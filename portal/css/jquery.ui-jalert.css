@@ -1,0 +1,5 @@
+﻿.jpopup { }
+.jpopup .ui-dialog-titlebar { display: none; }
+.jpopup table { width: 100%; }
+.jpopup table TD { padding: 15px 15px 15px 0px; }
+.jpopup table TH { padding: 15px; }

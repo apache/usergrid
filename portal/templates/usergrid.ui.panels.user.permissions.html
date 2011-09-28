@@ -1,0 +1,31 @@
+<div class="console-section">
+	<div class="user-profile-header">
+		{{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
+		<div class="user-profile-header-name{{if picture}} user-profile-picture-vert-offset{{/if}}">
+			{{if path}}<a href="#" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+			${name}
+			{{if path}}</a>{{/if}}
+		</div>
+		<div style="clear: both;"> </div>
+	</div>
+	<div class="console-section-contents ui-widget-content">
+		<div class="user-panel-section">
+			{{if roles}}
+			{{each roles}}
+			<div>${$index + 1}: <em>${$value}.</em></div>
+			{{/each}}
+			{{else}}
+			<div class="user-panel-section-message">No Roles</div>
+			{{/if}}
+		</div>
+		<div class="user-panel-section">
+			{{if permissions}}
+			{{each permissions}}
+			<div>${$index + 1}: <em>${$value}.</em></div>
+			{{/each}}
+			{{else}}
+			<div class="user-panel-section-message">No Permissions</div>
+			{{/if}}
+		</div>
+	</div>
+</div>

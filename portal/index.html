@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Usergrid Console</title>
+<link rel="stylesheet" type="text/css" href="css/reset.css" />
+<link rel="stylesheet" type="text/css" href="css/styles.css" />
+<link rel="stylesheet" type="text/css"
+	href="css/custom-theme/jquery-ui-1.8.9.custom.css" />
+<link rel="stylesheet" type="text/css"
+	href="css/jquery.ui.selectmenu.css" />
+<link rel="stylesheet" type="text/css"
+	href="css/jquery-ui-timepicker.css" />
+<link rel="stylesheet" type="text/css"
+	href="css/jquery.ui.statusbar.css" />
+<link rel="stylesheet" type="text/css"
+	href="css/jquery.ui-jalert.css" />
+<script src="js/json2.js" type="text/javascript"></script>
+<script src="js/jsonlint.js" type="text/javascript"></script>
+<script src="http://www.google.com/jsapi" type="text/javascript"></script>
+<script type="text/javascript">
+    google.load('visualization', '1', {
+        packages : [ 'corechart' ]
+    });
+</script>
+<script src="http://code.jquery.com/jquery-1.4.4.min.js"
+	type="text/javascript"></script>
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.9/jquery-ui.min.js"
+	type="text/javascript"></script>
+<script src="js/jquery.dataset.js" type="text/javascript"></script>
+<script src="js/jquery.tmpl.js" type="text/javascript"></script>
+<script src="js/jquery.dform-0.1.3.min.js" type="text/javascript"></script>
+<script src="js/jquery.ui.selectmenu.js" type="text/javascript"></script>
+<script src="js/jquery.ui.timepicker.js" type="text/javascript"></script>
+<script src="js/jquery.ui.statusbar.js" type="text/javascript"></script>
+<script src="js/jquery.ui-jalert.js" type="text/javascript"></script>
+<script src="js/date.js" type="text/javascript"></script>
+<script src="js/usergrid.client.js" type="text/javascript"></script>
+<script src="js/usergrid.console.js" type="text/javascript"></script>
+<script src="js/usergrid.console.ui.js" type="text/javascript"></script>
+<script src="js/usergrid.console.ui.navbar.js" type="text/javascript"></script>
+<script src="js/usergrid.console.ui.collections.entity.js" type="text/javascript"></script>
+<script src="js/usergrid.console.ui.collections.user.js" type="text/javascript"></script>
+</head>
+<body>
+	<div id="login-page" class="console-page">
+		<div id="login-area">
+			<div id="login-message"></div>
+			<form name="login-form" id="login-form" onsubmit="return false;">
+				<div id="login-title">Administration Console Login</div>
+				<hr />
+				<p>
+					<label for="login-email">Email</label><br /> <input type="text"
+						name="login-email" id="login-email" class="inputFields" value=""
+						size="20" tabindex="1" />
+				</p>
+				<p>
+					<label for="login-password">Password</label><br /> <input
+						type="password" name="login-password" id="login-password"
+						class="inputFields" value="" size="20" tabindex="2" />
+				</p>
+				<div id="login-links">
+					<a id="signup-link">Sign Up</a> <a id="forgot-password-link">Forgot
+						Password</a>
+				</div>
+				<div class="submit">
+					<input type="button" name="button-login" id="button-login"
+						value="Log In" tabindex="3" />
+				</div>
+			</form>
+		</div>
+		<div id="the-grid">
+			<p>The Grid.</p>
+			<p>A digital frontier.</p>
+			<p>I tried to picture clusters of information as they moved
+				through the computer.</p>
+			<p>What did they look like? Ships? Motorcycles? Were the circuits
+				like freeways?</p>
+			<p>I kept dreaming of a world I thought I&rsquo;d never see.</p>
+			<p>And then, one day, I got in.</p>
+		</div>
+	</div>
+	<div id="signup-page" style="display: none" class="console-page">
+		<div id="signup-area">
+			<div id="signup-message"></div>
+			<form name="signup-form" id="signup-form" onsubmit="return false;">
+				<div id="signup-title">Register For New Account</div>
+				<hr />
+				<table id="signup-form-table">
+					<tr>
+						<td class="left-td"><label for="signup-organization-name">Organization
+								Account Name</label><br /> <input type="text"
+							name="signup-organization-name" id="signup-organization-name"
+							class="inputFields" value="" size="20" tabindex="1" />
+						</td>
+						<td class="right-td"><label for="signup-username">Username</label><br />
+							<input type="text" name="signup-username" id="signup-username"
+							class="inputFields" value="" size="20" tabindex="1" />
+						</td>
+					</tr>
+					<tr>
+						<td class="left-td"><label for="signup-name">Name</label><br />
+							<input type="text" name="signup-name" id="signup-name"
+							class="inputFields" value="" size="20" tabindex="1" />
+						</td>
+						<td class="right-td"><label for="signup-email">Email</label><br />
+							<input type="text" name="signup-email" id="signup-email"
+							class="inputFields" value="" size="20" tabindex="1" />
+						</td>
+					</tr>
+					<tr>
+						<td class="left-td"><label for="signup-password">Password</label><br />
+							<input type="password" name="signup-password"
+							id="signup-password" class="inputFields" value="" size="20"
+							tabindex="2" />
+						</td>
+						<td class="right-td"><label for="signup-password-confirm">Confirm
+								Password</label><br /> <input type="password"
+							name="signup-password-confirm" id="signup-password-confirm"
+							class="inputFields" value="" size="20" tabindex="2" />
+						</td>
+					</tr>
+				</table>
+				<div id="signup-links">
+					<a id="signup-cancel">Go Back</a>
+				</div>
+				<div class="submit">
+					<input type="button" name="button-signup" id="button-signup"
+						value="Sign up" tabindex="3" />
+				</div>
+			</form>
+		</div>
+	</div>
+	<div id="console-page" style="display: none" class="console-page">
+		<div id="console-nav-bar" class="page-nav-bar">
+			<div class="page-nav-bar-breadcrumbs">Administration Console</div>
+			<div class="page-nav-bar-right">
+				<a id="logged-in-user-name">Logged In User</a>
+				<form id="organizationSelectForm" action="#">
+					<fieldset>
+						<select name="organizationSelect" id="organizationSelect">
+							<option value="my-organization" selected="selected">my-organization</option>
+						</select>
+					</fieldset>
+				</form>
+				<a id="logout-link" href="#"
+					onclick="usergrid.console.logout(); return false;">Sign Out</a>
+			</div>
+		</div>
+		<div id="console-columns">
+			<div id="sidebar-menu">
+				<ol id="system-panel-buttons" class="panel-buttons">
+					<li id="system-panel-button-home" class="ui-widget-header">Home</li>
+				</ol>
+				<form id="applicationSelectForm" action="#">
+					<fieldset>
+						<label for="applicationSelect">Application:</label>
+						<select name="applicationSelect" id="applicationSelect">
+							<option value="my-application" selected="selected">my-application</option>
+						</select>
+					</fieldset>
+				</form>
+				<ol id="application-panel-buttons" class="panel-buttons">
+					<li class="ui-widget-header"
+						id="application-panel-button-dashboard">Dashboard</li>
+					<li class="ui-widget-header">Users</li>
+					<li class="ui-widget-header">Groups</li>
+					<li class="ui-widget-header">Roles</li>
+					<li class="ui-widget-header">Activities</li>
+					<li class="ui-widget-header">Collections</li>
+					<li class="ui-widget-header">Analytics</li>
+					<li class="ui-widget-header">Settings</li>
+					<li class="ui-widget-header">Shell</li>
+				</ol>
+			</div>
+			<div id="console-panels">
+				<div id="organization-panel" style="display: none">
+					<div id="console-panel-nav-bar"></div>
+					<table id="acccount-panel-table">
+						<tr>
+							<td id="acccount-panel-left">
+								<div class="panel-content">
+									<div class="console-section">
+										<div class="console-section-header ui-widget-header">
+											<span class="console-section-title">Applications</span> <span
+												class="console-section-header-right"><a href="#"
+												onclick="usergrid.console.newApplication(); return false;">New
+													Application</a> </span>
+										</div>
+										<div class="console-section-contents ui-widget-content">
+											<div id="organization-applications">
+												<h2>No applications created.</h2>
+											</div>
+										</div>
+									</div>
+									<div class="console-section">
+										<div class="console-section-header ui-widget-header">
+											<span class="console-section-title">Organization
+												Administrators</span> <span class="console-section-header-right"><a
+												href="#"
+												onclick="usergrid.console.newOrganization(); return false;">New
+													Administrator</a> </span>
+										</div>
+										<div class="console-section-contents ui-widget-content">
+											<div id="organization-admins">
+												<h2>No administrators.</h2>
+											</div>
+										</div>
+									</div>
+									<div class="console-section">
+										<div class="console-section-header ui-widget-header">
+											<span class="console-section-title">Organization API
+												Credentials</span> <span class="console-section-header-right"><a
+												href="#"
+												onclick="usergrid.console.newOrganizationCredentials(); return false;">Generate
+													New Credentials</a> </span>
+										</div>
+										<div class="console-section-contents ui-widget-content">
+											<table id="organization-panel-key-table">
+												<tr>
+													<td class="organization-panel-key-label">Client
+														ID</td>
+													<td id="organization-panel-key"
+														class="organization-panel-key-value">...</td>
+												</tr>
+												<tr>
+													<td class="organization-panel-key-label">Client
+														Secret</td>
+													<td id="organization-panel-secret"
+														class="organization-panel-key-value">...</td>
+												</tr>
+											</table>
+										</div>
+									</div>
+								</div></td>
+							<td id="acccount-panel-right">
+								<div class="panel-content">
+									<div class="console-section">
+										<div class="console-section-header ui-widget-header">
+											<span class="console-section-title">Activities</span>
+										</div>
+										<div class="console-section-contents ui-widget-content">
+											<div id="organization-activities">
+												<h2>No activities.</h2>
+											</div>
+										</div>
+									</div>
+								</div></td>
+						</tr>
+					</table>
+					<div id="dialog-form-new-application" class="dialog-form"
+						title="Create new application">
+						<p class="validateTips">All form fields are required.</p>
+						<form>
+							<fieldset>
+								<label for="new-application-name">Name</label> <input
+									type="text" name="new-application-name"
+									id="new-application-name" value=""
+									class="text ui-widget-content ui-corner-all" />
+							</fieldset>
+						</form>
+					</div>
+					<div id="dialog-form-new-admin" class="dialog-form"
+						title="Create new administrator">
+						<p class="validateTips">All form fields are required.</p>
+						<form>
+							<fieldset>
+								<label for="new-admin-email">Email</label> <input type="text"
+									name="new-admin-email" id="new-admin-email" value=""
+									class="text ui-widget-content ui-corner-all" /> <label
+									for="new-admin-password">Password</label> <input
+									type="password" name="new-admin-password"
+									id="new-admin-password" value=""
+									class="text ui-widget-content ui-corner-all" />
+							</fieldset>
+						</form>
+					</div>
+				</div>
+				<div id="application-panel" style="display: none">
+					<div class="panel-content">
+						<div class="console-section">
+							<div class="console-section-header ui-widget-header">
+								<span class="console-section-title">Application Dashboard</span>
+							</div>
+							<div class="console-section-contents ui-widget-content">
+								<table id="application-panel-table">
+									<tr>
+										<td><div id="application-panel-entity-graph"></div></td>
+										<td id="application-panel-text">...</td>
+									</tr>
+								</table>
+								<div id="application-entities-timeline" class="application-usage-graph"></div>
+								<div id="application-cpu-time" class="application-usage-graph"></div><br />
+								<div id="application-data-uploaded" class="application-usage-graph"></div>
+								<div id="application-data-downloaded" class="application-usage-graph"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="users-panel" style="display: none">
+					<div id="users-panel-tab-bar"
+						class="console-tab-bar ui-widget-header">
+						<button class="button tab-bar-selection" id="button-users-list">List</button>
+						<button class="button" id="button-users-search">Search</button>
+					</div>
+					<div class="panel-content">
+						<div class="console-section">
+							<div class="console-section-header ui-widget-header">
+								<span class="console-section-title">Users</span> <span
+									class="console-section-header-right"><a href="#"
+									onclick="usergrid.console.newUser(); return false;">New
+										User</a> </span>
+							</div>
+							<div class="console-section-contents ui-widget-content">
+								<table id="users-response-area">
+									<tr>
+										<td id="users-response-area-contents">
+											<div id="users-response-table">
+												<pre class="query-response-json">{ }</pre>
+											</div>
+											<div id="users-next-prev">
+												<button class="button" id="button-users-prev">Previous</button>
+												<button class="button" id="button-users-next">Next</button>
+											</div>
+										</td>
+										<td id="users-by-alphabetical-cell"><div id="users-by-alphabetical"></div></td>
+									</tr>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div id="dialog-form-new-user" class="dialog-form"
+						title="Create new user">
+						<p class="validateTips">All form fields are required.</p>
+						<form>
+							<fieldset>
+								<label for="new-user-username">Username</label> <input
+									type="text" name="new-user-username" id="new-user-username"
+									value="" class="text ui-widget-content ui-corner-all" /> <label
+									for="new-user-fullname">Full name</label> <input type="text"
+									name="new-user-fullname" id="new-user-fullname" value=""
+									class="text ui-widget-content ui-corner-all" /> <label
+									for="new-user-email">Email</label> <input type="text"
+									name="new-user-email" id="new-user-email" value=""
+									class="text ui-widget-content ui-corner-all" /> <label
+									for="new-admin-password">Password</label> <input
+									type="password" name="new-user-password" id="new-user-password"
+									value="" class="text ui-widget-content ui-corner-all" />
+							</fieldset>
+						</form>
+					</div>
+				</div>
+				<div id="user-panel" style="display: none">
+					<div id="user-panel-tab-bar"
+						class="console-tab-bar ui-widget-header">
+						<button class="button" id="button-user-list">List</button>
+						<button class="button" id="button-user-search">Search</button>
+						<button class="button tab-bar-selection" id="button-user-profile">Profile</button>
+						<button class="button" id="button-user-memberships">Memberships</button>
+						<button class="button" id="button-user-activities">Activities</button>
+						<button class="button" id="button-user-graph">Graph</button>
+						<button class="button" id="button-user-permissions">Permissions</button>
+					</div>
+					<div id="user-panel-profile" class="panel-content"></div>
+					<div id="user-panel-memberships" class="panel-content" style="display: none;"></div>
+					<div id="user-panel-activities" class="panel-content" style="display: none;"></div>
+					<div id="user-panel-graph" class="panel-content" style="display: none;"></div>
+					<div id="user-panel-permissions" class="panel-content" style="display: none;"></div>
+				</div>
+				<div id="groups-panel" style="display: none">
+					<div class="panel-content">
+						<div class="console-section">
+							<div class="console-section-header ui-widget-header">
+								<span class="console-section-title">Groups</span>
+							</div>
+							<div class="console-section-contents ui-widget-content">
+								<div>
+									<h2>Not implemented.</h2>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="roles-panel" style="display: none">
+					<div class="panel-content">
+						<div class="console-section">
+							<div class="console-section-header ui-widget-header">
+								<span class="console-section-title">Roles</span> <span
+									class="console-section-header-right"><a href="#"
+									onclick="usergrid.console.newRole(); return false;">New
+										Role</a> </span>
+							</div>
+							<div class="console-section-contents ui-widget-content">
+								<div id="application-roles">
+									<h2>No roles created.</h2>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="activities-panel" style="display: none">
+					<div class="panel-content">
+						<div class="console-section">
+							<div class="console-section-header ui-widget-header">
+								<span class="console-section-title">Activities</span>
+							</div>
+							<div class="console-section-contents ui-widget-content">
+								<div id="activities-response-area">
+									<div id="activities-response-table">
+										<pre class="query-response-json">{ }</pre>
+									</div>
+									<div id="activities-next-prev">
+										<button class="button" id="button-activities-prev">Previous</button>
+										<button class="button" id="button-activities-next">Next</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="analytics-panel" style="display: none">
+					<div class="panel-content">
+						<div class="console-section">
+							<div class="console-section-header ui-widget-header">
+								<span class="console-section-title">Analytics</span>
+							</div>
+							<div class="console-section-contents ui-widget-content">
+								<div id="analytics-time">
+									<table>
+										<tr>
+											<td><span id="analytics-start-time-span">Start: <input
+													type="text" id="start-date" /> <input type="text"
+													id="start-time" value="12:00 AM" /> </span>
+											</td>
+											<td><span id="analytics-end-time-span">End: <input
+													type="text" id="end-date" /> <input type="text"
+													id="end-time" value="12:00 AM" /> </span>
+											</td>
+											<td><form id="resolutionSelectForm" action="#">
+													<fieldset>
+														<select name="resolutionSelect" id="resolutionSelect">
+															<option value="all">All</option>
+															<option value="minute">Minute</option>
+															<option value="five_minutes">5 Minutes</option>
+															<option value="half_hour">30 Minutes</option>
+															<option value="hour">Hour</option>
+															<option value="six_hour">6 Hours</option>
+															<option value="half_day">Half Day</option>
+															<option value="day" selected="selected">Day</option>
+															<option value="week">Week</option>
+															<option value="month">Month</option>
+														</select>
+													</fieldset>
+												</form>
+											</td>
+											<td><button class="button"
+													id="button-analytics-generate">Generate</button>
+											</td>
+										</tr>
+									</table>
+									<div id="analytics-counter-names"></div>
+								</div>
+								<div id="analytics-graph"></div>
+								<div id="analytics-graph-area"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="settings-panel" style="display: none">
+					<div class="panel-content">
+						<div class="console-section">
+							<div class="console-section-header ui-widget-header">
+								<span class="console-section-title">Settings</span>
+							</div>
+							<div class="console-section-contents ui-widget-content">
+								<div>
+									<h2>Not implemented.</h2>
+								</div>
+							</div>
+						</div>
+						<div class="console-section">
+							<div class="console-section-header ui-widget-header">
+								<span class="console-section-title">Application API Credentials</span>
+								<span class="console-section-header-right"><a href="#"
+									onclick="usergrid.console.newApplicationCredentials(); return false;">Generate
+										New Credentials</a> </span>
+							</div>
+							<div class="console-section-contents ui-widget-content">
+								<table id="application-panel-key-table">
+									<tr>
+										<td class="application-panel-key-label">Client
+											ID</td>
+										<td id="application-panel-key"
+											class="application-panel-key-value">...</td>
+									</tr>
+									<tr>
+										<td class="application-panel-key-label">Client
+											Secret</td>
+										<td id="application-panel-secret"
+											class="application-panel-key-value">...</td>
+									</tr>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="shell-panel" style="display: none">
+					<div id="shell-content">
+						<div id="shell-output">
+							<div class="shell-output-line">Usergrid Interactive Shell
+								(8-bit forever!)</div>
+						</div>
+						<div id="shell-input-div">
+							<div class="shell-prompt">&gt;</div>
+							<textarea id="shell-input" rows="2"></textarea>
+						</div>
+					</div>
+				</div>
+				<div id="collections-panel" style="display: none">
+					<div class="panel-content">
+						<div class="console-section">
+							<div class="console-section-header ui-widget-header">
+								<span class="console-section-title">Collections</span> <span
+									class="console-section-header-right"> <a href="#"
+									onclick="usergrid.console.newCollection(); return false;">New
+										Collection</a>&nbsp;&nbsp;&nbsp;&nbsp; <a href="#"
+									onclick="usergrid.console.pageSelectQueryExplorer(); return false;">Query
+										Explorer</a> </span>
+							</div>
+							<div class="console-section-contents ui-widget-content">
+								<div id="application-collections">
+									<h2>No collections created.</h2>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div id="dialog-form-new-collection" class="dialog-form"
+						title="Create new collection">
+						<p class="validateTips">All form fields are required.</p>
+						<form>
+							<fieldset>
+								<label for="new-collection-name">Name</label> <input type="text"
+									name="new-collection-name" id="new-collection-name" value=""
+									class="text ui-widget-content ui-corner-all" />
+							</fieldset>
+						</form>
+					</div>
+				</div>
+				<div id="query-panel" style="display: none">
+					<div id="query-path-area">
+						<table id="query-inputs">
+							<tr>
+								<td class="query-left-col">Path:</td>
+								<td class="query-middle-col query-input-box"><input
+									id="query-path" type="text" name="path" /> <span
+									id="button-clear-path">&#215;</span></td>
+								<td class="query-right-col" rowspan="2">
+									<button class="button" id="button-query-back">&#9664;</button>
+									<button class="button" id="button-query-get">Get</button> <span
+									class="query-more-options" style="display: none">
+										<button class="button" id="button-query-post">Post</button>
+										<button class="button" id="button-query-put">Put</button>
+										<button class="button" id="button-query-delete">Delete</button>
+								</span>
+									<button class="button query-more-options" style="display: none"
+										id="button-query-less-options">Less</button>
+									<button class="button query-less-options"
+										id="button-query-more-options">More</button></td>
+							</tr>
+							<tr class="query-more-options" style="display: none">
+								<td class="query-left-col">Query:</td>
+								<td class="query-middle-col query-input-box"><input
+									id="query-ql" type="text" name="query" /> <span
+									id="button-clear-ql">&#215;</span>
+									<form id="indexSelectForm" action="#">
+										<fieldset>
+											<select name="indexSelect" id="indexSelect">
+											</select>
+										</fieldset>
+									</form></td>
+							</tr>
+						</table>
+						<div id="query-source-area" class="query-more-options"
+							style="display: none">
+							<h2 id="query-sent-header">Sent</h2>
+							<textarea id="query-source"></textarea>
+							<div id="query-source-features">
+								<button id="button-query-shrink" class="button">&#9650;</button>
+								<button id="button-clear-query-source" class="button">Clear</button>
+								<button id="button-query-validate" class="button">Validate</button>
+							</div>
+						</div>
+					</div>
+					<div id="query-response-area">
+						<h2 id="query-received-header">Received</h2>
+						<div id="query-response-table">
+							<pre class="query-response-json">{ }</pre>
+						</div>
+						<div id="query-next-prev">
+							<button class="button" id="button-query-prev">Previous</button>
+							<button class="button" id="button-query-next">Next</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="account-page" style="display: none" class="console-page">
+		<div id="console-nav-bar" class="page-nav-bar">
+			<div class="page-nav-bar-breadcrumbs">Account Settings </div>
+			<div class="page-nav-bar-right">
+				<a id="return-to-console">Return To Admin Console</a>
+			</div>
+		</div>
+		<div class="panel-content">
+			<div class="console-section">
+				<div class="console-section-header ui-widget-header">
+					<span class="console-section-title">Personal Account</span>
+				</div>
+				<div class="console-section-contents ui-widget-content">
+					<div id="update-account-id-label">UUID</div><div id="update-account-id">00000000-0000-0000-0000-000000000000</div>
+					<form name="update-account-form" id="update-account-form">
+						<fieldset>
+							<label for="update-account-username">Username</label>
+							<input type="text" name="update-account-username" id="update-account-username" value="" class="text ui-widget-content ui-corner-all" />
+							<label for="update-account-username">Name</label>
+							<input type="text" name="update-account-name" id="update-account-name" value="" class="text ui-widget-content ui-corner-all" />
+							<label for="update-account-email">Email</label>
+							<input type="text" name="update-account-email" id="update-account-email" value="" class="text ui-widget-content ui-corner-all" />
+							<label for="update-account-password">Old Password*</label>
+							<input type="password" name="old-account-password" id="old-account-password" value="" class="text ui-widget-content ui-corner-all" />
+							<label for="update-account-password">New Password</label>
+							<input type="password" name="update-account-password" id="update-account-password" value="" class="text ui-widget-content ui-corner-all" />
+							<label for="update-account-password">New Password (repeat)</label>
+							<input type="password" name="update-account-password-repeat" id="update-account-password-repeat" value="" class="text ui-widget-content ui-corner-all" />
+						</fieldset>
+						<div class="submit">
+							<div>*Leave password fields blank to keep current password unchanged</div>
+							<input type="button" name="button-update-account" id="button-update-account" value="Update" />
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<div class="panel-content">
+			<div class="console-section">
+				<div class="console-section-header ui-widget-header">
+					<span class="console-section-title">Organizations</span> <span
+						class="console-section-header-right"><a href="#"
+						onclick="usergrid.console.newOrganization(); return false;">New
+							Organization</a> </span>
+				</div>
+				<div class="console-section-contents ui-widget-content">
+					<div id="account-organizations"></div>
+				</div>
+			</div>
+		</div>
+		<div id="dialog-form-new-organization" class="dialog-form"
+			title="Create new organization">
+			<p class="validateTips">All form fields are required.</p>
+			<form>
+				<fieldset>
+					<label for="new-organization-name">Name</label> <input
+						type="text" name="new-organization-name"
+						id="new-organization-name" value=""
+						class="text ui-widget-content ui-corner-all" />
+				</fieldset>
+			</form>
+		</div>
+	</div>
+	<div id="api-activity" style="display: none">Loading...</div>
+	<div id="statusbar-placeholder"></div>
+</body>
+</html>
