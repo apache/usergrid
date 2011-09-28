@@ -1,0 +1,32 @@
+<div class="console-section">
+	<div class="user-profile-header">
+		{{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
+		<div class="user-profile-header-name{{if picture}} user-profile-picture-vert-offset{{/if}}">
+			{{if path}}<a href="#" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+			${name}
+			{{if path}}</a>{{/if}}
+		</div>
+		<div style="clear: both;"> </div>
+	</div>
+	<div class="console-section-contents ui-widget-content">
+		<div class="user-panel-section">
+			{{if following}}
+			{{each following}}
+			<div>${$index + 1}: <em>${$value}.</em></div>
+			{{/each}}
+			{{else}}
+			<div class="user-panel-section-message">Not following anyone</div>
+			{{/if}}
+		</div>
+		<div class="user-panel-section">
+			{{if followers}}
+			{{each followers}}
+			<div>${$index + 1}: <em>${$value}.</em></div>
+			{{/each}}
+			{{else}}
+			<div class="user-panel-section-message">No followers</div>
+			{{/if}}
+		</div>
+	</div>
+</div>
+
