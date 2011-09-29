@@ -716,6 +716,11 @@ usergrid.Client = function(applicationId, clientId, clientSecret) {
     // POST: /management/users
     //
     function loginAdmin(email, password, success, failure) {
+        self.loggedInUser = null;
+        self.accessToken = null;
+        self.currentOrganization = null;
+        localStorage.removeItem('usergrid_user');
+        localStorage.removeItem('usergrid_access_token');
         var formdata = {
             grant_type: "password",
             username: email,
@@ -750,6 +755,41 @@ usergrid.Client = function(applicationId, clientId, clientSecret) {
         );
     }
     this.loginAdmin = loginAdmin;
+
+   function loginAppUser(applicationId, email, password, success, failure) {
+       self.loggedInUser = null;
+       self.accessToken = null;
+       self.currentOrganization = null;
+       localStorage.removeItem('usergrid_user');
+       localStorage.removeItem('usergrid_access_token');
+        var formdata = {
+            grant_type: "password",
+            username: email,
+            password: password
+        };
+        apiRequest("POST", "/"+ applicationId + "/token", formdata, null,
+        function(response) {
+            if (response && response.access_token && response.user) {
+                self.loggedInUser = response.user;
+                self.accessToken = response.access_token;
+                self.currentOrganization = null;
+                localStorage.setObject('usergrid_user', self.loggedInUser);
+                localStorage.setObject('usergrid_access_token', self.accessToken);
+                if (success) {
+                    success();
+                }
+            } else if (failure) {
+                failure();
+            }
+        },
+        function(XMLHttpRequest, textStatus, errorThrown) {
+            if (failure) {
+                failure();
+            }
+        }
+        );
+    }
+    this.loginAppUser = loginAppUser;
 
     function loginWithAccessToken(email, accessToken, success, failure) {
         self.accessToken = accessToken;
@@ -921,7 +961,7 @@ usergrid.Client = function(applicationId, clientId, clientSecret) {
     function createUser(applicationId, username, fullname, email, password, success, failure) {
         apiRequest("POST", "/" + applicationId + "/users", null, JSON.stringify({
             username: username,
-            fullname: fullname,
+            name: fullname,
             email: email,
             password: password
         }), success, failure);
