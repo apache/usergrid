@@ -1104,7 +1104,7 @@ $(document).ready(function usergrid_console_app() {
     var new_user_fullname = $("#new-user-fullname");
     var new_user_email = $("#new-user-email");
     var new_user_password = $("#new-user-password");
-    var allNewUserFields = $([]).add(new_user_username).add(new_user_username).add(new_user_email).add(new_user_password);
+    var allNewUserFields = $([]).add(new_user_username).add(new_user_fullname).add(new_user_email).add(new_user_password);
 
     $("#dialog-form-new-user")
     .dialog(
