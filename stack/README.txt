@@ -1,4 +1,15 @@
-Usergrid
+Usergrid Platform Stack for Mobile & Rich Client Apps
+
+For more info:
+
+Homepage:       http://www.usergrid.com
+Blog:           http://blog.usergrid.com
+Google Groups:  http://groups.google.com/group/usergrid-user
+                http://groups.google.com/group/usergrid-dev
+Twitter:        http://twitter.com/#!/usergrid
+
+
+Getting Started
 
 Note: The easiest way to run Usergrid is to download the double-clickable jar
 at:
