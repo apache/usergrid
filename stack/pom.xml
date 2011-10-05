@@ -466,13 +466,6 @@
 				<version>2.5</version>
 			</plugin>
 		</plugins>
-		<extensions>
-			<extension>
-				<groupId>org.springframework.build.aws</groupId>
-				<artifactId>org.springframework.build.aws.maven</artifactId>
-				<version>3.0.0.RELEASE</version>
-			</extension>
-		</extensions>
 	</build>
 
 	<reporting>
@@ -544,14 +537,5 @@
 			<layout>default</layout>
 		</pluginRepository>
 	</pluginRepositories>
-
-	<distributionManagement>
-		<snapshotRepository>
-			<id>usergrid-maven</id>
-			<name>Usergrid s3 repository</name>
-			<url>s3://usergrid-maven/snapshot</url>
-			<uniqueVersion>false</uniqueVersion>
-		</snapshotRepository>
-	</distributionManagement>
 
 </project>
