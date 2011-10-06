@@ -40,11 +40,14 @@ package org.usergrid.services;
 import static org.usergrid.utils.JsonUtils.normalizeJsonTree;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.collections.iterators.EmptyIterator;
+import org.apache.commons.collections.iterators.SingletonListIterator;
 import org.usergrid.utils.JsonUtils;
 
 public class ServicePayload {
@@ -161,6 +164,17 @@ public class ServicePayload {
 			return JsonUtils.mapToJsonString(list);
 		}
 		return JsonUtils.mapToJsonString(properties);
+	}
+
+	@SuppressWarnings("unchecked")
+	public Iterator<Map<String, Object>> payloadIterator() {
+		if (isBatch()) {
+			return batch.iterator();
+		}
+		if (properties != null) {
+			return new SingletonListIterator(properties);
+		}
+		return EmptyIterator.INSTANCE;
 	}
 
 }

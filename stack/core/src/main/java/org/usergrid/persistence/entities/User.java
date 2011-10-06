@@ -66,6 +66,9 @@ public class User extends TypedEntity {
 	@EntityProperty(indexed = true)
 	protected String lastname;
 
+	@EntityProperty(indexed = false)
+	protected String picture;
+
 	@EntityDictionary(keyType = java.lang.String.class)
 	protected Set<String> connections;
 
@@ -179,6 +182,15 @@ public class User extends TypedEntity {
 
 	public void setLastname(String lastname) {
 		this.lastname = lastname;
+	}
+
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	public String getPicture() {
+		return picture;
+	}
+
+	public void setPicture(String picture) {
+		this.picture = picture;
 	}
 
 	@JsonSerialize(include = Inclusion.NON_NULL)

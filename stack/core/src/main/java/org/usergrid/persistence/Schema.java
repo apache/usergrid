@@ -110,6 +110,7 @@ public class Schema {
 	public static final String PROPERTY_OWNER = "owner";
 	public static final String PROPERTY_OWNER_TYPE = "ownerType";
 	public static final String PROPERTY_PATH = "path";
+	public static final String PROPERTY_PICTURE = "picture";
 	public static final String PROPERTY_PUBLISHED = "published";
 	public static final String PROPERTY_SECRET = "secret";
 	public static final String PROPERTY_TIMESTAMP = "timestamp";
