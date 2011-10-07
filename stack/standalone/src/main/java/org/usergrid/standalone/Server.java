@@ -249,6 +249,10 @@ public class Server implements ApplicationContextAware {
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.ApplicationResource.authorize_005fform_jsp",
 				"/WEB-INF/jsp/org/usergrid/rest/applications/ApplicationResource/authorize_form.jsp");
 
+		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.ManagementResource.authorize_005fform_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/management/ManagementResource/authorize_form.jsp");
+
 	}
 
 	private void mapServlet(String cls, String mapping) {
