@@ -9,13 +9,11 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 	<title>Reset Password</title>
-	<style type="text/css">
-		<jsp:include page="/css/styles.css" />
-	</style>
+	<link rel="stylesheet" type="text/css" href="../../css/styles.css" />
 </head>
 <body>
 
-	<p>New password set for <c:out value="${it.user.email}"/></p>
+	<p>Email with instructions for password reset sent to <c:out value="${it.user.email}"/></p>
 
 </body>
 </html>

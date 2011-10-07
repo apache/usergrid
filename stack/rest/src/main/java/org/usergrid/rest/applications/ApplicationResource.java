@@ -41,11 +41,15 @@ import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.Response.temporaryRedirect;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.services.ServiceParameter.addParameter;
 import static org.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
+import java.net.URI;
+import java.net.URLEncoder;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
@@ -56,6 +60,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
@@ -68,6 +73,7 @@ import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
 import org.apache.log4j.Logger;
 import org.apache.shiro.codec.Base64;
+import org.usergrid.management.ApplicationInfo;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.ApiResponse;
@@ -77,6 +83,8 @@ import org.usergrid.rest.queues.QueueResource;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
+
+import com.sun.jersey.api.view.Viewable;
 
 @Produces(MediaType.APPLICATION_JSON)
 public class ApplicationResource extends ServiceResource {
@@ -135,7 +143,9 @@ public class ApplicationResource extends ServiceResource {
 			@QueryParam("username") String username,
 			@QueryParam("password") String password,
 			@QueryParam("client_id") String client_id,
-			@QueryParam("client_secret") String client_secret) throws Exception {
+			@QueryParam("client_secret") String client_secret,
+			@QueryParam("code") String code,
+			@QueryParam("redirect_uri") String redirect_uri) throws Exception {
 
 		logger.info("ApplicationResource.getAccessToken");
 
@@ -175,6 +185,11 @@ public class ApplicationResource extends ServiceResource {
 					}
 				} catch (Exception e1) {
 				}
+			} else if ("authorization_code".equals(grant_type)) {
+				AccessInfo access_info = new AccessInfo();
+				access_info.setAccessToken(code);
+				return Response.status(SC_OK).type(APPLICATION_JSON_TYPE)
+						.entity(mapToJsonString(access_info)).build();
 			}
 
 			if (user == null) {
@@ -215,12 +230,14 @@ public class ApplicationResource extends ServiceResource {
 			@FormParam("username") String username,
 			@FormParam("password") String password,
 			@FormParam("client_id") String client_id,
-			@FormParam("client_secret") String client_secret) throws Exception {
+			@FormParam("client_secret") String client_secret,
+			@FormParam("code") String code,
+			@FormParam("redirect_uri") String redirect_uri) throws Exception {
 
 		logger.info("ApplicationResource.getAccessTokenPost");
 
 		return getAccessToken(ui, null, grant_type, username, password,
-				client_id, client_secret);
+				client_id, client_secret, code, redirect_uri);
 	}
 
 	@GET
@@ -255,6 +272,109 @@ public class ApplicationResource extends ServiceResource {
 
 		return new ApiResponse(ui).withCredentials(kp)
 				.withAction("generate application keys").withSuccess();
+	}
+
+	@GET
+	@Path("authorize")
+	public Viewable showAuthorizeForm(@Context UriInfo ui,
+			@QueryParam("response_type") String response_type,
+			@QueryParam("client_id") String client_id,
+			@QueryParam("redirect_uri") String redirect_uri,
+			@QueryParam("scope") String scope, @QueryParam("state") String state)
+			throws Exception {
+
+		responseType = response_type;
+		clientId = client_id;
+		redirectUri = redirect_uri;
+		this.scope = scope;
+		this.state = state;
+
+		ApplicationInfo app = management.getApplication(applicationId);
+		applicationName = app.getName();
+
+		return new Viewable("authorize_form", this);
+	}
+
+	@POST
+	@Path("authorize")
+	public Viewable handleAuthorizeForm(@Context UriInfo ui,
+			@FormParam("response_type") String response_type,
+			@FormParam("client_id") String client_id,
+			@FormParam("redirect_uri") String redirect_uri,
+			@FormParam("scope") String scope, @FormParam("state") String state,
+			@FormParam("username") String username,
+			@FormParam("password") String password) throws Exception {
+
+		responseType = response_type;
+		clientId = client_id;
+		redirectUri = redirect_uri;
+		this.scope = scope;
+		this.state = state;
+
+		User user = null;
+		try {
+			user = management.verifyAppUserPasswordCredentials(
+					services.getApplicationId(), username, password);
+		} catch (Exception e1) {
+		}
+		if ((user != null) && isNotBlank(redirect_uri)) {
+			if (!redirect_uri.contains("?")) {
+				redirect_uri += "?";
+			} else {
+				redirect_uri += "&";
+			}
+			redirect_uri += "code="
+					+ management.getAccessTokenForAppUser(
+							services.getApplicationId(), user.getUuid());
+			if (isNotBlank(state)) {
+				redirect_uri += "&state=" + URLEncoder.encode(state, "UTF-8");
+			}
+			throw new WebApplicationException(temporaryRedirect(new URI(state))
+					.build());
+		} else {
+			errorMsg = "Username or password do not match";
+		}
+
+		ApplicationInfo app = management.getApplication(applicationId);
+		applicationName = app.getName();
+
+		return new Viewable("authorize_form", this);
+	}
+
+	String errorMsg = "";
+	String applicationName;
+	String responseType;
+	String clientId;
+	String redirectUri;
+	String scope;
+	String state;
+
+	public String getErrorMsg() {
+		return errorMsg;
+	}
+
+	public String getApplicationName() {
+		return applicationName;
+	}
+
+	public String getResponseType() {
+		return responseType;
+	}
+
+	public String getClientId() {
+		return clientId;
+	}
+
+	public String getRedirectUri() {
+		return redirectUri;
+	}
+
+	public String getScope() {
+		return scope;
+	}
+
+	public String getState() {
+		return state;
 	}
 
 }
