@@ -42,9 +42,14 @@ import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.Response.temporaryRedirect;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
+
+import java.net.URI;
+import java.net.URLEncoder;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -54,6 +59,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -69,6 +75,8 @@ import org.springframework.stereotype.Component;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.security.oauth.AccessInfo;
+
+import com.sun.jersey.api.view.Viewable;
 
 @Path("/management")
 @Component
@@ -193,4 +201,96 @@ public class ManagementResource extends AbstractContextResource {
 		return getAccessToken(ui, null, grant_type, username, password,
 				client_id, client_secret);
 	}
+
+	@GET
+	@Path("authorize")
+	public Viewable showAuthorizeForm(@Context UriInfo ui,
+			@QueryParam("response_type") String response_type,
+			@QueryParam("client_id") String client_id,
+			@QueryParam("redirect_uri") String redirect_uri,
+			@QueryParam("scope") String scope, @QueryParam("state") String state)
+			throws Exception {
+
+		responseType = response_type;
+		clientId = client_id;
+		redirectUri = redirect_uri;
+		this.scope = scope;
+		this.state = state;
+
+		return new Viewable("authorize_form", this);
+	}
+
+	@POST
+	@Path("authorize")
+	public Viewable handleAuthorizeForm(@Context UriInfo ui,
+			@FormParam("response_type") String response_type,
+			@FormParam("client_id") String client_id,
+			@FormParam("redirect_uri") String redirect_uri,
+			@FormParam("scope") String scope, @FormParam("state") String state,
+			@FormParam("username") String username,
+			@FormParam("password") String password) throws Exception {
+
+		responseType = response_type;
+		clientId = client_id;
+		redirectUri = redirect_uri;
+		this.scope = scope;
+		this.state = state;
+
+		UserInfo user = null;
+		try {
+			user = management.verifyAdminUserPasswordCredentials(username,
+					password);
+		} catch (Exception e1) {
+		}
+		if ((user != null) && isNotBlank(redirect_uri)) {
+			if (!redirect_uri.contains("?")) {
+				redirect_uri += "?";
+			} else {
+				redirect_uri += "&";
+			}
+			redirect_uri += "code="
+					+ management.getAccessTokenForAdminUser(user.getUuid());
+			if (isNotBlank(state)) {
+				redirect_uri += "&state=" + URLEncoder.encode(state, "UTF-8");
+			}
+			throw new WebApplicationException(temporaryRedirect(new URI(state))
+					.build());
+		} else {
+			errorMsg = "Username or password do not match";
+		}
+
+		return new Viewable("authorize_form", this);
+	}
+
+	String errorMsg = "";
+	String responseType;
+	String clientId;
+	String redirectUri;
+	String scope;
+	String state;
+
+	public String getErrorMsg() {
+		return errorMsg;
+	}
+
+	public String getResponseType() {
+		return responseType;
+	}
+
+	public String getClientId() {
+		return clientId;
+	}
+
+	public String getRedirectUri() {
+		return redirectUri;
+	}
+
+	public String getScope() {
+		return scope;
+	}
+
+	public String getState() {
+		return state;
+	}
+
 }

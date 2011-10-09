@@ -149,9 +149,18 @@ public class Server implements ApplicationContextAware {
 		handler.addFilter(new DelegatingFilterProxy(), "shiroFilter",
 				initParameters);
 
+		// handler.addFilter(new SpringServlet(), "spring", null);
+
 		setupJspMappings();
 
 		httpServer.getServerConfiguration().addHttpHandler(handler, "/*");
+
+		ClasspathStaticHttpHandler static_handler = new ClasspathStaticHttpHandler(
+				"/html/css/");
+		httpServer.getServerConfiguration().addHttpHandler(static_handler,
+				"/css/*");
+
+		httpServer.getServerConfiguration().setJmxEnabled(true);
 
 		try {
 			httpServer.start();
@@ -209,32 +218,41 @@ public class Server implements ApplicationContextAware {
 				"/WEB-INF/jsp/org/usergrid/rest/management/organizations/OrganizationResource/activate.jsp");
 
 		mapServlet(
-				"jsp.WEB_002dINF.jsp.org.usergrid.rest.application.users.UsersResource.resetpw_005femail_005fform_jsp",
-				"/WEB-INF/jsp/org/usergrid/rest/application/users/UsersResource/resetpw_email_form.jsp");
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UsersResource.resetpw_005femail_005fform_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/applications/users/UsersResource/resetpw_email_form.jsp");
 
 		mapServlet(
-				"jsp.WEB_002dINF.jsp.org.usergrid.rest.application.users.UsersResource.resetpw_005femail_005fsuccess_jsp",
-				"/WEB-INF/jsp/org/usergrid/rest/application/users/UsersResource/resetpw_email_success.jsp");
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UsersResource.resetpw_005femail_005fsuccess_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/applications/users/UsersResource/resetpw_email_success.jsp");
 
 		mapServlet(
-				"jsp.WEB_002dINF.jsp.org.usergrid.rest.application.users.UserResource.activate_jsp",
-				"/WEB-INF/jsp/org/usergrid/rest/application/users/UserResource/activate.jsp");
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UserResource.activate_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/applications/users/UserResource/activate.jsp");
 
 		mapServlet(
-				"jsp.WEB_002dINF.jsp.org.usergrid.rest.application.users.UserResource.resetpw_005femail_005fform_jsp",
-				"/WEB-INF/jsp/org/usergrid/rest/application/users/UserResource/resetpw_email_form.jsp");
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UserResource.resetpw_005femail_005fform_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/applications/users/UserResource/resetpw_email_form.jsp");
 
 		mapServlet(
-				"jsp.WEB_002dINF.jsp.org.usergrid.rest.application.users.UserResource.resetpw_005femail_005fsuccess_jsp",
-				"/WEB-INF/jsp/org/usergrid/rest/application/users/UserResource/resetpw_email_success.jsp");
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UserResource.resetpw_005femail_005fsuccess_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/applications/users/UserResource/resetpw_email_success.jsp");
 
 		mapServlet(
-				"jsp.WEB_002dINF.jsp.org.usergrid.rest.application.users.UserResource.resetpw_005fset_005fform_jsp",
-				"/WEB-INF/jsp/org/usergrid/rest/application/users/UserResource/resetpw_set_form.jsp");
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UserResource.resetpw_005fset_005fform_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/applications/users/UserResource/resetpw_set_form.jsp");
 
 		mapServlet(
-				"jsp.WEB_002dINF.jsp.org.usergrid.rest.application.users.UserResource.resetpw_005fset_005fsuccess_jsp",
-				"/WEB-INF/jsp/org/usergrid/rest/application/users/UserResource/resetpw_set_success.jsp");
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UserResource.resetpw_005fset_005fsuccess_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/applications/users/UserResource/resetpw_set_success.jsp");
+
+		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.ApplicationResource.authorize_005fform_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/applications/ApplicationResource/authorize_form.jsp");
+
+		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.ManagementResource.authorize_005fform_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/management/ManagementResource/authorize_form.jsp");
+
 	}
 
 	private void mapServlet(String cls, String mapping) {

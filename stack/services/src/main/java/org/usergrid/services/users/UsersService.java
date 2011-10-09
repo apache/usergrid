@@ -37,10 +37,21 @@
  ******************************************************************************/
 package org.usergrid.services.users;
 
+import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.usergrid.persistence.Schema.PROPERTY_EMAIL;
+import static org.usergrid.persistence.Schema.PROPERTY_PICTURE;
+import static org.usergrid.utils.ConversionUtils.string;
+
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.usergrid.services.AbstractCollectionService;
+import org.usergrid.services.ServiceContext;
+import org.usergrid.services.ServiceResults;
 
 public class UsersService extends AbstractCollectionService {
 
@@ -59,6 +70,28 @@ public class UsersService extends AbstractCollectionService {
 
 		addEntityDictionaries(Arrays.asList("rolenames", "permissions"));
 
+	}
+
+	@Override
+	public ServiceResults postCollection(ServiceContext context)
+			throws Exception {
+		Iterator<Map<String, Object>> i = context.getPayload()
+				.payloadIterator();
+		while (i.hasNext()) {
+			Map<String, Object> p = i.next();
+			setGravatar(p);
+		}
+		return super.postCollection(context);
+	}
+
+	public void setGravatar(Map<String, Object> p) {
+		if (isBlank(string(p.get(PROPERTY_PICTURE)))
+				&& isNotBlank(string(p.get("email")))) {
+			p.put(PROPERTY_PICTURE,
+					"http://www.gravatar.com/avatar/"
+							+ md5Hex(string(p.get(PROPERTY_EMAIL)).trim()
+									.toLowerCase()));
+		}
 	}
 
 }

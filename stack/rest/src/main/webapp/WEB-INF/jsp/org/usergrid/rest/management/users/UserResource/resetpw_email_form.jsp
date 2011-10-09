@@ -9,9 +9,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 	<title>Reset Password</title>
-	<style type="text/css">
-		<jsp:include page="/css/styles.css" />
-	</style>
+	<link rel="stylesheet" type="text/css" href="../../css/styles.css" />
 </head>
 <body>
 	<div class="dialog-area">
