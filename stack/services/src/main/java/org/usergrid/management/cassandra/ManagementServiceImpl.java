@@ -42,6 +42,11 @@ import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.usergrid.persistence.CredentialsInfo.checkPassword;
+import static org.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
+import static org.usergrid.persistence.CredentialsInfo.mongoPasswordCredentials;
+import static org.usergrid.persistence.CredentialsInfo.passwordCredentials;
+import static org.usergrid.persistence.CredentialsInfo.plainTextCredentials;
 import static org.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
 import static org.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.usergrid.persistence.Schema.PROPERTY_PATH;
@@ -60,9 +65,6 @@ import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.ListUtils.anyNull;
 import static org.usergrid.utils.MailUtils.getMailTo;
 import static org.usergrid.utils.MailUtils.sendHtmlMail;
-import static org.usergrid.utils.PasswordUtils.checkPassword;
-import static org.usergrid.utils.PasswordUtils.hashPassword;
-import static org.usergrid.utils.PasswordUtils.mongoPassword;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterLast;
 
 import java.nio.ByteBuffer;
@@ -91,6 +93,7 @@ import org.usergrid.management.exceptions.ExpiredAccessTokenException;
 import org.usergrid.management.exceptions.IncorrectPasswordException;
 import org.usergrid.management.exceptions.InvalidAccessTokenException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
+import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
@@ -386,9 +389,10 @@ public class ManagementServiceImpl implements ManagementService {
 		em.addToCollection(organizationEntity, "users", new SimpleEntityRef(
 				User.ENTITY_TYPE, user.getUuid()));
 
-		Map<String, String> credentials = new HashMap<String, String>();
-		credentials.put("secret",
-				generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION));
+		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
+		credentials
+				.put("secret",
+						plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION)));
 		em.addMapToDictionary(organizationEntity, DICTIONARY_CREDENTIALS,
 				credentials);
 
@@ -459,9 +463,11 @@ public class ManagementServiceImpl implements ManagementService {
 		properties.put("name", application.getName());
 		Entity app = em.create(applicationId, APPLICATION_INFO, null);
 
-		Map<String, String> credentials = new HashMap<String, String>();
-		credentials.put("secret",
-				generateOAuthSecretKey(AuthPrincipalType.APPLICATION));
+		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
+		credentials
+				.put("secret",
+						CredentialsInfo
+								.plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.APPLICATION)));
 		em.addMapToDictionary(app, DICTIONARY_CREDENTIALS, credentials);
 
 		addApplicationToOrganization(organizationId, applicationId);
@@ -629,11 +635,13 @@ public class ManagementServiceImpl implements ManagementService {
 		user.setDisabled(disabled);
 		user = em.create(user);
 
-		Map<String, String> credentials = new HashMap<String, String>();
-		credentials.put("password", hashPassword(password));
-		credentials.put("mongo_pwd", mongoPassword(username, password));
-		credentials.put("secret",
-				generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER));
+		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
+		credentials.put("password", passwordCredentials(password));
+		credentials.put("mongo_pwd",
+				mongoPasswordCredentials(username, password));
+		credentials
+				.put("secret",
+						plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
 		em.addMapToDictionary(user, DICTIONARY_CREDENTIALS, credentials);
 
 		UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
@@ -862,13 +870,14 @@ public class ManagementServiceImpl implements ManagementService {
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		Entity user = em.get(userId);
-		if (!checkPassword(oldPassword, (String) em.getDictionaryElementValue(
-				user, DICTIONARY_CREDENTIALS, "password"))) {
+		if (!checkPassword(oldPassword,
+				(CredentialsInfo) em.getDictionaryElementValue(user,
+						DICTIONARY_CREDENTIALS, "password"))) {
 			logger.info("Old password doesn't match");
 			throw new IncorrectPasswordException();
 		}
 		em.addToDictionary(user, DICTIONARY_CREDENTIALS, "password",
-				hashPassword(newPassword));
+				passwordCredentials(newPassword));
 	}
 
 	@Override
@@ -881,7 +890,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		em.addToDictionary(new SimpleEntityRef(User.ENTITY_TYPE, userId),
-				DICTIONARY_CREDENTIALS, "password", hashPassword(newPassword));
+				DICTIONARY_CREDENTIALS, "password",
+				passwordCredentials(newPassword));
 	}
 
 	@Override
@@ -894,8 +904,9 @@ public class ManagementServiceImpl implements ManagementService {
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		Entity user = em.get(userId);
-		if (checkPassword(password, (String) em.getDictionaryElementValue(user,
-				DICTIONARY_CREDENTIALS, "password"))) {
+		if (checkPassword(password,
+				(CredentialsInfo) em.getDictionaryElementValue(user,
+						DICTIONARY_CREDENTIALS, "password"))) {
 			return true;
 		}
 
@@ -913,8 +924,9 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-		if (checkPassword(password, (String) em.getDictionaryElementValue(user,
-				DICTIONARY_CREDENTIALS, "password"))) {
+		if (checkPassword(password,
+				(CredentialsInfo) em.getDictionaryElementValue(user,
+						DICTIONARY_CREDENTIALS, "password"))) {
 			userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
 			if (!userInfo.isActivated()) {
 				throw new UnactivatedAdminUserException();
@@ -1229,9 +1241,10 @@ public class ManagementServiceImpl implements ManagementService {
 		Entity applicationEntity = em.create(applicationId, APPLICATION_INFO,
 				properties);
 
-		Map<String, String> credentials = new HashMap<String, String>();
-		credentials.put("secret",
-				generateOAuthSecretKey(AuthPrincipalType.APPLICATION));
+		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
+		credentials
+				.put("secret",
+						plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.APPLICATION)));
 		em.addMapToDictionary(applicationEntity, DICTIONARY_CREDENTIALS,
 				credentials);
 
@@ -1391,15 +1404,16 @@ public class ManagementServiceImpl implements ManagementService {
 						: MANAGEMENT_APPLICATION_ID);
 		if (AuthPrincipalType.ORGANIZATION.equals(type)
 				|| AuthPrincipalType.APPLICATION.equals(type)) {
-			return (String) em
+			return getCredentialsSecret((CredentialsInfo) em
 					.getDictionaryElementValue(
 							new SimpleEntityRef(type.getEntityType(), id),
-							DICTIONARY_CREDENTIALS, "secret");
+							DICTIONARY_CREDENTIALS, "secret"));
 		} else if (AuthPrincipalType.ADMIN_USER.equals(type)
 				|| AuthPrincipalType.APPLICATION_USER.equals(type)) {
-			return (String) em.getDictionaryElementValue(new SimpleEntityRef(
-					type.getEntityType(), id), DICTIONARY_CREDENTIALS,
-					"password");
+			return getCredentialsSecret((CredentialsInfo) em
+					.getDictionaryElementValue(
+							new SimpleEntityRef(type.getEntityType(), id),
+							DICTIONARY_CREDENTIALS, "password"));
 		}
 		throw new IllegalArgumentException(
 				"Must specify an admin user, organization or application principal");
@@ -1436,7 +1450,7 @@ public class ManagementServiceImpl implements ManagementService {
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		String secret = generateOAuthSecretKey(type);
 		em.addToDictionary(new SimpleEntityRef(type.getEntityType(), id),
-				DICTIONARY_CREDENTIALS, "secret", secret);
+				DICTIONARY_CREDENTIALS, "secret", plainTextCredentials(secret));
 		return secret;
 	}
 
@@ -1489,6 +1503,12 @@ public class ManagementServiceImpl implements ManagementService {
 			}
 		}
 		return access_info;
+	}
+
+	public AccessInfo authorizeAppUser(String clientType, String clientId,
+			String clientSecret) throws Exception {
+
+		return null;
 	}
 
 	@Override
@@ -1862,7 +1882,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 		EntityManager em = emf.getEntityManager(applicationId);
 		em.addToDictionary(new SimpleEntityRef(User.ENTITY_TYPE, userId),
-				DICTIONARY_CREDENTIALS, "password", hashPassword(newPassword));
+				DICTIONARY_CREDENTIALS, "password",
+				passwordCredentials(newPassword));
 	}
 
 	@Override
@@ -1874,13 +1895,14 @@ public class ManagementServiceImpl implements ManagementService {
 
 		EntityManager em = emf.getEntityManager(applicationId);
 		Entity user = em.get(userId);
-		if (!checkPassword(oldPassword, (String) em.getDictionaryElementValue(
-				user, DICTIONARY_CREDENTIALS, "password"))) {
+		if (!checkPassword(oldPassword,
+				(CredentialsInfo) em.getDictionaryElementValue(user,
+						DICTIONARY_CREDENTIALS, "password"))) {
 			logger.info("Old password doesn't match");
 			throw new IncorrectPasswordException();
 		}
 		em.addToDictionary(user, DICTIONARY_CREDENTIALS, "password",
-				hashPassword(newPassword));
+				passwordCredentials(newPassword));
 	}
 
 	@Override
@@ -1893,8 +1915,9 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 
 		EntityManager em = emf.getEntityManager(applicationId);
-		if (checkPassword(password, (String) em.getDictionaryElementValue(user,
-				DICTIONARY_CREDENTIALS, "password"))) {
+		if (checkPassword(password,
+				(CredentialsInfo) em.getDictionaryElementValue(user,
+						DICTIONARY_CREDENTIALS, "password"))) {
 			if (!user.activated()) {
 				throw new UnactivatedAdminUserException();
 			}

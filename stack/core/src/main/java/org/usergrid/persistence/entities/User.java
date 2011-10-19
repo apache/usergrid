@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.TypedEntity;
 import org.usergrid.persistence.annotations.EntityCollection;
 import org.usergrid.persistence.annotations.EntityDictionary;
@@ -78,8 +79,8 @@ public class User extends TypedEntity {
 	@EntityDictionary(keyType = java.lang.String.class)
 	protected Set<String> permissions;
 
-	@EntityDictionary(keyType = java.lang.String.class, valueType = java.lang.String.class)
-	protected Map<String, String> credentials;
+	@EntityDictionary(keyType = java.lang.String.class, valueType = CredentialsInfo.class)
+	protected Map<String, CredentialsInfo> credentials;
 
 	@EntityCollection(type = "group", linkedCollection = "users", propertiesIndexed = { "path" }, indexingDynamicProperties = true)
 	protected List<UUID> groups;
@@ -230,11 +231,11 @@ public class User extends TypedEntity {
 	}
 
 	@JsonSerialize(include = Inclusion.NON_NULL)
-	public Map<String, String> getCredentials() {
+	public Map<String, CredentialsInfo> getCredentials() {
 		return credentials;
 	}
 
-	public void setCredentials(Map<String, String> credentials) {
+	public void setCredentials(Map<String, CredentialsInfo> credentials) {
 		this.credentials = credentials;
 	}
 

@@ -39,16 +39,22 @@ package org.usergrid.utils;
 
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 
+import java.security.NoSuchAlgorithmException;
+
 import org.apache.commons.codec.digest.DigestUtils;
-import org.usergrid.security.utils.BCrypt;
 
 public class PasswordUtils {
 
 	public static boolean USE_BCRYPT = false;
 
-	public static byte[] computeHash(String x) throws Exception {
+	public static byte[] computeHash(String x) {
 		java.security.MessageDigest d = null;
-		d = java.security.MessageDigest.getInstance("SHA-1");
+		try {
+			d = java.security.MessageDigest.getInstance("SHA-1");
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+			return null;
+		}
 		d.reset();
 		d.update(x.getBytes());
 		return d.digest();
