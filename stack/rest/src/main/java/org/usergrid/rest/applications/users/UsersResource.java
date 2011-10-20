@@ -176,11 +176,14 @@ public class UsersResource extends ServiceResource {
 	public ApiResponse executePost(@Context UriInfo ui, Object json)
 			throws Exception {
 		String password = null;
+		String pin = null;
 		if (json instanceof Map) {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> map = (Map<String, Object>) json;
 			password = (String) map.get("password");
 			map.remove("password");
+			pin = (String) map.get("pin");
+			map.remove("pin");
 			map.put("activated", true);
 		} else if (json instanceof List) {
 			@SuppressWarnings("unchecked")
@@ -190,17 +193,27 @@ public class UsersResource extends ServiceResource {
 					@SuppressWarnings("unchecked")
 					Map<String, Object> map = (Map<String, Object>) obj;
 					map.remove("password");
+					map.remove("pin");
 				}
 			}
 		}
 
 		ApiResponse response = super.executePost(ui, json);
 
-		if (isNotBlank(password) && (response.getEntities() != null)
+		if ((response.getEntities() != null)
 				&& (response.getEntities().size() == 1)) {
+
 			Entity user = response.getEntities().get(0);
-			management.setAppUserPassword(getApplicationId(), user.getUuid(),
-					password);
+
+			if (isNotBlank(password)) {
+				management.setAppUserPassword(getApplicationId(),
+						user.getUuid(), password);
+			}
+
+			if (isNotBlank(pin)) {
+				management.setAppUserPin(getApplicationId(), user.getUuid(),
+						pin);
+			}
 		}
 		return response;
 	}

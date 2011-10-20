@@ -59,11 +59,13 @@ import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.JsonNode;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.applications.ServiceResource;
+import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 
 import com.sun.jersey.api.view.Viewable;
 
@@ -106,6 +108,63 @@ public class UserResource extends ServiceResource {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user password");
+
+		return response;
+	}
+
+	@GET
+	@Path("sendpin")
+	public ApiResponse sendPin(@Context UriInfo ui) throws Exception {
+
+		management.sendAppUserPin(getApplicationId(), getUser().getUuid());
+
+		ApiResponse response = new ApiResponse(ui);
+		response.setAction("retrieve user pin");
+
+		return response;
+	}
+
+	@GET
+	@Path("setpin")
+	@RequireApplicationAccess
+	public ApiResponse setPin(@Context UriInfo ui, @QueryParam("pin") String pin)
+			throws Exception {
+
+		management.setAppUserPin(getApplicationId(), getUser().getUuid(), pin);
+
+		ApiResponse response = new ApiResponse(ui);
+		response.setAction("set user pin");
+
+		return response;
+	}
+
+	@POST
+	@Path("setpin")
+	@Consumes("application/x-www-form-urlencoded")
+	@RequireApplicationAccess
+	public ApiResponse postPin(@Context UriInfo ui, @FormParam("pin") String pin)
+			throws Exception {
+
+		management.setAppUserPin(getApplicationId(), getUser().getUuid(), pin);
+
+		ApiResponse response = new ApiResponse(ui);
+		response.setAction("set user pin");
+
+		return response;
+	}
+
+	@POST
+	@Path("setpin")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public ApiResponse jsonPin(@Context UriInfo ui, JsonNode json)
+			throws Exception {
+
+		String pin = json.path("pin").getTextValue();
+		management.setAppUserPin(getApplicationId(), getUser().getUuid(), pin);
+
+		logger.info("ServiceResource.executePost");
+		ApiResponse response = new ApiResponse(ui);
+		response.setAction("set user pin");
 
 		return response;
 	}

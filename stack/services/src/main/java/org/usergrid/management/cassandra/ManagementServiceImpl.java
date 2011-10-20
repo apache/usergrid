@@ -1949,4 +1949,50 @@ public class ManagementServiceImpl implements ManagementService {
 				"activate", true);
 	}
 
+	@Override
+	public void setAppUserPin(UUID applicationId, UUID userId, String newPin)
+			throws Exception {
+		if ((userId == null) || (newPin == null)) {
+			return;
+		}
+
+		EntityManager em = emf.getEntityManager(applicationId);
+		em.addToDictionary(new SimpleEntityRef(User.ENTITY_TYPE, userId),
+				DICTIONARY_CREDENTIALS, "pin", plainTextCredentials(newPin));
+	}
+
+	@Override
+	public void sendAppUserPin(UUID applicationId, UUID userId)
+			throws Exception {
+		EntityManager em = emf.getEntityManager(applicationId);
+		User user = em.get(userId, User.class);
+		if (user == null) {
+			return;
+		}
+		if (user.getEmail() == null) {
+			return;
+		}
+		String pin = getCredentialsSecret((CredentialsInfo) em
+				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS, "pin"));
+		sendHtmlMail(properties, getMailTo(user.getEmail()),
+				"Usergrid Mailer <mailer@usergrid.com>", "Your app pin",
+				"<p>Your application pin is:</p>\n<p>" + pin + "</p>");
+
+	}
+
+	@Override
+	public User verifyAppUserPinCredentials(UUID applicationId, String name,
+			String pin) throws Exception {
+		EntityManager em = emf.getEntityManager(applicationId);
+		User user = findUserEntity(applicationId, name);
+		if (user == null) {
+			return null;
+		}
+		if (pin.equals(getCredentialsSecret((CredentialsInfo) em
+				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS, "pin")))) {
+			return user;
+		}
+		return null;
+	}
+
 }

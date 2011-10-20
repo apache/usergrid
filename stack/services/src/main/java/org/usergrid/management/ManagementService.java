@@ -328,4 +328,13 @@ public interface ManagementService {
 
 	public UserInfo getAppUserFromAccessToken(String token) throws Exception;
 
+	public void setAppUserPin(UUID applicationId, UUID userId, String newPin)
+			throws Exception;
+
+	public void sendAppUserPin(UUID applicationId, UUID userId)
+			throws Exception;
+
+	public User verifyAppUserPinCredentials(UUID applicationId, String name,
+			String pin) throws Exception;
+
 }

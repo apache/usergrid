@@ -142,6 +142,7 @@ public class ApplicationResource extends ServiceResource {
 			@QueryParam("grant_type") String grant_type,
 			@QueryParam("username") String username,
 			@QueryParam("password") String password,
+			@QueryParam("pin") String pin,
 			@QueryParam("client_id") String client_id,
 			@QueryParam("client_secret") String client_secret,
 			@QueryParam("code") String code,
@@ -172,6 +173,12 @@ public class ApplicationResource extends ServiceResource {
 				try {
 					user = management.verifyAppUserPasswordCredentials(
 							services.getApplicationId(), username, password);
+				} catch (Exception e1) {
+				}
+			} else if ("pin".equals(grant_type)) {
+				try {
+					user = management.verifyAppUserPinCredentials(
+							services.getApplicationId(), username, pin);
 				} catch (Exception e1) {
 				}
 			} else if ("client_credentials".equals(grant_type)) {
@@ -229,6 +236,7 @@ public class ApplicationResource extends ServiceResource {
 			@FormParam("grant_type") String grant_type,
 			@FormParam("username") String username,
 			@FormParam("password") String password,
+			@FormParam("pin") String pin,
 			@FormParam("client_id") String client_id,
 			@FormParam("client_secret") String client_secret,
 			@FormParam("code") String code,
@@ -236,7 +244,7 @@ public class ApplicationResource extends ServiceResource {
 
 		logger.info("ApplicationResource.getAccessTokenPost");
 
-		return getAccessToken(ui, null, grant_type, username, password,
+		return getAccessToken(ui, null, grant_type, username, password, pin,
 				client_id, client_secret, code, redirect_uri);
 	}
 
