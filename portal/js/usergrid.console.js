@@ -764,8 +764,17 @@ $(document).ready(function usergrid_console_app() {
         }
     }
 
+    function checkTrue(o, t, n) {
+        if (!t) {
+            o.addClass("ui-state-error");
+            updateTips(n);
+        }
+        return t;
+    }
+
     var new_admin_email = $("#new-admin-email");
     var new_admin_password = $("#new-admin-password");
+    var new_admin_password_confirm = $("#new-admin-password-confirm");
     var allNewAdminFields = $([]).add(new_admin_email).add(new_admin_password);
     var tips = $(".validateTips");
 
@@ -798,6 +807,10 @@ $(document).ready(function usergrid_console_app() {
                 passwordRegex,
                 "Password field only allows : a-z, 0-9, @, #, $, %, ^, &");
 
+                bValid = bValid && checkTrue(new_admin_password,
+                new_admin_password.val() == new_admin_password_confirm.val(),
+                "Passwords do not match");
+
                 if (bValid) {
                     createAdmin(new_admin_email.val(), new_admin_password.val());
                     $(this).dialog("close");
@@ -812,10 +825,10 @@ $(document).ready(function usergrid_console_app() {
         }
     });
 
-    function newOrganization() {
+    function newAdministrator() {
         $("#dialog-form-new-admin").dialog("open");
     }
-    window.usergrid.console.newOrganization = newOrganization;
+    window.usergrid.console.newAdministrator = newAdministrator;
 
     var new_application_name = $("#new-application-name");
     var allNewApplicationFields = $([]).add(new_application_name);
