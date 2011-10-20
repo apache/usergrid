@@ -18,12 +18,16 @@
  ******************************************************************************/
 package org.usergrid.utils;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.node.JsonNodeFactory;
+import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 
 public class JsonUtilsTest {
@@ -68,4 +72,15 @@ public class JsonUtilsTest {
 			logger.info(e.getKey() + " = " + e.getValue());
 		}
 	}
+
+	@Test
+	public void testNormalize() {
+		ObjectNode node = JsonNodeFactory.instance.objectNode();
+		node.put("foo", "bar");
+
+		Object o = JsonUtils.normalizeJsonTree(node);
+		assertEquals(Map.class, o.getClass());
+
+	}
+
 }

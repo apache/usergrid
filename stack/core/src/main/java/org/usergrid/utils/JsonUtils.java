@@ -243,6 +243,8 @@ public class JsonUtils {
 			return ((Integer) obj).longValue();
 		} else if (obj instanceof BigInteger) {
 			return ((BigInteger) obj).longValue();
+		} else if (obj instanceof JsonNode) {
+			return mapper.convertValue(obj, Object.class);
 		}
 		return obj;
 	}

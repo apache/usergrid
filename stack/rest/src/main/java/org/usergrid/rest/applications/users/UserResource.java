@@ -156,6 +156,7 @@ public class UserResource extends ServiceResource {
 	@POST
 	@Path("setpin")
 	@Consumes(MediaType.APPLICATION_JSON)
+	@RequireApplicationAccess
 	public ApiResponse jsonPin(@Context UriInfo ui, JsonNode json)
 			throws Exception {
 
@@ -244,7 +245,8 @@ public class UserResource extends ServiceResource {
 		if (user == null) {
 			EntityManager em = getServices().getEntityManager();
 			try {
-				user = (User) em.get(em.getUserByIdentifier(userIdentifier));
+				user = em.get(em.getUserByIdentifier(userIdentifier),
+						User.class);
 			} catch (Exception e) {
 				logger.error("Unable go get user", e);
 			}
