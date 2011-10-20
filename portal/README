@@ -1,7 +1,7 @@
 Javascript-based console application for Usergrid
 
 Does not need local server installation to work with and can be run from
-filesystem. Set FORCE_PROD_API=true in usergrid.console.js to force it to use
+filesystem. Set FORCE_PUBLIC_API=true in usergrid.client.js to force it to use
 the production API server rather than a local one.
 
 Note that while both Safari and Firefox can run this from your local

@@ -8,12 +8,15 @@ var usergrid = usergrid || {};
  * @class Represents a Usergrid client. 
  * @param {string} applicationId The id of the application (optional)
  */
-usergrid.Client = function(applicationId, clientId, clientSecret) {
+usergrid.Client = function(options) {
     //This code block *WILL* load before the document is complete
     /** @property applicationId */
-    this.applicationId = applicationId || null;
-    this.clientId = clientId || null;
-    this.clientSecret = clientSecret || null;
+
+    if (!options) options = {};
+    
+    this.applicationId = options.applicationId || null;
+    this.clientId = options.clientId || null;
+    this.clientSecret = options.clientSecret || null;
 
     var self = this;
 
@@ -55,6 +58,10 @@ usergrid.Client = function(applicationId, clientId, clientSecret) {
 
     if (query_params.api_url) {
         this.apiUrl = query_params.api_url;
+    }
+
+    if (options.apiUrl) {
+        this.apiUrl = options.apiUrl;
     }
 
     /** @property resetPasswordUrl */
@@ -1121,17 +1128,25 @@ usergrid.Client = function(applicationId, clientId, clientSecret) {
     }
     this.Query = Query;
 
-    this.onAutoLogin = null;
-    if (query_params.access_token && query_params.admin_email) {
+    function handleAutoLogin(email, token) {
         logout();
-        loginWithAccessToken(query_params.admin_email, query_params.access_token,
+        loginWithAccessToken(email, token,
         function(response) {
             console.log("Auto-logged in");
             if (self.onAutoLogin) self.onAutoLogin();
         },
         function() {
-	        logout();
+            logout();
         });
+    }
+
+    this.onAutoLogin = null;
+    if (query_params.access_token && query_params.admin_email) {
+        handleAutoLogin(query_params.admin_email, query_params.access_token);
+        return;
+    }
+    else if (options.accessToken && options.adminEmail) {
+        handleAutoLogin(options.adminEmail, options.accessToken);
         return;
     }
 
