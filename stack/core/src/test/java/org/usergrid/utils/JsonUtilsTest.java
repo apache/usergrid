@@ -79,7 +79,7 @@ public class JsonUtilsTest {
 		node.put("foo", "bar");
 
 		Object o = JsonUtils.normalizeJsonTree(node);
-		assertEquals(Map.class, o.getClass());
+		assertEquals(java.util.LinkedHashMap.class, o.getClass());
 
 	}
 
