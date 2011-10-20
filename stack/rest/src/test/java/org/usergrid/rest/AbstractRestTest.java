@@ -21,7 +21,7 @@ import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerException;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 
-public class AbstractRestTest extends JerseyTest {
+public abstract class AbstractRestTest extends JerseyTest {
 
 	private static Logger logger = LoggerFactory
 			.getLogger(AbstractRestTest.class);
