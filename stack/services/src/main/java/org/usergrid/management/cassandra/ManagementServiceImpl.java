@@ -63,7 +63,6 @@ import static org.usergrid.services.ServiceParameter.parameters;
 import static org.usergrid.services.ServicePayload.payload;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.ListUtils.anyNull;
-import static org.usergrid.utils.MailUtils.getMailTo;
 import static org.usergrid.utils.MailUtils.sendHtmlMail;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterLast;
 
@@ -1592,7 +1591,7 @@ public class ManagementServiceImpl implements ManagementService {
 				.getProperty("usergrid.user.resetpw.url"), user.getUuid()
 				.toString())
 				+ "?token=" + token;
-		sendHtmlMail(properties, user.getMailTo(),
+		sendHtmlMail(properties, user.getDisplayEmailAddress(),
 				"Usergrid Mailer <mailer@usergrid.com>", "Password Reset",
 				"<p>To reset your password, click here:</p>\n<p><a href=\""
 						+ reset_url + "\">" + reset_url + "</a></p>");
@@ -1682,7 +1681,7 @@ public class ManagementServiceImpl implements ManagementService {
 		List<UserInfo> users = getAdminUsersForOrganization(organization
 				.getUuid());
 		for (UserInfo user : users) {
-			sendHtmlMail(properties, user.getMailTo(),
+			sendHtmlMail(properties, user.getDisplayEmailAddress(),
 					"Usergrid Mailer <mailer@usergrid.com>", subject, html);
 		}
 
@@ -1725,7 +1724,7 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public void sendAdminUserEmail(UserInfo user, String subject, String html)
 			throws Exception {
-		sendHtmlMail(properties, user.getMailTo(),
+		sendHtmlMail(properties, user.getDisplayEmailAddress(),
 				"Usergrid Mailer <mailer@usergrid.com>", subject, html);
 
 	}
@@ -1844,7 +1843,7 @@ public class ManagementServiceImpl implements ManagementService {
 				.getProperty("usergrid.user.resetpw.url"), user.getUuid()
 				.toString())
 				+ "?token=" + token;
-		sendHtmlMail(properties, getMailTo(user.getEmail()),
+		sendHtmlMail(properties, user.getDisplayEmailAddress(),
 				"Usergrid Mailer <mailer@usergrid.com>", "Password Reset",
 				"<p>To reset your password, click here:</p>\n<p><a href=\""
 						+ reset_url + "\">" + reset_url + "</a></p>");
@@ -1938,7 +1937,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 	public void sendAppUserEmail(User user, String subject, String html)
 			throws Exception {
-		sendHtmlMail(properties, getMailTo(user.getEmail()),
+		sendHtmlMail(properties, user.getDisplayEmailAddress(),
 				"Usergrid Mailer <mailer@usergrid.com>", subject, html);
 
 	}
@@ -1974,7 +1973,7 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 		String pin = getCredentialsSecret((CredentialsInfo) em
 				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS, "pin"));
-		sendHtmlMail(properties, getMailTo(user.getEmail()),
+		sendHtmlMail(properties, user.getDisplayEmailAddress(),
 				"Usergrid Mailer <mailer@usergrid.com>", "Your app pin",
 				"<p>Your application pin is:</p>\n<p>" + pin + "</p>");
 

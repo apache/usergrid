@@ -37,6 +37,7 @@
  ******************************************************************************/
 package org.usergrid.management;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.persistence.Schema.PROPERTY_ACTIVATED;
 import static org.usergrid.persistence.Schema.PROPERTY_DISABLED;
 import static org.usergrid.persistence.Schema.PROPERTY_EMAIL;
@@ -110,8 +111,8 @@ public class UserInfo {
 		return id + "/" + name + "/" + email;
 	}
 
-	public String getMailTo() {
-		if (name != null) {
+	public String getDisplayEmailAddress() {
+		if (isNotBlank(name)) {
 			return name + " <" + email + ">";
 		}
 		return email;

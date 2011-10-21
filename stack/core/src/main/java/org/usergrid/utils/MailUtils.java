@@ -48,7 +48,7 @@ public class MailUtils {
 		return filter(properties, "mail.");
 	}
 
-	public static String getMailTo(String email) {
+	public static String getHtmlMailTo(String email) {
 		return "<a href=\"mailto:" + email + "\">";
 	}
 

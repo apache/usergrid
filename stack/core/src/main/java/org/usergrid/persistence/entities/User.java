@@ -18,6 +18,8 @@
  ******************************************************************************/
 package org.usergrid.persistence.entities;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +27,7 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.usergrid.persistence.CredentialsInfo;
@@ -125,6 +128,14 @@ public class User extends TypedEntity {
 
 	@JsonSerialize(include = Inclusion.NON_NULL)
 	public String getEmail() {
+		return email;
+	}
+
+	@JsonIgnore
+	public String getDisplayEmailAddress() {
+		if (isNotBlank(name)) {
+			return name + " <" + email + ">";
+		}
 		return email;
 	}
 
