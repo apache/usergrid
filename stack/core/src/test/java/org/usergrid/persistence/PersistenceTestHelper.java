@@ -18,6 +18,8 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+import java.util.Properties;
+
 import org.usergrid.mq.QueueManagerFactory;
 
 public interface PersistenceTestHelper {
@@ -29,6 +31,10 @@ public interface PersistenceTestHelper {
 	public abstract QueueManagerFactory getMessageManagerFactory();
 
 	public abstract void setMessageManagerFactory(QueueManagerFactory mmf);
+
+	public abstract Properties getProperties();
+
+	public abstract void setProperties(Properties properties);
 
 	public abstract void setup() throws Exception;
 

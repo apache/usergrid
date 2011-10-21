@@ -37,21 +37,25 @@
  ******************************************************************************/
 package org.usergrid.management;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
-import javax.persistence.EntityManagerFactory;
-
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 
 public class OrganizationTest {
@@ -63,8 +67,6 @@ public class OrganizationTest {
 
 	static ManagementTestHelper helper;
 
-	static EntityManagerFactory entityManagerFactory;
-
 	@BeforeClass
 	public static void setup() throws Exception {
 		logger.info("setup");
@@ -72,7 +74,6 @@ public class OrganizationTest {
 		helper = new ManagementTestHelperImpl();
 		// helper.setClient(this);
 		helper.setup();
-		entityManagerFactory = helper.getJpaEntityManagerFactory();
 		management = helper.getManagementService();
 	}
 
@@ -89,20 +90,21 @@ public class OrganizationTest {
 				"ed@anuff.com", "test", false, false, false);
 		assertNotNull(user);
 
-		OrganizationInfo organization = management.createOrganization("ed-organization",
-				user);
+		OrganizationInfo organization = management.createOrganization(
+				"ed-organization", user);
 		assertNotNull(organization);
 
 		Map<UUID, String> userOrganizations = management
 				.getOrganizationsForAdminUser(user.getUuid());
-		assertEquals("wrong number of organizations", 1, userOrganizations.size());
+		assertEquals("wrong number of organizations", 1,
+				userOrganizations.size());
 
-		List<UserInfo> users = management.getAdminUsersForOrganization(organization
-				.getUuid());
+		List<UserInfo> users = management
+				.getAdminUsersForOrganization(organization.getUuid());
 		assertEquals("wrong number of users", 1, users.size());
 
-		UUID applicationId = management.createApplication(organization.getUuid(),
-				"ed-application");
+		UUID applicationId = management.createApplication(
+				organization.getUuid(), "ed-application");
 		assertNotNull(applicationId);
 
 		Map<UUID, String> applications = management
@@ -112,15 +114,17 @@ public class OrganizationTest {
 		OrganizationInfo organization2 = management
 				.getOrganizationForApplication(applicationId);
 		assertNotNull(organization2);
-		assertEquals("wrong organization name", "ed-organization", organization2.getName());
+		assertEquals("wrong organization name", "ed-organization",
+				organization2.getName());
 
-		boolean verified = management.verifyAdminUserPassword(user.getUuid(), "test");
+		boolean verified = management.verifyAdminUserPassword(user.getUuid(),
+				"test");
 		assertTrue(verified);
 
 		management.activateOrganization(user.getUuid());
 
-		UserInfo u = management.verifyAdminUserPasswordCredentials(user.getUuid()
-				.toString(), "test");
+		UserInfo u = management.verifyAdminUserPasswordCredentials(user
+				.getUuid().toString(), "test");
 		assertNotNull(u);
 
 		String token = management.getAccessTokenForAdminUser(user.getUuid());
@@ -129,5 +133,45 @@ public class OrganizationTest {
 		UUID userId = management.getAdminUserIdFromAccessToken(token);
 		assertEquals(user.getUuid(), userId);
 
+	}
+
+	@Test
+	public void testEmailStrings() {
+
+		testProperty(ManagementServiceImpl.EMAIL_ADMIN_ACTIVATED, false);
+		testProperty(ManagementServiceImpl.EMAIL_ADMIN_ACTIVATION, true);
+		testProperty(ManagementServiceImpl.EMAIL_ADMIN_PASSWORD_RESET, true);
+		testProperty(ManagementServiceImpl.EMAIL_ADMIN_USER_ACTIVATION, true);
+		testProperty(ManagementServiceImpl.EMAIL_ORGANIZATION_ACTIVATED, true);
+		testProperty(ManagementServiceImpl.EMAIL_ORGANIZATION_ACTIVATION, true);
+		testProperty(ManagementServiceImpl.EMAIL_SYSADMIN_ADMIN_ACTIVATION,
+				true);
+		testProperty(
+				ManagementServiceImpl.EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION,
+				true);
+		testProperty(ManagementServiceImpl.EMAIL_USER_ACTIVATED, false);
+		testProperty(ManagementServiceImpl.EMAIL_USER_ACTIVATION, true);
+		testProperty(ManagementServiceImpl.EMAIL_USER_PASSWORD_RESET, true);
+		testProperty(ManagementServiceImpl.EMAIL_USER_PIN_REQUEST, true);
+
+	}
+
+	public void testProperty(String propertyName, boolean containsSubstitution) {
+		Properties properties = helper.getProperties();
+		String propertyValue = properties.getProperty(propertyName);
+		assertTrue(propertyName + " was not found", isNotBlank(propertyValue));
+		logger.info(propertyName + "=" + propertyValue);
+
+		if (containsSubstitution) {
+			Map<String, String> valuesMap = new HashMap<String, String>();
+			valuesMap.put("reset_url", "test-url");
+			valuesMap.put("organization_name", "test-org");
+			valuesMap.put("activation_url", "test-url");
+			valuesMap.put("user_email", "test-email");
+			valuesMap.put("pin", "test-pin");
+			StrSubstitutor sub = new StrSubstitutor(valuesMap);
+			String resolvedString = sub.replace(propertyValue);
+			assertNotSame(propertyValue, resolvedString);
+		}
 	}
 }

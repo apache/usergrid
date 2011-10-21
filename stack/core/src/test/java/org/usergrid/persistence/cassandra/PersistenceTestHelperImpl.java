@@ -25,6 +25,9 @@ package org.usergrid.persistence.cassandra;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Properties;
+
 import me.prettyprint.cassandra.testutils.EmbeddedServerHelper;
 
 import org.apache.log4j.Logger;
@@ -50,6 +53,7 @@ public class PersistenceTestHelperImpl implements PersistenceTestHelper {
 
 	EntityManagerFactory emf;
 	QueueManagerFactory mmf;
+	Properties properties;
 
 	public boolean forceQuit = FORCE_QUIT;
 
@@ -143,6 +147,17 @@ public class PersistenceTestHelperImpl implements PersistenceTestHelper {
 	@Autowired
 	public void setMessageManagerFactory(QueueManagerFactory mmf) {
 		this.mmf = mmf;
+	}
+
+	@Override
+	public Properties getProperties() {
+		return properties;
+	}
+
+	@Override
+	@Autowired
+	public void setProperties(Properties properties) {
+		this.properties = properties;
 	}
 
 	public boolean isForceQuit() {

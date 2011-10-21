@@ -48,6 +48,9 @@ package org.usergrid.management.cassandra;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Properties;
+
 import me.prettyprint.cassandra.testutils.EmbeddedServerHelper;
 
 import org.apache.log4j.Logger;
@@ -78,6 +81,8 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
 	javax.persistence.EntityManagerFactory jpaEmf;
 
 	ManagementService management;
+
+	Properties properties;
 
 	public boolean forceQuit = FORCE_QUIT;
 
@@ -175,6 +180,17 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
 	@Autowired
 	public void setManagementService(ManagementService management) {
 		this.management = management;
+	}
+
+	@Override
+	public Properties getProperties() {
+		return properties;
+	}
+
+	@Override
+	@Autowired
+	public void setProperties(Properties properties) {
+		this.properties = properties;
 	}
 
 	public boolean isForceQuit() {

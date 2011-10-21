@@ -37,6 +37,8 @@
  ******************************************************************************/
 package org.usergrid.management;
 
+import java.util.Properties;
+
 import org.usergrid.persistence.EntityManagerFactory;
 
 public interface ManagementTestHelper {
@@ -57,5 +59,9 @@ public interface ManagementTestHelper {
 	public abstract void setup() throws Exception;
 
 	public abstract void teardown() throws Exception;
+
+	public abstract Properties getProperties();
+
+	public abstract void setProperties(Properties properties);
 
 }

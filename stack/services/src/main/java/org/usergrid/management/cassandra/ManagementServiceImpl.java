@@ -64,6 +64,7 @@ import static org.usergrid.services.ServicePayload.payload;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.ListUtils.anyNull;
 import static org.usergrid.utils.MailUtils.sendHtmlMail;
+import static org.usergrid.utils.MapUtils.hashMap;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterLast;
 
 import java.nio.ByteBuffer;
@@ -77,6 +78,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.log4j.Logger;
 import org.apache.shiro.UnavailableSecurityManagerException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,6 +139,23 @@ public class ManagementServiceImpl implements ManagementService {
 	public static final long MAX_TOKEN_AGE = 24 * 60 * 60 * 1000;
 
 	String sessionSecretSalt = TOKEN_SECRET_SALT;
+
+	public static String EMAIL_ADMIN_PASSWORD_RESET = "usergrid.management.email.admin-password-reset";
+
+	public static String EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION = "usergrid.management.email.sysadmin-organization-activation";
+	public static String EMAIL_ORGANIZATION_ACTIVATION = "usergrid.management.email.organization-activation";
+	public static String EMAIL_ORGANIZATION_ACTIVATED = "usergrid.management.email.organization-activated";
+
+	public static String EMAIL_SYSADMIN_ADMIN_ACTIVATION = "usergrid.management.email.sysadmin-admin-activation";
+	public static String EMAIL_ADMIN_ACTIVATION = "usergrid.management.email.admin-activation";
+	public static String EMAIL_ADMIN_ACTIVATED = "usergrid.management.email.admin-activated";
+
+	public static String EMAIL_ADMIN_USER_ACTIVATION = "usergrid.management.email.admin-user-activation";
+	public static String EMAIL_USER_ACTIVATION = "usergrid.management.email.user-activation";
+	public static String EMAIL_USER_ACTIVATED = "usergrid.management.email.user-activated";
+
+	public static String EMAIL_USER_PASSWORD_RESET = "usergrid.management.email.user-password-reset";
+	public static String EMAIL_USER_PIN_REQUEST = "usergrid.management.email.user-pin";
 
 	protected ServiceManagerFactory smf;
 
@@ -1583,6 +1602,11 @@ public class ManagementServiceImpl implements ManagementService {
 				User.ENTITY_TYPE, userId), "disabled"));
 	}
 
+	private String emailMsg(Map<String, String> values, String propertyName) {
+		return new StrSubstitutor(values).replace(properties
+				.getProperty(propertyName));
+	}
+
 	@Override
 	public void sendAdminUserPasswordReminderEmail(UserInfo user)
 			throws Exception {
@@ -1591,10 +1615,14 @@ public class ManagementServiceImpl implements ManagementService {
 				.getProperty("usergrid.user.resetpw.url"), user.getUuid()
 				.toString())
 				+ "?token=" + token;
-		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				"Usergrid Mailer <mailer@usergrid.com>", "Password Reset",
-				"<p>To reset your password, click here:</p>\n<p><a href=\""
-						+ reset_url + "\">" + reset_url + "</a></p>");
+
+		sendHtmlMail(
+				properties,
+				user.getDisplayEmailAddress(),
+				"Usergrid Mailer <mailer@usergrid.com>",
+				"Password Reset",
+				emailMsg(hashMap("reset_url", reset_url),
+						EMAIL_ADMIN_PASSWORD_RESET));
 
 	}
 
@@ -1640,22 +1668,26 @@ public class ManagementServiceImpl implements ManagementService {
 					+ "?token=" + token;
 			if (newOrganizationsNeedSysAdminApproval()) {
 				activation_url += "&confirm=true";
-				sendHtmlMail(properties,
+				sendHtmlMail(
+						properties,
 						properties.getProperty("usergrid.sysadmin.email"),
 						"Usergrid Mailer <mailer@usergrid.com>",
 						"Request For Organization Account Activation "
 								+ organization.getName(),
-						"<p>To activate the organization account for "
-								+ organization.getName()
-								+ ", click here:</p>\n<p><a href=\""
-								+ activation_url + "\">" + activation_url
-								+ "</a></p>");
+						emailMsg(
+								hashMap("organization_name",
+										organization.getName()).map(
+										"activation_url", activation_url),
+								EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION));
 			} else {
-				sendOrganizationEmail(organization,
+				sendOrganizationEmail(
+						organization,
 						"Organization Account Confirmation",
-						"<p>To activate your organization account, click here:</p>\n<p><a href=\""
-								+ activation_url + "\">" + activation_url
-								+ "</a></p>");
+						emailMsg(
+								hashMap("organization_name",
+										organization.getName()).map(
+										"activation_url", activation_url),
+								EMAIL_ORGANIZATION_ACTIVATION));
 			}
 		} catch (Exception e) {
 			logger.error(
@@ -1668,10 +1700,11 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public void sendOrganizationActivatedEmail(OrganizationInfo organization)
 			throws Exception {
-		sendOrganizationEmail(organization, "Organization Account Activated: "
-				+ organization.getName(), "<p>Your organization account "
-				+ organization.getName()
-				+ " has been successfully activated.</p>");
+		sendOrganizationEmail(
+				organization,
+				"Organization Account Activated: " + organization.getName(),
+				emailMsg(hashMap("organization_name", organization.getName()),
+						EMAIL_ORGANIZATION_ACTIVATED));
 
 	}
 
@@ -1696,20 +1729,23 @@ public class ManagementServiceImpl implements ManagementService {
 				+ "?token=" + token;
 		if (newAdminUsersNeedSysAdminApproval()) {
 			activation_url += "&confirm=true";
-			sendHtmlMail(properties,
+			sendHtmlMail(
+					properties,
 					properties.getProperty("usergrid.sysadmin.email"),
 					"Usergrid Mailer <mailer@usergrid.com>",
 					"Request For User Account Activation " + user.getEmail(),
-					"<p>To activate the user account for " + user.getEmail()
-							+ ", click here:</p>\n<p><a href=\""
-							+ activation_url + "\">" + activation_url
-							+ "</a></p>");
+					emailMsg(
+							hashMap("user_email", user.getEmail()).map(
+									"activation_url", activation_url),
+							EMAIL_SYSADMIN_ADMIN_ACTIVATION));
 		} else {
-			sendAdminUserEmail(user,
+			sendAdminUserEmail(
+					user,
 					"User Account Confirmation: " + user.getEmail(),
-					"<p>To activate your user account, click here:</p>\n<p><a href=\""
-							+ activation_url + "\">" + activation_url
-							+ "</a></p>");
+					emailMsg(
+							hashMap("user_email", user.getEmail()).map(
+									"activation_url", activation_url),
+							EMAIL_ADMIN_ACTIVATION));
 		}
 
 	}
@@ -1717,7 +1753,7 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public void sendAdminUserActivatedEmail(UserInfo user) throws Exception {
 		sendAdminUserEmail(user, "User Account Activated",
-				"<p>Your user account has been successfully activated.</p>");
+				properties.getProperty(EMAIL_ADMIN_ACTIVATED));
 
 	}
 
@@ -1843,10 +1879,13 @@ public class ManagementServiceImpl implements ManagementService {
 				.getProperty("usergrid.user.resetpw.url"), user.getUuid()
 				.toString())
 				+ "?token=" + token;
-		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				"Usergrid Mailer <mailer@usergrid.com>", "Password Reset",
-				"<p>To reset your password, click here:</p>\n<p><a href=\""
-						+ reset_url + "\">" + reset_url + "</a></p>");
+		sendHtmlMail(
+				properties,
+				user.getDisplayEmailAddress(),
+				"Usergrid Mailer <mailer@usergrid.com>",
+				"Password Reset",
+				emailMsg(hashMap("reset_url", reset_url),
+						EMAIL_USER_PASSWORD_RESET));
 
 	}
 
@@ -1854,7 +1893,7 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAppUserActivatedEmail(UUID applicationId, User user)
 			throws Exception {
 		sendAppUserEmail(user, "User Account Activated",
-				"<p>Your user account has been successfully activated.</p>");
+				properties.getProperty(EMAIL_USER_ACTIVATED));
 
 	}
 
@@ -1867,9 +1906,11 @@ public class ManagementServiceImpl implements ManagementService {
 				.getProperty("usergrid.user.activation.url"), user.getUuid()
 				.toString())
 				+ "?token=" + token;
-		sendAppUserEmail(user, "User Account Confirmation: " + user.getEmail(),
-				"<p>To activate your user account, click here:</p>\n<p><a href=\""
-						+ activation_url + "\">" + activation_url + "</a></p>");
+		sendAppUserEmail(
+				user,
+				"User Account Confirmation: " + user.getEmail(),
+				emailMsg(hashMap("activation_url", activation_url),
+						EMAIL_USER_ACTIVATION));
 	}
 
 	@Override
@@ -1975,7 +2016,7 @@ public class ManagementServiceImpl implements ManagementService {
 				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS, "pin"));
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
 				"Usergrid Mailer <mailer@usergrid.com>", "Your app pin",
-				"<p>Your application pin is:</p>\n<p>" + pin + "</p>");
+				emailMsg(hashMap("pin", pin), EMAIL_USER_PIN_REQUEST));
 
 	}
 
