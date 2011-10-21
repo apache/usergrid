@@ -140,6 +140,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 	String sessionSecretSalt = TOKEN_SECRET_SALT;
 
+	public static String EMAIL_MAILER = "usergrid.management.mailer";
+
 	public static String EMAIL_ADMIN_PASSWORD_RESET = "usergrid.management.email.admin-password-reset";
 
 	public static String EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION = "usergrid.management.email.sysadmin-organization-activation";
@@ -1619,7 +1621,7 @@ public class ManagementServiceImpl implements ManagementService {
 		sendHtmlMail(
 				properties,
 				user.getDisplayEmailAddress(),
-				"Usergrid Mailer <mailer@usergrid.com>",
+				getPropertyValue(EMAIL_MAILER),
 				"Password Reset",
 				emailMsg(hashMap("reset_url", reset_url),
 						EMAIL_ADMIN_PASSWORD_RESET));
@@ -1628,13 +1630,13 @@ public class ManagementServiceImpl implements ManagementService {
 
 	@Override
 	public boolean newOrganizationsNeedSysAdminApproval() {
-		return Boolean.parseBoolean(properties
+		return parseBoolean(properties
 				.getProperty("usergrid.sysadmin.approve.organizations"));
 	}
 
 	@Override
 	public boolean newAdminUsersNeedSysAdminApproval() {
-		return Boolean.parseBoolean(properties
+		return parseBoolean(properties
 				.getProperty("usergrid.sysadmin.approve.users"));
 	}
 
@@ -1670,8 +1672,8 @@ public class ManagementServiceImpl implements ManagementService {
 				activation_url += "&confirm=true";
 				sendHtmlMail(
 						properties,
-						properties.getProperty("usergrid.sysadmin.email"),
-						"Usergrid Mailer <mailer@usergrid.com>",
+						getPropertyValue("usergrid.sysadmin.email"),
+						getPropertyValue(EMAIL_MAILER),
 						"Request For Organization Account Activation "
 								+ organization.getName(),
 						emailMsg(
@@ -1715,7 +1717,7 @@ public class ManagementServiceImpl implements ManagementService {
 				.getUuid());
 		for (UserInfo user : users) {
 			sendHtmlMail(properties, user.getDisplayEmailAddress(),
-					"Usergrid Mailer <mailer@usergrid.com>", subject, html);
+					getPropertyValue(EMAIL_MAILER), subject, html);
 		}
 
 	}
@@ -1731,8 +1733,8 @@ public class ManagementServiceImpl implements ManagementService {
 			activation_url += "&confirm=true";
 			sendHtmlMail(
 					properties,
-					properties.getProperty("usergrid.sysadmin.email"),
-					"Usergrid Mailer <mailer@usergrid.com>",
+					getPropertyValue("usergrid.sysadmin.email"),
+					getPropertyValue(EMAIL_MAILER),
 					"Request For User Account Activation " + user.getEmail(),
 					emailMsg(
 							hashMap("user_email", user.getEmail()).map(
@@ -1753,7 +1755,7 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public void sendAdminUserActivatedEmail(UserInfo user) throws Exception {
 		sendAdminUserEmail(user, "User Account Activated",
-				properties.getProperty(EMAIL_ADMIN_ACTIVATED));
+				getPropertyValue(EMAIL_ADMIN_ACTIVATED));
 
 	}
 
@@ -1761,7 +1763,7 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAdminUserEmail(UserInfo user, String subject, String html)
 			throws Exception {
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				"Usergrid Mailer <mailer@usergrid.com>", subject, html);
+				getPropertyValue(EMAIL_MAILER), subject, html);
 
 	}
 
@@ -1882,7 +1884,7 @@ public class ManagementServiceImpl implements ManagementService {
 		sendHtmlMail(
 				properties,
 				user.getDisplayEmailAddress(),
-				"Usergrid Mailer <mailer@usergrid.com>",
+				getPropertyValue(EMAIL_MAILER),
 				"Password Reset",
 				emailMsg(hashMap("reset_url", reset_url),
 						EMAIL_USER_PASSWORD_RESET));
@@ -1893,7 +1895,7 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAppUserActivatedEmail(UUID applicationId, User user)
 			throws Exception {
 		sendAppUserEmail(user, "User Account Activated",
-				properties.getProperty(EMAIL_USER_ACTIVATED));
+				getPropertyValue(EMAIL_USER_ACTIVATED));
 
 	}
 
@@ -1979,7 +1981,7 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAppUserEmail(User user, String subject, String html)
 			throws Exception {
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				"Usergrid Mailer <mailer@usergrid.com>", subject, html);
+				getPropertyValue(EMAIL_MAILER), subject, html);
 
 	}
 
@@ -2015,7 +2017,7 @@ public class ManagementServiceImpl implements ManagementService {
 		String pin = getCredentialsSecret((CredentialsInfo) em
 				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS, "pin"));
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				"Usergrid Mailer <mailer@usergrid.com>", "Your app pin",
+				getPropertyValue(EMAIL_MAILER), "Your app pin",
 				emailMsg(hashMap("pin", pin), EMAIL_USER_PIN_REQUEST));
 
 	}
