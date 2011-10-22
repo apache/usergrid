@@ -17,7 +17,7 @@
 		<property name="locations">
 			<list>
 				<value>classpath:/usergrid-test.properties</value>
-				<value>classpath:/usergrid-custom-test.properties</value>
+				<value>${usergrid-custom-spring-test-properties}</value>
 			</list>
 		</property>
 	</bean>
