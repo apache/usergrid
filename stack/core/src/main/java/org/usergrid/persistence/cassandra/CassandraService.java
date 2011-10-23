@@ -8,6 +8,8 @@ import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static me.prettyprint.hector.api.factory.HFactory.createRangeSlicesQuery;
 import static me.prettyprint.hector.api.factory.HFactory.createSliceQuery;
 import static me.prettyprint.hector.api.factory.HFactory.createVirtualKeyspace;
+import static org.apache.commons.collections.MapUtils.getIntValue;
+import static org.apache.commons.collections.MapUtils.getString;
 import static org.usergrid.persistence.Schema.DICTIONARY_ID_SETS;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
@@ -18,7 +20,9 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.build
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.ConversionUtils.uuid;
+import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.usergrid.utils.MapUtils.asMap;
+import static org.usergrid.utils.MapUtils.filter;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -41,6 +45,7 @@ import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.cassandra.service.CassandraHostConfigurator;
+import me.prettyprint.cassandra.service.ThriftKsDef;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.Serializer;
@@ -220,10 +225,32 @@ public class CassandraService {
 			List<ColumnFamilyDefinition> cf_defs) {
 
 		logger.info("Creating keyspace: " + keyspace);
+
+		String strategy_class = getString(properties,
+				"cassandra.keyspace.strategy",
+				"org.apache.cassandra.locator.SimpleStrategy");
+		logger.info("Using strategy: " + strategy_class);
+
+		int replication_factor = getIntValue(properties,
+				"cassandra.keyspace.replication", 1);
+		logger.info("Using replication (may be overriden by strategy options): "
+				+ replication_factor);
+
 		try {
-			KeyspaceDefinition ks_def = HFactory.createKeyspaceDefinition(
-					keyspace, "org.apache.cassandra.locator.SimpleStrategy", 1,
-					new ArrayList<ColumnFamilyDefinition>());
+			ThriftKsDef ks_def = (ThriftKsDef) HFactory
+					.createKeyspaceDefinition(keyspace, strategy_class,
+							replication_factor,
+							new ArrayList<ColumnFamilyDefinition>());
+
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			Map<String, String> strategy_options = filter((Map) properties,
+					"cassandra.keyspace.strategy.options.");
+			if (strategy_options.size() > 0) {
+				logger.info("Strategy options: "
+						+ mapToFormattedJsonString(strategy_options));
+				ks_def.setStrategyOptions(strategy_options);
+			}
+
 			cluster.addKeyspace(ks_def);
 		} catch (Throwable e) {
 			logger.error("Exception while creating keyspace, " + keyspace
