@@ -257,6 +257,17 @@ public class CassandraService {
 					+ " - probably already exists", e);
 		}
 
+		boolean delay_configuration = (!"org.apache.cassandra.locator.SimpleStrategy"
+				.equals(strategy_class)) || (replication_factor > 1);
+
+		if (delay_configuration) {
+			logger.warn("Waiting 10s after keyspace creation");
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+			}
+		}
+
 		if (cf_defs != null) {
 			for (ColumnFamilyDefinition cfDef : cf_defs) {
 				try {
@@ -266,6 +277,20 @@ public class CassandraService {
 							"Exception while creating CF, " + cfDef.getName()
 									+ " - probably already exists", e);
 				}
+				if (delay_configuration) {
+					try {
+						logger.warn("Waiting 2s after CF creation");
+						Thread.sleep(2000);
+					} catch (InterruptedException e) {
+					}
+				}
+			}
+		}
+		if (delay_configuration) {
+			try {
+				logger.warn("Waiting 5s before continuing setup");
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
 			}
 		}
 	}
