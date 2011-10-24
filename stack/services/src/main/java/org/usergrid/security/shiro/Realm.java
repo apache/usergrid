@@ -68,8 +68,10 @@ import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.security.shiro.credentials.AdminUserAccessToken;
 import org.usergrid.security.shiro.credentials.AdminUserPassword;
+import org.usergrid.security.shiro.credentials.ApplicationAccessToken;
 import org.usergrid.security.shiro.credentials.ApplicationUserAccessToken;
 import org.usergrid.security.shiro.credentials.ClientCredentials;
+import org.usergrid.security.shiro.credentials.OrganizationAccessToken;
 import org.usergrid.security.shiro.credentials.PrincipalCredentials;
 import org.usergrid.security.shiro.principals.AdminUserPrincipal;
 import org.usergrid.security.shiro.principals.ApplicationPrincipal;
@@ -164,6 +166,12 @@ public class Realm extends AuthorizingRealm {
 			authenticated = true;
 		} else if ((principal instanceof ApplicationUserPrincipal)
 				&& (credentials instanceof ApplicationUserAccessToken)) {
+			authenticated = true;
+		} else if ((principal instanceof ApplicationPrincipal)
+				&& (credentials instanceof ApplicationAccessToken)) {
+			authenticated = true;
+		} else if ((principal instanceof OrganizationPrincipal)
+				&& (credentials instanceof OrganizationAccessToken)) {
 			authenticated = true;
 		}
 

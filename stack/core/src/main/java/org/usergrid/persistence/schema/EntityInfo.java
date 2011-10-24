@@ -19,6 +19,7 @@
 package org.usergrid.persistence.schema;
 
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -199,12 +200,15 @@ public class EntityInfo {
 			dictionary.setName(key);
 		}
 
-		for (String dictionaryName : Schema.DEFAULT_DICTIONARIES) {
+		for (@SuppressWarnings("rawtypes")
+		Entry<String, Class> dictionaryEntry : Schema.DEFAULT_DICTIONARIES
+				.entrySet()) {
+			String dictionaryName = dictionaryEntry.getKey();
 			if (!this.dictionaries.containsKey(dictionaryName)) {
 				DictionaryInfo dictionary = new DictionaryInfo();
 				dictionary.setName(dictionaryName);
 				dictionary.setKeyType(String.class);
-				dictionary.setValueType(String.class);
+				dictionary.setValueType(dictionaryEntry.getValue());
 				this.dictionaries.put(dictionaryName, dictionary);
 			}
 		}

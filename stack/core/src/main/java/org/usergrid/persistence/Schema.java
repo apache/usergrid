@@ -25,6 +25,7 @@ import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.InflectionUtils.pluralize;
 import static org.usergrid.utils.InflectionUtils.singularize;
 import static org.usergrid.utils.JsonUtils.toJsonNode;
+import static org.usergrid.utils.MapUtils.hashMap;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterLast;
 
 import java.beans.PropertyDescriptor;
@@ -146,13 +147,23 @@ public class Schema {
 	public static final String DICTIONARY_ID_SETS = "id_sets";
 	public static final String DICTIONARY_COUNTERS = "counters";
 
-	public static String[] DEFAULT_DICTIONARIES = { DICTIONARY_PROPERTIES,
-			DICTIONARY_SETS, DICTIONARY_INDEXES, DICTIONARY_COLLECTIONS,
-			DICTIONARY_CONNECTIONS, DICTIONARY_CONNECTING_TYPES,
-			DICTIONARY_CONNECTING_ENTITIES, DICTIONARY_CONNECTED_TYPES,
-			DICTIONARY_CONNECTED_ENTITIES, DICTIONARY_CONTAINER_ENTITIES,
-			DICTIONARY_CREDENTIALS, DICTIONARY_ROLENAMES,
-			DICTIONARY_PERMISSIONS, DICTIONARY_ID_SETS };
+	@SuppressWarnings("rawtypes")
+	public static Map<String, Class> DEFAULT_DICTIONARIES = hashMap(
+			DICTIONARY_PROPERTIES, (Class) String.class)
+			.map(DICTIONARY_SETS, String.class)
+			.map(DICTIONARY_INDEXES, String.class)
+			.map(DICTIONARY_COLLECTIONS, String.class)
+			.map(DICTIONARY_CONNECTIONS, String.class)
+			.map(DICTIONARY_CONNECTING_TYPES, String.class)
+			.map(DICTIONARY_CONNECTING_ENTITIES, String.class)
+			.map(DICTIONARY_CONNECTED_TYPES, String.class)
+			.map(DICTIONARY_CONNECTED_ENTITIES, String.class)
+			.map(DICTIONARY_CONTAINER_ENTITIES, String.class)
+			.map(DICTIONARY_CREDENTIALS, CredentialsInfo.class)
+			.map(DICTIONARY_ROLENAMES, String.class)
+			.map(DICTIONARY_PERMISSIONS, String.class)
+			.map(DICTIONARY_ID_SETS, String.class);
+
 	private final ObjectMapper mapper = new ObjectMapper();
 
 	@SuppressWarnings("unused")
