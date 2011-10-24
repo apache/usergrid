@@ -1541,9 +1541,13 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public boolean checkPasswordResetTokenForAdminUser(UUID userId, String token)
 			throws Exception {
-		EntityRef userRef = getEntityRefFromAccessToken(
-				MANAGEMENT_APPLICATION_ID, token, ADMIN_USER, 0, "resetpw",
-				false);
+		EntityRef userRef = null;
+		try {
+			userRef = getEntityRefFromAccessToken(MANAGEMENT_APPLICATION_ID,
+					token, ADMIN_USER, 0, "resetpw", true);
+		} catch (Exception e) {
+			logger.error("Unable to verify token", e);
+		}
 		return (userRef != null) && userId.equals(userRef.getUuid());
 	}
 
@@ -1835,8 +1839,13 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public boolean checkPasswordResetTokenForAppUser(UUID applicationId,
 			UUID userId, String token) throws Exception {
-		EntityRef userRef = getEntityRefFromAccessToken(applicationId, token,
-				APPLICATION_USER, 0, "resetpw", false);
+		EntityRef userRef = null;
+		try {
+			userRef = getEntityRefFromAccessToken(applicationId, token,
+					APPLICATION_USER, 0, "resetpw", true);
+		} catch (Exception e) {
+			logger.error("Unable to verify token", e);
+		}
 		return (userRef != null) && userId.equals(userRef.getUuid());
 	}
 
