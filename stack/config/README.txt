@@ -32,3 +32,8 @@ usergrid.properties file is loaded and will override any values with the same
 names. This makes it easier to keep confidential credentials out of source
 code version control.
 
+The custom properties file location can be overriden at build-time by passing
+the file location as a property parameter to maven.  For example:
+
+mvn clean install -Dusergrid-custom-spring-properties=classpath:/usergrid-custom.properties
+

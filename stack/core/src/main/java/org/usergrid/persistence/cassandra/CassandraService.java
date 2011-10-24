@@ -224,16 +224,16 @@ public class CassandraService {
 	public void createKeyspace(String keyspace,
 			List<ColumnFamilyDefinition> cf_defs) {
 
-		logger.info("Creating keyspace: " + keyspace);
+		logger.warn("Creating keyspace: " + keyspace);
 
 		String strategy_class = getString(properties,
 				"cassandra.keyspace.strategy",
 				"org.apache.cassandra.locator.SimpleStrategy");
-		logger.info("Using strategy: " + strategy_class);
+		logger.warn("Using strategy: " + strategy_class);
 
 		int replication_factor = getIntValue(properties,
 				"cassandra.keyspace.replication", 1);
-		logger.info("Using replication (may be overriden by strategy options): "
+		logger.warn("Using replication (may be overriden by strategy options): "
 				+ replication_factor);
 
 		try {
@@ -244,9 +244,9 @@ public class CassandraService {
 
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			Map<String, String> strategy_options = filter((Map) properties,
-					"cassandra.keyspace.strategy.options.");
+					"cassandra.keyspace.strategy.options.", true);
 			if (strategy_options.size() > 0) {
-				logger.info("Strategy options: "
+				logger.warn("Strategy options: "
 						+ mapToFormattedJsonString(strategy_options));
 				ks_def.setStrategyOptions(strategy_options);
 			}
@@ -281,7 +281,7 @@ public class CassandraService {
 
 		if (ksDefs != null) {
 			for (KeyspaceDefinition ksDef : ksDefs) {
-				logger.info(ksDef.getName().toString());
+				logger.warn(ksDef.getName().toString());
 			}
 		}
 	}

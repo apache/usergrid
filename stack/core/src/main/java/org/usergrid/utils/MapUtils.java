@@ -531,24 +531,45 @@ public class MapUtils extends org.apache.commons.collections.MapUtils {
 		return null;
 	}
 
-	public static <V> Map<String, V> filter(Map<String, V> map, String prefix) {
+	public static <V> Map<String, V> filter(Map<String, V> map, String prefix,
+			boolean remove_prefix) {
 		Map<String, V> filteredMap = new LinkedHashMap<String, V>();
 		for (Entry<String, V> entry : map.entrySet()) {
 			if (entry.getKey().startsWith(prefix)) {
-				filteredMap.put(entry.getKey(), entry.getValue());
+				if (remove_prefix) {
+					filteredMap.put(entry.getKey().substring(prefix.length()),
+							entry.getValue());
+				} else {
+					filteredMap.put(entry.getKey(), entry.getValue());
+				}
 			}
 		}
 		return filteredMap;
 	}
 
-	public static Properties filter(Properties properties, String prefix) {
+	public static <V> Map<String, V> filter(Map<String, V> map, String prefix) {
+		return filter(map, prefix, false);
+	}
+
+	public static Properties filter(Properties properties, String prefix,
+			boolean remove_prefix) {
 		Properties filteredProperties = new Properties();
 		for (Entry<String, String> entry : asMap(properties).entrySet()) {
 			if (entry.getKey().startsWith(prefix)) {
-				filteredProperties.put(entry.getKey(), entry.getValue());
+				if (remove_prefix) {
+					filteredProperties.put(
+							entry.getKey().substring(prefix.length()),
+							entry.getValue());
+				} else {
+					filteredProperties.put(entry.getKey(), entry.getValue());
+				}
 			}
 		}
 		return filteredProperties;
+	}
+
+	public static Properties filter(Properties properties, String prefix) {
+		return filter(properties, prefix, false);
 	}
 
 	public static Properties asProperties(Map<String, String> map) {
