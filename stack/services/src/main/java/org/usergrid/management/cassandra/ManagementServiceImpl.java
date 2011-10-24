@@ -1614,7 +1614,7 @@ public class ManagementServiceImpl implements ManagementService {
 			throws Exception {
 		String token = getPasswordResetTokenForAdminUser(user.getUuid());
 		String reset_url = String.format(properties
-				.getProperty("usergrid.user.resetpw.url"), user.getUuid()
+				.getProperty("usergrid.admin.resetpw.url"), user.getUuid()
 				.toString())
 				+ "?token=" + token;
 
@@ -1726,7 +1726,7 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAdminUserActivationEmail(UserInfo user) throws Exception {
 		String token = getActivationTokenForAdminUser(user.getUuid());
 		String activation_url = String.format(properties
-				.getProperty("usergrid.user.activation.url"), user.getUuid()
+				.getProperty("usergrid.admin.activation.url"), user.getUuid()
 				.toString())
 				+ "?token=" + token;
 		if (newAdminUsersNeedSysAdminApproval()) {
@@ -1877,9 +1877,9 @@ public class ManagementServiceImpl implements ManagementService {
 			throws Exception {
 		String token = getPasswordResetTokenForAppUser(applicationId,
 				user.getUuid());
-		String reset_url = String.format(properties
-				.getProperty("usergrid.user.resetpw.url"), user.getUuid()
-				.toString())
+		String reset_url = String.format(
+				properties.getProperty("usergrid.user.resetpw.url"),
+				applicationId.toString(), user.getUuid().toString())
 				+ "?token=" + token;
 		sendHtmlMail(
 				properties,
@@ -1904,9 +1904,9 @@ public class ManagementServiceImpl implements ManagementService {
 			throws Exception {
 		String token = getActivationTokenForAppUser(applicationId,
 				user.getUuid());
-		String activation_url = String.format(properties
-				.getProperty("usergrid.user.activation.url"), user.getUuid()
-				.toString())
+		String activation_url = String.format(
+				properties.getProperty("usergrid.user.activation.url"),
+				applicationId.toString(), user.getUuid().toString())
 				+ "?token=" + token;
 		sendAppUserEmail(
 				user,

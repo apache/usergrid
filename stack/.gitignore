@@ -27,3 +27,4 @@ DS_Store
 /rest/src/main/resources/usergrid-custom.properties
 
 usergrid-custom*
+standalone/src/main/resources/usergrid-standalone.properties
