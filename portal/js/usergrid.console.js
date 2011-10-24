@@ -1106,7 +1106,11 @@ $(document).ready(function usergrid_console_app() {
     function requestUsers() {
         var client_id = organization_keys.client_id;
         var client_secret = organization_keys.client_secret;
-        var test_client = new usergrid.Client(current_application_id, client_id, client_secret);
+        var test_client = new usergrid.Client({
+            applicationId : current_application_id,
+            clientId : client_id,
+            clientSecret : client_secret
+        });
         var query = {"ql" : "order by " + sortBy};
         if (userLetter != "*") query = {"ql" : sortBy + "='" + userLetter + "*'"};
         users_query = test_client.queryUsers(displayUsers, query);
@@ -1423,7 +1427,11 @@ $(document).ready(function usergrid_console_app() {
     function requestActivities() {
         var client_id = organization_keys.client_id;
         var client_secret = organization_keys.client_secret;
-        var test_client = new usergrid.Client(current_application_id, client_id, client_secret);
+        var test_client = new usergrid.Client({
+            applicationId : current_application_id,
+            clientId : client_id,
+            clientSecret : client_secret
+        });
         activitiesQuery = { };
         activitiesQuery.query = test_client.queryActivities(displayActivities);
         return false;
