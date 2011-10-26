@@ -73,7 +73,17 @@ public class CustomPermission extends WildcardPermission {
 		return true;
 	}
 
+	private static String normalizeIfPath(String p) {
+		if (p.startsWith("/")) {
+			if (!p.endsWith("/") && !p.endsWith("*")) {
+				p += "/";
+			}
+		}
+		return p;
+	}
+
 	private static boolean doCompare(String p1, String p2) {
+
 		if (p1.contains("${user}")) {
 			UserInfo user = SubjectUtils.getUser();
 			if (user != null) {
@@ -87,7 +97,13 @@ public class CustomPermission extends WildcardPermission {
 			}
 		}
 		if (matcher.isPattern(p1)) {
-			return matcher.match(p1, p2);
+			if (matcher.match(p1, p2)) {
+				return true;
+			}
+			if (matcher.match(normalizeIfPath(p1), normalizeIfPath(p2))) {
+				return true;
+			}
+			return false;
 		}
 		return p1.equalsIgnoreCase(p2);
 	}
