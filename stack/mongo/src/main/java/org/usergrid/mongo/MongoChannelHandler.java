@@ -46,7 +46,6 @@ import java.util.Set;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.mgt.SessionsSecurityManager;
 import org.apache.shiro.subject.Subject;
@@ -56,8 +55,8 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.usergrid.management.ManagementService;
 import org.usergrid.management.ApplicationInfo;
+import org.usergrid.management.ManagementService;
 import org.usergrid.management.UserInfo;
 import org.usergrid.mongo.commands.MongoCommand;
 import org.usergrid.mongo.protocol.Message;
@@ -161,7 +160,7 @@ public class MongoChannelHandler extends SimpleChannelUpstreamHandler {
 	public OpReply handleMessage(ChannelHandlerContext ctx, MessageEvent e,
 			Message message) {
 
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = SubjectUtils.getSubject();
 
 		if (message instanceof OpQuery) {
 			OpQuery q = (OpQuery) message;
@@ -233,7 +232,7 @@ public class MongoChannelHandler extends SimpleChannelUpstreamHandler {
 
 		PrincipalCredentialsToken token = PrincipalCredentialsToken
 				.getFromAdminUserInfoAndPassword(user, key);
-		Subject subject = SecurityUtils.getSubject();
+		Subject subject = SubjectUtils.getSubject();
 
 		try {
 			subject.login(token);

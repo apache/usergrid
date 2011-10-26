@@ -55,8 +55,6 @@ import java.util.UUID;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.UnavailableSecurityManagerException;
 import org.apache.shiro.subject.Subject;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
@@ -64,6 +62,7 @@ import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Schema;
+import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.services.ServiceParameter.IdParameter;
 import org.usergrid.services.ServiceParameter.NameParameter;
 import org.usergrid.services.ServiceParameter.QueryParameter;
@@ -1163,10 +1162,8 @@ public abstract class AbstractService implements Service {
 	}
 
 	public void checkPermissionsForPath(ServiceContext context, String path) {
-		Subject currentUser = null;
-		try {
-			currentUser = SecurityUtils.getSubject();
-		} catch (UnavailableSecurityManagerException e) {
+		Subject currentUser = SubjectUtils.getSubject();
+		if (currentUser == null) {
 			return;
 		}
 		String permission = getPermissionFromPath(em.getApplicationRef()
@@ -1179,6 +1176,8 @@ public abstract class AbstractService implements Service {
 		logger.info("Requested permission: " + permission);
 		logger.info("Permitted: " + permitted);
 		logger.info("-------------------------------------------------------------------");
+
+		currentUser.checkPermission(permission);
 	}
 
 }

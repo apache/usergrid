@@ -52,7 +52,6 @@ import org.apache.amber.oauth2.common.message.types.ParameterStyle;
 import org.apache.amber.oauth2.common.utils.OAuthUtils;
 import org.apache.amber.oauth2.rs.request.OAuthAccessResourceRequest;
 import org.apache.log4j.Logger;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationInfo;
@@ -62,6 +61,7 @@ import org.usergrid.management.exceptions.BadAccessTokenException;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.shiro.PrincipalCredentialsToken;
+import org.usergrid.security.shiro.utils.SubjectUtils;
 
 import com.sun.jersey.spi.container.ContainerRequest;
 
@@ -187,7 +187,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
 
 				}
 
-				Subject subject = SecurityUtils.getSubject();
+				Subject subject = SubjectUtils.getSubject();
 				subject.login(token);
 
 			} catch (OAuthProblemException e) {

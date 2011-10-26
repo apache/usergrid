@@ -48,7 +48,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.UnavailableSecurityManagerException;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
 import org.usergrid.management.ApplicationInfo;
@@ -61,8 +63,10 @@ import com.google.common.collect.BiMap;
 
 public class SubjectUtils {
 
+	private static final Logger logger = Logger.getLogger(SubjectUtils.class);
+
 	public static boolean isAnonymous() {
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return true;
 		}
@@ -73,7 +77,7 @@ public class SubjectUtils {
 	}
 
 	public static boolean isOrganizationAdmin() {
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return false;
 		}
@@ -81,7 +85,7 @@ public class SubjectUtils {
 	}
 
 	public static BiMap<UUID, String> getOrganizations() {
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (!isOrganizationAdmin()) {
 			return null;
 		}
@@ -97,7 +101,7 @@ public class SubjectUtils {
 		if (organization == null) {
 			return false;
 		}
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return false;
 		}
@@ -129,7 +133,7 @@ public class SubjectUtils {
 	}
 
 	public static OrganizationInfo getOrganization() {
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return null;
 		}
@@ -143,7 +147,7 @@ public class SubjectUtils {
 	}
 
 	public static String getOrganizationName() {
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return null;
 		}
@@ -160,7 +164,7 @@ public class SubjectUtils {
 	}
 
 	public static UUID getOrganizationId() {
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return null;
 		}
@@ -177,7 +181,7 @@ public class SubjectUtils {
 	}
 
 	public static Set<String> getOrganizationNames() {
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return null;
 		}
@@ -192,7 +196,7 @@ public class SubjectUtils {
 	}
 
 	public static boolean isApplicationAdmin() {
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return false;
 		}
@@ -205,7 +209,7 @@ public class SubjectUtils {
 		if (application == null) {
 			return false;
 		}
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return false;
 		}
@@ -218,7 +222,7 @@ public class SubjectUtils {
 		if (application == null) {
 			return false;
 		}
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return false;
 		}
@@ -254,7 +258,7 @@ public class SubjectUtils {
 
 	@SuppressWarnings("unchecked")
 	public static BiMap<UUID, String> getApplications() {
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return null;
 		}
@@ -267,7 +271,7 @@ public class SubjectUtils {
 	}
 
 	public static boolean isServiceAdmin() {
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return false;
 		}
@@ -275,7 +279,7 @@ public class SubjectUtils {
 	}
 
 	public static boolean isApplicationUser() {
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return false;
 		}
@@ -283,7 +287,7 @@ public class SubjectUtils {
 	}
 
 	public static boolean isAdminUser() {
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return false;
 		}
@@ -291,7 +295,7 @@ public class SubjectUtils {
 	}
 
 	public static UserInfo getUser() {
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return null;
 		}
@@ -342,7 +346,7 @@ public class SubjectUtils {
 		if (userId == null) {
 			return false;
 		}
-		Subject currentUser = SecurityUtils.getSubject();
+		Subject currentUser = getSubject();
 		if (currentUser == null) {
 			return false;
 		}
@@ -355,6 +359,16 @@ public class SubjectUtils {
 		String p = StringUtils.join(paths, ',');
 		permission += (isNotBlank(p) ? ":" + p : "");
 		return permission;
+	}
+
+	public static Subject getSubject() {
+		Subject currentUser = null;
+		try {
+			currentUser = SecurityUtils.getSubject();
+		} catch (UnavailableSecurityManagerException e) {
+			logger.error("Attempt to use Shiro prior to initialization");
+		}
+		return currentUser;
 	}
 
 }
