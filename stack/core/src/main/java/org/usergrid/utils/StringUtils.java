@@ -65,6 +65,9 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * @return
 	 */
 	public static String capitalizeUnderscore(String str) {
+		if (str == null) {
+			return null;
+		}
 		return capitalizeDelimiter(str, '_');
 	}
 
@@ -80,6 +83,9 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
 	}
 
 	public static String stringOrSubstringAfterLast(String str, char c) {
+		if (str == null) {
+			return null;
+		}
 		int i = str.lastIndexOf(c);
 		if (i != -1) {
 			return str.substring(i + 1);
@@ -88,6 +94,9 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
 	}
 
 	public static String stringOrSubstringBeforeLast(String str, char c) {
+		if (str == null) {
+			return null;
+		}
 		int i = str.lastIndexOf(c);
 		if (i != -1) {
 			return str.substring(0, i);
@@ -96,6 +105,9 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
 	}
 
 	public static String stringOrSubstringBeforeFirst(String str, char c) {
+		if (str == null) {
+			return null;
+		}
 		int i = str.indexOf(c);
 		if (i != -1) {
 			return str.substring(0, i);
@@ -104,6 +116,9 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
 	}
 
 	public static String stringOrSubstringAfterFirst(String str, char c) {
+		if (str == null) {
+			return null;
+		}
 		int i = str.indexOf(c);
 		if (i != -1) {
 			return str.substring(i + 1);
@@ -112,6 +127,9 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
 	}
 
 	public static String compactWhitespace(String str) {
+		if (str == null) {
+			return null;
+		}
 		boolean prev_ws = false;
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < str.length(); i++) {
@@ -136,6 +154,9 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * @return new string with replace applied
 	 */
 	public static String replaceAll(String source, String find, String replace) {
+		if (source == null) {
+			return null;
+		}
 		while (true) {
 			String old = source;
 			source = source.replaceAll(find, replace);
