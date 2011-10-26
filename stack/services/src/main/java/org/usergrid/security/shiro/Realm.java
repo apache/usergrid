@@ -37,6 +37,9 @@
  ******************************************************************************/
 package org.usergrid.security.shiro;
 
+import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import static org.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
+
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -53,6 +56,7 @@ import org.apache.shiro.authc.credential.AllowAllCredentialsMatcher;
 import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
+import org.apache.shiro.authz.permission.PermissionResolver;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.session.Session;
@@ -102,29 +106,43 @@ public class Realm extends AuthorizingRealm {
 
 	public Realm() {
 		setCredentialsMatcher(new AllowAllCredentialsMatcher());
+		setPermissionResolver(new PathBasedWildcardPermissionResolver());
 	}
 
 	public Realm(CacheManager cacheManager) {
 		super(cacheManager);
 		setCredentialsMatcher(new AllowAllCredentialsMatcher());
+		setPermissionResolver(new PathBasedWildcardPermissionResolver());
 	}
 
 	public Realm(CredentialsMatcher matcher) {
 		super(new AllowAllCredentialsMatcher());
+		setPermissionResolver(new PathBasedWildcardPermissionResolver());
 	}
 
 	public Realm(CacheManager cacheManager, CredentialsMatcher matcher) {
 		super(cacheManager, new AllowAllCredentialsMatcher());
+		setPermissionResolver(new PathBasedWildcardPermissionResolver());
 	}
 
 	@Override
 	public void setCredentialsMatcher(CredentialsMatcher credentialsMatcher) {
 		if (!(credentialsMatcher instanceof AllowAllCredentialsMatcher)) {
-			credentialsMatcher = new AllowAllCredentialsMatcher();
 			logger.info("Replacing " + credentialsMatcher
 					+ " with AllowAllCredentialsMatcher");
+			credentialsMatcher = new AllowAllCredentialsMatcher();
 		}
 		super.setCredentialsMatcher(credentialsMatcher);
+	}
+
+	@Override
+	public void setPermissionResolver(PermissionResolver permissionResolver) {
+		if (!(permissionResolver instanceof PathBasedWildcardPermissionResolver)) {
+			logger.info("Replacing " + permissionResolver
+					+ " with AllowAllCredentialsMatcher");
+			permissionResolver = new PathBasedWildcardPermissionResolver();
+		}
+		super.setPermissionResolver(permissionResolver);
 	}
 
 	@Autowired
@@ -234,14 +252,10 @@ public class Realm extends AuthorizingRealm {
 				if ((applications != null) && !applications.isEmpty()) {
 					grant(info,
 							principal,
-							"applications:access:"
+							"applications:admin,access,get,put,post,delete:"
 									+ StringUtils.join(applications.keySet(),
 											','));
-					grant(info,
-							principal,
-							"applications:admin:"
-									+ StringUtils.join(applications.keySet(),
-											','));
+
 					applicationSet.putAll(applications);
 				}
 
@@ -254,9 +268,8 @@ public class Realm extends AuthorizingRealm {
 				application = ((ApplicationPrincipal) principal)
 						.getApplication();
 				grant(info, principal,
-						"applications:access:" + application.getId());
-				grant(info, principal,
-						"applications:admin:" + application.getId());
+						"applications:admin,access,get,put,post,delete:"
+								+ application.getId());
 				applicationSet.put(application.getId(), application.getName());
 
 			} else if (principal instanceof AdminUserPrincipal) {
@@ -276,9 +289,10 @@ public class Realm extends AuthorizingRealm {
 
 					grant(info, principal, "system:access");
 
-					grant(info, principal, "organizations:access:*");
-					grant(info, principal, "applications:access:*");
-					grant(info, principal, "applications:admin:*");
+					grant(info, principal,
+							"organizations:admin,access,get,put,post,delete:*");
+					grant(info, principal,
+							"applications:admin,access,get,put,post,delete:*");
 					grant(info, principal, "users:access:*");
 
 				} else {
@@ -287,6 +301,13 @@ public class Realm extends AuthorizingRealm {
 					// they're associated with
 					// An service user can be associated with multiple
 					// organizations
+
+					grant(info,
+							principal,
+							getPermissionFromPath(MANAGEMENT_APPLICATION_ID,
+									"access,get,put,post,delete", "/users/"
+											+ user.getUuid(),
+									"/users/" + user.getUuid() + "/feed"));
 
 					role(info, principal, ROLE_ADMIN_USER);
 
@@ -297,8 +318,9 @@ public class Realm extends AuthorizingRealm {
 
 						if (userOrganizations != null) {
 							for (UUID id : userOrganizations.keySet()) {
-								grant(info, principal, "organizations:access:"
-										+ id);
+								grant(info, principal,
+										"organizations:admin,access,get,put,post,delete:"
+												+ id);
 							}
 							organizationSet.putAll(userOrganizations);
 
@@ -309,13 +331,7 @@ public class Realm extends AuthorizingRealm {
 									&& !userApplications.isEmpty()) {
 								grant(info,
 										principal,
-										"applications:access:"
-												+ StringUtils.join(
-														userApplications
-																.keySet(), ','));
-								grant(info,
-										principal,
-										"applications:admin:"
+										"applications:admin,access,get,put,post,delete:"
 												+ StringUtils.join(
 														userApplications
 																.keySet(), ','));
@@ -336,7 +352,18 @@ public class Realm extends AuthorizingRealm {
 
 				UUID applicationId = ((ApplicationUserPrincipal) principal)
 						.getApplicationId();
-				grant(info, principal, "applications:access:" + applicationId);
+				UserInfo user = ((ApplicationUserPrincipal) principal)
+						.getUser();
+				grant(info,
+						principal,
+						getPermissionFromPath(applicationId,
+								"access,get,put,post,delete",
+								"/users/" + user.getUuid()));
+				grant(info,
+						principal,
+						getPermissionFromPath(applicationId,
+								"access,get,put,post,delete",
+								"/users/" + user.getUsername()));
 
 				EntityManager em = emf.getEntityManager(applicationId);
 				try {

@@ -37,6 +37,7 @@
  ******************************************************************************/
 package org.usergrid.services;
 
+import static org.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
 import static org.usergrid.services.ServiceParameter.filter;
 import static org.usergrid.services.ServiceParameter.mergeQueries;
 import static org.usergrid.utils.ClassUtils.cast;
@@ -54,6 +55,9 @@ import java.util.UUID;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.UnavailableSecurityManagerException;
+import org.apache.shiro.subject.Subject;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
@@ -1140,6 +1144,41 @@ public abstract class AbstractService implements Service {
 	public ServiceResults headServiceMetadata(ServiceContext context,
 			String metadataType) throws Exception {
 		throw new UnsupportedServiceOperationException(context);
+	}
+
+	public void checkPermissionsForCollection(ServiceContext context) {
+		String path = context.getPath();
+		checkPermissionsForPath(context, path);
+	}
+
+	public void checkPermissionsForEntity(ServiceContext context, UUID entityId) {
+		String path = context.getPath(entityId);
+		checkPermissionsForPath(context, path);
+	}
+
+	public void checkPermissionsForEntity(ServiceContext context,
+			EntityRef entity) {
+		String path = context.getPath(entity);
+		checkPermissionsForPath(context, path);
+	}
+
+	public void checkPermissionsForPath(ServiceContext context, String path) {
+		Subject currentUser = null;
+		try {
+			currentUser = SecurityUtils.getSubject();
+		} catch (UnavailableSecurityManagerException e) {
+			return;
+		}
+		String permission = getPermissionFromPath(em.getApplicationRef()
+				.getUuid(), context.getAction().toString().toLowerCase(), path);
+		boolean permitted = currentUser.isPermitted(permission);
+
+		logger.info("---- Check permissions for path -----------------------------------");
+		logger.info("Requested path: " + path);
+		logger.info("Requested action: " + context.getAction());
+		logger.info("Requested permission: " + permission);
+		logger.info("Permitted: " + permitted);
+		logger.info("-------------------------------------------------------------------");
 	}
 
 }

@@ -85,6 +85,8 @@ public class AbstractCollectionService extends AbstractService {
 			throw new ServiceResourceNotFoundException(context);
 		}
 
+		checkPermissionsForEntity(context, entity);
+
 		// TODO check that entity is in fact in the collection
 
 		List<ServiceRequest> nextRequests = context
@@ -114,6 +116,8 @@ public class AbstractCollectionService extends AbstractService {
 			entity = importEntity(context, (Entity) entity);
 		}
 
+		checkPermissionsForEntity(context, entity);
+
 		/*
 		 * Results.Level level = Results.Level.REFS; if (isEmpty(parameters)) {
 		 * level = Results.Level.ALL_PROPERTIES; }
@@ -133,6 +137,8 @@ public class AbstractCollectionService extends AbstractService {
 	@Override
 	public ServiceResults getItemsByQuery(ServiceContext context, Query query)
 			throws Exception {
+
+		checkPermissionsForCollection(context);
 
 		int count = 1;
 		Results.Level level = Results.Level.REFS;
@@ -178,6 +184,8 @@ public class AbstractCollectionService extends AbstractService {
 	public ServiceResults getCollection(ServiceContext context)
 			throws Exception {
 
+		checkPermissionsForCollection(context);
+
 		if (getCollectionSort(context) != null) {
 			return getItemsByQuery(context, new Query());
 		}
@@ -205,6 +213,8 @@ public class AbstractCollectionService extends AbstractService {
 			return getItemById(context, id);
 		}
 
+		checkPermissionsForEntity(context, id);
+
 		Entity item = em.get(id);
 		updateEntity(context, item, context.getPayload());
 		item = importEntity(context, item);
@@ -228,6 +238,8 @@ public class AbstractCollectionService extends AbstractService {
 		Entity entity = em.get(ref);
 		entity = importEntity(context, entity);
 
+		checkPermissionsForEntity(context, entity);
+
 		updateEntity(context, entity);
 
 		return new ServiceResults(this, context, Type.COLLECTION,
@@ -238,6 +250,8 @@ public class AbstractCollectionService extends AbstractService {
 	@Override
 	public ServiceResults putItemsByQuery(ServiceContext context, Query query)
 			throws Exception {
+
+		checkPermissionsForCollection(context);
 
 		if (context.moreParameters()) {
 			return getItemsByQuery(context, query);
@@ -265,6 +279,8 @@ public class AbstractCollectionService extends AbstractService {
 	@Override
 	public ServiceResults postCollection(ServiceContext context)
 			throws Exception {
+
+		checkPermissionsForCollection(context);
 
 		if (context.getPayload().isBatch()) {
 			List<Entity> entities = new ArrayList<Entity>();
@@ -320,6 +336,8 @@ public class AbstractCollectionService extends AbstractService {
 	public ServiceResults postItemById(ServiceContext context, UUID id)
 			throws Exception {
 
+		checkPermissionsForEntity(context, id);
+
 		if (context.moreParameters()) {
 			return getItemById(context, id);
 		}
@@ -357,6 +375,8 @@ public class AbstractCollectionService extends AbstractService {
 	public ServiceResults deleteItemById(ServiceContext context, UUID id)
 			throws Exception {
 
+		checkPermissionsForEntity(context, id);
+
 		if (context.moreParameters()) {
 			return getItemById(context, id);
 		}
@@ -387,6 +407,8 @@ public class AbstractCollectionService extends AbstractService {
 		Entity entity = em.get(ref);
 		entity = importEntity(context, entity);
 
+		checkPermissionsForEntity(context, entity);
+
 		em.removeFromCollection(context.getOwner(),
 				context.getCollectionName(), entity);
 
@@ -398,6 +420,8 @@ public class AbstractCollectionService extends AbstractService {
 	@Override
 	public ServiceResults deleteItemsByQuery(ServiceContext context, Query query)
 			throws Exception {
+
+		checkPermissionsForCollection(context);
 
 		if (context.moreParameters()) {
 			return getItemsByQuery(context, query);

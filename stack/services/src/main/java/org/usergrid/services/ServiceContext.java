@@ -113,6 +113,18 @@ public class ServiceContext {
 		return request;
 	}
 
+	public String getPath() {
+		return request.getPath();
+	}
+
+	public String getPath(UUID entityId) {
+		return request.getPath() + "/" + entityId.toString();
+	}
+
+	public String getPath(EntityRef entity) {
+		return request.getPath() + "/" + entity.getUuid().toString();
+	}
+
 	public void setRequest(ServiceRequest request) {
 		this.request = request;
 	}

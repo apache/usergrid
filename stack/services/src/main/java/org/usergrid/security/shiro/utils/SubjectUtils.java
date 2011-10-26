@@ -37,6 +37,7 @@
  ******************************************************************************/
 package org.usergrid.security.shiro.utils;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.security.shiro.Realm.ROLE_ADMIN_USER;
 import static org.usergrid.security.shiro.Realm.ROLE_APPLICATION_ADMIN;
 import static org.usergrid.security.shiro.Realm.ROLE_APPLICATION_USER;
@@ -46,6 +47,7 @@ import static org.usergrid.security.shiro.Realm.ROLE_SERVICE_ADMIN;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
@@ -345,6 +347,14 @@ public class SubjectUtils {
 			return false;
 		}
 		return currentUser.isPermitted("users:access:" + userId);
+	}
+
+	public static String getPermissionFromPath(UUID applicationId,
+			String operations, String... paths) {
+		String permission = "applications:" + operations + ":" + applicationId;
+		String p = StringUtils.join(paths, ',');
+		permission += (isNotBlank(p) ? ":" + p : "");
+		return permission;
 	}
 
 }

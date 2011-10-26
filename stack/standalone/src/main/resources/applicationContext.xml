@@ -17,7 +17,6 @@
 		<property name="locations">
 			<list>
 				<value>classpath:/usergrid-standalone.properties</value>
-				<value>${usergrid-custom-spring-properties}</value>
 				<value>file:./usergrid-custom-standalone.properties</value>
 			</list>
 		</property>

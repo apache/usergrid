@@ -188,6 +188,8 @@ public class AbstractConnectionsService extends AbstractService {
 	public ServiceResults getCollection(ServiceContext context)
 			throws Exception {
 
+		checkPermissionsForCollection(context);
+
 		Results r = null;
 
 		if (connecting()) {
@@ -208,6 +210,8 @@ public class AbstractConnectionsService extends AbstractService {
 	@Override
 	public ServiceResults getItemById(ServiceContext context, UUID id)
 			throws Exception {
+
+		checkPermissionsForEntity(context, id);
 
 		EntityRef entity = null;
 
@@ -235,6 +239,8 @@ public class AbstractConnectionsService extends AbstractService {
 	@Override
 	public ServiceResults getItemsByQuery(ServiceContext context, Query query)
 			throws Exception {
+
+		checkPermissionsForCollection(context);
 
 		if (!query.hasFilterPredicates() && (query.getEntityType() != null)
 				&& query.containsNameOrEmailIdentifiersOnly()) {
@@ -302,6 +308,8 @@ public class AbstractConnectionsService extends AbstractService {
 	public ServiceResults postItemById(ServiceContext context, UUID id)
 			throws Exception {
 
+		checkPermissionsForEntity(context, id);
+
 		if (context.moreParameters()) {
 			return getItemById(context, id);
 		}
@@ -328,6 +336,8 @@ public class AbstractConnectionsService extends AbstractService {
 	@Override
 	public ServiceResults postItemsByQuery(ServiceContext context, Query query)
 			throws Exception {
+
+		checkPermissionsForCollection(context);
 
 		if (!query.hasFilterPredicates() && (query.getEntityType() != null)
 				&& query.containsSingleNameOrEmailIdentifier()) {
@@ -365,6 +375,8 @@ public class AbstractConnectionsService extends AbstractService {
 	public ServiceResults deleteItemById(ServiceContext context, UUID id)
 			throws Exception {
 
+		checkPermissionsForEntity(context, id);
+
 		if (context.moreParameters()) {
 			return getItemById(context, id);
 		}
@@ -385,6 +397,8 @@ public class AbstractConnectionsService extends AbstractService {
 	@Override
 	public ServiceResults deleteItemsByQuery(ServiceContext context, Query query)
 			throws Exception {
+
+		checkPermissionsForCollection(context);
 
 		if (!query.hasFilterPredicates() && (query.getEntityType() != null)
 				&& query.containsNameOrEmailIdentifiersOnly()) {
