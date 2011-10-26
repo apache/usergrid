@@ -39,9 +39,12 @@ package org.usergrid.security.shiro;
 
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
+import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
+import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
@@ -375,6 +378,26 @@ public class Realm extends AuthorizingRealm {
 							em.getApplicationRef(), "name");
 					applicationSet.put(applicationId, appName);
 					application = new ApplicationInfo(applicationId, appName);
+				} catch (Exception e) {
+				}
+				UserInfo user = ((ApplicationUserPrincipal) principal)
+						.getUser();
+				try {
+					Set<String> permissions = em.getUserPermissions(user
+							.getUuid());
+					if (permissions != null) {
+						for (String permission : permissions) {
+							if (permission.indexOf(':') > -1) {
+								String operations = stringOrSubstringBeforeFirst(
+										permission, ':');
+								permission = stringOrSubstringAfterFirst(
+										permission, ':');
+								permission = "applications:" + operations + ":"
+										+ applicationId + ":" + permission;
+								grant(info, principal, permission);
+							}
+						}
+					}
 				} catch (Exception e) {
 				}
 			}
