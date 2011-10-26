@@ -371,4 +371,16 @@ public class SubjectUtils {
 		return currentUser;
 	}
 
+	public static void checkPermission(String permission) {
+		Subject currentUser = getSubject();
+		if (currentUser == null) {
+			return;
+		}
+		try {
+			currentUser.checkPermission(permission);
+		} catch (org.apache.shiro.authz.UnauthenticatedException e) {
+			logger.error("Subject is anonymous");
+		}
+	}
+
 }

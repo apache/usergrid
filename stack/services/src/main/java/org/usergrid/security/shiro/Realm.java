@@ -363,7 +363,8 @@ public class Realm extends AuthorizingRealm {
 				grant(info,
 						principal,
 						getPermissionFromPath(applicationId,
-								"get,put,post,delete", "/users/${user}/feed",
+								"get,put,post,delete", "/users/${user}",
+								"/users/${user}/feed",
 								"/users/${user}/activities",
 								"/users/${user}/following/*",
 								"/users/${user}/following/user/*"));

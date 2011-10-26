@@ -1177,7 +1177,7 @@ public abstract class AbstractService implements Service {
 		logger.info("Permitted: " + permitted);
 		logger.info("-------------------------------------------------------------------");
 
-		currentUser.checkPermission(permission);
+		SubjectUtils.checkPermission(permission);
 	}
 
 }

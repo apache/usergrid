@@ -63,9 +63,11 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.usergrid.persistence.Query;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
+import org.usergrid.rest.exceptions.UnauthorizedApiRequestException;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.services.ServiceAction;
 import org.usergrid.services.ServiceManager;
@@ -245,6 +247,10 @@ public class ServiceResource extends AbstractContextResource {
 		} catch (Exception e) {
 			response.setError(e);
 			logger.error("Error while getting", e);
+
+			if (e instanceof UnauthorizedException) {
+				throw new UnauthorizedApiRequestException(response);
+			}
 		}
 
 		return response;
@@ -293,6 +299,10 @@ public class ServiceResource extends AbstractContextResource {
 		} catch (Exception e) {
 			response.setError(e);
 			logger.error("Error while posting", e);
+
+			if (e instanceof UnauthorizedException) {
+				throw new UnauthorizedApiRequestException(response);
+			}
 		}
 
 		return response;
@@ -318,6 +328,10 @@ public class ServiceResource extends AbstractContextResource {
 		} catch (Exception e) {
 			response.setError(e);
 			logger.error("Error while putting", e);
+
+			if (e instanceof UnauthorizedException) {
+				throw new UnauthorizedApiRequestException(response);
+			}
 		}
 
 		return response;
@@ -341,6 +355,10 @@ public class ServiceResource extends AbstractContextResource {
 		} catch (Exception e) {
 			response.setError(e);
 			logger.error("Error while deleting", e);
+
+			if (e instanceof UnauthorizedException) {
+				throw new UnauthorizedApiRequestException(response);
+			}
 		}
 
 		return response;

@@ -134,10 +134,22 @@ public class BasicTest extends AbstractRestTest {
 		String user_access_token = node.get("access_token").getTextValue();
 		assertTrue(isNotBlank(user_access_token));
 
-		node = resource().path("/test-app/users")
+		err_thrown = false;
+		try {
+			node = resource().path("/test-app/users")
+					.queryParam("access_token", user_access_token)
+					.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+		} catch (UniformInterfaceException e) {
+			if (e.getResponse().getStatus() != 401) {
+				throw e;
+			}
+			err_thrown = true;
+		}
+		assertTrue("Error should have been thrown", err_thrown);
+
+		node = resource().path("/test-app/users/edanuff")
 				.queryParam("access_token", user_access_token)
 				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-
 		logNode(node);
 
 		assertEquals(1, node.get("entities").size());
