@@ -1,29 +1,28 @@
 package org.usergrid.security.shiro;
 
-import static org.usergrid.utils.UUIDUtils.isUUID;
-
 import java.util.List;
 import java.util.Set;
 
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.permission.WildcardPermission;
 import org.springframework.util.AntPathMatcher;
+import org.usergrid.management.UserInfo;
+import org.usergrid.security.shiro.utils.SubjectUtils;
 
-public class PathBasedWildcardPermission extends WildcardPermission {
+public class CustomPermission extends WildcardPermission {
 
 	static AntPathMatcher matcher = new AntPathMatcher();
 
 	private static final long serialVersionUID = 1L;
 
-	public PathBasedWildcardPermission() {
+	public CustomPermission() {
 	}
 
-	public PathBasedWildcardPermission(String wildcardString) {
+	public CustomPermission(String wildcardString) {
 		super(wildcardString);
 	}
 
-	public PathBasedWildcardPermission(String wildcardString,
-			boolean caseSensitive) {
+	public CustomPermission(String wildcardString, boolean caseSensitive) {
 		super(wildcardString, caseSensitive);
 	}
 
@@ -36,11 +35,11 @@ public class PathBasedWildcardPermission extends WildcardPermission {
 	public boolean implies(Permission p) {
 		// By default only supports comparisons with other
 		// PathBasedWildcardPermission
-		if (!(p instanceof PathBasedWildcardPermission)) {
+		if (!(p instanceof CustomPermission)) {
 			return false;
 		}
 
-		PathBasedWildcardPermission wp = (PathBasedWildcardPermission) p;
+		CustomPermission wp = (CustomPermission) p;
 
 		List<Set<String>> otherParts = wp.getParts();
 
@@ -75,9 +74,16 @@ public class PathBasedWildcardPermission extends WildcardPermission {
 	}
 
 	private static boolean doCompare(String p1, String p2) {
-		if (isUUID(p1)) {
-			if (doCompare("/" + p1 + "/**", p2)) {
-				return true;
+		if (p1.contains("${user}")) {
+			UserInfo user = SubjectUtils.getUser();
+			if (user != null) {
+				if (doCompare(p1.replace("${user}", user.getUsername()), p2)) {
+					return true;
+				}
+				if (doCompare(p1.replace("${user}", user.getUuid().toString()),
+						p2)) {
+					return true;
+				}
 			}
 		}
 		if (matcher.isPattern(p1)) {
