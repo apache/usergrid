@@ -72,7 +72,7 @@ public class Setup {
 	 * @throws Exception
 	 *             the exception
 	 */
-	public void setup() throws Exception {
+	public synchronized void setup() throws Exception {
 		cass.init();
 
 		setupSystemKeyspace();
