@@ -106,23 +106,23 @@ public class Realm extends AuthorizingRealm {
 
 	public Realm() {
 		setCredentialsMatcher(new AllowAllCredentialsMatcher());
-		setPermissionResolver(new PathBasedWildcardPermissionResolver());
+		setPermissionResolver(new CustomPermissionResolver());
 	}
 
 	public Realm(CacheManager cacheManager) {
 		super(cacheManager);
 		setCredentialsMatcher(new AllowAllCredentialsMatcher());
-		setPermissionResolver(new PathBasedWildcardPermissionResolver());
+		setPermissionResolver(new CustomPermissionResolver());
 	}
 
 	public Realm(CredentialsMatcher matcher) {
 		super(new AllowAllCredentialsMatcher());
-		setPermissionResolver(new PathBasedWildcardPermissionResolver());
+		setPermissionResolver(new CustomPermissionResolver());
 	}
 
 	public Realm(CacheManager cacheManager, CredentialsMatcher matcher) {
 		super(cacheManager, new AllowAllCredentialsMatcher());
-		setPermissionResolver(new PathBasedWildcardPermissionResolver());
+		setPermissionResolver(new CustomPermissionResolver());
 	}
 
 	@Override
@@ -137,10 +137,10 @@ public class Realm extends AuthorizingRealm {
 
 	@Override
 	public void setPermissionResolver(PermissionResolver permissionResolver) {
-		if (!(permissionResolver instanceof PathBasedWildcardPermissionResolver)) {
+		if (!(permissionResolver instanceof CustomPermissionResolver)) {
 			logger.info("Replacing " + permissionResolver
 					+ " with AllowAllCredentialsMatcher");
-			permissionResolver = new PathBasedWildcardPermissionResolver();
+			permissionResolver = new CustomPermissionResolver();
 		}
 		super.setPermissionResolver(permissionResolver);
 	}
@@ -305,9 +305,13 @@ public class Realm extends AuthorizingRealm {
 					grant(info,
 							principal,
 							getPermissionFromPath(MANAGEMENT_APPLICATION_ID,
-									"access,get,put,post,delete", "/users/"
-											+ user.getUuid(),
-									"/users/" + user.getUuid() + "/feed"));
+									"access"));
+
+					grant(info,
+							principal,
+							getPermissionFromPath(MANAGEMENT_APPLICATION_ID,
+									"get,put,post,delete", "/users/${user}",
+									"/users/${user}/feed"));
 
 					role(info, principal, ROLE_ADMIN_USER);
 
@@ -352,18 +356,14 @@ public class Realm extends AuthorizingRealm {
 
 				UUID applicationId = ((ApplicationUserPrincipal) principal)
 						.getApplicationId();
-				UserInfo user = ((ApplicationUserPrincipal) principal)
-						.getUser();
+
+				grant(info, principal,
+						getPermissionFromPath(applicationId, "access"));
+
 				grant(info,
 						principal,
 						getPermissionFromPath(applicationId,
-								"access,get,put,post,delete",
-								"/users/" + user.getUuid()));
-				grant(info,
-						principal,
-						getPermissionFromPath(applicationId,
-								"access,get,put,post,delete",
-								"/users/" + user.getUsername()));
+								"get,put,post,delete", "/users/${user}"));
 
 				EntityManager em = emf.getEntityManager(applicationId);
 				try {
