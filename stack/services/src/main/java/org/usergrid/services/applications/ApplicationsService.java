@@ -313,8 +313,10 @@ public class ApplicationsService extends AbstractService {
 
 	public ServiceResults getApplicationCounters(Query query) throws Exception {
 		Results counters = em.getAggregateCounters(query);
-		ServiceResults results = simpleServiceResults(Type.COUNTERS)
-				.withCounters(counters.getCounters());
+		ServiceResults results = simpleServiceResults(Type.COUNTERS);
+		if (counters != null) {
+			results.withCounters(counters.getCounters());
+		}
 		return results;
 	}
 
