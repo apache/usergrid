@@ -124,6 +124,12 @@ public class UserResource extends ServiceResource {
 		return response;
 	}
 
+	@POST
+	@Path("sendpin")
+	public ApiResponse postSendPin(@Context UriInfo ui) throws Exception {
+		return sendPin(ui);
+	}
+
 	@GET
 	@Path("setpin")
 	@RequireApplicationAccess
