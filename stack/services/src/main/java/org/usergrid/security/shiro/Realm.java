@@ -310,11 +310,12 @@ public class Realm extends AuthorizingRealm {
 							getPermissionFromPath(MANAGEMENT_APPLICATION_ID,
 									"access"));
 
+					// admin users cannot access the management app directly
+					// so open all permissions
 					grant(info,
 							principal,
 							getPermissionFromPath(MANAGEMENT_APPLICATION_ID,
-									"get,put,post,delete", "/users/${user}",
-									"/users/${user}/feed"));
+									"get,put,post,delete", "/**"));
 
 					role(info, principal, ROLE_ADMIN_USER);
 
