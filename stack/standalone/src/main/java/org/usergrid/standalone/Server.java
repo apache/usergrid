@@ -316,7 +316,7 @@ public class Server implements ApplicationContextAware {
 		if (embeddedCassandra == null) {
 			embeddedCassandra = new EmbeddedServerHelper();
 
-			if (startDatabaseWithServer) {
+			if (initializeDatabaseOnStart) {
 				logger.info("Initializing Cassandra");
 				try {
 					embeddedCassandra.setup();
