@@ -37,6 +37,8 @@
  ******************************************************************************/
 package org.usergrid.rest;
 
+import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -60,6 +62,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.rest.applications.ApplicationResource;
 import org.usergrid.rest.exceptions.NoOpException;
+import org.usergrid.rest.exceptions.UnauthorizedApiRequestException;
 
 /**
  * 
@@ -142,6 +145,10 @@ public class RootResource extends AbstractContextResource {
 			return null;
 		}
 
+		if (applicationId.equals(MANAGEMENT_APPLICATION_ID)) {
+			throw new UnauthorizedApiRequestException();
+		}
+
 		return new ApplicationResource(this, applicationId);
 	}
 
@@ -163,6 +170,10 @@ public class RootResource extends AbstractContextResource {
 		UUID applicationId = emf.lookupApplication(applicationName);
 		if (applicationId == null) {
 			return null;
+		}
+
+		if (applicationId.equals(MANAGEMENT_APPLICATION_ID)) {
+			throw new UnauthorizedApiRequestException();
 		}
 
 		return new ApplicationResource(this, applicationId);
