@@ -245,7 +245,7 @@ public class MeteringFilter implements ContainerRequestFilter,
 		public OutputStream writeStatusAndHeaders(long contentLength,
 				ContainerResponse response) throws IOException {
 
-			logger.info("Wrapping output stream");
+			// logger.info("Wrapping output stream");
 			OutputStream o = crw.writeStatusAndHeaders(contentLength, response);
 
 			if (out == null) {
