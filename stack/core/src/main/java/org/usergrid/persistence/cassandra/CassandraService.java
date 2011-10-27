@@ -95,6 +95,9 @@ public class CassandraService {
 	public static final UUID DEFAULT_APPLICATION_ID = new UUID(0, 16);
 
 	private static final Logger logger = Logger
+			.getLogger(CassandraService.class);
+
+	private static final Logger db_logger = Logger
 			.getLogger(CassandraService.class.getPackage().getName() + ".DB");
 
 	Cluster cluster;
@@ -120,7 +123,7 @@ public class CassandraService {
 		this.cluster = cluster;
 		chc = cassandraHostConfigurator;
 		this.lockManager = lockManager;
-		logger.info(cluster.getKnownPoolHosts(false));
+		db_logger.info(cluster.getKnownPoolHosts(false));
 	}
 
 	public void init() throws Exception {
@@ -224,16 +227,16 @@ public class CassandraService {
 	public void createKeyspace(String keyspace,
 			List<ColumnFamilyDefinition> cf_defs) {
 
-		logger.warn("Creating keyspace: " + keyspace);
+		logger.info("Creating keyspace: " + keyspace);
 
 		String strategy_class = getString(properties,
 				"cassandra.keyspace.strategy",
 				"org.apache.cassandra.locator.SimpleStrategy");
-		logger.warn("Using strategy: " + strategy_class);
+		logger.info("Using strategy: " + strategy_class);
 
 		int replication_factor = getIntValue(properties,
 				"cassandra.keyspace.replication", 1);
-		logger.warn("Using replication (may be overriden by strategy options): "
+		logger.info("Using replication (may be overriden by strategy options): "
 				+ replication_factor);
 
 		try {
@@ -246,7 +249,7 @@ public class CassandraService {
 			Map<String, String> strategy_options = filter((Map) properties,
 					"cassandra.keyspace.strategy.options.", true);
 			if (strategy_options.size() > 0) {
-				logger.warn("Strategy options: "
+				logger.info("Strategy options: "
 						+ mapToFormattedJsonString(strategy_options));
 				ks_def.setStrategyOptions(strategy_options);
 			}
@@ -261,7 +264,7 @@ public class CassandraService {
 				.equals(strategy_class)) || (replication_factor > 1);
 
 		if (delay_configuration) {
-			logger.warn("Waiting 10s after keyspace creation");
+			logger.info("Waiting 10s after keyspace creation");
 			try {
 				Thread.sleep(10000);
 			} catch (InterruptedException e) {
@@ -279,7 +282,7 @@ public class CassandraService {
 				}
 				if (delay_configuration) {
 					try {
-						logger.warn("Waiting 2s after CF creation");
+						logger.info("Waiting 2s after CF creation");
 						Thread.sleep(2000);
 					} catch (InterruptedException e) {
 					}
@@ -288,7 +291,7 @@ public class CassandraService {
 		}
 		if (delay_configuration) {
 			try {
-				logger.warn("Waiting 5s before continuing setup");
+				logger.info("Waiting 5s before continuing setup");
 				Thread.sleep(5000);
 			} catch (InterruptedException e) {
 			}
@@ -301,12 +304,12 @@ public class CassandraService {
 		try {
 			ksDefs = cluster.describeKeyspaces();
 		} catch (Exception e) {
-			logger.error("Unable to describe keyspaces", e);
+			db_logger.error("Unable to describe keyspaces", e);
 		}
 
 		if (ksDefs != null) {
 			for (KeyspaceDefinition ksDef : ksDefs) {
-				logger.warn(ksDef.getName().toString());
+				logger.info(ksDef.getName().toString());
 			}
 		}
 	}
@@ -328,8 +331,8 @@ public class CassandraService {
 			Object columnFamily, Object key, Serializer<N> nameSerializer,
 			Serializer<V> valueSerializer) throws Exception {
 
-		if (logger.isInfoEnabled()) {
-			logger.info("getColumns cf=" + columnFamily + " key=" + key);
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("getColumns cf=" + columnFamily + " key=" + key);
 		}
 
 		SliceQuery<ByteBuffer, N, V> q = createSliceQuery(ko, be,
@@ -341,11 +344,11 @@ public class CassandraService {
 		ColumnSlice<N, V> slice = r.get();
 		List<HColumn<N, V>> results = slice.getColumns();
 
-		if (logger.isInfoEnabled()) {
+		if (db_logger.isInfoEnabled()) {
 			if (results == null) {
-				logger.info("getColumns returned null");
+				db_logger.info("getColumns returned null");
 			} else {
-				logger.info("getColumns returned " + results.size()
+				db_logger.info("getColumns returned " + results.size()
 						+ " columns");
 			}
 		}
@@ -394,8 +397,8 @@ public class CassandraService {
 			Object columnFamily, Object key, Object start, Object finish,
 			int count, boolean reversed) throws Exception {
 
-		if (logger.isInfoEnabled()) {
-			logger.info("getColumns cf=" + columnFamily + " key=" + key
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("getColumns cf=" + columnFamily + " key=" + key
 					+ " start=" + start + " finish=" + finish + " count="
 					+ count + " reversed=" + reversed);
 		}
@@ -433,11 +436,11 @@ public class CassandraService {
 		ColumnSlice<ByteBuffer, ByteBuffer> slice = r.get();
 		List<HColumn<ByteBuffer, ByteBuffer>> results = slice.getColumns();
 
-		if (logger.isInfoEnabled()) {
+		if (db_logger.isInfoEnabled()) {
 			if (results == null) {
-				logger.info("getColumns returned null");
+				db_logger.info("getColumns returned null");
 			} else {
-				logger.info("getColumns returned " + results.size()
+				db_logger.info("getColumns returned " + results.size()
 						+ " columns");
 			}
 		}
@@ -463,8 +466,8 @@ public class CassandraService {
 			Serializer<N> nameSerializer, Serializer<V> valueSerializer)
 			throws Exception {
 
-		if (logger.isInfoEnabled()) {
-			logger.info("getColumns cf=" + columnFamily + " keys=" + keys);
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("getColumns cf=" + columnFamily + " keys=" + keys);
 		}
 
 		MultigetSliceQuery<K, N, V> q = createMultigetSliceQuery(ko,
@@ -475,11 +478,11 @@ public class CassandraService {
 		QueryResult<Rows<K, N, V>> r = q.execute();
 		Rows<K, N, V> results = r.get();
 
-		if (logger.isInfoEnabled()) {
+		if (db_logger.isInfoEnabled()) {
 			if (results == null) {
-				logger.info("getColumns returned null");
+				db_logger.info("getColumns returned null");
 			} else {
-				logger.info("getColumns returned " + results.getCount()
+				db_logger.info("getColumns returned " + results.getCount()
 						+ " columns");
 			}
 		}
@@ -508,8 +511,8 @@ public class CassandraService {
 			Serializer<N> nameSerializer, Serializer<V> valueSerializer)
 			throws Exception {
 
-		if (logger.isInfoEnabled()) {
-			logger.info("getColumns cf=" + columnFamily + " key=" + key
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("getColumns cf=" + columnFamily + " key=" + key
 					+ " names=" + columnNames);
 		}
 
@@ -525,11 +528,11 @@ public class CassandraService {
 		ColumnSlice<N, V> slice = r.get();
 		List<HColumn<N, V>> results = slice.getColumns();
 
-		if (logger.isInfoEnabled()) {
+		if (db_logger.isInfoEnabled()) {
 			if (results == null) {
-				logger.info("getColumns returned null");
+				db_logger.info("getColumns returned null");
 			} else {
-				logger.info("getColumns returned " + results.size()
+				db_logger.info("getColumns returned " + results.size()
 						+ " columns");
 			}
 		}
@@ -558,8 +561,8 @@ public class CassandraService {
 			Serializer<N> nameSerializer, Serializer<V> valueSerializer)
 			throws Exception {
 
-		if (logger.isInfoEnabled()) {
-			logger.info("getColumns cf=" + columnFamily + " keys=" + keys
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("getColumns cf=" + columnFamily + " keys=" + keys
 					+ " names=" + columnNames);
 		}
 
@@ -572,11 +575,11 @@ public class CassandraService {
 		QueryResult<Rows<K, N, V>> r = q.execute();
 		Rows<K, N, V> results = r.get();
 
-		if (logger.isInfoEnabled()) {
+		if (db_logger.isInfoEnabled()) {
 			if (results == null) {
-				logger.info("getColumns returned null");
+				db_logger.info("getColumns returned null");
 			} else {
-				logger.info("getColumns returned " + results.getCount()
+				db_logger.info("getColumns returned " + results.getCount()
 						+ " columns");
 			}
 		}
@@ -603,8 +606,8 @@ public class CassandraService {
 			Object key, N column, Serializer<N> nameSerializer,
 			Serializer<V> valueSerializer) throws Exception {
 
-		if (logger.isInfoEnabled()) {
-			logger.info("getColumn cf=" + columnFamily + " key=" + key
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("getColumn cf=" + columnFamily + " key=" + key
 					+ " column=" + column);
 		}
 
@@ -621,9 +624,9 @@ public class CassandraService {
 				.execute();
 		HColumn<N, V> result = r.get();
 
-		if (logger.isInfoEnabled()) {
+		if (db_logger.isInfoEnabled()) {
 			if (result == null) {
-				logger.info("getColumn returned null");
+				db_logger.info("getColumn returned null");
 			}
 		}
 
@@ -654,8 +657,8 @@ public class CassandraService {
 	public void setColumn(Keyspace ko, Object columnFamily, Object key,
 			Object columnName, Object columnValue) throws Exception {
 
-		if (logger.isInfoEnabled()) {
-			logger.info("setColumn cf=" + columnFamily + " key=" + key
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("setColumn cf=" + columnFamily + " key=" + key
 					+ " name=" + columnName + " value=" + columnValue);
 		}
 
@@ -696,8 +699,8 @@ public class CassandraService {
 	public void setColumns(Keyspace ko, Object columnFamily, byte[] key,
 			Map<?, ?> map) throws Exception {
 
-		if (logger.isInfoEnabled()) {
-			logger.info("setColumns cf=" + columnFamily + " key=" + key
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("setColumns cf=" + columnFamily + " key=" + key
 					+ " map=" + map);
 		}
 
@@ -759,8 +762,8 @@ public class CassandraService {
 	public void deleteColumn(Keyspace ko, Object columnFamily, Object key,
 			Object column) throws Exception {
 
-		if (logger.isInfoEnabled()) {
-			logger.info("deleteColumn cf=" + columnFamily + " key=" + key
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("deleteColumn cf=" + columnFamily + " key=" + key
 					+ " name=" + column);
 		}
 
@@ -783,8 +786,8 @@ public class CassandraService {
 	public <K> Set<K> getRowKeySet(Keyspace ko, Object columnFamily,
 			Serializer<K> keySerializer) throws Exception {
 
-		if (logger.isInfoEnabled()) {
-			logger.info("getRowKeys cf=" + columnFamily);
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("getRowKeys cf=" + columnFamily);
 		}
 
 		RangeSlicesQuery<K, ByteBuffer, ByteBuffer> q = createRangeSlicesQuery(
@@ -800,9 +803,10 @@ public class CassandraService {
 			results.add(row.getKey());
 		}
 
-		if (logger.isInfoEnabled()) {
+		if (db_logger.isInfoEnabled()) {
 			{
-				logger.info("getRowKeys returned " + results.size() + " rows");
+				db_logger.info("getRowKeys returned " + results.size()
+						+ " rows");
 			}
 		}
 
@@ -858,8 +862,8 @@ public class CassandraService {
 	public void deleteRow(Keyspace ko, final Object columnFamily,
 			final Object key) throws Exception {
 
-		if (logger.isInfoEnabled()) {
-			logger.info("deleteRow cf=" + columnFamily + " key=" + key);
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("deleteRow cf=" + columnFamily + " key=" + key);
 		}
 
 		createMutator(ko, be).addDeletion(bytebuffer(key),
@@ -869,8 +873,8 @@ public class CassandraService {
 	public void deleteRow(Keyspace ko, final Object columnFamily,
 			final String key) throws Exception {
 
-		if (logger.isInfoEnabled()) {
-			logger.info("deleteRow cf=" + columnFamily + " key=" + key);
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("deleteRow cf=" + columnFamily + " key=" + key);
 		}
 
 		createMutator(ko, se).addDeletion(key, columnFamily.toString())
@@ -894,8 +898,8 @@ public class CassandraService {
 	public void deleteRow(Keyspace ko, final Object columnFamily,
 			final Object key, final long timestamp) throws Exception {
 
-		if (logger.isInfoEnabled()) {
-			logger.info("deleteRow cf=" + columnFamily + " key=" + key
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("deleteRow cf=" + columnFamily + " key=" + key
 					+ " timestamp=" + timestamp);
 		}
 
