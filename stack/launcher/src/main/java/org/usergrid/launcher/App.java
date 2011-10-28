@@ -10,8 +10,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.prefs.Preferences;
 
-import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 import org.apache.log4j.Logger;
@@ -20,9 +18,6 @@ import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.type.TypeReference;
 import org.usergrid.standalone.Server;
-
-import com.apple.eawt.AboutHandler;
-import com.apple.eawt.AppEvent.AboutEvent;
 
 public class App {
 
@@ -60,22 +55,7 @@ public class App {
 		}
 
 		if (MAC_OS_X) {
-			com.apple.eawt.Application macApp = com.apple.eawt.Application
-					.getApplication();
-			macApp.setDockIconImage(new ImageIcon(App.class
-					.getResource("dock_icon.png")).getImage());
-
-			macApp.setAboutHandler(new AboutHandler() {
-				@Override
-				public void handleAbout(AboutEvent evt) {
-					JOptionPane
-							.showMessageDialog(
-									null,
-									"Usergrid Standalone Server Launcher\nCopyright 2011 Ed Anuff & Usergrid",
-									"About Usergrid Launcher",
-									JOptionPane.INFORMATION_MESSAGE);
-				}
-			});
+			AppleUtils.initMacApp();
 		}
 
 		App app = new App();
