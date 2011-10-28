@@ -133,7 +133,7 @@ public class Server implements ApplicationContextAware {
 				"/(((images|css|js|jsp|WEB-INF/jsp)/.*)|(favicon\\.ico))");
 
 		handler.addContextParameter("contextConfigLocation",
-				"classpath:applicationContext.xml");
+				"classpath:standaloneApplicationContext.xml");
 
 		handler.addServletListener(ContextLoaderListener.class.getName());
 		handler.addServletListener(RequestContextListener.class.getName());
