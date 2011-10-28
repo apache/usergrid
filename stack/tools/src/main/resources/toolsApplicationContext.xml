@@ -34,7 +34,7 @@
 		<property name="locations">
 			<list>
 				<value>classpath:/usergrid.properties</value>
-				<value>${usergrid-custom-spring-properties}</value>
+				<value>file:./usergrid-custom-tools.properties</value>
 			</list>
 		</property>
 	</bean>

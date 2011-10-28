@@ -150,7 +150,7 @@ public abstract class ToolBase {
 
 		// copy("/testApplicationContext.xml", TMP);
 
-		String[] locations = { "applicationContext.xml" };
+		String[] locations = { "toolsApplicationContext.xml" };
 		ApplicationContext ac = new ClassPathXmlApplicationContext(locations);
 
 		AutowireCapableBeanFactory acbf = ac.getAutowireCapableBeanFactory();
