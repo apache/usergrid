@@ -37,6 +37,7 @@
  ******************************************************************************/
 package org.usergrid.rest.management.users;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
 
 import java.util.LinkedHashMap;
@@ -164,6 +165,11 @@ public class UsersResource extends AbstractContextResource {
 			@FormParam("recaptcha_response_field") String uresponse)
 			throws Exception {
 
+		if (isBlank(email)) {
+			errorMsg = "No email provided, try again...";
+			return new Viewable("resetpw_email_form", this);
+		}
+
 		ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
 		reCaptcha.setPrivateKey(properties
 				.getProperty("usergrid.recaptcha.private"));
@@ -171,7 +177,7 @@ public class UsersResource extends AbstractContextResource {
 		ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
 				httpServletRequest.getRemoteAddr(), challenge, uresponse);
 
-		if ((email != null) && reCaptchaResponse.isValid()) {
+		if (!useReCaptcha() || reCaptchaResponse.isValid()) {
 			user = management.getAdminUserByEmail(email);
 			if (user != null) {
 				management.sendAdminUserPasswordReminderEmail(user);

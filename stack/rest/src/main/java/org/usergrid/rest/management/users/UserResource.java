@@ -101,8 +101,8 @@ public class UserResource extends AbstractContextResource {
 		String oldPassword = string(json.get("oldpassword"));
 		String newPassword = string(json.get("newpassword"));
 		if ((oldPassword != null) && (newPassword != null)) {
-			management
-					.setAdminUserPassword(user.getUuid(), oldPassword, newPassword);
+			management.setAdminUserPassword(user.getUuid(), oldPassword,
+					newPassword);
 		}
 
 		String email = string(json.get("email"));
@@ -128,7 +128,8 @@ public class UserResource extends AbstractContextResource {
 
 		String oldPassword = string(json.get("oldpassword"));
 		String newPassword = string(json.get("newpassword"));
-		management.setAdminUserPassword(user.getUuid(), oldPassword, newPassword);
+		management.setAdminUserPassword(user.getUuid(), oldPassword,
+				newPassword);
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user password");
@@ -158,8 +159,8 @@ public class UserResource extends AbstractContextResource {
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("get admin user");
 
-		String token = management.getAccessTokenForAdminUser(SubjectUtils.getUser()
-				.getUuid());
+		String token = management.getAccessTokenForAdminUser(SubjectUtils
+				.getUser().getUuid());
 		Map<String, Object> userOrganizationData = management
 				.getAdminUserOrganizationData(user.getUuid());
 		userOrganizationData.put("token", token);
@@ -176,7 +177,8 @@ public class UserResource extends AbstractContextResource {
 
 		this.token = token;
 
-		if (management.checkPasswordResetTokenForAdminUser(user.getUuid(), token)) {
+		if (management.checkPasswordResetTokenForAdminUser(user.getUuid(),
+				token)) {
 			return new Viewable("resetpw_set_form", this);
 		} else {
 			return new Viewable("resetpw_email_form", this);
@@ -197,8 +199,8 @@ public class UserResource extends AbstractContextResource {
 		this.token = token;
 
 		if ((password1 != null) || (password2 != null)) {
-			if (management
-					.checkPasswordResetTokenForAdminUser(user.getUuid(), token)) {
+			if (management.checkPasswordResetTokenForAdminUser(user.getUuid(),
+					token)) {
 				if ((password1 != null) && password1.equals(password2)) {
 					management.setAdminUserPassword(user.getUuid(), password1);
 					return new Viewable("resetpw_set_success", this);
@@ -210,6 +212,11 @@ public class UserResource extends AbstractContextResource {
 				errorMsg = "Something odd happened, let's try again...";
 				return new Viewable("resetpw_email_form", this);
 			}
+		}
+
+		if (!useReCaptcha()) {
+			management.sendAdminUserPasswordReminderEmail(user);
+			return new Viewable("resetpw_email_success", this);
 		}
 
 		ReCaptchaImpl reCaptcha = new ReCaptchaImpl();

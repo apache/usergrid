@@ -37,6 +37,7 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.services.ServiceParameter.addParameter;
 
@@ -145,7 +146,12 @@ public class UsersResource extends ServiceResource {
 		ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
 				httpServletRequest.getRemoteAddr(), challenge, uresponse);
 
-		if ((email != null) && reCaptchaResponse.isValid()) {
+		if (isBlank(email)) {
+			errorMsg = "No email provided, try again...";
+			return new Viewable("resetpw_email_form", this);
+		}
+
+		if (!useReCaptcha() || reCaptchaResponse.isValid()) {
 			user = management.getAppUserByIdentifier(getApplicationId(),
 					Identifier.fromEmail(email));
 			if (user != null) {

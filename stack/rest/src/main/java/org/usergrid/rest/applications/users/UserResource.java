@@ -221,6 +221,12 @@ public class UserResource extends ServiceResource {
 			}
 		}
 
+		if (!useReCaptcha()) {
+			management.sendAppUserPasswordReminderEmail(getApplicationId(),
+					user);
+			return new Viewable("resetpw_email_success", this);
+		}
+
 		ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
 		reCaptcha.setPrivateKey(properties
 				.getProperty("usergrid.recaptcha.private"));
