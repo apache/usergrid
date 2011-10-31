@@ -366,7 +366,7 @@ public class SubjectUtils {
 		try {
 			currentUser = SecurityUtils.getSubject();
 		} catch (UnavailableSecurityManagerException e) {
-			logger.error("Attempt to use Shiro prior to initialization");
+			logger.error("getSubject(): Attempt to use Shiro prior to initialization");
 		}
 		return currentUser;
 	}
@@ -379,7 +379,7 @@ public class SubjectUtils {
 		try {
 			currentUser.checkPermission(permission);
 		} catch (org.apache.shiro.authz.UnauthenticatedException e) {
-			logger.error("Subject is anonymous");
+			logger.error("checkPermission(): Subject is anonymous");
 		}
 	}
 
