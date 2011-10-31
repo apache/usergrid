@@ -37,6 +37,8 @@
  ******************************************************************************/
 package org.usergrid.rest;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import java.util.List;
 import java.util.Properties;
 
@@ -46,6 +48,9 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+
+import net.tanesha.recaptcha.ReCaptcha;
+import net.tanesha.recaptcha.ReCaptchaFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.management.ManagementService;
@@ -163,4 +168,21 @@ public abstract class AbstractContextResource {
 		}
 		return null;
 	}
+
+	public boolean useReCaptcha() {
+		return isNotBlank(properties.getProperty("usergrid.recaptcha.public"))
+				&& isNotBlank(properties
+						.getProperty("usergrid.recaptcha.private"));
+	}
+
+	public String getReCaptchaHtml() {
+		if (!useReCaptcha()) {
+			return "";
+		}
+		ReCaptcha c = ReCaptchaFactory.newReCaptcha(
+				properties.getProperty("usergrid.recaptcha.public"),
+				properties.getProperty("usergrid.recaptcha.private"), false);
+		return c.createRecaptchaHtml(null, null);
+	}
+
 }
