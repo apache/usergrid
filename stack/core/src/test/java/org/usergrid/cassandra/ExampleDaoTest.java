@@ -27,9 +27,9 @@ import java.io.IOException;
 
 import me.prettyprint.cassandra.examples.ExampleDaoV2;
 import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.testutils.EmbeddedServerHelper;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Serializer;
+import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 
 import org.apache.cassandra.config.ConfigurationException;
 import org.apache.thrift.transport.TTransportException;

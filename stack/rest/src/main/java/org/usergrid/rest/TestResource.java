@@ -59,8 +59,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import me.prettyprint.cassandra.testutils.EmbeddedServerHelper;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
@@ -86,45 +84,8 @@ public class TestResource extends AbstractContextResource {
 
 	private static final Logger logger = Logger.getLogger(TestResource.class);
 
-	EmbeddedServerHelper embedded = null;
-
 	public TestResource() {
 
-	}
-
-	@RequireSystemAccess
-	@GET
-	@Path("cassandra/start")
-	public ApiResponse setupCassandra(@Context UriInfo ui) throws Exception {
-
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("cassandra start");
-
-		// assertNotNull(client);
-
-		logger.info("Starting Cassandra");
-		embedded = new EmbeddedServerHelper();
-		embedded.setup();
-
-		response.setSuccess();
-
-		return response;
-	}
-
-	@RequireSystemAccess
-	@GET
-	@Path("cassandra/stop")
-	public ApiResponse teardownCassandra(@Context UriInfo ui) {
-
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("cassandra stop");
-
-		logger.info("Stopping Cassandra");
-		EmbeddedServerHelper.teardown();
-
-		response.setSuccess();
-
-		return response;
 	}
 
 	private String getSampleDataUrl(String file) {

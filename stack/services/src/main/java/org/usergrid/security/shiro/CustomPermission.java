@@ -1,5 +1,6 @@
 package org.usergrid.security.shiro;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -43,6 +44,7 @@ public class CustomPermission extends WildcardPermission {
 
 		List<Set<String>> otherParts = wp.getParts();
 
+		boolean isApp = false;
 		int i = 0;
 		for (Set<String> otherPart : otherParts) {
 			// If this permission has less parts than the other permission,
@@ -51,8 +53,18 @@ public class CustomPermission extends WildcardPermission {
 			if ((getParts().size() - 1) < i) {
 				return true;
 			} else {
-				Set<String> part = getParts().get(i);
+				if ((i == 0) && otherPart.contains("applications")) {
+					isApp = true;
+				}
 				// this part is the permission, the other part is the challenger
+				Set<String> part = getParts().get(i);
+				// if we know we're doing an application compare
+				// then make sure all the parts from the third onwards
+				// are normalized as paths
+				if (isApp && (i >= 2)) {
+					part = makePaths(part);
+					otherPart = makePaths(otherPart);
+				}
 				if (!part.contains(WILDCARD_TOKEN)
 						&& !partContainsPart(part, otherPart)) {
 					return false;
@@ -73,13 +85,38 @@ public class CustomPermission extends WildcardPermission {
 		return true;
 	}
 
-	private static String normalizeIfPath(String p) {
+	static String normalizeIfPath(String p) {
 		if (p.startsWith("/")) {
 			if (!p.endsWith("/") && !p.endsWith("*")) {
 				p += "/";
 			}
 		}
 		return p;
+	}
+
+	static String makePath(String p) {
+		if (p.equals("*")) {
+			p = "/**";
+		}
+		if (!p.startsWith("/")) {
+			p = "/" + p;
+		}
+		if (!p.endsWith("/") && !p.endsWith("*")) {
+			p += "/";
+		}
+		return p;
+	}
+
+	static Set<String> makePaths(Set<String> part) {
+		Set<String> newPart = new HashSet<String>();
+		for (String p : part) {
+			newPart.add(makePath(p));
+		}
+		return newPart;
+	}
+
+	static boolean isPath(String p) {
+		return p.contains("/");
 	}
 
 	private static boolean doCompare(String p1, String p2) {
@@ -95,6 +132,10 @@ public class CustomPermission extends WildcardPermission {
 					return true;
 				}
 			}
+		}
+		if (isPath(p1) || isPath(p2)) {
+			p1 = makePath(p1);
+			p2 = makePath(p2);
 		}
 		if (matcher.isPattern(p1)) {
 			if (matcher.match(p1, p2)) {

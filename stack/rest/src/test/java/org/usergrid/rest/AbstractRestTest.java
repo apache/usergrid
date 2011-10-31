@@ -1,7 +1,7 @@
 package org.usergrid.rest;
 
 import static org.junit.Assert.assertNull;
-import me.prettyprint.cassandra.testutils.EmbeddedServerHelper;
+import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

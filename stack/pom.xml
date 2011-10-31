@@ -7,9 +7,9 @@
 		<bundle.symbolicName>org.usergrid</bundle.symbolicName>
 		<bundle.namespace>org.usergrid</bundle.namespace>
 		<cassandra-javautils-version>0.7.0</cassandra-javautils-version>
-		<cassandra-version>0.8.2</cassandra-version>
-		<hector-om-version>1.1-02</hector-om-version>
-		<hector-version>0.8.0-2</hector-version>
+		<cassandra-version>0.8.7</cassandra-version>
+		<hector-om-version>1.1-03</hector-om-version>
+		<hector-version>0.8.0-3</hector-version>
 		<jackson-version>1.8.5</jackson-version>
 		<jersey-version>1.9.1</jersey-version>
 		<junit-version>4.8.2</junit-version>
@@ -217,6 +217,11 @@
 			<dependency>
 				<groupId>me.prettyprint</groupId>
 				<artifactId>hector-core</artifactId>
+				<version>${hector-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>me.prettyprint</groupId>
+				<artifactId>hector-test</artifactId>
 				<version>${hector-version}</version>
 			</dependency>
 			<dependency>

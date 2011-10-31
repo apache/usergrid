@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Properties;
 
-import me.prettyprint.cassandra.testutils.EmbeddedServerHelper;
+import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;

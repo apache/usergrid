@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Properties;
 
-import me.prettyprint.cassandra.testutils.EmbeddedServerHelper;
+import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

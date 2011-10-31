@@ -189,6 +189,11 @@
 			</exclusions>
 		</dependency>
 		<dependency>
+			<groupId>me.prettyprint</groupId>
+			<artifactId>hector-test</artifactId>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>jasper</artifactId>
 			<version>6.0.33</version>

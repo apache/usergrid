@@ -227,6 +227,11 @@
 			<artifactId>hector-core</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>me.prettyprint</groupId>
+			<artifactId>hector-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
