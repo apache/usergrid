@@ -61,7 +61,7 @@ public class CustomPermission extends WildcardPermission {
 				// if we know we're doing an application compare
 				// then make sure all the parts from the third onwards
 				// are normalized as paths
-				if (isApp && (i >= 2)) {
+				if (isApp && (i > 2)) {
 					part = makePaths(part);
 					otherPart = makePaths(otherPart);
 				}
@@ -101,9 +101,9 @@ public class CustomPermission extends WildcardPermission {
 		if (!p.startsWith("/")) {
 			p = "/" + p;
 		}
-		if (!p.endsWith("/") && !p.endsWith("*")) {
-			p += "/";
-		}
+		// if (!p.endsWith("/") && !p.endsWith("*")) {
+		// p += "/";
+		// }
 		return p;
 	}
 
