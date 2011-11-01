@@ -42,7 +42,7 @@ public class EntityConnectionsTest extends AbstractPersistenceTest {
 	public void testEntityConnections() throws Exception {
 		logger.info("\n\nEntityConnectionsTest.testEntityConnections\n");
 
-		UUID applicationId = createApplication("testEntityManagerTest");
+		UUID applicationId = createApplication("testEntityConnections");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);
@@ -214,8 +214,8 @@ public class EntityConnectionsTest extends AbstractPersistenceTest {
 
 	public List<UUID> testApplicationCollections(UUID applicationId,
 			String collectionName, int expectedCount) throws Exception {
-		return testEntityCollections(applicationId, applicationId, collectionName,
-				expectedCount);
+		return testEntityCollections(applicationId, applicationId,
+				collectionName, expectedCount);
 	}
 
 	public List<UUID> testEntityCollections(UUID applicationId, UUID entityId,
