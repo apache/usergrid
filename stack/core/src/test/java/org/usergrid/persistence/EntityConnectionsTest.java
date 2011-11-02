@@ -98,9 +98,15 @@ public class EntityConnectionsTest extends AbstractPersistenceTest {
 
 		// List forward connections for cat A
 
+		// Thread.sleep(5000);
+
+		logger.info("Find all connections for cat A: " + catA.getUuid());
+
 		testEntityConnections(applicationId, catA.getUuid(), 1);
 
 		// List forward connections for award A
+
+		logger.info("Find all connections for award A: " + awardA.getUuid());
 
 		testEntityConnections(applicationId, awardA.getUuid(), 1);
 

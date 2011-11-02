@@ -184,10 +184,11 @@ public class RelationManagerImpl implements RelationManager {
 		QueryResult<OrderedRows<UUID, String, ByteBuffer>> r = q.execute();
 		OrderedRows<UUID, String, ByteBuffer> rows = r.get();
 		List<ConnectionRefImpl> connections = new ArrayList<ConnectionRefImpl>();
+		logger.info(rows.getCount() + " indexed connection row(s) retrieved");
 		for (Row<UUID, String, ByteBuffer> row : rows) {
 			UUID entityId = row.getKey();
 
-			logger.info("Indexed Connection " + entityId.toString() + " found");
+			logger.info("Indexed connection " + entityId.toString() + " found");
 
 			ConnectionRefImpl c = ConnectionRefImpl.loadFromColumns(row
 					.getColumnSlice().getColumns());
@@ -195,11 +196,14 @@ public class RelationManagerImpl implements RelationManager {
 			String entityType = c.getConnectedEntityType();
 			if (!includeConnectionEntities
 					&& TYPE_CONNECTION.equalsIgnoreCase(entityType)) {
+				logger.info("Skipping loopback connection "
+						+ entityId.toString());
 				continue;
 			}
 			connections.add(c);
 		}
 
+		logger.info("Returing " + connections.size() + " connection(s)");
 		return connections;
 	}
 

@@ -1467,6 +1467,11 @@ public class EntityManagerImpl implements EntityManager {
 		deleteAliasesForEntity(entityId, timestamp);
 	}
 
+	@Override
+	public void delete(EntityRef entityRef) throws Exception {
+		deleteEntity(entityRef.getUuid());
+	}
+
 	public void batchCreateRole(Mutator<ByteBuffer> batch, UUID groupId,
 			String roleName, String roleTitle, RoleRef roleRef,
 			UUID timestampUuid) throws Exception {
@@ -2067,24 +2072,6 @@ public class EntityManagerImpl implements EntityManager {
 	public void deleteProperty(EntityRef entityRef, String propertyName)
 			throws Exception {
 		setProperty(entityRef, propertyName, null);
-	}
-
-	@Override
-	public void delete(EntityRef entityRef) throws Exception {
-		// TODO Implement entity delete
-
-		// Get list of properties
-		// Deleting every property will eliminate all incoming indexes
-		// Get list of connections
-		// Delete every connection
-		// Remove from every collection including root collections
-		// Delete entity
-		// DYNAMIC_PROPERTY_NAMES
-		// DYNAMIC_DICTIONARY_NAMES
-		// COLLECTIONS_INDEX_NAMES
-		// CONNECTIONS_INDEX_NAMES
-		deleteEntity(entityRef.getUuid());
-
 	}
 
 	@Override
