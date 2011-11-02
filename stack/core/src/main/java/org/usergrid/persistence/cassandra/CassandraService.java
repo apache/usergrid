@@ -69,6 +69,7 @@ import me.prettyprint.hector.api.query.SliceQuery;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ser.ArraySerializers.ByteArraySerializer;
 import org.usergrid.locking.LockManager;
+import org.usergrid.utils.JsonUtils;
 
 public class CassandraService {
 
@@ -310,6 +311,26 @@ public class CassandraService {
 		if (ksDefs != null) {
 			for (KeyspaceDefinition ksDef : ksDefs) {
 				logger.info(ksDef.getName().toString());
+			}
+		}
+	}
+
+	public void logKeyspaces() {
+
+		List<KeyspaceDefinition> ksDefs = null;
+		try {
+			ksDefs = cluster.describeKeyspaces();
+		} catch (Exception e) {
+			db_logger.error("Unable to describe keyspaces", e);
+		}
+
+		if (ksDefs != null) {
+			for (KeyspaceDefinition ksDef : ksDefs) {
+				System.out.println("Keyspace: " + ksDef.getName().toString());
+				for (ColumnFamilyDefinition cf : ksDef.getCfDefs()) {
+					System.out.println("CF: " + cf.getName());
+					System.out.println(JsonUtils.mapToFormattedJsonString(cf));
+				}
 			}
 		}
 	}
