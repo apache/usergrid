@@ -54,6 +54,7 @@ public class PersistenceTestHelperImpl implements PersistenceTestHelper {
 	EntityManagerFactory emf;
 	QueueManagerFactory mmf;
 	Properties properties;
+	CassandraService cassandraService;
 
 	public boolean forceQuit = FORCE_QUIT;
 
@@ -166,6 +167,17 @@ public class PersistenceTestHelperImpl implements PersistenceTestHelper {
 
 	public void setForceQuit(boolean forceQuit) {
 		this.forceQuit = forceQuit;
+	}
+
+	@Override
+	public CassandraService getCassandraService() {
+		return cassandraService;
+	}
+
+	@Override
+	@Autowired
+	public void setCassandraService(CassandraService cassandraService) {
+		this.cassandraService = cassandraService;
 	}
 
 }

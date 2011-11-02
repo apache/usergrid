@@ -21,6 +21,7 @@ package org.usergrid.persistence;
 import java.util.Properties;
 
 import org.usergrid.mq.QueueManagerFactory;
+import org.usergrid.persistence.cassandra.CassandraService;
 
 public interface PersistenceTestHelper {
 
@@ -39,5 +40,9 @@ public interface PersistenceTestHelper {
 	public abstract void setup() throws Exception;
 
 	public abstract void teardown() throws Exception;
+
+	public abstract void setCassandraService(CassandraService cassandraService);
+
+	public abstract CassandraService getCassandraService();
 
 }
