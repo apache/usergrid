@@ -19,6 +19,7 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.batch
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.buildSetIdListMutator;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
+import static org.usergrid.utils.ConversionUtils.string;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.usergrid.utils.MapUtils.asMap;
@@ -55,6 +56,7 @@ import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.beans.Rows;
+import me.prettyprint.hector.api.ddl.ColumnDefinition;
 import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
 import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import me.prettyprint.hector.api.factory.HFactory;
@@ -328,8 +330,59 @@ public class CassandraService {
 			for (KeyspaceDefinition ksDef : ksDefs) {
 				System.out.println("Keyspace: " + ksDef.getName().toString());
 				for (ColumnFamilyDefinition cf : ksDef.getCfDefs()) {
-					System.out.println("CF: " + cf.getName());
-					System.out.println(JsonUtils.mapToFormattedJsonString(cf));
+					System.out.println("  CF: " + cf.getName());
+
+					System.out.println("    id: " + cf.getId());
+					System.out.println("    comment: " + cf.getComment());
+					System.out.println("    rowCacheSize: "
+							+ cf.getRowCacheSize());
+					System.out.println("    keyCacheSize: "
+							+ cf.getKeyCacheSize());
+					System.out.println("    readRepairChance: "
+							+ cf.getReadRepairChance());
+					System.out.println("    gcGraceSeconds: "
+							+ cf.getGcGraceSeconds());
+					System.out.println("    minCompactionThreshold: "
+							+ cf.getMinCompactionThreshold());
+					System.out.println("    maxCompactionThreshold: "
+							+ cf.getMaxCompactionThreshold());
+					System.out.println("    rowCacheSavePeriodInSeconds: "
+							+ cf.getRowCacheSavePeriodInSeconds());
+					System.out.println("    keyCacheSavePeriodInSeconds: "
+							+ cf.getKeyCacheSavePeriodInSeconds());
+					System.out.println("    memtableFlushAfterMins: "
+							+ cf.getMemtableFlushAfterMins());
+					System.out.println("    memtableThroughputInMb: "
+							+ cf.getMemtableThroughputInMb());
+					System.out.println("    memtableOperationsInMillions: "
+							+ cf.getMemtableOperationsInMillions());
+					System.out.println("    keyspaceName: "
+							+ cf.getKeyspaceName());
+					System.out.println("    comparatorType: "
+							+ cf.getColumnType());
+					System.out.println("    columnType: "
+							+ JsonUtils.mapToJsonString(cf.getColumnType()));
+					System.out.println("    subComparatorType: "
+							+ JsonUtils.mapToJsonString(cf
+									.getSubComparatorType()));
+					System.out.println("    keyValidationClass: "
+							+ cf.getKeyValidationClass());
+					System.out.println("    columnMetadata:");
+					for (ColumnDefinition column : cf.getColumnMetadata()) {
+						System.out.println("      name: "
+								+ string(column.getName()));
+						System.out.println("        indexName: "
+								+ column.getIndexName());
+						System.out.println("        validationClass: "
+								+ column.getValidationClass());
+						System.out.println("        indexType: "
+								+ column.getIndexType());
+					}
+					System.out.println("    defaultValidationClass: "
+							+ cf.getDefaultValidationClass());
+					System.out.println("    replicateOnWrite: "
+							+ cf.isReplicateOnWrite());
+
 				}
 			}
 		}
