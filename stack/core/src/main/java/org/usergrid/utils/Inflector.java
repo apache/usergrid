@@ -740,6 +740,7 @@ public class Inflector {
 		inflect.addIrregular("sex", "sexes");
 		inflect.addIrregular("move", "moves");
 		inflect.addIrregular("stadium", "stadiums");
+		inflect.addIrregular("data", "data");
 
 		inflect.addUncountable("equipment", "information", "rice", "money",
 				"species", "series", "fish", "sheep");
