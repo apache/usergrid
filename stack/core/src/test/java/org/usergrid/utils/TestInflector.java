@@ -35,6 +35,7 @@ public class TestInflector {
 		testSingularize("messages", "message");
 		testSingularize("activities", "activity");
 		testSingularize("binaries", "binary");
+		testSingularize("data", "data");
 
 		testSingularize("user", "user");
 		testSingularize("group", "group");
@@ -49,6 +50,7 @@ public class TestInflector {
 		testPluralize("message", "messages");
 		testPluralize("activity", "activities");
 		testPluralize("binary", "binaries");
+		testPluralize("data", "data");
 
 		testPluralize("users", "users");
 		testPluralize("groups", "groups");
