@@ -293,8 +293,8 @@ public class ServiceManager {
 					payload);
 		}
 
-		String serviceName = ServiceParameter.dequeueParameter(parameters)
-				.getName();
+		String serviceName = pluralize(ServiceParameter.dequeueParameter(
+				parameters).getName());
 		return new ServiceRequest(this, action, serviceName, parameters,
 				payload, returnsTree);
 	}
