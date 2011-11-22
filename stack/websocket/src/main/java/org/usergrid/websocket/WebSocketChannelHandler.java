@@ -63,8 +63,6 @@ import java.security.MessageDigest;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.apache.shiro.mgt.SessionsSecurityManager;
 import org.apache.shiro.subject.Subject;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -93,6 +91,8 @@ import org.jboss.netty.handler.codec.http.websocket.WebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocket.WebSocketFrameDecoder;
 import org.jboss.netty.handler.codec.http.websocket.WebSocketFrameEncoder;
 import org.jboss.netty.util.CharsetUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.management.ManagementService;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.services.ServiceManagerFactory;
@@ -102,7 +102,7 @@ import com.google.common.collect.MapMaker;
 
 public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(WebSocketChannelHandler.class);
 
 	private final EntityManagerFactory emf;
@@ -198,8 +198,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-		logger.log(Level.WARN, "Unexpected exception from downstream.",
-				e.getCause());
+		logger.warn("Unexpected exception from downstream.", e.getCause());
 		e.getChannel().close();
 	}
 

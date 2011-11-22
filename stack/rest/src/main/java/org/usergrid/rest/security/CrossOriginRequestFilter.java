@@ -37,7 +37,8 @@
  ******************************************************************************/
 package org.usergrid.rest.security;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerResponse;
@@ -45,7 +46,7 @@ import com.sun.jersey.spi.container.ContainerResponseFilter;
 
 public class CrossOriginRequestFilter implements ContainerResponseFilter {
 
-	public static final Logger logger = Logger
+	public static final Logger logger = LoggerFactory
 			.getLogger(CrossOriginRequestFilter.class);
 
 	private static final String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";

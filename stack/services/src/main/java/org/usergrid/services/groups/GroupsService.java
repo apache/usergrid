@@ -37,14 +37,15 @@
  ******************************************************************************/
 package org.usergrid.services.groups;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.services.AbstractPathBasedColllectionService;
 import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServiceResults;
 
 public class GroupsService extends AbstractPathBasedColllectionService {
 
-	private static final Logger logger = Logger.getLogger(GroupsService.class);
+	private static final Logger logger = LoggerFactory.getLogger(GroupsService.class);
 
 	public GroupsService() {
 		super();

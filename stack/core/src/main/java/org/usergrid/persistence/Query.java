@@ -51,7 +51,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.query.QueryFilterLexer;
 import org.usergrid.persistence.query.QueryFilterParser;
@@ -59,7 +60,7 @@ import org.usergrid.utils.JsonUtils;
 
 public class Query {
 
-	private static final Logger logger = Logger.getLogger(Query.class);
+	private static final Logger logger = LoggerFactory.getLogger(Query.class);
 
 	public static final int DEFAULT_LIMIT = 10;
 

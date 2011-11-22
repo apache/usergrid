@@ -27,37 +27,41 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UUIDUtilsTest {
 
-	private static final Logger logger = Logger.getLogger(UUIDUtilsTest.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(UUIDUtilsTest.class);
 
 	@Test
 	public void testUUIDUtils() {
 		UUID uuid = UUIDUtils.newTimeUUID();
-		logger.info(uuid);
-		logger.info(uuid.timestamp());
-		logger.info(UUIDUtils.getTimestampInMillis(uuid));
+		logger.info("" + uuid);
+		logger.info("" + uuid.timestamp());
+		logger.info("" + UUIDUtils.getTimestampInMillis(uuid));
 
-		logger.info(UUIDUtils.getTimestampInMillis(UUIDUtils.newTimeUUID()));
-		logger.info(System.currentTimeMillis());
+		logger.info(""
+				+ UUIDUtils.getTimestampInMillis(UUIDUtils.newTimeUUID()));
+		logger.info("" + System.currentTimeMillis());
 
-		logger.info(UUIDUtils.getTimestampInMicros(UUIDUtils.newTimeUUID()));
-		logger.info(System.currentTimeMillis() * 1000);
+		logger.info(""
+				+ UUIDUtils.getTimestampInMicros(UUIDUtils.newTimeUUID()));
+		logger.info("" + (System.currentTimeMillis() * 1000));
 
-		logger.info(UUIDUtils.MIN_TIME_UUID);
-		logger.info(UUIDUtils.MIN_TIME_UUID.variant());
-		logger.info(UUIDUtils.MIN_TIME_UUID.version());
-		logger.info(UUIDUtils.MIN_TIME_UUID.clockSequence());
-		logger.info(UUIDUtils.MIN_TIME_UUID.timestamp());
+		logger.info("" + UUIDUtils.MIN_TIME_UUID);
+		logger.info("" + UUIDUtils.MIN_TIME_UUID.variant());
+		logger.info("" + UUIDUtils.MIN_TIME_UUID.version());
+		logger.info("" + UUIDUtils.MIN_TIME_UUID.clockSequence());
+		logger.info("" + UUIDUtils.MIN_TIME_UUID.timestamp());
 
-		logger.info(UUIDUtils.MAX_TIME_UUID);
-		logger.info(UUIDUtils.MAX_TIME_UUID.variant());
-		logger.info(UUIDUtils.MAX_TIME_UUID.version());
-		logger.info(UUIDUtils.MAX_TIME_UUID.clockSequence());
-		logger.info(UUIDUtils.MAX_TIME_UUID.timestamp());
+		logger.info("" + UUIDUtils.MAX_TIME_UUID);
+		logger.info("" + UUIDUtils.MAX_TIME_UUID.variant());
+		logger.info("" + UUIDUtils.MAX_TIME_UUID.version());
+		logger.info("" + UUIDUtils.MAX_TIME_UUID.clockSequence());
+		logger.info("" + UUIDUtils.MAX_TIME_UUID.timestamp());
 	}
 
 	@Test

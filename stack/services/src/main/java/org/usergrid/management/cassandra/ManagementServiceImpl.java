@@ -79,8 +79,9 @@ import java.util.UUID;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
-import org.apache.log4j.Logger;
 import org.apache.shiro.UnavailableSecurityManagerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.locking.LockManager;
 import org.usergrid.management.ApplicationInfo;
@@ -111,6 +112,11 @@ import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
+import org.usergrid.security.shiro.PrincipalCredentialsToken;
+import org.usergrid.security.shiro.credentials.ApplicationClientCredentials;
+import org.usergrid.security.shiro.credentials.OrganizationClientCredentials;
+import org.usergrid.security.shiro.principals.ApplicationPrincipal;
+import org.usergrid.security.shiro.principals.OrganizationPrincipal;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.services.ServiceAction;
 import org.usergrid.services.ServiceManager;
@@ -129,7 +135,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 	public static final String APPLICATION_INFO = "application_info";
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ManagementServiceImpl.class);
 
 	public static final String OAUTH_SECRET_SALT = "super secret oauth value";
@@ -1379,6 +1385,9 @@ public class ManagementServiceImpl implements ManagementService {
 			return null;
 		}
 		UUID applicationId = emf.lookupApplication(applicationName);
+		if (applicationId == null) {
+			return null;
+		}
 		return new ApplicationInfo(applicationId, applicationName.toLowerCase());
 	}
 
@@ -1523,6 +1532,40 @@ public class ManagementServiceImpl implements ManagementService {
 			}
 		}
 		return access_info;
+	}
+
+	@Override
+	public PrincipalCredentialsToken getPrincipalCredentialsTokenForClientCredentials(
+			String clientId, String clientSecret) throws Exception {
+		if ((clientId == null) || (clientSecret == null)) {
+			return null;
+		}
+		UUID uuid = getUUIDFromClientId(clientId);
+		if (uuid == null) {
+			return null;
+		}
+		AuthPrincipalType type = getTypeFromClientId(clientId);
+		if (type == null) {
+			return null;
+		}
+		PrincipalCredentialsToken token = null;
+		if (clientSecret
+				.equals(getSecret(MANAGEMENT_APPLICATION_ID, type, uuid))) {
+			if (type.equals(AuthPrincipalType.APPLICATION)) {
+				ApplicationInfo app = getApplication(uuid);
+				token = new PrincipalCredentialsToken(new ApplicationPrincipal(
+						app), new ApplicationClientCredentials(clientId,
+						clientSecret));
+
+			} else if (type.equals(AuthPrincipalType.ORGANIZATION)) {
+				OrganizationInfo organization = getOrganizationByUuid(uuid);
+				token = new PrincipalCredentialsToken(
+						new OrganizationPrincipal(organization),
+						new OrganizationClientCredentials(clientId,
+								clientSecret));
+			}
+		}
+		return token;
 	}
 
 	public AccessInfo authorizeAppUser(String clientType, String clientId,

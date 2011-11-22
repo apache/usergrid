@@ -48,7 +48,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Schema;
@@ -60,7 +61,7 @@ import org.usergrid.services.exceptions.ServiceInvocationException;
 public class AbstractPathBasedColllectionService extends
 		AbstractCollectionService {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(AbstractPathBasedColllectionService.class);
 
 	public AbstractPathBasedColllectionService() {

@@ -51,16 +51,17 @@ import java.util.Properties;
 import java.util.UUID;
 
 import org.apache.commons.lang.text.StrSubstitutor;
-import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 
 public class OrganizationTest {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(OrganizationTest.class);
 
 	static ManagementService management;

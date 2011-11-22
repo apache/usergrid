@@ -2,13 +2,6 @@ package org.usergrid.launcher;
 
 import java.awt.BorderLayout;
 import java.io.IOException;
-import java.util.logging.Filter;
-import java.util.logging.Formatter;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.LogRecord;
-import java.util.logging.SimpleFormatter;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -47,9 +40,6 @@ public class LogViewerFrame extends JFrame {
 		Log4jAppender appender = new Log4jAppender();
 		Logger.getRootLogger().addAppender(appender);
 
-		LogManager.getLogManager().getLogger("")
-				.addHandler(new JavaUtilLogHandler());
-
 	}
 
 	public void appendMessage(final String message) {
@@ -87,41 +77,6 @@ public class LogViewerFrame extends JFrame {
 		@Override
 		protected void append(LoggingEvent loggingEvent) {
 			appendMessage(layout.format(loggingEvent));
-		}
-
-	}
-
-	public class JavaUtilLogHandler extends Handler {
-
-		Formatter formatter;
-
-		Level level = Level.INFO;
-
-		public JavaUtilLogHandler() {
-			formatter = new SimpleFormatter();
-			Filter filter = new Filter() {
-				@Override
-				public boolean isLoggable(LogRecord record) {
-					return record.getLevel().intValue() >= level.intValue();
-				}
-			};
-			setFilter(filter);
-		}
-
-		@Override
-		public void close() throws SecurityException {
-		}
-
-		@Override
-		public void flush() {
-		}
-
-		@Override
-		public void publish(LogRecord logRecord) {
-			if (!getFilter().isLoggable(logRecord)) {
-				return;
-			}
-			appendMessage(formatter.format(logRecord));
 		}
 
 	}

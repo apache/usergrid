@@ -21,7 +21,8 @@ package org.usergrid.clustering.hazelcast;
 import java.util.Collection;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -40,7 +41,7 @@ import com.hazelcast.core.MessageListener;
 @Ignore
 public class HazelcastTest implements InstanceListener, MessageListener<Object> {
 
-	private static final Logger logger = Logger.getLogger(HazelcastTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(HazelcastTest.class);
 
 	ClassPathXmlApplicationContext ac;
 

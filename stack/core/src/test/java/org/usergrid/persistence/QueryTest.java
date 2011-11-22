@@ -26,7 +26,8 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import org.usergrid.persistence.Query.FilterPredicate;
 import org.usergrid.persistence.Query.SortDirection;
@@ -35,7 +36,7 @@ import org.usergrid.utils.JsonUtils;
 
 public class QueryTest {
 
-	private static final Logger logger = Logger.getLogger(QueryTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(QueryTest.class);
 
 	@Test
 	public void testQuery() throws Exception {

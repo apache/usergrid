@@ -79,6 +79,7 @@ public class ApiResponse {
 	String errorDescription;
 	String errorUri;
 	String exception;
+	String callback;
 
 	String path;
 	String uri;
@@ -107,6 +108,15 @@ public class ApiResponse {
 	public ApiResponse(UriInfo ui) {
 		this.ui = ui;
 		timestamp = System.currentTimeMillis();
+	}
+
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	public String getCallback() {
+		return callback;
+	}
+
+	public void setCallback(String callback) {
+		this.callback = callback;
 	}
 
 	@JsonSerialize(include = Inclusion.NON_NULL)

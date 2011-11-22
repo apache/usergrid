@@ -106,8 +106,9 @@ import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
 import me.prettyprint.hector.api.query.SliceQuery;
 
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ser.ArraySerializers.ByteArraySerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.Queue;
 import org.usergrid.mq.QueueManager;
@@ -136,7 +137,7 @@ import com.fasterxml.uuid.UUIDComparator;
 
 public class QueueManagerImpl implements QueueManager {
 
-	public static final Logger logger = Logger
+	public static final Logger logger = LoggerFactory
 			.getLogger(QueueManagerImpl.class);
 
 	public static final String DICTIONARY_SUBSCRIBER_INDEXES = "subscriber_indexes";

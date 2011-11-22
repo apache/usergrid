@@ -40,7 +40,8 @@ package org.usergrid.services.groups.users.activities;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Results;
@@ -51,7 +52,7 @@ import org.usergrid.services.generic.GenericCollectionService;
 
 public class ActivitiesService extends GenericCollectionService {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ActivitiesService.class);
 
 	public ActivitiesService() {

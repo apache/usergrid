@@ -46,12 +46,14 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
@@ -60,7 +62,8 @@ import javax.ws.rs.core.UriInfo;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.Query;
@@ -68,12 +71,14 @@ import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.applications.ServiceResource;
 
+import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
 @Produces(MediaType.APPLICATION_JSON)
 public class UsersResource extends ServiceResource {
 
-	private static final Logger logger = Logger.getLogger(UsersResource.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(UsersResource.class);
 
 	String errorMsg;
 	User user;
@@ -179,7 +184,8 @@ public class UsersResource extends ServiceResource {
 
 	@POST
 	@Override
-	public ApiResponse executePost(@Context UriInfo ui, Object json)
+	public JSONWithPadding executePost(@Context UriInfo ui, Object json,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 		String password = null;
 		String pin = null;
@@ -204,7 +210,8 @@ public class UsersResource extends ServiceResource {
 			}
 		}
 
-		ApiResponse response = super.executePost(ui, json);
+		ApiResponse response = (ApiResponse) super.executePost(ui, json,
+				callback).getJsonSource();
 
 		if ((response.getEntities() != null)
 				&& (response.getEntities().size() == 1)) {
@@ -221,7 +228,7 @@ public class UsersResource extends ServiceResource {
 						pin);
 			}
 		}
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 }

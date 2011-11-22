@@ -37,22 +37,30 @@
  ******************************************************************************/
 package org.usergrid.rest.applications;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.services.ServiceManager;
 
-@Produces(MediaType.APPLICATION_JSON)
+import com.sun.jersey.api.json.JSONWithPadding;
+
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class AuthResource extends AbstractContextResource {
 
-	private static final Logger logger = Logger.getLogger(AuthResource.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(AuthResource.class);
 
 	ServiceManager services = null;
 
@@ -63,7 +71,8 @@ public class AuthResource extends AbstractContextResource {
 
 	@GET
 	@Path("fb")
-	public ApiResponse authFB(@Context UriInfo ui) {
+	public JSONWithPadding authFB(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback) {
 
 		logger.info("AuthResource.authFB");
 
@@ -71,7 +80,7 @@ public class AuthResource extends AbstractContextResource {
 		response.setAction("setup");
 		response.setSuccess();
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 }

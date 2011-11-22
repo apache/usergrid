@@ -75,9 +75,17 @@ public abstract class SecurityFilter implements ContainerRequestFilter {
 	@Context
 	HttpContext hc;
 
+	public EntityManagerFactory getEntityManagerFactory() {
+		return emf;
+	}
+
 	@Autowired
 	public void setEntityManagerFactory(EntityManagerFactory emf) {
 		this.emf = emf;
+	}
+
+	public ServiceManagerFactory getServiceManagerFactory() {
+		return smf;
 	}
 
 	@Autowired
@@ -85,9 +93,17 @@ public abstract class SecurityFilter implements ContainerRequestFilter {
 		this.smf = smf;
 	}
 
+	public Properties getProperties() {
+		return properties;
+	}
+
 	@Autowired
 	public void setProperties(Properties properties) {
 		this.properties = properties;
+	}
+
+	public ManagementService getManagementService() {
+		return management;
 	}
 
 	@Autowired

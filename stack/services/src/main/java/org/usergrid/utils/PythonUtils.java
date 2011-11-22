@@ -39,13 +39,14 @@ package org.usergrid.utils;
 
 import static org.usergrid.utils.StringUtils.compactWhitespace;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.python.core.PyObject;
 import org.python.util.PythonInterpreter;
 
 public class PythonUtils {
 
-	private static final Logger logger = Logger.getLogger(PythonUtils.class);
+	private static final Logger logger = LoggerFactory.getLogger(PythonUtils.class);
 
 	public static PyObject getPyClass(String moduleName, String clsName) {
 		PyObject pyObject = null;

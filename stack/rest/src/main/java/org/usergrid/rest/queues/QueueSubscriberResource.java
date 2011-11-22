@@ -55,15 +55,20 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.mq.QueueSet;
 import org.usergrid.rest.AbstractContextResource;
 
-@Produces(MediaType.APPLICATION_JSON)
+import com.sun.jersey.api.json.JSONWithPadding;
+
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class QueueSubscriberResource extends AbstractContextResource {
 
-	static final Logger logger = Logger
+	static final Logger logger = LoggerFactory
 			.getLogger(QueueSubscriberResource.class);
 
 	QueueManager mq;
@@ -100,9 +105,10 @@ public class QueueSubscriberResource extends AbstractContextResource {
 	}
 
 	@GET
-	public QueueSet executeGet(@Context UriInfo ui,
+	public JSONWithPadding executeGet(@Context UriInfo ui,
 			@QueryParam("start") String firstSubscriberQueuePath,
-			@QueryParam("limit") @DefaultValue("10") int limit)
+			@QueryParam("limit") @DefaultValue("10") int limit,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		logger.info("QueueSubscriberResource.executeGet: " + queuePath);
@@ -110,47 +116,57 @@ public class QueueSubscriberResource extends AbstractContextResource {
 		QueueSet results = mq.getSubscribers(queuePath,
 				firstSubscriberQueuePath, limit);
 
-		return results;
+		return new JSONWithPadding(results, callback);
 	}
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-	public QueueSet executePost(@Context UriInfo ui, Map<String, Object> json)
+	public JSONWithPadding executePost(@Context UriInfo ui,
+			Map<String, Object> json,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		logger.info("QueueSubscriberResource.executePost: " + queuePath);
 
-		return executePut(ui, json);
+		return executePut(ui, json, callback);
 	}
 
 	@PUT
 	@Consumes(MediaType.APPLICATION_JSON)
-	public QueueSet executePut(@Context UriInfo ui, Map<String, Object> json)
+	public JSONWithPadding executePut(@Context UriInfo ui,
+			Map<String, Object> json,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		logger.info("QueueSubscriberResource.executePut: " + queuePath);
 
 		if (StringUtils.isNotBlank(subscriberPath)) {
-			return mq.subscribeToQueue(queuePath, subscriberPath);
+			return new JSONWithPadding(mq.subscribeToQueue(queuePath,
+					subscriberPath), callback);
 		} else if ((json != null) && (json.containsKey("subscriber"))) {
 			String subscriber = (String) json.get("subscriber");
-			return mq.subscribeToQueue(queuePath, subscriber);
+			return new JSONWithPadding(mq.subscribeToQueue(queuePath,
+					subscriber), callback);
 		} else if ((json != null) && (json.containsKey("subscribers"))) {
 			@SuppressWarnings("unchecked")
 			List<String> subscribers = (List<String>) json.get("subscribers");
-			return mq.addSubscribersToQueue(queuePath, subscribers);
+			return new JSONWithPadding(mq.addSubscribersToQueue(queuePath,
+					subscribers), callback);
 		}
 
 		return null;
 	}
 
 	@DELETE
-	public QueueSet executeDelete(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding executeDelete(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("QueueSubscriberResource.executeDelete: " + queuePath);
 
 		if (StringUtils.isNotBlank(subscriberPath)) {
-			return mq.unsubscribeFromQueue(queuePath, subscriberPath);
+			return new JSONWithPadding(mq.unsubscribeFromQueue(queuePath,
+					subscriberPath), callback);
 		}
 
 		return null;

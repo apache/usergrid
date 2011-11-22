@@ -51,12 +51,13 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.persistence.ConnectionRef;
 import org.usergrid.persistence.Entity;
@@ -73,7 +74,7 @@ public class Export extends ToolBase {
 
 	public static final int MAX_ENTITY_FETCH = 100;
 
-	private static final Logger logger = Logger.getLogger(Export.class);
+	private static final Logger logger = LoggerFactory.getLogger(Export.class);
 
 	/** Verbose option: -v */
 	private static final String VERBOSE = "v";
@@ -147,7 +148,7 @@ public class Export extends ToolBase {
 
 	private void exportApplicationsForOrg(Entry<UUID, String> organization)
 			throws Exception {
-		logger.info(organization);
+		logger.info("" + organization);
 
 		// Loop through the applications per organization
 		BiMap<UUID, String> applications = managementService

@@ -48,14 +48,15 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.services.AbstractCollectionService;
 import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServiceResults;
 
 public class UsersService extends AbstractCollectionService {
 
-	private static final Logger logger = Logger.getLogger(UsersService.class);
+	private static final Logger logger = LoggerFactory.getLogger(UsersService.class);
 
 	public UsersService() {
 		super();

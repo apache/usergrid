@@ -53,7 +53,8 @@ import java.util.Properties;
 
 import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
@@ -69,7 +70,7 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
 
 	public static final boolean FORCE_QUIT = false;
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ManagementTestHelperImpl.class);
 
 	// private static final String TMP = "tmp";

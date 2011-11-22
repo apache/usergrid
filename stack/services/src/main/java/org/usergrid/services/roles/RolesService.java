@@ -37,7 +37,8 @@
  ******************************************************************************/
 package org.usergrid.services.roles;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.SimpleRoleRef;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.services.AbstractCollectionService;
@@ -46,7 +47,7 @@ import org.usergrid.services.ServiceResults;
 
 public class RolesService extends AbstractCollectionService {
 
-	private static final Logger logger = Logger.getLogger(RolesService.class);
+	private static final Logger logger = LoggerFactory.getLogger(RolesService.class);
 
 	public RolesService() {
 		super();

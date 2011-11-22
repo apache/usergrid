@@ -44,10 +44,12 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -55,14 +57,17 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.rest.applications.ApplicationResource;
 import org.usergrid.rest.exceptions.NoOpException;
 import org.usergrid.rest.exceptions.UnauthorizedApiRequestException;
+
+import com.sun.jersey.api.json.JSONWithPadding;
 
 /**
  * 
@@ -71,10 +76,13 @@ import org.usergrid.rest.exceptions.UnauthorizedApiRequestException;
 @Path("/")
 @Component
 @Scope("singleton")
-@Produces(MediaType.APPLICATION_JSON)
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class RootResource extends AbstractContextResource {
 
-	private static final Logger logger = Logger.getLogger(RootResource.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(RootResource.class);
 
 	long started = System.currentTimeMillis();
 
@@ -83,7 +91,8 @@ public class RootResource extends AbstractContextResource {
 
 	@GET
 	@Path("applications")
-	public ApiResponse getAllApplications(@Context UriInfo ui)
+	public JSONWithPadding getAllApplications(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws URISyntaxException {
 
 		System.out.println("RootResource.getAllApplications");
@@ -101,7 +110,7 @@ public class RootResource extends AbstractContextResource {
 			response.setError("Unable to retrieve applications");
 		}
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@GET
@@ -121,14 +130,15 @@ public class RootResource extends AbstractContextResource {
 
 	@GET
 	@Path("status")
-	public ApiResponse getStatus() {
+	public JSONWithPadding getStatus(
+			@QueryParam("callback") @DefaultValue("callback") String callback) {
 		ApiResponse response = new ApiResponse();
 
 		ObjectNode node = JsonNodeFactory.instance.objectNode();
 		node.put("started", started);
 		node.put("uptime", System.currentTimeMillis() - started);
 		response.setProperty("status", node);
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@Path("{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")

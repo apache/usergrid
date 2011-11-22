@@ -44,7 +44,8 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
@@ -64,7 +65,7 @@ public class ServiceManager {
 	public static final String OSS_PACKAGE_PREFIX = "org.usergrid.services";
 	public static final String COM_PACKAGE_PREFIX = "com.usergrid.services";
 
-	private static final Logger logger = Logger.getLogger(ServiceManager.class);
+	private static final Logger logger = LoggerFactory.getLogger(ServiceManager.class);
 
 	UUID applicationId;
 

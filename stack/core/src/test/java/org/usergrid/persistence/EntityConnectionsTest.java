@@ -26,12 +26,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EntityConnectionsTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(EntityConnectionsTest.class);
 
 	public EntityConnectionsTest() {
@@ -99,6 +100,8 @@ public class EntityConnectionsTest extends AbstractPersistenceTest {
 		// List forward connections for cat A
 
 		// Thread.sleep(5000);
+
+		helper.getCassandraService().logKeyspaces();
 
 		logger.info("Find all connections for cat A: " + catA.getUuid());
 

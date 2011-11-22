@@ -41,29 +41,38 @@ import static org.usergrid.services.ServiceParameter.addParameter;
 import static org.usergrid.services.ServicePayload.batchPayload;
 import static org.usergrid.services.ServicePayload.idListPayload;
 import static org.usergrid.services.ServicePayload.payload;
+import static org.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.usergrid.utils.JsonUtils.normalizeJsonTree;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.log4j.Logger;
 import org.apache.shiro.authz.UnauthorizedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.AggregateCounter;
+import org.usergrid.persistence.AggregateCounterSet;
+import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
@@ -76,10 +85,14 @@ import org.usergrid.services.ServicePayload;
 import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
 
-@Produces(MediaType.APPLICATION_JSON)
+import com.sun.jersey.api.json.JSONWithPadding;
+
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class ServiceResource extends AbstractContextResource {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ServiceResource.class);
 
 	ServiceManager services;
@@ -233,7 +246,9 @@ public class ServiceResource extends AbstractContextResource {
 
 	@GET
 	@RequireApplicationAccess
-	public ApiResponse executeGet(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding executeGet(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("ServiceResource.executeGet");
 
@@ -253,7 +268,7 @@ public class ServiceResource extends AbstractContextResource {
 			}
 		}
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -282,7 +297,8 @@ public class ServiceResource extends AbstractContextResource {
 	@POST
 	@RequireApplicationAccess
 	@Consumes(MediaType.APPLICATION_JSON)
-	public ApiResponse executePost(@Context UriInfo ui, Object json)
+	public JSONWithPadding executePost(@Context UriInfo ui, Object json,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		logger.info("ServiceResource.executePost");
@@ -305,13 +321,15 @@ public class ServiceResource extends AbstractContextResource {
 			}
 		}
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@PUT
 	@RequireApplicationAccess
 	@Consumes(MediaType.APPLICATION_JSON)
-	public ApiResponse executePut(@Context UriInfo ui, Map<String, Object> json)
+	public JSONWithPadding executePut(@Context UriInfo ui,
+			Map<String, Object> json,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		logger.info("ServiceResource.executePut");
@@ -334,12 +352,14 @@ public class ServiceResource extends AbstractContextResource {
 			}
 		}
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@DELETE
 	@RequireApplicationAccess
-	public ApiResponse executeDelete(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding executeDelete(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("ServiceResource.executeDelete");
 
@@ -361,6 +381,62 @@ public class ServiceResource extends AbstractContextResource {
 			}
 		}
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
+
+	@Produces("text/csv")
+	@GET
+	@RequireApplicationAccess
+	public String executeGetCsv(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
+		ui.getQueryParameters().putSingle("pad", "true");
+		JSONWithPadding jsonp = executeGet(ui, callback);
+
+		StringBuilder builder = new StringBuilder();
+		if ((jsonp != null) && (jsonp.getJsonSource() instanceof ApiResponse)) {
+			ApiResponse apiResponse = (ApiResponse) jsonp.getJsonSource();
+			if ((apiResponse.getCounters() != null)
+					&& (apiResponse.getCounters().size() > 0)) {
+				List<AggregateCounterSet> counters = apiResponse.getCounters();
+				int size = counters.get(0).getValues().size();
+				List<AggregateCounter> firstCounterList = counters.get(0)
+						.getValues();
+				if (size > 0) {
+					builder.append("timestamp");
+					for (AggregateCounterSet counterSet : counters) {
+						builder.append(",");
+						builder.append(counterSet.getName());
+					}
+					builder.append("\n");
+					SimpleDateFormat formatter = new SimpleDateFormat(
+							"yyyy-MM-dd HH:mm:ss.SSS");
+					for (int i = 0; i < size; i++) {
+						// yyyy-mm-dd hh:mm:ss.000
+						builder.append(formatter.format(new Date(
+								firstCounterList.get(i).getTimestamp())));
+						for (AggregateCounterSet counterSet : counters) {
+							List<AggregateCounter> counterList = counterSet
+									.getValues();
+							builder.append(",");
+							builder.append(counterList.get(i).getValue());
+						}
+						builder.append("\n");
+					}
+				}
+			} else if ((apiResponse.getEntities() != null)
+					&& (apiResponse.getEntities().size() > 0)) {
+				for (Entity entity : apiResponse.getEntities()) {
+					builder.append(entity.getUuid());
+					builder.append(",");
+					builder.append(entity.getType());
+					builder.append(",");
+					builder.append(mapToJsonString(entity));
+				}
+
+			}
+		}
+		return builder.toString();
+	}
+
 }

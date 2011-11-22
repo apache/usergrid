@@ -42,11 +42,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.jaxrs.Annotations;
 import org.codehaus.jackson.jaxrs.MapperConfigurator;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Provider
@@ -55,7 +56,7 @@ import org.springframework.stereotype.Component;
 public class JacksonCustomMapperProvider implements
 		ContextResolver<ObjectMapper> {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(JacksonCustomMapperProvider.class);
 
 	public final static Annotations[] BASIC_ANNOTATIONS = { Annotations.JACKSON };

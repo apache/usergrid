@@ -50,9 +50,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManagerFactory;
@@ -64,7 +65,7 @@ import org.usergrid.utils.JsonUtils;
 public abstract class AbstractServiceTest {
 	public static final boolean USE_DEFAULT_DOMAIN = false;
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(AbstractServiceTest.class);
 
 	static PersistenceTestHelper helper;

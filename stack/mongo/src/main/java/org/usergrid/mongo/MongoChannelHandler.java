@@ -44,8 +44,6 @@ import java.net.InetSocketAddress;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.mgt.SessionsSecurityManager;
 import org.apache.shiro.subject.Subject;
@@ -55,6 +53,8 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.UserInfo;
@@ -75,7 +75,7 @@ import org.usergrid.utils.MapUtils;
 
 public class MongoChannelHandler extends SimpleChannelUpstreamHandler {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(MongoChannelHandler.class);
 
 	private final EntityManagerFactory emf;
@@ -152,8 +152,7 @@ public class MongoChannelHandler extends SimpleChannelUpstreamHandler {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-		logger.log(Level.WARN, "Unexpected exception from downstream.",
-				e.getCause());
+		logger.warn("Unexpected exception from downstream.", e.getCause());
 		e.getChannel().close();
 	}
 

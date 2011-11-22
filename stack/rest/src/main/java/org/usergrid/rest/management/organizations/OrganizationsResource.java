@@ -41,16 +41,19 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.OrganizationInfo;
@@ -58,13 +61,17 @@ import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 
+import com.sun.jersey.api.json.JSONWithPadding;
+
 @Path("/management/organizations")
 @Component
 @Scope("singleton")
-@Produces(MediaType.APPLICATION_JSON)
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class OrganizationsResource extends AbstractContextResource {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(OrganizationsResource.class);
 
 	public OrganizationsResource() {
@@ -97,8 +104,10 @@ public class OrganizationsResource extends AbstractContextResource {
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-	public ApiResponse newOrganization(@Context UriInfo ui,
-			Map<String, Object> json) throws Exception {
+	public JSONWithPadding newOrganization(@Context UriInfo ui,
+			Map<String, Object> json,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("new organization");
 
@@ -109,16 +118,18 @@ public class OrganizationsResource extends AbstractContextResource {
 		String password = (String) json.get("password");
 
 		return newOrganizationFromForm(ui, organizationName, username, name,
-				email, password);
+				email, password, callback);
 	}
 
 	@POST
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public ApiResponse newOrganizationFromForm(@Context UriInfo ui,
+	public JSONWithPadding newOrganizationFromForm(@Context UriInfo ui,
 			@FormParam("organization") String organizationName,
 			@FormParam("username") String username,
 			@FormParam("name") String name, @FormParam("email") String email,
-			@FormParam("password") String password) throws Exception {
+			@FormParam("password") String password,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("New organization: " + organizationName);
 
@@ -138,13 +149,13 @@ public class OrganizationsResource extends AbstractContextResource {
 		response.setData(organizationOwner);
 		response.setSuccess();
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	/*
 	 * @POST
 	 * 
-	 * @Consumes(MediaType.MULTIPART_FORM_DATA) public ApiResponse
+	 * @Consumes(MediaType.MULTIPART_FORM_DATA) public JSONWithPadding
 	 * newOrganizationFromMultipart(@Context UriInfo ui,
 	 * 
 	 * @FormDataParam("organization") String organization,

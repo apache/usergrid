@@ -37,18 +37,18 @@
  ******************************************************************************/
 package org.usergrid.mongo.testproxy;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.mongo.protocol.Message;
 import org.usergrid.mongo.protocol.OpReply;
 
 public class MongoProxyServerHandler extends SimpleChannelUpstreamHandler {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(MongoProxyServerHandler.class);
 
 	@Override
@@ -71,8 +71,7 @@ public class MongoProxyServerHandler extends SimpleChannelUpstreamHandler {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-		logger.log(Level.WARN, "Unexpected exception from downstream.",
-				e.getCause());
+		logger.warn("Unexpected exception from downstream.", e.getCause());
 		e.getChannel().close();
 	}
 }

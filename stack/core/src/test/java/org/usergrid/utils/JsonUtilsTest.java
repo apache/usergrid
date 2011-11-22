@@ -25,14 +25,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 
 public class JsonUtilsTest {
 
-	private static final Logger logger = Logger.getLogger(JsonUtilsTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(JsonUtilsTest.class);
 
 	@SuppressWarnings("unchecked")
 	@Test

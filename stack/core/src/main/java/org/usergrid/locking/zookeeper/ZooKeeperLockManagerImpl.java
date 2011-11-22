@@ -22,10 +22,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.scale7.networking.utility.NetworkAlgorithms;
 import org.scale7.zookeeper.cages.ZkSessionManager;
 import org.scale7.zookeeper.cages.ZkWriteLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.locking.LockManager;
 import org.usergrid.locking.LockPathBuilder;
 import org.usergrid.locking.exception.UGLockException;
@@ -82,7 +83,7 @@ public final class ZooKeeperLockManagerImpl implements LockManager {
 		return lock;
 	}
 
-	protected static final Logger logger = Logger
+	protected static final Logger logger = LoggerFactory
 			.getLogger(ZooKeeperLockManagerImpl.class);
 
 	/**

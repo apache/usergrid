@@ -32,7 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
@@ -49,7 +50,7 @@ import org.codehaus.jackson.smile.SmileFactory;
  */
 public class JsonUtils {
 
-	private static final Logger logger = Logger.getLogger(JsonUtils.class);
+	private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
 
 	static ObjectMapper mapper = new ObjectMapper();
 

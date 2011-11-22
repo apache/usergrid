@@ -37,13 +37,14 @@
  ******************************************************************************/
 package org.usergrid.services;
 
-import org.apache.log4j.Logger;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ServiceFactoryTest {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ServiceFactoryTest.class);
 
 	@Ignore

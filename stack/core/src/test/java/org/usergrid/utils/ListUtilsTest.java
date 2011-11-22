@@ -23,12 +23,13 @@ import static org.junit.Assert.assertEquals;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 public class ListUtilsTest {
 
-	private static final Logger logger = Logger.getLogger(ListUtilsTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(ListUtilsTest.class);
 
 	@Test
 	public void testListUtils() {

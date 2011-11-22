@@ -41,13 +41,14 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.EntityManager;
 
 public class ApplicationsServiceTest extends AbstractServiceTest {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ApplicationsServiceTest.class);
 
 	@Test
@@ -60,7 +61,7 @@ public class ApplicationsServiceTest extends AbstractServiceTest {
 		EntityManager em = emf.getEntityManager(applicationId);
 		assertNotNull(em);
 
-		//em.createRole("admin", null);
+		// em.createRole("admin", null);
 		em.createRole("manager", null);
 		em.createRole("member", null);
 

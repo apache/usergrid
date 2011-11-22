@@ -12,7 +12,8 @@ import java.util.prefs.Preferences;
 
 import javax.swing.UIManager;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
@@ -21,7 +22,7 @@ import org.usergrid.standalone.Server;
 
 public class App {
 
-	private static final Logger logger = Logger.getLogger(App.class);
+	private static final Logger logger = LoggerFactory.getLogger(App.class);
 
 	public static boolean MAC_OS_X = (System.getProperty("os.name")
 			.toLowerCase().startsWith("mac os x"));

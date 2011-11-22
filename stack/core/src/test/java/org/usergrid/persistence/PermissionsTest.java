@@ -26,12 +26,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PermissionsTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(PermissionsTest.class);
 
 	public PermissionsTest() {
@@ -48,7 +49,7 @@ public class PermissionsTest extends AbstractPersistenceTest {
 		EntityManager em = emf.getEntityManager(applicationId);
 		assertNotNull(em);
 
-		//em.createRole("admin", null);
+		// em.createRole("admin", null);
 		em.createRole("manager", null);
 		em.createRole("member", null);
 
@@ -121,7 +122,8 @@ public class PermissionsTest extends AbstractPersistenceTest {
 				permissions.size());
 		dump("group permissions", permissions);
 
-		em.revokeGroupRolePermission(group.getUuid(), "admin", "groups:access:*");
+		em.revokeGroupRolePermission(group.getUuid(), "admin",
+				"groups:access:*");
 
 		permissions = em.getGroupRolePermissions(group.getUuid(), "admin");
 		assertEquals("proper number of group role permissions not set", 1,

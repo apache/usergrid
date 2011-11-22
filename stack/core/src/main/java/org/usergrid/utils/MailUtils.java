@@ -32,12 +32,13 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MailUtils {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ConversionUtils.class);
 
 	public static Properties getMailProperties(Map<String, String> properties) {
@@ -82,7 +83,7 @@ public class MailUtils {
 					plainText = Jsoup.parse(htmlText).body()
 							.wrap("<pre></pre>").text();
 				} catch (Exception e) {
-					logger.error(e);
+					logger.error("Html parse error", e);
 				}
 			}
 
@@ -117,7 +118,7 @@ public class MailUtils {
 			transport.sendMessage(msg, msg.getAllRecipients());
 			transport.close();
 		} catch (Exception e) {
-			logger.error(e);
+			logger.error("Mail error", e);
 		}
 	}
 

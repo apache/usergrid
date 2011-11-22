@@ -48,7 +48,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.UnavailableSecurityManagerException;
 import org.apache.shiro.session.Session;
@@ -63,7 +64,7 @@ import com.google.common.collect.BiMap;
 
 public class SubjectUtils {
 
-	private static final Logger logger = Logger.getLogger(SubjectUtils.class);
+	private static final Logger logger = LoggerFactory.getLogger(SubjectUtils.class);
 
 	public static boolean isAnonymous() {
 		Subject currentUser = getSubject();

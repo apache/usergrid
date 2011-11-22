@@ -94,6 +94,7 @@ public class AggregateCounterSet {
 		this.values = values;
 	}
 
+	@JsonSerialize(include = Inclusion.NON_NULL)
 	public UUID getQueue() {
 		return queue;
 	}

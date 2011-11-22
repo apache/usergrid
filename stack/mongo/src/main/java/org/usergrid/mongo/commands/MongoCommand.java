@@ -39,7 +39,8 @@ package org.usergrid.mongo.commands;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.springframework.util.StringUtils;
@@ -49,7 +50,7 @@ import org.usergrid.mongo.protocol.OpReply;
 
 public abstract class MongoCommand {
 
-	private static final Logger logger = Logger.getLogger(MongoCommand.class);
+	private static final Logger logger = LoggerFactory.getLogger(MongoCommand.class);
 
 	static ConcurrentHashMap<String, MongoCommand> commands = new ConcurrentHashMap<String, MongoCommand>();
 

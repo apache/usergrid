@@ -41,12 +41,14 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -60,8 +62,11 @@ import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 
 import com.google.common.collect.BiMap;
+import com.sun.jersey.api.json.JSONWithPadding;
 
-@Produces(MediaType.APPLICATION_JSON)
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class OrganizationsResource extends AbstractContextResource {
 
 	UserInfo user;
@@ -73,7 +78,8 @@ public class OrganizationsResource extends AbstractContextResource {
 
 	@RequireAdminUserAccess
 	@GET
-	public ApiResponse getUserOrganizations(@Context UriInfo ui)
+	public JSONWithPadding getUserOrganizations(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
@@ -82,13 +88,15 @@ public class OrganizationsResource extends AbstractContextResource {
 		BiMap<UUID, String> userOrganizations = SubjectUtils.getOrganizations();
 		response.setData(userOrganizations.inverse());
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@RequireAdminUserAccess
 	@POST
-	public ApiResponse newOrganizationForUser(@Context UriInfo ui,
-			Map<String, Object> json) throws Exception {
+	public JSONWithPadding newOrganizationForUser(@Context UriInfo ui,
+			Map<String, Object> json,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("new organization for user");
@@ -101,14 +109,15 @@ public class OrganizationsResource extends AbstractContextResource {
 		management.activateOrganization(organization.getUuid());
 		management.sendOrganizationActivationEmail(organization);
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@RequireOrganizationAccess
 	@PUT
 	@Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-	public ApiResponse addUserToOrganization(@Context UriInfo ui,
-			@PathParam("organizationId") String organizationIdStr)
+	public JSONWithPadding addUserToOrganization(@Context UriInfo ui,
+			@PathParam("organizationId") String organizationIdStr,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
@@ -116,18 +125,19 @@ public class OrganizationsResource extends AbstractContextResource {
 
 		OrganizationInfo organization = management.getOrganizationByUuid(UUID
 				.fromString(organizationIdStr));
-		management
-				.addAdminUserToOrganization(user.getUuid(), organization.getUuid());
+		management.addAdminUserToOrganization(user.getUuid(),
+				organization.getUuid());
 		response.setData(organization);
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@RequireOrganizationAccess
 	@DELETE
 	@Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-	public ApiResponse removeUserFromOrganizationByOrganizationId(
+	public JSONWithPadding removeUserFromOrganizationByOrganizationId(
 			@Context UriInfo ui,
-			@PathParam("organizationId") String organizationIdStr)
+			@PathParam("organizationId") String organizationIdStr,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
@@ -138,15 +148,16 @@ public class OrganizationsResource extends AbstractContextResource {
 		management.removeAdminUserFromOrganization(user.getUuid(),
 				organization.getUuid());
 		response.setData(organization);
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@RequireOrganizationAccess
 	@DELETE
 	@Path("{organizationName}")
-	public ApiResponse removeUserFromOrganizationByOrganizationName(
+	public JSONWithPadding removeUserFromOrganizationByOrganizationName(
 			@Context UriInfo ui,
-			@PathParam("organizationName") String organizationName)
+			@PathParam("organizationName") String organizationName,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
@@ -157,7 +168,7 @@ public class OrganizationsResource extends AbstractContextResource {
 				organization.getUuid());
 		response.setData(organization);
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 }

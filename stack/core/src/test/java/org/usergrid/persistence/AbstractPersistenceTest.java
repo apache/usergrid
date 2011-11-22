@@ -22,9 +22,10 @@ import static org.junit.Assert.assertNull;
 
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.cassandra.CassandraService;
@@ -41,7 +42,7 @@ public abstract class AbstractPersistenceTest {
 
 	public static final boolean USE_DEFAULT_APPLICATION = false;
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(AbstractPersistenceTest.class);
 
 	static PersistenceTestHelper helper;

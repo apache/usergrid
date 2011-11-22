@@ -23,14 +23,15 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import org.usergrid.persistence.entities.Activity;
 import org.usergrid.persistence.entities.User;
 
 public class IndexUtilsTest {
 
-	private static final Logger logger = Logger.getLogger(IndexUtilsTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(IndexUtilsTest.class);
 
 	@Test
 	public void testKeywords() {

@@ -19,8 +19,8 @@
 package org.usergrid.persistence.cassandra;
 
 import static me.prettyprint.hector.api.factory.HFactory.createIndexedSlicesQuery;
-import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.usergrid.persistence.Schema.PROPERTY_TYPE;
+import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 
 import java.nio.ByteBuffer;
@@ -40,14 +40,15 @@ import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.query.QueryResult;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.DynamicEntity;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Schema;
 
 public class CassandraIndexedQueries {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(CassandraIndexedQueries.class);
 
 	public static final StringSerializer se = new StringSerializer();
@@ -98,7 +99,8 @@ public class CassandraIndexedQueries {
 		q.setRange(null, null, false, count);
 		// q.setColumnNames(PROPERTY_ID);
 		if ((propertyNames == null) || (propertyNames.length == 0)) {
-			propertyNames = Schema.getDefaultSchema().getAllPropertyNamesAsArray();
+			propertyNames = Schema.getDefaultSchema()
+					.getAllPropertyNamesAsArray();
 		}
 		q.setColumnNames(propertyNames);
 		q.addEqualsExpression(PROPERTY_TYPE, bytebuffer(entityType));
@@ -272,8 +274,8 @@ public class CassandraIndexedQueries {
 		List<Entity> results = new ArrayList<Entity>();
 
 		doSearchEntityIndex(ko, entityType, null, results, propertyName,
-				propertyValue,
-				Schema.getDefaultSchema().getPropertyNamesAsArray(entityType));
+				propertyValue, Schema.getDefaultSchema()
+						.getPropertyNamesAsArray(entityType));
 
 		return results;
 	}

@@ -40,9 +40,11 @@ package org.usergrid.rest.management.organizations.applications;
 import java.util.UUID;
 
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -54,7 +56,11 @@ import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
 
-@Produces(MediaType.APPLICATION_JSON)
+import com.sun.jersey.api.json.JSONWithPadding;
+
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class ApplicationResource extends AbstractContextResource {
 
 	OrganizationInfo organization;
@@ -78,8 +84,10 @@ public class ApplicationResource extends AbstractContextResource {
 
 	@RequireOrganizationAccess
 	@DELETE
-	public ApiResponse deleteApplicationFromOrganizationByApplicationId(
-			@Context UriInfo ui) throws Exception {
+	public JSONWithPadding deleteApplicationFromOrganizationByApplicationId(
+			@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("delete application from organization");
@@ -87,13 +95,15 @@ public class ApplicationResource extends AbstractContextResource {
 		management.deleteOrganizationApplication(organization.getUuid(),
 				applicationId);
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@RequireOrganizationAccess
 	@GET
 	@Path("credentials")
-	public ApiResponse getCredentials(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding getCredentials(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("get application client credentials");
@@ -103,6 +113,6 @@ public class ApplicationResource extends AbstractContextResource {
 				management.getClientSecretForApplication(applicationId));
 
 		response.setCredentials(credentials);
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 }

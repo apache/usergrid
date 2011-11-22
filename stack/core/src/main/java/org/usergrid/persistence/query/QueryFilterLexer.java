@@ -29,7 +29,8 @@ import org.antlr.runtime.MismatchedSetException;
 import org.antlr.runtime.NoViableAltException;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.RecognizerSharedState;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class QueryFilterLexer extends Lexer {
 	public static final int EOF = -1;
@@ -69,7 +70,7 @@ public class QueryFilterLexer extends Lexer {
 	public static final int OCTAL_ESC = 14;
 	public static final int WS = 15;
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(QueryFilterLexer.class);
 
 	@Override
@@ -614,7 +615,7 @@ public class QueryFilterLexer extends Lexer {
 
 					switch (alt1) {
 					case 1:
-						// /Users/edanuff/Development/java/antlr/QueryFilter.g:
+					// /Users/edanuff/Development/java/antlr/QueryFilter.g:
 					{
 						if ((input.LA(1) == '.')
 								|| ((input.LA(1) >= '0') && (input.LA(1) <= '9'))
@@ -671,8 +672,8 @@ public class QueryFilterLexer extends Lexer {
 
 					switch (alt2) {
 					case 1:
-						// /Users/edanuff/Development/java/antlr/QueryFilter.g:46:7:
-						// '0' .. '9'
+					// /Users/edanuff/Development/java/antlr/QueryFilter.g:46:7:
+					// '0' .. '9'
 					{
 						matchRange('0', '9');
 
@@ -712,8 +713,8 @@ public class QueryFilterLexer extends Lexer {
 			alt9 = dfa9.predict(input);
 			switch (alt9) {
 			case 1:
-				// /Users/edanuff/Development/java/antlr/QueryFilter.g:50:9: (
-				// '0' .. '9' )+ '.' ( '0' .. '9' )* ( EXPONENT )?
+			// /Users/edanuff/Development/java/antlr/QueryFilter.g:50:9: (
+			// '0' .. '9' )+ '.' ( '0' .. '9' )* ( EXPONENT )?
 			{
 				// /Users/edanuff/Development/java/antlr/QueryFilter.g:50:9: (
 				// '0' .. '9' )+
@@ -728,8 +729,8 @@ public class QueryFilterLexer extends Lexer {
 
 					switch (alt3) {
 					case 1:
-						// /Users/edanuff/Development/java/antlr/QueryFilter.g:50:10:
-						// '0' .. '9'
+					// /Users/edanuff/Development/java/antlr/QueryFilter.g:50:10:
+					// '0' .. '9'
 					{
 						matchRange('0', '9');
 
@@ -760,8 +761,8 @@ public class QueryFilterLexer extends Lexer {
 
 					switch (alt4) {
 					case 1:
-						// /Users/edanuff/Development/java/antlr/QueryFilter.g:50:26:
-						// '0' .. '9'
+					// /Users/edanuff/Development/java/antlr/QueryFilter.g:50:26:
+					// '0' .. '9'
 					{
 						matchRange('0', '9');
 
@@ -783,8 +784,8 @@ public class QueryFilterLexer extends Lexer {
 				}
 				switch (alt5) {
 				case 1:
-					// /Users/edanuff/Development/java/antlr/QueryFilter.g:50:37:
-					// EXPONENT
+				// /Users/edanuff/Development/java/antlr/QueryFilter.g:50:37:
+				// EXPONENT
 				{
 					mEXPONENT();
 
@@ -796,8 +797,8 @@ public class QueryFilterLexer extends Lexer {
 			}
 				break;
 			case 2:
-				// /Users/edanuff/Development/java/antlr/QueryFilter.g:51:9: '.'
-				// ( '0' .. '9' )+ ( EXPONENT )?
+			// /Users/edanuff/Development/java/antlr/QueryFilter.g:51:9: '.'
+			// ( '0' .. '9' )+ ( EXPONENT )?
 			{
 				match('.');
 				// /Users/edanuff/Development/java/antlr/QueryFilter.g:51:13: (
@@ -813,8 +814,8 @@ public class QueryFilterLexer extends Lexer {
 
 					switch (alt6) {
 					case 1:
-						// /Users/edanuff/Development/java/antlr/QueryFilter.g:51:14:
-						// '0' .. '9'
+					// /Users/edanuff/Development/java/antlr/QueryFilter.g:51:14:
+					// '0' .. '9'
 					{
 						matchRange('0', '9');
 
@@ -842,8 +843,8 @@ public class QueryFilterLexer extends Lexer {
 				}
 				switch (alt7) {
 				case 1:
-					// /Users/edanuff/Development/java/antlr/QueryFilter.g:51:25:
-					// EXPONENT
+				// /Users/edanuff/Development/java/antlr/QueryFilter.g:51:25:
+				// EXPONENT
 				{
 					mEXPONENT();
 
@@ -855,8 +856,8 @@ public class QueryFilterLexer extends Lexer {
 			}
 				break;
 			case 3:
-				// /Users/edanuff/Development/java/antlr/QueryFilter.g:52:9: (
-				// '0' .. '9' )+ EXPONENT
+			// /Users/edanuff/Development/java/antlr/QueryFilter.g:52:9: (
+			// '0' .. '9' )+ EXPONENT
 			{
 				// /Users/edanuff/Development/java/antlr/QueryFilter.g:52:9: (
 				// '0' .. '9' )+
@@ -871,8 +872,8 @@ public class QueryFilterLexer extends Lexer {
 
 					switch (alt8) {
 					case 1:
-						// /Users/edanuff/Development/java/antlr/QueryFilter.g:52:10:
-						// '0' .. '9'
+					// /Users/edanuff/Development/java/antlr/QueryFilter.g:52:10:
+					// '0' .. '9'
 					{
 						matchRange('0', '9');
 
@@ -930,16 +931,16 @@ public class QueryFilterLexer extends Lexer {
 
 					switch (alt10) {
 					case 1:
-						// /Users/edanuff/Development/java/antlr/QueryFilter.g:56:15:
-						// ESC_SEQ
+					// /Users/edanuff/Development/java/antlr/QueryFilter.g:56:15:
+					// ESC_SEQ
 					{
 						mESC_SEQ();
 
 					}
 						break;
 					case 2:
-						// /Users/edanuff/Development/java/antlr/QueryFilter.g:56:25:
-						// ~ ( '\\\\' | '\\'' )
+					// /Users/edanuff/Development/java/antlr/QueryFilter.g:56:25:
+					// ~ ( '\\\\' | '\\'' )
 					{
 						if (((input.LA(1) >= '\u0000') && (input.LA(1) <= '&'))
 								|| ((input.LA(1) >= '(') && (input.LA(1) <= '['))
@@ -998,16 +999,16 @@ public class QueryFilterLexer extends Lexer {
 				}
 				switch (alt11) {
 				case 1:
-					// /Users/edanuff/Development/java/antlr/QueryFilter.g:60:12:
-					// 'true'
+				// /Users/edanuff/Development/java/antlr/QueryFilter.g:60:12:
+				// 'true'
 				{
 					match("true");
 
 				}
 					break;
 				case 2:
-					// /Users/edanuff/Development/java/antlr/QueryFilter.g:60:20:
-					// 'false'
+				// /Users/edanuff/Development/java/antlr/QueryFilter.g:60:20:
+				// 'false'
 				{
 					match("false");
 
@@ -1119,7 +1120,7 @@ public class QueryFilterLexer extends Lexer {
 				}
 				switch (alt12) {
 				case 1:
-					// /Users/edanuff/Development/java/antlr/QueryFilter.g:
+				// /Users/edanuff/Development/java/antlr/QueryFilter.g:
 				{
 					if ((input.LA(1) == '+') || (input.LA(1) == '-')) {
 						input.consume();
@@ -1149,8 +1150,8 @@ public class QueryFilterLexer extends Lexer {
 
 					switch (alt13) {
 					case 1:
-						// /Users/edanuff/Development/java/antlr/QueryFilter.g:73:34:
-						// '0' .. '9'
+					// /Users/edanuff/Development/java/antlr/QueryFilter.g:73:34:
+					// '0' .. '9'
 					{
 						matchRange('0', '9');
 
@@ -1256,9 +1257,9 @@ public class QueryFilterLexer extends Lexer {
 			}
 			switch (alt14) {
 			case 1:
-				// /Users/edanuff/Development/java/antlr/QueryFilter.g:80:9:
-				// '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' |
-				// '\\\\' )
+			// /Users/edanuff/Development/java/antlr/QueryFilter.g:80:9:
+			// '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' |
+			// '\\\\' )
 			{
 				match('\\');
 				if ((input.LA(1) == '\"') || (input.LA(1) == '\'')
@@ -1277,16 +1278,16 @@ public class QueryFilterLexer extends Lexer {
 			}
 				break;
 			case 2:
-				// /Users/edanuff/Development/java/antlr/QueryFilter.g:81:9:
-				// UNICODE_ESC
+			// /Users/edanuff/Development/java/antlr/QueryFilter.g:81:9:
+			// UNICODE_ESC
 			{
 				mUNICODE_ESC();
 
 			}
 				break;
 			case 3:
-				// /Users/edanuff/Development/java/antlr/QueryFilter.g:82:9:
-				// OCTAL_ESC
+			// /Users/edanuff/Development/java/antlr/QueryFilter.g:82:9:
+			// OCTAL_ESC
 			{
 				mOCTAL_ESC();
 
@@ -1348,8 +1349,8 @@ public class QueryFilterLexer extends Lexer {
 			}
 			switch (alt15) {
 			case 1:
-				// /Users/edanuff/Development/java/antlr/QueryFilter.g:87:9:
-				// '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
+			// /Users/edanuff/Development/java/antlr/QueryFilter.g:87:9:
+			// '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
 			{
 				match('\\');
 				// /Users/edanuff/Development/java/antlr/QueryFilter.g:87:14: (
@@ -1382,8 +1383,8 @@ public class QueryFilterLexer extends Lexer {
 			}
 				break;
 			case 2:
-				// /Users/edanuff/Development/java/antlr/QueryFilter.g:88:9:
-				// '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
+			// /Users/edanuff/Development/java/antlr/QueryFilter.g:88:9:
+			// '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
 			{
 				match('\\');
 				// /Users/edanuff/Development/java/antlr/QueryFilter.g:88:14: (
@@ -1407,8 +1408,8 @@ public class QueryFilterLexer extends Lexer {
 			}
 				break;
 			case 3:
-				// /Users/edanuff/Development/java/antlr/QueryFilter.g:89:9:
-				// '\\\\' ( '0' .. '7' )
+			// /Users/edanuff/Development/java/antlr/QueryFilter.g:89:9:
+			// '\\\\' ( '0' .. '7' )
 			{
 				match('\\');
 				// /Users/edanuff/Development/java/antlr/QueryFilter.g:89:14: (
@@ -1477,7 +1478,7 @@ public class QueryFilterLexer extends Lexer {
 
 					switch (alt16) {
 					case 1:
-						// /Users/edanuff/Development/java/antlr/QueryFilter.g:
+					// /Users/edanuff/Development/java/antlr/QueryFilter.g:
 					{
 						if (((input.LA(1) >= '\t') && (input.LA(1) <= '\n'))
 								|| ((input.LA(1) >= '\f') && (input.LA(1) <= '\r'))
@@ -1528,203 +1529,203 @@ public class QueryFilterLexer extends Lexer {
 		alt17 = dfa17.predict(input);
 		switch (alt17) {
 		case 1:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:10: T__16
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:10: T__16
 		{
 			mT__16();
 
 		}
 			break;
 		case 2:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:16: T__17
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:16: T__17
 		{
 			mT__17();
 
 		}
 			break;
 		case 3:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:22: T__18
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:22: T__18
 		{
 			mT__18();
 
 		}
 			break;
 		case 4:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:28: T__19
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:28: T__19
 		{
 			mT__19();
 
 		}
 			break;
 		case 5:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:34: T__20
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:34: T__20
 		{
 			mT__20();
 
 		}
 			break;
 		case 6:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:40: T__21
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:40: T__21
 		{
 			mT__21();
 
 		}
 			break;
 		case 7:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:46: T__22
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:46: T__22
 		{
 			mT__22();
 
 		}
 			break;
 		case 8:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:52: T__23
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:52: T__23
 		{
 			mT__23();
 
 		}
 			break;
 		case 9:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:58: T__24
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:58: T__24
 		{
 			mT__24();
 
 		}
 			break;
 		case 10:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:64: T__25
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:64: T__25
 		{
 			mT__25();
 
 		}
 			break;
 		case 11:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:70: T__26
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:70: T__26
 		{
 			mT__26();
 
 		}
 			break;
 		case 12:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:76: T__27
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:76: T__27
 		{
 			mT__27();
 
 		}
 			break;
 		case 13:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:82: T__28
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:82: T__28
 		{
 			mT__28();
 
 		}
 			break;
 		case 14:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:88: T__29
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:88: T__29
 		{
 			mT__29();
 
 		}
 			break;
 		case 15:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:94: T__30
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:94: T__30
 		{
 			mT__30();
 
 		}
 			break;
 		case 16:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:100: T__31
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:100: T__31
 		{
 			mT__31();
 
 		}
 			break;
 		case 17:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:106: T__32
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:106: T__32
 		{
 			mT__32();
 
 		}
 			break;
 		case 18:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:112: T__33
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:112: T__33
 		{
 			mT__33();
 
 		}
 			break;
 		case 19:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:118: T__34
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:118: T__34
 		{
 			mT__34();
 
 		}
 			break;
 		case 20:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:124: T__35
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:124: T__35
 		{
 			mT__35();
 
 		}
 			break;
 		case 21:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:130: T__36
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:130: T__36
 		{
 			mT__36();
 
 		}
 			break;
 		case 22:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:136: T__37
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:136: T__37
 		{
 			mT__37();
 
 		}
 			break;
 		case 23:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:142: T__38
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:142: T__38
 		{
 			mT__38();
 
 		}
 			break;
 		case 24:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:148: ID
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:148: ID
 		{
 			mID();
 
 		}
 			break;
 		case 25:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:151: INT
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:151: INT
 		{
 			mINT();
 
 		}
 			break;
 		case 26:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:155: FLOAT
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:155: FLOAT
 		{
 			mFLOAT();
 
 		}
 			break;
 		case 27:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:161: STRING
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:161: STRING
 		{
 			mSTRING();
 
 		}
 			break;
 		case 28:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:168: UUID
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:168: UUID
 		{
 			mUUID();
 
 		}
 			break;
 		case 29:
-			// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:173: WS
+		// /Users/edanuff/Development/java/antlr/QueryFilter.g:1:173: WS
 		{
 			mWS();
 

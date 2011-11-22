@@ -43,7 +43,8 @@ import me.prettyprint.hector.api.beans.HCounterColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.cassandra.QueuesCF;
 import org.usergrid.persistence.CounterResolution;
@@ -51,7 +52,7 @@ import org.usergrid.persistence.entities.Event;
 
 public class CounterUtils {
 
-	public static final Logger logger = Logger.getLogger(CounterUtils.class);
+	public static final Logger logger = LoggerFactory.getLogger(CounterUtils.class);
 
 	public static final LongSerializer le = new LongSerializer();
 	public static final StringSerializer se = new StringSerializer();

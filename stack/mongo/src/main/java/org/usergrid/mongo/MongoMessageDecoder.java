@@ -37,11 +37,12 @@
  ******************************************************************************/
 package org.usergrid.mongo;
 
-import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.frame.FrameDecoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.mongo.protocol.Message;
 import org.usergrid.mongo.protocol.OpDelete;
 import org.usergrid.mongo.protocol.OpGetMore;
@@ -54,7 +55,7 @@ import org.usergrid.mongo.protocol.OpUpdate;
 
 public class MongoMessageDecoder extends FrameDecoder {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(MongoMessageDecoder.class);
 
 	@Override

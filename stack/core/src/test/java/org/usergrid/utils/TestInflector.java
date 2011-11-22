@@ -20,11 +20,12 @@ package org.usergrid.utils;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 public class TestInflector {
-	private static final Logger logger = Logger.getLogger(TestInflector.class);
+	private static final Logger logger = LoggerFactory.getLogger(TestInflector.class);
 
 	@Test
 	public void testInflector() {

@@ -51,7 +51,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ManagementService;
@@ -74,7 +75,7 @@ import com.sun.jersey.spi.container.ResourceFilterFactory;
 @Component
 public class SecuredResourceFilterFactory implements ResourceFilterFactory {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(SecuredResourceFilterFactory.class);
 
 	private @Context

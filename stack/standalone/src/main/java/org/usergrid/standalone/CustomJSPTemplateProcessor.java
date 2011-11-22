@@ -11,7 +11,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sun.jersey.api.container.ContainerException;
 import com.sun.jersey.api.core.HttpContext;
@@ -25,7 +26,7 @@ import com.sun.jersey.spi.template.ViewProcessor;
 @Provider
 public class CustomJSPTemplateProcessor implements ViewProcessor<String> {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(CustomJSPTemplateProcessor.class);
 
 	private @Context

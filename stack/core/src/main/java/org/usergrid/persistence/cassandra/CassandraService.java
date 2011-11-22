@@ -68,8 +68,9 @@ import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import me.prettyprint.hector.api.query.SliceQuery;
 
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ser.ArraySerializers.ByteArraySerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.locking.LockManager;
 import org.usergrid.utils.JsonUtils;
 
@@ -97,10 +98,10 @@ public class CassandraService {
 	public static final UUID MANAGEMENT_APPLICATION_ID = new UUID(0, 1);
 	public static final UUID DEFAULT_APPLICATION_ID = new UUID(0, 16);
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(CassandraService.class);
 
-	private static final Logger db_logger = Logger
+	private static final Logger db_logger = LoggerFactory
 			.getLogger(CassandraService.class.getPackage().getName() + ".DB");
 
 	Cluster cluster;
@@ -126,7 +127,7 @@ public class CassandraService {
 		this.cluster = cluster;
 		chc = cassandraHostConfigurator;
 		this.lockManager = lockManager;
-		db_logger.info(cluster.getKnownPoolHosts(false));
+		db_logger.info("" + cluster.getKnownPoolHosts(false));
 	}
 
 	public void init() throws Exception {

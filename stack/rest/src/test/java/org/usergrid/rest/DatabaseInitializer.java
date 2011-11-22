@@ -3,7 +3,8 @@ package org.usergrid.rest;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.management.ManagementService;
 import org.usergrid.mq.QueueManagerFactory;
@@ -14,7 +15,7 @@ import org.usergrid.services.ServiceManagerFactory;
 
 public class DatabaseInitializer {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(DatabaseInitializer.class);
 
 	protected EntityManagerFactory emf;

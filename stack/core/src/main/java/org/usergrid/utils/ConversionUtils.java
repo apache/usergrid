@@ -28,8 +28,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.lang.math.NumberUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Convenience methods for converting to and from formats, primarily between
@@ -37,7 +37,7 @@ import org.apache.log4j.Logger;
  */
 public class ConversionUtils {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ConversionUtils.class);
 
 	/**
@@ -87,7 +87,7 @@ public class ConversionUtils {
 		try {
 			return UUID.fromString(uuid);
 		} catch (Exception e) {
-			logger.log(Level.ERROR, "Bad UUID", e);
+			logger.error("Bad UUID", e);
 		}
 		return UUIDUtils.zeroUUID;
 	}

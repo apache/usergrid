@@ -27,14 +27,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.utils.JsonUtils;
 
 public class EntityDictionaryTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(EntityDictionaryTest.class);
 
 	public EntityDictionaryTest() {

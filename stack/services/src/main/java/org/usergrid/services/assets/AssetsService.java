@@ -37,12 +37,13 @@
  ******************************************************************************/
 package org.usergrid.services.assets;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.services.AbstractCollectionService;
 
 public class AssetsService extends AbstractCollectionService {
 
-	private static final Logger logger = Logger.getLogger(AssetsService.class);
+	private static final Logger logger = LoggerFactory.getLogger(AssetsService.class);
 
 	public AssetsService() {
 		super();

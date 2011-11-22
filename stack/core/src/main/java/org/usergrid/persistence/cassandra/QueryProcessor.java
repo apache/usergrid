@@ -37,7 +37,8 @@ import java.util.ListIterator;
 import java.util.Set;
 
 import org.apache.commons.collections.comparators.ComparatorChain;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityPropertyComparator;
 import org.usergrid.persistence.Query;
@@ -50,7 +51,7 @@ import org.usergrid.utils.StringUtils;
 
 public class QueryProcessor {
 
-	private static final Logger logger = Logger.getLogger(QueryProcessor.class);
+	private static final Logger logger = LoggerFactory.getLogger(QueryProcessor.class);
 
 	Query query;
 

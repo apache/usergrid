@@ -97,7 +97,8 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.AssociatedEntityRef;
 import org.usergrid.persistence.CollectionRef;
 import org.usergrid.persistence.ConnectedEntityRef;
@@ -124,7 +125,7 @@ import org.usergrid.utils.StringUtils;
 
 public class RelationManagerImpl implements RelationManager {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(EntityManagerImpl.class);
 
 	EntityManagerImpl em;

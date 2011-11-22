@@ -20,13 +20,14 @@ package org.usergrid.persistence;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 public class UtilsTest {
 
 	@SuppressWarnings("unused")
-	private static final Logger logger = Logger.getLogger(UtilsTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(UtilsTest.class);
 
 	public UtilsTest() {
 	}

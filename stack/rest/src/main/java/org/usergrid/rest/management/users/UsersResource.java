@@ -45,12 +45,14 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -58,7 +60,8 @@ import javax.ws.rs.core.UriInfo;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.UserInfo;
@@ -66,15 +69,19 @@ import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.exceptions.AuthErrorInfo;
 
+import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
 @Path("/management/users")
 @Component
 @Scope("singleton")
-@Produces(MediaType.APPLICATION_JSON)
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class UsersResource extends AbstractContextResource {
 
-	private static final Logger logger = Logger.getLogger(UsersResource.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(UsersResource.class);
 
 	String errorMsg;
 	UserInfo user;
@@ -108,10 +115,12 @@ public class UsersResource extends AbstractContextResource {
 
 	@POST
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public ApiResponse createUser(@Context UriInfo ui,
+	public JSONWithPadding createUser(@Context UriInfo ui,
 			@FormParam("username") String username,
 			@FormParam("name") String name, @FormParam("email") String email,
-			@FormParam("password") String password) throws Exception {
+			@FormParam("password") String password,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("Create user: " + username);
 
@@ -130,13 +139,13 @@ public class UsersResource extends AbstractContextResource {
 			throw mappableSecurityException(AuthErrorInfo.BAD_CREDENTIALS_SYNTAX_ERROR);
 		}
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	/*
 	 * @POST
 	 * 
-	 * @Consumes(MediaType.MULTIPART_FORM_DATA) public ApiResponse
+	 * @Consumes(MediaType.MULTIPART_FORM_DATA) public JSONWithPadding
 	 * createUserFromMultipart(@Context UriInfo ui,
 	 * 
 	 * @FormDataParam("username") String username,

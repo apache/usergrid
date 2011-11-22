@@ -51,7 +51,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.filefilter.PrefixFileFilter;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
@@ -68,7 +69,7 @@ public class Import extends ToolBase {
 
 	public static final int MAX_ENTITY_FETCH = 100;
 
-	private static final Logger logger = Logger.getLogger(Import.class);
+	private static final Logger logger = LoggerFactory.getLogger(Import.class);
 
 	/** Input directory where the .json export files are */
 	private static final String INPUT_DIR = "inputDir";

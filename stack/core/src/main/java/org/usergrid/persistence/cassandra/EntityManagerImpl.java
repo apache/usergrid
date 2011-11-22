@@ -120,7 +120,8 @@ import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.AggregateCounter;
 import org.usergrid.persistence.AggregateCounterSet;
 import org.usergrid.persistence.AssociatedEntityRef;
@@ -171,7 +172,7 @@ import com.google.common.collect.HashBiMap;
 public class EntityManagerImpl implements EntityManager {
 
 	/** The log4j logger. */
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(EntityManagerImpl.class);
 
 	EntityManagerFactoryImpl emf;

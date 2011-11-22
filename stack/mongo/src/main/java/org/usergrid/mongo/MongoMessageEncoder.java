@@ -37,18 +37,19 @@
  ******************************************************************************/
 package org.usergrid.mongo;
 
-import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.mongo.protocol.Message;
 
 public class MongoMessageEncoder extends SimpleChannelHandler {
 
 	@SuppressWarnings("unused")
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(MongoMessageEncoder.class);
 
 	@Override

@@ -38,7 +38,8 @@ import java.util.UUID;
 import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
 import me.prettyprint.hector.api.ddl.ComparatorType;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.mq.cassandra.QueuesCF;
 
 // TODO: Auto-generated Javadoc
@@ -49,7 +50,7 @@ import org.usergrid.mq.cassandra.QueuesCF;
  */
 public class Setup {
 
-	private static final Logger logger = Logger.getLogger(Setup.class);
+	private static final Logger logger = LoggerFactory.getLogger(Setup.class);
 
 	private final org.usergrid.persistence.EntityManagerFactory emf;
 	private final CassandraService cass;

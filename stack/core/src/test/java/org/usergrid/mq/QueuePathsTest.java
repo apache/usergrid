@@ -22,12 +22,13 @@ import static org.usergrid.mq.Queue.getQueueParentPaths;
 import static org.usergrid.mq.Queue.normalizeQueuePath;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 public class QueuePathsTest {
 
-	private static final Logger logger = Logger.getLogger(MessagesTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MessagesTest.class);
 
 	public QueuePathsTest() {
 	}

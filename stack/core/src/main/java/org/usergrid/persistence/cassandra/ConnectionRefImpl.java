@@ -44,7 +44,8 @@ import org.apache.cassandra.thrift.ColumnDef;
 import org.apache.cassandra.thrift.IndexType;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.ConnectedEntityRef;
 import org.usergrid.persistence.ConnectionRef;
 import org.usergrid.persistence.EntityRef;
@@ -84,7 +85,7 @@ public class ConnectionRefImpl implements ConnectionRef {
 	 */
 	public static final UUID NULL_ID = new UUID(0, 0);
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ConnectionRefImpl.class);
 
 	/**

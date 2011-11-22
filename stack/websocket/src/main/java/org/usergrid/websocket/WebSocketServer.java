@@ -58,7 +58,6 @@ import static org.junit.Assert.assertTrue;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
-import org.apache.log4j.Logger;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SessionsSecurityManager;
 import org.apache.shiro.realm.Realm;
@@ -67,6 +66,8 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.execution.ExecutionHandler;
 import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
@@ -87,7 +88,7 @@ import org.usergrid.services.ServiceManagerFactory;
  */
 public class WebSocketServer {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(WebSocketServer.class);
 
 	EntityManagerFactory emf;

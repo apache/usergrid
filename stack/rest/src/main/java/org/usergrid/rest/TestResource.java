@@ -50,6 +50,7 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -62,7 +63,8 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.persistence.Entity;
@@ -74,15 +76,19 @@ import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
 import org.usergrid.utils.JsonUtils;
 
+import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
 @Path("/test")
 @Component
 @Scope("singleton")
-@Produces(MediaType.APPLICATION_JSON)
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class TestResource extends AbstractContextResource {
 
-	private static final Logger logger = Logger.getLogger(TestResource.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(TestResource.class);
 
 	public TestResource() {
 
@@ -97,7 +103,9 @@ public class TestResource extends AbstractContextResource {
 	@RequireSystemAccess
 	@GET
 	@Path("load_test_users")
-	public ApiResponse loadTestUsers(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding loadTestUsers(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("loading users");
@@ -105,12 +113,12 @@ public class TestResource extends AbstractContextResource {
 		Map<String, String> properties = emf.getServiceProperties();
 		if (properties == null) {
 			response.setError("Unable to retrieve system properties, database is probably down.");
-			return response;
+			return new JSONWithPadding(response, callback);
 		}
 
 		if ("true".equalsIgnoreCase(properties.get("test.users.loaded"))) {
 			response.setError("Test users were already loaded.");
-			return response;
+			return new JSONWithPadding(response, callback);
 		}
 
 		emf.setServiceProperty("test.users.loaded", "true");
@@ -120,7 +128,7 @@ public class TestResource extends AbstractContextResource {
 		UUID nsId = emf.lookupApplication("test-app");
 		if (nsId == null) {
 			response.setError("No test-app application created.");
-			return response;
+			return new JSONWithPadding(response, callback);
 		}
 
 		Object json = JsonUtils.loadFromUrl(getSampleDataUrl("userlist.json"));
@@ -136,14 +144,16 @@ public class TestResource extends AbstractContextResource {
 
 		logger.info("Users loaded");
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@RequireSystemAccess
 	@SuppressWarnings("unchecked")
 	@GET
 	@Path("load_sxsw_data")
-	public ApiResponse loadSXSWData(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding loadSXSWData(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("loading sxsw data");
@@ -151,12 +161,12 @@ public class TestResource extends AbstractContextResource {
 		Map<String, String> properties = emf.getServiceProperties();
 		if (properties == null) {
 			response.setError("Unable to retrieve system properties, database is probably down.");
-			return response;
+			return new JSONWithPadding(response);
 		}
 
 		if ("true".equalsIgnoreCase(properties.get("test.sxsw_data.loaded"))) {
 			response.setError("SXSW test data already loaded.");
-			return response;
+			return new JSONWithPadding(response);
 		}
 
 		emf.setServiceProperty("test.sxsw_data.loaded", "true");
@@ -164,7 +174,7 @@ public class TestResource extends AbstractContextResource {
 		UUID nsId = emf.lookupApplication("sxsw");
 		if (nsId == null) {
 			response.setError("No SXSW application created.");
-			return response;
+			return new JSONWithPadding(response);
 		}
 
 		ServiceManager sm = smf.getServiceManager(nsId);
@@ -273,12 +283,13 @@ public class TestResource extends AbstractContextResource {
 
 		logger.info("SXSW data loaded");
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@GET
 	@Path("hello")
-	public ApiResponse helloWorld(@Context UriInfo ui) {
+	public JSONWithPadding helloWorld(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback) {
 
 		logger.info("Saying hello");
 
@@ -286,33 +297,37 @@ public class TestResource extends AbstractContextResource {
 		response.setAction("hello world!");
 		response.setSuccess();
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("testpost")
-	public Map<String, Object> testPost(Map<String, Object> json) {
+	public JSONWithPadding testPost(Map<String, Object> json,
+			@QueryParam("callback") @DefaultValue("callback") String callback) {
 
-		return json;
+		return new JSONWithPadding(json, callback);
 	}
 
 	@GET
 	@Path("testjson")
-	public ApiResponse testJson(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding testJson(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("test json");
 		response.setSuccess();
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@RequireSystemAccess
 	@GET
 	@Path("connect")
-	public ApiResponse testConnect(@Context UriInfo ui,
-			@QueryParam("from") UUID from, @QueryParam("to") UUID to)
+	public JSONWithPadding testConnect(@Context UriInfo ui,
+			@QueryParam("from") UUID from, @QueryParam("to") UUID to,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
@@ -325,7 +340,7 @@ public class TestResource extends AbstractContextResource {
 		response.setSuccess();
 		// response.setResult(c);
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@GET

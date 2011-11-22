@@ -29,7 +29,8 @@ import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.RecognizerSharedState;
 import org.antlr.runtime.Token;
 import org.antlr.runtime.TokenStream;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Query.FilterPredicate;
 import org.usergrid.persistence.Query.SortPredicate;
@@ -103,7 +104,7 @@ public class QueryFilterParser extends Parser {
 
 	Query query = new Query();
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(QueryFilterParser.class);
 
 	@Override
@@ -324,8 +325,8 @@ public class QueryFilterParser extends Parser {
 				}
 				switch (alt1) {
 				case 1:
-					// /Users/edanuff/Development/java/antlr/QueryFilter.g:110:34:
-					// ',' second_value
+				// /Users/edanuff/Development/java/antlr/QueryFilter.g:110:34:
+				// ',' second_value
 				{
 					match(input, 28, FOLLOW_28_in_filter723);
 					pushFollow(FOLLOW_second_value_in_filter725);
@@ -555,8 +556,8 @@ public class QueryFilterParser extends Parser {
 					}
 					switch (alt2) {
 					case 1:
-						// /Users/edanuff/Development/java/antlr/QueryFilter.g:142:30:
-						// ',' second_value
+					// /Users/edanuff/Development/java/antlr/QueryFilter.g:142:30:
+					// ',' second_value
 					{
 						match(input, 28, FOLLOW_28_in_where802);
 						pushFollow(FOLLOW_second_value_in_where804);
@@ -681,8 +682,8 @@ public class QueryFilterParser extends Parser {
 					}
 					switch (alt3) {
 					case 1:
-						// /Users/edanuff/Development/java/antlr/QueryFilter.g:159:14:
-						// direction
+					// /Users/edanuff/Development/java/antlr/QueryFilter.g:159:14:
+					// direction
 					{
 						pushFollow(FOLLOW_direction_in_order837);
 						direction12 = direction();
@@ -756,16 +757,16 @@ public class QueryFilterParser extends Parser {
 
 				switch (alt6) {
 				case 1:
-					// /Users/edanuff/Development/java/antlr/QueryFilter.g:170:5:
-					// '*'
+				// /Users/edanuff/Development/java/antlr/QueryFilter.g:170:5:
+				// '*'
 				{
 					match(input, 32, FOLLOW_32_in_select_expr851);
 
 				}
 					break;
 				case 2:
-					// /Users/edanuff/Development/java/antlr/QueryFilter.g:170:11:
-					// select_subject ( ',' select_subject )*
+				// /Users/edanuff/Development/java/antlr/QueryFilter.g:170:11:
+				// select_subject ( ',' select_subject )*
 				{
 					pushFollow(FOLLOW_select_subject_in_select_expr855);
 					select_subject();
@@ -784,8 +785,8 @@ public class QueryFilterParser extends Parser {
 
 						switch (alt4) {
 						case 1:
-							// /Users/edanuff/Development/java/antlr/QueryFilter.g:170:27:
-							// ',' select_subject
+						// /Users/edanuff/Development/java/antlr/QueryFilter.g:170:27:
+						// ',' select_subject
 						{
 							match(input, 28, FOLLOW_28_in_select_expr858);
 							pushFollow(FOLLOW_select_subject_in_select_expr860);
@@ -804,8 +805,8 @@ public class QueryFilterParser extends Parser {
 				}
 					break;
 				case 3:
-					// /Users/edanuff/Development/java/antlr/QueryFilter.g:170:51:
-					// '{' select_assign ( ',' select_assign )* '}'
+				// /Users/edanuff/Development/java/antlr/QueryFilter.g:170:51:
+				// '{' select_assign ( ',' select_assign )* '}'
 				{
 					match(input, 33, FOLLOW_33_in_select_expr867);
 					pushFollow(FOLLOW_select_assign_in_select_expr869);
@@ -825,8 +826,8 @@ public class QueryFilterParser extends Parser {
 
 						switch (alt5) {
 						case 1:
-							// /Users/edanuff/Development/java/antlr/QueryFilter.g:170:70:
-							// ',' select_assign
+						// /Users/edanuff/Development/java/antlr/QueryFilter.g:170:70:
+						// ',' select_assign
 						{
 							match(input, 28, FOLLOW_28_in_select_expr872);
 							pushFollow(FOLLOW_select_assign_in_select_expr874);
@@ -892,8 +893,8 @@ public class QueryFilterParser extends Parser {
 				}
 				switch (alt8) {
 				case 1:
-					// /Users/edanuff/Development/java/antlr/QueryFilter.g:173:26:
-					// 'where' where ( 'and' where )*
+				// /Users/edanuff/Development/java/antlr/QueryFilter.g:173:26:
+				// 'where' where ( 'and' where )*
 				{
 					match(input, 36, FOLLOW_36_in_ql901);
 					pushFollow(FOLLOW_where_in_ql903);
@@ -913,8 +914,8 @@ public class QueryFilterParser extends Parser {
 
 						switch (alt7) {
 						case 1:
-							// /Users/edanuff/Development/java/antlr/QueryFilter.g:173:41:
-							// 'and' where
+						// /Users/edanuff/Development/java/antlr/QueryFilter.g:173:41:
+						// 'and' where
 						{
 							match(input, 37, FOLLOW_37_in_ql906);
 							pushFollow(FOLLOW_where_in_ql908);
@@ -945,8 +946,8 @@ public class QueryFilterParser extends Parser {
 				}
 				switch (alt10) {
 				case 1:
-					// /Users/edanuff/Development/java/antlr/QueryFilter.g:173:58:
-					// 'order by' order ( ',' order )*
+				// /Users/edanuff/Development/java/antlr/QueryFilter.g:173:58:
+				// 'order by' order ( ',' order )*
 				{
 					match(input, 38, FOLLOW_38_in_ql915);
 					pushFollow(FOLLOW_order_in_ql917);
@@ -966,8 +967,8 @@ public class QueryFilterParser extends Parser {
 
 						switch (alt9) {
 						case 1:
-							// /Users/edanuff/Development/java/antlr/QueryFilter.g:173:76:
-							// ',' order
+						// /Users/edanuff/Development/java/antlr/QueryFilter.g:173:76:
+						// ',' order
 						{
 							match(input, 28, FOLLOW_28_in_ql920);
 							pushFollow(FOLLOW_order_in_ql922);

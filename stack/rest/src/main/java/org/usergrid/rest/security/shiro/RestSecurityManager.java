@@ -39,15 +39,16 @@ package org.usergrid.rest.security.shiro;
 
 import java.util.Collection;
 
-import org.apache.log4j.Logger;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.rest.security.shiro.session.HttpRequestSessionManager;
 
 public class RestSecurityManager extends DefaultWebSecurityManager {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(RestSecurityManager.class);
 
 	public RestSecurityManager() {

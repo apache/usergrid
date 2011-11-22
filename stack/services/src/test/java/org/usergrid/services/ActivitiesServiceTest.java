@@ -43,8 +43,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.entities.Activity;
@@ -52,7 +53,7 @@ import org.usergrid.persistence.entities.Activity;
 public class ActivitiesServiceTest extends AbstractServiceTest {
 
 	@SuppressWarnings("unused")
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ActivitiesServiceTest.class);
 
 	@Test

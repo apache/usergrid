@@ -20,12 +20,13 @@ package org.usergrid.utils;
 
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 public class MapUtilsTest {
 
-	private static final Logger logger = Logger.getLogger(MapUtilsTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MapUtilsTest.class);
 
 	@Test
 	public void testMapUtils() {

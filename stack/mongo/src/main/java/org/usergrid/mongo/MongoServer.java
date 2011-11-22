@@ -44,7 +44,8 @@ import java.net.InetSocketAddress;
 import java.nio.ByteOrder;
 import java.util.concurrent.Executors;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SessionsSecurityManager;
 import org.apache.shiro.realm.Realm;
@@ -65,7 +66,7 @@ import org.usergrid.services.ServiceManagerFactory;
 
 public class MongoServer {
 
-	private static final Logger logger = Logger.getLogger(MongoServer.class);
+	private static final Logger logger = LoggerFactory.getLogger(MongoServer.class);
 
 	EntityManagerFactory emf;
 	ServiceManagerFactory smf;

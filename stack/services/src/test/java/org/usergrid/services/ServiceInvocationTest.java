@@ -48,15 +48,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
 import org.usergrid.utils.JsonUtils;
 
 public class ServiceInvocationTest extends AbstractServiceTest {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ServiceInvocationTest.class);
 
 	@Test
@@ -74,7 +75,8 @@ public class ServiceInvocationTest extends AbstractServiceTest {
 				"users").getEntity();
 		assertNotNull(user);
 
-		// test collection /application/00000000-0000-0000-0000-000000000001/users
+		// test collection
+		// /application/00000000-0000-0000-0000-000000000001/users
 		// Service application = sm.getService(Application.ENTITY_TYPE);
 
 		testRequest(sm, ServiceAction.GET, 1, null, "users");

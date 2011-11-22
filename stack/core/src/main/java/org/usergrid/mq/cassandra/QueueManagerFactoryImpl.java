@@ -26,15 +26,16 @@ import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ser.ArraySerializers.ByteArraySerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.cassandra.CassandraService;
 
 public class QueueManagerFactoryImpl implements QueueManagerFactory {
 
-	public static final Logger logger = Logger
+	public static final Logger logger = LoggerFactory
 			.getLogger(QueueManagerFactoryImpl.class);
 
 	public static String IMPLEMENTATION_DESCRIPTION = "Cassandra Queue Manager Factory 1.0";

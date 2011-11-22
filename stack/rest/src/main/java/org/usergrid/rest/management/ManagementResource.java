@@ -40,7 +40,6 @@ package org.usergrid.rest.management;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.temporaryRedirect;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -52,6 +51,7 @@ import java.net.URI;
 import java.net.URLEncoder;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -61,6 +61,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -68,20 +69,24 @@ import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
-import org.apache.log4j.Logger;
 import org.apache.shiro.codec.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.security.oauth.AccessInfo;
 
+import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
 @Path("/management")
 @Component
 @Scope("singleton")
-@Produces(APPLICATION_JSON)
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class ManagementResource extends AbstractContextResource {
 
 	/*-
@@ -96,7 +101,7 @@ public class ManagementResource extends AbstractContextResource {
 	 * 
 	 */
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ManagementResource.class);
 
 	public ManagementResource() {
@@ -105,13 +110,15 @@ public class ManagementResource extends AbstractContextResource {
 
 	@GET
 	@Path("token")
-	public Response getAccessToken(@Context UriInfo ui,
+	public JSONWithPadding getAccessToken(@Context UriInfo ui,
 			@HeaderParam("Authorization") String authorization,
 			@QueryParam("grant_type") String grant_type,
 			@QueryParam("username") String username,
 			@QueryParam("password") String password,
 			@QueryParam("client_id") String client_id,
-			@QueryParam("client_secret") String client_secret) throws Exception {
+			@QueryParam("client_secret") String client_secret,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("ManagementResource.getAccessToken");
 
@@ -145,9 +152,10 @@ public class ManagementResource extends AbstractContextResource {
 					AccessInfo access_info = management.authorizeClient(
 							client_id, client_secret);
 					if (access_info != null) {
-						return Response.status(SC_OK)
+						return new JSONWithPadding(Response.status(SC_OK)
 								.type(APPLICATION_JSON_TYPE)
-								.entity(mapToJsonString(access_info)).build();
+								.entity(mapToJsonString(access_info)).build(),
+								callback);
 					}
 				} catch (Exception e1) {
 				}
@@ -159,9 +167,10 @@ public class ManagementResource extends AbstractContextResource {
 						.setError(OAuthError.TokenResponse.INVALID_GRANT)
 						.setErrorDescription("invalid username or password")
 						.buildJSONMessage();
-				return Response.status(response.getResponseStatus())
+				return new JSONWithPadding(Response
+						.status(response.getResponseStatus())
 						.type(APPLICATION_JSON_TYPE).entity(response.getBody())
-						.build();
+						.build(), callback);
 			}
 
 			AccessInfo access_info = new AccessInfo()
@@ -174,32 +183,36 @@ public class ManagementResource extends AbstractContextResource {
 							management.getAdminUserOrganizationData(user
 									.getUuid()));
 
-			return Response.status(SC_OK).type(APPLICATION_JSON_TYPE)
-					.entity(mapToJsonString(access_info)).build();
+			return new JSONWithPadding(Response.status(SC_OK)
+					.type(APPLICATION_JSON_TYPE)
+					.entity(mapToJsonString(access_info)).build(), callback);
 
 		} catch (OAuthProblemException e) {
 			logger.error("OAuth Error", e);
 			OAuthResponse res = OAuthResponse.errorResponse(SC_BAD_REQUEST)
 					.error(e).buildJSONMessage();
-			return Response.status(res.getResponseStatus())
-					.type(APPLICATION_JSON_TYPE).entity(res.getBody()).build();
+			return new JSONWithPadding(Response.status(res.getResponseStatus())
+					.type(APPLICATION_JSON_TYPE).entity(res.getBody()).build(),
+					callback);
 		}
 	}
 
 	@POST
 	@Path("token")
 	@Consumes(APPLICATION_FORM_URLENCODED)
-	public Response getAccessTokenPost(@Context UriInfo ui,
+	public JSONWithPadding getAccessTokenPost(@Context UriInfo ui,
 			@FormParam("grant_type") String grant_type,
 			@FormParam("username") String username,
 			@FormParam("password") String password,
 			@FormParam("client_id") String client_id,
-			@FormParam("client_secret") String client_secret) throws Exception {
+			@FormParam("client_secret") String client_secret,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("ManagementResource.getAccessTokenPost");
 
 		return getAccessToken(ui, null, grant_type, username, password,
-				client_id, client_secret);
+				client_id, client_secret, callback);
 	}
 
 	@GET

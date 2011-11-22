@@ -26,7 +26,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -38,7 +39,7 @@ import org.usergrid.locking.exception.UGLockException;
 
 public class LockTestSingleNode {
 
-	private static final Logger logger = Logger.getLogger(LockTestSingleNode.class);
+	private static final Logger logger = LoggerFactory.getLogger(LockTestSingleNode.class);
 	
 	private LockManager manager;
 	

@@ -42,8 +42,9 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ser.ArraySerializers.ByteArraySerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.Queue;
 import org.usergrid.utils.ConversionUtils;
@@ -51,7 +52,7 @@ import org.usergrid.utils.JsonUtils;
 
 public class CassandraMQUtils {
 
-	public static final Logger logger = Logger
+	public static final Logger logger = LoggerFactory
 			.getLogger(CassandraMQUtils.class);
 
 	public static final StringSerializer se = new StringSerializer();
@@ -62,7 +63,7 @@ public class CassandraMQUtils {
 	public static final LongSerializer le = new LongSerializer();
 
 	/** Logger for batch operations */
-	private static final Logger batch_logger = Logger
+	private static final Logger batch_logger = LoggerFactory
 			.getLogger(CassandraMQUtils.class.getPackage().getName() + ".BATCH");
 
 	public static void logBatchOperation(String operation, Object columnFamily,

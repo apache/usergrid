@@ -36,7 +36,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -48,7 +49,7 @@ import org.codehaus.jackson.node.ObjectNode;
 
 public class IndexUtils {
 
-	private static final Logger logger = Logger.getLogger(IndexUtils.class);
+	private static final Logger logger = LoggerFactory.getLogger(IndexUtils.class);
 
 	static Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_30);
 

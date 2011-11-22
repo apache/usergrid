@@ -52,8 +52,9 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ser.ArraySerializers.ByteArraySerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.DynamicEntity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
@@ -69,7 +70,7 @@ import org.usergrid.utils.UUIDUtils;
  */
 public class EntityManagerFactoryImpl implements EntityManagerFactory {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(EntityManagerFactoryImpl.class);
 
 	public static String IMPLEMENTATION_DESCRIPTION = "Cassandra Entity Manager Factory 1.0";

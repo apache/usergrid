@@ -42,7 +42,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sun.jersey.api.core.PackagesResourceConfig;
 
@@ -52,7 +53,7 @@ public class CustomResourceConfig extends PackagesResourceConfig {
 	 * private static final Logger logger = Logger
 	 * .getLogger(CustomResourceConfig.class.getName());
 	 */
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(CustomResourceConfig.class);
 
 	public CustomResourceConfig() {
@@ -87,6 +88,7 @@ public class CustomResourceConfig extends PackagesResourceConfig {
 
 		m.put("xml", MediaType.TEXT_XML_TYPE);
 		m.put("json", MediaType.APPLICATION_JSON_TYPE);
+		m.put("js", new MediaType("application", "javascript"));
 		m.put("html", MediaType.TEXT_HTML_TYPE);
 		m.put("txt", MediaType.TEXT_PLAIN_TYPE);
 

@@ -42,8 +42,9 @@ import java.util.Map;
 
 import javax.ws.rs.core.SecurityContext;
 
-import org.apache.log4j.Logger;
 import org.apache.shiro.codec.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.sun.jersey.spi.container.ContainerRequest;
@@ -51,7 +52,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
 @Component
 public class BasicAuthSecurityFilter extends SecurityFilter {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(BasicAuthSecurityFilter.class);
 
 	public BasicAuthSecurityFilter() {

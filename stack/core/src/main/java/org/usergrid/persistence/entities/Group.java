@@ -43,7 +43,7 @@ public class Group extends TypedEntity {
 
 	public static final String CONNECTION_MEMBERSHIP = "membership";
 
-	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = true, aliasProperty = true, pathBasedName = true, mutable = false, unique = true, basic = true)
+	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = true, aliasProperty = true, pathBasedName = true, mutable = true, unique = true, basic = true)
 	protected String path;
 
 	@EntityProperty(basic = true)

@@ -17,7 +17,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.jasper.runtime.JspFactoryImpl;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.util.ClassLoaderUtil;
 import org.glassfish.grizzly.servlet.ServletHandler;
@@ -44,7 +45,7 @@ public class Server implements ApplicationContextAware {
 
 	public static final boolean INSTALL_JSP_SERVLETS = true;
 
-	private static final Logger logger = Logger.getLogger(Server.class);
+	private static final Logger logger = LoggerFactory.getLogger(Server.class);
 
 	public static Server instance = null;
 

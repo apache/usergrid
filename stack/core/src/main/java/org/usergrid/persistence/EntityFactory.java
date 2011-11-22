@@ -20,7 +20,8 @@ package org.usergrid.persistence;
 
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A factory for creating Entity objects.
@@ -28,7 +29,7 @@ import org.apache.log4j.Logger;
 public class EntityFactory {
 
 	/** The Constant logger. */
-	private static final Logger logger = Logger.getLogger(EntityFactory.class);
+	private static final Logger logger = LoggerFactory.getLogger(EntityFactory.class);
 
 	/**
 	 * New entity.

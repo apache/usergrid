@@ -46,7 +46,8 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Query;
 import org.usergrid.services.ServiceParameter.QueryParameter;
@@ -54,7 +55,7 @@ import org.usergrid.services.ServiceResults.Type;
 
 public class ServiceRequest {
 
-	private static final Logger logger = Logger.getLogger(ServiceRequest.class);
+	private static final Logger logger = LoggerFactory.getLogger(ServiceRequest.class);
 
 	public static final int MAX_INVOCATIONS = 10;
 

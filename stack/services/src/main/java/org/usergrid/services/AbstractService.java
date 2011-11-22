@@ -54,8 +54,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.log4j.Logger;
 import org.apache.shiro.subject.Subject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
@@ -80,7 +81,7 @@ import org.usergrid.services.exceptions.UnsupportedServiceOperationException;
  */
 public abstract class AbstractService implements Service {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(AbstractService.class);
 
 	private ServiceInfo info;

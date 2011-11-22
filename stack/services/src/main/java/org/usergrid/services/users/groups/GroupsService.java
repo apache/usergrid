@@ -37,11 +37,12 @@
  ******************************************************************************/
 package org.usergrid.services.users.groups;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GroupsService extends org.usergrid.services.groups.GroupsService {
 
-	private static final Logger logger = Logger.getLogger(GroupsService.class);
+	private static final Logger logger = LoggerFactory.getLogger(GroupsService.class);
 
 	public GroupsService() {
 		super();

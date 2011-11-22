@@ -40,7 +40,8 @@ package org.usergrid.mongo.commands;
 import static org.usergrid.utils.MapUtils.entry;
 import static org.usergrid.utils.MapUtils.map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.usergrid.management.ApplicationInfo;
@@ -54,7 +55,7 @@ import org.usergrid.security.shiro.utils.SubjectUtils;
 
 public class Count extends MongoCommand {
 
-	private static final Logger logger = Logger.getLogger(Count.class);
+	private static final Logger logger = LoggerFactory.getLogger(Count.class);
 
 	@Override
 	public OpReply execute(MongoChannelHandler handler,

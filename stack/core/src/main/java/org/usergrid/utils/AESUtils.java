@@ -8,11 +8,13 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AESUtils {
 
-	private static final Logger logger = Logger.getLogger(AESUtils.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(AESUtils.class);
 
 	private static byte[] linebreak = {};
 	private static Cipher cipher;
@@ -23,7 +25,7 @@ public class AESUtils {
 			cipher = Cipher.getInstance("AES/ECB/PKCS5Padding", "SunJCE");
 			coder = new Base64(32, linebreak, true);
 		} catch (Throwable t) {
-			logger.error(t);
+			logger.error("Cipher error", t);
 		}
 	}
 
@@ -35,7 +37,7 @@ public class AESUtils {
 			byte[] cipherText = cipher.doFinal(plainText.getBytes());
 			return new String(coder.encode(cipherText));
 		} catch (Exception e) {
-			logger.error(e);
+			logger.error("Encryption error", e);
 		}
 		return null;
 	}
@@ -49,9 +51,8 @@ public class AESUtils {
 			byte[] decrypted = cipher.doFinal(encypted);
 			return new String(decrypted);
 		} catch (Exception e) {
-			logger.error(e);
+			logger.error("Decryption error", e);
 		}
 		return null;
 	}
-
 }

@@ -51,7 +51,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.ClassUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
@@ -64,7 +65,7 @@ import org.usergrid.services.ServiceManagerFactory;
 
 public abstract class ToolBase {
 
-	private static final Logger logger = Logger.getLogger(ToolBase.class);
+	private static final Logger logger = LoggerFactory.getLogger(ToolBase.class);
 
 	EmbeddedServerHelper embedded = null;
 

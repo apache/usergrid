@@ -37,11 +37,12 @@
  ******************************************************************************/
 package org.usergrid.services.groups.roles;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RolesService extends org.usergrid.services.roles.RolesService {
 
-	private static final Logger logger = Logger.getLogger(RolesService.class);
+	private static final Logger logger = LoggerFactory.getLogger(RolesService.class);
 
 	public RolesService() {
 		super();

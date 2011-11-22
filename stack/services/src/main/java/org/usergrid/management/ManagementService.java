@@ -48,6 +48,7 @@ import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.oauth.AccessInfo;
+import org.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.usergrid.services.ServiceResults;
 
 import com.google.common.collect.BiMap;
@@ -336,5 +337,8 @@ public interface ManagementService {
 
 	public User verifyAppUserPinCredentials(UUID applicationId, String name,
 			String pin) throws Exception;
+
+	public PrincipalCredentialsToken getPrincipalCredentialsTokenForClientCredentials(
+			String clientId, String clientSecret) throws Exception;
 
 }

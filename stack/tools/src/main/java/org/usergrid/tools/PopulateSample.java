@@ -50,7 +50,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.Entity;
@@ -63,7 +64,7 @@ import org.usergrid.services.ServiceResults;
 
 public class PopulateSample extends ToolBase {
 
-	private static final Logger logger = Logger.getLogger(Export.class);
+	private static final Logger logger = LoggerFactory.getLogger(Export.class);
 
 	@Override
 	public Options createOptions() {

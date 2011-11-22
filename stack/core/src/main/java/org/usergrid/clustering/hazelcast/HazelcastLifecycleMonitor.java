@@ -18,7 +18,8 @@
  ******************************************************************************/
 package org.usergrid.clustering.hazelcast;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.Instance;
@@ -30,7 +31,7 @@ import com.hazelcast.core.MembershipListener;
 public class HazelcastLifecycleMonitor implements InstanceListener,
 		MembershipListener {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(HazelcastLifecycleMonitor.class);
 
 	public HazelcastLifecycleMonitor() {

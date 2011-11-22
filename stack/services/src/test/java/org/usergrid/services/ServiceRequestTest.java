@@ -47,12 +47,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ServiceRequestTest {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ServiceRequestTest.class);
 
 	@Test
@@ -68,7 +69,7 @@ public class ServiceRequestTest {
 		path = services.newRequest(ServiceAction.GET,
 				parameters("users", "bob"), null);
 		// path = path.addSegment("users", "bob");
-		logger.info(path.getParameters());
+		logger.info("" + path.getParameters());
 
 		Map<List<String>, List<String>> replaceParameters = new LinkedHashMap<List<String>, List<String>>();
 		replaceParameters.put(Arrays.asList("users"),
@@ -76,17 +77,17 @@ public class ServiceRequestTest {
 		List<ServiceParameter> p = filter(path.getParameters(),
 				replaceParameters);
 		// path = path.addSegment("messages", "bob");
-		logger.info(p);
+		logger.info("" + p);
 
 		path = services.newRequest(ServiceAction.GET,
 				parameters("users", UUID.randomUUID(), "messages"), null);
-		logger.info(path.getParameters());
+		logger.info("" + path.getParameters());
 
 		logger.info("\\1");
 		replaceParameters = new LinkedHashMap<List<String>, List<String>>();
 		replaceParameters.put(Arrays.asList("users", "$id"),
 				Arrays.asList("connecting", "\\1", "users"));
 		p = filter(path.getParameters(), replaceParameters);
-		logger.info(p);
+		logger.info("" + p);
 	}
 }

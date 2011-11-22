@@ -43,14 +43,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 
 public class GroupServiceTest extends AbstractServiceTest {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(GroupServiceTest.class);
 
 	@Test
@@ -124,7 +125,8 @@ public class GroupServiceTest extends AbstractServiceTest {
 
 		em.grantGroupRolePermission(group.getUuid(), "admin", "users:access:*");
 		em.grantGroupRolePermission(group.getUuid(), "admin", "groups:access:*");
-		em.grantGroupRolePermission(group.getUuid(), "author", "assets:access:*");
+		em.grantGroupRolePermission(group.getUuid(), "author",
+				"assets:access:*");
 
 		ServiceManager sm = smf.getServiceManager(applicationId);
 

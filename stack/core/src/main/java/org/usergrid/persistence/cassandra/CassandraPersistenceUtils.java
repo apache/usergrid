@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,7 @@ import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.ddl.ColumnDefinition;
 import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
 import me.prettyprint.hector.api.ddl.ComparatorType;
+import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.MutationResult;
 import me.prettyprint.hector.api.mutation.Mutator;
@@ -63,8 +65,9 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import org.apache.cassandra.thrift.ColumnDef;
 import org.apache.cassandra.thrift.IndexType;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.utils.JsonUtils;
 
 /**
@@ -73,11 +76,11 @@ import org.usergrid.utils.JsonUtils;
  */
 public class CassandraPersistenceUtils {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(CassandraPersistenceUtils.class);
 
 	/** Logger for batch operations */
-	private static final Logger batch_logger = Logger
+	private static final Logger batch_logger = LoggerFactory
 			.getLogger(CassandraPersistenceUtils.class.getPackage().getName()
 					+ ".BATCH");
 
@@ -474,6 +477,19 @@ public class CassandraPersistenceUtils {
 		}
 
 		return cf_defs;
+	}
+
+	public static void validateKeyspace(CFEnum[] cf_enums,
+			KeyspaceDefinition ksDef) {
+		Map<String, ColumnFamilyDefinition> cfs = new HashMap<String, ColumnFamilyDefinition>();
+		for (ColumnFamilyDefinition cf : ksDef.getCfDefs()) {
+			cfs.put(cf.getName(), cf);
+		}
+		for (CFEnum c : cf_enums) {
+			if (!cfs.keySet().contains(c.getColumnFamily())) {
+
+			}
+		}
 	}
 
 }

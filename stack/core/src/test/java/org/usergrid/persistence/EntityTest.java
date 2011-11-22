@@ -25,7 +25,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.User;
@@ -33,7 +34,7 @@ import org.usergrid.utils.JsonUtils;
 
 public class EntityTest {
 
-	private static final Logger logger = Logger.getLogger(EntityTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(EntityTest.class);
 
 	@Test
 	public void testEntityClasses() throws Exception {

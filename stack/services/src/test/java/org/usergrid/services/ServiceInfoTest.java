@@ -41,13 +41,14 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.utils.JsonUtils;
 
 public class ServiceInfoTest {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ServiceInfoTest.class);
 
 	@Test

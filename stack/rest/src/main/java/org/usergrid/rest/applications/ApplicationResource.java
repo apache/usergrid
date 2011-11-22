@@ -53,6 +53,7 @@ import java.net.URLEncoder;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -71,8 +72,9 @@ import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
-import org.apache.log4j.Logger;
 import org.apache.shiro.codec.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.persistence.entities.User;
@@ -84,12 +86,16 @@ import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
 
+import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
-@Produces(MediaType.APPLICATION_JSON)
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class ApplicationResource extends ServiceResource {
 
-	public static final Logger logger = Logger.getLogger(ServiceResource.class);
+	public static final Logger logger = LoggerFactory
+			.getLogger(ServiceResource.class);
 
 	UUID applicationId;
 	QueueManager queues;
@@ -137,7 +143,7 @@ public class ApplicationResource extends ServiceResource {
 
 	@GET
 	@Path("token")
-	public Response getAccessToken(@Context UriInfo ui,
+	public JSONWithPadding getAccessToken(@Context UriInfo ui,
 			@HeaderParam("Authorization") String authorization,
 			@QueryParam("grant_type") String grant_type,
 			@QueryParam("username") String username,
@@ -146,7 +152,9 @@ public class ApplicationResource extends ServiceResource {
 			@QueryParam("client_id") String client_id,
 			@QueryParam("client_secret") String client_secret,
 			@QueryParam("code") String code,
-			@QueryParam("redirect_uri") String redirect_uri) throws Exception {
+			@QueryParam("redirect_uri") String redirect_uri,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("ApplicationResource.getAccessToken");
 
@@ -186,17 +194,19 @@ public class ApplicationResource extends ServiceResource {
 					AccessInfo access_info = management.authorizeClient(
 							client_id, client_secret);
 					if (access_info != null) {
-						return Response.status(SC_OK)
+						return new JSONWithPadding(Response.status(SC_OK)
 								.type(APPLICATION_JSON_TYPE)
-								.entity(mapToJsonString(access_info)).build();
+								.entity(mapToJsonString(access_info)).build(),
+								callback);
 					}
 				} catch (Exception e1) {
 				}
 			} else if ("authorization_code".equals(grant_type)) {
 				AccessInfo access_info = new AccessInfo();
 				access_info.setAccessToken(code);
-				return Response.status(SC_OK).type(APPLICATION_JSON_TYPE)
-						.entity(mapToJsonString(access_info)).build();
+				return new JSONWithPadding(Response.status(SC_OK)
+						.type(APPLICATION_JSON_TYPE)
+						.entity(mapToJsonString(access_info)).build(), callback);
 			}
 
 			if (user == null) {
@@ -205,9 +215,10 @@ public class ApplicationResource extends ServiceResource {
 						.setError(OAuthError.TokenResponse.INVALID_GRANT)
 						.setErrorDescription("invalid username or password")
 						.buildJSONMessage();
-				return Response.status(response.getResponseStatus())
+				return new JSONWithPadding(Response
+						.status(response.getResponseStatus())
 						.type(APPLICATION_JSON_TYPE).entity(response.getBody())
-						.build();
+						.build(), callback);
 			}
 
 			AccessInfo access_info = new AccessInfo()
@@ -217,22 +228,24 @@ public class ApplicationResource extends ServiceResource {
 									services.getApplicationId(), user.getUuid()))
 					.withProperty("user", user);
 
-			return Response.status(SC_OK).type(APPLICATION_JSON_TYPE)
-					.entity(mapToJsonString(access_info)).build();
+			return new JSONWithPadding(Response.status(SC_OK)
+					.type(APPLICATION_JSON_TYPE)
+					.entity(mapToJsonString(access_info)).build(), callback);
 
 		} catch (OAuthProblemException e) {
 			logger.error("OAuth Error", e);
 			OAuthResponse res = OAuthResponse.errorResponse(SC_BAD_REQUEST)
 					.error(e).buildJSONMessage();
-			return Response.status(res.getResponseStatus())
-					.type(APPLICATION_JSON_TYPE).entity(res.getBody()).build();
+			return new JSONWithPadding(Response.status(res.getResponseStatus())
+					.type(APPLICATION_JSON_TYPE).entity(res.getBody()).build(),
+					callback);
 		}
 	}
 
 	@POST
 	@Path("token")
 	@Consumes(APPLICATION_FORM_URLENCODED)
-	public Response getAccessTokenPost(@Context UriInfo ui,
+	public JSONWithPadding getAccessTokenPost(@Context UriInfo ui,
 			@FormParam("grant_type") String grant_type,
 			@FormParam("username") String username,
 			@FormParam("password") String password,
@@ -240,18 +253,22 @@ public class ApplicationResource extends ServiceResource {
 			@FormParam("client_id") String client_id,
 			@FormParam("client_secret") String client_secret,
 			@FormParam("code") String code,
-			@FormParam("redirect_uri") String redirect_uri) throws Exception {
+			@FormParam("redirect_uri") String redirect_uri,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("ApplicationResource.getAccessTokenPost");
 
 		return getAccessToken(ui, null, grant_type, username, password, pin,
-				client_id, client_secret, code, redirect_uri);
+				client_id, client_secret, code, redirect_uri, callback);
 	}
 
 	@GET
 	@Path("credentials")
 	@RequireApplicationAccess
-	public ApiResponse getKeys(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding getKeys(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("AuthResource.keys");
 
@@ -261,14 +278,16 @@ public class ApplicationResource extends ServiceResource {
 				management.getClientSecretForApplication(services
 						.getApplicationId()));
 
-		return new ApiResponse(ui).withCredentials(kp)
-				.withAction("get application keys").withSuccess();
+		return new JSONWithPadding(new ApiResponse(ui).withCredentials(kp)
+				.withAction("get application keys").withSuccess(), callback);
 	}
 
 	@POST
 	@Path("credentials")
 	@RequireApplicationAccess
-	public ApiResponse generateKeys(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding generateKeys(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("AuthResource.keys");
 
@@ -278,8 +297,9 @@ public class ApplicationResource extends ServiceResource {
 				management.newClientSecretForApplication(services
 						.getApplicationId()));
 
-		return new ApiResponse(ui).withCredentials(kp)
-				.withAction("generate application keys").withSuccess();
+		return new JSONWithPadding(new ApiResponse(ui).withCredentials(kp)
+				.withAction("generate application keys").withSuccess(),
+				callback);
 	}
 
 	@GET

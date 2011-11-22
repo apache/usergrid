@@ -25,7 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import org.usergrid.persistence.AbstractPersistenceTest;
 import org.usergrid.persistence.EntityManager;
@@ -34,7 +35,7 @@ import org.usergrid.utils.JsonUtils;
 
 public class MessagesTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = Logger.getLogger(MessagesTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MessagesTest.class);
 
 	public MessagesTest() {
 		super();

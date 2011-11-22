@@ -50,7 +50,8 @@ import me.prettyprint.hector.api.beans.Row;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.reflect.FieldUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -84,7 +85,7 @@ import org.usergrid.utils.MapUtils;
  */
 public class Schema {
 
-	private static final Logger logger = Logger.getLogger(Schema.class);
+	private static final Logger logger = LoggerFactory.getLogger(Schema.class);
 
 	public static final String SCAN_PATH = "org/usergrid/persistence/entities";
 	public static final String ENTITIES_PACKAGE = "org.usergrid.persistence.entities";

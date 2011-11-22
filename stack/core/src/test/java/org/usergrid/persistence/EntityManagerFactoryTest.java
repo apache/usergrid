@@ -20,12 +20,13 @@ package org.usergrid.persistence;
 
 import static org.junit.Assert.assertNotNull;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EntityManagerFactoryTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(EntityManagerFactoryTest.class);
 
 	public EntityManagerFactoryTest() {

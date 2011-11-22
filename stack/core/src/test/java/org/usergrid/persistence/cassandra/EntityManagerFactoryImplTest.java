@@ -30,10 +30,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
@@ -45,7 +46,7 @@ public class EntityManagerFactoryImplTest {
 
 	public static final boolean USE_DEFAULT_DOMAIN = !CassandraService.USE_VIRTUAL_KEYSPACES;
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(EntityManagerFactoryImplTest.class);
 
 	static PersistenceTestHelper helper;

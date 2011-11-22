@@ -44,6 +44,7 @@ import static org.usergrid.utils.ConversionUtils.string;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -58,8 +59,9 @@ import javax.ws.rs.core.UriInfo;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
@@ -67,12 +69,14 @@ import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.applications.ServiceResource;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 
+import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource extends ServiceResource {
 
-	private static final Logger logger = Logger.getLogger(UserResource.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(UserResource.class);
 
 	User user;
 
@@ -90,8 +94,10 @@ public class UserResource extends ServiceResource {
 
 	@PUT
 	@Path("password")
-	public ApiResponse setUserPassword(@Context UriInfo ui,
-			Map<String, Object> json) throws Exception {
+	public JSONWithPadding setUserPassword(@Context UriInfo ui,
+			Map<String, Object> json,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		if (json == null) {
 			return null;
@@ -109,31 +115,37 @@ public class UserResource extends ServiceResource {
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user password");
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@GET
 	@Path("sendpin")
-	public ApiResponse sendPin(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding sendPin(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		management.sendAppUserPin(getApplicationId(), getUser().getUuid());
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("retrieve user pin");
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@POST
 	@Path("sendpin")
-	public ApiResponse postSendPin(@Context UriInfo ui) throws Exception {
-		return sendPin(ui);
+	public JSONWithPadding postSendPin(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
+		return sendPin(ui, callback);
 	}
 
 	@GET
 	@Path("setpin")
 	@RequireApplicationAccess
-	public ApiResponse setPin(@Context UriInfo ui, @QueryParam("pin") String pin)
+	public JSONWithPadding setPin(@Context UriInfo ui,
+			@QueryParam("pin") String pin,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		management.setAppUserPin(getApplicationId(), getUser().getUuid(), pin);
@@ -141,14 +153,16 @@ public class UserResource extends ServiceResource {
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user pin");
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@POST
 	@Path("setpin")
 	@Consumes("application/x-www-form-urlencoded")
 	@RequireApplicationAccess
-	public ApiResponse postPin(@Context UriInfo ui, @FormParam("pin") String pin)
+	public JSONWithPadding postPin(@Context UriInfo ui,
+			@FormParam("pin") String pin,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		management.setAppUserPin(getApplicationId(), getUser().getUuid(), pin);
@@ -156,14 +170,15 @@ public class UserResource extends ServiceResource {
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user pin");
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@POST
 	@Path("setpin")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@RequireApplicationAccess
-	public ApiResponse jsonPin(@Context UriInfo ui, JsonNode json)
+	public JSONWithPadding jsonPin(@Context UriInfo ui, JsonNode json,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		String pin = json.path("pin").getTextValue();
@@ -173,7 +188,7 @@ public class UserResource extends ServiceResource {
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user pin");
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@GET
@@ -286,7 +301,9 @@ public class UserResource extends ServiceResource {
 
 	@GET
 	@Path("reactivate")
-	public ApiResponse reactivate(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding reactivate(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("Send activation email for user: " + getUser().getUuid());
 
@@ -295,7 +312,7 @@ public class UserResource extends ServiceResource {
 		management.sendAppUserActivationEmail(getApplicationId(), user);
 
 		response.setAction("reactivate user");
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 }

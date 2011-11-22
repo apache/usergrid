@@ -47,7 +47,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Query;
@@ -61,7 +62,7 @@ import org.usergrid.services.ServiceResults.Type;
 
 public class ApplicationsService extends AbstractService {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(ApplicationsService.class);
 
 	public ApplicationsService() {

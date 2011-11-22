@@ -42,6 +42,7 @@ import static org.usergrid.utils.ConversionUtils.string;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -56,7 +57,8 @@ import javax.ws.rs.core.UriInfo;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
@@ -65,12 +67,16 @@ import org.usergrid.rest.security.annotations.RequireAdminUserAccess;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.services.ServiceResults;
 
+import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
-@Produces(MediaType.APPLICATION_JSON)
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class UserResource extends AbstractContextResource {
 
-	private static final Logger logger = Logger.getLogger(UserResource.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(UserResource.class);
 
 	UserInfo user;
 
@@ -91,7 +97,9 @@ public class UserResource extends AbstractContextResource {
 	}
 
 	@PUT
-	public ApiResponse setUserInfo(@Context UriInfo ui, Map<String, Object> json)
+	public JSONWithPadding setUserInfo(@Context UriInfo ui,
+			Map<String, Object> json,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		if (json == null) {
@@ -114,13 +122,15 @@ public class UserResource extends AbstractContextResource {
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("update user info");
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@PUT
 	@Path("password")
-	public ApiResponse setUserPassword(@Context UriInfo ui,
-			Map<String, Object> json) throws Exception {
+	public JSONWithPadding setUserPassword(@Context UriInfo ui,
+			Map<String, Object> json,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		if (json == null) {
 			return null;
@@ -134,13 +144,15 @@ public class UserResource extends AbstractContextResource {
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user password");
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@RequireAdminUserAccess
 	@GET
 	@Path("feed")
-	public ApiResponse getFeed(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding getFeed(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("get admin user feed");
@@ -149,12 +161,14 @@ public class UserResource extends AbstractContextResource {
 		response.setEntities(results.getEntities());
 		response.setSuccess();
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@RequireAdminUserAccess
 	@GET
-	public ApiResponse getUserData(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding getUserData(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("get admin user");
@@ -167,7 +181,7 @@ public class UserResource extends AbstractContextResource {
 		response.setData(userOrganizationData);
 		response.setSuccess();
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@GET
@@ -266,7 +280,9 @@ public class UserResource extends AbstractContextResource {
 
 	@GET
 	@Path("reactivate")
-	public ApiResponse reactivate(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding reactivate(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("Send activation email for user: " + user.getUuid());
 
@@ -275,7 +291,7 @@ public class UserResource extends AbstractContextResource {
 		management.sendAdminUserActivationEmail(user);
 
 		response.setAction("reactivate user");
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 }

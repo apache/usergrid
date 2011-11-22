@@ -48,7 +48,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -90,7 +91,7 @@ import com.google.common.collect.HashBiMap;
 
 public class Realm extends AuthorizingRealm {
 
-	private static final Logger logger = Logger.getLogger(Realm.class);
+	private static final Logger logger = LoggerFactory.getLogger(Realm.class);
 
 	public final static String ROLE_SERVICE_ADMIN = "service-admin";
 	public final static String ROLE_ADMIN_USER = "admin-user";

@@ -20,13 +20,15 @@ package org.usergrid.persistence;
 
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.entities.SampleEntity;
 
 public class SchemaTest {
 
-	private static final Logger logger = Logger.getLogger(SchemaTest.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(SchemaTest.class);
 
 	public SchemaTest() {
 	}
@@ -34,8 +36,10 @@ public class SchemaTest {
 	@Test
 	public void testTypes() throws Exception {
 
-		logger.info(Schema.getDefaultSchema().getEntityClass("sample_entity"));
-		logger.info(Schema.getDefaultSchema().getEntityType(SampleEntity.class));
+		logger.info(""
+				+ Schema.getDefaultSchema().getEntityClass("sample_entity"));
+		logger.info(""
+				+ Schema.getDefaultSchema().getEntityType(SampleEntity.class));
 
 		SampleEntity entity = new SampleEntity();
 		logger.info(entity.getType());

@@ -51,8 +51,9 @@ import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.ParameterStyle;
 import org.apache.amber.oauth2.common.utils.OAuthUtils;
 import org.apache.amber.oauth2.rs.request.OAuthAccessResourceRequest;
-import org.apache.log4j.Logger;
 import org.apache.shiro.subject.Subject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
@@ -70,7 +71,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
 
 	public static final String REALM = "Usergrid Authentication";
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(OAuth2AccessTokenSecurityFilter.class);
 
 	public OAuth2AccessTokenSecurityFilter() {

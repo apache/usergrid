@@ -43,14 +43,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 
 public class UsersServiceTest extends AbstractServiceTest {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(UsersServiceTest.class);
 
 	@Test
@@ -63,7 +64,7 @@ public class UsersServiceTest extends AbstractServiceTest {
 		EntityManager em = emf.getEntityManager(applicationId);
 		assertNotNull(em);
 
-		//em.createRole("admin", null);
+		// em.createRole("admin", null);
 		em.createRole("manager", null);
 		em.createRole("member", null);
 

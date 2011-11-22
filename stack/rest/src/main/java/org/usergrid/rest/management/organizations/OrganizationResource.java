@@ -37,6 +37,7 @@
  ******************************************************************************/
 package org.usergrid.rest.management.organizations;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -46,7 +47,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
@@ -56,12 +58,15 @@ import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
 import org.usergrid.services.ServiceResults;
 
+import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
-@Produces(MediaType.APPLICATION_JSON)
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class OrganizationResource extends AbstractContextResource {
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(OrganizationsResource.class);
 
 	OrganizationInfo organization;
@@ -105,7 +110,9 @@ public class OrganizationResource extends AbstractContextResource {
 
 	@GET
 	@Path("reactivate")
-	public ApiResponse reactivate(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding reactivate(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		logger.info("Send activation email for organization: "
 				+ organization.getUuid());
@@ -115,13 +122,15 @@ public class OrganizationResource extends AbstractContextResource {
 		management.sendOrganizationActivationEmail(organization);
 
 		response.setAction("reactivate organization");
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@RequireOrganizationAccess
 	@GET
 	@Path("feed")
-	public ApiResponse getFeed(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding getFeed(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("get organization feed");
@@ -131,13 +140,15 @@ public class OrganizationResource extends AbstractContextResource {
 		response.setEntities(results.getEntities());
 		response.setSuccess();
 
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@RequireOrganizationAccess
 	@GET
 	@Path("credentials")
-	public ApiResponse getCredentials(@Context UriInfo ui) throws Exception {
+	public JSONWithPadding getCredentials(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("get organization client credentials");
@@ -148,13 +159,14 @@ public class OrganizationResource extends AbstractContextResource {
 						.getUuid()));
 
 		response.setCredentials(keys);
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	@RequireOrganizationAccess
 	@POST
 	@Path("credentials")
-	public ApiResponse generateCredentials(@Context UriInfo ui)
+	public JSONWithPadding generateCredentials(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
@@ -166,7 +178,7 @@ public class OrganizationResource extends AbstractContextResource {
 						.getUuid()));
 
 		response.setCredentials(credentials);
-		return response;
+		return new JSONWithPadding(response, callback);
 	}
 
 	public OrganizationInfo getOrganization() {

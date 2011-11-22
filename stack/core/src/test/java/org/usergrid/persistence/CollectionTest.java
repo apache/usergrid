@@ -26,13 +26,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.utils.JsonUtils;
 
 public class CollectionTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = Logger.getLogger(CollectionTest.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(CollectionTest.class);
 
 	@SuppressWarnings("serial")
 	@Test
@@ -63,12 +65,12 @@ public class CollectionTest extends AbstractPersistenceTest {
 		Entity activity = em.create("activity", properties);
 		assertNotNull(activity);
 
-		logger.info(activity.getClass());
+		logger.info("" + activity.getClass());
 		logger.info(JsonUtils.mapToFormattedJsonString(activity));
 
 		activity = em.get(activity.getUuid());
 
-		logger.info(activity.getClass());
+		logger.info("" + activity.getClass());
 		logger.info(JsonUtils.mapToFormattedJsonString(activity));
 
 		em.addToCollection(user, "activities", activity);
