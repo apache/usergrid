@@ -69,6 +69,7 @@ import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
+import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.codec.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +79,6 @@ import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.security.oauth.AccessInfo;
 
-import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
 @Path("/management")
@@ -108,16 +108,33 @@ public class ManagementResource extends AbstractContextResource {
 		logger.info("ManagementResource initialized");
 	}
 
+	private static String wrapWithCallback(AccessInfo accessInfo,
+			String callback) {
+		return wrapWithCallback(mapToJsonString(accessInfo), callback);
+	}
+
+	private static String wrapWithCallback(String json, String callback) {
+		if (StringUtils.isNotBlank(callback)) {
+			json = callback + "(" + json + ")";
+		}
+		return json;
+	}
+
+	private static MediaType jsonMediaType(String callback) {
+		return isNotBlank(callback) ? new MediaType("application", "javascript")
+				: APPLICATION_JSON_TYPE;
+	}
+
 	@GET
 	@Path("token")
-	public JSONWithPadding getAccessToken(@Context UriInfo ui,
+	public Response getAccessToken(@Context UriInfo ui,
 			@HeaderParam("Authorization") String authorization,
 			@QueryParam("grant_type") String grant_type,
 			@QueryParam("username") String username,
 			@QueryParam("password") String password,
 			@QueryParam("client_id") String client_id,
 			@QueryParam("client_secret") String client_secret,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
+			@QueryParam("callback") @DefaultValue("") String callback)
 			throws Exception {
 
 		logger.info("ManagementResource.getAccessToken");
@@ -152,10 +169,11 @@ public class ManagementResource extends AbstractContextResource {
 					AccessInfo access_info = management.authorizeClient(
 							client_id, client_secret);
 					if (access_info != null) {
-						return new JSONWithPadding(Response.status(SC_OK)
-								.type(APPLICATION_JSON_TYPE)
-								.entity(mapToJsonString(access_info)).build(),
-								callback);
+						return Response
+								.status(SC_OK)
+								.type(jsonMediaType(callback))
+								.entity(wrapWithCallback(access_info, callback))
+								.build();
 					}
 				} catch (Exception e1) {
 				}
@@ -167,10 +185,10 @@ public class ManagementResource extends AbstractContextResource {
 						.setError(OAuthError.TokenResponse.INVALID_GRANT)
 						.setErrorDescription("invalid username or password")
 						.buildJSONMessage();
-				return new JSONWithPadding(Response
-						.status(response.getResponseStatus())
-						.type(APPLICATION_JSON_TYPE).entity(response.getBody())
-						.build(), callback);
+				return Response.status(response.getResponseStatus())
+						.type(jsonMediaType(callback))
+						.entity(wrapWithCallback(response.getBody(), callback))
+						.build();
 			}
 
 			AccessInfo access_info = new AccessInfo()
@@ -183,30 +201,29 @@ public class ManagementResource extends AbstractContextResource {
 							management.getAdminUserOrganizationData(user
 									.getUuid()));
 
-			return new JSONWithPadding(Response.status(SC_OK)
-					.type(APPLICATION_JSON_TYPE)
-					.entity(mapToJsonString(access_info)).build(), callback);
+			return Response.status(SC_OK).type(jsonMediaType(callback))
+					.entity(wrapWithCallback(access_info, callback)).build();
 
 		} catch (OAuthProblemException e) {
 			logger.error("OAuth Error", e);
 			OAuthResponse res = OAuthResponse.errorResponse(SC_BAD_REQUEST)
 					.error(e).buildJSONMessage();
-			return new JSONWithPadding(Response.status(res.getResponseStatus())
-					.type(APPLICATION_JSON_TYPE).entity(res.getBody()).build(),
-					callback);
+			return Response.status(res.getResponseStatus())
+					.type(jsonMediaType(callback))
+					.entity(wrapWithCallback(res.getBody(), callback)).build();
 		}
 	}
 
 	@POST
 	@Path("token")
 	@Consumes(APPLICATION_FORM_URLENCODED)
-	public JSONWithPadding getAccessTokenPost(@Context UriInfo ui,
+	public Response getAccessTokenPost(@Context UriInfo ui,
 			@FormParam("grant_type") String grant_type,
 			@FormParam("username") String username,
 			@FormParam("password") String password,
 			@FormParam("client_id") String client_id,
 			@FormParam("client_secret") String client_secret,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
+			@QueryParam("callback") @DefaultValue("") String callback)
 			throws Exception {
 
 		logger.info("ManagementResource.getAccessTokenPost");

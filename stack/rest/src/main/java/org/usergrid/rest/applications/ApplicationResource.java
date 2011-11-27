@@ -72,6 +72,7 @@ import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
+import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.codec.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,9 +142,26 @@ public class ApplicationResource extends ServiceResource {
 		return new UsersResource(this);
 	}
 
+	private static String wrapWithCallback(AccessInfo accessInfo,
+			String callback) {
+		return wrapWithCallback(mapToJsonString(accessInfo), callback);
+	}
+
+	private static String wrapWithCallback(String json, String callback) {
+		if (StringUtils.isNotBlank(callback)) {
+			json = callback + "(" + json + ")";
+		}
+		return json;
+	}
+
+	private static MediaType jsonMediaType(String callback) {
+		return isNotBlank(callback) ? new MediaType("application", "javascript")
+				: APPLICATION_JSON_TYPE;
+	}
+
 	@GET
 	@Path("token")
-	public JSONWithPadding getAccessToken(@Context UriInfo ui,
+	public Response getAccessToken(@Context UriInfo ui,
 			@HeaderParam("Authorization") String authorization,
 			@QueryParam("grant_type") String grant_type,
 			@QueryParam("username") String username,
@@ -153,7 +171,7 @@ public class ApplicationResource extends ServiceResource {
 			@QueryParam("client_secret") String client_secret,
 			@QueryParam("code") String code,
 			@QueryParam("redirect_uri") String redirect_uri,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
+			@QueryParam("callback") @DefaultValue("") String callback)
 			throws Exception {
 
 		logger.info("ApplicationResource.getAccessToken");
@@ -194,19 +212,20 @@ public class ApplicationResource extends ServiceResource {
 					AccessInfo access_info = management.authorizeClient(
 							client_id, client_secret);
 					if (access_info != null) {
-						return new JSONWithPadding(Response.status(SC_OK)
-								.type(APPLICATION_JSON_TYPE)
-								.entity(mapToJsonString(access_info)).build(),
-								callback);
+						return Response
+								.status(SC_OK)
+								.type(jsonMediaType(callback))
+								.entity(wrapWithCallback(access_info, callback))
+								.build();
 					}
 				} catch (Exception e1) {
 				}
 			} else if ("authorization_code".equals(grant_type)) {
 				AccessInfo access_info = new AccessInfo();
 				access_info.setAccessToken(code);
-				return new JSONWithPadding(Response.status(SC_OK)
-						.type(APPLICATION_JSON_TYPE)
-						.entity(mapToJsonString(access_info)).build(), callback);
+				return Response.status(SC_OK).type(jsonMediaType(callback))
+						.entity(wrapWithCallback(access_info, callback))
+						.build();
 			}
 
 			if (user == null) {
@@ -215,10 +234,10 @@ public class ApplicationResource extends ServiceResource {
 						.setError(OAuthError.TokenResponse.INVALID_GRANT)
 						.setErrorDescription("invalid username or password")
 						.buildJSONMessage();
-				return new JSONWithPadding(Response
-						.status(response.getResponseStatus())
-						.type(APPLICATION_JSON_TYPE).entity(response.getBody())
-						.build(), callback);
+				return Response.status(response.getResponseStatus())
+						.type(jsonMediaType(callback))
+						.entity(wrapWithCallback(response.getBody(), callback))
+						.build();
 			}
 
 			AccessInfo access_info = new AccessInfo()
@@ -228,24 +247,23 @@ public class ApplicationResource extends ServiceResource {
 									services.getApplicationId(), user.getUuid()))
 					.withProperty("user", user);
 
-			return new JSONWithPadding(Response.status(SC_OK)
-					.type(APPLICATION_JSON_TYPE)
-					.entity(mapToJsonString(access_info)).build(), callback);
+			return Response.status(SC_OK).type(jsonMediaType(callback))
+					.entity(wrapWithCallback(access_info, callback)).build();
 
 		} catch (OAuthProblemException e) {
 			logger.error("OAuth Error", e);
 			OAuthResponse res = OAuthResponse.errorResponse(SC_BAD_REQUEST)
 					.error(e).buildJSONMessage();
-			return new JSONWithPadding(Response.status(res.getResponseStatus())
-					.type(APPLICATION_JSON_TYPE).entity(res.getBody()).build(),
-					callback);
+			return Response.status(res.getResponseStatus())
+					.type(jsonMediaType(callback))
+					.entity(wrapWithCallback(res.getBody(), callback)).build();
 		}
 	}
 
 	@POST
 	@Path("token")
 	@Consumes(APPLICATION_FORM_URLENCODED)
-	public JSONWithPadding getAccessTokenPost(@Context UriInfo ui,
+	public Response getAccessTokenPost(@Context UriInfo ui,
 			@FormParam("grant_type") String grant_type,
 			@FormParam("username") String username,
 			@FormParam("password") String password,
@@ -254,7 +272,7 @@ public class ApplicationResource extends ServiceResource {
 			@FormParam("client_secret") String client_secret,
 			@FormParam("code") String code,
 			@FormParam("redirect_uri") String redirect_uri,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
+			@QueryParam("callback") @DefaultValue("") String callback)
 			throws Exception {
 
 		logger.info("ApplicationResource.getAccessTokenPost");
