@@ -840,6 +840,7 @@ public class ManagementServiceImpl implements ManagementService {
 					Identifier.fromUUID(UUID.fromString(identifier)));
 			if (entity != null) {
 				user = (User) entity.toTypedEntity();
+				logger.info("Found user " + identifier + " as a UUID");
 			}
 		} catch (Exception e) {
 			logger.error("Unable to get user " + identifier
@@ -854,6 +855,7 @@ public class ManagementServiceImpl implements ManagementService {
 					Identifier.fromName(identifier));
 			if (entity != null) {
 				user = (User) entity.toTypedEntity();
+				logger.info("Found user " + identifier + " as a username");
 			}
 		} catch (Exception e) {
 			logger.error("Unable to get user " + identifier
@@ -868,6 +870,7 @@ public class ManagementServiceImpl implements ManagementService {
 					Identifier.fromEmail(identifier));
 			if (entity != null) {
 				user = (User) entity.toTypedEntity();
+				logger.info("Found user " + identifier + " as an email address");
 			}
 		} catch (Exception e) {
 			logger.error("Unable to get user " + identifier
@@ -1519,7 +1522,7 @@ public class ManagementServiceImpl implements ManagementService {
 						.withAccessToken(
 								getTokenForPrincipal(MANAGEMENT_APPLICATION_ID,
 										type, uuid, null, true))
-						.withProperty("application", app);
+						.withProperty("application", app.getId());
 			} else if (type.equals(AuthPrincipalType.ORGANIZATION)) {
 				OrganizationInfo organization = getOrganizationByUuid(uuid);
 				access_info = new AccessInfo()
