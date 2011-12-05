@@ -70,23 +70,14 @@ import com.google.common.collect.BiMap;
 
 public class Export extends ToolBase {
 
-	public static final boolean FORCE_USE_PRODUCTION = false;
+	static final Logger logger = LoggerFactory.getLogger(Export.class);
 
-	public static final int MAX_ENTITY_FETCH = 100;
-
-	private static final Logger logger = LoggerFactory.getLogger(Export.class);
-
-	/** Verbose option: -v */
-	private static final String VERBOSE = "v";
-
-	private boolean isVerboseEnabled = false;
+	static File outputDir;
 
 	/** Output dir option: -outputDir */
-	private static final String OUTPUT_DIR = "outputDir";
+	static final String OUTPUT_DIR = "outputDir";
 
-	private static File exportDir;
-
-	private String baseOutputDirName = "export";
+	String baseOutputDirName = "export";
 
 	JsonFactory jsonFactory = new JsonFactory();
 
@@ -125,8 +116,8 @@ public class Export extends ToolBase {
 		setVerbose(line);
 
 		prepareBaseOutputFileName(line);
-		exportDir = createOutputParentDir();
-		logger.info("Export directory: " + exportDir.getAbsolutePath());
+		outputDir = createOutputParentDir();
+		logger.info("Export directory: " + outputDir.getAbsolutePath());
 
 		// Export organizations separately.
 		exportOrganizations();
@@ -399,12 +390,6 @@ public class Export extends ToolBase {
 
 	}
 
-	private void setVerbose(CommandLine line) {
-		if (line.hasOption(VERBOSE)) {
-			isVerboseEnabled = true;
-		}
-	}
-
 	/**
 	 * Write the string onto the writer and check if verbose is enabled to log
 	 * also an echo of what is being written to the writer.
@@ -421,32 +406,12 @@ public class Export extends ToolBase {
 
 	}
 
-	/**
-	 * Log the content in the default logger(info)
-	 * 
-	 * @param content
-	 */
-	private void echo(String content) {
-		if (isVerboseEnabled) {
-			logger.info(content);
-		}
-	}
-
-	/**
-	 * Print the object in JSon format.
-	 * 
-	 * @param obj
-	 */
-	private void echo(Object obj) {
-		echo(JsonUtils.mapToFormattedJsonString(obj));
-	}
-
 	private File createOutputParentDir() {
 		return createDir(baseOutputDirName);
 	}
 
 	private File createOutputFile(String type, String name) {
-		return new File(exportDir, prepareOutputFileName(type, name));
+		return new File(outputDir, prepareOutputFileName(type, name));
 	}
 
 	@SuppressWarnings("unused")
@@ -456,7 +421,7 @@ public class Export extends ToolBase {
 
 	@SuppressWarnings("unused")
 	private File createCollectionsDir(String applicationName) {
-		return createDir(exportDir, "application." + applicationName
+		return createDir(outputDir, "application." + applicationName
 				+ ".collections");
 	}
 

@@ -51,9 +51,9 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.codehaus.jackson.JsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.codehaus.jackson.JsonFactory;
 import org.usergrid.persistence.Query;
 import org.usergrid.services.ServiceAction;
 import org.usergrid.services.ServiceManager;
@@ -66,8 +66,6 @@ import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
 public class Cli extends ToolBase {
-
-	public static final boolean FORCE_USE_PRODUCTION = false;
 
 	public static final int MAX_ENTITY_FETCH = 100;
 

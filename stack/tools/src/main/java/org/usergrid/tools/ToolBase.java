@@ -39,6 +39,7 @@ package org.usergrid.tools;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 import java.util.Properties;
 
@@ -48,6 +49,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.ClassUtils;
@@ -65,7 +68,15 @@ import org.usergrid.services.ServiceManagerFactory;
 
 public abstract class ToolBase {
 
-	private static final Logger logger = LoggerFactory.getLogger(ToolBase.class);
+	public static final int MAX_ENTITY_FETCH = 100;
+
+	/** Verbose option: -v */
+	static final String VERBOSE = "v";
+
+	boolean isVerboseEnabled = false;
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(ToolBase.class);
 
 	EmbeddedServerHelper embedded = null;
 
@@ -129,9 +140,24 @@ public abstract class ToolBase {
 		return ClassUtils.getShortClassName(this.getClass());
 	}
 
+	@SuppressWarnings("static-access")
 	public Options createOptions() {
 
+		Option hostOption = OptionBuilder.withArgName("host").hasArg()
+				.withDescription("Cassandra host").create("host");
+
+		Option remoteOption = OptionBuilder.withDescription(
+				"Use remote Cassandra instance").create("remote");
+
+		Option verbose = OptionBuilder
+				.withDescription(
+						"Print on the console an echo of the content written to the file")
+				.create(VERBOSE);
+
 		Options options = new Options();
+		options.addOption(hostOption);
+		options.addOption(remoteOption);
+		options.addOption(verbose);
 
 		return options;
 	}
@@ -185,6 +211,32 @@ public abstract class ToolBase {
 	public void teardownEmbedded() {
 		logger.info("Stopping Cassandra");
 		EmbeddedServerHelper.teardown();
+	}
+
+	void setVerbose(CommandLine line) {
+		if (line.hasOption(VERBOSE)) {
+			isVerboseEnabled = true;
+		}
+	}
+
+	/**
+	 * Log the content in the default logger(info)
+	 * 
+	 * @param content
+	 */
+	void echo(String content) {
+		if (isVerboseEnabled) {
+			logger.info(content);
+		}
+	}
+
+	/**
+	 * Print the object in JSon format.
+	 * 
+	 * @param obj
+	 */
+	void echo(Object obj) {
+		echo(mapToFormattedJsonString(obj));
 	}
 
 	@Autowired

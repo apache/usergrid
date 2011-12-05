@@ -37,8 +37,8 @@
  ******************************************************************************/
 package org.usergrid.tools;
 
-import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.usergrid.persistence.Schema.PROPERTY_TYPE;
+import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 
 import java.io.File;
 import java.util.HashMap;
@@ -51,37 +51,27 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.filefilter.PrefixFileFilter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.entities.Application;
-import org.usergrid.utils.JsonUtils;
 
 public class Import extends ToolBase {
-
-	public static final boolean FORCE_USE_PRODUCTION = false;
-
-	public static final int MAX_ENTITY_FETCH = 100;
 
 	private static final Logger logger = LoggerFactory.getLogger(Import.class);
 
 	/** Input directory where the .json export files are */
-	private static final String INPUT_DIR = "inputDir";
+	static final String INPUT_DIR = "inputDir";
 
-	private static File importDir;
+	static File importDir;
 
-	/** Verbose option: -v */
-	private static final String VERBOSE = "v";
-
-	private static final String DEFAULT_INPUT_DIR = "export";
-
-	private boolean isVerboseEnabled = false;
+	static final String DEFAULT_INPUT_DIR = "export";
 
 	JsonFactory jsonFactory = new JsonFactory();
 
@@ -139,7 +129,8 @@ public class Import extends ToolBase {
 			try {
 				importApplication(applicationName);
 			} catch (Exception e) {
-				logger.warn("Unable to import application: " + applicationName, e);
+				logger.warn("Unable to import application: " + applicationName,
+						e);
 			}
 		}
 	}
@@ -393,32 +384,6 @@ public class Import extends ToolBase {
 		logger.info("Importing from:" + importDir.getAbsolutePath());
 		logger.info("Status. Exists: " + importDir.exists() + " - Readable: "
 				+ importDir.canRead());
-	}
-
-	private void setVerbose(CommandLine line) {
-		if (line.hasOption(VERBOSE)) {
-			isVerboseEnabled = true;
-		}
-	}
-
-	/**
-	 * Log the content in the default logger(info)
-	 * 
-	 * @param content
-	 */
-	private void echo(String content) {
-		if (isVerboseEnabled) {
-			logger.info("\n" + content);
-		}
-	}
-
-	/**
-	 * Print the object in JSon format.
-	 * 
-	 * @param obj
-	 */
-	private void echo(Object obj) {
-		echo(JsonUtils.mapToFormattedJsonString(obj));
 	}
 
 }
