@@ -99,6 +99,8 @@ public class UserResource extends ServiceResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
+		logger.info("UserResource.setUserPassword");
+
 		if (json == null) {
 			return null;
 		}
@@ -124,6 +126,8 @@ public class UserResource extends ServiceResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
+		logger.info("UserResource.sendPin");
+
 		management.sendAppUserPin(getApplicationId(), getUser().getUuid());
 
 		ApiResponse response = new ApiResponse(ui);
@@ -148,6 +152,8 @@ public class UserResource extends ServiceResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
+		logger.info("UserResource.setPin");
+
 		management.setAppUserPin(getApplicationId(), getUser().getUuid(), pin);
 
 		ApiResponse response = new ApiResponse(ui);
@@ -164,6 +170,8 @@ public class UserResource extends ServiceResource {
 			@FormParam("pin") String pin,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
+
+		logger.info("UserResource.postPin");
 
 		management.setAppUserPin(getApplicationId(), getUser().getUuid(), pin);
 
@@ -184,7 +192,7 @@ public class UserResource extends ServiceResource {
 		String pin = json.path("pin").getTextValue();
 		management.setAppUserPin(getApplicationId(), getUser().getUuid(), pin);
 
-		logger.info("ServiceResource.executePost");
+		logger.info("UserResource.jsonPin");
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user pin");
 
@@ -195,6 +203,8 @@ public class UserResource extends ServiceResource {
 	@Path("resetpw")
 	public Viewable showPasswordResetForm(@Context UriInfo ui,
 			@QueryParam("token") String token) throws Exception {
+
+		logger.info("UserResource.showPasswordResetForm");
 
 		this.token = token;
 
@@ -216,6 +226,8 @@ public class UserResource extends ServiceResource {
 			@FormParam("recaptcha_challenge_field") String challenge,
 			@FormParam("recaptcha_response_field") String uresponse)
 			throws Exception {
+
+		logger.info("UserResource.handlePasswordResetForm");
 
 		this.token = token;
 
