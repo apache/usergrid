@@ -111,4 +111,6 @@ public interface RelationManager {
 	public void setAssociatedProperty(AssociatedEntityRef associatedEntityRef,
 			String propertyName, Object propertyValue) throws Exception;
 
+	public abstract int getCollectionSize(String collectionName) throws Exception;
+
 }

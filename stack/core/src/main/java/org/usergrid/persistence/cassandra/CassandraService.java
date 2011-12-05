@@ -1063,7 +1063,7 @@ public class CassandraService {
 				be, be);
 		cq.setColumnFamily(columnFamily.toString());
 		cq.setKey(bytebuffer(key));
-		cq.setRange(ByteBuffer.allocate(0), ByteBuffer.allocate(0), 100000);
+		cq.setRange(ByteBuffer.allocate(0), ByteBuffer.allocate(0), 100000000);
 		QueryResult<Integer> r = cq.execute();
 		if (r == null) {
 			return 0;

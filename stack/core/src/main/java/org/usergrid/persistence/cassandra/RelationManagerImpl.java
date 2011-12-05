@@ -2176,6 +2176,15 @@ public class RelationManagerImpl implements RelationManager {
 	}
 
 	@Override
+	public int getCollectionSize(String collectionName) throws Exception {
+		return cass.countColumns(
+				cass.getApplicationKeyspace(applicationId),
+				ENTITY_ID_SETS,
+				key(headEntity.getUuid(), DICTIONARY_COLLECTIONS,
+						collectionName));
+	}
+
+	@Override
 	public Results getCollection(String collectionName,
 			Map<String, Object> subkeyProperties, UUID startResult, int count,
 			Results.Level resultsLevel, boolean reversed) throws Exception {
