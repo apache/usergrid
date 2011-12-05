@@ -88,6 +88,9 @@ public class Application extends TypedEntity {
 	@EntityDictionary(keyType = java.lang.String.class, valueType = java.lang.String.class)
 	protected Map<String, String> credentials;
 
+	@EntityDictionary(keyType = java.lang.String.class, valueType = WebHook.class)
+	protected Map<String, WebHook> webhooks;
+
 	@EntityCollection(type = "activity", propertiesIndexed = { "created",
 			"modified", "published", "content" }, subkeys = "verb", reversed = true, sort = "published desc")
 	protected List<UUID> activities;
@@ -445,6 +448,31 @@ public class Application extends TypedEntity {
 					+ ", version=" + version + "]";
 		}
 
+	}
+
+	@XmlRootElement
+	public static class WebHook {
+		String type;
+		String uri;
+
+		public WebHook() {
+		}
+
+		public String getType() {
+			return type;
+		}
+
+		public void setType(String type) {
+			this.type = type;
+		}
+
+		public String getUri() {
+			return uri;
+		}
+
+		public void setUri(String uri) {
+			this.uri = uri;
+		}
 	}
 
 }
