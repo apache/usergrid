@@ -1,14 +1,16 @@
 package org.usergrid.android.client;
 
-import static org.usergrid.android.client.Utils.addQueryParams;
-import static org.usergrid.android.client.Utils.encodeParams;
-import static org.usergrid.android.client.Utils.isEmpty;
-import static org.usergrid.android.client.Utils.path;
+import static org.usergrid.android.client.utils.JsonUtils.parse;
+import static org.usergrid.android.client.utils.ObjectUtils.isEmpty;
+import static org.usergrid.android.client.utils.UrlUtils.addQueryParams;
+import static org.usergrid.android.client.utils.UrlUtils.encodeParams;
+import static org.usergrid.android.client.utils.UrlUtils.path;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.springframework.http.HttpEntity;
@@ -18,11 +20,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.usergrid.android.client.entities.Device;
 import org.usergrid.android.client.entities.Entity;
 import org.usergrid.android.client.entities.Group;
 import org.usergrid.android.client.entities.User;
 import org.usergrid.android.client.response.ApiResponse;
+import org.usergrid.android.client.utils.DeviceUuidFactory;
 
+import android.content.Context;
 import android.util.Log;
 
 /**
@@ -299,8 +304,7 @@ public class Client {
 			Log.e(TAG,
 					"Client.apiRequest(): HTTP error: "
 							+ e.getLocalizedMessage());
-			response = Utils.parse(e.getResponseBodyAsString(),
-					ApiResponse.class);
+			response = parse(e.getResponseBodyAsString(), ApiResponse.class);
 			if ((response != null) && !isEmpty(response.getError())) {
 				Log.e(TAG,
 						"Client.apiRequest(): Response error: "
@@ -396,6 +400,18 @@ public class Client {
 			Log.i(TAG, "Client.authorizeAppClient(): Response: " + response);
 		}
 		return response;
+	}
+
+	public Device registerDevice(Context context, Map<String, Object> properties) {
+		assertValidApplicationId();
+		UUID deviceId = new DeviceUuidFactory(context).getDeviceUuid();
+		if (properties == null) {
+			properties = new HashMap<String, Object>();
+		}
+		properties.put("refreshed", System.currentTimeMillis());
+		ApiResponse response = apiRequest(HttpMethod.PUT, null, properties,
+				applicationId, "devices", deviceId.toString());
+		return response.getFirstEntity(Device.class);
 	}
 
 	public ApiResponse createEntity(Entity entity) {
