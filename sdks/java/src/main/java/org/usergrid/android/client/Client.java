@@ -27,22 +27,6 @@ import android.util.Log;
 
 /**
  * @author edanuff
- *
- */
-/**
- * @author edanuff
- *
- */
-/**
- * @author edanuff
- *
- */
-/**
- * @author edanuff
- *
- */
-/**
- * @author edanuff
  * 
  */
 public class Client {
