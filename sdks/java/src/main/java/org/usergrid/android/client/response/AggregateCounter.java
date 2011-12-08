@@ -1,6 +1,6 @@
 package org.usergrid.android.client.response;
 
-import org.usergrid.android.client.Utils;
+import static org.usergrid.android.client.utils.JsonUtils.toJsonString;
 
 public class AggregateCounter {
 
@@ -30,7 +30,7 @@ public class AggregateCounter {
 
 	@Override
 	public String toString() {
-		return Utils.toJsonString(this);
+		return toJsonString(this);
 	}
 
 }

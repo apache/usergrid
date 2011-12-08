@@ -1,11 +1,12 @@
 package org.usergrid.android.client.response;
 
+import static org.usergrid.android.client.utils.JsonUtils.toJsonString;
+
 import java.util.List;
 import java.util.UUID;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-import org.usergrid.android.client.Utils;
 
 public class AggregateCounterSet {
 	private String name;
@@ -88,7 +89,7 @@ public class AggregateCounterSet {
 
 	@Override
 	public String toString() {
-		return Utils.toJsonString(this);
+		return toJsonString(this);
 	}
 
 }
