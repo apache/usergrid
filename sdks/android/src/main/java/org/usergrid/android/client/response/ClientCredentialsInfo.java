@@ -1,7 +1,8 @@
 package org.usergrid.android.client.response;
 
+import static org.usergrid.android.client.utils.JsonUtils.toJsonString;
+
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.usergrid.android.client.Utils;
 
 public class ClientCredentialsInfo {
 
@@ -35,7 +36,7 @@ public class ClientCredentialsInfo {
 
 	@Override
 	public String toString() {
-		return Utils.toJsonString(this);
+		return toJsonString(this);
 	}
 
 }

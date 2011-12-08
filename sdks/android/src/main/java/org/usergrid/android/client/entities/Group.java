@@ -1,8 +1,8 @@
 package org.usergrid.android.client.entities;
 
 import static org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL;
-import static org.usergrid.android.client.Utils.getStringProperty;
-import static org.usergrid.android.client.Utils.setStringProperty;
+import static org.usergrid.android.client.utils.JsonUtils.getStringProperty;
+import static org.usergrid.android.client.utils.JsonUtils.setStringProperty;
 
 import java.util.List;
 

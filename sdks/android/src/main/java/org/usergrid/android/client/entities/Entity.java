@@ -1,10 +1,11 @@
 package org.usergrid.android.client.entities;
 
-import static org.usergrid.android.client.Utils.getStringProperty;
-import static org.usergrid.android.client.Utils.getUUIDProperty;
-import static org.usergrid.android.client.Utils.newMapWithoutKeys;
-import static org.usergrid.android.client.Utils.setStringProperty;
-import static org.usergrid.android.client.Utils.setUUIDProperty;
+import static org.usergrid.android.client.utils.JsonUtils.getStringProperty;
+import static org.usergrid.android.client.utils.JsonUtils.getUUIDProperty;
+import static org.usergrid.android.client.utils.JsonUtils.setStringProperty;
+import static org.usergrid.android.client.utils.JsonUtils.setUUIDProperty;
+import static org.usergrid.android.client.utils.JsonUtils.toJsonString;
+import static org.usergrid.android.client.utils.MapUtils.newMapWithoutKeys;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +17,6 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.annotate.JsonAnyGetter;
 import org.codehaus.jackson.annotate.JsonAnySetter;
 import org.codehaus.jackson.annotate.JsonIgnore;
-import org.usergrid.android.client.Utils;
 
 public class Entity {
 
@@ -82,7 +82,7 @@ public class Entity {
 
 	@Override
 	public String toString() {
-		return Utils.toJsonString(this);
+		return toJsonString(this);
 	}
 
 	public <T extends Entity> T toType(Class<T> t) {

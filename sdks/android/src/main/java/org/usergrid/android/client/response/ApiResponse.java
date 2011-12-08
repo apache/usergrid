@@ -1,5 +1,7 @@
 package org.usergrid.android.client.response;
 
+import static org.usergrid.android.client.utils.JsonUtils.toJsonString;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +13,6 @@ import org.codehaus.jackson.annotate.JsonAnySetter;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-import org.usergrid.android.client.Utils;
 import org.usergrid.android.client.entities.Entity;
 import org.usergrid.android.client.entities.User;
 
@@ -296,7 +297,7 @@ public class ApiResponse {
 
 	@Override
 	public String toString() {
-		return Utils.toJsonString(this);
+		return toJsonString(this);
 	}
 
 }
