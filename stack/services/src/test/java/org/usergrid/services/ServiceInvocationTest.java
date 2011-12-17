@@ -154,6 +154,11 @@ public class ServiceInvocationTest extends AbstractServiceTest {
 		testRequest(sm, ServiceAction.GET, 1, null, "users", "edanuff",
 				"likes", "restaurants");
 
+		UUID uuid = UUID.randomUUID();
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("visits", 5);
+		testRequest(sm, ServiceAction.PUT, 1, properties, "devices", uuid);
+
 	}
 
 	@Override
