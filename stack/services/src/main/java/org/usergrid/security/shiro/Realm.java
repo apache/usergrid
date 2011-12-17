@@ -37,6 +37,8 @@
  ******************************************************************************/
 package org.usergrid.security.shiro;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
@@ -48,8 +50,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -66,6 +66,8 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.usergrid.management.ApplicationInfo;
@@ -371,6 +373,7 @@ public class Realm extends AuthorizingRealm {
 								"get,put,post,delete", "/users/${user}",
 								"/users/${user}/feed",
 								"/users/${user}/activities",
+								"/users/${user}/groups",
 								"/users/${user}/following/*",
 								"/users/${user}/following/user/*"));
 
@@ -382,24 +385,19 @@ public class Realm extends AuthorizingRealm {
 					application = new ApplicationInfo(applicationId, appName);
 				} catch (Exception e) {
 				}
+
+				try {
+					Set<String> permissions = em.getRolePermissions("default");
+					grant(info, principal, applicationId, permissions);
+				} catch (Exception e) {
+				}
+
 				UserInfo user = ((ApplicationUserPrincipal) principal)
 						.getUser();
 				try {
 					Set<String> permissions = em.getUserPermissions(user
 							.getUuid());
-					if (permissions != null) {
-						for (String permission : permissions) {
-							if (permission.indexOf(':') > -1) {
-								String operations = stringOrSubstringBeforeFirst(
-										permission, ':');
-								permission = stringOrSubstringAfterFirst(
-										permission, ':');
-								permission = "applications:" + operations + ":"
-										+ applicationId + ":" + permission;
-								grant(info, principal, permission);
-							}
-						}
-					}
+					grant(info, principal, applicationId, permissions);
 				} catch (Exception e) {
 				}
 			}
@@ -433,6 +431,29 @@ public class Realm extends AuthorizingRealm {
 			PrincipalIdentifier principal, String role) {
 		logger.info("Principal " + principal + " added to role: " + role);
 		info.addRole(role);
+	}
+
+	private static void grant(SimpleAuthorizationInfo info,
+			PrincipalIdentifier principal, UUID applicationId,
+			Set<String> permissions) {
+		if (permissions != null) {
+			for (String permission : permissions) {
+				if (isNotBlank(permission)) {
+					String operations = "*";
+					if (permission.indexOf(':') != -1) {
+						operations = stringOrSubstringBeforeFirst(permission,
+								':');
+					}
+					if (isBlank(operations)) {
+						operations = "*";
+					}
+					permission = stringOrSubstringAfterFirst(permission, ':');
+					permission = "applications:" + operations + ":"
+							+ applicationId + ":" + permission;
+					grant(info, principal, permission);
+				}
+			}
+		}
 	}
 
 	@Override
