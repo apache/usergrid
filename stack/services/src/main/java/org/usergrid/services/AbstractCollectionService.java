@@ -217,8 +217,14 @@ public class AbstractCollectionService extends AbstractService {
 		checkPermissionsForEntity(context, id);
 
 		Entity item = em.get(id);
-		updateEntity(context, item, context.getPayload());
-		item = importEntity(context, item);
+		if (item != null) {
+			updateEntity(context, item, context.getPayload());
+			item = importEntity(context, item);
+		} else {
+			String entityType = getEntityType();
+			item = em.create(id, entityType, context.getPayload()
+					.getProperties());
+		}
 
 		return new ServiceResults(this, context, Type.COLLECTION,
 				Results.fromEntity(item), null, null);
