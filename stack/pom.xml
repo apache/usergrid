@@ -6,11 +6,11 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<bundle.symbolicName>org.usergrid</bundle.symbolicName>
 		<bundle.namespace>org.usergrid</bundle.namespace>
-		<cassandra-javautils-version>0.7.0</cassandra-javautils-version>
-		<cassandra-version>0.8.7</cassandra-version>
-		<hector-om-version>1.1-02</hector-om-version>
-		<hector-version>0.8.0-2</hector-version>
-		<hector-test-version>0.8.0-3</hector-test-version>
+		<cassandra-javautils-version>0.7.1</cassandra-javautils-version>
+		<cassandra-version>1.0.6</cassandra-version>
+		<hector-om-version>2.0-01</hector-om-version>
+		<hector-version>1.0-2-SNAPSHOT</hector-version>
+		<hector-test-version>1.0-2-SNAPSHOT</hector-test-version>
 		<jackson-version>1.8.5</jackson-version>
 		<jersey-version>1.9.1</jersey-version>
 		<junit-version>4.8.2</junit-version>
