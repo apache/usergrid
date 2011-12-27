@@ -50,14 +50,14 @@ import me.prettyprint.hector.api.beans.Row;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.reflect.FieldUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.node.ObjectNode;
 import org.codehaus.jackson.smile.SmileFactory;
 import org.codehaus.jackson.type.TypeReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AssignableTypeFilter;
@@ -1808,7 +1808,7 @@ public class Schema {
 
 		String entityType = string(columns.get(PROPERTY_TYPE));
 		if (entityType == null) {
-			logger.error("No type for entity found!", new Throwable());
+			logger.warn("deserializeEntityProperties(): No type for entity found, entity probably doesn't exist");
 			return null;
 		}
 		if (checkId && !columns.containsKey(PROPERTY_UUID)) {
