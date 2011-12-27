@@ -976,11 +976,27 @@ public class EntityManagerImpl implements EntityManager {
 		}
 
 		if (!is_application) {
-			batchIncrementAggregateCounters(m, applicationId, null, null, null,
-					null, "application.collection." + collection_name, 1L,
-					timestamp);
-			batchIncrementAggregateCounters(m, applicationId, null, null, null,
-					null, "application.entities", 1L, timestamp);
+			/*
+			 * batchIncrementAggregateCounters(m, applicationId, null, null,
+			 * null, null, "application.collection." + collection_name, 1L,
+			 * timestamp); batchIncrementAggregateCounters(m, applicationId,
+			 * null, null, null, null, "application.entities", 1L, timestamp);
+			 */
+			try {
+				incrementAggregateCounters(null, null, null,
+						"application.collection." + collection_name, 1L);
+			} catch (Exception e) {
+				logger.error(
+						"Unable to increment counter application.collection."
+								+ collection_name, e);
+			}
+			try {
+				incrementAggregateCounters(null, null, null,
+						"application.entities", 1L);
+			} catch (Exception e) {
+				logger.error(
+						"Unable to increment counter application.entities", e);
+			}
 		}
 
 		return entity;
@@ -1107,8 +1123,8 @@ public class EntityManagerImpl implements EntityManager {
 		// }
 
 		if (results == null) {
-			logger.error("No properties found for entity " + entityId,
-					new Throwable());
+			logger.warn("getEntity(): No properties found for entity "
+					+ entityId + ", probably doesn't exist...");
 			return null;
 		}
 
