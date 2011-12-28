@@ -22,7 +22,7 @@ public class Device extends TypedEntity {
 	@EntityProperty(indexed = true, fulltextIndexed = false, required = false, indexedInConnections = true, aliasProperty = true, unique = true, basic = true)
 	protected String name;
 
-	@EntityCollection(type = "user", propertiesIndexed = { "username", "email" }, linkedCollection = "devices", indexingDynamicProperties = false)
+	@EntityCollection(type = "user", propertiesIndexed = {}, linkedCollection = "devices", indexingDynamicProperties = false)
 	protected List<UUID> users;
 
 	public Device() {

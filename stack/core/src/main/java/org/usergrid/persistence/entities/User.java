@@ -88,7 +88,7 @@ public class User extends TypedEntity {
 	@EntityCollection(type = "group", linkedCollection = "users", propertiesIndexed = { "path" }, indexingDynamicProperties = true)
 	protected List<UUID> groups;
 
-	@EntityCollection(type = "device", linkedCollection = "users", propertiesIndexed = { "name" }, indexingDynamicProperties = false)
+	@EntityCollection(type = "device", linkedCollection = "users", propertiesIndexed = {}, indexingDynamicProperties = false)
 	protected List<UUID> devices;
 
 	@EntityCollection(type = "activity", propertiesIndexed = { "created",

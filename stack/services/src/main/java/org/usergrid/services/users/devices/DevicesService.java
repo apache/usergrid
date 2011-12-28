@@ -35,73 +35,20 @@
  * You may copy and distribute such a system following the terms of the GNU AGPL
  * for Usergrid Stack and the licenses of the other code concerned, provided that
  ******************************************************************************/
-package org.usergrid.services.devices;
+package org.usergrid.services.users.devices;
 
-import java.util.UUID;
-
-import org.apache.commons.collections.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.Results;
-import org.usergrid.persistence.entities.Device;
-import org.usergrid.services.AbstractCollectionService;
-import org.usergrid.services.ServiceContext;
-import org.usergrid.services.ServiceResults;
-import org.usergrid.services.ServiceResults.Type;
 
-public class DevicesService extends AbstractCollectionService {
-
-	// registering devices can hit the DB hard, since badly-behaved apps can
-	// call it very frequently. We need to maintain a simple LRU cache to
-	// avoid this
-
-	public static final int DEVICE_CACHE_COUNT = 10000;
-	public static final long MAX_DEVICE_CACHE_AGE = 10 * 60 * 1000;
+public class DevicesService extends
+		org.usergrid.services.devices.DevicesService {
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(DevicesService.class);
 
-	private static LRUMap deviceCache = new LRUMap(DEVICE_CACHE_COUNT);
-
 	public DevicesService() {
 		super();
-		logger.info("/devices");
-	}
-
-	static boolean deviceInCache(UUID deviceId) {
-		synchronized (deviceCache) {
-			Long timestamp = (Long) deviceCache.put(deviceId,
-					System.currentTimeMillis());
-			if (timestamp == null) {
-				return false;
-			}
-			if ((timestamp - System.currentTimeMillis()) > MAX_DEVICE_CACHE_AGE) {
-				deviceCache.remove(deviceId);
-				return false;
-			}
-			return true;
-		}
-	}
-
-	@Override
-	public ServiceResults putItemById(ServiceContext context, UUID id)
-			throws Exception {
-		logger.info("Registering device " + id);
-		if (deviceInCache(id)) {
-			logger.info("Device " + id + " in cache, skipping...");
-			return new ServiceResults(this, context, Type.COLLECTION,
-					Results.fromEntity(new Device(id)), null, null);
-		} else {
-			logger.info("Device " + id + " not in cache, storing...");
-			return super.putItemById(context, id);
-		}
-	}
-
-	@Override
-	public ServiceResults postItemById(ServiceContext context, UUID id)
-			throws Exception {
-		logger.info("Attempting to connect an entity to device " + id);
-		return super.postItemById(context, id);
+		logger.info("/users/*/devices");
 	}
 
 }
