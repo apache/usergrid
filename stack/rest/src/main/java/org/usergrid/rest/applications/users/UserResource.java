@@ -42,6 +42,7 @@ import static org.usergrid.security.shiro.utils.SubjectUtils.isApplicationAdmin;
 import static org.usergrid.utils.ConversionUtils.string;
 
 import java.util.Map;
+import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -105,17 +106,22 @@ public class UserResource extends ServiceResource {
 			return null;
 		}
 
-		String oldPassword = string(json.get("oldpassword"));
-		String newPassword = string(json.get("newpassword"));
-		if (isApplicationAdmin(Identifier.fromUUID(getApplicationId()))) {
-			management.setAdminUserPassword(getApplicationId(), newPassword);
-		} else {
-			management.setAppUserPassword(getApplicationId(), getUser()
-					.getUuid(), oldPassword, newPassword);
-		}
-
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user password");
+
+		if (getUser() != null) {
+			String oldPassword = string(json.get("oldpassword"));
+			String newPassword = string(json.get("newpassword"));
+			if (isApplicationAdmin(Identifier.fromUUID(getApplicationId()))) {
+				management
+						.setAdminUserPassword(getApplicationId(), newPassword);
+			} else {
+				management.setAppUserPassword(getApplicationId(), getUser()
+						.getUuid(), oldPassword, newPassword);
+			}
+		} else {
+			response.setError("User not found");
+		}
 
 		return new JSONWithPadding(response, callback);
 	}
@@ -128,10 +134,14 @@ public class UserResource extends ServiceResource {
 
 		logger.info("UserResource.sendPin");
 
-		management.sendAppUserPin(getApplicationId(), getUser().getUuid());
-
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("retrieve user pin");
+
+		if (getUser() != null) {
+			management.sendAppUserPin(getApplicationId(), getUserUuid());
+		} else {
+			response.setError("User not found");
+		}
 
 		return new JSONWithPadding(response, callback);
 	}
@@ -154,10 +164,14 @@ public class UserResource extends ServiceResource {
 
 		logger.info("UserResource.setPin");
 
-		management.setAppUserPin(getApplicationId(), getUser().getUuid(), pin);
-
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user pin");
+
+		if (getUser() != null) {
+			management.setAppUserPin(getApplicationId(), getUserUuid(), pin);
+		} else {
+			response.setError("User not found");
+		}
 
 		return new JSONWithPadding(response, callback);
 	}
@@ -173,10 +187,14 @@ public class UserResource extends ServiceResource {
 
 		logger.info("UserResource.postPin");
 
-		management.setAppUserPin(getApplicationId(), getUser().getUuid(), pin);
-
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user pin");
+
+		if (getUser() != null) {
+			management.setAppUserPin(getApplicationId(), getUserUuid(), pin);
+		} else {
+			response.setError("User not found");
+		}
 
 		return new JSONWithPadding(response, callback);
 	}
@@ -189,12 +207,16 @@ public class UserResource extends ServiceResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		String pin = json.path("pin").getTextValue();
-		management.setAppUserPin(getApplicationId(), getUser().getUuid(), pin);
-
 		logger.info("UserResource.jsonPin");
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user pin");
+
+		if (getUser() != null) {
+			String pin = json.path("pin").getTextValue();
+			management.setAppUserPin(getApplicationId(), getUserUuid(), pin);
+		} else {
+			response.setError("User not found");
+		}
 
 		return new JSONWithPadding(response, callback);
 	}
@@ -209,7 +231,7 @@ public class UserResource extends ServiceResource {
 		this.token = token;
 
 		if (management.checkPasswordResetTokenForAppUser(getApplicationId(),
-				getUser().getUuid(), token)) {
+				getUserUuid(), token)) {
 			return new Viewable("resetpw_set_form", this);
 		} else {
 			return new Viewable("resetpw_email_form", this);
@@ -233,7 +255,7 @@ public class UserResource extends ServiceResource {
 
 		if ((password1 != null) || (password2 != null)) {
 			if (management.checkPasswordResetTokenForAppUser(
-					getApplicationId(), getUser().getUuid(), token)) {
+					getApplicationId(), getUserUuid(), token)) {
 				if ((password1 != null) && password1.equals(password2)) {
 					management.setAppUserPassword(getApplicationId(), getUser()
 							.getUuid(), password1);
@@ -294,6 +316,14 @@ public class UserResource extends ServiceResource {
 		return user;
 	}
 
+	public UUID getUserUuid() {
+		user = getUser();
+		if (user == null) {
+			return null;
+		}
+		return user.getUuid();
+	}
+
 	@GET
 	@Path("activate")
 	public Viewable activate(@Context UriInfo ui,
@@ -301,8 +331,8 @@ public class UserResource extends ServiceResource {
 			@QueryParam("confirm") boolean confirm) throws Exception {
 
 		if (management.checkActivationTokenForAppUser(getApplicationId(),
-				getUser().getUuid(), token)) {
-			management.activateAppUser(getApplicationId(), getUser().getUuid());
+				getUserUuid(), token)) {
+			management.activateAppUser(getApplicationId(), getUserUuid());
 			if (confirm) {
 				management.sendAppUserActivatedEmail(getApplicationId(), user);
 			}
@@ -317,7 +347,7 @@ public class UserResource extends ServiceResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		logger.info("Send activation email for user: " + getUser().getUuid());
+		logger.info("Send activation email for user: " + getUserUuid());
 
 		ApiResponse response = new ApiResponse(ui);
 
