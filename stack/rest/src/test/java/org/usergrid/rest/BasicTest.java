@@ -207,6 +207,10 @@ public class BasicTest extends AbstractRestTest {
 		user_access_token = node.get("access_token").getTextValue();
 		assertTrue(isNotBlank(user_access_token));
 
+		node = resource().path("/test-app/users/ed@anuff.com/test").get(
+				JsonNode.class);
+		logNode(node);
+
 	}
 
 }

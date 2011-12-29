@@ -68,6 +68,7 @@ import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.entities.User;
+import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.applications.ServiceResource;
 
@@ -89,7 +90,7 @@ public class UsersResource extends ServiceResource {
 
 	@Override
 	@Path("{entityId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-	public ServiceResource addIdParameter(@Context UriInfo ui,
+	public AbstractContextResource addIdParameter(@Context UriInfo ui,
 			@PathParam("entityId") PathSegment entityId) throws Exception {
 
 		logger.info("ServiceResource.addIdParameter");
@@ -105,7 +106,7 @@ public class UsersResource extends ServiceResource {
 
 	@Override
 	@Path("{itemName}")
-	public ServiceResource addNameParameter(@Context UriInfo ui,
+	public AbstractContextResource addNameParameter(@Context UriInfo ui,
 			@PathParam("itemName") PathSegment itemName) throws Exception {
 
 		logger.info("ServiceResource.addNameParameter");

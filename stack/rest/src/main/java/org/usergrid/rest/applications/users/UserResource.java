@@ -51,21 +51,25 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
+import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.applications.ServiceResource;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
@@ -75,6 +79,8 @@ import com.sun.jersey.api.view.Viewable;
 
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource extends ServiceResource {
+
+	public static final String USER_EXTENSION_RESOURCE_PREFIX = "org.usergrid.rest.applications.users.extensions.";
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(UserResource.class);
@@ -355,6 +361,28 @@ public class UserResource extends ServiceResource {
 
 		response.setAction("reactivate user");
 		return new JSONWithPadding(response, callback);
+	}
+
+	@Override
+	@Path("{itemName}")
+	public AbstractContextResource addNameParameter(@Context UriInfo ui,
+			@PathParam("itemName") PathSegment itemName) throws Exception {
+
+		// check for user extension
+		String resourceClass = USER_EXTENSION_RESOURCE_PREFIX
+				+ StringUtils.capitalize(itemName.getPath()) + "Resource";
+		AbstractUserExtensionResource extensionResource = null;
+		try {
+			extensionResource = (AbstractUserExtensionResource) Class
+					.forName(resourceClass).getConstructor(UserResource.class)
+					.newInstance(this);
+		} catch (Exception e) {
+		}
+		if (extensionResource != null) {
+			return extensionResource;
+		}
+
+		return super.addNameParameter(ui, itemName);
 	}
 
 }
