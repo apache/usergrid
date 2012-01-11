@@ -87,41 +87,6 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-install-plugin</artifactId>
-				<version>2.3.1</version>
-				<executions>
-					<execution>
-						<id>install scale7-core</id>
-						<phase>initialize</phase>
-						<goals>
-							<goal>install-file</goal>
-						</goals>
-						<configuration>
-							<packaging>jar</packaging>
-							<groupId>org.scale7</groupId>
-							<artifactId>scale7-core</artifactId>
-							<version>1.4-SNAPSHOT</version>
-							<file>${basedir}/lib/scale7-core-1.4-SNAPSHOT.jar</file>
-						</configuration>
-					</execution>
-					<execution>
-						<id>install scale7-cages</id>
-						<phase>initialize</phase>
-						<goals>
-							<goal>install-file</goal>
-						</goals>
-						<configuration>
-							<packaging>jar</packaging>
-							<groupId>org.scale7</groupId>
-							<artifactId>scale7-cages</artifactId>
-							<version>0.8-SNAPSHOT</version>
-							<file>${basedir}/lib/scale7-cages-0.8-SNAPSHOT.jar</file>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>2.3.1</version>
 				<executions>

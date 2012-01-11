@@ -500,12 +500,17 @@
 
 	<repositories>
 		<repository>
-			<id>usergrid-maven</id>
-			<name>Usergrid s3 repository</name>
-			<url>https://usergrid-maven.s3.amazonaws.com/snapshot</url>
+			<id>usergrid-dependencies-snapshots</id>
+			<name>Usergrid s3 dependencies snapshots repository</name>
+			<url>https://usergrid-maven.s3.amazonaws.com/dependencies-snapshots</url>
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
+		</repository>
+		<repository>
+			<id>usergrid-dependencies</id>
+			<name>Usergrid s3 dependencies repository</name>
+			<url>https://usergrid-maven.s3.amazonaws.com/dependencies</url>
 		</repository>
 		<repository>
 			<id>maven2-repository.dev.java.net</id>

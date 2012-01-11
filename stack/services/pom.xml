@@ -52,27 +52,6 @@
 					<showWarnings>true</showWarnings>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-install-plugin</artifactId>
-				<version>2.3.1</version>
-				<executions>
-					<execution>
-						<id>install jython</id>
-						<phase>initialize</phase>
-						<goals>
-							<goal>install-file</goal>
-						</goals>
-						<configuration>
-							<packaging>jar</packaging>
-							<groupId>org.python</groupId>
-							<artifactId>jython</artifactId>
-							<version>2.5.2rc2</version>
-							<file>${basedir}/lib/jython-2.5.2rc2.jar</file>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 		<resources>
 			<resource>
