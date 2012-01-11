@@ -17,11 +17,12 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.jasper.runtime.JspFactoryImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.util.ClassLoaderUtil;
 import org.glassfish.grizzly.servlet.ServletHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -67,6 +68,8 @@ public class Server implements ApplicationContextAware {
 
 	protected QueueManagerFactory qmf;
 
+	int port = NetworkListener.DEFAULT_NETWORK_PORT;
+
 	public Server() {
 		instance = this;
 	}
@@ -96,6 +99,14 @@ public class Server implements ApplicationContextAware {
 		startDatabaseWithServer = line.hasOption("db");
 		initializeDatabaseOnStart = line.hasOption("init");
 
+		if (line.hasOption("port")) {
+			try {
+				port = ((Number) line.getParsedOptionValue("port")).intValue();
+			} catch (ParseException exp) {
+				printCliHelp("Parsing failed.  Reason: " + exp.getMessage());
+				return;
+			}
+		}
 		startServer();
 	}
 
@@ -105,7 +116,7 @@ public class Server implements ApplicationContextAware {
 			startCassandra();
 		}
 
-		httpServer = HttpServer.createSimpleServer();
+		httpServer = HttpServer.createSimpleServer(".", port);
 
 		ServletHandler handler = new ServletHandler();
 
@@ -307,8 +318,16 @@ public class Server implements ApplicationContextAware {
 		OptionBuilder.withDescription("Start database");
 		Option dbOption = OptionBuilder.create("db");
 
+		OptionBuilder.withDescription("Http port");
+		OptionBuilder.hasArg();
+		OptionBuilder.withArgName("PORT");
+		OptionBuilder.withLongOpt("port");
+		OptionBuilder.withType(Number.class);
+		Option portOption = OptionBuilder.create('p');
+
 		options.addOption(initOption);
 		options.addOption(dbOption);
+		options.addOption(portOption);
 
 		return options;
 	}

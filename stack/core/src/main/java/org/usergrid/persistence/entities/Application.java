@@ -115,6 +115,9 @@ public class Application extends TypedEntity {
 			"modified", "username", "email" }, dictionariesIndexed = { "aliases" }, indexingDynamicProperties = true)
 	protected List<UUID> users;
 
+	@EntityCollection(type = "device", propertiesIndexed = {}, indexingDynamicProperties = false)
+	protected List<UUID> devices;
+
 	public Application() {
 		// id = UUIDUtils.newTimeUUID();
 	}
@@ -314,6 +317,15 @@ public class Application extends TypedEntity {
 
 	public void setEvents(List<UUID> events) {
 		this.events = events;
+	}
+
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	public List<UUID> getDevices() {
+		return devices;
+	}
+
+	public void setDevices(List<UUID> devices) {
+		this.devices = devices;
 	}
 
 	@JsonSerialize(include = Inclusion.NON_NULL)

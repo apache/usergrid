@@ -88,6 +88,9 @@ public class User extends TypedEntity {
 	@EntityCollection(type = "group", linkedCollection = "users", propertiesIndexed = { "path" }, indexingDynamicProperties = true)
 	protected List<UUID> groups;
 
+	@EntityCollection(type = "device", linkedCollection = "users", propertiesIndexed = {}, indexingDynamicProperties = false)
+	protected List<UUID> devices;
+
 	@EntityCollection(type = "activity", propertiesIndexed = { "created",
 			"published", "content" }, subkeys = { "verb" }, reversed = true, sort = "published desc")
 	protected List<UUID> activities;
@@ -212,6 +215,15 @@ public class User extends TypedEntity {
 
 	public void setGroups(List<UUID> groups) {
 		this.groups = groups;
+	}
+
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	public List<UUID> getDevices() {
+		return devices;
+	}
+
+	public void setDevices(List<UUID> devices) {
+		this.devices = devices;
 	}
 
 	@JsonSerialize(include = Inclusion.NON_NULL)
