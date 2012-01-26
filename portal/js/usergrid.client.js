@@ -82,7 +82,7 @@ usergrid.Client = function(options) {
             return null;
         };
     }
-
+    
     var uuidValueRegex = /\"([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})\"/gm;
 
     function isUUID(uuid) {
@@ -307,6 +307,7 @@ usergrid.Client = function(options) {
 
     /** @property loggedInUser */
     this.loggedInUser = null;
+    /** @property accessToken */
     this.accessToken = null;
     /** @property currentOrganization */
     this.currentOrganization = null;
@@ -1138,6 +1139,11 @@ usergrid.Client = function(options) {
         function() {
             logout();
         });
+    }
+
+    if (this.apiUrl != localStorage.getItem('usergrid_api_url')) {
+    	logout();
+    	localStorage.setItem('usergrid_api_url', this.apiUrl);
     }
 
     this.onAutoLogin = null;
