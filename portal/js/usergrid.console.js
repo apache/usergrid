@@ -2112,6 +2112,10 @@ $(document).ready(function usergrid_console_app() {
         client.updateAdminUser(userData,
             function(response) {
                 $.jAlert("Account settings update", '');
+                if ((old_pass && new_pass) && (old_pass != new_pass)) {
+                	logout();
+                	return;
+                }
                 requestAccountSettings();
             },
             function(response) {
