@@ -37,6 +37,8 @@
  ******************************************************************************/
 package org.usergrid.rest.management.organizations.users;
 
+import static org.apache.commons.collections.MapUtils.getObject;
+import static org.usergrid.utils.ConversionUtils.getBoolean;
 import static org.usergrid.utils.ConversionUtils.string;
 
 import java.util.LinkedHashMap;
@@ -113,9 +115,18 @@ public class UsersResource extends AbstractContextResource {
 
 		String email = string(json.get("email"));
 		String password = string(json.get("password"));
+		boolean invite = getBoolean(getObject(json, "invite", true));
 
-		UserInfo user = management.createAdminUser(email, email, email,
-				password, false, false, true);
+		UserInfo user = null;
+		if (invite) {
+			user = management.getAdminUserByEmail(email);
+		}
+
+		if (user == null) {
+			user = management.createAdminUser(email, email, email, password,
+					false, false, true);
+		}
+
 		if (user == null) {
 			return null;
 		}
@@ -138,6 +149,7 @@ public class UsersResource extends AbstractContextResource {
 			@FormParam("username") String username,
 			@FormParam("name") String name, @FormParam("email") String email,
 			@FormParam("password") String password,
+			@FormParam("invite") @DefaultValue("true") boolean invite,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
@@ -146,8 +158,16 @@ public class UsersResource extends AbstractContextResource {
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("create user");
 
-		UserInfo user = management.createAdminUser(email, email, email,
-				password, false, false, true);
+		UserInfo user = null;
+		if (invite) {
+			user = management.getAdminUserByEmail(email);
+		}
+
+		if (user == null) {
+			user = management.createAdminUser(email, email, email, password,
+					false, false, true);
+		}
+
 		if (user == null) {
 			return null;
 		}
@@ -219,7 +239,7 @@ public class UsersResource extends AbstractContextResource {
 			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
-		response.setAction("remove user from organization");
+		response.setAction("add user from organization");
 
 		UserInfo user = management.getAdminUserByUsername(username);
 		if (user == null) {
@@ -245,7 +265,7 @@ public class UsersResource extends AbstractContextResource {
 			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
-		response.setAction("remove user from organization");
+		response.setAction("add user from organization");
 
 		UserInfo user = management.getAdminUserByEmail(email);
 		if (user == null) {
