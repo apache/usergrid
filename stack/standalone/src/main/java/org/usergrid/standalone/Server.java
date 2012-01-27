@@ -190,8 +190,8 @@ public class Server implements ApplicationContextAware {
 		JspFactory.setDefaultFactory(factory);
 
 		mapServlet(
-				"jsp.WEB_002dINF.jsp.org.usergrid.rest.WadlHtmlResource.view_jsp",
-				"/WEB-INF/jsp/org/usergrid/rest/WadlHtmlResource/view.jsp");
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.SwaggerResource.resources_json_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/SwaggerResource/resources.json.jsp");
 
 		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.test_jsp",
@@ -262,9 +262,16 @@ public class Server implements ApplicationContextAware {
 				"/WEB-INF/jsp/org/usergrid/rest/applications/ApplicationResource/authorize_form.jsp");
 
 		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.SwaggerApplicationsResource.applications_json_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/applications/SwaggerApplicationsResource/applications.json.jsp");
+		
+		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.ManagementResource.authorize_005fform_jsp",
 				"/WEB-INF/jsp/org/usergrid/rest/management/ManagementResource/authorize_form.jsp");
 
+		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.SwaggerManagementResource.management_json_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/management/SwaggerManagementResource/management.json.jsp");
 	}
 
 	private void mapServlet(String cls, String mapping) {
