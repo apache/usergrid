@@ -94,6 +94,7 @@ import org.usergrid.management.exceptions.DisabledAdminUserException;
 import org.usergrid.management.exceptions.ExpiredAccessTokenException;
 import org.usergrid.management.exceptions.IncorrectPasswordException;
 import org.usergrid.management.exceptions.InvalidAccessTokenException;
+import org.usergrid.management.exceptions.UnableToLeaveOrganizationException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
 import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
@@ -1235,6 +1236,18 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+
+		try {
+			if (em.getCollection(
+					new SimpleEntityRef(Group.ENTITY_TYPE, organizationId),
+					"users", null, 2, Level.IDS, false).size() <= 1) {
+				throw new Exception();
+			}
+		} catch (Exception e) {
+			throw new UnableToLeaveOrganizationException(
+					"Organizations must have at least one member.");
+		}
+
 		em.removeFromCollection(new SimpleEntityRef(Group.ENTITY_TYPE,
 				organizationId), "users", new SimpleEntityRef(User.ENTITY_TYPE,
 				userId));
