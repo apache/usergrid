@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 
 public class Test extends ToolBase {
 
-	private static final Logger logger = LoggerFactory.getLogger(Export.class);
+	private static final Logger logger = LoggerFactory.getLogger(Test.class);
 
 	@Override
 	public Options createOptions() {
