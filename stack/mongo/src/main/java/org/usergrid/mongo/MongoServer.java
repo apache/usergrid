@@ -42,10 +42,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteOrder;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SessionsSecurityManager;
 import org.apache.shiro.realm.Realm;
@@ -55,6 +54,8 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.execution.ExecutionHandler;
 import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
@@ -66,7 +67,8 @@ import org.usergrid.services.ServiceManagerFactory;
 
 public class MongoServer {
 
-	private static final Logger logger = LoggerFactory.getLogger(MongoServer.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(MongoServer.class);
 
 	EntityManagerFactory emf;
 	ServiceManagerFactory smf;
@@ -74,6 +76,7 @@ public class MongoServer {
 	Realm realm;
 	SessionsSecurityManager securityManager;
 	Channel channel;
+	Properties properties;
 
 	public static void main(String[] args) throws Exception {
 		MongoServer server = new MongoServer();
@@ -104,6 +107,15 @@ public class MongoServer {
 		this.realm = realm;
 	}
 
+	public Properties getProperties() {
+		return properties;
+	}
+
+	@Autowired
+	public void setProperties(Properties properties) {
+		this.properties = properties;
+	}
+
 	public String[] getApplicationContextLocations() {
 		String[] locations = { "applicationContext.xml" };
 		return locations;
@@ -127,6 +139,14 @@ public class MongoServer {
 	}
 
 	public void startServer() {
+
+		if ((properties != null)
+				&& (Boolean.parseBoolean(properties.getProperty(
+						"usergrid.mongo.disable", "false")))) {
+			logger.info("Usergrid Mongo Emulation Server Disabled");
+			return;
+		}
+
 		logger.info("Starting Usergrid Mongo Emulation Server");
 
 		if (realm != null) {
