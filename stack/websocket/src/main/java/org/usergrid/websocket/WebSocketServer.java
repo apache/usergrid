@@ -56,6 +56,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.InetSocketAddress;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 
 import org.apache.shiro.mgt.DefaultSecurityManager;
@@ -98,6 +99,7 @@ public class WebSocketServer {
 	SessionsSecurityManager securityManager;
 	boolean ssl = false;
 	Channel channel;
+	Properties properties;
 
 	public static void main(String[] args) throws Exception {
 		WebSocketServer server = new WebSocketServer();
@@ -132,6 +134,15 @@ public class WebSocketServer {
 		this.realm = realm;
 	}
 
+	public Properties getProperties() {
+		return properties;
+	}
+
+	@Autowired
+	public void setProperties(Properties properties) {
+		this.properties = properties;
+	}
+
 	public String[] getApplicationContextLocations() {
 		String[] locations = { "applicationContext.xml" };
 		return locations;
@@ -155,6 +166,13 @@ public class WebSocketServer {
 	}
 
 	public void startServer() {
+		if ((properties != null)
+				&& (Boolean.parseBoolean(properties.getProperty(
+						"usergrid.websocket.disable", "false")))) {
+			logger.info("Usergrid WebSocket Server Disabled");
+			return;
+		}
+
 		logger.info("Starting Usergrid WebSocket Server");
 
 		if (realm != null) {
