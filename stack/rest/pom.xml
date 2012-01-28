@@ -427,6 +427,11 @@
 			<version>1.9-ea04</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.glassfish.grizzly</groupId>
+			<artifactId>grizzly-http-servlet-server</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 </project>
