@@ -42,6 +42,7 @@ import static org.usergrid.rest.exceptions.SecurityException.mappableSecurityExc
 import static org.usergrid.security.shiro.utils.SubjectUtils.isPermittedAccessToApplication;
 import static org.usergrid.security.shiro.utils.SubjectUtils.isPermittedAccessToOrganization;
 import static org.usergrid.security.shiro.utils.SubjectUtils.isUser;
+import static org.usergrid.security.shiro.utils.SubjectUtils.loginApplicationGuest;
 
 import java.util.Collections;
 import java.util.List;
@@ -55,6 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.Identifier;
@@ -63,6 +65,7 @@ import org.usergrid.rest.security.annotations.RequireAdminUserAccess;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.usergrid.rest.security.annotations.RequireSystemAccess;
+import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.services.ServiceManagerFactory;
 
 import com.sun.jersey.api.model.AbstractMethod;
@@ -252,6 +255,16 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
 		@Override
 		public void authorize(ContainerRequest request) {
 			logger.info("ApplicationFilter.authorize");
+			if (SubjectUtils.isAnonymous()) {
+				ApplicationInfo application = null;
+				try {
+					application = management
+							.getApplication(getApplicationIdentifier());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				loginApplicationGuest(application);
+			}
 			if (!isPermittedAccessToApplication(getApplicationIdentifier())) {
 				throw mappableSecurityException("unauthorized",
 						"No application access authorized");
