@@ -48,23 +48,25 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.UnavailableSecurityManagerException;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.Identifier;
+import org.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.usergrid.security.shiro.principals.UserPrincipal;
 
 import com.google.common.collect.BiMap;
 
 public class SubjectUtils {
 
-	private static final Logger logger = LoggerFactory.getLogger(SubjectUtils.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(SubjectUtils.class);
 
 	public static boolean isAnonymous() {
 		Subject currentUser = getSubject();
@@ -381,6 +383,21 @@ public class SubjectUtils {
 			currentUser.checkPermission(permission);
 		} catch (org.apache.shiro.authz.UnauthenticatedException e) {
 			logger.error("checkPermission(): Subject is anonymous");
+		}
+	}
+
+	public static void loginApplicationGuest(ApplicationInfo application) {
+		if (application == null) {
+			logger.error("loginApplicationGuest(): Null application");
+			return;
+		}
+		if (isAnonymous()) {
+			Subject subject = SubjectUtils.getSubject();
+			PrincipalCredentialsToken token = PrincipalCredentialsToken
+					.getGuestCredentialsFromApplicationInfo(application);
+			subject.login(token);
+		} else {
+			logger.error("loginApplicationGuest(): Logging in non-anonymous user as guest not allowed");
 		}
 	}
 
