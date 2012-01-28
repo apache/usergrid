@@ -35,6 +35,7 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
+import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
@@ -42,7 +43,6 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 
-import org.codehaus.jackson.map.ser.ArraySerializers.ByteArraySerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.mq.Message;
@@ -58,7 +58,7 @@ public class CassandraMQUtils {
 	public static final StringSerializer se = new StringSerializer();
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
 	public static final UUIDSerializer ue = new UUIDSerializer();
-	public static final ByteArraySerializer bae = new ByteArraySerializer();
+	public static final BytesArraySerializer bae = new BytesArraySerializer();
 	public static final DynamicCompositeSerializer dce = new DynamicCompositeSerializer();
 	public static final LongSerializer le = new LongSerializer();
 
