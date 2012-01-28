@@ -43,10 +43,12 @@ import org.usergrid.management.UserInfo;
 import org.usergrid.security.shiro.credentials.AdminUserAccessToken;
 import org.usergrid.security.shiro.credentials.AdminUserPassword;
 import org.usergrid.security.shiro.credentials.ApplicationAccessToken;
+import org.usergrid.security.shiro.credentials.ApplicationGuest;
 import org.usergrid.security.shiro.credentials.ApplicationUserAccessToken;
 import org.usergrid.security.shiro.credentials.OrganizationAccessToken;
 import org.usergrid.security.shiro.credentials.PrincipalCredentials;
 import org.usergrid.security.shiro.principals.AdminUserPrincipal;
+import org.usergrid.security.shiro.principals.ApplicationGuestPrincipal;
 import org.usergrid.security.shiro.principals.ApplicationPrincipal;
 import org.usergrid.security.shiro.principals.ApplicationUserPrincipal;
 import org.usergrid.security.shiro.principals.OrganizationPrincipal;
@@ -101,6 +103,16 @@ public class PrincipalCredentialsToken implements
 		if (application != null) {
 			return new PrincipalCredentialsToken(new ApplicationPrincipal(
 					application), new ApplicationAccessToken(token));
+		}
+		return null;
+	}
+
+	public static PrincipalCredentialsToken getGuestCredentialsFromApplicationInfo(
+			ApplicationInfo application) {
+
+		if (application != null) {
+			return new PrincipalCredentialsToken(new ApplicationGuestPrincipal(
+					application), new ApplicationGuest());
 		}
 		return null;
 	}
