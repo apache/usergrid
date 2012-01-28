@@ -76,6 +76,10 @@ import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
+import org.usergrid.persistence.Results;
+import org.usergrid.persistence.Results.Level;
+import org.usergrid.persistence.SimpleEntityRef;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.security.shiro.credentials.AdminUserAccessToken;
 import org.usergrid.security.shiro.credentials.AdminUserPassword;
 import org.usergrid.security.shiro.credentials.ApplicationAccessToken;
@@ -84,6 +88,7 @@ import org.usergrid.security.shiro.credentials.ClientCredentials;
 import org.usergrid.security.shiro.credentials.OrganizationAccessToken;
 import org.usergrid.security.shiro.credentials.PrincipalCredentials;
 import org.usergrid.security.shiro.principals.AdminUserPrincipal;
+import org.usergrid.security.shiro.principals.ApplicationGuestPrincipal;
 import org.usergrid.security.shiro.principals.ApplicationPrincipal;
 import org.usergrid.security.shiro.principals.ApplicationUserPrincipal;
 import org.usergrid.security.shiro.principals.OrganizationPrincipal;
@@ -354,7 +359,8 @@ public class Realm extends AuthorizingRealm {
 						}
 
 					} catch (Exception e) {
-						e.printStackTrace();
+						logger.error(
+								"Unable to construct admin user permissions", e);
 					}
 				}
 			} else if (principal instanceof ApplicationUserPrincipal) {
@@ -390,6 +396,8 @@ public class Realm extends AuthorizingRealm {
 					Set<String> permissions = em.getRolePermissions("default");
 					grant(info, principal, applicationId, permissions);
 				} catch (Exception e) {
+					logger.error("Unable to get user default role permissions",
+							e);
 				}
 
 				UserInfo user = ((ApplicationUserPrincipal) principal)
@@ -399,6 +407,58 @@ public class Realm extends AuthorizingRealm {
 							.getUuid());
 					grant(info, principal, applicationId, permissions);
 				} catch (Exception e) {
+					logger.error("Unable to get user permissions", e);
+				}
+
+				try {
+					Set<String> roles = em.getUserRoles(user.getUuid());
+					for (String role : roles) {
+						Set<String> permissions = em.getRolePermissions(role);
+						grant(info, principal, applicationId, permissions);
+					}
+				} catch (Exception e) {
+					logger.error("Unable to get user role permissions", e);
+				}
+
+				try {
+					Results r = em.getCollection(new SimpleEntityRef(
+							User.ENTITY_TYPE, user.getUuid()), "groups", null,
+							1000, Level.IDS, false);
+					if (r != null) {
+						for (UUID groupId : r.getIds()) {
+							Map<String, String> groupRoles = em
+									.getUserGroupRoles(user.getUuid(), groupId);
+							for (String roleName : groupRoles.keySet()) {
+								Set<String> permissions = em
+										.getGroupRolePermissions(groupId,
+												roleName);
+								grant(info, principal, applicationId,
+										permissions);
+							}
+						}
+					}
+
+				} catch (Exception e) {
+					logger.error("Unable to get user group role permissions", e);
+				}
+
+			} else if (principal instanceof ApplicationGuestPrincipal) {
+				role(info, principal, ROLE_APPLICATION_USER);
+
+				UUID applicationId = ((ApplicationUserPrincipal) principal)
+						.getApplicationId();
+
+				EntityManager em = emf.getEntityManager(applicationId);
+
+				grant(info, principal,
+						getPermissionFromPath(applicationId, "access"));
+
+				try {
+					Set<String> permissions = em.getRolePermissions("guest");
+					grant(info, principal, applicationId, permissions);
+				} catch (Exception e) {
+					logger.error("Unable to get user default role permissions",
+							e);
 				}
 			}
 		}

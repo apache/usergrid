@@ -157,6 +157,8 @@ public interface ManagementService {
 
 	public ApplicationInfo getApplication(UUID applicationId) throws Exception;
 
+	public ApplicationInfo getApplication(Identifier id) throws Exception;
+
 	public Entity getApplicationEntityById(UUID applicationId) throws Exception;
 
 	public ApplicationInfo getApplicationInfoFromAccessToken(String token)

@@ -69,6 +69,7 @@ import static org.usergrid.utils.StringUtils.stringOrSubstringAfterLast;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1292,6 +1293,17 @@ public class ManagementServiceImpl implements ManagementService {
 
 		addApplicationToOrganization(organizationId, applicationId);
 
+		em.grantRolePermissions("default", Arrays.asList(
+				"get,put,post,delete:/users/${user}",
+				"get,put,post,delete:/users/${user}/feed",
+				"get,put,post,delete:/users/${user}/activities",
+				"get,put,post,delete:/users/${user}/groups",
+				"get,put,post,delete:/users/${user}/following/*",
+				"get,put,post,delete:/users/${user}/following/user/*"));
+
+		em.grantRolePermissions("guest",
+				Arrays.asList("post:/users/", "put:/devices/"));
+
 		UserInfo user = null;
 		// if we call this method before the full stack is initialized
 		// we'll get an exception
@@ -1415,6 +1427,20 @@ public class ManagementServiceImpl implements ManagementService {
 		Entity entity = getApplicationEntityById(applicationId);
 		if (entity != null) {
 			return new ApplicationInfo(applicationId, entity.getName());
+		}
+		return null;
+	}
+
+	@Override
+	public ApplicationInfo getApplication(Identifier id) throws Exception {
+		if (id == null) {
+			return null;
+		}
+		if (id.isUUID()) {
+			return getApplication(id.getUUID());
+		}
+		if (id.isName()) {
+			return getApplication(id.getName());
 		}
 		return null;
 	}
