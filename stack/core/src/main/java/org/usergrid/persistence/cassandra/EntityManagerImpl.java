@@ -86,6 +86,7 @@ import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -2212,6 +2213,22 @@ public class EntityManagerImpl implements EntityManager {
 		addInsertToMutator(batch, ApplicationCF.ENTITY_DICTIONARIES,
 				getRolePermissionsKey(roleName), permission,
 				ByteBuffer.allocate(0), timestamp);
+		batchExecute(batch, CassandraService.RETRY_COUNT);
+	}
+
+	@Override
+	public void grantRolePermissions(String roleName,
+			Collection<String> permissions) throws Exception {
+		roleName = roleName.toLowerCase();
+		long timestamp = cass.createTimestamp();
+		Mutator<ByteBuffer> batch = createMutator(
+				cass.getApplicationKeyspace(applicationId), be);
+		for (String permission : permissions) {
+			permission = permission.toLowerCase();
+			addInsertToMutator(batch, ApplicationCF.ENTITY_DICTIONARIES,
+					getRolePermissionsKey(roleName), permission,
+					ByteBuffer.allocate(0), timestamp);
+		}
 		batchExecute(batch, CassandraService.RETRY_COUNT);
 	}
 

@@ -18,6 +18,7 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -699,6 +700,9 @@ public interface EntityManager {
 
 	public void grantRolePermission(String roleName, String permission)
 			throws Exception;
+
+	public void grantRolePermissions(String roleName,
+			Collection<String> permissions) throws Exception;
 
 	public void revokeRolePermission(String roleName, String permission)
 			throws Exception;
