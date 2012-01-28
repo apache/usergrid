@@ -71,6 +71,7 @@ import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.applications.ServiceResource;
+import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
@@ -185,6 +186,7 @@ public class UsersResource extends ServiceResource {
 
 	@POST
 	@Override
+	@RequireApplicationAccess
 	public JSONWithPadding executePost(@Context UriInfo ui, Object json,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
