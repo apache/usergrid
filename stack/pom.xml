@@ -11,11 +11,12 @@
 		<hector-om-version>2.0-01</hector-om-version>
 		<hector-version>1.0-2-SNAPSHOT</hector-version>
 		<hector-test-version>1.0-2-SNAPSHOT</hector-test-version>
-		<jackson-version>1.8.5</jackson-version>
-		<jersey-version>1.9.1</jersey-version>
+		<jackson-version>1.9.4</jackson-version>
+		<jersey-version>1.11</jersey-version>
+		<shiro-version>1.2.0</shiro-version>
 		<junit-version>4.8.2</junit-version>
 		<log4j-version>1.2.16</log4j-version>
-		<org.springframework.version>3.1.0.RC1</org.springframework.version>
+		<org.springframework.version>3.1.0.RELEASE</org.springframework.version>
 		<slf4j-version>1.6.1</slf4j-version>
 		<snakeyaml-version>1.8</snakeyaml-version>
 		<usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
@@ -293,17 +294,17 @@
 			<dependency>
 				<groupId>org.apache.shiro</groupId>
 				<artifactId>shiro-core</artifactId>
-				<version>1.1.0</version>
+				<version>${shiro-version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.shiro</groupId>
 				<artifactId>shiro-web</artifactId>
-				<version>1.1.0</version>
+				<version>${shiro-version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.shiro</groupId>
 				<artifactId>shiro-spring</artifactId>
-				<version>1.1.0</version>
+				<version>${shiro-version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.tomcat</groupId>
@@ -538,14 +539,6 @@
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
-		</repository>
-		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>springsource-milestone</id>
-			<name>Spring Framework Milestone Repository</name>
-			<url>http://maven.springframework.org/milestone</url>
 		</repository>
 		<repository>
 			<id>JBoss repository</id>
