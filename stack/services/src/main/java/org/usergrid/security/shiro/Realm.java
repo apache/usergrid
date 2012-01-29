@@ -445,10 +445,17 @@ public class Realm extends AuthorizingRealm {
 			} else if (principal instanceof ApplicationGuestPrincipal) {
 				role(info, principal, ROLE_APPLICATION_USER);
 
-				UUID applicationId = ((ApplicationUserPrincipal) principal)
+				UUID applicationId = ((ApplicationGuestPrincipal) principal)
 						.getApplicationId();
 
 				EntityManager em = emf.getEntityManager(applicationId);
+				try {
+					String appName = (String) em.getProperty(
+							em.getApplicationRef(), "name");
+					applicationSet.put(applicationId, appName);
+					application = new ApplicationInfo(applicationId, appName);
+				} catch (Exception e) {
+				}
 
 				grant(info, principal,
 						getPermissionFromPath(applicationId, "access"));
