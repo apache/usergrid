@@ -86,6 +86,7 @@ import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -2734,6 +2735,48 @@ public class EntityManagerImpl implements EntityManager {
 	public Set<String> getConnectionIndexes(EntityRef entity,
 			String connectionType) throws Exception {
 		return getRelationManager(entity).getConnectionIndexes(connectionType);
+	}
+
+	@Override
+	public void resetRoles() throws Exception {
+
+		try {
+			createRole("admin", "Administrator");
+		} catch (Exception e) {
+			logger.error("Could not create admin role, may already exist", e);
+		}
+
+		try {
+			createRole("default", "Default");
+		} catch (Exception e) {
+			logger.error("Could not create default role, may already exist", e);
+		}
+
+		try {
+			createRole("guest", "Guest");
+		} catch (Exception e) {
+			logger.error("Could not create guest role, may already exist", e);
+		}
+
+		try {
+			grantRolePermissions("default", Arrays.asList(
+					"get,put,post,delete:/users/${user}",
+					"get,put,post,delete:/users/${user}/feed",
+					"get,put,post,delete:/users/${user}/activities",
+					"get,put,post,delete:/users/${user}/groups",
+					"get,put,post,delete:/users/${user}/following/*",
+					"get,put,post,delete:/users/${user}/following/user/*"));
+		} catch (Exception e) {
+			logger.error("Could not populate default role", e);
+		}
+
+		try {
+			grantRolePermissions("guest", Arrays.asList("post:/users",
+					"post:/devices", "put:/devices/*"));
+		} catch (Exception e) {
+			logger.error("Could not populate guest role", e);
+		}
+
 	}
 
 }

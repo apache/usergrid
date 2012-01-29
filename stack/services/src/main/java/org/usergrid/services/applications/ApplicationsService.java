@@ -71,6 +71,7 @@ public class ApplicationsService extends AbstractService {
 		addEntityDictionary("rolenames");
 		addEntityDictionary("counters");
 		addEntityCommand("hello");
+		addEntityCommand("resetroles");
 	}
 
 	@Override
@@ -97,19 +98,21 @@ public class ApplicationsService extends AbstractService {
 	@Override
 	public ServiceResults getItemById(ServiceContext context, UUID id)
 			throws Exception {
-		return getApplicationEntity();
+		return getApplicationEntity(context);
 	}
 
 	@Override
 	public ServiceResults putItemById(ServiceContext context, UUID id)
 			throws Exception {
-		return updateApplicationEntity(context.getPayload());
+		return updateApplicationEntity(context, context.getPayload());
 	}
 
 	@Override
 	public ServiceResults getEntityDictionary(ServiceContext context,
 			List<EntityRef> refs, String dictionary) throws Exception {
+
 		if ("rolenames".equalsIgnoreCase(dictionary)) {
+			checkPermissionsForPath(context, "/rolenames");
 
 			if (context.parameterCount() == 1) {
 
@@ -126,6 +129,8 @@ public class ApplicationsService extends AbstractService {
 			}
 
 		} else if ("counters".equals(dictionary)) {
+			checkPermissionsForPath(context, "/counters");
+
 			if (context.parameterCount() == 1) {
 				return getApplicationCounterNames();
 			} else if (context.parameterCount() > 1) {
@@ -143,7 +148,9 @@ public class ApplicationsService extends AbstractService {
 	public ServiceResults postEntityDictionary(ServiceContext context,
 			List<EntityRef> refs, String dictionary, ServicePayload payload)
 			throws Exception {
+
 		if ("rolenames".equalsIgnoreCase(dictionary)) {
+			checkPermissionsForPath(context, "/rolenames");
 
 			if (context.parameterCount() == 1) {
 
@@ -184,6 +191,8 @@ public class ApplicationsService extends AbstractService {
 			List<EntityRef> refs, String dictionary) throws Exception {
 
 		if ("rolenames".equalsIgnoreCase(dictionary)) {
+			checkPermissionsForPath(context, "/rolenames");
+
 			if (context.parameterCount() == 2) {
 
 				String roleName = context.getParameters().get(1).getName();
@@ -220,7 +229,10 @@ public class ApplicationsService extends AbstractService {
 		return super.deleteEntityDictionary(context, refs, dictionary);
 	}
 
-	public ServiceResults getApplicationEntity() throws Exception {
+	public ServiceResults getApplicationEntity(ServiceContext context)
+			throws Exception {
+
+		checkPermissionsForPath(context, "/");
 
 		Entity entity = em.get(em.getApplicationRef());
 		Results r = Results.fromEntity(entity);
@@ -235,8 +247,10 @@ public class ApplicationsService extends AbstractService {
 		return genericServiceResults(r);
 	}
 
-	public ServiceResults updateApplicationEntity(ServicePayload payload)
-			throws Exception {
+	public ServiceResults updateApplicationEntity(ServiceContext context,
+			ServicePayload payload) throws Exception {
+
+		checkPermissionsForPath(context, "/");
 
 		Map<String, Object> properties = payload.getProperties();
 		Object m = properties.get("metadata");
@@ -330,6 +344,17 @@ public class ApplicationsService extends AbstractService {
 			return results;
 		}
 		return super.getEntityCommand(context, refs, command);
+	}
+
+	@Override
+	public ServiceResults postEntityCommand(ServiceContext context,
+			List<EntityRef> refs, String command, ServicePayload payload)
+			throws Exception {
+		if ("resetroles".equalsIgnoreCase(command)) {
+			em.resetRoles();
+			return getApplicationRoles();
+		}
+		return super.postEntityCommand(context, refs, command, payload);
 	}
 
 }

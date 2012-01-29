@@ -695,6 +695,8 @@ public interface EntityManager {
 
 	public Map<String, String> getRoles() throws Exception;
 
+	public void resetRoles() throws Exception;
+
 	public Entity createRole(String roleName, String roleTitle)
 			throws Exception;
 
