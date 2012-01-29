@@ -207,9 +207,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 		((EntityManagerImpl) em).create(TYPE_APPLICATION,
 				APPLICATION_ENTITY_CLASS, properties);
 
-		em.createRole("admin", "Administrator");
-		em.createRole("default", "Default");
-		em.createRole("guest", "Guest");
+		em.resetRoles();
 
 		return applicationId;
 	}

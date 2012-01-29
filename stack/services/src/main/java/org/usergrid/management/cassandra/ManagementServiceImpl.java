@@ -69,7 +69,6 @@ import static org.usergrid.utils.StringUtils.stringOrSubstringAfterLast;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1293,8 +1292,6 @@ public class ManagementServiceImpl implements ManagementService {
 
 		addApplicationToOrganization(organizationId, applicationId);
 
-		initRoles(applicationId);
-
 		UserInfo user = null;
 		// if we call this method before the full stack is initialized
 		// we'll get an exception
@@ -1312,22 +1309,6 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 
 		return applicationId;
-	}
-
-	public void initRoles(UUID applicationId) throws Exception {
-		EntityManager em = emf.getEntityManager(applicationId);
-
-		em.grantRolePermissions("default", Arrays.asList(
-				"get,put,post,delete:/users/${user}",
-				"get,put,post,delete:/users/${user}/feed",
-				"get,put,post,delete:/users/${user}/activities",
-				"get,put,post,delete:/users/${user}/groups",
-				"get,put,post,delete:/users/${user}/following/*",
-				"get,put,post,delete:/users/${user}/following/user/*"));
-
-		em.grantRolePermissions("guest",
-				Arrays.asList("post:/users", "post:/devices", "put:/devices/*"));
-
 	}
 
 	@Override
