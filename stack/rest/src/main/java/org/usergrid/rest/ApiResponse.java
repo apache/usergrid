@@ -142,19 +142,19 @@ public class ApiResponse {
 		return withError(code, null, null);
 	}
 
-	public void setError(Exception e) {
+	public void setError(Throwable e) {
 		setError(null, null, e);
 	}
 
-	public ApiResponse withError(Exception e) {
+	public ApiResponse withError(Throwable e) {
 		return withError(null, null, e);
 	}
 
-	public void setError(String description, Exception e) {
+	public void setError(String description, Throwable e) {
 		setError(null, description, e);
 	}
 
-	public ApiResponse withError(String description, Exception e) {
+	public ApiResponse withError(String description, Throwable e) {
 		return withError(null, description, e);
 	}
 
@@ -165,7 +165,10 @@ public class ApiResponse {
 		error = code;
 		errorDescription = description;
 		if (e != null) {
-			exception = e.toString();
+			if (description == null) {
+				errorDescription = e.getMessage();
+			}
+			exception = e.getClass().getName();
 		}
 	}
 
