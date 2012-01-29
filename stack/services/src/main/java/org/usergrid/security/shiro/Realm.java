@@ -373,15 +373,13 @@ public class Realm extends AuthorizingRealm {
 				grant(info, principal,
 						getPermissionFromPath(applicationId, "access"));
 
-				grant(info,
-						principal,
-						getPermissionFromPath(applicationId,
-								"get,put,post,delete", "/users/${user}",
-								"/users/${user}/feed",
-								"/users/${user}/activities",
-								"/users/${user}/groups",
-								"/users/${user}/following/*",
-								"/users/${user}/following/user/*"));
+				/*
+				 * grant(info, principal, getPermissionFromPath(applicationId,
+				 * "get,put,post,delete", "/users/${user}",
+				 * "/users/${user}/feed", "/users/${user}/activities",
+				 * "/users/${user}/groups", "/users/${user}/following/*",
+				 * "/users/${user}/following/user/*"));
+				 */
 
 				EntityManager em = emf.getEntityManager(applicationId);
 				try {
