@@ -16,6 +16,10 @@ public class CustomResolverTest {
 	@Test
 	public void testResolver() throws Exception {
 
+		testImplies(true,
+				"applications:get:00000000-0000-0000-0000-000000000001:/foo",
+				"applications:get:00000000-0000-0000-0000-000000000001:/foo");
+
 		testImplies(
 				true,
 				"applications:get:00000000-0000-0000-0000-000000000001:/foo/bar/*",
