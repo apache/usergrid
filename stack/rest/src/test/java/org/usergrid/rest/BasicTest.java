@@ -7,6 +7,7 @@ import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.Map;
+import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -45,6 +46,8 @@ public class BasicTest extends AbstractRestTest {
 	public void testToken() {
 		JsonNode node = null;
 
+		// test get token for admin user with bad password
+
 		boolean err_thrown = false;
 		try {
 			node = resource().path("/management/token")
@@ -59,6 +62,8 @@ public class BasicTest extends AbstractRestTest {
 		}
 		assertTrue("Error should have been thrown", err_thrown);
 
+		// test get token for admin user with correct default password
+
 		node = resource().path("/management/token")
 				.queryParam("grant_type", "password")
 				.queryParam("username", "test@usergrid.com")
@@ -70,6 +75,8 @@ public class BasicTest extends AbstractRestTest {
 		String access_token = node.get("access_token").getTextValue();
 		assertTrue(isNotBlank(access_token));
 
+		// test get admin user with token
+
 		node = resource().path("/management/users/test@usergrid.com")
 				.queryParam("access_token", access_token)
 				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
@@ -79,6 +86,8 @@ public class BasicTest extends AbstractRestTest {
 		assertEquals("Test User",
 				node.get("data").get("organizations").get("test-organization")
 						.get("users").get("test").get("name").getTextValue());
+
+		// test create app user with token
 
 		Map<String, String> payload = hashMap("email", "ed@anuff.com")
 				.map("username", "edanuff").map("name", "Ed Anuff")
@@ -95,6 +104,8 @@ public class BasicTest extends AbstractRestTest {
 		assertEquals("edanuff", node.get("entities").get(0).get("username")
 				.getTextValue());
 
+		// test login user with incorrect password
+
 		err_thrown = false;
 		try {
 			node = resource().path("/test-app/token")
@@ -108,6 +119,8 @@ public class BasicTest extends AbstractRestTest {
 			err_thrown = true;
 		}
 		assertTrue("Error should have been thrown", err_thrown);
+
+		// test login user with incorrect pin
 
 		err_thrown = false;
 		try {
@@ -123,6 +136,8 @@ public class BasicTest extends AbstractRestTest {
 		}
 		assertTrue("Error should have been thrown", err_thrown);
 
+		// test login user with correct password
+
 		node = resource().path("/test-app/token")
 				.queryParam("grant_type", "password")
 				.queryParam("username", "ed@anuff.com")
@@ -133,6 +148,8 @@ public class BasicTest extends AbstractRestTest {
 
 		String user_access_token = node.get("access_token").getTextValue();
 		assertTrue(isNotBlank(user_access_token));
+
+		// test get app user collection with insufficient permissions
 
 		err_thrown = false;
 		try {
@@ -147,12 +164,16 @@ public class BasicTest extends AbstractRestTest {
 		}
 		assertTrue("Error should have been thrown", err_thrown);
 
+		// test get app user with sufficient permissions
+
 		node = resource().path("/test-app/users/edanuff")
 				.queryParam("access_token", user_access_token)
 				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 		logNode(node);
 
 		assertEquals(1, node.get("entities").size());
+
+		// test get app user collection with bad token
 
 		err_thrown = false;
 		try {
@@ -167,6 +188,8 @@ public class BasicTest extends AbstractRestTest {
 		}
 		assertTrue("Error should have been thrown", err_thrown);
 
+		// test get app user collection with no token
+
 		err_thrown = false;
 		try {
 			node = resource().path("/test-app/users")
@@ -178,6 +201,8 @@ public class BasicTest extends AbstractRestTest {
 		}
 		assertTrue("Error should have been thrown", err_thrown);
 
+		// test login app user with pin
+
 		node = resource().path("/test-app/token")
 				.queryParam("grant_type", "pin")
 				.queryParam("username", "ed@anuff.com")
@@ -188,6 +213,8 @@ public class BasicTest extends AbstractRestTest {
 
 		user_access_token = node.get("access_token").getTextValue();
 		assertTrue(isNotBlank(user_access_token));
+
+		// test set app user pin
 
 		MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
 		formData.add("pin", "5678");
@@ -207,9 +234,55 @@ public class BasicTest extends AbstractRestTest {
 		user_access_token = node.get("access_token").getTextValue();
 		assertTrue(isNotBlank(user_access_token));
 
+		// test user test extension resource
+
 		node = resource().path("/test-app/users/ed@anuff.com/test").get(
 				JsonNode.class);
 		logNode(node);
+
+		// test create user with guest permissions (no token)
+
+		payload = hashMap("email", "ed.anuff@gmail.com")
+				.map("username", "ed.anuff").map("name", "Ed Anuff")
+				.map("password", "sesame").map("pin", "1234");
+
+		node = resource().path("/test-app/users")
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE)
+				.post(JsonNode.class, payload);
+
+		logNode(node);
+
+		assertEquals("ed.anuff", node.get("entities").get(0).get("username")
+				.getTextValue());
+
+		// test create device with guest permissions (no token)
+
+		payload = hashMap("foo", "bar");
+
+		node = resource().path("/test-app/devices/" + UUID.randomUUID())
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE)
+				.put(JsonNode.class, payload);
+
+		logNode(node);
+
+		// test create entity with guest permissions (no token), should fail
+
+		payload = hashMap("foo", "bar");
+
+		err_thrown = false;
+		try {
+			node = resource().path("/test-app/items")
+					.accept(MediaType.APPLICATION_JSON)
+					.type(MediaType.APPLICATION_JSON_TYPE)
+					.post(JsonNode.class, payload);
+		} catch (UniformInterfaceException e) {
+			assertEquals("Should receive a 401 Unauthorized", 401, e
+					.getResponse().getStatus());
+			err_thrown = true;
+		}
+		assertTrue("Error should have been thrown", err_thrown);
 
 	}
 
