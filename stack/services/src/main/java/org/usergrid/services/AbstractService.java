@@ -91,7 +91,11 @@ public abstract class AbstractService implements Service {
 	protected ServiceManager sm;
 
 	protected Set<String> hiddenConnections;
+	protected Set<String> addedConnections;
+
+	protected Set<String> hiddenCollections;
 	protected Set<String> addedCollections;
+
 	protected Map<List<String>, List<String>> replaceParameters;
 
 	protected Set<String> serviceCommands;
@@ -184,6 +188,34 @@ public abstract class AbstractService implements Service {
 			hiddenConnections = new LinkedHashSet<String>();
 		}
 		hiddenConnections.addAll(connections);
+	}
+
+	public void addConnection(String connection) {
+		if (addedConnections == null) {
+			addedConnections = new LinkedHashSet<String>();
+		}
+		addedConnections.add(connection);
+	}
+
+	public void addConnections(List<String> connections) {
+		if (addedConnections == null) {
+			addedConnections = new LinkedHashSet<String>();
+		}
+		addedConnections.addAll(connections);
+	}
+
+	public void addHiddenCollection(String collection) {
+		if (hiddenCollections == null) {
+			hiddenCollections = new LinkedHashSet<String>();
+		}
+		hiddenCollections.add(collection);
+	}
+
+	public void addHiddenCollections(List<String> collections) {
+		if (hiddenCollections == null) {
+			hiddenCollections = new LinkedHashSet<String>();
+		}
+		hiddenCollections.addAll(collections);
 	}
 
 	public void addCollection(String collection) {
@@ -458,12 +490,15 @@ public abstract class AbstractService implements Service {
 	public Set<String> getCollectionSet(EntityRef ref) {
 		Set<String> set = Schema.getDefaultSchema().getCollectionNames(
 				ref.getType());
+		set = new LinkedHashSet<String>(set);
 		if (addedCollections != null) {
-			set = new LinkedHashSet<String>(set);
 			set.addAll(addedCollections);
 		}
+		if (hiddenCollections != null) {
+			set.removeAll(hiddenCollections);
+		}
 		if (set.size() > 0) {
-			return new LinkedHashSet<String>(set);
+			return set;
 		}
 		return null;
 	}
@@ -930,6 +965,7 @@ public abstract class AbstractService implements Service {
 
 		if (entityDictionaries.contains(dictionary)) {
 			EntityRef entityRef = refs.get(0);
+			checkPermissionsForEntitySubPath(context, entityRef, dictionary);
 			Set<String> items = cast(em.getDictionaryAsSet(entityRef,
 					dictionary));
 
@@ -1159,6 +1195,18 @@ public abstract class AbstractService implements Service {
 	public void checkPermissionsForEntity(ServiceContext context,
 			EntityRef entity) {
 		String path = context.getPath(entity);
+		checkPermissionsForPath(context, path);
+	}
+
+	public void checkPermissionsForEntitySubPath(ServiceContext context,
+			UUID entityId, String subPath) {
+		String path = context.getPath(entityId, subPath);
+		checkPermissionsForPath(context, path);
+	}
+
+	public void checkPermissionsForEntitySubPath(ServiceContext context,
+			EntityRef entity, String subPath) {
+		String path = context.getPath(entity, subPath);
 		checkPermissionsForPath(context, path);
 	}
 
