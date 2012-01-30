@@ -128,7 +128,7 @@ public class Server implements ApplicationContextAware {
 				"true");
 		handler.addInitParameter(
 				"com.sun.jersey.spi.container.ContainerRequestFilters",
-				"org.usergrid.rest.filters.MeteringFilter,org.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter,org.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter");
+				"org.usergrid.rest.filters.MeteringFilter,org.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter,org.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter,org.usergrid.rest.security.shiro.filters.ClientCredentialsSecurityFilter");
 		handler.addInitParameter(
 				"com.sun.jersey.spi.container.ContainerResponseFilters",
 				"org.usergrid.rest.security.CrossOriginRequestFilter,org.usergrid.rest.filters.MeteringFilter");
@@ -178,6 +178,10 @@ public class Server implements ApplicationContextAware {
 			httpServer.start();
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+
+		while (true) {
+			;
 		}
 	}
 
@@ -264,7 +268,7 @@ public class Server implements ApplicationContextAware {
 		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.SwaggerApplicationsResource.applications_json_jsp",
 				"/WEB-INF/jsp/org/usergrid/rest/applications/SwaggerApplicationsResource/applications.json.jsp");
-		
+
 		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.ManagementResource.authorize_005fform_jsp",
 				"/WEB-INF/jsp/org/usergrid/rest/management/ManagementResource/authorize_form.jsp");
