@@ -1356,7 +1356,7 @@ $(document).ready(function usergrid_console_app() {
                 var title = roles[name];
                 t += "<div class=\"role-row\" id=\"role-row-"
                 + name
-                + "\"><a href=\"#\" onclick=\"usergrid.console.pageOpenQueryExplorer('/roles/"
+                + "\"><a href=\"#\" onclick=\"usergrid.console.pageOpenRole('"
                 + name
                 + "'); return false;\"><span class=\"role-row-title\">"
                 + title
@@ -1381,6 +1381,37 @@ $(document).ready(function usergrid_console_app() {
         $("#application-roles").html(
         "<h2>Loading...</h2>");
         client.requestApplicationRoles(current_application_id, displayRoles,
+        function() {
+            $("#application-roles").html("<h2>Unable to retrieve roles list.</h2>");
+        });
+    }
+
+    /*******************************************************************
+     * 
+     * Role
+     * 
+     ******************************************************************/
+
+    var current_role_name = "";
+
+    function pageOpenRole(roleName) {
+        current_role_name = roleName;
+        showPanel("#role-panel");
+        $('#application-panel-buttons .ui-selected').removeClass('ui-selected');
+        $('#application-panel-button-roles').addClass('ui-selected');
+        requestRole();
+    }
+    window.usergrid.console.pageOpenRole = pageOpenRole;
+
+    function requestRole() {
+        $("#role-section-title").html("");
+        $("#role-permissions").html("");
+        client.requestApplicationRoles(current_application_id, function(response) {
+            displayRoles(response);
+            $("#role-section-title").html(roles[current_role_name] + " Role");
+            $("#role-permissions").html(
+            "<h2>Loading " + roles[current_role_name] + " permissions...</h2>");
+        },
         function() {
             $("#application-roles").html("<h2>Unable to retrieve roles list.</h2>");
         });
@@ -2221,6 +2252,16 @@ $(document).ready(function usergrid_console_app() {
     });
 
     $("#users-by-alphabetical").html(getAlphabetLinks("usergrid.console.showUsersForLetter"));
+
+    $("#role-panel-tab-bar button").click(function() {
+        if ($(this).attr("id") == "button-role-list") {
+            pageSelectRoles();
+        }
+        else {
+            pageSelectRole();
+        }
+        return false;
+    });
 
     $("button, input:submit, input:button").button();
 

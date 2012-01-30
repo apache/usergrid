@@ -165,9 +165,11 @@
 						id="application-panel-button-dashboard">Dashboard</li>
 					<li class="ui-widget-header">Users</li>
 					<li class="ui-widget-header">Groups</li>
-					<li class="ui-widget-header">Roles</li>
+					<li class="ui-widget-header"
+						id="application-panel-button-roles">Roles</li>
 					<li class="ui-widget-header">Activities</li>
-					<li class="ui-widget-header">Collections</li>
+					<li class="ui-widget-header"
+						id="application-panel-button-collections">Collections</li>
 					<li class="ui-widget-header">Analytics</li>
 					<li class="ui-widget-header">Settings</li>
 					<li class="ui-widget-header">Shell</li>
@@ -387,6 +389,10 @@
 					</div>
 				</div>
 				<div id="roles-panel" style="display: none">
+					<div id="roles-panel-tab-bar"
+						class="console-tab-bar ui-widget-header">
+						<button class="button tab-bar-selection" id="button-roles-list">List</button>
+					</div>
 					<div class="panel-content">
 						<div class="console-section">
 							<div class="console-section-header ui-widget-header">
@@ -398,6 +404,25 @@
 							<div class="console-section-contents ui-widget-content">
 								<div id="application-roles">
 									<h2>No roles created.</h2>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="role-panel" style="display: none">
+					<div id="role-panel-tab-bar"
+						class="console-tab-bar ui-widget-header">
+						<button class="button" id="button-role-list">List</button>
+						<button class="button tab-bar-selection" id="button-role-settings">Settings</button>
+					</div>
+					<div id="role-panel-settings" class="panel-content">
+						<div class="console-section">
+							<div class="console-section-header ui-widget-header">
+								<span class="console-section-title" id="role-section-title">Role</span></span>
+							</div>
+							<div class="console-section-contents ui-widget-content">
+								<div id="role-permissions">
+									<h2>...</h2>
 								</div>
 							</div>
 						</div>
