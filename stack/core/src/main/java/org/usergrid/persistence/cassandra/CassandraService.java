@@ -708,6 +708,38 @@ public class CassandraService {
 		return result;
 	}
 
+	public <N, V> ColumnSlice<N, V> getColumns(Keyspace ko,
+			Object columnFamily, Object key, N[] columns,
+			Serializer<N> nameSerializer, Serializer<V> valueSerializer)
+			throws Exception {
+
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("getColumn cf=" + columnFamily + " key=" + key
+					+ " column=" + columns);
+		}
+
+		/*
+		 * ByteBuffer column_bytes = null; if (column instanceof List) {
+		 * column_bytes = Composite.serializeToByteBuffer((List<?>) column); }
+		 * else { column_bytes = bytebuffer(column); }
+		 */
+
+		SliceQuery<ByteBuffer, N, V> q = HFactory.createSliceQuery(ko, be,
+				nameSerializer, valueSerializer);
+		QueryResult<ColumnSlice<N, V>> r = q.setKey(bytebuffer(key))
+				.setColumnNames(columns)
+				.setColumnFamily(columnFamily.toString()).execute();
+		ColumnSlice<N, V> result = r.get();
+
+		if (db_logger.isInfoEnabled()) {
+			if (result == null) {
+				db_logger.info("getColumn returned null");
+			}
+		}
+
+		return result;
+	}
+
 	public HColumn<String, ByteBuffer> getColumn(Keyspace ko,
 			Object columnFamily, Object key, String column) throws Exception {
 		return getColumn(ko, columnFamily, key, column, se, be);
