@@ -17,6 +17,7 @@
 		<property name="locations">
 			<list>
 				<value>classpath:/usergrid-standalone.properties</value>
+				<value>classpath:/usergrid-custom.properties</value>
 				<value>file:./usergrid-custom-standalone.properties</value>
 			</list>
 		</property>
