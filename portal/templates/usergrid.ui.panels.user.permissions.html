@@ -14,8 +14,10 @@
 			{{if roles}}
 			{{each roles}}
 			<div class="user-role-row" id="user-role-row-${$index}">
-				<span class="user-role-row-title">${$value}</span>
-				<span class="user-role-row-name">(${$index})</span>
+				<a href="#" onclick="usergrid.console.pageOpenRole('${$index}'); return false;">
+					<span class="user-role-row-title">${$value}</span>
+					<span class="user-role-row-name">(${$index})</span>
+				</a>
 			</div>
 			{{/each}}
 			{{else}}
