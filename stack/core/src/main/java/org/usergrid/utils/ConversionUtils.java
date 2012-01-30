@@ -22,6 +22,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -374,14 +375,10 @@ public class ConversionUtils {
 		}
 	}
 
-	/**
-	 * @param uuids
-	 * @return
-	 */
-	public static List<String> strings(List<UUID> uuids) {
+	public static <T> List<String> strings(Collection<T> items) {
 		List<String> strings = new ArrayList<String>();
-		for (UUID uuid : uuids) {
-			strings.add(string(uuid));
+		for (T item : items) {
+			strings.add(string(item));
 		}
 		return strings;
 	}
