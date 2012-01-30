@@ -117,12 +117,25 @@ public class ServiceContext {
 		return request.getPath();
 	}
 
+	public String getPath(String subPath) {
+		return request.getPath() + "/" + subPath;
+	}
+
 	public String getPath(UUID entityId) {
 		return request.getPath() + "/" + entityId.toString();
 	}
 
 	public String getPath(EntityRef entity) {
 		return request.getPath() + "/" + entity.getUuid().toString();
+	}
+
+	public String getPath(UUID entityId, String subPath) {
+		return request.getPath() + "/" + entityId.toString() + "/" + subPath;
+	}
+
+	public String getPath(EntityRef entity, String subPath) {
+		return request.getPath() + "/" + entity.getUuid().toString() + "/"
+				+ subPath;
 	}
 
 	public void setRequest(ServiceRequest request) {
