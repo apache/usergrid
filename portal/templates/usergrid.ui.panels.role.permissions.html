@@ -1,0 +1,27 @@
+
+{{if permissions}}
+<table id="role-permissions-table" data-permission="${$index}">
+	<tr>
+		<th></th>
+		<th>All</th>
+		<th>Get</th>
+		<th>Post</th>
+		<th>Put</th>
+		<th>Delete</th>
+		<th>Path</th>
+	</tr>
+{{each permissions}}
+	<tr>
+		<td class="role-permission-delete"><div class="ui-icon ui-icon-close"></div></td>
+		<td class="role-permission-op"><input type="checkbox" name="all" value="all" {{if $value.ops['*']}}checked="checked" {{/if}}</td>
+		<td class="role-permission-op"><input type="checkbox" name="get" value="get" {{if $value.ops.get}}checked="checked" {{/if}} /></td>
+		<td class="role-permission-op"><input type="checkbox" name="post" value="post" {{if $value.ops.post}}checked="checked" {{/if}} /></td>
+		<td class="role-permission-op"><input type="checkbox" name="put" value="put" {{if $value.ops.put}}checked="checked" {{/if}} /></td>
+		<td class="role-permission-op"><input type="checkbox" name="delete" value="delete" {{if $value.ops.delete}}checked="checked" {{/if}} /></td>
+		<td class="role-permission-path">${$value.path}</td>
+	</tr>
+{{/each}}
+</table>
+{{else}}
+<div class="user-panel-section-message">No Permissions</div>
+{{/if}}

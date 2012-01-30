@@ -1079,6 +1079,34 @@ a:active {
 	color: #404040;
 }
 
+#role-permissions-table th {
+	font-weight: bold;
+	height: 20px;
+}
+
+#role-permissions-table tr {
+	vertical-align: middle;
+}
+
+#role-permissions-table td {
+	vertical-align: middle;
+	border: 1px solid #ddd;
+	padding: 2px;
+	height: 24px;
+}
+
+.role-permission-op {
+	width: 72px !important;
+	min-width: 72px !important;
+	text-align: center;
+}
+
+.role-permission-path {
+	width: 100%;
+	padding-left: 8px;
+	text-align: left;
+}
+
 #indexSelectForm {
 	display: inline;
 	float: right;
@@ -1220,17 +1248,17 @@ a:active {
 	float: right;
 }
 
-#acccount-panel-table {
+#account-panel-table {
 	width: 100%;
 	margin: 0px;
 	padding: 0px;
 }
 
-#acccount-panel-left {
+#account-panel-left {
 	width: 60%;
 }
 
-#acccount-panel-right {
+#account-panel-right {
 	width: 40%;
 }
 

@@ -1403,6 +1403,43 @@ $(document).ready(function usergrid_console_app() {
     }
     window.usergrid.console.pageOpenRole = pageOpenRole;
 
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.permissions.html");
+
+    var permissions = {};
+    function displayPermissions(response) {
+        $("#role-permissions").html("");
+        var t = "";
+        var m = "";
+        permissions = {};
+        if (response.data) {
+            var perms = response.data;
+            var count = 0;
+            for (var i in perms) {
+                count++;
+                var perm = perms[i];
+                var parts = perm.split(':');
+                var ops_part = "*";
+                var path_part = parts[0];
+                if (parts.length > 1) {
+                    ops_part = parts[0];
+                    path_part = parts[1];
+                }
+                var ops = ops_part.split(',');
+                permissions[perm] = { ops : {}, path : path_part};
+                for (var j in ops) {
+                    permissions[perm].ops[ops[j]] = true;
+                }
+            }
+            if (count == 0) {
+                permissions = null;
+            }
+            $.tmpl("usergrid.ui.panels.role.permissions.html", {"permissions" : permissions }, {}).appendTo("#role-permissions");
+        } else {
+            $("#role-permissions")
+            .html("<h2>No permission information retrieved.</h2>");
+        }
+    }
+
     function requestRole() {
         $("#role-section-title").html("");
         $("#role-permissions").html("");
@@ -1411,6 +1448,12 @@ $(document).ready(function usergrid_console_app() {
             $("#role-section-title").html(roles[current_role_name] + " Role");
             $("#role-permissions").html(
             "<h2>Loading " + roles[current_role_name] + " permissions...</h2>");
+            client.requestApplicationRolePermissions(current_application_id, current_role_name, function(response) {
+                displayPermissions(response);
+            },
+            function() {
+                $("#application-roles").html("<h2>Unable to retrieve " + roles[current_role_name] + " role permissions.</h2>");
+            });
         },
         function() {
             $("#application-roles").html("<h2>Unable to retrieve roles list.</h2>");
@@ -2387,7 +2430,7 @@ $(document).ready(function usergrid_console_app() {
             showConsole();
             pageSelectHome();
         }
-    }
+    };
 
     if (client.loggedIn()) {
         showConsole();

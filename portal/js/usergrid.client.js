@@ -654,6 +654,16 @@ usergrid.Client = function(options) {
     this.requestApplicationRoles = requestApplicationRoles;
 
     //
+    // Get application role permissions
+    //
+    // GET: /<application-id>/rolenames/<rolename>
+    //
+    function requestApplicationRolePermissions(applicationId, roleName, success, failure) {
+        apiGetRequest("/" + applicationId + "/rolenames/" + roleName, null, success, failure);
+    }
+    this.requestApplicationRolePermissions = requestApplicationRolePermissions;
+
+    //
     // Get application counters
     //
     // GET: /<application-id>/counters
