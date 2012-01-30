@@ -42,21 +42,28 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.persistence.Schema.PROPERTY_EMAIL;
 import static org.usergrid.persistence.Schema.PROPERTY_PICTURE;
+import static org.usergrid.services.ServiceResults.genericServiceResults;
 import static org.usergrid.utils.ConversionUtils.string;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.EntityRef;
 import org.usergrid.services.AbstractCollectionService;
 import org.usergrid.services.ServiceContext;
+import org.usergrid.services.ServicePayload;
 import org.usergrid.services.ServiceResults;
 
 public class UsersService extends AbstractCollectionService {
 
-	private static final Logger logger = LoggerFactory.getLogger(UsersService.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(UsersService.class);
 
 	public UsersService() {
 		super();
@@ -68,6 +75,8 @@ public class UsersService extends AbstractCollectionService {
 
 		addReplaceParameters(Arrays.asList("followers"),
 				Arrays.asList("connecting", "following"));
+
+		addHiddenCollection("roles");
 
 		addEntityDictionaries(Arrays.asList("rolenames", "permissions"));
 
@@ -93,6 +102,107 @@ public class UsersService extends AbstractCollectionService {
 							+ md5Hex(string(p.get(PROPERTY_EMAIL)).trim()
 									.toLowerCase()));
 		}
+	}
+
+	public ServiceResults getUserRoles(UUID userId) throws Exception {
+		Map<String, String> roles = em.getUserRolesWithTitles(userId);
+		roles.put("default", "Default");
+		ServiceResults results = genericServiceResults().withData(roles);
+		return results;
+	}
+
+	public ServiceResults getApplicationRolePermissions(String roleName)
+			throws Exception {
+		Set<String> permissions = em.getRolePermissions(roleName);
+		ServiceResults results = genericServiceResults().withData(permissions);
+		return results;
+	}
+
+	public ServiceResults addUserRole(UUID userId, String roleName)
+			throws Exception {
+		em.addUserToRole(userId, roleName);
+		return getUserRoles(userId);
+	}
+
+	public ServiceResults deleteUserRole(UUID userId, String roleName)
+			throws Exception {
+		em.removeUserFromRole(userId, roleName);
+		return getUserRoles(userId);
+	}
+
+	@Override
+	public ServiceResults getEntityDictionary(ServiceContext context,
+			List<EntityRef> refs, String dictionary) throws Exception {
+
+		if ("rolenames".equalsIgnoreCase(dictionary)) {
+			EntityRef entityRef = refs.get(0);
+			checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
+
+			if (context.parameterCount() == 0) {
+
+				return getUserRoles(entityRef.getUuid());
+
+			} else if (context.parameterCount() == 1) {
+
+				String roleName = context.getParameters().get(1).getName();
+				if (isBlank(roleName)) {
+					return null;
+				}
+
+				return getApplicationRolePermissions(roleName);
+			}
+
+		}
+
+		return super.getEntityDictionary(context, refs, dictionary);
+	}
+
+	@Override
+	public ServiceResults putEntityDictionary(ServiceContext context,
+			List<EntityRef> refs, String dictionary, ServicePayload payload)
+			throws Exception {
+
+		if ("rolenames".equalsIgnoreCase(dictionary)) {
+			EntityRef entityRef = refs.get(0);
+			checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
+
+			if (context.parameterCount() == 0) {
+
+				String name = payload.getStringProperty("name");
+				if (isBlank(name)) {
+					return null;
+				}
+
+				return addUserRole(entityRef.getUuid(), name);
+
+			}
+
+		}
+
+		return super.postEntityDictionary(context, refs, dictionary, payload);
+	}
+
+	@Override
+	public ServiceResults deleteEntityDictionary(ServiceContext context,
+			List<EntityRef> refs, String dictionary) throws Exception {
+
+		if ("rolenames".equalsIgnoreCase(dictionary)) {
+			EntityRef entityRef = refs.get(0);
+			checkPermissionsForEntitySubPath(context, entityRef, "rolenames");
+
+			if (context.parameterCount() == 1) {
+
+				String roleName = context.getParameters().get(1).getName();
+				if (isBlank(roleName)) {
+					return null;
+				}
+
+				return deleteUserRole(entityRef.getUuid(), roleName);
+
+			}
+		}
+
+		return super.deleteEntityDictionary(context, refs, dictionary);
 	}
 
 }
