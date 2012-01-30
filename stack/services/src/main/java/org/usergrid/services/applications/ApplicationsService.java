@@ -88,6 +88,7 @@ public class ApplicationsService extends AbstractService {
 		String entityCommand = checkForEntityCommands(context);
 
 		results = invokeItemWithId(context, sm.getApplicationId());
+		context.dequeueParameter();
 
 		results = handleEntityDictionary(context, results, entityDictionary);
 		results = handleEntityCommand(context, results, entityCommand);
@@ -114,13 +115,13 @@ public class ApplicationsService extends AbstractService {
 		if ("rolenames".equalsIgnoreCase(dictionary)) {
 			checkPermissionsForPath(context, "/rolenames");
 
-			if (context.parameterCount() == 1) {
+			if (context.parameterCount() == 0) {
 
 				return getApplicationRoles();
 
-			} else if (context.parameterCount() == 2) {
+			} else if (context.parameterCount() == 1) {
 
-				String roleName = context.getParameters().get(1).getName();
+				String roleName = context.getParameters().get(0).getName();
 				if (isBlank(roleName)) {
 					return null;
 				}
@@ -131,12 +132,12 @@ public class ApplicationsService extends AbstractService {
 		} else if ("counters".equals(dictionary)) {
 			checkPermissionsForPath(context, "/counters");
 
-			if (context.parameterCount() == 1) {
+			if (context.parameterCount() == 0) {
 				return getApplicationCounterNames();
-			} else if (context.parameterCount() > 1) {
-				if (context.getParameters().get(1) instanceof QueryParameter) {
+			} else if (context.parameterCount() > 0) {
+				if (context.getParameters().get(0) instanceof QueryParameter) {
 					return getApplicationCounters(((QueryParameter) context
-							.getParameters().get(1)).getQuery());
+							.getParameters().get(0)).getQuery());
 				}
 			}
 		}
@@ -152,7 +153,7 @@ public class ApplicationsService extends AbstractService {
 		if ("rolenames".equalsIgnoreCase(dictionary)) {
 			checkPermissionsForPath(context, "/rolenames");
 
-			if (context.parameterCount() == 1) {
+			if (context.parameterCount() == 0) {
 
 				String name = payload.getStringProperty("name");
 				if (isBlank(name)) {
@@ -166,9 +167,9 @@ public class ApplicationsService extends AbstractService {
 
 				return newApplicationRole(name, title);
 
-			} else if (context.parameterCount() == 2) {
+			} else if (context.parameterCount() == 1) {
 
-				String roleName = context.getParameters().get(1).getName();
+				String roleName = context.getParameters().get(0).getName();
 				if (isBlank(roleName)) {
 					return null;
 				}
@@ -193,23 +194,23 @@ public class ApplicationsService extends AbstractService {
 		if ("rolenames".equalsIgnoreCase(dictionary)) {
 			checkPermissionsForPath(context, "/rolenames");
 
-			if (context.parameterCount() == 2) {
+			if (context.parameterCount() == 1) {
 
-				String roleName = context.getParameters().get(1).getName();
+				String roleName = context.getParameters().get(0).getName();
 				if (isBlank(roleName)) {
 					return null;
 				}
 
 				return deleteApplicationRole(roleName);
 
-			} else if (context.parameterCount() > 2) {
+			} else if (context.parameterCount() > 1) {
 
-				String roleName = context.getParameters().get(1).getName();
+				String roleName = context.getParameters().get(0).getName();
 				if (isBlank(roleName)) {
 					return null;
 				}
 
-				Query q = context.getParameters().get(2).getQuery();
+				Query q = context.getParameters().get(1).getQuery();
 				if (q == null) {
 					return null;
 				}
