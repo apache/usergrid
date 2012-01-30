@@ -808,4 +808,12 @@ public interface EntityManager {
 	public <A extends Entity> A get(EntityRef entityRef, Class<A> entityClass)
 			throws Exception;
 
+	public Map<String, String> getRolesWithTitles(Set<String> roleNames)
+			throws Exception;
+
+	public String getRoleTitle(String roleName) throws Exception;
+
+	public Map<String, String> getUserRolesWithTitles(UUID userId)
+			throws Exception;
+
 }

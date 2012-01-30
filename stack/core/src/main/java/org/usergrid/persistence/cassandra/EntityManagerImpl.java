@@ -95,6 +95,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -1302,6 +1303,57 @@ public class EntityManagerImpl implements EntityManager {
 		return value;
 	}
 
+	public Map<String, Object> getDictionaryElementValues(EntityRef entity,
+			String dictionaryName, String... elementNames) throws Exception {
+
+		Map<String, Object> values = null;
+
+		ApplicationCF dictionaryCf = null;
+
+		boolean entityHasDictionary = getDefaultSchema().hasDictionary(
+				entity.getType(), dictionaryName);
+
+		if (entityHasDictionary) {
+			dictionaryCf = ENTITY_DICTIONARIES;
+		} else {
+			dictionaryCf = ENTITY_COMPOSITE_DICTIONARIES;
+		}
+
+		Class<?> dictionaryCoType = getDefaultSchema().getDictionaryValueType(
+				entity.getType(), dictionaryName);
+		boolean coTypeIsBasic = ClassUtils.isBasicType(dictionaryCoType);
+
+		ByteBuffer[] columnNames = new ByteBuffer[elementNames.length];
+		for (int i = 0; i < elementNames.length; i++) {
+			columnNames[i] = entityHasDictionary ? bytebuffer(elementNames[i])
+					: DynamicComposite.toByteBuffer(elementNames[i]);
+		}
+
+		ColumnSlice<ByteBuffer, ByteBuffer> results = cass.getColumns(
+				cass.getApplicationKeyspace(applicationId), dictionaryCf,
+				key(entity.getUuid(), dictionaryName), columnNames, be, be);
+		if (results != null) {
+			values = new HashMap<String, Object>();
+			for (HColumn<ByteBuffer, ByteBuffer> result : results.getColumns()) {
+				String name = entityHasDictionary ? string(result.getName())
+						: DynamicComposite.fromByteBuffer(result.getName())
+								.get(0, se);
+				if (entityHasDictionary && coTypeIsBasic) {
+					values.put(name,
+							object(dictionaryCoType, result.getValue()));
+				} else if (result.getValue().remaining() > 0) {
+					values.put(name, Schema
+							.deserializePropertyValueFromJsonBinary(result
+									.getValue().slice(), dictionaryCoType));
+				}
+			}
+		} else {
+			logger.error("Results of EntityManagerImpl.getDictionaryElementValues is null");
+		}
+
+		return values;
+	}
+
 	/**
 	 * Gets the set.
 	 * 
@@ -2193,6 +2245,38 @@ public class EntityManagerImpl implements EntityManager {
 	}
 
 	@Override
+	public String getRoleTitle(String roleName) throws Exception {
+		String title = string(getDictionaryElementValue(getApplicationRef(),
+				DICTIONARY_ROLENAMES, roleName));
+		if (title == null) {
+			title = roleName;
+		}
+		return title;
+	}
+
+	@Override
+	public Map<String, String> getRolesWithTitles(Set<String> roleNames)
+			throws Exception {
+		Map<String, String> rolesWithTitles = new HashMap<String, String>();
+
+		Map<String, Object> results = getDictionaryElementValues(
+				getApplicationRef(), DICTIONARY_ROLENAMES,
+				roleNames.toArray(new String[0]));
+
+		for (String roleName : roleNames) {
+			rolesWithTitles.put(roleName, roleName);
+		}
+
+		if (results != null) {
+			for (Entry<String, Object> result : results.entrySet()) {
+				rolesWithTitles.put(result.getKey(), string(result.getValue()));
+			}
+		}
+
+		return rolesWithTitles;
+	}
+
+	@Override
 	public Entity createRole(String roleName, String roleTitle)
 			throws Exception {
 		UUID timestampUuid = newTimeUUID();
@@ -2336,6 +2420,14 @@ public class EntityManagerImpl implements EntityManager {
 	@Override
 	public Set<String> getUserRoles(UUID userId) throws Exception {
 		return cast(getDictionaryAsSet(userRef(userId), DICTIONARY_ROLENAMES));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Map<String, String> getUserRolesWithTitles(UUID userId)
+			throws Exception {
+		return getRolesWithTitles((Set<String>) cast(getDictionaryAsSet(
+				userRef(userId), DICTIONARY_ROLENAMES)));
 	}
 
 	@Override
