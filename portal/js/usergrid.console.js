@@ -1285,9 +1285,9 @@ $(document).ready(function usergrid_console_app() {
                 }
             })
 
-            client.queryUserRoles(current_application_id, entity.uuid, function(response) {
-                if (user_data && response.entities && (response.entities.length > 0)) {
-                    user_data.roles = response.entities;
+            client.requestUserRoles(current_application_id, entity.uuid, function(response) {
+                if (user_data && response.data) {
+                    user_data.roles = response.data;
                     redrawUserPanel();
                 }
             })
@@ -2112,6 +2112,10 @@ $(document).ready(function usergrid_console_app() {
         client.updateAdminUser(userData,
             function(response) {
                 $.jAlert("Account settings update", '');
+                if ((old_pass && new_pass) && (old_pass != new_pass)) {
+                	logout();
+                	return;
+                }
                 requestAccountSettings();
             },
             function(response) {

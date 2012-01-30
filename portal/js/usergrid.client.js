@@ -930,7 +930,7 @@ usergrid.Client = function(options) {
         }
         var options = getByType("object", 0, a) || {};
 
-        var path = "/" + ns + "/" + root_collection + "/" + id + "/" + entity_collection;
+        var path = "/" + root_collection + "/" + id + "/" + entity_collection;
         var q = new Query(ns, path, null, options, success, failure);
         q.send("GET", null);
         return q;
@@ -946,10 +946,10 @@ usergrid.Client = function(options) {
     }
     this.queryUserActivities = queryUserActivities;
 
-    function queryUserRoles(a) {
-        return queryEntityCollection("users", "roles", arguments);
+    function requestUserRoles(applicationId, entityId, success, failure) {
+        apiGetRequest("/" + applicationId + "/users/" + entityId + "/rolenames", null, success, failure);
     }
-    this.queryUserRoles = queryUserRoles;
+    this.requestUserRoles = requestUserRoles;
 
     function queryUserPermissions(a) {
         return queryEntityCollection("users", "permissions", arguments);

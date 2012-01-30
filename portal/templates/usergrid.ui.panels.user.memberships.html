@@ -12,7 +12,10 @@
 		<div class="user-panel-section">
 			{{if memberships}}
 			{{each memberships}}
-			<div>${$index + 1}: <em>${$value}.</em></div>
+			<div class="user-group-row" id="user-group-row-${$index}">
+				<span class="user-group-row-title">${$value.path}</span>
+				<span class="user-group-row-name">(${$value.path})</span>
+			</div>
 			{{/each}}
 			{{else}}
 			<div class="user-panel-section-message">No Group Memberships</div>

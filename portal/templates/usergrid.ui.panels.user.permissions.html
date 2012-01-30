@@ -10,21 +10,26 @@
 	</div>
 	<div class="console-section-contents ui-widget-content">
 		<div class="user-panel-section">
+			<div class="user-roles-title">Roles</div>
 			{{if roles}}
 			{{each roles}}
-			<div>${$index + 1}: <em>${$value}.</em></div>
+			<div class="user-role-row" id="user-role-row-${$index}">
+				<span class="user-role-row-title">${$value}</span>
+				<span class="user-role-row-name">(${$index})</span>
+			</div>
 			{{/each}}
 			{{else}}
 			<div class="user-panel-section-message">No Roles</div>
 			{{/if}}
 		</div>
 		<div class="user-panel-section">
+			<div class="user-permissions-title">Permissions</div>
 			{{if permissions}}
 			{{each permissions}}
-			<div>${$index + 1}: <em>${$value}.</em></div>
+			<div data-permission="${$value}"><em>${$value}</em></div>
 			{{/each}}
 			{{else}}
-			<div class="user-panel-section-message">No Permissions</div>
+			<div class="user-panel-section-message">No User-specific Permissions</div>
 			{{/if}}
 		</div>
 	</div>

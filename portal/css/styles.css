@@ -1173,6 +1173,45 @@ a:active {
 	font-size: 18px;
 }
 
+.user-roles-title {
+	font-size: 18px;
+	font-weight: bold;
+	border-bottom: 1px solid #AED0EA;
+	margin-bottom: 16px;
+	padding-bottom: 8px;
+}
+
+.user-role-row {
+	font-size: 18px;
+	margin-bottom: 16px;
+}
+
+.user-role-row-name {
+	font-size: 14px;
+	font-family: monospace;
+	color: #404040;
+}
+
+.user-permissions-title {
+	margin-top: 32px;
+	font-size: 18px;
+	font-weight: bold;
+	border-bottom: 1px solid #AED0EA;
+	margin-bottom: 16px;
+	padding-bottom: 8px;
+}
+
+.user-group-row {
+	font-size: 18px;
+	margin-bottom: 16px;
+}
+
+.user-group-row-name {
+	font-size: 14px;
+	font-family: monospace;
+	color: #404040;
+}
+
 #button-users-prev {
 	float: left;
 }
