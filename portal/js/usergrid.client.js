@@ -335,7 +335,7 @@ usergrid.Client = function(options) {
 
         params = params || {};
 
-        if (method == "GET") {
+        if ((method == "GET") || (method == "DELETE")) {
             params['_'] = new Date().getTime();
         }
 
@@ -662,6 +662,20 @@ usergrid.Client = function(options) {
         apiGetRequest("/" + applicationId + "/rolenames/" + roleName, null, success, failure);
     }
     this.requestApplicationRolePermissions = requestApplicationRolePermissions;
+
+    function addApplicationRolePermission(applicationId, roleName, permission, success, failure) {
+        apiRequest("POST", "/" + applicationId + "/rolenames/" + roleName, null, JSON.stringify({
+            permission : permission
+        }), success, failure);
+    }
+    this.addApplicationRolePermission = addApplicationRolePermission;
+
+    function deleteApplicationRolePermission(applicationId, roleName, permission, success, failure) {
+        apiRequest("DELETE", "/" + applicationId + "/rolenames/" + roleName, {
+            permission : permission
+        }, null, success, failure);
+    }
+    this.deleteApplicationRolePermission = deleteApplicationRolePermission;
 
     //
     // Get application counters

@@ -1418,14 +1418,15 @@ $(document).ready(function usergrid_console_app() {
                 count++;
                 var perm = perms[i];
                 var parts = perm.split(':');
-                var ops_part = "*";
+                var ops_part = "";
                 var path_part = parts[0];
                 if (parts.length > 1) {
                     ops_part = parts[0];
                     path_part = parts[1];
                 }
+                ops_part.replace("*", "get,post,put,delete")
                 var ops = ops_part.split(',');
-                permissions[perm] = { ops : {}, path : path_part};
+                permissions[perm] = { ops : {}, path : path_part, perm : perm};
                 for (var j in ops) {
                     permissions[perm].ops[ops[j]] = true;
                 }
@@ -1433,7 +1434,7 @@ $(document).ready(function usergrid_console_app() {
             if (count == 0) {
                 permissions = null;
             }
-            $.tmpl("usergrid.ui.panels.role.permissions.html", {"permissions" : permissions }, {}).appendTo("#role-permissions");
+            $.tmpl("usergrid.ui.panels.role.permissions.html", {"role" : current_role_name, "permissions" : permissions }, {}).appendTo("#role-permissions");
         } else {
             $("#role-permissions")
             .html("<h2>No permission information retrieved.</h2>");
@@ -1459,6 +1460,40 @@ $(document).ready(function usergrid_console_app() {
             $("#application-roles").html("<h2>Unable to retrieve roles list.</h2>");
         });
     }
+
+    function deleteRolePermission(roleName, permission) {
+        console.log("delete " + roleName + " - " + permission);
+        client.deleteApplicationRolePermission(current_application_id, roleName, permission, requestRole, requestRole);
+    }
+    window.usergrid.console.deleteRolePermission = deleteRolePermission;
+
+    function addRolePermission(roleName) {
+        var path = $('#role-permission-path-entry-input').val();
+        var ops = "";
+        var s = "";
+        if ($('#role-permission-op-get-checkbox').prop("checked")) {
+            ops = "get";
+            s = ",";
+        }
+        if ($('#role-permission-op-post-checkbox').prop("checked")) {
+            ops = ops + s + "post";
+            s = ",";
+        }
+        if ($('#role-permission-op-put-checkbox').prop("checked")) {
+            ops =  ops + s + "put";
+            s = ",";
+        }
+        if ($('#role-permission-op-delete-checkbox').prop("checked")) {
+            ops =  ops + s + "delete";
+            s = ",";
+        }
+        var permission = ops + ":" + path;
+        console.log("add " + roleName + " - " + permission);
+        if (ops) {
+            client.addApplicationRolePermission(current_application_id, roleName, permission, requestRole, requestRole);
+        }
+    }
+    window.usergrid.console.addRolePermission = addRolePermission;
 
     /*******************************************************************
      * 
@@ -2187,8 +2222,8 @@ $(document).ready(function usergrid_console_app() {
             function(response) {
                 $.jAlert("Account settings update", '');
                 if ((old_pass && new_pass) && (old_pass != new_pass)) {
-                	logout();
-                	return;
+                    logout();
+                    return;
                 }
                 requestAccountSettings();
             },

@@ -3,7 +3,6 @@
 <table id="role-permissions-table" data-permission="${$index}">
 	<tr>
 		<th></th>
-		<th>All</th>
 		<th>Get</th>
 		<th>Post</th>
 		<th>Put</th>
@@ -12,15 +11,22 @@
 	</tr>
 {{each permissions}}
 	<tr>
-		<td class="role-permission-delete"><div class="ui-icon ui-icon-close"></div></td>
-		<td class="role-permission-op"><input type="checkbox" name="all" value="all" {{if $value.ops['*']}}checked="checked" {{/if}}</td>
-		<td class="role-permission-op"><input type="checkbox" name="get" value="get" {{if $value.ops.get}}checked="checked" {{/if}} /></td>
-		<td class="role-permission-op"><input type="checkbox" name="post" value="post" {{if $value.ops.post}}checked="checked" {{/if}} /></td>
-		<td class="role-permission-op"><input type="checkbox" name="put" value="put" {{if $value.ops.put}}checked="checked" {{/if}} /></td>
-		<td class="role-permission-op"><input type="checkbox" name="delete" value="delete" {{if $value.ops.delete}}checked="checked" {{/if}} /></td>
+		<td class="role-permission-delete"><a onclick="usergrid.console.deleteRolePermission('${role}', '${$value.perm}'); return false;"><div class="ui-icon ui-icon-circle-close"></div></a></td>
+		<td class="role-permission-op">{{if $value.ops.get}}<div class="ui-icon ui-icon-check"></div>{{/if}}</td>
+		<td class="role-permission-op">{{if $value.ops.post}}<div class="ui-icon ui-icon-check"></div>{{/if}}</td>
+		<td class="role-permission-op">{{if $value.ops.put}}<div class="ui-icon ui-icon-check"></div>{{/if}}</td>
+		<td class="role-permission-op">{{if $value.ops.delete}}<div class="ui-icon ui-icon-check"></div>{{/if}}</td>
 		<td class="role-permission-path">${$value.path}</td>
 	</tr>
 {{/each}}
+	<tr>
+		<td class="role-permission-delete"><a onclick="usergrid.console.addRolePermission('${role}'); return false;"><div class="ui-icon ui-icon-circle-plus"></div></a></td>
+		<td class="role-permission-op"><input id="role-permission-op-get-checkbox" type="checkbox" name="get" value="get" /></td>
+		<td class="role-permission-op"><input id="role-permission-op-post-checkbox" type="checkbox" name="post" value="post" /></td>
+		<td class="role-permission-op"><input id="role-permission-op-put-checkbox" type="checkbox" name="put" value="put" /></td>
+		<td class="role-permission-op"><input id="role-permission-op-delete-checkbox" type="checkbox" name="delete" value="delete" /></td>
+		<td id="role-permission-path-entry-td" class="role-permission-path"><input id="role-permission-path-entry-input" type="text" name="path" value="/" /></td>
+	</tr>
 </table>
 {{else}}
 <div class="user-panel-section-message">No Permissions</div>
