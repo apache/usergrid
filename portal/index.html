@@ -642,46 +642,48 @@
 				<a id="return-to-console">Return To Admin Console</a>
 			</div>
 		</div>
-		<div class="panel-content">
-			<div class="console-section">
-				<div class="console-section-header ui-widget-header">
-					<span class="console-section-title">Personal Account</span>
-				</div>
-				<div class="console-section-contents ui-widget-content">
-					<div id="update-account-id-label">UUID</div><div id="update-account-id">00000000-0000-0000-0000-000000000000</div>
-					<form name="update-account-form" id="update-account-form">
-						<fieldset>
-							<label for="update-account-username">Username</label>
-							<input type="text" name="update-account-username" id="update-account-username" value="" class="text ui-widget-content ui-corner-all" />
-							<label for="update-account-username">Name</label>
-							<input type="text" name="update-account-name" id="update-account-name" value="" class="text ui-widget-content ui-corner-all" />
-							<label for="update-account-email">Email</label>
-							<input type="text" name="update-account-email" id="update-account-email" value="" class="text ui-widget-content ui-corner-all" />
-							<label for="update-account-password">Old Password*</label>
-							<input type="password" name="old-account-password" id="old-account-password" value="" class="text ui-widget-content ui-corner-all" />
-							<label for="update-account-password">New Password</label>
-							<input type="password" name="update-account-password" id="update-account-password" value="" class="text ui-widget-content ui-corner-all" />
-							<label for="update-account-password">New Password (repeat)</label>
-							<input type="password" name="update-account-password-repeat" id="update-account-password-repeat" value="" class="text ui-widget-content ui-corner-all" />
-						</fieldset>
-						<div class="submit">
-							<div>*Leave password fields blank to keep current password unchanged</div>
-							<input type="button" name="button-update-account" id="button-update-account" value="Update" />
-						</div>
-					</form>
+		<div id="account-panels">
+			<div class="panel-content">
+				<div class="console-section">
+					<div class="console-section-header ui-widget-header">
+						<span class="console-section-title">Personal Account</span>
+					</div>
+					<div class="console-section-contents ui-widget-content">
+						<div id="update-account-id-label">UUID</div><div id="update-account-id">00000000-0000-0000-0000-000000000000</div>
+						<form name="update-account-form" id="update-account-form">
+							<fieldset>
+								<label for="update-account-username">Username</label>
+								<input type="text" name="update-account-username" id="update-account-username" value="" class="text ui-widget-content ui-corner-all" />
+								<label for="update-account-username">Name</label>
+								<input type="text" name="update-account-name" id="update-account-name" value="" class="text ui-widget-content ui-corner-all" />
+								<label for="update-account-email">Email</label>
+								<input type="text" name="update-account-email" id="update-account-email" value="" class="text ui-widget-content ui-corner-all" />
+								<label for="update-account-password">Old Password*</label>
+								<input type="password" name="old-account-password" id="old-account-password" value="" class="text ui-widget-content ui-corner-all" />
+								<label for="update-account-password">New Password</label>
+								<input type="password" name="update-account-password" id="update-account-password" value="" class="text ui-widget-content ui-corner-all" />
+								<label for="update-account-password">New Password (repeat)</label>
+								<input type="password" name="update-account-password-repeat" id="update-account-password-repeat" value="" class="text ui-widget-content ui-corner-all" />
+							</fieldset>
+							<div class="submit">
+								<div>*Leave password fields blank to keep current password unchanged</div>
+								<input type="button" name="button-update-account" id="button-update-account" value="Update" />
+							</div>
+						</form>
+					</div>
 				</div>
 			</div>
-		</div>
-		<div class="panel-content">
-			<div class="console-section">
-				<div class="console-section-header ui-widget-header">
-					<span class="console-section-title">Organizations</span> <span
-						class="console-section-header-right"><a href="#"
-						onclick="usergrid.console.newOrganization(); return false;">New
-							Organization</a> </span>
-				</div>
-				<div class="console-section-contents ui-widget-content">
-					<div id="account-organizations"></div>
+			<div class="panel-content">
+				<div class="console-section">
+					<div class="console-section-header ui-widget-header">
+						<span class="console-section-title">Organizations</span> <span
+							class="console-section-header-right"><a href="#"
+							onclick="usergrid.console.newOrganization(); return false;">New
+								Organization</a> </span>
+					</div>
+					<div class="console-section-contents ui-widget-content">
+						<div id="account-organizations"></div>
+					</div>
 				</div>
 			</div>
 		</div>
