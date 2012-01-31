@@ -1266,6 +1266,16 @@ a:active {
 	float: right;
 }
 
+#account-page {
+	height: 100%;
+}
+
+#account-panels {
+	overflow-x: hidden;
+	overflow-y: auto;
+	height: 94%;
+}
+
 #account-panel-table {
 	width: 100%;
 	margin: 0px;
