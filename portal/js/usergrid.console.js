@@ -1433,7 +1433,7 @@ $(document).ready(function usergrid_console_app() {
             if (count == 0) {
                 permissions = null;
             }
-            $.tmpl("usergrid.ui.panels.role.permissions.html", {"permissions" : permissions }, {}).appendTo("#role-permissions");
+            $.tmpl("usergrid.ui.panels.role.permissions.html", {"role" : current_role_name, "permissions" : permissions }, {}).appendTo("#role-permissions");
         } else {
             $("#role-permissions")
             .html("<h2>No permission information retrieved.</h2>");
@@ -1459,6 +1459,11 @@ $(document).ready(function usergrid_console_app() {
             $("#application-roles").html("<h2>Unable to retrieve roles list.</h2>");
         });
     }
+
+    function deleteRolePermission(role, permission) {
+        console.log(role + " - " + permission);
+    }
+    window.usergrid.console.deleteRolePermission = deleteRolePermission;
 
     /*******************************************************************
      * 

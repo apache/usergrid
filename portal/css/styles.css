@@ -1095,6 +1095,11 @@ a:active {
 	height: 24px;
 }
 
+.role-permission-op div {
+	width: 16px !important;
+	margin: auto;
+}
+
 .role-permission-op {
 	width: 72px !important;
 	min-width: 72px !important;
@@ -1105,6 +1110,19 @@ a:active {
 	width: 100%;
 	padding-left: 8px;
 	text-align: left;
+}
+
+#role-permission-path-entry-td {
+	background-color: #ddd;	
+}
+
+#role-permission-path-entry-input {
+	width: 100%;
+	background-color: #FFF;
+	border: none;
+	margin: 0px;
+	padding: 0px;
+	height: 100%;
 }
 
 #indexSelectForm {
