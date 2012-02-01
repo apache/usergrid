@@ -41,6 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.AggregateCounterSet;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
@@ -48,6 +50,9 @@ import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 
 public class ServiceResults extends Results {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(ServiceResults.class);
 
 	public enum Type {
 		GENERIC, COLLECTION, CONNECTION, COUNTERS
@@ -84,7 +89,7 @@ public class ServiceResults extends Results {
 		}
 		this.serviceMetadata = serviceMetadata;
 		this.nextRequests = nextRequests;
-		System.out.println(childPath);
+		logger.info("Child path: " + childPath);
 	}
 
 	public ServiceResults(Service service, ServiceContext context,
@@ -103,7 +108,7 @@ public class ServiceResults extends Results {
 		}
 		this.serviceMetadata = serviceMetadata;
 		this.nextRequests = nextRequests;
-		System.out.println(childPath);
+		logger.info("Child path: " + childPath);
 	}
 
 	public static ServiceResults genericServiceResults() {
