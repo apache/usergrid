@@ -70,6 +70,8 @@ public class Server implements ApplicationContextAware {
 
 	int port = NetworkListener.DEFAULT_NETWORK_PORT;
 
+	boolean daemon = true;
+
 	public Server() {
 		instance = this;
 	}
@@ -180,8 +182,14 @@ public class Server implements ApplicationContextAware {
 			e.printStackTrace();
 		}
 
-		while (true) {
-			;
+		if (daemon) {
+			while (true) {
+				try {
+					Thread.sleep(Long.MAX_VALUE);
+				} catch (InterruptedException e) {
+					logger.warn("Interrupted");
+				}
+			}
 		}
 	}
 
@@ -305,6 +313,10 @@ public class Server implements ApplicationContextAware {
 		if (ctx instanceof XmlWebApplicationContext) {
 			((XmlWebApplicationContext) ctx).close();
 		}
+	}
+
+	public void setDaemon(boolean daemon) {
+		this.daemon = daemon;
 	}
 
 	public boolean isRunning() {

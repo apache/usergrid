@@ -12,12 +12,12 @@ import java.util.prefs.Preferences;
 
 import javax.swing.UIManager;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.type.TypeReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.standalone.Server;
 
 public class App {
@@ -137,6 +137,7 @@ public class App {
 			synchronized (this) {
 				if (server == null) {
 					server = new Server();
+					server.setDaemon(false);
 				}
 			}
 
