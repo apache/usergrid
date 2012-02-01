@@ -156,6 +156,8 @@ $(document).ready(function usergrid_console_app() {
     window.usergrid.console.pageSelectQueryExplorer = pageSelectQueryExplorer;
 
     function pageOpenQueryExplorer(collection) {
+        $('#application-panel-buttons .ui-selected').removeClass('ui-selected');
+        $('#application-panel-button-collections').addClass('ui-selected');
         showPanel("#query-panel");
         hideMoreQueryOptions();
         $("#query-path").val(collection);
