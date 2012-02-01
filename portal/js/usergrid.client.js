@@ -898,24 +898,34 @@ usergrid.Client = function(options) {
     }
     this.signup = signup;
 
-    function getUser(a) {
+    function getEntity(collection, a) {
         var ns = self.applicationId;
-        var id = arguments[0];
-        if (countByType("string", arguments) >= 2) {
-            ns = getByType("string", 0, arguments);
-            id = getByType("string", 1, arguments);
+        var id = a[0];
+        if (countByType("string", a) >= 2) {
+            ns = getByType("string", 0, a);
+            id = getByType("string", 1, a);
         }
-        var success = getByType("function", 0, arguments);
-        var failure = getByType("function", 1, arguments);
+        var success = getByType("function", 0, a);
+        var failure = getByType("function", 1, a);
         if (!ns) {
             return;
         }
-        var params = getByType("object", 0, arguments);
+        var params = getByType("object", 0, a);
 
-        var path = "/" + ns + "/users/" + id;
+        var path = "/" + ns + "/" + collection + "/" + id;
         apiGetRequest(path, params, success, failure);
     }
+    this.getEntity = getEntity;
+
+    function getUser(a) {
+        return getEntity("users", arguments);
+    }
     this.getUser = getUser;
+
+    function getGroup(a) {
+        return getEntity("groups", arguments);
+    }
+    this.getGroup = getGroup;
 
     function queryEntities(root_collection, a) {
         var ns = self.applicationId;
@@ -1030,6 +1040,26 @@ usergrid.Client = function(options) {
         apiGetRequest(path, null, success, failure);
     }
     this.requestCollectionIndexes = requestCollectionIndexes;
+
+    function queryGroups(a) {
+         return queryEntities("groups", arguments);
+    }
+    this.queryGroups = queryGroups;
+
+    function queryGroupMemberships(a) {
+        return queryEntityCollection("groups", "users", arguments);
+    }
+    this.queryGroupMemberships = queryGroupMemberships;
+
+    function queryGroupActivities(a) {
+        return queryEntityCollection("groups", "activities", arguments);
+    }
+    this.queryGroupActivities = queryGroupActivities;
+
+    function requestGroupRoles(applicationId, entityId, success, failure) {
+        apiGetRequest("/" + applicationId + "/groups/" + entityId + "/rolenames", null, success, failure);
+    }
+    this.requestGroupRoles = requestGroupRoles;
 
     /**
         Creates a new Query.
@@ -1166,8 +1196,8 @@ usergrid.Client = function(options) {
     }
 
     if (this.apiUrl != localStorage.getItem('usergrid_api_url')) {
-    	logout();
-    	localStorage.setItem('usergrid_api_url', this.apiUrl);
+        logout();
+        localStorage.setItem('usergrid_api_url', this.apiUrl);
     }
 
     this.onAutoLogin = null;

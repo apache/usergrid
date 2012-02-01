@@ -1,0 +1,25 @@
+<div class="console-section">
+	<div class="group-details-header">
+		<div class="group-details-header-name">
+			{{if path}}<a href="#" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+			${name}
+			{{if path}}</a>{{/if}}
+		</div>
+		<div style="clear: both;"> </div>
+	</div>
+	<div class="console-section-contents ui-widget-content">
+		<div class="group-panel-section">
+			{{if memberships}}
+			{{each memberships}}
+			<div class="group-user-row" id="group-user-row-${$index}">
+				<span class="group-user-row-title">${$value.name}</span>
+				<span class="group-user-row-name">(${$value.username})</span>
+			</div>
+			{{/each}}
+			{{else}}
+			<div class="group-panel-section-message">No Group Memberships</div>
+			{{/if}}
+		</div>
+	</div>
+</div>
+
