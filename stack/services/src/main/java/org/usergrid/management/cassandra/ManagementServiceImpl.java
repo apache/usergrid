@@ -147,6 +147,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 	String sessionSecretSalt = TOKEN_SECRET_SALT;
 
+	long maxTokenAge = MAX_TOKEN_AGE;
+
 	public static String EMAIL_MAILER = "usergrid.management.mailer";
 
 	public static String EMAIL_ADMIN_PASSWORD_RESET = "usergrid.management.email.admin-password-reset";
@@ -192,6 +194,12 @@ public class ManagementServiceImpl implements ManagementService {
 	@Autowired
 	public void setProperties(Properties properties) {
 		this.properties = properties;
+
+		if (properties != null) {
+			maxTokenAge = Long.parseLong(properties.getProperty(
+					"usergrid.auth.token_max_age", "" + MAX_TOKEN_AGE));
+			maxTokenAge = maxTokenAge > 0 ? maxTokenAge : MAX_TOKEN_AGE;
+		}
 	}
 
 	@Autowired
@@ -212,6 +220,10 @@ public class ManagementServiceImpl implements ManagementService {
 		if (sessionSecretSalt != null) {
 			this.sessionSecretSalt = sessionSecretSalt;
 		}
+	}
+
+	public void setMaxTokenAge(long maxTokenAge) {
+		this.maxTokenAge = maxTokenAge;
 	}
 
 	private String getPropertyValue(String propertyName) {
@@ -1086,7 +1098,7 @@ public class ManagementServiceImpl implements ManagementService {
 				.getEntityManager(applicationId != null ? applicationId
 						: MANAGEMENT_APPLICATION_ID);
 		Entity entity = em.get(getEntityRefFromAccessToken(applicationId,
-				token, null, MAX_TOKEN_AGE, null, true));
+				token, null, maxTokenAge, null, true));
 		return entity;
 	}
 
@@ -1103,7 +1115,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		Entity user = em.get(getEntityRefFromAccessToken(
-				MANAGEMENT_APPLICATION_ID, token, ADMIN_USER, MAX_TOKEN_AGE,
+				MANAGEMENT_APPLICATION_ID, token, ADMIN_USER, maxTokenAge,
 				null, true));
 		return user;
 	}
@@ -1938,7 +1950,7 @@ public class ManagementServiceImpl implements ManagementService {
 			if (appId != null) {
 				EntityManager em = emf.getEntityManager(appId);
 				Entity user = em.get(getEntityRefFromAccessToken(appId, token,
-						APPLICATION_USER, MAX_TOKEN_AGE, null, true));
+						APPLICATION_USER, maxTokenAge, null, true));
 				if (user != null) {
 					return new UserInfo(appId, user.getProperties());
 				}
