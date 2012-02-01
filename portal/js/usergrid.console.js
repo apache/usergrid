@@ -782,7 +782,7 @@ $(document).ready(function usergrid_console_app() {
     .dialog(
     {
         autoOpen: false,
-        height: 375,
+        height: 450,
         width: 350,
         modal: true,
         buttons: {
@@ -1044,7 +1044,7 @@ $(document).ready(function usergrid_console_app() {
      ******************************************************************/
 
     var userLetter = "*";
-    var sortBy = "username";
+    var userSortBy = "username";
     function pageSelectUsers(uuid) {
         pageSelect(uuid);
         showPanel("#users-panel");
@@ -1111,8 +1111,8 @@ $(document).ready(function usergrid_console_app() {
             clientId : client_id,
             clientSecret : client_secret
         });
-        var query = {"ql" : "order by " + sortBy};
-        if (userLetter != "*") query = {"ql" : sortBy + "='" + userLetter + "*'"};
+        var query = {"ql" : "order by " + userSortBy};
+        if (userLetter != "*") query = {"ql" : userSortBy + "='" + userLetter + "*'"};
         users_query = test_client.queryUsers(displayUsers, query);
         return false;
     }
@@ -1323,12 +1323,263 @@ $(document).ready(function usergrid_console_app() {
      * 
      ******************************************************************/
 
+    var groupLetter = "*";
+    var groupSortBy = "path";
     function pageSelectGroups(uuid) {
         pageSelect(uuid);
-        //showPanel("#groups-panel");
-        pageOpenQueryExplorer("/groups");
+        showPanel("#groups-panel");
+        requestGroups();
+        selectTabButton("#groups-panel-tab-bar", $("#button-groups-list"));
+        //pageOpenQueryExplorer("/groups");
+        $("#groups-by-alphabetical").show();
     }
     window.usergrid.console.pageSelectGroups = pageSelectGroups;
+
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.list.html");
+
+    var groupsResults = null;
+    function displayGroups(response) {
+        groupsResults = usergrid.console.ui.displayEntityListResponse({query: groups_query}, {
+            "listItemTemplate" : "usergrid.ui.panels.group.list.html",
+            "getListItemTemplateOptions" : function(entity, path) {
+                var name = entity.uuid + " : " + entity.type;
+                if (entity.path) {
+                    name = entity.path;
+                }
+                if (entity.name) {
+                    name = name + " : " + entity.name;
+                }
+                var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
+                var uri = (entity.metadata || { }).uri;
+                return {
+                    entity : entity,
+                    picture : entity.picture,
+                    name : name,
+                    path : path,
+                    fblink : entity.fblink,
+                    collections : collections,
+                    uri : uri
+                };
+            },
+            "onRender" : function() {
+                $("#groups-by-alphabetical").show();
+            },
+            "onNoEntities" : function() {
+                if (groupLetter != "*") return "No groups with paths starting with " +  groupLetter;
+                return null;
+            },
+            "output" : "#groups-response-table",
+            "nextPrevDiv" : "#groups-next-prev",
+            "prevButton" : "#button-groups-prev",
+            "nextButton" : "#button-groups-next",
+            "noEntitiesMsg" : "No groups found"
+        }, response);
+    }
+
+    function showGroupsForLetter(c) {
+        groupLetter = c;
+        requestGroups();
+    }
+    usergrid.console.showGroupsForLetter = showGroupsForLetter;
+
+    var groups_query = null;
+    function requestGroups() {
+        var client_id = organization_keys.client_id;
+        var client_secret = organization_keys.client_secret;
+        var test_client = new usergrid.Client({
+            applicationId : current_application_id,
+            clientId : client_id,
+            clientSecret : client_secret
+        });
+        var query = {"ql" : "order by " + groupSortBy};
+        if (groupLetter != "*") query = {"ql" : groupSortBy + "='" + groupLetter + "*'"};
+        groups_query = test_client.queryGroups(displayGroups, query);
+        return false;
+    }
+
+    var new_group_path = $("#new-group-path");
+    var new_group_fullname = $("#new-group-fullname");
+    var new_group_email = $("#new-group-email");
+    var new_group_password = $("#new-group-password");
+    var allNewGroupFields = $([]).add(new_group_path).add(new_group_fullname).add(new_group_email).add(new_group_password);
+
+    $("#dialog-form-new-group")
+    .dialog(
+    {
+        autoOpen: false,
+        height: 500,
+        width: 475,
+        modal: true,
+        buttons: {
+            "Create": function() {
+                allNewGroupFields.removeClass("ui-state-error");
+
+                var bValid = checkLength(new_group_email, "email", 6, 80)
+                && checkLength(new_group_password, "password", 5, 16)
+                && checkRegexp(
+                new_group_path,
+                nameRegex,
+                "Groupname only allows : a-z, 0-9, dot, and dash")
+                && checkRegexp(
+                new_group_email,
+                emailRegex,
+                "eg. ui@jquery.com")
+                && checkRegexp(new_group_password,
+                passwordRegex,
+                "Password field only allows : a-z, 0-9, @, #, $, %, ^, &");
+
+                if (bValid) {
+                    createGroup(new_group_path.val(), new_group_fullname.val(),
+                        new_group_email.val(), new_group_password.val());
+                    $(this).dialog("close");
+                }
+            },
+            Cancel: function() {
+                $(this).dialog("close");
+            }
+        },
+        close: function() {
+            allNewGroupFields.val("").removeClass("ui-state-error");
+        }
+    });
+
+    function createGroup(path, fullname, email, password) {
+        client.createGroup(current_application_id, path, fullname, email, password, requestGroups,
+        function() {
+            alert("Unable to create group " + email);
+        });
+    }
+
+    function newGroup() {
+        $("#dialog-form-new-group").dialog("open");
+    }
+    window.usergrid.console.newGroup = newGroup;
+
+    /*******************************************************************
+     * 
+     * Group
+     * 
+     ******************************************************************/
+
+    function pageOpenGroupProfile(groupId) {
+        showPanel("#group-panel");
+        requestGroup(groupId);
+        selectTabButton("#group-panel-tab-bar", $("#button-group-details"));
+        showPanelContent("#group-panel", "#group-panel-details");
+    }
+    window.usergrid.console.pageOpenGroupProfile = pageOpenGroupProfile;
+
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.details.html");
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.memberships.html");
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.activities.html");
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.permissions.html");
+
+    function redrawGroupPanel() {
+        $("#group-panel-details").html("");
+        $("#group-panel-memberships").html("");
+        $("#group-panel-activities").html("");
+        $("#group-panel-permissions").html("");
+        if (group_data) {
+            var options = {
+                makeObjectTable : usergrid.console.ui.makeObjectTable,
+                tableOpts : usergrid.console.ui.standardTableOpts,
+                metadataTableOpts : usergrid.console.ui.metadataTableOpts
+            };
+
+            var details = $.tmpl("usergrid.ui.panels.group.details.html", group_data, options);
+
+            var formDiv = details.find(".query-result-form");
+            $(formDiv).buildForm(usergrid.console.ui.jsonSchemaToDForm(usergrid.console.ui.collections.group_schema, group_data.entity));
+
+            details.appendTo("#group-panel-details");
+
+            details.find(".button").button();
+
+            $.tmpl("usergrid.ui.panels.group.memberships.html", group_data, options).appendTo("#group-panel-memberships");
+
+            $.tmpl("usergrid.ui.panels.group.activities.html", group_data, options).appendTo("#group-panel-activities");
+
+            $.tmpl("usergrid.ui.panels.group.graph.html", group_data, options).appendTo("#group-panel-graph");
+
+            $.tmpl("usergrid.ui.panels.group.permissions.html", group_data, options).appendTo("#group-panel-permissions");
+        }
+    }
+
+    var group_data = null;
+
+    function handleGroupResponse(response) {
+        if (response.entities && (response.entities.length > 0)) {
+            var entity = response.entities[0];
+            var path = response.path || "";
+            path = "" + path.match(/[^?]*/);
+
+            var name = entity.uuid + " : "
+                    + entity.type;
+            if (entity.path) {
+                name = entity.path;
+            }
+            if (entity.name) {
+                name = name + " : " + entity.name;
+            }
+
+            var collections = $.extend({ }, (entity.metadata || { }).collections, (entity.metadata || { }).connections);
+            if ($.isEmptyObject(collections)) collections = null;
+
+            var entity_contents = $.extend( false, { }, entity);
+            delete entity_contents['metadata'];
+
+            var metadata = entity.metadata;
+            if ($.isEmptyObject(metadata)) metadata = null;
+
+            var entity_path = (entity.metadata || {}).path;
+            if ($.isEmptyObject(entity_path)) {
+                entity_path = path + "/" + entity.uuid;
+            }
+
+            group_data = {
+                entity : entity_contents,
+                picture : entity.picture,
+                name : name,
+                path : entity_path,
+                collections : collections,
+                metadata : metadata,
+                uri : (entity.metadata || { }).uri
+            };
+
+            redrawGroupPanel();
+
+            client.queryGroupMemberships(current_application_id, entity.uuid, function(response) {
+                if (group_data && response.entities && (response.entities.length > 0)) {
+                    group_data.memberships = response.entities;
+                    redrawGroupPanel();
+                }
+            })
+
+            client.queryGroupActivities(current_application_id, entity.uuid, function(response) {
+                if (group_data && response.entities && (response.entities.length > 0)) {
+                    group_data.activities = response.entities;
+                    redrawGroupPanel();
+                }
+            })
+
+            client.requestGroupRoles(current_application_id, entity.uuid, function(response) {
+                if (group_data && response.data) {
+                    group_data.roles = response.data;
+                    redrawGroupPanel();
+                }
+            })
+
+        }
+    }
+
+    function requestGroup(groupId) {
+        $("#group-details-area").html(
+        "<h2>Loading...</h2>");
+        client.getGroup(current_application_id, groupId, handleGroupResponse,
+        function() {
+            $("#group-details-area").html("<h2>Unable to retrieve group details.</h2>");
+        });
+    }
 
     /*******************************************************************
      * 
@@ -2330,6 +2581,27 @@ $(document).ready(function usergrid_console_app() {
     });
 
     $("#users-by-alphabetical").html(getAlphabetLinks("usergrid.console.showUsersForLetter"));
+
+    $("#groups-panel-tab-bar button").click(function() {
+        selectTabButton("#groups-panel-tab-bar", $(this));
+        return false;
+    });
+
+    $("#group-panel-tab-bar button").click(function() {
+        selectTabButton("#group-panel-tab-bar", $(this));
+        if ($(this).attr("id") == "button-group-list") {
+            pageSelectGroups();
+        }
+        else if ($(this).attr("id") == "button-group-search") {
+            pageSelectGroups();
+        }
+        else {
+            showPanelContent("#group-panel", "#group-panel-" + $(this).attr("id").substring(13));
+        }
+        return false;
+    });
+
+    $("#groups-by-alphabetical").html(getAlphabetLinks("usergrid.console.showGroupsForLetter"));
 
     $("#role-panel-tab-bar button").click(function() {
         if ($(this).attr("id") == "button-role-list") {

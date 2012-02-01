@@ -1068,6 +1068,12 @@ a:active {
 	font-size: 18px;
 }
 
+/*******************************************************************
+ * 
+ * Roles
+ * 
+ *******************************************************************/
+
 .role-row {
 	font-size: 18px;
 	margin-bottom: 16px;
@@ -1153,6 +1159,12 @@ a:active {
 #indexSelect-button {
 	width: 16px !important;
 }
+
+/*******************************************************************
+ * 
+ * Users
+ * 
+ *******************************************************************/
 
 #users-response-area {
 	width: 100%;
@@ -1266,6 +1278,120 @@ a:active {
 	float: right;
 }
 
+/*******************************************************************
+ * 
+ * Groups
+ * 
+ *******************************************************************/
+
+#groups-response-area {
+	width: 100%;
+}
+
+#groups-response-area-contents {
+	width: 99%;
+}
+
+#groups-by-alphabetical-cell {
+	text-align: center;
+	vertical-align: top;
+}
+
+#groups-by-alphabetical {
+	text-align: center;
+	width: 32px;
+	margin-left: 16px;
+	border-radius: 14px;
+	padding: 8px 4px 8px 4px;
+	background-color: #333;
+	color: white !important;
+}
+
+#groups-by-alphabetical * {
+	color: white !important;
+	line-height: 20px;
+}
+
+#groups-next-prev {
+	font-size: 12px;
+	padding-bottom: 32px;
+}
+
+.group-details-header {
+	font-family: sans-serif;
+	font-weight: bold;
+	border: 1px solid #AED0EA;
+	background-color: #DEEDF7;
+	border-top-left-radius: 8px;
+	border-top-right-radius: 8px;
+	border-bottom-left-radius: 0px;
+	border-bottom-right-radius: 0px;
+}
+
+.group-details-header-name {
+	float: left;
+	padding: 8px;
+	font-size: 18px;
+}
+
+.group-roles-title {
+	font-size: 18px;
+	font-weight: bold;
+	border-bottom: 1px solid #AED0EA;
+	margin-bottom: 16px;
+	padding-bottom: 8px;
+}
+
+.group-role-row {
+	font-size: 18px;
+	margin-bottom: 16px;
+}
+
+.group-role-row-name {
+	font-size: 14px;
+	font-family: monospace;
+	color: #404040;
+}
+
+.group-permissions-title {
+	margin-top: 32px;
+	font-size: 18px;
+	font-weight: bold;
+	border-bottom: 1px solid #AED0EA;
+	margin-bottom: 16px;
+	padding-bottom: 8px;
+}
+
+.group-group-row {
+	font-size: 18px;
+	margin-bottom: 16px;
+}
+
+.group-group-row-name {
+	font-size: 14px;
+	font-family: monospace;
+	color: #404040;
+}
+
+#button-groups-prev {
+	float: left;
+}
+
+#button-groups-next {
+	float: right;
+}
+
+#groups-response-table .query-result-table {
+	height: 36px;
+}
+
+/*******************************************************************
+ * 
+ * Home
+ * 
+ *******************************************************************/
+
+
 #account-page {
 	height: 100%;
 }
@@ -1289,6 +1415,12 @@ a:active {
 #account-panel-right {
 	width: 40%;
 }
+
+/*******************************************************************
+ * 
+ * Analytics
+ * 
+ *******************************************************************/
 
 #start-date {
 	width: 100px;
@@ -1400,6 +1532,12 @@ a:active {
 	height: 550px !important;
 }
 
+/*******************************************************************
+ * 
+ * Shell
+ * 
+ *******************************************************************/
+
 #shell-content {
 	width: 100%;
 	margin: 0px;
@@ -1465,6 +1603,12 @@ a:active {
 	border-bottom-left-radius: 4px;
 	border-bottom-right-radius: 4px;
 }
+
+/*******************************************************************
+ * 
+ * Account
+ * 
+ *******************************************************************/
 
 #update-account-id-label {
 	float: left;

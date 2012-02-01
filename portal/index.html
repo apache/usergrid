@@ -136,14 +136,14 @@
 			<div class="page-nav-bar-breadcrumbs">Administration Console</div>
 			<div class="page-nav-bar-right">
 				<a id="logged-in-user-name">Logged In User</a>
-				<form id="organizationSelectForm" action="#">
+				<form id="organizationSelectForm" action="">
 					<fieldset>
 						<select name="organizationSelect" id="organizationSelect">
 							<option value="my-organization" selected="selected">my-organization</option>
 						</select>
 					</fieldset>
 				</form>
-				<a id="logout-link" href="#"
+				<a id="logout-link" href=""
 					onclick="usergrid.console.logout(); return false;">Sign Out</a>
 			</div>
 		</div>
@@ -152,7 +152,7 @@
 				<ol id="system-panel-buttons" class="panel-buttons">
 					<li id="system-panel-button-home" class="ui-widget-header">Home</li>
 				</ol>
-				<form id="applicationSelectForm" action="#">
+				<form id="applicationSelectForm" action="">
 					<fieldset>
 						<label for="applicationSelect">Application:</label>
 						<select name="applicationSelect" id="applicationSelect">
@@ -185,7 +185,7 @@
 									<div class="console-section">
 										<div class="console-section-header ui-widget-header">
 											<span class="console-section-title">Applications</span> <span
-												class="console-section-header-right"><a href="#"
+												class="console-section-header-right"><a href=""
 												onclick="usergrid.console.newApplication(); return false;">New
 													Application</a> </span>
 										</div>
@@ -199,7 +199,7 @@
 										<div class="console-section-header ui-widget-header">
 											<span class="console-section-title">Organization
 												Administrators</span> <span class="console-section-header-right"><a
-												href="#"
+												href=""
 												onclick="usergrid.console.newAdministrator(); return false;">New
 													Administrator</a> </span>
 										</div>
@@ -213,7 +213,7 @@
 										<div class="console-section-header ui-widget-header">
 											<span class="console-section-title">Organization API
 												Credentials</span> <span class="console-section-header-right"><a
-												href="#"
+												href=""
 												onclick="usergrid.console.newOrganizationCredentials(); return false;">Generate
 													New Credentials</a> </span>
 										</div>
@@ -264,8 +264,8 @@
 					</div>
 					<div id="dialog-form-new-admin" class="dialog-form"
 						title="Create new administrator">
-						<p class="validateTips">All form fields are required.
-						If admin already has account, password fields are ignored.</p>
+						<p class="validateTips">All form fields are required.</p>
+						<p class="validateTips">If admin already has account, password fields are ignored.</p>
 						<form>
 							<fieldset>
 								<label for="new-admin-email">Email</label> <input type="text"
@@ -314,7 +314,7 @@
 						<div class="console-section">
 							<div class="console-section-header ui-widget-header">
 								<span class="console-section-title">Users</span> <span
-									class="console-section-header-right"><a href="#"
+									class="console-section-header-right"><a href=""
 									onclick="usergrid.console.newUser(); return false;">New
 										User</a> </span>
 							</div>
@@ -375,18 +375,72 @@
 					<div id="user-panel-permissions" class="panel-content" style="display: none;"></div>
 				</div>
 				<div id="groups-panel" style="display: none">
+					<div id="groups-panel-tab-bar"
+						class="console-tab-bar ui-widget-header">
+						<button class="button tab-bar-selection" id="button-groups-list">List</button>
+						<button class="button" id="button-groups-search">Search</button>
+					</div>
 					<div class="panel-content">
 						<div class="console-section">
 							<div class="console-section-header ui-widget-header">
-								<span class="console-section-title">Groups</span>
+								<span class="console-section-title">Groups</span> <span
+									class="console-section-header-right"><a href=""
+									onclick="usergrid.console.newGroup(); return false;">New
+										Group</a> </span>
 							</div>
 							<div class="console-section-contents ui-widget-content">
-								<div>
-									<h2>Not implemented.</h2>
-								</div>
+								<table id="groups-response-area">
+									<tr>
+										<td id="groups-response-area-contents">
+											<div id="groups-response-table">
+												<pre class="query-response-json">{ }</pre>
+											</div>
+											<div id="groups-next-prev">
+												<button class="button" id="button-groups-prev">Previous</button>
+												<button class="button" id="button-groups-next">Next</button>
+											</div>
+										</td>
+										<td id="groups-by-alphabetical-cell"><div id="groups-by-alphabetical"></div></td>
+									</tr>
+								</table>
 							</div>
 						</div>
 					</div>
+					<div id="dialog-form-new-group" class="dialog-form"
+						title="Create new group">
+						<p class="validateTips">All form fields are required.</p>
+						<form>
+							<fieldset>
+								<label for="new-group-groupname">Groupname</label> <input
+									type="text" name="new-group-groupname" id="new-group-groupname"
+									value="" class="text ui-widget-content ui-corner-all" /> <label
+									for="new-group-fullname">Full name</label> <input type="text"
+									name="new-group-fullname" id="new-group-fullname" value=""
+									class="text ui-widget-content ui-corner-all" /> <label
+									for="new-group-email">Email</label> <input type="text"
+									name="new-group-email" id="new-group-email" value=""
+									class="text ui-widget-content ui-corner-all" /> <label
+									for="new-admin-password">Password</label> <input
+									type="password" name="new-group-password" id="new-group-password"
+									value="" class="text ui-widget-content ui-corner-all" />
+							</fieldset>
+						</form>
+					</div>
+				</div>
+				<div id="group-panel" style="display: none">
+					<div id="group-panel-tab-bar"
+						class="console-tab-bar ui-widget-header">
+						<button class="button" id="button-group-list">List</button>
+						<button class="button" id="button-group-search">Search</button>
+						<button class="button tab-bar-selection" id="button-group-details">Details</button>
+						<button class="button" id="button-group-memberships">Memberships</button>
+						<button class="button" id="button-group-activities">Activities</button>
+						<button class="button" id="button-group-permissions">Permissions</button>
+					</div>
+					<div id="group-panel-details" class="panel-content"></div>
+					<div id="group-panel-memberships" class="panel-content" style="display: none;"></div>
+					<div id="group-panel-activities" class="panel-content" style="display: none;"></div>
+					<div id="group-panel-permissions" class="panel-content" style="display: none;"></div>
 				</div>
 				<div id="roles-panel" style="display: none">
 					<div id="roles-panel-tab-bar"
@@ -397,7 +451,7 @@
 						<div class="console-section">
 							<div class="console-section-header ui-widget-header">
 								<span class="console-section-title">Roles</span> <span
-									class="console-section-header-right"><a href="#"
+									class="console-section-header-right"><a href=""
 									onclick="usergrid.console.newRole(); return false;">New
 										Role</a> </span>
 							</div>
@@ -466,7 +520,7 @@
 													type="text" id="end-date" /> <input type="text"
 													id="end-time" value="12:00 AM" /> </span>
 											</td>
-											<td><form id="resolutionSelectForm" action="#">
+											<td><form id="resolutionSelectForm" action="">
 													<fieldset>
 														<select name="resolutionSelect" id="resolutionSelect">
 															<option value="all">All</option>
@@ -511,7 +565,7 @@
 						<div class="console-section">
 							<div class="console-section-header ui-widget-header">
 								<span class="console-section-title">Application API Credentials</span>
-								<span class="console-section-header-right"><a href="#"
+								<span class="console-section-header-right"><a href=""
 									onclick="usergrid.console.newApplicationCredentials(); return false;">Generate
 										New Credentials</a> </span>
 							</div>
@@ -551,9 +605,9 @@
 						<div class="console-section">
 							<div class="console-section-header ui-widget-header">
 								<span class="console-section-title">Collections</span> <span
-									class="console-section-header-right"> <a href="#"
+									class="console-section-header-right"> <a href=""
 									onclick="usergrid.console.newCollection(); return false;">New
-										Collection</a>&nbsp;&nbsp;&nbsp;&nbsp; <a href="#"
+										Collection</a>&nbsp;&nbsp;&nbsp;&nbsp; <a href=""
 									onclick="usergrid.console.pageSelectQueryExplorer(); return false;">Query
 										Explorer</a> </span>
 							</div>
@@ -602,7 +656,7 @@
 								<td class="query-middle-col query-input-box"><input
 									id="query-ql" type="text" name="query" /> <span
 									id="button-clear-ql">&#215;</span>
-									<form id="indexSelectForm" action="#">
+									<form id="indexSelectForm" action="">
 										<fieldset>
 											<select name="indexSelect" id="indexSelect">
 											</select>
@@ -677,7 +731,7 @@
 				<div class="console-section">
 					<div class="console-section-header ui-widget-header">
 						<span class="console-section-title">Organizations</span> <span
-							class="console-section-header-right"><a href="#"
+							class="console-section-header-right"><a href=""
 							onclick="usergrid.console.newOrganization(); return false;">New
 								Organization</a> </span>
 					</div>

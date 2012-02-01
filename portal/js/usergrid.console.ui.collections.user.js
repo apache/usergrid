@@ -101,6 +101,24 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
     };
     usergrid.console.ui.collections.vcard_schema = vcard_schema;
 
+    var group_schema = {
+        "description":"A representation of a group",
+        "type":"object",
+        "properties":{
+            "path":{
+                "type":"string",
+                "optional": true,
+                "title" : "Group Path"
+            },
+            "title":{
+                "type":"string",
+                "optional":true,
+                "title" : "Display Name"
+            }
+        }
+    };
+    usergrid.console.ui.collections.group_schema = group_schema;
+
     usergrid.console.ui.loadTemplate("usergrid.ui.collections.user.header.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.collections.user.detail.html");
     
