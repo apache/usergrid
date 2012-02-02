@@ -2851,13 +2851,8 @@ public class EntityManagerImpl implements EntityManager {
 		}
 
 		try {
-			grantRolePermissions("default", Arrays.asList(
-					"get,put,post,delete:/users/${user}",
-					"get,put,post,delete:/users/${user}/feed",
-					"get,put,post,delete:/users/${user}/activities",
-					"get,put,post,delete:/users/${user}/groups",
-					"get,put,post,delete:/users/${user}/following/*",
-					"get,put,post,delete:/users/${user}/following/user/*"));
+			grantRolePermissions("default",
+					Arrays.asList("get,put,post,delete:/**"));
 		} catch (Exception e) {
 			logger.error("Could not populate default role", e);
 		}
