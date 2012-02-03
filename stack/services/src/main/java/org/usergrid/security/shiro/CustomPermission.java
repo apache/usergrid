@@ -132,7 +132,18 @@ public class CustomPermission extends WildcardPermission {
 					return true;
 				}
 			}
+		} else if (p1.contains("me")) {
+			UserInfo user = SubjectUtils.getUser();
+			if (user != null) {
+				if (doCompare(p1.replace("me", user.getUsername()), p2)) {
+					return true;
+				}
+				if (doCompare(p1.replace("me", user.getUuid().toString()), p2)) {
+					return true;
+				}
+			}
 		}
+
 		if (isPath(p1) || isPath(p2)) {
 			p1 = makePath(p1);
 			p2 = makePath(p2);

@@ -54,7 +54,9 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.EntityRef;
+import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.services.AbstractCollectionService;
 import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServicePayload;
@@ -80,6 +82,18 @@ public class UsersService extends AbstractCollectionService {
 
 		addEntityDictionaries(Arrays.asList("rolenames", "permissions"));
 
+	}
+
+	@Override
+	public ServiceResults invokeItemWithName(ServiceContext context, String name)
+			throws Exception {
+		if ("me".equals(name)) {
+			UserInfo user = SubjectUtils.getUser();
+			if ((user != null) && (user.getUuid() != null)) {
+				return super.invokeItemWithId(context, user.getUuid());
+			}
+		}
+		return super.invokeItemWithName(context, name);
 	}
 
 	@Override

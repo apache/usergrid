@@ -956,6 +956,11 @@ public class EntityManagerImpl implements EntityManager {
 						prop_name, propertyValue);
 			}
 
+			if (User.ENTITY_TYPE.equals(entityType) && "me".equals(prop_name)) {
+				throw new DuplicateUniquePropertyExistsException(entityType,
+						prop_name, propertyValue);
+			}
+
 			if (!Schema.isAssociatedEntityType(entityType)
 					&& prop_name.equals(aliasName)) {
 				String aliasValue = propertyValue.toString().toLowerCase()
