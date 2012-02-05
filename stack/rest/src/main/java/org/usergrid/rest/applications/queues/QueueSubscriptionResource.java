@@ -35,7 +35,7 @@
  * You may copy and distribute such a system following the terms of the GNU AGPL
  * for Usergrid Stack and the licenses of the other code concerned, provided that
  ******************************************************************************/
-package org.usergrid.rest.queues;
+package org.usergrid.rest.applications.queues;
 
 import java.util.List;
 import java.util.Map;
