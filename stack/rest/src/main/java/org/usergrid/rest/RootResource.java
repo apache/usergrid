@@ -114,6 +114,14 @@ public class RootResource extends AbstractContextResource {
 	}
 
 	@GET
+	@Path("apps")
+	public JSONWithPadding getAllApplications2(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws URISyntaxException {
+		return getAllApplications(ui, callback);
+	}
+
+	@GET
 	public Response getRoot(@Context UriInfo ui) throws URISyntaxException {
 
 		String redirect_root = properties.getProperty("usergrid.redirect_root");
@@ -168,6 +176,12 @@ public class RootResource extends AbstractContextResource {
 		return getApplicationById(applicationId);
 	}
 
+	@Path("apps/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+	public ApplicationResource getApplicationById3(
+			@PathParam("applicationId") String applicationId) throws Exception {
+		return getApplicationById(applicationId);
+	}
+
 	@Path("{applicationName}")
 	public ApplicationResource getApplicationByName(
 			@PathParam("applicationName") String applicationName)
@@ -191,6 +205,13 @@ public class RootResource extends AbstractContextResource {
 
 	@Path("applications/{applicationName}")
 	public ApplicationResource getApplicationByName2(
+			@PathParam("applicationName") String applicationName)
+			throws Exception {
+		return getApplicationByName(applicationName);
+	}
+
+	@Path("apps/{applicationName}")
+	public ApplicationResource getApplicationByName3(
 			@PathParam("applicationName") String applicationName)
 			throws Exception {
 		return getApplicationByName(applicationName);
