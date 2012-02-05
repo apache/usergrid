@@ -62,19 +62,15 @@ import net.tanesha.recaptcha.ReCaptchaResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.exceptions.AuthErrorInfo;
+import org.usergrid.rest.management.ManagementResource;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
-@Path("/management/users")
-@Component
-@Scope("singleton")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })
@@ -86,7 +82,8 @@ public class UsersResource extends AbstractContextResource {
 	String errorMsg;
 	UserInfo user;
 
-	public UsersResource() {
+	public UsersResource(ManagementResource parent) {
+		super(parent);
 		logger.info("ManagementUsersResource initialized");
 	}
 

@@ -43,7 +43,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -100,6 +102,31 @@ public class ApplicationsResource extends AbstractContextResource {
 			throws Exception {
 
 		String applicationName = (String) json.get("name");
+		if (isEmpty(applicationName)) {
+			return null;
+		}
+
+		ApiResponse response = new ApiResponse(ui);
+		response.setAction("new application for organization");
+
+		UUID applicationId = management.createApplication(
+				organization.getUuid(), applicationName);
+
+		LinkedHashMap<String, UUID> applications = new LinkedHashMap<String, UUID>();
+		applications.put(applicationName, applicationId);
+		response.setData(applications);
+
+		return new JSONWithPadding(response, callback);
+	}
+
+	@RequireOrganizationAccess
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	public JSONWithPadding newApplicationForOrganizationFromForm(
+			@Context UriInfo ui, Map<String, Object> json,
+			@QueryParam("callback") @DefaultValue("callback") String callback,
+			@FormParam("name") String applicationName) throws Exception {
+
 		if (isEmpty(applicationName)) {
 			return null;
 		}

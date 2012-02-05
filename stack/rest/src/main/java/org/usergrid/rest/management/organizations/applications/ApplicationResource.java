@@ -42,6 +42,7 @@ import java.util.UUID;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -115,4 +116,24 @@ public class ApplicationResource extends AbstractContextResource {
 		response.setCredentials(credentials);
 		return new JSONWithPadding(response, callback);
 	}
+	
+	@RequireOrganizationAccess
+	@POST
+	@Path("credentials")
+	public JSONWithPadding generateCredentials(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
+
+		ApiResponse response = new ApiResponse(ui);
+		response.setAction("generate application client credentials");
+
+		ClientCredentialsInfo credentials = new ClientCredentialsInfo(
+				management.getClientIdForApplication(applicationId),
+				management.newClientSecretForApplication(applicationId));
+
+		response.setCredentials(credentials);
+		return new JSONWithPadding(response, callback);
+	}
+
+
 }

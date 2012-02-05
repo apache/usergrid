@@ -96,6 +96,13 @@ public class UserResource extends AbstractContextResource {
 		return new OrganizationsResource(this, user);
 	}
 
+	@RequireAdminUserAccess
+	@Path("orgs")
+	public OrganizationsResource getUserOrganizations2(@Context UriInfo ui)
+			throws Exception {
+		return new OrganizationsResource(this, user);
+	}
+
 	@PUT
 	public JSONWithPadding setUserInfo(@Context UriInfo ui,
 			Map<String, Object> json,

@@ -233,13 +233,13 @@ public class UsersResource extends AbstractContextResource {
 	@RequireOrganizationAccess
 	@PUT
 	@Path("{username}")
-	public JSONWithPadding addUserFromOrganizationByUsername(
+	public JSONWithPadding addUserToOrganizationByUsername(
 			@Context UriInfo ui, @PathParam("username") String username,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
-		response.setAction("add user from organization");
+		response.setAction("add user to organization");
 
 		UserInfo user = management.getAdminUserByUsername(username);
 		if (user == null) {
@@ -259,13 +259,13 @@ public class UsersResource extends AbstractContextResource {
 	@RequireOrganizationAccess
 	@PUT
 	@Path("{email: [A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}}")
-	public JSONWithPadding addUserFromOrganizationByEmail(@Context UriInfo ui,
+	public JSONWithPadding addUserToOrganizationByEmail(@Context UriInfo ui,
 			@PathParam("email") String email,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		ApiResponse response = new ApiResponse(ui);
-		response.setAction("add user from organization");
+		response.setAction("add user to organization");
 
 		UserInfo user = management.getAdminUserByEmail(email);
 		if (user == null) {

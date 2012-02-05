@@ -40,8 +40,10 @@ package org.usergrid.rest.management.users.organizations;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -112,10 +114,57 @@ public class OrganizationsResource extends AbstractContextResource {
 		return new JSONWithPadding(response, callback);
 	}
 
+	@RequireAdminUserAccess
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	public JSONWithPadding newOrganizationForUserFromForm(@Context UriInfo ui,
+			Map<String, Object> json,
+			@QueryParam("callback") @DefaultValue("callback") String callback,
+			@FormParam("organization") String organizationName)
+			throws Exception {
+
+		ApiResponse response = new ApiResponse(ui);
+		response.setAction("new organization for user");
+
+		if (organizationName == null) {
+			return null;
+		}
+
+		OrganizationInfo organization = management.createOrganization(
+				organizationName, user);
+		response.setData(organization);
+
+		management.activateOrganization(organization.getUuid());
+		management.sendOrganizationActivationEmail(organization);
+
+		return new JSONWithPadding(response, callback);
+	}
+
+	@RequireOrganizationAccess
+	@PUT
+	@Path("{organizationName}")
+	public JSONWithPadding addUserToOrganizationByOrganizationName(
+			@Context UriInfo ui,
+			@PathParam("organizationName") String organizationName,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
+
+		ApiResponse response = new ApiResponse(ui);
+		response.setAction("add user to organization");
+
+		OrganizationInfo organization = management
+				.getOrganizationByName(organizationName);
+		management.addAdminUserToOrganization(user.getUuid(),
+				organization.getUuid());
+		response.setData(organization);
+		return new JSONWithPadding(response, callback);
+	}
+
 	@RequireOrganizationAccess
 	@PUT
 	@Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-	public JSONWithPadding addUserToOrganization(@Context UriInfo ui,
+	public JSONWithPadding addUserToOrganizationByOrganizationId(
+			@Context UriInfo ui,
 			@PathParam("organizationId") String organizationIdStr,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {

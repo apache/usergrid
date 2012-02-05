@@ -91,6 +91,27 @@ public class OrganizationResource extends AbstractContextResource {
 		return new ApplicationsResource(this, organization);
 	}
 
+	@RequireOrganizationAccess
+	@Path("apps")
+	public ApplicationsResource getOrganizationApplications2(@Context UriInfo ui)
+			throws Exception {
+		return new ApplicationsResource(this, organization);
+	}
+
+	@GET
+	public JSONWithPadding getOrganizationDetails(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
+
+		logger.info("Get details for organization: " + organization.getUuid());
+
+		ApiResponse response = new ApiResponse(ui);
+		response.setProperty("organization",
+				management.getOrganizationData(organization));
+
+		return new JSONWithPadding(response, callback);
+	}
+
 	@GET
 	@Path("activate")
 	public Viewable activate(@Context UriInfo ui,

@@ -77,6 +77,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
+import org.usergrid.rest.management.organizations.OrganizationsResource;
+import org.usergrid.rest.management.users.UsersResource;
 import org.usergrid.security.oauth.AccessInfo;
 
 import com.sun.jersey.api.view.Viewable;
@@ -123,6 +125,21 @@ public class ManagementResource extends AbstractContextResource {
 	private static MediaType jsonMediaType(String callback) {
 		return isNotBlank(callback) ? new MediaType("application", "javascript")
 				: APPLICATION_JSON_TYPE;
+	}
+
+	@Path("organizations")
+	public OrganizationsResource getOrganizations() {
+		return new OrganizationsResource(this);
+	}
+
+	@Path("orgs")
+	public OrganizationsResource getOrganizations2() {
+		return new OrganizationsResource(this);
+	}
+
+	@Path("users")
+	public UsersResource getUsers() {
+		return new UsersResource(this);
 	}
 
 	@GET

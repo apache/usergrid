@@ -54,18 +54,14 @@ import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
+import org.usergrid.rest.management.ManagementResource;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
-@Path("/management/organizations")
-@Component
-@Scope("singleton")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })
@@ -74,7 +70,8 @@ public class OrganizationsResource extends AbstractContextResource {
 	private static final Logger logger = LoggerFactory
 			.getLogger(OrganizationsResource.class);
 
-	public OrganizationsResource() {
+	public OrganizationsResource(ManagementResource parent) {
+		super(parent);
 		logger.info("ManagementOrganizationsResource initialized");
 	}
 
