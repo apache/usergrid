@@ -52,7 +52,7 @@ usergrid.Client = function(options) {
 
     // If not forcing public API, then use the local API
     // if we've loaded from filesystem or local web server
-    if (!FORCE_PUBLIC_API && (document.domain.substring(0,9) == "localhost")) {
+    if (!FORCE_PUBLIC_API && ((document.domain || "localhost") == "localhost")) {
         this.apiUrl = LOCAL_API_URL;
     }
 
