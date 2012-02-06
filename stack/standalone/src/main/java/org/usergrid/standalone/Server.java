@@ -37,6 +37,7 @@ import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
 import org.usergrid.persistence.cassandra.Setup;
+import org.usergrid.rest.SwaggerServlet;
 import org.usergrid.services.ServiceManagerFactory;
 import org.usergrid.standalone.cassandra.EmbeddedServerHelper;
 
@@ -122,6 +123,12 @@ public class Server implements ApplicationContextAware {
 
 		ServletHandler handler = new ServletHandler();
 
+		handler.addContextParameter("contextConfigLocation",
+				"classpath:standaloneApplicationContext.xml");
+
+		handler.addServletListener(ContextLoaderListener.class.getName());
+		handler.addServletListener(RequestContextListener.class.getName());
+
 		com.sun.jersey.api.json.JSONConfiguration.badgerFish();
 
 		handler.addInitParameter("com.sun.jersey.config.property.packages",
@@ -146,12 +153,6 @@ public class Server implements ApplicationContextAware {
 				"com.sun.jersey.config.property.WebPageContentRegex",
 				"/(((images|css|js|jsp|WEB-INF/jsp)/.*)|(favicon\\.ico))");
 
-		handler.addContextParameter("contextConfigLocation",
-				"classpath:standaloneApplicationContext.xml");
-
-		handler.addServletListener(ContextLoaderListener.class.getName());
-		handler.addServletListener(RequestContextListener.class.getName());
-
 		handler.setServletInstance(new SpringServlet());
 		// handler.setServletPath("/ROOT");
 		// handler.setContextPath("/ROOT");
@@ -162,6 +163,8 @@ public class Server implements ApplicationContextAware {
 		initParameters.put("targetFilterLifecycle", "true");
 		handler.addFilter(new DelegatingFilterProxy(), "shiroFilter",
 				initParameters);
+
+		handler.addFilter(new SwaggerServlet(), "swagger", null);
 
 		// handler.addFilter(new SpringServlet(), "spring", null);
 
@@ -200,15 +203,6 @@ public class Server implements ApplicationContextAware {
 
 		JspFactoryImpl factory = new JspFactoryImpl();
 		JspFactory.setDefaultFactory(factory);
-
-		mapServlet("org.usergrid.rest.SwaggerServlet", "/resources.json");
-
-		mapServlet("org.usergrid.rest.SwaggerServlet", "/management.json");
-
-		mapServlet("org.usergrid.rest.SwaggerServlet", "/applications.json");
-
-		mapServlet("jsp.WEB_002dINF.jsp.swagger.resources_json_jsp",
-				"/WEB-INF/jsp/swagger/resources.json.jsp");
 
 		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.test_jsp",
@@ -278,15 +272,10 @@ public class Server implements ApplicationContextAware {
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.ApplicationResource.authorize_005fform_jsp",
 				"/WEB-INF/jsp/org/usergrid/rest/applications/ApplicationResource/authorize_form.jsp");
 
-		mapServlet("jsp.WEB_002dINF.jsp.swagger.applications_json_jsp",
-				"/WEB-INF/jsp/swagger/applications.json.jsp");
-
 		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.ManagementResource.authorize_005fform_jsp",
 				"/WEB-INF/jsp/org/usergrid/rest/management/ManagementResource/authorize_form.jsp");
 
-		mapServlet("jsp.WEB_002dINF.jsp.swagger.management_json_jsp",
-				"/WEB-INF/jsp/swagger/management.json.jsp");
 	}
 
 	private void mapServlet(String cls, String mapping) {

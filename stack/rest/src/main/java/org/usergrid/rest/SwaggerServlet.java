@@ -1,23 +1,94 @@
 package org.usergrid.rest;
 
-import java.io.IOException;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.springframework.web.context.support.WebApplicationContextUtils.getRequiredWebApplicationContext;
+import static org.usergrid.rest.utils.CORSUtils.allowAllOrigins;
+import static org.usergrid.utils.StringUtils.readClasspathFileAsString;
 
-import javax.servlet.RequestDispatcher;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.rest.utils.CORSUtils;
+import org.springframework.context.ApplicationContext;
 
-public class SwaggerServlet extends HttpServlet {
+public class SwaggerServlet extends HttpServlet implements Filter {
+
+	public static final String SWAGGER_BASE_PATH = "http://localhost:8080";
 
 	public static final Logger logger = LoggerFactory
 			.getLogger(SwaggerServlet.class);
 
 	private static final long serialVersionUID = 1L;
+
+	ServletContext sc;
+	Properties properties;
+
+	@Override
+	public void init(ServletConfig config) throws ServletException {
+		super.init(config);
+		logger.info("init(ServletConfig config)");
+		if (sc == null) {
+			sc = config.getServletContext();
+		}
+		properties = (Properties) getSpringBeanFromWeb("properties");
+		loadSwagger();
+	}
+
+	@Override
+	public void init(FilterConfig config) throws ServletException {
+		logger.info("init(FilterConfig paramFilterConfig)");
+		if (sc == null) {
+			sc = config.getServletContext();
+		}
+		properties = (Properties) getSpringBeanFromWeb("properties");
+		loadSwagger();
+	}
+
+	public Object getSpringBeanFromWeb(String beanName) {
+		if (sc == null) {
+			return null;
+		}
+		ApplicationContext appContext = getRequiredWebApplicationContext(sc);
+		return appContext.getBean(beanName);
+	}
+
+	Map<String, String> pathToJson = new HashMap<String, String>();
+
+	public String loadTempate(String template) {
+		String templateString = readClasspathFileAsString(template);
+		Map<String, String> valuesMap = new HashMap<String, String>();
+		String basePath = properties != null ? properties.getProperty(
+				"swagger.basepath", SWAGGER_BASE_PATH) : SWAGGER_BASE_PATH;
+		valuesMap.put("basePath", basePath);
+		StrSubstitutor sub = new StrSubstitutor(valuesMap);
+		return sub.replace(templateString);
+	}
+
+	public void loadSwagger() {
+		logger.info("loadSwagger()");
+		pathToJson.put("/resources.json",
+				loadTempate("/swagger/resources.json"));
+		pathToJson.put("/applications.json",
+				loadTempate("/swagger/applications.json"));
+		pathToJson.put("/management.json",
+				loadTempate("/swagger/management.json"));
+	}
 
 	@Override
 	protected void doGet(HttpServletRequest request,
@@ -26,14 +97,52 @@ public class SwaggerServlet extends HttpServlet {
 		String path = request.getServletPath();
 
 		logger.info("Swagger request: " + path);
-		String destination = "/WEB-INF/jsp/swagger" + path + ".jsp";
 
-		CORSUtils.allowAllOrigins(request, response);
+		handleJsonOutput(request, response);
 
-		RequestDispatcher rd = getServletContext().getRequestDispatcher(
-				destination);
-		rd.forward(request, response);
+	}
 
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response,
+			FilterChain chain) throws IOException, ServletException {
+		try {
+			doFilter((HttpServletRequest) request,
+					(HttpServletResponse) response, chain);
+		} catch (ClassCastException e) {
+			throw new ServletException("non-HTTP request or response");
+		}
+	}
+
+	public void doFilter(HttpServletRequest request,
+			HttpServletResponse response, FilterChain chain)
+			throws IOException, ServletException {
+
+		if (handleJsonOutput(request, response)) {
+			return;
+		}
+
+		chain.doFilter(request, response);
+	}
+
+	public boolean handleJsonOutput(HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+		String path = request.getServletPath();
+		if (isEmpty(path)) {
+			path = request.getPathInfo();
+		}
+		if (isEmpty(path)) {
+			return false;
+		}
+		path = path.toLowerCase();
+		if (pathToJson.containsKey(path)) {
+			allowAllOrigins(request, response);
+			if ("get".equalsIgnoreCase(request.getMethod())) {
+				response.setContentType("application/json");
+				response.getWriter().print(pathToJson.get(path));
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

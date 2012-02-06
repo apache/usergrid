@@ -20,6 +20,10 @@ package org.usergrid.utils;
 
 import static org.usergrid.utils.ConversionUtils.string;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 /**
  * @author edanuff
  * 
@@ -213,6 +217,28 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
 			return true;
 		}
 		return obj instanceof String;
+	}
+
+	public static String readClasspathFileAsString(String filePath) {
+		StringBuffer fileData = new StringBuffer(1000);
+		BufferedReader reader = new BufferedReader(new InputStreamReader(
+				StringUtils.class.getResourceAsStream(filePath)));
+		char[] buf = new char[1024];
+		int numRead = 0;
+		try {
+			while ((numRead = reader.read(buf)) != -1) {
+				String readData = String.valueOf(buf, 0, numRead);
+				fileData.append(readData);
+				buf = new char[1024];
+			}
+		} catch (Exception e) {
+		} finally {
+			try {
+				reader.close();
+			} catch (IOException e) {
+			}
+		}
+		return fileData.toString();
 	}
 
 }
