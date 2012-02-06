@@ -39,6 +39,7 @@ package org.usergrid.rest.security;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.rest.utils.CORSUtils;
 
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerResponse;
@@ -49,103 +50,11 @@ public class CrossOriginRequestFilter implements ContainerResponseFilter {
 	public static final Logger logger = LoggerFactory
 			.getLogger(CrossOriginRequestFilter.class);
 
-	private static final String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
-	private static final String ACCESS_CONTROL_ALLOW_CREDENTIALS = "Access-Control-Allow-Credentials";
-	private static final String ACCESS_CONTROL_ALLOW_METHODS = "Access-Control-Allow-Methods";
-	private static final String ACCESS_CONTROL_ALLOW_HEADERS = "Access-Control-Allow-Headers";
-	private static final String ACCESS_CONTROL_REQUEST_METHOD = "access-control-request-method";
-	private static final String ACCESS_CONTROL_REQUEST_HEADERS = "access-control-request-headers";
-	private static final String ORIGIN_HEADER = "origin";
-	private static final String REFERER_HEADER = "referer";
-	private static final String AUTHORIZATION_HEADER = "authorization";
-
 	@Override
 	public ContainerResponse filter(ContainerRequest request,
 			ContainerResponse response) {
 
-		// logger.info(JsonUtils.mapToFormattedJsonString(request
-		// .getRequestHeaders()));
-
-		if (request.getRequestHeaders().containsKey(
-				ACCESS_CONTROL_REQUEST_METHOD)) {
-
-			for (String value : request.getRequestHeaders().get(
-					ACCESS_CONTROL_REQUEST_METHOD)) {
-				response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_METHODS,
-						value);
-			}
-		}
-
-		if (request.getRequestHeaders().containsKey(
-				ACCESS_CONTROL_REQUEST_HEADERS)) {
-			for (String value : request.getRequestHeaders().get(
-					ACCESS_CONTROL_REQUEST_HEADERS)) {
-				response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_HEADERS,
-						value);
-			}
-		}
-
-		boolean origin_sent = false;
-		boolean null_origin_received = false;
-		if (request.getRequestHeaders().containsKey(ORIGIN_HEADER)) {
-			for (String value : request.getRequestHeaders().get(ORIGIN_HEADER)) {
-				if (value != null) {
-					if ("null".equalsIgnoreCase(value)) {
-						null_origin_received = true;
-					} else {
-						origin_sent = true;
-						response.getHttpHeaders().add(
-								ACCESS_CONTROL_ALLOW_ORIGIN, value);
-					}
-				}
-			}
-		}
-
-		if (!origin_sent) {
-			String origin = getOrigin(request);
-			if (origin != null) {
-				response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_CREDENTIALS,
-						"true");
-				response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_ORIGIN,
-						origin);
-			} else {
-				if (!null_origin_received) {
-					if (!request.getRequestHeaders().containsKey(
-							AUTHORIZATION_HEADER)) {
-						response.getHttpHeaders().add(
-								ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-					}
-				}
-			}
-		} else {
-			response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_CREDENTIALS,
-					"true");
-		}
-
-		// logger.info(JsonUtils.mapToFormattedJsonString(response
-		// .getHttpHeaders()));
-
-		return response;
-	}
-
-	public String getOrigin(ContainerRequest request) {
-		String origin = request.getRequestHeaders().getFirst(ORIGIN_HEADER);
-		String referer = request.getRequestHeaders().getFirst(REFERER_HEADER);
-		if ((origin != null) && (!"null".equalsIgnoreCase(origin))) {
-			return origin;
-		}
-		if ((referer != null) && (referer.startsWith("http"))) {
-			int i = referer.indexOf("//");
-			if (i != -1) {
-				i = referer.indexOf('/', i + 2);
-				if (i != -1) {
-					return referer.substring(0, i);
-				} else {
-					return referer;
-				}
-			}
-		}
-		return null;
+		return CORSUtils.allowAllOrigins(request, response);
 	}
 
 }
