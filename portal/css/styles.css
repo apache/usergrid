@@ -49,6 +49,7 @@ a:active {
 	height: 54px;
 	max-height: 54px;
 	border-bottom: 1px solid #808080;
+	min-width: 1024px;
 }
 
 .page-nav-bar-breadcrumbs {
@@ -110,6 +111,7 @@ a:active {
 .console-section {
 	width: 100%;
 	margin: 0px 0px 21px 0px;
+	min-width: 600px;	
 }
 
 .console-section-header {
@@ -121,6 +123,7 @@ a:active {
 	border-top-right-radius: 8px;
 	border-bottom-left-radius: 0px;
 	border-bottom-right-radius: 0px;
+	min-width: 300px;
 }
 
 .console-section-title {
@@ -1483,6 +1486,7 @@ a:active {
 
 #analytics-time {
 	margin-bottom: 32px;
+	min-width: 800px;
 }
 
 #analytics-graph-table {
