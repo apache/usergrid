@@ -1,0 +1,263 @@
+//@import "bootstrap.less";
+//@import "apigee.less";
+@import "../bootstrap/less/bootstrap.less";
+@apigeelogin: url(../images/apigeelogin.png);
+
+//--------------General ------------------------------------------------------------
+html{
+}
+
+a:link {
+	color: #111;
+	text-decoration: none;
+}
+
+a:visited {
+	color: #000;
+	text-decoration: none;
+}
+
+a:hover {
+	color: #000 !important;
+	text-decoration: none;
+}
+
+a:active {
+	color: #000;
+	text-decoration: none;
+}
+
+//----------Layout ------------------------------------------------------------
+body {
+  padding-top: 40px;
+}
+
+footer{
+	clear: both;
+  border-top:solid 2px #F2F5F7;
+  positition:fixed;
+	left:0;
+	bottom:0;
+	z-index:1030;
+	padding:10px;
+}
+
+//----------Header ------------------------------------------------------------
+.navbar{
+  background: none repeat scroll 0 0 white;
+  border-bottom:solid 2px #F2F5F7;
+	h1, h2{
+		display: inline;
+		float:left;
+		margin: 0 15px;
+	}
+	h1 {
+		background: @apigeelogin no-repeat;
+		height: 35px;
+		width: 106px;
+		overflow: hidden;
+		position: relative;
+		color: transparent;
+	}
+	h2{
+		color:#777777;
+		font-size:18px;
+	}
+	.nav{
+	  float:right;
+	  &>li{
+	    &>a{
+	      text-shadow: 0 0px 0 white;
+	    }
+	  }
+	  .active{
+			&>a{
+				background:#E65E17;
+			}
+	  }
+	}
+}
+
+//----------------- Navigation --------------------------------------------------------------------
+.nav-list{
+	border-right:2px solid #F2F5F7;
+	.active > a{
+		background-color:#E65E17;
+	}
+}
+
+//----------Login, Signup, Forgot ------------------------------------------------------------
+#login-page, #signup-page {
+	background-image: url("../images/usergrid_400.png");
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	background-position: 16px 10px;
+	margin:20px auto;
+}
+
+#the-grid {
+	color: transparent;
+	-webkit-transition: color 2s ease-in; //safari and chrome
+	-o-transition: color 2s ease-in; // opera
+	-moz-transition: color 2s ease-in; //safari and chrome
+	transition: color 2s ease-in; //safari and chrome
+	padding-top: 120px;
+	p{
+		font-size: 14px;
+		font-family: palatino;
+		font-style: italic;
+		padding: 4px;
+	}
+	&:hover {
+		color: #999;
+	}
+}
+
+.logoUserGrid{
+	background-image: url("../images/usergrid_200.png");
+	background-repeat: no-repeat;
+	height: 40px;
+	width: 200px;
+	overflow: hidden;
+	position: relative;
+	display: block;
+	float: right;
+	color: transparent;
+	margin:  0;
+}
+
+#forgot-password-page{
+	iframe{
+		width:100%;
+		height: 620px;
+		border:0;
+	}
+}
+
+//----------Pages ------------------------------------------------------------
+
+#pages{
+	height:100%;
+  clear:both;
+  margin: 30px 0;
+  min-height:400px;
+  &>div{
+		display:none;
+	}
+	.alert-error{
+ 		display: none;
+ 	}
+}
+
+//----------Box ------------------------------------------------------------
+.box {
+  margin: 0 20px 20px;
+	border: solid 1px #727272;
+	//background: #F2F5F7;
+	.border-radius(5px);
+	h3 {
+    margin:0;
+		color: #fff;
+		font-size: 12pt;
+		padding: 10px;
+		//margin-bottom: 20px;
+		//font-weight: normal;
+		line-height:18px;
+		.border-radius(5px 5px 0px 0px);
+    //text-shadow: inset 0 1px 1px rgba(255,255,255,.5);
+		.gradientBar(#727272, #616161);
+		a {
+			//.btn;
+			//.btn-danger;
+			font-size: 12px;
+			.border-radius(15px);
+			float:right;
+		  color:white !important;
+			&:hover{
+			  color:white !important;
+			}
+			i {
+		  .icon-white;
+			}
+		}
+	}
+	form {
+		margin:0px;
+		padding-top: 10px;
+	}
+	.form-actions{
+		margin-bottom:0px;
+		.border-radius(0 0 5px 5px);
+	}
+	.boxContent{
+		padding: 10px;
+		line-height: 25px;
+	}
+}
+
+.console-section-header{
+	margin:0;
+	color: #fff;
+	font-size: 12pt;
+	padding: 10px;
+	margin-bottom: 20px;
+	font-weight: normal;
+	line-height:18px;
+	.border-radius(5px 5px 0px 0px);
+  //text-shadow: inset 0 1px 1px rgba(255,255,255,.5);
+	.gradientBar(#727272, #616161);
+	a {
+		float:right;
+		color: #E65E17;
+		font-weight: bold;
+	}
+}
+
+//---------------- Panels ---------------------------------------------------------------------
+
+#application-panel{
+	.boxContent{
+		background-color:#f2f5f7;
+		.border-radius(0 0 5px 5px);
+	}
+}
+
+#shell-panel{
+  .boxContent{
+		font-family:monospace;
+		font-size:14px;
+		min-height:400px;
+	}
+	textarea {
+		font-family:monospace;
+		border: none;
+		overflow: auto;
+		width: 95%;
+		outline: none;
+		box-shadow: 0 0 0 white inset;
+		margin-bottom:40px;
+	}
+}
+//-------------------------------------------------------------------------------------
+
+.console-section{
+	.box;
+}
+
+.form-horizontal .controls{
+	span{
+		margin-top:5px;
+	}
+}
+//-------------------------------------------------------------------------------------
+
+//TODO: Controles
+#resolutionSelect-menu{
+	display:none;
+}
+#ui-datepicker-div{
+	display:none;
+}
+#applicationSelect-menu{
+	display:none;
+}
