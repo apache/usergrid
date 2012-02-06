@@ -73,7 +73,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "auth_password_get",
+          "nickname" : "mgt_auth_password_get",
           "responseClass" : "response",
           "summary" : "Get management access token"
         },
@@ -143,7 +143,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "auth_password_post",
+          "nickname" : "mgt_auth_password_post",
           "responseClass" : "response",
           "summary" : "Get management access token"
         }
@@ -217,7 +217,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "authorize_get",
+          "nickname" : "mgt_authorize_get",
           "responseClass" : "response",
           "summary" : "Authorize client"
         },
@@ -301,7 +301,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "authorize_post",
+          "nickname" : "mgt_authorize_post",
           "responseClass" : "response",
           "summary" : "Authorize client"
         }
@@ -335,7 +335,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_json_post",
+          "nickname" : "mgt_org_json_post",
           "responseClass" : "response",
           "summary" : "Create new organization"
         },
@@ -395,7 +395,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_form_post",
+          "nickname" : "mgt_org_form_post",
           "responseClass" : "response",
           "summary" : "Create new organization"
         }
@@ -437,7 +437,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_get",
+          "nickname" : "mgt_org_get",
           "responseClass" : "response",
           "summary" : "Find organization by name or UUID"
         }
@@ -487,7 +487,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_activate_get",
+          "nickname" : "mgt_org_activate_get",
           "responseClass" : "response",
           "summary" : "Activates the organization"
         }
@@ -521,7 +521,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_reactivate_get",
+          "nickname" : "mgt_org_reactivate_get",
           "responseClass" : "response",
           "summary" : "Reactivates the organization"
         }
@@ -563,7 +563,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_feed_get",
+          "nickname" : "mgt_org_feed_get",
           "responseClass" : "response",
           "summary" : "Get organization activity feed"
         }
@@ -605,7 +605,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_credentials_get",
+          "nickname" : "mgt_org_credentials_get",
           "responseClass" : "response",
           "summary" : "Get organization client credentials"
         },
@@ -641,7 +641,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_credentials_post",
+          "nickname" : "mgt_org_credentials_post",
           "responseClass" : "response",
           "summary" : "Generate organization client credentials"
         }
@@ -683,7 +683,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_users_get",
+          "nickname" : "mgt_org_users_get",
           "responseClass" : "response",
           "summary" : "Get admin users for organization"
         },
@@ -727,7 +727,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_users_json_post",
+          "nickname" : "mgt_org_users_json_post",
           "responseClass" : "response",
           "summary" : "Create new admin user for organization"
         },
@@ -795,7 +795,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_users_form_post",
+          "nickname" : "mgt_org_users_form_post",
           "responseClass" : "response",
           "summary" : "Create new admin user for organization"
         }
@@ -845,7 +845,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_user_put",
+          "nickname" : "mgt_org_user_put",
           "responseClass" : "response",
           "summary" : "Add admin users to organization"
         },
@@ -889,7 +889,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_user_delete",
+          "nickname" : "mgt_org_user_delete",
           "responseClass" : "response",
           "summary" : "Remove admin user from organization"
         }
@@ -931,7 +931,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_apps_get",
+          "nickname" : "mgt_org_apps_get",
           "responseClass" : "response",
           "summary" : "Get apps for organization"
         },
@@ -975,7 +975,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_apps_json_post",
+          "nickname" : "mgt_org_apps_json_post",
           "responseClass" : "response",
           "summary" : "Create new applicationfor organization"
         },
@@ -1019,7 +1019,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_apps_form_post",
+          "nickname" : "mgt_org_apps_form_post",
           "responseClass" : "response",
           "summary" : "Create new application for organization"
         }
@@ -1069,7 +1069,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_application_delete",
+          "nickname" : "mgt_org_app_delete",
           "responseClass" : "response",
           "summary" : "Delete an application in an organization"
         }
@@ -1119,7 +1119,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_application_credentials_get",
+          "nickname" : "mgt_org_app_credentials_get",
           "responseClass" : "response",
           "summary" : "Get application keys"
         },
@@ -1163,7 +1163,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_application_credentials_post",
+          "nickname" : "mgt_org_app_credentials_post",
           "responseClass" : "response",
           "summary" : "Generate application keys"
         }
@@ -1197,7 +1197,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_user_json_post",
+          "nickname" : "mgt_org_user_json_post",
           "responseClass" : "response",
           "summary" : "Create new admin user"
         },
@@ -1249,7 +1249,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_user_form_post",
+          "nickname" : "mgt_org_user_form_post",
           "responseClass" : "response",
           "summary" : "Create new organization"
         }
@@ -1274,7 +1274,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_user_reset_password_get",
+          "nickname" : "mgt_org_user_reset_password_get",
           "responseClass" : "response",
           "summary" : "Initiate a user password reset"
         },
@@ -1318,7 +1318,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "organization_user_reset_password_form_post",
+          "nickname" : "mgt_org_user_reset_password_form_post",
           "responseClass" : "response",
           "summary" : "Complete a user password reset"
         }
@@ -1360,7 +1360,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "admin_user_get",
+          "nickname" : "mgt_admin_user_get",
           "responseClass" : "response",
           "summary" : "Returns the admin user details"
         },
@@ -1404,7 +1404,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "admin_user_json_put",
+          "nickname" : "mgt_admin_user_json_put",
           "responseClass" : "response",
           "summary" : "Updates the admin user details"
         }
@@ -1454,7 +1454,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "admin_user_activate_get",
+          "nickname" : "mgt_admin_user_activate_get",
           "responseClass" : "response",
           "summary" : "Activates the admin user"
         }
@@ -1488,7 +1488,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "admin_user_reactivate_get",
+          "nickname" : "mgt_admin_user_reactivate_get",
           "responseClass" : "response",
           "summary" : "Reactivates the admin user"
         }
@@ -1530,7 +1530,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "admin_user_feed_get",
+          "nickname" : "mgt_admin_user_feed_get",
           "responseClass" : "response",
           "summary" : "Get admin user activity feed"
         }
@@ -1580,7 +1580,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "admin_user_password_json_put",
+          "nickname" : "mgt_admin_user_password_json_put",
           "responseClass" : "response",
           "summary" : "Set admin user password"
         }
@@ -1614,7 +1614,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "admin_user_reset_password_get",
+          "nickname" : "mgt_admin_user_reset_password_get",
           "responseClass" : "response",
           "summary" : "Initiate a user password reset"
         },
@@ -1658,7 +1658,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "admin_user_reset_password_form_post",
+          "nickname" : "mgt_admin_user_reset_password_form_post",
           "responseClass" : "response",
           "summary" : "Complete a user password reset"
         }
@@ -1700,7 +1700,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "admin_user_orgs_get",
+          "nickname" : "mgt_admin_user_orgs_get",
           "responseClass" : "response",
           "summary" : "Get organizations for admin user"
         },
@@ -1744,7 +1744,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "admin_user_orgs_json_post",
+          "nickname" : "mgt_admin_user_orgs_json_post",
           "responseClass" : "response",
           "summary" : "Create new organization for admn user"
         },
@@ -1788,7 +1788,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "admin_user_orgs_form_post",
+          "nickname" : "mgt_admin_user_orgs_form_post",
           "responseClass" : "response",
           "summary" : "Create new organization for admin user"
         }
@@ -1838,7 +1838,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "admin_user_organization_put",
+          "nickname" : "mgt_admin_user_org_put",
           "responseClass" : "response",
           "summary" : "Add admin user to organization"
         },
@@ -1882,7 +1882,7 @@
               "code" : 404
             }
           ],
-          "nickname" : "admin_user_organization_delete",
+          "nickname" : "mgt_admin_user_org_delete",
           "responseClass" : "response",
           "summary" : "Remove admin user from organization"
         }
