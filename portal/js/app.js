@@ -10,6 +10,7 @@ $(document).ready(function() {
 
 	function Init(){
 		$('.navbar .dropdown-toggle').dropdown();
+		$('#sidebar-menu .dropdown-toggle').dropdown();
 
 		//Pages.AddPage(name,link,box,init,extra);
 		Pages.AddPage('login',null,null,null,null);
@@ -28,6 +29,6 @@ $(document).ready(function() {
 	}
 
 	function InitNavigation (){
-		$("#sidebar-menu a").click(Pages.ShowPanel);
+		$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
 	}
 });

@@ -116,8 +116,10 @@ function usergrid_console_app() {
     }
 
     function setNavApplicationText() {
-        $('select#applicationSelect').selectmenu("value", current_application_id);
+        //$('select#applicationSelect').selectmenu("value", current_application_id);
 	    $('#application-panel h3').text("Application Dashboard - " + current_application_name);
+	    $('#selectedApp').text(current_application_name);
+	    
     }
 
     function getAlphabetLinks(funcname) {
@@ -561,14 +563,14 @@ function usergrid_console_app() {
 
     function displayApplications(response) {
         var t = "";
-        var m = "";
+	      var m2 = "";
         applications = {};
         applications_by_id = {};
         if (response.data) {
             applications = response.data;
             var count = 0;
             var applicationNames = keys(applications).sort();
-            for (var i in applicationNames) {
+						for (var i in applicationNames) {
                 var application = applicationNames[i];
                 var uuid = applications[application];
                 t += "<div class=\"application-row\" id=\"application-row-"
@@ -585,11 +587,15 @@ function usergrid_console_app() {
                     current_application_id = uuid;
                     current_application_name = application;
                 }
-                m += "<option value=\"" + uuid + "\"" + ((uuid == current_application_id) ? " selected=\"selected\"": "") + ">" + application + "</option>";
+							  m2 += "<li><a href='#" + uuid + "'>" + application + "</a></li>";
             }
             if (count) {
+	            $("#applications-menu ul").html(m2);
+	            $("#applications-menu ul a").click(function(e){
+				            var link = $(this);
+		            usergrid.console.pageSelectApplication(link.attr("href").substring(1));
+			    });
                 $("#organization-applications").html(t);
-                $("select#applicationSelect").html(m);
                 enableApplicationPanelButtons();
             }
             else {
@@ -2289,15 +2295,16 @@ function usergrid_console_app() {
     });
 */
     //$('select#applicationSelect').selectmenu();
+	/*
     $('select#applicationSelect').selectmenu({
         change: function(e, object) {
             $('#system-panel-buttons .ui-selected').removeClass('ui-selected');
             $('#application-panel-buttons .ui-selected').removeClass('ui-selected');
             $('#application-panel-button-dashboard').addClass('ui-selected');
-            pageSelectApplication(object.value);
+            pageSelectApplication(object.value); //TODO: esto va al seleccionar app
         }
     });
-
+*/
     $('#system-panel-button-home').addClass('ui-selected');
     $('#application-panel-buttons .ui-selected').removeClass('ui-selected');
 

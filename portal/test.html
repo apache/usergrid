@@ -298,8 +298,8 @@
 	<ul id="system-panel-buttons" class="nav nav-list">
 		<li id="system-panel-button-home"><a href="#organization"><i class="icon-home"></i> Home</a></li>
 
-		<li class="dropdown">
-			<a class="dropdown-toggle" href="#"><i class="icon-book"></i> test-organization</a>
+		<li id="applications-menu" class="dropdown">
+			<a class="dropdown-toggle" href="#"><i class="icon-th-list"></i> Applications</a>
 			<ul class="dropdown-menu">
 				<li><a href="#">organization1</a></li>
 				<li><a href="#">organization2</a></li>
@@ -307,18 +307,10 @@
 			</ul>
 		</li>
 
-		<li class="nav-header"><i class="icon-th-list"></i> Applications</li>
-		<form id="applicationSelectForm" action="#">
-			<fieldset>
-				<select name="applicationSelect" id="applicationSelect">
-					<option value="my-application" selected="selected">my-application</option>
-				</select>
-			</fieldset>
-		</form>
+		<li id="selectedApp" class="nav-header">Selected Application</li>
+		<li id="application-panel-button-dashboard"><a href="#application"><i class="icon-th"></i>Dashboard</a></li>
 
-		<li id="application-panel-button-dashboard"><a href="#application"><i class="icon-th"></i> Dashboard</a></li>
-
-		<li class="nav-header">Security</li>
+		<li class="nav-header"></li>
 		<li><a href="#users"><i class="icon-user"></i> Users</a></li>
 		<li><a href="#groups"><i class="icon-user"></i> Groups</a></li>
 		<li><a href="#roles"><i class="icon-user"></i> Roles</a></li>
