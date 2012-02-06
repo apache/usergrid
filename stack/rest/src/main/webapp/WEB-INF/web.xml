@@ -15,6 +15,22 @@
 		<listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
 	</listener>
 	<filter>
+		<filter-name>swaggerFilter</filter-name>
+		<filter-class>org.usergrid.rest.SwaggerServlet</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>swaggerFilter</filter-name>
+		<url-pattern>/resources.json</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>swaggerFilter</filter-name>
+		<url-pattern>/applications.json</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>swaggerFilter</filter-name>
+		<url-pattern>/management.json</url-pattern>
+	</filter-mapping>
+	<filter>
 		<filter-name>shiroFilter</filter-name>
 		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
 		<init-param>
