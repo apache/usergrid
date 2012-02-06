@@ -142,6 +142,11 @@ public class ApplicationResource extends ServiceResource {
 		return new UsersResource(this);
 	}
 
+	@Path("user")
+	public UsersResource getUsers2(@Context UriInfo ui) throws Exception {
+		return getUsers(ui);
+	}
+
 	private static String wrapWithCallback(AccessInfo accessInfo,
 			String callback) {
 		return wrapWithCallback(mapToJsonString(accessInfo), callback);
