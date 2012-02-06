@@ -4,12 +4,12 @@
 	<title>Usergrid Console</title>
 	 <link rel="stylesheet" type="text/css" href="css/reset.css"/>
 	<!--
+ -->
 	 <link rel="stylesheet" type="text/css" href="css/custom-theme/jquery-ui-1.8.9.custom.css"/>
 	 <link rel="stylesheet" type="text/css" href="css/jquery-ui-timepicker.css"/>
 	 <link rel="stylesheet" type="text/css" href="css/jquery.ui.statusbar.css"/>
 	<link rel="stylesheet" type="text/css" href="css/jquery.ui-jalert.css"/>
 	<link rel="stylesheet" type="text/css" href="css/jquery.ui.selectmenu.css"/>
- -->
 	<link rel="stylesheet/less" type="text/css" href="css/usergrid.less"/>
 	<script src="js/json2.js" type="text/javascript"></script>
 	<script src="js/jsonlint.js" type="text/javascript"></script>
@@ -53,16 +53,13 @@
 			<li><a id="forgot-password-link" href="#"><i class="icon-lock"></i> Forgot Password</a></li>
 		</ul>
 		<ul id="consoleMenu" class="nav secondary-nav">
-			<li><a id="console-link" href="#"><i class="icon-home"></i> Console</a></li>
-			<li><a id="account-link" href="#"><i class="icon-user"></i> test@usergrid.com</a></li>
-			<li class="dropdown">
-				<a class="dropdown-toggle" href="#"><i class="icon-book"></i> test-organization</a>
+			<li id="organizations-menu" class="dropdown">
+				<a id="console-link" class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="icon-home"></i> <span> Organizations</span> <b class="caret"></b></a>
 				<ul class="dropdown-menu">
-					<li><a href="#">organization1</a></li>
-					<li><a href="#">organization2</a></li>
-					<li><a href="#">organization3</a></li>
+					<li><a href="#">loading...</a></li>
 				</ul>
 			</li>
+			<li><a id="account-link" href="#"><i class="icon-user"></i> test@usergrid.com</a></li>
 			<li><a id="logout-link" href="#"><i class="icon-off"></i> Sign Out</a></li>
 		</ul>
 	</div>
@@ -263,9 +260,8 @@
 						</div>
 					</fieldset>
 					<div class="form-actions">
-						<input type="button" name="button-update-account" id="button-update-account" value="Update" class="btn btn-primary"/>
-
-						<div class="alert">Passwords dosnt match</div>
+						<input type="button" name="button-update-account" id="button-update-account" value="Update" class="btn btn-primary span"/>
+						<span class="alert">New passwords don't match</span>
 					</div>
 				</form>
 			</div>
@@ -302,10 +298,18 @@
 	<ul id="system-panel-buttons" class="nav nav-list">
 		<li id="system-panel-button-home"><a href="#organization"><i class="icon-home"></i> Home</a></li>
 
+		<li class="dropdown">
+			<a class="dropdown-toggle" href="#"><i class="icon-book"></i> test-organization</a>
+			<ul class="dropdown-menu">
+				<li><a href="#">organization1</a></li>
+				<li><a href="#">organization2</a></li>
+				<li><a href="#">organization3</a></li>
+			</ul>
+		</li>
+
 		<li class="nav-header"><i class="icon-th-list"></i> Applications</li>
 		<form id="applicationSelectForm" action="#">
 			<fieldset>
-
 				<select name="applicationSelect" id="applicationSelect">
 					<option value="my-application" selected="selected">my-application</option>
 				</select>

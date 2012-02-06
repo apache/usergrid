@@ -16,7 +16,7 @@ var Pages = function(){
 		page.box.show();
 
 		$(".navbar li.active").removeClass('active');
-		$(".navbar ul").hide();
+		$(".navbar .navbar-inner > ul").hide();
 		page.link.parent().addClass('active').parent().show();
 		if(page.showFunction)
 			page.showFunction();

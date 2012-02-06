@@ -117,7 +117,7 @@ function usergrid_console_app() {
 
     function setNavApplicationText() {
         $('select#applicationSelect').selectmenu("value", current_application_id);
-        $('#application-panel .console-section-title').first().text("Application Dashboard - " + current_application_name);
+	    $('#application-panel h3').text("Application Dashboard - " + current_application_name);
     }
 
     function getAlphabetLinks(funcname) {
@@ -886,7 +886,8 @@ function usergrid_console_app() {
         pageSelect(uuid);
         requestApplicationCredentials();
         requestApplicationUsage();
-        showPanel("#application-panel");
+        //showPanel("#application-panel");
+	      Pages.SelectPanel('application');
     }
     window.usergrid.console.pageSelectApplication = pageSelectApplication;
 
@@ -1043,7 +1044,8 @@ function usergrid_console_app() {
     var sortBy = "username";
     function pageSelectUsers(uuid) {
         pageSelect(uuid);
-        showPanel("#users-panel");
+        //showPanel("#users-panel");
+	      Pages.SelectPanel('users');
         requestUsers();
         selectTabButton("#users-panel-tab-bar", $("#button-users-list"));
         //pageOpenQueryExplorer("/users");
@@ -1179,7 +1181,8 @@ function usergrid_console_app() {
      ******************************************************************/
 
     function pageOpenUserProfile(userId) {
-        showPanel("#user-panel");
+        //showPanel("#user-panel");
+	      Pages.SelectPanel('user');
         requestUser(userId);
         selectTabButton("#user-panel-tab-bar", $("#button-user-profile"));
         showPanelContent("#user-panel", "#user-panel-profile");
@@ -1322,6 +1325,7 @@ function usergrid_console_app() {
     function pageSelectGroups(uuid) {
         pageSelect(uuid);
         //showPanel("#groups-panel");
+	      Pages.SelectPanel('groups');
         pageOpenQueryExplorer("/groups");
     }
     window.usergrid.console.pageSelectGroups = pageSelectGroups;
@@ -1334,7 +1338,8 @@ function usergrid_console_app() {
 
     function pageSelectRoles(uuid) {
         pageSelect(uuid);
-        showPanel("#roles-panel");
+        //showPanel("#roles-panel");
+	      Pages.SelectPanel('roles');
         requestRoles();
     }
     window.usergrid.console.pageSelectRoles = pageSelectRoles;
@@ -1390,7 +1395,8 @@ function usergrid_console_app() {
 
     function pageSelectActivities(uuid) {
         pageSelect(uuid);
-        showPanel("#activities-panel");
+        //showPanel("#activities-panel");
+	      Pages.SelectPanel('activities');
         requestActivities();
         //pageOpenQueryExplorer("/activities");
     }
@@ -1443,7 +1449,8 @@ function usergrid_console_app() {
     function pageSelectAnalytics(uuid) {
         pageSelect(uuid);
         requestApplicationCounterNames();
-        showPanel("#analytics-panel");
+        //showPanel("#analytics-panel");
+	      Pages.SelectPanel('analytics');
     }
     window.usergrid.console.pageSelectAnalytics = pageSelectAnalytics;
 
@@ -1579,7 +1586,8 @@ function usergrid_console_app() {
     function pageSelectSettings(uuid) {
         pageSelect(uuid);
         requestApplicationCredentials(); 
-        showPanel("#settings-panel");
+        //showPanel("#settings-panel");
+	   Pages.SelectPanel('settings');
     }
     window.usergrid.console.pageSelectSettings = pageSelectSettings;
 
@@ -1623,7 +1631,8 @@ function usergrid_console_app() {
     function pageSelectShell(uuid) {
         pageSelect(uuid);
         requestApplicationCredentials();
-        showPanel("#shell-panel");
+        //showPanel("#shell-panel");
+	    Pages.SelectPanel('shell');
         $("#shell-input").focus();
     }
     window.usergrid.console.pageSelectShell = pageSelectShell;
@@ -1759,7 +1768,8 @@ function usergrid_console_app() {
 
     function pageSelectCollections(uuid) {
         pageSelect(uuid);
-        showPanel("#collections-panel");
+        //showPanel("#collections-panel");
+	    Pages.SelectPanel('collections');
     }
     window.usergrid.console.pageSelectCollections = pageSelectCollections;
 
@@ -1897,6 +1907,25 @@ function usergrid_console_app() {
         }
         $("select#organizationSelect").html(m);
         $('select#organizationSelect').selectmenu();
+
+	      var m2 = "";
+        for (var name in organizations) {
+            var id = organizations[name].uuid;
+            var selected = (((id == client.currentOrganization) || (name == client.currentOrganization)) ? " selected=\"selected\"": "");
+	          m2 += "<li><a href='#" + id + "'>" + name + "</a></li>";
+        }
+	      $("#organizations-menu ul").html(m2);
+	    $("#organizations-menu ul a").click(function(e){
+				    if (client) {
+					    var link = $(this);
+				        client.currentOrganization = link.attr("href").substring(1);
+				        showConsole();
+					      Pages.SelectPanel('organization');
+					      $("#organizations-menu > a span").text(link.text());
+				    }
+			    }
+	    );
+
     }
 
     function showConsole() {
@@ -1916,7 +1945,8 @@ function usergrid_console_app() {
         var password = $("#login-password").val();
         if (email == "skip") {
             showConsole();
-            showPanel("#organization-panel");
+            //showPanel("#organization-panel");
+	        Pages.SelectPanel('organization');
             return;
         }
         client.loginAdmin(email, password,
@@ -2250,13 +2280,14 @@ function usergrid_console_app() {
     }
 
     //$("#system-panel-buttons").selectable();
+	/*
     $("#system-panel-buttons").selectable({
         selected: function(event, ui) {
             $('#application-panel-buttons .ui-selected').removeClass('ui-selected');
             pageSelectHome();
         }
     });
-
+*/
     //$('select#applicationSelect').selectmenu();
     $('select#applicationSelect').selectmenu({
         change: function(e, object) {
