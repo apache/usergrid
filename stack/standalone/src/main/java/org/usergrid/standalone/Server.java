@@ -201,9 +201,14 @@ public class Server implements ApplicationContextAware {
 		JspFactoryImpl factory = new JspFactoryImpl();
 		JspFactory.setDefaultFactory(factory);
 
-		mapServlet(
-				"jsp.WEB_002dINF.jsp.org.usergrid.rest.SwaggerResource.resources_json_jsp",
-				"/WEB-INF/jsp/org/usergrid/rest/SwaggerResource/resources.json.jsp");
+		mapServlet("org.usergrid.rest.SwaggerServlet", "/resources.json");
+
+		mapServlet("org.usergrid.rest.SwaggerServlet", "/management.json");
+
+		mapServlet("org.usergrid.rest.SwaggerServlet", "/applications.json");
+
+		mapServlet("jsp.WEB_002dINF.jsp.swagger.resources_json_jsp",
+				"/WEB-INF/jsp/swagger/resources.json.jsp");
 
 		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.test_jsp",
@@ -273,17 +278,15 @@ public class Server implements ApplicationContextAware {
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.ApplicationResource.authorize_005fform_jsp",
 				"/WEB-INF/jsp/org/usergrid/rest/applications/ApplicationResource/authorize_form.jsp");
 
-		mapServlet(
-				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.SwaggerApplicationsResource.applications_json_jsp",
-				"/WEB-INF/jsp/org/usergrid/rest/applications/SwaggerApplicationsResource/applications.json.jsp");
+		mapServlet("jsp.WEB_002dINF.jsp.swagger.applications_json_jsp",
+				"/WEB-INF/jsp/swagger/applications.json.jsp");
 
 		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.ManagementResource.authorize_005fform_jsp",
 				"/WEB-INF/jsp/org/usergrid/rest/management/ManagementResource/authorize_form.jsp");
 
-		mapServlet(
-				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.SwaggerManagementResource.management_json_jsp",
-				"/WEB-INF/jsp/org/usergrid/rest/management/SwaggerManagementResource/management.json.jsp");
+		mapServlet("jsp.WEB_002dINF.jsp.swagger.management_json_jsp",
+				"/WEB-INF/jsp/swagger/management.json.jsp");
 	}
 
 	private void mapServlet(String cls, String mapping) {
