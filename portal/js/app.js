@@ -12,7 +12,7 @@ $(document).ready(function() {
 		$('.navbar .dropdown-toggle').dropdown();
 		$('#sidebar-menu .dropdown-toggle').dropdown();
 
-		//Pages.AddPage(name,link,box,init,extra);
+		//Pages.AddPage(name,link,box,init,show);
 		Pages.AddPage('login',null,null,null,null);
 		Pages.ShowPage('login');
 
@@ -20,7 +20,7 @@ $(document).ready(function() {
 		Pages.AddPage('forgot-password',null,null,null,null);
 
 		//Pages.AddPage('navlist',null,null,null,null);
-		Pages.AddPage('console',null,null,InitNavigation,null);
+		Pages.AddPage('console',null,null,InitConsole,null);
 		Pages.AddPage('account',null,null,null,usergrid.console.requestAccountSettings);
 
 		usergrid_console_app();
@@ -28,7 +28,20 @@ $(document).ready(function() {
 		$("#logout-link").click(usergrid.console.logout);
 	}
 
-	function InitNavigation (){
-		$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
+	function InitConsole (){
+		//Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
+		Pages.AddPanel('organization',null,null,null,null);
+		Pages.AddPanel('application',null,null,null,usergrid.console.pageSelectApplication);
+		Pages.AddPanel('user',null,null,null,null);
+		Pages.AddPanel('users',null,null,null,usergrid.console.pageSelectUsers);
+		Pages.AddPanel('groups',null,null,null,usergrid.console.pageSelectGroups);
+		Pages.AddPanel('roles',null,null,null,usergrid.console.pageSelectRoles);
+		Pages.AddPanel('activities',null,null,null,usergrid.console.pageSelectActivities);
+		Pages.AddPanel('collections',null,null,null,usergrid.console.pageSelectCollections);
+		Pages.AddPanel('analytics',null,null,null,usergrid.console.pageSelectAnalytics);
+		Pages.AddPanel('settings',null,null,null,usergrid.console.pageSelectSettings);
+		Pages.AddPanel('shell',null,null,null,usergrid.console.pageSelectShell);
+
+		//$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
 	}
 });

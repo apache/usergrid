@@ -6,7 +6,8 @@
 
 var Pages = function(){
 	var self = {
-		pages: {}
+		pages: {},
+		panels: {}
 	}
 	var client = new usergrid.Client();
 
@@ -47,27 +48,45 @@ var Pages = function(){
 		self.pages[page.name] = page;
 	}
 
-	self.ShowPanel = function (){
-		var link = $(this);
-		var box = $("#" + link.attr("href").substring(1) + "-panel");
+	self.AddPanel = function(panelName, linkSelector,boxSelector,initFunction,showFunction)	{
+		if(!linkSelector)
+			linkSelector = "#sidebar-menu a[href='#" + panelName + "']";
 
-		ShowPanel(link,box);
-		return false;
-	};
-	self.SelectPanel = function (panel){
-		var link = $("a[href='#" + panel + "']");
-		var box = $("#" + panel + "-panel");
+		if(!boxSelector)
+			boxSelector = "#" + panelName + '-panel';
 
-		ShowPanel(link,box);
-		return false;
-	};
+		var panel = {
+			name: panelName,
+			link: $(linkSelector),
+			box:$(boxSelector),
+			initFunction:initFunction,
+			showFunction:showFunction
+		}
 
-	function ShowPanel(link, box){
+		panel.link.click(function(e) {
+			e.preventDefault();
+			self.SelectPanel(panel.name);
+		});
+
+		self.panels[panel.name] = panel;
+	}
+
+	self.SelectPanel = function (panelName){
+		console.log(panelName);
+		var panel = self.panels[panelName];
+		console.log(panel);
+		
 		$("#sidebar-menu li.active").removeClass('active');
-		link.parent().addClass('active');
+		panel.link.parent().addClass('active');
 
+		if(panel.showFunction){
+			console.log(panel.showFunction);
+			panel.showFunction();
+		}
+		
 		$("#console-panels > div").hide();
-		box.show();
+		panel.box.show();
+
 	}
 
 	function LoadPage(page){

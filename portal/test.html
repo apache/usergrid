@@ -403,7 +403,7 @@
 		<div class="boxContent">
 			<div id="application-panel-table" class="row">
 				<div id="application-panel-entity-graph" class="span5"></div>
-				<div id="application-panel-text" class="span">...</div>
+				<div id="application-panel-text" class="span2">...</div>
 			</div>
 			<div class="row">
 				<div id="application-entities-timeline" class="span4"></div>
@@ -426,23 +426,22 @@
 			<div class="console-section-header ui-widget-header">
 				<span class="console-section-title">Users</span> <span class="console-section-header-right"><a href="#" onclick="usergrid.console.newUser(); return false;">New User</a> </span>
 			</div>
-			<div class="console-section-contents ui-widget-content">
-				<table id="users-response-area">
-					<tr>
-						<td id="users-response-area-contents">
+			<div class="console-section-contents">
+				<div id="users-response-area">
+					<div id="users-response-area-contents" class="span9">
 							<div id="users-response-table">
 								<pre class="query-response-json">{ }</pre>
 							</div>
-							<div id="users-next-prev">
+							<div id="users-next-prev" >
 								<button class="button" id="button-users-prev">Previous</button>
 								<button class="button" id="button-users-next">Next</button>
 							</div>
-						</td>
-						<td id="users-by-alphabetical-cell">
-							<div id="users-by-alphabetical"></div>
-						</td>
-					</tr>
-				</table>
+					</div>
+					<div id="users-by-alphabetical-cell" class="span1">
+						<div id="users-by-alphabetical"></div>
+					</div>
+					<div class="clear"></div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -465,13 +464,13 @@
 </div>
 <div id="user-panel" style="display: none">
 	<div id="user-panel-tab-bar" class="console-tab-bar ui-widget-header">
-		<button class="button" id="button-user-list">List</button>
-		<button class="button" id="button-user-search">Search</button>
-		<button class="button tab-bar-selection" id="button-user-profile">Profile</button>
-		<button class="button" id="button-user-memberships">Memberships</button>
-		<button class="button" id="button-user-activities">Activities</button>
-		<button class="button" id="button-user-graph">Graph</button>
-		<button class="button" id="button-user-permissions">Permissions</button>
+		<button class="btn" id="button-user-list">List</button>
+		<button class="btn" id="button-user-search">Search</button>
+		<button class="btn tab-bar-selection" id="button-user-profile">Profile</button>
+		<button class="btn" id="button-user-memberships">Memberships</button>
+		<button class="btn" id="button-user-activities">Activities</button>
+		<button class="btn" id="button-user-graph">Graph</button>
+		<button class="btn" id="button-user-permissions">Permissions</button>
 	</div>
 	<div id="user-panel-profile" class="panel-content"></div>
 	<div id="user-panel-memberships" class="panel-content" style="display: none;"></div>
