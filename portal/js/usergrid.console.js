@@ -1399,7 +1399,6 @@ $(document).ready(function usergrid_console_app() {
         return false;
     }
 
-    //rod@apigee - create new group dialog
     var new_group_title = $("#new-group-title");
     var new_group_path = $("#new-group-path");
     var allNewGroupFields = $([]).add(new_group_title).add(new_group_path);
@@ -1420,7 +1419,7 @@ $(document).ready(function usergrid_console_app() {
                 "Title only allows : a-z, 0-9, dot, and dash")
                 && checkRegexp(new_group_path, nameRegex,
                 "Title only allows : a-z, 0-9, dot, and dash");
-                if (bValid) {  //rod@apigee create group                  
+                if (bValid) {                 
                     createGroup(new_group_path.val(), new_group_title.val());
                     $(this).dialog("close");
                 }
