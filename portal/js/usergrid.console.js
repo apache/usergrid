@@ -1808,7 +1808,7 @@ $(document).ready(function usergrid_console_app() {
         $("#analytics-counter-names").html("Loading...");
         client.requestApplicationCounterNames(current_application_id, function(response) {
             application_counters_names = response.data;
-            var html = usergrid.console.ui.makeTableFromList(application_counters_names, 4, {
+            var html = usergrid.console.ui.makeTableFromList(application_counters_names, 3, {
                 tableId : "analytics-counter-names-table",
                 getListItem : function(i, col, row) {
                     var counter_name = application_counters_names[i];
