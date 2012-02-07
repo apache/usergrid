@@ -555,6 +555,32 @@ usergrid.Client = function(options) {
     this.requestAdmins = requestAdmins;
 
     //
+    // Create new organization for admin user
+    //
+    // POST: /management/users/<user-id>/organizations
+    //
+    function createOrganization(organizationName, success, failure) {
+        if (!self.loggedInUser) {
+            failure();
+        }
+        apiRequest("POST", "/management/users/" + self.loggedInUser.uuid + "/organizations", null, JSON.stringify({"organization" : organizationName}), success, failure);
+    }
+    this.createOrganization = createOrganization;
+    
+    
+    
+    
+    //
+    // Get admin users for organization
+    //
+    // GET: /management/organizations
+    //
+    function requestOrganizations(success, failure) {        
+        apiGetRequest("/management/users/" + self.loggedInUser.uuid + "/organizations", null, success, failure);
+    }
+    this.requestOrganizations = requestOrganizations;
+    
+    //
     // Get access keys for organization
     //
     // GET: /management/organizations/<organization-name>/keys

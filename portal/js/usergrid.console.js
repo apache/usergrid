@@ -2531,8 +2531,66 @@ $(document).ready(function usergrid_console_app() {
     }
     window.usergrid.console.newOrganization = newOrganization;
 
-    function createOrganization(organizationName) {
-        
+    function displayOrganizations(response) {       
+        var t = "";
+        var m = "";
+        organizations = {};
+        orgainzations_by_id = {};
+        if (response.data) {
+            organizations = response.data;
+            var count = 0;
+            var organizationNames = keys(organizations).sort();
+            for (var i in organizationNames) {
+                var organization = organizationNames[i];
+                var uuid = organizations[organization];
+                t += "<div class=\"organization-row\" id=\"organization-row-"
+                + uuid
+                + "\"><a href=\"#\" onclick=\"usergrid.console.pageSelectOrganization('"
+                + uuid
+                + "'); return false;\"><span class=\"organization-row-name\">"
+                + organization
+                + "</span> <span class=\"organization-row-uuid\">("
+                + uuid + ")</span>" + "</a></div>";
+                count++;
+                orgainzations_by_id[uuid] = organization;
+                /*
+                if ($.isEmptyObject(current_organization_id)) {
+                    current_organization_id = uuid;
+                    current_organization_name = organization;
+                }
+                m += "<option value=\"" + uuid + "\"" + ((uuid == current_organization_id) ? " selected=\"selected\"": "") + ">" + organization + "</option>";
+                */
+            }
+            if (count) {
+                $("#organizations").html(t);                
+            }
+            else {
+                $("#organizations").html(
+                "<h2>No organizations created.</h2>"); 
+            }
+        } else {
+            $("#organizations").html(
+            "<h2>No organizations created.</h2>");
+            
+        }
+       
+    }
+       
+    function requestOrganizations() {        
+        $("#organizations").html(
+        "<h2>Loading...</h2>");    
+        client.requestOrganizations(displayOrganizations,
+        function() {            
+            $("#organizations").html("<h2>Unable to retrieve organizations list.</h2>");
+        });
+       
+    }
+         
+    function createOrganization(name) {
+        client.createOrganization(name,requestOrganizations,
+        function() {
+            alert("Unable to create orgnization " + name);
+        });
     }
     window.usergrid.console.createOrganization = createOrganization;
 
