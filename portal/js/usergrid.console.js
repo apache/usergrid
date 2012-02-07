@@ -1399,11 +1399,10 @@ $(document).ready(function usergrid_console_app() {
         return false;
     }
 
+    //rod@apigee - create new group dialog
+    var new_group_title = $("#new-group-title");
     var new_group_path = $("#new-group-path");
-    var new_group_fullname = $("#new-group-fullname");
-    var new_group_email = $("#new-group-email");
-    var new_group_password = $("#new-group-password");
-    var allNewGroupFields = $([]).add(new_group_path).add(new_group_fullname).add(new_group_email).add(new_group_password);
+    var allNewGroupFields = $([]).add(new_group_title).add(new_group_path);
 
     $("#dialog-form-new-group")
     .dialog(
@@ -1415,24 +1414,14 @@ $(document).ready(function usergrid_console_app() {
         buttons: {
             "Create": function() {
                 allNewGroupFields.removeClass("ui-state-error");
-
-                var bValid = checkLength(new_group_email, "email", 6, 80)
-                && checkLength(new_group_password, "password", 5, 16)
-                && checkRegexp(
-                new_group_path,
-                nameRegex,
-                "Groupname only allows : a-z, 0-9, dot, and dash")
-                && checkRegexp(
-                new_group_email,
-                emailRegex,
-                "eg. ui@jquery.com")
-                && checkRegexp(new_group_password,
-                passwordRegex,
-                "Password field only allows : a-z, 0-9, @, #, $, %, ^, &");
-
-                if (bValid) {
-                    createGroup(new_group_path.val(), new_group_fullname.val(),
-                        new_group_email.val(), new_group_password.val());
+                var bValid = checkLength(new_group_title, "title", 1, 80)
+                && checkLength(new_group_path, "path",1, 80)                
+                && checkRegexp(new_group_title, nameRegex,
+                "Title only allows : a-z, 0-9, dot, and dash")
+                && checkRegexp(new_group_path, nameRegex,
+                "Title only allows : a-z, 0-9, dot, and dash");
+                if (bValid) {  //rod@apigee create group                  
+                    createGroup(new_group_path.val(), new_group_title.val());
                     $(this).dialog("close");
                 }
             },
@@ -1444,9 +1433,9 @@ $(document).ready(function usergrid_console_app() {
             allNewGroupFields.val("").removeClass("ui-state-error");
         }
     });
-
-    function createGroup(path, fullname, email, password) {
-        client.createGroup(current_application_id, path, fullname, email, password, requestGroups,
+    
+    function createGroup(path, title) {
+        client.createGroup(current_application_id, path, title, requestGroups,
         function() {
             alert("Unable to create group " + email);
         });

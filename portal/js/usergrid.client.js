@@ -1061,6 +1061,20 @@ usergrid.Client = function(options) {
     }
     this.requestGroupRoles = requestGroupRoles;
 
+
+    //
+    // Create new group    //
+    // POST: /<application-id/users
+    //
+    function createGroup(applicationId, path, title, success, failure) {
+        apiRequest("POST", "/" + applicationId + "/groups", null, JSON.stringify({
+            path: path,
+            title: title
+        }), success, failure);
+    }
+    this.createGroup = createGroup;
+
+
     /**
         Creates a new Query.
         @class Represents a Query. 
