@@ -1933,7 +1933,8 @@ $(document).ready(function usergrid_console_app() {
 
     function pageSelectSettings(uuid) {
         pageSelect(uuid);
-        requestApplicationCredentials(); 
+        requestApplicationCredentials();
+        requestOrganizations();
         showPanel("#settings-panel");
     }
     window.usergrid.console.pageSelectSettings = pageSelectSettings;
