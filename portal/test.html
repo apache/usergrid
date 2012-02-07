@@ -417,9 +417,19 @@
 	</div>
 </div>
 <div id="users-panel" style="display: none">
-	<div id="users-panel-tab-bar" class="console-tab-bar ui-widget-header">
-		<button class="button tab-bar-selection" id="button-users-list">List</button>
-		<button class="button" id="button-users-search">Search</button>
+	<div id="users-panel-tab-bar" class="">
+		<ul class="nav nav-pills">
+		<li  class="active"><a id="button-users-list" href="#">List</a></li>
+		<li><a id="button-users-search" href="#">Search</a></li>
+		<li class="dropdown">
+		<a class="dropdown-toggle" data-toggle="dropdown" href="#">
+			Filter <b class="caret"></b>
+		</a>
+		<ul id="users-by-alphabetical" class="dropdown-menu">
+			<li><a href="#">{0}</a></li>
+		</ul>
+		</li>
+	</ul>
 	</div>
 	<div class="panel-content">
 		<div class="console-section">
@@ -428,7 +438,6 @@
 			</div>
 			<div class="console-section-contents">
 				<div id="users-response-area">
-					<div id="users-response-area-contents" class="span9">
 							<div id="users-response-table">
 								<pre class="query-response-json">{ }</pre>
 							</div>
@@ -436,11 +445,6 @@
 								<button class="button" id="button-users-prev">Previous</button>
 								<button class="button" id="button-users-next">Next</button>
 							</div>
-					</div>
-					<div id="users-by-alphabetical-cell" class="span1">
-						<div id="users-by-alphabetical"></div>
-					</div>
-					<div class="clear"></div>
 				</div>
 			</div>
 		</div>
@@ -463,15 +467,15 @@
 	</div>
 </div>
 <div id="user-panel" style="display: none">
-	<div id="user-panel-tab-bar" class="console-tab-bar ui-widget-header">
-		<button class="btn" id="button-user-list">List</button>
-		<button class="btn" id="button-user-search">Search</button>
-		<button class="btn tab-bar-selection" id="button-user-profile">Profile</button>
-		<button class="btn" id="button-user-memberships">Memberships</button>
-		<button class="btn" id="button-user-activities">Activities</button>
-		<button class="btn" id="button-user-graph">Graph</button>
-		<button class="btn" id="button-user-permissions">Permissions</button>
-	</div>
+	<ul id="user-panel-tab-bar" class="nav nav-pills">
+		<li><a id="button-user-list" href="#">List</a></li>
+		<li><a id="button-user-search" href="#">Search</a></li>
+		<li><a id="button-user-profile" href="#">Profile</a></li>
+		<li><a id="button-user-memberships" href="#">Memberships</a></li>
+		<li><a id="button-user-activities" href="#">Activities</a></li>
+		<li><a id="button-user-graph" href="#">Graph</a></li>
+		<li><a id="button-user-permissions" href="#">Permissions</a></li>
+	</ul>
 	<div id="user-panel-profile" class="panel-content"></div>
 	<div id="user-panel-memberships" class="panel-content" style="display: none;"></div>
 	<div id="user-panel-activities" class="panel-content" style="display: none;"></div>

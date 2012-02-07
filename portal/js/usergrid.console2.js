@@ -103,16 +103,9 @@ function usergrid_console_app() {
         });
     }
 
-    function selectTabButton(bar, button) {
-        $(bar).children().each(function() {
-            if ($(this).is('button')) {
-                if ($(this).attr("id") == button.attr("id")) {
-                    $(this).addClass("tab-bar-selection");
-                } else {
-                    $(this).removeClass("tab-bar-selection");
-                }
-            }
-        });
+    function selectTabButton(bar, link) {
+	    $(bar).find("li.active").removeClass('active');
+	    link.parent().addClass('active');
     }
 
     function setNavApplicationText() {
@@ -122,17 +115,16 @@ function usergrid_console_app() {
 	    
     }
 
-    function getAlphabetLinks(funcname) {
-        var i = 0;
-        var s = "<a onclick=\"javascript:" + funcname + "('*');\">*</a><br />";
-        for (i = 1; i <= 26; i++) {
-            s += "<a onclick=\"javascript:" + funcname +
-            "('" + String.fromCharCode(64 + i) + "');\">" +
-            String.fromCharCode(64 + i) + "</a><br />";
+			function createAlphabetLinks(containerSelector) {
+				var li = $(containerSelector).html();
+				var s = li.replace('{0}','*');
+        for (var i = 1; i <= 26; i++) {
+	        var char =  String.fromCharCode(64 + i);
+	        s+= li.replace('{0}',char);
         }
-        return s;
+        $(containerSelector).html(s);
+				$(containerSelector + " a").click(usergrid.console.showUsersForLetter);
      }
-
     /*******************************************************************
      * 
      * Query Explorer
@@ -1060,7 +1052,7 @@ function usergrid_console_app() {
         requestUsers();
         selectTabButton("#users-panel-tab-bar", $("#button-users-list"));
         //pageOpenQueryExplorer("/users");
-        $("#users-by-alphabetical").show();
+        //$("#users-by-alphabetical").show();
     }
     window.usergrid.console.pageSelectUsers = pageSelectUsers;
 
@@ -1091,7 +1083,7 @@ function usergrid_console_app() {
                 };
             },
             "onRender" : function() {
-                $("#users-by-alphabetical").show();
+                //$("#users-by-alphabetical").show();
             },
             "onNoEntities" : function() {
                 if (userLetter != "*") return "No users with usernames starting with " +  userLetter;
@@ -1106,8 +1098,8 @@ function usergrid_console_app() {
     }
 
     function showUsersForLetter(c) {
-        userLetter = c;
-        requestUsers();
+			userLetter = $(this).text();
+			requestUsers();
     }
     usergrid.console.showUsersForLetter = showUsersForLetter;
 
@@ -1195,7 +1187,7 @@ function usergrid_console_app() {
         //showPanel("#user-panel");
 	      Pages.SelectPanel('user');
         requestUser(userId);
-        //selectTabButton("#user-panel-tab-bar", $("#button-user-profile"));
+        selectTabButton("#user-panel-tab-bar", $("#button-user-profile"));
         //showPanelContent("#user-panel", "#user-panel-profile");
     }
     window.usergrid.console.pageOpenUserProfile = pageOpenUserProfile;
@@ -2229,7 +2221,7 @@ function usergrid_console_app() {
         return false;
     });
 
-    $("#user-panel-tab-bar button").click(function() {
+    $("#user-panel-tab-bar a").click(function() {
         selectTabButton("#user-panel-tab-bar", $(this));
         if ($(this).attr("id") == "button-user-list") {
 	        Pages.SelectPanel('users');
@@ -2245,7 +2237,7 @@ function usergrid_console_app() {
         return false;
     });
 
-    $("#users-by-alphabetical").html(getAlphabetLinks("usergrid.console.showUsersForLetter"));
+		createAlphabetLinks("#users-by-alphabetical");
 
     $("button, input:submit, input:button").button();
 
@@ -2327,7 +2319,6 @@ function usergrid_console_app() {
         'shell': pageSelectShell
     };
 
-	alert("3");
 	Pages.panels.application.showFunction = pageSelectApplication;
 	Pages.panels.users.showFunction = pageSelectUsers;
 	Pages.panels.groups.showFunction = pageSelectGroups;

@@ -132,7 +132,7 @@ footer{
 #forgot-password-page{
 	iframe{
 		width:100%;
-		height: 620px;
+		height: 700px;
 		border:0;
 	}
 }
@@ -199,12 +199,12 @@ footer{
 }
 
 .console-section{
+	.box;
 	.console-section-header{
 		margin:0;
 		color: #fff;
 		font-size: 12pt;
 		padding: 10px;
-		margin-bottom: 20px;
 		font-weight: normal;
 		line-height:18px;
 		.border-radius(5px 5px 0px 0px);
@@ -256,10 +256,6 @@ footer{
 }
 //-------------------------------------------------------------------------------------
 
-.console-section{
-	.box;
-}
-
 .form-horizontal .controls{
 	span{
 		margin-top:5px;
@@ -296,10 +292,6 @@ footer{
 			border-top:1px solid #ccc;
 		}
   }
-}
-
-#users-panel-tab-bar{
-	display:none;
 }
 
 /*-----------------------------------------------------------*/
@@ -423,24 +415,17 @@ footer{
  *
  *******************************************************************/
 
-#users-by-alphabetical-cell {
-	text-align: center;
-	vertical-align: top;
-}
-
 #users-by-alphabetical {
-	text-align: center;
-	width: 32px;
-	margin-left: 16px;
-	border-radius: 14px;
-	padding: 8px 4px 8px 4px;
-	background-color: #333;
-	color: white !important;
-}
-
-#users-by-alphabetical * {
-	color: white !important;
-	line-height: 20px;
+  padding: 5px;
+	li {
+		display:inline-block;
+		width:35px;
+		text-align: center;
+		a{
+			line-height: 20px;
+			padding: 5px;
+		}
+	}
 }
 
 #users-next-prev {
@@ -451,12 +436,8 @@ footer{
 .user-profile-header {
 	font-family: sans-serif;
 	font-weight: bold;
-	border: 1px solid #AED0EA;
+	//border: 1px solid #AED0EA;
 	background-color: #DEEDF7;
-	border-top-left-radius: 8px;
-	border-top-right-radius: 8px;
-	border-bottom-left-radius: 0px;
-	border-bottom-right-radius: 0px;
 }
 
 .user-profile-picture {
@@ -464,10 +445,6 @@ footer{
 	width: 50px;
 	height: 50px;
 	border-right: 1px solid #AED0EA;
-	border-top-left-radius: 8px;
-	border-top-right-radius: 0px;
-	border-bottom-left-radius: 0px;
-	border-bottom-right-radius: 0px;
 }
 
 .user-profile-picture-vert-offset {
@@ -525,4 +502,19 @@ footer{
 
 #button-users-next {
 	float: right;
+}
+
+/*----------------------------------------------*/
+.ui-widget-content{
+	background:white;
+	border: 1px solid #CCCCCC;
+}
+.ui-widget-header{
+	background:@gray;
+	color:white;
+}
+.ui-dialog-buttonpane{
+	background-color: #F5F5F5;
+	border-top: 1px solid #DDDDDD;
+	margin-top: 18px;
 }

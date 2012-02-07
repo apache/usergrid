@@ -32,7 +32,7 @@ $(document).ready(function() {
 		//Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
 		Pages.AddPanel('organization',null,null,null,null);
 		Pages.AddPanel('application',null,null,null,usergrid.console.pageSelectApplication);
-		Pages.AddPanel('user',null,null,null,null);
+		Pages.AddPanel('user',"#sidebar-menu a[href='#users']",null,null,null);
 		Pages.AddPanel('users',null,null,null,usergrid.console.pageSelectUsers);
 		Pages.AddPanel('groups',null,null,null,usergrid.console.pageSelectGroups);
 		Pages.AddPanel('roles',null,null,null,usergrid.console.pageSelectRoles);
