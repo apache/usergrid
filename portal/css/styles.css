@@ -192,6 +192,7 @@ a:active {
 	font-size: 18px;
 	font-weight: bold;
 	height: 18px;
+	cursor: pointer;
 }
 
 .console-tab-bar {
@@ -1060,6 +1061,7 @@ a:active {
 	margin-top: 4px;
 	margin-right: 24px;
 	font-size: 18px;
+	cursor: pointer;
 }
 
 #return-to-console {
@@ -1313,6 +1315,7 @@ a:active {
 #groups-by-alphabetical * {
 	color: white !important;
 	line-height: 20px;
+	cursor: pointer;
 }
 
 #groups-next-prev {
