@@ -2611,7 +2611,8 @@ $(document).ready(function usergrid_console_app() {
     $('select#organizationSelect').selectmenu({
         change: function(e, object) {
             if (client) {
-                client.currentOrganization = object.value;
+                client.currentOrganization = object.value;                
+                pageSelectHome();
                 showConsole();
             }
         }
