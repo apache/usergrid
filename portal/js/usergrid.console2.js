@@ -1463,14 +1463,13 @@ function usergrid_console_app() {
         $("#analytics-counter-names").html("Loading...");
         client.requestApplicationCounterNames(current_application_id, function(response) {
             application_counters_names = response.data;
-            var html = usergrid.console.ui.makeTableFromList(application_counters_names, 4, {
+            var html = usergrid.console.ui.makeTableFromList(application_counters_names, 1, {
                 tableId : "analytics-counter-names-table",
                 getListItem : function(i, col, row) {
                     var counter_name = application_counters_names[i];
                     var checked = !counter_name.startsWith("application.");
-                    return "<div class=\"analytics-counter\"><input class=\"analytics-counter-checkbox\" type=\"checkbox\" name=\"counter\" value=\"" + 
-                        counter_name + "\"" + 
-                        (checked ? " checked=\"true\"" : "") + " />" + counter_name + "</div>";
+                    return "<div class='analytics-counter'><input class='analytics-counter-checkbox' type='checkbox' name='counter' " +
+		                    "value='" + counter_name + "'" + (checked ? " checked='true'" : "") + " />" + counter_name + "</div>";
                 }
             });
             $("#analytics-counter-names").html(html);
@@ -1490,13 +1489,13 @@ function usergrid_console_app() {
     function requestApplicationCounters() {
         var counters_checked = $('.analytics-counter-checkbox:checked').serializeArray();
         var counter_names = new Array();
-        for (i in counters_checked) {
+        for (var i in counters_checked) {
             counter_names.push(counters_checked[i].value);
         }
         $("#analytics-graph").html("Loading...");
         start_timestamp = $("#start-date").datepicker("getDate").at($('#start-time').timepicker("getTime")).getTime();
         end_timestamp = $("#end-date").datepicker("getDate").at($('#end-time').timepicker("getTime")).getTime();
-        resolution = $('select#resolutionSelect').selectmenu("value");
+        resolution = $('select#resolutionSelect').val();
         client.requestApplicationCounters(current_application_id, start_timestamp, end_timestamp, resolution, counter_names, function(response) {
             application_counters = response.counters;
             if (!application_counters) {
@@ -2352,7 +2351,7 @@ function usergrid_console_app() {
         showLeadingZero: false
     });
     
-    $('select#resolutionSelect').selectmenu();
+    //$('select#resolutionSelect').selectmenu();
     
     $('#button-analytics-generate').click(function() {
         requestApplicationCounters();

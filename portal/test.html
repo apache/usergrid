@@ -533,43 +533,62 @@
 <div id="analytics-panel" style="display: none">
 	<div class="panel-content">
 		<div class="console-section">
-			<div class="console-section-header ui-widget-header">
+			<div class="console-section-header">
 				<span class="console-section-title">Analytics</span>
 			</div>
-			<div class="console-section-contents ui-widget-content">
+			<div class="console-section-contents">
 				<div id="analytics-time">
-					<table>
-						<tr>
-							<td><span id="analytics-start-time-span">Start: <input type="text" id="start-date"/> <input type="text" id="start-time" value="12:00 AM"/> </span>
-							</td>
-							<td><span id="analytics-end-time-span">End: <input type="text" id="end-date"/> <input type="text" id="end-time" value="12:00 AM"/> </span>
-							</td>
-							<td>
-								<form id="resolutionSelectForm" action="#">
-									<fieldset>
-										<select name="resolutionSelect" id="resolutionSelect">
-											<option value="all">All</option>
-											<option value="minute">Minute</option>
-											<option value="five_minutes">5 Minutes</option>
-											<option value="half_hour">30 Minutes</option>
-											<option value="hour">Hour</option>
-											<option value="six_hour">6 Hours</option>
-											<option value="half_day">Half Day</option>
-											<option value="day" selected="selected">Day</option>
-											<option value="week">Week</option>
-											<option value="month">Month</option>
-										</select>
-									</fieldset>
-								</form>
-							</td>
-							<td>
-								<button class="button" id="button-analytics-generate">Generate
-								</button>
-							</td>
-						</tr>
-					</table>
-					<div id="analytics-counter-names"></div>
+					<form id="resolutionSelectForm" action="#" class="form-horizontal">
+							<div class="row">
+								<fieldset class="span">
+									<div id="analytics-start-time-span" class="control-group">
+										<label class="control-label" for="start-date">Start:</label>
+										<div class="controls">
+											<input type="text" id="start-date" class="fixSpan2"/>
+											<input type="text" id="start-time" value="12:00 AM"  class="fixSpan2"/>
+										</div>
+									</div>
+									<div id="analytics-end-time-span" class="control-group">
+										<label class="control-label" for="end-date">End:</label>
+										<div class="controls">
+											<input type="text" id="end-date" class="fixSpan2"/>
+											<input type="text" id="end-time" value="12:00 AM"  class="fixSpan2"/>
+										</div>
+									</div>
+									<div class="control-group">
+										<label class="control-label" for="resolutionSelect">Resolution</label>
+										<div class="controls">
+											<select name="resolutionSelect" id="resolutionSelect">
+												<option value="all">All</option>
+												<option value="minute">Minute</option>
+												<option value="five_minutes">5 Minutes</option>
+												<option value="half_hour">30 Minutes</option>
+												<option value="hour">Hour</option>
+												<option value="six_hour">6 Hours</option>
+												<option value="half_day">Half Day</option>
+												<option value="day" selected="selected">Day</option>
+												<option value="week">Week</option>
+												<option value="month">Month</option>
+											</select>
+										</div>
+									</div>
+								</fieldset>
+								<fieldset class="span offset1">
+									<div id="analytics-counter-names"></div>
+								</fieldset>
+							</div>
+							<div class="form-actions">
+								<button class="btn btn-primary" id="button-analytics-generate">Generate</button>
+							</div>
+						</form>
 				</div>
+			</div>
+		</div>
+		<div class="console-section">
+			<div class="console-section-header">
+				<span class="console-section-title">Result Analytics</span>
+			</div>
+			<div class="console-section-contents">
 				<div id="analytics-graph"></div>
 				<div id="analytics-graph-area"></div>
 			</div>

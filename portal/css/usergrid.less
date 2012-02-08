@@ -227,7 +227,10 @@ footer{
 	}
 	.console-section-contents{
 		padding:20px;
-	}	
+		.form-actions{
+			margin: 0 -20px -20px -20px;
+		}
+	}
 }
 //---------------- Panels ---------------------------------------------------------------------
 
@@ -517,4 +520,69 @@ footer{
 	background-color: #F5F5F5;
 	border-top: 1px solid #DDDDDD;
 	margin-top: 18px;
+}
+
+
+/*------------ bootstrap --------------------------*/
+.analytics-start-time-span{
+  width:500px;
+
+}
+
+.fixSpan1{
+  display:inline-block;
+	width: 60px * 1 - 20px;
+}
+.fixSpan2{
+  display:inline-block;
+	width: 60px * 2 - 20px;
+}
+.fixSpan3{
+  display:inline-block;
+	width: 60px * 3 - 20px;
+}
+
+
+/*--------------- Analytics --------------------------------------------------*/
+#analytics-graph-table {
+	border-collapse: collapse;
+	width: 950px;
+	margin: 10px 0;
+	background-color: #ffffff;
+	td,th {
+		text-align: center;
+		border: 1px solid #ddd;
+		padding: 2px;
+		font-size: .875em;
+		width: 13%;
+		vertical-align: middle;
+		white-space: nowrap;
+	}
+	td {
+		max-width: 100px;
+		min-width: 100px;
+		width: auto !important;
+	}
+	th {
+		background-color: #f4f4f4;
+	}
+	.accessHide {
+		position: absolute;
+		left: -999999px;
+	}
+	caption {
+		font-size: 1em;
+	}
+}
+
+#analytics-graph {
+	.visualize-labels-x .label {
+		-webkit-transform: rotate(90deg);
+		-moz-transform: rotate(90deg);
+		font-size: .875em;
+		margin-top: 20px;
+	}
+	.visualize {
+		height: 550px !important;
+	}
 }
