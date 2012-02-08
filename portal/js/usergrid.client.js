@@ -1036,7 +1036,12 @@ usergrid.Client = function(options) {
     }
     this.createUser = createUser;
 
-    function queryActivities(a) {
+    function deleteUser(applicationId, userId, success, failure) {        
+        apiRequest("DELETE", "/" + applicationId + "/users/" + userId, null, null, success, failure);
+    }
+    this.deleteUser = deleteUser;
+    
+      function queryActivities(a) {
         var ns = self.applicationId;
         if (countByType("string", arguments) > 0) {
             ns = getByType("string", 0, arguments);
@@ -1100,6 +1105,10 @@ usergrid.Client = function(options) {
     }
     this.createGroup = createGroup;
 
+    function deleteGroup(applicationId, groupId, success, failure) {        
+        apiRequest("DELETE", "/" + applicationId + "/groups/" + groupId, null, null, success, failure);
+    }
+    this.deleteGroup = deleteGroup;
 
     /**
         Creates a new Query.

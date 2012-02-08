@@ -1070,13 +1070,15 @@ $(document).ready(function usergrid_console_app() {
                 }
                 if (entity.name) {
                     name = name + " : " + entity.name;
-                }
+                }           
                 var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
                 var uri = (entity.metadata || { }).uri;
+                var id = 'userListItem';                          
                 return {
                     entity : entity,
                     picture : entity.picture,
                     name : name,
+                    id: id,
                     path : path,
                     fblink : entity.fblink,
                     collections : collections,
@@ -1177,6 +1179,18 @@ $(document).ready(function usergrid_console_app() {
     }
     window.usergrid.console.newUser = newUser;
 
+    function deleteUsers() {        
+        $("input[id^=userListItem]").each( function() {
+            if ($(this).prop("checked")) {  
+                var userId = $(this).attr("value");
+                client.deleteUser(current_application_id, userId, requestUsers,
+                function() {
+                    alert("Unable to delete user " + userId);
+                });
+            }
+        });
+    }
+    window.usergrid.console.deleteUsers = deleteUsers;
     
     /*******************************************************************
      * 
@@ -1353,10 +1367,12 @@ $(document).ready(function usergrid_console_app() {
                 }
                 var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
                 var uri = (entity.metadata || { }).uri;
+                var id = 'groupListItem'; 
                 return {
                     entity : entity,
                     picture : entity.picture,
                     name : name,
+                    id: id,
                     path : path,
                     fblink : entity.fblink,
                     collections : collections,
@@ -1440,6 +1456,19 @@ $(document).ready(function usergrid_console_app() {
         });
     }
 
+    function deleteGroups() {        
+        $("input[id^=groupListItem]").each( function() {
+            if ($(this).prop("checked")) {  
+                var groupId = $(this).attr("value");
+                client.deleteGroup(current_application_id, groupId, requestGroups,
+                function() {
+                    alert("Unable to delete group " + groupId);
+                });
+            }
+        });
+    }
+    window.usergrid.console.deleteGroups = deleteGroups;
+    
     function newGroup() {
         $("#dialog-form-new-group").dialog("open");
     }
