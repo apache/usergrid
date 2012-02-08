@@ -662,47 +662,61 @@
 	</div>
 </div>
 <div id="query-panel" style="display: none">
-	<div id="query-path-area">
-		<table id="query-inputs">
-			<tr>
-				<td class="query-left-col">Path:</td>
-				<td class="query-middle-col query-input-box">
-					<input id="query-path" type="text" name="path"/> <span id="button-clear-path">&#215;</span></td>
-				<td class="query-right-col" rowspan="2">
-					<button class="button" id="button-query-back">&#9664;</button>
-					<button class="button" id="button-query-get">Get</button> <span class="query-more-options" style="display: none">
-											<button class="button" id="button-query-post">Post</button>
-											<button class="button" id="button-query-put">Put</button>
-											<button class="button" id="button-query-delete">Delete</button>
-									</span>
-					<button class="button query-more-options" style="display: none" id="button-query-less-options">Less
-					</button>
-					<button class="button query-less-options" id="button-query-more-options">More
-					</button>
-				</td>
-			</tr>
-			<tr class="query-more-options" style="display: none">
-				<td class="query-left-col">Query:</td>
-				<td class="query-middle-col query-input-box">
-					<input id="query-ql" type="text" name="query"/> <span id="button-clear-ql">&#215;</span>
+	<div id="query-path-area" class="box">
+		<h3>Query</h3>
+		<div class="boxContent">
+			<form id="query-inputs" class="form-horizontal">
+				<div class="control-group">
+					<label class="control-label" for="">Path: </label>
+					<div class="controls">
+					<div class="input-append">
+						<input id="query-path" type="text" name="path" class="span6"/>
+						<span id="button-clear-path" class="add-on">&#215;</span>
+			    </div>
+					</div>
+				</div>
 
-					<form id="indexSelectForm" action="#">
-						<fieldset>
-							<select name="indexSelect" id="indexSelect"> </select>
-						</fieldset>
-					</form>
-				</td>
-			</tr>
-		</table>
-		<div id="query-source-area" class="query-more-options" style="display: none">
-			<h2 id="query-sent-header">Sent</h2>
-			<textarea id="query-source"></textarea>
+				<div class="query-more-options" style="display: none">
+					<div class="control-group">
+						<label class="control-label" for="">Query: </label>
 
-			<div id="query-source-features">
-				<button id="button-query-shrink" class="button">&#9650;</button>
-				<button id="button-clear-query-source" class="button">Clear</button>
-				<button id="button-query-validate" class="button">Validate</button>
-			</div>
+						<div class="controls">
+							<div class="input-append">
+								<input id="query-ql" type="text" name="query" class="span6"/>
+								<span id="button-clear-ql" class="add-on">&#215;</span>
+							</div>
+							<div class="btn-group" >
+							    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">Query<span class="caret"></span></a>
+							    <ul id="queryOptions" class="dropdown-menu"></ul>
+							</div>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label" for="">Sent: </label>
+						<div class="controls">
+						<div class="input-append">
+							<textarea id="query-source" class="span6 pull-left"></textarea>
+							<span id="button-clear-query-source" class="add-on">&#215;</span>
+						</div>
+							<div class="btn-group">
+							  <a id="button-query-shrink" class="btn" href="#">&#9650;</a>
+							  <a id="button-query-validate" class="btn" href="#">Validate</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		<div class="form-actions">
+			<a class="btn" id="button-query-back">&#9664;</a>
+			<a class="btn btn-primary" id="button-query-get">Get</a>
+			<a class="btn query-more-options pull-right" style="display: none" id="button-query-less-options">Less</a>
+			<a class="btn query-less-options pull-right" id="button-query-more-options">More</a>
+			<span class="query-more-options" style="display: none">
+				<a class="btn" id="button-query-post">Post</a>
+				<a class="btn" id="button-query-put">Put</a>
+				<a class="btn" id="button-query-delete">Delete</a>
+		  </span>
 		</div>
 	</div>
 	<div id="query-response-area">

@@ -72,15 +72,12 @@ var Pages = function(){
 	}
 
 	self.SelectPanel = function (panelName){
-		console.log(panelName);
 		var panel = self.panels[panelName];
-		console.log(panel);
-		
+
 		$("#sidebar-menu li.active").removeClass('active');
 		panel.link.parent().addClass('active');
 
 		if(panel.showFunction){
-			console.log(panel.showFunction);
 			panel.showFunction();
 		}
 		
