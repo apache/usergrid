@@ -392,13 +392,21 @@ usergrid.Client = function(options) {
                         if (response && response.error) {
                             var error = response.error;
                             setLastError(error);
+                            if (error == "auth_expired_session_token") {
                                 force_logout = true;
                             }
-                            else if (error.type == "auth_missing_credentials") {
+                            else if (error == "auth_missing_credentials") {
                                 force_logout = true;
                             }
-                            else if (error.type == "auth_invalid") {
+                            else if (error == "auth_invalid") {
                                 force_logout = true;
+                            }
+                            else if (error == "unauthorized") {
+                                force_logout = true;
+                            }
+                            else if (error == "web_application") {
+                                //TBD::should we do something here?                                
+                                                           
                             }
                         }
                         response = response || {};
