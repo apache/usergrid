@@ -293,11 +293,19 @@ footer{
 
 #application-panel-table{
   table{
-  width:100%;
+	  width:200px;
+	  margin-left: 50px;
+    tr > *{
+      text-align: left;
+    }
 		th{
 			font-weight: bold;
 			border-top:1px solid #ccc;
 		}
+	  tr > *:first-child{
+      text-align: right;
+      padding-right: 5px;
+	  }
   }
 }
 
@@ -594,5 +602,22 @@ footer{
 	}
 	.visualize {
 		height: 550px !important;
+	}
+}
+/*-----------------------------------------------*/
+#organization-panel{
+	.box{
+		min-width: 400px;
+	}
+}
+#application-panel{
+	.boxContent > .row > div{
+	  	min-width: 400px;
+	}
+}
+
+#settings-panel{
+	.box{
+	  	min-width: 400px;
 	}
 }
