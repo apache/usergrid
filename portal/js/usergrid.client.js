@@ -392,7 +392,6 @@ usergrid.Client = function(options) {
                         if (response && response.error) {
                             var error = response.error;
                             setLastError(error);
-                            if (error.type == "auth_expired_session_token") {
                                 force_logout = true;
                             }
                             else if (error.type == "auth_missing_credentials") {
