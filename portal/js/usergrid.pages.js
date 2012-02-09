@@ -72,15 +72,12 @@ var Pages = function(){
 	}
 
 	self.SelectPanel = function (panelName){
-		console.log(panelName);
 		var panel = self.panels[panelName];
-		console.log(panel);
-		
+
 		$("#sidebar-menu li.active").removeClass('active');
 		panel.link.parent().addClass('active');
 
 		if(panel.showFunction){
-			console.log(panel.showFunction);
 			panel.showFunction();
 		}
 		
@@ -90,13 +87,15 @@ var Pages = function(){
 	}
 
 	function LoadPage(page){
-		$.ajaxSetup ({cache: false});
 
 		if(page.name=='forgot-password')
 			$("#forgot-password-page iframe").attr("src", client.resetPasswordUrl);
 		else{
-			if(window.location.pathname.indexOf('app') > 0)
+			if(window.location.pathname.indexOf('app') > 0){
+				$.ajaxSetup ({cache: false});
 				page.box.load(page.name + '.html',page.initFunction);
+				$.ajaxSetup ({cache: true});
+			}
 			else if(page.initFunction)
 				page.initFunction();
 		}

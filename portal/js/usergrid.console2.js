@@ -506,22 +506,21 @@ function usergrid_console_app() {
     };
 
     function doBuildIndexMenu() {
-        var m = "";
+        //var m = "";
+	      var m2 = "";
         if (indexes) {
             for (var i in indexes) {
-                var index = indexes[i];
-                m += "<option value=\"" + index + "\">" + index + "</option>";
+              var index = indexes[i];
+	            //m += "<option value='" + index + "'>" + index + "</option>";
+	            m2 += "<li><a>" + index + "</a></li>";
             }
         }
-        $("select#indexSelect").html(m);
-        $('select#indexSelect').selectmenu({
-            positionOptions: {
-                my: "right top",
-                at: "left bottom",
-                offset: "40 4",
-            },
-            width: "400px"
-        });
+      //$("select#indexSelect").html(m);
+	    $("#queryOptions").html(m2);
+	    $("#queryOptions a").click(function(e){
+		    e.preventDefault();
+		    $("#query-ql").val($(this).text());
+	    });
     }
 
     function requestIndexes() {
@@ -583,7 +582,7 @@ function usergrid_console_app() {
 	            $("#applications-menu ul").html(m2);
 	            $("#organization-applications a").click(function(e){
 		            e.preventDefault();
-				        var link = $(this);
+				    var link = $(this);
 		            pageSelect(link.attr("href").substring(1));
 		            Pages.SelectPanel('application');
 			    });
@@ -1463,14 +1462,13 @@ function usergrid_console_app() {
         $("#analytics-counter-names").html("Loading...");
         client.requestApplicationCounterNames(current_application_id, function(response) {
             application_counters_names = response.data;
-            var html = usergrid.console.ui.makeTableFromList(application_counters_names, 4, {
+            var html = usergrid.console.ui.makeTableFromList(application_counters_names, 1, {
                 tableId : "analytics-counter-names-table",
                 getListItem : function(i, col, row) {
                     var counter_name = application_counters_names[i];
                     var checked = !counter_name.startsWith("application.");
-                    return "<div class=\"analytics-counter\"><input class=\"analytics-counter-checkbox\" type=\"checkbox\" name=\"counter\" value=\"" + 
-                        counter_name + "\"" + 
-                        (checked ? " checked=\"true\"" : "") + " />" + counter_name + "</div>";
+                    return "<div class='analytics-counter'><input class='analytics-counter-checkbox' type='checkbox' name='counter' " +
+		                    "value='" + counter_name + "'" + (checked ? " checked='true'" : "") + " />" + counter_name + "</div>";
                 }
             });
             $("#analytics-counter-names").html(html);
@@ -1490,13 +1488,13 @@ function usergrid_console_app() {
     function requestApplicationCounters() {
         var counters_checked = $('.analytics-counter-checkbox:checked').serializeArray();
         var counter_names = new Array();
-        for (i in counters_checked) {
+        for (var i in counters_checked) {
             counter_names.push(counters_checked[i].value);
         }
         $("#analytics-graph").html("Loading...");
         start_timestamp = $("#start-date").datepicker("getDate").at($('#start-time').timepicker("getTime")).getTime();
         end_timestamp = $("#end-date").datepicker("getDate").at($('#end-time').timepicker("getTime")).getTime();
-        resolution = $('select#resolutionSelect').selectmenu("value");
+        resolution = $('select#resolutionSelect').val();
         client.requestApplicationCounters(current_application_id, start_timestamp, end_timestamp, resolution, counter_names, function(response) {
             application_counters = response.counters;
             if (!application_counters) {
@@ -2081,19 +2079,25 @@ function usergrid_console_app() {
                 var organizationName = organizationNames[i];
                 var organization = organizations[organizationName];
                 var uuid = organization.uuid;
-                t += "<div class=\"organization-row\" id=\"organization-row-"
-                + uuid
-                + "\"><div class=\"organization-row-link\"><a href=\"#\" onclick=\"usergrid.console.pageSelectOrganization('"
-                + uuid
-                + "'); return false;\"><span class=\"organization-row-name\">"
-                + organizationName
-                + "</span> <span class=\"application-row-uuid\">("
-                + uuid + ")</span>"
-                + "</a></div><div class=\"organization-row-buttons\"><a href=\"#\" class=\"button\" onclick=\"usergrid.console.pageSelectOrganization('"
-                + uuid
-                + "'); return false;\">Leave</a></div></div>";
+                t +=
+	                "<div class='row' id='organization-row-" + uuid + "'>" +
+                  "<div class='organization-row-link span'>" +
+                    "<a href='#" + uuid + "' >" +
+                      "<span>" + organizationName + "</span>" +
+                      "<span> (" + uuid + ")</span>" +
+	                  "</a>" +
+	                "</div>" +
+                  "<div class='organization-row-buttons span pull-right'>" +
+	                  "<a href='#" + uuid + "' class='btn btn-danger' >Leave</a>" +
+                  "</div>" +
+	                "</div>";
             }
-            $("#account-organizations").html(t).find(".button").button();
+            $("#account-organizations").html(t);
+            $("#account-organizations a").click( function(e){
+               e.preventDefault();
+               var uuid = $(this).attr("href").substring(1);
+               usergrid.console.pageSelectOrganization(uuid); //TODO: this function dont exist
+            });
         } else {
         }
     }
@@ -2252,10 +2256,8 @@ function usergrid_console_app() {
     });
 
     //$('select#indexSelect').selectmenu();
-    $('select#indexSelect').selectmenu({
-        select: function(e, object) {
-            $("#query-ql").val(object.value || "");
-        }
+    $('select#indexSelect').change( function(e){
+	    $("#query-ql").val($(this).val() || "");
     });
 
     doBuildIndexMenu();
@@ -2319,6 +2321,7 @@ function usergrid_console_app() {
         'shell': pageSelectShell
     };
 
+    Pages.pages.account.showFunction = usergrid.console.requestAccountSettings;
 	Pages.panels.application.showFunction = pageSelectApplication;
 	Pages.panels.users.showFunction = pageSelectUsers;
 	Pages.panels.groups.showFunction = pageSelectGroups;
@@ -2352,7 +2355,7 @@ function usergrid_console_app() {
         showLeadingZero: false
     });
     
-    $('select#resolutionSelect').selectmenu();
+    //$('select#resolutionSelect').selectmenu();
     
     $('#button-analytics-generate').click(function() {
         requestApplicationCounters();
