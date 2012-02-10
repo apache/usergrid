@@ -2,9 +2,38 @@
 //@import "apigee.less";
 @import "../bootstrap/less/bootstrap.less";
 @apigeelogin: url(../images/apigeelogin.png);
+@redApigee: #FF3B00;
+@grayApigee: #575560;
+@border: #C9C9C9;
 
 //--------------General ------------------------------------------------------------
+html, body{
+	height: 100%;
+}
+
 html{
+  border-left: 1px solid @border;
+  border-right: 1px solid @border;
+}
+
+.fullContainer{
+	position:relative; /* needed for footer positioning*/
+	margin:0 auto; /* center, not in IE5 */
+	height:auto !important; /* real browsers */
+	min-height:100%; /* real browsers */
+	height:100%; /* IE6: treaded as min-height*/
+  padding: 100px 0 43px;
+}
+
+footer{
+  position:absolute;
+  bottom:0; /* stick to bottom */
+  height: 31px;
+  width:100%;
+	clear: both;
+	padding:5px;
+  border-top: 1px solid @border;
+  border-bottom: 1px solid @border;
 }
 
 a:link {
@@ -30,25 +59,18 @@ a:active {
 .clear{
 	clear: both;
 }
-//----------Layout ------------------------------------------------------------
-body {
-  padding-top: 40px;
-}
-
-footer{
-	clear: both;
-  border-top:solid 2px #F2F5F7;
-  positition:fixed;
-	left:0;
-	bottom:0;
-	z-index:1030;
-	padding:10px;
-}
 
 //----------Header ------------------------------------------------------------
 .navbar{
-  background: none repeat scroll 0 0 white;
-  border-bottom:solid 2px #F2F5F7;
+  &:before {
+    content: '';
+    height: 6px;
+    display: block;
+    background: @redApigee;
+  }
+  margin: 0px 1px 20px 1px;
+  border-top: 1px solid #C9C9C9;
+  border-bottom: 3px solid @grayApigee;
 	h1, h2{
 		display: inline;
 		float:left;
@@ -139,7 +161,6 @@ footer{
 //----------Pages ------------------------------------------------------------
 
 #pages{
-	height:100%;
   clear:both;
   margin: 30px 0;
   min-height:400px;
