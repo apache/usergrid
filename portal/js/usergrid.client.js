@@ -392,14 +392,21 @@ usergrid.Client = function(options) {
                         if (response && response.error) {
                             var error = response.error;
                             setLastError(error);
-                            if (error.type == "auth_expired_session_token") {
+                            if (error == "auth_expired_session_token") {
                                 force_logout = true;
                             }
-                            else if (error.type == "auth_missing_credentials") {
+                            else if (error == "auth_missing_credentials") {
                                 force_logout = true;
                             }
-                            else if (error.type == "auth_invalid") {
+                            else if (error == "auth_invalid") {
                                 force_logout = true;
+                            }
+                            else if (error == "unauthorized") {
+                                force_logout = true;
+                            }
+                            else if (error == "web_application") {
+                                //TBD::should we do something here?                                
+                                                           
                             }
                         }
                         response = response || {};
@@ -554,6 +561,32 @@ usergrid.Client = function(options) {
     }
     this.requestAdmins = requestAdmins;
 
+    //
+    // Create new organization for admin user
+    //
+    // POST: /management/users/<user-id>/organizations
+    //
+    function createOrganization(organizationName, success, failure) {
+        if (!self.loggedInUser) {
+            failure();
+        }
+        apiRequest("POST", "/management/users/" + self.loggedInUser.uuid + "/organizations", null, JSON.stringify({"organization" : organizationName}), success, failure);
+    }
+    this.createOrganization = createOrganization;
+    
+    
+    
+    
+    //
+    // Get admin users for organization
+    //
+    // GET: /management/organizations
+    //
+    function requestOrganizations(success, failure) {        
+        apiGetRequest("/management/users/" + self.loggedInUser.uuid + "/organizations", null, success, failure);
+    }
+    this.requestOrganizations = requestOrganizations;
+    
     //
     // Get access keys for organization
     //
@@ -1010,7 +1043,12 @@ usergrid.Client = function(options) {
     }
     this.createUser = createUser;
 
-    function queryActivities(a) {
+    function deleteUser(applicationId, userId, success, failure) {        
+        apiRequest("DELETE", "/" + applicationId + "/users/" + userId, null, null, success, failure);
+    }
+    this.deleteUser = deleteUser;
+    
+      function queryActivities(a) {
         var ns = self.applicationId;
         if (countByType("string", arguments) > 0) {
             ns = getByType("string", 0, arguments);
@@ -1060,6 +1098,24 @@ usergrid.Client = function(options) {
         apiGetRequest("/" + applicationId + "/groups/" + entityId + "/rolenames", null, success, failure);
     }
     this.requestGroupRoles = requestGroupRoles;
+
+
+    //
+    // Create new group    //
+    // POST: /<application-id/users
+    //
+    function createGroup(applicationId, path, title, success, failure) {
+        apiRequest("POST", "/" + applicationId + "/groups", null, JSON.stringify({
+            path: path,
+            title: title
+        }), success, failure);
+    }
+    this.createGroup = createGroup;
+
+    function deleteGroup(applicationId, groupId, success, failure) {        
+        apiRequest("DELETE", "/" + applicationId + "/groups/" + groupId, null, null, success, failure);
+    }
+    this.deleteGroup = deleteGroup;
 
     /**
         Creates a new Query.

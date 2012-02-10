@@ -4,7 +4,7 @@ function usergrid_console_app() {
     usergrid.console = usergrid.console || {};
 
     var OFFLINE = false;
-    var OFFLINE_PAGE = "#query-page"; //TODO: This is for???
+    var OFFLINE_PAGE = "#query-page";
 
     var self = this;
 
@@ -1068,13 +1068,15 @@ function usergrid_console_app() {
                 }
                 if (entity.name) {
                     name = name + " : " + entity.name;
-                }
+                }           
                 var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
                 var uri = (entity.metadata || { }).uri;
+                var id = 'userListItem';                          
                 return {
                     entity : entity,
                     picture : entity.picture,
                     name : name,
+                    id: id,
                     path : path,
                     fblink : entity.fblink,
                     collections : collections,
@@ -1175,6 +1177,18 @@ function usergrid_console_app() {
     }
     window.usergrid.console.newUser = newUser;
 
+    function deleteUsers() {        
+        $("input[id^=userListItem]").each( function() {
+            if ($(this).prop("checked")) {  
+                var userId = $(this).attr("value");
+                client.deleteUser(current_application_id, userId, requestUsers,
+                function() {
+                    alert("Unable to delete user " + userId);
+                });
+            }
+        });
+    }
+    window.usergrid.console.deleteUsers = deleteUsers;
     
     /*******************************************************************
      * 
@@ -1332,6 +1346,255 @@ function usergrid_console_app() {
     }
     window.usergrid.console.pageSelectGroups = pageSelectGroups;
 
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.list.html");
+
+    var groupsResults = null;
+    function displayGroups(response) {
+        groupsResults = usergrid.console.ui.displayEntityListResponse({query: groups_query}, {
+            "listItemTemplate" : "usergrid.ui.panels.group.list.html",
+            "getListItemTemplateOptions" : function(entity, path) {
+                var name = entity.uuid + " : " + entity.type;
+                if (entity.path) {
+                    name = entity.path;
+                }
+                if (entity.name) {
+                    name = name + " : " + entity.name;
+                }
+                var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
+                var uri = (entity.metadata || { }).uri;
+                var id = 'groupListItem'; 
+                return {
+                    entity : entity,
+                    picture : entity.picture,
+                    name : name,
+                    id: id,
+                    path : path,
+                    fblink : entity.fblink,
+                    collections : collections,
+                    uri : uri
+                };
+            },
+            "onRender" : function() {
+                $("#groups-by-alphabetical").show();
+            },
+            "onNoEntities" : function() {
+                if (groupLetter != "*") return "No groups with paths starting with " +  groupLetter;
+                return null;
+            },
+            "output" : "#groups-response-table",
+            "nextPrevDiv" : "#groups-next-prev",
+            "prevButton" : "#button-groups-prev",
+            "nextButton" : "#button-groups-next",
+            "noEntitiesMsg" : "No groups found"
+        }, response);
+    }
+
+    function showGroupsForLetter(c) {
+        groupLetter = c;
+        requestGroups();
+    }
+    usergrid.console.showGroupsForLetter = showGroupsForLetter;
+
+    var groups_query = null;
+    function requestGroups() {
+        var client_id = organization_keys.client_id;
+        var client_secret = organization_keys.client_secret;
+        var test_client = new usergrid.Client({
+            applicationId : current_application_id,
+            clientId : client_id,
+            clientSecret : client_secret
+        });
+        var query = {"ql" : "order by " + groupSortBy};
+        if (groupLetter != "*") query = {"ql" : groupSortBy + "='" + groupLetter + "*'"};
+        groups_query = test_client.queryGroups(displayGroups, query);
+        return false;
+    }
+
+    var new_group_title = $("#new-group-title");
+    var new_group_path = $("#new-group-path");
+    var allNewGroupFields = $([]).add(new_group_title).add(new_group_path);
+
+    $("#dialog-form-new-group")
+    .dialog(
+    {
+        autoOpen: false,
+        height: 500,
+        width: 475,
+        modal: true,
+        buttons: {
+            "Create": function() {
+                allNewGroupFields.removeClass("ui-state-error");
+                var bValid = checkLength(new_group_title, "title", 1, 80)
+                && checkLength(new_group_path, "path",1, 80)                
+                && checkRegexp(new_group_title, nameRegex,
+                "Title only allows : a-z, 0-9, dot, and dash")
+                && checkRegexp(new_group_path, nameRegex,
+                "Title only allows : a-z, 0-9, dot, and dash");
+                if (bValid) {                 
+                    createGroup(new_group_path.val(), new_group_title.val());
+                    $(this).dialog("close");
+                }
+            },
+            Cancel: function() {
+                $(this).dialog("close");
+            }
+        },
+        close: function() {
+            allNewGroupFields.val("").removeClass("ui-state-error");
+        }
+    });
+    
+    function createGroup(path, title) {
+        client.createGroup(current_application_id, path, title, requestGroups,
+        function() {
+            alert("Unable to create group " + email);
+        });
+    }
+
+    function deleteGroups() {        
+        $("input[id^=groupListItem]").each( function() {
+            if ($(this).prop("checked")) {  
+                var groupId = $(this).attr("value");
+                client.deleteGroup(current_application_id, groupId, requestGroups,
+                function() {
+                    alert("Unable to delete group " + groupId);
+                });
+            }
+        });
+    }
+    window.usergrid.console.deleteGroups = deleteGroups;
+    
+    function newGroup() {
+        $("#dialog-form-new-group").dialog("open");
+    }
+    window.usergrid.console.newGroup = newGroup;
+
+    /*******************************************************************
+     * 
+     * Group
+     * 
+     ******************************************************************/
+
+    function pageOpenGroupProfile(groupId) {
+        showPanel("#group-panel");
+        requestGroup(groupId);
+        selectTabButton("#group-panel-tab-bar", $("#button-group-details"));
+        showPanelContent("#group-panel", "#group-panel-details");
+    }
+    window.usergrid.console.pageOpenGroupProfile = pageOpenGroupProfile;
+
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.details.html");
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.memberships.html");
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.activities.html");
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.permissions.html");
+
+    function redrawGroupPanel() {
+        $("#group-panel-details").html("");
+        $("#group-panel-memberships").html("");
+        $("#group-panel-activities").html("");
+        $("#group-panel-permissions").html("");
+        if (group_data) {
+            var options = {
+                makeObjectTable : usergrid.console.ui.makeObjectTable,
+                tableOpts : usergrid.console.ui.standardTableOpts,
+                metadataTableOpts : usergrid.console.ui.metadataTableOpts
+            };
+
+            var details = $.tmpl("usergrid.ui.panels.group.details.html", group_data, options);
+
+            var formDiv = details.find(".query-result-form");
+            $(formDiv).buildForm(usergrid.console.ui.jsonSchemaToDForm(usergrid.console.ui.collections.group_schema, group_data.entity));
+
+            details.appendTo("#group-panel-details");
+
+            details.find(".button").button();
+
+            $.tmpl("usergrid.ui.panels.group.memberships.html", group_data, options).appendTo("#group-panel-memberships");
+
+            $.tmpl("usergrid.ui.panels.group.activities.html", group_data, options).appendTo("#group-panel-activities");
+
+            $.tmpl("usergrid.ui.panels.group.graph.html", group_data, options).appendTo("#group-panel-graph");
+
+            $.tmpl("usergrid.ui.panels.group.permissions.html", group_data, options).appendTo("#group-panel-permissions");
+        }
+    }
+
+    var group_data = null;
+
+    function handleGroupResponse(response) {
+        if (response.entities && (response.entities.length > 0)) {
+            var entity = response.entities[0];
+            var path = response.path || "";
+            path = "" + path.match(/[^?]*/);
+
+            var name = entity.uuid + " : "
+                    + entity.type;
+            if (entity.path) {
+                name = entity.path;
+            }
+            if (entity.name) {
+                name = name + " : " + entity.name;
+            }
+
+            var collections = $.extend({ }, (entity.metadata || { }).collections, (entity.metadata || { }).connections);
+            if ($.isEmptyObject(collections)) collections = null;
+
+            var entity_contents = $.extend( false, { }, entity);
+            delete entity_contents['metadata'];
+
+            var metadata = entity.metadata;
+            if ($.isEmptyObject(metadata)) metadata = null;
+
+            var entity_path = (entity.metadata || {}).path;
+            if ($.isEmptyObject(entity_path)) {
+                entity_path = path + "/" + entity.uuid;
+            }
+
+            group_data = {
+                entity : entity_contents,
+                picture : entity.picture,
+                name : name,
+                path : entity_path,
+                collections : collections,
+                metadata : metadata,
+                uri : (entity.metadata || { }).uri
+            };
+
+            redrawGroupPanel();
+
+            client.queryGroupMemberships(current_application_id, entity.uuid, function(response) {
+                if (group_data && response.entities && (response.entities.length > 0)) {
+                    group_data.memberships = response.entities;
+                    redrawGroupPanel();
+                }
+            })
+
+            client.queryGroupActivities(current_application_id, entity.uuid, function(response) {
+                if (group_data && response.entities && (response.entities.length > 0)) {
+                    group_data.activities = response.entities;
+                    redrawGroupPanel();
+                }
+            })
+
+            client.requestGroupRoles(current_application_id, entity.uuid, function(response) {
+                if (group_data && response.data) {
+                    group_data.roles = response.data;
+                    redrawGroupPanel();
+                }
+            })
+
+        }
+    }
+
+    function requestGroup(groupId) {
+        $("#group-details-area").html(
+        "<h2>Loading...</h2>");
+        client.getGroup(current_application_id, groupId, handleGroupResponse,
+        function() {
+            $("#group-details-area").html("<h2>Unable to retrieve group details.</h2>");
+        });
+    }
+
     /*******************************************************************
      * 
      * Roles
@@ -1388,6 +1651,115 @@ function usergrid_console_app() {
             $("#application-roles").html("<h2>Unable to retrieve roles list.</h2>");
         });
     }
+
+    /*******************************************************************
+     * 
+     * Role
+     * 
+     ******************************************************************/
+
+    var current_role_name = "";
+
+    function pageOpenRole(roleName) {
+        current_role_name = roleName;
+        showPanel("#role-panel");
+        $('#application-panel-buttons .ui-selected').removeClass('ui-selected');
+        $('#application-panel-button-roles').addClass('ui-selected');
+        requestRole();
+    }
+    window.usergrid.console.pageOpenRole = pageOpenRole;
+
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.permissions.html");
+
+    var permissions = {};
+    function displayPermissions(response) {
+        $("#role-permissions").html("");
+        var t = "";
+        var m = "";
+        permissions = {};
+        if (response.data) {
+            var perms = response.data;
+            var count = 0;
+            for (var i in perms) {
+                count++;
+                var perm = perms[i];
+                var parts = perm.split(':');
+                var ops_part = "";
+                var path_part = parts[0];
+                if (parts.length > 1) {
+                    ops_part = parts[0];
+                    path_part = parts[1];
+                }
+                ops_part.replace("*", "get,post,put,delete")
+                var ops = ops_part.split(',');
+                permissions[perm] = { ops : {}, path : path_part, perm : perm};
+                for (var j in ops) {
+                    permissions[perm].ops[ops[j]] = true;
+                }
+            }
+            if (count == 0) {
+                permissions = null;
+            }
+            $.tmpl("usergrid.ui.panels.role.permissions.html", {"role" : current_role_name, "permissions" : permissions }, {}).appendTo("#role-permissions");
+        } else {
+            $("#role-permissions")
+            .html("<h2>No permission information retrieved.</h2>");
+        }
+    }
+
+    function requestRole() {
+        $("#role-section-title").html("");
+        $("#role-permissions").html("");
+        client.requestApplicationRoles(current_application_id, function(response) {
+            displayRoles(response);
+            $("#role-section-title").html(roles[current_role_name] + " Role");
+            $("#role-permissions").html(
+            "<h2>Loading " + roles[current_role_name] + " permissions...</h2>");
+            client.requestApplicationRolePermissions(current_application_id, current_role_name, function(response) {
+                displayPermissions(response);
+            },
+            function() {
+                $("#application-roles").html("<h2>Unable to retrieve " + roles[current_role_name] + " role permissions.</h2>");
+            });
+        },
+        function() {
+            $("#application-roles").html("<h2>Unable to retrieve roles list.</h2>");
+        });
+    }
+
+    function deleteRolePermission(roleName, permission) {
+        console.log("delete " + roleName + " - " + permission);
+        client.deleteApplicationRolePermission(current_application_id, roleName, permission, requestRole, requestRole);
+    }
+    window.usergrid.console.deleteRolePermission = deleteRolePermission;
+
+    function addRolePermission(roleName) {
+        var path = $('#role-permission-path-entry-input').val();
+        var ops = "";
+        var s = "";
+        if ($('#role-permission-op-get-checkbox').prop("checked")) {
+            ops = "get";
+            s = ",";
+        }
+        if ($('#role-permission-op-post-checkbox').prop("checked")) {
+            ops = ops + s + "post";
+            s = ",";
+        }
+        if ($('#role-permission-op-put-checkbox').prop("checked")) {
+            ops =  ops + s + "put";
+            s = ",";
+        }
+        if ($('#role-permission-op-delete-checkbox').prop("checked")) {
+            ops =  ops + s + "delete";
+            s = ",";
+        }
+        var permission = ops + ":" + path;
+        console.log("add " + roleName + " - " + permission);
+        if (ops) {
+            client.addApplicationRolePermission(current_application_id, roleName, permission, requestRole, requestRole);
+        }
+    }
+    window.usergrid.console.addRolePermission = addRolePermission;
 
     /*******************************************************************
      * 
@@ -1586,7 +1958,8 @@ function usergrid_console_app() {
 
     function pageSelectSettings(uuid) {
         pageSelect(uuid);
-        requestApplicationCredentials(); 
+        requestApplicationCredentials();
+        requestOrganizations();
         //showPanel("#settings-panel");
 	   //Pages.SelectPanel('settings');
     }
@@ -1879,6 +2252,7 @@ function usergrid_console_app() {
      * Login
      * 
      ******************************************************************/
+
     $("#login-organization").focus();
 
     function clearLoginForm() {
@@ -2198,8 +2572,66 @@ function usergrid_console_app() {
     }
     window.usergrid.console.newOrganization = newOrganization;
 
-    function createOrganization(organizationName) {
-        
+    function displayOrganizations(response) {       
+        var t = "";
+        var m = "";
+        organizations = {};
+        orgainzations_by_id = {};
+        if (response.data) {
+            organizations = response.data;
+            var count = 0;
+            var organizationNames = keys(organizations).sort();
+            for (var i in organizationNames) {
+                var organization = organizationNames[i];
+                var uuid = organizations[organization];
+                t += "<div class=\"organization-row\" id=\"organization-row-"
+                + uuid
+                + "\"><a href=\"#\" onclick=\"usergrid.console.pageSelectOrganization('"
+                + uuid
+                + "'); return false;\"><span class=\"organization-row-name\">"
+                + organization
+                + "</span> <span class=\"organization-row-uuid\">("
+                + uuid + ")</span>" + "</a></div>";
+                count++;
+                orgainzations_by_id[uuid] = organization;
+                /*
+                if ($.isEmptyObject(current_organization_id)) {
+                    current_organization_id = uuid;
+                    current_organization_name = organization;
+                }
+                m += "<option value=\"" + uuid + "\"" + ((uuid == current_organization_id) ? " selected=\"selected\"": "") + ">" + organization + "</option>";
+                */
+            }
+            if (count) {
+                $("#organizations").html(t);                
+            }
+            else {
+                $("#organizations").html(
+                "<h2>No organizations created.</h2>"); 
+            }
+        } else {
+            $("#organizations").html(
+            "<h2>No organizations created.</h2>");
+            
+        }
+       
+    }
+       
+    function requestOrganizations() {        
+        $("#organizations").html(
+        "<h2>Loading...</h2>");    
+        client.requestOrganizations(displayOrganizations,
+        function() {            
+            $("#organizations").html("<h2>Unable to retrieve organizations list.</h2>");
+        });
+       
+    }
+         
+    function createOrganization(name) {
+        client.createOrganization(name,requestOrganizations,
+        function() {
+            alert("Unable to create orgnization " + name);
+        });
     }
     window.usergrid.console.createOrganization = createOrganization;
 
@@ -2243,13 +2675,45 @@ function usergrid_console_app() {
 
 		createAlphabetLinks("#users-by-alphabetical");
 
+    $("#groups-panel-tab-bar button").click(function() {
+        selectTabButton("#groups-panel-tab-bar", $(this));
+        return false;
+    });
+
+    $("#group-panel-tab-bar button").click(function() {
+        selectTabButton("#group-panel-tab-bar", $(this));
+        if ($(this).attr("id") == "button-group-list") {
+            pageSelectGroups();
+        }
+        else if ($(this).attr("id") == "button-group-search") {
+            pageSelectGroups();
+        }
+        else {
+            showPanelContent("#group-panel", "#group-panel-" + $(this).attr("id").substring(13));
+        }
+        return false;
+    });
+
+    $("#groups-by-alphabetical").html(getAlphabetLinks("usergrid.console.showGroupsForLetter"));
+
+    $("#role-panel-tab-bar button").click(function() {
+        if ($(this).attr("id") == "button-role-list") {
+            pageSelectRoles();
+        }
+        else {
+            pageSelectRole();
+        }
+        return false;
+    });
+
     $("button, input:submit, input:button").button();
 
     //$('select#organizationSelect').selectmenu();
     $('select#organizationSelect').selectmenu({
         change: function(e, object) {
             if (client) {
-                client.currentOrganization = object.value;
+                client.currentOrganization = object.value;                
+                pageSelectHome();
                 showConsole();
             }
         }
