@@ -1070,13 +1070,15 @@ $(document).ready(function usergrid_console_app() {
                 }
                 if (entity.name) {
                     name = name + " : " + entity.name;
-                }
+                }           
                 var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
                 var uri = (entity.metadata || { }).uri;
+                var id = 'userListItem';                          
                 return {
                     entity : entity,
                     picture : entity.picture,
                     name : name,
+                    id: id,
                     path : path,
                     fblink : entity.fblink,
                     collections : collections,
@@ -1177,6 +1179,18 @@ $(document).ready(function usergrid_console_app() {
     }
     window.usergrid.console.newUser = newUser;
 
+    function deleteUsers() {        
+        $("input[id^=userListItem]").each( function() {
+            if ($(this).prop("checked")) {  
+                var userId = $(this).attr("value");
+                client.deleteUser(current_application_id, userId, requestUsers,
+                function() {
+                    alert("Unable to delete user " + userId);
+                });
+            }
+        });
+    }
+    window.usergrid.console.deleteUsers = deleteUsers;
     
     /*******************************************************************
      * 
@@ -1353,10 +1367,12 @@ $(document).ready(function usergrid_console_app() {
                 }
                 var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
                 var uri = (entity.metadata || { }).uri;
+                var id = 'groupListItem'; 
                 return {
                     entity : entity,
                     picture : entity.picture,
                     name : name,
+                    id: id,
                     path : path,
                     fblink : entity.fblink,
                     collections : collections,
@@ -1399,11 +1415,9 @@ $(document).ready(function usergrid_console_app() {
         return false;
     }
 
+    var new_group_title = $("#new-group-title");
     var new_group_path = $("#new-group-path");
-    var new_group_fullname = $("#new-group-fullname");
-    var new_group_email = $("#new-group-email");
-    var new_group_password = $("#new-group-password");
-    var allNewGroupFields = $([]).add(new_group_path).add(new_group_fullname).add(new_group_email).add(new_group_password);
+    var allNewGroupFields = $([]).add(new_group_title).add(new_group_path);
 
     $("#dialog-form-new-group")
     .dialog(
@@ -1415,24 +1429,14 @@ $(document).ready(function usergrid_console_app() {
         buttons: {
             "Create": function() {
                 allNewGroupFields.removeClass("ui-state-error");
-
-                var bValid = checkLength(new_group_email, "email", 6, 80)
-                && checkLength(new_group_password, "password", 5, 16)
-                && checkRegexp(
-                new_group_path,
-                nameRegex,
-                "Groupname only allows : a-z, 0-9, dot, and dash")
-                && checkRegexp(
-                new_group_email,
-                emailRegex,
-                "eg. ui@jquery.com")
-                && checkRegexp(new_group_password,
-                passwordRegex,
-                "Password field only allows : a-z, 0-9, @, #, $, %, ^, &");
-
-                if (bValid) {
-                    createGroup(new_group_path.val(), new_group_fullname.val(),
-                        new_group_email.val(), new_group_password.val());
+                var bValid = checkLength(new_group_title, "title", 1, 80)
+                && checkLength(new_group_path, "path",1, 80)                
+                && checkRegexp(new_group_title, nameRegex,
+                "Title only allows : a-z, 0-9, dot, and dash")
+                && checkRegexp(new_group_path, nameRegex,
+                "Title only allows : a-z, 0-9, dot, and dash");
+                if (bValid) {                 
+                    createGroup(new_group_path.val(), new_group_title.val());
                     $(this).dialog("close");
                 }
             },
@@ -1444,14 +1448,27 @@ $(document).ready(function usergrid_console_app() {
             allNewGroupFields.val("").removeClass("ui-state-error");
         }
     });
-
-    function createGroup(path, fullname, email, password) {
-        client.createGroup(current_application_id, path, fullname, email, password, requestGroups,
+    
+    function createGroup(path, title) {
+        client.createGroup(current_application_id, path, title, requestGroups,
         function() {
             alert("Unable to create group " + email);
         });
     }
 
+    function deleteGroups() {        
+        $("input[id^=groupListItem]").each( function() {
+            if ($(this).prop("checked")) {  
+                var groupId = $(this).attr("value");
+                client.deleteGroup(current_application_id, groupId, requestGroups,
+                function() {
+                    alert("Unable to delete group " + groupId);
+                });
+            }
+        });
+    }
+    window.usergrid.console.deleteGroups = deleteGroups;
+    
     function newGroup() {
         $("#dialog-form-new-group").dialog("open");
     }
@@ -1819,7 +1836,7 @@ $(document).ready(function usergrid_console_app() {
         $("#analytics-counter-names").html("Loading...");
         client.requestApplicationCounterNames(current_application_id, function(response) {
             application_counters_names = response.data;
-            var html = usergrid.console.ui.makeTableFromList(application_counters_names, 4, {
+            var html = usergrid.console.ui.makeTableFromList(application_counters_names, 3, {
                 tableId : "analytics-counter-names-table",
                 getListItem : function(i, col, row) {
                     var counter_name = application_counters_names[i];
@@ -1944,7 +1961,8 @@ $(document).ready(function usergrid_console_app() {
 
     function pageSelectSettings(uuid) {
         pageSelect(uuid);
-        requestApplicationCredentials(); 
+        requestApplicationCredentials();
+        requestOrganizations();
         showPanel("#settings-panel");
     }
     window.usergrid.console.pageSelectSettings = pageSelectSettings;
@@ -2541,8 +2559,66 @@ $(document).ready(function usergrid_console_app() {
     }
     window.usergrid.console.newOrganization = newOrganization;
 
-    function createOrganization(organizationName) {
-        
+    function displayOrganizations(response) {       
+        var t = "";
+        var m = "";
+        organizations = {};
+        orgainzations_by_id = {};
+        if (response.data) {
+            organizations = response.data;
+            var count = 0;
+            var organizationNames = keys(organizations).sort();
+            for (var i in organizationNames) {
+                var organization = organizationNames[i];
+                var uuid = organizations[organization];
+                t += "<div class=\"organization-row\" id=\"organization-row-"
+                + uuid
+                + "\"><a href=\"#\" onclick=\"usergrid.console.pageSelectOrganization('"
+                + uuid
+                + "'); return false;\"><span class=\"organization-row-name\">"
+                + organization
+                + "</span> <span class=\"organization-row-uuid\">("
+                + uuid + ")</span>" + "</a></div>";
+                count++;
+                orgainzations_by_id[uuid] = organization;
+                /*
+                if ($.isEmptyObject(current_organization_id)) {
+                    current_organization_id = uuid;
+                    current_organization_name = organization;
+                }
+                m += "<option value=\"" + uuid + "\"" + ((uuid == current_organization_id) ? " selected=\"selected\"": "") + ">" + organization + "</option>";
+                */
+            }
+            if (count) {
+                $("#organizations").html(t);                
+            }
+            else {
+                $("#organizations").html(
+                "<h2>No organizations created.</h2>"); 
+            }
+        } else {
+            $("#organizations").html(
+            "<h2>No organizations created.</h2>");
+            
+        }
+       
+    }
+       
+    function requestOrganizations() {        
+        $("#organizations").html(
+        "<h2>Loading...</h2>");    
+        client.requestOrganizations(displayOrganizations,
+        function() {            
+            $("#organizations").html("<h2>Unable to retrieve organizations list.</h2>");
+        });
+       
+    }
+         
+    function createOrganization(name) {
+        client.createOrganization(name,requestOrganizations,
+        function() {
+            alert("Unable to create orgnization " + name);
+        });
     }
     window.usergrid.console.createOrganization = createOrganization;
 
@@ -2621,7 +2697,8 @@ $(document).ready(function usergrid_console_app() {
     $('select#organizationSelect').selectmenu({
         change: function(e, object) {
             if (client) {
-                client.currentOrganization = object.value;
+                client.currentOrganization = object.value;                
+                pageSelectHome();
                 showConsole();
             }
         }
