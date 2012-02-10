@@ -1117,6 +1117,18 @@ usergrid.Client = function(options) {
     }
     this.deleteGroup = deleteGroup;
 
+    //
+    // Create new role    //
+    // POST: /<application-id/users
+    //
+    function createRole(applicationId, name, title, success, failure) {        
+        apiRequest("POST", "/" + applicationId + "/rolenames", null, JSON.stringify({
+            name: name,
+            title: title
+        }), success, failure);
+    }
+    this.createRole = createRole;
+
     /**
         Creates a new Query.
         @class Represents a Query. 
