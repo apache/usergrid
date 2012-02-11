@@ -38,6 +38,9 @@
 		<module>rest</module>
 		<module>standalone</module>
 		<module>launcher</module>
+                <module>count-common</module>
+                <module>count-batcher</module>
+                <module>count-inserter</module>
 	</modules>
 
 
