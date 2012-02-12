@@ -14,7 +14,7 @@ public class ScheduledBatcherTest {
 
     @Test
     public void testScheduledExecution() {
-        ScheduledBatcher batcher = new ScheduledBatcher(1);
+        ScheduledBatcher batcher = new ScheduledBatcher(1,1);
         batcher.setBatchSubmitter(new Slf4JBatchSubmitter());
         batcher.add(new Count("k1","c1",1));
         batcher.add(new Count("k1","c1",3));
@@ -24,7 +24,8 @@ public class ScheduledBatcherTest {
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         }
-        assertEquals(0,batcher.getPayloadSize());
+        batcher.add(new Count("k1","c2",1));
+        assertEquals(1,batcher.getBatchSubmissionCount());
 
     }
 }

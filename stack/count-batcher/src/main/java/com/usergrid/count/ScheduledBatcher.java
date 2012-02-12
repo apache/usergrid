@@ -5,6 +5,7 @@ import com.usergrid.count.common.Count;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Fires up a single-threaded ScheduledExecutor which will invoke
@@ -15,37 +16,37 @@ import java.util.concurrent.TimeUnit;
  */
 public class ScheduledBatcher extends AbstractBatcher {
 
-    private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private int batchInterval;
+    private volatile long currentMillis;
+    private AtomicLong batchSubmissionCount = new AtomicLong();
 
     /**
      * Initializes the scheduledExecutor with the interval (in seconds) at which this executor will fire
      * @param batchInterval
      */
-    public ScheduledBatcher(int batchInterval) {
+    public ScheduledBatcher(int queueSize, int batchInterval) {
+        super(queueSize);
         this.batchInterval = batchInterval;
-        executor.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                if ( batch != null ) {
-                    batchSubmitter.submit(batch);
-                    batch = new Batch();
-                }
-            }
-        }, this.batchInterval, this.batchInterval, TimeUnit.SECONDS);
+        this.currentMillis = System.currentTimeMillis();
     }
 
-    @Override
-    public void add(Count count) {
-        if ( batch == null ) {
-            batch = new Batch();
+    /**
+     * This implementation is synchronized
+     * @param batch
+     * @return
+     */
+    protected boolean maybeSubmit(Batch batch) {
+        long now = System.currentTimeMillis();
+        if ( now > ((1000 * batchInterval) + currentMillis) ) {
+            currentMillis = now;
+            batchSubmitter.submit(batch);
+            batchSubmissionCount.incrementAndGet();
+            return true;
         }
-        batch.add(count);
+        return false;
     }
 
-    public void shutdown() {
-        this.executor.shutdown();
-        this.executor.shutdownNow();
+    public long getBatchSubmissionCount() {
+        return batchSubmissionCount.get();
     }
-
 }

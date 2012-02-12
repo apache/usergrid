@@ -1,8 +1,10 @@
 package com.usergrid.count;
 
+import java.util.concurrent.Future;
+
 /**
  * @author zznate
  */
 public interface BatchSubmitter {
-    void submit(SimpleBatcher.Batch batch);
+    Future<?> submit(SimpleBatcher.Batch batch);
 }

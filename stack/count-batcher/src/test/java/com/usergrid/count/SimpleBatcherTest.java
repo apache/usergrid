@@ -16,17 +16,10 @@ public class SimpleBatcherTest {
 
     }
 
-    @Test
-    public void testAddCountForPayloadSize() {
-        SimpleBatcher simpleBatcher = new SimpleBatcher();
-        simpleBatcher.add(new Count("k1","counter1",1));
-        simpleBatcher.add(new Count("k1","counter1",5));
-        assertEquals(1, simpleBatcher.getPayloadSize());
-    }
 
     @Test
     public void testBatchSizeTrigger() {
-        SimpleBatcher simpleBatcher = new SimpleBatcher();
+        SimpleBatcher simpleBatcher = new SimpleBatcher(1);
         simpleBatcher.setBatchSubmitter(new Slf4JBatchSubmitter());
         simpleBatcher.setBatchSize(4);
         simpleBatcher.add(new Count("k1","counter1", 1));
@@ -35,11 +28,10 @@ public class SimpleBatcherTest {
         simpleBatcher.add(new Count("k1","c3", 1));
         simpleBatcher.add(new Count("k1","c3",1));
 
-        assertEquals(3, simpleBatcher.getPayloadSize());
+        assertEquals(0, simpleBatcher.getBatchSubmissionCount());
         simpleBatcher.add(new Count("k1","c4",1));
-        assertEquals(0, simpleBatcher.getPayloadSize());
-        simpleBatcher.add(new Count("k1","c3",1));
-        assertEquals(1, simpleBatcher.getPayloadSize());
+        assertEquals(1, simpleBatcher.getBatchSubmissionCount());
+
     }
 
 }

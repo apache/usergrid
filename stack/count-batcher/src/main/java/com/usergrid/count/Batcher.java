@@ -9,6 +9,6 @@ import com.usergrid.count.common.Count;
 public interface Batcher {
     void setBatchSubmitter(BatchSubmitter batchSubmitter);
     void add(Count count);
-    int getOpCount();
-    int getPayloadSize();
+    long getOpCount();
+    long getBatchSubmissionCount();
 }
