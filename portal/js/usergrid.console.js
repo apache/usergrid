@@ -115,7 +115,7 @@ function usergrid_console_app() {
 	    
     }
 
-			function createAlphabetLinks(containerSelector) {
+			function createAlphabetLinks(containerSelector, callback) {
 				var li = $(containerSelector).html();
 				var s = li.replace('{0}','*');
         for (var i = 1; i <= 26; i++) {
@@ -123,7 +123,7 @@ function usergrid_console_app() {
 	        s+= li.replace('{0}',char);
         }
         $(containerSelector).html(s);
-				$(containerSelector + " a").click(usergrid.console.showUsersForLetter);
+				$(containerSelector + " a").click(callback);
      }
     /*******************************************************************
      * 
@@ -316,6 +316,8 @@ function usergrid_console_app() {
     }
 
     function showQueryStatus(s, _type) {
+	    console.log(s);
+	    console.log(_type);
         $("#statusbar-placeholder").statusbar("add", s, 7, _type);
     }
 
@@ -2673,7 +2675,7 @@ function usergrid_console_app() {
         return false;
     });
 
-		createAlphabetLinks("#users-by-alphabetical");
+		createAlphabetLinks("#users-by-alphabetical",usergrid.console.showUsersForLetter);
 
     $("#groups-panel-tab-bar button").click(function() {
         selectTabButton("#groups-panel-tab-bar", $(this));
@@ -2694,7 +2696,7 @@ function usergrid_console_app() {
         return false;
     });
 
-    $("#groups-by-alphabetical").html(getAlphabetLinks("usergrid.console.showGroupsForLetter"));
+		createAlphabetLinks("#groups-by-alphabetical", usergrid.console.showGroupsForLetter);
 
     $("#role-panel-tab-bar button").click(function() {
         if ($(this).attr("id") == "button-role-list") {
@@ -2785,7 +2787,7 @@ function usergrid_console_app() {
         'shell': pageSelectShell
     };
 
-    Pages.pages.account.showFunction = usergrid.console.requestAccountSettings;
+  Pages.pages.account.showFunction = usergrid.console.requestAccountSettings;
 	Pages.panels.application.showFunction = pageSelectApplication;
 	Pages.panels.users.showFunction = pageSelectUsers;
 	Pages.panels.groups.showFunction = pageSelectGroups;
