@@ -16,6 +16,8 @@ import java.util.concurrent.*;
  */
 public class Slf4JBatchSubmitter implements BatchSubmitter {
 
+    // TODO custom logger for printing counts
+    // - should be configed programatically
     private Logger log = LoggerFactory.getLogger(Slf4JBatchSubmitter.class);
 
     private int threadCount = 3;
