@@ -5,6 +5,8 @@
 @redApigee: #FF3B00;
 @grayApigee: #575560;
 @border: #C9C9C9;
+@border2: #E5E5E5;
+@modalBar: #F2F2F2;
 
 //--------------General ------------------------------------------------------------
 html, body{
@@ -25,15 +27,24 @@ html{
   padding: 100px 0 43px;
 }
 
+#pages{
+  padding: 70px 0 50px 0;
+  &>div{
+		display:none;
+	}
+	.alert-error{
+ 		display: none;
+ 	}
+}
+
 footer{
   position:absolute;
   bottom:0; /* stick to bottom */
-  height: 31px;
-  width:100%;
-	clear: both;
+  width:99%;
 	padding:5px;
   border-top: 1px solid @border;
   border-bottom: 1px solid @border;
+  #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
 }
 
 a:link {
@@ -85,7 +96,7 @@ a:active {
 		color: transparent;
 	}
 	h2{
-		color:#777777;
+		color:@grayApigee;
 		font-size:18px;
 	}
 	.nav{
@@ -93,11 +104,13 @@ a:active {
 	  &>li{
 	    &>a{
 	      text-shadow: 0 0px 0 white;
+	      font-weight: bold;
 	    }
 	  }
 	  .active{
 			&>a{
-				background:#E65E17 !important;
+			  background: url('../images/menuActiveTriangle.png') no-repeat center top;
+				color:@redApigee;
 			}
 	  }
 	}
@@ -106,8 +119,12 @@ a:active {
 //----------------- Navigation --------------------------------------------------------------------
 .nav-list{
 	border-right:2px solid #F2F5F7;
+	& > li > a{
+		.border-radius(5px);
+		padding: 5px 15px;
+	}
 	.active > a{
-		background-color:#E65E17;
+		background-color:@redApigee;
 	}
 }
 
@@ -158,19 +175,6 @@ a:active {
 	}
 }
 
-//----------Pages ------------------------------------------------------------
-
-#pages{
-  clear:both;
-  margin: 30px 0;
-  min-height:400px;
-  &>div{
-		display:none;
-	}
-	.alert-error{
- 		display: none;
- 	}
-}
 
 //----------Box ------------------------------------------------------------
 .box {
@@ -551,15 +555,19 @@ a:active {
 	border: 1px solid #CCCCCC;
 }
 .ui-widget-header{
-	background:@gray;
-	color:white;
+	background:white;
+	color:@redApigee;
+	border: none;
+	border-bottom: 1px solid @border2;
 }
 .ui-dialog-buttonpane{
-	background-color: #F5F5F5;
-	border-top: 1px solid #DDDDDD;
+	background-color: @modalBar;
+	border-top: 1px solid @border2;
 	margin-top: 18px;
 }
-
+.ui-dialog{
+	padding: 0;
+}
 
 /*------------ bootstrap --------------------------*/
 .analytics-start-time-span{
@@ -640,4 +648,19 @@ a:active {
 	.box{
 	  	min-width: 400px;
 	}
+}
+
+
+#api-activity {
+	font-size: 14px;
+	text-align: center;
+	background-color: #fff29e;
+	position: absolute;
+	top: 49px;
+	left: 50%;
+	margin-left: -50px;
+	z-index: 9999;
+	width: 100px;
+	.border-radius(0 0 5px 5px);
+	display: none;
 }

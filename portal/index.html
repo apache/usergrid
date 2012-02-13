@@ -42,7 +42,7 @@
 	<script src="js/app.js" type="text/javascript"></script>
 </head>
 <body>
-<div class="fullContainer">
+<div id="fullContainer">
 <div data-dropdown="dropdown" class="navbar navbar-fixed-top">
 	<div class="navbar-inner">
 		<h1 class="apigee">Apigee Enterprise</h1>
@@ -63,6 +63,7 @@
 			<li><a id="logout-link" href=""><i class="icon-off"></i> Sign Out</a></li>
 		</ul>
 		<div class="clear"></div>
+		<div id="api-activity" class="alert">Loading...</div>
 	</div>
 </div>
 <div id="pages">
@@ -841,7 +842,6 @@
 		</div>
 	</div>
 	<div class="clearfix"></div>
-	<div id="api-activity">Loading...</div>
 	<div id="statusbar-placeholder"></div>
 </div>
 <footer>
