@@ -7,4 +7,5 @@ import java.util.concurrent.Future;
  */
 public interface BatchSubmitter {
     Future<?> submit(SimpleBatcher.Batch batch);
+    void shutdown();
 }

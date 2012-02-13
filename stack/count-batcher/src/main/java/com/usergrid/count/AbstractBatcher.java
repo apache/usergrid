@@ -1,6 +1,12 @@
 package com.usergrid.count;
 
 import com.usergrid.count.common.Count;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.annotation.Metered;
+import com.yammer.metrics.annotation.Timed;
+import com.yammer.metrics.core.Counter;
+import com.yammer.metrics.core.Timer;
+import com.yammer.metrics.core.TimerContext;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,7 +25,9 @@ public abstract class AbstractBatcher implements Batcher {
     private int queueSize;
 
     private ArrayBlockingQueue<Batch> queue;
-    protected AtomicLong opCount = new AtomicLong(0);
+    private final AtomicLong opCount = new AtomicLong();
+    private final Timer addTimer =
+            Metrics.newTimer(AbstractBatcher.class, "add_invocation", TimeUnit.MICROSECONDS, TimeUnit.SECONDS);
 
     public AbstractBatcher(int queueSize) {
         this.queueSize = queueSize;
@@ -44,33 +52,40 @@ public abstract class AbstractBatcher implements Batcher {
 
     protected abstract boolean maybeSubmit(Batch batch);
 
+    /**
+     * Add a count object to this batcher
+     * @param count
+     * @throws CounterProcessingUnavailableException
+     */
     public void add(Count count) throws CounterProcessingUnavailableException {
+        final TimerContext context = addTimer.time();
         Batch batch = null;
         try {
             batch = queue.poll(100L, TimeUnit.MILLISECONDS);
+            batch.add(count);
+
+            boolean wasSubmitted = maybeSubmit(batch);
+            if ( wasSubmitted ) {
+                queue.offer(new Batch());
+            } else {
+                queue.offer(batch);
+            }
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         } finally {
+            context.stop();
             if ( batch == null ) {
                 throw new CounterProcessingUnavailableException("Timed out polling for available batch");
             }
         }
 
-        batch.add(count);
 
-        boolean wasSubmitted = maybeSubmit(batch);
-        if ( wasSubmitted ) {
-            queue.offer(new Batch());
-        } else {
-            queue.offer(batch);
-        }
 
     }
 
-    // need a concept of mutex to lock on re-create
     class Batch {
         private final Map<String,Count> counts;
-
+        private final AtomicInteger localCallCounter = new AtomicInteger();
 
         Batch() {
             counts = new HashMap<String, Count>();
@@ -78,6 +93,7 @@ public abstract class AbstractBatcher implements Batcher {
 
         void add(Count count) {
             opCount.incrementAndGet();
+            localCallCounter.incrementAndGet();
             Count found = counts.get(count.getCounterName());
             if ( found != null ) {
                 counts.put(found.getCounterName(), found.apply(count));
@@ -85,6 +101,7 @@ public abstract class AbstractBatcher implements Batcher {
                 counts.put(count.getCounterName(),count);
             }
         }
+
         /**
          * The number of distinct counters which have been seen
          * @return
@@ -97,6 +114,9 @@ public abstract class AbstractBatcher implements Batcher {
             return counts.values();
         }
 
+        public int getLocalCallCount() {
+            return localCallCounter.get();
+        }
 
     }
 }

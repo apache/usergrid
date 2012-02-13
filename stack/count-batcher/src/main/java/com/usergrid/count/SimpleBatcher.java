@@ -1,7 +1,10 @@
 package com.usergrid.count;
 
 import com.usergrid.count.common.Count;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -12,7 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author zznate
  */
 public class SimpleBatcher extends AbstractBatcher {
-
+    private Logger log = LoggerFactory.getLogger(SimpleBatcher.class);
     private int batchSize = 500;
     private AtomicLong batchSubmissionCount = new AtomicLong();
 
@@ -25,7 +28,9 @@ public class SimpleBatcher extends AbstractBatcher {
      *
      */
     protected boolean maybeSubmit(Batch batch) {
-        if ( batch.getPayloadSize() >= batchSize ) {
+        int localCallCount = batch.getLocalCallCount();
+        if ( localCallCount > 0 && localCallCount % batchSize == 0 ) {
+            log.info("submit triggered...");
             batchSubmitter.submit(batch);
             batchSubmissionCount.incrementAndGet();
             return true;
