@@ -47,7 +47,7 @@ public abstract class AbstractBatcher implements Batcher {
     public void add(Count count) throws CounterProcessingUnavailableException {
         Batch batch = null;
         try {
-            batch = queue.poll(5000L, TimeUnit.MILLISECONDS);
+            batch = queue.poll(100L, TimeUnit.MILLISECONDS);
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         } finally {
@@ -60,9 +60,9 @@ public abstract class AbstractBatcher implements Batcher {
 
         boolean wasSubmitted = maybeSubmit(batch);
         if ( wasSubmitted ) {
-            queue.add(new Batch());
+            queue.offer(new Batch());
         } else {
-            queue.add(batch);
+            queue.offer(batch);
         }
 
     }
