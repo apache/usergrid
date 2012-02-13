@@ -7,6 +7,7 @@
 @border: #C9C9C9;
 @border2: #E5E5E5;
 @modalBar: #F2F2F2;
+@h3Color: #CCCCCC;
 
 //--------------General ------------------------------------------------------------
 html, body{
@@ -18,13 +19,12 @@ html{
   border-right: 1px solid @border;
 }
 
-.fullContainer{
+#fullContainer{
 	position:relative; /* needed for footer positioning*/
 	margin:0 auto; /* center, not in IE5 */
 	height:auto !important; /* real browsers */
 	min-height:100%; /* real browsers */
 	height:100%; /* IE6: treaded as min-height*/
-  padding: 100px 0 43px;
 }
 
 #pages{
@@ -39,12 +39,20 @@ html{
 
 footer{
   position:absolute;
-  bottom:0; /* stick to bottom */
-  width:99%;
-	padding:5px;
+  bottom:0;
+  width:100%;
   border-top: 1px solid @border;
   border-bottom: 1px solid @border;
   #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+	&> div {
+		padding: 5px 0;
+	}
+	.nav{
+	  margin: 0;
+	}
+	#copyright{
+	  padding: 9px;
+	}
 }
 
 a:link {
@@ -179,12 +187,11 @@ a:active {
 //----------Box ------------------------------------------------------------
 .box {
   margin: 0 20px 20px;
-	border: solid 1px #727272;
+	border: solid 1px @h3Color;
 	//background: #F2F5F7;
 	.border-radius(5px);
 	h3 {
     margin:0;
-		color: #fff;
 		font-size: 12pt;
 		padding: 10px;
 		//margin-bottom: 20px;
@@ -192,19 +199,21 @@ a:active {
 		line-height:18px;
 		.border-radius(5px 5px 0px 0px);
     //text-shadow: inset 0 1px 1px rgba(255,255,255,.5);
-		.gradientBar(#727272, #616161);
+		background: @h3Color;
+	  //#gradient > .vertical(@navbarBackground, @h3Color);
+
 		a {
 			//.btn;
 			//.btn-danger;
 			font-size: 12px;
 			.border-radius(15px);
 			float:right;
-		  color:white !important;
+		  color:#000000 !important;
 			&:hover{
-			  color:white !important;
+			  color:@redApigee !important;
 			}
 			i {
-		  .icon-white;
+		    //.icon-white;
 			}
 		}
 	}
