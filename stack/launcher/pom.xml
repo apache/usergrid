@@ -25,13 +25,6 @@
 					<include>**/*.xml</include>
 				</includes>
 			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>false</filtering>
-				<excludes>
-					<exclude>**/*.xml</exclude>
-				</excludes>
-			</resource>
 		</resources>
 		<testResources>
 			<testResource>

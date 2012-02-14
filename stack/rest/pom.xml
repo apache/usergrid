@@ -25,13 +25,6 @@
 					<include>**/*.xml</include>
 				</includes>
 			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>false</filtering>
-				<excludes>
-					<exclude>**/*.xml</exclude>
-				</excludes>
-			</resource>
 		</resources>
 		<testResources>
 			<testResource>
@@ -40,13 +33,6 @@
 				<includes>
 					<include>**/*.xml</include>
 				</includes>
-			</testResource>
-			<testResource>
-				<directory>src/test/resources</directory>
-				<filtering>false</filtering>
-				<excludes>
-					<exclude>**/*.xml</exclude>
-				</excludes>
 			</testResource>
 		</testResources>
 		<plugins>

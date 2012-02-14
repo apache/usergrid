@@ -725,7 +725,7 @@ public class QueueManagerImpl implements QueueManager {
 			queuePath = "/";
 		}
 
-		logger.info("QueueManagerFactoryImpl.getFromQueue: " + queuePath);
+		logger.info("QueueManagerFactoryImpl.getFromQueue: {}", queuePath);
 		UUID queueId = Queue.getQueueId(queuePath);
 
 		UUID consumerId = query.getConsumerId();
@@ -1618,8 +1618,10 @@ public class QueueManagerImpl implements QueueManager {
 						false, INDEX_ENTRY_LIST_COUNT).execute().get()
 				.getColumns();
 
-		logger.info("Found " + entries.size() + " previous index entries for "
-				+ entryName + " of entity " + queueId);
+		if ( logger.isInfoEnabled() ) {
+            logger.info("Found {} previous index entries for {} of entity {}",
+                new Object[]{entries.size(), entryName, queueId});
+        }
 
 		// Delete all matching entries from entry list
 		for (HColumn<ByteBuffer, ByteBuffer> entry : entries) {
@@ -1797,7 +1799,7 @@ public class QueueManagerImpl implements QueueManager {
 					composite_cursor = "";
 				}
 				int hashCode = slice.hashCode();
-				logger.info("Cursor hash code: " + hashCode);
+				logger.info("Cursor hash code: {} ", hashCode);
 				composite_cursor += hashCode + ":" + r.getCursor();
 			}
 

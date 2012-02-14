@@ -937,10 +937,10 @@ public class EntityManagerImpl implements EntityManager {
 		}
 
 		A entity = EntityFactory.newEntity(itemId, eType, entityClass);
-		logger.info("Entity created of type " + entity.getClass().getName());
+		logger.info("Entity created of type {}", entity.getClass().getName());
 
 		String aliasName = getDefaultSchema().aliasProperty(entityType);
-		logger.info("Alias property is " + aliasName);
+		logger.info("Alias property is {}", aliasName);
 		for (String prop_name : properties.keySet()) {
 
 			Object propertyValue = properties.get(prop_name);
@@ -965,8 +965,7 @@ public class EntityManagerImpl implements EntityManager {
 					&& prop_name.equals(aliasName)) {
 				String aliasValue = propertyValue.toString().toLowerCase()
 						.trim();
-				logger.info("Alias property value for " + aliasName + " is "
-						+ aliasValue);
+				logger.info("Alias property value for {} is {}", aliasName, aliasValue);
 				createAlias(applicationId, ref(entityType, itemId), entityType,
 						aliasValue);
 			}
@@ -1472,16 +1471,14 @@ public class EntityManagerImpl implements EntityManager {
 
 	public void deleteEntity(UUID entityId) throws Exception {
 
-		logger.info("deleteEntity " + entityId + " of application "
-				+ applicationId);
+		logger.info("deleteEntity {} of application {}", entityId, applicationId);
 
 		DynamicEntity entity = loadPartialEntity(entityId);
 		if (entity == null) {
 			return;
 		}
 
-		logger.info("deleteEntity: " + entityId + " is of type "
-				+ entity.getType());
+		logger.info("deleteEntity: {} is of type {}", entityId, entity.getType());
 
 		Keyspace ko = cass.getApplicationKeyspace(applicationId);
 		Mutator<ByteBuffer> m = createMutator(ko, be);

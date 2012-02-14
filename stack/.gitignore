@@ -13,6 +13,8 @@ out
 *.svn
 *.ipr
 *.iws
+*.iml
+*~
 DS_Store
 /.DS_Store
 *.class

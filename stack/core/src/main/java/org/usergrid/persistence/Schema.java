@@ -327,7 +327,7 @@ public class Schema {
 	}
 
 	public synchronized void registerEntity(Class<? extends Entity> entityClass) {
-		logger.info("Registering " + entityClass);
+		logger.info("Registering {}", entityClass);
 		EntityInfo e = registeredEntityClasses.get(entityClass);
 		if (e != null) {
 			return;

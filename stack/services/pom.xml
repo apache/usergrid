@@ -62,13 +62,6 @@
 				</includes>
 			</resource>
 			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>false</filtering>
-				<excludes>
-					<exclude>**/*.xml</exclude>
-				</excludes>
-			</resource>
-			<resource>
 				<directory>src/main/python</directory>
 			</resource>
 		</resources>
@@ -79,13 +72,6 @@
 				<includes>
 					<include>**/*.xml</include>
 				</includes>
-			</testResource>
-			<testResource>
-				<directory>src/test/resources</directory>
-				<filtering>false</filtering>
-				<excludes>
-					<exclude>**/*.xml</exclude>
-				</excludes>
 			</testResource>
 			<testResource>
 				<directory>src/main/python</directory>
