@@ -315,9 +315,8 @@
 			</div>
 		</div>
 		<div id="users-panel" style="display: none">
-			<div id="users-panel-tab-bar" class="">
-				<ul class="nav nav-pills">
-				<li  class="active"><a id="button-users-list" href="#">List</a></li>
+			<ul id="users-panel-tab-bar" class="nav nav-tabs">
+				<li class="active"><a id="button-users-list" href="#">List</a></li>
 				<li><a id="button-users-search" href="#">Search</a></li>
 				<li class="dropdown">
 				<a class="dropdown-toggle" data-toggle="dropdown" href="#">
@@ -328,7 +327,6 @@
 				</ul>
 				</li>
 			</ul>
-			</div>
 			<div class="panel-content">
 				<div class="console-section">
 					<div class="console-section-header ui-widget-header">
@@ -371,7 +369,7 @@
 			</div>
 		</div>
 		<div id="user-panel" style="display: none">
-			<ul id="user-panel-tab-bar" class="nav nav-pills">
+			<ul id="user-panel-tab-bar" class="nav nav-tabs">
 				<li><a id="button-user-list" href="#">List</a></li>
 				<li><a id="button-user-search" href="#">Search</a></li>
 				<li><a id="button-user-profile" href="#">Profile</a></li>
@@ -387,10 +385,11 @@
 			<div id="user-panel-permissions" class="panel-content" style="display: none;"></div>
 		</div>
 		<div id="groups-panel" style="display: none">
-			<div id="groups-panel-tab-bar"
-				class="console-tab-bar ui-widget-header">
-				<button class="button tab-bar-selection" id="button-groups-list">List</button>
-				<button class="button" id="button-groups-search">Search</button>
+			<div id="groups-panel-tab-bar" class="">
+				<ul class="nav nav-tabs">
+				<li  class="active"><a id="button-groups-list" href="#">List</a></li>
+				<li><a id="button-groups-search" href="#">Search</a></li>
+			</ul>
 			</div>
 			<div class="panel-content">
 				<div class="console-section">
@@ -437,15 +436,15 @@
 			</div>
 		</div>
 		<div id="group-panel" style="display: none">
-			<div id="group-panel-tab-bar"
-				class="console-tab-bar ui-widget-header">
-				<button class="button" id="button-group-list">List</button>
-				<button class="button" id="button-group-search">Search</button>
-				<button class="button tab-bar-selection" id="button-group-details">Details</button>
-				<button class="button" id="button-group-memberships">Memberships</button>
-				<button class="button" id="button-group-activities">Activities</button>
-				<button class="button" id="button-group-permissions">Permissions</button>
-			</div>
+			<ul id="group-panel-tab-bar" class="nav nav-tabs">
+				<li><a id="button-group-list" href="#">List</a></li>
+				<li><a id="button-group-search" href="#">Search</a></li>
+				<li><a id="button-group-details" href="#">Details</a></li>
+				<li><a id="button-group-memberships" href="#">Memberships</a></li>
+				<li><a id="button-group-activities" href="#">Activities</a></li>
+				<li><a id="button-group-permissions" href="#">Permissions</a></li>
+			</ul>
+
 			<div id="group-panel-details" class="panel-content"></div>
 			<div id="group-panel-memberships" class="panel-content" style="display: none;"></div>
 			<div id="group-panel-activities" class="panel-content" style="display: none;"></div>
@@ -453,10 +452,9 @@
 		</div>
 
 		<div id="roles-panel" style="display: none">
-			<div id="roles-panel-tab-bar"
-				class="console-tab-bar ui-widget-header">
-				<button class="button tab-bar-selection" id="button-roles-list">List</button>
-			</div>
+			<ul id="roles-panel-tab-bar" class="nav nav-tabs">
+				<li class="active"><a id="button-roles-list" href="#">List</a></li>
+			</ul>
 			<div class="panel-content">
 				<div class="console-section">
 					<div class="console-section-header ui-widget-header">
