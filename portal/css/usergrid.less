@@ -1,7 +1,7 @@
 //@import "bootstrap.less";
 //@import "apigee.less";
 @import "../bootstrap/less/bootstrap.less";
-@apigeelogin: url(../images/apigeelogin.png);
+@apigee-logo: url(../images/apigee-logo.png);
 @redApigee: #FF3B00;
 @grayApigee: #575560;
 @border: #C9C9C9;
@@ -93,19 +93,21 @@ a:active {
 	h1, h2{
 		display: inline;
 		float:left;
-		margin: 0 15px;
 	}
 	h1 {
-		background: @apigeelogin no-repeat;
-		height: 35px;
-		width: 106px;
+		background: @apigee-logo no-repeat 0 10px transparent;
+		height: 32px;
+		width: 64px;
 		overflow: hidden;
 		position: relative;
 		color: transparent;
+		margin: 0 15px;
 	}
 	h2{
 		color:@grayApigee;
-		font-size:18px;
+		font-size:14px;
+		margin: 10px;
+		line-height: 20px;
 	}
 	.nav{
 	  float:right;

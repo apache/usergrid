@@ -1339,12 +1339,13 @@ function usergrid_console_app() {
      * Groups
      * 
      ******************************************************************/
-
+    var groupLetter = "*";
+    var groupSortBy = "path";
     function pageSelectGroups(uuid) {
-        pageSelect(uuid);
-        //showPanel("#groups-panel");
-	      //Pages.SelectPanel('groups');
-        pageOpenQueryExplorer("/groups");
+      pageSelect(uuid);
+	    requestGroups();
+	    selectTabButton("#groups-panel-tab-bar", $("#button-groups-list"));
+	    $("#groups-by-alphabetical").show();
     }
     window.usergrid.console.pageSelectGroups = pageSelectGroups;
 
