@@ -1004,10 +1004,10 @@ usergrid.Client = function(options) {
     }
     this.queryUserActivities = queryUserActivities;
 
-    function requestUserRoles(applicationId, entityId, success, failure) {
+    function queryUserRoles(applicationId, entityId, success, failure) {
         apiGetRequest("/" + applicationId + "/users/" + entityId + "/rolenames", null, success, failure);
     }
-    this.requestUserRoles = requestUserRoles;
+    this.queryUserRoles = queryUserRoles;
 
     function queryUserPermissions(a) {
         return queryEntityCollection("users", "permissions", arguments);
