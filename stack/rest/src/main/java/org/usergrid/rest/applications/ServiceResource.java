@@ -304,6 +304,7 @@ public class ServiceResource extends AbstractContextResource {
 			throws Exception {
 
 		logger.info("ServiceResource.executePost");
+
 		Object json = body.getEntity();
 
 		ApiResponse response = new ApiResponse(ui);
