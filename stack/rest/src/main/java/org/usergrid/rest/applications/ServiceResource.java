@@ -86,6 +86,7 @@ import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
 
 import com.sun.jersey.api.json.JSONWithPadding;
+import com.sun.jersey.core.provider.EntityHolder;
 
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
@@ -297,11 +298,13 @@ public class ServiceResource extends AbstractContextResource {
 	@POST
 	@RequireApplicationAccess
 	@Consumes(MediaType.APPLICATION_JSON)
-	public JSONWithPadding executePost(@Context UriInfo ui, Object json,
+	public JSONWithPadding executePost(@Context UriInfo ui,
+			EntityHolder<Object> body,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		logger.info("ServiceResource.executePost");
+		Object json = body.getEntity();
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("post");
