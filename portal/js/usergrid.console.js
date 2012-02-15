@@ -1254,7 +1254,7 @@ function usergrid_console_app() {
             var entity = response.entities[0];
             var path = response.path || "";
             path = "" + path.match(/[^?]*/);
-
+            var username = entity.username;
             var name = entity.uuid + " : "
                     + entity.type;
             if (entity.username) {
@@ -2537,6 +2537,7 @@ function usergrid_console_app() {
 					    var link = $(this);
 				        client.currentOrganization = link.attr("href").substring(1);
 				        showConsole();
+						  pageSelectHome();
 					      Pages.SelectPanel('organization');
 					      $("#organizations-menu > a span").text(link.text());
 				    }
