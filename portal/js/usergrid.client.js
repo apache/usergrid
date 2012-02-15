@@ -509,7 +509,7 @@ usergrid.Client = function(options) {
         if (!self.currentOrganization) {
             failure();
         }
-        apiGetRequest("/management/organizations/" + self.currentOrganization + "/applications", null, success, failure);
+        apiGetRequest("/management/organizations/" + self.currentOrganization.uuid + "/applications", null, success, failure);
     }
     /**
      * <p>Get applications for organization</p>
@@ -545,7 +545,7 @@ usergrid.Client = function(options) {
         if (!self.currentOrganization) {
             failure();
         }
-        apiRequest("POST", "/management/organizations/" + self.currentOrganization + "/applications", null, JSON.stringify({
+        apiRequest("POST", "/management/organizations/" + self.currentOrganization.uuid + "/applications", null, JSON.stringify({
             name: name
         }), success, failure);
     }
@@ -560,7 +560,7 @@ usergrid.Client = function(options) {
         if (!self.currentOrganization) {
             failure();
         }
-        apiGetRequest("/management/organizations/" + self.currentOrganization + "/users", null, success, failure);
+        apiGetRequest("/management/organizations/" + self.currentOrganization.uuid + "/users", null, success, failure);
     }
     this.requestAdmins = requestAdmins;
 
@@ -599,7 +599,7 @@ usergrid.Client = function(options) {
         if (!self.currentOrganization) {
             failure();
         }
-        apiGetRequest("/management/organizations/" + self.currentOrganization + "/credentials", null, success, failure);
+        apiGetRequest("/management/organizations/" + self.currentOrganization.uuid + "/credentials", null, success, failure);
     }
     this.requestOrganizationCredentials = requestOrganizationCredentials;
 
@@ -612,7 +612,7 @@ usergrid.Client = function(options) {
         if (!self.currentOrganization) {
             failure();
         }
-        apiRequest("POST", "/management/organizations/" + self.currentOrganization + "/credentials", null, null, success, failure);
+        apiRequest("POST", "/management/organizations/" + self.currentOrganization.uuid + "/credentials", null, null, success, failure);
     }
     this.regenerateOrganizationCredentials = regenerateOrganizationCredentials;
 
@@ -625,7 +625,7 @@ usergrid.Client = function(options) {
         if (!self.currentOrganization) {
             failure();
         }
-        apiRequest("POST", "/management/organizations/" + self.currentOrganization + "/users", null, JSON.stringify({
+        apiRequest("POST", "/management/organizations/" + self.currentOrganization.uuid + "/users", null, JSON.stringify({
             email: email,
             password: password
         }), success, failure);
@@ -799,13 +799,7 @@ usergrid.Client = function(options) {
             if (response && response.access_token && response.user) {
                 self.loggedInUser = response.user;
                 self.accessToken = response.access_token;
-                self.currentOrganization = null;
-                if (self.loggedInUser.organizations) {
-                    for (first in self.loggedInUser.organizations) break;
-                    if (first) {
-                        self.currentOrganization = self.loggedInUser.organizations[first].uuid;
-                    }
-                }
+	            setCurrentOrganization();
                 localStorage.setObject('usergrid_user', self.loggedInUser);
                 localStorage.setObject('usergrid_access_token', self.accessToken);
                 if (success) {
@@ -865,13 +859,7 @@ usergrid.Client = function(options) {
         function(response) {
             if (response && response.data) {
                 self.loggedInUser = response.data;
-                self.currentOrganization = null;
-                if (self.loggedInUser.organizations) {
-                    for (first in self.loggedInUser.organizations) break;
-                    if (first) {
-                        self.currentOrganization = self.loggedInUser.organizations[first].uuid;
-                    }
-                }
+	            setCurrentOrganization();
                 localStorage.setObject('usergrid_user', self.loggedInUser);
                 localStorage.setObject('usergrid_access_token', self.accessToken);
                 if (success) {
@@ -1301,12 +1289,16 @@ usergrid.Client = function(options) {
 
     self.loggedInUser = localStorage.getObject('usergrid_user');
     self.accessToken = localStorage.getObject('usergrid_access_token');
-    if (self.loggedInUser && self.loggedInUser.organizations) {
-        for (first in self.loggedInUser.organizations) break;
-        if (first) {
-            self.currentOrganization = self.loggedInUser.organizations[first].uuid;
-        }
-    }
+		setCurrentOrganization();
 
+	function setCurrentOrganization() {
+		self.currentOrganization = null;
+		if (self.loggedInUser && self.loggedInUser.organizations) {
+			for (first in self.loggedInUser.organizations) break;
+			if (first) {
+				self.currentOrganization = self.loggedInUser.organizations[first];
+			}
+		}
+	}
 };
 
