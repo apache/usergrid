@@ -9,6 +9,9 @@
 @modalBar: #F2F2F2;
 @h3Color: #CCCCCC;
 
+//@fontMenu:
+
+
 //--------------General ------------------------------------------------------------
 html, body{
 	height: 100%;
@@ -116,13 +119,21 @@ a:active {
 	  &>li{
 	    &>a{
 	      text-shadow: 0 0px 0 white;
-	      font-weight: bold;
+	      font-weight: normal;
+	      color: @grayApigee;
+	      &:hover{
+	        color: @redApigee !important;
+	      }
 	    }
 	  }
 	  .active{
 			&>a{
 			  background: url('../images/menuActiveTriangle.png') no-repeat center top;
 				color:@redApigee;
+				font-weight: bold;
+	      &:hover{
+	        background-color: transparent;
+	      }
 			}
 	  }
 	}
