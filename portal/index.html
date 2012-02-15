@@ -373,6 +373,24 @@
 					<div id="user-panel-activities" class="panel-content" style="display: none;"></div>
 					<div id="user-panel-graph" class="panel-content" style="display: none;"></div>
 					<div id="user-panel-permissions" class="panel-content" style="display: none;"></div>
+					<div id="dialog-form-add-user-to-group" class="dialog-form"
+					    title="Add User to Group">
+					    <p class="validateTips">All form fields are required.</p>
+					    <form>
+						<fieldset>
+						    <label for="search-user-username">Username</label>
+						    <input onkeyup="usergrid.console.lookupUsername(this.value);"							    
+							type="text" name="search-user-username" id="search-user-username"
+							value="" class="text ui-widget-content ui-corner-all" />
+						</fieldset>
+					    </form>
+					    <div class="suggestionsBox" id="suggestionsUsers">
+						<div class="suggestionList" id="SuggestionsListUsers">
+						    &nbsp;
+						</div>
+					    </div>
+					</div>
+					
 				</div>
 				<div id="groups-panel" style="display: none">
 					<div id="groups-panel-tab-bar"
@@ -412,7 +430,7 @@
 					<div id="dialog-form-new-group" class="dialog-form"
 						title="Create new group">
 						<p class="validateTips">All form fields are required.</p>
-						<form>
+						<form>						    
 							<fieldset>
 								<label for="new-group-title">Title</label> <input
 									type="text" name="new-group-title" id="new-group-title"
@@ -438,6 +456,23 @@
 					<div id="group-panel-memberships" class="panel-content" style="display: none;"></div>
 					<div id="group-panel-activities" class="panel-content" style="display: none;"></div>
 					<div id="group-panel-permissions" class="panel-content" style="display: none;"></div>
+					<div id="dialog-form-add-group-to-user" class="dialog-form"
+					    title="Add User to a Group">
+					    <p class="validateTips">All form fields are required.</p>
+					    <form>
+						<fieldset>
+						    <label for="search-group-groupname">Group</label>
+						    <input onkeyup="usergrid.console.lookupGroupName(this.value);"							
+							type="text" name="search-group-groupname" id="search-group-groupname"
+							value="" class="text ui-widget-content ui-corner-all" />
+						</fieldset>
+					    </form>
+					    <div class="suggestionsBox" id="suggestionsGroups">
+						<div class="suggestionList" id="SuggestionsListGroups">
+						    &nbsp;
+						</div>
+					    </div>					
+					</div>
 				</div>
 				<div id="roles-panel" style="display: none">
 					<div id="roles-panel-tab-bar"

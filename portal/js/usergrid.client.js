@@ -425,8 +425,11 @@ usergrid.Client = function(options) {
                     }
                     return;
                 }
-
-                success(response);
+                try {
+                    success(response);
+                } catch (e) {
+                    alert('There was an error:' + e);
+                }
             }
         };
 
@@ -1028,6 +1031,13 @@ usergrid.Client = function(options) {
     }
     this.queryUserFollowing = queryUserFollowing;
 
+    function requestUserList(applicationId, searchString, success, failure) {
+        if (searchString != "*") searchString = searchString + '*';        
+        apiRequest("GET", "/" + applicationId + "/users", null, JSON.stringify({
+            username: searchString
+        }), success, failure);
+    }
+    this.requestUserList = requestUserList;
     //
     // Create new application user for organization
     //
@@ -1117,6 +1127,11 @@ usergrid.Client = function(options) {
     }
     this.deleteGroup = deleteGroup;
 
+    function addUserToGroup(applicationId, groupId, username, success, failure) {        
+        apiRequest("POST", "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, "{ }", success, failure);
+    }
+    this.addUserToGroup = addUserToGroup;
+    
     //
     // Create new role    //
     // POST: /<application-id/users
@@ -1129,6 +1144,12 @@ usergrid.Client = function(options) {
     }
     this.createRole = createRole;
 
+    function deleteRole(applicationId, rolename, success, failure) {        
+        apiRequest("DELETE", "/" + applicationId + "/rolenames/" + rolename, null, null, success, failure);
+    }
+    this.deleteRole = deleteRole;
+    
+    
     /**
         Creates a new Query.
         @class Represents a Query. 

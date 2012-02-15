@@ -1065,6 +1065,7 @@ $(document).ready(function usergrid_console_app() {
             "listItemTemplate" : "usergrid.ui.panels.user.list.html",
             "getListItemTemplateOptions" : function(entity, path) {
                 var name = entity.uuid + " : " + entity.type;
+                var username = entity.username;
                 if (entity.username) {
                     name = entity.username;
                 }
@@ -1080,6 +1081,7 @@ $(document).ready(function usergrid_console_app() {
                     name : name,
                     id: id,
                     path : path,
+                    username : username,
                     fblink : entity.fblink,
                     collections : collections,
                     uri : uri
@@ -1279,6 +1281,7 @@ $(document).ready(function usergrid_console_app() {
                 entity : entity_contents,
                 picture : entity.picture,
                 name : name,
+                username : username,
                 path : entity_path,
                 collections : collections,
                 metadata : metadata,
@@ -1332,6 +1335,7 @@ $(document).ready(function usergrid_console_app() {
             $("#user-profile-area").html("<h2>Unable to retrieve user profile.</h2>");
         });
     }
+    window.usergrid.console.requestUser = requestUser;
 
     /*******************************************************************
      * 
@@ -1474,6 +1478,196 @@ $(document).ready(function usergrid_console_app() {
     }
     window.usergrid.console.newGroup = newGroup;
 
+    //*****************************************************
+    // add user to group - user autosearch
+    //*****************************************************
+    var add_user_username = $("#search-user-username");
+    var allSearchUserFields = $([]).add(add_user_username);
+    var selectedGroupId = '';
+    $("#dialog-form-add-user-to-group").dialog({
+        autoOpen: false,
+        height: 400,
+        width: 350,
+        modal: true,
+        buttons: {
+            "Create": function() {
+                allSearchUserFields.removeClass("ui-state-error");
+                var bValid = checkLength(add_user_username, "new_user_username", 1, 80)
+                && checkRegexp(add_user_username, nameRegex,
+                "Username name only allows : a-z, 0-9, dot, and dash.");
+                if (bValid) {
+                    addUserToGroup(selectedGroupId, add_user_username.val());
+                    $(this).dialog("close");
+                }
+            },
+            Cancel: function() {
+                $(this).dialog("close");
+            }
+        },
+        close: function() {
+            allSearchUserFields.val("").removeClass("ui-state-error");
+        }
+    });
+
+    function findUserDialog(groupId) {
+        selectedGroupId = groupId;
+        $("#dialog-form-add-user-to-group").dialog("open");
+    }
+    window.usergrid.console.findUserDialog = findUserDialog;
+
+    function addUserToGroup(groupId, userId) {
+        client.addUserToGroup(current_application_id, groupId, userId, function() { requestGroup(groupId); },
+        function() {
+            alert("Unable to add user to group ");
+        });
+    }
+
+    function handleUserListResponse(response) {
+        if (response.entities && (response.entities.length > 0)) {
+            var response_html = '';
+            var i=0;
+            var e=response.entities.length;
+            for (i=0;i<e;i++)
+            {
+                var entity = response.entities[i];
+                username = entity.username;
+                name = entity.name;
+                uuid = entity.uuid;
+                response_html = response_html +
+                '<a href="#" onclick="usergrid.console.setUsername(\''+username+'\');">'+username+' ('+name+')</a><br/>';
+            }
+            $('#SuggestionsListUsers').html(response_html);
+        } else {
+            var data ='no entries found...';
+            $('#SuggestionsListUsers').html(data);
+        }
+    }
+
+    function setUsername(thisValue) {
+            $('#search-user-username').val(thisValue);
+            setTimeout("$('#suggestionsUsers').hide();", 200);
+    }
+    window.usergrid.console.setUsername = setUsername;
+
+    function lookupUsername(searchString) {
+            if(searchString.length == 0) {
+                // no input, so hide the suggestion box.
+                $('#suggestionsUsers').hide();
+            } else {
+                $('#suggestionsUsers').show();
+                var data = 'searching...';
+                $('#SuggestionsListUsers').html(data);
+
+                var client_id = organization_keys.client_id;
+                var client_secret = organization_keys.client_secret;
+                var test_client = new usergrid.Client({
+                    applicationId : current_application_id,
+                    clientId : client_id,
+                    clientSecret : client_secret
+                });
+                var query = {"ql" : "order by " + userSortBy};
+                if (searchString != "*") query = {"ql" : userSortBy + "='" + searchString + "*'"};
+                users_query = test_client.queryUsers(handleUserListResponse, query);
+            }
+    }
+    window.usergrid.console.lookupUsername = lookupUsername;
+
+    //*****************************************************
+    // add user to group - group autosearch
+    //*****************************************************
+
+    var add_group_groupname = $("#search-group-groupname");
+    var allSearchGroupFields = $([]).add(add_group_groupname);
+    var selectedUserId = '';
+    $("#dialog-form-add-group-to-user").dialog({
+        autoOpen: false,
+        height: 400,
+        width: 350,
+        modal: true,
+        buttons: {
+            "Create": function() {
+                allSearchGroupFields.removeClass("ui-state-error");
+                var bValid = checkLength(add_group_groupname, "new_group_groupname", 1, 80)
+                && checkRegexp(add_group_groupname, nameRegex,
+                "Group name name only allows : a-z, 0-9, dot, and dash.");
+                if (bValid) {
+                    addUserToGroup2(add_group_groupname.val(), selectedUserId);
+                    $(this).dialog("close");
+                }
+            },
+            Cancel: function() {
+                $(this).dialog("close");
+            }
+        },
+        close: function() {
+            allSearchGroupFields.val("").removeClass("ui-state-error");
+        }
+    });
+
+    function findGroupDialog(userId) {
+        selectedUserId = userId;
+        $("#dialog-form-add-group-to-user").dialog("open");
+    }
+    window.usergrid.console.findGroupDialog = findGroupDialog;
+
+    function addUserToGroup2(groupId, userId) {
+        client.addUserToGroup(current_application_id, groupId, userId, function() { requestUser(userId); },
+        function() {
+            alert("Unable to add user to group ");
+        });
+    }
+
+    function handleGroupListResponse(response) {
+        if (response.entities && (response.entities.length > 0)) {
+            var response_html = '';
+            var i=0;
+            var e=response.entities.length;
+            for (i=0;i<e;i++)
+            {
+                var entity = response.entities[i];
+                path = entity.path;
+                title = entity.title;
+                uuid = entity.uuid;
+                response_html = response_html +
+                '<a href="#" onclick="usergrid.console.setGroupPath(\''+path+'\');">'+path+'</a><br/>';
+            }
+            $('#SuggestionsListGroups').html(response_html);
+        } else {
+            var data ='no entries found...';
+            $('#SuggestionsListGroups').html(data);
+        }
+    }
+
+    function setGroupPath(thisValue) {
+            $('#search-group-groupname').val(thisValue);
+            setTimeout("$('#suggestionsGroups').hide();", 200);
+    }
+    window.usergrid.console.setGroupPath = setGroupPath;
+
+    function lookupGroupName(searchString) {
+            if(searchString.length == 0) {
+                // no input, so hide the suggestion box.
+                $('#suggestionsGroups').hide();
+            } else {
+                $('#suggestionsGroups').show();
+                var data = 'searching...';
+                $('#SuggestionsListGroups').html(data);
+
+                var client_id = organization_keys.client_id;
+                var client_secret = organization_keys.client_secret;
+                var test_client = new usergrid.Client({
+                    applicationId : current_application_id,
+                    clientId : client_id,
+                    clientSecret : client_secret
+                });
+                var query = {"ql" : "order by " + groupSortBy};
+                if (searchString != "*") query = {"ql" : groupSortBy + "='" + searchString + "*'"};
+                users_query = test_client.queryGroups(handleGroupListResponse, query);
+            }
+    }
+    window.usergrid.console.lookupGroupName = lookupGroupName;
+
+
     /*******************************************************************
      * 
      * Group
@@ -1531,7 +1725,7 @@ $(document).ready(function usergrid_console_app() {
             var entity = response.entities[0];
             var path = response.path || "";
             path = "" + path.match(/[^?]*/);
-
+            var uuid = entity.uuid;
             var name = entity.uuid + " : "
                     + entity.type;
             if (entity.path) {
@@ -1559,6 +1753,7 @@ $(document).ready(function usergrid_console_app() {
                 entity : entity_contents,
                 picture : entity.picture,
                 name : name,
+                uuid : uuid,
                 path : entity_path,
                 collections : collections,
                 metadata : metadata,

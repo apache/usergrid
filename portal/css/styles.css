@@ -1690,3 +1690,10 @@ a:active {
 .organization-row-buttons .ui-button-text {
 	padding-top: 2px !important;
 }
+
+.suggestionsBox{
+	display: none;
+	border: 1px solid #222;
+	width: 300px;
+	z-index: 99;	
+}
