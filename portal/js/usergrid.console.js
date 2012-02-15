@@ -886,6 +886,7 @@ function usergrid_console_app() {
      * 
      ******************************************************************/
 
+    var backgroundGraphColor = 'white';//'#F2F5F7';
     function pageSelectApplication() {
         pageSelect(usergrid.console.currentApp);
         requestApplicationCredentials();
@@ -920,7 +921,7 @@ function usergrid_console_app() {
         document.getElementById('application-panel-entity-graph')).
         draw(data, {
             is3D: true,
-            backgroundColor: "#F2F5F7"
+            backgroundColor: backgroundGraphColor
         });
 
         $('#application-panel #application-panel-text').html(t);
@@ -962,7 +963,7 @@ function usergrid_console_app() {
                     titleTextStyle: {color: 'black', fontName: 'Arial', fontSize: 18},
                     width: graph_width,
                     height: graph_height,
-                    backgroundColor: "#F2F5F7",
+                    backgroundColor: backgroundGraphColor,
                     legend: "none",
                     hAxis: {textStyle: {color:"transparent", fontSize: 1}},
                     vAxis: {textStyle: {color:"transparent", fontSize: 1}}});
@@ -983,7 +984,7 @@ function usergrid_console_app() {
                     titleTextStyle: {color: 'black', fontName: 'Arial', fontSize: 18},
                     width: graph_width,
                     height: graph_height,
-                    backgroundColor: "#F2F5F7",
+                    backgroundColor: backgroundGraphColor,
                     legend: "none",
                     hAxis: {textStyle: {color:"transparent", fontSize: 1}},
                     vAxis: {textStyle: {color:"transparent", fontSize: 1}}});
@@ -1004,7 +1005,7 @@ function usergrid_console_app() {
                     titleTextStyle: {color: 'black', fontName: 'Arial', fontSize: 18},
                     width: graph_width,
                     height: graph_height,
-                    backgroundColor: "#F2F5F7",
+                    backgroundColor: backgroundGraphColor,
                     legend: "none",
                     hAxis: {textStyle: {color:"transparent", fontSize: 1}},
                     vAxis: {textStyle: {color:"transparent", fontSize: 1}}});
@@ -1025,7 +1026,7 @@ function usergrid_console_app() {
                     titleTextStyle: {color: 'black', fontName: 'Arial', fontSize: 18},
                     width: graph_width,
                     height: graph_height,
-                    backgroundColor: "#F2F5F7",
+                    backgroundColor: backgroundGraphColor,
                     legend: "none",
                     hAxis: {textStyle: {color:"transparent", fontSize: 1}},
                     vAxis: {textStyle: {color:"transparent", fontSize: 1}}});
@@ -1939,12 +1940,12 @@ function usergrid_console_app() {
             if (resolution == "all") {
                 new google.visualization.ColumnChart(
                     document.getElementById('analytics-graph-area')).
-                    draw(data, {width: 950, height: 500, backgroundColor: "#F2F5F7"});
+                    draw(data, {width: 950, height: 500, backgroundColor: backgroundGraphColor});
             }
             else {
                 new google.visualization.LineChart(
                     document.getElementById('analytics-graph-area')).
-                    draw(data, {width: 950, height: 500, backgroundColor: "#F2F5F7"});
+                    draw(data, {width: 950, height: 500, backgroundColor: backgroundGraphColor});
             }
             //$("#analytics-graph-table").visualize({type: 'line', width: '950px', height: '500px'});
         },
