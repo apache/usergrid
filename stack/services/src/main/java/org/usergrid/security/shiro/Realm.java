@@ -304,6 +304,10 @@ public class Realm extends AuthorizingRealm {
 							"organizations:admin,access,get,put,post,delete:*");
 					grant(info, principal,
 							"applications:admin,access,get,put,post,delete:*");
+					grant(info, principal,
+							"organizations:admin,access,get,put,post,delete:*:/**");
+					grant(info, principal,
+							"applications:admin,access,get,put,post,delete:*:/**");
 					grant(info, principal, "users:access:*");
 
 				} else {

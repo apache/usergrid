@@ -29,3 +29,8 @@ DS_Store
 /rest/src/main/resources/usergrid-custom.properties
 
 usergrid-custom*
+
+tools/applications.json
+tools/applications.wadl
+tools/management.json
+tools/management.wadl
