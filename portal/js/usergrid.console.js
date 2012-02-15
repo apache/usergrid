@@ -25,7 +25,7 @@ function usergrid_console_app() {
     var query_history = [];
 
     var indexes = [];
-
+    var backgroundGraphColor = '#ffffff';
     var client = new usergrid.Client();
     client.onLogout = function() {
 	    Pages.ShowPage("login");
