@@ -80,7 +80,7 @@
 				<div id="login-message" class="alert alert-error">
 					<strong>ERROR</strong>: Your details were incorrect.<br/>
 				</div>
-				<div class="box">
+				<div class="console-section">
 					<h3>Administration Console Login</h3>
 
 					<form name="login-form" id="login-form" class="form-horizontal">
@@ -127,7 +127,7 @@
 			<div id="signup-area" class="span6 offset1">
 				<div id="signup-message" class="alert alert-error"></div>
 
-				<div class="box">
+				<div class="console-section">
 					<h3>
 						Register For New Account </h3>
 
@@ -224,34 +224,34 @@
 		<div id="console-panels" class="span10">
 		<div id="organization-panel" style="display: none">
 			<div id="console-panel-nav-bar"></div>
-			<div class="box span5">
+			<div class="console-section span5">
 				<h3>
 					Applications
 					<a class="" href="#" onclick="usergrid.console.newApplication(); return false;"><i class="icon-plus"></i> New Application</a>
 				</h3>
 
-				<div id="organization-applications" class="boxContent">
+				<div id="organization-applications" class="console-section-contents">
 					<span class="alert">No applications created.</span>
 				</div>
 			</div>
-			<div class="box span5">
+			<div class="console-section span5">
 				<h3>
 					Organizations Administrators
 					<a class="" href="" onclick="usergrid.console.newAdministrator(); return false;"><i class="icon-plus"></i> New Administrator</a>
 				</h3>
 
-				<div id="organization-admins" class="boxContent">
+				<div id="organization-admins" class="console-section-contents">
 					<span class="alert">No administrators.</span>
 				</div>
 			</div>
 
-			<div class="box span5">
+			<div class="console-section span5">
 				<h3>
 					Organization API Credentials
 					<a class="" href="" onclick="usergrid.console.newOrganizationCredentials(); return false;"><i class="icon-random"></i> Regenerate Credential</a>
 				</h3>
 
-				<div id="" class="boxContent">
+				<div id="" class="console-section-contents">
 					<div class="row">
 						<span class="span3">Client ID</span> <span id="organization-panel-key">...</span>
 					</div>
@@ -261,11 +261,11 @@
 				</div>
 			</div>
 
-			<div class="box span10">
+			<div class="console-section span10">
 				<h3>
 					Activities </h3>
 
-				<div id="organization-activities" class="boxContent">
+				<div id="organization-activities" class="console-section-contents">
 					<span class="alert">No activities.</span>
 				</div>
 			</div>
@@ -296,9 +296,9 @@
 			</div>
 		</div>
 		<div id="application-panel" style="display: none">
-			<div class="box span11">
+			<div class="console-section span11">
 				<h3>Application Dashboard</h3>
-				<div class="boxContent">
+				<div class="console-section-contents">
 					<div id="application-panel-table" class="row">
 						<div id="application-panel-entity-graph" class="span"></div>
 						<div id="application-panel-text" class="span">...</div>
@@ -329,15 +329,11 @@
 			</ul>
 			<div class="panel-content">
 				<div class="console-section">
-					<div class="console-section-header ui-widget-header">
-						<span class="console-section-title">Users</span>
-						<span class="console-section-header-right">
-							<a href="" onclick="usergrid.console.newUser(); return false;">New User</a>
-						</span>
-						<span class="console-section-header-right">
-							<a href="" onclick="usergrid.console.deleteUsers(); return false;">Delete Users</a>
-						</span>
-					</div>
+					<h3>
+						Users
+						<a href="" onclick="usergrid.console.newUser(); return false;">New User</a>
+						<a href="" onclick="usergrid.console.deleteUsers(); return false;">Delete Users</a>
+					</h3>
 					<div class="console-section-contents">
 						<div id="users-response-area">
 									<div id="users-response-table">
@@ -393,16 +389,12 @@
 			</div>
 			<div class="panel-content">
 				<div class="console-section">
-					<div class="console-section-header ui-widget-header">
-						<span class="console-section-title">Groups</span> <span
-							class="console-section-header-right"><a href=""
-							onclick="usergrid.console.newGroup(); return false;">New
-								Group</a> </span>
-						<span class="console-section-header-right"><a href=""
-							onclick="usergrid.console.deleteGroups(); return false;">Delete
-								Groups</a> </span>
-					</div>
-					<div class="console-section-contents ui-widget-content">
+					<h3>
+						Groups
+						<a href="" onclick="usergrid.console.newGroup(); return false;">New Group</a>
+						<a href="" onclick="usergrid.console.deleteGroups(); return false;">Delete Groups</a>
+					</h3>
+					<div class="console-section-contents">
 						<table id="groups-response-area">
 							<tr>
 								<td id="groups-response-area-contents">
@@ -457,13 +449,11 @@
 			</ul>
 			<div class="panel-content">
 				<div class="console-section">
-					<div class="console-section-header ui-widget-header">
-						<span class="console-section-title">Roles</span>
-						<span class="console-section-header-right">
-							<a href="" onclick="usergrid.console.newRole(); return false;">New Role</a>
-						</span>
-					</div>
-					<div class="console-section-contents ui-widget-content">
+					<h3>
+						Roles
+						<a href="" onclick="usergrid.console.newRole(); return false;">New Role</a>
+					</h3>
+					<div class="console-section-contents">
 						<div id="application-roles">
 							<h2>No roles created.</h2>
 						</div>
@@ -478,11 +468,11 @@
 				<button class="button tab-bar-selection" id="button-role-settings">Settings</button>
 			</div>
 			<div id="role-panel-settings" class="panel-content">
+				<h3>
+					<span id="role-section-title">Role</span>
+				</h3>
 				<div class="console-section">
-					<div class="console-section-header ui-widget-header">
-						<span class="console-section-title" id="role-section-title">Role</span></span>
-					</div>
-					<div class="console-section-contents ui-widget-content">
+					<div class="console-section-contents">
 						<div id="role-permissions">
 							<h2>...</h2>
 						</div>
@@ -495,10 +485,10 @@
 		<div id="activities-panel" style="display: none">
 			<div class="panel-content">
 				<div class="console-section">
-					<div class="console-section-header ui-widget-header">
-						<span class="console-section-title">Activities</span>
-					</div>
-					<div class="console-section-contents ui-widget-content">
+					<h3>
+						Activities
+					</h3>
+					<div class="console-section-contents">
 						<div id="activities-response-area">
 							<div id="activities-response-table">
 								<pre class="query-response-json">{ }</pre>
@@ -515,9 +505,7 @@
 		<div id="analytics-panel" style="display: none">
 			<div class="panel-content">
 				<div class="console-section">
-					<div class="console-section-header">
-						<span class="console-section-title">Analytics</span>
-					</div>
+					<h3>Analytics</h3>
 					<div class="console-section-contents">
 						<div id="analytics-time">
 							<form id="resolutionSelectForm" action="" class="form-horizontal">
@@ -567,9 +555,7 @@
 					</div>
 				</div>
 				<div class="console-section">
-					<div class="console-section-header">
-						<span class="console-section-title">Result Analytics</span>
-					</div>
+					<h3>Result Analytics</h3>
 					<div class="console-section-contents">
 						<div id="analytics-graph"></div>
 						<div id="analytics-graph-area"></div>
@@ -580,25 +566,23 @@
 		<div id="settings-panel" style="display: none">
 			<div class="panel-content">
 				<div class="console-section">
-					<div class="console-section-header ui-widget-header">
-						<span class="console-section-title">Organizations</span>
-						<span class="console-section-header-right">
-							<a href="" onclick="usergrid.console.newOrganization(); return false;">Generate New Organization</a>
-						</span>
-					</div>
-					<div class="console-section-contents ui-widget-content">
+					<h3>
+						Organizations
+						<a href="" onclick="usergrid.console.newOrganization(); return false;">Generate New Organization</a>
+					</h3>
+					<div class="console-section-contents">
 						<div id="organizations">
 							<h2>No organizations created.</h2>
 						</div>
 					</div>
 				</div>
-				<div class="box span5">
+				<div class="console-section span5">
 					<h3>
 						Application API Credentials
 						<a class="" href="" onclick="usergrid.console.newApplicationCredentials(); return false;"><i class="icon-random"></i> Regenerate Credential</a>
 					</h3>
 
-					<div id="application-panel-key-table" class="boxContent">
+					<div id="application-panel-key-table" class="console-section-contents">
 						<div class="row">
 							<span class="span3">Client ID</span> <span id="application-panel-key">...</span>
 						</div>
@@ -607,21 +591,21 @@
 						</div>
 					</div>
 				</div>
-				<div class="box span5">
+				<div class="console-section span5">
 					<h3>
 						Settings
 					</h3>
 
-					<div id="" class="boxContent">
+					<div id="" class="console-section-contents">
 						<span class="alert">Not implemented.</span>
 					</div>
 				</div>
 			</div>
 		</div>
 		<div id="shell-panel" style="display: none">
-			<div id="shell-content" class="box">
+			<div id="shell-content" class="console-section">
 				<h3>Interactive Shell</h3>
-				<div class="boxContent">
+				<div class="console-section-contents">
 					<div id="shell-output">
 						<div class="shell-output-line">Usergrid Interactive Shell (8-bit forever!)</div>
 					</div>
@@ -635,15 +619,13 @@
 		<div id="collections-panel" style="display: none">
 			<div class="panel-content">
 				<div class="console-section">
-					<div class="console-section-header ui-widget-header">
-						<span class="console-section-title">Collections</span>
-						<span class="console-section-header-right">
-							<a href="" onclick="usergrid.console.newCollection(); return false;">New Collection</a>
-							&nbsp;&nbsp;&nbsp;&nbsp;
-							<a href="" onclick="usergrid.console.pageSelectQueryExplorer(); return false;">Query Explorer</a>
-						</span>
-					</div>
-					<div class="console-section-contents ui-widget-content">
+					<h3>
+						Collections
+						<a href="" onclick="usergrid.console.newCollection(); return false;">New Collection</a>
+						&nbsp;&nbsp;&nbsp;&nbsp;
+						<a href="" onclick="usergrid.console.pageSelectQueryExplorer(); return false;">Query Explorer</a>
+					</h3>
+					<div class="console-section-contents">
 						<div id="application-collections">
 							<h2>No collections created.</h2>
 						</div>
@@ -662,9 +644,9 @@
 			</div>
 		</div>
 		<div id="query-panel" style="display: none">
-			<div id="query-path-area" class="box">
+			<div id="query-path-area" class="console-section">
 				<h3>Query</h3>
-				<div class="boxContent">
+				<div class="console-section-contents">
 					<form id="query-inputs" class="form-horizontal">
 						<div class="control-group">
 							<label class="control-label" for="">Path: </label>
@@ -743,9 +725,9 @@
 		<div id="account-panels">
 		<div class="panel-content">
 			<div class="console-section">
-				<div class="console-section-header ui-widget-header">
-					<span class="console-section-title">Personal Account</span>
-				</div>
+				<h3>
+					Personal Account
+				</h3>
 				<div class="console-section-contents">
 					<form name="update-account-form" id="update-account-form" class="form-horizontal">
 						<fieldset>
@@ -817,12 +799,11 @@
 		</div>
 		<div class="panel-content">
 			<div class="console-section">
-				<div class="console-section-header ui-widget-header">
-					<span class="console-section-title">Organizations</span>
-						<span class="console-section-header-right">
-						<a href="" onclick="usergrid.console.newOrganization(); return false;">New Organization</a> </span>
-				</div>
-				<div class="console-section-contents ui-widget-content">
+				<h3>
+					Organizations
+					<a href="" onclick="usergrid.console.newOrganization(); return false;">New Organization</a>
+				</h3>
+				<div class="console-section-contents">
 					<div id="account-organizations"></div>
 				</div>
 			</div>

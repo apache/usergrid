@@ -187,7 +187,7 @@ a:active {
 
 
 //----------Box ------------------------------------------------------------
-.box {
+.console-section {
   margin: 0 20px 20px;
 	border: solid 1px @h3Color;
 	//background: #F2F5F7;
@@ -203,11 +203,11 @@ a:active {
     //text-shadow: inset 0 1px 1px rgba(255,255,255,.5);
 		background: @h3Color;
 	  //#gradient > .vertical(@navbarBackground, @h3Color);
+		//.gradientBar(#727272, #616161);
 
 		a {
-			//.btn;
-			//.btn-danger;
 			font-size: 12px;
+			padding: 5px 10px;
 			.border-radius(15px);
 			float:right;
 		  color:#000000 !important;
@@ -227,46 +227,15 @@ a:active {
 		margin-bottom:0px;
 		.border-radius(0 0 5px 5px);
 	}
-	.boxContent{
+	.console-section-contents{
 		padding: 10px;
 		line-height: 25px;
-	}
-}
-
-.console-section{
-	.box;
-	.console-section-header{
-		margin:0;
-		color: #fff;
-		font-size: 12pt;
-		padding: 10px;
-		font-weight: normal;
-		line-height:18px;
-		.border-radius(5px 5px 0px 0px);
-		//text-shadow: inset 0 1px 1px rgba(255,255,255,.5);
-		.gradientBar(#727272, #616161);
-		a {
-			//.btn;
-			//.btn-danger;
-			font-size: 12px;
-			.border-radius(15px);
-			float:right;
-		  color:white !important;
-			&:hover{
-			  color:white !important;
-			}
-			i {
-		  .icon-white;
-			}
-		}
-	}
-	.console-section-contents{
-		padding:20px;
 		.form-actions{
 			margin: 20px -20px -20px -20px;
 		}
 	}
 }
+
 //---------------- Panels ---------------------------------------------------------------------
 
 #application-panel{
