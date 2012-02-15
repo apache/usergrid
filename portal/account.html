@@ -1,0 +1,97 @@
+<h2>
+	Account Settings
+</h2>
+
+<div class="panel-content">
+	<div class="console-section">
+		<div class="console-section-header ui-widget-header">
+			<span class="console-section-title">Personal Account</span>
+		</div>
+		<div class="console-section-contents">
+			<form name="update-account-form" id="update-account-form" class="form-horizontal">
+				<fieldset>
+					<div class="control-group">
+						<label id="update-account-id-label" class="control-label" for="">UUID</label>
+						<div class="controls">
+							<input type="text" name="update-account-username" id="update-account-id" class="span4 uneditable-input" value="00000000-0000-0000-0000-000000000000" size="20"/>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label" for="update-account-username">Username </label>
+
+						<div class="controls">
+							<input type="text" name="update-account-username" id="update-account-username" class="span4" value="" size="20"/>
+						</div>
+					</div>
+
+
+					<div class="control-group">
+						<label class="control-label" for="update-account-name">Name </label>
+
+						<div class="controls">
+							<input type="text" name="update-account-name" id="update-account-name" class="span4" value="" size="20"/>
+						</div>
+					</div>
+
+					<div class="control-group">
+						<label class="control-label" for="update-account-email"> Email</label>
+
+						<div class="controls">
+							<input type="text" name="update-account-email" id="update-account-email" class="span4" value="" size="20"/>
+						</div>
+					</div>
+
+					<div class="control-group">
+						<label class="control-label" for="old-account-password">Old Password</label>
+
+						<div class="controls">
+							<input type="text" name="old-account-password" id="old-account-password" class="span4" value="" size="20"/>
+							<span class="help-block">Leave blank to keep current password unchanged</span>
+						</div>
+					</div>
+
+					<div class="control-group">
+						<label class="control-label" for="update-account-password">New Password</label>
+
+						<div class="controls">
+							<input type="text" name="update-account-password" id="update-account-password" class="span4" value="" size="20"/>
+							<span class="help-block">Leave blank to keep current password unchanged</span>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label" for="update-account-password-repeat">Confirm New Password</label>
+
+						<div class="controls">
+							<input type="text" name="update-account-password-repeat" id="update-account-password-repeat" class="span4" value="" size="20"/>
+							<span class="help-block">Leave blank to keep current password unchanged</span>
+						</div>
+					</div>
+				</fieldset>
+				<div class="form-actions">
+					<input type="button" name="button-update-account" id="button-update-account" value="Update" class="btn btn-danger" />
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<div class="panel-content">
+	<div class="console-section">
+		<div class="console-section-header ui-widget-header">
+			<span class="console-section-title">Organizations</span>
+			<span class="console-section-header-right">
+			<a href="#" onclick="usergrid.console.newOrganization(); return false;">New Organization</a> </span>
+		</div>
+		<div class="console-section-contents ui-widget-content">
+			<div id="account-organizations"></div>
+		</div>
+	</div>
+</div>
+<div id="dialog-form-new-organization" class="dialog-form" title="Create new organization">
+	<p class="validateTips">All form fields are required.</p>
+	<form>
+		<fieldset>
+			<label for="new-organization-name">Name</label>
+			<input type="text" name="new-organization-name" id="new-organization-name" value="" class="text ui-widget-content ui-corner-all" />
+		</fieldset>
+	</form>
+</div>
