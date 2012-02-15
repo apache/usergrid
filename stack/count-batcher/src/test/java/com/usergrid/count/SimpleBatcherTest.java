@@ -28,7 +28,7 @@ public class SimpleBatcherTest {
         simpleBatcher.add(new Count("k1","c3", 1));
         simpleBatcher.add(new Count("k1","c3",1));
 
-        assertEquals(0, simpleBatcher.getBatchSubmissionCount());
+        assertEquals(1, simpleBatcher.getBatchSubmissionCount());
         simpleBatcher.add(new Count("k1","c4",1));
         assertEquals(1, simpleBatcher.getBatchSubmissionCount());
 
