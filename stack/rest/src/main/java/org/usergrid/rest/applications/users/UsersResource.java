@@ -75,6 +75,7 @@ import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
+import com.sun.jersey.core.provider.EntityHolder;
 
 @Produces(MediaType.APPLICATION_JSON)
 public class UsersResource extends ServiceResource {
@@ -187,9 +188,11 @@ public class UsersResource extends ServiceResource {
 	@POST
 	@Override
 	@RequireApplicationAccess
-	public JSONWithPadding executePost(@Context UriInfo ui, Object json,
+	public JSONWithPadding executePost(@Context UriInfo ui,
+			EntityHolder<Object> body,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
+		Object json = body.getEntity();
 		String password = null;
 		String pin = null;
 		if (json instanceof Map) {
@@ -213,7 +216,7 @@ public class UsersResource extends ServiceResource {
 			}
 		}
 
-		ApiResponse response = (ApiResponse) super.executePost(ui, json,
+		ApiResponse response = (ApiResponse) super.executePost(ui, body,
 				callback).getJsonSource();
 
 		if ((response.getEntities() != null)

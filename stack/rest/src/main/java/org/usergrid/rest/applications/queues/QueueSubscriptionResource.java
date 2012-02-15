@@ -62,6 +62,7 @@ import org.usergrid.mq.QueueSet;
 import org.usergrid.rest.AbstractContextResource;
 
 import com.sun.jersey.api.json.JSONWithPadding;
+import com.sun.jersey.core.provider.EntityHolder;
 
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
@@ -122,24 +123,25 @@ public class QueueSubscriptionResource extends AbstractContextResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	public JSONWithPadding executePost(@Context UriInfo ui,
-			Map<String, Object> json,
+			EntityHolder<Map<String, Object>> body,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		logger.info("QueueSubscriptionResource.executePost: " + queuePath);
 
-		return executePut(ui, json, callback);
+		return executePut(ui, body, callback);
 	}
 
 	@PUT
 	@Consumes(MediaType.APPLICATION_JSON)
 	public JSONWithPadding executePut(@Context UriInfo ui,
-			Map<String, Object> json,
+			EntityHolder<Map<String, Object>> body,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
 		logger.info("QueueSubscriptionResource.executePut: " + queuePath);
 
+		Map<String, Object> json = body.getEntity();
 		if (StringUtils.isNotBlank(subscriptionPath)) {
 			return new JSONWithPadding(mq.subscribeToQueue(subscriptionPath,
 					queuePath), callback);
