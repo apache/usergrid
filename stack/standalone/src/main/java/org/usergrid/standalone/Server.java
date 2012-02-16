@@ -137,7 +137,7 @@ public class Server implements ApplicationContextAware {
 				"true");
 		handler.addInitParameter(
 				"com.sun.jersey.spi.container.ContainerRequestFilters",
-				"org.usergrid.rest.filters.MeteringFilter,org.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter,org.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter,org.usergrid.rest.security.shiro.filters.ClientCredentialsSecurityFilter");
+				"org.usergrid.rest.filters.MeteringFilter,org.usergrid.rest.filters.JSONPCallbackFilter,org.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter,org.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter,org.usergrid.rest.security.shiro.filters.ClientCredentialsSecurityFilter");
 		handler.addInitParameter(
 				"com.sun.jersey.spi.container.ContainerResponseFilters",
 				"org.usergrid.rest.security.CrossOriginRequestFilter,org.usergrid.rest.filters.MeteringFilter");

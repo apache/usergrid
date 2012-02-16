@@ -37,36 +37,31 @@
  ******************************************************************************/
 package org.usergrid.rest.exceptions;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
+import static org.usergrid.utils.JsonUtils.mapToJsonString;
 
 import org.usergrid.rest.ApiResponse;
-import org.usergrid.utils.JsonUtils;
 
-public class NoOpException extends WebApplicationException {
+public class NoOpException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
 	ApiResponse response = new ApiResponse();
 
 	public NoOpException() {
-		super(200);
 	}
 
 	public NoOpException(ApiResponse response) {
-		super(200);
 		if (response != null) {
 			this.response = response;
 		}
 	}
 
-	@Override
-	public Response getResponse() {
-		String jsonResponse = JsonUtils.mapToJsonString(response);
-		return Response.ok().type(APPLICATION_JSON_TYPE).entity(jsonResponse)
-				.build();
+	public ApiResponse getApiResponse() {
+		return response;
+	}
+
+	public String getJsonResponse() {
+		return mapToJsonString(response);
 	}
 
 }
