@@ -1058,6 +1058,7 @@ function usergrid_console_app() {
             "listItemTemplate" : "usergrid.ui.panels.user.list.html",
             "getListItemTemplateOptions" : function(entity, path) {
                 var name = entity.uuid + " : " + entity.type;
+                var username = entity.username;
                 if (entity.username) {
                     name = entity.username;
                 }
@@ -1073,6 +1074,7 @@ function usergrid_console_app() {
                     name : name,
                     id: id,
                     path : path,
+                    username : username,
                     fblink : entity.fblink,
                     collections : collections,
                     uri : uri
@@ -1273,6 +1275,7 @@ function usergrid_console_app() {
                 entity : entity_contents,
                 picture : entity.picture,
                 name : name,
+                username : username,
                 path : entity_path,
                 collections : collections,
                 metadata : metadata,

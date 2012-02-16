@@ -374,22 +374,22 @@
 			<div id="user-panel-activities" class="panel-content" style="display: none;"></div>
 			<div id="user-panel-graph" class="panel-content" style="display: none;"></div>
 			<div id="user-panel-permissions" class="panel-content" style="display: none;"></div>
-			<div id="dialog-form-add-user-to-group" class="dialog-form"
-				title="Add User to Group">
+            <div id="dialog-form-add-group-to-user" class="dialog-form"
+				title="Add User to a Group">
 				<p class="validateTips">All form fields are required.</p>
 				<form>
 			  <fieldset>
-					<label for="search-user-username">Username</label>
-					<input onkeyup="usergrid.console.lookupUsername(this.value);"							    
-				  type="text" name="search-user-username" id="search-user-username"
+					<label for="search-group-groupname">Group</label>
+					<input onkeyup="usergrid.console.lookupGroupName(this.value);"							
+				  type="text" name="search-group-groupname" id="search-group-groupname"
 				  value="" class="text ui-widget-content ui-corner-all" />
 			  </fieldset>
 				</form>
-				<div class="suggestionsBox" id="suggestionsUsers">
-			  <div class="suggestionList" id="SuggestionsListUsers">
+				<div class="suggestionsBox" id="suggestionsGroups">
+			  <div class="suggestionList" id="SuggestionsListGroups">
 					&nbsp;
 			  </div>
-				</div>
+			</div>					
 		  </div>
 		</div>
 		<div id="groups-panel" style="display: none">
@@ -432,7 +432,7 @@
 						<label for="new-group-title">Title</label> <input
 							type="text" name="new-group-title" id="new-group-title"
 							value="" class="text ui-widget-content ui-corner-all" /> <label
-							for="new-group-path">Path<label> <input type="text"
+							for="new-group-path">Path</label> <input type="text"
 							name="new-group-path" id="new-group-path" value=""
 							class="text ui-widget-content ui-corner-all" />
 					</fieldset>
@@ -453,23 +453,22 @@
 			<div id="group-panel-memberships" class="panel-content" style="display: none;"></div>
 			<div id="group-panel-activities" class="panel-content" style="display: none;"></div>
 			<div id="group-panel-permissions" class="panel-content" style="display: none;"></div>
-			<div id="dialog-form-add-group-to-user" class="dialog-form"
-				title="Add User to a Group">
+			<div id="dialog-form-add-user-to-group" class="dialog-form"
+				title="Add User to Group">
 				<p class="validateTips">All form fields are required.</p>
 				<form>
 			  <fieldset>
-					<label for="search-group-groupname">Group</label>
-					<input onkeyup="usergrid.console.lookupGroupName(this.value);"							
-				  type="text" name="search-group-groupname" id="search-group-groupname"
+					<label for="search-user-username">Username</label>
+					<input onkeyup="usergrid.console.lookupUsername(this.value);"							    
+				  type="text" name="search-user-username" id="search-user-username"
 				  value="" class="text ui-widget-content ui-corner-all" />
 			  </fieldset>
 				</form>
-				<div class="suggestionsBox" id="suggestionsGroups">
-			  <div class="suggestionList" id="SuggestionsListGroups">
+				<div class="suggestionsBox" id="suggestionsUsers">
+			  <div class="suggestionList" id="SuggestionsListUsers">
 					&nbsp;
 			  </div>
-				</div>					
-		  </div>
+			</div>
 		</div>
 
 		<div id="roles-panel" style="display: none">
@@ -603,28 +602,6 @@
 						<div id="analytics-graph"></div>
 						<div id="analytics-graph-area"></div>
 					</div>
-					<div id="user-panel-profile" class="panel-content"></div>
-					<div id="user-panel-memberships" class="panel-content" style="display: none;"></div>
-					<div id="user-panel-activities" class="panel-content" style="display: none;"></div>
-					<div id="user-panel-graph" class="panel-content" style="display: none;"></div>
-					<div id="user-panel-permissions" class="panel-content" style="display: none;"></div>
-					<div id="dialog-form-add-user-to-group" class="dialog-form"
-					    title="Add User to Group">
-					    <p class="validateTips">All form fields are required.</p>
-					    <form>
-						<fieldset>
-						    <label for="search-user-username">Username</label>
-						    <input onkeyup="usergrid.console.lookupUsername(this.value);"							    
-							type="text" name="search-user-username" id="search-user-username"
-							value="" class="text ui-widget-content ui-corner-all" />
-						</fieldset>
-					    </form>
-					    <div class="suggestionsBox" id="suggestionsUsers">
-						<div class="suggestionList" id="SuggestionsListUsers">
-						    &nbsp;
-						</div>
-					    </div>
-					</div>
 				</div>
 			</div>
 		</div>
@@ -640,19 +617,6 @@
 							<h2>No organizations created.</h2>
 						</div>
 					</div>
-					<div id="dialog-form-new-group" class="dialog-form"
-						title="Create new group">
-						<p class="validateTips">All form fields are required.</p>
-						<form>						    
-							<fieldset>
-								<label for="new-group-title">Title</label> <input
-									type="text" name="new-group-title" id="new-group-title"
-									value="" class="text ui-widget-content ui-corner-all" /> <label
-									for="new-group-path">Path<label> <input type="text"
-									name="new-group-path" id="new-group-path" value=""
-									class="text ui-widget-content ui-corner-all" /> 
-							</fieldset>
-						</form>
 				</div>
 				<div class="console-section span5">
 					<h3>
@@ -677,27 +641,6 @@
 					<div id="" class="console-section-contents">
 						<span class="alert">Not implemented.</span>
 					</div>
-					<div id="group-panel-details" class="panel-content"></div>
-					<div id="group-panel-memberships" class="panel-content" style="display: none;"></div>
-					<div id="group-panel-activities" class="panel-content" style="display: none;"></div>
-					<div id="group-panel-permissions" class="panel-content" style="display: none;"></div>
-					<div id="dialog-form-add-group-to-user" class="dialog-form"
-					    title="Add User to a Group">
-					    <p class="validateTips">All form fields are required.</p>
-					    <form>
-						<fieldset>
-						    <label for="search-group-groupname">Group</label>
-						    <input onkeyup="usergrid.console.lookupGroupName(this.value);"							
-							type="text" name="search-group-groupname" id="search-group-groupname"
-							value="" class="text ui-widget-content ui-corner-all" />
-						</fieldset>
-					    </form>
-					    <div class="suggestionsBox" id="suggestionsGroups">
-						<div class="suggestionList" id="SuggestionsListGroups">
-						    &nbsp;
-						</div>
-					    </div>					
-					</div>
 				</div>
 			</div>
 		</div>
@@ -711,20 +654,6 @@
 					<div id="shell-input-div">
 						<span>&gt;</span>
 						<textarea id="shell-input" rows="2"></textarea>
-					</div>
-					<div id="dialog-form-new-role" class="dialog-form"
-						title="Create new Role">
-						<p class="validateTips">All form fields are required.</p>
-						<form>
-							<fieldset>
-								<label for="new-role-name">Name</label> <input
-									type="text" name="new-role-name" id="new-role-name"
-									value="" class="text ui-widget-content ui-corner-all" />
-								<label for="new-role-title">Title</label> <input
-									type="text" name="new-role-title" id="new-role-title"
-									value="" class="text ui-widget-content ui-corner-all" /> 
-							</fieldset>
-						</form>
 					</div>
 				</div>
 			</div>
