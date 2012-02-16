@@ -1,15 +1,12 @@
 <div class="console-section">
-	<div class="group-details-header">
-		<div class="group-details-header-name">
-			{{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
-			${name}
-			{{if path}}</a>{{/if}}
-		</div>
-		<div
-			class="console-section-header-right"><a href=""
-			onclick="usergrid.console.findUserDialog('${uuid}'); return false;">Add User to this Group</a> </div>
-		<div style="clear: both;"> </div>
-	</div>
+	<h3>
+        {{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+        ${name}
+        {{if path}}</a>{{/if}}
+		<div class="bar">
+            <a href="" onclick="usergrid.console.findUserDialog('${uuid}'); return false;">Add User to this Group</a>
+        </div>
+	</h3>
 	<div class="console-section-contents ui-widget-content">
 		<div class="group-panel-section">
 			{{if memberships}}

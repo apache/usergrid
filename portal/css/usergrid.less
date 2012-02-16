@@ -213,17 +213,16 @@ a:active {
 		padding: 10px;
 		line-height:18px;
 		background: @h3Color;
+        .bar{
+            float:right;
+        }
 		a {
 			font-size: 12px;
 			padding: 5px 10px;
 			.border-radius(15px);
-			float:right;
-		  color:#000000 !important;
+		    color:#000000 !important;
 			&:hover{
 			  color:@redApigee !important;
-			}
-			i {
-		    //.icon-white;
 			}
 		}
 	}
@@ -393,6 +392,17 @@ a:active {
 }
 
 .query-result-table {
+	margin: 0px;
+	width: 100%;
+    tr{
+        border-bottom: 1px solid @h3Color;
+        &:last-child{
+            border-bottom: none;
+        }
+    }
+}
+
+#groups-response-area{
 	margin: 0px;
 	width: 100%;
     tr{
@@ -669,6 +679,6 @@ a:active {
 	margin-left: -50px;
 	z-index: 9999;
 	width: 100px;
-	.border-radius(0 0 5px 5px);
+	.border-radius(0px 0px 5px 5px);
 	display: none;
 }

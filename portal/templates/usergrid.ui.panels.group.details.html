@@ -1,13 +1,10 @@
 <div class="console-section">
-	<div class="group-details-header">
-		<div class="group-details-header-name">
-			{{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
-			${name}
-			{{if path}}</a>{{/if}}
-		</div>
-		<div style="clear: both;"> </div>
-	</div>
-	<div class="console-section-contents ui-widget-content">
+	<h3>
+        {{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+        ${name}
+        {{if path}}</a>{{/if}}
+	</h3>
+	<div class="console-section-contents">
 		<div class="query-result-edit query-result-portlet">
 			<div class="query-result-portlet-title">Edit</div>
 			<div class="query-result-form"></div>
