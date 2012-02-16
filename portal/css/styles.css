@@ -618,7 +618,7 @@ a:active {
 
 #login-area {
 	position: absolute;
-	top: 50%;
+	top: 300px;
 	left: 50%;
 	width: 30em;
 	height: 23em;
@@ -1689,4 +1689,11 @@ a:active {
 
 .organization-row-buttons .ui-button-text {
 	padding-top: 2px !important;
+}
+
+.suggestionsBox{
+	display: none;
+	border: 1px solid #222;
+	width: 300px;
+	z-index: 99;	
 }
