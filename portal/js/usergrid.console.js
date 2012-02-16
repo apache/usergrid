@@ -2683,8 +2683,8 @@ function usergrid_console_app() {
                   "</div>" +
 	                "</div>";
             }
-            $("#account-organizations").html(t);
-            $("#account-organizations a").click( function(e){
+            $("#organizations").html(t);
+            $("#organizations a").click( function(e){
                e.preventDefault();
                var uuid = $(this).attr("href").substring(1);
                usergrid.console.pageSelectOrganization(uuid); //TODO: this function dont exist
