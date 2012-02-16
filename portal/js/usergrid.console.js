@@ -95,9 +95,13 @@ function usergrid_console_app() {
         });
     }
 
-    function selectTabButton(bar, link) {
-	    $(bar).find("li.active").removeClass('active');
-	    link.parent().addClass('active');
+    function selectTabButton(link) {
+        var tab = $(link).parent();
+        tab.parent().find("li.active").removeClass('active');
+        tab.addClass('active');
+    }
+    function selectFirstTabButton(bar){
+        selectTabButton(bar.find("li:first-child a"));
     }
 
     function setNavApplicationText() {
@@ -1039,10 +1043,8 @@ function usergrid_console_app() {
     var sortBy = "username";
     function pageSelectUsers(uuid) {
         pageSelect(uuid);
-        //showPanel("#users-panel");
-	      //Pages.SelectPanel('users');
         requestUsers();
-        selectTabButton("#users-panel-tab-bar", $("#button-users-list"));
+        selectFirstTabButton('#users-panel-tab-bar');
         //pageOpenQueryExplorer("/users");
         //$("#users-by-alphabetical").show();
     }
@@ -1192,11 +1194,9 @@ function usergrid_console_app() {
      ******************************************************************/
 
     function pageOpenUserProfile(userId) {
-        //showPanel("#user-panel");
-	      Pages.SelectPanel('user');
+	    Pages.SelectPanel('user');
         requestUser(userId);
-        selectTabButton("#user-panel-tab-bar", $("#button-user-profile"));
-        //showPanelContent("#user-panel", "#user-panel-profile");
+        selectFirstTabButton("#button-user-profile");
     }
     window.usergrid.console.pageOpenUserProfile = pageOpenUserProfile;
 
@@ -1336,10 +1336,9 @@ function usergrid_console_app() {
     var groupLetter = "*";
     var groupSortBy = "path";
     function pageSelectGroups(uuid) {
-      pageSelect(uuid);
+        pageSelect(uuid);
 	    requestGroups();
-	    selectTabButton("#groups-panel-tab-bar", $("#button-groups-list"));
-	    $("#groups-by-alphabetical").show();
+	    selectTabButton("#button-groups-list");
     }
     window.usergrid.console.pageSelectGroups = pageSelectGroups;
 
@@ -1663,11 +1662,9 @@ function usergrid_console_app() {
      ******************************************************************/
 
     function pageOpenGroupProfile(groupId) {
-        //showPanel("#group-panel");
         Pages.SelectPanel('group');
         requestGroup(groupId);
-        selectTabButton("#group-panel-tab-bar", $("#button-group-details"));
-        //showPanelContent("#group-panel", "#group-panel-details");
+        selectTabButton("#button-group-details");
     }
     window.usergrid.console.pageOpenGroupProfile = pageOpenGroupProfile;
 
@@ -2861,12 +2858,12 @@ function usergrid_console_app() {
     });
 
     $("#users-panel-tab-bar a").click(function() {
-        selectTabButton("#users-panel-tab-bar", $(this));
+        selectTabButton(this);
         return false;
     });
 
     $("#user-panel-tab-bar a").click(function() {
-        selectTabButton("#user-panel-tab-bar", $(this));
+        selectTabButton(this);
         if ($(this).attr("id") == "button-user-list") {
 	        Pages.SelectPanel('users');
         }
@@ -2882,12 +2879,12 @@ function usergrid_console_app() {
 		createAlphabetLinks("#users-by-alphabetical",usergrid.console.showUsersForLetter);
 
     $("#groups-panel-tab-bar a").click(function() {
-        selectTabButton("#groups-panel-tab-bar", $(this));
+        selectTabButton(this);
         return false;
     });
 
     $("#group-panel-tab-bar a").click(function() {
-        selectTabButton("#group-panel-tab-bar", $(this));
+        selectTabButton(this);
         if ($(this).attr("id") == "button-group-list") {
             pageSelectGroups();
         }

@@ -225,6 +225,13 @@ a:active {
 			  color:@redApigee !important;
 			}
 		}
+        &:after{
+              clear: both;
+              content: ".";
+              display: block;
+              height: 0;
+              visibility: hidden;
+          }
 	}
 	form {
 		margin:0px;
@@ -672,19 +679,11 @@ a:active {
 	}
 }
 /*-----------------------------------------------*/
-#organization-panel{
-	.box{
+.console-section{
 		min-width: 400px;
-	}
 }
 #application-panel{
-	.boxContent > .row > div{
-	  	min-width: 400px;
-	}
-}
-
-#settings-panel{
-	.box{
+	.console-section-contents > .row > div{
 	  	min-width: 400px;
 	}
 }
