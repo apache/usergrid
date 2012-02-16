@@ -67,7 +67,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.shiro.authz.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.AggregateCounter;
@@ -76,7 +75,6 @@ import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
-import org.usergrid.rest.exceptions.UnauthorizedApiRequestException;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.services.ServiceAction;
 import org.usergrid.services.ServiceManager;
@@ -257,16 +255,7 @@ public class ServiceResource extends AbstractContextResource {
 		response.setApplication(services.getApplicationId());
 		response.setParams(ui.getQueryParameters());
 
-		try {
-			executeServiceRequest(ui, response, ServiceAction.GET, null);
-		} catch (Exception e) {
-			response.setError(e);
-			logger.error("Error while getting", e);
-
-			if (e instanceof UnauthorizedException) {
-				throw new UnauthorizedApiRequestException(response);
-			}
-		}
+		executeServiceRequest(ui, response, ServiceAction.GET, null);
 
 		return new JSONWithPadding(response, callback);
 	}
@@ -310,16 +299,7 @@ public class ServiceResource extends AbstractContextResource {
 
 		ServicePayload payload = getPayload(json);
 
-		try {
-			executeServiceRequest(ui, response, ServiceAction.POST, payload);
-		} catch (Exception e) {
-			response.setError(e);
-			logger.error("Error while posting", e);
-
-			if (e instanceof UnauthorizedException) {
-				throw new UnauthorizedApiRequestException(response);
-			}
-		}
+		executeServiceRequest(ui, response, ServiceAction.POST, payload);
 
 		return new JSONWithPadding(response, callback);
 	}
@@ -341,16 +321,7 @@ public class ServiceResource extends AbstractContextResource {
 
 		ServicePayload payload = getPayload(json);
 
-		try {
-			executeServiceRequest(ui, response, ServiceAction.PUT, payload);
-		} catch (Exception e) {
-			response.setError(e);
-			logger.error("Error while putting", e);
-
-			if (e instanceof UnauthorizedException) {
-				throw new UnauthorizedApiRequestException(response);
-			}
-		}
+		executeServiceRequest(ui, response, ServiceAction.PUT, payload);
 
 		return new JSONWithPadding(response, callback);
 	}
@@ -370,16 +341,7 @@ public class ServiceResource extends AbstractContextResource {
 
 		response.setError("Delete collection not implemented");
 
-		try {
-			executeServiceRequest(ui, response, ServiceAction.DELETE, null);
-		} catch (Exception e) {
-			response.setError(e);
-			logger.error("Error while deleting", e);
-
-			if (e instanceof UnauthorizedException) {
-				throw new UnauthorizedApiRequestException(response);
-			}
-		}
+		executeServiceRequest(ui, response, ServiceAction.DELETE, null);
 
 		return new JSONWithPadding(response, callback);
 	}

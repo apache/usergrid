@@ -37,12 +37,10 @@
  ******************************************************************************/
 package org.usergrid.rest.exceptions;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 /**
@@ -52,8 +50,8 @@ import javax.ws.rs.ext.Provider;
  * </p>
  */
 @Provider
-public class SecurityExceptionMapper implements
-		ExceptionMapper<SecurityException> {
+public class SecurityExceptionMapper extends
+		AbstractExceptionMapper<SecurityException> {
 
 	@Override
 	public Response toResponse(SecurityException e) {
@@ -66,8 +64,7 @@ public class SecurityExceptionMapper implements
 					.type("application/json").entity(e.getJsonResponse())
 					.build();
 		} else {
-			return Response.status(UNAUTHORIZED).type(APPLICATION_JSON_TYPE)
-					.entity(e.getJsonResponse()).build();
+			return toResponse(UNAUTHORIZED, e.getJsonResponse());
 		}
 	}
 
