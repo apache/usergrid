@@ -101,7 +101,7 @@ function usergrid_console_app() {
         tab.addClass('active');
     }
     function selectFirstTabButton(bar){
-        selectTabButton(bar.find("li:first-child a"));
+        selectTabButton($(bar).find("li:first-child a"));
     }
 
     function setNavApplicationText() {
@@ -1196,7 +1196,7 @@ function usergrid_console_app() {
     function pageOpenUserProfile(userId) {
 	    Pages.SelectPanel('user');
         requestUser(userId);
-        selectFirstTabButton("#button-user-profile");
+        selectTabButton("#button-user-profile");
     }
     window.usergrid.console.pageOpenUserProfile = pageOpenUserProfile;
 
@@ -1338,7 +1338,7 @@ function usergrid_console_app() {
     function pageSelectGroups(uuid) {
         pageSelect(uuid);
 	    requestGroups();
-	    selectTabButton("#button-groups-list");
+        selectFirstTabButton('#groups-panel-tab-bar');
     }
     window.usergrid.console.pageSelectGroups = pageSelectGroups;
 
