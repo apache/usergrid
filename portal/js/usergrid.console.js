@@ -1666,7 +1666,7 @@ function usergrid_console_app() {
 
     function pageOpenGroupProfile(groupId) {
         //showPanel("#group-panel");
-        PAges.SelectPanel('group');
+        Pages.SelectPanel('group');
         requestGroup(groupId);
         selectTabButton("#group-panel-tab-bar", $("#button-group-details"));
         //showPanelContent("#group-panel", "#group-panel-details");
@@ -2863,7 +2863,7 @@ function usergrid_console_app() {
         return false;
     });
 
-    $("#users-panel-tab-bar button").click(function() {
+    $("#users-panel-tab-bar a").click(function() {
         selectTabButton("#users-panel-tab-bar", $(this));
         return false;
     });
@@ -2884,12 +2884,12 @@ function usergrid_console_app() {
 
 		createAlphabetLinks("#users-by-alphabetical",usergrid.console.showUsersForLetter);
 
-    $("#groups-panel-tab-bar button").click(function() {
+    $("#groups-panel-tab-bar a").click(function() {
         selectTabButton("#groups-panel-tab-bar", $(this));
         return false;
     });
 
-    $("#group-panel-tab-bar button").click(function() {
+    $("#group-panel-tab-bar a").click(function() {
         selectTabButton("#group-panel-tab-bar", $(this));
         if ($(this).attr("id") == "button-group-list") {
             pageSelectGroups();
@@ -2905,7 +2905,7 @@ function usergrid_console_app() {
 
 		createAlphabetLinks("#groups-by-alphabetical", usergrid.console.showGroupsForLetter);
 
-    $("#role-panel-tab-bar button").click(function() {
+    $("#role-panel-tab-bar a").click(function() {
         if ($(this).attr("id") == "button-role-list") {
             pageSelectRoles();
         }
