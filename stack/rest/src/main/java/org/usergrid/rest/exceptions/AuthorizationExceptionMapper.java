@@ -37,37 +37,26 @@
  ******************************************************************************/
 package org.usergrid.rest.exceptions;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.Provider;
 
-import org.usergrid.rest.ApiResponse;
-import org.usergrid.utils.JsonUtils;
+import org.apache.shiro.authz.AuthorizationException;
 
-public class UnauthorizedApiRequestException extends WebApplicationException {
-
-	private static final long serialVersionUID = 1L;
-
-	ApiResponse response = new ApiResponse();
-
-	public UnauthorizedApiRequestException() {
-		super(401);
-	}
-
-	public UnauthorizedApiRequestException(ApiResponse response) {
-		super(401);
-		if (response != null) {
-			this.response = response;
-		}
-	}
+/**
+ * <p>
+ * Map an authentication exception to an HTTP 401 response.
+ * </p>
+ */
+@Provider
+public class AuthorizationExceptionMapper extends
+		AbstractExceptionMapper<AuthorizationException> {
 
 	@Override
-	public Response getResponse() {
-		String jsonResponse = JsonUtils.mapToJsonString(response);
-		return Response.status(UNAUTHORIZED).type(APPLICATION_JSON_TYPE)
-				.entity(jsonResponse).build();
+	public Response toResponse(AuthorizationException e) {
+
+		return toResponse(UNAUTHORIZED, e);
 	}
 
 }

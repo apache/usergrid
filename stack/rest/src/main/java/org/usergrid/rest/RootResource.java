@@ -57,6 +57,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
@@ -65,7 +66,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.rest.applications.ApplicationResource;
 import org.usergrid.rest.exceptions.NoOpException;
-import org.usergrid.rest.exceptions.UnauthorizedApiRequestException;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
@@ -164,7 +164,7 @@ public class RootResource extends AbstractContextResource {
 		}
 
 		if (applicationId.equals(MANAGEMENT_APPLICATION_ID)) {
-			throw new UnauthorizedApiRequestException();
+			throw new UnauthorizedException();
 		}
 
 		return new ApplicationResource(this, applicationId);
@@ -197,7 +197,7 @@ public class RootResource extends AbstractContextResource {
 		}
 
 		if (applicationId.equals(MANAGEMENT_APPLICATION_ID)) {
-			throw new UnauthorizedApiRequestException();
+			throw new UnauthorizedException();
 		}
 
 		return new ApplicationResource(this, applicationId);

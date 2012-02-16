@@ -37,27 +37,12 @@
  ******************************************************************************/
 package org.usergrid.rest.exceptions;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import org.usergrid.persistence.exceptions.PersistenceException;
-import org.usergrid.rest.ApiResponse;
-import org.usergrid.utils.JsonUtils;
 
 @Provider
-public class PersistenceExceptionMapper implements
-		ExceptionMapper<PersistenceException> {
-
-	@Override
-	public Response toResponse(PersistenceException e) {
-		ApiResponse response = new ApiResponse();
-		response.setError(e.getMessage(), e);
-		String jsonResponse = JsonUtils.mapToJsonString(response);
-		return Response.serverError().type(APPLICATION_JSON_TYPE)
-				.entity(jsonResponse).build();
-	}
+public class PersistenceExceptionMapper extends
+		AbstractExceptionMapper<PersistenceException> {
 
 }

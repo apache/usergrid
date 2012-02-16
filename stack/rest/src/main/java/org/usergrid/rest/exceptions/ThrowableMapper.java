@@ -37,25 +37,9 @@
  ******************************************************************************/
 package org.usergrid.rest.exceptions;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import org.usergrid.rest.ApiResponse;
-import org.usergrid.utils.JsonUtils;
-
 @Provider
-public class ThrowableMapper implements ExceptionMapper<Throwable> {
-
-	@Override
-	public Response toResponse(Throwable e) {
-		ApiResponse response = new ApiResponse();
-		response.setError(e.getMessage(), e);
-		String jsonResponse = JsonUtils.mapToJsonString(response);
-		return Response.serverError().type(APPLICATION_JSON_TYPE)
-				.entity(jsonResponse).build();
-	}
+public class ThrowableMapper extends AbstractExceptionMapper<Throwable> {
 
 }
