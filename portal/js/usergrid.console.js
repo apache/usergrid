@@ -308,8 +308,6 @@ function usergrid_console_app() {
     }
 
     function showQueryStatus(s, _type) {
-	    console.log(s);
-	    console.log(_type);
         $("#statusbar-placeholder").statusbar("add", s, 7, _type);
     }
 
@@ -2528,7 +2526,6 @@ function usergrid_console_app() {
 		for (var name in organizations) {
 			data.push({uuid:organizations[name].uuid, name:name});
 		}
-		console.log(data);
 		orgMenu.empty();
 		orgTmpl.tmpl(data).appendTo(orgMenu);
 		orgMenu.find("a").click(selectOrganization);
@@ -2740,7 +2737,7 @@ function usergrid_console_app() {
     });
 
     function requestAccountSettings() {
-        $("#update-account-id").html(client.loggedInUser.uuid);
+        $("#update-account-id").val(client.loggedInUser.uuid);
         $("#update-account-name").val("");
         $("#update-account-email").val("");
         $("#old-account-password").val("");
