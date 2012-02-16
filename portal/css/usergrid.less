@@ -235,11 +235,19 @@ a:active {
 		.border-radius(0 0 5px 5px);
 	}
 	.console-section-contents{
+	    position: relative;
 		padding: 10px;
 		line-height: 25px;
 		.form-actions{
 			margin: 20px -10px -10px;
 		}
+        &:after{
+            clear: both;
+            content: ".";
+            display: block;
+            height: 0;
+            visibility: hidden;
+        }
 	}
 }
 
@@ -484,16 +492,29 @@ a:active {
     }
 }
 
+#users-response-area{
+    min-height: 700px;
+}
 
 #users-by-alphabetical {
-  padding: 5px;
+    position:absolute;
+    right: 0;
+    top:0;
+    margin: 10px;
+    width: 35px;
+    padding: 5px;
+    background-color: rgba(0,0,0,.5);
+
+    .border-radius(10px);
 	li {
 		display:inline-block;
 		width:35px;
 		text-align: center;
 		a{
+		    font-weight: bold;
+		    color:white;
 			line-height: 20px;
-			padding: 5px;
+			padding: 5px 10px;
 		}
 	}
 }
