@@ -213,17 +213,16 @@ a:active {
 		padding: 10px;
 		line-height:18px;
 		background: @h3Color;
+        .bar{
+            float:right;
+        }
 		a {
 			font-size: 12px;
 			padding: 5px 10px;
 			.border-radius(15px);
-			float:right;
-		  color:#000000 !important;
+		    color:#000000 !important;
 			&:hover{
 			  color:@redApigee !important;
-			}
-			i {
-		    //.icon-white;
 			}
 		}
 	}
@@ -236,11 +235,19 @@ a:active {
 		.border-radius(0 0 5px 5px);
 	}
 	.console-section-contents{
+	    position: relative;
 		padding: 10px;
 		line-height: 25px;
 		.form-actions{
 			margin: 20px -10px -10px;
 		}
+        &:after{
+            clear: both;
+            content: ".";
+            display: block;
+            height: 0;
+            visibility: hidden;
+        }
 	}
 }
 
@@ -403,6 +410,17 @@ a:active {
     }
 }
 
+#groups-response-area{
+	margin: 0px;
+	width: 100%;
+    tr{
+        border-bottom: 1px solid @h3Color;
+        &:last-child{
+            border-bottom: none;
+        }
+    }
+}
+
 .query-result-td-checkbox input {
 	width: 20px;
 }
@@ -474,16 +492,29 @@ a:active {
     }
 }
 
+#users-response-area{
+    min-height: 700px;
+}
 
 #users-by-alphabetical {
-  padding: 5px;
+    position:absolute;
+    right: 0;
+    top:0;
+    margin: 10px;
+    width: 35px;
+    padding: 5px;
+    background-color: rgba(0,0,0,.5);
+
+    .border-radius(10px);
 	li {
 		display:inline-block;
 		width:35px;
 		text-align: center;
 		a{
+		    font-weight: bold;
+		    color:white;
 			line-height: 20px;
-			padding: 5px;
+			padding: 5px 10px;
 		}
 	}
 }
@@ -669,6 +700,6 @@ a:active {
 	margin-left: -50px;
 	z-index: 9999;
 	width: 100px;
-	.border-radius(0 0 5px 5px);
+	.border-radius(0px 0px 5px 5px);
 	display: none;
 }

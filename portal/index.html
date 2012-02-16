@@ -199,7 +199,9 @@
                             <div class="console-section span5">
                                 <h3>
                                     Applications
-                                    <a class="" href="#" onclick="usergrid.console.newApplication(); return false;"><i class="icon-plus"></i> New Application</a>
+                                    <div class="bar">
+                                        <a class="" href="#" onclick="usergrid.console.newApplication(); return false;"><i class="icon-plus"></i> New Application</a>
+                                    </div>
                                 </h3>
                                 <div id="organization-applications" class="console-section-contents">
                                     <span class="alert">No applications created.</span>
@@ -208,7 +210,9 @@
                             <div class="console-section span5">
                                 <h3>
                                     Organizations Administrators
+                                    <div class="bar">
                                     <a class="" href="" onclick="usergrid.console.newAdministrator(); return false;"><i class="icon-plus"></i> New Administrator</a>
+                                    </div>
                                 </h3>
                                 <div id="organization-admins" class="console-section-contents">
                                    <span class="alert">No administrators.</span>
@@ -217,7 +221,9 @@
                             <div class="console-section span5">
                                 <h3>
                                     Organization API Credentials
+                                    <div class="bar">
                                     <a class="" href="" onclick="usergrid.console.newOrganizationCredentials(); return false;"><i class="icon-random"></i> Regenerate Credential</a>
+                                    </div>
                                 </h3>
                                 <div class="console-section-contents">
                                     <div class="row">
@@ -281,21 +287,15 @@
                             <ul id="users-panel-tab-bar" class="nav nav-tabs">
                                 <li class="active"><a id="button-users-list" href="#">List</a></li>
                                 <li><a id="button-users-search" href="#">Search</a></li>
-                                <li class="dropdown">
-                                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                                       Filter <b class="caret"></b>
-                                    </a>
-                                    <ul id="users-by-alphabetical" class="dropdown-menu">
-                                       <li><a href="#">{0}</a></li>
-                                    </ul>
-                                </li>
                             </ul>
                             <div class="panel-content">
                                 <div class="console-section">
                                     <h3>
                                         Users
+                                        <div class="bar">
                                         <a href="" onclick="usergrid.console.newUser(); return false;">New User</a>
                                         <a href="" onclick="usergrid.console.deleteUsers(); return false;">Delete Users</a>
+                                        </div>
                                     </h3>
                                     <div class="console-section-contents">
                                         <div id="users-response-area">
@@ -307,6 +307,9 @@
                                                 <button class="button" id="button-users-next">Next</button>
                                             </div>
                                         </div>
+                                        <ul id="users-by-alphabetical">
+                                            <li><a href="#">{0}</a></li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
@@ -369,8 +372,10 @@
                                 <div class="console-section">
                                     <h3>
                                         Groups
+                                        <div class="bar">
                                         <a href="" onclick="usergrid.console.newGroup(); return false;">New Group</a>
                                         <a href="" onclick="usergrid.console.deleteGroups(); return false;">Delete Groups</a>
+                                        </div>
                                     </h3>
                                     <div class="console-section-contents">
                                         <table id="groups-response-area">
@@ -442,7 +447,9 @@
                                 <div class="console-section">
                                     <h3>
                                         Roles
+                                        <div class="bar">
                                         <a href="" onclick="usergrid.console.newRole(); return false;">New Role</a>
+                                        </div>
                                     </h3>
                                     <div class="console-section-contents">
                                         <div id="application-roles">
@@ -572,7 +579,9 @@
                                 <div class="console-section">
                                     <h3>
                                         Organizations
+                                        <div class="bar">
                                         <a href="" onclick="usergrid.console.newOrganization(); return false;">Generate New Organization</a>
+                                        </div>
                                     </h3>
                                     <div class="console-section-contents">
                                         <div id="organizations">
@@ -583,7 +592,9 @@
                                 <div class="console-section span5">
                                     <h3>
                                         Application API Credentials
+                                        <div class="bar">
                                         <a class="" href="" onclick="usergrid.console.newApplicationCredentials(); return false;"><i class="icon-random"></i> Regenerate Credential</a>
+                                        </div>
                                     </h3>
                                     <div id="application-panel-key-table" class="console-section-contents">
                                         <div class="row">
@@ -623,9 +634,10 @@
                                 <div class="console-section">
                                     <h3>
                                         Collections
+                                        <div class="bar">
                                         <a href="" onclick="usergrid.console.newCollection(); return false;">New Collection</a>
-                                        &nbsp;&nbsp;&nbsp;&nbsp;
                                         <a href="" onclick="usergrid.console.pageSelectQueryExplorer(); return false;">Query Explorer</a>
+                                        </div>
                                     </h3>
                                     <div class="console-section-contents">
                                         <div id="application-collections">
@@ -730,7 +742,7 @@
                                         <div class="control-group">
                                             <label id="update-account-id-label" class="control-label" for="">UUID</label>
                                             <div class="controls">
-                                               <input type="text" name="update-account-username" id="update-account-id" class="span4" value="00000000-0000-0000-0000-000000000000" size="20"/>
+                                               <input type="text" name="update-account-username" id="update-account-id" class="span4 uneditable-input" value="loading..." size="20"/>
                                             </div>
                                         </div>
                                         <div class="control-group">
@@ -785,7 +797,9 @@
                     <div class="console-section">
                         <h3>
                             Organizations
+                            <div class="bar">
                             <a href="" onclick="usergrid.console.newOrganization(); return false;">New Organization</a>
+                            </div>
                         </h3>
                         <div class="console-section-contents">
                             <div id="account-organizations"></div>
