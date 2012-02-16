@@ -82,6 +82,7 @@ import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.InflectionUtils.pluralize;
 import static org.usergrid.utils.InflectionUtils.singularize;
 import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
+import static org.usergrid.utils.UUIDUtils.getTimestampInMillis;
 import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
 import java.nio.ByteBuffer;
@@ -839,11 +840,12 @@ public class EntityManagerImpl implements EntityManager {
 					Object v = properties.get(p);
 					if (getDefaultSchema().isPropertyTimestamp(entityType, p)) {
 						if (v == null) {
-							properties.put(p, timestamp);
-						}
-						long ts = getLong(v);
-						if (ts <= 0) {
-							properties.put(p, timestamp);
+							properties.put(p, timestamp / 1000);
+						} else {
+							long ts = getLong(v);
+							if (ts <= 0) {
+								properties.put(p, timestamp / 1000);
+							}
 						}
 						continue;
 					}
@@ -922,8 +924,8 @@ public class EntityManagerImpl implements EntityManager {
 		properties.put(PROPERTY_UUID, itemId);
 		properties.put(PROPERTY_TYPE,
 				Schema.normalizeEntityType(entityType, false));
-		properties.put(PROPERTY_CREATED, timestamp);
-		properties.put(PROPERTY_MODIFIED, timestamp);
+		properties.put(PROPERTY_CREATED, timestamp / 1000);
+		properties.put(PROPERTY_MODIFIED, timestamp / 1000);
 
 		// special case timestamp and published properties
 		// and dictionary their timestamp values if not set
@@ -965,7 +967,8 @@ public class EntityManagerImpl implements EntityManager {
 					&& prop_name.equals(aliasName)) {
 				String aliasValue = propertyValue.toString().toLowerCase()
 						.trim();
-				logger.info("Alias property value for {} is {}", aliasName, aliasValue);
+				logger.info("Alias property value for {} is {}", aliasName,
+						aliasValue);
 				createAlias(applicationId, ref(entityType, itemId), entityType,
 						aliasValue);
 			}
@@ -1462,7 +1465,7 @@ public class EntityManagerImpl implements EntityManager {
 		Mutator<ByteBuffer> m = createMutator(ko, be);
 
 		UUID timestampUuid = newTimeUUID();
-		properties.put(PROPERTY_MODIFIED, getTimestampInMicros(timestampUuid));
+		properties.put(PROPERTY_MODIFIED, getTimestampInMillis(timestampUuid));
 
 		batchUpdateProperties(m, entity, properties, timestampUuid);
 
@@ -1471,14 +1474,16 @@ public class EntityManagerImpl implements EntityManager {
 
 	public void deleteEntity(UUID entityId) throws Exception {
 
-		logger.info("deleteEntity {} of application {}", entityId, applicationId);
+		logger.info("deleteEntity {} of application {}", entityId,
+				applicationId);
 
 		DynamicEntity entity = loadPartialEntity(entityId);
 		if (entity == null) {
 			return;
 		}
 
-		logger.info("deleteEntity: {} is of type {}", entityId, entity.getType());
+		logger.info("deleteEntity: {} is of type {}", entityId,
+				entity.getType());
 
 		Keyspace ko = cass.getApplicationKeyspace(applicationId);
 		Mutator<ByteBuffer> m = createMutator(ko, be);

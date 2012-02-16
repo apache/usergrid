@@ -101,7 +101,7 @@ public class UserResource extends ServiceResource {
 
 	@PUT
 	@Path("password")
-	public JSONWithPadding setUserPassword(@Context UriInfo ui,
+	public JSONWithPadding setUserPasswordPut(@Context UriInfo ui,
 			Map<String, Object> json,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
@@ -130,6 +130,15 @@ public class UserResource extends ServiceResource {
 		}
 
 		return new JSONWithPadding(response, callback);
+	}
+
+	@POST
+	@Path("password")
+	public JSONWithPadding setUserPasswordPost(@Context UriInfo ui,
+			Map<String, Object> json,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
+		return setUserPasswordPut(ui, json, callback);
 	}
 
 	@GET
