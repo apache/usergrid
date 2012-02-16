@@ -1665,10 +1665,11 @@ function usergrid_console_app() {
      ******************************************************************/
 
     function pageOpenGroupProfile(groupId) {
-        showPanel("#group-panel");
+        //showPanel("#group-panel");
+        PAges.SelectPanel('group');
         requestGroup(groupId);
         selectTabButton("#group-panel-tab-bar", $("#button-group-details"));
-        showPanelContent("#group-panel", "#group-panel-details");
+        //showPanelContent("#group-panel", "#group-panel-details");
     }
     window.usergrid.console.pageOpenGroupProfile = pageOpenGroupProfile;
 
