@@ -1,5 +1,5 @@
 <div class="console-section">
-	<div class="user-profile-header">
+	<h3>
 		{{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
 		<div class="user-profile-header-name{{if picture}} user-profile-picture-vert-offset{{/if}}">
 			{{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
@@ -11,8 +11,8 @@
 			onclick="usergrid.console.findGroupDialog('${username}'); return false;">Add ${username} to a Group</a>
 		</div>
 		<div style="clear: both;"> </div>
-	</div>
-	<div class="console-section-contents ui-widget-content">
+	</h3>
+	<div class="console-section-contents">
 		<div class="user-panel-section">
 			{{if memberships}}
 			{{each memberships}}
