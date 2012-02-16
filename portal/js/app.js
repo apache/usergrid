@@ -37,7 +37,8 @@ $(document).ready(function () {
 		Pages.AddPanel('application', null, null, null, usergrid.console.pageSelectApplication);
 		Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
 		Pages.AddPanel('users', null, null, null, usergrid.console.pageSelectUsers);
-		Pages.AddPanel('groups', null, null, null, usergrid.console.pageSelectGroups);
+		Pages.AddPanel('group', "#sidebar-menu a[href='#groups']", null, null, null);
+		Pages.AddPanel('groups', null, null, null, usergrid.console.pageSelectGroups);		
 		Pages.AddPanel('roles', null, null, null, usergrid.console.pageSelectRoles);
 		Pages.AddPanel('activities', null, null, null, usergrid.console.pageSelectActivities);
 		Pages.AddPanel('collections', null, null, null, usergrid.console.pageSelectCollections);
