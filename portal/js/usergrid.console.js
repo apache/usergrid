@@ -813,7 +813,6 @@ function usergrid_console_app() {
             var form = $("#dialog-form-new-admin");
             form.find("input").val("").removeClass("ui-state-error");
             form.find(".validateTips").remove();
-            form.reset();
         }
     });
 
