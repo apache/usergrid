@@ -1,53 +1,96 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.usergrid</groupId>
-		<artifactId>usergrid</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
-	</parent>
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<bundle.symbolicName>org.usergrid.count-inserter</bundle.symbolicName>
-		<bundle.namespace>org.usergrid</bundle.namespace>
-		<slf4j.version>1.6.1</slf4j.version>
-	</properties>
-  <artifactId>usergrid-count-inserter</artifactId>
-  <packaging>jar</packaging>
-  <name>${bundle.symbolicName} [${bundle.namespace}]</name>
-  <description>Storage service for Usergrid distributed counter architechture</description>
- 
-
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.8.1</version>
-      <scope>test</scope>
-    </dependency>
-      <dependency>
-                <groupId>me.prettyprint</groupId>
-                <artifactId>hector-test</artifactId>
-                <version>1.0-3</version>
-                <scope>test</scope>
-       </dependency>
-      <dependency>
-        <groupId>com.github.stephenc</groupId>
-        <artifactId>jamm</artifactId>
-        <version>0.2.5</version>
-        <scope>test</scope>
-      </dependency>
-    <dependency>
+    <parent>
         <groupId>org.usergrid</groupId>
-        <artifactId>usergrid-count-common</artifactId>
+        <artifactId>usergrid</artifactId>
         <version>0.0.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-        <groupId>me.prettyprint</groupId>
-        <artifactId>hector-core</artifactId>
-        <version>1.0-3</version>
-    </dependency>
+    </parent>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <bundle.symbolicName>org.usergrid.count-inserter</bundle.symbolicName>
+        <bundle.namespace>org.usergrid</bundle.namespace>
+        <slf4j.version>1.6.1</slf4j.version>
+    </properties>
+    <artifactId>usergrid-count-inserter</artifactId>
+    <packaging>jar</packaging>
+    <name>${bundle.symbolicName} [${bundle.namespace}]</name>
+    <description>Storage service for Usergrid distributed counter architechture</description>
 
-  </dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.prettyprint</groupId>
+            <artifactId>hector-test</artifactId>
+            <version>1.0-3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.stephenc</groupId>
+            <artifactId>jamm</artifactId>
+            <version>0.2.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.usergrid</groupId>
+            <artifactId>usergrid-count-common</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>me.prettyprint</groupId>
+            <artifactId>hector-core</artifactId>
+            <version>1.0-3</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.15</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.jms</groupId>
+                    <artifactId>jms</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jdmk</groupId>
+                    <artifactId>jmxtools</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jmx</groupId>
+                    <artifactId>jmxri</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+            <version>3.3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.linkedin.zkclient</groupId>
+            <artifactId>zkclient</artifactId>
+            <version>20110412</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.8.0</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jopt-simple</groupId>
+            <artifactId>jopt-simple</artifactId>
+            <version>3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka</artifactId>
+            <version>0.7.0</version>
+        </dependency>
+
+    </dependencies>
 </project>
