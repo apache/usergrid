@@ -2504,14 +2504,14 @@ function usergrid_console_app() {
         $("#login-message").hide();
     }
 
-	function setupMenu() {
-		if (client && client.loggedInUser)
-			$("#account-link").html(client.loggedInUser.email);
-		else
-			$("#logged-in-user-name").html("No Logged In User");
+   function setupMenu() {
+      if (client && client.loggedInUser)
+         $("#account-link").html(client.loggedInUser.email);
+      else
+         $("#account-link").html("No Logged In User");
+      setupOrganizationsMenu();
+   }
 
-		setupOrganizationsMenu();
-	}
 	function setupOrganizationsMenu() {
 		if (!client || !client.loggedInUser || !client.loggedInUser.organizations) {
 			return;
@@ -2681,7 +2681,7 @@ function usergrid_console_app() {
 	                  "</a>" +
 	                "</div>" +
                   "<div class='organization-row-buttons span pull-right'>" +
-	                  "<a href='#" + uuid + "' class='btn btn-danger' >Leave</a>" +
+	                  "<a onclick=\"usergrid.console.leaveOrganization('" + uuid + "')\" href='#" + uuid + "' class='btn btn-danger' >Leave</a>" +
                   "</div>" +
 	                "</div>";
             }
@@ -2851,6 +2851,15 @@ function usergrid_console_app() {
     }
     window.usergrid.console.createOrganization = createOrganization;
 
+
+   function leaveOrganization(name) {
+        client.leaveOrganization(name,requestOrganizations,
+        function() {
+            alert("Unable to leave orgnization " + name);
+        });
+    }
+    window.usergrid.console.leaveOrganization = leaveOrganization;
+    
     /*******************************************************************
      * 
      * Startup
