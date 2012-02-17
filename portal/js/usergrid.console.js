@@ -2506,7 +2506,7 @@ function usergrid_console_app() {
 
 	function setupMenu() {
 		if (client && client.loggedInUser)
-			$("#logged-in-user-name").html(client.loggedInUser.email);
+			$("#account-link").html(client.loggedInUser.email);
 		else
 			$("#logged-in-user-name").html("No Logged In User");
 
@@ -2544,10 +2544,11 @@ function usergrid_console_app() {
     function login() {
         var email = $("#login-email").val();
         var password = $("#login-password").val();
+        /*
         if (email == "skip") {
 	        Pages.ShowPage("console");
 					return;
-        }
+        }*/
         client.loginAdmin(email, password,loginOk,
 	        function() {
 	            displayLoginError();
