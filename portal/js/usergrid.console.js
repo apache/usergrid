@@ -2560,12 +2560,12 @@ function usergrid_console_app() {
     function logout() {
         client.logout();
         initOrganizationVars();
-	      Pages.ShowPage("login");
+	    Pages.ShowPage("login");
 	    return false;
     }
     usergrid.console.logout = logout;
 
-		$("#login-form").submit(function() {
+    $("#login-form").submit(function () {
         login();
         return false;
     });
