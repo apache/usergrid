@@ -37,6 +37,24 @@ public class JsonUtils {
 		}
 	}
 
+	public static Long getLongProperty(Map<String, JsonNode> properties,
+			String name) {
+		JsonNode value = properties.get(name);
+		if (value != null) {
+			return value.asLong(0);
+		}
+		return null;
+	}
+
+	public static void setLongProperty(Map<String, JsonNode> properties,
+			String name, Long value) {
+		if (value == null) {
+			properties.remove(name);
+		} else {
+			properties.put(name, JsonNodeFactory.instance.numberNode(value));
+		}
+	}
+
 	public static Boolean getBooleanProperty(Map<String, JsonNode> properties,
 			String name) {
 		JsonNode value = properties.get(name);
@@ -103,6 +121,42 @@ public class JsonUtils {
 			Log.e(TAG, "ERROR: " + e.getLocalizedMessage());
 		}
 		return null;
+	}
+
+	public static JsonNode toJsonNode(Object obj) {
+		return mapper.convertValue(obj, JsonNode.class);
+	}
+
+	public static <T> T fromJsonNode(JsonNode json, Class<T> c) {
+		try {
+			return mapper.readValue(json, c);
+		} catch (JsonParseException e) {
+			Log.e(TAG, "ERROR: " + e.getLocalizedMessage());
+		} catch (JsonMappingException e) {
+			Log.e(TAG, "ERROR: " + e.getLocalizedMessage());
+		} catch (IOException e) {
+			Log.e(TAG, "ERROR: " + e.getLocalizedMessage());
+		}
+		return null;
+	}
+
+	public static <T> T getObjectProperty(Map<String, JsonNode> properties,
+			String name, Class<T> c) {
+		JsonNode value = properties.get(name);
+		if (value != null) {
+			return fromJsonNode(value, c);
+		}
+		return null;
+	}
+
+	public static void setObjectProperty(Map<String, JsonNode> properties,
+			String name, Object value) {
+		if (value == null) {
+			properties.remove(name);
+		} else {
+			properties.put(name,
+					JsonNodeFactory.instance.textNode(value.toString()));
+		}
 	}
 
 }
