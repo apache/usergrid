@@ -357,8 +357,7 @@ public class Client {
 
 	public void authorizeAppUserAsync(final String email,
 			final String password, final ApiResponseCallback callback) {
-		(new ClientAsyncTask(callback) {
-
+		(new ClientAsyncTask<ApiResponse>(callback) {
 			@Override
 			public ApiResponse doTask() {
 				return authorizeAppUser(email, password);
@@ -394,8 +393,7 @@ public class Client {
 
 	public void authorizeAppUserViaPinAsync(final String email,
 			final String pin, final ApiResponseCallback callback) {
-		(new ClientAsyncTask(callback) {
-
+		(new ClientAsyncTask<ApiResponse>(callback) {
 			@Override
 			public ApiResponse doTask() {
 				return authorizeAppUserViaPin(email, pin);
@@ -562,7 +560,7 @@ public class Client {
 		return q;
 	}
 
-	public void queryUsers(String ql, QueryResultsCallback callback) {
+	public void queryUsersAsync(String ql, QueryResultsCallback callback) {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("ql", ql);
 		queryRequestAsync(callback, HttpMethod.GET, params, null,
@@ -575,7 +573,8 @@ public class Client {
 		return q;
 	}
 
-	public void queryUsersForGroup(String groupId, QueryResultsCallback callback) {
+	public void queryUsersForGroupAsync(String groupId,
+			QueryResultsCallback callback) {
 		queryRequestAsync(callback, HttpMethod.GET, null, null, applicationId,
 				"groups", groupId);
 	}
@@ -639,6 +638,43 @@ public class Client {
 						connectedEntityId);
 			}
 		}).execute();
+	}
+
+	public ApiResponse disconnectEntities(String connectingEntityId,
+			String connectionType, String connectedEntityId) {
+		return apiRequest(HttpMethod.DELETE, null, null, applicationId,
+				"groups", connectingEntityId, connectionType, connectedEntityId);
+	}
+
+	public void disconnectEntitiesAsync(final String connectingEntityId,
+			final String connectionType, final String connectedEntityId,
+			final ApiResponseCallback callback) {
+		(new ClientAsyncTask<ApiResponse>(callback) {
+			@Override
+			public ApiResponse doTask() {
+				return connectEntities(connectingEntityId, connectionType,
+						connectedEntityId);
+			}
+		}).execute();
+	}
+
+	public Query queryEntityConnections(String connectingEntityType,
+			String connectingEntityId, String connectionType, String ql) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("ql", ql);
+		Query q = queryRequest(HttpMethod.GET, params, null, applicationId,
+				connectingEntityType, connectingEntityId, connectionType);
+		return q;
+	}
+
+	public void queryEntityConnectionsAsync(String connectingEntityType,
+			String connectingEntityId, String connectionType, String ql,
+			QueryResultsCallback callback) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("ql", ql);
+		queryRequestAsync(callback, HttpMethod.GET, params, null,
+				applicationId, connectingEntityType, connectingEntityId,
+				connectionType);
 	}
 
 	public class Query {
