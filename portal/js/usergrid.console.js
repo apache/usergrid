@@ -621,7 +621,7 @@ function usergrid_console_app() {
     function createApplication(name) {
         client.createApplication(name, requestApplications,
         function() {
-            alert("Unable to create application " + name);
+            alert("Unable to create application: " + client.getLastErrorMessage(name));
         });
     }
 
@@ -697,7 +697,7 @@ function usergrid_console_app() {
     function createAdmin(email, password) {
         client.createAdmin(email, password, requestAdmins,
         function() {
-            alert("Unable to create admin " + email);
+            alert("Unable to create admin: " + client.getLastErrorMessage(email));
         });
     }
 
@@ -1042,7 +1042,7 @@ function usergrid_console_app() {
      ******************************************************************/
 
     var userLetter = "*";
-    var sortBy = "username";
+    var userSortBy = "username";
     function pageSelectUsers(uuid) {
         pageSelect(uuid);
         requestUsers();
@@ -1112,8 +1112,8 @@ function usergrid_console_app() {
             clientId : client_id,
             clientSecret : client_secret
         });
-        var query = {"ql" : "order by " + sortBy};
-        if (userLetter != "*") query = {"ql" : sortBy + "='" + userLetter + "*'"};
+        var query = {"ql" : "order by " + userSortBy};
+        if (userLetter != "*") query = {"ql" : userSortBy + "='" + userLetter + "*'"};
         users_query = test_client.queryUsers(displayUsers, query);
         return false;
     }
@@ -1167,7 +1167,7 @@ function usergrid_console_app() {
     function createUser(username, fullname, email, password) {
         client.createUser(current_application_id, username, fullname, email, password, requestUsers,
         function() {
-            alert("Unable to create user " + email);
+            alert("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'));
         });
     }
 
@@ -1182,7 +1182,7 @@ function usergrid_console_app() {
                 var userId = $(this).attr("value");
                 client.deleteUser(current_application_id, userId, requestUsers,
                 function() {
-                    alert("Unable to delete user " + userId);
+                    alert("Unable to delete user: " + client.getLastErrorMessage(userId));
                 });
             }
         });
@@ -1446,7 +1446,7 @@ function usergrid_console_app() {
     function createGroup(path, title) {
         client.createGroup(current_application_id, path, title, requestGroups,
         function() {
-            alert("Unable to create group " + email);
+            alert("Unable to create group: " + client.getLastErrorMessage(path));
         });
     }
 
@@ -1456,7 +1456,7 @@ function usergrid_console_app() {
                 var groupId = $(this).attr("value");
                 client.deleteGroup(current_application_id, groupId, requestGroups,
                 function() {
-                    alert("Unable to delete group " + groupId);
+                    alert("Unable to delete group: " + client.getLastErrorMessage(groupId));
                 });
             }
         });
@@ -1508,7 +1508,7 @@ function usergrid_console_app() {
     function addUserToGroup(groupId, userId) {
         client.addUserToGroup(current_application_id, groupId, userId, function() { requestGroup(groupId); },
         function() {
-            alert("Unable to add user to group ");
+            alert("Unable to add user to group: " + client.getLastErrorMessage('An internal error occured.'));
         });
     }
 
@@ -1603,7 +1603,7 @@ function usergrid_console_app() {
     function addUserToGroup2(groupId, userId) {
         client.addUserToGroup(current_application_id, groupId, userId, function() { requestUser(userId); },
         function() {
-            alert("Unable to add user to group ");
+            alert("Unable to add user to group: " + client.getLastErrorMessage('An internal error occured.'));
         });
     }
 
@@ -1878,7 +1878,7 @@ function usergrid_console_app() {
     function createRole(name, title) {
         client.createRole(current_application_id, name, title, requestRoles,
         function() {
-            alert("Unable to create role " + rolename);
+            alert("Unable to create role: " + client.getLastErrorMessage(name));
         });
     }
 
@@ -2438,7 +2438,7 @@ function usergrid_console_app() {
     function createCollection(collectionName) {
         client.createCollection(current_application_id, collectionName, requestCollections,
         function() {
-            alert("Unable to create collection " + collectionName);
+            alert("Unable to create collection: " + client.getLastErrorMessage(collectionName));
         });
     }
 
@@ -2846,7 +2846,7 @@ function usergrid_console_app() {
     function createOrganization(name) {
         client.createOrganization(name,requestOrganizations,
         function() {
-            alert("Unable to create orgnization " + name);
+            alert("Unable to create orgnization: " + client.getLastErrorMessage(name));
         });
     }
     window.usergrid.console.createOrganization = createOrganization;
