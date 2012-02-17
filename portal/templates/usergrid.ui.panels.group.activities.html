@@ -8,7 +8,7 @@
 		<div class="group-panel-section">
 			{{if activities}}
 			{{each activities}}
-			<div>${$index + 1}: <em>${$value}.</em></div>
+			<div>${$index + 1}: <em>${$value.actor.displayName} (${$value.actor.email}) - ${$value.verb}: ${$value.content}</em></div>
 			{{/each}}
 			{{else}}
 			<div class="group-panel-section-message">No Group Activities</div>
