@@ -43,6 +43,7 @@ html{
 }
 
 footer{
+  display: none;
   position:absolute;
   bottom:0;
   width:100%;
@@ -351,18 +352,20 @@ a:active {
     }
 }
 
+.query-result-row .query-result-portlet{
+    margin: 1px 0 5px 35px;
+}
 .query-result-portlet {
 	font-size: 12px;
-	border: 1px solid #666;
+	border: 1px solid  @h3Color;
 	background-color: #eee;
 	padding: 0px;
-	margin: 8px 0px 8px 8px;
+	margin: 0px;
 }
 
 .query-result-portlet-title {
 	font-size: 12px;
 	font-weight: bold;
-	border-bottom: 1px solid #666;
 	background-color: #ccc;
 	padding: 2px 4px;
 }
