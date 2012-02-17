@@ -2681,7 +2681,7 @@ function usergrid_console_app() {
 	                  "</a>" +
 	                "</div>" +
                   "<div class='organization-row-buttons span pull-right'>" +
-	                  "<a onclick=\"usergrid.console.leaveOrganization('" + uuid + "')\" href='#" + uuid + "' class='btn btn-danger' >Leave</a>" +
+	                  "<a onclick=\"usergrid.console.leaveOrganization('" + organizationName + "')\" href='#" + uuid + "' class='btn btn-danger' >Leave</a>" +
                   "</div>" +
 	                "</div>";
             }
@@ -2689,7 +2689,7 @@ function usergrid_console_app() {
             $("#organizations a").click( function(e){
                e.preventDefault();
                var uuid = $(this).attr("href").substring(1);
-               usergrid.console.pageSelectOrganization(uuid); //TODO: this function dont exist
+               //usergrid.console.pageSelectOrganization(uuid); //TODO: this function dont exist
             });
         } else {
         }
@@ -2853,10 +2853,12 @@ function usergrid_console_app() {
 
 
    function leaveOrganization(name) {
-        client.leaveOrganization(name,requestOrganizations,
-        function() {
-            alert("Unable to leave orgnization " + name);
-        });
+        if (confirm('Are you sure you want to leave this Organization?')) {
+            client.leaveOrganization(name,requestOrganizations,
+            function() {
+                alert("Unable to leave orgnization: " + client.getLastErrorMessage('There was an error processing your request'));
+            });
+        }
     }
     window.usergrid.console.leaveOrganization = leaveOrganization;
     

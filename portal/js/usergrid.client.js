@@ -268,33 +268,28 @@ usergrid.Client = function(options) {
     function setLastError(error) {
         if (error) {
             self.error = error;
-            if (error.type) {
-                console.log(error.type);
+            if (error.error) {
+                console.log(error.error);
             }
-            if (error.message) {
-                console.log(error.message);
-            }
-            if (error.detail) {
-                console.log(error.detail);
+            if (error.error_description) {
+                console.log(error.error_description);
             }
             if (error.exception) {
                 console.log(error.exception);
-            }
+            } 
         }
     }
 
     function getLastErrorMessage(defaultMsg) {
         var errorMsg = defaultMsg;
         if (self.error) {
-            if (self.error.message) {
-                errorMsg = self.error.message;
-                if (self.error.detail) {
-                    errorMsg += " - " + self.error.detail;
-                }
+            if (self.error.error_description) {
+                errorMsg = self.error.error_description;
             }
         }
         return errorMsg;
     }
+
     /**
      * Gets the error message of the last client error
      * 
@@ -391,7 +386,8 @@ usergrid.Client = function(options) {
                     try {
                         if (response && response.error) {
                             var error = response.error;
-                            setLastError(error);
+                            //var error = response.error_description;
+                            setLastError(response);
                             if (error == "auth_expired_session_token") {
                                 force_logout = true;
                             }
@@ -579,12 +575,10 @@ usergrid.Client = function(options) {
     
     
     function leaveOrganization(organizationName, success, failure) {
-        alert('Implement Leave Organization API call please.');
-        return false;
         if (!self.loggedInUser) {
             failure();
         }
-        apiRequest("DELETE", "/management/users/" + self.loggedInUser.uuid + "/organizations", null, JSON.stringify({"organization" : organizationName}), success, failure);
+        apiRequest("DELETE", "/management/users/" + self.loggedInUser.username + "/organizations/" + organizationName, null, null, success, failure);
     }
     this.leaveOrganization = leaveOrganization;
     
