@@ -36,7 +36,8 @@ import android.content.Context;
 import android.util.Log;
 
 /**
- * @author edanuff
+ * The Client class for accessing the Usergrid API. Start by instantiating this
+ * class though the appropriate constructor.
  * 
  */
 public class Client {
@@ -72,13 +73,15 @@ public class Client {
 	static RestTemplate restTemplate = new RestTemplate();
 
 	/**
-	 * Default constructor
+	 * Default constructor for instantiating a client.
 	 */
 	public Client() {
 		init();
 	}
 
 	/**
+	 * Instantiate client for a specific app
+	 * 
 	 * @param applicationId
 	 *            the application id or name
 	 */
@@ -227,10 +230,16 @@ public class Client {
 		this.accessToken = accessToken;
 	}
 
+	/**
+	 * @return the currentOrganization
+	 */
 	public String getCurrentOrganization() {
 		return currentOrganization;
 	}
 
+	/**
+	 * @param currentOrganization
+	 */
 	public void setCurrentOrganization(String currentOrganization) {
 		this.currentOrganization = currentOrganization;
 	}
@@ -329,6 +338,14 @@ public class Client {
 		}
 	}
 
+	/**
+	 * Log the user in and get a valid access token.
+	 * 
+	 * @param email
+	 * @param password
+	 * @return non-null ApiResponse if request succeeds, check getError() for
+	 *         "invalid_grant" to see if access is denied.
+	 */
 	public ApiResponse authorizeAppUser(String email, String password) {
 		assertValidApplicationId();
 		loggedInUser = null;
@@ -355,6 +372,14 @@ public class Client {
 		return response;
 	}
 
+	/**
+	 * Log the user in and get a valid access token. Executes asynchronously in
+	 * background and the callbacks are called in the UI thread.
+	 * 
+	 * @param email
+	 * @param password
+	 * @param callback
+	 */
 	public void authorizeAppUserAsync(final String email,
 			final String password, final ApiResponseCallback callback) {
 		(new ClientAsyncTask<ApiResponse>(callback) {
@@ -365,6 +390,14 @@ public class Client {
 		}).execute();
 	}
 
+	/**
+	 * Log the user in with their numeric pin-code and get a valid access token.
+	 * 
+	 * @param email
+	 * @param pin
+	 * @return non-null ApiResponse if request succeeds, check getError() for
+	 *         "invalid_grant" to see if access is denied.
+	 */
 	public ApiResponse authorizeAppUserViaPin(String email, String pin) {
 		assertValidApplicationId();
 		loggedInUser = null;
@@ -391,6 +424,15 @@ public class Client {
 		return response;
 	}
 
+	/**
+	 * Log the user in with their numeric pin-code and get a valid access token.
+	 * Executes asynchronously in background and the callbacks are called in the
+	 * UI thread.
+	 * 
+	 * @param email
+	 * @param pin
+	 * @param callback
+	 */
 	public void authorizeAppUserViaPinAsync(final String email,
 			final String pin, final ApiResponseCallback callback) {
 		(new ClientAsyncTask<ApiResponse>(callback) {
@@ -401,6 +443,15 @@ public class Client {
 		}).execute();
 	}
 
+	/**
+	 * Log the app in with it's client id and client secret key. Not recommended
+	 * for production apps.
+	 * 
+	 * @param email
+	 * @param pin
+	 * @return non-null ApiResponse if request succeeds, check getError() for
+	 *         "invalid_grant" to see if access is denied.
+	 */
 	public ApiResponse authorizeAppClient(String clientId, String clientSecret) {
 		assertValidApplicationId();
 		loggedInUser = null;
@@ -427,6 +478,15 @@ public class Client {
 		return response;
 	}
 
+	/**
+	 * Log the app in with it's client id and client secret key. Not recommended
+	 * for production apps. Executes asynchronously in background and the
+	 * callbacks are called in the UI thread.
+	 * 
+	 * @param clientId
+	 * @param clientSecret
+	 * @param callback
+	 */
 	public void authorizeAppClientAsync(final String clientId,
 			final String clientSecret, final ApiResponseCallback callback) {
 		(new ClientAsyncTask<ApiResponse>(callback) {
@@ -438,6 +498,13 @@ public class Client {
 		}).execute();
 	}
 
+	/**
+	 * Registers a device using the device's unique device ID.
+	 * 
+	 * @param context
+	 * @param properties
+	 * @return a Device object if success
+	 */
 	public Device registerDevice(Context context, Map<String, Object> properties) {
 		assertValidApplicationId();
 		UUID deviceId = new DeviceUuidFactory(context).getDeviceUuid();
@@ -450,6 +517,15 @@ public class Client {
 		return response.getFirstEntity(Device.class);
 	}
 
+	/**
+	 * Registers a device using the device's unique device ID. Executes
+	 * asynchronously in background and the callbacks are called in the UI
+	 * thread.
+	 * 
+	 * @param context
+	 * @param properties
+	 * @param callback
+	 */
 	public void registerDeviceAsync(final Context context,
 			final Map<String, Object> properties,
 			final DeviceRegistrationCallback callback) {
@@ -461,6 +537,12 @@ public class Client {
 		}).execute();
 	}
 
+	/**
+	 * Create a new entity on the server.
+	 * 
+	 * @param entity
+	 * @return an ApiResponse with the new entity in it.
+	 */
 	public ApiResponse createEntity(Entity entity) {
 		assertValidApplicationId();
 		if (isEmpty(entity.getType())) {
@@ -471,6 +553,13 @@ public class Client {
 		return response;
 	}
 
+	/**
+	 * Create a new entity on the server. Executes asynchronously in background
+	 * and the callbacks are called in the UI thread.
+	 * 
+	 * @param entity
+	 * @param callback
+	 */
 	public void createEntityAsync(final Entity entity,
 			final ApiResponseCallback callback) {
 		(new ClientAsyncTask<ApiResponse>(callback) {
@@ -481,6 +570,13 @@ public class Client {
 		}).execute();
 	}
 
+	/**
+	 * Create a new entity on the server from a set of properties. Properties
+	 * must include a "type" property.
+	 * 
+	 * @param properties
+	 * @return an ApiResponse with the new entity in it.
+	 */
 	public ApiResponse createEntity(Map<String, Object> properties) {
 		assertValidApplicationId();
 		if (isEmpty(properties.get("type"))) {
@@ -491,6 +587,14 @@ public class Client {
 		return response;
 	}
 
+	/**
+	 * Create a new entity on the server from a set of properties. Properties
+	 * must include a "type" property. Executes asynchronously in background and
+	 * the callbacks are called in the UI thread.
+	 * 
+	 * @param properties
+	 * @param callback
+	 */
 	public void createEntityAsync(final Map<String, Object> properties,
 			final ApiResponseCallback callback) {
 		(new ClientAsyncTask<ApiResponse>(callback) {
@@ -501,6 +605,13 @@ public class Client {
 		}).execute();
 	}
 
+	/**
+	 * Get the groups for the user.
+	 * 
+	 * @param userId
+	 * @return a map with the group path as the key and the Group entity as the
+	 *         value
+	 */
 	public Map<String, Group> getGroupsForUser(String userId) {
 		ApiResponse response = apiRequest(HttpMethod.GET, null, null,
 				applicationId, "users", userId, "groups");
@@ -514,6 +625,13 @@ public class Client {
 		return groupMap;
 	}
 
+	/**
+	 * Get the groups for the user. Executes asynchronously in background and
+	 * the callbacks are called in the UI thread.
+	 * 
+	 * @param userId
+	 * @param callback
+	 */
 	public void getGroupsForUserAsync(final String userId,
 			final GroupsRetrievedCallback callback) {
 		(new ClientAsyncTask<Map<String, Group>>(callback) {
@@ -524,12 +642,35 @@ public class Client {
 		}).execute();
 	}
 
+	/**
+	 * Perform a query request and return a query object. The Query object
+	 * provides a simple way of dealing with result sets that need to be
+	 * iterated or paged through.
+	 * 
+	 * @param method
+	 * @param params
+	 * @param data
+	 * @param segments
+	 * @return
+	 */
 	public Query queryRequest(HttpMethod method, Map<String, Object> params,
 			Object data, String... segments) {
 		ApiResponse response = apiRequest(method, params, data, segments);
 		return new Query(response, method, params, data, segments);
 	}
 
+	/**
+	 * Perform a query request and return a query object. The Query object
+	 * provides a simple way of dealing with result sets that need to be
+	 * iterated or paged through. Executes asynchronously in background and the
+	 * callbacks are called in the UI thread.
+	 * 
+	 * @param callback
+	 * @param method
+	 * @param params
+	 * @param data
+	 * @param segments
+	 */
 	public void queryRequestAsync(final QueryResultsCallback callback,
 			final HttpMethod method, final Map<String, Object> params,
 			final Object data, final String... segments) {
@@ -541,17 +682,35 @@ public class Client {
 		}).execute();
 	}
 
+	/**
+	 * Perform a query of the users collection.
+	 * 
+	 * @return
+	 */
 	public Query queryUsers() {
 		Query q = queryRequest(HttpMethod.GET, null, null, applicationId,
 				"users");
 		return q;
 	}
 
-	public void queryUsers(QueryResultsCallback callback) {
+	/**
+	 * Perform a query of the users collection. Executes asynchronously in
+	 * background and the callbacks are called in the UI thread.
+	 * 
+	 * @param callback
+	 */
+	public void queryUsersAsync(QueryResultsCallback callback) {
 		queryRequestAsync(callback, HttpMethod.GET, null, null, applicationId,
 				"users");
 	}
 
+	/**
+	 * Perform a query of the users collection using the provided query command.
+	 * For example: "name contains 'ed'".
+	 * 
+	 * @param ql
+	 * @return
+	 */
 	public Query queryUsers(String ql) {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("ql", ql);
@@ -560,6 +719,14 @@ public class Client {
 		return q;
 	}
 
+	/**
+	 * Perform a query of the users collection using the provided query command.
+	 * For example: "name contains 'ed'". Executes asynchronously in background
+	 * and the callbacks are called in the UI thread.
+	 * 
+	 * @param ql
+	 * @param callback
+	 */
 	public void queryUsersAsync(String ql, QueryResultsCallback callback) {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("ql", ql);
@@ -567,23 +734,51 @@ public class Client {
 				applicationId, "users");
 	}
 
+	/**
+	 * Queries the users for the specified group.
+	 * 
+	 * @param groupId
+	 * @return
+	 */
 	public Query queryUsersForGroup(String groupId) {
 		Query q = queryRequest(HttpMethod.GET, null, null, applicationId,
-				"groups", groupId);
+				"groups", groupId, "users");
 		return q;
 	}
 
+	/**
+	 * Queries the users for the specified group. Executes asynchronously in
+	 * background and the callbacks are called in the UI thread.
+	 * 
+	 * @param groupId
+	 * @param callback
+	 */
 	public void queryUsersForGroupAsync(String groupId,
 			QueryResultsCallback callback) {
 		queryRequestAsync(callback, HttpMethod.GET, null, null, applicationId,
-				"groups", groupId);
+				"groups", groupId, "users");
 	}
 
+	/**
+	 * Adds a user to the specified groups.
+	 * 
+	 * @param userId
+	 * @param groupId
+	 * @return
+	 */
 	public ApiResponse addUserToGroup(String userId, String groupId) {
 		return apiRequest(HttpMethod.POST, null, null, applicationId, "groups",
 				groupId, "users", userId);
 	}
 
+	/**
+	 * Adds a user to the specified groups. Executes asynchronously in
+	 * background and the callbacks are called in the UI thread.
+	 * 
+	 * @param userId
+	 * @param groupId
+	 * @param callback
+	 */
 	public void addUserToGroupAsync(final String userId, final String groupId,
 			final ApiResponseCallback callback) {
 		(new ClientAsyncTask<ApiResponse>(callback) {
@@ -594,15 +789,40 @@ public class Client {
 		}).execute();
 	}
 
+	/**
+	 * Creates a group with the specified group path. Group paths can be slash
+	 * ("/") delimited like file paths for hierarchical group relationships.
+	 * 
+	 * @param groupPath
+	 * @return
+	 */
 	public ApiResponse createGroup(String groupPath) {
 		return createGroup(groupPath, null);
 	}
 
+	/**
+	 * Creates a group with the specified group path. Group paths can be slash
+	 * ("/") delimited like file paths for hierarchical group relationships.
+	 * Executes asynchronously in background and the callbacks are called in the
+	 * UI thread.
+	 * 
+	 * @param groupPath
+	 * @param callback
+	 */
 	public void createGroupAsync(String groupPath,
 			final ApiResponseCallback callback) {
 		createGroupAsync(groupPath, null);
 	}
 
+	/**
+	 * Creates a group with the specified group path and group title. Group
+	 * paths can be slash ("/") delimited like file paths for hierarchical group
+	 * relationships.
+	 * 
+	 * @param groupPath
+	 * @param groupTitle
+	 * @return
+	 */
 	public ApiResponse createGroup(String groupPath, String groupTitle) {
 		Map<String, Object> data = new HashMap<String, Object>();
 		data.put("path", groupPath);
@@ -612,6 +832,16 @@ public class Client {
 		return apiRequest(HttpMethod.POST, null, data, applicationId, "groups");
 	}
 
+	/**
+	 * Creates a group with the specified group path and group title. Group
+	 * paths can be slash ("/") deliminted like file paths for hierarchical
+	 * group relationships. Executes asynchronously in background and the
+	 * callbacks are called in the UI thread.
+	 * 
+	 * @param groupPath
+	 * @param groupTitle
+	 * @param callback
+	 */
 	public void createGroupAsync(final String groupPath,
 			final String groupTitle, final ApiResponseCallback callback) {
 		(new ClientAsyncTask<ApiResponse>(callback) {
@@ -622,42 +852,91 @@ public class Client {
 		}).execute();
 	}
 
-	public ApiResponse connectEntities(String connectingEntityId,
-			String connectionType, String connectedEntityId) {
+	/**
+	 * Connect two entities together.
+	 * 
+	 * @param connectingEntityType
+	 * @param connectingEntityId
+	 * @param connectionType
+	 * @param connectedEntityId
+	 * @return
+	 */
+	public ApiResponse connectEntities(String connectingEntityType,
+			String connectingEntityId, String connectionType,
+			String connectedEntityId) {
 		return apiRequest(HttpMethod.POST, null, null, applicationId, "groups",
 				connectingEntityId, connectionType, connectedEntityId);
 	}
 
-	public void connectEntitiesAsync(final String connectingEntityId,
-			final String connectionType, final String connectedEntityId,
-			final ApiResponseCallback callback) {
+	/**
+	 * Connect two entities together. Executes asynchronously in background and
+	 * the callbacks are called in the UI thread.
+	 * 
+	 * @param connectingEntityType
+	 * @param connectingEntityId
+	 * @param connectionType
+	 * @param connectedEntityId
+	 * @param callback
+	 */
+	public void connectEntitiesAsync(final String connectingEntityType,
+			final String connectingEntityId, final String connectionType,
+			final String connectedEntityId, final ApiResponseCallback callback) {
 		(new ClientAsyncTask<ApiResponse>(callback) {
 			@Override
 			public ApiResponse doTask() {
-				return connectEntities(connectingEntityId, connectionType,
-						connectedEntityId);
+				return connectEntities(connectingEntityType,
+						connectingEntityId, connectionType, connectedEntityId);
 			}
 		}).execute();
 	}
 
-	public ApiResponse disconnectEntities(String connectingEntityId,
-			String connectionType, String connectedEntityId) {
+	/**
+	 * Disconnect two entities.
+	 * 
+	 * @param connectingEntityType
+	 * @param connectingEntityId
+	 * @param connectionType
+	 * @param connectedEntityId
+	 * @return
+	 */
+	public ApiResponse disconnectEntities(String connectingEntityType,
+			String connectingEntityId, String connectionType,
+			String connectedEntityId) {
 		return apiRequest(HttpMethod.DELETE, null, null, applicationId,
 				"groups", connectingEntityId, connectionType, connectedEntityId);
 	}
 
-	public void disconnectEntitiesAsync(final String connectingEntityId,
-			final String connectionType, final String connectedEntityId,
-			final ApiResponseCallback callback) {
+	/**
+	 * Disconnect two entities. Executes asynchronously in background and the
+	 * callbacks are called in the UI thread.
+	 * 
+	 * @param connectingEntityType
+	 * @param connectingEntityId
+	 * @param connectionType
+	 * @param connectedEntityId
+	 * @param callback
+	 */
+	public void disconnectEntitiesAsync(final String connectingEntityType,
+			final String connectingEntityId, final String connectionType,
+			final String connectedEntityId, final ApiResponseCallback callback) {
 		(new ClientAsyncTask<ApiResponse>(callback) {
 			@Override
 			public ApiResponse doTask() {
-				return connectEntities(connectingEntityId, connectionType,
-						connectedEntityId);
+				return connectEntities(connectingEntityType,
+						connectingEntityId, connectionType, connectedEntityId);
 			}
 		}).execute();
 	}
 
+	/**
+	 * Query the connected entities.
+	 * 
+	 * @param connectingEntityType
+	 * @param connectingEntityId
+	 * @param connectionType
+	 * @param ql
+	 * @return
+	 */
 	public Query queryEntityConnections(String connectingEntityType,
 			String connectingEntityId, String connectionType, String ql) {
 		Map<String, Object> params = new HashMap<String, Object>();
@@ -667,6 +946,16 @@ public class Client {
 		return q;
 	}
 
+	/**
+	 * Query the connected entities. Executes asynchronously in background and
+	 * the callbacks are called in the UI thread.
+	 * 
+	 * @param connectingEntityType
+	 * @param connectingEntityId
+	 * @param connectionType
+	 * @param ql
+	 * @param callback
+	 */
 	public void queryEntityConnectionsAsync(String connectingEntityType,
 			String connectingEntityId, String connectionType, String ql,
 			QueryResultsCallback callback) {
@@ -677,6 +966,10 @@ public class Client {
 				connectionType);
 	}
 
+	/**
+	 * Query object
+	 * 
+	 */
 	public class Query {
 		final HttpMethod method;
 		final Map<String, Object> params;
@@ -704,10 +997,16 @@ public class Client {
 			prevCursor = (q.response != null) ? q.response.getCursor() : null;
 		}
 
+		/**
+		 * @return the api response of the last request
+		 */
 		public ApiResponse getResponse() {
 			return response;
 		}
 
+		/**
+		 * @return true if the server indicates more results are available
+		 */
 		public boolean more() {
 			if ((response != null) && (response.getCursor() != null)
 					&& (response.getCursor().length() > 0)) {
@@ -716,6 +1015,11 @@ public class Client {
 			return false;
 		}
 
+		/**
+		 * Performs a request for the next set of results
+		 * 
+		 * @return query that contains results and where to get more from.
+		 */
 		public Query next() {
 			if (more()) {
 				Map<String, Object> nextParams = null;
