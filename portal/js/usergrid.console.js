@@ -565,7 +565,7 @@ function usergrid_console_app() {
             var count = 0;
             var applicationNames = keys(applications).sort();
             var data = [];
-            var appListTmpl = $('<div class="application-row"><a href="#"><span class="application-row-name">${name}</span> <span class="application-row-uuid">(${uuid})</span></a></div>');
+            var appListTmpl = $('<div class="application-row"><a href="#"><span class="application-row-name">${name}</span> <span class="application-row-uuid">(${uuid})</span></a></br></div>');
             var appMenuTmpl = $('<li><a href="#">${name}</a></li>');
 
             for (var i in applicationNames) {
