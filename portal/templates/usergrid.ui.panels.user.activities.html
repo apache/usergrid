@@ -10,7 +10,7 @@
 	<div class="console-section-contents">
 			{{if activities}}
 			{{each activities}}
-			<div>${$index + 1}: <em>${$value}.</em></div>
+			<div>${$index + 1}: <em>${$value.actor.displayName} (${$value.actor.email}) - ${$value.verb}: ${$value.content}</em></div>
 			{{/each}}
 			{{else}}
 			<div class="user-panel-section-message">No User Activities</div>
