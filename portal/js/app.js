@@ -11,6 +11,7 @@ $(document).ready(function () {
 	function Init() {
 		usergrid_console_app();
 		InitMenu();
+        StatusBar.Init('#statusbar-placeholder');
 		$("#logout-link").click(usergrid.console.logout);
 		usergrid.console.loginOk();
 	}
@@ -48,4 +49,5 @@ $(document).ready(function () {
 
 		//$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
 	}
+    
 });

@@ -312,7 +312,8 @@ function usergrid_console_app() {
     }
 
     function showQueryStatus(s, _type) {
-        $("#statusbar-placeholder").statusbar("add", s, 7, _type);
+        //$("#statusbar-placeholder").statusbar("add", s, 7, _type);
+        StatusBar.showAlert(s,_type);
     }
 
     function doQuerySend(method, data) {
@@ -2972,11 +2973,8 @@ function usergrid_console_app() {
         return false;
     });
 
-
-    $("#statusbar-placeholder").statusbar();
-    
     //$("#console-panel-nav-bar").usergrid_console_navbar({crumbs : [{title : "Hello"}, {title : "Goodbye"}], tabs : [{title : "Hello"}, {title : "Goodbye"}]});
-    
+
 
     if (OFFLINE) {
 	    Pages.ShowPage(OFFLINE_PAGE)
