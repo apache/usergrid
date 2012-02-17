@@ -873,10 +873,8 @@ function usergrid_console_app() {
     function pageSelect(uuid) {
         if (uuid) {
             current_application_id = uuid;
-            console.log(applications_by_id[uuid]);
             current_application_name = applications_by_id[uuid];
         }
-        console.log(applications_by_id[uuid]);
         setNavApplicationText();
         requestCollections();
         query_history = [];
