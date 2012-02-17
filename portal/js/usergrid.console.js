@@ -95,9 +95,13 @@ function usergrid_console_app() {
         });
     }
 
-    function selectTabButton(bar, link) {
-	    $(bar).find("li.active").removeClass('active');
-	    link.parent().addClass('active');
+    function selectTabButton(link) {
+        var tab = $(link).parent();
+        tab.parent().find("li.active").removeClass('active');
+        tab.addClass('active');
+    }
+    function selectFirstTabButton(bar){
+        selectTabButton($(bar).find("li:first-child a"));
     }
 
     function setNavApplicationText() {
@@ -551,53 +555,55 @@ function usergrid_console_app() {
 	      var m2 = "";
         applications = {};
         applications_by_id = {};
+        var appMenu = $("#applications-menu ul");
+        var appList = $("#organization-applications");
+        appMenu.empty();
+        appList.empty();
+
         if (response.data) {
             applications = response.data;
             var count = 0;
             var applicationNames = keys(applications).sort();
-						for (var i in applicationNames) {
-                var application = applicationNames[i];
-                var uuid = applications[application];
-                t += "<div class='application-row' id='application-row-"
-                + uuid
-                + "'><a href='#" + uuid + "'><span class=\"application-row-name\">"
-                + application
-                + "</span> <span class=\"application-row-uuid\">("
-                + uuid + ")</span>" + "</a></div>";
+            var data = [];
+            var appListTmpl = $('<div class="application-row"><a href="#"><span class="application-row-name">${name}</span> <span class="application-row-uuid">(${uuid})</span></a></div>');
+            var appMenuTmpl = $('<li><a href="#">${name}</a></li>');
+
+            for (var i in applicationNames) {
+                var name = applicationNames[i];
+                var uuid = applications[name];
+                data.push({uuid:uuid, name:name});
                 count++;
-                applications_by_id[uuid] = application;
+                applications_by_id[uuid] = name;
                 if ($.isEmptyObject(current_application_id)) {
                     current_application_id = uuid;
-                    current_application_name = application;
+                    current_application_name = name;
                 }
-							  m2 += "<li><a href='#" + uuid + "'>" + application + "</a></li>";
             }
             if (count) {
-	            $("#applications-menu ul").html(m2);
-	            $("#organization-applications a").click(function (e) {
-		            e.preventDefault();
-		            var link = $(this);
-		            pageSelect(link.attr("href").substring(1));
-		            Pages.SelectPanel('application');
-	            });
-	            $("#applications-menu ul a").click(function (e) {
-		            var link = $(this);
-		            pageSelect(link.attr("href").substring(1));
-		            Pages.SelectPanel('application');
-	            });
-	            $("#organization-applications").html(t);
+                appListTmpl.tmpl(data).appendTo(appList);
+                appMenuTmpl.tmpl(data).appendTo(appMenu);
+                appMenu.find("a").click(function selectApp(e) {
+                    var link = $(this);
+                    pageSelect(link.tmplItem().data.uuid);
+                    Pages.SelectPanel('application');
+                });
+                appList.find("a").click(function selectApp(e) {
+                    e.preventDefault();
+                    var link = $(this);
+
+                    pageSelect(link.tmplItem().data.uuid);
+                    Pages.SelectPanel('application');
+                });
 	            enableApplicationPanelButtons();
             }
             else {
-                $("#organization-applications").html("<h2>No applications created.</h2>");
-                $("#applications-menu ul").html('<li>--No Apps--</li>');
+                appList.html("<h2>No applications created.</h2>");
+                appMenu.html('<li>--No Apps--</li>');
                 disableApplicationPanelButtons();
             }
-            $('select#applicationSelect').selectmenu();
-
         } else {
-            $("#organization-applications")
-            .html("<h2>No applications created.</h2>");
+            appList.html("<h2>No applications created.</h2>");
+            appMenu.html('<li>--No Apps--</li>');
             disableApplicationPanelButtons();
         }
     }
@@ -1039,10 +1045,8 @@ function usergrid_console_app() {
     var sortBy = "username";
     function pageSelectUsers(uuid) {
         pageSelect(uuid);
-        //showPanel("#users-panel");
-	      //Pages.SelectPanel('users');
         requestUsers();
-        selectTabButton("#users-panel-tab-bar", $("#button-users-list"));
+        selectFirstTabButton('#users-panel-tab-bar');
         //pageOpenQueryExplorer("/users");
         //$("#users-by-alphabetical").show();
     }
@@ -1192,11 +1196,10 @@ function usergrid_console_app() {
      ******************************************************************/
 
     function pageOpenUserProfile(userId) {
-        //showPanel("#user-panel");
-	      Pages.SelectPanel('user');
+	    Pages.SelectPanel('user');
         requestUser(userId);
-        selectTabButton("#user-panel-tab-bar", $("#button-user-profile"));
-        //showPanelContent("#user-panel", "#user-panel-profile");
+        selectTabButton("#button-user-profile");
+        showPanelContent("#user-panel", "#user-panel-profile");
     }
     window.usergrid.console.pageOpenUserProfile = pageOpenUserProfile;
 
@@ -1336,10 +1339,9 @@ function usergrid_console_app() {
     var groupLetter = "*";
     var groupSortBy = "path";
     function pageSelectGroups(uuid) {
-      pageSelect(uuid);
+        pageSelect(uuid);
 	    requestGroups();
-	    selectTabButton("#groups-panel-tab-bar", $("#button-groups-list"));
-	    $("#groups-by-alphabetical").show();
+        selectFirstTabButton('#groups-panel-tab-bar');
     }
     window.usergrid.console.pageSelectGroups = pageSelectGroups;
 
@@ -1663,11 +1665,10 @@ function usergrid_console_app() {
      ******************************************************************/
 
     function pageOpenGroupProfile(groupId) {
-        //showPanel("#group-panel");
         Pages.SelectPanel('group');
         requestGroup(groupId);
-        selectTabButton("#group-panel-tab-bar", $("#button-group-details"));
-        //showPanelContent("#group-panel", "#group-panel-details");
+        selectTabButton("#button-group-details");
+        showPanelContent("#group-panel", "#group-panel-details");
     }
     window.usergrid.console.pageOpenGroupProfile = pageOpenGroupProfile;
 
@@ -2861,12 +2862,12 @@ function usergrid_console_app() {
     });
 
     $("#users-panel-tab-bar a").click(function() {
-        selectTabButton("#users-panel-tab-bar", $(this));
+        selectTabButton(this);
         return false;
     });
 
     $("#user-panel-tab-bar a").click(function() {
-        selectTabButton("#user-panel-tab-bar", $(this));
+        selectTabButton(this);
         if ($(this).attr("id") == "button-user-list") {
 	        Pages.SelectPanel('users');
         }
@@ -2882,12 +2883,12 @@ function usergrid_console_app() {
 		createAlphabetLinks("#users-by-alphabetical",usergrid.console.showUsersForLetter);
 
     $("#groups-panel-tab-bar a").click(function() {
-        selectTabButton("#groups-panel-tab-bar", $(this));
+        selectTabButton(this);
         return false;
     });
 
     $("#group-panel-tab-bar a").click(function() {
-        selectTabButton("#group-panel-tab-bar", $(this));
+        selectTabButton(this);
         if ($(this).attr("id") == "button-group-list") {
             pageSelectGroups();
         }
