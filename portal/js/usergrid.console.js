@@ -787,27 +787,18 @@ function usergrid_console_app() {
             "Create": function() {
                 var bValid = true;
                 allNewAdminFields.removeClass("ui-state-error");
+                new_admin_password_confirm.removeClass("ui-state-error");
 
-                bValid = bValid
-                && checkLength(new_admin_email, "email", 6, 80);
-                
-                bValid = bValid
-                && checkLength(new_admin_password, "password", 5, 16);
-
-                bValid = bValid
-                && checkRegexp(
-                new_admin_email,
-                emailRegex,
-                "eg. ui@jquery.com");
-                
-                bValid = bValid
-                && checkRegexp(new_admin_password,
-                passwordRegex,
-                "Password field only allows : a-z, 0-9, @, #, $, %, ^, &");
+                bValid = bValid && checkLength(new_admin_email, "email", 6, 80);
+                bValid = bValid && checkLength(new_admin_password, "password", 5, 16);
+                bValid = bValid && checkRegexp(new_admin_email,emailRegex,
+                    "eg. example@apigee.com");
+                bValid = bValid && checkRegexp(new_admin_password,passwordRegex,
+                    "Password field only allows : a-z, 0-9, @, #, $, %, ^, &");
 
                 bValid = bValid && checkTrue(new_admin_password,
-                new_admin_password.val() == new_admin_password_confirm.val(),
-                "Passwords do not match");
+                    new_admin_password.val() == new_admin_password_confirm.val(),
+                    "Passwords do not match");
 
                 if (bValid) {
                     createAdmin(new_admin_email.val(), new_admin_password.val());
@@ -819,7 +810,10 @@ function usergrid_console_app() {
             }
         },
         close: function() {
-            allNewAdminFields.val("").removeClass("ui-state-error");
+            var form = $("#dialog-form-new-admin");
+            form.find("input").val("").removeClass("ui-state-error");
+            form.find(".validateTips").remove();
+            form.reset();
         }
     });
 
