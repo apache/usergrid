@@ -106,9 +106,10 @@ function usergrid_console_app() {
 
     function setNavApplicationText() {
         //$('select#applicationSelect').selectmenu("value", current_application_id);
+        if(!current_application_name)
+            current_application_name = "Select an Application";
 	    $('#application-panel h3').text("Application Dashboard - " + current_application_name);
 	    $('#selectedApp').text(current_application_name);
-	    
     }
 
     function createAlphabetLinks(containerSelector, callback) {
@@ -596,6 +597,7 @@ function usergrid_console_app() {
                     Pages.SelectPanel('application');
                 });
 	            enableApplicationPanelButtons();
+                selectFirstApp();
             }
             else {
                 appList.html("<h2>No applications created.</h2>");
@@ -612,11 +614,18 @@ function usergrid_console_app() {
     function requestApplications() {
         $("#organization-applications").html(
         "<h2>Loading...</h2>");
-        client.requestApplications(displayApplications,
-        function() {
+        client.requestApplications(displayApplications, function() {
             $("#organization-applications").html("<h2>Unable to retrieve application list.</h2>");
             disableApplicationPanelButtons();
         });
+    }
+
+    function selectFirstApp() {
+
+        var firstApp = null;
+        for (firstApp in client.currentOrganization.applications) break;
+        if(firstApp)
+            pageSelect(client.currentOrganization.applications[firstApp]);
     }
 
     function createApplication(name) {
@@ -864,12 +873,16 @@ function usergrid_console_app() {
     function pageSelect(uuid) {
         if (uuid) {
             current_application_id = uuid;
+            console.log(applications_by_id[uuid]);
             current_application_name = applications_by_id[uuid];
         }
+        console.log(applications_by_id[uuid]);
         setNavApplicationText();
         requestCollections();
         query_history = [];
     }
+    window.usergrid.console.pageSelect = pageSelect;
+
 
     /*******************************************************************
      * 
@@ -2532,6 +2545,7 @@ function usergrid_console_app() {
 			var orgName = link.text();
 			client.currentOrganization = client.loggedInUser.organizations[orgName];
 			Pages.ShowPage('console');
+            disableApplicationPanelButtons();
 		}
 	}
 
@@ -2683,7 +2697,7 @@ function usergrid_console_app() {
             $("#organizations a").click( function(e){
                e.preventDefault();
                var uuid = $(this).attr("href").substring(1);
-               //usergrid.console.pageSelectOrganization(uuid); //TODO: this function dont exist
+               //usergrid.console.pageSelectOrganization(uuid); //TODO:david this function dont exist
             });
         } else {
         }
@@ -2929,15 +2943,11 @@ function usergrid_console_app() {
     doBuildIndexMenu();
 
     function enableApplicationPanelButtons() {
-        $("select#applicationSelect").removeClass("ui-state-disabled");
-        $("#applicationSelectForm .ui-selectmenu").removeClass("ui-state-disabled");
-        $("#application-panel-buttons").removeClass("ui-state-disabled");
+        $("#application-panel-buttons").show();
     }
 
     function disableApplicationPanelButtons() {
-        $("select#applicationSelect").addClass("ui-state-disabled");
-        $("#applicationSelectForm .ui-selectmenu").addClass("ui-state-disabled");
-        $("#application-panel-buttons").addClass("ui-state-disabled");
+        $("#application-panel-buttons").hide();
     }
 
     $('#system-panel-button-home').addClass('ui-selected');

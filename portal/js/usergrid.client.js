@@ -1293,14 +1293,15 @@ usergrid.Client = function(options) {
 
     self.loggedInUser = localStorage.getObject('usergrid_user');
     self.accessToken = localStorage.getObject('usergrid_access_token');
-		setCurrentOrganization();
+	setCurrentOrganization();
 
 	function setCurrentOrganization() {
 		self.currentOrganization = null;
 		if (self.loggedInUser && self.loggedInUser.organizations) {
-			for (first in self.loggedInUser.organizations) break;
-			if (first) {
-				self.currentOrganization = self.loggedInUser.organizations[first];
+            var firstOrg = null;
+			for (firstOrg in self.loggedInUser.organizations) break;
+			if (firstOrg) {
+				self.currentOrganization = self.loggedInUser.organizations[firstOrg];
 			}
 		}
 	}
