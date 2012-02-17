@@ -20,6 +20,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.usergrid.android.client.callbacks.ApiResponseCallback;
+import org.usergrid.android.client.callbacks.ClientAsyncTask;
+import org.usergrid.android.client.callbacks.DeviceRegistrationCallback;
+import org.usergrid.android.client.callbacks.GroupsRetrievedCallback;
+import org.usergrid.android.client.callbacks.QueryResultsCallback;
 import org.usergrid.android.client.entities.Device;
 import org.usergrid.android.client.entities.Entity;
 import org.usergrid.android.client.entities.Group;
@@ -350,6 +355,17 @@ public class Client {
 		return response;
 	}
 
+	public void authorizeAppUserAsync(final String email,
+			final String password, final ApiResponseCallback callback) {
+		(new ClientAsyncTask(callback) {
+
+			@Override
+			public ApiResponse doTask() {
+				return authorizeAppUser(email, password);
+			}
+		}).execute();
+	}
+
 	public ApiResponse authorizeAppUserViaPin(String email, String pin) {
 		assertValidApplicationId();
 		loggedInUser = null;
@@ -374,6 +390,17 @@ public class Client {
 			Log.i(TAG, "Client.authorizeAppUser(): Response: " + response);
 		}
 		return response;
+	}
+
+	public void authorizeAppUserViaPinAsync(final String email,
+			final String pin, final ApiResponseCallback callback) {
+		(new ClientAsyncTask(callback) {
+
+			@Override
+			public ApiResponse doTask() {
+				return authorizeAppUserViaPin(email, pin);
+			}
+		}).execute();
 	}
 
 	public ApiResponse authorizeAppClient(String clientId, String clientSecret) {
@@ -402,6 +429,17 @@ public class Client {
 		return response;
 	}
 
+	public void authorizeAppClientAsync(final String clientId,
+			final String clientSecret, final ApiResponseCallback callback) {
+		(new ClientAsyncTask<ApiResponse>(callback) {
+
+			@Override
+			public ApiResponse doTask() {
+				return authorizeAppClient(clientId, clientSecret);
+			}
+		}).execute();
+	}
+
 	public Device registerDevice(Context context, Map<String, Object> properties) {
 		assertValidApplicationId();
 		UUID deviceId = new DeviceUuidFactory(context).getDeviceUuid();
@@ -414,6 +452,17 @@ public class Client {
 		return response.getFirstEntity(Device.class);
 	}
 
+	public void registerDeviceAsync(final Context context,
+			final Map<String, Object> properties,
+			final DeviceRegistrationCallback callback) {
+		(new ClientAsyncTask<Device>(callback) {
+			@Override
+			public Device doTask() {
+				return registerDevice(context, properties);
+			}
+		}).execute();
+	}
+
 	public ApiResponse createEntity(Entity entity) {
 		assertValidApplicationId();
 		if (isEmpty(entity.getType())) {
@@ -424,6 +473,16 @@ public class Client {
 		return response;
 	}
 
+	public void createEntityAsync(final Entity entity,
+			final ApiResponseCallback callback) {
+		(new ClientAsyncTask<ApiResponse>(callback) {
+			@Override
+			public ApiResponse doTask() {
+				return createEntity(entity);
+			}
+		}).execute();
+	}
+
 	public ApiResponse createEntity(Map<String, Object> properties) {
 		assertValidApplicationId();
 		if (isEmpty(properties.get("type"))) {
@@ -432,6 +491,16 @@ public class Client {
 		ApiResponse response = apiRequest(HttpMethod.POST, null, properties,
 				applicationId, properties.get("type").toString());
 		return response;
+	}
+
+	public void createEntityAsync(final Map<String, Object> properties,
+			final ApiResponseCallback callback) {
+		(new ClientAsyncTask<ApiResponse>(callback) {
+			@Override
+			public ApiResponse doTask() {
+				return createEntity(properties);
+			}
+		}).execute();
 	}
 
 	public Map<String, Group> getGroupsForUser(String userId) {
@@ -447,16 +516,42 @@ public class Client {
 		return groupMap;
 	}
 
+	public void getGroupsForUserAsync(final String userId,
+			final GroupsRetrievedCallback callback) {
+		(new ClientAsyncTask<Map<String, Group>>(callback) {
+			@Override
+			public Map<String, Group> doTask() {
+				return getGroupsForUser(userId);
+			}
+		}).execute();
+	}
+
 	public Query queryRequest(HttpMethod method, Map<String, Object> params,
 			Object data, String... segments) {
 		ApiResponse response = apiRequest(method, params, data, segments);
 		return new Query(response, method, params, data, segments);
 	}
 
+	public void queryRequestAsync(final QueryResultsCallback callback,
+			final HttpMethod method, final Map<String, Object> params,
+			final Object data, final String... segments) {
+		(new ClientAsyncTask<Query>(callback) {
+			@Override
+			public Query doTask() {
+				return queryRequest(method, params, data, segments);
+			}
+		}).execute();
+	}
+
 	public Query queryUsers() {
 		Query q = queryRequest(HttpMethod.GET, null, null, applicationId,
 				"users");
 		return q;
+	}
+
+	public void queryUsers(QueryResultsCallback callback) {
+		queryRequestAsync(callback, HttpMethod.GET, null, null, applicationId,
+				"users");
 	}
 
 	public Query queryUsers(String ql) {
@@ -467,10 +562,22 @@ public class Client {
 		return q;
 	}
 
+	public void queryUsers(String ql, QueryResultsCallback callback) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("ql", ql);
+		queryRequestAsync(callback, HttpMethod.GET, params, null,
+				applicationId, "users");
+	}
+
 	public Query queryUsersForGroup(String groupId) {
 		Query q = queryRequest(HttpMethod.GET, null, null, applicationId,
 				"groups", groupId);
 		return q;
+	}
+
+	public void queryUsersForGroup(String groupId, QueryResultsCallback callback) {
+		queryRequestAsync(callback, HttpMethod.GET, null, null, applicationId,
+				"groups", groupId);
 	}
 
 	public ApiResponse addUserToGroup(String userId, String groupId) {
@@ -478,8 +585,23 @@ public class Client {
 				groupId, "users", userId);
 	}
 
+	public void addUserToGroupAsync(final String userId, final String groupId,
+			final ApiResponseCallback callback) {
+		(new ClientAsyncTask<ApiResponse>(callback) {
+			@Override
+			public ApiResponse doTask() {
+				return addUserToGroup(userId, groupId);
+			}
+		}).execute();
+	}
+
 	public ApiResponse createGroup(String groupPath) {
 		return createGroup(groupPath, null);
+	}
+
+	public void createGroupAsync(String groupPath,
+			final ApiResponseCallback callback) {
+		createGroupAsync(groupPath, null);
 	}
 
 	public ApiResponse createGroup(String groupPath, String groupTitle) {
@@ -489,6 +611,34 @@ public class Client {
 			data.put("title", groupTitle);
 		}
 		return apiRequest(HttpMethod.POST, null, data, applicationId, "groups");
+	}
+
+	public void createGroupAsync(final String groupPath,
+			final String groupTitle, final ApiResponseCallback callback) {
+		(new ClientAsyncTask<ApiResponse>(callback) {
+			@Override
+			public ApiResponse doTask() {
+				return createGroup(groupPath, groupTitle);
+			}
+		}).execute();
+	}
+
+	public ApiResponse connectEntities(String connectingEntityId,
+			String connectionType, String connectedEntityId) {
+		return apiRequest(HttpMethod.POST, null, null, applicationId, "groups",
+				connectingEntityId, connectionType, connectedEntityId);
+	}
+
+	public void connectEntitiesAsync(final String connectingEntityId,
+			final String connectionType, final String connectedEntityId,
+			final ApiResponseCallback callback) {
+		(new ClientAsyncTask<ApiResponse>(callback) {
+			@Override
+			public ApiResponse doTask() {
+				return connectEntities(connectingEntityId, connectionType,
+						connectedEntityId);
+			}
+		}).execute();
 	}
 
 	public class Query {
