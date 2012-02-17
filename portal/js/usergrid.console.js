@@ -111,16 +111,16 @@ function usergrid_console_app() {
 	    
     }
 
-			function createAlphabetLinks(containerSelector, callback) {
-				var li = $(containerSelector).html();
-				var s = li.replace('{0}','*');
+    function createAlphabetLinks(containerSelector, callback) {
+        var li = $(containerSelector).html();
+        var s = li.replace('{0}', '*');
         for (var i = 1; i <= 26; i++) {
-	        var char =  String.fromCharCode(64 + i);
-	        s+= li.replace('{0}',char);
+            var char = String.fromCharCode(64 + i);
+            s += li.replace('{0}', char);
         }
         $(containerSelector).html(s);
-				$(containerSelector + " a").click(callback);
-     }
+        $(containerSelector + " a").click(callback);
+    }
     /*******************************************************************
      * 
      * Query Explorer
@@ -2892,7 +2892,8 @@ function usergrid_console_app() {
         return false;
     });
 
-		createAlphabetLinks("#users-by-alphabetical",usergrid.console.showUsersForLetter);
+    createAlphabetLinks("#users-by-alphabetical",usergrid.console.showUsersForLetter);
+    createAlphabetLinks("#groups-by-alphabetical", usergrid.console.showGroupsForLetter);
 
     $("#groups-panel-tab-bar a").click(function() {
         selectTabButton(this);
@@ -2913,7 +2914,6 @@ function usergrid_console_app() {
         return false;
     });
 
-		createAlphabetLinks("#groups-by-alphabetical", usergrid.console.showGroupsForLetter);
 
     $("#role-panel-tab-bar a").click(function() {
         if ($(this).attr("id") == "button-role-list") {

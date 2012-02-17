@@ -297,17 +297,17 @@
                                         <a href="" onclick="usergrid.console.deleteUsers(); return false;">Delete Users</a>
                                         </div>
                                     </h3>
-                                    <div class="console-section-contents">
+                                    <div class="console-section-contents listContent">
                                         <div id="users-response-area">
                                             <div id="users-response-table">
                                                 <pre class="query-response-json">No Users Found</pre>
                                             </div>
-                                            <div id="users-next-prev" >
-                                                <button class="button" id="button-users-prev">Previous</button>
-                                                <button class="button" id="button-users-next">Next</button>
-                                            </div>
+                                            <ul class="pager" id="users-next-prev">
+                                                <li class="previous"><a href="#" id="button-users-prev">&larr; Previous</a></li>
+                                                <li class="next"><a href="#" id="button-users-next">Next &rarr;</a></li>
+                                            </ul>
                                         </div>
-                                        <ul id="users-by-alphabetical">
+                                        <ul id="users-by-alphabetical" class="alphabeticalFilter">
                                             <li><a href="#">{0}</a></li>
                                         </ul>
                                     </div>
@@ -377,21 +377,19 @@
                                         <a href="" onclick="usergrid.console.deleteGroups(); return false;">Delete Groups</a>
                                         </div>
                                     </h3>
-                                    <div class="console-section-contents">
-                                        <table id="groups-response-area">
-                                            <tr>
-                                                <td id="groups-response-area-contents">
-                                                    <div id="groups-response-table">
-                                                        <pre class="query-response-json">{ }</pre>
-                                                    </div>
-                                                    <div id="groups-next-prev">
-                                                        <button class="button" id="button-groups-prev">Previous</button>
-                                                        <button class="button" id="button-groups-next">Next</button>
-                                                    </div>
-                                                </td>
-                                                <td id="groups-by-alphabetical-cell"><div id="groups-by-alphabetical"></div></td>
-                                            </tr>
-                                        </table>
+                                    <div class="console-section-contents listContent">
+                                        <div id="groups-response-area">
+                                            <div id="groups-response-table">
+                                                <pre class="query-response-json">{ }</pre>
+                                            </div>
+                                            <ul class="pager" id="groups-next-prev">
+                                                <li class="previous"><a href="#" id="button-groups-prev">&larr; Previous</a></li>
+                                                <li class="next"><a href="#" id="button-groups-next">Next &rarr;</a></li>
+                                            </ul>
+                                        </div>
+                                        <ul id="groups-by-alphabetical" class="alphabeticalFilter">
+                                            <li><a href="#">{0}</a></li>
+                                        </ul>
                                     </div>
                                </div>
                             </div>
@@ -501,10 +499,10 @@
                                             <div id="activities-response-table">
                                                 <pre class="query-response-json">{ }</pre>
                                             </div>
-                                                                          <button class="button" id="button-activities-prev">Previous</button>
-                                                <button class="button" id="button-activities-next">Next</button>  <div id="activities-next-prev">
-                
-                                            </div>
+                                            <ul class="pager" id="activities-next-prev">
+                                                <li class="previous"><a href="#" id="button-activities-prev">&larr; Previous</a></li>
+                                                <li class="next"><a href="#" id="button-activities-next">Next &rarr;</a></li>
+                                            </ul>
                                         </div>
                                     </div>
                                 </div>
@@ -703,10 +701,10 @@
                             <div id="query-response-table">
                                 <pre class="query-response-json">{ }</pre>
                             </div>
-                            <div id="query-next-prev">
-                                <button class="button" id="button-query-prev">Previous</button>
-                                <button class="button" id="button-query-next">Next</button>
-                            </div>
+                            <ul class="pager" id="query-next-prev">
+                                <li class="previous"><a href="#" id="button-query-prev">&larr; Previous</a></li>
+                                <li class="next"><a href="#" id="button-query-next">Next &rarr;</a></li>
+                            </ul>
                         </div>
                     </div>
                     </div>
