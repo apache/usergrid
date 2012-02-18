@@ -864,8 +864,9 @@ public class Client {
 	public ApiResponse connectEntities(String connectingEntityType,
 			String connectingEntityId, String connectionType,
 			String connectedEntityId) {
-		return apiRequest(HttpMethod.POST, null, null, applicationId, "groups",
-				connectingEntityId, connectionType, connectedEntityId);
+		return apiRequest(HttpMethod.POST, null, null, applicationId,
+				connectingEntityType, connectingEntityId, connectionType,
+				connectedEntityId);
 	}
 
 	/**
@@ -903,7 +904,8 @@ public class Client {
 			String connectingEntityId, String connectionType,
 			String connectedEntityId) {
 		return apiRequest(HttpMethod.DELETE, null, null, applicationId,
-				"groups", connectingEntityId, connectionType, connectedEntityId);
+				connectingEntityType, connectingEntityId, connectionType,
+				connectedEntityId);
 	}
 
 	/**
