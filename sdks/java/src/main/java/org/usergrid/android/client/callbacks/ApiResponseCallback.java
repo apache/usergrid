@@ -6,6 +6,4 @@ public interface ApiResponseCallback extends ClientCallback<ApiResponse> {
 
 	public void onResponse(ApiResponse response);
 
-	public void onException(Exception e);
-
 }

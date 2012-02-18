@@ -144,8 +144,7 @@ public class Activity extends Entity {
 
 	public static Activity newActivity(String verb, String title,
 			String content, String category, User user, Entity object,
-			String objectType, String objectName, String objectContent)
-			throws Exception {
+			String objectType, String objectName, String objectContent) {
 
 		Activity activity = new Activity();
 		activity.setVerb(verb);
