@@ -539,7 +539,7 @@ function usergrid_console_app() {
             if ($(this).prop("checked")) {  
                 var entityId = $(this).attr("value");
                 var path = $(this).attr("name");
-                client.deleteEntity(current_application_id, entityId, path, function() { pageOpenQueryExplorer(path); },
+                client.deleteEntity(current_application_id, entityId, path, doQueryGet,
                 function() {
                     alert("Unable to delete entity: " + client.getLastErrorMessage(entityId));
                 });
