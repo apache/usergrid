@@ -135,11 +135,14 @@ public class SwaggerServlet extends HttpServlet implements Filter {
 		}
 		path = path.toLowerCase();
 		if (pathToJson.containsKey(path)) {
-			allowAllOrigins(request, response);
-			if ("get".equalsIgnoreCase(request.getMethod())) {
-				response.setContentType("application/json");
-				response.getWriter().print(pathToJson.get(path));
-				return true;
+			String json = pathToJson.get(path);
+			if (json != null) {
+				allowAllOrigins(request, response);
+				if ("get".equalsIgnoreCase(request.getMethod())) {
+					response.setContentType("application/json");
+					response.getWriter().print(json);
+					return true;
+				}
 			}
 		}
 		return false;
