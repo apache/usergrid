@@ -706,8 +706,13 @@
                                </span>
                             </div>
                         </div>
-                        <div id="query-response-area">
-                            <h2 id="query-received-header">Received</h2>
+                        <div id="query-response-area" class="console-section">
+                            <h3 id="query-received-header">
+                                Received
+                                <div class="bar">
+                                    <a href="" onclick="usergrid.console.deleteEntity(); return false;"><i class="icon-remove"></i> Delete Entity</a>
+                                </div>
+                            </h3>
                             <div id="query-response-table">
                                 <pre class="query-response-json">{ }</pre>
                             </div>

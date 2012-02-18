@@ -534,6 +534,19 @@ function usergrid_console_app() {
         });
     }
 
+    function deleteEntity() {        
+        $("input[id^=queryResultItem]").each( function() {
+            if ($(this).prop("checked")) {  
+                var entityId = $(this).attr("value");
+                var path = $(this).attr("name");
+                client.deleteEntity(current_application_id, entityId, path, function() { pageOpenQueryExplorer(path); },
+                function() {
+                    alert("Unable to delete entity: " + client.getLastErrorMessage(entityId));
+                });
+            }
+        });
+    }
+
     /*******************************************************************
      * 
      * Organization Home
@@ -1614,6 +1627,7 @@ function usergrid_console_app() {
         });
     }
 
+    window.usergrid.console.deleteEntity = deleteEntity;
     function handleGroupListResponse(response) {
         if (response.entities && (response.entities.length > 0)) {
             var response_html = '';

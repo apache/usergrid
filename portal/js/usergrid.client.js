@@ -998,6 +998,11 @@ usergrid.Client = function(options) {
         return q;
     }
 
+    function deleteEntity(applicationId, entityId, path, success, failure) {        
+        apiRequest("DELETE", "/" + applicationId + "/" + path + "/" + entityId, null, null, success, failure);
+    }
+    this.deleteEntity = deleteEntity;
+    
     function queryUserMemberships(a) {
         return queryEntityCollection("users", "groups", arguments);
     }
