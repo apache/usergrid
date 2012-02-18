@@ -606,6 +606,55 @@ public class Client {
 	}
 
 	/**
+	 * Creates a user.
+	 * 
+	 * @param username
+	 *            required
+	 * @param name
+	 * @param email
+	 * @param password
+	 * @return
+	 */
+	public ApiResponse createUser(String username, String name, String email,
+			String password) {
+		Map<String, Object> properties = new HashMap<String, Object>();
+		if (username != null) {
+			properties.put("username", username);
+		}
+		if (name != null) {
+			properties.put("name", name);
+		}
+		if (email != null) {
+			properties.put("email", email);
+		}
+		if (password != null) {
+			properties.put("password", password);
+		}
+		return createEntity(properties);
+	}
+
+	/**
+	 * Creates a user. Executes asynchronously in background and the callbacks
+	 * are called in the UI thread.
+	 * 
+	 * @param username
+	 * @param name
+	 * @param email
+	 * @param password
+	 * @param callback
+	 */
+	public void createUserAsync(final String username, final String name,
+			final String email, final String password,
+			final ApiResponseCallback callback) {
+		(new ClientAsyncTask<ApiResponse>(callback) {
+			@Override
+			public ApiResponse doTask() {
+				return createUser(username, name, email, password);
+			}
+		}).execute();
+	}
+
+	/**
 	 * Get the groups for the user.
 	 * 
 	 * @param userId
