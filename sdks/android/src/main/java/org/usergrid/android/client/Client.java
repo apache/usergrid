@@ -25,6 +25,7 @@ import org.usergrid.android.client.callbacks.ClientAsyncTask;
 import org.usergrid.android.client.callbacks.DeviceRegistrationCallback;
 import org.usergrid.android.client.callbacks.GroupsRetrievedCallback;
 import org.usergrid.android.client.callbacks.QueryResultsCallback;
+import org.usergrid.android.client.entities.Activity;
 import org.usergrid.android.client.entities.Device;
 import org.usergrid.android.client.entities.Entity;
 import org.usergrid.android.client.entities.Group;
@@ -687,6 +688,132 @@ public class Client {
 			@Override
 			public Map<String, Group> doTask() {
 				return getGroupsForUser(userId);
+			}
+		}).execute();
+	}
+
+	/**
+	 * Get a user's activity feed. Returned as a query to ease paging.
+	 * 
+	 * @param userId
+	 * @return
+	 */
+	public Query queryActivityFeedForUser(String userId) {
+		Query q = queryRequest(HttpMethod.GET, null, null, applicationId,
+				"users", userId, "feed");
+		return q;
+	}
+
+	/**
+	 * Get a user's activity feed. Returned as a query to ease paging. Executes
+	 * asynchronously in background and the callbacks are called in the UI
+	 * thread.
+	 * 
+	 * 
+	 * @param userId
+	 * @param callback
+	 */
+	public void queryActivityFeedForUserAsync(final String userId,
+			final QueryResultsCallback callback) {
+		(new ClientAsyncTask<Query>(callback) {
+			@Override
+			public Query doTask() {
+				return queryActivityFeedForUser(userId);
+			}
+		}).execute();
+	}
+
+	/**
+	 * Posts an activity to a user. Activity must already be created.
+	 * 
+	 * @param userId
+	 * @param activity
+	 * @return
+	 */
+	public ApiResponse postUserActivity(String userId, Activity activity) {
+		return apiRequest(HttpMethod.POST, null, null, applicationId, "users",
+				userId, "activities", activity.getUuid().toString());
+	}
+
+	/**
+	 * Creates and posts an activity to a user.
+	 * 
+	 * @param verb
+	 * @param title
+	 * @param content
+	 * @param category
+	 * @param user
+	 * @param object
+	 * @param objectType
+	 * @param objectName
+	 * @param objectContent
+	 * @return
+	 */
+	public ApiResponse postUserActivity(String verb, String title,
+			String content, String category, User user, Entity object,
+			String objectType, String objectName, String objectContent) {
+		Activity activity = Activity.newActivity(verb, title, content,
+				category, user, object, objectType, objectName, objectContent);
+		createEntity(activity);
+		return postUserActivity(user.getUuid().toString(), activity);
+	}
+
+	/**
+	 * Creates and posts an activity to a user. Executes asynchronously in
+	 * background and the callbacks are called in the UI thread.
+	 * 
+	 * @param verb
+	 * @param title
+	 * @param content
+	 * @param category
+	 * @param user
+	 * @param object
+	 * @param objectType
+	 * @param objectName
+	 * @param objectContent
+	 * @param callback
+	 */
+	public void postUserActivityAsync(final String verb, final String title,
+			final String content, final String category, final User user,
+			final Entity object, final String objectType,
+			final String objectName, final String objectContent,
+			final ApiResponseCallback callback) {
+		(new ClientAsyncTask<ApiResponse>(callback) {
+			@Override
+			public ApiResponse doTask() {
+				return postUserActivity(verb, title, content, category, user,
+						object, objectType, objectName, objectContent);
+			}
+		}).execute();
+	}
+
+	/**
+	 * Get a group's activity feed. Returned as a query to ease paging.
+	 * 
+	 * @param userId
+	 * @return
+	 */
+	public Query queryActivityFeedForGroup(String groupId) {
+		Query q = queryRequest(HttpMethod.GET, null, null, applicationId,
+				"groups", groupId, "feed");
+		return q;
+	}
+
+	/**
+	 * Get a group's activity feed. Returned as a query to ease paging. Executes
+	 * asynchronously in background and the callbacks are called in the UI
+	 * thread.
+	 * 
+	 * 
+	 * @param userId
+	 * @param callback
+	 */
+	public void queryActivityFeedForGroupAsync(final String groupId,
+			final QueryResultsCallback callback) {
+		(new ClientAsyncTask<Query>(callback) {
+			@Override
+			public Query doTask() {
+				return queryActivityFeedForGroup(groupId);
 			}
 		}).execute();
 	}

@@ -6,6 +6,4 @@ public interface DeviceRegistrationCallback extends ClientCallback<Device> {
 
 	public void onDeviceRegistration(Device device);
 
-	public void onException(Exception e);
-
 }
