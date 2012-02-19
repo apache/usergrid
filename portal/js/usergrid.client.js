@@ -1128,7 +1128,12 @@ usergrid.Client = function(options) {
         apiRequest("POST", "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, "{ }", success, failure);
     }
     this.addUserToGroup = addUserToGroup;
-    
+
+    function entitySearch(applicationId, searchType, searchString, success, failure) {
+       return queryEntities(searchType, arguments);
+    }
+    this.entitySearch = entitySearch;
+
     //
     // Create new role    //
     // POST: /<application-id/users

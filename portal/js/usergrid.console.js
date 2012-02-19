@@ -534,11 +534,16 @@ function usergrid_console_app() {
         });
     }
 
-    function deleteEntity() {        
+    function deleteEntity() {
+        var count = $("input[id^=queryResultItem]").length;
         $("input[id^=queryResultItem]").each( function() {
             if ($(this).prop("checked")) {  
                 var entityId = $(this).attr("value");
                 var path = $(this).attr("name");
+                var refreshFunction = function() { pageOpenQueryExplorer(path); };
+                if (count>1) {
+                    refreshFunction = doQueryGet;
+                }
                 client.deleteEntity(current_application_id, entityId, path, doQueryGet,
                 function() {
                     alert("Unable to delete entity: " + client.getLastErrorMessage(entityId));
@@ -546,7 +551,8 @@ function usergrid_console_app() {
             }
         });
     }
-
+    window.usergrid.console.deleteEntity = deleteEntity;
+    
     /*******************************************************************
      * 
      * Organization Home
@@ -1057,6 +1063,122 @@ function usergrid_console_app() {
 
     /*******************************************************************
      * 
+     * general entity search
+     * 
+     ******************************************************************/
+    var gEntityType = ''; //entityType can be user or group - will add as needed
+    var gSearchType = ''; //searchType is search or autosearch
+    var gTargetDisplay = '';
+    var gOriginalSearchField = '';
+    function entitySearch(searchString, entityType, targetDisplay, searchType, originalSearchField) {
+        gEntityType = entityType;
+        gSearchType = searchType;
+        gTargetDisplay = '#' + targetDisplay;
+        gOriginalSearchField = '#' + originalSearchField;
+
+        var sortBy =userSortBy; //default to users
+        if (entityType == 'groups') {
+            sortBy = groupSortBy;
+        }
+        
+        var query = {"ql" : "order by " + sortBy};
+        if (searchString != "*") query = {"ql" : sortBy + "='" + searchString + "*'"};
+        
+        client.applicationId = current_application_id;
+        if (entityType == 'users') {
+            users_query = client.queryUsers(entitySearchResults, query);
+        } else if (entityType == 'groups') {
+            groups_query = client.queryGroups(entitySearchResults, query);
+        } 
+    }
+    window.usergrid.console.entitySearch = entitySearch;
+    
+    function entitySearchResults(response, query) {
+        $(gTargetDisplay).html('searching...');
+        $(gTargetDisplay).show();
+        if (response.entities && (response.entities.length > 0)) {
+            var response_html = '';
+            var i=0;
+            var e=response.entities.length;
+            for (i=0;i<e;i++)
+            {
+                var entity = response.entities[i];
+                if (gEntityType == 'users') {
+                    username = entity.username;
+                    name = entity.name;
+                    uuid = entity.uuid;
+                    if (gSearchType == 'search') {
+                        response_html = response_html +
+                        '<a onclick="usergrid.console.showSearchResults(\'' + gOriginalSearchField + '\', \''+gEntityType+'\', \''+uuid+'\'); return false;" href="#">'+username+' ('+name+')</a><br/>';
+                    } else if (gSearchType == 'autofill') {
+                        response_html = response_html +
+                         '<a href="#" onclick="usergrid.console.fillSearchField(\''+gOriginalSearchField+'\', \''+username+'\');">'+username+'</a><br/>';
+                    }
+                } else if (gEntityType == 'groups') {
+                    path = entity.path;
+                    title = entity.title;
+                    uuid = entity.uuid;
+                    if (gSearchType == 'search') {
+                        response_html = response_html +
+                        '<a onclick="usergrid.console.showSearchResults(\'' + gOriginalSearchField + '\', \''+gEntityType+'\', \''+uuid+'\'); return false;" href="#">'+path+'</a><br/>';
+                    } else if (gSearchType == 'autoFill') {
+                        response_html = response_html +
+                        '<a href="#" onclick="usergrid.console.fillSearchField(\''+gOriginalSearchField+'\', \''+path+'\');">'+title+'</a><br/>';
+                    }
+                }
+            }
+            $(gTargetDisplay).html(response_html);
+        } else {
+            $(gTargetDisplay).html('no entries found...');
+        }
+    }
+    
+    function clearSearchResults() {
+        $(gOriginalSearchField).val('');
+        $(gTargetDisplay).html('');
+        $(gTargetDisplay).hide();
+        gOriginalSearchField = '';
+        gTargetDisplay = '';
+        gEntityType = '';
+        gSearchType = '';
+    }
+    function showSearchResults(searchField, searchType, searchString) {
+        clearSearchResults();
+        if (searchType == 'users') {
+            pageOpenUserProfile(searchString);
+        } else if (searchType == 'groups') {
+            pageOpenGroupProfile(searchString);
+        }
+        
+    }
+    window.usergrid.console.showSearchResults = showSearchResults;
+    
+    function fillSearchField(searchField, value) {
+        $(gOriginalSearchField).val(value);
+        $(gTargetDisplay).html('');
+        $(gTargetDisplay).hide();
+    }
+    window.usergrid.console.fillSearchField = fillSearchField;
+    
+    function findGroupDialog2(formToShow){
+        $('#'+formToShow).show();
+    }
+    window.usergrid.console.findGroupDialog2 = findGroupDialog2;
+    
+    function addUserToGroup3(userId) {
+        
+        groupId = $(gOriginalSearchField).val();
+        addUserToGroup(userId, groupId);
+        /*
+        client.addUserToGroup(current_application_id, groupId, userId, function() { requestUser(userId); },
+        function() {
+            alert("Unable to add user to group: " + client.getLastErrorMessage('An internal error occured.'));
+        });*/
+    }
+    window.usergrid.console.addUserToGroup3 = addUserToGroup3;
+    
+    /*******************************************************************
+     * 
      * Users
      * 
      ******************************************************************/
@@ -1118,23 +1240,27 @@ function usergrid_console_app() {
     }
 
     function showUsersForLetter(c) {
-			userLetter = $(this).text();
-			requestUsers();
+        userLetter = $(this).text();
+        requestUsers();
     }
     usergrid.console.showUsersForLetter = showUsersForLetter;
 
+    function showUsersForSearch(search){
+        selectFirstTabButton('#users-panel-tab-bar');
+        $('#users-panel-search').hide();
+        selectTabButton("#button-users-list");
+        $('#users-panel-list').show();
+        userLetter = search;
+        requestUsers();
+    }    
+    usergrid.console.showUsersForSearch = showUsersForSearch;
+    
     var users_query = null;
     function requestUsers() {
-        var client_id = organization_keys.client_id;
-        var client_secret = organization_keys.client_secret;
-        var test_client = new usergrid.Client({
-            applicationId : current_application_id,
-            clientId : client_id,
-            clientSecret : client_secret
-        });
         var query = {"ql" : "order by " + userSortBy};
         if (userLetter != "*") query = {"ql" : userSortBy + "='" + userLetter + "*'"};
-        users_query = test_client.queryUsers(displayUsers, query);
+        client.applicationId = current_application_id;
+        users_query = client.queryUsers(displayUsers, query);
         return false;
     }
 
@@ -1414,6 +1540,16 @@ function usergrid_console_app() {
     }
     usergrid.console.showGroupsForLetter = showGroupsForLetter;
 
+    function showGroupsForSearch(search){
+        selectFirstTabButton('#groups-panel-tab-bar');
+        $('#groups-panel-search').hide();
+        selectTabButton("#button-groups-list");
+        $('#groups-panel-list').show();
+        groupLetter = search;
+        requestGroups();
+    }    
+    usergrid.console.showUsersForSearch = showUsersForSearch;
+    
     var groups_query = null;
     function requestGroups() {
         var client_id = organization_keys.client_id;
@@ -1491,7 +1627,7 @@ function usergrid_console_app() {
     //*****************************************************
     // add user to group - user autosearch
     //*****************************************************
-    var add_user_username = $("#search-user-username");
+    var add_user_username = $("#lookup-user-username");
     var allSearchUserFields = $([]).add(add_user_username);
     var selectedGroupId = '';
     $("#dialog-form-add-user-to-group").dialog({
@@ -1502,7 +1638,7 @@ function usergrid_console_app() {
         buttons: {
             "Create": function() {
                 allSearchUserFields.removeClass("ui-state-error");
-                var bValid = checkLength(add_user_username, "new_user_username", 1, 80)
+                var bValid = checkLength(add_user_username, "username", 1, 80)
                 && checkRegexp(add_user_username, nameRegex,
                 "Username name only allows : a-z, 0-9, dot, and dash.");
                 if (bValid) {
@@ -1532,6 +1668,9 @@ function usergrid_console_app() {
         });
     }
 
+    var targetDivUserList = '';
+    var targetDivUserBox = '';
+    var targetInputUserBox = '';
     function handleUserListResponse(response) {
         if (response.entities && (response.entities.length > 0)) {
             var response_html = '';
@@ -1543,42 +1682,39 @@ function usergrid_console_app() {
                 username = entity.username;
                 name = entity.name;
                 uuid = entity.uuid;
-                response_html = response_html +
+                response_html = response_html +                
                 '<a href="#" onclick="usergrid.console.setUsername(\''+username+'\');">'+username+' ('+name+')</a><br/>';
-            }
-            $('#SuggestionsListUsers').html(response_html);
+            }            
+            $(targetDivUserList).html(response_html);
         } else {
-            var data ='no entries found...';
-            $('#SuggestionsListUsers').html(data);
+             $(targetDivUserList).html('no entries found...');
         }
     }
 
     function setUsername(thisValue) {
-            $('#search-user-username').val(thisValue);
-            setTimeout("$('#suggestionsUsers').hide();", 200);
+        $(targetInputUserBox).val(thisValue);
+        $(targetDivUserList).html("");
+        setTimeout("$("+targetDivUserBox+").hide();", 200);
     }
     window.usergrid.console.setUsername = setUsername;
 
-    function lookupUsername(searchString) {
-            if(searchString.length == 0) {
-                // no input, so hide the suggestion box.
-                $('#suggestionsUsers').hide();
-            } else {
-                $('#suggestionsUsers').show();
-                var data = 'searching...';
-                $('#SuggestionsListUsers').html(data);
+    function lookupUsername(searchString, targetBox, targetList, destination) {
+        targetDivUserBox = $('#'+targetBox);
+        targetDivUserList = $('#'+targetList);
+        targetInputUserBox = destination;
+        if(searchString.length == 0) {
+            // no input, so hide the suggestion box.
+            $(targetDivUserBox).hide();
+        } else {
+            $(targetDivUserBox).show();
+            var data = 'searching...';
+            $(targetDivUserList).html(data);
 
-                var client_id = organization_keys.client_id;
-                var client_secret = organization_keys.client_secret;
-                var test_client = new usergrid.Client({
-                    applicationId : current_application_id,
-                    clientId : client_id,
-                    clientSecret : client_secret
-                });
-                var query = {"ql" : "order by " + userSortBy};
-                if (searchString != "*") query = {"ql" : userSortBy + "='" + searchString + "*'"};
-                users_query = test_client.queryUsers(handleUserListResponse, query);
-            }
+            var query = {"ql" : "order by " + userSortBy};
+            if (searchString != "*") query = {"ql" : userSortBy + "='" + searchString + "*'"};
+            client.applicationId = current_application_id;
+            users_query = client.queryUsers(handleUserListResponse, query);
+        }
     }
     window.usergrid.console.lookupUsername = lookupUsername;
 
@@ -1586,7 +1722,7 @@ function usergrid_console_app() {
     // add user to group - group autosearch
     //*****************************************************
 
-    var add_group_groupname = $("#search-group-groupname");
+    var add_group_groupname = $("#lookup-group-groupname");
     var allSearchGroupFields = $([]).add(add_group_groupname);
     var selectedUserId = '';
     $("#dialog-form-add-group-to-user").dialog({
@@ -1597,7 +1733,7 @@ function usergrid_console_app() {
         buttons: {
             "Create": function() {
                 allSearchGroupFields.removeClass("ui-state-error");
-                var bValid = checkLength(add_group_groupname, "new_group_groupname", 1, 80)
+                var bValid = checkLength(add_group_groupname, "groupname", 1, 80)
                 && checkRegexp(add_group_groupname, nameRegex,
                 "Group name name only allows : a-z, 0-9, dot, and dash.");
                 if (bValid) {
@@ -1617,6 +1753,7 @@ function usergrid_console_app() {
     function findGroupDialog(userId) {
         selectedUserId = userId;
         $("#dialog-form-add-group-to-user").dialog("open");
+        //$("#groups-autosearch-form").dialog("open");
     }
     window.usergrid.console.findGroupDialog = findGroupDialog;
 
@@ -1627,7 +1764,9 @@ function usergrid_console_app() {
         });
     }
 
-    window.usergrid.console.deleteEntity = deleteEntity;
+    var targetDivGroupList = '';
+    var targetDivGroupBox = '';
+    var targetInputGroupBox = '';
     function handleGroupListResponse(response) {
         if (response.entities && (response.entities.length > 0)) {
             var response_html = '';
@@ -1642,39 +1781,43 @@ function usergrid_console_app() {
                 response_html = response_html +
                 '<a href="#" onclick="usergrid.console.setGroupPath(\''+path+'\');">'+path+'</a><br/>';
             }
-            $('#SuggestionsListGroups').html(response_html);
+            $(targetDivGroupList).html(response_html);
         } else {
             var data ='no entries found...';
-            $('#SuggestionsListGroups').html(data);
+            $(targetDivGroupList).html(data);
         }
     }
 
     function setGroupPath(thisValue) {
-            $('#search-group-groupname').val(thisValue);
-            setTimeout("$('#suggestionsGroups').hide();", 200);
+        $(targetInputGroupBox).val(thisValue);
+        $(targetDivGroupList).html("");
+        setTimeout("$('#suggestionsGroups').hide();", 200);
     }
     window.usergrid.console.setGroupPath = setGroupPath;
 
-    function lookupGroupName(searchString) {
-            if(searchString.length == 0) {
-                // no input, so hide the suggestion box.
-                $('#suggestionsGroups').hide();
-            } else {
-                $('#suggestionsGroups').show();
-                var data = 'searching...';
-                $('#SuggestionsListGroups').html(data);
+    function lookupGroupName(searchString, targetBox, targetList, destination) {
+        targetDivGroupBox = $('#'+targetBox);
+        targetDivGroupList = $('#'+targetList);
+        targetInputGroupBox = destination;
+        if(searchString.length == 0) {
+            // no input, so hide the suggestion box.
+            $(targetDivGroupBox).hide();
+        } else {
+            $(targetDivGroupBox).show();
+            var data = 'searching...';
+            $(targetDivGroupList).html(data);
 
-                var client_id = organization_keys.client_id;
-                var client_secret = organization_keys.client_secret;
-                var test_client = new usergrid.Client({
-                    applicationId : current_application_id,
-                    clientId : client_id,
-                    clientSecret : client_secret
-                });
-                var query = {"ql" : "order by " + groupSortBy};
-                if (searchString != "*") query = {"ql" : groupSortBy + "='" + searchString + "*'"};
-                users_query = test_client.queryGroups(handleGroupListResponse, query);
-            }
+            var client_id = organization_keys.client_id;
+            var client_secret = organization_keys.client_secret;
+            var test_client = new usergrid.Client({
+                applicationId : current_application_id,
+                clientId : client_id,
+                clientSecret : client_secret
+            });
+            var query = {"ql" : "order by " + groupSortBy};
+            if (searchString != "*") query = {"ql" : groupSortBy + "='" + searchString + "*'"};
+            users_query = test_client.queryGroups(handleGroupListResponse, query);
+        }
     }
     window.usergrid.console.lookupGroupName = lookupGroupName;
 
@@ -2894,19 +3037,48 @@ function usergrid_console_app() {
         showAccountSettings();
         return false;
     });
+    
+    function showPanelList(type){
+        //hide the other panels
+        $('#' + type + '-panel-search').hide();
+        //show the list tab
+        selectTabButton('#button-'+type+'-list');
+        //populate the panel content
+        $('#' + type + '-panel-list').show();
+    }
+    
+    function showPanelSearch(type){
+        //hide the other panels
+        $('#' + type + '-panel-list').hide();
+        //show the search tab
+        selectTabButton('#button-' + type + '-search');
+        //populate the panel content
+        $('#' + type + '-panel-search').show();
+    }
 
-    $("#users-panel-tab-bar a").click(function() {
-        selectTabButton(this);
+    $("#button-users-list").click(function() {
+        showPanelList('users');
+        return false;
+    });
+
+    $("#button-users-search").click(function() {
+        showPanelSearch('users');
         return false;
     });
 
     $("#user-panel-tab-bar a").click(function() {
         selectTabButton(this);
         if ($(this).attr("id") == "button-user-list") {
-	        Pages.SelectPanel('users');
+            //at this point we might be on another panel, so switch back to users and reset the search
+            userLetter = '*';
+            requestUsers();
+            Pages.SelectPanel('users');
+            showPanelList('users');
         }
         else if ($(this).attr("id") == "button-user-search") {
-	        Pages.SelectPanel('users');
+            //again, we might be on another panel, so switch back to users
+            Pages.SelectPanel('users');
+            showPanelSearch('users');
         }
         else {
             showPanelContent("#user-panel", "#user-panel-" + $(this).attr("id").substring(12));
@@ -2917,18 +3089,29 @@ function usergrid_console_app() {
     createAlphabetLinks("#users-by-alphabetical",usergrid.console.showUsersForLetter);
     createAlphabetLinks("#groups-by-alphabetical", usergrid.console.showGroupsForLetter);
 
-    $("#groups-panel-tab-bar a").click(function() {
-        selectTabButton(this);
+    $("#button-groups-list").click(function() {
+        showPanelList('groups');
+        return false;
+    });
+
+    $("#button-groups-search").click(function() {
+        showPanelSearch('groups');
         return false;
     });
 
     $("#group-panel-tab-bar a").click(function() {
         selectTabButton(this);
         if ($(this).attr("id") == "button-group-list") {
-            pageSelectGroups();
+            //at this point we might be on another panel, so switch back to groups and reset the search
+            groupLetter = '*';
+            requestGroups();
+            Pages.SelectPanel('groups');
+            showPanelList('groups');
         }
         else if ($(this).attr("id") == "button-group-search") {
-            pageSelectGroups();
+            //again, we might be on another panel, so switch back to groups
+            Pages.SelectPanel('groups');
+            showPanelSearch('groups');
         }
         else {
             showPanelContent("#group-panel", "#group-panel-" + $(this).attr("id").substring(13));

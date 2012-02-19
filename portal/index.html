@@ -298,7 +298,7 @@
                                 <li class="active"><a id="button-users-list" href="#">List</a></li>
                                 <li><a id="button-users-search" href="#">Search</a></li>
                             </ul>
-                            <div class="panel-content">
+                            <div id="users-panel-list" class="panel-content">
                                 <div class="console-section">
                                     <h3>
                                         Users
@@ -322,6 +322,25 @@
                                         </ul>
                                     </div>
                                 </div>
+                            </div>
+                            <div id="users-panel-search" class="panel-content" style="display: none;">
+                                <div class="console-section">
+                                    <h3>User Search</h3>
+                                    <div class="console-section-contents">
+                                        <div id="users-search-form" class="dialog-form" title="Find User">
+                                            <form>
+                                                <fieldset>
+                                                    <label for="search-user-username">Username</label>
+                                                    <input onkeyup="usergrid.console.entitySearch(this.value, 'users', 'sugFindUserBox', 'search', 'search-user-username');"
+                                                        type="text" name="search-user-username" id="search-user-username"
+                                                        value="" class="text ui-widget-content ui-corner-all" />
+                                                </fieldset>
+                                            </form>
+                                            <div class="suggestionsBox" id="sugFindUserBox"></div>
+                                        </div>
+                                    </div>
+                                    
+                                 </div>
                             </div>
                             <div id="dialog-form-new-user" class="dialog-form" title="Create new user">
                                 <p class="validateTips">All form fields are required.</p>
@@ -358,33 +377,33 @@
                                 <p class="validateTips">All form fields are required.</p>
                                 <form>
                                     <fieldset>
-                                        <label for="search-group-groupname">Group</label>
-                                        <input onkeyup="usergrid.console.lookupGroupName(this.value);"
-                                        type="text" name="search-group-groupname" id="search-group-groupname"
+                                        <label for="lookup-group-groupname">Group</label>
+                                        <input onkeyup="usergrid.console.lookupGroupName(this.value, 'sugGroupsSearchLookupBox', 'SugGroupsSearchLookupList', this);"
+                                        type="text" name="lookup-group-groupname" id="lookup-group-groupname"
                                         value="" class="text ui-widget-content ui-corner-all" />
                                     </fieldset>
                                 </form>
-                                <div class="suggestionsBox" id="suggestionsGroups">
-                                    <div class="suggestionList" id="SuggestionsListGroups">
+                                <div class="suggestionsBox" id="sugGroupsSearchLookupBox">
+                                    <div class="suggestionList" id="SugGroupsSearchLookupList">
                                         &nbsp;
                                     </div>
-                                </div>
+                                </div> 
                             </div>
                         </div>
                         <div id="groups-panel" style="display: none">
                             <div id="groups-panel-tab-bar" class="">
                                 <ul class="nav nav-tabs">
-                                    <li  class="active"><a id="button-groups-list" href="#">List</a></li>
+                                    <li class="active"><a id="button-groups-list" href="#">List</a></li>
                                     <li><a id="button-groups-search" href="#">Search</a></li>
                                 </ul>
                             </div>
-                            <div class="panel-content">
+                            <div id="groups-panel-list" class="panel-content">
                                 <div class="console-section">
                                     <h3>
                                         Groups
                                         <div class="bar">
-                                        <a href="" onclick="usergrid.console.newGroup(); return false;"><i class="icon-plus"></i> New Group</a>
-                                        <a href="" onclick="usergrid.console.deleteGroups(); return false;"><i class="icon-remove"></i> Delete Groups</a>
+                                            <a href="" onclick="usergrid.console.newGroup(); return false;"><i class="icon-plus"></i> New Group</a>
+                                            <a href="" onclick="usergrid.console.deleteGroups(); return false;"><i class="icon-remove"></i> Delete Groups</a>
                                         </div>
                                     </h3>
                                     <div class="console-section-contents listContent">
@@ -402,6 +421,24 @@
                                         </ul>
                                     </div>
                                </div>
+                            </div>
+                            <div id="groups-panel-search" class="panel-content" style="display: none;">
+                                <div class="console-section">
+                                    <h3>Group Search</h3>
+                                    <div class="console-section-contents">
+                                        <div id="groups-search-form" class="dialog-form" title="Find Group">
+                                            <form>
+                                                <fieldset>
+                                                    <label for="search-group-groupname">Group</label>
+                                                    <input onkeyup="usergrid.console.entitySearch(this.value, 'groups', 'sugFindGroupBox', 'search', 'search-group-groupname');"
+                                                    type="text" name="search-group-groupname" id="search-group-groupname"
+                                                    value="" class="text ui-widget-content ui-corner-all" />
+                                                </fieldset>
+                                            </form>
+                                            <div class="suggestionsBox" id="sugFindGroupBox"></div>
+                                        </div>
+                                    </div>
+                                 </div>
                             </div>
                             <div id="dialog-form-new-group" class="dialog-form" title="Create new group">
                                 <p class="validateTips">All form fields are required.</p>
@@ -430,18 +467,18 @@
                             <div id="group-panel-memberships" class="panel-content" style="display: none;"></div>
                             <div id="group-panel-activities" class="panel-content" style="display: none;"></div>
                             <div id="group-panel-permissions" class="panel-content" style="display: none;"></div>
-                            <div id="dialog-form-add-user-to-group" class="dialog-form"	title="Add User to Group">
+                            <div id="dialog-form-add-user-to-group" class="dialog-form" title="Add User to Group">
                                 <p class="validateTips">All form fields are required.</p>
                                 <form>
                                     <fieldset>
-                                        <label for="search-user-username">Username</label>
-                                        <input onkeyup="usergrid.console.lookupUsername(this.value);"
-                                            type="text" name="search-user-username" id="search-user-username"
+                                        <label for="lookup-user-username">Username</label>
+                                        <input onkeyup="usergrid.console.lookupUsername(this.value, 'sugUsersSearchLookupBox', 'sugUsersSearchLookupList', this);"
+                                            type="text" name="lookup-user-username" id="lookup-user-username"
                                             value="" class="text ui-widget-content ui-corner-all" />
                                     </fieldset>
                                 </form>
-                                <div class="suggestionsBox" id="suggestionsUsers">
-                                    <div class="suggestionList" id="SuggestionsListUsers">
+                                <div class="suggestionsBox" id="sugUsersSearchLookupBox">
+                                    <div class="suggestionList" id="sugUsersSearchLookupList">
                                         &nbsp;
                                     </div>
                                 </div>
@@ -518,8 +555,6 @@
                                 </div>
                             </div>
                         </div>
-          
-          
                         <div id="analytics-panel" style="display: none">
                             <div class="panel-content">
                                 <div class="console-section">

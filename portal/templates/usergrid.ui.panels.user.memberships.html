@@ -1,28 +1,27 @@
 <div class="console-section">
-	<h3>
-		{{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
-		<div class="user-profile-header-name{{if picture}} user-profile-picture-vert-offset{{/if}}">
-			{{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
-			${name}
-			{{if path}}</a>{{/if}}
-		</div>
+    <h3>
+        {{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
+        <div class="user-profile-header-name{{if picture}} user-profile-picture-vert-offset{{/if}}">
+            {{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+                ${name}
+            {{if path}}</a>{{/if}}
+        </div>
         <div class="bar">
             <a href="" onclick="usergrid.console.findGroupDialog('${username}'); return false;">Add ${username} to a Group</a>
-		</div>
-	</h3>
-	<div class="console-section-contents">
-		<div class="user-panel-section">
-			{{if memberships}}
-			{{each memberships}}
-			<div class="user-group-row" id="user-group-row-${$index}">
-				<span class="user-group-row-title">${$value.path}</span>
-				<span class="user-group-row-name">(${$value.path})</span>
-			</div>
-			{{/each}}
-			{{else}}
-			<div class="user-panel-section-message">No Group Memberships</div>
-			{{/if}}
-		</div>
-	</div>
+        </div>
+    </h3>
+    <div class="console-section-contents">
+       <div class="user-panel-section">
+          {{if memberships}}
+          {{each memberships}}
+          <div class="user-group-row" id="user-group-row-${$index}">
+             <span class="user-group-row-title">${$value.path}</span>
+             <span class="user-group-row-name">(${$value.path})</span>
+          </div>
+          {{/each}}
+          {{else}}
+          <div class="user-panel-section-message">No Group Memberships</div>
+          {{/if}}
+       </div>
+    </div>
 </div>
-

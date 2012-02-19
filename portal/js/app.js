@@ -19,8 +19,8 @@ $(document).ready(function () {
 	function InitMenu() {
 		$('.navbar .dropdown-toggle').dropdown();
 		$('#sidebar-menu .dropdown-toggle').dropdown();
-
 		//Pages.AddPage(name,link,box,init,show);
+
 		Pages.AddPage('login', null, null, null, null);
 		Pages.ShowPage('login');
 
