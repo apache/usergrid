@@ -12,11 +12,11 @@ import static org.junit.Assert.assertEquals;
 public class CountSerDeUtilsTest {
 
     private static final String SIMPLE_JSON =
-            "{\"keyName\":\"k1\",\"columnName\":\"c1\",\"value\":1}";
+            "{\"tableName\":\"Counters\",\"keyName\":\"k1\",\"columnName\":\"c1\",\"value\":1}";
 
     @Test
     public void testSerialize() {
-        Count count = new Count("k1","c1",1);
+        Count count = new Count("Counters","k1","c1",1);
         String sered = CountSerDeUtils.serialize(count);
         assertEquals(SIMPLE_JSON, sered);
     }
@@ -26,6 +26,7 @@ public class CountSerDeUtilsTest {
         Count count = CountSerDeUtils.deserialize(SIMPLE_JSON);
         assertEquals("k1",count.getKeyName());
         assertEquals("c1",count.getColumnName());
+        assertEquals("Counters", count.getTableName());
         assertEquals(1,count.getValue());
     }
 }

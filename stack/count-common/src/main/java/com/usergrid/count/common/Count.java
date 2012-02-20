@@ -16,17 +16,21 @@ import static org.codehaus.jackson.annotate.JsonAutoDetect.*;
 @JsonAutoDetect(creatorVisibility = Visibility.PUBLIC_ONLY)
 public class Count {
     @JsonProperty
+    private final String tableName;
+    @JsonProperty
     private final String keyName;
     @JsonProperty
     private final String columnName;
     @JsonProperty
-    private int value;
+    private long value;
 
 
     @JsonCreator
-    public Count(@JsonProperty(value = "keyName") String keyName,
+    public Count(@JsonProperty(value = "tableName") String tableName,
+                 @JsonProperty(value = "keyName") String keyName,
                  @JsonProperty(value="columnName") String columnName,
-                 @JsonProperty(value="value") int value) {
+                 @JsonProperty(value="value") long value) {
+        this.tableName = tableName;
         this.keyName = keyName;
         this.columnName = columnName;
         this.value = value;
@@ -46,7 +50,7 @@ public class Count {
      */
     @JsonIgnore
     public String getCounterName() {
-        return keyName + ":" + columnName;
+        return tableName + ":" + keyName + ":" + columnName;
     }
 
     public long getValue() {
@@ -61,8 +65,12 @@ public class Count {
         return keyName;
     }
 
+    public String getTableName() {
+        return tableName;
+    }
+
     @Override
     public String toString() {
-        return "Counter Name: ".concat(getCounterName()).concat(" value: ").concat(Integer.toString(value));
+        return "Counter Name: ".concat(getCounterName()).concat(" value: ").concat(Long.toString(value));
     }
 }

@@ -18,13 +18,10 @@ import java.util.List;
 public class CassandraCounterStore implements CounterStore {
 
     private final Keyspace keyspace;
-    private final String columnFamilyName;
 
-    public CassandraCounterStore(Keyspace keyspace, String columnFamilyName) {
+    public CassandraCounterStore(Keyspace keyspace) {
         this.keyspace = keyspace;
-        this.columnFamilyName = columnFamilyName;
     }
-
 
     public void save(Count count) {
         this.save(Arrays.asList(count));
@@ -35,7 +32,7 @@ public class CassandraCounterStore implements CounterStore {
         for ( Count count : counts ) {
             HCounterColumn<String> column =
                     new HCounterColumnImpl<String>(count.getColumnName(), count.getValue(), StringSerializer.get());
-            mutator.addCounter(count.getKeyName(), columnFamilyName, column);
+            mutator.addCounter(count.getKeyName(), count.getTableName(), column);
         }
         mutator.execute();
     }

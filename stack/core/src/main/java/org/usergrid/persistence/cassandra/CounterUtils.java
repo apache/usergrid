@@ -19,6 +19,7 @@
 package org.usergrid.persistence.cassandra;
 
 import com.usergrid.count.Batcher;
+import com.usergrid.count.common.Count;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
@@ -32,7 +33,6 @@ import org.usergrid.mq.Message;
 import org.usergrid.mq.cassandra.QueuesCF;
 import org.usergrid.persistence.CounterResolution;
 import org.usergrid.persistence.entities.Event;
-import com.usergrid.count.CountProducer;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -244,7 +244,7 @@ public class CounterUtils {
 
 	}
 
-	private static void handleAggregateCounterRow(Mutator<ByteBuffer> m,
+	private void handleAggregateCounterRow(Mutator<ByteBuffer> m,
 			String key, long column, long value) {
 		// logger.info("update counts set " + column + " += " + value
 		// + " where key = \"" + key + "\"");
@@ -253,6 +253,9 @@ public class CounterUtils {
 			m.addCounter(bytebuffer(key),
 					APPLICATION_AGGREGATE_COUNTERS.toString(), c);
 		}
+        // TODO create and add Count
+        batcher.add(new Count(APPLICATION_AGGREGATE_COUNTERS.toString(), key,
+                Long.toString(column), value));
 	}
 
 	public AggregateCounterSelection getAggregateCounterSelection(
@@ -289,6 +292,11 @@ public class CounterUtils {
 		m.addCounter(bytebuffer(entityId), ENTITY_COUNTERS.toString(), c);
 		addInsertToMutator(m, ENTITY_DICTIONARIES,
 				key(entityId, DICTIONARY_COUNTERS), name, null, timestamp);
+        // TODO create and send Count
+        batcher.add(new Count(ENTITY_COUNTERS.toString(),
+                entityId.toString(),
+                name,
+                value));
 		return m;
 	}
 
@@ -325,7 +333,11 @@ public class CounterUtils {
 				bytebuffer(key(queueId, DICTIONARY_COUNTERS).toString()),
 				QueuesCF.QUEUE_DICTIONARIES.toString(),
 				createColumn(name, ByteBuffer.allocate(0), timestamp, se, be));
-
+        // TODO create and send Count
+        batcher.add(new Count(QueuesCF.COUNTERS.toString(),
+                queueId.toString(),
+                name,
+                value));
 		return m;
 	}
 
