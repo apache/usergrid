@@ -355,6 +355,10 @@ usergrid.Client = function(options) {
             xhr.setRequestHeader("Authorization", authorizationHeader);
             xhr.withCredentials = true;
         }
+        else if (self.clientId && self.clientSecret) {
+            params["client_id"] = self.clientId;
+            params["client_secret"] = self.clientSecret;
+        }
 
         xhr.onreadystatechange = function() {
             if (xhr.readyState == 2) {
@@ -998,6 +1002,11 @@ usergrid.Client = function(options) {
         return q;
     }
 
+    function deleteEntity(applicationId, entityId, path, success, failure) {        
+        apiRequest("DELETE", "/" + applicationId + "/" + path + "/" + entityId, null, null, success, failure);
+    }
+    this.deleteEntity = deleteEntity;
+    
     function queryUserMemberships(a) {
         return queryEntityCollection("users", "groups", arguments);
     }
@@ -1101,6 +1110,15 @@ usergrid.Client = function(options) {
     }
     this.requestGroupRoles = requestGroupRoles;
 
+    function saveUserProfile(applicationId, userid, payload, success,failure){
+        apiRequest("PUT", "/" + applicationId + "/users/" + userid, null, JSON.stringify(payload) , success, failure);
+    }
+    this.saveUserProfile = saveUserProfile;
+
+    function saveGroupProfile(applicationId, groupid, payload, success,failure){
+        apiRequest("PUT", "/" + applicationId + "/groups/" + groupid, null, JSON.stringify(payload) , success, failure);
+    }
+    this.saveGroupProfile = saveGroupProfile;
 
     //
     // Create new group    //
@@ -1123,7 +1141,12 @@ usergrid.Client = function(options) {
         apiRequest("POST", "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, "{ }", success, failure);
     }
     this.addUserToGroup = addUserToGroup;
-    
+
+    function entitySearch(applicationId, searchType, searchString, success, failure) {
+       return queryEntities(searchType, arguments);
+    }
+    this.entitySearch = entitySearch;
+
     //
     // Create new role    //
     // POST: /<application-id/users
