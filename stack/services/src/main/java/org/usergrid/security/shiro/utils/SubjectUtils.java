@@ -264,6 +264,10 @@ public class SubjectUtils {
 		if (identifier.isName()) {
 			applicationName = identifier.getName().toLowerCase();
 			applicationId = applications.inverse().get(applicationName);
+			if (applicationId == null) {
+				applicationId = applications.inverse()
+						.get(identifier.getName());
+			}
 		} else if (identifier.isUUID()) {
 			applicationId = identifier.getUUID();
 			applicationName = applications.get(identifier.getUUID());

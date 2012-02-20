@@ -224,6 +224,8 @@ public class ApplicationsService extends AbstractService {
 					revokeApplicationRolePermission(roleName, permission);
 				}
 
+				return getApplicationRolePermissions(roleName);
+
 			}
 		}
 
