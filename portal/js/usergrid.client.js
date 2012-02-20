@@ -355,6 +355,10 @@ usergrid.Client = function(options) {
             xhr.setRequestHeader("Authorization", authorizationHeader);
             xhr.withCredentials = true;
         }
+        else if (self.clientId && self.clientSecret) {
+            params["client_id"] = self.clientId;
+            params["client_secret"] = self.clientSecret;
+        }
 
         xhr.onreadystatechange = function() {
             if (xhr.readyState == 2) {
