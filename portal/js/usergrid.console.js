@@ -1188,8 +1188,7 @@ function usergrid_console_app() {
         pageSelect(uuid);
         requestUsers();
         selectFirstTabButton('#users-panel-tab-bar');
-        //pageOpenQueryExplorer("/users");
-        //$("#users-by-alphabetical").show();
+        showPanelList('users');
     }
     window.usergrid.console.pageSelectUsers = pageSelectUsers;
 
