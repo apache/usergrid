@@ -253,7 +253,7 @@ public class CounterUtils {
 			m.addCounter(bytebuffer(key),
 					APPLICATION_AGGREGATE_COUNTERS.toString(), c);
 		}
-        // TODO create and add Count
+        // create and add Count
         batcher.add(new Count(APPLICATION_AGGREGATE_COUNTERS.toString(), key,
                 Long.toString(column), value));
 	}
@@ -292,7 +292,7 @@ public class CounterUtils {
 		m.addCounter(bytebuffer(entityId), ENTITY_COUNTERS.toString(), c);
 		addInsertToMutator(m, ENTITY_DICTIONARIES,
 				key(entityId, DICTIONARY_COUNTERS), name, null, timestamp);
-        // TODO create and send Count
+        // create and send Count
         batcher.add(new Count(ENTITY_COUNTERS.toString(),
                 entityId.toString(),
                 name,
@@ -333,7 +333,7 @@ public class CounterUtils {
 				bytebuffer(key(queueId, DICTIONARY_COUNTERS).toString()),
 				QueuesCF.QUEUE_DICTIONARIES.toString(),
 				createColumn(name, ByteBuffer.allocate(0), timestamp, se, be));
-        // TODO create and send Count
+        // create and send Count
         batcher.add(new Count(QueuesCF.COUNTERS.toString(),
                 queueId.toString(),
                 name,
