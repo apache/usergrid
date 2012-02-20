@@ -1507,11 +1507,13 @@ function usergrid_console_app() {
                 var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
                 var uri = (entity.metadata || { }).uri;
                 var id = 'groupListItem'; 
+                var title = entity.title;
                 return {
                     entity : entity,
                     picture : entity.picture,
                     name : name,
                     id: id,
+                    title: title,
                     path : path,
                     fblink : entity.fblink,
                     collections : collections,
