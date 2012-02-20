@@ -20,15 +20,18 @@ package org.usergrid.utils;
 
 import static org.usergrid.utils.ConversionUtils.string;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author edanuff
  * 
  */
 public class StringUtils extends org.apache.commons.lang.StringUtils {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(StringUtils.class);
 
 	public static String[] lowerCaseArray(String[] strings) {
 		if (strings != null) {
@@ -220,25 +223,13 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
 	}
 
 	public static String readClasspathFileAsString(String filePath) {
-		StringBuffer fileData = new StringBuffer(1000);
-		BufferedReader reader = new BufferedReader(new InputStreamReader(
-				StringUtils.class.getResourceAsStream(filePath)));
-		char[] buf = new char[1024];
-		int numRead = 0;
 		try {
-			while ((numRead = reader.read(buf)) != -1) {
-				String readData = String.valueOf(buf, 0, numRead);
-				fileData.append(readData);
-				buf = new char[1024];
-			}
+			return IOUtils.toString(StringUtils.class
+					.getResourceAsStream(filePath));
 		} catch (Exception e) {
-		} finally {
-			try {
-				reader.close();
-			} catch (IOException e) {
-			}
+			logger.error("Error getting file from classpath: " + filePath, e);
 		}
-		return fileData.toString();
+		return null;
 	}
 
 }
