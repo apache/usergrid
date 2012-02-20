@@ -18,15 +18,21 @@
  ******************************************************************************/
 package org.usergrid.persistence.cassandra;
 
-import static me.prettyprint.hector.api.factory.HFactory.createColumn;
-import static me.prettyprint.hector.api.factory.HFactory.createCounterColumn;
-import static org.usergrid.persistence.Schema.DICTIONARY_COUNTERS;
-import static org.usergrid.persistence.cassandra.ApplicationCF.APPLICATION_AGGREGATE_COUNTERS;
-import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
-import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
-import static org.usergrid.utils.ConversionUtils.bytebuffer;
+import com.usergrid.count.Batcher;
+import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
+import me.prettyprint.cassandra.serializers.LongSerializer;
+import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
+import me.prettyprint.hector.api.beans.HCounterColumn;
+import me.prettyprint.hector.api.mutation.Mutator;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.usergrid.mq.Message;
+import org.usergrid.mq.cassandra.QueuesCF;
+import org.usergrid.persistence.CounterResolution;
+import org.usergrid.persistence.entities.Event;
+import com.usergrid.count.CountProducer;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -35,20 +41,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
-import me.prettyprint.hector.api.beans.HCounterColumn;
-import me.prettyprint.hector.api.mutation.Mutator;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.usergrid.mq.Message;
-import org.usergrid.mq.cassandra.QueuesCF;
-import org.usergrid.persistence.CounterResolution;
-import org.usergrid.persistence.entities.Event;
+import static me.prettyprint.hector.api.factory.HFactory.createColumn;
+import static me.prettyprint.hector.api.factory.HFactory.createCounterColumn;
+import static org.usergrid.persistence.Schema.DICTIONARY_COUNTERS;
+import static org.usergrid.persistence.cassandra.ApplicationCF.*;
+import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
+import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.usergrid.utils.ConversionUtils.bytebuffer;
 
 public class CounterUtils {
 
@@ -59,7 +58,13 @@ public class CounterUtils {
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
 	public static final UUIDSerializer ue = new UUIDSerializer();
 
-	public static class AggregateCounterSelection {
+    private Batcher batcher;
+
+    public void setBatcher(Batcher batcher) {
+        this.batcher = batcher;
+    }
+
+    public static class AggregateCounterSelection {
 		String name;
 		UUID userId;
 		UUID groupId;
@@ -124,7 +129,7 @@ public class CounterUtils {
 		}
 	}
 
-	public static void addEventCounterMutations(Mutator<ByteBuffer> m,
+	public void addEventCounterMutations(Mutator<ByteBuffer> m,
 			UUID applicationId, Event event, long timestamp) {
 		if (event.getCounters() != null) {
 			for (Entry<String, Integer> value : event.getCounters().entrySet()) {
@@ -136,7 +141,7 @@ public class CounterUtils {
 		}
 	}
 
-	public static void addMessageCounterMutations(Mutator<ByteBuffer> m,
+	public void addMessageCounterMutations(Mutator<ByteBuffer> m,
 			UUID applicationId, UUID queueId, Message msg, long timestamp) {
 		if (msg.getCounters() != null) {
 			for (Entry<String, Integer> value : msg.getCounters().entrySet()) {
@@ -148,7 +153,7 @@ public class CounterUtils {
 		}
 	}
 
-	public static void batchIncrementAggregateCounters(Mutator<ByteBuffer> m,
+	public void batchIncrementAggregateCounters(Mutator<ByteBuffer> m,
 			UUID applicationId, UUID userId, UUID groupId, UUID queueId,
 			String category, Map<String, Long> counters, long timestamp) {
 		if (counters != null) {
@@ -160,7 +165,7 @@ public class CounterUtils {
 		}
 	}
 
-	public static void batchIncrementAggregateCounters(Mutator<ByteBuffer> m,
+	public void batchIncrementAggregateCounters(Mutator<ByteBuffer> m,
 			UUID applicationId, UUID userId, UUID groupId, UUID queueId,
 			String category, String name, long value, long cassandraTimestamp) {
 		batchIncrementAggregateCounters(m, applicationId, userId, groupId,
@@ -168,7 +173,7 @@ public class CounterUtils {
 				cassandraTimestamp);
 	}
 
-	private static void batchIncrementAggregateCounters(Mutator<ByteBuffer> m,
+	private void batchIncrementAggregateCounters(Mutator<ByteBuffer> m,
 			UUID applicationId, UUID userId, UUID groupId, UUID queueId,
 			String category, String name, long value, long counterTimestamp,
 			long cassandraTimestamp) {
@@ -188,7 +193,7 @@ public class CounterUtils {
 		}
 	}
 
-	private static void batchIncrementAggregateCounters(Mutator<ByteBuffer> m,
+	private void batchIncrementAggregateCounters(Mutator<ByteBuffer> m,
 			UUID userId, UUID groupId, UUID queueId, String category,
 			CounterResolution resolution, String name, long value,
 			long counterTimestamp) {
@@ -250,21 +255,21 @@ public class CounterUtils {
 		}
 	}
 
-	public static AggregateCounterSelection getAggregateCounterSelection(
+	public AggregateCounterSelection getAggregateCounterSelection(
 			String name, UUID userId, UUID groupId, UUID queueId,
 			String category) {
 		return new AggregateCounterSelection(name, userId, groupId, queueId,
 				category);
 	}
 
-	public static String getAggregateCounterRow(String name, UUID userId,
+	public String getAggregateCounterRow(String name, UUID userId,
 			UUID groupId, UUID queueId, String category,
 			CounterResolution resolution) {
 		return getAggregateCounterSelection(name, userId, groupId, queueId,
 				category).getRow(resolution);
 	}
 
-	public static List<String> getAggregateCounterRows(
+	public List<String> getAggregateCounterRows(
 			List<AggregateCounterSelection> selections,
 			CounterResolution resolution) {
 		List<String> keys = new ArrayList<String>();
@@ -274,7 +279,7 @@ public class CounterUtils {
 		return keys;
 	}
 
-	public static Mutator<ByteBuffer> batchIncrementEntityCounter(
+	public Mutator<ByteBuffer> batchIncrementEntityCounter(
 			Mutator<ByteBuffer> m, UUID entityId, String name, Long value,
 			long timestamp) {
 		// logger.info("Incrementing property " + name + " of entity " +
@@ -287,7 +292,7 @@ public class CounterUtils {
 		return m;
 	}
 
-	public static Mutator<ByteBuffer> batchIncrementEntityCounters(
+	public Mutator<ByteBuffer> batchIncrementEntityCounters(
 			Mutator<ByteBuffer> m, UUID entityId, Map<String, Long> values,
 			long timestamp) {
 		for (Entry<String, Long> entry : values.entrySet()) {
@@ -297,7 +302,7 @@ public class CounterUtils {
 		return m;
 	}
 
-	public static Mutator<ByteBuffer> batchIncrementEntityCounters(
+	public Mutator<ByteBuffer> batchIncrementEntityCounters(
 			Mutator<ByteBuffer> m, Map<UUID, Map<String, Long>> values,
 			long timestamp) {
 		for (Entry<UUID, Map<String, Long>> entry : values.entrySet()) {
@@ -307,7 +312,7 @@ public class CounterUtils {
 		return m;
 	}
 
-	public static Mutator<ByteBuffer> batchIncrementQueueCounter(
+	public Mutator<ByteBuffer> batchIncrementQueueCounter(
 			Mutator<ByteBuffer> m, UUID queueId, String name, long value,
 			long timestamp) {
 		// logger.info("Incrementing property " + name + " of entity " +
@@ -324,7 +329,7 @@ public class CounterUtils {
 		return m;
 	}
 
-	public static Mutator<ByteBuffer> batchIncrementQueueCounters(
+	public Mutator<ByteBuffer> batchIncrementQueueCounters(
 			Mutator<ByteBuffer> m, UUID queueId, Map<String, Long> values,
 			long timestamp) {
 		for (Entry<String, Long> entry : values.entrySet()) {
@@ -334,7 +339,7 @@ public class CounterUtils {
 		return m;
 	}
 
-	public static Mutator<ByteBuffer> batchIncrementQueueCounters(
+	public Mutator<ByteBuffer> batchIncrementQueueCounters(
 			Mutator<ByteBuffer> m, Map<UUID, Map<String, Long>> values,
 			long timestamp) {
 		for (Entry<UUID, Map<String, Long>> entry : values.entrySet()) {

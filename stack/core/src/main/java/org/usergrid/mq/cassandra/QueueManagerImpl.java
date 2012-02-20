@@ -56,9 +56,6 @@ import static org.usergrid.persistence.cassandra.ApplicationCF.APPLICATION_AGGRE
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.persistence.cassandra.CassandraService.RETRY_COUNT;
-import static org.usergrid.persistence.cassandra.CounterUtils.addMessageCounterMutations;
-import static org.usergrid.persistence.cassandra.CounterUtils.batchIncrementQueueCounter;
-import static org.usergrid.persistence.cassandra.CounterUtils.batchIncrementQueueCounters;
 import static org.usergrid.utils.CompositeUtils.setEqualityFlag;
 import static org.usergrid.utils.CompositeUtils.setGreaterThanEqualityFlag;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
@@ -152,6 +149,7 @@ public class QueueManagerImpl implements QueueManager {
 	UUID applicationId;
 	QueueManagerFactoryImpl mmf;
 	CassandraService cass;
+    CounterUtils counterUtils;
 
 	public static final StringSerializer se = new StringSerializer();
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
@@ -161,9 +159,11 @@ public class QueueManagerImpl implements QueueManager {
 	public static final LongSerializer le = new LongSerializer();
 
 	public QueueManagerImpl(QueueManagerFactoryImpl mmf, CassandraService cass,
+            CounterUtils counterUtils,
 			UUID applicationId) {
 		this.mmf = mmf;
 		this.cass = cass;
+        this.counterUtils = counterUtils;
 		this.applicationId = applicationId;
 	}
 
@@ -216,7 +216,7 @@ public class QueueManagerImpl implements QueueManager {
 				QUEUE_SUBSCRIBERS.getColumnFamily(),
 				createColumn(queuePath, queueId, timestamp, se, ue));
 
-		CounterUtils.batchIncrementQueueCounter(batch, getQueueId("/"),
+		counterUtils.batchIncrementQueueCounter(batch, getQueueId("/"),
 				queuePath, 1L, timestamp);
 
 		if (indexUpdate == null) {
@@ -224,7 +224,7 @@ public class QueueManagerImpl implements QueueManager {
 		}
 		indexUpdate.addToMutation(batch, queueId, shard_ts, timestamp);
 
-		addMessageCounterMutations(batch, applicationId, queueId, message,
+		counterUtils.addMessageCounterMutations(batch, applicationId, queueId, message,
 				timestamp);
 
 		batch.addInsertion(
@@ -1230,7 +1230,7 @@ public class QueueManagerImpl implements QueueManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		CounterUtils.batchIncrementAggregateCounters(m, applicationId, null,
+		counterUtils.batchIncrementAggregateCounters(m, applicationId, null,
 				null, getQueueId(queuePath), category, counterName, value,
 				timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
@@ -1248,7 +1248,7 @@ public class QueueManagerImpl implements QueueManager {
 		q.setColumnFamily(APPLICATION_AGGREGATE_COUNTERS.getColumnFamily());
 		q.setRange(start, finish, false, ALL_COUNT);
 		QueryResult<CounterSlice<Long>> r = q.setKey(
-				CounterUtils.getAggregateCounterRow(counterName, null, null,
+				counterUtils.getAggregateCounterRow(counterName, null, null,
 						queueId, category, resolution)).execute();
 		List<AggregateCounter> counters = new ArrayList<AggregateCounter>();
 		for (HCounterColumn<Long> column : r.get().getColumns()) {
@@ -1379,7 +1379,7 @@ public class QueueManagerImpl implements QueueManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		batchIncrementQueueCounters(m, getQueueId(queuePath), counts, timestamp);
+		counterUtils.batchIncrementQueueCounters(m, getQueueId(queuePath), counts, timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -1388,7 +1388,7 @@ public class QueueManagerImpl implements QueueManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		batchIncrementQueueCounter(m, getQueueId(queuePath), name, value,
+		counterUtils.batchIncrementQueueCounter(m, getQueueId(queuePath), name, value,
 				timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}

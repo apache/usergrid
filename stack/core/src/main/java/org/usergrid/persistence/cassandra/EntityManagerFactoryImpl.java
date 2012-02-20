@@ -85,6 +85,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	public static final LongSerializer le = new LongSerializer();
 
 	CassandraService cass;
+    CounterUtils counterUtils;
 
 	/**
 	 * Must be constructed with a CassandraClientPool.
@@ -92,8 +93,9 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	 * @param cassandraClientPool
 	 *            the cassandra client pool
 	 */
-	public EntityManagerFactoryImpl(CassandraService cass) {
+	public EntityManagerFactoryImpl(CassandraService cass, CounterUtils counterUtils) {
 		this.cass = cass;
+        this.counterUtils = counterUtils;
 	}
 
 	/*
@@ -114,7 +116,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	 */
 	@Override
 	public EntityManager getEntityManager(UUID applicationId) {
-		return new EntityManagerImpl(this, cass, applicationId);
+		return new EntityManagerImpl(this, cass, counterUtils, applicationId);
 	}
 
 	/**
