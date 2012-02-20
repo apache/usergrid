@@ -1110,6 +1110,15 @@ usergrid.Client = function(options) {
     }
     this.requestGroupRoles = requestGroupRoles;
 
+    function saveUserProfile(applicationId, userid, payload, success,failure){
+        apiRequest("PUT", "/" + applicationId + "/users/" + userid, null, JSON.stringify(payload) , success, failure);
+    }
+    this.saveUserProfile = saveUserProfile;
+
+    function saveGroupProfile(applicationId, groupid, payload, success,failure){
+        apiRequest("PUT", "/" + applicationId + "/groups/" + groupid, null, JSON.stringify(payload) , success, failure);
+    }
+    this.saveGroupProfile = saveGroupProfile;
 
     //
     // Create new group    //

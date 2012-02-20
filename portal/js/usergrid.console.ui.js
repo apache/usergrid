@@ -211,6 +211,26 @@ usergrid.console.ui = usergrid.console.ui || { };
     }
     usergrid.console.ui.jsonSchemaToDForm = jsonSchemaToDForm;
     
+    function jsonSchemaToPayload(schema){
+        var payloadData = new Object();
+        var payload = '';
+        for (var propName in schema.properties) {
+            var property = schema.properties[propName];
+            var type = property.type;
+            if (type == "string") {
+                var value = $('#ui-form-'+propName).val();
+                if (!value) value = "";
+                payloadData[propName] = value;
+                 
+            } else if (type == "object") {
+                
+            }
+        }
+        return payloadData;        
+    }
+    usergrid.console.ui.jsonSchemaToPayload = jsonSchemaToPayload;
+
+
     function displayEntityListResponse(query_results, options, response) {
     
         query_results = query_results || {};

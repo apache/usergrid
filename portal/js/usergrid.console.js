@@ -540,7 +540,7 @@ function usergrid_console_app() {
             if ($(this).prop("checked")) {  
                 var entityId = $(this).attr("value");
                 var path = $(this).attr("name");
-                var refreshFunction = function() { pageOpenQueryExplorer(path); };
+                var refreshFunction = function() {pageOpenQueryExplorer(path);};
                 if (count>1) {
                     refreshFunction = doQueryGet;
                 }
@@ -737,7 +737,7 @@ function usergrid_console_app() {
         client.requestOrganizationCredentials(function(response) {
             $("#organization-panel-key").html(response.credentials.client_id);
             $("#organization-panel-secret").html(response.credentials.client_secret);
-            organization_keys = { client_id : response.credentials.client_id, client_secret : response.credentials.client_secret };
+            organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
         },
         function() {
             $("#organization-panel-key").html("Unable to load...");
@@ -751,7 +751,7 @@ function usergrid_console_app() {
         client.regenerateOrganizationCredentials(function(response) {
             $("#organization-panel-key").html(response.credentials.client_id);
             $("#organization-panel-secret").html(response.credentials.client_secret);
-            organization_keys = { client_id : response.credentials.client_id, client_secret : response.credentials.client_secret };
+            organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
         },
         function() {
             $("#organization-panel-key").html("Unable to load...");
@@ -1354,6 +1354,28 @@ function usergrid_console_app() {
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.graph.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.permissions.html");
 
+    function saveUserProfile(uuid){
+        var payload = usergrid.console.ui.jsonSchemaToPayload(usergrid.console.ui.collections.vcard_schema);
+        client.saveUserProfile(current_application_id, uuid, payload, completeSaveProfile,
+        function() {
+            alert("Unable to update User: " + client.getLastErrorMessage('An internal error occured.'));
+        });
+    }
+    window.usergrid.console.saveUserProfile = saveUserProfile;
+
+    function saveGroupProfile(uuid){
+        var payload = usergrid.console.ui.jsonSchemaToPayload(usergrid.console.ui.collections.group_schema);
+        client.saveUserProfile(current_application_id, uuid, payload, completeSaveProfile,
+        function() {
+            alert("Unable to update Group: " + client.getLastErrorMessage('An internal error occured.'));
+        });
+    }
+    window.usergrid.console.saveGroupProfile = saveGroupProfile;
+
+    function completeSaveProfile(){
+        alert('Information Saved.');
+    }
+
     function redrawUserPanel() {
         $("#user-panel-profile").html("");
         $("#user-panel-memberships").html("");
@@ -1385,7 +1407,11 @@ function usergrid_console_app() {
             $.tmpl("usergrid.ui.panels.user.permissions.html", user_data, options).appendTo("#user-panel-permissions");
         }
     }
-    
+
+    function saveUserData(){
+        usergrid.console.ui.jsonSchemaToPayload(schema, obj);
+    }
+
     var user_data = null;
     
     function handleUserResponse(response) {
@@ -1663,7 +1689,7 @@ function usergrid_console_app() {
     window.usergrid.console.findUserDialog = findUserDialog;
 
     function addUserToGroup(groupId, userId) {
-        client.addUserToGroup(current_application_id, groupId, userId, function() { requestGroup(groupId); },
+        client.addUserToGroup(current_application_id, groupId, userId, function() {requestGroup(groupId);},
         function() {
             alert("Unable to add user to group: " + client.getLastErrorMessage('An internal error occured.'));
         });
@@ -1759,7 +1785,7 @@ function usergrid_console_app() {
     window.usergrid.console.findGroupDialog = findGroupDialog;
 
     function addUserToGroup2(groupId, userId) {
-        client.addUserToGroup(current_application_id, groupId, userId, function() { requestUser(userId); },
+        client.addUserToGroup(current_application_id, groupId, userId, function() {requestUser(userId);},
         function() {
             alert("Unable to add user to group: " + client.getLastErrorMessage('An internal error occured.'));
         });
@@ -2091,7 +2117,7 @@ function usergrid_console_app() {
                 }
                 ops_part.replace("*", "get,post,put,delete")
                 var ops = ops_part.split(',');
-                permissions[perm] = { ops : {}, path : path_part, perm : perm};
+                permissions[perm] = {ops : {}, path : path_part, perm : perm};
                 for (var j in ops) {
                     permissions[perm].ops[ops[j]] = true;
                 }
@@ -2099,7 +2125,7 @@ function usergrid_console_app() {
             if (count == 0) {
                 permissions = null;
             }
-            $.tmpl("usergrid.ui.panels.role.permissions.html", {"role" : current_role_name, "permissions" : permissions }, {}).appendTo("#role-permissions");
+            $.tmpl("usergrid.ui.panels.role.permissions.html", {"role" : current_role_name, "permissions" : permissions}, {}).appendTo("#role-permissions");
         } else {
             $("#role-permissions")
             .html("<h2>No permission information retrieved.</h2>");
