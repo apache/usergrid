@@ -43,6 +43,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.temporaryRedirect;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.usergrid.security.shiro.utils.SubjectUtils.isApplicationAdmin;
 import static org.usergrid.services.ServiceParameter.addParameter;
 import static org.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
@@ -73,11 +74,13 @@ import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
 import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.codec.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.mq.QueueManager;
+import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.RootResource;
@@ -295,6 +298,10 @@ public class ApplicationResource extends ServiceResource {
 
 		logger.info("AuthResource.keys");
 
+		if (!isApplicationAdmin(Identifier.fromUUID(applicationId))) {
+			throw new UnauthorizedException();
+		}
+
 		ClientCredentialsInfo kp = new ClientCredentialsInfo(
 				management.getClientIdForApplication(services
 						.getApplicationId()),
@@ -313,6 +320,10 @@ public class ApplicationResource extends ServiceResource {
 			throws Exception {
 
 		logger.info("AuthResource.keys");
+
+		if (!isApplicationAdmin(Identifier.fromUUID(applicationId))) {
+			throw new UnauthorizedException();
+		}
 
 		ClientCredentialsInfo kp = new ClientCredentialsInfo(
 				management.getClientIdForApplication(services
