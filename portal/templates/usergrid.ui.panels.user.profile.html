@@ -6,8 +6,10 @@
 			${name}
 			{{if path}}</a>{{/if}}
 		</div>
+        <div class="bar">
+            <a href="#" onclick="usergrid.console.saveUserProfile('${username}'); return false;"> Save User </a>
+        </div>
 	</h3>
-    <a href="#" onclick="usergrid.console.saveUserProfile('${username}'); return false;"> Save User </a>
 	<div class="console-section-contents">
 		<div class="query-result-edit query-result-portlet">
 			<div class="query-result-portlet-title">Edit</div>
