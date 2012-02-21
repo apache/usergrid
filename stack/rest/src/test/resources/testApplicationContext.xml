@@ -133,6 +133,7 @@
 
     <bean id="counterUtils" class="org.usergrid.persistence.cassandra.CounterUtils">
         <property name="batcher" ref="simpleBatcher"/>
+        <property name="counterType" value="n"/>
     </bean>
 
 	<bean id="serviceManagerFactory" class="org.usergrid.services.ServiceManagerFactory">

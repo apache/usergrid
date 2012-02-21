@@ -58,11 +58,24 @@ public class CounterUtils {
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
 	public static final UUIDSerializer ue = new UUIDSerializer();
 
+  private String counterType = "o";
+
     private Batcher batcher;
 
     public void setBatcher(Batcher batcher) {
         this.batcher = batcher;
     }
+
+  /**
+   * Set the type to 'new' ("n"), 'parallel' ("p"), 'old' ("o" - the default)
+   * If not one of the above, do nothing
+   * @param counterType
+   */
+  public void setCounterType(String counterType) {
+    if ( StringUtils.equals(counterType,"n") || StringUtils.equals(counterType, "p") || StringUtils.equals(counterType,"o") ) {
+      this.counterType = counterType;
+    }
+  }
 
     public static class AggregateCounterSelection {
 		String name;
@@ -248,14 +261,19 @@ public class CounterUtils {
 			String key, long column, long value) {
 		// logger.info("update counts set " + column + " += " + value
 		// + " where key = \"" + key + "\"");
-		if (m != null) {
-			HCounterColumn<Long> c = createCounterColumn(column, value, le);
-			m.addCounter(bytebuffer(key),
-					APPLICATION_AGGREGATE_COUNTERS.toString(), c);
-		}
+    if ( StringUtils.equals(counterType, "o") || StringUtils.equals(counterType, "p")) {
+      if (m != null) {
+        HCounterColumn<Long> c = createCounterColumn(column, value, le);
+        m.addCounter(bytebuffer(key),
+                APPLICATION_AGGREGATE_COUNTERS.toString(), c);
+      }
+    }
+    if ( StringUtils.equals(counterType, "n") || StringUtils.equals(counterType, "p")) {
         // create and add Count
         batcher.add(new Count(APPLICATION_AGGREGATE_COUNTERS.toString(), key,
-                Long.toString(column), value));
+                se.fromByteBuffer(le.toByteBuffer(column)), // eww. TODO
+                value));
+    }
 	}
 
 	public AggregateCounterSelection getAggregateCounterSelection(
@@ -288,15 +306,19 @@ public class CounterUtils {
 		// logger.info("Incrementing property " + name + " of entity " +
 		// entityId
 		// + " by " + value);
-		HCounterColumn<String> c = createCounterColumn(name, value);
-		m.addCounter(bytebuffer(entityId), ENTITY_COUNTERS.toString(), c);
+    if ( StringUtils.equals(counterType, "o") || StringUtils.equals(counterType, "p")) {
+      HCounterColumn<String> c = createCounterColumn(name, value);
+            m.addCounter(bytebuffer(entityId), ENTITY_COUNTERS.toString(), c);
+    }
 		addInsertToMutator(m, ENTITY_DICTIONARIES,
 				key(entityId, DICTIONARY_COUNTERS), name, null, timestamp);
         // create and send Count
+    if ( StringUtils.equals(counterType, "n") || StringUtils.equals(counterType, "p")) {
         batcher.add(new Count(ENTITY_COUNTERS.toString(),
                 entityId.toString(),
                 name,
                 value));
+    }
 		return m;
 	}
 
@@ -326,18 +348,22 @@ public class CounterUtils {
 		// logger.info("Incrementing property " + name + " of entity " +
 		// entityId
 		// + " by " + value);
-		HCounterColumn<String> c = createCounterColumn(name, value);
-		m.addCounter(bytebuffer(queueId), QueuesCF.COUNTERS.toString(), c);
+    if ( StringUtils.equals(counterType, "o") || StringUtils.equals(counterType, "p")) {
+      HCounterColumn<String> c = createCounterColumn(name, value);
+      m.addCounter(bytebuffer(queueId), QueuesCF.COUNTERS.toString(), c);
+    }
 
 		m.addInsertion(
 				bytebuffer(key(queueId, DICTIONARY_COUNTERS).toString()),
 				QueuesCF.QUEUE_DICTIONARIES.toString(),
 				createColumn(name, ByteBuffer.allocate(0), timestamp, se, be));
         // create and send Count
+    if ( StringUtils.equals(counterType, "n") || StringUtils.equals(counterType, "p")) {
         batcher.add(new Count(QueuesCF.COUNTERS.toString(),
                 queueId.toString(),
                 name,
                 value));
+    }
 		return m;
 	}
 
