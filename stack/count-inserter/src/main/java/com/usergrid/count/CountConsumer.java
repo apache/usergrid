@@ -92,7 +92,7 @@ public class CountConsumer {
 
     /**
      * Start polling the queue for new tasks. Work is handed off to {@link #setConsumerCount(int)}
-     * threads. {@link CounterStore#save(java.util.List)} is invoked once {@link #setBatchInsertSize(int)}
+     * threads. {@link CounterStore#save(java.util.Collection)} is invoked once {@link #setBatchInsertSize(int)}
      * threshold has been exceeded.
      *
      */

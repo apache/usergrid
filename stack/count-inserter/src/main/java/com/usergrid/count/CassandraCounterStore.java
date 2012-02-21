@@ -9,6 +9,7 @@ import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -27,7 +28,7 @@ public class CassandraCounterStore implements CounterStore {
         this.save(Arrays.asList(count));
     }
 
-    public void save(List<Count> counts) {
+    public void save(Collection<Count> counts) {
         Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
         for ( Count count : counts ) {
             HCounterColumn<String> column =
