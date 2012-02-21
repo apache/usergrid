@@ -16,15 +16,15 @@ public class ScheduledBatcherTest {
     public void testScheduledExecution() {
         ScheduledBatcher batcher = new ScheduledBatcher(1,1);
         batcher.setBatchSubmitter(new Slf4JBatchSubmitter());
-        batcher.add(new Count("k1","c1",1));
-        batcher.add(new Count("k1","c1",3));
-        batcher.add(new Count("k1","c2",1));
+        batcher.add(new Count("Counter","k1","c1",1));
+        batcher.add(new Count("Counter","k1","c1",3));
+        batcher.add(new Count("Counter","k1","c2",1));
         try {
             TimeUnit.SECONDS.sleep(3);
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         }
-        batcher.add(new Count("k1","c2",1));
+        batcher.add(new Count("Counter","k1","c2",1));
         assertEquals(1,batcher.getBatchSubmissionCount());
 
     }

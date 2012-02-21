@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.cassandra.CassandraService;
+import org.usergrid.persistence.cassandra.CounterUtils;
 
 public class QueueManagerFactoryImpl implements QueueManagerFactory {
 
@@ -41,6 +42,7 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
 	public static String IMPLEMENTATION_DESCRIPTION = "Cassandra Queue Manager Factory 1.0";
 
 	CassandraService cass;
+    CounterUtils counterUtils;
 
 	public static final StringSerializer se = new StringSerializer();
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
@@ -52,11 +54,14 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
 	/**
 	 * Must be constructed with a CassandraClientPool.
 	 * 
-	 * @param cassandraClientPool
+	 * @param cass
 	 *            the cassandra client pool
+     * @param counterUtils
+     *            the CounterUtils
 	 */
-	public QueueManagerFactoryImpl(CassandraService cass) {
+	public QueueManagerFactoryImpl(CassandraService cass, CounterUtils counterUtils) {
 		this.cass = cass;
+        this.counterUtils = counterUtils;
 	}
 
 	@Override
@@ -66,7 +71,7 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
 
 	@Override
 	public QueueManager getQueueManager(UUID applicationId) {
-		return new QueueManagerImpl(this, cass, applicationId);
+		return new QueueManagerImpl(this, cass, counterUtils, applicationId);
 	}
 
 }

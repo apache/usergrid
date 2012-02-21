@@ -93,11 +93,27 @@
 	<bean id="entityManagerFactory"
 		class="org.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
 		<constructor-arg ref="cassandraService" />
-	</bean>
+        <constructor-arg ref="counterUtils"/>
 
-	<bean id="queueManagerFactory"
-		class="org.usergrid.mq.cassandra.QueueManagerFactoryImpl">
-		<constructor-arg ref="cassandraService" />
-	</bean>
+    </bean>
+
+    <bean id="queueManagerFactory"
+          class="org.usergrid.mq.cassandra.QueueManagerFactoryImpl">
+        <constructor-arg ref="cassandraService" />
+        <constructor-arg ref="counterUtils"/>
+    </bean>
+
+    <bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
+        <constructor-arg value="3"/>
+        <property name="batchSubmitter" ref="batchSubmitter"/>
+    </bean>
+
+    <bean id="batchSubmitter" class="com.usergrid.count.Slf4JBatchSubmitter">
+    </bean>
+
+    <bean id="counterUtils" class="org.usergrid.persistence.cassandra.CounterUtils">
+        <property name="batcher" ref="simpleBatcher"/>
+    </bean>
+
 
 </beans>

@@ -22,14 +22,14 @@ public class SimpleBatcherTest {
         SimpleBatcher simpleBatcher = new SimpleBatcher(1);
         simpleBatcher.setBatchSubmitter(new Slf4JBatchSubmitter());
         simpleBatcher.setBatchSize(4);
-        simpleBatcher.add(new Count("k1","counter1", 1));
-        simpleBatcher.add(new Count("k1","c2", 2));
-        simpleBatcher.add(new Count("k1","c3",1));
-        simpleBatcher.add(new Count("k1","c3", 1));
-        simpleBatcher.add(new Count("k1","c3",1));
+        simpleBatcher.add(new Count("Counter","k1","counter1", 1));
+        simpleBatcher.add(new Count("Counter","k1","c2", 2));
+        simpleBatcher.add(new Count("Counter","k1","c3",1));
+        simpleBatcher.add(new Count("Counter","k1","c3", 1));
+        simpleBatcher.add(new Count("Counter","k1","c3",1));
 
         assertEquals(1, simpleBatcher.getBatchSubmissionCount());
-        simpleBatcher.add(new Count("k1","c4",1));
+        simpleBatcher.add(new Count("Counter","k1","c4",1));
         assertEquals(1, simpleBatcher.getBatchSubmissionCount());
 
     }

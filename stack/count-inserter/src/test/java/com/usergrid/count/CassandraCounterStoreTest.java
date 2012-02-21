@@ -29,8 +29,8 @@ public class CassandraCounterStoreTest {
     @Test
     public void testSerializer() {
         CassandraCounterStore cassandraCounterStore =
-                new CassandraCounterStore(HFactory.createKeyspace("Keyspace1", cluster), "Counter1");
-        Count count = new Count("k1","c1",1);
+                new CassandraCounterStore(HFactory.createKeyspace("Keyspace1", cluster));
+        Count count = new Count("Counter1","k1","c1",1);
         cassandraCounterStore.save(count);
     }
 

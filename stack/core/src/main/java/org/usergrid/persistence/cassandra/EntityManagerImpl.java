@@ -68,11 +68,6 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.batch
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.toStorableBinaryValue;
 import static org.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
-import static org.usergrid.persistence.cassandra.CounterUtils.addEventCounterMutations;
-import static org.usergrid.persistence.cassandra.CounterUtils.batchIncrementAggregateCounters;
-import static org.usergrid.persistence.cassandra.CounterUtils.batchIncrementEntityCounter;
-import static org.usergrid.persistence.cassandra.CounterUtils.batchIncrementEntityCounters;
-import static org.usergrid.persistence.cassandra.CounterUtils.getAggregateCounterRow;
 import static org.usergrid.utils.ClassUtils.cast;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.ConversionUtils.getLong;
@@ -185,15 +180,19 @@ public class EntityManagerImpl implements EntityManager {
 
 	CassandraService cass;
 
+    CounterUtils counterUtils;
+
 	public static final StringSerializer se = new StringSerializer();
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
 	public static final UUIDSerializer ue = new UUIDSerializer();
 	public static final LongSerializer le = new LongSerializer();
 
 	public EntityManagerImpl(EntityManagerFactoryImpl emf,
-			CassandraService cass, UUID applicationId) {
+			CassandraService cass, CounterUtils counterUtils,
+            UUID applicationId) {
 		this.emf = emf;
 		this.cass = cass;
+        this.counterUtils = counterUtils;
 		this.applicationId = applicationId;
 	}
 
@@ -981,7 +980,7 @@ public class EntityManagerImpl implements EntityManager {
 		}
 
 		if (entity instanceof Event) {
-			addEventCounterMutations(m, applicationId, (Event) entity,
+			counterUtils.addEventCounterMutations(m, applicationId, (Event) entity,
 					timestamp);
 		}
 
@@ -1657,7 +1656,7 @@ public class EntityManagerImpl implements EntityManager {
 		q.setColumnFamily(APPLICATION_AGGREGATE_COUNTERS.toString());
 		q.setRange(start, finish, false, ALL_COUNT);
 		QueryResult<CounterSlice<Long>> r = q.setKey(
-				getAggregateCounterRow(counterName, userId, groupId, queueId,
+				counterUtils.getAggregateCounterRow(counterName, userId, groupId, queueId,
 						category, resolution)).execute();
 		List<AggregateCounter> counters = new ArrayList<AggregateCounter>();
 		for (HCounterColumn<Long> column : r.get().getColumns()) {
@@ -2521,7 +2520,7 @@ public class EntityManagerImpl implements EntityManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		batchIncrementAggregateCounters(m, applicationId, userId, groupId,
+		counterUtils.batchIncrementAggregateCounters(m, applicationId, userId, groupId,
 				null, category, counterName, value, timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 
@@ -2533,7 +2532,7 @@ public class EntityManagerImpl implements EntityManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		batchIncrementAggregateCounters(m, applicationId, userId, groupId,
+		counterUtils.batchIncrementAggregateCounters(m, applicationId, userId, groupId,
 				null, category, counters, timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 
@@ -2553,7 +2552,7 @@ public class EntityManagerImpl implements EntityManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		batchIncrementEntityCounters(m, applicationId, counts, timestamp);
+		counterUtils.batchIncrementEntityCounters(m, applicationId, counts, timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -2562,7 +2561,7 @@ public class EntityManagerImpl implements EntityManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		batchIncrementEntityCounter(m, applicationId, name, value, timestamp);
+		counterUtils.batchIncrementEntityCounter(m, applicationId, name, value, timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -2571,7 +2570,7 @@ public class EntityManagerImpl implements EntityManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		batchIncrementEntityCounters(m, counts, timestamp);
+		counterUtils.batchIncrementEntityCounters(m, counts, timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -2580,7 +2579,7 @@ public class EntityManagerImpl implements EntityManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		batchIncrementEntityCounters(m, entityId, counts, timestamp);
+		counterUtils.batchIncrementEntityCounters(m, entityId, counts, timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -2589,7 +2588,7 @@ public class EntityManagerImpl implements EntityManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		batchIncrementEntityCounter(m, entityId, name, value, timestamp);
+		counterUtils.batchIncrementEntityCounter(m, entityId, name, value, timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 

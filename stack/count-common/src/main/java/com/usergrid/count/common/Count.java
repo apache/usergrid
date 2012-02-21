@@ -1,17 +1,36 @@
 package com.usergrid.count.common;
 
 import org.apache.commons.lang.StringUtils;
+import org.codehaus.jackson.annotate.JsonAutoDetect;
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JacksonInject;
+
+import static org.codehaus.jackson.annotate.JsonAutoDetect.*;
 
 /**
  * Loosely models a 'count' of things to
  * @author zznate
  */
+@JsonAutoDetect(creatorVisibility = Visibility.PUBLIC_ONLY)
 public class Count {
+    @JsonProperty
+    private final String tableName;
+    @JsonProperty
     private final String keyName;
+    @JsonProperty
     private final String columnName;
-    private int value;
+    @JsonProperty
+    private long value;
 
-    public Count(String keyName, String columnName, int value) {
+
+    @JsonCreator
+    public Count(@JsonProperty(value = "tableName") String tableName,
+                 @JsonProperty(value = "keyName") String keyName,
+                 @JsonProperty(value="columnName") String columnName,
+                 @JsonProperty(value="value") long value) {
+        this.tableName = tableName;
         this.keyName = keyName;
         this.columnName = columnName;
         this.value = value;
@@ -29,8 +48,9 @@ public class Count {
      * the counter name should uniquely identify the entity being counted.
      * @return
      */
+    @JsonIgnore
     public String getCounterName() {
-        return keyName + ":" + columnName;
+        return tableName + ":" + keyName + ":" + columnName;
     }
 
     public long getValue() {
@@ -45,8 +65,12 @@ public class Count {
         return keyName;
     }
 
+    public String getTableName() {
+        return tableName;
+    }
+
     @Override
     public String toString() {
-        return "Counter Name: ".concat(getCounterName()).concat(" value: ").concat(Integer.toString(value));
+        return "Counter Name: ".concat(getCounterName()).concat(" value: ").concat(Long.toString(value));
     }
 }

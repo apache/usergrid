@@ -143,7 +143,17 @@
 			<version>${project.version}</version>
 			<scope>runtime</scope>
 		</dependency>
-		<dependency>
+        <dependency>
+            <groupId>org.usergrid</groupId>
+            <artifactId>usergrid-count-batcher</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.usergrid</groupId>
+            <artifactId>usergrid-count-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
 			<groupId>org.scale7</groupId>
 			<artifactId>scale7-core</artifactId>
 		</dependency>
