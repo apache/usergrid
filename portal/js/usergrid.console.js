@@ -108,7 +108,7 @@ function usergrid_console_app() {
         //$('select#applicationSelect').selectmenu("value", current_application_id);
         if(!current_application_name)
             current_application_name = "Select an Application";
-	    $('#application-panel h3').text("Application Dashboard - " + current_application_name);
+	    $('#selectedApp2').text(" - " + current_application_name);
 	    $('#selectedApp').text(current_application_name);
     }
 

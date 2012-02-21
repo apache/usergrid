@@ -14,6 +14,23 @@ $(document).ready(function () {
         StatusBar.Init('#statusbar-placeholder');
 		$("#logout-link").click(usergrid.console.logout);
 		usergrid.console.loginOk();
+
+        var triangle = $("<a class='openPanel'>&#9660;</a>").click( function(e){
+            e.preventDefault();
+            var link = $(this);
+            link.parent().parent().find(".console-section-contents").slideUp();
+            link.parent().find(".closePanel").show();
+            link.hide();
+        });
+        var triangleOpen =  $("<a class='closePanel'>&#9654;</a>").click( function(e){
+            e.preventDefault();
+            var link = $(this);
+            link.parent().parent().find(".console-section-contents").slideDown();
+            link.parent().find(".openPanel").show();
+            link.hide();
+        });
+        triangle.prependTo("#console-panels h3");
+        triangleOpen.prependTo("#console-panels h3").hide();
 	}
 
 	function InitMenu() {
