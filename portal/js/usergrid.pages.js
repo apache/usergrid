@@ -15,29 +15,24 @@ var Pages = function(){
 		$("#pages > div").hide();
 		var page = self.pages[pageName];
 		page.box.show();
-
 		$(".navbar li.active").removeClass('active');
-		$(".navbar .navbar-inner > ul").hide();
-		page.link.parent().addClass('active').parent().show();
+		$(".navbar .navbar-inner").hide();
+        if(page.link.parent().parent().hasClass("dropdown-menu"))
+            page.link.parent().parent().parent().addClass('active');
+        else
+    		page.link.parent().addClass('active');
+        page.menu.show();
 		if(page.showFunction)
 			page.showFunction();
 		return;
 	}
 
-	self.AddPage = function(pageName, linkSelector,boxSelector,initFunction,showFunction)	{
-		if(!linkSelector)
-			linkSelector = "#" + pageName + '-link';
+	self.AddPage = function(page)	{
+		if(!page.link)
+            page.link = $("#" + page.name + '-link');
 
-		if(!boxSelector)
-			boxSelector = "#" + pageName + '-page';
-
-		var page = {
-			name: pageName,
-			link: $(linkSelector),
-			box:$(boxSelector),
-			initFunction:initFunction,
-			showFunction:showFunction
-		}
+		if(!page.box)
+			page.box = $("#" + page.name + '-page');
 
 		page.link.click(function(e) {
 			e.preventDefault();

@@ -19,17 +19,18 @@ $(document).ready(function () {
 	function InitMenu() {
 		$('.navbar .dropdown-toggle').dropdown();
 		$('#sidebar-menu .dropdown-toggle').dropdown();
-		//Pages.AddPage(name,link,box,init,show);
 
-		Pages.AddPage('login', null, null, null, null);
+        var publicMenu = $("#publicMenu");
+        var privateMenu =$("#privateMenu");
+
+		Pages.AddPage({name:'login', menu:publicMenu});
 		Pages.ShowPage('login');
 
-		Pages.AddPage('signup', null, null, null, null);
-		Pages.AddPage('forgot-password', null, null, null, null);
+		Pages.AddPage({name:'signup', menu:publicMenu});
+		Pages.AddPage({name:'forgot-password', menu:publicMenu});
 
-		//Pages.AddPage('navlist',null,null,null,null);
-		Pages.AddPage('console', null, null, InitConsole, usergrid.console.pageSelectHome);
-		Pages.AddPage('account', null, null, null, usergrid.console.requestAccountSettings);
+        Pages.AddPage({name:'console', menu:privateMenu, initFunction:InitConsole, showFunction:usergrid.console.pageSelectHome});
+        Pages.AddPage({name:'account', menu:privateMenu, initFunction:InitConsole, showFunction:usergrid.console.requestAccountSettings});
 	}
 
 	function InitConsole() {

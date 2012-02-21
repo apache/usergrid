@@ -2693,10 +2693,11 @@ function usergrid_console_app() {
     }
 
    function setupMenu() {
+      var userNameBox = $("#userEmail");
       if (client && client.loggedInUser)
-         $("#account-link").html(client.loggedInUser.email);
+          userNameBox.html(client.loggedInUser.email);
       else
-         $("#account-link").html("No Logged In User");
+          userNameBox.html("No Logged In User");
       setupOrganizationsMenu();
    }
 

@@ -9,6 +9,7 @@
 @modalBar: #F2F2F2;
 @h3Color: #CCCCCC;
 @minScreenWidth: 850px;
+@linkHoverBgColor: #E5E5E5;
 //@fontMenu:
 
 
@@ -87,7 +88,9 @@ a:active {
 
 //----------Header ------------------------------------------------------------
 .navbar{
-  min-width: @minScreenWidth;
+  height:46px;
+  min-width: 700px;
+  #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
   &:before {
     content: '';
     height: 6px;
@@ -97,6 +100,9 @@ a:active {
   margin: 0px 1px 20px 1px;
   border-top: 1px solid #C9C9C9;
   border-bottom: 3px solid @grayApigee;
+  .navbar-inner{
+    display: none;
+  }
 	h1, h2{
 		display: inline;
 		float:left;
@@ -120,13 +126,14 @@ a:active {
 	  float:right;
 	}
 	.nav{
-	  &>li{
-	    &>a{
+	  li{
+	    a{
 	      text-shadow: 0 0px 0 white;
 	      font-weight: normal;
 	      color: @grayApigee;
 	      &:hover{
 	        color: @redApigee !important;
+	        background: @linkHoverBgColor !important;
 	      }
 	    }
 	  }
@@ -135,9 +142,6 @@ a:active {
 			  background: url('../images/menuActiveTriangle.png') no-repeat center top;
 				color:@redApigee;
 				font-weight: bold;
-	      &:hover{
-	        background-color: transparent;
-	      }
 			}
 	  }
 	}
@@ -149,6 +153,7 @@ a:active {
 //----------------- Navigation --------------------------------------------------------------------
 #sidebar-menu{
     min-width: 120px;
+    max-width: 130px;
 }
 .nav-list{
 	border-right:2px solid #F2F5F7;
@@ -159,6 +164,15 @@ a:active {
 	.active > a{
 		background-color:@redApigee;
 	}
+   .dropdown-menu a{
+      text-shadow: 0 0px 0 white;
+      font-weight: normal;
+      color: @grayApigee;
+      &:hover{
+        color: @redApigee !important;
+        background: @linkHoverBgColor !important;
+      }
+   }
 }
 
 //----------Login, Signup, Forgot ------------------------------------------------------------
@@ -230,7 +244,7 @@ a:active {
             a {
                 padding: 5px 10px;
                 .border-radius(15px);
-                color:#000000 !important;
+                color:#007CDC !important;
                 &:hover{
                   color:@redApigee !important;
                 }
