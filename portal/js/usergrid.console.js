@@ -503,22 +503,10 @@ function usergrid_console_app() {
         $("#query-path").val(path);
     };
 
+    var queryQl = $("#query-ql");
+    queryQl.typeahead();
     function doBuildIndexMenu() {
-        //var m = "";
-	      var m2 = "";
-        if (indexes) {
-            for (var i in indexes) {
-              var index = indexes[i];
-	            //m += "<option value='" + index + "'>" + index + "</option>";
-	            m2 += "<li><a>" + index + "</a></li>";
-            }
-        }
-      //$("select#indexSelect").html(m);
-	    $("#queryOptions").html(m2);
-	    $("#queryOptions a").click(function(e){
-		    e.preventDefault();
-		    $("#query-ql").val($(this).text());
-	    });
+        queryQl.data('typeahead').source = indexes;
     }
 
     function requestIndexes() {
