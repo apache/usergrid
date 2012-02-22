@@ -2001,7 +2001,7 @@ function usergrid_console_app() {
                 var title = roles[name];
                 t += "<div class=\"role-row\" id=\"role-row-"
                 + name
-                + "\"><a href=\"#\" onclick=\"usergrid.console.pageOpenQueryExplorer('/roles/"
+                + "\"><a href=\"#\" onclick=\"usergrid.console.pageOpenRole('"
                 + name
                 + "'); return false;\"><span class=\"role-row-title\">"
                 + title
@@ -2076,6 +2076,20 @@ function usergrid_console_app() {
     }
     window.usergrid.console.newRole = newRole;
 
+
+    function deleteRoles() {
+        $("input[id^=roleListItem]").each( function() {
+            if ($(this).prop("checked")) {
+                var roleId = $(this).attr("value");
+                client.deleteRole(current_application_id, roleId, requestRoles,
+                function() {
+                    alert("Unable to delete role: " + client.getLastErrorMessage(userId));
+                });
+            }
+        });
+    }
+    window.usergrid.console.deleteRoles = deleteRoles;
+
     /*******************************************************************
      * 
      * Role
@@ -2089,6 +2103,7 @@ function usergrid_console_app() {
         showPanel("#role-panel");
         $('#application-panel-buttons .ui-selected').removeClass('ui-selected');
         $('#application-panel-button-roles').addClass('ui-selected');
+        showPanelSearch('roles');
         requestRole();
     }
     window.usergrid.console.pageOpenRole = pageOpenRole;
@@ -3139,13 +3154,30 @@ function usergrid_console_app() {
         return false;
     });
 
+    $("#button-roles-list").click(function() {
+        showPanelList('roles');
+        return false;
+    });
+
+    $("#button-roles-search").click(function() {
+        showPanelSearch('roles');
+        return false;
+    });
 
     $("#role-panel-tab-bar a").click(function() {
         if ($(this).attr("id") == "button-role-list") {
+            Pages.SelectPanel('roles');
             pageSelectRoles();
+            showPanelList('roles');
+        }
+        else if ($(this).attr("id") == "button-group-search") {
+            //again, we might be on another panel, so switch back to groups
+            Pages.SelectPanel('roles');
+            showPanelSearch('roles');
         }
         else {
             pageSelectRole();
+            Pages.SelectPanel('roles');
         }
         return false;
     });

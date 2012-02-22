@@ -1159,8 +1159,8 @@ usergrid.Client = function(options) {
     }
     this.createRole = createRole;
 
-    function deleteRole(applicationId, rolename, success, failure) {        
-        apiRequest("DELETE", "/" + applicationId + "/rolenames/" + rolename, null, null, success, failure);
+    function deleteRole(applicationId, roleId, success, failure) {
+        apiRequest("DELETE", "/" + applicationId + "/rolenames/" + roleId, null, null, success, failure);
     }
     this.deleteRole = deleteRole;
     

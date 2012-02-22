@@ -485,20 +485,34 @@
                             </div>
                         </div>
                         <div id="roles-panel" style="display: none">
-                            <ul id="roles-panel-tab-bar" class="nav nav-tabs">
-                                <li class="active"><a id="button-roles-list" href="#">List</a></li>
-                            </ul>
-                            <div class="panel-content">
+                            <div id="roles-panel-tab-bar" class="">
+                                <ul id="roles-panel-tab-bar" class="nav nav-tabs">
+                                    <li class="active"><a id="button-roles-list" href="#">List</a></li>
+                                    <li><a id="button-roles-search" href="#">Settings</a></li>
+                                </ul>
+                            </div>
+                            <div id="roles-panel-list" class="panel-content">
                                 <div class="console-section">
                                     <h3>
                                         Roles
                                         <div class="bar">
                                         <a href="" onclick="usergrid.console.newRole(); return false;"><i class="icon-plus"></i> New Role</a>
+                                        <a href="" onclick="usergrid.console.deleteRoles(); return false;"><i class="icon-remove"></i> Delete </a>
                                         </div>
                                     </h3>
                                     <div class="console-section-contents">
                                         <div id="application-roles">
                                             <h2>No roles created.</h2>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="roles-panel-search" class="panel-content" style="display: none;">
+                                <div class="console-section">
+                                    <h3>Role Settings</h3>
+                                    <div class="console-section-contents">
+                                        <div id="roles-settings">
+                                            <h2>No Permissions.</h2>
                                         </div>
                                     </div>
                                 </div>
@@ -520,7 +534,7 @@
                         <div id="role-panel" style="display: none">
                             <ul id="role-panel-tab-bar" class="nav nav-tabs">
                                 <li class="active"><a id="button-role-list" href="#">List</a></li>
-                                <li><a id="button-role-settings" href="#">Settings</a></li>
+                                <li><a id="button-role-search" href="#">Settings</a></li>
                            </ul>
                            <div id="role-panel-settings" class="panel-content">
                               <h3>
