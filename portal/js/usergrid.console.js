@@ -2046,7 +2046,7 @@ function usergrid_console_app() {
         $("input[id^=roleListItem]").each( function() {
             if ($(this).prop("checked")) {
                 var roleId = $(this).attr("value");
-                client.deleteRole(current_application_id, roleId, requestRoles,
+                client.deleteEntity(current_application_id, roleId, 'role', requestRoles,
                 function() {
                     alert("Unable to delete role: " + client.getLastErrorMessage(roleId));
                 });

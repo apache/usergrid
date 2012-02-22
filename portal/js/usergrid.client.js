@@ -1163,13 +1163,7 @@ usergrid.Client = function(options) {
         }), success, failure);
     }
     this.createRole = createRole;
-
-    function deleteRole(applicationId, roleId, success, failure) {
-        apiRequest("DELETE", "/" + applicationId + "/rolenames/" + roleId, null, null, success, failure);
-    }
-    this.deleteRole = deleteRole;
-    
-    
+     
     /**
         Creates a new Query.
         @class Represents a Query. 
