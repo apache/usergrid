@@ -36,6 +36,14 @@
 			</testResource>
 		</testResources>
 		<plugins>
+            <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                      <forkMode>always</forkMode>
+                      <argLine>-Xmx512M -Xms512M -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+                    </configuration>
+                  </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
