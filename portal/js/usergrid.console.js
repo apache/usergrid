@@ -108,7 +108,7 @@ function usergrid_console_app() {
         //$('select#applicationSelect').selectmenu("value", current_application_id);
         if(!current_application_name)
             current_application_name = "Select an Application";
-	    $('#application-panel h3').text("Application Dashboard - " + current_application_name);
+	    $('#selectedApp2').text(" - " + current_application_name);
 	    $('#selectedApp').text(current_application_name);
     }
 
@@ -503,22 +503,10 @@ function usergrid_console_app() {
         $("#query-path").val(path);
     };
 
+    var queryQl = $("#query-ql");
+    queryQl.typeahead();
     function doBuildIndexMenu() {
-        //var m = "";
-	      var m2 = "";
-        if (indexes) {
-            for (var i in indexes) {
-              var index = indexes[i];
-	            //m += "<option value='" + index + "'>" + index + "</option>";
-	            m2 += "<li><a>" + index + "</a></li>";
-            }
-        }
-      //$("select#indexSelect").html(m);
-	    $("#queryOptions").html(m2);
-	    $("#queryOptions a").click(function(e){
-		    e.preventDefault();
-		    $("#query-ql").val($(this).text());
-	    });
+        queryQl.data('typeahead').source = indexes;
     }
 
     function requestIndexes() {
@@ -891,10 +879,8 @@ function usergrid_console_app() {
     function pageSelect(uuid) {
         if (uuid) {
             current_application_id = uuid;
-            console.log(applications_by_id[uuid]);
             current_application_name = applications_by_id[uuid];
         }
-        console.log(applications_by_id[uuid]);
         setNavApplicationText();
         requestCollections();
         query_history = [];
@@ -2710,10 +2696,11 @@ function usergrid_console_app() {
     }
 
    function setupMenu() {
+      var userNameBox = $("#userEmail");
       if (client && client.loggedInUser)
-         $("#account-link").html(client.loggedInUser.email);
+          userNameBox.html(client.loggedInUser.email);
       else
-         $("#account-link").html("No Logged In User");
+          userNameBox.html("No Logged In User");
       setupOrganizationsMenu();
    }
 

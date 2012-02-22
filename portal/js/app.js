@@ -14,22 +14,40 @@ $(document).ready(function () {
         StatusBar.Init('#statusbar-placeholder');
 		$("#logout-link").click(usergrid.console.logout);
 		usergrid.console.loginOk();
+
+        var triangle = $("<a class='openPanel'>&#9660;</a>").click( function(e){
+            e.preventDefault();
+            var link = $(this);
+            link.parent().parent().find(".console-section-contents").slideUp();
+            link.parent().find(".closePanel").show();
+            link.hide();
+        });
+        var triangleOpen =  $("<a class='closePanel'>&#9654;</a>").click( function(e){
+            e.preventDefault();
+            var link = $(this);
+            link.parent().parent().find(".console-section-contents").slideDown();
+            link.parent().find(".openPanel").show();
+            link.hide();
+        });
+        triangle.prependTo("#console-panels h3");
+        triangleOpen.prependTo("#console-panels h3").hide();
 	}
 
 	function InitMenu() {
 		$('.navbar .dropdown-toggle').dropdown();
 		$('#sidebar-menu .dropdown-toggle').dropdown();
-		//Pages.AddPage(name,link,box,init,show);
 
-		Pages.AddPage('login', null, null, null, null);
+        var publicMenu = $("#publicMenu");
+        var privateMenu =$("#privateMenu");
+
+		Pages.AddPage({name:'login', menu:publicMenu});
 		Pages.ShowPage('login');
 
-		Pages.AddPage('signup', null, null, null, null);
-		Pages.AddPage('forgot-password', null, null, null, null);
+		Pages.AddPage({name:'signup', menu:publicMenu});
+		Pages.AddPage({name:'forgot-password', menu:publicMenu});
 
-		//Pages.AddPage('navlist',null,null,null,null);
-		Pages.AddPage('console', null, null, InitConsole, usergrid.console.pageSelectHome);
-		Pages.AddPage('account', null, null, null, usergrid.console.requestAccountSettings);
+        Pages.AddPage({name:'console', menu:privateMenu, initFunction:InitConsole, showFunction:usergrid.console.pageSelectHome});
+        Pages.AddPage({name:'account', menu:privateMenu, initFunction:InitConsole, showFunction:usergrid.console.requestAccountSettings});
 	}
 
 	function InitConsole() {
