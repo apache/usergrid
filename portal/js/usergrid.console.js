@@ -1565,16 +1565,10 @@ function usergrid_console_app() {
     
     var groups_query = null;
     function requestGroups() {
-        var client_id = organization_keys.client_id;
-        var client_secret = organization_keys.client_secret;
-        var test_client = new usergrid.Client({
-            applicationId : current_application_id,
-            clientId : client_id,
-            clientSecret : client_secret
-        });
+        client.applicationId = current_application_id;
         var query = {"ql" : "order by " + groupSortBy};
         if (groupLetter != "*") query = {"ql" : groupSortBy + "='" + groupLetter + "*'"};
-        groups_query = test_client.queryGroups(displayGroups, query);
+        groups_query = client.queryGroups(displayGroups, query);
         return false;
     }
 
@@ -1820,16 +1814,10 @@ function usergrid_console_app() {
             var data = 'searching...';
             $(targetDivGroupList).html(data);
 
-            var client_id = organization_keys.client_id;
-            var client_secret = organization_keys.client_secret;
-            var test_client = new usergrid.Client({
-                applicationId : current_application_id,
-                clientId : client_id,
-                clientSecret : client_secret
-            });
+            client.applicationId = current_application_id;
             var query = {"ql" : "order by " + groupSortBy};
             if (searchString != "*") query = {"ql" : groupSortBy + "='" + searchString + "*'"};
-            users_query = test_client.queryGroups(handleGroupListResponse, query);
+            users_query = client.queryGroups(handleGroupListResponse, query);
         }
     }
     window.usergrid.console.lookupGroupName = lookupGroupName;
@@ -1967,6 +1955,8 @@ function usergrid_console_app() {
      * 
      ******************************************************************/
 
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.roles.list.html");
+
     function pageSelectRoles(uuid) {
         pageSelect(uuid);
         requestRoles();
@@ -1975,50 +1965,56 @@ function usergrid_console_app() {
     }
     window.usergrid.console.pageSelectRoles = pageSelectRoles;
 
+    var rolesResults = null;
+    var roles_query = null;
+    var roleLetter = '*';
+    var roleSortBy = 'title';
+    function requestRoles() {
+        client.applicationId = current_application_id;
+        var query = {"ql" : "order by " + roleSortBy};
+        if (roleLetter != "*") query = {"ql" : roleSortBy + "='" + groupLetter + "*'"};
+        roles_query = client.queryRoles(displayRoles, null);
+        return false;
+    }
+
+
     function displayRoles(response) {
-        var t = "";
-        var m = "";
         roles = {};
         if (response.data) {
             roles = response.data;
-            var count = 0;
-            var roleNames = keys(roles).sort();
-            for (var i in roleNames) {
-                var name = roleNames[i];
-                var title = roles[name];
-                t += "<div class=\"role-row\" id=\"role-row-"
-                + name
-                + "\"><a href=\"#\" onclick=\"usergrid.console.pageOpenRole('"
-                + name
-                + "'); return false;\"><span class=\"role-row-title\">"
-                + title
-                + "</span> <span class=\"role-row-name\">("
-                + name + ")</span>" + "</a></div>";
-                count++;
-            }
-            if (count) {
-                $("#application-roles").html(t);
-            }
-            else {
-                $("#application-roles").html(
-                "<h2>No roles defined.</h2>");
-            }
-        } else {
-            $("#application-roles")
-            .html("<h2>No role information retrieved.</h2>");
         }
-    }
+        rolesResults = usergrid.console.ui.displayEntityListResponse({query: roles_query}, {
+            "listItemTemplate" : "usergrid.ui.panels.roles.list.html",
+            "getListItemTemplateOptions" : function(entity, path) {
+                var name = entity.name;
+                var title = entity.title;
+                var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
+                var uri = (entity.metadata || { }).uri;
+                var id = 'roleListItem';
+                return {
+                    entity : entity,                    
+                    name : name,
+                    title: title,
+                    id: id,
+                    collections : collections,
+                    uri : uri
+                };
+            },
+            "onRender" : function() {
+                //$("#users-by-alphabetical").show();
+            },
+            "onNoEntities" : function() {
+                if (userLetter != "*") return "No roles found";
+                return null;
+            },
+            "output" : "#roles-response-table",
+            "nextPrevDiv" : "#roles-next-prev",
+            "prevButton" : "#button-roles-prev",
+            "nextButton" : "#button-roles-next",
+            "noEntitiesMsg" : "No roles found"
+        }, response);
+    } 
 
-    function requestRoles() {
-        $("#application-roles").html(
-        "<h2>Loading...</h2>");
-        client.requestApplicationRoles(current_application_id, displayRoles,
-        function() {
-            $("#application-roles").html("<h2>Unable to retrieve roles list.</h2>");
-        });
-        showPanelList('roles');
-    }
-    
     var new_role_name = $("#new-role-name");
     var new_role_title = $("#new-role-title");
     var allNewRoleFields = $([]).add(new_role_name).add(new_role_title);
@@ -2071,7 +2067,7 @@ function usergrid_console_app() {
                 var roleId = $(this).attr("value");
                 client.deleteRole(current_application_id, roleId, requestRoles,
                 function() {
-                    alert("Unable to delete role: " + client.getLastErrorMessage(userId));
+                    alert("Unable to delete role: " + client.getLastErrorMessage(roleId));
                 });
             }
         });
@@ -2227,15 +2223,9 @@ function usergrid_console_app() {
     }
 
     function requestActivities() {
-        var client_id = organization_keys.client_id;
-        var client_secret = organization_keys.client_secret;
-        var test_client = new usergrid.Client({
-            applicationId : current_application_id,
-            clientId : client_id,
-            clientSecret : client_secret
-        });
+        client.applicationId = current_application_id;
         activitiesQuery = { };
-        activitiesQuery.query = test_client.queryActivities(displayActivities);
+        activitiesQuery.query = client.queryActivities(displayActivities);
         return false;
     }
 
