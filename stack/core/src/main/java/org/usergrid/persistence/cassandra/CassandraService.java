@@ -224,6 +224,14 @@ public class CassandraService {
 		return ko;
 	}
 
+  /**
+   * The Usergrid_Applications keyspace directly
+   * @return
+   */
+  public Keyspace getUsergridApplicationKeyspace() {
+    return getKeyspace(STATIC_APPLICATION_KEYSPACE, null);
+  }
+
 	public Keyspace getSystemKeyspace() {
 		return systemKeyspace;
 	}

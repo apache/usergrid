@@ -108,6 +108,7 @@ public class MessagesTest extends AbstractPersistenceTest {
 		logger.info(JsonUtils.mapToFormattedJsonString(messages));
 		assertEquals(3, messages.size());
 */
+    TimeUnit.SECONDS.sleep(2);
 		Map<String, Long> counters = qm.getQueueCounters("/");
     logger.info("dumping counters...." + counters);
 		logger.info(JsonUtils.mapToFormattedJsonString(counters));

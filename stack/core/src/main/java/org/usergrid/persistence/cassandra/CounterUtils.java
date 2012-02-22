@@ -351,7 +351,8 @@ public class CounterUtils {
 		// + " by " + value);
     if ( StringUtils.equals(counterType, "o") || StringUtils.equals(counterType, "p")) {
       HCounterColumn<String> c = createCounterColumn(name, value);
-      m.addCounter(bytebuffer(queueId), QueuesCF.COUNTERS.toString(), c);
+      ByteBuffer keybytes = bytebuffer(queueId);
+      m.addCounter(keybytes, QueuesCF.COUNTERS.toString(), c);
     }
 
 		m.addInsertion(
@@ -361,7 +362,7 @@ public class CounterUtils {
         // create and send Count
     if ( StringUtils.equals(counterType, "n") || StringUtils.equals(counterType, "p")) {
         batcher.add(new Count(QueuesCF.COUNTERS.toString(),
-                UUIDSerializer.get().toByteBuffer(queueId),
+                queueId,
                 name,
                 value));
     }
