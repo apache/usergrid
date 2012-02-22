@@ -262,14 +262,14 @@ public class CounterUtils {
 			String key, long column, long value) {
 		// logger.info("update counts set " + column + " += " + value
 		// + " where key = \"" + key + "\"");
-    if ( StringUtils.equals(counterType, "o") || StringUtils.equals(counterType, "p")) {
+    if ( "o".equals(counterType) || "p".equals(counterType)) {
       if (m != null) {
         HCounterColumn<Long> c = createCounterColumn(column, value, le);
         m.addCounter(bytebuffer(key),
                 APPLICATION_AGGREGATE_COUNTERS.toString(), c);
       }
     }
-    if ( StringUtils.equals(counterType, "n") || StringUtils.equals(counterType, "p")) {
+    if ( "n".equals(counterType) || "p".equals(counterType)) {
         // create and add Count
         batcher.add(new Count(APPLICATION_AGGREGATE_COUNTERS.toString(), key,
                 column,
@@ -307,14 +307,14 @@ public class CounterUtils {
 		// logger.info("Incrementing property " + name + " of entity " +
 		// entityId
 		// + " by " + value);
-    if ( StringUtils.equals(counterType, "o") || StringUtils.equals(counterType, "p")) {
+    if ( "o".equals(counterType) || "p".equals(counterType)) {
       HCounterColumn<String> c = createCounterColumn(name, value);
             m.addCounter(bytebuffer(entityId), ENTITY_COUNTERS.toString(), c);
     }
 		addInsertToMutator(m, ENTITY_DICTIONARIES,
 				key(entityId, DICTIONARY_COUNTERS), name, null, timestamp);
         // create and send Count
-    if ( StringUtils.equals(counterType, "n") || StringUtils.equals(counterType, "p")) {
+    if ( "n".equals(counterType) || "p".equals(counterType)) {
         batcher.add(new Count(ENTITY_COUNTERS.toString(),
                 entityId,
                 name,
@@ -349,7 +349,7 @@ public class CounterUtils {
 		// logger.info("Incrementing property " + name + " of entity " +
 		// entityId
 		// + " by " + value);
-    if ( StringUtils.equals(counterType, "o") || StringUtils.equals(counterType, "p")) {
+    if ( "o".equals(counterType) || "p".equals(counterType)) {
       HCounterColumn<String> c = createCounterColumn(name, value);
       ByteBuffer keybytes = bytebuffer(queueId);
       m.addCounter(keybytes, QueuesCF.COUNTERS.toString(), c);
@@ -360,7 +360,7 @@ public class CounterUtils {
 				QueuesCF.QUEUE_DICTIONARIES.toString(),
 				createColumn(name, ByteBuffer.allocate(0), timestamp, se, be));
         // create and send Count
-    if ( StringUtils.equals(counterType, "n") || StringUtils.equals(counterType, "p")) {
+    if ( "n".equals(counterType) || "p".equals(counterType)) {
         batcher.add(new Count(QueuesCF.COUNTERS.toString(),
                 queueId,
                 name,
