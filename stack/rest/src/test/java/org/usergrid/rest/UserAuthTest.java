@@ -30,8 +30,6 @@ public class UserAuthTest extends AbstractRestTest {
 
   @Test(expected = UniformInterfaceException.class)
   public void testPasswordChangeFail() {
-    if ( !userInited )
-      setupLocal();
     Map<String, String> payload = hashMap("password", "sesame1").map("oldpassword", "sesame");
 
     JsonNode node = resource().path("/test-app/users/ed@anuff.com/password")
@@ -44,8 +42,6 @@ public class UserAuthTest extends AbstractRestTest {
 
   @Test
   public void testPasswordChangeOk() {
-    if ( !userInited )
-      setupLocal();
     Map<String, String> payload = hashMap("newpassword", "sesame1").map("oldpassword", "sesame");
 
     JsonNode node = resource().path("/test-app/users/ed@anuff.com/password")
@@ -57,7 +53,10 @@ public class UserAuthTest extends AbstractRestTest {
 
   }
 
+  @Before
   public void setupLocal() {
+    if ( userInited )
+      return;
     JsonNode node = resource().path("/management/token")
     				.queryParam("grant_type", "password")
     				.queryParam("username", "test@usergrid.com")
