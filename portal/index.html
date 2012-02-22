@@ -332,12 +332,13 @@
                                 <h3>User Search</h3>
                                 <div class="console-section-contents">
                                     <div id="users-search-form" class="dialog-form" title="Find User">
-                                        <form>
+                                        <form class="well form-search" onsubmit="return false;">
                                             <fieldset>
                                                 <label for="search-user-username">Username</label>
-                                                <input onkeyup="usergrid.console.entitySearch(this.value, 'users', 'sugFindUserBox', 'search', 'search-user-username');" type="text" name="search-user-username" id="search-user-username" value="" class="text ui-widget-content ui-corner-all"/>
+                                                <input onkeyup="usergrid.console.entitySearch(this.value, 'users', 'sugFindUserBox', 'search', 'search-user-username');" type="text" name="search-user-username" id="search-user-username"/>
                                             </fieldset>
                                         </form>
+                                        <br/>
                                         <div class="suggestionsBox" id="sugFindUserBox"></div>
                                     </div>
                                 </div>
@@ -426,12 +427,14 @@
                                 <h3>Group Search</h3>
                                 <div class="console-section-contents">
                                     <div id="groups-search-form" class="dialog-form" title="Find Group">
-                                        <form>
+                                        <form class="well form-search" onsubmit="usergrid.console.entitySearch($('#search-group-groupname').val(), 'groups', 'sugFindGroupBox', 'search', 'search-group-groupname');return false;">
                                             <fieldset>
                                                 <label for="search-group-groupname">Group</label>
                                                 <input onkeyup="usergrid.console.entitySearch(this.value, 'groups', 'sugFindGroupBox', 'search', 'search-group-groupname');" type="text" name="search-group-groupname" id="search-group-groupname" value="" class="text ui-widget-content ui-corner-all"/>
+                                                <input type="submit" value="Search" class="btn"/>
                                             </fieldset>
                                         </form>
+                                        <br/>
                                         <div class="suggestionsBox" id="sugFindGroupBox"></div>
                                     </div>
                                 </div>
@@ -718,26 +721,26 @@
                                             <label class="control-label" for="query-source">Json Input: </label>
                                             <div class="controls">
                                                 <div class="input-append">
+                                                    <a id="button-query-shrink" class='openPanel'>&#9660;</a>
+                                                    <a id="button-query-expand" class='closePanel'>&#9654;</a>
                                                     <textarea id="query-source" class="span6 pull-left"></textarea> <span id="button-clear-query-source" class="add-on">&#215;</span>
-                                                </div>
-                                                <div class="btn-group">
-                                                    <a id="button-query-shrink" class="btn" href="#">&#9650;</a> <a id="button-query-validate" class="btn" href="#">Validate</a>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </form>
-                            </div>
-                            <div class="form-actions">
+                                <div class="form-actions">
                                 <a class="btn" id="button-query-back">&#9664; Back</a>
-                                <a class="btn btn-primary" id="button-query-get">Get</a>
+                                <a class="btn" id="button-query-get">Get</a>
                                 <a class="btn query-more-options pull-right" style="display: none" id="button-query-less-options">Less</a>
                                 <a class="btn query-less-options pull-right" id="button-query-more-options">More</a>
                                 <span class="query-more-options" style="display: none">
                                     <a class="btn" id="button-query-post">Post</a>
                                     <a class="btn" id="button-query-put">Put</a>
                                     <a class="btn" id="button-query-delete">Delete</a>
+                                    <a class="btn" id="button-query-validate" href="#">Validate Json</a>
                                 </span>
+                            </div>
                             </div>
                         </div>
                         <div id="query-response-area" class="console-section">

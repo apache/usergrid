@@ -355,6 +355,7 @@ function usergrid_console_app() {
         if (obj) {
             doQuerySend("POST", JSON.stringify(obj));
         }
+        return false;
     }
 
     function doQueryPut() {
@@ -363,69 +364,46 @@ function usergrid_console_app() {
         if (obj) {
             doQuerySend("PUT", JSON.stringify(obj));
         }
+        return false;
     }
 
     function doQueryDelete() {
         shrinkQueryInput();
         doQuerySend("DELETE", null);
+        return false;
     }
 
     function expandQueryInput() {
         $("#query-source").height(150);
+        $("#button-query-shrink").show();
+        $("#button-query-expand").hide();
+        return false;
     }
 
     function shrinkQueryInput() {
         $("#query-source").height(60);
+        $("#button-query-shrink").hide();
+        $("#button-query-expand").show();
+        return false;
     }
 
-    $("#button-query-shrink").click(function() {
-        shrinkQueryInput();
-        return false;
-    });
+    InitQueryPanel();
+    function InitQueryPanel(){
+        $("#query-source").focus(expandQueryInput);
+        $("#button-query-shrink").click(shrinkQueryInput);
+        $("#button-query-expand").click(expandQueryInput);
 
-    $("#query-source").focus(function() {
-        expandQueryInput();
-    });
+        $("#button-query-back").click(function() {doQueryBack();return false;});
 
-    $("#button-query-validate").click(function() {
-        validateQuerySource();
-        return false;
-    });
+        $("#button-query-get").click(function() {doQueryGet();return false;});
+        $("#button-query-post").click(doQueryPost);
+        $("#button-query-put").click(doQueryPut);
+        $("#button-query-delete").click(doQueryDelete);
+        $("#button-query-validate").click(function() {validateQuerySource();return false;});
 
-    $("#button-query-get").click(function() {
-        doQueryGet();
-        return false;
-    });
-
-    $("#button-query-back").click(function() {
-        doQueryBack();
-        return false;
-    });
-
-    $("#button-query-post").click(function() {
-        doQueryPost();
-        return false;
-    });
-
-    $("#button-query-put").click(function() {
-        doQueryPut();
-        return false;
-    });
-
-    $("#button-query-delete").click(function() {
-        doQueryDelete();
-        return false;
-    });
-
-    $("#button-query-prev").click(function() {
-        doQueryPrevious();
-        return false;
-    });
-
-    $("#button-query-next").click(function() {
-        doQueryNext();
-        return false;
-    });
+        $("#button-query-prev").click(function() {doQueryPrevious();return false;});
+        $("#button-query-next").click(function() {doQueryNext();return false;});
+    }
 
     function showMoreQueryOptions() {
         $(".query-more-options").show();
@@ -1074,11 +1052,13 @@ function usergrid_console_app() {
             users_query = client.queryUsers(entitySearchResults, query);
         } else if (entityType == 'groups') {
             groups_query = client.queryGroups(entitySearchResults, query);
-        } 
+        }
     }
     window.usergrid.console.entitySearch = entitySearch;
     
     function entitySearchResults(response, query) {
+        console.log(response);
+        console.log(query);
         $(gTargetDisplay).html('searching...');
         $(gTargetDisplay).show();
         if (response.entities && (response.entities.length > 0)) {
@@ -1182,6 +1162,7 @@ function usergrid_console_app() {
 
     var usersResults = null;
     function displayUsers(response) {
+        console.log(response);
         usersResults = usergrid.console.ui.displayEntityListResponse({query: users_query}, {
             "listItemTemplate" : "usergrid.ui.panels.user.list.html",
             "getListItemTemplateOptions" : function(entity, path) {
