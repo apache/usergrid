@@ -33,6 +33,7 @@ import org.usergrid.mq.Message;
 import org.usergrid.mq.cassandra.QueuesCF;
 import org.usergrid.persistence.CounterResolution;
 import org.usergrid.persistence.entities.Event;
+import org.usergrid.utils.ConversionUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -271,7 +272,7 @@ public class CounterUtils {
     if ( StringUtils.equals(counterType, "n") || StringUtils.equals(counterType, "p")) {
         // create and add Count
         batcher.add(new Count(APPLICATION_AGGREGATE_COUNTERS.toString(), key,
-                se.fromByteBuffer(le.toByteBuffer(column)), // eww. TODO
+                column,
                 value));
     }
 	}
@@ -315,7 +316,7 @@ public class CounterUtils {
         // create and send Count
     if ( StringUtils.equals(counterType, "n") || StringUtils.equals(counterType, "p")) {
         batcher.add(new Count(ENTITY_COUNTERS.toString(),
-                entityId.toString(),
+                entityId,
                 name,
                 value));
     }
@@ -360,7 +361,7 @@ public class CounterUtils {
         // create and send Count
     if ( StringUtils.equals(counterType, "n") || StringUtils.equals(counterType, "p")) {
         batcher.add(new Count(QueuesCF.COUNTERS.toString(),
-                queueId.toString(),
+                UUIDSerializer.get().toByteBuffer(queueId),
                 name,
                 value));
     }

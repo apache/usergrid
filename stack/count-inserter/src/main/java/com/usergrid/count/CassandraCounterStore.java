@@ -2,22 +2,25 @@ package com.usergrid.count;
 
 import com.usergrid.count.common.Count;
 import me.prettyprint.cassandra.model.HCounterColumnImpl;
+import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HCounterColumn;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Encapsulate counter writes to Cassandra
  * @author zznate
  */
 public class CassandraCounterStore implements CounterStore {
+    private Logger log = LoggerFactory.getLogger(CassandraCounterStore.class);
 
     private final Keyspace keyspace;
 
@@ -30,11 +33,12 @@ public class CassandraCounterStore implements CounterStore {
     }
 
     public void save(Collection<Count> counts) {
-        Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
+        Mutator<ByteBuffer> mutator = HFactory.createMutator(keyspace, ByteBufferSerializer.get());
         for ( Count count : counts ) {
-            HCounterColumn<String> column =
-                    new HCounterColumnImpl<String>(count.getColumnName(), count.getValue(), StringSerializer.get());
-            mutator.addCounter(count.getKeyName(), count.getTableName(), column);
+            HCounterColumn column =
+                    new HCounterColumnImpl(count.getColumnName(), count.getValue(), count.getColumnNameSerializer());
+            mutator.addCounter(count.getKeyNameBytes(), count.getTableName(), column);
+          log.info("added counter: {} ", column);
         }
         mutator.execute();
     }
