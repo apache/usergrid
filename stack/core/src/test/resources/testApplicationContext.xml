@@ -106,13 +106,24 @@
     <bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
         <constructor-arg value="3"/>
         <property name="batchSubmitter" ref="batchSubmitter"/>
+        <property name="batchSize" value="1"/>
     </bean>
 
-    <bean id="batchSubmitter" class="com.usergrid.count.Slf4JBatchSubmitter">
+    <bean id="batchSubmitter" class="com.usergrid.count.CassandraSubmitter">
+        <constructor-arg ref="cassandraCounterStore"/>
+    </bean>
+
+    <bean id="cassandraCounterStore" class="com.usergrid.count.CassandraCounterStore">
+        <constructor-arg>
+            <bean id="keyspace"
+                  factory-bean="cassandraService"
+                  factory-method="getUsergridApplicationKeyspace"/>
+        </constructor-arg>
     </bean>
 
     <bean id="counterUtils" class="org.usergrid.persistence.cassandra.CounterUtils">
         <property name="batcher" ref="simpleBatcher"/>
+        <property name="counterType" value="o"/>
     </bean>
 
 

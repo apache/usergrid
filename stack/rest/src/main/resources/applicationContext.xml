@@ -124,11 +124,21 @@
         <property name="batchSubmitter" ref="batchSubmitter"/>
     </bean>
 
-    <bean id="batchSubmitter" class="com.usergrid.count.Slf4JBatchSubmitter">
+    <bean id="batchSubmitter" class="com.usergrid.count.CassandraSubmitter">
+        <constructor-arg ref="cassandraCounterStore"/>
+    </bean>
+
+    <bean id="cassandraCounterStore" class="com.usergrid.count.CassandraCounterStore">
+        <constructor-arg>
+            <bean id="keyspace"
+                  factory-bean="cassandraService"
+                  factory-method="getSystemKeyspace"/>
+        </constructor-arg>
     </bean>
 
     <bean id="counterUtils" class="org.usergrid.persistence.cassandra.CounterUtils">
         <property name="batcher" ref="simpleBatcher"/>
+        <property name="counterType" value="o"/> <!-- use new couter architecture. p: parallel, o: old -->
     </bean>
 
 	<bean id="serviceManagerFactory" class="org.usergrid.services.ServiceManagerFactory">
