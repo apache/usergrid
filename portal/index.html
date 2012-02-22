@@ -332,10 +332,10 @@
                                 <h3>User Search</h3>
                                 <div class="console-section-contents">
                                     <div id="users-search-form" class="dialog-form" title="Find User">
-                                        <form>
+                                        <form class="well form-search" onsubmit="return false;">
                                             <fieldset>
                                                 <label for="search-user-username">Username</label>
-                                                <input onkeyup="usergrid.console.entitySearch(this.value, 'users', 'sugFindUserBox', 'search', 'search-user-username');" type="text" name="search-user-username" id="search-user-username" value="" class="text ui-widget-content ui-corner-all"/>
+                                                <input onkeyup="usergrid.console.entitySearch(this.value, 'users', 'sugFindUserBox', 'search', 'search-user-username');" type="text" name="search-user-username" id="search-user-username"/>
                                             </fieldset>
                                         </form>
                                         <div class="suggestionsBox" id="sugFindUserBox"></div>
@@ -426,7 +426,7 @@
                                 <h3>Group Search</h3>
                                 <div class="console-section-contents">
                                     <div id="groups-search-form" class="dialog-form" title="Find Group">
-                                        <form>
+                                        <form class="well form-search" onsubmit="return false;">
                                             <fieldset>
                                                 <label for="search-group-groupname">Group</label>
                                                 <input onkeyup="usergrid.console.entitySearch(this.value, 'groups', 'sugFindGroupBox', 'search', 'search-group-groupname');" type="text" name="search-group-groupname" id="search-group-groupname" value="" class="text ui-widget-content ui-corner-all"/>
