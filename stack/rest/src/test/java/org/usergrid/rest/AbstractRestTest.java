@@ -2,7 +2,9 @@ package org.usergrid.rest;
 
 import static org.junit.Assert.assertNull;
 import me.prettyprint.hector.testutils.EmbeddedServerHelper;
+import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
+import org.codehaus.jackson.JsonNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
@@ -91,5 +93,9 @@ public abstract class AbstractRestTest extends JerseyTest {
 		EmbeddedServerHelper.teardown();
 		embedded = null;
 	}
+
+  public static void logNode(JsonNode node) {
+  		logger.info(mapToFormattedJsonString(node));
+  }
 
 }

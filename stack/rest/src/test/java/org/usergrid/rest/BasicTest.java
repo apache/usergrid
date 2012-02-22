@@ -3,7 +3,6 @@ package org.usergrid.rest;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.Map;
@@ -36,10 +35,6 @@ public class BasicTest extends AbstractRestTest {
 		assertTrue(isNotBlank(json));
 
 		log.info(json);
-	}
-
-	public static void logNode(JsonNode node) {
-		log.info(mapToFormattedJsonString(node));
 	}
 
 	@Test

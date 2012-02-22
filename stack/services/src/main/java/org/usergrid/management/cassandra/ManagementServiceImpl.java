@@ -178,9 +178,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 	/**
 	 * Must be constructed with a CassandraClientPool.
-	 * 
-	 * @param cassandraClientPool
-	 *            the cassandra client pool
+	 *
 	 */
 	public ManagementServiceImpl() {
 	}
@@ -2025,9 +2023,12 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public void setAppUserPassword(UUID applicationId, UUID userId,
 			String oldPassword, String newPassword) throws Exception {
-		if ((userId == null) || (oldPassword == null) || (newPassword == null)) {
-			return;
+		if ((userId == null) ) {
+			throw new IllegalArgumentException("userId is required");
 		}
+    if ( (oldPassword == null) || (newPassword == null)) {
+      throw new IllegalArgumentException("oldpassword and newpassword are both required");
+    }
 
 		EntityManager em = emf.getEntityManager(applicationId);
 		Entity user = em.get(userId);

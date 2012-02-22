@@ -114,10 +114,13 @@ public class UserResource extends ServiceResource {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user password");
-
+    String oldPassword = string(json.get("oldpassword"));
+    String newPassword = string(json.get("newpassword"));
+    if ( StringUtils.isBlank(oldPassword) || StringUtils.isBlank(newPassword) ) {
+      throw new IllegalArgumentException("oldpassword and newpassword are both required");
+    }
 		if (getUser() != null) {
-			String oldPassword = string(json.get("oldpassword"));
-			String newPassword = string(json.get("newpassword"));
+
 			if (isApplicationAdmin(Identifier.fromUUID(getApplicationId()))) {
 				management
 						.setAdminUserPassword(getApplicationId(), newPassword);
