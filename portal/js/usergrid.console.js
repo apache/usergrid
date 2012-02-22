@@ -1512,6 +1512,7 @@ function usergrid_console_app() {
         pageSelect(uuid);
         requestGroups();
         selectFirstTabButton('#groups-panel-tab-bar');
+        showPanelList('groups');
     }
     window.usergrid.console.pageSelectGroups = pageSelectGroups;
 
@@ -1982,9 +1983,9 @@ function usergrid_console_app() {
 
     function pageSelectRoles(uuid) {
         pageSelect(uuid);
-        //showPanel("#roles-panel");
-        //Pages.SelectPanel('roles');
         requestRoles();
+        selectFirstTabButton('#roles-panel-tab-bar');
+        showPanelList('roles');
     }
     window.usergrid.console.pageSelectRoles = pageSelectRoles;
 
@@ -2029,6 +2030,7 @@ function usergrid_console_app() {
         function() {
             $("#application-roles").html("<h2>Unable to retrieve roles list.</h2>");
         });
+        showPanelList('roles');
     }
     
     var new_role_name = $("#new-role-name");
@@ -2100,11 +2102,10 @@ function usergrid_console_app() {
 
     function pageOpenRole(roleName) {
         current_role_name = roleName;
-        showPanel("#role-panel");
-        $('#application-panel-buttons .ui-selected').removeClass('ui-selected');
-        $('#application-panel-button-roles').addClass('ui-selected');
-        showPanelSearch('roles');
         requestRole();
+        showPanel("#role-panel");
+        showPanelSearch('role');
+        selectTabButton('#button-role-search');
     }
     window.usergrid.console.pageOpenRole = pageOpenRole;
 
