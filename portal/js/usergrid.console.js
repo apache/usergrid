@@ -1987,8 +1987,11 @@ function usergrid_console_app() {
         current_role_name = roleName;
         requestRole();
         showPanel("#role-panel");
-        showPanelSearch('role');
+        $('#role-panel-list').hide();
+        //show the search tab
         selectTabButton('#button-role-search');
+        //populate the panel content
+        $('#role-panel-search').show();
     }
     window.usergrid.console.pageOpenRole = pageOpenRole;
 
@@ -3017,15 +3020,28 @@ function usergrid_console_app() {
             requestGroups();
             Pages.SelectPanel('groups');
             showPanelList('groups');
-        }
-        else {
+        } else {
             showPanelContent("#group-panel", "#group-panel-" + $(this).attr("id").substring(13));
         }
         return false;
     });
 
-    $("#button-roles-list").click(function() {
-        showPanelList('roles');
+    $("#roles-panel-tab-bar a").click(function() {
+        if ($(this).attr("id") == "button-roles-list") {
+            Pages.SelectPanel('roles');
+            pageSelectRoles();
+            showPanelList('roles');
+        }
+        else if ($(this).attr("id") == "button-roles-search") {
+            //show the search tab
+            selectTabButton('#button-roles-search');
+            //populate the panel content
+            $('#roles-panel-list').hide();
+            $('#roles-panel-search').show();
+        } else {
+            pageSelectRole();
+            Pages.SelectPanel('roles');
+        }
         return false;
     });
 
@@ -3035,7 +3051,13 @@ function usergrid_console_app() {
             pageSelectRoles();
             showPanelList('roles');
         }
-        else {
+        else if ($(this).attr("id") == "button-role-search") {
+            //show the search tab
+            selectTabButton('#button-roles-search');
+            //populate the panel content
+            $('#roles-panel-list').hide();
+            $('#roles-panel-search').show();
+        } else {
             pageSelectRole();
             Pages.SelectPanel('roles');
         }
