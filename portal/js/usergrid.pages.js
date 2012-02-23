@@ -85,6 +85,8 @@ var Pages = function(){
 
 		if(page.name=='forgot-password')
 			$("#forgot-password-page iframe").attr("src", client.resetPasswordUrl);
+        else if(page.name=='console-frame')
+      		$("#console-frame-page iframe").attr("src", "consoleFrame.html");
 		else{
 			if(window.location.pathname.indexOf('app') > 0){
 				$.ajaxSetup ({cache: false});
