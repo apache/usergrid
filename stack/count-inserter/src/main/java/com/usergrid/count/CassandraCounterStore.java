@@ -6,6 +6,7 @@ import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HCounterColumn;
+import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import org.slf4j.Logger;
@@ -40,6 +41,10 @@ public class CassandraCounterStore implements CounterStore {
             mutator.addCounter(count.getKeyNameBytes(), count.getTableName(), column);
           log.info("added counter: {} ", column);
         }
-        mutator.execute();
+        try {
+          mutator.execute();
+        } catch (HectorException he) {
+          log.error("Insert failed. Reason: ", he);
+        }
     }
 }

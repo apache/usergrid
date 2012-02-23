@@ -132,13 +132,13 @@
         <constructor-arg>
             <bean id="keyspace"
                   factory-bean="cassandraService"
-                  factory-method="getSystemKeyspace"/>
+                  factory-method="getUsergridApplicationKeyspace"/>
         </constructor-arg>
     </bean>
 
     <bean id="counterUtils" class="org.usergrid.persistence.cassandra.CounterUtils">
         <property name="batcher" ref="simpleBatcher"/>
-        <property name="counterType" value="o"/> <!-- use new couter architecture. p: parallel, o: old -->
+        <property name="counterType" value="n"/> <!-- use new couter architecture. p: parallel, o: old -->
     </bean>
 
 	<bean id="serviceManagerFactory" class="org.usergrid.services.ServiceManagerFactory">
