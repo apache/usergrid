@@ -129,22 +129,19 @@ public class MeteringFilter implements ContainerRequestFilter,
 						.getAttribute("application.request.timetamp");
 				if ((timestamp != null) && (timestamp > 0)) {
 					long time = System.currentTimeMillis() - timestamp;
-					logger.info("Application: " + applicationId + ", spent "
-							+ time + " milliseconds of CPU time");
+					logger.info("Application: {}, spent {} milliseconds of CPU time", applicationId, time);
 					counters.put("application.request.time", time);
 				}
 
 				Long read = (Long) httpServletRequest
 						.getAttribute("application.request.upload");
 				if ((read != null) && (read > 0)) {
-					logger.info("Application: " + applicationId + ", received "
-							+ written + " bytes");
+					logger.info("Application: {}, received {} bytes", applicationId, written);
 					counters.put("application.request.upload", read);
 				}
 
 				if (written > 0) {
-					logger.info("Application: " + applicationId + ", sending "
-							+ written + " bytes");
+					logger.info("Application: {}, sending {} bytes", applicationId, written);
 					counters.put("application.request.download", written);
 				}
 
