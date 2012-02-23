@@ -851,7 +851,7 @@ public class ManagementServiceImpl implements ManagementService {
 					Identifier.fromUUID(UUID.fromString(identifier)));
 			if (entity != null) {
 				user = (User) entity.toTypedEntity();
-				logger.info("Found user " + identifier + " as a UUID");
+				logger.info("Found user {} as a UUID",identifier);
 			}
 		} catch (Exception e) {
 			logger.error("Unable to get user " + identifier
@@ -866,7 +866,7 @@ public class ManagementServiceImpl implements ManagementService {
 					Identifier.fromName(identifier));
 			if (entity != null) {
 				user = (User) entity.toTypedEntity();
-				logger.info("Found user " + identifier + " as a username");
+				logger.info("Found user {} as a username",identifier);
 			}
 		} catch (Exception e) {
 			logger.error("Unable to get user " + identifier
@@ -881,7 +881,7 @@ public class ManagementServiceImpl implements ManagementService {
 					Identifier.fromEmail(identifier));
 			if (entity != null) {
 				user = (User) entity.toTypedEntity();
-				logger.info("Found user " + identifier + " as an email address");
+				logger.info("Found user {} as an email address",identifier);
 			}
 		} catch (Exception e) {
 			logger.error("Unable to get user " + identifier
@@ -1045,7 +1045,7 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 
 		if ((expectedType != null) && !principal.getType().equals(expectedType)) {
-			logger.info("Token is not of expected type " + token);
+			logger.info("Token is not of expected type {}", token);
 			throw new BadAccessTokenException("Token is not of expected type "
 					+ token);
 		}
@@ -1064,7 +1064,7 @@ public class ManagementServiceImpl implements ManagementService {
 		long current_time = System.currentTimeMillis();
 		long age = current_time - timestamp;
 		if ((maxAge > 0) && (age > maxAge)) {
-			logger.info("Token expired " + (age / 1000 / 60) + " minutes ago");
+      logger.info("Token expired {} minutes ago", (age / 1000 / 60) );
 			throw new ExpiredAccessTokenException("Token expired "
 					+ (age / 1000 / 60) + " minutes ago");
 		}

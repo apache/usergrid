@@ -89,7 +89,7 @@ public class ServiceResults extends Results {
 		}
 		this.serviceMetadata = serviceMetadata;
 		this.nextRequests = nextRequests;
-		logger.info("Child path: " + childPath);
+		logger.info("Child path: {}",childPath);
 	}
 
 	public ServiceResults(Service service, ServiceContext context,
@@ -108,7 +108,7 @@ public class ServiceResults extends Results {
 		}
 		this.serviceMetadata = serviceMetadata;
 		this.nextRequests = nextRequests;
-		logger.info("Child path: " + childPath);
+		logger.info("Child path: {}",childPath);
 	}
 
 	public static ServiceResults genericServiceResults() {

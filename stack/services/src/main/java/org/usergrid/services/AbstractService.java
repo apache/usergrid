@@ -370,8 +370,7 @@ public abstract class AbstractService implements Service {
 			for (Entity entity : entities) {
 				Entity imported = importEntity(request, entity);
 				if (imported != entity) {
-					logger.info("Import returned new entity instace for "
-							+ entity.getUuid() + ", replacing in results set");
+					logger.info("Import returned new entity instace for {} replacing in results set", entity.getUuid());
 					results.replace(imported);
 				}
 			}

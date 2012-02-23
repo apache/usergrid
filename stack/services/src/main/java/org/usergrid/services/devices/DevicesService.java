@@ -86,13 +86,13 @@ public class DevicesService extends AbstractCollectionService {
 	@Override
 	public ServiceResults putItemById(ServiceContext context, UUID id)
 			throws Exception {
-		logger.info("Registering device " + id);
+		logger.info("Registering device {}", id);
 		if (deviceInCache(id)) {
-			logger.info("Device " + id + " in cache, skipping...");
+			logger.info("Device {} in cache, skipping...", id);
 			return new ServiceResults(this, context, Type.COLLECTION,
 					Results.fromEntity(new Device(id)), null, null);
 		} else {
-			logger.info("Device " + id + " not in cache, storing...");
+			logger.info("Device {} not in cache, storing...", id);
 			return super.putItemById(context, id);
 		}
 	}
@@ -100,7 +100,7 @@ public class DevicesService extends AbstractCollectionService {
 	@Override
 	public ServiceResults postItemById(ServiceContext context, UUID id)
 			throws Exception {
-		logger.info("Attempting to connect an entity to device " + id);
+		logger.info("Attempting to connect an entity to device {}", id);
 		return super.postItemById(context, id);
 	}
 

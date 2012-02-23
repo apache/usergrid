@@ -120,16 +120,15 @@ public class AbstractPathBasedColllectionService extends
 					}
 				}
 				if (!isEmpty(aliases)) {
-					logger.info("Found " + aliases.size() + " potential paths");
+					logger.info("Found {} potential paths", aliases.size());
 					Map<String, EntityRef> aliasedEntities = em.getAlias(
 							getEntityType(), aliases);
 					for (int i = aliases.size() - 1; i >= 0; i--) {
 						alias = aliases.get(i);
 						pathEntity = aliasedEntities.get(alias);
 						if (pathEntity != null) {
-							logger.info("Found entity " + pathEntity.getUuid()
-									+ " of type " + pathEntity.getType()
-									+ " for alias " + alias);
+							logger.info("Found entity {} of type {} for alias {}",
+                      new Object[]{pathEntity.getUuid(), pathEntity.getType(), alias});
 							parameters = parameters.subList(i + 1,
 									parameters.size());
 							first_parameter = new IdParameter(
