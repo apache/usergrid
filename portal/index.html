@@ -37,6 +37,7 @@
     <script src="bootstrap/js/bootstrap-dropdown.js" type="text/javascript"></script>
     <script src="bootstrap/js/bootstrap-button.js" type="text/javascript"></script>
     <script src="bootstrap/js/bootstrap-typeahead.js" type="text/javascript"></script>
+    <script src="bootstrap/js/bootstrap-modal.js" type="text/javascript"></script>
     <script src="js/usergrid.pages.js" type="text/javascript"></script>
     <script src="js/app.js" type="text/javascript"></script>
     <script src="js/usergrid.status.js" type="text/javascript"></script>
@@ -214,7 +215,7 @@
                             <h3>
                                 Applications
                                 <div class="bar">
-                                    <a class="" href="#" onclick="usergrid.console.newApplication(); return false;"><i class="icon-plus"></i> New Application</a>
+                                    <a class="" data-toggle="modal" href="#dialog-form-new-application"><i class="icon-plus"></i> New Application</a>
                                 </div>
                             </h3>
                             <div id="organization-applications" class="console-section-contents">
@@ -254,15 +255,29 @@
                                 <span class="alert">No activities.</span>
                             </div>
                         </div>
-                        <div id="dialog-form-new-application" class="dialog-form" title="Create new application">
-                            <p class="validateTips">All form fields are required.</p>
-                            <form>
+                        <form id="dialog-form-new-application" class="modal hide fade form-horizontal" action="#">
+                            <div class="modal-header">
+                                <a class="close" data-dismiss="modal">x</a>
+                                <h4>Create new application</h4>
+                            </div>
+                            <div class="modal-body">
+                                <p class="validateTips">All form fields are required.</p>
                                 <fieldset>
-                                    <label for="new-application-name">Name</label>
-                                    <input type="text" name="new-application-name" id="new-application-name" value="" class="text ui-widget-content ui-corner-all"/>
+                                    <div class="control-group">
+                                        <label for="new-application-name">Name</label>
+                                        <div class="controls">
+                                            <input type="text" name="name" id="new-application-name" value="" class="input-xlarge"/>
+                                            <p class="help-block">Length of name must be between 4 and 80</p>
+                                        </div>
+                                    </div>
                                 </fieldset>
-                            </form>
-                        </div>
+                            </div>
+                            <div class="modal-footer">
+                                <input type="submit" class="btn" value="Create"/>
+                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                            </div>
+                        </form>
+
                         <div id="dialog-form-new-admin" class="dialog-form" title="Create new administrator">
                             <p class="validateTips">All form fields are required.</p>
                             <p class="validateTips">If admin already has account, password fields are ignored.</p>

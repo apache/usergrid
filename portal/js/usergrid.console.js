@@ -612,13 +612,6 @@ function usergrid_console_app() {
             pageSelect(client.currentOrganization.applications[firstApp]);
     }
 
-    function createApplication(name) {
-        client.createApplication(name, requestApplications,
-        function() {
-            alert("Unable to create application: " + client.getLastErrorMessage(name));
-        });
-    }
-
     function displayAdmins(response) {
         var t = "";
         admins = {};
@@ -814,45 +807,73 @@ function usergrid_console_app() {
     }
     window.usergrid.console.newAdministrator = newAdministrator;
 
-    var new_application_name = $("#new-application-name");
-    var allNewApplicationFields = $([]).add(new_application_name);
-
-    $("#dialog-form-new-application").dialog({
-        autoOpen: false,
-        height: 275,
-        width: 350,
-        modal: true,
-        buttons: {
-            "Create": function() {
-                var bValid = true;
-                allNewApplicationFields.removeClass("ui-state-error");
-
-                bValid = bValid
-                && checkLength(new_application_name, "name", 4, 80);
-
-                bValid = bValid
-                && checkRegexp(new_application_name,
-                nameRegex,
-                "Application name only allows : a-z, 0-9, dot, and dash");
-
-                if (bValid) {
-                    createApplication(new_application_name.val());
-                    $(this).dialog("close");
-                }
-            },
-            Cancel: function() {
-                $(this).dialog("close");
-            }
-        },
-        close: function() {
-            allNewApplicationFields.val("").removeClass("ui-state-error");
-        }
-    });
-
-    function newApplication() {
-        $("#dialog-form-new-application").dialog("open");
+    function resetModal(){
+        this.reset();
+        $(this).find(".ui-state-error").removeClass("ui-state-error");
+        $(this).find(".error").removeClass("error");
     }
-    window.usergrid.console.newApplication = newApplication;
+    function focusModal(){
+        $(this).find('input:first').focus();
+    }
+    function submitModal(e){
+        e.preventDefault();
+    }
+    $('form.modal').on('hidden',resetModal).on('shown',focusModal).submit(submitModal);
+    $('#dialog-form-new-application').submit(submitApplication);
+
+    function checkLength2(input, min, max) {
+        if (input.val().length > max || input.val().length < min) {
+            var tip = "Length must be between " + min + " and " + max + ".";
+            input.focus();
+            input.parent().parent().addClass("error");
+            input.parent().parent().find(".help-block").val(tip);
+            return false;
+        }
+        return true;
+    }
+    function checkRegexp2(input, regexp, tip) {
+        if (! (regexp.test(input.val()))) {
+            input.focus();
+            input.parent().parent().addClass("error");
+            input.parent().parent().find(".help-block").text(tip);
+            return false;
+        }
+        return true;
+    }
+    $.fn.serializeObject = function()
+    {
+       var o = {};
+       var a = this.serializeArray();
+       $.each(a, function() {
+           if (o[this.name]) {
+               if (!o[this.name].push) {
+                   o[this.name] = [o[this.name]];
+               }
+               o[this.name].push(this.value || '');
+           } else {
+               o[this.name] = this.value || '';
+           }
+       });
+       return o;
+    };
+
+    function submitApplication() {
+        $(this).find(".error").removeClass("error");
+
+        var new_application_name = $("#new-application-name");
+
+        if(!checkLength2(new_application_name, 4, 80))
+            return false;
+
+        if(!checkRegexp2(new_application_name, nameRegex, "only allows : a-z, 0-9, dot, and dash"))
+            return false;
+
+        client.createApplication2($(this).serializeObject(), requestApplications, function() {
+            alert("Unable to create application: " + client.getLastErrorMessage(name));
+        });
+
+        $(this).modal('hide');
+    }
 
     function pageSelect(uuid) {
         if (uuid) {

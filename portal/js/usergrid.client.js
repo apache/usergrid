@@ -530,7 +530,7 @@ usergrid.Client = function(options) {
      *     message : "An error message",
      *     detail : "An detailed error description",
      *     exception : "A Java exception"
-     *   }
+     *   }JSON.stringify(
      * }
      * </pre>
      */
@@ -541,16 +541,13 @@ usergrid.Client = function(options) {
     //
     // POST: /management/organizations/<organization-name>/applications
     //
-    function createApplication(name, success, failure) {
+    function createApplication(data, success, failure) {
         if (!self.currentOrganization) {
             failure();
         }
-        apiRequest("POST", "/management/organizations/" + self.currentOrganization.uuid + "/applications", null, JSON.stringify({
-            name: name
-        }), success, failure);
+        apiRequest("POST", "/management/organizations/" + self.currentOrganization.uuid + "/applications", null, JSON.stringify(data), success, failure);
     }
     this.createApplication = createApplication;
-
     //
     // Get admin users for organization
     //
