@@ -868,7 +868,7 @@ function usergrid_console_app() {
         if(!checkRegexp2(new_application_name, nameRegex, "only allows : a-z, 0-9, dot, and dash"))
             return false;
 
-        client.createApplication2($(this).serializeObject(), requestApplications, function() {
+        client.createApplication($(this).serializeObject(), requestApplications, function() {
             alert("Unable to create application: " + client.getLastErrorMessage(name));
         });
 
