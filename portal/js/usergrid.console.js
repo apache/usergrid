@@ -1044,125 +1044,7 @@ function usergrid_console_app() {
             $("#application-data-downloaded").html("");
         });
     }
-
-    /*******************************************************************
-     * 
-     * general entity search
-     * 
-     ******************************************************************/
-    var gEntityType = ''; //entityType can be user or group - will add as needed
-    var gSearchType = ''; //searchType is search or autosearch
-    var gTargetDisplay = '';
-    var gOriginalSearchField = '';
-    function entitySearch(searchString, entityType, targetDisplay, searchType, originalSearchField) {
-        gEntityType = entityType;
-        gSearchType = searchType;
-        gTargetDisplay = '#' + targetDisplay;
-        gOriginalSearchField = '#' + originalSearchField;
-
-        var sortBy =userSortBy; //default to users
-        if (entityType == 'groups') {
-            sortBy = groupSortBy;
-        }
-        
-        var query = {"ql" : "order by " + sortBy};
-        if (searchString != "*") query = {"ql" : sortBy + "='" + searchString + "*'"};
-        
-        client.applicationId = current_application_id;
-        if (entityType == 'users') {
-            users_query = client.queryUsers(entitySearchResults, query);
-        } else if (entityType == 'groups') {
-            groups_query = client.queryGroups(entitySearchResults, query);
-        }
-    }
-    window.usergrid.console.entitySearch = entitySearch;
-    
-    function entitySearchResults(response, query) {
-        console.log(response);
-        console.log(query);
-        $(gTargetDisplay).html('searching...');
-        $(gTargetDisplay).show();
-        if (response.entities && (response.entities.length > 0)) {
-            var response_html = '';
-            var i=0;
-            var e=response.entities.length;
-            for (i=0;i<e;i++)
-            {
-                var entity = response.entities[i];
-                if (gEntityType == 'users') {
-                    username = entity.username;
-                    name = entity.name;
-                    uuid = entity.uuid;
-                    if (gSearchType == 'search') {
-                        response_html = response_html +
-                        '<a onclick="usergrid.console.showSearchResults(\'' + gOriginalSearchField + '\', \''+gEntityType+'\', \''+uuid+'\'); return false;" href="#">'+username+' ('+name+')</a><br/>';
-                    } else if (gSearchType == 'autofill') {
-                        response_html = response_html +
-                         '<a href="#" onclick="usergrid.console.fillSearchField(\''+gOriginalSearchField+'\', \''+username+'\');">'+username+'</a><br/>';
-                    }
-                } else if (gEntityType == 'groups') {
-                    path = entity.path;
-                    title = entity.title;
-                    uuid = entity.uuid;
-                    if (gSearchType == 'search') {
-                        response_html = response_html +
-                        '<a onclick="usergrid.console.showSearchResults(\'' + gOriginalSearchField + '\', \''+gEntityType+'\', \''+uuid+'\'); return false;" href="#">'+path+'</a><br/>';
-                    } else if (gSearchType == 'autoFill') {
-                        response_html = response_html +
-                        '<a href="#" onclick="usergrid.console.fillSearchField(\''+gOriginalSearchField+'\', \''+path+'\');">'+title+'</a><br/>';
-                    }
-                }
-            }
-            $(gTargetDisplay).html(response_html);
-        } else {
-            $(gTargetDisplay).html('no entries found...');
-        }
-    }
-    
-    function clearSearchResults() {
-        $(gOriginalSearchField).val('');
-        $(gTargetDisplay).html('');
-        $(gTargetDisplay).hide();
-        gOriginalSearchField = '';
-        gTargetDisplay = '';
-        gEntityType = '';
-        gSearchType = '';
-    }
-    function showSearchResults(searchField, searchType, searchString) {
-        clearSearchResults();
-        if (searchType == 'users') {
-            pageOpenUserProfile(searchString);
-        } else if (searchType == 'groups') {
-            pageOpenGroupProfile(searchString);
-        }
-        
-    }
-    window.usergrid.console.showSearchResults = showSearchResults;
-    
-    function fillSearchField(searchField, value) {
-        $(gOriginalSearchField).val(value);
-        $(gTargetDisplay).html('');
-        $(gTargetDisplay).hide();
-    }
-    window.usergrid.console.fillSearchField = fillSearchField;
-    
-    function findGroupDialog2(formToShow){
-        $('#'+formToShow).show();
-    }
-    window.usergrid.console.findGroupDialog2 = findGroupDialog2;
-    
-    function addUserToGroup3(userId) {
-        
-        groupId = $(gOriginalSearchField).val();
-        addUserToGroup(userId, groupId);
-        /*
-        client.addUserToGroup(current_application_id, groupId, userId, function() { requestUser(userId); },
-        function() {
-            alert("Unable to add user to group: " + client.getLastErrorMessage('An internal error occured.'));
-        });*/
-    }
-    window.usergrid.console.addUserToGroup3 = addUserToGroup3;
-    
+   
     /*******************************************************************
      * 
      * Users
@@ -1176,6 +1058,7 @@ function usergrid_console_app() {
         requestUsers();
         selectFirstTabButton('#users-panel-tab-bar');
         showPanelList('users');
+        $('#search-user-username').val(''); //reset the search box
     }
     window.usergrid.console.pageSelectUsers = pageSelectUsers;
 
@@ -1242,13 +1125,20 @@ function usergrid_console_app() {
     usergrid.console.showUsersForSearch = showUsersForSearch;
     
     var users_query = null;
-    function requestUsers() {
+    function requestUsers(search) {
         var query = {"ql" : "order by " + userSortBy};
-        if (userLetter != "*") query = {"ql" : userSortBy + "='" + userLetter + "*'"};
+        if (typeof search == 'string') {
+            if (search.length > 0) {
+                query = {"ql" : userSortBy + "='" + search + "*'"};
+            }
+        } else if (userLetter != "*") {
+            query = {"ql" : userSortBy + "='" + userLetter + "*'"};
+        }
         client.applicationId = current_application_id;
         users_query = client.queryUsers(displayUsers, query);
         return false;
     }
+    usergrid.console.requestUsers = requestUsers;
 
     var new_user_username = $("#new-user-username");
     var new_user_fullname = $("#new-user-fullname");
@@ -1501,6 +1391,7 @@ function usergrid_console_app() {
         requestGroups();
         selectFirstTabButton('#groups-panel-tab-bar');
         showPanelList('groups');
+        $('#search-user-groupname').val(''); //reset the search box
     }
     window.usergrid.console.pageSelectGroups = pageSelectGroups;
 
@@ -1564,15 +1455,22 @@ function usergrid_console_app() {
         requestGroups();
     }    
     usergrid.console.showUsersForSearch = showUsersForSearch;
-    
+
     var groups_query = null;
-    function requestGroups() {
-        client.applicationId = current_application_id;
+    function requestGroups(search) {
         var query = {"ql" : "order by " + groupSortBy};
-        if (groupLetter != "*") query = {"ql" : groupSortBy + "='" + groupLetter + "*'"};
+        if (typeof search == 'string') {
+            if (search.length > 0) {
+                query = {"ql" : groupSortBy + "='" + search + "*'"};
+            }
+        } else if (groupLetter != "*") {
+            query = {"ql" : groupSortBy + "='" + groupLetter + "*'"};
+        }
+        client.applicationId = current_application_id;
         groups_query = client.queryGroups(displayGroups, query);
         return false;
     }
+    usergrid.console.requestGroups = requestGroups;
 
     var new_group_title = $("#new-group-title");
     var new_group_path = $("#new-group-path");
@@ -1615,7 +1513,8 @@ function usergrid_console_app() {
         });
     }
 
-    function deleteGroups() {        
+    function deleteGroups() {
+        $('#search-user-groupname').val('');
         $("input[id^=groupListItem]").each( function() {
             if ($(this).prop("checked")) {  
                 var groupId = $(this).attr("value");
@@ -1624,7 +1523,7 @@ function usergrid_console_app() {
                     alert("Unable to delete group: " + client.getLastErrorMessage(groupId));
                 });
             }
-        });
+        });        
     }
     window.usergrid.console.deleteGroups = deleteGroups;
     
@@ -2558,54 +2457,68 @@ function usergrid_console_app() {
      * 
      ******************************************************************/
 
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.collections.list.html");
+
     function pageSelectCollections(uuid) {
         pageSelect(uuid);
-        //showPanel("#collections-panel");
-	    //Pages.SelectPanel('collections');
+        requestCollections();
+        //selectFirstTabButton('#collections-panel-tab-bar');
+        //showPanelList('collections');
     }
     window.usergrid.console.pageSelectCollections = pageSelectCollections;
 
-    var collections = {};
-    var entity_count = 0;
+    var collectionsResults = null;
+    var collections_query = null;
+    var collectionsLetter = '*';
+    var collectionsSortBy = 'title';
+    function requestCollections() {
+        client.applicationId = current_application_id;
+       // var query = {"ql" : "order by " + collectionsSortBy};
+        //if (collectionsLetter != "*") query = {"ql" : collectionsSortBy + "='" + collectionsLetter + "*'"};
+        collections_query = client.queryCollections(displayCollections, null);
+        return false;
+    }
+
 
     function displayCollections(response) {
-        var t = "";
-        collections = {};
-        entity_count = 0;
-        if (response.entities && response.entities[0]
-        && response.entities[0].metadata
-        && response.entities[0].metadata.collections) {
-            collections = response.entities[0].metadata.collections;
-            var count = 0;
-            var collectionNames = keys(collections).sort();
-            for (var i in collectionNames) {
-                var collectionName = collectionNames[i];
-                var collection = collections[collectionName];
-                t += "<div class=\"collection-row\" id=\"collection-row-"
-                + collectionName
-                + "\"><a href=\"#\" onclick=\"usergrid.console.pageOpenQueryExplorer('/"
-                + collectionName
-                + "'); return false;\"><span class=\"collection-row-name\">/"
-                + collectionName
-                + "</span> <span class=\"collection-row-count\">("
-                + collection.count
-                + " entities)</span>"
-                + "</a></div>";
-                count++;
-                entity_count += collection.count;
-            }
-            if (count) {
-                $("#application-collections").html(t);
-            }
-            else {
-                $("#application-collections").html(
-                "<h2>No collections created.</h2>");
-            }
-        } else {
-            $("#application-collections").html(
-            "<h2>No collections created.</h2>");
+        roles = {};
+        if (response.data) {
+            roles = response.data;
         }
-        updateApplicationDashboard();
+        collectionsResults = usergrid.console.ui.displayEntityListResponse({query: roles_query}, {
+            "listItemTemplate" : "usergrid.ui.panels.collections.list.html",
+            "getListItemTemplateOptions" : function(entity, path) {
+                var name = entity.name;
+                var title = entity.title;
+                var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
+                var uri = (entity.metadata || { }).uri;
+                var id = 'collectionListItem';
+                var type = entity.type;
+                var count = entity.count;
+                return {
+                    entity : entity,
+                    name : name,
+                    title: title,
+                    id: id,
+                    type: type,
+                    count: count,
+                    collections : collections,
+                    uri : uri
+                };
+            },
+            "onRender" : function() {
+                //$("#users-by-alphabetical").show();
+            },
+            "onNoEntities" : function() {
+                if (userLetter != "*") return "No collections found";
+                return null;
+            },
+            "output" : "#collections-response-table",
+            "nextPrevDiv" : "#collections-next-prev",
+            "prevButton" : "#button-collections-prev",
+            "nextButton" : "#button-collections-next",
+            "noEntitiesMsg" : "No collections found"
+        }, response);
     }
 
     function requestCollections() {
@@ -3061,23 +2974,9 @@ function usergrid_console_app() {
         //populate the panel content
         $('#' + type + '-panel-list').show();
     }
-    
-    function showPanelSearch(type){
-        //hide the other panels
-        $('#' + type + '-panel-list').hide();
-        //show the search tab
-        selectTabButton('#button-' + type + '-search');
-        //populate the panel content
-        $('#' + type + '-panel-search').show();
-    }
 
     $("#button-users-list").click(function() {
         showPanelList('users');
-        return false;
-    });
-
-    $("#button-users-search").click(function() {
-        showPanelSearch('users');
         return false;
     });
 
@@ -3089,11 +2988,6 @@ function usergrid_console_app() {
             requestUsers();
             Pages.SelectPanel('users');
             showPanelList('users');
-        }
-        else if ($(this).attr("id") == "button-user-search") {
-            //again, we might be on another panel, so switch back to users
-            Pages.SelectPanel('users');
-            showPanelSearch('users');
         }
         else {
             showPanelContent("#user-panel", "#user-panel-" + $(this).attr("id").substring(12));
@@ -3109,11 +3003,6 @@ function usergrid_console_app() {
         return false;
     });
 
-    $("#button-groups-search").click(function() {
-        showPanelSearch('groups');
-        return false;
-    });
-
     $("#group-panel-tab-bar a").click(function() {
         selectTabButton(this);
         if ($(this).attr("id") == "button-group-list") {
@@ -3122,11 +3011,6 @@ function usergrid_console_app() {
             requestGroups();
             Pages.SelectPanel('groups');
             showPanelList('groups');
-        }
-        else if ($(this).attr("id") == "button-group-search") {
-            //again, we might be on another panel, so switch back to groups
-            Pages.SelectPanel('groups');
-            showPanelSearch('groups');
         }
         else {
             showPanelContent("#group-panel", "#group-panel-" + $(this).attr("id").substring(13));
@@ -3139,21 +3023,11 @@ function usergrid_console_app() {
         return false;
     });
 
-    $("#button-roles-search").click(function() {
-        showPanelSearch('roles');
-        return false;
-    });
-
     $("#role-panel-tab-bar a").click(function() {
         if ($(this).attr("id") == "button-role-list") {
             Pages.SelectPanel('roles');
             pageSelectRoles();
             showPanelList('roles');
-        }
-        else if ($(this).attr("id") == "button-group-search") {
-            //again, we might be on another panel, so switch back to groups
-            Pages.SelectPanel('roles');
-            showPanelSearch('roles');
         }
         else {
             pageSelectRole();

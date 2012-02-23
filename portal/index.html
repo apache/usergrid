@@ -314,14 +314,14 @@
                     </div>
                     <div id="users-panel" style="display: none">
                         <ul id="users-panel-tab-bar" class="nav nav-tabs">
-                            <li class="active"><a id="button-users-list" href="#">List</a></li>
-                            <li><a id="button-users-search" href="#">Search</a></li>
+                            <li class="active"><a id="button-users-list" href="#">List</a></li>               
                         </ul>
                         <div id="users-panel-list" class="panel-content">
                             <div class="console-section">
                                 <h3>
                                     Users
                                     <div class="bar">
+                                        Search: <input onkeyup="usergrid.console.requestUsers(this.value);" type="text" name="search-user-username" id="search-user-username"/>
                                         <a href="" onclick="usergrid.console.newUser(); return false;"><i class="icon-plus"></i> New</a>
                                         <a href="" onclick="usergrid.console.deleteUsers(); return false;"><i class="icon-remove"></i> Delete</a>
                                     </div>
@@ -339,23 +339,6 @@
                                     <ul id="users-by-alphabetical" class="alphabeticalFilter">
                                         <li><a href="#">{0}</a></li>
                                     </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="users-panel-search" class="panel-content" style="display: none;">
-                            <div class="console-section">
-                                <h3>User Search</h3>
-                                <div class="console-section-contents">
-                                    <div id="users-search-form" class="dialog-form" title="Find User">
-                                        <form class="well form-search" onsubmit="return false;">
-                                            <fieldset>
-                                                <label for="search-user-username">Username</label>
-                                                <input onkeyup="usergrid.console.entitySearch(this.value, 'users', 'sugFindUserBox', 'search', 'search-user-username');" type="text" name="search-user-username" id="search-user-username"/>
-                                            </fieldset>
-                                        </form>
-                                        <br/>
-                                        <div class="suggestionsBox" id="sugFindUserBox"></div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -378,7 +361,6 @@
                     <div id="user-panel" style="display: none">
                         <ul id="user-panel-tab-bar" class="nav nav-tabs">
                             <li><a id="button-user-list" href="#">List</a></li>
-                            <li><a id="button-user-search" href="#">Search</a></li>
                             <li><a id="button-user-profile" href="#">Profile</a></li>
                             <li><a id="button-user-memberships" href="#">Memberships</a></li>
                             <li><a id="button-user-activities" href="#">Activities</a></li>
@@ -409,7 +391,6 @@
                         <div id="groups-panel-tab-bar" class="">
                             <ul class="nav nav-tabs">
                                 <li class="active"><a id="button-groups-list" href="#">List</a></li>
-                                <li><a id="button-groups-search" href="#">Search</a></li>
                             </ul>
                         </div>
                         <div id="groups-panel-list" class="panel-content">
@@ -417,8 +398,9 @@
                                 <h3>
                                     Groups
                                     <div class="bar">
-                                        <a href="" onclick="usergrid.console.newGroup(); return false;"><i class="icon-plus"></i> New Group</a>
-                                        <a href="" onclick="usergrid.console.deleteGroups(); return false;"><i class="icon-remove"></i> Delete Groups</a>
+                                        Search: <input onkeyup="usergrid.console.requestGroups(this.value);" type="text" name="search-user-groupname" id="search-user-groupname"/>
+                                        <a href="" onclick="usergrid.console.newGroup(); return false;"><i class="icon-plus"></i> New </a>
+                                        <a href="" onclick="usergrid.console.deleteGroups(); return false;"><i class="icon-remove"></i> Delete </a>
                                     </div>
                                 </h3>
                                 <div class="console-section-contents listContent">
@@ -437,24 +419,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="groups-panel-search" class="panel-content" style="display: none;">
-                            <div class="console-section">
-                                <h3>Group Search</h3>
-                                <div class="console-section-contents">
-                                    <div id="groups-search-form" class="dialog-form" title="Find Group">
-                                        <form class="well form-search" onsubmit="usergrid.console.entitySearch($('#search-group-groupname').val(), 'groups', 'sugFindGroupBox', 'search', 'search-group-groupname');return false;">
-                                            <fieldset>
-                                                <label for="search-group-groupname">Group</label>
-                                                <input onkeyup="usergrid.console.entitySearch(this.value, 'groups', 'sugFindGroupBox', 'search', 'search-group-groupname');" type="text" name="search-group-groupname" id="search-group-groupname" value="" class="text ui-widget-content ui-corner-all"/>
-                                                <input type="submit" value="Search" class="btn"/>
-                                            </fieldset>
-                                        </form>
-                                        <br/>
-                                        <div class="suggestionsBox" id="sugFindGroupBox"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         <div id="dialog-form-new-group" class="dialog-form" title="Create new group">
                             <p class="validateTips">All form fields are required.</p>
                             <form>
@@ -470,7 +434,6 @@
                     <div id="group-panel" style="display: none">
                         <ul id="group-panel-tab-bar" class="nav nav-tabs">
                             <li><a id="button-group-list" href="#">List</a></li>
-                            <li><a id="button-group-search" href="#">Search</a></li>
                             <li><a id="button-group-details" href="#">Details</a></li>
                             <li><a id="button-group-memberships" href="#">Memberships</a></li>
                             <li><a id="button-group-activities" href="#">Activities</a></li>
@@ -514,7 +477,7 @@
                                     <div class="console-section-contents">
                                         <div id="roles-response-table">
                                             <pre class="query-response-json">Searching for Roles...</pre>
-                                        </div>                           
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -692,8 +655,8 @@
                                     </div>
                                 </h3>
                                 <div class="console-section-contents">
-                                    <div id="application-collections">
-                                        <h2>No collections created.</h2>
+                                    <div id="collections-response-table">
+                                        <pre class="query-response-json">Searching for Collections...</pre>
                                     </div>
                                 </div>
                             </div>
