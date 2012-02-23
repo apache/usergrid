@@ -688,40 +688,34 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="query-more-options" style="display: none">
-                                        <div class="control-group">
-                                            <label class="control-label" for="query-ql">Query: </label>
-                                            <div class="controls">
-                                                <div class="input-append">
-                                                    <input id="query-ql" type="text" name="query" class="span6"/>
-                                                    <span id="button-clear-ql" class="add-on">&#215;</span>
-                                                </div>
+                                    <div class="control-group">
+                                        <label class="control-label" for="query-ql">Query: </label>
+                                        <div class="controls">
+                                            <div class="input-append">
+                                                <input id="query-ql" type="text" name="query" class="span6"/>
+                                                <span id="button-clear-ql" class="add-on">&#215;</span>
                                             </div>
                                         </div>
-                                        <div class="control-group">
-                                            <label class="control-label" for="query-source">Json Input: </label>
-                                            <div class="controls">
-                                                <div class="input-append">
-                                                    <a id="button-query-shrink" class='openPanel'>&#9660;</a>
-                                                    <a id="button-query-expand" class='closePanel'>&#9654;</a>
-                                                    <textarea id="query-source" class="span6 pull-left"></textarea> <span id="button-clear-query-source" class="add-on">&#215;</span>
-                                                </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <label class="control-label" for="query-source">Json Input: </label>
+                                        <div class="controls">
+                                            <div class="input-append">
+                                                <a id="button-query-shrink" class='openPanel'>&#9660;</a>
+                                                <a id="button-query-expand" class='closePanel'>&#9654;</a>
+                                                <textarea id="query-source" class="span6 pull-left"></textarea> <span id="button-clear-query-source" class="add-on">&#215;</span>
                                             </div>
                                         </div>
                                     </div>
                                 </form>
-                                <div class="form-actions">
-                                <a class="btn" id="button-query-back">&#9664; Back</a>
-                                <a class="btn" id="button-query-get">Get</a>
-                                <a class="btn query-more-options pull-right" style="display: none" id="button-query-less-options">Less</a>
-                                <a class="btn query-less-options pull-right" id="button-query-more-options">More</a>
-                                <span class="query-more-options" style="display: none">
-                                    <a class="btn" id="button-query-post">Post</a>
-                                    <a class="btn" id="button-query-put">Put</a>
-                                    <a class="btn" id="button-query-delete">Delete</a>
+                                <div class="form-actions btn-toolbar">
+                                    <a class="btn" id="button-query-back">&#9664; Back</a>
+                                        <a class="btn" id="button-query-get">Get</a>
+                                        <a class="btn" id="button-query-post">Post</a>
+                                        <a class="btn" id="button-query-put">Put</a>
+                                        <a class="btn" id="button-query-delete">Delete</a>
                                     <a class="btn" id="button-query-validate" href="#">Validate Json</a>
-                                </span>
-                            </div>
+                                </div>
                             </div>
                         </div>
                         <div id="query-response-area" class="console-section">
