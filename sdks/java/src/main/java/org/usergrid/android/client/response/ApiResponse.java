@@ -10,10 +10,12 @@ import java.util.UUID;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.annotate.JsonAnyGetter;
 import org.codehaus.jackson.annotate.JsonAnySetter;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.usergrid.android.client.entities.Entity;
+import org.usergrid.android.client.entities.Message;
 import org.usergrid.android.client.entities.User;
 
 public class ApiResponse {
@@ -41,6 +43,12 @@ public class ApiResponse {
 	private Map<String, List<String>> params;
 	private List<AggregateCounterSet> counters;
 	private ClientCredentialsInfo credentials;
+
+	private List<Message> messages;
+	private List<QueueInfo> queues;
+	private UUID last;
+	private UUID queue;
+	private UUID consumer;
 
 	private User user;
 
@@ -298,6 +306,100 @@ public class ApiResponse {
 	@Override
 	public String toString() {
 		return toJsonString(this);
+	}
+
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	public List<Message> getMessages() {
+		return messages;
+	}
+
+	public void setMessages(List<Message> messages) {
+		this.messages = messages;
+	}
+
+	@JsonIgnore
+	public int getMessageCount() {
+		if (messages == null) {
+			return 0;
+		}
+		return messages.size();
+	}
+
+	@JsonIgnore
+	public Message getFirstMessage() {
+		if ((messages != null) && (messages.size() > 0)) {
+			return messages.get(0);
+		}
+		return null;
+	}
+
+	@JsonIgnore
+	public Entity getLastMessage() {
+		if ((messages != null) && (messages.size() > 0)) {
+			return messages.get(messages.size() - 1);
+		}
+		return null;
+	}
+
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	public UUID getLast() {
+		return last;
+	}
+
+	public void setLast(UUID last) {
+		this.last = last;
+	}
+
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	public List<QueueInfo> getQueues() {
+		return queues;
+	}
+
+	public void setQueues(List<QueueInfo> queues) {
+		this.queues = queues;
+	}
+
+	@JsonIgnore
+	public QueueInfo getFirstQueue() {
+		if ((queues != null) && (queues.size() > 0)) {
+			return queues.get(0);
+		}
+		return null;
+	}
+
+	@JsonIgnore
+	public QueueInfo getLastQueue() {
+		if ((queues != null) && (queues.size() > 0)) {
+			return queues.get(queues.size() - 1);
+		}
+		return null;
+	}
+
+	@JsonIgnore
+	public UUID getLastQueueId() {
+		QueueInfo q = getLastQueue();
+		if (q != null) {
+			return q.getQueue();
+		}
+		return null;
+	}
+
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	public UUID getQueue() {
+		return queue;
+	}
+
+	public void setQueue(UUID queue) {
+		this.queue = queue;
+	}
+
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	public UUID getConsumer() {
+		return consumer;
+	}
+
+	public void setConsumer(UUID consumer) {
+		this.consumer = consumer;
 	}
 
 }
