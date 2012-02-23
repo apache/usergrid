@@ -1,5 +1,7 @@
 package org.usergrid.android.client;
 
+import static org.springframework.util.StringUtils.arrayToDelimitedString;
+import static org.springframework.util.StringUtils.tokenizeToStringArray;
 import static org.usergrid.android.client.utils.JsonUtils.parse;
 import static org.usergrid.android.client.utils.ObjectUtils.isEmpty;
 import static org.usergrid.android.client.utils.UrlUtils.addQueryParams;
@@ -7,10 +9,12 @@ import static org.usergrid.android.client.utils.UrlUtils.encodeParams;
 import static org.usergrid.android.client.utils.UrlUtils.path;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.springframework.http.HttpEntity;
@@ -699,8 +703,8 @@ public class Client {
 	 * @return
 	 */
 	public Query queryActivityFeedForUser(String userId) {
-		Query q = queryRequest(HttpMethod.GET, null, null, applicationId,
-				"users", userId, "feed");
+		Query q = queryEntitiesRequest(HttpMethod.GET, null, null,
+				applicationId, "users", userId, "feed");
 		return q;
 	}
 
@@ -788,14 +792,78 @@ public class Client {
 	}
 
 	/**
+	 * Posts an activity to a group. Activity must already be created.
+	 * 
+	 * @param userId
+	 * @param activity
+	 * @return
+	 */
+	public ApiResponse postGroupActivity(String userId, Activity activity) {
+		return apiRequest(HttpMethod.POST, null, null, applicationId, "groups",
+				userId, "activities", activity.getUuid().toString());
+	}
+
+	/**
+	 * Creates and posts an activity to a group.
+	 * 
+	 * @param verb
+	 * @param title
+	 * @param content
+	 * @param category
+	 * @param user
+	 * @param object
+	 * @param objectType
+	 * @param objectName
+	 * @param objectContent
+	 * @return
+	 */
+	public ApiResponse postGroupActivity(String verb, String title,
+			String content, String category, User user, Entity object,
+			String objectType, String objectName, String objectContent) {
+		Activity activity = Activity.newActivity(verb, title, content,
+				category, user, object, objectType, objectName, objectContent);
+		createEntity(activity);
+		return postGroupActivity(user.getUuid().toString(), activity);
+	}
+
+	/**
+	 * Creates and posts an activity to a group. Executes asynchronously in
+	 * background and the callbacks are called in the UI thread.
+	 * 
+	 * @param verb
+	 * @param title
+	 * @param content
+	 * @param category
+	 * @param user
+	 * @param object
+	 * @param objectType
+	 * @param objectName
+	 * @param objectContent
+	 * @param callback
+	 */
+	public void postGroupActivityAsync(final String verb, final String title,
+			final String content, final String category, final User user,
+			final Entity object, final String objectType,
+			final String objectName, final String objectContent,
+			final ApiResponseCallback callback) {
+		(new ClientAsyncTask<ApiResponse>(callback) {
+			@Override
+			public ApiResponse doTask() {
+				return postGroupActivity(verb, title, content, category, user,
+						object, objectType, objectName, objectContent);
+			}
+		}).execute();
+	}
+
+	/**
 	 * Get a group's activity feed. Returned as a query to ease paging.
 	 * 
 	 * @param userId
 	 * @return
 	 */
 	public Query queryActivityFeedForGroup(String groupId) {
-		Query q = queryRequest(HttpMethod.GET, null, null, applicationId,
-				"groups", groupId, "feed");
+		Query q = queryEntitiesRequest(HttpMethod.GET, null, null,
+				applicationId, "groups", groupId, "feed");
 		return q;
 	}
 
@@ -829,10 +897,10 @@ public class Client {
 	 * @param segments
 	 * @return
 	 */
-	public Query queryRequest(HttpMethod method, Map<String, Object> params,
-			Object data, String... segments) {
+	public Query queryEntitiesRequest(HttpMethod method,
+			Map<String, Object> params, Object data, String... segments) {
 		ApiResponse response = apiRequest(method, params, data, segments);
-		return new Query(response, method, params, data, segments);
+		return new EntityQuery(response, method, params, data, segments);
 	}
 
 	/**
@@ -847,13 +915,13 @@ public class Client {
 	 * @param data
 	 * @param segments
 	 */
-	public void queryRequestAsync(final QueryResultsCallback callback,
+	public void queryEntitiesRequestAsync(final QueryResultsCallback callback,
 			final HttpMethod method, final Map<String, Object> params,
 			final Object data, final String... segments) {
 		(new ClientAsyncTask<Query>(callback) {
 			@Override
 			public Query doTask() {
-				return queryRequest(method, params, data, segments);
+				return queryEntitiesRequest(method, params, data, segments);
 			}
 		}).execute();
 	}
@@ -864,8 +932,8 @@ public class Client {
 	 * @return
 	 */
 	public Query queryUsers() {
-		Query q = queryRequest(HttpMethod.GET, null, null, applicationId,
-				"users");
+		Query q = queryEntitiesRequest(HttpMethod.GET, null, null,
+				applicationId, "users");
 		return q;
 	}
 
@@ -876,8 +944,8 @@ public class Client {
 	 * @param callback
 	 */
 	public void queryUsersAsync(QueryResultsCallback callback) {
-		queryRequestAsync(callback, HttpMethod.GET, null, null, applicationId,
-				"users");
+		queryEntitiesRequestAsync(callback, HttpMethod.GET, null, null,
+				applicationId, "users");
 	}
 
 	/**
@@ -890,8 +958,8 @@ public class Client {
 	public Query queryUsers(String ql) {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("ql", ql);
-		Query q = queryRequest(HttpMethod.GET, params, null, applicationId,
-				"users");
+		Query q = queryEntitiesRequest(HttpMethod.GET, params, null,
+				applicationId, "users");
 		return q;
 	}
 
@@ -906,7 +974,7 @@ public class Client {
 	public void queryUsersAsync(String ql, QueryResultsCallback callback) {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("ql", ql);
-		queryRequestAsync(callback, HttpMethod.GET, params, null,
+		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
 				applicationId, "users");
 	}
 
@@ -917,8 +985,8 @@ public class Client {
 	 * @return
 	 */
 	public Query queryUsersForGroup(String groupId) {
-		Query q = queryRequest(HttpMethod.GET, null, null, applicationId,
-				"groups", groupId, "users");
+		Query q = queryEntitiesRequest(HttpMethod.GET, null, null,
+				applicationId, "groups", groupId, "users");
 		return q;
 	}
 
@@ -931,8 +999,8 @@ public class Client {
 	 */
 	public void queryUsersForGroupAsync(String groupId,
 			QueryResultsCallback callback) {
-		queryRequestAsync(callback, HttpMethod.GET, null, null, applicationId,
-				"groups", groupId, "users");
+		queryEntitiesRequestAsync(callback, HttpMethod.GET, null, null,
+				applicationId, "groups", groupId, "users");
 	}
 
 	/**
@@ -1119,8 +1187,9 @@ public class Client {
 			String connectingEntityId, String connectionType, String ql) {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("ql", ql);
-		Query q = queryRequest(HttpMethod.GET, params, null, applicationId,
-				connectingEntityType, connectingEntityId, connectionType);
+		Query q = queryEntitiesRequest(HttpMethod.GET, params, null,
+				applicationId, connectingEntityType, connectingEntityId,
+				connectionType);
 		return q;
 	}
 
@@ -1139,40 +1208,47 @@ public class Client {
 			QueryResultsCallback callback) {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("ql", ql);
-		queryRequestAsync(callback, HttpMethod.GET, params, null,
+		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
 				applicationId, connectingEntityType, connectingEntityId,
 				connectionType);
+	}
+
+	public interface Query {
+
+		public ApiResponse getResponse();
+
+		public boolean more();
+
+		public Query next();
+
 	}
 
 	/**
 	 * Query object
 	 * 
 	 */
-	public class Query {
+	private class EntityQuery implements Query {
 		final HttpMethod method;
 		final Map<String, Object> params;
 		final Object data;
 		final String[] segments;
-		final String prevCursor;
 		final ApiResponse response;
 
-		private Query(ApiResponse response, HttpMethod method,
+		private EntityQuery(ApiResponse response, HttpMethod method,
 				Map<String, Object> params, Object data, String[] segments) {
 			this.response = response;
 			this.method = method;
 			this.params = params;
 			this.data = data;
 			this.segments = segments;
-			prevCursor = null;
 		}
 
-		private Query(ApiResponse response, Query q) {
+		private EntityQuery(ApiResponse response, EntityQuery q) {
 			this.response = response;
 			method = q.method;
 			params = q.params;
 			data = q.data;
 			segments = q.segments;
-			prevCursor = (q.response != null) ? q.response.getCursor() : null;
 		}
 
 		/**
@@ -1209,11 +1285,179 @@ public class Client {
 				nextParams.put("cursor", response.getCursor());
 				ApiResponse nextResponse = apiRequest(method, nextParams, data,
 						segments);
-				return new Query(nextResponse, this);
+				return new EntityQuery(nextResponse, this);
 			}
 			return null;
 		}
 
+	}
+
+	private String normalizeQueuePath(String path) {
+		return arrayToDelimitedString(
+				tokenizeToStringArray(path, "/", true, true), "/");
+	}
+
+	public ApiResponse postMessage(String path, Map<String, Object> message) {
+		return apiRequest(HttpMethod.POST, null, message, applicationId,
+				"queues", normalizeQueuePath(path));
+	}
+
+	public ApiResponse postMessage(String path,
+			List<Map<String, Object>> messages) {
+		return apiRequest(HttpMethod.POST, null, messages, applicationId,
+				"queues", normalizeQueuePath(path));
+	}
+
+	public enum QueuePosition {
+		START("start"), END("end"), LAST("last"), CONSUMER("consumer");
+
+		private final String shortName;
+
+		QueuePosition(String shortName) {
+			this.shortName = shortName;
+		}
+
+		static Map<String, QueuePosition> nameMap = new ConcurrentHashMap<String, QueuePosition>();
+
+		static {
+			for (QueuePosition op : EnumSet.allOf(QueuePosition.class)) {
+				if (op.shortName != null) {
+					nameMap.put(op.shortName, op);
+				}
+			}
+		}
+
+		public static QueuePosition find(String s) {
+			if (s == null) {
+				return null;
+			}
+			return nameMap.get(s);
+		}
+
+		@Override
+		public String toString() {
+			return shortName;
+		}
+	}
+
+	public ApiResponse getMessages(String path, String consumer, UUID last,
+			Long time, Integer prev, Integer next, Integer limit,
+			QueuePosition pos, Boolean update, Boolean sync) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		if (consumer != null) {
+			params.put("consumer", consumer);
+		}
+		if (last != null) {
+			params.put("last", last);
+		}
+		if (time != null) {
+			params.put("time", time);
+		}
+		if (prev != null) {
+			params.put("prev", prev);
+		}
+		if (next != null) {
+			params.put("next", next);
+		}
+		if (limit != null) {
+			params.put("limit", limit);
+		}
+		if (pos != null) {
+			params.put("pos", pos.toString());
+		}
+		if (update != null) {
+			params.put("update", update);
+		}
+		if (sync != null) {
+			params.put("synchronized", sync);
+		}
+		return apiRequest(HttpMethod.GET, params, null, applicationId,
+				"queues", normalizeQueuePath(path));
+	}
+
+	public ApiResponse addSubscriber(String publisherQueue,
+			String subscriberQueue) {
+		return apiRequest(HttpMethod.POST, null, null, applicationId, "queues",
+				normalizeQueuePath(publisherQueue), "subscribers",
+				normalizeQueuePath(subscriberQueue));
+	}
+
+	public ApiResponse removeSubscriber(String publisherQueue,
+			String subscriberQueue) {
+		return apiRequest(HttpMethod.DELETE, null, null, applicationId,
+				"queues", normalizeQueuePath(publisherQueue), "subscribers",
+				normalizeQueuePath(subscriberQueue));
+	}
+
+	private class QueueQuery implements Query {
+		final HttpMethod method;
+		final Map<String, Object> params;
+		final Object data;
+		final String queuePath;
+		final ApiResponse response;
+
+		private QueueQuery(ApiResponse response, HttpMethod method,
+				Map<String, Object> params, Object data, String queuePath) {
+			this.response = response;
+			this.method = method;
+			this.params = params;
+			this.data = data;
+			this.queuePath = normalizeQueuePath(queuePath);
+		}
+
+		private QueueQuery(ApiResponse response, QueueQuery q) {
+			this.response = response;
+			method = q.method;
+			params = q.params;
+			data = q.data;
+			queuePath = q.queuePath;
+		}
+
+		/**
+		 * @return the api response of the last request
+		 */
+		public ApiResponse getResponse() {
+			return response;
+		}
+
+		/**
+		 * @return true if the server indicates more results are available
+		 */
+		public boolean more() {
+			if ((response != null) && (response.getCursor() != null)
+					&& (response.getCursor().length() > 0)) {
+				return true;
+			}
+			return false;
+		}
+
+		/**
+		 * Performs a request for the next set of results
+		 * 
+		 * @return query that contains results and where to get more from.
+		 */
+		public Query next() {
+			if (more()) {
+				Map<String, Object> nextParams = null;
+				if (params != null) {
+					nextParams = new HashMap<String, Object>(params);
+				} else {
+					nextParams = new HashMap<String, Object>();
+				}
+				nextParams.put("start", response.getCursor());
+				ApiResponse nextResponse = apiRequest(method, nextParams, data,
+						queuePath);
+				return new QueueQuery(nextResponse, this);
+			}
+			return null;
+		}
+
+	}
+
+	public Query queryQueuesRequest(HttpMethod method,
+			Map<String, Object> params, Object data, String queuePath) {
+		ApiResponse response = apiRequest(method, params, data, queuePath);
+		return new QueueQuery(response, method, params, data, queuePath);
 	}
 
 }
