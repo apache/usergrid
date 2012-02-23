@@ -1100,6 +1100,11 @@ usergrid.Client = function(options) {
     }
     this.queryRoles = queryRoles;
 
+    function queryCollections(a) {
+        return queryEntities("/", arguments);
+    }
+    this.queryCollections = queryCollections;
+
     function queryGroupMemberships(a) {
         return queryEntityCollection("groups", "users", arguments);
     }

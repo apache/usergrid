@@ -276,8 +276,21 @@ usergrid.console.ui = usergrid.console.ui || { };
         
         var t = "";
         if (response.entities && (response.entities.length > 0)) {
+
             query_results.entities = response.entities;
             query_results.entities_by_id = {};
+            
+            // collections is the only one that uses this lower level item, and can't be trusted to be here
+            // so hardcoding this check for that type and loading it in a try to make sure we don't error out
+            // in other cases
+            try {
+                if (response.entities[0].metadata.collections &&
+                    options.output == "#collections-response-table") {
+                    query_results.entities = response.entities[0].metadata.collections;
+                }
+            } catch (e) {
+                //do nothing, this is only to trap errors
+            }
 
             if (listItemTemplate) {
                 $(output).html("");

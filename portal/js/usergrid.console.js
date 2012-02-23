@@ -2537,54 +2537,68 @@ function usergrid_console_app() {
      * 
      ******************************************************************/
 
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.collections.list.html");
+
     function pageSelectCollections(uuid) {
         pageSelect(uuid);
-        //showPanel("#collections-panel");
-	    //Pages.SelectPanel('collections');
+        requestCollections();
+        //selectFirstTabButton('#collections-panel-tab-bar');
+        //showPanelList('collections');
     }
     window.usergrid.console.pageSelectCollections = pageSelectCollections;
 
-    var collections = {};
-    var entity_count = 0;
+    var collectionsResults = null;
+    var collections_query = null;
+    var collectionsLetter = '*';
+    var collectionsSortBy = 'title';
+    function requestCollections() {
+        client.applicationId = current_application_id;
+       // var query = {"ql" : "order by " + collectionsSortBy};
+        //if (collectionsLetter != "*") query = {"ql" : collectionsSortBy + "='" + collectionsLetter + "*'"};
+        collections_query = client.queryCollections(displayCollections, null);
+        return false;
+    }
+
 
     function displayCollections(response) {
-        var t = "";
-        collections = {};
-        entity_count = 0;
-        if (response.entities && response.entities[0]
-        && response.entities[0].metadata
-        && response.entities[0].metadata.collections) {
-            collections = response.entities[0].metadata.collections;
-            var count = 0;
-            var collectionNames = keys(collections).sort();
-            for (var i in collectionNames) {
-                var collectionName = collectionNames[i];
-                var collection = collections[collectionName];
-                t += "<div class=\"collection-row\" id=\"collection-row-"
-                + collectionName
-                + "\"><a href=\"#\" onclick=\"usergrid.console.pageOpenQueryExplorer('/"
-                + collectionName
-                + "'); return false;\"><span class=\"collection-row-name\">/"
-                + collectionName
-                + "</span> <span class=\"collection-row-count\">("
-                + collection.count
-                + " entities)</span>"
-                + "</a></div>";
-                count++;
-                entity_count += collection.count;
-            }
-            if (count) {
-                $("#application-collections").html(t);
-            }
-            else {
-                $("#application-collections").html(
-                "<h2>No collections created.</h2>");
-            }
-        } else {
-            $("#application-collections").html(
-            "<h2>No collections created.</h2>");
+        roles = {};
+        if (response.data) {
+            roles = response.data;
         }
-        updateApplicationDashboard();
+        collectionsResults = usergrid.console.ui.displayEntityListResponse({query: roles_query}, {
+            "listItemTemplate" : "usergrid.ui.panels.collections.list.html",
+            "getListItemTemplateOptions" : function(entity, path) {
+                var name = entity.name;
+                var title = entity.title;
+                var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
+                var uri = (entity.metadata || { }).uri;
+                var id = 'collectionListItem';
+                var type = entity.type;
+                var count = entity.count;
+                return {
+                    entity : entity,
+                    name : name,
+                    title: title,
+                    id: id,
+                    type: type,
+                    count: count,
+                    collections : collections,
+                    uri : uri
+                };
+            },
+            "onRender" : function() {
+                //$("#users-by-alphabetical").show();
+            },
+            "onNoEntities" : function() {
+                if (userLetter != "*") return "No collections found";
+                return null;
+            },
+            "output" : "#collections-response-table",
+            "nextPrevDiv" : "#collections-next-prev",
+            "prevButton" : "#button-collections-prev",
+            "nextButton" : "#button-collections-next",
+            "noEntitiesMsg" : "No collections found"
+        }, response);
     }
 
     function requestCollections() {
