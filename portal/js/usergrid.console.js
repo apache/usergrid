@@ -902,22 +902,22 @@ function usergrid_console_app() {
     }
     window.usergrid.console.pageSelectApplication = pageSelectApplication;
 
-    function updateApplicationDashboard() {
-
+    function updateApplicationDashboard(collections) {
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Entity');
         data.addColumn('number', 'Count');
         var rows = [];
-        var t = "<table id=\"application-panel-entity-counts\">";
+        var t = '<table id="application-panel-entity-counts">';
         var collectionNames = keys(collections).sort();
+
+        var entity_count = 0;
         for (var i in collectionNames) {
             var collectionName = collectionNames[i];
             var collection = collections[collectionName];
-            var row = [collectionName, {
-                v: collection.count
-            }];
+            var row = [collectionName, {v: collection.count}];
             rows.push(row);
             t += "<tr><td>" + collection.count + "</td><td>" + collectionName + "</td></tr>";
+            entity_count += collection.count;
         }
         t += "<tr id=\"application-panel-entity-total\"><th>" + entity_count + "</th><th>entities total</th></tr>";
         t += "</table>";
@@ -2485,6 +2485,12 @@ function usergrid_console_app() {
         if (response.data) {
             roles = response.data;
         }
+
+        if (response.entities && response.entities[0] && response.entities[0].metadata && response.entities[0].metadata.collections) {
+            var collections = response.entities[0].metadata.collections;
+            updateApplicationDashboard(collections);
+        }
+
         collectionsResults = usergrid.console.ui.displayEntityListResponse({query: roles_query}, {
             "listItemTemplate" : "usergrid.ui.panels.collections.list.html",
             "getListItemTemplateOptions" : function(entity, path) {
