@@ -70,7 +70,7 @@ $(document).ready(function () {
 		Pages.AddPage({name:'forgot-password', menu:publicMenu});
 
         Pages.AddPage({name:'console', menu:privateMenu, initFunction:InitConsole, showFunction:usergrid.console.pageSelectHome});
-        Pages.AddPage({name:'account', menu:privateMenu, initFunction:InitConsole, showFunction:usergrid.console.requestAccountSettings});
+        Pages.AddPage({name:'account', menu:privateMenu, showFunction:usergrid.console.requestAccountSettings});
         Pages.AddPage({name:'console-frame', menu:privateMenu});
 	}
 

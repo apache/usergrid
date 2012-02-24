@@ -1054,7 +1054,6 @@ function usergrid_console_app() {
     var userLetter = "*";
     var userSortBy = "username";
     function pageSelectUsers(uuid) {
-        pageSelect(uuid);
         requestUsers();
         selectFirstTabButton('#users-panel-tab-bar');
         showPanelList('users');
@@ -1387,7 +1386,6 @@ function usergrid_console_app() {
     var groupLetter = "*";
     var groupSortBy = "path";
     function pageSelectGroups(uuid) {
-        pageSelect(uuid);
         requestGroups();
         selectFirstTabButton('#groups-panel-tab-bar');
         showPanelList('groups');
@@ -1859,7 +1857,6 @@ function usergrid_console_app() {
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.roles.list.html");
 
     function pageSelectRoles(uuid) {
-        pageSelect(uuid);
         requestRoles();
         selectFirstTabButton('#roles-panel-tab-bar');
         showPanelList('roles');
@@ -2094,11 +2091,7 @@ function usergrid_console_app() {
      ******************************************************************/
 
     function pageSelectActivities(uuid) {
-        pageSelect(uuid);
-        //showPanel("#activities-panel");
-        //Pages.SelectPanel('activities');
         requestActivities();
-        //pageOpenQueryExplorer("/activities");
     }
     window.usergrid.console.pageSelectActivities = pageSelectActivities;
 
@@ -2141,10 +2134,7 @@ function usergrid_console_app() {
      ******************************************************************/
 
     function pageSelectAnalytics(uuid) {
-        pageSelect(uuid);
         requestApplicationCounterNames();
-        //showPanel("#analytics-panel");
-	      //Pages.SelectPanel('analytics');
     }
     window.usergrid.console.pageSelectAnalytics = pageSelectAnalytics;
 
@@ -2277,11 +2267,8 @@ function usergrid_console_app() {
      ******************************************************************/
 
     function pageSelectSettings(uuid) {
-        pageSelect(uuid);
         requestApplicationCredentials();
         requestOrganizations();
-        //showPanel("#settings-panel");
-        //Pages.SelectPanel('settings');
     }
     window.usergrid.console.pageSelectSettings = pageSelectSettings;
 
@@ -2323,10 +2310,7 @@ function usergrid_console_app() {
      ******************************************************************/
 
     function pageSelectShell(uuid) {
-        pageSelect(uuid);
         requestApplicationCredentials();
-        //showPanel("#shell-panel");
-        //Pages.SelectPanel('shell');
         $("#shell-input").focus();
     }
     window.usergrid.console.pageSelectShell = pageSelectShell;
@@ -2463,10 +2447,7 @@ function usergrid_console_app() {
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.collections.list.html");
 
     function pageSelectCollections(uuid) {
-        pageSelect(uuid);
         requestCollections();
-        //selectFirstTabButton('#collections-panel-tab-bar');
-        //showPanelList('collections');
     }
     window.usergrid.console.pageSelectCollections = pageSelectCollections;
 
@@ -2474,14 +2455,16 @@ function usergrid_console_app() {
     var collections_query = null;
     var collectionsLetter = '*';
     var collectionsSortBy = 'title';
-    function requestCollections() {
-        client.applicationId = current_application_id;
-       // var query = {"ql" : "order by " + collectionsSortBy};
-        //if (collectionsLetter != "*") query = {"ql" : collectionsSortBy + "='" + collectionsLetter + "*'"};
-        collections_query = client.queryCollections(displayCollections, null);
-        return false;
-    }
 
+    function requestCollections() {
+        $("#application-collections").html(
+        "<h2>Loading...</h2>");
+        client.requestCollections(current_application_id, displayCollections,
+        function() {
+            $("#application-collections").html(
+            "<h2>Unable to retrieve collections list.</h2>");
+        });
+    }
 
     function displayCollections(response) {
         roles = {};
@@ -2528,17 +2511,7 @@ function usergrid_console_app() {
             "nextButton" : "#button-collections-next",
             "noEntitiesMsg" : "No collections found"
         }, response);
-    }
-
-    function requestCollections() {
-        $("#application-collections").html(
-        "<h2>Loading...</h2>");
-        client.requestCollections(current_application_id, displayCollections,
-        function() {
-            $("#application-collections").html(
-            "<h2>Unable to retrieve collections list.</h2>");
-        });
-    }
+    }    
 
     function createCollection(collectionName) {
         client.createCollection(current_application_id, collectionName, requestCollections,
