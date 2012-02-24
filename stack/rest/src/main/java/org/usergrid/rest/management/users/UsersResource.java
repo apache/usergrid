@@ -62,15 +62,16 @@ import net.tanesha.recaptcha.ReCaptchaResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.exceptions.AuthErrorInfo;
-import org.usergrid.rest.management.ManagementResource;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
+@Component("org.usergrid.rest.management.users.UsersResource")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })
@@ -82,8 +83,7 @@ public class UsersResource extends AbstractContextResource {
 	String errorMsg;
 	UserInfo user;
 
-	public UsersResource(ManagementResource parent) {
-		super(parent);
+	public UsersResource() {
 		logger.info("ManagementUsersResource initialized");
 	}
 
@@ -91,15 +91,15 @@ public class UsersResource extends AbstractContextResource {
 	public UserResource getUserById(@Context UriInfo ui,
 			@PathParam("userId") String userIdStr) throws Exception {
 
-		return new UserResource(this, management.getAdminUserByUuid(UUID
-				.fromString(userIdStr)));
+		return getSubResource(UserResource.class).init(
+				management.getAdminUserByUuid(UUID.fromString(userIdStr)));
 	}
 
 	@Path("{username}")
 	public UserResource getUserByUsername(@Context UriInfo ui,
 			@PathParam("username") String username) throws Exception {
 
-		return new UserResource(this,
+		return getSubResource(UserResource.class).init(
 				management.getAdminUserByUsername(username));
 	}
 
@@ -107,7 +107,8 @@ public class UsersResource extends AbstractContextResource {
 	public UserResource getUserByEmail(@Context UriInfo ui,
 			@PathParam("email") String email) throws Exception {
 
-		return new UserResource(this, management.getAdminUserByEmail(email));
+		return getSubResource(UserResource.class).init(
+				management.getAdminUserByEmail(email));
 	}
 
 	@POST

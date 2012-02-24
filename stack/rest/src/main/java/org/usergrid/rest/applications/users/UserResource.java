@@ -66,6 +66,8 @@ import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
@@ -77,6 +79,8 @@ import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
+@Component("org.usergrid.rest.applications.users.UserResource")
+@Scope("prototype")
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource extends ServiceResource {
 
@@ -93,10 +97,12 @@ public class UserResource extends ServiceResource {
 
 	String token;
 
-	public UserResource(ServiceResource parent, Identifier userIdentifier)
-			throws Exception {
-		super(parent);
+	public UserResource() {
+	}
+
+	public UserResource init(Identifier userIdentifier) throws Exception {
 		this.userIdentifier = userIdentifier;
+		return this;
 	}
 
 	@PUT
@@ -385,9 +391,10 @@ public class UserResource extends ServiceResource {
 				+ StringUtils.capitalize(itemName.getPath()) + "Resource";
 		AbstractUserExtensionResource extensionResource = null;
 		try {
-			extensionResource = (AbstractUserExtensionResource) Class
-					.forName(resourceClass).getConstructor(UserResource.class)
-					.newInstance(this);
+			@SuppressWarnings("unchecked")
+			Class<AbstractUserExtensionResource> extensionCls = (Class<AbstractUserExtensionResource>) Class
+					.forName(resourceClass);
+			extensionResource = getSubResource(extensionCls);
 		} catch (Exception e) {
 		}
 		if (extensionResource != null) {

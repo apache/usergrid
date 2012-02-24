@@ -57,6 +57,8 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.mq.QueueSet;
 import org.usergrid.rest.AbstractContextResource;
@@ -64,6 +66,8 @@ import org.usergrid.rest.AbstractContextResource;
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.core.provider.EntityHolder;
 
+@Component
+@Scope("prototype")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })
@@ -76,23 +80,21 @@ public class QueueSubscriptionResource extends AbstractContextResource {
 	String queuePath = "";
 	String subscriptionPath = "";
 
-	public QueueSubscriptionResource(QueueResource parent, QueueManager mq,
-			String queuePath) throws Exception {
-		super(parent);
-
-		this.mq = mq;
-		this.queuePath = queuePath;
-
+	public QueueSubscriptionResource() {
 	}
 
-	public QueueSubscriptionResource(QueueSubscriptionResource parent,
-			QueueManager mq, String queuePath, String subscriptionPath)
-			throws Exception {
-		super(parent);
+	public QueueSubscriptionResource init(QueueManager mq, String queuePath) {
+		this.mq = mq;
+		this.queuePath = queuePath;
+		return this;
+	}
 
+	public QueueSubscriptionResource init(QueueManager mq, String queuePath,
+			String subscriptionPath) throws Exception {
 		this.mq = mq;
 		this.queuePath = queuePath;
 		this.subscriptionPath = subscriptionPath;
+		return this;
 	}
 
 	@Path("{subPath}")
@@ -101,8 +103,8 @@ public class QueueSubscriptionResource extends AbstractContextResource {
 
 		logger.info("QueueSubscriptionResource.getSubPath");
 
-		return new QueueSubscriptionResource(this, mq, queuePath,
-				subscriptionPath + "/" + subPath);
+		return getSubResource(QueueSubscriptionResource.class).init(mq,
+				queuePath, subscriptionPath + "/" + subPath);
 	}
 
 	@GET

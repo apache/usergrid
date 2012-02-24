@@ -59,6 +59,7 @@ import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.services.ServiceManagerFactory;
 
 import com.sun.jersey.api.core.HttpContext;
+import com.sun.jersey.api.core.ResourceContext;
 import com.sun.jersey.spi.CloseableService;
 
 public abstract class AbstractContextResource {
@@ -83,77 +84,39 @@ public abstract class AbstractContextResource {
 	@Context
 	protected HttpServletRequest httpServletRequest;
 
+	@Context
+	protected ResourceContext resourceContext;
+
+	@Autowired
 	protected EntityManagerFactory emf;
 
+	@Autowired
 	protected ServiceManagerFactory smf;
 
+	@Autowired
 	protected ManagementService management;
 
+	@Autowired
 	protected Properties properties;
 
+	@Autowired
 	protected QueueManagerFactory qmf;
 
 	public AbstractContextResource() {
 	}
 
-	public AbstractContextResource(AbstractContextResource parent) {
+	public AbstractContextResource getParent() {
+		return parent;
+	}
+
+	public void setParent(AbstractContextResource parent) {
 		this.parent = parent;
-		uriInfo = parent.uriInfo;
-		request = parent.request;
-		sc = parent.sc;
-		hc = parent.hc;
-		cs = parent.cs;
-		httpServletRequest = parent.httpServletRequest;
-		emf = parent.emf;
-		smf = parent.smf;
-		management = parent.management;
-		properties = parent.properties;
-		qmf = parent.qmf;
 	}
 
-	public EntityManagerFactory getEntityManagerFactory() {
-		return emf;
-	}
-
-	@Autowired
-	public void setEntityManagerFactory(EntityManagerFactory emf) {
-		this.emf = emf;
-	}
-
-	public ServiceManagerFactory getServiceManagerFactory() {
-		return smf;
-	}
-
-	@Autowired
-	public void setServiceManagerFactory(ServiceManagerFactory smf) {
-		this.smf = smf;
-	}
-
-	public ManagementService getManagementService() {
-		return management;
-	}
-
-	@Autowired
-	public void setManagementService(ManagementService management) {
-		this.management = management;
-	}
-
-	public Properties getProperties() {
-		return properties;
-	}
-
-	@Autowired
-	public void setProperties(Properties properties) {
-		this.properties = properties;
-	}
-
-	public QueueManagerFactory getQueueManagerFactory() {
-		return qmf;
-	}
-
-	@Autowired
-	public void setQueueManagerFactory(QueueManagerFactory qmf) {
-		this.qmf = qmf;
+	public <T extends AbstractContextResource> T getSubResource(Class<T> t) {
+		T subResource = resourceContext.getResource(t);
+		subResource.setParent(this);
+		return subResource;
 	}
 
 	public PathSegment getFirstPathSegment(String name) {

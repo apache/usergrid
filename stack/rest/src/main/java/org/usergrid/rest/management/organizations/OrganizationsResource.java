@@ -54,14 +54,17 @@ import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
-import org.usergrid.rest.management.ManagementResource;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
+@Component("org.usergrid.rest.management.organizations.OrganizationsResource")
+@Scope("prototype")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })
@@ -70,9 +73,7 @@ public class OrganizationsResource extends AbstractContextResource {
 	private static final Logger logger = LoggerFactory
 			.getLogger(OrganizationsResource.class);
 
-	public OrganizationsResource(ManagementResource parent) {
-		super(parent);
-		logger.info("ManagementOrganizationsResource initialized");
+	public OrganizationsResource() {
 	}
 
 	@Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
@@ -84,7 +85,7 @@ public class OrganizationsResource extends AbstractContextResource {
 		if (organization == null) {
 			return null;
 		}
-		return new OrganizationResource(this, organization);
+		return getSubResource(OrganizationResource.class).init(organization);
 	}
 
 	@Path("{organizationName}")
@@ -96,7 +97,7 @@ public class OrganizationsResource extends AbstractContextResource {
 		if (organization == null) {
 			return null;
 		}
-		return new OrganizationResource(this, organization);
+		return getSubResource(OrganizationResource.class).init(organization);
 	}
 
 	@POST

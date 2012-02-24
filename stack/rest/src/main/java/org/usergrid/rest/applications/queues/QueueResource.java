@@ -58,16 +58,19 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.mq.QueueQuery;
 import org.usergrid.mq.QueueResults;
 import org.usergrid.rest.AbstractContextResource;
-import org.usergrid.rest.applications.ServiceResource;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.core.provider.EntityHolder;
 
+@Component
+@Scope("prototype")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })
@@ -78,20 +81,13 @@ public class QueueResource extends AbstractContextResource {
 	QueueManager mq;
 	String queuePath = "";
 
-	public QueueResource(ServiceResource service, QueueManager mq)
-			throws Exception {
-		super(service);
-
-		this.mq = mq;
+	public QueueResource() {
 	}
 
-	public QueueResource(QueueResource parent, QueueManager mq, String queuePath)
-			throws Exception {
-		super(parent);
-
+	public QueueResource init(QueueManager mq, String queuePath) {
 		this.mq = mq;
 		this.queuePath = queuePath;
-
+		return this;
 	}
 
 	@Path("{subPath}")
@@ -100,7 +96,8 @@ public class QueueResource extends AbstractContextResource {
 
 		logger.info("QueueResource.getSubPath");
 
-		return new QueueResource(this, mq, queuePath + "/" + subPath);
+		return getSubResource(QueueResource.class).init(mq,
+				queuePath + "/" + subPath);
 	}
 
 	@Path("subscribers")
@@ -109,7 +106,8 @@ public class QueueResource extends AbstractContextResource {
 
 		logger.info("QueueResource.getSubscribers");
 
-		return new QueueSubscriberResource(this, mq, queuePath);
+		return getSubResource(QueueSubscriberResource.class)
+				.init(mq, queuePath);
 	}
 
 	@Path("subscriptions")
@@ -118,7 +116,8 @@ public class QueueResource extends AbstractContextResource {
 
 		logger.info("QueueResource.getSubscriptions");
 
-		return new QueueSubscriptionResource(this, mq, queuePath);
+		return getSubResource(QueueSubscriptionResource.class).init(mq,
+				queuePath);
 	}
 
 	@Path("properties")

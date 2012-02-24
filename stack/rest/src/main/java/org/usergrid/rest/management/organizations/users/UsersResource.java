@@ -63,6 +63,8 @@ import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
@@ -71,6 +73,8 @@ import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
+@Component("org.usergrid.rest.management.organizations.users.UsersResource")
+@Scope("prototype")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })
@@ -81,10 +85,12 @@ public class UsersResource extends AbstractContextResource {
 
 	OrganizationInfo organization;
 
-	public UsersResource(AbstractContextResource parent,
-			OrganizationInfo organization) {
-		super(parent);
+	public UsersResource() {
+	}
+
+	public UsersResource init(OrganizationInfo organization) {
 		this.organization = organization;
+		return this;
 	}
 
 	@RequireOrganizationAccess
@@ -233,8 +239,8 @@ public class UsersResource extends AbstractContextResource {
 	@RequireOrganizationAccess
 	@PUT
 	@Path("{username}")
-	public JSONWithPadding addUserToOrganizationByUsername(
-			@Context UriInfo ui, @PathParam("username") String username,
+	public JSONWithPadding addUserToOrganizationByUsername(@Context UriInfo ui,
+			@PathParam("username") String username,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 

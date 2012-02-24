@@ -69,6 +69,8 @@ import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.persistence.AggregateCounter;
 import org.usergrid.persistence.AggregateCounterSet;
 import org.usergrid.persistence.Entity;
@@ -86,6 +88,8 @@ import org.usergrid.services.ServiceResults;
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.core.provider.EntityHolder;
 
+@Component
+@Scope("prototype")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })
@@ -97,14 +101,15 @@ public class ServiceResource extends AbstractContextResource {
 	ServiceManager services;
 	List<ServiceParameter> serviceParameters = null;
 
-	public ServiceResource(AbstractContextResource parent) throws Exception {
-		super(parent);
-
+	public ServiceResource() {
 	}
 
-	public ServiceResource(ServiceResource parent) throws Exception {
-		super(parent);
-		services = parent.services;
+	@Override
+	public void setParent(AbstractContextResource parent) {
+		super.setParent(parent);
+		if (parent instanceof ServiceResource) {
+			services = ((ServiceResource) parent).services;
+		}
 	}
 
 	public ServiceResource getServiceResourceParent() {
@@ -176,7 +181,7 @@ public class ServiceResource extends AbstractContextResource {
 
 		addMatrixParams(getServiceParameters(), ui, entityId);
 
-		return new ServiceResource(this);
+		return getSubResource(ServiceResource.class);
 	}
 
 	@Path("{itemName}")
@@ -198,7 +203,7 @@ public class ServiceResource extends AbstractContextResource {
 
 		addMatrixParams(getServiceParameters(), ui, itemName);
 
-		return new ServiceResource(this);
+		return getSubResource(ServiceResource.class);
 	}
 
 	public ServiceResults executeServiceRequest(UriInfo ui,
