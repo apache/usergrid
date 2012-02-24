@@ -765,6 +765,7 @@ function usergrid_console_app() {
     $('form.modal').on('hidden',resetModal).on('shown',focusModal).submit(submitModal);
     $('#dialog-form-new-application').submit(submitApplication);
     $("#dialog-form-new-admin").submit(submitNewAdmin);
+    $("#dialog-form-new-organization").submit(submitNewOrg);
 
     function checkLength2(input, min, max) {
         if (input.val().length > max || input.val().length < min) {
@@ -852,6 +853,23 @@ function usergrid_console_app() {
         if (bValid) {
             client.createAdmin(form.serializeObject(), requestAdmins, function () {
                 alert("Unable to create admin: " + client.getLastErrorMessage(new_admin_email.val()));
+            });
+            $(this).modal('hide');
+        }
+    }
+    function submitNewOrg() {
+        var form = $(this);
+        formClearErrors(form);
+
+        var new_organization_name = $("#new-organization-name");
+
+        var bValid = true;
+        bValid = bValid && checkLength2(new_organization_name, 4, 80);
+        bValid = bValid && checkRegexp2(new_organization_name, nameRegex, "Organization name only allow : a-z, 0-9, dot, and dash.");
+
+        if (bValid) {
+            client.createOrganization(form.serializeObject(),requestOrganizations, function() {
+                alert("Unable to create orgnization: " + client.getLastErrorMessage(new_organization_name.val()));
             });
             $(this).modal('hide');
         }
@@ -2835,46 +2853,6 @@ function usergrid_console_app() {
     }
     usergrid.console.requestAccountSettings = requestAccountSettings;
 
-    var new_organization_name = $("#new-organization-name");
-    var allNewOrganizationFields = $([]).add(new_organization_name);
-
-    $("#dialog-form-new-organization").dialog({
-        autoOpen: false,
-        height: 275,
-        width: 350,
-        modal: true,
-        buttons: {
-            "Create": function() {
-                var bValid = true;
-                allNewOrganizationFields.removeClass("ui-state-error");
-
-                bValid = bValid
-                && checkLength(new_organization_name, "name", 4, 80);
-
-                bValid = bValid
-                && checkRegexp(new_organization_name,
-                nameRegex,
-                "Organization name only allow : a-z, 0-9, dot, and dash.");
-
-                if (bValid) {
-                    createOrganization(new_organization_name.val());
-                    $(this).dialog("close");
-                }
-            },
-            Cancel: function() {
-                $(this).dialog("close");
-            }
-        },
-        close: function() {
-            allNewOrganizationFields.val("").removeClass("ui-state-error");
-        }
-    });
-
-    function newOrganization() {
-        $("#dialog-form-new-organization").dialog("open");
-    }
-    window.usergrid.console.newOrganization = newOrganization;
-
     function displayOrganizations(response) {       
         var t = "";
         var m = "";
@@ -2926,14 +2904,6 @@ function usergrid_console_app() {
             $("#organizations").html("<h2>Unable to retrieve organizations list.</h2>");
         });
     }
-         
-    function createOrganization(name) {
-        client.createOrganization(name,requestOrganizations,
-        function() {
-            alert("Unable to create orgnization: " + client.getLastErrorMessage(name));
-        });
-    }
-    window.usergrid.console.createOrganization = createOrganization;
 
 
    function leaveOrganization(name) {

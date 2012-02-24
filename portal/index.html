@@ -833,7 +833,7 @@
                         <h3>
                             Organizations
                             <div class="bar">
-                                <a href="" onclick="usergrid.console.newOrganization(); return false;"><i class="icon-plus"></i> New Organization</a>
+                                <a class="" data-toggle="modal" href="#dialog-form-new-organization"><i class="icon-plus"></i> New Organization</a>
                             </div>
                         </h3>
                         <div class="console-section-contents">
@@ -841,15 +841,28 @@
                         </div>
                     </div>
                 </div>
-                <div id="dialog-form-new-organization" class="dialog-form" title="Create new organization">
-                    <p class="validateTips">All form fields are required.</p>
-                    <form>
+                <form id="dialog-form-new-organization" class="modal hide fade">
+                    <div class="modal-header">
+                        <a class="close" data-dismiss="modal">x</a>
+                        <h4>Create new organization</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p class="validateTips">All form fields are required.</p>
                         <fieldset>
-                            <label for="new-organization-name">Name</label>
-                            <input type="text" name="new-organization-name" id="new-organization-name" value="" class="text ui-widget-content ui-corner-all"/>
+                            <div class="control-group">
+                                <label for="new-organization-name">Name</label>
+                                <div class="controls">
+                                    <input type="text" name="organization" id="new-organization-name" class="input-xlarge"/>
+                                    <p class="help-block hide"></p>
+                                </div>
+                            </div>
                         </fieldset>
-                    </form>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="submit" class="btn btn-primary" value="Create"/>
+                        <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                    </div>
+                </form>
             </div>
         </div>
         <div class="clear"></div>

@@ -540,6 +540,7 @@ usergrid.Client = function(options) {
     // Add application to organization
     //
     // POST: /management/organizations/<organization-name>/applications
+    // data: {name}
     //
     function createApplication(data, success, failure) {
         if (!self.currentOrganization) {
@@ -565,12 +566,13 @@ usergrid.Client = function(options) {
     // Create new organization for admin user
     //
     // POST: /management/users/<user-id>/organizations
+    // data: {organization}
     //
-    function createOrganization(organizationName, success, failure) {
+    function createOrganization(data, success, failure) {
         if (!self.loggedInUser) {
             failure();
         }
-        apiRequest("POST", "/management/users/" + self.loggedInUser.uuid + "/organizations", null, JSON.stringify({"organization" : organizationName}), success, failure);
+        apiRequest("POST", "/management/users/" + self.loggedInUser.uuid + "/organizations", null, JSON.stringify(data), success, failure);
     }
     this.createOrganization = createOrganization;
     
@@ -625,6 +627,7 @@ usergrid.Client = function(options) {
     // Create new admin user for organization
     //
     // POST: /management/organizations/<organization-name>/users
+    // data: {email, password}
     //
     function createAdmin(data, success, failure) {
         if (!self.currentOrganization) {
