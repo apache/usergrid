@@ -1,4 +1,4 @@
-package org.usergrid.rest;
+package org.usergrid.rest.applications.users;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.codehaus.jackson.JsonNode;
@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.rest.AbstractRestTest;
 
 import javax.ws.rs.core.MediaType;
 
@@ -18,13 +19,13 @@ import static org.usergrid.utils.MapUtils.hashMap;
 /**
  * @author zznate
  */
-public class UserAuthTest extends AbstractRestTest {
-  private static Logger log = LoggerFactory.getLogger(UserAuthTest.class);
+public class UserResourceTest extends AbstractRestTest {
+  private static Logger log = LoggerFactory.getLogger(UserResourceTest.class);
 
   private static boolean userInited = false;
   private static String access_token;
 
-  public UserAuthTest() throws Exception {
+  public UserResourceTest() throws Exception {
     super();
   }
 
