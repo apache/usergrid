@@ -1,7 +1,11 @@
 package org.usergrid.rest.applications.users;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.rest.AbstractContextResource;
 
+@Component
+@Scope("prototype")
 public abstract class AbstractUserExtensionResource extends
 		AbstractContextResource {
 
@@ -10,9 +14,12 @@ public abstract class AbstractUserExtensionResource extends
 	public AbstractUserExtensionResource() {
 	}
 
-	public AbstractUserExtensionResource init(UserResource userResource) {
-		this.userResource = userResource;
-		return this;
+	@Override
+	public void setParent(AbstractContextResource parent) {
+		super.setParent(parent);
+		if (parent instanceof UserResource) {
+			this.userResource = (UserResource) parent;
+		}
 	}
 
 	public UserResource getUserResource() {

@@ -64,6 +64,8 @@ import net.tanesha.recaptcha.ReCaptchaResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.Query;
@@ -77,6 +79,8 @@ import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 import com.sun.jersey.core.provider.EntityHolder;
 
+@Component("org.usergrid.rest.applications.users.UsersResource")
+@Scope("prototype")
 @Produces(MediaType.APPLICATION_JSON)
 public class UsersResource extends ServiceResource {
 
@@ -202,6 +206,7 @@ public class UsersResource extends ServiceResource {
 				.getEntityManager()
 				.getProperty(this.getServices().getApplicationRef(),
 						"registration_requires_email_confirmation");
+		boolean activated = !((registration_requires_email_confirmation != null) && registration_requires_email_confirmation);
 
 		if (json instanceof Map) {
 			@SuppressWarnings("unchecked")
@@ -210,7 +215,7 @@ public class UsersResource extends ServiceResource {
 			map.remove("password");
 			pin = (String) map.get("pin");
 			map.remove("pin");
-			map.put("activated", !registration_requires_email_confirmation);
+			map.put("activated", activated);
 		} else if (json instanceof List) {
 			@SuppressWarnings("unchecked")
 			List<Object> list = (List<Object>) json;

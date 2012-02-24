@@ -48,12 +48,16 @@ import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.services.ServiceManager;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
+@Component
+@Scope("prototype")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })
@@ -69,6 +73,7 @@ public class AuthResource extends AbstractContextResource {
 
 	@Override
 	public void setParent(AbstractContextResource parent) {
+		super.setParent(parent);
 		if (parent instanceof ServiceResource) {
 			services = ((ServiceResource) parent).services;
 		}

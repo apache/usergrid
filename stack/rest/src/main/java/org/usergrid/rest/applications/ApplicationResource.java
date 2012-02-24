@@ -78,6 +78,8 @@ import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.codec.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.persistence.Identifier;
@@ -92,6 +94,8 @@ import org.usergrid.security.oauth.ClientCredentialsInfo;
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
 
+@Component("org.usergrid.rest.applications.ApplicationResource")
+@Scope("prototype")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })

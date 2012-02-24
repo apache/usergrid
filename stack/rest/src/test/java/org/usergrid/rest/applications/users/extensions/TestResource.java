@@ -7,22 +7,20 @@ import javax.ws.rs.core.MediaType;
 import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.rest.applications.users.AbstractUserExtensionResource;
-import org.usergrid.rest.applications.users.UserResource;
 
 @Ignore
+@Component("org.usergrid.rest.applications.users.extensions.TestResource")
+@Scope("prototype")
 @Produces(MediaType.APPLICATION_JSON)
 public class TestResource extends AbstractUserExtensionResource {
 
 	private static Logger log = LoggerFactory.getLogger(TestResource.class);
 
 	public TestResource() {
-	}
-
-	@Override
-	public TestResource init(UserResource userResource) {
 		log.info("TestResource");
-		return this;
 	}
 
 	@GET

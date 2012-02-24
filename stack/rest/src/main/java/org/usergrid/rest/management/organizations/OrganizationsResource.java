@@ -54,6 +54,8 @@ import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.rest.AbstractContextResource;
@@ -61,6 +63,8 @@ import org.usergrid.rest.ApiResponse;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
+@Component("org.usergrid.rest.management.organizations.OrganizationsResource")
+@Scope("prototype")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })

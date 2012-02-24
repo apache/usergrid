@@ -55,6 +55,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
@@ -66,6 +68,8 @@ import org.usergrid.security.shiro.utils.SubjectUtils;
 import com.google.common.collect.BiMap;
 import com.sun.jersey.api.json.JSONWithPadding;
 
+@Component("org.usergrid.rest.management.users.organizations.OrganizationsResource")
+@Scope("prototype")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })
