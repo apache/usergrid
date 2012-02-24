@@ -23,6 +23,7 @@
 				<filtering>true</filtering>
 				<includes>
 					<include>**/*.xml</include>
+                    <include>**/*.png</include>
 				</includes>
 			</resource>
 		</resources>
