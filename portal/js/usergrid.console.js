@@ -150,10 +150,26 @@ function usergrid_console_app() {
         //query_history = [];
         displayQueryResponse({});
         doQueryGet();
+        var count = (collection.split('/').length - 1);
+        if (count>1){
+            $('#button-query-back').show();
+        } else {
+            $('#button-query-back').hide();
+        }
     }
     window.usergrid.console.pageOpenQueryExplorer = pageOpenQueryExplorer;
 
     function pushQuery() {
+        //don't let me get to deep...
+        var newPath = $("#query-path").val();
+        try {
+            var oldPath = query_history[0].path;
+            if (newPath == oldPath) {
+                return;
+            }
+        } catch (e) {
+            
+        }
         query_history.unshift({
             path: $("#query-path").val(),
             query: $("#query-ql").val()
@@ -169,6 +185,12 @@ function usergrid_console_app() {
         if (item) {
             $("#query-path").val(item.path);
             $("#query-ql").val(item.query);
+            var count = (item.path.split('/').length - 1);
+            if (count>1){
+                $('#button-query-back').show();
+            } else {
+                $('#button-query-back').hide();
+            }
         }
     }
 
