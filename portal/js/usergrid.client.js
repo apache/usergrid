@@ -1040,14 +1040,10 @@ usergrid.Client = function(options) {
     // Create new application user for organization
     //
     // POST: /<application-id/users
+    // data: {username,name,email,password}
     //
-    function createUser(applicationId, username, fullname, email, password, success, failure) {
-        apiRequest("POST", "/" + applicationId + "/users", null, JSON.stringify({
-            username: username,
-            name: fullname,
-            email: email,
-            password: password
-        }), success, failure);
+    function createUser(applicationId, data, success, failure) {
+        apiRequest("POST", "/" + applicationId + "/users", null, JSON.stringify(data), success, failure);
     }
     this.createUser = createUser;
 

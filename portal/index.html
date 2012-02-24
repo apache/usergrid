@@ -350,7 +350,7 @@
                                     Users
                                     <div class="bar">
                                         Search: <input onkeyup="usergrid.console.requestUsers(this.value);" type="text" name="search-user-username" id="search-user-username"/>
-                                        <a href="" onclick="usergrid.console.newUser(); return false;"><i class="icon-plus"></i> New</a>
+                                        <a class="" data-toggle="modal" href="#dialog-form-new-user"><i class="icon-plus"></i> New</a>
                                         <a href="" onclick="usergrid.console.deleteUsers(); return false;"><i class="icon-remove"></i> Delete</a>
                                     </div>
                                 </h3>
@@ -370,21 +370,49 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="dialog-form-new-user" class="dialog-form" title="Create new user">
-                            <p class="validateTips">All form fields are required.</p>
-                            <form>
+                        <form id="dialog-form-new-user" class="modal hide fade">
+                            <div class="modal-header">
+                                <a class="close" data-dismiss="modal">x</a>
+                                <h4>Create new user</h4>
+                            </div>
+                            <div class="modal-body">
+                                <p class="validateTips">All form fields are required.</p>
                                 <fieldset>
-                                    <label for="new-user-username">Username</label>
-                                    <input type="text" name="new-user-username" id="new-user-username" value="" class="text ui-widget-content ui-corner-all"/>
-                                    <label for="new-user-fullname">Full name</label>
-                                    <input type="text" name="new-user-fullname" id="new-user-fullname" value="" class="text ui-widget-content ui-corner-all"/>
-                                    <label for="new-user-email">Email</label>
-                                    <input type="text" name="new-user-email" id="new-user-email" value="" class="text ui-widget-content ui-corner-all"/>
-                                    <label for="new-admin-password">Password</label>
-                                    <input type="password" name="new-user-password" id="new-user-password" value="" class="text ui-widget-content ui-corner-all"/>
+                                    <div class="control-group">
+                                        <label for="new-user-username">Username</label>
+                                        <div class="controls">
+                                            <input type="text" name="username" id="new-user-username" class="input-xlarge"/>
+                                            <p class="help-block hide"></p>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <label for="new-user-fullname">Full name</label>
+                                        <div class="controls">
+                                            <input type="text" name="name" id="new-user-fullname" class="input-xlarge"/>
+                                            <p class="help-block hide"></p>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <label for="new-user-email">Email</label>
+                                        <div class="controls">
+                                            <input type="text" name="email" id="new-user-email" class="input-xlarge"/>
+                                            <p class="help-block hide"></p>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <label for="new-user-password">Password</label>
+                                        <div class="controls">
+                                            <input type="password" name="password" id="new-user-password" class="input-xlarge"/>
+                                            <p class="help-block hide"></p>
+                                        </div>
+                                    </div>
                                 </fieldset>
-                            </form>
-                        </div>
+                            </div>
+                            <div class="modal-footer">
+                                <input type="submit" class="btn btn-primary" value="Create"/>
+                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                            </div>
+                        </form>
                     </div>
                     <div id="user-panel" style="display: none">
                         <ul id="user-panel-tab-bar" class="nav nav-tabs">
