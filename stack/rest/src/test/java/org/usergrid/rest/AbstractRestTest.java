@@ -3,9 +3,11 @@ package org.usergrid.rest;
 import static org.junit.Assert.assertNull;
 import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
+import static org.usergrid.utils.MapUtils.hashMap;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,12 +25,26 @@ import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerException;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 
+import javax.ws.rs.core.MediaType;
+import java.util.Map;
+
+/**
+ * Base class for testing Usergrid Jersey-based REST API.
+ * Implementations should model the paths mapped, not the method names.
+ * For example, to test the the "password" mapping on
+ * applications.users.UserResource for a PUT method, the test method(s)
+ * should following the following naming convention:
+ * test_[HTTP verb]_[action mapping]_[ok|fail][_[specific failure condition if multiple]
+ */
 public abstract class AbstractRestTest extends JerseyTest {
 
 	private static Logger logger = LoggerFactory
 			.getLogger(AbstractRestTest.class);
 
 	static EmbeddedServerHelper embedded = null;
+  static boolean usersSetup = false;
+
+  protected String access_token;
 
 	static ClientConfig clientConfig = new DefaultClientConfig();
 	static {
@@ -72,7 +88,29 @@ public abstract class AbstractRestTest extends JerseyTest {
 								MapUtils.hashMap("targetFilterLifecycle",
 										"true")).clientConfig(clientConfig)
 						.build());
+    setupUsers();
 	}
+
+  protected void setupUsers() {
+    if (usersSetup) return;
+    JsonNode node = resource().path("/management/token")
+        				.queryParam("grant_type", "password")
+        				.queryParam("username", "test@usergrid.com")
+        				.queryParam("password", "test")
+        				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+        String mgmToken = node.get("access_token").getTextValue();
+
+        Map<String, String> payload = hashMap("email", "ed@anuff.com")
+                .map("username", "edanuff").map("name", "Ed Anuff")
+                .map("password", "sesame").map("pin", "1234");
+
+        node = resource().path("/test-app/users")
+                .queryParam("access_token", mgmToken)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(JsonNode.class, payload);
+    usersSetup = true;
+  }
 
 	@Override
 	protected TestContainerFactory getTestContainerFactory() {
@@ -98,4 +136,32 @@ public abstract class AbstractRestTest extends JerseyTest {
   		logger.info(mapToFormattedJsonString(node));
   }
 
+  /**
+   * Hook to get the token for our base user
+   */
+  @Before
+  public void acquireToken() {
+    JsonNode node = resource().path("/test-app/token")
+                .queryParam("grant_type", "password")
+                .queryParam("username", "ed@anuff.com")
+                .queryParam("password", "sesame")
+                .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+
+     this.access_token = node.get("access_token").getTextValue();
+  }
+
+  /**
+   * Acquire the management token for the test@usergrid.com user
+   * @return
+   */
+  protected String mgmtToken() {
+    JsonNode node = resource().path("/management/token")
+            .queryParam("grant_type", "password")
+            .queryParam("username", "test@usergrid.com")
+            .queryParam("password", "test")
+            .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+    String mgmToken = node.get("access_token").getTextValue();
+    return mgmToken;
+
+  }
 }

@@ -23,14 +23,13 @@ public class UserResourceTest extends AbstractRestTest {
   private static Logger log = LoggerFactory.getLogger(UserResourceTest.class);
 
   private static boolean userInited = false;
-  private static String access_token;
 
   public UserResourceTest() throws Exception {
     super();
   }
 
   @Test(expected = UniformInterfaceException.class)
-  public void testPasswordChangeFail() {
+  public void test_PUT_password_fail() {
     Map<String, String> payload = hashMap("password", "sesame1").map("oldpassword", "sesame");
 
     JsonNode node = resource().path("/test-app/users/ed@anuff.com/password")
@@ -38,11 +37,10 @@ public class UserResourceTest extends AbstractRestTest {
             .accept(MediaType.APPLICATION_JSON)
             .type(MediaType.APPLICATION_JSON_TYPE)
             .put(JsonNode.class, payload);
-
   }
 
   @Test
-  public void testPasswordChangeOk() {
+  public void test_PUT_password_ok() {
     Map<String, String> payload = hashMap("newpassword", "sesame1").map("oldpassword", "sesame");
 
     JsonNode node = resource().path("/test-app/users/ed@anuff.com/password")
@@ -51,41 +49,7 @@ public class UserResourceTest extends AbstractRestTest {
             .type(MediaType.APPLICATION_JSON_TYPE)
             .put(JsonNode.class, payload);
     logNode(node);
-
   }
 
-  @Before
-  public void setupLocal() {
-    if ( userInited )
-      return;
-    JsonNode node = resource().path("/management/token")
-    				.queryParam("grant_type", "password")
-    				.queryParam("username", "test@usergrid.com")
-    				.queryParam("password", "test")
-    				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-    String mgmToken = node.get("access_token").getTextValue();
 
-    Map<String, String> payload = hashMap("email", "ed@anuff.com")
-            .map("username", "edanuff").map("name", "Ed Anuff")
-            .map("password", "sesame").map("pin", "1234");
-
-    node = resource().path("/test-app/users")
-            .queryParam("access_token", mgmToken)
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .post(JsonNode.class, payload);
-    userInited = true;
-    access_token = acquireToken();
-
-  }
-
-  private String acquireToken() {
-    JsonNode node = resource().path("/test-app/token")
-                .queryParam("grant_type", "password")
-                .queryParam("username", "ed@anuff.com")
-                .queryParam("password", "sesame")
-                .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-
-     return node.get("access_token").getTextValue();
-  }
 }
