@@ -681,13 +681,6 @@ function usergrid_console_app() {
         });
     }
 
-    function createAdmin(email, password) {
-        client.createAdmin(email, password, requestAdmins,
-        function() {
-            alert("Unable to create admin: " + client.getLastErrorMessage(email));
-        });
-    }
-
     var organization_keys = { };
     
     function requestOrganizationCredentials() {
@@ -756,61 +749,12 @@ function usergrid_console_app() {
         return t;
     }
 
-    var new_admin_email = $("#new-admin-email");
-    var new_admin_password = $("#new-admin-password");
-    var new_admin_password_confirm = $("#new-admin-password-confirm");
-    var allNewAdminFields = $([]).add(new_admin_email).add(new_admin_password);
     var tips = $(".validateTips");
-
-    $("#dialog-form-new-admin")
-    .dialog(
-    {
-        autoOpen: false,
-        height: 375,
-        width: 350,
-        modal: true,
-        buttons: {
-            "Create": function() {
-                var bValid = true;
-                allNewAdminFields.removeClass("ui-state-error");
-                new_admin_password_confirm.removeClass("ui-state-error");
-
-                bValid = bValid && checkLength(new_admin_email, "email", 6, 80);
-                bValid = bValid && checkLength(new_admin_password, "password", 5, 16);
-                bValid = bValid && checkRegexp(new_admin_email,emailRegex,
-                    "eg. example@apigee.com");
-                bValid = bValid && checkRegexp(new_admin_password,passwordRegex,
-                    "Password field only allows : a-z, 0-9, @, #, $, %, ^, &");
-
-                bValid = bValid && checkTrue(new_admin_password,
-                    new_admin_password.val() == new_admin_password_confirm.val(),
-                    "Passwords do not match");
-
-                if (bValid) {
-                    createAdmin(new_admin_email.val(), new_admin_password.val());
-                    $(this).dialog("close");
-                }
-            },
-            Cancel: function() {
-                $(this).dialog("close");
-            }
-        },
-        close: function() {
-            var form = $("#dialog-form-new-admin");
-            form.find("input").val("").removeClass("ui-state-error");
-            form.find(".validateTips").remove();
-        }
-    });
-
-    function newAdministrator() {
-        $("#dialog-form-new-admin").dialog("open");
-    }
-    window.usergrid.console.newAdministrator = newAdministrator;
 
     function resetModal(){
         this.reset();
-        $(this).find(".ui-state-error").removeClass("ui-state-error");
-        $(this).find(".error").removeClass("error");
+        var form = $(this);
+        formClearErrors(form);
     }
     function focusModal(){
         $(this).find('input:first').focus();
@@ -820,13 +764,14 @@ function usergrid_console_app() {
     }
     $('form.modal').on('hidden',resetModal).on('shown',focusModal).submit(submitModal);
     $('#dialog-form-new-application').submit(submitApplication);
+    $("#dialog-form-new-admin").submit(submitNewAdmin);
 
     function checkLength2(input, min, max) {
         if (input.val().length > max || input.val().length < min) {
             var tip = "Length must be between " + min + " and " + max + ".";
             input.focus();
             input.parent().parent().addClass("error");
-            input.parent().parent().find(".help-block").val(tip);
+            input.parent().parent().find(".help-block").text(tip).fadeIn();
             return false;
         }
         return true;
@@ -835,13 +780,21 @@ function usergrid_console_app() {
         if (! (regexp.test(input.val()))) {
             input.focus();
             input.parent().parent().addClass("error");
-            input.parent().parent().find(".help-block").text(tip);
+            input.parent().parent().find(".help-block").text(tip).fadeIn();
             return false;
         }
         return true;
     }
-    $.fn.serializeObject = function()
-    {
+    function checkTrue2(input, exp, tip) {
+        if (!exp) {
+            input.focus();
+            input.parent().parent().addClass("error");
+            input.parent().parent().find(".help-block").text(tip).fadeIn();
+            return false;
+        }
+        return exp;
+    }
+    $.fn.serializeObject = function() {
        var o = {};
        var a = this.serializeArray();
        $.each(a, function() {
@@ -857,8 +810,15 @@ function usergrid_console_app() {
        return o;
     };
 
+    function formClearErrors(form){
+        form.find(".ui-state-error").removeClass("ui-state-error");
+        form.find(".error").removeClass("error");
+        form.find(".validateTips").remove();
+        form.find(".help-block").empty();
+    }
     function submitApplication() {
-        $(this).find(".error").removeClass("error");
+        var form = $(this);
+        formClearErrors(form);
 
         var new_application_name = $("#new-application-name");
 
@@ -868,11 +828,33 @@ function usergrid_console_app() {
         if(!checkRegexp2(new_application_name, nameRegex, "only allows : a-z, 0-9, dot, and dash"))
             return false;
 
-        client.createApplication($(this).serializeObject(), requestApplications, function() {
+        client.createApplication(form.serializeObject(), requestApplications, function() {
             alert("Unable to create application: " + client.getLastErrorMessage(name));
         });
 
         $(this).modal('hide');
+    }
+    function submitNewAdmin() {
+        var form = $(this);
+        formClearErrors(form);
+
+        var new_admin_email = $("#new-admin-email");
+        var new_admin_password = $("#new-admin-password");
+        var new_admin_password_confirm = $("#new-admin-password-confirm");
+
+        var bValid = true;
+        bValid = bValid && checkLength2(new_admin_email, 6, 80);
+        bValid = bValid && checkRegexp2(new_admin_email,emailRegex, "eg. example@apigee.com");
+        bValid = bValid && checkLength2(new_admin_password, 5, 16);
+        bValid = bValid && checkRegexp2(new_admin_password,passwordRegex, "Password field only allows : a-z, 0-9, @, #, $, %, ^, &");
+        bValid = bValid && checkTrue2(new_admin_password_confirm, new_admin_password.val() == new_admin_password_confirm.val(), "Passwords do not match");
+
+        if (bValid) {
+            client.createAdmin(form.serializeObject(), requestAdmins, function () {
+                alert("Unable to create admin: " + client.getLastErrorMessage(new_admin_email.val()));
+            });
+            $(this).modal('hide');
+        }
     }
 
     function pageSelect(uuid) {

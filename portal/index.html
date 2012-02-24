@@ -230,7 +230,7 @@
                             <h3>
                                 Organizations Administrators
                                 <div class="bar">
-                                    <a class="" href="" onclick="usergrid.console.newAdministrator(); return false;"><i class="icon-plus"></i> New Administrator</a>
+                                    <a class="" data-toggle="modal" href="#dialog-form-new-admin"><i class="icon-plus"></i> New Administrator</a>
                                 </div>
                             </h3>
                             <div id="organization-admins" class="console-section-contents">
@@ -282,20 +282,44 @@
                             </div>
                         </form>
 
-                        <div id="dialog-form-new-admin" class="dialog-form" title="Create new administrator">
-                            <p class="validateTips">All form fields are required.</p>
-                            <p class="validateTips">If admin already has account, password fields are ignored.</p>
-                            <form>
+                        <form id="dialog-form-new-admin" class="modal hide fade" title="Create new administrator">
+                            <div class="modal-header">
+                                <a class="close" data-dismiss="modal">x</a>
+                                <h4>Create new administrator</h4>
+                            </div>
+                            <div class="modal-body">
+                                <p class="validateTips">All form fields are required.</p>
+                                <p class="validateTips">If admin already has account, password fields are ignored.</p>
+
                                 <fieldset>
-                                    <label for="new-admin-email">Email</label>
-                                    <input type="text" name="new-admin-email" id="new-admin-email" value="" class="text ui-widget-content ui-corner-all"/>
-                                    <label for="new-admin-password">Password</label>
-                                    <input type="password" name="new-admin-password" id="new-admin-password" value="" class="text ui-widget-content ui-corner-all"/>
-                                    <label for="new-admin-password-confirm">Confirm Password</label>
-                                    <input type="password" name="new-admin-password-confirm" id="new-admin-password-confirm" value="" class="text ui-widget-content ui-corner-all"/>
+                                    <div class="control-group">
+                                        <label for="new-admin-email">Email</label>
+                                        <div class="controls">
+                                            <input type="text" name="email" id="new-admin-email" value="" class="input-xlarge"/>
+                                            <p class="help-block hide"></p>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <label for="new-admin-password">Password</label>
+                                        <div class="controls">
+                                            <input type="password" name="password" id="new-admin-password" value="" class="input-xlarge"/>
+                                            <p class="help-block hide"></p>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <label for="new-admin-password-confirm">Confirm Password</label>
+                                        <div class="controls">
+                                            <input type="password" name="" id="new-admin-password-confirm" value="" class="input-xlarge"/>
+                                            <p class="help-block hide"></p>
+                                        </div>
+                                    </div>
                                 </fieldset>
-                            </form>
-                        </div>
+                            </div>
+                            <div class="modal-footer">
+                                <input type="submit" class="btn btn-primary" value="Create"/>
+                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                            </div>
+                        </form>
                     </div>
                     <div id="application-panel" style="display: none">
                         <div class="console-section span11">

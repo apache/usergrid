@@ -626,14 +626,11 @@ usergrid.Client = function(options) {
     //
     // POST: /management/organizations/<organization-name>/users
     //
-    function createAdmin(email, password, success, failure) {
+    function createAdmin(data, success, failure) {
         if (!self.currentOrganization) {
             failure();
         }
-        apiRequest("POST", "/management/organizations/" + self.currentOrganization.uuid + "/users", null, JSON.stringify({
-            email: email,
-            password: password
-        }), success, failure);
+        apiRequest("POST", "/management/organizations/" + self.currentOrganization.uuid + "/users", null, JSON.stringify(data), success, failure);
     }
     this.createAdmin = createAdmin;
 
