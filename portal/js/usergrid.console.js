@@ -766,6 +766,8 @@ function usergrid_console_app() {
     $('#dialog-form-new-application').submit(submitApplication);
     $("#dialog-form-new-admin").submit(submitNewAdmin);
     $("#dialog-form-new-organization").submit(submitNewOrg);
+    $("#dialog-form-new-user").submit(submitNewUser);
+    $("#dialog-form-new-role").submit(submitNewRole);
 
     function checkLength2(input, min, max) {
         if (input.val().length > max || input.val().length < min) {
@@ -843,16 +845,16 @@ function usergrid_console_app() {
         var new_admin_password = $("#new-admin-password");
         var new_admin_password_confirm = $("#new-admin-password-confirm");
 
-        var bValid = true;
-        bValid = bValid && checkLength2(new_admin_email, 6, 80);
-        bValid = bValid && checkRegexp2(new_admin_email,emailRegex, "eg. example@apigee.com");
-        bValid = bValid && checkLength2(new_admin_password, 5, 16);
-        bValid = bValid && checkRegexp2(new_admin_password,passwordRegex, "Password field only allows : a-z, 0-9, @, #, $, %, ^, &");
-        bValid = bValid && checkTrue2(new_admin_password_confirm, new_admin_password.val() == new_admin_password_confirm.val(), "Passwords do not match");
+        var bValid = checkLength2(new_admin_email, 6, 80)
+            && checkRegexp2(new_admin_email,emailRegex, "eg. example@apigee.com")
+            && checkLength2(new_admin_password, 5, 16)
+            && checkRegexp2(new_admin_password,passwordRegex, "Password field only allows : a-z, 0-9, @, #, $, %, ^, &")
+            && checkTrue2(new_admin_password_confirm, new_admin_password.val() == new_admin_password_confirm.val(), "Passwords do not match");
 
         if (bValid) {
-            client.createAdmin(form.serializeObject(), requestAdmins, function () {
-                alert("Unable to create admin: " + client.getLastErrorMessage(new_admin_email.val()));
+            var data = form.serializeObject();
+            client.createAdmin(data, requestAdmins, function () {
+                alert("Unable to create admin: " + client.getLastErrorMessage(data.email));
             });
             $(this).modal('hide');
         }
@@ -863,13 +865,57 @@ function usergrid_console_app() {
 
         var new_organization_name = $("#new-organization-name");
 
-        var bValid = true;
-        bValid = bValid && checkLength2(new_organization_name, 4, 80);
-        bValid = bValid && checkRegexp2(new_organization_name, nameRegex, "Organization name only allow : a-z, 0-9, dot, and dash.");
+        var bValid = checkLength2(new_organization_name, 4, 80)
+            && checkRegexp2(new_organization_name, nameRegex, "Organization name only allow : a-z, 0-9, dot, and dash.");
 
         if (bValid) {
-            client.createOrganization(form.serializeObject(),requestOrganizations, function() {
-                alert("Unable to create orgnization: " + client.getLastErrorMessage(new_organization_name.val()));
+            var data = form.serializeObject();
+            client.createOrganization(data,requestOrganizations, function() {
+                alert("Unable to create orgnization: " + client.getLastErrorMessage(data.name));
+            });
+            $(this).modal('hide');
+        }
+    }
+    function submitNewUser() {
+        var form = $(this);
+        formClearErrors(form);
+
+        var new_user_username = $("#new-user-username");
+        var new_user_fullname = $("#new-user-fullname");
+        var new_user_email = $("#new-user-email");
+        var new_user_password = $("#new-user-password");
+
+        var bValid = checkRegexp2(new_user_username,nameRegex,"Username only allows : a-z, 0-9, dot, and dash")
+            && checkLength2(new_user_email, 6, 80)
+            && checkRegexp2(new_user_email,emailRegex,"eg. ui@jquery.com")
+            && checkLength2(new_user_password, 5, 16)
+            && checkRegexp2(new_user_password,passwordRegex,"Password field only allows : a-z, 0-9, @, #, $, %, ^, &");
+
+        if (bValid) {
+            var data = form.serializeObject();
+            client.createUser(current_application_id, data, requestUsers, function() {
+                alert("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'));
+            });
+
+            $(this).modal('hide');
+        }
+    }
+    function submitNewRole() {
+        var form = $(this);
+        formClearErrors(form);
+
+        var new_role_name = $("#new-role-name");
+        var new_role_title = $("#new-role-title");
+
+        var bValid = checkLength2(new_role_name, 1, 80)
+            && checkRegexp2(new_role_name, nameRegex, "Name only allows : a-z, 0-9, dot, and dash")
+            && checkLength2(new_role_title, 1, 80)
+            && checkRegexp2(new_role_title, nameRegex, "Title only allows : a-z, 0-9, dot, and dash");
+
+        if (bValid) {
+            var data = form.serializeObject();
+            client.createRole(current_application_id, data, requestRoles, function() {
+                alert("Unable to create role: " + client.getLastErrorMessage(data.name));
             });
             $(this).modal('hide');
         }
@@ -1138,64 +1184,6 @@ function usergrid_console_app() {
         return false;
     }
     usergrid.console.requestUsers = requestUsers;
-
-    var new_user_username = $("#new-user-username");
-    var new_user_fullname = $("#new-user-fullname");
-    var new_user_email = $("#new-user-email");
-    var new_user_password = $("#new-user-password");
-    var allNewUserFields = $([]).add(new_user_username).add(new_user_fullname).add(new_user_email).add(new_user_password);
-
-    $("#dialog-form-new-user")
-    .dialog(
-    {
-        autoOpen: false,
-        height: 500,
-        width: 475,
-        modal: true,
-        buttons: {
-            "Create": function() {
-                allNewUserFields.removeClass("ui-state-error");
-
-                var bValid = checkLength(new_user_email, "email", 6, 80)
-                && checkLength(new_user_password, "password", 5, 16)
-                && checkRegexp(
-                new_user_username,
-                nameRegex,
-                "Username only allows : a-z, 0-9, dot, and dash")
-                && checkRegexp(
-                new_user_email,
-                emailRegex,
-                "eg. ui@jquery.com")
-                && checkRegexp(new_user_password,
-                passwordRegex,
-                "Password field only allows : a-z, 0-9, @, #, $, %, ^, &");
-
-                if (bValid) {
-                    createUser(new_user_username.val(), new_user_fullname.val(),
-                        new_user_email.val(), new_user_password.val());
-                    $(this).dialog("close");
-                }
-            },
-            Cancel: function() {
-                $(this).dialog("close");
-            }
-        },
-        close: function() {
-            allNewUserFields.val("").removeClass("ui-state-error");
-        }
-    });
-
-    function createUser(username, fullname, email, password) {
-        client.createUser(current_application_id, username, fullname, email, password, requestUsers,
-        function() {
-            alert("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'));
-        });
-    }
-
-    function newUser() {
-        $("#dialog-form-new-user").dialog("open");
-    }
-    window.usergrid.console.newUser = newUser;
 
     function deleteUsers() {        
         $("input[id^=userListItem]").each( function() {
@@ -1911,53 +1899,7 @@ function usergrid_console_app() {
             "nextButton" : "#button-roles-next",
             "noEntitiesMsg" : "No roles found"
         }, response);
-    } 
-
-    var new_role_name = $("#new-role-name");
-    var new_role_title = $("#new-role-title");
-    var allNewRoleFields = $([]).add(new_role_name).add(new_role_title);
-
-    $("#dialog-form-new-role")
-    .dialog(
-    {        
-        autoOpen: false,
-        height: 300,
-        width: 475,
-        modal: true,
-        buttons: {
-            "Create": function() {
-                allNewRoleFields.removeClass("ui-state-error");
-                var bValid = checkLength(new_role_name, "name", 1, 80)
-                && checkLength(new_role_title, "title", 1, 80)
-                && checkRegexp(new_role_name, nameRegex, "Name only allows : a-z, 0-9, dot, and dash")
-                && checkRegexp(new_role_title, nameRegex, "Title only allows : a-z, 0-9, dot, and dash");
-                if (bValid) {
-                    createRole(new_role_name.val(), new_role_title.val());
-                    $(this).dialog("close");
-                }
-            },
-            Cancel: function() {
-                $(this).dialog("close");
-            }
-        },
-        close: function() {
-            allNewRoleFields.val("").removeClass("ui-state-error");
-        }
-    });
-    
-    
-    function createRole(name, title) {
-        client.createRole(current_application_id, name, title, requestRoles,
-        function() {
-            alert("Unable to create role: " + client.getLastErrorMessage(name));
-        });
     }
-
-    function newRole() {
-        $("#dialog-form-new-role").dialog("open");
-    }
-    window.usergrid.console.newRole = newRole;
-
 
     function deleteRoles() {
         $("input[id^=roleListItem]").each( function() {
