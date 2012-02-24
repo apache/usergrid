@@ -44,13 +44,15 @@ html{
 }
 
 footer{
-  display: none;
   position:absolute;
   bottom:0;
   width:100%;
   border-top: 1px solid @border;
   border-bottom: 1px solid @border;
   #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+  .subnav{
+    display: none;
+  }
 	&> div {
 		padding: 5px 0;
 	}
