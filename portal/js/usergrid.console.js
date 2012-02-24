@@ -2861,7 +2861,6 @@ function usergrid_console_app() {
         if ($(this).attr("id") == "button-user-list") {
             //at this point we might be on another panel, so switch back to users and reset the search
             userLetter = '*';
-            requestUsers();
             Pages.SelectPanel('users');
             showPanelList('users');
         }
@@ -2884,7 +2883,6 @@ function usergrid_console_app() {
         if ($(this).attr("id") == "button-group-list") {
             //at this point we might be on another panel, so switch back to groups and reset the search
             groupLetter = '*';
-            requestGroups();
             Pages.SelectPanel('groups');
             showPanelList('groups');
         } else {
@@ -2896,7 +2894,6 @@ function usergrid_console_app() {
     $("#roles-panel-tab-bar a").click(function() {
         if ($(this).attr("id") == "button-roles-list") {
             Pages.SelectPanel('roles');
-            pageSelectRoles();
             showPanelList('roles');
         }
         else if ($(this).attr("id") == "button-roles-search") {
@@ -2906,7 +2903,6 @@ function usergrid_console_app() {
             $('#roles-panel-list').hide();
             $('#roles-panel-search').show();
         } else {
-            pageSelectRole();
             Pages.SelectPanel('roles');
         }
         return false;
@@ -2915,7 +2911,6 @@ function usergrid_console_app() {
     $("#role-panel-tab-bar a").click(function() {
         if ($(this).attr("id") == "button-role-list") {
             Pages.SelectPanel('roles');
-            pageSelectRoles();
             showPanelList('roles');
         }
         else if ($(this).attr("id") == "button-role-search") {
@@ -2925,7 +2920,6 @@ function usergrid_console_app() {
             $('#roles-panel-list').hide();
             $('#roles-panel-search').show();
         } else {
-            pageSelectRole();
             Pages.SelectPanel('roles');
         }
         return false;
