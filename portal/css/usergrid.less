@@ -8,7 +8,7 @@
 @border2: #E5E5E5;
 @modalBar: #F2F2F2;
 @h3Color: #CCCCCC;
-@minScreenWidth: 850px;
+@minScreenWidth: 600px;
 @linkHoverBgColor: #E5E5E5;
 //@fontMenu:
 
@@ -34,7 +34,7 @@ html{
 }
 
 #pages{
-  padding: 70px 0 50px 0;
+  padding: 70px 0 50px 0px;
   &>div{
 		display:none;
 	}
@@ -42,7 +42,10 @@ html{
  		display: none;
  	}
 }
-
+#console-panels{
+    margin-left: 150px;
+    border-left:2px solid #F2F5F7;
+}
 footer{
   position:absolute;
   bottom:0;
@@ -151,16 +154,22 @@ a:active {
 	}
 }
 
+#system-panel-buttons{
+    a{
+        //border: 1px solid #000000;
+        //margin: 5px 0;
+    }
+}
 #application-panel-buttons{
     display: none;
 }
 //----------------- Navigation --------------------------------------------------------------------
 #sidebar-menu{
-    min-width: 120px;
-    max-width: 130px;
+    position: absolute;
+    left: 15px;
+    width: 120px;
 }
 .nav-list{
-	border-right:2px solid #F2F5F7;
 	& > li > a{
 		.border-radius(5px);
 		padding: 5px 15px;
@@ -235,7 +244,7 @@ a:active {
 
 //----------Box ------------------------------------------------------------
 .console-section {
-    min-width: 200px;
+    min-width: 450px;
     margin: 0 0px 20px;
 	border: solid 1px @h3Color;
 	//background: #F2F5F7;

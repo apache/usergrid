@@ -177,14 +177,14 @@
         <div id="forgot-password-page" class="container">
             <iframe class="container"></iframe>
         </div>
-        <div id="console-page" class="container-fluid">
-            <div id="console-columns" class="row-fluid">
-                <div id="sidebar-menu" class="span2">
+        <div id="console-page" class="">
+            <div >
+                <div id="sidebar-menu">
                     <ul id="system-panel-buttons" class="nav nav-list">
-                        <li><a href="#organization"><i class="icon-home"></i> Home</a></li>
-                        <li><a href="#console"><i class="icon-list-alt"></i> Console</a></li>
+                        <li><a class="btn" href="#organization"><i class="icon-home"></i> Home</a></li>
+                        <li><a class="btn" href="#console"><i class="icon-list-alt"></i> Console</a></li>
                         <li id="applications-menu" class="dropdown">
-                            <a class="dropdown-toggle" href="#"><i class="icon-th-list"></i> Applications </a>
+                            <a class="dropdown-toggle btn" href="#"><i class="icon-th-list"></i> Applications </a>
                             <ul class="dropdown-menu">
                                 <li><a href="#">loading apps...</a></li>
                             </ul>
@@ -203,7 +203,7 @@
                         <li><a href="#settings"><i class="icon-cog"></i> Settings</a></li>
                     </ul>
                 </div>
-                <div id="console-panels" class="span10">
+                <div id="console-panels" class="container-fluid">
                     <div id="organization-panel" style="display: none">
                         <div id="console-panel-nav-bar"></div>
                         <div class="console-section">
@@ -237,10 +237,10 @@
                             </h3>
                             <div class="console-section-contents">
                                 <div class="row">
-                                    <span class="span3">Client ID</span> <span id="organization-panel-key">...</span>
+                                    <span class="span2">Client ID</span> <span id="organization-panel-key">...</span>
                                 </div>
                                 <div class="row">
-                                    <span class="span3">Client Secret</span> <span id="organization-panel-secret">...</span>
+                                    <span class="span2">Client Secret</span> <span id="organization-panel-secret">...</span>
                                 </div>
                             </div>
                         </div>
