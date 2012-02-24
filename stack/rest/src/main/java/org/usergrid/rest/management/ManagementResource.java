@@ -129,17 +129,17 @@ public class ManagementResource extends AbstractContextResource {
 
 	@Path("organizations")
 	public OrganizationsResource getOrganizations() {
-		return new OrganizationsResource(this);
+		return getSubResource(OrganizationsResource.class);
 	}
 
 	@Path("orgs")
 	public OrganizationsResource getOrganizations2() {
-		return new OrganizationsResource(this);
+		return getSubResource(OrganizationsResource.class);
 	}
 
 	@Path("users")
 	public UsersResource getUsers() {
-		return new UsersResource(this);
+		return getSubResource(UsersResource.class);
 	}
 
 	@GET

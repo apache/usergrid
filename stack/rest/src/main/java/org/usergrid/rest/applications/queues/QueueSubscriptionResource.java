@@ -76,23 +76,21 @@ public class QueueSubscriptionResource extends AbstractContextResource {
 	String queuePath = "";
 	String subscriptionPath = "";
 
-	public QueueSubscriptionResource(QueueResource parent, QueueManager mq,
-			String queuePath) throws Exception {
-		super(parent);
-
-		this.mq = mq;
-		this.queuePath = queuePath;
-
+	public QueueSubscriptionResource() {
 	}
 
-	public QueueSubscriptionResource(QueueSubscriptionResource parent,
-			QueueManager mq, String queuePath, String subscriptionPath)
-			throws Exception {
-		super(parent);
+	public QueueSubscriptionResource init(QueueManager mq, String queuePath) {
+		this.mq = mq;
+		this.queuePath = queuePath;
+		return this;
+	}
 
+	public QueueSubscriptionResource init(QueueManager mq, String queuePath,
+			String subscriptionPath) throws Exception {
 		this.mq = mq;
 		this.queuePath = queuePath;
 		this.subscriptionPath = subscriptionPath;
+		return this;
 	}
 
 	@Path("{subPath}")
@@ -101,8 +99,8 @@ public class QueueSubscriptionResource extends AbstractContextResource {
 
 		logger.info("QueueSubscriptionResource.getSubPath");
 
-		return new QueueSubscriptionResource(this, mq, queuePath,
-				subscriptionPath + "/" + subPath);
+		return getSubResource(QueueSubscriptionResource.class).init(mq,
+				queuePath, subscriptionPath + "/" + subPath);
 	}
 
 	@GET

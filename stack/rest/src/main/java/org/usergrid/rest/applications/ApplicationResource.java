@@ -83,7 +83,6 @@ import org.usergrid.mq.QueueManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.ApiResponse;
-import org.usergrid.rest.RootResource;
 import org.usergrid.rest.applications.queues.QueueResource;
 import org.usergrid.rest.applications.users.UsersResource;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
@@ -104,12 +103,14 @@ public class ApplicationResource extends ServiceResource {
 	UUID applicationId;
 	QueueManager queues;
 
-	public ApplicationResource(RootResource parent, UUID applicationId)
-			throws Exception {
-		super(parent);
+	public ApplicationResource() {
+	}
+
+	public ApplicationResource init(UUID applicationId) throws Exception {
 		this.applicationId = applicationId;
 		services = smf.getServiceManager(applicationId);
 		queues = qmf.getQueueManager(applicationId);
+		return this;
 	}
 
 	@Override
@@ -119,15 +120,13 @@ public class ApplicationResource extends ServiceResource {
 
 	@Path("auth")
 	public AuthResource getAuthResource() throws Exception {
-
-		return new AuthResource(this, services);
+		return getSubResource(AuthResource.class);
 	}
 
 	@RequireApplicationAccess
 	@Path("queues")
 	public QueueResource getQueueResource() throws Exception {
-
-		return new QueueResource(this, queues);
+		return getSubResource(QueueResource.class).init(queues, "");
 	}
 
 	@Path("users")
@@ -142,7 +141,7 @@ public class ApplicationResource extends ServiceResource {
 			addMatrixParams(getServiceParameters(), ui, ps);
 		}
 
-		return new UsersResource(this);
+		return getSubResource(UsersResource.class);
 	}
 
 	@Path("user")

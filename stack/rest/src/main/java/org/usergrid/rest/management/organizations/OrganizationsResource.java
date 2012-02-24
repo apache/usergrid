@@ -58,7 +58,6 @@ import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
-import org.usergrid.rest.management.ManagementResource;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
@@ -70,9 +69,7 @@ public class OrganizationsResource extends AbstractContextResource {
 	private static final Logger logger = LoggerFactory
 			.getLogger(OrganizationsResource.class);
 
-	public OrganizationsResource(ManagementResource parent) {
-		super(parent);
-		logger.info("ManagementOrganizationsResource initialized");
+	public OrganizationsResource() {
 	}
 
 	@Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
@@ -84,7 +81,7 @@ public class OrganizationsResource extends AbstractContextResource {
 		if (organization == null) {
 			return null;
 		}
-		return new OrganizationResource(this, organization);
+		return getSubResource(OrganizationResource.class).init(organization);
 	}
 
 	@Path("{organizationName}")
@@ -96,7 +93,7 @@ public class OrganizationsResource extends AbstractContextResource {
 		if (organization == null) {
 			return null;
 		}
-		return new OrganizationResource(this, organization);
+		return getSubResource(OrganizationResource.class).init(organization);
 	}
 
 	@POST

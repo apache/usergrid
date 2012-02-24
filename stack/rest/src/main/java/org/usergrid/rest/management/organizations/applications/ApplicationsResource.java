@@ -72,10 +72,12 @@ public class ApplicationsResource extends AbstractContextResource {
 
 	OrganizationInfo organization;
 
-	public ApplicationsResource(AbstractContextResource parent,
-			OrganizationInfo organization) {
-		super(parent);
+	public ApplicationsResource() {
+	}
+
+	public ApplicationsResource init(OrganizationInfo organization) {
 		this.organization = organization;
+		return this;
 	}
 
 	@RequireOrganizationAccess
@@ -151,7 +153,7 @@ public class ApplicationsResource extends AbstractContextResource {
 			@PathParam("applicationId") String applicationIdStr)
 			throws Exception {
 
-		return new ApplicationResource(this, organization,
+		return getSubResource(ApplicationResource.class).init(organization,
 				UUID.fromString(applicationIdStr));
 	}
 
@@ -165,7 +167,8 @@ public class ApplicationsResource extends AbstractContextResource {
 		ApplicationInfo application = management
 				.getApplication(applicationName);
 
-		return new ApplicationResource(this, organization, application);
+		return getSubResource(ApplicationResource.class).init(organization,
+				application);
 	}
 
 }

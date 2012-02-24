@@ -167,7 +167,7 @@ public class RootResource extends AbstractContextResource {
 			throw new UnauthorizedException();
 		}
 
-		return new ApplicationResource(this, applicationId);
+		return getSubResource(ApplicationResource.class).init(applicationId);
 	}
 
 	@Path("applications/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
@@ -200,7 +200,7 @@ public class RootResource extends AbstractContextResource {
 			throw new UnauthorizedException();
 		}
 
-		return new ApplicationResource(this, applicationId);
+		return getSubResource(ApplicationResource.class).init(applicationId);
 	}
 
 	@Path("applications/{applicationName}")

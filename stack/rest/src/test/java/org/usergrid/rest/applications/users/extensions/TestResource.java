@@ -16,9 +16,13 @@ public class TestResource extends AbstractUserExtensionResource {
 
 	private static Logger log = LoggerFactory.getLogger(TestResource.class);
 
-	public TestResource(UserResource userResource) throws Exception {
-		super(userResource);
+	public TestResource() {
+	}
+
+	@Override
+	public TestResource init(UserResource userResource) {
 		log.info("TestResource");
+		return this;
 	}
 
 	@GET

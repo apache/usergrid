@@ -97,14 +97,14 @@ public class ServiceResource extends AbstractContextResource {
 	ServiceManager services;
 	List<ServiceParameter> serviceParameters = null;
 
-	public ServiceResource(AbstractContextResource parent) throws Exception {
-		super(parent);
-
+	public ServiceResource() {
 	}
 
-	public ServiceResource(ServiceResource parent) throws Exception {
-		super(parent);
-		services = parent.services;
+	@Override
+	public void setParent(AbstractContextResource parent) {
+		if (parent instanceof ServiceResource) {
+			services = ((ServiceResource) parent).services;
+		}
 	}
 
 	public ServiceResource getServiceResourceParent() {
@@ -176,7 +176,7 @@ public class ServiceResource extends AbstractContextResource {
 
 		addMatrixParams(getServiceParameters(), ui, entityId);
 
-		return new ServiceResource(this);
+		return getSubResource(ServiceResource.class);
 	}
 
 	@Path("{itemName}")
@@ -198,7 +198,7 @@ public class ServiceResource extends AbstractContextResource {
 
 		addMatrixParams(getServiceParameters(), ui, itemName);
 
-		return new ServiceResource(this);
+		return getSubResource(ServiceResource.class);
 	}
 
 	public ServiceResults executeServiceRequest(UriInfo ui,

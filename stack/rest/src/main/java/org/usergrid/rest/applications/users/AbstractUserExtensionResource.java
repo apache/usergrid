@@ -7,10 +7,12 @@ public abstract class AbstractUserExtensionResource extends
 
 	UserResource userResource;
 
-	public AbstractUserExtensionResource(UserResource userResource)
-			throws Exception {
-		super(userResource);
+	public AbstractUserExtensionResource() {
+	}
+
+	public AbstractUserExtensionResource init(UserResource userResource) {
 		this.userResource = userResource;
+		return this;
 	}
 
 	public UserResource getUserResource() {

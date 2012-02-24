@@ -68,19 +68,22 @@ public class ApplicationResource extends AbstractContextResource {
 	UUID applicationId;
 	ApplicationInfo application;
 
-	public ApplicationResource(AbstractContextResource parent,
-			OrganizationInfo organization, UUID applicationId) {
-		super(parent);
-		this.organization = organization;
-		this.applicationId = applicationId;
+	public ApplicationResource() {
 	}
 
-	public ApplicationResource(AbstractContextResource parent,
-			OrganizationInfo organization, ApplicationInfo application) {
-		super(parent);
+	public ApplicationResource init(OrganizationInfo organization,
+			UUID applicationId) {
+		this.organization = organization;
+		this.applicationId = applicationId;
+		return this;
+	}
+
+	public ApplicationResource init(OrganizationInfo organization,
+			ApplicationInfo application) {
 		this.organization = organization;
 		applicationId = application.getId();
 		this.application = application;
+		return this;
 	}
 
 	@RequireOrganizationAccess
@@ -116,7 +119,7 @@ public class ApplicationResource extends AbstractContextResource {
 		response.setCredentials(credentials);
 		return new JSONWithPadding(response, callback);
 	}
-	
+
 	@RequireOrganizationAccess
 	@POST
 	@Path("credentials")
@@ -134,6 +137,5 @@ public class ApplicationResource extends AbstractContextResource {
 		response.setCredentials(credentials);
 		return new JSONWithPadding(response, callback);
 	}
-
 
 }

@@ -71,31 +71,33 @@ public class OrganizationResource extends AbstractContextResource {
 
 	OrganizationInfo organization;
 
-	public OrganizationResource(AbstractContextResource parent,
-			OrganizationInfo organization) {
-		super(parent);
+	public OrganizationResource() {
+	}
+
+	public OrganizationResource init(OrganizationInfo organization) {
 		this.organization = organization;
+		return this;
 	}
 
 	@RequireOrganizationAccess
 	@Path("users")
 	public UsersResource getOrganizationUsers(@Context UriInfo ui)
 			throws Exception {
-		return new UsersResource(this, organization);
+		return getSubResource(UsersResource.class).init(organization);
 	}
 
 	@RequireOrganizationAccess
 	@Path("applications")
 	public ApplicationsResource getOrganizationApplications(@Context UriInfo ui)
 			throws Exception {
-		return new ApplicationsResource(this, organization);
+		return getSubResource(ApplicationsResource.class).init(organization);
 	}
 
 	@RequireOrganizationAccess
 	@Path("apps")
 	public ApplicationsResource getOrganizationApplications2(@Context UriInfo ui)
 			throws Exception {
-		return new ApplicationsResource(this, organization);
+		return getSubResource(ApplicationsResource.class).init(organization);
 	}
 
 	@GET

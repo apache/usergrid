@@ -81,10 +81,12 @@ public class UsersResource extends AbstractContextResource {
 
 	OrganizationInfo organization;
 
-	public UsersResource(AbstractContextResource parent,
-			OrganizationInfo organization) {
-		super(parent);
+	public UsersResource() {
+	}
+
+	public UsersResource init(OrganizationInfo organization) {
 		this.organization = organization;
+		return this;
 	}
 
 	@RequireOrganizationAccess
@@ -233,8 +235,8 @@ public class UsersResource extends AbstractContextResource {
 	@RequireOrganizationAccess
 	@PUT
 	@Path("{username}")
-	public JSONWithPadding addUserToOrganizationByUsername(
-			@Context UriInfo ui, @PathParam("username") String username,
+	public JSONWithPadding addUserToOrganizationByUsername(@Context UriInfo ui,
+			@PathParam("username") String username,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 

@@ -86,8 +86,7 @@ public class UsersResource extends ServiceResource {
 	String errorMsg;
 	User user;
 
-	public UsersResource(ServiceResource parent) throws Exception {
-		super(parent);
+	public UsersResource() {
 	}
 
 	@Override
@@ -103,7 +102,8 @@ public class UsersResource extends ServiceResource {
 
 		addMatrixParams(getServiceParameters(), ui, entityId);
 
-		return new UserResource(this, Identifier.fromUUID(itemId));
+		return getSubResource(UserResource.class).init(
+				Identifier.fromUUID(itemId));
 	}
 
 	@Override
@@ -122,14 +122,15 @@ public class UsersResource extends ServiceResource {
 			}
 			addMatrixParams(getServiceParameters(), ui, itemName);
 
-			return new ServiceResource(this);
+			return getSubResource(ServiceResource.class);
 		}
 
 		addParameter(getServiceParameters(), itemName.getPath());
 
 		addMatrixParams(getServiceParameters(), ui, itemName);
 
-		return new UserResource(this, Identifier.from(itemName.getPath()));
+		return getSubResource(UserResource.class).init(
+				Identifier.from(itemName.getPath()));
 	}
 
 	@GET
@@ -195,6 +196,13 @@ public class UsersResource extends ServiceResource {
 		Object json = body.getEntity();
 		String password = null;
 		String pin = null;
+
+		Boolean registration_requires_email_confirmation = (Boolean) this
+				.getServices()
+				.getEntityManager()
+				.getProperty(this.getServices().getApplicationRef(),
+						"registration_requires_email_confirmation");
+
 		if (json instanceof Map) {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> map = (Map<String, Object>) json;
@@ -202,7 +210,7 @@ public class UsersResource extends ServiceResource {
 			map.remove("password");
 			pin = (String) map.get("pin");
 			map.remove("pin");
-			map.put("activated", true);
+			map.put("activated", !registration_requires_email_confirmation);
 		} else if (json instanceof List) {
 			@SuppressWarnings("unchecked")
 			List<Object> list = (List<Object>) json;

@@ -93,10 +93,12 @@ public class UserResource extends ServiceResource {
 
 	String token;
 
-	public UserResource(ServiceResource parent, Identifier userIdentifier)
-			throws Exception {
-		super(parent);
+	public UserResource() {
+	}
+
+	public UserResource init(Identifier userIdentifier) throws Exception {
 		this.userIdentifier = userIdentifier;
+		return this;
 	}
 
 	@PUT
@@ -382,9 +384,10 @@ public class UserResource extends ServiceResource {
 				+ StringUtils.capitalize(itemName.getPath()) + "Resource";
 		AbstractUserExtensionResource extensionResource = null;
 		try {
-			extensionResource = (AbstractUserExtensionResource) Class
-					.forName(resourceClass).getConstructor(UserResource.class)
-					.newInstance(this);
+			@SuppressWarnings("unchecked")
+			Class<AbstractUserExtensionResource> extensionCls = (Class<AbstractUserExtensionResource>) Class
+					.forName(resourceClass);
+			extensionResource = getSubResource(extensionCls).init(this);
 		} catch (Exception e) {
 		}
 		if (extensionResource != null) {

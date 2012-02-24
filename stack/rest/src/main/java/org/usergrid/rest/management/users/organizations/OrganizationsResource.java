@@ -73,9 +73,12 @@ public class OrganizationsResource extends AbstractContextResource {
 
 	UserInfo user;
 
-	public OrganizationsResource(AbstractContextResource parent, UserInfo user) {
-		super(parent);
+	public OrganizationsResource() {
+	}
+
+	public OrganizationsResource init(UserInfo user) {
 		this.user = user;
+		return this;
 	}
 
 	@RequireAdminUserAccess

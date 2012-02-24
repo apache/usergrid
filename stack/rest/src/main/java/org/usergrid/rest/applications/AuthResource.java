@@ -64,9 +64,14 @@ public class AuthResource extends AbstractContextResource {
 
 	ServiceManager services = null;
 
-	public AuthResource(AbstractContextResource parent, ServiceManager services) {
-		super(parent);
-		this.services = services;
+	public AuthResource() {
+	}
+
+	@Override
+	public void setParent(AbstractContextResource parent) {
+		if (parent instanceof ServiceResource) {
+			services = ((ServiceResource) parent).services;
+		}
 	}
 
 	@GET
