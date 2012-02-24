@@ -71,12 +71,12 @@ $(document).ready(function () {
 
         Pages.AddPage({name:'console', menu:privateMenu, initFunction:InitConsole, showFunction:usergrid.console.pageSelectHome});
         Pages.AddPage({name:'account', menu:privateMenu, showFunction:usergrid.console.requestAccountSettings});
-        Pages.AddPage({name:'console-frame', menu:privateMenu});
 	}
 
 	function InitConsole() {
 		//Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
 		Pages.AddPanel('organization', null, null, null, null);
+        Pages.AddPanel('console', null, null, null, null);
 		Pages.AddPanel('application', null, null, null, usergrid.console.pageSelectApplication);
 		Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
 		Pages.AddPanel('users', null, null, null, usergrid.console.pageSelectUsers);
