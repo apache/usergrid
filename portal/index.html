@@ -523,8 +523,8 @@
                                     <h3>
                                         Roles
                                         <div class="bar">
-                                        <a href="" onclick="usergrid.console.newRole(); return false;"><i class="icon-plus"></i> New </a>
-                                        <a href="" onclick="usergrid.console.deleteRoles(); return false;"><i class="icon-remove"></i> Delete </a>
+                                            <a data-toggle="modal" href="#dialog-form-new-role"><i class="icon-plus"></i> New </a>
+                                            <a href="" onclick="usergrid.console.deleteRoles(); return false;"><i class="icon-remove"></i> Delete </a>
                                         </div>
                                     </h3>
                                     <div class="console-section-contents">
@@ -544,19 +544,36 @@
                                     </div>
                                 </div>
                             </div>
-                            <div id="dialog-form-new-role" class="dialog-form" title="Create new Role">
-                                <p class="validateTips">All form fields are required.</p>
-                                <form>
-                                    <fieldset>
-                                        <label for="new-role-name">Name</label> <input
-                                            type="text" name="new-role-name" id="new-role-name"
-                                            value="" class="text ui-widget-content ui-corner-all" />
-                                        <label for="new-role-title">Title</label> <input
-                                            type="text" name="new-role-title" id="new-role-title"
-                                            value="" class="text ui-widget-content ui-corner-all" />
-                                    </fieldset>
-                                </form>
+                            <form id="dialog-form-new-role" class="modal hide fade">
+                            <div class="modal-header">
+                                <a class="close" data-dismiss="modal">x</a>
+                                <h4>Create new Role</h4>
                             </div>
+                            <div class="modal-body">
+                                <p class="validateTips">All form fields are required.</p>
+
+                                <fieldset>
+                                    <div class="control-group">
+                                        <label for="new-role-name">Name</label>
+                                        <div class="controls">
+                                            <input type="text" name="name" id="new-role-name" class="input-xlarge"/>
+                                            <p class="help-block hide"></p>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <label for="new-role-title">Title</label>
+                                        <div class="controls">
+                                            <input type="text" name="title" id="new-role-title" class="input-xlarge"/>
+                                            <p class="help-block hide"></p>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                            <div class="modal-footer">
+                                <input type="submit" class="btn btn-primary" value="Create"/>
+                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                            </div>
+                        </form>
                         </div>
                         <div id="role-panel" style="display: none">
                             <ul id="role-panel-tab-bar" class="nav nav-tabs">

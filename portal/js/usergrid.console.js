@@ -767,6 +767,7 @@ function usergrid_console_app() {
     $("#dialog-form-new-admin").submit(submitNewAdmin);
     $("#dialog-form-new-organization").submit(submitNewOrg);
     $("#dialog-form-new-user").submit(submitNewUser);
+    $("#dialog-form-new-role").submit(submitNewRole);
 
     function checkLength2(input, min, max) {
         if (input.val().length > max || input.val().length < min) {
@@ -896,6 +897,26 @@ function usergrid_console_app() {
                 alert("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'));
             });
 
+            $(this).modal('hide');
+        }
+    }
+    function submitNewRole() {
+        var form = $(this);
+        formClearErrors(form);
+
+        var new_role_name = $("#new-role-name");
+        var new_role_title = $("#new-role-title");
+
+        var bValid = checkLength2(new_role_name, 1, 80)
+            && checkRegexp2(new_role_name, nameRegex, "Name only allows : a-z, 0-9, dot, and dash")
+            && checkLength2(new_role_title, 1, 80)
+            && checkRegexp2(new_role_title, nameRegex, "Title only allows : a-z, 0-9, dot, and dash");
+
+        if (bValid) {
+            var data = form.serializeObject();
+            client.createRole(current_application_id, data, requestRoles, function() {
+                alert("Unable to create role: " + client.getLastErrorMessage(data.name));
+            });
             $(this).modal('hide');
         }
     }
@@ -1881,53 +1902,7 @@ function usergrid_console_app() {
             "nextButton" : "#button-roles-next",
             "noEntitiesMsg" : "No roles found"
         }, response);
-    } 
-
-    var new_role_name = $("#new-role-name");
-    var new_role_title = $("#new-role-title");
-    var allNewRoleFields = $([]).add(new_role_name).add(new_role_title);
-
-    $("#dialog-form-new-role")
-    .dialog(
-    {        
-        autoOpen: false,
-        height: 300,
-        width: 475,
-        modal: true,
-        buttons: {
-            "Create": function() {
-                allNewRoleFields.removeClass("ui-state-error");
-                var bValid = checkLength(new_role_name, "name", 1, 80)
-                && checkLength(new_role_title, "title", 1, 80)
-                && checkRegexp(new_role_name, nameRegex, "Name only allows : a-z, 0-9, dot, and dash")
-                && checkRegexp(new_role_title, nameRegex, "Title only allows : a-z, 0-9, dot, and dash");
-                if (bValid) {
-                    createRole(new_role_name.val(), new_role_title.val());
-                    $(this).dialog("close");
-                }
-            },
-            Cancel: function() {
-                $(this).dialog("close");
-            }
-        },
-        close: function() {
-            allNewRoleFields.val("").removeClass("ui-state-error");
-        }
-    });
-    
-    
-    function createRole(name, title) {
-        client.createRole(current_application_id, name, title, requestRoles,
-        function() {
-            alert("Unable to create role: " + client.getLastErrorMessage(name));
-        });
     }
-
-    function newRole() {
-        $("#dialog-form-new-role").dialog("open");
-    }
-    window.usergrid.console.newRole = newRole;
-
 
     function deleteRoles() {
         $("input[id^=roleListItem]").each( function() {
