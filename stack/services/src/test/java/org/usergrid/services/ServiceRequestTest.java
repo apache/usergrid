@@ -50,6 +50,7 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class ServiceRequestTest {
 
@@ -62,6 +63,9 @@ public class ServiceRequestTest {
 		UUID applicationId = DEFAULT_APPLICATION_ID;
 
 		ServiceManagerFactory smf = new ServiceManagerFactory(null);
+		ClassPathXmlApplicationContext ac = new ClassPathXmlApplicationContext();
+		ac.refresh();
+		smf.setApplicationContext(ac);
 		ServiceManager services = smf.getServiceManager(applicationId);
 
 		ServiceRequest path = null;

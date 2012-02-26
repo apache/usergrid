@@ -55,6 +55,9 @@ import me.prettyprint.hector.api.query.RangeSlicesQuery;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.usergrid.persistence.DynamicEntity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
@@ -68,7 +71,8 @@ import org.usergrid.utils.UUIDUtils;
  * @author edanuff
  * 
  */
-public class EntityManagerFactoryImpl implements EntityManagerFactory {
+public class EntityManagerFactoryImpl implements EntityManagerFactory,
+		ApplicationContextAware {
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(EntityManagerFactoryImpl.class);
@@ -84,8 +88,10 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	public static final DynamicCompositeSerializer dce = new DynamicCompositeSerializer();
 	public static final LongSerializer le = new LongSerializer();
 
+	ApplicationContext applicationContext;
+
 	CassandraService cass;
-    CounterUtils counterUtils;
+	CounterUtils counterUtils;
 
 	/**
 	 * Must be constructed with a CassandraClientPool.
@@ -93,9 +99,10 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	 * @param cassandraClientPool
 	 *            the cassandra client pool
 	 */
-	public EntityManagerFactoryImpl(CassandraService cass, CounterUtils counterUtils) {
+	public EntityManagerFactoryImpl(CassandraService cass,
+			CounterUtils counterUtils) {
 		this.cass = cass;
-        this.counterUtils = counterUtils;
+		this.counterUtils = counterUtils;
 	}
 
 	/*
@@ -116,7 +123,9 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	 */
 	@Override
 	public EntityManager getEntityManager(UUID applicationId) {
-		return new EntityManagerImpl(this, cass, counterUtils, applicationId);
+		return applicationContext.getAutowireCapableBeanFactory()
+				.createBean(EntityManagerImpl.class)
+				.init(this, cass, counterUtils, applicationId);
 	}
 
 	/**
@@ -336,6 +345,12 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 			logger.error("Unable to load properties: " + e.getMessage());
 		}
 		return null;
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext)
+			throws BeansException {
+		this.applicationContext = applicationContext;
 	}
 
 }

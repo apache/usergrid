@@ -121,6 +121,9 @@ import me.prettyprint.hector.api.query.SliceCounterQuery;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.usergrid.persistence.AggregateCounter;
 import org.usergrid.persistence.AggregateCounterSet;
 import org.usergrid.persistence.AssociatedEntityRef;
@@ -168,11 +171,14 @@ import com.google.common.collect.HashBiMap;
  * @author edanuff
  * 
  */
-public class EntityManagerImpl implements EntityManager {
+public class EntityManagerImpl implements EntityManager,
+		ApplicationContextAware {
 
 	/** The log4j logger. */
 	private static final Logger logger = LoggerFactory
 			.getLogger(EntityManagerImpl.class);
+
+	ApplicationContext applicationContext;
 
 	EntityManagerFactoryImpl emf;
 
@@ -180,20 +186,23 @@ public class EntityManagerImpl implements EntityManager {
 
 	CassandraService cass;
 
-    CounterUtils counterUtils;
+	CounterUtils counterUtils;
 
 	public static final StringSerializer se = new StringSerializer();
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
 	public static final UUIDSerializer ue = new UUIDSerializer();
 	public static final LongSerializer le = new LongSerializer();
 
-	public EntityManagerImpl(EntityManagerFactoryImpl emf,
-			CassandraService cass, CounterUtils counterUtils,
-            UUID applicationId) {
+	public EntityManagerImpl() {
+	}
+
+	public EntityManagerImpl init(EntityManagerFactoryImpl emf,
+			CassandraService cass, CounterUtils counterUtils, UUID applicationId) {
 		this.emf = emf;
 		this.cass = cass;
-        this.counterUtils = counterUtils;
+		this.counterUtils = counterUtils;
 		this.applicationId = applicationId;
+		return this;
 	}
 
 	@Override
@@ -219,7 +228,9 @@ public class EntityManagerImpl implements EntityManager {
 
 	@Override
 	public RelationManagerImpl getRelationManager(EntityRef entityRef) {
-		return new RelationManagerImpl(this, cass, applicationId, entityRef);
+		return applicationContext.getAutowireCapableBeanFactory()
+				.createBean(RelationManagerImpl.class)
+				.init(this, cass, applicationId, entityRef);
 	}
 
 	/**
@@ -980,8 +991,8 @@ public class EntityManagerImpl implements EntityManager {
 		}
 
 		if (entity instanceof Event) {
-			counterUtils.addEventCounterMutations(m, applicationId, (Event) entity,
-					timestamp);
+			counterUtils.addEventCounterMutations(m, applicationId,
+					(Event) entity, timestamp);
 		}
 
 		if (!is_application) {
@@ -1656,8 +1667,8 @@ public class EntityManagerImpl implements EntityManager {
 		q.setColumnFamily(APPLICATION_AGGREGATE_COUNTERS.toString());
 		q.setRange(start, finish, false, ALL_COUNT);
 		QueryResult<CounterSlice<Long>> r = q.setKey(
-				counterUtils.getAggregateCounterRow(counterName, userId, groupId, queueId,
-						category, resolution)).execute();
+				counterUtils.getAggregateCounterRow(counterName, userId,
+						groupId, queueId, category, resolution)).execute();
 		List<AggregateCounter> counters = new ArrayList<AggregateCounter>();
 		for (HCounterColumn<Long> column : r.get().getColumns()) {
 			AggregateCounter count = new AggregateCounter(column.getName(),
@@ -2520,8 +2531,8 @@ public class EntityManagerImpl implements EntityManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementAggregateCounters(m, applicationId, userId, groupId,
-				null, category, counterName, value, timestamp);
+		counterUtils.batchIncrementAggregateCounters(m, applicationId, userId,
+				groupId, null, category, counterName, value, timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 
 	}
@@ -2532,8 +2543,8 @@ public class EntityManagerImpl implements EntityManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementAggregateCounters(m, applicationId, userId, groupId,
-				null, category, counters, timestamp);
+		counterUtils.batchIncrementAggregateCounters(m, applicationId, userId,
+				groupId, null, category, counters, timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 
 	}
@@ -2552,7 +2563,8 @@ public class EntityManagerImpl implements EntityManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementEntityCounters(m, applicationId, counts, timestamp);
+		counterUtils.batchIncrementEntityCounters(m, applicationId, counts,
+				timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -2561,7 +2573,8 @@ public class EntityManagerImpl implements EntityManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementEntityCounter(m, applicationId, name, value, timestamp);
+		counterUtils.batchIncrementEntityCounter(m, applicationId, name, value,
+				timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -2579,7 +2592,8 @@ public class EntityManagerImpl implements EntityManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementEntityCounters(m, entityId, counts, timestamp);
+		counterUtils.batchIncrementEntityCounters(m, entityId, counts,
+				timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -2588,7 +2602,8 @@ public class EntityManagerImpl implements EntityManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementEntityCounter(m, entityId, name, value, timestamp);
+		counterUtils.batchIncrementEntityCounter(m, entityId, name, value,
+				timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -2870,6 +2885,12 @@ public class EntityManagerImpl implements EntityManager {
 			logger.error("Could not populate guest role", e);
 		}
 
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext)
+			throws BeansException {
+		this.applicationContext = applicationContext;
 	}
 
 }
