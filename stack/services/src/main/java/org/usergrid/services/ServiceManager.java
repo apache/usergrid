@@ -46,6 +46,9 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
@@ -55,7 +58,7 @@ import org.usergrid.services.applications.ApplicationsService;
 import org.usergrid.services.exceptions.UndefinedServiceEntityTypeException;
 import org.usergrid.utils.ListUtils;
 
-public class ServiceManager {
+public class ServiceManager implements ApplicationContextAware {
 
 	// because one typo can ruin your whole day
 	public static final String ENTITY = "entity";
@@ -65,7 +68,10 @@ public class ServiceManager {
 	public static final String OSS_PACKAGE_PREFIX = "org.usergrid.services";
 	public static final String COM_PACKAGE_PREFIX = "com.usergrid.services";
 
-	private static final Logger logger = LoggerFactory.getLogger(ServiceManager.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(ServiceManager.class);
+
+	ApplicationContext applicationContext;
 
 	UUID applicationId;
 
@@ -79,12 +85,16 @@ public class ServiceManager {
 
 	boolean searchPython;
 
-	public ServiceManager(ServiceManagerFactory smf, EntityManager em) {
+	public ServiceManager() {
+	}
+
+	public ServiceManager init(ServiceManagerFactory smf, EntityManager em) {
 		this.smf = smf;
 		this.em = em;
 		if (em != null) {
 			applicationId = em.getApplicationRef().getUuid();
 		}
+		return this;
 	}
 
 	public EntityManager getEntityManager() {
@@ -201,6 +211,7 @@ public class ServiceManager {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	private Service getServiceInstance(ServiceInfo info) {
 
 		Class<Service> cls = findServiceClass(info);
@@ -208,14 +219,16 @@ public class ServiceManager {
 			Service s = null;
 			try {
 				try {
-					s = cls.newInstance();
+					s = applicationContext.getAutowireCapableBeanFactory()
+							.createBean(cls);
 				} catch (Exception e) {
 				}
 				if (s == null) {
 					try {
 						String cname = cls.getName();
-						s = (Service) Class.forName(cname + "Impl")
-								.newInstance();
+						cls = (Class<Service>) Class.forName(cname + "Impl");
+						s = applicationContext.getAutowireCapableBeanFactory()
+								.createBean(cls);
 					} catch (Exception e) {
 					}
 				}
@@ -311,4 +324,9 @@ public class ServiceManager {
 		smf.notifyCollectionEventListeners(path, results);
 	}
 
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext)
+			throws BeansException {
+		this.applicationContext = applicationContext;
+	}
 }

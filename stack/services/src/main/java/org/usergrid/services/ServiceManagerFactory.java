@@ -40,10 +40,15 @@ package org.usergrid.services;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 
-public class ServiceManagerFactory {
+public class ServiceManagerFactory implements ApplicationContextAware {
+
+	ApplicationContext applicationContext;
 
 	EntityManagerFactory emf;
 
@@ -59,7 +64,8 @@ public class ServiceManagerFactory {
 		if (emf != null) {
 			em = emf.getEntityManager(applicationId);
 		}
-		return new ServiceManager(this, em);
+		return applicationContext.getAutowireCapableBeanFactory()
+				.createBean(ServiceManager.class).init(this, em);
 	}
 
 	public List<ServiceExecutionEventListener> getExecutionEventListeners() {
@@ -98,4 +104,11 @@ public class ServiceManagerFactory {
 			}
 		}
 	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext)
+			throws BeansException {
+		this.applicationContext = applicationContext;
+	}
+
 }

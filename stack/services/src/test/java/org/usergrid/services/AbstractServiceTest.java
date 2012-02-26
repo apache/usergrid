@@ -73,6 +73,7 @@ public abstract class AbstractServiceTest {
 	public AbstractServiceTest() {
 		emf = (EntityManagerFactoryImpl) helper.getEntityManagerFactory();
 		smf = new ServiceManagerFactory(emf);
+		smf.setApplicationContext(helper.getApplicationContext());
 	}
 
 	@BeforeClass

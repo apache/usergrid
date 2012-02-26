@@ -255,7 +255,6 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
-			<scope>test</scope>
 			<exclusions>
 				<exclusion>
 					<groupId>commons-logging</groupId>
