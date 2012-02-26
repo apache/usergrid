@@ -1434,7 +1434,7 @@ function usergrid_console_app() {
                 };
             },
             "onRender" : function() {
-                $("#groups-by-alphabetical").show();
+                //$("#groups-by-alphabetical").show();
             },
             "onNoEntities" : function() {
                 if (groupLetter != "*") return "No groups with paths starting with " +  groupLetter;
@@ -2892,8 +2892,8 @@ function usergrid_console_app() {
         return false;
     });
 
-    createAlphabetLinks("#users-by-alphabetical",usergrid.console.showUsersForLetter);
-    createAlphabetLinks("#groups-by-alphabetical", usergrid.console.showGroupsForLetter);
+    //createAlphabetLinks("#users-by-alphabetical",usergrid.console.showUsersForLetter);
+    //createAlphabetLinks("#groups-by-alphabetical", usergrid.console.showGroupsForLetter);
 
     $("#button-groups-list").click(function() {
         showPanelList('groups');
