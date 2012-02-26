@@ -149,7 +149,7 @@ public class QueueManagerImpl implements QueueManager {
 	UUID applicationId;
 	QueueManagerFactoryImpl mmf;
 	CassandraService cass;
-    CounterUtils counterUtils;
+	CounterUtils counterUtils;
 
 	public static final StringSerializer se = new StringSerializer();
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
@@ -158,13 +158,16 @@ public class QueueManagerImpl implements QueueManager {
 	public static final DynamicCompositeSerializer dce = new DynamicCompositeSerializer();
 	public static final LongSerializer le = new LongSerializer();
 
-	public QueueManagerImpl(QueueManagerFactoryImpl mmf, CassandraService cass,
-            CounterUtils counterUtils,
-			UUID applicationId) {
+	public QueueManagerImpl() {
+	}
+
+	public QueueManagerImpl init(QueueManagerFactoryImpl mmf,
+			CassandraService cass, CounterUtils counterUtils, UUID applicationId) {
 		this.mmf = mmf;
 		this.cass = cass;
-        this.counterUtils = counterUtils;
+		this.counterUtils = counterUtils;
 		this.applicationId = applicationId;
+		return this;
 	}
 
 	@Override
@@ -224,8 +227,8 @@ public class QueueManagerImpl implements QueueManager {
 		}
 		indexUpdate.addToMutation(batch, queueId, shard_ts, timestamp);
 
-		counterUtils.addMessageCounterMutations(batch, applicationId, queueId, message,
-				timestamp);
+		counterUtils.addMessageCounterMutations(batch, applicationId, queueId,
+				message, timestamp);
 
 		batch.addInsertion(
 				bytebuffer(queueId),
@@ -1379,7 +1382,8 @@ public class QueueManagerImpl implements QueueManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementQueueCounters(m, getQueueId(queuePath), counts, timestamp);
+		counterUtils.batchIncrementQueueCounters(m, getQueueId(queuePath),
+				counts, timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -1388,8 +1392,8 @@ public class QueueManagerImpl implements QueueManager {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementQueueCounter(m, getQueueId(queuePath), name, value,
-				timestamp);
+		counterUtils.batchIncrementQueueCounter(m, getQueueId(queuePath), name,
+				value, timestamp);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -1618,10 +1622,10 @@ public class QueueManagerImpl implements QueueManager {
 						false, INDEX_ENTRY_LIST_COUNT).execute().get()
 				.getColumns();
 
-		if ( logger.isInfoEnabled() ) {
-            logger.info("Found {} previous index entries for {} of entity {}",
-                new Object[]{entries.size(), entryName, queueId});
-        }
+		if (logger.isInfoEnabled()) {
+			logger.info("Found {} previous index entries for {} of entity {}",
+					new Object[] { entries.size(), entryName, queueId });
+		}
 
 		// Delete all matching entries from entry list
 		for (HColumn<ByteBuffer, ByteBuffer> entry : entries) {

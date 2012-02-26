@@ -29,20 +29,25 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.CounterUtils;
 
-public class QueueManagerFactoryImpl implements QueueManagerFactory {
+public class QueueManagerFactoryImpl implements QueueManagerFactory,
+		ApplicationContextAware {
 
 	public static final Logger logger = LoggerFactory
 			.getLogger(QueueManagerFactoryImpl.class);
 
 	public static String IMPLEMENTATION_DESCRIPTION = "Cassandra Queue Manager Factory 1.0";
 
+	ApplicationContext applicationContext;
 	CassandraService cass;
-    CounterUtils counterUtils;
+	CounterUtils counterUtils;
 
 	public static final StringSerializer se = new StringSerializer();
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
@@ -56,12 +61,13 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
 	 * 
 	 * @param cass
 	 *            the cassandra client pool
-     * @param counterUtils
-     *            the CounterUtils
+	 * @param counterUtils
+	 *            the CounterUtils
 	 */
-	public QueueManagerFactoryImpl(CassandraService cass, CounterUtils counterUtils) {
+	public QueueManagerFactoryImpl(CassandraService cass,
+			CounterUtils counterUtils) {
 		this.cass = cass;
-        this.counterUtils = counterUtils;
+		this.counterUtils = counterUtils;
 	}
 
 	@Override
@@ -71,7 +77,15 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
 
 	@Override
 	public QueueManager getQueueManager(UUID applicationId) {
-		return new QueueManagerImpl(this, cass, counterUtils, applicationId);
+		return applicationContext.getAutowireCapableBeanFactory()
+				.createBean(QueueManagerImpl.class)
+				.init(this, cass, counterUtils, applicationId);
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext)
+			throws BeansException {
+		this.applicationContext = applicationContext;
 	}
 
 }

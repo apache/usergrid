@@ -99,6 +99,9 @@ import me.prettyprint.hector.api.query.QueryResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.usergrid.persistence.AssociatedEntityRef;
 import org.usergrid.persistence.CollectionRef;
 import org.usergrid.persistence.ConnectedEntityRef;
@@ -123,11 +126,13 @@ import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
 
-public class RelationManagerImpl implements RelationManager {
+public class RelationManagerImpl implements RelationManager,
+		ApplicationContextAware {
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(EntityManagerImpl.class);
 
+	ApplicationContext applicationContext;
 	EntityManagerImpl em;
 	CassandraService cass;
 	UUID applicationId;
@@ -139,16 +144,22 @@ public class RelationManagerImpl implements RelationManager {
 	public static final LongSerializer le = new LongSerializer();
 	private static final UUID NULL_ID = new UUID(0, 0);
 
-	public RelationManagerImpl(EntityManagerImpl em, CassandraService cass,
-			UUID applicationId, EntityRef headEntity) {
+	public RelationManagerImpl() {
+	}
+
+	public RelationManagerImpl init(EntityManagerImpl em,
+			CassandraService cass, UUID applicationId, EntityRef headEntity) {
 		this.em = em;
 		this.applicationId = applicationId;
 		this.cass = cass;
 		this.headEntity = headEntity;
+		return this;
 	}
 
 	RelationManagerImpl getRelationManager(EntityRef headEntity) {
-		return new RelationManagerImpl(em, cass, applicationId, headEntity);
+		return applicationContext.getAutowireCapableBeanFactory()
+				.createBean(RelationManagerImpl.class)
+				.init(em, cass, applicationId, headEntity);
 	}
 
 	Entity getHeadEntity() throws Exception {
@@ -2918,6 +2929,12 @@ public class RelationManagerImpl implements RelationManager {
 
 		em.setProperty(associatedEntityRef, propertyName, propertyValue);
 
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext)
+			throws BeansException {
+		this.applicationContext = applicationContext;
 	}
 
 }
