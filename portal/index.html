@@ -64,6 +64,15 @@
                         <li><a href="#">loading...</a></li>
                     </ul>
                 </li>
+                <li id="more-menu" class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#"><span>More</span> <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="https://apigee.com/docs/Usergrid" target="_blank"> Product Page</a></li>
+                        <li><a href="https://apigee.com/docs/Usergrid/Help" target="_blank"> Help</a></li>
+                        <li><a href="https://apigee.com/docs/Usergrid/SDK" target="_blank"> SDK</a></li>
+                        <li><a href="https://apigee.com/docs/Usergrid/Community" target="_blank"> Community</a></li>
+                    </ul>
+                </li>
                 <li id="logout-menu" class="dropdown">
                     <a id="account-link1" class="dropdown-toggle" data-toggle="dropdown" href="#"><span id="userEmail">test</span> <b class="caret"></b></a>
                     <ul class="dropdown-menu">
@@ -266,7 +275,7 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-primary" value="Create"/>
-                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                         <form id="dialog-form-new-admin" class="modal hide fade" title="Create new administrator">
@@ -289,7 +298,7 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-primary" value="Create"/>
-                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                     </div>
@@ -331,7 +340,7 @@
                                             <option value="lastName">Last Name</option>-->
                                         </select>
                                         Search:
-                                        <input onkeyup="usergrid.console.searchUsers();" type="text" name="search-user-username" id="search-user-username"/>
+                                        <input onkeyup="usergrid.console.searchUsers();" type="text" name="search-user-username" id="search-user-username" class="input-small search-query" placeholder="Search..."/>
                                         <a class="" href="#" onclick="usergrid.console.selectAllUsers();"><i class="icon-plus"></i> Select All </a>
                                         <a class="" data-toggle="modal" href="#dialog-form-new-user"><i class="icon-plus"></i> Add</a>
                                         <a href="" onclick="usergrid.console.deleteUsers(); return false;"><i class="icon-remove"></i> Delete</a>
@@ -390,7 +399,7 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-primary" value="Create"/>
-                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                     </div>
@@ -433,7 +442,7 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-primary" value="Create"/>
-                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                     </div>
@@ -453,7 +462,8 @@
                                             <option value="title">Title</option>
                                             <option value="name">Name</option>
                                         </select>
-                                        Search: <input onkeyup="usergrid.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname"/>
+                                        Search: 
+                                        <input onkeyup="usergrid.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search-query" placeholder="Search..."/>
                                         <a class="" href="#" onclick="usergrid.console.selectAllGroups();"><i class="icon-plus"></i> Select All </a>
                                         <a class="" data-toggle="modal" href="#dialog-form-new-group"><i class="icon-plus"></i> Add</a>
                                         <a href="" onclick="usergrid.console.deleteGroups(); return false;"><i class="icon-remove"></i> Delete </a>
@@ -503,7 +513,7 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-primary" value="Create"/>
-                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                     </div>
@@ -544,7 +554,7 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-primary" value="Create"/>
-                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                     </div>
@@ -604,7 +614,7 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-primary" value="Create"/>
-                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                         </div>
@@ -780,7 +790,7 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-primary" value="Create"/>
-                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                     </div>
@@ -944,7 +954,7 @@
                     </div>
                     <div class="modal-footer">
                         <input type="submit" class="btn btn-primary" value="Create"/>
-                        <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                        <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
                     </div>
                 </form>
             </div>

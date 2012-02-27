@@ -1,5 +1,3 @@
-//@import "bootstrap.less";
-//@import "apigee.less";
 @import "../bootstrap/less/bootstrap.less";
 @apigee-logo: url(../images/apigee-logo.png);
 @redApigee: #FF3B00;
@@ -10,6 +8,7 @@
 @h3Color: #CCCCCC;
 @minScreenWidth: 600px;
 @linkHoverBgColor: #E5E5E5;
+@linkColor: #007CDC;
 //@fontMenu:
 
 
@@ -44,7 +43,7 @@ html{
 }
 #console-panels{
     margin-left: 150px;
-    border-left:2px solid #F2F5F7;
+    border-left:1px solid @border;
 }
 footer{
   position:absolute;
@@ -146,7 +145,7 @@ a:active {
 	  }
 	  .active{
 			&>a{
-			  background: url('../images/menuActiveTriangle.png') no-repeat center top;
+			  //background: url('../images/menuActiveTriangle.png') no-repeat center top;
 				color:@redApigee;
 				font-weight: bold;
 			}
@@ -251,6 +250,9 @@ a:active {
     overflow: hidden;
 	.border-radius(5px);
 	h3 {
+	    .search-query{
+	        background-color: @linkHoverBgColor;
+    	 }
 	    .title{
 
 	        cursor:pointer;
@@ -872,3 +874,24 @@ a:active {
         padding: 5px;
     }
 }
+.modal-footer{
+    input{
+        float: right;
+    }
+}
+/*-------------------------------*/
+ .btn-link{
+    border:none;
+    color: @linkColor;
+    box-shadow: none;
+    background: transparent;
+    &:hover{
+        color:@redApigee;
+    }
+ }
+ .btn-danger{
+    color:white !important;
+    &:hover{
+        color:white !important;
+    }
+ }
