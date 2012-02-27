@@ -1282,6 +1282,11 @@ function usergrid_console_app() {
     }
     usergrid.console.searchUsers = searchUsers;
 
+    function selectAllUsers(){
+        $('[id=userListItem]').attr('checked', 'true');
+    }
+    usergrid.console.selectAllUsers = selectAllUsers;
+
     var users_query = null;
     function requestUsers(search, searchType) {
         var query = {"ql" : "order by " + userSortBy}; //default to built in search
@@ -1555,15 +1560,31 @@ function usergrid_console_app() {
     }    
     usergrid.console.showUsersForSearch = showUsersForSearch;
 
+    function searchGroups(){
+        var search = $('#search-user-groupname').val();
+        var searchType = ($('#search-group-type').val())?$('#search-group-type').val():groupSortBy;
+        //make sure the input is valid:
+        if (searchType == 'name') { searchType = 'name'; }
+        else if (searchType == 'title') { searchType = 'title'; }
+        else if (searchType == 'path') { searchType = 'path'; }
+        requestGroups(search, searchType);
+    }
+    usergrid.console.searchGroups = searchGroups;
+
+    function selectAllGroups(){
+        $('[id=groupListItem]').attr('checked', 'true');
+    }
+    usergrid.console.selectAllGroups = selectAllGroups;
+    
     var groups_query = null;
-    function requestGroups(search) {
+    function requestGroups(search, searchType) {
         var query = {"ql" : "order by " + groupSortBy};
         if (typeof search == 'string') {
             if (search.length > 0) {
-                query = {"ql" : groupSortBy + "='" + search + "*'"};
+                query = {"ql" : searchType + "='" + search + "*'"};
             }
         } else if (groupLetter != "*") {
-            query = {"ql" : groupSortBy + "='" + groupLetter + "*'"};
+            query = {"ql" : searchType + "='" + groupLetter + "*'"};
         }
         client.applicationId = current_application_id;
         groups_query = client.queryGroups(displayGroups, query);

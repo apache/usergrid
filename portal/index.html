@@ -332,6 +332,7 @@
                                         </select>
                                         Search:
                                         <input onkeyup="usergrid.console.searchUsers();" type="text" name="search-user-username" id="search-user-username"/>
+                                        <a class="" href="#" onclick="usergrid.console.selectAllUsers();"><i class="icon-plus"></i> Select All </a>
                                         <a class="" data-toggle="modal" href="#dialog-form-new-user"><i class="icon-plus"></i> Add</a>
                                         <a href="" onclick="usergrid.console.deleteUsers(); return false;"><i class="icon-remove"></i> Delete</a>
                                     </div>
@@ -446,7 +447,14 @@
                             <div class="console-section">
                                 <h3><span class="title"> Groups </span>
                                     <div class="bar">
-                                        Search: <input onkeyup="usergrid.console.requestGroups(this.value);" type="text" name="search-user-groupname" id="search-user-groupname"/>
+                                        Search by:
+                                        <select id="search-group-type" onChange="usergrid.console.searchGroups();">
+                                            <option value="path">Path</option>
+                                            <option value="title">Title</option>
+                                            <option value="name">Name</option>
+                                        </select>
+                                        Search: <input onkeyup="usergrid.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname"/>
+                                        <a class="" href="#" onclick="usergrid.console.selectAllGroups();"><i class="icon-plus"></i> Select All </a>
                                         <a class="" data-toggle="modal" href="#dialog-form-new-group"><i class="icon-plus"></i> Add</a>
                                         <a href="" onclick="usergrid.console.deleteGroups(); return false;"><i class="icon-remove"></i> Delete </a>
                                     </div>
