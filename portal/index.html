@@ -345,7 +345,7 @@
                                     Users
                                     <div class="bar">
                                         Search: <input onkeyup="usergrid.console.requestUsers(this.value);" type="text" name="search-user-username" id="search-user-username"/>
-                                        <a class="" data-toggle="modal" href="#dialog-form-new-user"><i class="icon-plus"></i> New</a>
+                                        <a class="" data-toggle="modal" href="#dialog-form-new-user"><i class="icon-plus"></i> Add</a>
                                         <a href="" onclick="usergrid.console.deleteUsers(); return false;"><i class="icon-remove"></i> Delete</a>
                                     </div>
                                 </h3>
@@ -359,9 +359,11 @@
                                             <li class="next"><a href="#" id="button-users-next">Next &rarr;</a></li>
                                         </ul>
                                     </div>
+                                    <!--
                                     <ul id="users-by-alphabetical" class="alphabeticalFilter">
                                         <li><a href="#">{0}</a></li>
                                     </ul>
+                                    -->
                                 </div>
                             </div>
                         </div>
@@ -450,7 +452,7 @@
                                     Groups
                                     <div class="bar">
                                         Search: <input onkeyup="usergrid.console.requestGroups(this.value);" type="text" name="search-user-groupname" id="search-user-groupname"/>
-                                        <a href="" onclick="usergrid.console.newGroup(); return false;"><i class="icon-plus"></i> New </a>
+                                        <a href="" onclick="usergrid.console.newGroup(); return false;"><i class="icon-plus"></i> Add </a>
                                         <a href="" onclick="usergrid.console.deleteGroups(); return false;"><i class="icon-remove"></i> Delete </a>
                                     </div>
                                 </h3>
@@ -464,9 +466,11 @@
                                             <li class="next"><a href="#" id="button-groups-next">Next &rarr;</a></li>
                                         </ul>
                                     </div>
+                                    <!--
                                     <ul id="groups-by-alphabetical" class="alphabeticalFilter">
                                         <li><a href="#">{0}</a></li>
                                     </ul>
+                                    -->
                                 </div>
                             </div>
                         </div>
@@ -518,7 +522,7 @@
                                     <h3>
                                         Roles
                                         <div class="bar">
-                                            <a data-toggle="modal" href="#dialog-form-new-role"><i class="icon-plus"></i> New </a>
+                                            <a data-toggle="modal" href="#dialog-form-new-role"><i class="icon-plus"></i> Add </a>
                                             <a href="" onclick="usergrid.console.deleteRoles(); return false;"><i class="icon-remove"></i> Delete </a>
                                         </div>
                                     </h3>
@@ -674,7 +678,7 @@
                                 <h3>
                                     Application API Credentials
                                     <div class="bar">
-                                        <a class="" href="" onclick="usergrid.console.newApplicationCredentials(); return false;"><i class="icon-random"></i> Regenerate Credentials</a>
+                                        <a class="" href="" onclick="usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
                                     </div>
                                 </h3>
                                 <div id="application-panel-key-table" class="console-section-contents">
@@ -686,12 +690,14 @@
                                     </div>
                                 </div>
                             </div>
+                            <!--
                             <div class="console-section">
                                 <h3> Settings </h3>
                                 <div class="console-section-contents">
                                     <span class="alert">Not implemented.</span>
                                 </div>
                             </div>
+                            -->
                         </div>
                     </div>
                     <div id="shell-panel" style="display: none">
@@ -714,7 +720,7 @@
                                 <h3>
                                     Collections
                                     <div class="bar">
-                                        <a class="" data-toggle="modal" href="#dialog-form-new-collection"><i class="icon-plus"></i> New </a>
+                                        <a class="" data-toggle="modal" href="#dialog-form-new-collection"><i class="icon-plus"></i> Add </a>
                                         <a href="" onclick="usergrid.console.pageSelectQueryExplorer(); return false;">Query Explorer</a>
                                     </div>
                                 </h3>
@@ -884,7 +890,7 @@
                         <h3>
                             Organizations
                             <div class="bar">
-                                <a class="" data-toggle="modal" href="#dialog-form-new-organization"><i class="icon-plus"></i> New Organization</a>
+                                <a class="" data-toggle="modal" href="#dialog-form-new-organization"><i class="icon-plus"></i> Add </a>
                             </div>
                         </h3>
                         <div class="console-section-contents">
