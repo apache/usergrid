@@ -332,7 +332,16 @@
                             <div class="console-section">
                                 <h3><span class="title"> Users </span>
                                     <div class="bar">
-                                        <input onkeyup="usergrid.console.requestUsers(this.value);" type="text" name="search-user-username" id="search-user-username" class="input-small search-query" placeholder="Search..."/>
+                                        Search by:
+                                        <select id="search-user-type" onChange="usergrid.console.searchUsers();">
+                                            <option value="username">Username</option>
+                                            <option value="name">Full Name</option>
+                                            <!--<option value="firstName">First Name</option>
+                                            <option value="lastName">Last Name</option>-->
+                                        </select>
+                                        Search:
+                                        <input onkeyup="usergrid.console.searchUsers();" type="text" name="search-user-username" id="search-user-username" class="input-small search-query" placeholder="Search..."/>
+                                        <a class="" href="#" onclick="usergrid.console.selectAllUsers();"><i class="icon-plus"></i> Select All </a>
                                         <a class="" data-toggle="modal" href="#dialog-form-new-user"><i class="icon-plus"></i> Add</a>
                                         <a href="" onclick="usergrid.console.deleteUsers(); return false;"><i class="icon-remove"></i> Delete</a>
                                     </div>
@@ -347,11 +356,6 @@
                                             <li class="next"><a href="#" id="button-users-next">Next &rarr;</a></li>
                                         </ul>
                                     </div>
-                                    <!--
-                                    <ul id="users-by-alphabetical" class="alphabeticalFilter">
-                                        <li><a href="#">{0}</a></li>
-                                    </ul>
-                                    -->
                                 </div>
                             </div>
                         </div>
@@ -452,7 +456,15 @@
                             <div class="console-section">
                                 <h3><span class="title"> Groups </span>
                                     <div class="bar">
-                                        <input onkeyup="usergrid.console.requestGroups(this.value);" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search-query" placeholder="Search..."/>
+                                        Search by:
+                                        <select id="search-group-type" onChange="usergrid.console.searchGroups();">
+                                            <option value="path">Path</option>
+                                            <option value="title">Title</option>
+                                            <option value="name">Name</option>
+                                        </select>
+                                        Search: 
+                                        <input onkeyup="usergrid.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search-query" placeholder="Search..."/>
+                                        <a class="" href="#" onclick="usergrid.console.selectAllGroups();"><i class="icon-plus"></i> Select All </a>
                                         <a class="" data-toggle="modal" href="#dialog-form-new-group"><i class="icon-plus"></i> Add</a>
                                         <a href="" onclick="usergrid.console.deleteGroups(); return false;"><i class="icon-remove"></i> Delete </a>
                                     </div>

@@ -872,15 +872,8 @@ function usergrid_console_app() {
         formClearErrors(form);
 
         var new_admin_email = $("#new-admin-email");
-        //var new_admin_password = $("#new-admin-password");
-        //var new_admin_password_confirm = $("#new-admin-password-confirm");
-
         var bValid = checkLength2(new_admin_email, 6, 80)
-            && checkRegexp2(new_admin_email,emailRegex, "eg. example@apigee.com")
-         //   && checkLength2(new_admin_password, 5, 16)
-          //  && checkRegexp2(new_admin_password,passwordRegex, "Password field only allows : a-z, 0-9, @, #, $, %, ^, &")
-          //  && checkTrue2(new_admin_password_confirm, new_admin_password.val() == new_admin_password_confirm.val(), "Passwords do not match");
-;
+            && checkRegexp2(new_admin_email,emailRegex, "eg. example@apigee.com");
         if (bValid) {
             var data = form.serializeObject();
             client.createAdmin(data, requestAdmins, function () {
@@ -1278,16 +1271,31 @@ function usergrid_console_app() {
         requestUsers();
     }    
     usergrid.console.showUsersForSearch = showUsersForSearch;
-    
+
+    function searchUsers(){
+        var search = $('#search-user-username').val();
+        var searchType = ($('#search-user-type').val())?$('#search-user-type').val():userSortBy;
+        //make sure the input is valid:
+        if (searchType == 'name') { searchType = 'name'; }
+        else if (searchType == 'username') { searchType = 'username'; }
+        requestUsers(search, searchType);
+    }
+    usergrid.console.searchUsers = searchUsers;
+
+    function selectAllUsers(){
+        $('[id=userListItem]').attr('checked', 'true');
+    }
+    usergrid.console.selectAllUsers = selectAllUsers;
+
     var users_query = null;
-    function requestUsers(search) {
-        var query = {"ql" : "order by " + userSortBy};
+    function requestUsers(search, searchType) {
+        var query = {"ql" : "order by " + userSortBy}; //default to built in search
         if (typeof search == 'string') {
             if (search.length > 0) {
-                query = {"ql" : userSortBy + "='" + search + "*'"};
+                query = {"ql" : searchType + "='" + search + "*'"};
             }
         } else if (userLetter != "*") {
-            query = {"ql" : userSortBy + "='" + userLetter + "*'"};
+            query = {"ql" : searchType + "='" + userLetter + "*'"};
         }
         client.applicationId = current_application_id;
         users_query = client.queryUsers(displayUsers, query);
@@ -1552,15 +1560,31 @@ function usergrid_console_app() {
     }    
     usergrid.console.showUsersForSearch = showUsersForSearch;
 
+    function searchGroups(){
+        var search = $('#search-user-groupname').val();
+        var searchType = ($('#search-group-type').val())?$('#search-group-type').val():groupSortBy;
+        //make sure the input is valid:
+        if (searchType == 'name') { searchType = 'name'; }
+        else if (searchType == 'title') { searchType = 'title'; }
+        else if (searchType == 'path') { searchType = 'path'; }
+        requestGroups(search, searchType);
+    }
+    usergrid.console.searchGroups = searchGroups;
+
+    function selectAllGroups(){
+        $('[id=groupListItem]').attr('checked', 'true');
+    }
+    usergrid.console.selectAllGroups = selectAllGroups;
+    
     var groups_query = null;
-    function requestGroups(search) {
+    function requestGroups(search, searchType) {
         var query = {"ql" : "order by " + groupSortBy};
         if (typeof search == 'string') {
             if (search.length > 0) {
-                query = {"ql" : groupSortBy + "='" + search + "*'"};
+                query = {"ql" : searchType + "='" + search + "*'"};
             }
         } else if (groupLetter != "*") {
-            query = {"ql" : groupSortBy + "='" + groupLetter + "*'"};
+            query = {"ql" : searchType + "='" + groupLetter + "*'"};
         }
         client.applicationId = current_application_id;
         groups_query = client.queryGroups(displayGroups, query);
