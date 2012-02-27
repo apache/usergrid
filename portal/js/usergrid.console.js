@@ -791,6 +791,7 @@ function usergrid_console_app() {
     $("#dialog-form-new-user").submit(submitNewUser);
     $("#dialog-form-new-role").submit(submitNewRole);
     $("#dialog-form-new-collection").submit(submitNewCollection);
+    $("#dialog-form-new-group").submit(submitNewGroup);
 
     function checkLength2(input, min, max) {
         if (input.val().length > max || input.val().length < min) {
@@ -958,6 +959,27 @@ function usergrid_console_app() {
             $(this).modal('hide');
         }
     }
+    function submitNewGroup() {
+        var form = $(this);
+        formClearErrors(form);
+
+        var new_group_title = $("#new-group-title");
+        var new_group_path = $("#new-group-path");
+
+        var bValid = checkLength2(new_group_title, 1, 80)
+            && checkRegexp2(new_group_title, nameRegex, "Title only allows : a-z, 0-9, dot, and dash")
+            && checkLength2(new_group_path, 1, 80)
+            && checkRegexp2(new_group_path, nameRegex, "Title only allows : a-z, 0-9, dot, and dash");
+
+        if (bValid) {
+            var data = form.serializeObject();
+            client.createGroup(current_application_id, data, requestGroups, function() {
+                alert("Unable to create group: " + client.getLastErrorMessage(data.path));
+            });
+            $(this).modal('hide');
+        }
+    }
+
 
 /*-------------------- ------------------------ ---------------------------*/
 
@@ -1498,47 +1520,6 @@ function usergrid_console_app() {
     }
     usergrid.console.requestGroups = requestGroups;
 
-    var new_group_title = $("#new-group-title");
-    var new_group_path = $("#new-group-path");
-    var allNewGroupFields = $([]).add(new_group_title).add(new_group_path);
-
-    $("#dialog-form-new-group")
-    .dialog(
-    {
-        autoOpen: false,
-        height: 500,
-        width: 475,
-        modal: true,
-        buttons: {
-            "Create": function() {
-                allNewGroupFields.removeClass("ui-state-error");
-                var bValid = checkLength(new_group_title, "title", 1, 80)
-                && checkLength(new_group_path, "path",1, 80)                
-                && checkRegexp(new_group_title, nameRegex,
-                "Title only allows : a-z, 0-9, dot, and dash")
-                && checkRegexp(new_group_path, nameRegex,
-                "Title only allows : a-z, 0-9, dot, and dash");
-                if (bValid) {                 
-                    createGroup(new_group_path.val(), new_group_title.val());
-                    $(this).dialog("close");
-                }
-            },
-            Cancel: function() {
-                $(this).dialog("close");
-            }
-        },
-        close: function() {
-            allNewGroupFields.val("").removeClass("ui-state-error");
-        }
-    });
-    
-    function createGroup(path, title) {
-        client.createGroup(current_application_id, path, title, requestGroups,
-        function() {
-            alert("Unable to create group: " + client.getLastErrorMessage(path));
-        });
-    }
-
     function deleteGroups() {
         $('#search-user-groupname').val('');
         $("input[id^=groupListItem]").each( function() {
@@ -1553,11 +1534,6 @@ function usergrid_console_app() {
     }
     window.usergrid.console.deleteGroups = deleteGroups;
     
-    function newGroup() {
-        $("#dialog-form-new-group").dialog("open");
-    }
-    window.usergrid.console.newGroup = newGroup;
-
     //*****************************************************
     // add user to group - user autosearch
     //*****************************************************

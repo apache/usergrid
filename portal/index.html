@@ -452,7 +452,7 @@
                                     Groups
                                     <div class="bar">
                                         Search: <input onkeyup="usergrid.console.requestGroups(this.value);" type="text" name="search-user-groupname" id="search-user-groupname"/>
-                                        <a href="" onclick="usergrid.console.newGroup(); return false;"><i class="icon-plus"></i> Add </a>
+                                        <a class="" data-toggle="modal" href="#dialog-form-new-group"><i class="icon-plus"></i> Add</a>
                                         <a href="" onclick="usergrid.console.deleteGroups(); return false;"><i class="icon-remove"></i> Delete </a>
                                     </div>
                                 </h3>
@@ -474,17 +474,36 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="dialog-form-new-group" class="dialog-form" title="Create new group">
-                            <p class="validateTips">All form fields are required.</p>
-                            <form>
+                        <form id="dialog-form-new-group" class="modal hide fade">
+                            <div class="modal-header">
+                                <a class="close" data-dismiss="modal">x</a>
+                                <h4>Create new group</h4>
+                            </div>
+                            <div class="modal-body">
+                                <p class="validateTips">All form fields are required.</p>
                                 <fieldset>
-                                    <label for="new-group-title">Title</label>
-                                    <input type="text" name="new-group-title" id="new-group-title" value="" class="text ui-widget-content ui-corner-all"/>
-                                    <label for="new-group-path">Path</label>
-                                    <input type="text" name="new-group-path" id="new-group-path" value="" class="text ui-widget-content ui-corner-all"/>
+                                    <div class="control-group">
+                                        <label for="new-group-title">Title</label>
+                                        <div class="controls">
+                                            <input type="text" name="title" id="new-group-title" value="" class="input-xlarge"/>
+                                            <p class="help-block hide"></p>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <label for="new-group-path">Path</label>
+                                        <div class="controls">
+                                            <input type="text" name="path" id="new-group-path" value="" class="input-xlarge"/>
+                                            <p class="help-block hide"></p>
+                                        </div>
+                                    </div>
                                 </fieldset>
-                            </form>
-                        </div>
+                            </div>
+                            <div class="modal-footer">
+                                <input type="submit" class="btn btn-primary" value="Create"/>
+                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                            </div>
+                        </form>
+
                     </div>
                     <div id="group-panel" style="display: none">
                         <ul id="group-panel-tab-bar" class="nav nav-tabs">
