@@ -323,7 +323,15 @@
                             <div class="console-section">
                                 <h3><span class="title"> Users </span>
                                     <div class="bar">
-                                        Search: <input onkeyup="usergrid.console.requestUsers(this.value);" type="text" name="search-user-username" id="search-user-username"/>
+                                        Search by:
+                                        <select id="search-user-type" onChange="usergrid.console.searchUsers();">
+                                            <option value="username">Username</option>
+                                            <option value="name">Full Name</option>
+                                            <!--<option value="firstName">First Name</option>
+                                            <option value="lastName">Last Name</option>-->
+                                        </select>
+                                        Search:
+                                        <input onkeyup="usergrid.console.searchUsers();" type="text" name="search-user-username" id="search-user-username"/>
                                         <a class="" data-toggle="modal" href="#dialog-form-new-user"><i class="icon-plus"></i> Add</a>
                                         <a href="" onclick="usergrid.console.deleteUsers(); return false;"><i class="icon-remove"></i> Delete</a>
                                     </div>
@@ -338,11 +346,6 @@
                                             <li class="next"><a href="#" id="button-users-next">Next &rarr;</a></li>
                                         </ul>
                                     </div>
-                                    <!--
-                                    <ul id="users-by-alphabetical" class="alphabeticalFilter">
-                                        <li><a href="#">{0}</a></li>
-                                    </ul>
-                                    -->
                                 </div>
                             </div>
                         </div>
