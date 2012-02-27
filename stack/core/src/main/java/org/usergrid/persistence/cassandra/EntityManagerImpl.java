@@ -122,8 +122,12 @@ import me.prettyprint.hector.api.query.SliceCounterQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.usergrid.mq.Message;
+import org.usergrid.mq.QueueManager;
+import org.usergrid.mq.cassandra.QueueManagerFactoryImpl;
 import org.usergrid.persistence.AggregateCounter;
 import org.usergrid.persistence.AggregateCounterSet;
 import org.usergrid.persistence.AssociatedEntityRef;
@@ -181,6 +185,9 @@ public class EntityManagerImpl implements EntityManager,
 	ApplicationContext applicationContext;
 
 	EntityManagerFactoryImpl emf;
+
+	@Autowired
+	QueueManagerFactoryImpl qmf;
 
 	UUID applicationId;
 
@@ -951,6 +958,19 @@ public class EntityManagerImpl implements EntityManager,
 		A entity = EntityFactory.newEntity(itemId, eType, entityClass);
 		logger.info("Entity created of type {}", entity.getClass().getName());
 
+		if (entity instanceof Event) {
+			for (String prop_name : properties.keySet()) {
+				Object propertyValue = properties.get(prop_name);
+				if (propertyValue != null) {
+					entity.setProperty(prop_name, propertyValue);
+				}
+			}
+			storeEventAsMessage(m, (Event) entity, timestamp);
+			incrementEntityCollection("events");
+
+			return entity;
+		}
+
 		String aliasName = getDefaultSchema().aliasProperty(entityType);
 		logger.info("Alias property is {}", aliasName);
 		for (String prop_name : properties.keySet()) {
@@ -990,36 +1010,27 @@ public class EntityManagerImpl implements EntityManager,
 
 		}
 
-		if (entity instanceof Event) {
-			counterUtils.addEventCounterMutations(m, applicationId,
-					(Event) entity, timestamp);
-		}
-
 		if (!is_application) {
-			/*
-			 * batchIncrementAggregateCounters(m, applicationId, null, null,
-			 * null, null, "application.collection." + collection_name, 1L,
-			 * timestamp); batchIncrementAggregateCounters(m, applicationId,
-			 * null, null, null, null, "application.entities", 1L, timestamp);
-			 */
-			try {
-				incrementAggregateCounters(null, null, null,
-						"application.collection." + collection_name, 1L);
-			} catch (Exception e) {
-				logger.error(
-						"Unable to increment counter application.collection."
-								+ collection_name, e);
-			}
-			try {
-				incrementAggregateCounters(null, null, null,
-						"application.entities", 1L);
-			} catch (Exception e) {
-				logger.error(
-						"Unable to increment counter application.entities", e);
-			}
+			incrementEntityCollection(collection_name);
 		}
 
 		return entity;
+	}
+
+	public void incrementEntityCollection(String collection_name) {
+		try {
+			incrementAggregateCounters(null, null, null,
+					"application.collection." + collection_name, 1L);
+		} catch (Exception e) {
+			logger.error("Unable to increment counter application.collection."
+					+ collection_name, e);
+		}
+		try {
+			incrementAggregateCounters(null, null, null,
+					"application.entities", 1L);
+		} catch (Exception e) {
+			logger.error("Unable to increment counter application.entities", e);
+		}
 	}
 
 	public void insertEntity(String type, UUID entityId) throws Exception {
@@ -1037,6 +1048,24 @@ public class EntityManagerImpl implements EntityManager,
 
 		batchExecute(m, CassandraService.RETRY_COUNT);
 
+	}
+
+	public Event storeEventAsMessage(Mutator<ByteBuffer> m, Event event,
+			long timestamp) {
+
+		counterUtils.addEventCounterMutations(m, applicationId, event,
+				timestamp);
+
+		QueueManager q = qmf.getQueueManager(applicationId);
+
+		Message message = new Message();
+		message.setType("event");
+		message.setCategory(event.getCategory());
+		message.setStringProperty("message", event.getMessage());
+		message.setTimestamp(timestamp);
+		q.postToQueue("events", message);
+
+		return event;
 	}
 
 	/**
