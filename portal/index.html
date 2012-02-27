@@ -278,35 +278,19 @@
                                 <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
-
                         <form id="dialog-form-new-admin" class="modal hide fade" title="Create new administrator">
                             <div class="modal-header">
                                 <a class="close" data-dismiss="modal">x</a>
                                 <h4>Create new administrator</h4>
                             </div>
                             <div class="modal-body">
-                                <p class="validateTips">All form fields are required.</p>
-                                <p class="validateTips">If admin already has account, password fields are ignored.</p>
-
                                 <fieldset>
                                     <div class="control-group">
                                         <label for="new-admin-email">Email</label>
                                         <div class="controls">
                                             <input type="text" name="email" id="new-admin-email" value="" class="input-xlarge"/>
-                                            <p class="help-block hide"></p>
-                                        </div>
-                                    </div>
-                                    <div class="control-group">
-                                        <label for="new-admin-password">Password</label>
-                                        <div class="controls">
-                                            <input type="password" name="password" id="new-admin-password" value="" class="input-xlarge"/>
-                                            <p class="help-block hide"></p>
-                                        </div>
-                                    </div>
-                                    <div class="control-group">
-                                        <label for="new-admin-password-confirm">Confirm Password</label>
-                                        <div class="controls">
-                                            <input type="password" name="" id="new-admin-password-confirm" value="" class="input-xlarge"/>
+                                            <input type="hidden" name="password" id="new-admin-password" value="fdsafdsa"/>
+                                            <input type="password" name="" id="new-admin-password-confirm" value="fdsafdsa"/>
                                             <p class="help-block hide"></p>
                                         </div>
                                     </div>
@@ -319,9 +303,8 @@
                         </form>
                     </div>
                     <div id="console-panel" class="container">
-                                <iframe class="container" src="consoleFrame.html"></iframe>
-                            </div>
-
+                        <iframe class="container" src="consoleFrame.html"></iframe>
+                    </div>
                     <div id="application-panel" style="display: none">
                         <div class="console-section span11">
                             <h3><span class="title"> Application Dashboard <span id="selectedApp2"></span> </span></h3>

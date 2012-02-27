@@ -872,15 +872,15 @@ function usergrid_console_app() {
         formClearErrors(form);
 
         var new_admin_email = $("#new-admin-email");
-        var new_admin_password = $("#new-admin-password");
-        var new_admin_password_confirm = $("#new-admin-password-confirm");
+        //var new_admin_password = $("#new-admin-password");
+        //var new_admin_password_confirm = $("#new-admin-password-confirm");
 
         var bValid = checkLength2(new_admin_email, 6, 80)
             && checkRegexp2(new_admin_email,emailRegex, "eg. example@apigee.com")
-            && checkLength2(new_admin_password, 5, 16)
-            && checkRegexp2(new_admin_password,passwordRegex, "Password field only allows : a-z, 0-9, @, #, $, %, ^, &")
-            && checkTrue2(new_admin_password_confirm, new_admin_password.val() == new_admin_password_confirm.val(), "Passwords do not match");
-
+         //   && checkLength2(new_admin_password, 5, 16)
+          //  && checkRegexp2(new_admin_password,passwordRegex, "Password field only allows : a-z, 0-9, @, #, $, %, ^, &")
+          //  && checkTrue2(new_admin_password_confirm, new_admin_password.val() == new_admin_password_confirm.val(), "Passwords do not match");
+;
         if (bValid) {
             var data = form.serializeObject();
             client.createAdmin(data, requestAdmins, function () {
