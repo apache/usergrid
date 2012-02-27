@@ -31,7 +31,7 @@ import org.usergrid.persistence.cassandra.CFEnum;
 
 public enum QueuesCF implements CFEnum {
 
-	MESSAGE_PROPERTIES("Message_Properties", "BytesType"),
+	MESSAGE_PROPERTIES("Entity_Properties", "BytesType", false),
 
 	QUEUE_PROPERTIES("Queue_Properties", "BytesType"),
 
@@ -67,12 +67,22 @@ public enum QueuesCF implements CFEnum {
 	private final String comparator;
 	private final String validator;
 	private final String indexes;
+	private final boolean create;
 
 	QueuesCF(String cf, String comparator) {
 		this.cf = cf;
 		this.comparator = comparator;
 		validator = null;
 		indexes = null;
+		create = true;
+	}
+
+	QueuesCF(String cf, String comparator, boolean create) {
+		this.cf = cf;
+		this.comparator = comparator;
+		validator = null;
+		indexes = null;
+		this.create = create;
 	}
 
 	QueuesCF(String cf, String comparator, String validator) {
@@ -80,6 +90,7 @@ public enum QueuesCF implements CFEnum {
 		this.comparator = comparator;
 		this.validator = validator;
 		indexes = null;
+		create = true;
 	}
 
 	QueuesCF(String cf, String comparator, String validator, String indexes) {
@@ -87,6 +98,7 @@ public enum QueuesCF implements CFEnum {
 		this.comparator = comparator;
 		this.validator = validator;
 		this.indexes = indexes;
+		create = true;
 	}
 
 	@Override
@@ -117,6 +129,11 @@ public enum QueuesCF implements CFEnum {
 	@Override
 	public List<ColumnDefinition> getMetadata() {
 		return getIndexMetadata(indexes);
+	}
+
+	@Override
+	public boolean create() {
+		return create;
 	}
 
 }

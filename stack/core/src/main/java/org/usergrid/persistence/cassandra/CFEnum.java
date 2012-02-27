@@ -16,4 +16,6 @@ public interface CFEnum {
 
 	public List<ColumnDefinition> getMetadata();
 
+	public boolean create();
+
 }

@@ -133,6 +133,13 @@ public class ApplicationResource extends ServiceResource {
 		return getSubResource(QueueResource.class).init(queues, "");
 	}
 
+	@GET
+	@RequireApplicationAccess
+	@Path("events")
+	public QueueResource getEventsResource() throws Exception {
+		return getSubResource(QueueResource.class).init(queues, "/events");
+	}
+
 	@Path("users")
 	public UsersResource getUsers(@Context UriInfo ui) throws Exception {
 
