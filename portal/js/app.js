@@ -18,22 +18,21 @@ $(document).ready(function () {
 	}
 
     function makePanelCollapsable(){
-        var triangle = $("<a class='openPanel'>&#9660;</a>").click( function(e){
-            e.preventDefault();
-            var link = $(this);
-            link.parent().parent().find(".console-section-contents").slideUp();
-            link.parent().find(".closePanel").show();
-            link.hide();
-        });
-        var triangleOpen =  $("<a class='closePanel'>&#9654;</a>").click( function(e){
-            e.preventDefault();
-            var link = $(this);
-            link.parent().parent().find(".console-section-contents").slideDown();
-            link.parent().find(".openPanel").show();
-            link.hide();
-        });
-        triangle.prependTo("#console-panels h3");
-        triangleOpen.prependTo("#console-panels h3").hide();
+        var triangle = $("<span class='openPanel'>&#9660;</span >");
+        var triangleOpen =  $("<span class='closePanel'>&#9654;</span >");
+
+        var titles = $("#console-panels h3 .title");
+        triangle.appendTo(titles);
+        triangleOpen.appendTo(titles).hide();
+        titles.click(toggleSection);
+    }
+
+    function toggleSection(e){
+        e.preventDefault();
+        var h3 = $(this).parent();
+        h3.parent().find(".console-section-contents").toggle();//slideUp();//.slideDown();
+        h3.find(".openPanel").toggle();
+        h3.find(".closePanel").toggle();
     }
 
     function makeResultCollapsable(){

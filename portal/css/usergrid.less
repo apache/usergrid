@@ -251,6 +251,13 @@ a:active {
     overflow: hidden;
 	.border-radius(5px);
 	h3 {
+	    .title{
+
+	        cursor:pointer;
+	        &:hover{
+                  color: white;
+            }
+        }
 	    position:relative;
         margin:0;
 		font-size: 12pt;
@@ -265,7 +272,7 @@ a:active {
                 .border-radius(15px);
                 color:#007CDC !important;
                 &:hover{
-                  color:@redApigee !important;
+                  color:white !important;
                 }
             }
         }
@@ -305,7 +312,7 @@ a:active {
 .openPanel, .closePanel{
     display:inline-block;
     width: 25px;
-    float: left;
+    //float: left;
 }
 //---------------- Panels ---------------------------------------------------------------------
 
