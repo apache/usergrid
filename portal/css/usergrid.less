@@ -146,7 +146,7 @@ a:active {
 	  }
 	  .active{
 			&>a{
-			  background: url('../images/menuActiveTriangle.png') no-repeat center top;
+			  //background: url('../images/menuActiveTriangle.png') no-repeat center top;
 				color:@redApigee;
 				font-weight: bold;
 			}
@@ -251,6 +251,9 @@ a:active {
     overflow: hidden;
 	.border-radius(5px);
 	h3 {
+	    .search-query{
+	        background-color: @linkHoverBgColor;
+    	 }
 	    .title{
 
 	        cursor:pointer;

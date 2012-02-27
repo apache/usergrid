@@ -64,6 +64,15 @@
                         <li><a href="#">loading...</a></li>
                     </ul>
                 </li>
+                <li id="more-menu" class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#"><span>More</span> <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="https://apigee.com/docs/Usergrid" target="_blank"> Product Page</a></li>
+                        <li><a href="https://apigee.com/docs/Usergrid/Help" target="_blank"> Help</a></li>
+                        <li><a href="https://apigee.com/docs/Usergrid/SDK" target="_blank"> SDK</a></li>
+                        <li><a href="https://apigee.com/docs/Usergrid/Community" target="_blank"> Community</a></li>
+                    </ul>
+                </li>
                 <li id="logout-menu" class="dropdown">
                     <a id="account-link1" class="dropdown-toggle" data-toggle="dropdown" href="#"><span id="userEmail">test</span> <b class="caret"></b></a>
                     <ul class="dropdown-menu">
@@ -340,7 +349,7 @@
                             <div class="console-section">
                                 <h3><span class="title"> Users </span>
                                     <div class="bar">
-                                        Search: <input onkeyup="usergrid.console.requestUsers(this.value);" type="text" name="search-user-username" id="search-user-username"/>
+                                        <input onkeyup="usergrid.console.requestUsers(this.value);" type="text" name="search-user-username" id="search-user-username" class="input-small search-query" placeholder="Search..."/>
                                         <a class="" data-toggle="modal" href="#dialog-form-new-user"><i class="icon-plus"></i> Add</a>
                                         <a href="" onclick="usergrid.console.deleteUsers(); return false;"><i class="icon-remove"></i> Delete</a>
                                     </div>
@@ -460,7 +469,7 @@
                             <div class="console-section">
                                 <h3><span class="title"> Groups </span>
                                     <div class="bar">
-                                        Search: <input onkeyup="usergrid.console.requestGroups(this.value);" type="text" name="search-user-groupname" id="search-user-groupname"/>
+                                        <input onkeyup="usergrid.console.requestGroups(this.value);" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search-query" placeholder="Search..."/>
                                         <a class="" data-toggle="modal" href="#dialog-form-new-group"><i class="icon-plus"></i> Add</a>
                                         <a href="" onclick="usergrid.console.deleteGroups(); return false;"><i class="icon-remove"></i> Delete </a>
                                     </div>
