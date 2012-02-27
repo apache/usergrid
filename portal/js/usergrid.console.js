@@ -792,6 +792,7 @@ function usergrid_console_app() {
     $("#dialog-form-new-role").submit(submitNewRole);
     $("#dialog-form-new-collection").submit(submitNewCollection);
     $("#dialog-form-new-group").submit(submitNewGroup);
+    $("#dialog-form-add-group-to-user").submit(submitAddGroupToUser);
 
     function checkLength2(input, min, max) {
         if (input.val().length > max || input.val().length < min) {
@@ -979,7 +980,27 @@ function usergrid_console_app() {
             $(this).modal('hide');
         }
     }
+    function submitAddGroupToUser() {
+        var form = $(this);
+        formClearErrors(form);
 
+        var add_group_groupname = $("#lookup-group-groupname");
+
+        var bValid = checkLength2(add_group_groupname, 1, 80)
+            && checkRegexp2(add_group_groupname, nameRegex, "Group name name only allows : a-z, 0-9, dot, and dash.");
+
+        if (bValid) {
+            var data = form.serializeObject();
+            client.addUserToGroup(current_application_id, data.group, data.userId,
+                function() {requestUser(data.userId);},
+                function() {
+                    alert("Unable to add user to group: " + client.getLastErrorMessage('An internal error occured.'));
+                }
+            );
+
+            $(this).modal('hide');
+        }
+    }
 
 /*-------------------- ------------------------ ---------------------------*/
 
@@ -1632,47 +1653,12 @@ function usergrid_console_app() {
     // add user to group - group autosearch
     //*****************************************************
 
-    var add_group_groupname = $("#lookup-group-groupname");
-    var allSearchGroupFields = $([]).add(add_group_groupname);
-    var selectedUserId = '';
-    $("#dialog-form-add-group-to-user").dialog({
-        autoOpen: false,
-        height: 400,
-        width: 350,
-        modal: true,
-        buttons: {
-            "Create": function() {
-                allSearchGroupFields.removeClass("ui-state-error");
-                var bValid = checkLength(add_group_groupname, "groupname", 1, 80)
-                && checkRegexp(add_group_groupname, nameRegex,
-                "Group name name only allows : a-z, 0-9, dot, and dash.");
-                if (bValid) {
-                    addUserToGroup2(add_group_groupname.val(), selectedUserId);
-                    $(this).dialog("close");
-                }
-            },
-            Cancel: function() {
-                $(this).dialog("close");
-            }
-        },
-        close: function() {
-            allSearchGroupFields.val("").removeClass("ui-state-error");
-        }
-    });
 
     function findGroupDialog(userId) {
-        selectedUserId = userId;
-        $("#dialog-form-add-group-to-user").dialog("open");
-        //$("#groups-autosearch-form").dialog("open");
+        $("#dialog-form-add-group-to-user").find('[name=userId]').val(userId);
+        $("#dialog-form-add-group-to-user").modal('show');
     }
     window.usergrid.console.findGroupDialog = findGroupDialog;
-
-    function addUserToGroup2(groupId, userId) {
-        client.addUserToGroup(current_application_id, groupId, userId, function() {requestUser(userId);},
-        function() {
-            alert("Unable to add user to group: " + client.getLastErrorMessage('An internal error occured.'));
-        });
-    }
 
     var targetDivGroupList = '';
     var targetDivGroupBox = '';
