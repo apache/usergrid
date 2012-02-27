@@ -773,6 +773,12 @@ function usergrid_console_app() {
 
     var tips = $(".validateTips");
 
+    /*******************************************************************
+     *
+     * Modals
+     *
+     ******************************************************************/
+
     function resetModal(){
         this.reset();
         var form = $(this);
@@ -793,6 +799,7 @@ function usergrid_console_app() {
     $("#dialog-form-new-collection").submit(submitNewCollection);
     $("#dialog-form-new-group").submit(submitNewGroup);
     $("#dialog-form-add-group-to-user").submit(submitAddGroupToUser);
+    $("#dialog-form-add-user-to-group").submit(submitAddUserToGroup);
 
     function checkLength2(input, min, max) {
         if (input.val().length > max || input.val().length < min) {
@@ -994,10 +1001,30 @@ function usergrid_console_app() {
             client.addUserToGroup(current_application_id, data.group, data.userId,
                 function() {requestUser(data.userId);},
                 function() {
-                    alert("Unable to add user to group: " + client.getLastErrorMessage('An internal error occured.'));
+                    alert("Unable to add group to user: " + client.getLastErrorMessage('An internal error occured.'));
                 }
             );
 
+            $(this).modal('hide');
+        }
+    }
+    function submitAddUserToGroup() {
+        var form = $(this);
+        formClearErrors(form);
+
+        var add_user_username = $("#lookup-user-username");
+
+        var bValid = checkLength2(add_user_username, 1, 80)
+            && checkRegexp2(add_user_username, nameRegex, "Username name only allows : a-z, 0-9, dot, and dash.");
+
+        if (bValid) {
+            var data = form.serializeObject();
+            client.addUserToGroup(current_application_id, data.groupId, data.username,
+                function() {requestGroup(data.groupId);},
+                function() {
+                    alert("Unable to add user to group: " + client.getLastErrorMessage('An internal error occured.'));
+                }
+            );
             $(this).modal('hide');
         }
     }
@@ -1558,46 +1585,12 @@ function usergrid_console_app() {
     //*****************************************************
     // add user to group - user autosearch
     //*****************************************************
-    var add_user_username = $("#lookup-user-username");
-    var allSearchUserFields = $([]).add(add_user_username);
-    var selectedGroupId = '';
-    $("#dialog-form-add-user-to-group").dialog({
-        autoOpen: false,
-        height: 400,
-        width: 350,
-        modal: true,
-        buttons: {
-            "Create": function() {
-                allSearchUserFields.removeClass("ui-state-error");
-                var bValid = checkLength(add_user_username, "username", 1, 80)
-                && checkRegexp(add_user_username, nameRegex,
-                "Username name only allows : a-z, 0-9, dot, and dash.");
-                if (bValid) {
-                    addUserToGroup(selectedGroupId, add_user_username.val());
-                    $(this).dialog("close");
-                }
-            },
-            Cancel: function() {
-                $(this).dialog("close");
-            }
-        },
-        close: function() {
-            allSearchUserFields.val("").removeClass("ui-state-error");
-        }
-    });
 
     function findUserDialog(groupId) {
-        selectedGroupId = groupId;
-        $("#dialog-form-add-user-to-group").dialog("open");
+        $("#dialog-form-add-user-to-group").find('[name=groupId]').val(groupId);
+        $("#dialog-form-add-user-to-group").modal("show");
     }
     window.usergrid.console.findUserDialog = findUserDialog;
-
-    function addUserToGroup(groupId, userId) {
-        client.addUserToGroup(current_application_id, groupId, userId, function() {requestGroup(groupId);},
-        function() {
-            alert("Unable to add user to group: " + client.getLastErrorMessage('An internal error occured.'));
-        });
-    }
 
     var targetDivUserList = '';
     var targetDivUserBox = '';

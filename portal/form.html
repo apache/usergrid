@@ -35,34 +35,5 @@ Modal-form
 
 
 
-<form id="dialog-form-add-group-to-user" class="modal hide fade">
-    <div class="modal-header">
-        <a class="close" data-dismiss="modal">x</a>
-        <h4>Add group to user</h4>
-    </div>
-    <div class="modal-body">
-        <p class="validateTips">All form fields are required.</p>
-
-        <fieldset>
-            <input type="hidden" name="userId">
-            <div class="control-group">
-                <label for="lookup-group-groupname">Group</label>
-                <div class="controls">
-                    <input name="group" type="text" id="lookup-group-groupname" onkeyup="usergrid.console.lookupGroupName(this.value, 'sugGroupsSearchLookupBox', 'SugGroupsSearchLookupList', this);" value="" class="input-xlarge"/>
-                    <p class="help-block hide"></p>
-                </div>
-            </div>
-            <div class="control-group">
-                <div class="suggestionsBox" id="sugGroupsSearchLookupBox">
-                    <div class="suggestionList" id="SugGroupsSearchLookupList">&nbsp;</div>
-                </div>
-            </div>
-        </fieldset>
-    </div>
-    <div class="modal-footer">
-        <input type="submit" class="btn btn-primary" value="Create"/>
-        <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
-    </div>
-</form>
 
 
