@@ -651,10 +651,11 @@ usergrid.Client = function(options) {
     // Create collection for application
     //
     // POST: /<application-id>
+    // data:{name}
     //
-    function createCollection(applicationId, collectionName, success, failure) {
+    function createCollection(applicationId, data, success, failure) {
         var collections = {};
-        collections[collectionName] = {};
+        collections[data.name] = {};
         var metadata = {
             metadata: {
                 collections: collections

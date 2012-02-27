@@ -768,6 +768,7 @@ function usergrid_console_app() {
     $("#dialog-form-new-organization").submit(submitNewOrg);
     $("#dialog-form-new-user").submit(submitNewUser);
     $("#dialog-form-new-role").submit(submitNewRole);
+    $("#dialog-form-new-collection").submit(submitNewCollection);
 
     function checkLength2(input, min, max) {
         if (input.val().length > max || input.val().length < min) {
@@ -825,17 +826,15 @@ function usergrid_console_app() {
 
         var new_application_name = $("#new-application-name");
 
-        if(!checkLength2(new_application_name, 4, 80))
-            return false;
+        var bValid = checkLength2(new_application_name, 4, 80)
+            && checkRegexp2(new_application_name, nameRegex, "only allows : a-z, 0-9, dot, and dash");
 
-        if(!checkRegexp2(new_application_name, nameRegex, "only allows : a-z, 0-9, dot, and dash"))
-            return false;
-
-        client.createApplication(form.serializeObject(), requestApplications, function() {
-            alert("Unable to create application: " + client.getLastErrorMessage(name));
-        });
-
-        $(this).modal('hide');
+        if (bValid) {
+            client.createApplication(form.serializeObject(), requestApplications, function() {
+                alert("Unable to create application: " + client.getLastErrorMessage(name));
+            });
+            $(this).modal('hide');
+        }
     }
     function submitNewAdmin() {
         var form = $(this);
@@ -920,6 +919,25 @@ function usergrid_console_app() {
             $(this).modal('hide');
         }
     }
+    function submitNewCollection() {
+        var form = $(this);
+        formClearErrors(form);
+
+        var new_collection_name = $("#new-collection-name");
+
+        var bValid = checkLength2(new_collection_name, 4, 80)
+            && checkRegexp2(new_collection_name, alphaNumRegex, "Collection name only allow : a-z 0-9");
+
+        if (bValid) {
+            var data = form.serializeObject();
+            client.createCollection(current_application_id, data, requestCollections, function() {
+                alert("Unable to create collection: " + client.getLastErrorMessage(data.name));
+            });
+            $(this).modal('hide');
+        }
+    }
+
+/*-------------------- ------------------------ ---------------------------*/
 
     function pageSelect(uuid) {
         if (uuid) {
@@ -2454,53 +2472,6 @@ function usergrid_console_app() {
             "noEntitiesMsg" : "No collections found"
         }, response);
     }    
-
-    function createCollection(collectionName) {
-        client.createCollection(current_application_id, collectionName, requestCollections,
-        function() {
-            alert("Unable to create collection: " + client.getLastErrorMessage(collectionName));
-        });
-    }
-
-    var new_collection_name = $("#new-collection-name");
-    var allNewCollectionFields = $([]).add(new_collection_name);
-
-    $("#dialog-form-new-collection").dialog({
-        autoOpen: false,
-        height: 275,
-        width: 350,
-        modal: true,
-        buttons: {
-            "Create": function() {
-                var bValid = true;
-                allNewCollectionFields.removeClass("ui-state-error");
-
-                bValid = bValid
-                && checkLength(new_collection_name, "name", 4, 80);
-
-                bValid = bValid
-                && checkRegexp(new_collection_name,
-                alphaNumRegex,
-                "Collection name only allow : a-z 0-9");
-
-                if (bValid) {
-                    createCollection(new_collection_name.val());
-                    $(this).dialog("close");
-                }
-            },
-            Cancel: function() {
-                $(this).dialog("close");
-            }
-        },
-        close: function() {
-            allNewCollectionFields.val("").removeClass("ui-state-error");
-        }
-    });
-
-    function newCollection() {
-        $("#dialog-form-new-collection").dialog("open");
-    }
-    window.usergrid.console.newCollection = newCollection;
 
     /*******************************************************************
      * 

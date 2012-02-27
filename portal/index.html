@@ -714,7 +714,7 @@
                                 <h3>
                                     Collections
                                     <div class="bar">
-                                        <a href="" onclick="usergrid.console.newCollection(); return false;"><i class="icon-plus"></i> New Collection</a>
+                                        <a class="" data-toggle="modal" href="#dialog-form-new-collection"><i class="icon-plus"></i> New </a>
                                         <a href="" onclick="usergrid.console.pageSelectQueryExplorer(); return false;">Query Explorer</a>
                                     </div>
                                 </h3>
@@ -725,15 +725,29 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="dialog-form-new-collection" class="dialog-form" title="Create new collection">
-                            <p class="validateTips">All form fields are required.</p>
-                            <form>
+                        <form id="dialog-form-new-collection" class="modal hide fade">
+                            <div class="modal-header">
+                                <a class="close" data-dismiss="modal">x</a>
+                                <h4>Create new collection</h4>
+                            </div>
+                            <div class="modal-body">
+                                <p class="validateTips">All form fields are required.</p>
+
                                 <fieldset>
-                                    <label for="new-collection-name">Name</label>
-                                    <input type="text" name="new-collection-name" id="new-collection-name" value="" class="text ui-widget-content ui-corner-all"/>
+                                    <div class="control-group">
+                                        <label for="new-collection-name">Name</label>
+                                        <div class="controls">
+                                            <input type="text" name="name" id="new-collection-name" value="" class="input-xlarge"/>
+                                            <p class="help-block hide"></p>
+                                        </div>
+                                    </div>
                                 </fieldset>
-                            </form>
-                        </div>
+                            </div>
+                            <div class="modal-footer">
+                                <input type="submit" class="btn btn-primary" value="Create"/>
+                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                            </div>
+                        </form>
                     </div>
                     <div id="query-panel" style="display: none">
                         <div id="query-path-area" class="console-section">
