@@ -651,10 +651,11 @@ usergrid.Client = function(options) {
     // Create collection for application
     //
     // POST: /<application-id>
+    // data:{name}
     //
-    function createCollection(applicationId, collectionName, success, failure) {
+    function createCollection(applicationId, data, success, failure) {
         var collections = {};
-        collections[collectionName] = {};
+        collections[data.name] = {};
         var metadata = {
             metadata: {
                 collections: collections
@@ -1126,12 +1127,10 @@ usergrid.Client = function(options) {
     //
     // Create new group    //
     // POST: /<application-id/users
+    // data: {path, title}
     //
-    function createGroup(applicationId, path, title, success, failure) {
-        apiRequest("POST", "/" + applicationId + "/groups", null, JSON.stringify({
-            path: path,
-            title: title
-        }), success, failure);
+    function createGroup(applicationId, data, success, failure) {
+        apiRequest("POST", "/" + applicationId + "/groups", null, JSON.stringify(data), success, failure);
     }
     this.createGroup = createGroup;
 
