@@ -18,6 +18,7 @@ function usergrid_console_app() {
 
     var current_application_id = {};
     var current_application_name = {};
+    var applicationData = {};
 
     var query_entities = null;
     var query_entities_by_id = null;
@@ -1051,18 +1052,18 @@ function usergrid_console_app() {
     }
     window.usergrid.console.pageSelectApplication = pageSelectApplication;
 
-    function updateApplicationDashboard(collections) {
+    function updateApplicationDashboard() {
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Entity');
         data.addColumn('number', 'Count');
         var rows = [];
         var t = '<table id="application-panel-entity-counts">';
-        var collectionNames = keys(collections).sort();
+        var collectionNames = keys(applicationData.Collections).sort();
 
         var entity_count = 0;
         for (var i in collectionNames) {
             var collectionName = collectionNames[i];
-            var collection = collections[collectionName];
+            var collection = applicationData.Collections[collectionName];
             var row = [collectionName, {v: collection.count}];
             rows.push(row);
             t += "<tr><td>" + collection.count + "</td><td>" + collectionName + "</td></tr>";
@@ -1957,7 +1958,9 @@ function usergrid_console_app() {
 
     var permissions = {};
     function displayPermissions(response) {
-        $("#role-permissions").html("");
+        var section = $("#role-permissions");
+        section.empty();
+
         var t = "";
         var m = "";
         permissions = {};
@@ -1985,9 +1988,9 @@ function usergrid_console_app() {
                 permissions = null;
             }
             $.tmpl("usergrid.ui.panels.role.permissions.html", {"role" : current_role_name, "permissions" : permissions}, {}).appendTo("#role-permissions");
+            updateAutocompleteCollections();
         } else {
-            $("#role-permissions")
-            .html("<h2>No permission information retrieved.</h2>");
+            section.html("<h2>No permission information retrieved.</h2>");
         }
     }
 
@@ -2418,24 +2421,28 @@ function usergrid_console_app() {
     var collectionsSortBy = 'title';
 
     function requestCollections() {
-        $("#application-collections").html(
-        "<h2>Loading...</h2>");
-        client.requestCollections(current_application_id, displayCollections,
-        function() {
-            $("#application-collections").html(
-            "<h2>Unable to retrieve collections list.</h2>");
+        var section =$("#application-collections");
+        section.empty().html("<h2>Loading...</h2>");
+        client.requestCollections(current_application_id, displayCollections, function() {
+            section.html("<h2>Unable to retrieve collections list.</h2>");
         });
     }
 
+    function updateAutocompleteCollections(){
+        var pathInput = $("#role-permission-path-entry-input");
+        pathInput.typeahead(applicationData.Collections);
+        //pathInput.data('typeahead').source = applicationData.Collections;
+    }
     function displayCollections(response) {
         roles = {};
+
         if (response.data) {
             roles = response.data;
         }
 
         if (response.entities && response.entities[0] && response.entities[0].metadata && response.entities[0].metadata.collections) {
-            var collections = response.entities[0].metadata.collections;
-            updateApplicationDashboard(collections);
+            applicationData.Collections = response.entities[0].metadata.collections;
+            updateApplicationDashboard();
         }
 
         collectionsResults = usergrid.console.ui.displayEntityListResponse({query: roles_query}, {
@@ -2459,9 +2466,7 @@ function usergrid_console_app() {
                     uri : uri
                 };
             },
-            "onRender" : function() {
-                //$("#users-by-alphabetical").show();
-            },
+            "onRender" : function() {},
             "onNoEntities" : function() {
                 if (userLetter != "*") return "No collections found";
                 return null;
