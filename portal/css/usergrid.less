@@ -42,7 +42,7 @@ html{
  	}
 }
 #console-panels{
-    margin-left: 150px;
+    margin-left: 155px;
     border-left:1px solid @border;
 }
 footer{
@@ -153,25 +153,18 @@ a:active {
 	}
 }
 
-#system-panel-buttons{
-    a{
-        //border: 1px solid #000000;
-        //margin: 5px 0;
-    }
-}
-#application-panel-buttons{
-    display: none;
-}
 //----------------- Navigation --------------------------------------------------------------------
 #sidebar-menu{
     position: absolute;
-    left: 15px;
-    width: 120px;
+    left: 5px;
+    width: 155px;
 }
 .nav-list{
 	& > li > a{
+	    text-align: left;
 		.border-radius(5px);
-		padding: 5px 15px;
+		padding: 5px 0 5px 10px;
+        margin: 10px 0;
 	}
 	.active > a{
 		background-color:@redApigee;
@@ -186,7 +179,31 @@ a:active {
       }
    }
 }
-
+#system-panel-buttons{
+    a{
+        //border: 1px solid #000000;
+        //margin: 5px 0;
+    }
+    .active > a{
+        color: @redApigee;
+        text-shadow: 1px 1px 0 rgba(255, 59, 0, 0.2);
+        font-weight: bold;
+    }
+}
+#application-panel-buttons{
+    display: none;
+    .active > a{
+        i{
+            .icon-white;
+        }
+        &:hover i{
+            .icon-black;
+        }
+    }
+}
+.icon-black{
+    background-image: url(../bootstrap/img/glyphicons-halflings.png);
+}
 //----------Login, Signup, Forgot ------------------------------------------------------------
 #login-page, #signup-page {
 	margin:50px auto;
