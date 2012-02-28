@@ -804,30 +804,30 @@ function usergrid_console_app() {
     function checkLength2(input, min, max) {
         if (input.val().length > max || input.val().length < min) {
             var tip = "Length must be between " + min + " and " + max + ".";
-            input.focus();
-            input.parent().parent().addClass("error");
-            input.parent().parent().find(".help-block").text(tip).fadeIn();
+            validationError(input,tip);
             return false;
         }
         return true;
     }
     function checkRegexp2(input, regexp, tip) {
         if (! (regexp.test(input.val()))) {
-            input.focus();
-            input.parent().parent().addClass("error");
-            input.parent().parent().find(".help-block").text(tip).fadeIn();
+            validationError(input,tip);
             return false;
         }
         return true;
     }
     function checkTrue2(input, exp, tip) {
         if (!exp) {
-            input.focus();
-            input.parent().parent().addClass("error");
-            input.parent().parent().find(".help-block").text(tip).fadeIn();
+            validationError(input,tip);
             return false;
         }
-        return exp;
+        return true;
+    }
+
+    function validationError(input, tip){
+        input.focus();
+        input.parent().parent().addClass("error");
+        input.parent().parent().find(".help-block").text(tip).addClass("alert-error").addClass("alert").show();
     }
     $.fn.serializeObject = function() {
        var o = {};
@@ -849,7 +849,7 @@ function usergrid_console_app() {
         form.find(".ui-state-error").removeClass("ui-state-error");
         form.find(".error").removeClass("error");
         form.find(".validateTips").remove();
-        form.find(".help-block").empty();
+        form.find(".help-block").empty().hide();
     }
     function submitApplication() {
         var form = $(this);
