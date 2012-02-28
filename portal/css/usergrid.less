@@ -456,7 +456,7 @@ a:active {
 .query-result-portlet-title {
 	font-size: 12px;
 	font-weight: bold;
-	background-color: #ccc;
+	background-color: #dadada;
 	padding: 2px 4px;
 }
 
@@ -585,29 +585,28 @@ a:active {
 }
 
 .console-section-contents.listContent{
-    min-height: 700px;
-    //padding-right:70px;
-    .alphabeticalFilter{
-    position:absolute;
-    right: 0;
-    top:0;
-    margin: 10px;
-    width: 35px;
-    padding: 5px;
-    background-color: rgba(0,0,0,.5);
+    padding: 0px;
 
-    .border-radius(10px);
-	li {
-		display:inline-block;
-		width:35px;
-		text-align: center;
-		a{
-		    font-weight: bold;
-		    color:white;
-			line-height: 20px;
-			padding: 5px 10px;
-		}
-	}
+    .alphabeticalFilter{
+        position:absolute;
+        right: 0;
+        top:0;
+        margin: 10px;
+        width: 35px;
+        background-color: rgba(0,0,0,.5);
+
+        .border-radius(10px);
+        li {
+            display:inline-block;
+            width:35px;
+            text-align: center;
+            a{
+                font-weight: bold;
+                color:white;
+                line-height: 20px;
+                padding: 5px 10px;
+            }
+        }
     }
 }
 
@@ -939,3 +938,9 @@ a:active {
  #application-panel-text{
     min-width: 340px !important;
  }
+
+ .query-result-header{
+   #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+ }
+
+
