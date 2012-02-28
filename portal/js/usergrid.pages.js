@@ -58,6 +58,9 @@ var Pages = function(){
 			showFunction:showFunction
 		}
 
+        if(panel.initFunction)
+            panel.initFunction();
+
 		panel.link.click(function(e) {
 			e.preventDefault();
 			self.SelectPanel(panel.name);
