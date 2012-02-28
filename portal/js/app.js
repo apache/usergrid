@@ -92,7 +92,7 @@ $(document).ready(function () {
 	}
 
     function resetConsole(){
-        var url = 'https://50.16.203.236/console/youtube?embedded=true';
+        var url = 'https://apigee.com/console/usergrid?embedded=true';
         $("#console-panel iframe").attr("src", url);
     }
     
