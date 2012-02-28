@@ -50,7 +50,7 @@
             <h2 id="ActualPage1">Usergrid Admin Portal</h2>
             <ul id="loginMenu" class="nav secondary-nav">
                 <li><a id="login-link" href="#"><i class="icon-user"></i> Login</a></li>
-                <li><a id="signup-link" href="#"><i class="icon-plus"></i> Sign Up</a></li>
+                <li><a id="signup-link" href="#"></i> Sign Up</a></li>
                 <li><a id="forgot-password-link" href="#"><i class="icon-lock"></i> Forgot Password</a></li>
             </ul>
         </div>
@@ -219,7 +219,7 @@
                         <div class="console-section">
                             <h3><span class="title"> Applications </span>
                                 <div class="bar">
-                                    <a class="" data-toggle="modal" href="#dialog-form-new-application"><i class="icon-plus"></i> New Application</a>
+                                    <a class="" data-toggle="modal" href="#dialog-form-new-application"></i> New Application</a>
                                 </div>
                             </h3>
                             <div id="organization-applications" class="console-section-contents">
@@ -229,7 +229,7 @@
                         <div class="console-section">
                             <h3><span class="title"> Organizations Administrators </span>
                                 <div class="bar">
-                                    <a class="" data-toggle="modal" href="#dialog-form-new-admin"><i class="icon-plus"></i> New Administrator</a>
+                                    <a class="" data-toggle="modal" href="#dialog-form-new-admin"></i> New Administrator</a>
                                 </div>
                             </h3>
                             <div id="organization-admins" class="console-section-contents">
@@ -239,7 +239,7 @@
                         <div class="console-section">
                             <h3><span class="title"> Organization API Credentials </span>
                                 <div class="bar">
-                                    <a class="" href="" onclick="usergrid.console.newOrganizationCredentials(); return false;"><i class="icon-random"></i> Regenerate Credentials</a>
+                                    <a class="" href="" onclick="usergrid.console.newOrganizationCredentials(); return false;"></i> Regenerate Credentials</a>
                                 </div>
                             </h3>
                             <div class="console-section-contents">
@@ -334,7 +334,7 @@
                                 <h3><span class="title"> Users </span>
                                     <div class="bar">
                                         Search by:
-                                        <select id="search-user-type" onChange="usergrid.console.searchUsers();">
+                                        <select id="search-user-type" onChange="usergrid.console.searchUsers();" class="input-medium search-query">
                                             <option value="username">Username</option>
                                             <option value="name">Full Name</option>
                                             <!--<option value="firstName">First Name</option>
@@ -342,9 +342,9 @@
                                         </select>
                                         Search:
                                         <input onkeyup="usergrid.console.searchUsers();" type="text" name="search-user-username" id="search-user-username" class="input-small search-query" placeholder="Search..."/>
-                                        <a class="" href="#" onclick="usergrid.console.selectAllUsers();"><i class="icon-plus"></i> Select All </a>
-                                        <a class="" data-toggle="modal" href="#dialog-form-new-user"><i class="icon-plus"></i> Add</a>
-                                        <a href="" onclick="usergrid.console.deleteUsers(); return false;"><i class="icon-remove"></i> Delete</a>
+                                        <a class="" href="#" onclick="usergrid.console.selectAllUsers();"></i> Select All </a>
+                                        <a class="" data-toggle="modal" href="#dialog-form-new-user"></i> Add</a>
+                                        <a href="" onclick="usergrid.console.deleteUsers(); return false;"></i> Delete</a>
                                     </div>
                                 </h3>
                                 <div class="console-section-contents listContent">
@@ -458,16 +458,16 @@
                                 <h3><span class="title"> Groups </span>
                                     <div class="bar">
                                         Search by:
-                                        <select id="search-group-type" onChange="usergrid.console.searchGroups();">
+                                        <select id="search-group-type" onChange="usergrid.console.searchGroups();" class="input-medium search-query">
                                             <option value="path">Path</option>
                                             <option value="title">Title</option>
                                             <option value="name">Name</option>
                                         </select>
                                         Search: 
                                         <input onkeyup="usergrid.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search-query" placeholder="Search..."/>
-                                        <a class="" href="#" onclick="usergrid.console.selectAllGroups();"><i class="icon-plus"></i> Select All </a>
-                                        <a class="" data-toggle="modal" href="#dialog-form-new-group"><i class="icon-plus"></i> Add</a>
-                                        <a href="" onclick="usergrid.console.deleteGroups(); return false;"><i class="icon-remove"></i> Delete </a>
+                                        <a class="" href="#" onclick="usergrid.console.selectAllGroups();"></i> Select All </a>
+                                        <a class="" data-toggle="modal" href="#dialog-form-new-group"></i> Add</a>
+                                        <a href="" onclick="usergrid.console.deleteGroups(); return false;"></i> Delete </a>
                                     </div>
                                 </h3>
                                 <div class="console-section-contents listContent">
@@ -567,8 +567,8 @@
                                 <div class="console-section">
                                     <h3><span class="title"> Roles </span>
                                         <div class="bar">
-                                            <a data-toggle="modal" href="#dialog-form-new-role"><i class="icon-plus"></i> Add </a>
-                                            <a href="" onclick="usergrid.console.deleteRoles(); return false;"><i class="icon-remove"></i> Delete </a>
+                                            <a data-toggle="modal" href="#dialog-form-new-role"></i> Add </a>
+                                            <a href="" onclick="usergrid.console.deleteRoles(); return false;"></i> Delete </a>
                                         </div>
                                     </h3>
                                     <div class="console-section-contents">
@@ -760,7 +760,7 @@
                             <div class="console-section">
                                 <h3><span class="title"> Collections </span>
                                     <div class="bar">
-                                        <a class="" data-toggle="modal" href="#dialog-form-new-collection"><i class="icon-plus"></i> Add </a>
+                                        <a class="" data-toggle="modal" href="#dialog-form-new-collection"></i> Add </a>
                                         <a href="" onclick="usergrid.console.pageSelectQueryExplorer(); return false;">Query Explorer</a>
                                     </div>
                                 </h3>
@@ -843,7 +843,7 @@
                             <h3 id="query-received-header">
                                 <span class="title"> Received </span>
                                 <div class="bar">
-                                    <a href="" onclick="usergrid.console.deleteEntity(); return false;"><i class="icon-remove"></i> Delete Entity</a>
+                                    <a href="" onclick="usergrid.console.deleteEntity(); return false;"></i> Delete Entity</a>
                                 </div>
                             </h3>
                             <div class="console-section-contents">
@@ -928,7 +928,7 @@
                     <div class="console-section">
                         <h3><span class="title"> Organizations </span>
                             <div class="bar">
-                                <a class="" data-toggle="modal" href="#dialog-form-new-organization"><i class="icon-plus"></i> Add </a>
+                                <a class="" data-toggle="modal" href="#dialog-form-new-organization"></i> Add </a>
                             </div>
                         </h3>
                         <div class="console-section-contents">
