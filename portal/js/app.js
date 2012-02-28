@@ -75,7 +75,7 @@ $(document).ready(function () {
 	function InitConsole() {
 		//Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
 		Pages.AddPanel('organization', null, null, null, null);
-        Pages.AddPanel('console', null, null, null, null);
+        Pages.AddPanel('console', null, null, null, resetConsole);
 		Pages.AddPanel('application', null, null, null, usergrid.console.pageSelectApplication);
 		Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
 		Pages.AddPanel('users', null, null, null, usergrid.console.pageSelectUsers);
@@ -90,5 +90,10 @@ $(document).ready(function () {
 
 		//$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
 	}
+
+    function resetConsole(){
+        var url = 'https://50.16.203.236/console/youtube?embedded=true';
+        $("#console-panel iframe").attr("src", url);
+    }
     
 });
