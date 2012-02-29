@@ -93,8 +93,7 @@ $(document).ready(function () {
 
     function initConsoleFrame(){
         var bearerToken = usergrid.console.getAccessToken();
-        var bearerTokenJson={'type':'custom_token','access_token':bearerToken};
-        var bearerTokenString = encodeURIComponent('['+JSON.stringify(bearerTokenJson)+']');
+        var bearerTokenString = encodeURIComponent("[{'type':'custom_token','access_token':'"+bearerToken+"'}]");
         var url = 'https://apigee.com/console/usergrid?embedded=true&auth='+bearerTokenString;
         $("#console-panel iframe").attr("src", url);
     }
