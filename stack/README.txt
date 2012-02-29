@@ -19,7 +19,7 @@ Getting Started
 Note: The easiest way to run Usergrid is to download the double-clickable jar
 at:
 
-https://usergrid.s3.amazonaws.com/usergrid-launcher-0.0.1-SNAPSHOT.jar
+https://usergrid.ci.cloudbees.com/job/Usergrid%20Nightly/lastSuccessfulBuild/org.usergrid$usergrid-launcher/artifact/org.usergrid/usergrid-launcher/0.0.1-SNAPSHOT/usergrid-launcher-0.0.1-SNAPSHOT.jar
 
 This will let you try out the system without building or installing it.
 
@@ -57,7 +57,7 @@ usergrid/launcher project.
 If you don't want to do a full build, you can download a pre-built version
 of the launcher app from:
 
-https://usergrid.s3.amazonaws.com/usergrid-launcher-0.0.1-SNAPSHOT.jar
+https://usergrid.ci.cloudbees.com/job/Usergrid%20Nightly/lastSuccessfulBuild/org.usergrid$usergrid-launcher/artifact/org.usergrid/usergrid-launcher/0.0.1-SNAPSHOT/usergrid-launcher-0.0.1-SNAPSHOT.jar
 
 Licenses
 
