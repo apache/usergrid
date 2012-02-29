@@ -884,6 +884,11 @@ usergrid.Client = function(options) {
     }
     this.loginWithAccessToken = loginWithAccessToken;
 
+    function getAccessToken(){
+        return self.accessToken;
+    }
+    this.getAccessToken = getAccessToken;
+
     this.onLogout = null;
     function logout() {
         self.loggedInUser = null;

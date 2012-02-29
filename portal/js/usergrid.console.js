@@ -84,6 +84,11 @@ function usergrid_console_app() {
         });
     }
 
+    function getAccessToken(){
+        return client.getAccessToken();
+    }
+    usergrid.console.getAccessToken = getAccessToken;
+    
     function showPanelContent(panelDiv, contentDiv) {
         var cdiv = $(contentDiv);
         $(panelDiv).children(".panel-content").each(function() {
