@@ -333,6 +333,7 @@ usergrid.console.ui = usergrid.console.ui || { };
 
             if (prevButton) {
                 if (query_results.query.hasPrevious && query_results.query.hasPrevious()) {
+                    $(prevButton).click(query_results.query.getPrevious);
                     $(prevButton).show();
                 }
                 else {
@@ -342,6 +343,7 @@ usergrid.console.ui = usergrid.console.ui || { };
 
             if (nextButton) {
                 if (query_results.query.hasNext && query_results.query.hasNext()) {
+                    $(nextButton).click(query_results.query.getNext);
                     $(nextButton).show();
                 }
                 else {
@@ -351,7 +353,7 @@ usergrid.console.ui = usergrid.console.ui || { };
 
             if (nextPrevDiv) {
                if (query_results.query.hasPrevious && query_results.query.hasNext && (query_results.query.hasPrevious() || query_results.query.hasNext())) {
-                    $(nextPrevDiv).show();
+                   $(nextPrevDiv).show();
                 }
                 else {
                     $(nextPrevDiv).hide();
