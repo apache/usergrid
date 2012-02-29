@@ -4,7 +4,7 @@
 			<!--<td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="${id}" value="${entity.uuid}" /></td>-->
 			<td class="query-result-td-header-name">
                 <div class="query-result-header-name query-result-picture-vert-offset">
-                    ${created} ${entity.actor.displayName} ${entity.verb} ${entity.content}
+                    ${created}: <em> ${entity.actor.displayName} (${entity.actor.email}) - ${entity.verb} ${entity.content}</em>
                 </div>
 			</td>
 		</tr>

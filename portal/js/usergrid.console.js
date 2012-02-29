@@ -1454,9 +1454,20 @@ function usergrid_console_app() {
             client.queryUserActivities(current_application_id, entity.uuid, function(response) {
                 if (user_data && response.entities && (response.entities.length > 0)) {
                     user_data.activities = response.entities;
+
                     redrawUserPanel();
+                    $('span[id^=activities-date-field]').each( function() {
+                        var date = parseInt($(this).html());
+                        var dt = new Date(date);
+                        var created  = dt.getDay() + '/' + dt.getMonth() + '/' + dt.getFullYear() + ' ' +dt.getHours() + ':' + dt.getMinutes() + ':' + dt.getSeconds() + ':' +dt.getMilliseconds() ;
+                        $(this).html(created);
+                    });
+
+                    
                 }
             })
+            
+            
 
             client.queryUserRoles(current_application_id, entity.uuid, function(response) {
                 if (user_data && response.entities && (response.entities.length > 0)) {
