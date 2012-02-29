@@ -36,7 +36,8 @@ var Pages = function(){
 
 		page.link.click(function(e) {
 			e.preventDefault();
-			self.ShowPage(page.name);
+            if(!page.link.hasClass("dropdown-toggle"))
+    			self.ShowPage(page.name);
 		});
 
 		LoadPage(page);

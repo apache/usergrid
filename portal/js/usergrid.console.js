@@ -2554,18 +2554,20 @@ function usergrid_console_app() {
             data.push({uuid:organizations[name].uuid, name:name});
         }
         orgMenu.empty();
+        //$.tmpl('<li><a href="#">${name}</a></li>',data).appendTo(orgMenu);
         orgTmpl.tmpl(data).appendTo(orgMenu);
         orgMenu.find("a").click(selectOrganization);
     }
 
-        function selectOrganization(e){
-            if (client) {
-                    var link = $(this);
-                    var orgName = link.text();
-                    client.currentOrganization = client.loggedInUser.organizations[orgName];
-                    Pages.ShowPage('console');
-            disableApplicationPanelButtons();
-        }
+    function selectOrganization(e) {
+        if(!client)
+            return;
+
+        var link = $(this);
+        var orgName = link.text();
+        client.setCurrentOrganization(orgName);
+        disableApplicationPanelButtons();
+        Pages.ShowPage('console');
     }
 
     function login() {
