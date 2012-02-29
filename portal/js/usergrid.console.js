@@ -1277,8 +1277,8 @@ function usergrid_console_app() {
         var search = $('#search-user-username').val();
         var searchType = ($('#search-user-type').val())?$('#search-user-type').val():userSortBy;
         //make sure the input is valid:
-        if (searchType == 'name') { searchType = 'name'; }
-        else if (searchType == 'username') { searchType = 'username'; }
+        if (searchType == 'name') {searchType = 'name';}
+        else if (searchType == 'username') {searchType = 'username';}
         requestUsers(search, searchType);
     }
     usergrid.console.searchUsers = searchUsers;
@@ -1565,9 +1565,9 @@ function usergrid_console_app() {
         var search = $('#search-user-groupname').val();
         var searchType = ($('#search-group-type').val())?$('#search-group-type').val():groupSortBy;
         //make sure the input is valid:
-        if (searchType == 'name') { searchType = 'name'; }
-        else if (searchType == 'title') { searchType = 'title'; }
-        else if (searchType == 'path') { searchType = 'path'; }
+        if (searchType == 'name') {searchType = 'name';}
+        else if (searchType == 'title') {searchType = 'title';}
+        else if (searchType == 'path') {searchType = 'path';}
         requestGroups(search, searchType);
     }
     usergrid.console.searchGroups = searchGroups;
