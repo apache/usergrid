@@ -15,8 +15,10 @@
           {{if memberships}}
           {{each memberships}}
           <div class="user-group-row" id="user-group-row-${$index}">
-             <span class="user-group-row-title">${$value.path}</span>
-             <span class="user-group-row-name">(${$value.path})</span>
+             <a href="#" onclick="usergrid.console.pageOpenGroupProfile('${$value.uuid}'); return false;">
+                 <span class="user-group-row-title">${$value.path}</span>
+                 <span class="user-group-row-name">(${$value.path})</span>
+             </a>
           </div>
           {{/each}}
           {{else}}
