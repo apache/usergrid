@@ -34,3 +34,5 @@ tools/applications.json
 tools/applications.wadl
 tools/management.json
 tools/management.wadl
+
+core/src/main/java/QueryFilter.tokens
