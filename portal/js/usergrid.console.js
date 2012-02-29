@@ -2054,42 +2054,62 @@ function usergrid_console_app() {
      * 
      ******************************************************************/
 
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.activities.list.html");
     function pageSelectActivities(uuid) {
         requestActivities();
+       // selectFirstTabButton('#activities-panel-tab-bar');
+        showPanelList('activities');
     }
     window.usergrid.console.pageSelectActivities = pageSelectActivities;
 
-    var activitiesQuery = null;
     var activitiesResults = null;
+    var activities_query = null;
+    var activitiesLetter = '*';
+    var activitiesSortBy = 'title';
+    function requestActivities() {
+        client.applicationId = current_application_id;
+        var query = {"ql" : "order by " + activitiesSortBy};
+        if (activitiesLetter != "*") query = {"ql" : activitiesSortBy + "='" + activitiesLetter + "*'"};
+        activities_query = client.queryActivities(displayActivities, null);
+        return false;
+    }
+
+
     function displayActivities(response) {
-        activitiesResults = usergrid.console.ui.displayEntityListResponse(activitiesQuery, {
-            "getListItem" : function(entity, entity_path) {
-                var t = "<div class=\"query-result-row entity_list_item\" data-entity-type=\""
-                 + entity.type
-                 + "\" data-entity-id=\"" + entity.uuid + "\" data-collection-path=\""
-                 + entity_path
-                 + "\">"
-                 + entity.actorName + " " + entity.verb + " " + entity.content
-                 + "</div>";
-                return t;
+        Activities = {};
+        if (response.data) {
+            activities = response.data;
+        }
+        activitiesResults = usergrid.console.ui.displayEntityListResponse({query: activities_query}, {
+            "listItemTemplate" : "usergrid.ui.panels.activities.list.html",
+            "getListItemTemplateOptions" : function(entity, path) {
+                var id = 'activitiesListItem';
+                //var created = entity.created;
+                var dt = new Date(entity.created);
+                var created  = dt.getDay() + '/' + dt.getMonth() + '/' + dt.getFullYear() + ' ' +dt.getHours() + ':' + dt.getMinutes();
+
+                var uri = entity.uri;
+                return {
+                    entity : entity,
+                    created : created,
+                    id: id,
+                    uri : uri
+                };
             },
             "onRender" : function() {
+                //$("#users-by-alphabetical").show();
+            },
+            "onNoEntities" : function() {
+                if (activitiesLetter != "*") return "No activities found";
+                return null;
             },
             "output" : "#activities-response-table",
             "nextPrevDiv" : "#activities-next-prev",
             "prevButton" : "#button-activities-prev",
             "nextButton" : "#button-activities-next",
-            "noEntitiesMsg" : "No activities in application"
+            "noEntitiesMsg" : "No activities found"
         }, response);
     }
-
-    function requestActivities() {
-        client.applicationId = current_application_id;
-        activitiesQuery = { };
-        activitiesQuery.query = client.queryActivities(displayActivities);
-        return false;
-    }
-
 
     /*******************************************************************
      * 

@@ -1052,28 +1052,6 @@ usergrid.Client = function(options) {
         apiRequest("DELETE", "/" + applicationId + "/users/" + userId, null, null, success, failure);
     }
     this.deleteUser = deleteUser;
-    
-      function queryActivities(a) {
-        var ns = self.applicationId;
-        if (countByType("string", arguments) > 0) {
-            ns = getByType("string", 0, arguments);
-            if (!ns) ns = self.applicationId;
-        }
-        var success = getByType("function", 0, arguments);
-        var failure = getByType("function", 1, arguments);
-        if (!ns) {
-            return;
-        }
-        var options = getByType("object", 0, arguments) || {};
-        if (!options.reversed) {
-            options.reversed = true;
-        }
-
-        var q = new Query(ns, "/activities", null, options, success, failure);
-        q.send("GET", null);
-        return q;
-    }
-    this.queryActivities = queryActivities;
 
     function requestCollectionIndexes(applicationId, path, success, failure) {
         if (path.lastIndexOf("/", 0) !== 0) {
@@ -1093,6 +1071,11 @@ usergrid.Client = function(options) {
         return queryEntities("roles", arguments);
     }
     this.queryRoles = queryRoles;
+
+    function queryActivities(a) {
+        return queryEntities("activities", arguments);
+    }
+    this.queryActivities = queryActivities;
 
     function queryCollections(a) {
         return queryEntities("/", arguments);
