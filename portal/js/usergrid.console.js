@@ -2065,14 +2065,21 @@ function usergrid_console_app() {
     var activitiesResults = null;
     var activities_query = null;
     var activitiesLetter = '*';
-    var activitiesSortBy = 'title';
-    function requestActivities() {
+    var activitiesSortBy = 'created';
+
+    var activities_query = null;
+    function requestActivities(search, searchType) {
+        var query = {"ql" : "order by " + activitiesSortBy}; //default to built in search
+        if (typeof search == 'string') {
+            if (search.length > 0) {
+                query = {"ql" : searchType + "='" + search + "*'"};
+            }
+        } 
         client.applicationId = current_application_id;
-        var query = {"ql" : "order by " + activitiesSortBy};
-        if (activitiesLetter != "*") query = {"ql" : activitiesSortBy + "='" + activitiesLetter + "*'"};
-        activities_query = client.queryActivities(displayActivities, null);
+        activities_query = client.queryActivities(displayActivities, query);
         return false;
     }
+    usergrid.console.requestActivities = requestActivities;
 
 
     function displayActivities(response) {
@@ -2110,6 +2117,16 @@ function usergrid_console_app() {
             "noEntitiesMsg" : "No activities found"
         }, response);
     }
+
+    function searchActivities(){
+        var search = $('#search-activities').val();
+        var searchType = ($('#search-activities-type').val())?$('#search-activities-type').val():activitiesSortBy;
+        //make sure the input is valid:
+        if (searchType == 'actor') {searchType = 'actor.displayName';}
+        else if (searchType == 'content') {searchType = 'content';}
+        requestActivities(search, searchType);
+    }
+    usergrid.console.searchActivities = searchActivities;
 
     /*******************************************************************
      * 
