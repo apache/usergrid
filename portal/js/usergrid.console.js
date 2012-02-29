@@ -672,27 +672,35 @@ function usergrid_console_app() {
         });
     }
 
+    function dateToString(numberDate){
+        var date = new Date(numberDate);
+        var milisecs = date.getMilliseconds()/1000;
+        return date.toString('dd/MMM/yyyy HH:mm:ss' + milisecs.toFixed(3));
+    }
+    function get_gravatar(email, size) {
+        var size = size || 50;
+        return 'http://www.gravatar.com/avatar/' + MD5(email) + '?d=identicon&s=' + size;
+    }
     function displayAdminFeed(response) {
-        var t = "";
-        var activities = {};
+        var sectionActivities = $("#organization-activities");
+        sectionActivities.empty();
         if (response.entities && (response.entities.length > 0)) {
-            activities = response.entities;
-            var i = 0;
-            for (i in activities) {
+            var activities = response.entities;
+            for (var i in activities) {
                 var activity = activities[i];
-                t += "<div class=\"organization-activity-row\">"
-                + activity.title + "</div>";
+                var time = $('<span/>',{
+                    class:'time',
+                    text: dateToString(activity.created)});
+                var mail = $(activity.title).attr("mailto");
+                var img = $('<img/>',{src:get_gravatar(mail, 20)});
+                var row = $('<div/>', {
+                    class: 'organization-activity-row',
+                    html: activity.title});
+                row.prepend(img).prepend(time).appendTo(sectionActivities);
             }
-            if (i)
-            $("#organization-activities").html(t);
-            else
-            $("#organization-activities").html(
-            "<h2>No activities.</h2>");
-
-        } else {
-            $("#organization-activities").html(
-            "<h2>No activities.</h2>");
         }
+        if(sectionActivities.is(":empty"))
+            sectionActivities.html('<h2>No activities.</h2>');
     }
 
     function requestAdminFeed() {
