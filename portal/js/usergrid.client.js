@@ -840,7 +840,7 @@ usergrid.Client = function(options) {
             if (response && response.access_token && response.user) {
                 self.loggedInUser = response.user;
                 self.accessToken = response.access_token;
-                self.currentOrganization = null;
+                setCurrentOrganization();
                 localStorage.setObject('usergrid_user', self.loggedInUser);
                 localStorage.setObject('usergrid_access_token', self.accessToken);
                 if (success) {
@@ -1298,17 +1298,30 @@ usergrid.Client = function(options) {
 
     self.loggedInUser = localStorage.getObject('usergrid_user');
     self.accessToken = localStorage.getObject('usergrid_access_token');
-	setCurrentOrganization();
+    setCurrentOrganization();
 
-	function setCurrentOrganization() {
-		self.currentOrganization = null;
-		if (self.loggedInUser && self.loggedInUser.organizations) {
+
+
+	function setCurrentOrganization(orgName) {
+        self.currentOrganization = null;
+        if (!self.loggedInUser || !self.loggedInUser.organizations)
+            return;
+
+        if(orgName)
+            self.currentOrganization = self.loggedInUser.organizations[orgName];
+        else
+            self.currentOrganization = self.loggedInUser.organizations[localStorage.currentOrganizationName];
+
+        if(!self.currentOrganization){
             var firstOrg = null;
 			for (firstOrg in self.loggedInUser.organizations) break;
-			if (firstOrg) {
-				self.currentOrganization = self.loggedInUser.organizations[firstOrg];
-			}
-		}
+			if (firstOrg) self.currentOrganization = self.loggedInUser.organizations[firstOrg];
+        }
+
+        localStorage.currentOrganizationName = self.currentOrganization.name;
 	}
+    this.setCurrentOrganization = setCurrentOrganization;
+
+
 };
 
