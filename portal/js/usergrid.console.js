@@ -2486,13 +2486,20 @@ function usergrid_console_app() {
         });
     }
 
-    function updateAutocompleteCollections(){
-        $("#role-permissions-form")[0].setAttribute("autocomplete","off")
+    function updatePermissionAutocompleteCollections(){
         var pathInput = $("#role-permission-path-entry-input");
         var list = [];
         for (var i in applicationData.Collections)
             list.push('/' + applicationData.Collections[i].name);
         pathInput.typeahead({source:list});
+    }
+    function updateQueryAutocompleteCollections(){
+        var pathInput = $("#query-path");
+        var list = [];
+        for (var i in applicationData.Collections)
+            list.push('/' + applicationData.Collections[i].name);
+        pathInput.typeahead({source:list});
+        pathInput.data('typeahead').source = list;
     }
     function displayCollections(response) {
         roles = {};
@@ -2504,6 +2511,7 @@ function usergrid_console_app() {
         if (response.entities && response.entities[0] && response.entities[0].metadata && response.entities[0].metadata.collections) {
             applicationData.Collections = response.entities[0].metadata.collections;
             updateApplicationDashboard();
+            updateQueryAutocompleteCollections();
         }
 
         collectionsResults = usergrid.console.ui.displayEntityListResponse({query: roles_query}, {
