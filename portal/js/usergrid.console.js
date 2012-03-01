@@ -680,8 +680,8 @@ function usergrid_console_app() {
 
     function dateToString(numberDate){
         var date = new Date(numberDate);
-        var milisecs = date.getMilliseconds()/1000;
-        return date.toString('dd/MMM/yyyy HH:mm:ss' + milisecs.toFixed(3));
+        //var milisecs = date.getMilliseconds()/1000; //not showing secs per ea
+        return numberDate + '  ' +date.toString('h:mm tt - dd MMM yyyy '); //:ss' + milisecs.toFixed(3));
     }
     function get_gravatar(email, size) {
         var size = size || 50;
@@ -1466,9 +1466,7 @@ function usergrid_console_app() {
 
                     redrawUserPanel();
                     $('span[id^=activities-date-field]').each( function() {
-                        var date = parseInt($(this).html());
-                        var dt = new Date(date);
-                        var created  = dt.getDay() + '/' + dt.getMonth() + '/' + dt.getFullYear() + ' ' +dt.getHours() + ':' + dt.getMinutes() + ':' + dt.getSeconds() + ':' +dt.getMilliseconds() ;
+                        var created = dateToString(parseInt($(this).html()))
                         $(this).html(created);
                     });
 
@@ -2116,10 +2114,7 @@ function usergrid_console_app() {
             "listItemTemplate" : "usergrid.ui.panels.activities.list.html",
             "getListItemTemplateOptions" : function(entity, path) {
                 var id = 'activitiesListItem';
-                //var created = entity.created;
-                var dt = new Date(entity.created);
-                var created  = dt.getDay() + '/' + dt.getMonth() + '/' + dt.getFullYear() + ' ' +dt.getHours() + ':' + dt.getMinutes();
-
+                var created = dateToString(entity.created);
                 var uri = entity.uri;
                 return {
                     entity : entity,

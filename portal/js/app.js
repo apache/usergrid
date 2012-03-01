@@ -97,7 +97,7 @@ $(document).ready(function () {
             {
             "type":"custom_token",
             "name":"Authorization",
-            "value":"Bearer "+bearerToken,
+            "value":"Bearer " + bearerToken,
             "style":"header"
             },
             {
