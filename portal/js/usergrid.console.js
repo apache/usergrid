@@ -12,6 +12,7 @@ function usergrid_console_app() {
     var passwordRegex = /^([0-9a-zA-Z@#$%^&])+$/;
     var nameRegex = /^([0-9a-zA-Z\.\-])+$/;
     var alphaNumRegex = /^([0-9a-zA-Z])+$/;
+    var pathRegex = /^([0-9a-zA-Z\.\-\/])+$/;
 
     var applications = {};
     var applications_by_id = {};
@@ -984,7 +985,7 @@ function usergrid_console_app() {
         var bValid = checkLength2(new_group_title, 1, 80)
             && checkRegexp2(new_group_title, nameRegex, "Title only allows : a-z, 0-9, dot, and dash")
             && checkLength2(new_group_path, 1, 80)
-            && checkRegexp2(new_group_path, nameRegex, "Title only allows : a-z, 0-9, dot, and dash");
+            && checkRegexp2(new_group_path, pathRegex, "Path only allows : /, a-z, 0-9, dot, and dash");
 
         if (bValid) {
             var data = form.serializeObject();
