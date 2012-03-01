@@ -1,6 +1,6 @@
 
 <h4>Add Permission Rule</h4>
-<form action="" onsubmit="usergrid.console.addRolePermission('${role}'); return false;" class="well form-inline">
+<form id="role-permissions-form" action="" onsubmit="usergrid.console.addRolePermission('${role}'); return false;" class="well form-inline">
     Path: <input id="role-permission-path-entry-input" type="text" name="path" value="/" />
     <label class="checkbox">
         <input id="role-permission-op-get-checkbox" type="checkbox" name="get" value="get"/>

@@ -506,6 +506,7 @@ function usergrid_console_app() {
 
     var queryQl = $("#query-ql");
     queryQl.typeahead();
+
     function doBuildIndexMenu() {
         queryQl.data('typeahead').source = indexes;
     }
@@ -2457,9 +2458,12 @@ function usergrid_console_app() {
     }
 
     function updateAutocompleteCollections(){
+        $("#role-permissions-form")[0].setAttribute("autocomplete","off")
         var pathInput = $("#role-permission-path-entry-input");
-        pathInput.typeahead(applicationData.Collections);
-        //pathInput.data('typeahead').source = applicationData.Collections;
+        var list = [];
+        for (var i in applicationData.Collections)
+            list.push('/' + applicationData.Collections[i].name);
+        pathInput.typeahead({source:list});
     }
     function displayCollections(response) {
         roles = {};
