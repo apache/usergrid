@@ -69,12 +69,14 @@ public enum ApplicationCF implements CFEnum {
 	private final String comparator;
 	private final String validator;
 	private final String indexes;
+	private final boolean create;
 
 	ApplicationCF(String cf, String comparator) {
 		this.cf = cf;
 		this.comparator = comparator;
 		validator = null;
 		indexes = null;
+		create = true;
 	}
 
 	ApplicationCF(String cf, String comparator, String validator) {
@@ -82,6 +84,7 @@ public enum ApplicationCF implements CFEnum {
 		this.comparator = comparator;
 		this.validator = validator;
 		indexes = null;
+		create = true;
 	}
 
 	ApplicationCF(String cf, String comparator, String validator, String indexes) {
@@ -89,6 +92,7 @@ public enum ApplicationCF implements CFEnum {
 		this.comparator = comparator;
 		this.validator = validator;
 		this.indexes = indexes;
+		create = true;
 	}
 
 	@Override
@@ -119,6 +123,11 @@ public enum ApplicationCF implements CFEnum {
 	@Override
 	public List<ColumnDefinition> getMetadata() {
 		return getIndexMetadata(indexes);
+	}
+
+	@Override
+	public boolean create() {
+		return create;
 	}
 
 }

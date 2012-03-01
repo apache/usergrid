@@ -324,7 +324,9 @@ public class Message {
 	}
 
 	public void setCategory(String category) {
-		properties.put(MESSAGE_CATEGORY, category.toLowerCase());
+		if (category != null) {
+			properties.put(MESSAGE_CATEGORY, category.toLowerCase());
+		}
 	}
 
 	public void setCorrelationID(String correlationId) {

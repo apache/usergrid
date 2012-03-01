@@ -460,6 +460,9 @@ public class CassandraPersistenceUtils {
 		}
 
 		for (CFEnum cf : values) {
+			if (!cf.create()) {
+				continue;
+			}
 			String defaultValidationClass = cf.getValidator();
 			List<ColumnDefinition> metadata = cf.getMetadata();
 

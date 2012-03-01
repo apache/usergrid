@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+    <appender class="org.apache.log4j.ConsoleAppender" name="stdout">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param value="%d %p (%t) [%c] - %m%n" name="ConversionPattern"/>
+        </layout>
+    </appender>
+    <logger name="org.apache">
+        <level value="error"/>
+        <appender-ref ref="stdout"/>
+    </logger>
+    <logger name="me.prettyprint.cassandra.hector.TimingLogger">
+        <level value="warn"/>
+        <appender-ref ref="stdout"/>
+    </logger>
+    <logger name="me.prettyprint.hector.api.beans.AbstractComposite">
+        <level value="error"/>
+        <appender-ref ref="stdout"/>
+    </logger>
+    <logger name="org.usergrid.persistence.cassandra.BATCH">
+        <level value="warn"/>
+        <appender-ref ref="stdout"/>
+    </logger>
+    <logger name="org.usergrid.persistence.cassandra.ConnectionRefImpl">
+        <level value="warn"/>
+        <appender-ref ref="stdout"/>
+    </logger>
+    <logger name="org.usergrid.persistence.cassandra.DaoUtils">
+        <level value="warn"/>
+        <appender-ref ref="stdout"/>
+    </logger>
+    <logger name="org.usergrid.persistence.cassandra.DB">
+        <level value="warn"/>
+        <appender-ref ref="stdout"/>
+    </logger>
+    <logger name="org.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
+        <level value="warn"/>
+        <appender-ref ref="stdout"/>
+    </logger>
+    <logger name="org.usergrid.persistence.cassandra.EntityManagerImpl">
+        <level value="warn"/>
+        <appender-ref ref="stdout"/>
+    </logger>
+    <logger name="org.usergrid.rest.security.AllowAjaxFilter">
+        <level value="warn"/>
+        <appender-ref ref="stdout"/>
+    </logger>
+    <root>
+        <level value="info"/>
+        <appender-ref ref="stdout"/>
+    </root>
+</log4j:configuration>
