@@ -12,6 +12,7 @@ function usergrid_console_app() {
     var passwordRegex = /^([0-9a-zA-Z@#$%^&])+$/;
     var nameRegex = /^([0-9a-zA-Z\.\-])+$/;
     var alphaNumRegex = /^([0-9a-zA-Z])+$/;
+    var pathRegex = /^([0-9a-zA-Z\.\-\/])+$/;
 
     var applications = {};
     var applications_by_id = {};
@@ -84,6 +85,11 @@ function usergrid_console_app() {
         });
     }
 
+    function getAccessToken(){
+        return client.getAccessToken();
+    }
+    usergrid.console.getAccessToken = getAccessToken;
+    
     function showPanelContent(panelDiv, contentDiv) {
         var cdiv = $(contentDiv);
         $(panelDiv).children(".panel-content").each(function() {
@@ -675,8 +681,8 @@ function usergrid_console_app() {
 
     function dateToString(numberDate){
         var date = new Date(numberDate);
-        var milisecs = date.getMilliseconds()/1000;
-        return date.toString('dd/MMM/yyyy HH:mm:ss' + milisecs.toFixed(3));
+        //var milisecs = date.getMilliseconds()/1000; //not showing secs per ea
+        return date.toString('h:mm tt - dd MMM yyyy '); //:ss' + milisecs.toFixed(3));
     }
     function get_gravatar(email, size) {
         var size = size || 50;
@@ -980,7 +986,7 @@ function usergrid_console_app() {
         var bValid = checkLength2(new_group_title, 1, 80)
             && checkRegexp2(new_group_title, nameRegex, "Title only allows : a-z, 0-9, dot, and dash")
             && checkLength2(new_group_path, 1, 80)
-            && checkRegexp2(new_group_path, nameRegex, "Title only allows : a-z, 0-9, dot, and dash");
+            && checkRegexp2(new_group_path, pathRegex, "Path only allows : /, a-z, 0-9, dot, and dash");
 
         if (bValid) {
             var data = form.serializeObject();
@@ -1286,8 +1292,8 @@ function usergrid_console_app() {
         var search = $('#search-user-username').val();
         var searchType = ($('#search-user-type').val())?$('#search-user-type').val():userSortBy;
         //make sure the input is valid:
-        if (searchType == 'name') { searchType = 'name'; }
-        else if (searchType == 'username') { searchType = 'username'; }
+        if (searchType == 'name') {searchType = 'name';}
+        else if (searchType == 'username') {searchType = 'username';}
         requestUsers(search, searchType);
     }
     usergrid.console.searchUsers = searchUsers;
@@ -1458,9 +1464,18 @@ function usergrid_console_app() {
             client.queryUserActivities(current_application_id, entity.uuid, function(response) {
                 if (user_data && response.entities && (response.entities.length > 0)) {
                     user_data.activities = response.entities;
+
                     redrawUserPanel();
+                    $('span[id^=activities-date-field]').each( function() {
+                        var created = dateToString(parseInt($(this).html()))
+                        $(this).html(created);
+                    });
+
+                    
                 }
             })
+            
+            
 
             client.queryUserRoles(current_application_id, entity.uuid, function(response) {
                 if (user_data && response.entities && (response.entities.length > 0)) {
@@ -1574,9 +1589,9 @@ function usergrid_console_app() {
         var search = $('#search-user-groupname').val();
         var searchType = ($('#search-group-type').val())?$('#search-group-type').val():groupSortBy;
         //make sure the input is valid:
-        if (searchType == 'name') { searchType = 'name'; }
-        else if (searchType == 'title') { searchType = 'title'; }
-        else if (searchType == 'path') { searchType = 'path'; }
+        if (searchType == 'name') {searchType = 'name';}
+        else if (searchType == 'title') {searchType = 'title';}
+        else if (searchType == 'path') {searchType = 'path';}
         requestGroups(search, searchType);
     }
     usergrid.console.searchGroups = searchGroups;
@@ -2074,14 +2089,21 @@ function usergrid_console_app() {
     var activitiesResults = null;
     var activities_query = null;
     var activitiesLetter = '*';
-    var activitiesSortBy = 'title';
-    function requestActivities() {
+    var activitiesSortBy = 'created';
+
+    var activities_query = null;
+    function requestActivities(search, searchType) {
+        var query = {"ql" : "order by " + activitiesSortBy}; //default to built in search
+        if (typeof search == 'string') {
+            if (search.length > 0) {
+                query = {"ql" : searchType + "='" + search + "*'"};
+            }
+        } 
         client.applicationId = current_application_id;
-        var query = {"ql" : "order by " + activitiesSortBy};
-        if (activitiesLetter != "*") query = {"ql" : activitiesSortBy + "='" + activitiesLetter + "*'"};
-        activities_query = client.queryActivities(displayActivities, null);
+        activities_query = client.queryActivities(displayActivities, query);
         return false;
     }
+    usergrid.console.requestActivities = requestActivities;
 
 
     function displayActivities(response) {
@@ -2093,10 +2115,7 @@ function usergrid_console_app() {
             "listItemTemplate" : "usergrid.ui.panels.activities.list.html",
             "getListItemTemplateOptions" : function(entity, path) {
                 var id = 'activitiesListItem';
-                //var created = entity.created;
-                var dt = new Date(entity.created);
-                var created  = dt.getDay() + '/' + dt.getMonth() + '/' + dt.getFullYear() + ' ' +dt.getHours() + ':' + dt.getMinutes();
-
+                var created = dateToString(entity.created);
                 var uri = entity.uri;
                 return {
                     entity : entity,
@@ -2119,6 +2138,16 @@ function usergrid_console_app() {
             "noEntitiesMsg" : "No activities found"
         }, response);
     }
+
+    function searchActivities(){
+        var search = $('#search-activities').val();
+        var searchType = ($('#search-activities-type').val())?$('#search-activities-type').val():activitiesSortBy;
+        //make sure the input is valid:
+        if (searchType == 'actor') {searchType = 'actor.displayName';}
+        else if (searchType == 'content') {searchType = 'content';}
+        requestActivities(search, searchType);
+    }
+    usergrid.console.searchActivities = searchActivities;
 
     /*******************************************************************
      * 

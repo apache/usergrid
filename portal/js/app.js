@@ -92,8 +92,24 @@ $(document).ready(function () {
 	}
 
     function initConsoleFrame(){
-        var url = 'https://apigee.com/console/usergrid?embedded=true';
-        //var url = 'https://50.16.203.236/console/youtube?embedded=true';
+        var bearerToken = usergrid.console.getAccessToken();
+        var bearerTokenJson = JSON.stringify(
+            {
+            "type":"custom_token",
+            "name":"Authorization",
+            "value":"Bearer " + bearerToken,
+            "style":"header"
+            },
+            {
+            "type":"custom_token",
+            "name":"app_id",
+            "value":"8a197065-58c5-11e1-bfb7-22000a1c5a67",
+            "style":"template"
+            });
+        //var string='[{"type":"custom_token","name":"Authorization","value":"Bearer '+bearerToken+'","style":"header"},{"type":"custom_token","name":"app_id","value":"8a197065-58c5-11e1-bfb7-22000a1c5a67","style":"template"}]';
+        var bearerTokenString = encodeURIComponent(bearerTokenJson);
+        //var bearerTokenString = encodeURIComponent("[{'type':'custom_token','access_token':'"+bearerToken+"'}]");
+        var url = 'https://apigee.com/console/usergrid?embedded=true&auth='+bearerTokenString;
         $("#console-panel iframe").attr("src", url);
     }
     

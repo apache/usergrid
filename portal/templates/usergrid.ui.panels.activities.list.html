@@ -4,7 +4,23 @@
 			<!--<td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="${id}" value="${entity.uuid}" /></td>-->
 			<td class="query-result-td-header-name">
                 <div class="query-result-header-name query-result-picture-vert-offset">
-                    ${created} ${entity.actor.displayName} ${entity.verb} ${entity.content}
+                    <table id="activities-list-view">
+                        <tr>
+                            <td class="created">
+                               ${created}:
+                            </td>
+                            <td class="actor">
+                               ${entity.actor.displayName} (${entity.actor.email})
+                            </td>
+                            <td class="verb">
+                               - ${entity.verb}
+                            </td>
+                            <td class="content">
+                                <em>${entity.content}</em>
+                            </td>
+                        </tr>
+                    </table>
+                       
                 </div>
 			</td>
 		</tr>
