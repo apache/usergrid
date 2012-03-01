@@ -681,7 +681,7 @@ function usergrid_console_app() {
     function dateToString(numberDate){
         var date = new Date(numberDate);
         //var milisecs = date.getMilliseconds()/1000; //not showing secs per ea
-        return numberDate + '  ' +date.toString('h:mm tt - dd MMM yyyy '); //:ss' + milisecs.toFixed(3));
+        return date.toString('h:mm tt - dd MMM yyyy '); //:ss' + milisecs.toFixed(3));
     }
     function get_gravatar(email, size) {
         var size = size || 50;
