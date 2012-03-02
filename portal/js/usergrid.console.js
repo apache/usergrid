@@ -2019,7 +2019,7 @@ function usergrid_console_app() {
                 permissions = null;
             }
             $.tmpl("usergrid.ui.panels.role.permissions.html", {"role" : current_role_name, "permissions" : permissions}, {}).appendTo("#role-permissions");
-            updateAutocompleteCollections();
+            updatePermissionAutocompleteCollections();
         } else {
             section.html("<h2>No permission information retrieved.</h2>");
         }
