@@ -16,7 +16,35 @@
     <packaging>jar</packaging>
     <name>${bundle.symbolicName} [${bundle.namespace}]</name>
     <description>Counter batching service for Usergrid distributed counter architechture</description>
-
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<!-- <groups>fast,${groups}</groups> -->
+					<systemPropertyVariables>
+						<storage-config>${basedir}/src/test/conf</storage-config>
+					</systemPropertyVariables>
+					<forkMode>always</forkMode>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+					<optimize>true</optimize>
+					<debug>true</debug>
+					<showDeprecation>true</showDeprecation>
+					<showWarnings>true</showWarnings>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
