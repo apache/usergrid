@@ -1241,10 +1241,20 @@ public class EntityManagerImpl implements EntityManager,
 				Map<String, Object> properties = deserializeEntityProperties(results
 						.getByKey(key));
 
+				if (properties == null) {
+					logger.error("Error deserializing entity with key "
+							+ key
+							+ ", entity probaby doesn't exist, where did this key come from?");
+					continue;
+				}
+
 				UUID id = uuid(properties.get(PROPERTY_UUID));
 				String type = string(properties.get(PROPERTY_TYPE));
 
 				if ((id == null) || (type == null)) {
+					logger.error("Error retrieving entity with key "
+							+ key
+							+ ", no type or id deseriazable, where did this key come from?");
 					continue;
 				}
 				A entity = EntityFactory.newEntity(id, type, entityClass);
@@ -1255,7 +1265,9 @@ public class EntityManagerImpl implements EntityManager,
 
 			for (UUID entityId : entityIds) {
 				A entity = resultSet.get(entityId);
-				entities.add(entity);
+				if (entity != null) {
+					entities.add(entity);
+				}
 			}
 
 		}
