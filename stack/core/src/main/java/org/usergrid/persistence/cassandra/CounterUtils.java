@@ -308,17 +308,18 @@ public class CounterUtils {
 		// entityId
 		// + " by " + value);
     if ( "o".equals(counterType) || "p".equals(counterType)) {
-      PrefixedSerializer ps = new PrefixedSerializer(applicationId, UUIDSerializer.get(),
-                      UUIDSerializer.get());
+
       HCounterColumn<String> c = createCounterColumn(name, value);
-            m.addCounter(ps.toByteBuffer(entityId), ENTITY_COUNTERS.toString(), c);
+            m.addCounter(bytebuffer(entityId), ENTITY_COUNTERS.toString(), c);
     }
 		addInsertToMutator(m, ENTITY_DICTIONARIES,
 				key(entityId, DICTIONARY_COUNTERS), name, null, timestamp);
         // create and send Count
     if ( "n".equals(counterType) || "p".equals(counterType)) {
+      PrefixedSerializer ps = new PrefixedSerializer(applicationId, UUIDSerializer.get(),
+                            UUIDSerializer.get());
         batcher.add(new Count(ENTITY_COUNTERS.toString(),
-                entityId,
+                ps.toByteBuffer(entityId),
                 name,
                 value));
     }
@@ -347,7 +348,7 @@ public class CounterUtils {
 
 	public Mutator<ByteBuffer> batchIncrementQueueCounter(
 			Mutator<ByteBuffer> m, UUID queueId, String name, long value,
-			long timestamp) {
+			long timestamp, UUID applicationId) {
 		// logger.info("Incrementing property " + name + " of entity " +
 		// entityId
 		// + " by " + value);
@@ -363,8 +364,10 @@ public class CounterUtils {
 				createColumn(name, ByteBuffer.allocate(0), timestamp, se, be));
         // create and send Count
     if ( "n".equals(counterType) || "p".equals(counterType)) {
+        PrefixedSerializer ps = new PrefixedSerializer(applicationId, UUIDSerializer.get(),
+                                  UUIDSerializer.get());
         batcher.add(new Count(QueuesCF.COUNTERS.toString(),
-                queueId,
+                ps.toByteBuffer(queueId),
                 name,
                 value));
     }
@@ -373,20 +376,20 @@ public class CounterUtils {
 
 	public Mutator<ByteBuffer> batchIncrementQueueCounters(
 			Mutator<ByteBuffer> m, UUID queueId, Map<String, Long> values,
-			long timestamp) {
+			long timestamp, UUID applicationId) {
 		for (Entry<String, Long> entry : values.entrySet()) {
 			batchIncrementQueueCounter(m, queueId, entry.getKey(),
-					entry.getValue(), timestamp);
+					entry.getValue(), timestamp, applicationId);
 		}
 		return m;
 	}
 
 	public Mutator<ByteBuffer> batchIncrementQueueCounters(
 			Mutator<ByteBuffer> m, Map<UUID, Map<String, Long>> values,
-			long timestamp) {
+			long timestamp, UUID applicationId) {
 		for (Entry<UUID, Map<String, Long>> entry : values.entrySet()) {
 			batchIncrementQueueCounters(m, entry.getKey(), entry.getValue(),
-					timestamp);
+					timestamp, applicationId);
 		}
 		return m;
 	}
