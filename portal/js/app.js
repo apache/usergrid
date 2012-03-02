@@ -92,7 +92,9 @@ $(document).ready(function () {
 	}
 
     function initConsoleFrame(){
-        var bearerToken = usergrid.console.getAccessToken();
+        /*
+       // var bearerToken = usergrid.console.getAccessToken();
+        var bearerToken = localStorage.getObject('usergrid_access_token');
         var bearerTokenJson = JSON.stringify(
             {
             "type":"custom_token",
@@ -111,6 +113,7 @@ $(document).ready(function () {
         //var bearerTokenString = encodeURIComponent("[{'type':'custom_token','access_token':'"+bearerToken+"'}]");
         var url = 'https://apigee.com/console/usergrid?embedded=true&auth='+bearerTokenString;
         $("#console-panel iframe").attr("src", url);
+        */
     }
     
 });

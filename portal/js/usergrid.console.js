@@ -84,11 +84,39 @@ function usergrid_console_app() {
             }
         });
     }
+    function initConsoleFrame(){
 
-    function getAccessToken(){
-        return client.getAccessToken();
+        $("#console-panel iframe").attr("src", url);
     }
-    usergrid.console.getAccessToken = getAccessToken;
+
+    function getAccessTokenURL(){
+        //return client.getAccessToken();
+        // var bearerToken = usergrid.console.getAccessToken();
+        var bearerToken = localStorage.getObject('usergrid_access_token');
+        var bearerTokenJson = JSON.stringify(
+            {
+            "type":"custom_token",
+            "name":"Authorization",
+            "value":"Bearer " + bearerToken,
+            "style":"header"
+            },
+            {
+            "type":"custom_token",
+            "name":"app_id",
+            "value":current_application_id,
+            "style":"template"
+            });
+        var fred = encodeURIComponent(bearerToken);
+        alert(fred);
+        var bearerTokenString = encodeURIComponent(bearerTokenJson);
+
+        //var string='[{"type":"custom_token","name":"Authorization","value":"Bearer '+bearerToken+'","style":"header"},{"type":"custom_token","name":"app_id","value":"'+current_application_id+'","style":"template"}]';
+        //var bearerTokenString = encodeURIComponent(string);
+        //var bearerTokenString = encodeURIComponent("[{'type':'custom_token','access_token':'"+bearerToken+"'}]");
+        var url = 'https://apigee.com/console/usergrid?embedded=true&auth='+bearerTokenString;
+        return url;
+    }
+    usergrid.console.getAccessTokenURL = getAccessTokenURL;
     
     function showPanelContent(panelDiv, contentDiv) {
         var cdiv = $(contentDiv);
