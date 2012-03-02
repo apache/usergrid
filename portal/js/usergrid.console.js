@@ -643,31 +643,38 @@ function usergrid_console_app() {
     }
 
     function displayAdmins(response) {
-        var t = "";
-        admins = {};
+        var sectionAdmins = $("#organization-admins");
+        sectionAdmins.empty();
         if (response.data) {
+            var admins = {};
             admins = response.data;
             var i = 0;
             admins = admins.sort();
             for (i in admins) {
                 var admin = admins[i];
-                t += "<div class=\"admin-row\" id=\"admin-row-"
-                + i
-                + "\"><a href=\"#\" onclick=\"usergrid.console.pageSelectAdmin('"
-                + admin.uuid
-                + "'); return false;\"><span class=\"application-admin-name\">"
-                + admin.name + " &lt;" + admin.email + "&gt;</span></a></div>";
+                var div = $('<div/>',{
+                    id: 'admin-row-' + i,
+                    class:'admin-row'
+                });
+                var link = $('<a/>',{
+                    href: "#admin/" + admin.uuid,
+                    click: function(){usergrid.console.pageSelectAdmin(admin.uuid); return false;}
+                });
+                var span = $('<span/>',{
+                    class: 'application-admin-name',
+                    html: admin.name + " &lt;" + admin.email + "&gt;"
+                });
+                var img = $('<img/>',{
+                    class: 'smallgravatar',
+                    src:get_gravatar(admin.email, 20)
+                });
+                link.append(img).append(span);
+                div.append(link);
+                sectionAdmins.append(div);
             }
-            if (i)
-            $("#organization-admins").html(t);
-            else
-            $("#organization-admins").html(
-            "<h2>No organization administrators.</h2>");
-
-        } else {
-            $("#organization-admin").html(
-            "<h2>No organization administrators.</h2>");
         }
+        if(sectionAdmins.is(":empty"))
+            sectionAdmins.html('<h2>No organization administrators.</h2>');
     }
 
     function requestAdmins() {
