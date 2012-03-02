@@ -983,8 +983,12 @@ a:active {
 #organization-applications{
     padding: 0px;
     .application-row{
-        #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+        border-top: 1px solid #CCCCCC;
+        //#gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
         padding: 10px;
+    }
+    .application-row:nth-child(2n){
+        background: #EEE;
     }
     .alert{
         margin: 15px;
@@ -999,6 +1003,7 @@ a:active {
     }
     .admin-row{
         //border: 1px solid #CCCCCC;
+        border-top: 1px solid #CCCCCC;
         #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
         padding: 10px;
     }
