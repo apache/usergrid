@@ -611,8 +611,8 @@ function usergrid_console_app() {
             var count = 0;
             var applicationNames = keys(applications).sort();
             var data = [];
-            var appListTmpl = $('<div class="application-row"><a href="#"><span class="application-row-name">${name}</span> <span class="application-row-uuid">(${uuid})</span></a></br></div>');
-            var appMenuTmpl = $('<li><a href="#">${name}</a></li>');
+            var appListTmpl = $('<div><div class="application-row"><a href="#"><span class="application-row-name">${name}</span> <span class="application-row-uuid">(${uuid})</span></a></div></div>');
+            var appMenuTmpl = $('<div><li><a href="#">${name}</a></li></div>');
 
             for (var i in applicationNames) {
                 var name = applicationNames[i];
@@ -643,29 +643,26 @@ function usergrid_console_app() {
                 enableApplicationPanelButtons();
                 selectFirstApp();
             }
-            else {
-                appList.html("<h2>No applications created.</h2>");
-                appMenu.html('<li>--No Apps--</li>');
-                disableApplicationPanelButtons();
-            }
-        } else {
-            appList.html("<h2>No applications created.</h2>");
+        }
+
+        if(appList.is(":empty")){
+            appList.html('<div class="alert">No applications created.</div>');
             appMenu.html('<li>--No Apps--</li>');
             disableApplicationPanelButtons();
         }
+
     }
 
     function requestApplications() {
-        $("#organization-applications").html(
-        "<h2>Loading...</h2>");
+        var sectionApps = $("#organization-applications");
+        sectionApps.empty().html('<div class="alert alert-info">Loading...</div>');
         client.requestApplications(displayApplications, function() {
-            $("#organization-applications").html("<h2>Unable to retrieve application list.</h2>");
+            sectionApps.html('<div class="alert">Unable to retrieve application list.</div>');
             disableApplicationPanelButtons();
         });
     }
 
     function selectFirstApp() {
-
         var firstApp = null;
         for (firstApp in client.currentOrganization.applications) break;
         if(firstApp)
@@ -673,39 +670,45 @@ function usergrid_console_app() {
     }
 
     function displayAdmins(response) {
-        var t = "";
-        admins = {};
+        var sectionAdmins = $("#organization-admins");
+        sectionAdmins.empty();
         if (response.data) {
+            var admins = {};
             admins = response.data;
             var i = 0;
             admins = admins.sort();
             for (i in admins) {
                 var admin = admins[i];
-                t += "<div class=\"admin-row\" id=\"admin-row-"
-                + i
-                + "\"><a href=\"#\" onclick=\"usergrid.console.pageSelectAdmin('"
-                + admin.uuid
-                + "'); return false;\"><span class=\"application-admin-name\">"
-                + admin.name + " &lt;" + admin.email + "&gt;</span></a></div>";
+                var div = $('<div/>',{
+                    id: 'admin-row-' + i,
+                    class:'admin-row'
+                });
+                var link = $('<a/>',{
+                    href: "mailto:" + admin.email
+                    //,click: function(){usergrid.console.pageSelectAdmin(admin.uuid); return false;}
+                });
+                var span = $('<span/>',{
+                    class: 'application-admin-name',
+                    html: admin.name + " &lt;" + admin.email + "&gt;"
+                });
+                var img = $('<img/>',{
+                    class: 'smallgravatar',
+                    src:get_gravatar(admin.email, 20)
+                });
+                link.append(img).append(span);
+                div.append(link);
+                sectionAdmins.append(div);
             }
-            if (i)
-            $("#organization-admins").html(t);
-            else
-            $("#organization-admins").html(
-            "<h2>No organization administrators.</h2>");
-
-        } else {
-            $("#organization-admin").html(
-            "<h2>No organization administrators.</h2>");
         }
+        if(sectionAdmins.is(":empty"))
+            sectionAdmins.html('<h2>No organization administrators.</h2>');
     }
 
     function requestAdmins() {
-        $("#organization-admin").html(
-        "<h2>Loading...</h2>");
-        client.requestAdmins(displayAdmins,
-        function() {
-            $("#organization-admins").html("<h2>Unable to retrieve admin list.</h2>");
+        var sectionAdmins =$("#organization-admins");
+        sectionAdmins.empty().html('<div class="alert alert-info">Loading...</div>');
+        client.requestAdmins(displayAdmins, function() {
+            sectionAdmins.html('<div class="alert">Unable to retrieve admin list</div>');
         });
     }
 
@@ -725,27 +728,27 @@ function usergrid_console_app() {
             var activities = response.entities;
             for (var i in activities) {
                 var activity = activities[i];
+                var title = $("<span/>",{html: activity.title});
+                var personLink = $(title).find("a");
+                var mail = personLink.attr("mailto");
+                var img = $('<img/>',{src:get_gravatar(mail, 20), class:"smallgravatar"});
+                personLink.attr("href","mailto:" + mail).prepend(img);
                 var time = $('<span/>',{
                     class:'time',
                     text: dateToString(activity.created)});
-                var mail = $(activity.title).attr("mailto");
-                var img = $('<img/>',{src:get_gravatar(mail, 20)});
-                var row = $('<div/>', {
-                    class: 'organization-activity-row',
-                    html: activity.title});
-                row.prepend(img).prepend(time).appendTo(sectionActivities);
+                var row = $('<div/>', {class: 'organization-activity-row'});
+                row.append(time).append(title).appendTo(sectionActivities);
             }
         }
         if(sectionActivities.is(":empty"))
-            sectionActivities.html('<h2>No activities.</h2>');
+            sectionActivities.html('<div class="alert">No activities.</div>');
     }
 
     function requestAdminFeed() {
-        $("#organization-activities").html(
-        "<h2>Loading...</h2>");
-        client.requestAdminFeed(displayAdminFeed,
-        function() {
-            $("#organization-activities").html("<h2>Unable to retrieve feed.</h2>");
+        var section =$("#organization-activities");
+        section.empty().html('<div class="alert alert-info">Loading...</div>');
+        client.requestAdminFeed(displayAdminFeed, function() {
+            section.html('<div class="alert">Unable to retrieve feed.</div>');
         });
     }
 
@@ -2042,7 +2045,7 @@ function usergrid_console_app() {
                 permissions = null;
             }
             $.tmpl("usergrid.ui.panels.role.permissions.html", {"role" : current_role_name, "permissions" : permissions}, {}).appendTo("#role-permissions");
-            updateAutocompleteCollections();
+            updatePermissionAutocompleteCollections();
         } else {
             section.html("<h2>No permission information retrieved.</h2>");
         }
@@ -2147,7 +2150,7 @@ function usergrid_console_app() {
                 var id = 'activitiesListItem';
                 var created = dateToString(entity.created);
                 var uri = entity.uri;
-                if(entity.actor && entity.actor.email)
+                if(entity && entity.actor && entity.actor.email)
                     entity.actor.gravatar = get_gravatar(entity.actor.email,20);
                 return {
                     entity : entity,
