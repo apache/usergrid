@@ -616,7 +616,7 @@ function usergrid_console_app() {
         }
 
         if(appList.is(":empty")){
-            appList.html("<h2>No applications created.</h2>");
+            appList.html('<div class="alert">No applications created.</div>');
             appMenu.html('<li>--No Apps--</li>');
             disableApplicationPanelButtons();
         }
@@ -625,9 +625,9 @@ function usergrid_console_app() {
 
     function requestApplications() {
         var sectionApps = $("#organization-applications");
-        sectionApps.empty().html("<h2>Loading...</h2>");
+        sectionApps.empty().html('<div class="alert alert-info">Loading...</div>');
         client.requestApplications(displayApplications, function() {
-            sectionApps.html("<h2>Unable to retrieve application list.</h2>");
+            sectionApps.html('<div class="alert">Unable to retrieve application list.</div>');
             disableApplicationPanelButtons();
         });
     }
@@ -675,11 +675,10 @@ function usergrid_console_app() {
     }
 
     function requestAdmins() {
-        $("#organization-admin").html(
-        "<h2>Loading...</h2>");
-        client.requestAdmins(displayAdmins,
-        function() {
-            $("#organization-admins").html("<h2>Unable to retrieve admin list.</h2>");
+        var sectionAdmins =$("#organization-admins");
+        sectionAdmins.empty().html('<div class="alert alert-info">Loading...</div>');
+        client.requestAdmins(displayAdmins, function() {
+            sectionAdmins.html('<div class="alert">Unable to retrieve admin list</div>');
         });
     }
 
@@ -712,15 +711,14 @@ function usergrid_console_app() {
             }
         }
         if(sectionActivities.is(":empty"))
-            sectionActivities.html('<h2>No activities.</h2>');
+            sectionActivities.html('<div class="alert">No activities.</div>');
     }
 
     function requestAdminFeed() {
-        $("#organization-activities").html(
-        "<h2>Loading...</h2>");
-        client.requestAdminFeed(displayAdminFeed,
-        function() {
-            $("#organization-activities").html("<h2>Unable to retrieve feed.</h2>");
+        var section =$("#organization-activities");
+        section.empty().html('<div class="alert alert-info">Loading...</div>');
+        client.requestAdminFeed(displayAdminFeed, function() {
+            section.html('<div class="alert">Unable to retrieve feed.</div>');
         });
     }
 
