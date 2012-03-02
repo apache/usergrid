@@ -1352,15 +1352,18 @@ function usergrid_console_app() {
     }
     usergrid.console.requestUsers = requestUsers;
 
-    function deleteUsers() {        
-        $("input[id^=userListItem]").each( function() {
-            if ($(this).prop("checked")) {  
-                var userId = $(this).attr("value");
-                client.deleteUser(current_application_id, userId, requestUsers,
-                function() {
-                    alert("Unable to delete user: " + client.getLastErrorMessage(userId));
-                });
-            }
+    function deleteUsers() {
+        var items = $("#users-response-table input[id^=userListItem]:checked");
+        if(!items.length){
+            alert("Please, first select the items you want to delete");
+            return;
+        }
+
+        items.each(function() {
+            var userId = $(this).attr("value");
+            client.deleteUser(current_application_id, userId, requestUsers, function() {
+                alert("Unable to delete user: " + client.getLastErrorMessage(userId));
+            });
         });
     }
     window.usergrid.console.deleteUsers = deleteUsers;
@@ -2789,7 +2792,7 @@ function usergrid_console_app() {
             $("#organizations a").click( function(e){
                e.preventDefault();
                var uuid = $(this).attr("href").substring(1);
-               //usergrid.console.pageSelectOrganization(uuid); //TODO:david this function dont exist
+               //usergrid.console.pageSelectOrganization(uuid); //TODO:david this function does not exist
             });
         } else {
         }
