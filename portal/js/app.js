@@ -12,7 +12,6 @@ $(document).ready(function () {
 		usergrid_console_app();
 		InitMenu();
         StatusBar.Init('#statusbar-placeholder');
-		$("#logout-link").click(usergrid.console.logout);
 		usergrid.console.loginOk();
         makePanelCollapsable();
 	}
@@ -58,6 +57,7 @@ $(document).ready(function () {
 	function InitMenu() {
 		$('.navbar .dropdown-toggle').dropdown();
 		$('#sidebar-menu .dropdown-toggle').dropdown();
+        $("#logout-link").click(usergrid.console.logout);
 
         var publicMenu = $("#publicMenu");
         var privateMenu =$("#privateMenu");
