@@ -957,18 +957,7 @@ a:active {
     .alert;
 }
 
-.organization-activity-row{
-    line-height: 25px;
-    .time{
-        color:#888;
-        width:170px;
-        display: inline-block;
-    }
-    img{
-     padding: 0 5px;
-    }
 
-}
 
 /*------------------activities------------------*/
 #activities-list-view{
@@ -990,7 +979,7 @@ a:active {
     }
 }
 
-/*------------------ Organization Administrators ------------------*/
+/*------------------ Home Page ------------------*/
 #organization-admins{
     padding: 0px;
     .alert{
@@ -1007,6 +996,31 @@ a:active {
     }
 }
 
+#organization-activities{
+    padding: 0px;
+    .alert{
+        display: inline-block;
+        margin: 15px;
+    }
+    .organization-activity-row{
+        line-height: 25px;
+        #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+        padding: 10px;
+        .time{
+            color:#888;
+            width:170px;
+            display: inline-block;
+        }
+        img{
+            .smallgravatar;
+        }
+        a{
+            padding: 10px;
+        }
+    }
+}
+
+/*---------- -------------------------------*/
 
 .smallgravatar{
     position: relative;

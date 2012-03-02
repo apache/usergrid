@@ -702,15 +702,16 @@ function usergrid_console_app() {
             var activities = response.entities;
             for (var i in activities) {
                 var activity = activities[i];
+                var title = $("<span/>",{html: activity.title});
+                var personLink = $(title).find("a");
+                var mail = personLink.attr("mailto");
+                var img = $('<img/>',{src:get_gravatar(mail, 20), class:"smallgravatar"});
+                personLink.attr("href","mailto:" + mail).prepend(img);
                 var time = $('<span/>',{
                     class:'time',
                     text: dateToString(activity.created)});
-                var mail = $(activity.title).attr("mailto");
-                var img = $('<img/>',{src:get_gravatar(mail, 20)});
-                var row = $('<div/>', {
-                    class: 'organization-activity-row',
-                    html: activity.title});
-                row.prepend(img).prepend(time).appendTo(sectionActivities);
+                var row = $('<div/>', {class: 'organization-activity-row'});
+                row.append(time).append(title).appendTo(sectionActivities);
             }
         }
         if(sectionActivities.is(":empty"))
