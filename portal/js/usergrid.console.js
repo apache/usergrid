@@ -581,8 +581,8 @@ function usergrid_console_app() {
             var count = 0;
             var applicationNames = keys(applications).sort();
             var data = [];
-            var appListTmpl = $('<div class="application-row"><a href="#"><span class="application-row-name">${name}</span> <span class="application-row-uuid">(${uuid})</span></a></br></div>');
-            var appMenuTmpl = $('<li><a href="#">${name}</a></li>');
+            var appListTmpl = $('<div><div class="application-row"><a href="#"><span class="application-row-name">${name}</span> <span class="application-row-uuid">(${uuid})</span></a></div></div>');
+            var appMenuTmpl = $('<div><li><a href="#">${name}</a></li></div>');
 
             for (var i in applicationNames) {
                 var name = applicationNames[i];
@@ -613,29 +613,26 @@ function usergrid_console_app() {
                 enableApplicationPanelButtons();
                 selectFirstApp();
             }
-            else {
-                appList.html("<h2>No applications created.</h2>");
-                appMenu.html('<li>--No Apps--</li>');
-                disableApplicationPanelButtons();
-            }
-        } else {
+        }
+
+        if(appList.is(":empty")){
             appList.html("<h2>No applications created.</h2>");
             appMenu.html('<li>--No Apps--</li>');
             disableApplicationPanelButtons();
         }
+
     }
 
     function requestApplications() {
-        $("#organization-applications").html(
-        "<h2>Loading...</h2>");
+        var sectionApps = $("#organization-applications");
+        sectionApps.empty().html("<h2>Loading...</h2>");
         client.requestApplications(displayApplications, function() {
-            $("#organization-applications").html("<h2>Unable to retrieve application list.</h2>");
+            sectionApps.html("<h2>Unable to retrieve application list.</h2>");
             disableApplicationPanelButtons();
         });
     }
 
     function selectFirstApp() {
-
         var firstApp = null;
         for (firstApp in client.currentOrganization.applications) break;
         if(firstApp)
