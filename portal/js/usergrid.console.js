@@ -1352,17 +1352,35 @@ function usergrid_console_app() {
     }
     usergrid.console.requestUsers = requestUsers;
 
-    function deleteUsers() {
+    function confirmDelete(callback){
+        var form = $("#confirmDialog");
+        if(form.submit)
+            form.unbind('submit');
+
+        form.submit(function(e){
+            e.preventDefault();
+            form.modal("hide");
+        }).submit();
+
+        form.modal("show");
+    }
+
+    $("#delete-users-link").click(deleteUsers);
+    function deleteUsers(e) {
+        e.preventDefault();
+
         var items = $("#users-response-table input[id^=userListItem]:checked");
         if(!items.length){
             alert("Please, first select the items you want to delete");
             return;
         }
 
-        items.each(function() {
-            var userId = $(this).attr("value");
-            client.deleteUser(current_application_id, userId, requestUsers, function() {
-                alert("Unable to delete user: " + client.getLastErrorMessage(userId));
+        confirmDelete(function(){
+            items.each(function() {
+                var userId = $(this).attr("value");
+                client.deleteUser(current_application_id, userId, requestUsers, function() {
+                    alert("Unable to delete user: " + client.getLastErrorMessage(userId));
+                });
             });
         });
     }

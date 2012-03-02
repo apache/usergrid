@@ -342,9 +342,9 @@
                                             <!--<option value="firstName">First Name</option>
                                             <option value="lastName">Last Name</option>-->
                                         </select>
-                                        <a class="" href="#" onclick="usergrid.console.selectAllUsers();"></i> Select All </a>
-                                        <a class="" data-toggle="modal" href="#dialog-form-new-user"></i> Add</a>
-                                        <a href="" onclick="usergrid.console.deleteUsers(); return false;"></i> Delete</a>
+                                        <a class="" href="#" onclick="usergrid.console.selectAllUsers();"> Select All </a>
+                                        <a class="" data-toggle="modal" href="#dialog-form-new-user"> Add</a>
+                                        <a id="delete-users-link" href="#"> Delete</a>
                                     </div>
                                 </h3>
                                 <div class="console-section-contents listContent">
@@ -989,7 +989,7 @@
             <p></p>
         </div>
         <div class="modal-footer">
-            <input type="submit" class="btn btn-danger" value="Create"/>
+            <input type="submit" class="btn btn-danger" value="Yes, delete"/>
             <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
         </div>
     </form>
