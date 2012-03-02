@@ -45,7 +45,7 @@ public class Message extends TypedEntity {
 	@EntityProperty(indexed = false, mutable = false)
 	protected String destination;
 
-	@EntityProperty(indexed = false, mutable = false)
+	@EntityProperty(name = "reply_to", indexed = false, mutable = false)
 	protected String replyTo;
 
 	@EntityProperty(fulltextIndexed = false, required = true, mutable = false)
