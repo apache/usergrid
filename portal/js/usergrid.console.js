@@ -849,6 +849,7 @@ function usergrid_console_app() {
     $("#dialog-form-new-group").submit(submitNewGroup);
     $("#dialog-form-add-group-to-user").submit(submitAddGroupToUser);
     $("#dialog-form-add-user-to-group").submit(submitAddUserToGroup);
+    $("#dialog-form-add-user-to-role").submit(submitAddUserToRole);
 
     function checkLength2(input, min, max) {
         if (input.val().length > max || input.val().length < min) {
@@ -1051,6 +1052,26 @@ function usergrid_console_app() {
         }
     }
     function submitAddUserToGroup() {
+        var form = $(this);
+        formClearErrors(form);
+
+        var add_user_username = $("#lookup-user-username");
+
+        var bValid = checkLength2(add_user_username, 1, 80)
+            && checkRegexp2(add_user_username, nameRegex, "Username name only allows : a-z, 0-9, dot, and dash.");
+
+        if (bValid) {
+            var data = form.serializeObject();
+            client.addUserToGroup(current_application_id, data.groupId, data.username,
+                function() {requestGroup(data.groupId);},
+                function() {
+                    alert("Unable to add user to group: " + client.getLastErrorMessage('An internal error occured.'));
+                }
+            );
+            $(this).modal('hide');
+        }
+    }
+    function submitAddUserToRole() {
         var form = $(this);
         formClearErrors(form);
 
@@ -1925,6 +1946,7 @@ function usergrid_console_app() {
         requestRoles();
         selectFirstTabButton('#roles-panel-tab-bar');
         showPanelList('roles');
+        $('#role-panel-users').hide();
     }
     window.usergrid.console.pageSelectRoles = pageSelectRoles;
 
@@ -2984,6 +3006,7 @@ function usergrid_console_app() {
             selectTabButton('#button-roles-search');
             //populate the panel content
             $('#roles-panel-list').hide();
+            $('#role-panel-users').hide();
             $('#roles-panel-search').show();
         } else {
             Pages.SelectPanel('roles');
@@ -2996,12 +3019,21 @@ function usergrid_console_app() {
             Pages.SelectPanel('roles');
             showPanelList('roles');
         }
-        else if ($(this).attr("id") == "button-role-search") {
+        else if ($(this).attr("id") == "button-role-settings") {
             //show the search tab
-            selectTabButton('#button-roles-search');
+            selectTabButton('#button-role-settings');
             //populate the panel content
             $('#roles-panel-list').hide();
-            $('#roles-panel-search').show();
+            $('#role-panel-users').hide();
+            $('#role-panel-settings').show();
+        }
+        else if ($(this).attr("id") == "button-role-users") {
+            //show the users tab
+            selectTabButton('#button-role-users');
+            //populate the panel content
+            $('#roles-panel-list').hide();
+            $('#role-panel-settings').hide();
+            $('#role-panel-users').show();
         } else {
             Pages.SelectPanel('roles');
         }

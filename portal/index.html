@@ -418,6 +418,35 @@
                         <div id="user-panel-activities" class="panel-content" style="display: none;"></div>
                         <div id="user-panel-graph" class="panel-content" style="display: none;"></div>
                         <div id="user-panel-permissions" class="panel-content" style="display: none;"></div>
+                        <form id="dialog-form-add-user-to-role" class="modal hide fade">
+    <div class="modal-header">
+        <a class="close" data-dismiss="modal">x</a>
+        <h4>Add user to Role</h4>
+    </div>
+    <div class="modal-body">
+        <p class="validateTips">All form fields are required.</p>
+        <fieldset>
+            <div class="control-group">
+                <label for="new-role-name">Name</label>
+                <div class="controls">
+                    <input type="text" name="name" id="new-role-name" class="input-xlarge"/>
+                    <p class="help-block hide"></p>
+                </div>
+            </div>
+            <div class="control-group">
+                <label for="new-role-title">Title</label>
+                <div class="controls">
+                    <input type="text" name="title" id="new-role-title" class="input-xlarge"/>
+                    <p class="help-block hide"></p>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+    <div class="modal-footer">
+        <input type="submit" class="btn btn-primary" value="Create"/>
+        <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
+    </div>
+</form>
                         <form id="dialog-form-add-group-to-user" class="modal hide fade">
                             <div class="modal-header">
                                 <a class="close" data-dismiss="modal">x</a>
@@ -619,7 +648,8 @@
                         <div id="role-panel" style="display: none">
                             <ul id="role-panel-tab-bar" class="nav nav-tabs">
                                 <li class="active"><a id="button-role-list" href="#">List</a></li>
-                                <li><a id="button-role-search" href="#">Settings</a></li>
+                                <li><a id="button-role-settings" href="#">Settings</a></li>
+                                <li><a id="button-role-users" href="#">Users</a></li>
                            </ul>
                            <div id="role-panel-settings" class="panel-content">
                                <div class="console-section">
@@ -630,7 +660,17 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                            </div>
+                                <div id="role-panel-users" class="panel-content">
+                                <div class="console-section">
+                                    <h3> <span id="role-section-title" class="title">Users</span> </h3>
+                                    <div class="console-section-contents">
+                                        <div id="role-users">
+                                            <h2>...</h2>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                     </div>
                     <div id="activities-panel" style="display: none">
                         <div id="activities-panel-list" class="panel-content">
