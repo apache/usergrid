@@ -2117,7 +2117,7 @@ function usergrid_console_app() {
                 var id = 'activitiesListItem';
                 var created = dateToString(entity.created);
                 var uri = entity.uri;
-                if(entity.actor && entity.actor.email)
+                if(entity && entity.actor && entity.actor.email)
                     entity.actor.gravatar = get_gravatar(entity.actor.email,20);
                 return {
                     entity : entity,
