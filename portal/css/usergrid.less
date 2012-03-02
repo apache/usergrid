@@ -957,18 +957,7 @@ a:active {
     .alert;
 }
 
-.organization-activity-row{
-    line-height: 25px;
-    .time{
-        color:#888;
-        width:170px;
-        display: inline-block;
-    }
-    img{
-     padding: 0 5px;
-    }
 
-}
 
 /*------------------activities------------------*/
 #activities-list-view{
@@ -976,7 +965,6 @@ a:active {
         border: none;
     }
     td{
-        
         padding-right: 20px;
         font-size: 12px;
     }
@@ -989,4 +977,72 @@ a:active {
     .content{
     
     }
+}
+
+/*------------------ Home Page ------------------*/
+#organization-applications{
+    padding: 0px;
+    .application-row{
+        border-top: 1px solid #CCCCCC;
+        //#gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+        padding: 10px;
+    }
+    .application-row:nth-child(2n){
+        background: #EEE;
+    }
+    .alert{
+        margin: 15px;
+    }
+}
+
+#organization-admins{
+    padding: 0px;
+    .alert{
+        display: inline-block;
+        margin: 15px;
+    }
+    .admin-row{
+        //border: 1px solid #CCCCCC;
+        border-top: 1px solid #CCCCCC;
+        #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+        padding: 10px;
+    }
+    a{
+        padding: 10px;
+    }
+}
+
+#organization-activities{
+    padding: 0px;
+    .alert{
+        display: inline-block;
+        margin: 15px;
+    }
+    .organization-activity-row{
+        line-height: 25px;
+        #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+        padding: 10px;
+        .time{
+            color:#888;
+            width:170px;
+            display: inline-block;
+        }
+        img{
+            .smallgravatar;
+        }
+        a{
+            padding: 10px;
+        }
+    }
+}
+
+/*---------- -------------------------------*/
+
+.smallgravatar{
+    position: relative;
+    top: 2px;
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+    margin: 0 5px;
 }

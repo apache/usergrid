@@ -80,6 +80,11 @@ var Pages = function(){
 			panel.showFunction();
 		}
 		
+        if (panelName == 'console') {
+            url = usergrid.console.getAccessTokenURL();
+            $("#console-panel iframe").attr("src", url);
+        }
+
 		$("#console-panels > div").hide();
 		panel.box.show();
 
