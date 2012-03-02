@@ -657,8 +657,8 @@ function usergrid_console_app() {
                     class:'admin-row'
                 });
                 var link = $('<a/>',{
-                    href: "#admin/" + admin.uuid,
-                    click: function(){usergrid.console.pageSelectAdmin(admin.uuid); return false;}
+                    href: "mailto:" + admin.email
+                    //,click: function(){usergrid.console.pageSelectAdmin(admin.uuid); return false;}
                 });
                 var span = $('<span/>',{
                     class: 'application-admin-name',
