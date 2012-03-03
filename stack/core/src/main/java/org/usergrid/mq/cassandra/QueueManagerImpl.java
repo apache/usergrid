@@ -220,7 +220,7 @@ public class QueueManagerImpl implements QueueManager {
 				createColumn(queuePath, queueId, timestamp, se, ue));
 
 		counterUtils.batchIncrementQueueCounter(batch, getQueueId("/"),
-				queuePath, 1L, timestamp);
+				queuePath, 1L, timestamp, applicationId);
 
 		if (indexUpdate == null) {
 			indexUpdate = new MessageIndexUpdate(message);
@@ -1383,7 +1383,7 @@ public class QueueManagerImpl implements QueueManager {
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
 		counterUtils.batchIncrementQueueCounters(m, getQueueId(queuePath),
-				counts, timestamp);
+				counts, timestamp, applicationId);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -1393,7 +1393,7 @@ public class QueueManagerImpl implements QueueManager {
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
 		counterUtils.batchIncrementQueueCounter(m, getQueueId(queuePath), name,
-				value, timestamp);
+				value, timestamp, applicationId);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
