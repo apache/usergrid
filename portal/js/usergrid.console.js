@@ -1564,13 +1564,13 @@ function usergrid_console_app() {
                     
                 }
             })
-            
-            
 
             client.queryUserRoles(current_application_id, entity.uuid, function(response) {
                 if (user_data && response.entities && (response.entities.length > 0)) {
                     user_data.roles = response.entities;
                     redrawUserPanel();
+                } else {
+                    user_data.roles = null;
                 }
             })
 
@@ -1584,6 +1584,13 @@ function usergrid_console_app() {
             client.queryUserFollowing(current_application_id, entity.uuid, function(response) {
                 if (user_data && response.entities && (response.entities.length > 0)) {
                     user_data.following = response.entities;
+                    redrawUserPanel();
+                }
+            })
+
+            client.queryUserFollowers(current_application_id, entity.uuid, function(response) {
+                if (user_data && response.entities && (response.entities.length > 0)) {
+                    user_data.followers = response.entities;
                     redrawUserPanel();
                 }
             })

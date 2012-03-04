@@ -1035,6 +1035,11 @@ usergrid.Client = function(options) {
     }
     this.queryUserFollowing = queryUserFollowing;
 
+    function queryUserFollowers(a) {
+        return queryEntityCollection("users", "followers", arguments);
+    }
+    this.queryUserFollowers = queryUserFollowers;
+
     function requestUserList(applicationId, searchString, success, failure) {
         if (searchString != "*") searchString = searchString + '*';        
         apiRequest("GET", "/" + applicationId + "/users", null, JSON.stringify({

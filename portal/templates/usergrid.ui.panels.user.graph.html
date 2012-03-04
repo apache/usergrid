@@ -8,19 +8,23 @@
 		</div>
 	</h3>
 	<div class="console-section-contents">
+        <div class="user-roles-title">Followers </div>
 		<div class="user-panel-section">
 			{{if following}}
 			{{each following}}
-			<div>${$index + 1}: <em>${$value}.</em></div>
+			<div>${$index + 1}: <em>${name}.</em></div>
 			{{/each}}
 			{{else}}
 			<div class="user-panel-section-message">Not following anyone</div>
 			{{/if}}
 		</div>
+        <br/>
+
+        <div class="user-roles-title">Following </div>
 		<div class="user-panel-section">
 			{{if followers}}
 			{{each followers}}
-			<div>${$index + 1}: <em>${$value}.</em></div>
+			<div>${$index + 1}: <em>${name}.</em></div>
 			{{/each}}
 			{{else}}
 			<div class="user-panel-section-message">No followers</div>
