@@ -1042,6 +1042,12 @@ usergrid.Client = function(options) {
         }), success, failure);
     }
     this.requestUserList = requestUserList;
+
+    function requestUsers(applicationId, success, failure) {
+        apiGetRequest("/" + applicationId + "/users", null, success, failure);
+    }
+    this.requestUsers = requestUsers;
+
     //
     // Create new application user for organization
     //
@@ -1097,6 +1103,11 @@ usergrid.Client = function(options) {
     }
     this.queryGroupActivities = queryGroupActivities;
 
+    function requestGroups(applicationId, success, failure) {
+        apiGetRequest("/" + applicationId + "/groups", null, success, failure);
+    }
+    this.requestGroups = requestGroups;
+
     function requestGroupRoles(applicationId, entityId, success, failure) {
         apiGetRequest("/" + applicationId + "/groups/" + entityId + "/rolenames", null, success, failure);
     }
@@ -1131,7 +1142,7 @@ usergrid.Client = function(options) {
         apiRequest("POST", "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, "{ }", success, failure);
     }
     this.addUserToGroup = addUserToGroup;
-
+   
     function entitySearch(applicationId, searchType, searchString, success, failure) {
        return queryEntities(searchType, arguments);
     }
