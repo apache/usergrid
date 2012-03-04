@@ -1157,7 +1157,17 @@ usergrid.Client = function(options) {
         apiRequest("POST", "/" + applicationId + "/rolenames", null, JSON.stringify(data), success, failure);
     }
     this.createRole = createRole;
-     
+
+    function addUserToRole(applicationId, roleId, username, success, failure) {
+        apiRequest("POST", "/" + applicationId + "/roles/" + roleId + "/users/" + username, null, "{ }", success, failure);
+    }
+    this.addUserToRole = addUserToRole;
+
+    function requestRoles(applicationId, success, failure) {
+        apiGetRequest("/" + applicationId + "/rolenames", null, success, failure);
+    }
+    this.requestRoles = requestRoles;
+
     /**
         Creates a new Query.
         @class Represents a Query. 

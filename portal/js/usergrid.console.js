@@ -1426,6 +1426,14 @@ function usergrid_console_app() {
     }
     window.usergrid.console.pageOpenUserProfile = pageOpenUserProfile;
 
+    function pageSelectUserPermissions(userId) {
+        Pages.SelectPanel('user');
+        requestUser(userId);
+        selectTabButton("#button-user-permissions");
+        showPanelContent("#user-panel", "#user-panel-permissions");
+    }
+    window.usergrid.console.pageSelectUserPermissions = pageSelectUserPermissions;
+
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.profile.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.memberships.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.activities.html");
