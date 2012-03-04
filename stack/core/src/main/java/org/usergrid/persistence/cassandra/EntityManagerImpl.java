@@ -2494,7 +2494,8 @@ public class EntityManagerImpl implements EntityManager,
 		addToDictionary(userRef(userId), DICTIONARY_ROLENAMES, roleName,
 				roleName);
 		addToCollection(userRef(userId), COLLECTION_ROLES, roleRef(roleName));
-		addToCollection(roleRef(roleName), COLLECTION_USERS, userRef(userId));
+		// addToCollection(roleRef(roleName), COLLECTION_USERS,
+		// userRef(userId));
 	}
 
 	@Override
@@ -2504,8 +2505,8 @@ public class EntityManagerImpl implements EntityManager,
 		removeFromDictionary(userRef(userId), DICTIONARY_ROLENAMES, roleName);
 		removeFromCollection(userRef(userId), COLLECTION_ROLES,
 				roleRef(roleName));
-		removeFromCollection(roleRef(roleName), COLLECTION_USERS,
-				userRef(userId));
+		// removeFromCollection(roleRef(roleName), COLLECTION_USERS,
+		// userRef(userId));
 	}
 
 	@Override
@@ -2624,7 +2625,8 @@ public class EntityManagerImpl implements EntityManager,
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementEntityCounters(m, counts, timestamp, applicationId);
+		counterUtils.batchIncrementEntityCounters(m, counts, timestamp,
+				applicationId);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 

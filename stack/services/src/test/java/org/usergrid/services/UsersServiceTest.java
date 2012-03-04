@@ -61,7 +61,10 @@ public class UsersServiceTest extends AbstractServiceTest {
 		UUID applicationId = createApplication("testPermissions");
 		assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
+		ServiceManager sm = smf.getServiceManager(applicationId);
+		assertNotNull(sm);
+
+		EntityManager em = sm.getEntityManager();
 		assertNotNull(em);
 
 		// em.createRole("admin", null);
@@ -78,13 +81,15 @@ public class UsersServiceTest extends AbstractServiceTest {
 		Entity user = em.create("user", properties);
 		assertNotNull(user);
 
-		em.addUserToRole(user.getUuid(), "admin");
-		em.addUserToRole(user.getUuid(), "manager");
+		// em.addUserToRole(user.getUuid(), "admin");
+		testRequest(sm, ServiceAction.POST, 1, null, "users", user.getUuid(),
+				"roles", "admin");
+		// em.addUserToRole(user.getUuid(), "manager");
+		testRequest(sm, ServiceAction.POST, 1, null, "users", user.getUuid(),
+				"roles", "manager");
 
 		em.grantUserPermission(user.getUuid(), "users:access:*");
 		em.grantUserPermission(user.getUuid(), "groups:access:*");
-
-		ServiceManager sm = smf.getServiceManager(applicationId);
 
 		testDataRequest(sm, ServiceAction.GET, null, "users", user.getUuid(),
 				"rolenames");

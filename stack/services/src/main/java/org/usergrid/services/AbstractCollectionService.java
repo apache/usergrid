@@ -69,6 +69,41 @@ public class AbstractCollectionService extends AbstractService {
 	// cname/id/
 
 	@Override
+	public Entity getEntity(ServiceRequest request, UUID uuid) throws Exception {
+		if (!isRootService()) {
+			return null;
+		}
+		Entity entity = em.get(uuid);
+		if (entity != null) {
+			entity = importEntity(request, entity);
+		}
+		return entity;
+	}
+
+	@Override
+	public Entity getEntity(ServiceRequest request, String name)
+			throws Exception {
+		if (!isRootService()) {
+			return null;
+		}
+		String nameProperty = Schema.getDefaultSchema().aliasProperty(
+				getEntityType());
+		if (nameProperty == null) {
+			nameProperty = "name";
+		}
+
+		EntityRef entityRef = em.getAlias(getEntityType(), name);
+		if (entityRef == null) {
+			return null;
+		}
+		Entity entity = em.get(entityRef);
+		if (entity != null) {
+			entity = importEntity(request, entity);
+		}
+		return entity;
+	}
+
+	@Override
 	public ServiceResults getItemById(ServiceContext context, UUID id)
 			throws Exception {
 
@@ -358,7 +393,7 @@ public class AbstractCollectionService extends AbstractService {
 		em.addToCollection(context.getOwner(), context.getCollectionName(),
 				entity);
 
-		return new ServiceResults(null, context, Type.CONNECTION,
+		return new ServiceResults(null, context, Type.COLLECTION,
 				Results.fromEntity(entity), null, null);
 	}
 
