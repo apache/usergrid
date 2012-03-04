@@ -348,8 +348,6 @@ public class ServiceResource extends AbstractContextResource {
 		response.setApplication(services.getApplicationId());
 		response.setParams(ui.getQueryParameters());
 
-		response.setError("Delete collection not implemented");
-
 		executeServiceRequest(ui, response, ServiceAction.DELETE, null);
 
 		return new JSONWithPadding(response, callback);
