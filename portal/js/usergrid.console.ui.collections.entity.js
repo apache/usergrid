@@ -103,6 +103,8 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 				
 		getContents : function() {
 			var entity_contents = $.extend( false, { }, this.options.entity);
+            var path = entity_contents['metadata']['path'];
+            entity_contents = $.extend( false, entity_contents, {'path': path});
 			delete entity_contents['metadata'];
 			return $.tmpl("usergrid.ui.collections.entity.contents.html", {
 				entity : entity_contents
@@ -111,7 +113,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 				tableOpts : usergrid.console.ui.standardTableOpts
 			});
 		},
-				
+
 		getMetadata : function() {
 			var entity = this.options.entity;
 			if (!$.isEmptyObject(entity.metadata)) {
@@ -169,10 +171,17 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 			o.details.appendTo(el);
 			
 			o.details.find(".button").button();
+			o.contents = el.find(".query-result-contents");
 			o.json = el.find(".query-result-json");
 			o.formDiv = el.find(".query-result-form");
 			
-			var json_button = o.details.find(".query-result-header-toggle-json");
+			var content_button = o.details.find(".query-result-header-toggle-contents");
+			content_button.click(function() {
+				o.contents.toggle();
+				return false;
+			});
+
+            var json_button = o.details.find(".query-result-header-toggle-json");
 			json_button.click(function() {
 				o.json.toggle();
 				return false;
@@ -196,6 +205,8 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 			if ($.isEmptyObject(collections)) collections = null;
 
 			var entity_contents = $.extend( false, { }, this.options.entity);
+            var path = entity_contents['metadata']['path'];
+            entity_contents = $.extend( false, entity_contents, {'path': path});
 			delete entity_contents['metadata'];
 			
 			var metadata = entity.metadata;
