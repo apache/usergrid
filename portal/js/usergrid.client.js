@@ -719,6 +719,13 @@ usergrid.Client = function(options) {
     }
     this.deleteApplicationRolePermission = deleteApplicationRolePermission;
 
+    function addApplicationUserPermission(applicationId, username, permission, success, failure) {
+        apiRequest("POST", "/" + applicationId + "/users/" + username, null, JSON.stringify({
+            permission : permission
+        }), success, failure);
+    }
+    this.addApplicationUserPermission = addApplicationUserPermission;
+
     //
     // Get application counters
     //
@@ -1021,7 +1028,7 @@ usergrid.Client = function(options) {
     this.queryUserActivities = queryUserActivities;
 
     function queryUserRoles(applicationId, entityId, success, failure) {
-        apiGetRequest("/" + applicationId + "/users/" + entityId + "/rolenames", null, success, failure);
+        apiGetRequest("/" + applicationId + "/users/" + entityId + "/roles", null, success, failure);
     }
     this.queryUserRoles = queryUserRoles;
 

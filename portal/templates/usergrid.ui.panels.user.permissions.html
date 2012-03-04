@@ -14,19 +14,20 @@
 	<div class="console-section-contents">
 		<div class="user-panel-section">
 			<div class="user-roles-title">Roles </div>
-			{{if roles>1}}
+			{{if roles}}
 			{{each roles}}
 			<div class="user-role-row" id="user-role-row-${$index}">
 				<a href="" onclick="usergrid.console.pageOpenRole('${$index}'); return false;">
-					<span class="user-role-row-title">${$value}</span>
-					<span class="user-role-row-name">(${$index})</span>
+					<span class="user-role-row-title">${title}</span>
+					<span class="user-role-row-name">(${name})</span>
 				</a>
 			</div>
 			{{/each}}
 			{{else}}
 			<div class="user-panel-section-message">No Roles</div>
 			{{/if}}
-		
+            
+            <div class="user-roles-title">Permissions </div>
             <h4>Add Permission Rule</h4>
             <form id="role-permissions-form" action="" onsubmit="usergrid.console.addRolePermission('${role}'); return false;" class="well form-inline" autocomplete="off">
                 Path: <input id="role-permission-path-entry-input" type="text" name="path" value="/" />
