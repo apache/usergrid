@@ -35,41 +35,19 @@
  * You may copy and distribute such a system following the terms of the GNU AGPL
  * for Usergrid Stack and the licenses of the other code concerned, provided that
  ******************************************************************************/
-package org.usergrid.services;
+package org.usergrid.services.roles.groups;
 
-import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityRef;
+public class GroupsService extends org.usergrid.services.groups.GroupsService {
 
-public interface Service {
+	private static final Logger logger = LoggerFactory
+			.getLogger(GroupsService.class);
 
-	public static final String GENERIC_ENTITY_TYPE = "entity";
-
-	public String getServiceType();
-
-	public Class<? extends Entity> getEntityClass();
-
-	public String getEntityType();
-
-	public boolean isRootService();
-
-	public ServiceResults invoke(ServiceAction action, ServiceRequest request,
-			ServiceResults previousResults, ServicePayload payload)
-			throws Exception;
-
-	public Entity getEntity(ServiceRequest request, UUID uuid) throws Exception;
-
-	public Entity getEntity(ServiceRequest request, String name)
-			throws Exception;
-
-	public Entity importEntity(ServiceRequest request, Entity entity)
-			throws Exception;
-
-	public Entity writeEntity(ServiceRequest request, Entity entity)
-			throws Exception;
-
-	public Entity updateEntity(ServiceRequest request, EntityRef ref,
-			ServicePayload payload) throws Exception;
+	public GroupsService() {
+		super();
+		logger.info("/roles/*/groups");
+	}
 
 }

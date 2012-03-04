@@ -37,14 +37,9 @@
  ******************************************************************************/
 package org.usergrid.services;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.usergrid.services.ServiceParameter.parameters;
-import static org.usergrid.services.ServicePayload.payload;
-import static org.usergrid.utils.InflectionUtils.pluralize;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -53,15 +48,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
-import org.usergrid.utils.JsonUtils;
 
 public class ServiceInvocationTest extends AbstractServiceTest {
 
-	private static final Logger logger = LoggerFactory
+	public static final Logger logger = LoggerFactory
 			.getLogger(ServiceInvocationTest.class);
 
 	@Test
 	public void testServices() throws Exception {
+		logger.info("testServices");
 
 		UUID applicationId = createApplication("test");
 
@@ -159,56 +154,6 @@ public class ServiceInvocationTest extends AbstractServiceTest {
 		properties.put("visits", 5);
 		testRequest(sm, ServiceAction.PUT, 1, properties, "devices", uuid);
 
-	}
-
-	@Override
-	public Entity doCreate(ServiceManager sm, String entityType, String name)
-			throws Exception {
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("name", name);
-
-		return testRequest(sm, ServiceAction.POST, 1, properties,
-				pluralize(entityType)).getEntity();
-	}
-
-	@Override
-	public ServiceResults testRequest(ServiceManager sm, ServiceAction action,
-			int expectedCount, Map<String, Object> properties, Object... params)
-			throws Exception {
-		ServiceRequest request = sm.newRequest(action, parameters(params),
-				payload(properties));
-		logger.info("Request: " + action + " " + request.toString());
-		dumpProperties(properties);
-		ServiceResults results = request.execute();
-		dumpResults(results);
-		assertNotNull(results);
-		assertEquals(expectedCount, results.getEntities().size());
-		return results;
-	}
-
-	@Override
-	public void dumpProperties(Map<String, Object> properties) {
-		if (properties != null) {
-			logger.info("Input:\n"
-					+ JsonUtils.mapToFormattedJsonString(properties));
-		}
-	}
-
-	@Override
-	public void dumpResults(ServiceResults results) {
-		if (results != null) {
-			List<Entity> entities = results.getEntities();
-			logger.info("Results:\n"
-					+ JsonUtils.mapToFormattedJsonString(entities));
-		}
-	}
-
-	@Override
-	public void dumpEntity(Entity entity) {
-		if (entity != null) {
-			logger.info("Entity:\n"
-					+ JsonUtils.mapToFormattedJsonString(entity));
-		}
 	}
 
 }

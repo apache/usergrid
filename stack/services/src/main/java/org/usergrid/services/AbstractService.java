@@ -301,6 +301,13 @@ public abstract class AbstractService implements Service {
 		return null;
 	}
 
+	@Override
+	public Entity getEntity(ServiceRequest request, String name)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	public Entity importEntity(ServiceContext context, Entity entity)
 			throws Exception {
 		return importEntity(context.getRequest(), entity);
@@ -370,7 +377,9 @@ public abstract class AbstractService implements Service {
 			for (Entity entity : entities) {
 				Entity imported = importEntity(request, entity);
 				if (imported != entity) {
-					logger.info("Import returned new entity instace for {} replacing in results set", entity.getUuid());
+					logger.info(
+							"Import returned new entity instace for {} replacing in results set",
+							entity.getUuid());
 					results.replace(imported);
 				}
 			}
