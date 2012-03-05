@@ -436,14 +436,17 @@ a:active {
 
 /*-----------------------------------------------------------*/
 .query-result-row {
-	margin: 0px 0px 0px 0px;
-   tr{
-    border: 	1px solid @h3Color;
+    border-top: 1px solid #CCCCCC;
+    padding: 0px;
+    background: white;
+    &:nth-child(2n){
+        background: #EEE;
     }
+    margin: 0px 0px 0px 0px;
 }
 
 .query-result-row .query-result-portlet{
-    margin: 1px 0 5px 35px;
+    margin: 0 0 5px 21px;
 }
 .query-result-portlet {
 	font-size: 12px;
@@ -491,8 +494,6 @@ a:active {
 .query-result-header {
 	font-family: sans-serif;
 	font-weight: bold;
-	border: 1px solid #666;
-	background-color: #f0f0f0;
 }
 
 .query-result-user-picture {
@@ -506,11 +507,24 @@ a:active {
 	margin: 0px;
 	width: 100%;
     tr{
-        border-bottom: 1px solid @h3Color;
-    }
+         border-bottom: 1px solid @h3Color;
+        &:last-child {
+            border-bottom: none;
+        }
+     }
 }
 
-
+.query-result-table-obj {
+    tr {
+        .zebraRows;
+    }
+    .query-result-table-obj {
+        tr {
+            background: transparent;
+            border-top: none;
+        }
+    }
+}
 
 .query-result-td-checkbox input {
 	width: 20px;
@@ -553,6 +567,9 @@ a:active {
 .query-result-header-name {
 	padding-left: 8px;
 	font-size: 18px;
+}
+.query-result-table-name{
+    width: 25%;
 }
 
 /*-------------------------------------------------*/
@@ -940,7 +957,7 @@ a:active {
  }
 
  .query-result-header{
-   #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+
  }
 
 
@@ -983,6 +1000,7 @@ a:active {
 .zebraRows{
     border-top: 1px solid #CCCCCC;
     padding: 10px;
+    background: white;
     &:nth-child(2n){
         background: #EEE;
     }
