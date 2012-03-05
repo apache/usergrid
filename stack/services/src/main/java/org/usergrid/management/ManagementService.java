@@ -343,4 +343,6 @@ public interface ManagementService {
 	public PrincipalCredentialsToken getPrincipalCredentialsTokenForClientCredentials(
 			String clientId, String clientSecret) throws Exception;
 
+	public abstract long getMaxTokenAge();
+
 }
