@@ -720,7 +720,7 @@ function usergrid_console_app() {
     }
     function get_gravatar(email, size) {
         var size = size || 50;
-        return 'http://www.gravatar.com/avatar/' + MD5(email) + '?d=identicon&s=' + size;
+        return 'https://secure.gravatar.com/avatar/' + MD5(email) + '?d=identicon&s=' + size;
     }
     function displayAdminFeed(response) {
         var sectionActivities = $("#organization-activities");
