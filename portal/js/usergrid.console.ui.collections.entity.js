@@ -42,6 +42,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 				if (o.contents.css('display') == 'none') {
                     o.contents.show();
                     o.json.hide();
+                    o.collections.hide();
                 } else {
                     o.contents.hide();
                 }                
@@ -53,6 +54,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
                 if (o.json.css('display') == 'none') {
                     o.json.show();
                     o.contents.hide();
+                    o.collections.hide();
                 } else {
                     o.json.hide();
                 }                
@@ -61,7 +63,13 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 			
 			var collections_button = o.header.find(".query-result-header-toggle-collections");
 			collections_button.click(function() {
-				o.collections.toggle();
+                if (o.collections.css('display') == 'none') {
+                    o.collections.show();
+                    o.contents.hide();
+                    o.json.hide();
+                } else {
+                    o.collections.hide();
+                }
 				return false;
 			});
 			
