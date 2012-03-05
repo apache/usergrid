@@ -2035,7 +2035,9 @@ function usergrid_console_app() {
 
     function deleteRolePermission(roleName, permission) {
         console.log("delete " + roleName + " - " + permission);
-        client.deleteApplicationRolePermission(current_application_id, roleName, permission, requestRole, requestRole);
+        confirmDelete(function(){
+            client.deleteApplicationRolePermission(current_application_id, roleName, permission, requestRole, requestRole);
+        });
     }
     window.usergrid.console.deleteRolePermission = deleteRolePermission;
 
