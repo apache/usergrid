@@ -980,15 +980,18 @@ a:active {
 }
 
 /*------------------ Home Page ------------------*/
+.zebraRows{
+    border-top: 1px solid #CCCCCC;
+    padding: 10px;
+    &:nth-child(2n){
+        background: #EEE;
+    }
+}
+
 #organization-applications{
     padding: 0px;
     .application-row{
-        border-top: 1px solid #CCCCCC;
-        //#gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
-        padding: 10px;
-    }
-    .application-row:nth-child(2n){
-        background: #EEE;
+        .zebraRows;
     }
     .alert{
         margin: 15px;
@@ -1002,10 +1005,7 @@ a:active {
         margin: 15px;
     }
     .admin-row{
-        //border: 1px solid #CCCCCC;
-        border-top: 1px solid #CCCCCC;
-        #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
-        padding: 10px;
+        .zebraRows;
     }
     a{
         padding: 10px;
@@ -1019,9 +1019,8 @@ a:active {
         margin: 15px;
     }
     .organization-activity-row{
+        .zebraRows;
         line-height: 25px;
-        #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
-        padding: 10px;
         .time{
             color:#888;
             width:170px;
@@ -1036,6 +1035,19 @@ a:active {
     }
 }
 
+#organizations{
+    padding: 0px;
+    .alert{
+        display: inline-block;
+        margin: 15px;
+    }
+    .row{
+        .zebraRows;
+    }
+    a{
+        padding: 3px 10px;
+    }
+}
 /*---------- -------------------------------*/
 
 .smallgravatar{
