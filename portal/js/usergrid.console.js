@@ -10,7 +10,7 @@ function usergrid_console_app() {
 
     var emailRegex = /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i;
     var passwordRegex = /^([0-9a-zA-Z@#$%^&])+$/;
-    var userusernameRegex = /^([0-9a-zA-Z\.\-])+$/;
+    var usernameRegex = /^([0-9a-zA-Z\.\-])+$/;
     var nameRegex = /^([ 0-9a-zA-Z\.\-])+$/;
     var alphaNumRegex = /^([0-9a-zA-Z])+$/;
     var pathRegex = /^([0-9a-z\.\-\/])+$/;
@@ -1387,7 +1387,7 @@ function usergrid_console_app() {
         form.submit(function(e){
             e.preventDefault();
             form.modal("hide");
-        }).submit();
+        }).submit(callback);
 
         form.modal("show");
     }
@@ -1715,19 +1715,28 @@ function usergrid_console_app() {
     }
     usergrid.console.requestGroups = requestGroups;
 
-    function deleteGroups() {
-        $('#search-user-groupname').val('');
-        $("input[id^=groupListItem]").each( function() {
-            if ($(this).prop("checked")) {  
+    $("#delete-groups-link").click(deleteGroups);
+    function deleteGroups(e) {
+        e.preventDefault();
+
+        var items = $("#groups-response-table input[id^=groupListItem]:checked");
+        if(!items.length){
+            alert("Please, first select the items you want to delete");
+            return;
+        }
+
+        confirmDelete(function(){
+            console.log(this);
+            console.log(items);
+            items.each(function() {
                 var groupId = $(this).attr("value");
                 client.deleteGroup(current_application_id, groupId, requestGroups,
                 function() {
                     alert("Unable to delete group: " + client.getLastErrorMessage(groupId));
                 });
-            }
-        });        
+            });
+        });
     }
-    window.usergrid.console.deleteGroups = deleteGroups;
 
     /*******************************************************************
      * 
