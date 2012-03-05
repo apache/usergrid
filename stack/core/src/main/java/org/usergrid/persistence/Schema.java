@@ -147,6 +147,7 @@ public class Schema {
 	public static final String DICTIONARY_PERMISSIONS = "permissions";
 	public static final String DICTIONARY_ID_SETS = "id_sets";
 	public static final String DICTIONARY_COUNTERS = "counters";
+	public static final String DICTIONARY_LOCATIONS = "locations";
 
 	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> DEFAULT_DICTIONARIES = hashMap(
