@@ -312,7 +312,8 @@ public abstract class ServiceParameter {
 			for (int i = 0; i < replaceSet.getKey().size(); i++) {
 				String matchStr = replaceSet.getKey().get(i);
 				ServiceParameter param = parameters.get(i);
-				if (matchStr.equals("$id") && (param instanceof IdParameter)) {
+				if (matchStr.equals("$id")
+						&& ((param instanceof IdParameter) || (param instanceof NameParameter))) {
 					continue;
 				} else if (matchStr.equals("$query")
 						&& (param instanceof QueryParameter)) {

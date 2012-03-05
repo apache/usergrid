@@ -63,7 +63,7 @@ public class AbstractCollectionService extends AbstractService {
 
 	public AbstractCollectionService() {
 		// addSet("indexes");
-		addMetadataType("indexes");
+		declareMetadataType("indexes");
 	}
 
 	// cname/id/

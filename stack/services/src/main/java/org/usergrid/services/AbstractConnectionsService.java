@@ -70,7 +70,7 @@ public class AbstractConnectionsService extends AbstractService {
 
 	public AbstractConnectionsService() {
 		// addSets(Arrays.asList("indexes"));
-		addMetadataType("indexes");
+		declareMetadataType("indexes");
 	}
 
 	public boolean connecting() {

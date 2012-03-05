@@ -57,7 +57,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
 		// addedCollections = new LinkedHashSet<String>();
 		// addedCollections.add("members");
 
-		addEntityDictionary("rolenames");
+		declareEntityDictionary("rolenames");
 	}
 
 	@Override
