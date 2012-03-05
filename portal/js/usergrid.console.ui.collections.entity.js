@@ -38,14 +38,24 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 			o.header.find(".button").button();
 
 			var contents_button = o.header.find(".query-result-header-toggle-contents");
-			contents_button.click(function() {
-				o.contents.toggle();
+			contents_button.click(function() {    
+				if (o.contents.css('display') == 'none') {
+                    o.contents.show();
+                    o.json.hide();
+                } else {
+                    o.contents.hide();
+                }                
 				return false;
 			});
 			
 			var json_button = o.header.find(".query-result-header-toggle-json");
 			json_button.click(function() {
-				o.json.toggle();
+                if (o.json.css('display') == 'none') {
+                    o.json.show();
+                    o.contents.hide();
+                } else {
+                    o.json.hide();
+                }                
 				return false;
 			});
 			
@@ -177,13 +187,23 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 			
 			var content_button = o.details.find(".query-result-header-toggle-contents");
 			content_button.click(function() {
-				o.contents.toggle();
+                if (o.contents.css('display') == 'none') {
+                    o.contents.show();
+                    o.json.hide();
+                } else {
+                    o.contents.hide();
+                }                
 				return false;
 			});
 
             var json_button = o.details.find(".query-result-header-toggle-json");
 			json_button.click(function() {
-				o.json.toggle();
+                if (o.json.css('display') == 'none') {
+                    o.json.show();
+                    o.contents.hide();
+                } else {
+                    o.json.hide();
+                }                
 				return false;
 			});
 			
