@@ -53,7 +53,7 @@ public class RolesService extends AbstractCollectionService {
 		super();
 		logger.info("/roles");
 
-		addEntityDictionary("permissions");
+		declareEntityDictionary("permissions");
 
 	}
 
