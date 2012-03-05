@@ -37,17 +37,13 @@
  ******************************************************************************/
 package org.usergrid.rest.security.shiro.filters;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
+import static org.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
 
-import org.apache.amber.oauth2.common.OAuth;
-import org.apache.amber.oauth2.common.error.OAuthError;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
+
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.exception.OAuthSystemException;
-import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.ParameterStyle;
 import org.apache.amber.oauth2.common.utils.OAuthUtils;
 import org.apache.amber.oauth2.rs.request.OAuthAccessResourceRequest;
@@ -60,6 +56,7 @@ import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.BadAccessTokenException;
 import org.usergrid.management.exceptions.ManagementException;
+import org.usergrid.rest.exceptions.AuthErrorInfo;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.shiro.PrincipalCredentialsToken;
@@ -209,43 +206,19 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
 					return request;
 				}
 
-				OAuthResponse oauthResponse = OAuthResponse
-						.errorResponse(HttpServletResponse.SC_UNAUTHORIZED)
-						.setRealm(REALM).setError(e.getError())
-						.setErrorDescription(e.getDescription())
-						.setErrorUri(e.getDescription()).buildHeaderMessage();
-
-				throw new WebApplicationException(
-						Response.status(Response.Status.BAD_REQUEST)
-								.header(OAuth.HeaderType.WWW_AUTHENTICATE,
-										oauthResponse
-												.getHeader(OAuth.HeaderType.WWW_AUTHENTICATE))
-								.build());
+				throw new MappableContainerException(e);
 
 			}
 		} catch (OAuthSystemException ose) {
-			throw new WebApplicationException(ose);
+			throw new MappableContainerException(ose);
 		}
 
 		return request;
 	}
 
 	private void throwBadTokenError() throws OAuthSystemException {
-		// Return the OAuth error message
-		OAuthResponse oauthResponse = OAuthResponse
-				.errorResponse(HttpServletResponse.SC_UNAUTHORIZED)
-				.setRealm(REALM)
-				.setError(OAuthError.ResourceResponse.INVALID_TOKEN)
-				.buildHeaderMessage();
 
-		// return
-		// Response.status(Response.Status.UNAUTHORIZED).build();
-		throw new WebApplicationException(Response
-				.status(Response.Status.UNAUTHORIZED)
-				.header(OAuth.HeaderType.WWW_AUTHENTICATE,
-						oauthResponse
-								.getHeader(OAuth.HeaderType.WWW_AUTHENTICATE))
-				.build());
+		throw mappableSecurityException(AuthErrorInfo.BAD_ACCESS_TOKEN_ERROR);
 
 	}
 }
