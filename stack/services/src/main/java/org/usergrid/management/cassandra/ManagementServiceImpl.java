@@ -91,7 +91,7 @@ import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.BadAccessTokenException;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
-import org.usergrid.management.exceptions.ExpiredAccessTokenException;
+import org.usergrid.management.exceptions.ExpiredTokenException;
 import org.usergrid.management.exceptions.IncorrectPasswordException;
 import org.usergrid.management.exceptions.InvalidAccessTokenException;
 import org.usergrid.management.exceptions.UnableToLeaveOrganizationException;
@@ -1070,7 +1070,7 @@ public class ManagementServiceImpl implements ManagementService {
 		long age = current_time - timestamp;
 		if ((maxAge > 0) && (age > maxAge)) {
 			logger.info("Token expired {} minutes ago", (age / 1000 / 60));
-			throw new ExpiredAccessTokenException("Token expired "
+			throw new ExpiredTokenException("Token expired "
 					+ (age / 1000 / 60) + " minutes ago");
 		}
 

@@ -37,23 +37,23 @@
  ******************************************************************************/
 package org.usergrid.management.exceptions;
 
-public class ExpiredAccessTokenException extends BadAccessTokenException {
+public class ExpiredTokenException extends BadAccessTokenException {
 
 	private static final long serialVersionUID = 1L;
 
-	public ExpiredAccessTokenException() {
+	public ExpiredTokenException() {
 		super();
 	}
 
-	public ExpiredAccessTokenException(String arg0, Throwable arg1) {
+	public ExpiredTokenException(String arg0, Throwable arg1) {
 		super(arg0, arg1);
 	}
 
-	public ExpiredAccessTokenException(String arg0) {
+	public ExpiredTokenException(String arg0) {
 		super(arg0);
 	}
 
-	public ExpiredAccessTokenException(Throwable arg0) {
+	public ExpiredTokenException(Throwable arg0) {
 		super(arg0);
 	}
 
