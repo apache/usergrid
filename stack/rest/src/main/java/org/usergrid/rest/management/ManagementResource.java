@@ -209,7 +209,7 @@ public class ManagementResource extends AbstractContextResource {
 			}
 
 			AccessInfo access_info = new AccessInfo()
-					.withExpiresIn(3600)
+					.withExpiresIn(management.getMaxTokenAge() / 1000)
 					.withAccessToken(
 							management.getAccessTokenForAdminUser(user
 									.getUuid()))

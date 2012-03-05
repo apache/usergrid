@@ -259,7 +259,7 @@ public class ApplicationResource extends ServiceResource {
 			}
 
 			AccessInfo access_info = new AccessInfo()
-					.withExpiresIn(3600)
+					.withExpiresIn(management.getMaxTokenAge() / 1000)
 					.withAccessToken(
 							management.getAccessTokenForAppUser(
 									services.getApplicationId(), user.getUuid()))
