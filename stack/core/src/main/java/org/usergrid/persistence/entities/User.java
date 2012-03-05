@@ -99,7 +99,7 @@ public class User extends TypedEntity {
 			"published", "content" }, subkeys = { "verb" }, reversed = true, sort = "published desc")
 	protected List<UUID> feed;
 
-	@EntityCollection(type = "role")
+	@EntityCollection(type = "role", linkedCollection = "users")
 	protected List<UUID> roles;
 
 	public User() {

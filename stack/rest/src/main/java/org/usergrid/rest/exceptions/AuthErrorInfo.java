@@ -39,7 +39,7 @@ package org.usergrid.rest.exceptions;
 
 import org.usergrid.management.exceptions.BadAccessTokenException;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
-import org.usergrid.management.exceptions.ExpiredAccessTokenException;
+import org.usergrid.management.exceptions.ExpiredTokenException;
 import org.usergrid.management.exceptions.IncorrectPasswordException;
 import org.usergrid.management.exceptions.InvalidAccessTokenException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
@@ -69,7 +69,7 @@ public enum AuthErrorInfo {
 	NO_DOMAIN_ERROR("auth_no_application",
 			"Unable to authenticate due to application not found"), //
 	NOT_DOMAIN_OWNER_ERROR("auth_not_application_owner", ""), //
-	EXPIRED_ACCESS_TOKEN_ERROR("auth_expired_access_token",
+	EXPIRED_ACCESS_TOKEN_ERROR("expired_token",
 			"Unable to authenticate due to expired access token"), //
 	BAD_ACCESS_TOKEN_ERROR("auth_bad_access_token",
 			"Unable to authenticate due to corrupt access token"), //
@@ -104,12 +104,10 @@ public enum AuthErrorInfo {
 		return message;
 	}
 
-	public static AuthErrorInfo getForException(Exception e) {
-		if (e instanceof BadAccessTokenException) {
-			return BAD_ACCESS_TOKEN_ERROR;
-		} else if (e instanceof DisabledAdminUserException) {
+	public static AuthErrorInfo getForException(Throwable e) {
+		if (e instanceof DisabledAdminUserException) {
 			return DISABLED_ADMIN;
-		} else if (e instanceof ExpiredAccessTokenException) {
+		} else if (e instanceof ExpiredTokenException) {
 			return EXPIRED_ACCESS_TOKEN_ERROR;
 		} else if (e instanceof IncorrectPasswordException) {
 			return INVALID_USERNAME_OR_PASSWORD_ERROR;
@@ -119,6 +117,8 @@ public enum AuthErrorInfo {
 			return UNACTIVATED_ORGANIZATION;
 		} else if (e instanceof UnactivatedAdminUserException) {
 			return UNACTIVATED_ADMIN;
+		} else if (e instanceof BadAccessTokenException) {
+			return BAD_ACCESS_TOKEN_ERROR;
 		}
 		return null;
 	}

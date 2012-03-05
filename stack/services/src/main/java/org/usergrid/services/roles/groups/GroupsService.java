@@ -35,26 +35,19 @@
  * You may copy and distribute such a system following the terms of the GNU AGPL
  * for Usergrid Stack and the licenses of the other code concerned, provided that
  ******************************************************************************/
-package org.usergrid.management.exceptions;
+package org.usergrid.services.roles.groups;
 
-public class ExpiredAccessTokenException extends BadAccessTokenException {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-	private static final long serialVersionUID = 1L;
+public class GroupsService extends org.usergrid.services.groups.GroupsService {
 
-	public ExpiredAccessTokenException() {
+	private static final Logger logger = LoggerFactory
+			.getLogger(GroupsService.class);
+
+	public GroupsService() {
 		super();
-	}
-
-	public ExpiredAccessTokenException(String arg0, Throwable arg1) {
-		super(arg0, arg1);
-	}
-
-	public ExpiredAccessTokenException(String arg0) {
-		super(arg0);
-	}
-
-	public ExpiredAccessTokenException(Throwable arg0) {
-		super(arg0);
+		logger.info("/roles/*/groups");
 	}
 
 }

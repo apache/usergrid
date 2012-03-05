@@ -28,8 +28,8 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.usergrid.persistence.TypedEntity;
 import org.usergrid.persistence.annotations.EntityCollection;
-import org.usergrid.persistence.annotations.EntityProperty;
 import org.usergrid.persistence.annotations.EntityDictionary;
+import org.usergrid.persistence.annotations.EntityProperty;
 
 /**
  * Groups are used to organize users.
@@ -51,10 +51,10 @@ public class Role extends TypedEntity {
 	@EntityDictionary(keyType = java.lang.String.class)
 	protected Set<String> permissions;
 
-	@EntityCollection(type = "user")
+	@EntityCollection(type = "user", linkedCollection = "roles")
 	protected List<UUID> users;
 
-	@EntityCollection(type = "group")
+	@EntityCollection(type = "group", linkedCollection = "roles")
 	protected List<UUID> groups;
 
 	public Role() {

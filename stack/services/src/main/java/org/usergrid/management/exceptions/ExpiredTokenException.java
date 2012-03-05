@@ -35,38 +35,26 @@
  * You may copy and distribute such a system following the terms of the GNU AGPL
  * for Usergrid Stack and the licenses of the other code concerned, provided that
  ******************************************************************************/
-package org.usergrid.services.roles;
+package org.usergrid.management.exceptions;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.SimpleRoleRef;
-import org.usergrid.persistence.entities.Group;
-import org.usergrid.services.AbstractCollectionService;
-import org.usergrid.services.ServiceContext;
-import org.usergrid.services.ServiceResults;
+public class ExpiredTokenException extends BadAccessTokenException {
 
-public class RolesService extends AbstractCollectionService {
+	private static final long serialVersionUID = 1L;
 
-	private static final Logger logger = LoggerFactory.getLogger(RolesService.class);
-
-	public RolesService() {
+	public ExpiredTokenException() {
 		super();
-		logger.info("/roles");
-
-		declareEntityDictionary("permissions");
-
 	}
 
-	@Override
-	public ServiceResults getItemByName(ServiceContext context, String name)
-			throws Exception {
-		if ((context.getOwner() != null)
-				&& Group.ENTITY_TYPE.equals(context.getOwner().getType())) {
-			return getItemById(context,
-					SimpleRoleRef.getIdForGroupIdAndRoleName(context.getOwner()
-							.getUuid(), name));
-		}
-		return super.getItemByName(context, name);
+	public ExpiredTokenException(String arg0, Throwable arg1) {
+		super(arg0, arg1);
+	}
+
+	public ExpiredTokenException(String arg0) {
+		super(arg0);
+	}
+
+	public ExpiredTokenException(Throwable arg0) {
+		super(arg0);
 	}
 
 }

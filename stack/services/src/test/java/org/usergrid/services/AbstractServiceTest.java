@@ -144,7 +144,10 @@ public abstract class AbstractServiceTest {
 	}
 
 	public void dumpProperties(Map<String, Object> properties) {
-		dump("Input", properties);
+		if (properties != null) {
+			logger.info("Input:\n"
+					+ JsonUtils.mapToFormattedJsonString(properties));
+		}
 	}
 
 	public void dumpResults(ServiceResults results) {

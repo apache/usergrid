@@ -1727,6 +1727,7 @@ public class RelationManagerImpl implements RelationManager,
 			return null;
 		}
 
+		Set<UUID> idSet = new LinkedHashSet<UUID>();
 		List<UUID> ids = null;
 		List<EntityRef> refs = null;
 		Map<UUID, Map<String, Object>> metadata = new LinkedHashMap<UUID, Map<String, Object>>();
@@ -1774,11 +1775,25 @@ public class RelationManagerImpl implements RelationManager,
 			}
 
 			if ((refs != null) && (eType != null)) {
-				refs.add(new SimpleEntityRef(eType, connectedEntityId));
+				if (!idSet.contains(connectedEntityId)) {
+					refs.add(new SimpleEntityRef(eType, connectedEntityId));
+					idSet.add(connectedEntityId);
+				} else {
+					logger.error("Duplicate entity uuid ("
+							+ connectedEntityId
+							+ ") found in index results, discarding but index appears inconsistent...");
+				}
 			}
 
 			if (ids != null) {
-				ids.add(connectedEntityId);
+				if (!idSet.contains(connectedEntityId)) {
+					ids.add(connectedEntityId);
+					idSet.add(connectedEntityId);
+				} else {
+					logger.error("Duplicate entity uuid ("
+							+ connectedEntityId
+							+ ") found in index results, discarding but index appears inconsistent...");
+				}
 			}
 
 			if (cType != null) {

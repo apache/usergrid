@@ -91,7 +91,7 @@ import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.BadAccessTokenException;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
-import org.usergrid.management.exceptions.ExpiredAccessTokenException;
+import org.usergrid.management.exceptions.ExpiredTokenException;
 import org.usergrid.management.exceptions.IncorrectPasswordException;
 import org.usergrid.management.exceptions.InvalidAccessTokenException;
 import org.usergrid.management.exceptions.UnableToLeaveOrganizationException;
@@ -178,7 +178,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 	/**
 	 * Must be constructed with a CassandraClientPool.
-	 *
+	 * 
 	 */
 	public ManagementServiceImpl() {
 	}
@@ -198,6 +198,11 @@ public class ManagementServiceImpl implements ManagementService {
 					"usergrid.auth.token_max_age", "" + MAX_TOKEN_AGE));
 			maxTokenAge = maxTokenAge > 0 ? maxTokenAge : MAX_TOKEN_AGE;
 		}
+	}
+
+	@Override
+	public long getMaxTokenAge() {
+		return maxTokenAge;
 	}
 
 	@Autowired
@@ -851,7 +856,7 @@ public class ManagementServiceImpl implements ManagementService {
 					Identifier.fromUUID(UUID.fromString(identifier)));
 			if (entity != null) {
 				user = (User) entity.toTypedEntity();
-				logger.info("Found user {} as a UUID",identifier);
+				logger.info("Found user {} as a UUID", identifier);
 			}
 		} catch (Exception e) {
 			logger.error("Unable to get user " + identifier
@@ -866,7 +871,7 @@ public class ManagementServiceImpl implements ManagementService {
 					Identifier.fromName(identifier));
 			if (entity != null) {
 				user = (User) entity.toTypedEntity();
-				logger.info("Found user {} as a username",identifier);
+				logger.info("Found user {} as a username", identifier);
 			}
 		} catch (Exception e) {
 			logger.error("Unable to get user " + identifier
@@ -881,7 +886,7 @@ public class ManagementServiceImpl implements ManagementService {
 					Identifier.fromEmail(identifier));
 			if (entity != null) {
 				user = (User) entity.toTypedEntity();
-				logger.info("Found user {} as an email address",identifier);
+				logger.info("Found user {} as an email address", identifier);
 			}
 		} catch (Exception e) {
 			logger.error("Unable to get user " + identifier
@@ -1064,8 +1069,8 @@ public class ManagementServiceImpl implements ManagementService {
 		long current_time = System.currentTimeMillis();
 		long age = current_time - timestamp;
 		if ((maxAge > 0) && (age > maxAge)) {
-      logger.info("Token expired {} minutes ago", (age / 1000 / 60) );
-			throw new ExpiredAccessTokenException("Token expired "
+			logger.info("Token expired {} minutes ago", (age / 1000 / 60));
+			throw new ExpiredTokenException("Token expired "
 					+ (age / 1000 / 60) + " minutes ago");
 		}
 
@@ -2023,12 +2028,13 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public void setAppUserPassword(UUID applicationId, UUID userId,
 			String oldPassword, String newPassword) throws Exception {
-		if ((userId == null) ) {
+		if ((userId == null)) {
 			throw new IllegalArgumentException("userId is required");
 		}
-    if ( (oldPassword == null) || (newPassword == null)) {
-      throw new IllegalArgumentException("oldpassword and newpassword are both required");
-    }
+		if ((oldPassword == null) || (newPassword == null)) {
+			throw new IllegalArgumentException(
+					"oldpassword and newpassword are both required");
+		}
 
 		EntityManager em = emf.getEntityManager(applicationId);
 		Entity user = em.get(userId);

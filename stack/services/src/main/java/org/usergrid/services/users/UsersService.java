@@ -71,16 +71,14 @@ public class UsersService extends AbstractCollectionService {
 		super();
 		logger.info("/users");
 
-		addHiddenConnection("following");
+		makeConnectionPrivate("following");
 
-		addCollections(Arrays.asList("following", "followers"));
+		declareVirtualCollections(Arrays.asList("following", "followers"));
 
-		addReplaceParameters(Arrays.asList("followers"),
-				Arrays.asList("connecting", "following"));
+		addReplaceParameters(Arrays.asList("$id", "followers"),
+				Arrays.asList("\\0", "connecting", "following"));
 
-		addHiddenCollection("roles");
-
-		addEntityDictionaries(Arrays.asList("rolenames", "permissions"));
+		declareEntityDictionaries(Arrays.asList("rolenames", "permissions"));
 
 	}
 

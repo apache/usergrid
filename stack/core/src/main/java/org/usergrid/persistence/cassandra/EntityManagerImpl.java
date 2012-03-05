@@ -1241,10 +1241,20 @@ public class EntityManagerImpl implements EntityManager,
 				Map<String, Object> properties = deserializeEntityProperties(results
 						.getByKey(key));
 
+				if (properties == null) {
+					logger.error("Error deserializing entity with key "
+							+ key
+							+ ", entity probaby doesn't exist, where did this key come from?");
+					continue;
+				}
+
 				UUID id = uuid(properties.get(PROPERTY_UUID));
 				String type = string(properties.get(PROPERTY_TYPE));
 
 				if ((id == null) || (type == null)) {
+					logger.error("Error retrieving entity with key "
+							+ key
+							+ ", no type or id deseriazable, where did this key come from?");
 					continue;
 				}
 				A entity = EntityFactory.newEntity(id, type, entityClass);
@@ -1255,7 +1265,9 @@ public class EntityManagerImpl implements EntityManager,
 
 			for (UUID entityId : entityIds) {
 				A entity = resultSet.get(entityId);
-				entities.add(entity);
+				if (entity != null) {
+					entities.add(entity);
+				}
 			}
 
 		}
@@ -2482,7 +2494,8 @@ public class EntityManagerImpl implements EntityManager,
 		addToDictionary(userRef(userId), DICTIONARY_ROLENAMES, roleName,
 				roleName);
 		addToCollection(userRef(userId), COLLECTION_ROLES, roleRef(roleName));
-		addToCollection(roleRef(roleName), COLLECTION_USERS, userRef(userId));
+		// addToCollection(roleRef(roleName), COLLECTION_USERS,
+		// userRef(userId));
 	}
 
 	@Override
@@ -2492,8 +2505,8 @@ public class EntityManagerImpl implements EntityManager,
 		removeFromDictionary(userRef(userId), DICTIONARY_ROLENAMES, roleName);
 		removeFromCollection(userRef(userId), COLLECTION_ROLES,
 				roleRef(roleName));
-		removeFromCollection(roleRef(roleName), COLLECTION_USERS,
-				userRef(userId));
+		// removeFromCollection(roleRef(roleName), COLLECTION_USERS,
+		// userRef(userId));
 	}
 
 	@Override
@@ -2593,7 +2606,7 @@ public class EntityManagerImpl implements EntityManager,
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
 		counterUtils.batchIncrementEntityCounters(m, applicationId, counts,
-				timestamp);
+				timestamp, applicationId);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -2603,7 +2616,7 @@ public class EntityManagerImpl implements EntityManager,
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
 		counterUtils.batchIncrementEntityCounter(m, applicationId, name, value,
-				timestamp);
+				timestamp, applicationId);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -2612,7 +2625,8 @@ public class EntityManagerImpl implements EntityManager,
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementEntityCounters(m, counts, timestamp);
+		counterUtils.batchIncrementEntityCounters(m, counts, timestamp,
+				applicationId);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -2622,7 +2636,7 @@ public class EntityManagerImpl implements EntityManager,
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
 		counterUtils.batchIncrementEntityCounters(m, entityId, counts,
-				timestamp);
+				timestamp, applicationId);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
@@ -2632,7 +2646,7 @@ public class EntityManagerImpl implements EntityManager,
 		Mutator<ByteBuffer> m = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
 		counterUtils.batchIncrementEntityCounter(m, entityId, name, value,
-				timestamp);
+				timestamp, applicationId);
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 

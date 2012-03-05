@@ -60,6 +60,9 @@ public interface Service {
 
 	public Entity getEntity(ServiceRequest request, UUID uuid) throws Exception;
 
+	public Entity getEntity(ServiceRequest request, String name)
+			throws Exception;
+
 	public Entity importEntity(ServiceRequest request, Entity entity)
 			throws Exception;
 

@@ -37,7 +37,12 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable>
 
 	public Response toResponse(Status status, E e) {
 		ApiResponse response = new ApiResponse();
-		response.setError(e);
+		AuthErrorInfo authError = AuthErrorInfo.getForException(e);
+		if (authError != null) {
+			response.setError(authError.getType(), authError.getMessage(), e);
+		} else {
+			response.setError(e);
+		}
 		String jsonResponse = mapToJsonString(response);
 		return toResponse(status, jsonResponse);
 	}

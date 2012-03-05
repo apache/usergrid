@@ -68,10 +68,10 @@ public class ApplicationsService extends AbstractService {
 	public ApplicationsService() {
 		super();
 		logger.info("/applications");
-		addEntityDictionary("rolenames");
-		addEntityDictionary("counters");
-		addEntityCommand("hello");
-		addEntityCommand("resetroles");
+		declareEntityDictionary("rolenames");
+		declareEntityDictionary("counters");
+		declareEntityCommand("hello");
+		declareEntityCommand("resetroles");
 	}
 
 	@Override

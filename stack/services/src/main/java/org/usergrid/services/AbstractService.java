@@ -90,11 +90,11 @@ public abstract class AbstractService implements Service {
 
 	protected ServiceManager sm;
 
-	protected Set<String> hiddenConnections;
-	protected Set<String> addedConnections;
+	protected Set<String> privateConnections;
+	protected Set<String> declaredConnections;
 
-	protected Set<String> hiddenCollections;
-	protected Set<String> addedCollections;
+	protected Set<String> privateCollections;
+	protected Set<String> declaredCollections;
 
 	protected Map<List<String>, List<String>> replaceParameters;
 
@@ -176,60 +176,60 @@ public abstract class AbstractService implements Service {
 				info.getContainerType(), info.getCollectionName());
 	}
 
-	public void addHiddenConnection(String connection) {
-		if (hiddenConnections == null) {
-			hiddenConnections = new LinkedHashSet<String>();
+	public void makeConnectionPrivate(String connection) {
+		if (privateConnections == null) {
+			privateConnections = new LinkedHashSet<String>();
 		}
-		hiddenConnections.add(connection);
+		privateConnections.add(connection);
 	}
 
-	public void addHiddenConnections(List<String> connections) {
-		if (hiddenConnections == null) {
-			hiddenConnections = new LinkedHashSet<String>();
+	public void makeConnectionsPrivate(List<String> connections) {
+		if (privateConnections == null) {
+			privateConnections = new LinkedHashSet<String>();
 		}
-		hiddenConnections.addAll(connections);
+		privateConnections.addAll(connections);
 	}
 
-	public void addConnection(String connection) {
-		if (addedConnections == null) {
-			addedConnections = new LinkedHashSet<String>();
+	public void declareConnection(String connection) {
+		if (declaredConnections == null) {
+			declaredConnections = new LinkedHashSet<String>();
 		}
-		addedConnections.add(connection);
+		declaredConnections.add(connection);
 	}
 
-	public void addConnections(List<String> connections) {
-		if (addedConnections == null) {
-			addedConnections = new LinkedHashSet<String>();
+	public void declareConnections(List<String> connections) {
+		if (declaredConnections == null) {
+			declaredConnections = new LinkedHashSet<String>();
 		}
-		addedConnections.addAll(connections);
+		declaredConnections.addAll(connections);
 	}
 
-	public void addHiddenCollection(String collection) {
-		if (hiddenCollections == null) {
-			hiddenCollections = new LinkedHashSet<String>();
+	public void makeCollectionPrivate(String collection) {
+		if (privateCollections == null) {
+			privateCollections = new LinkedHashSet<String>();
 		}
-		hiddenCollections.add(collection);
+		privateCollections.add(collection);
 	}
 
-	public void addHiddenCollections(List<String> collections) {
-		if (hiddenCollections == null) {
-			hiddenCollections = new LinkedHashSet<String>();
+	public void makeCollectionsPrivate(List<String> collections) {
+		if (privateCollections == null) {
+			privateCollections = new LinkedHashSet<String>();
 		}
-		hiddenCollections.addAll(collections);
+		privateCollections.addAll(collections);
 	}
 
-	public void addCollection(String collection) {
-		if (addedCollections == null) {
-			addedCollections = new LinkedHashSet<String>();
+	public void declareVirtualCollection(String collection) {
+		if (declaredCollections == null) {
+			declaredCollections = new LinkedHashSet<String>();
 		}
-		addedCollections.add(collection);
+		declaredCollections.add(collection);
 	}
 
-	public void addCollections(List<String> collections) {
-		if (addedCollections == null) {
-			addedCollections = new LinkedHashSet<String>();
+	public void declareVirtualCollections(List<String> collections) {
+		if (declaredCollections == null) {
+			declaredCollections = new LinkedHashSet<String>();
 		}
-		addedCollections.addAll(collections);
+		declaredCollections.addAll(collections);
 	}
 
 	public void addReplaceParameters(List<String> find, List<String> replace) {
@@ -239,56 +239,56 @@ public abstract class AbstractService implements Service {
 		replaceParameters.put(find, replace);
 	}
 
-	public void addServiceCommands(String command) {
+	public void declareServiceCommands(String command) {
 		if (serviceCommands == null) {
 			serviceCommands = new LinkedHashSet<String>();
 		}
 		serviceCommands.add(command);
 	}
 
-	public void addServiceCommands(List<String> commands) {
+	public void declareServiceCommands(List<String> commands) {
 		if (serviceCommands == null) {
 			serviceCommands = new LinkedHashSet<String>();
 		}
 		serviceCommands.addAll(commands);
 	}
 
-	public void addEntityDictionary(String dictionary) {
+	public void declareEntityDictionary(String dictionary) {
 		if (entityDictionaries == null) {
 			entityDictionaries = new LinkedHashSet<String>();
 		}
 		entityDictionaries.add(dictionary);
 	}
 
-	public void addEntityDictionaries(List<String> dictionaries) {
+	public void declareEntityDictionaries(List<String> dictionaries) {
 		if (entityDictionaries == null) {
 			entityDictionaries = new LinkedHashSet<String>();
 		}
 		entityDictionaries.addAll(dictionaries);
 	}
 
-	public void addMetadataType(String type) {
+	public void declareMetadataType(String type) {
 		if (metadataTypes == null) {
 			metadataTypes = new LinkedHashSet<String>();
 		}
 		metadataTypes.add(type);
 	}
 
-	public void addMetadataTypes(List<String> typeList) {
+	public void declareMetadataTypes(List<String> typeList) {
 		if (metadataTypes == null) {
 			metadataTypes = new LinkedHashSet<String>();
 		}
 		metadataTypes.addAll(typeList);
 	}
 
-	public void addEntityCommand(String command) {
+	public void declareEntityCommand(String command) {
 		if (entityCommands == null) {
 			entityCommands = new LinkedHashSet<String>();
 		}
 		entityCommands.add(command);
 	}
 
-	public void addEntityCommands(List<String> commands) {
+	public void declareEntityCommands(List<String> commands) {
 		if (entityCommands == null) {
 			entityCommands = new LinkedHashSet<String>();
 		}
@@ -297,6 +297,13 @@ public abstract class AbstractService implements Service {
 
 	@Override
 	public Entity getEntity(ServiceRequest request, UUID uuid) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Entity getEntity(ServiceRequest request, String name)
+			throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -370,7 +377,9 @@ public abstract class AbstractService implements Service {
 			for (Entity entity : entities) {
 				Entity imported = importEntity(request, entity);
 				if (imported != entity) {
-					logger.info("Import returned new entity instace for {} replacing in results set", entity.getUuid());
+					logger.info(
+							"Import returned new entity instace for {} replacing in results set",
+							entity.getUuid());
 					results.replace(imported);
 				}
 			}
@@ -458,8 +467,8 @@ public abstract class AbstractService implements Service {
 		}
 		if (connections.size() > 0) {
 			connections.remove("connection");
-			if (hiddenConnections != null) {
-				connections.removeAll(hiddenConnections);
+			if (privateConnections != null) {
+				connections.removeAll(privateConnections);
 			}
 			if (connections.size() > 0) {
 				return new LinkedHashSet<Object>(connections);
@@ -476,8 +485,8 @@ public abstract class AbstractService implements Service {
 		}
 		if (connections.size() > 0) {
 			connections.remove("connection");
-			if (hiddenConnections != null) {
-				connections.removeAll(hiddenConnections);
+			if (privateConnections != null) {
+				connections.removeAll(privateConnections);
 			}
 			if (connections.size() > 0) {
 				return new LinkedHashSet<Object>(connections);
@@ -490,11 +499,11 @@ public abstract class AbstractService implements Service {
 		Set<String> set = Schema.getDefaultSchema().getCollectionNames(
 				ref.getType());
 		set = new LinkedHashSet<String>(set);
-		if (addedCollections != null) {
-			set.addAll(addedCollections);
+		if (declaredCollections != null) {
+			set.addAll(declaredCollections);
 		}
-		if (hiddenCollections != null) {
-			set.removeAll(hiddenCollections);
+		if (privateCollections != null) {
+			set.removeAll(privateCollections);
 		}
 		if (set.size() > 0) {
 			return set;
