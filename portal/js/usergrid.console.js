@@ -10,9 +10,10 @@ function usergrid_console_app() {
 
     var emailRegex = /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i;
     var passwordRegex = /^([0-9a-zA-Z@#$%^&])+$/;
-    var nameRegex = /^([0-9a-zA-Z\.\-])+$/;
+    var userusernameRegex = /^([0-9a-zA-Z\.\-])+$/;
+    var nameRegex = /^([ 0-9a-zA-Z\.\-])+$/;
     var alphaNumRegex = /^([0-9a-zA-Z])+$/;
-    var pathRegex = /^([0-9a-zA-Z\.\-\/])+$/;
+    var pathRegex = /^([0-9a-z\.\-\/])+$/;
 
     var applications = {};
     var applications_by_id = {};
@@ -908,7 +909,7 @@ function usergrid_console_app() {
         var new_application_name = $("#new-application-name");
 
         var bValid = checkLength2(new_application_name, 4, 80)
-            && checkRegexp2(new_application_name, nameRegex, "only allows : a-z, 0-9, dot, and dash");
+            && checkRegexp2(new_application_name, usernameRegex, "only allows : a-z, 0-9, dot, and dash");
 
         if (bValid) {
             client.createApplication(form.serializeObject(), requestApplications, function() {
@@ -939,7 +940,7 @@ function usergrid_console_app() {
         var new_organization_name = $("#new-organization-name");
 
         var bValid = checkLength2(new_organization_name, 4, 80)
-            && checkRegexp2(new_organization_name, nameRegex, "Organization name only allow : a-z, 0-9, dot, and dash.");
+            && checkRegexp2(new_organization_name, usernameRegex, "Organization name only allow : a-z, 0-9, dot, and dash.");
 
         if (bValid) {
             var data = form.serializeObject();
@@ -958,7 +959,7 @@ function usergrid_console_app() {
         var new_user_email = $("#new-user-email");
         var new_user_password = $("#new-user-password");
 
-        var bValid = checkRegexp2(new_user_username,nameRegex,"Username only allows : a-z, 0-9, dot, and dash")
+        var bValid = checkRegexp2(new_user_username,usernameRegex,"Username only allows : a-z, 0-9, dot, and dash")
             && checkLength2(new_user_email, 6, 80)
             && checkRegexp2(new_user_email,emailRegex,"eg. ui@jquery.com")
             && checkLength2(new_user_password, 5, 16)
@@ -981,9 +982,9 @@ function usergrid_console_app() {
         var new_role_title = $("#new-role-title");
 
         var bValid = checkLength2(new_role_name, 1, 80)
-            && checkRegexp2(new_role_name, nameRegex, "Name only allows : a-z, 0-9, dot, and dash")
+            && checkRegexp2(new_role_name, usernameRegex, "Name only allows : a-z, 0-9, dot, and dash")
             && checkLength2(new_role_title, 1, 80)
-            && checkRegexp2(new_role_title, nameRegex, "Title only allows : a-z, 0-9, dot, and dash");
+            && checkRegexp2(new_role_title, usernameRegex, "Title only allows : a-z, 0-9, dot, and dash");
 
         if (bValid) {
             var data = form.serializeObject();
@@ -1018,7 +1019,7 @@ function usergrid_console_app() {
         var new_group_path = $("#new-group-path");
 
         var bValid = checkLength2(new_group_title, 1, 80)
-            && checkRegexp2(new_group_title, nameRegex, "Title only allows : a-z, 0-9, dot, and dash")
+            && checkRegexp2(new_group_title, nameRegex, "Display Name only allows : A-Z, a-z, 0-9, space, dot, and dash")
             && checkLength2(new_group_path, 1, 80)
             && checkRegexp2(new_group_path, pathRegex, "Path only allows : /, a-z, 0-9, dot, and dash");
 
@@ -1035,7 +1036,7 @@ function usergrid_console_app() {
         formClearErrors(form);
         var add_group_groupname = $("#search-group-name-input");
         var bValid = checkLength2(add_group_groupname, 1, 80)
-            && checkRegexp2(add_group_groupname, nameRegex, "Group name name only allows : a-z, 0-9, dot, and dash.");
+            && checkRegexp2(add_group_groupname, usernameRegex, "Group name name only allows : a-z, 0-9, dot, and dash.");
 
         if (bValid) {
             group = $('#search-group-name-input').val();
@@ -1055,7 +1056,7 @@ function usergrid_console_app() {
         formClearErrors(form);
         var add_user_username = $("#search-user-name-input");
         var bValid = checkLength2(add_user_username, 1, 80)
-            && checkRegexp2(add_user_username, nameRegex, "Username name only allows : a-z, 0-9, dot, and dash.");
+            && checkRegexp2(add_user_username, usernameRegex, "Username name only allows : a-z, 0-9, dot, and dash.");
 
         if (bValid) {
             username = $('#search-user-name-input').val();
@@ -2711,12 +2712,12 @@ function usergrid_console_app() {
 
     function signup() {
         var organization_name = $("#signup-organization-name").val();
-        if (!(nameRegex.test(organization_name))) {
+        if (!(usernameRegex.test(organization_name))) {
             displaySignupError("Invalid organization name, only a-z, 0-9, dot, and dash.");
             return;
         }
         var username = $("#signup-username").val();
-        if (!(nameRegex.test(username))) {
+        if (!(usernameRegex.test(username))) {
             displaySignupError("Invalid username, only a-z, 0-9, dot, and dash.");
             return;
         }
