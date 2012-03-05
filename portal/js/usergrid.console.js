@@ -625,10 +625,6 @@ function usergrid_console_app() {
                 data.push({uuid:uuid, name:name});
                 count++;
                 applications_by_id[uuid] = name;
-                if ($.isEmptyObject(current_application_id)) {
-                    current_application_id = uuid;
-                    current_application_name = name;
-                }
             }
             if (count) {
                 appListTmpl.tmpl(data).appendTo(appList);
@@ -641,7 +637,6 @@ function usergrid_console_app() {
                 appList.find("a").click(function selectApp(e) {
                     e.preventDefault();
                     var link = $(this);
-
                     pageSelect(link.tmplItem().data.uuid);
                     Pages.SelectPanel('application');
                 });
@@ -668,10 +663,14 @@ function usergrid_console_app() {
     }
 
     function selectFirstApp() {
-        var firstApp = null;
-        for (firstApp in client.currentOrganization.applications) break;
-        if(firstApp)
-            pageSelect(client.currentOrganization.applications[firstApp]);
+        if(localStorage.currentApplicationId && applications_by_id[localStorage.currentApplicationId])
+            pageSelect(localStorage.currentApplicationId);
+        else {
+            var firstApp = null;
+            for (firstApp in client.currentOrganization.applications) break;
+            if(firstApp)
+                pageSelect(client.currentOrganization.applications[firstApp]);
+        }
     }
 
     function displayAdmins(response) {
@@ -1108,6 +1107,7 @@ function usergrid_console_app() {
         if (uuid) {
             current_application_id = uuid;
             current_application_name = applications_by_id[uuid];
+            localStorage.currentApplicationId = current_application_id;
         }
         setNavApplicationText();
         requestCollections();
@@ -1123,7 +1123,7 @@ function usergrid_console_app() {
      ******************************************************************/
 
     function pageSelectApplication() {
-        pageSelect(usergrid.console.currentApp);
+        pageSelect();
         requestApplicationCredentials();
         requestApplicationUsage();
         //showPanel("#application-panel");
