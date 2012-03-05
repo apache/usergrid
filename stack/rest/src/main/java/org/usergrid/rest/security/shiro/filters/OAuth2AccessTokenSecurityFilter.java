@@ -37,6 +37,7 @@
  ******************************************************************************/
 package org.usergrid.rest.security.shiro.filters;
 
+import static org.usergrid.rest.exceptions.AuthErrorInfo.BAD_ACCESS_TOKEN_ERROR;
 import static org.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -56,7 +57,6 @@ import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.BadAccessTokenException;
 import org.usergrid.management.exceptions.ManagementException;
-import org.usergrid.rest.exceptions.AuthErrorInfo;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.shiro.PrincipalCredentialsToken;
@@ -127,7 +127,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
 						e.printStackTrace();
 					}
 					if (user == null) {
-						throwBadTokenError();
+						throw mappableSecurityException(BAD_ACCESS_TOKEN_ERROR);
 					}
 
 					token = PrincipalCredentialsToken
@@ -147,7 +147,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
 						e.printStackTrace();
 					}
 					if (user == null) {
-						throwBadTokenError();
+						throw mappableSecurityException(BAD_ACCESS_TOKEN_ERROR);
 					}
 
 					token = PrincipalCredentialsToken
@@ -166,7 +166,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
 						e.printStackTrace();
 					}
 					if (organization == null) {
-						throwBadTokenError();
+						throw mappableSecurityException(BAD_ACCESS_TOKEN_ERROR);
 					}
 
 					token = PrincipalCredentialsToken
@@ -186,7 +186,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
 						e.printStackTrace();
 					}
 					if (application == null) {
-						throwBadTokenError();
+						throw mappableSecurityException(BAD_ACCESS_TOKEN_ERROR);
 					}
 
 					token = PrincipalCredentialsToken
@@ -216,9 +216,4 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
 		return request;
 	}
 
-	private void throwBadTokenError() throws OAuthSystemException {
-
-		throw mappableSecurityException(AuthErrorInfo.BAD_ACCESS_TOKEN_ERROR);
-
-	}
 }
