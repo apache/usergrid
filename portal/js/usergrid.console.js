@@ -1136,7 +1136,7 @@ function usergrid_console_app() {
         data.addColumn('string', 'Entity');
         data.addColumn('number', 'Count');
         var rows = [];
-        var t = '<table class="table table-striped table-bordered" id="application-panel-entity-counts">';
+        var t = '<table class="table table-bordered" id="application-panel-entity-counts">';
         var collectionNames = keys(applicationData.Collections).sort();
 
         var entity_count = 0;
@@ -1145,7 +1145,7 @@ function usergrid_console_app() {
             var collection = applicationData.Collections[collectionName];
             var row = [collectionName, {v: collection.count}];
             rows.push(row);
-            t += "<tr><td>" + collection.count + "</td><td>" + collectionName + "</td></tr>";
+            t += "<tr class=\"zebraRows\"><td>" + collection.count + "</td><td>" + collectionName + "</td></tr>";
             entity_count += collection.count;
         }
         t += "<tr id=\"application-panel-entity-total\"><th>" + entity_count + "</th><th>entities total</th></tr>";
