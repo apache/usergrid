@@ -561,25 +561,29 @@ function usergrid_console_app() {
         });
     }
 
-    function deleteEntity() {
-        var count = $("input[id^=queryResultItem]").length;
-        $("input[id^=queryResultItem]").each( function() {
-            if ($(this).prop("checked")) {  
+    $("#delete-entity-link").click(deleteEntity);
+    function deleteEntity(e) {
+        e.preventDefault();
+
+        var items = $("#query-response-table input[id^=queryResultItem]:checked");
+        if(!items.length){
+            alert("Please, first select the items you want to delete");
+            return;
+        }
+
+        confirmDelete(function(){
+            items.each(function() {
                 var entityId = $(this).attr("value");
                 var path = $(this).attr("name");
-                var refreshFunction = function() {pageOpenQueryExplorer(path);};
-                if (count>1) {
-                    refreshFunction = doQueryGet;
-                }
                 client.deleteEntity(current_application_id, entityId, path, doQueryGet,
                 function() {
                     alert("Unable to delete entity: " + client.getLastErrorMessage(entityId));
                 });
-            }
+            });
         });
+
     }
-    window.usergrid.console.deleteEntity = deleteEntity;
-    
+
     /*******************************************************************
      * 
      * Organization Home
@@ -621,10 +625,6 @@ function usergrid_console_app() {
                 data.push({uuid:uuid, name:name});
                 count++;
                 applications_by_id[uuid] = name;
-                if ($.isEmptyObject(current_application_id)) {
-                    current_application_id = uuid;
-                    current_application_name = name;
-                }
             }
             if (count) {
                 appListTmpl.tmpl(data).appendTo(appList);
@@ -637,7 +637,6 @@ function usergrid_console_app() {
                 appList.find("a").click(function selectApp(e) {
                     e.preventDefault();
                     var link = $(this);
-
                     pageSelect(link.tmplItem().data.uuid);
                     Pages.SelectPanel('application');
                 });
@@ -664,10 +663,14 @@ function usergrid_console_app() {
     }
 
     function selectFirstApp() {
-        var firstApp = null;
-        for (firstApp in client.currentOrganization.applications) break;
-        if(firstApp)
-            pageSelect(client.currentOrganization.applications[firstApp]);
+        if(localStorage.currentApplicationId && applications_by_id[localStorage.currentApplicationId])
+            pageSelect(localStorage.currentApplicationId);
+        else {
+            var firstApp = null;
+            for (firstApp in client.currentOrganization.applications) break;
+            if(firstApp)
+                pageSelect(client.currentOrganization.applications[firstApp]);
+        }
     }
 
     function displayAdmins(response) {
@@ -1104,6 +1107,7 @@ function usergrid_console_app() {
         if (uuid) {
             current_application_id = uuid;
             current_application_name = applications_by_id[uuid];
+            localStorage.currentApplicationId = current_application_id;
         }
         setNavApplicationText();
         requestCollections();
@@ -1119,7 +1123,7 @@ function usergrid_console_app() {
      ******************************************************************/
 
     function pageSelectApplication() {
-        pageSelect(usergrid.console.currentApp);
+        pageSelect();
         requestApplicationCredentials();
         requestApplicationUsage();
         //showPanel("#application-panel");
@@ -1387,7 +1391,7 @@ function usergrid_console_app() {
         form.submit(function(e){
             e.preventDefault();
             form.modal("hide");
-        }).submit();
+        }).submit(callback);
 
         form.modal("show");
     }
@@ -1411,8 +1415,7 @@ function usergrid_console_app() {
             });
         });
     }
-    window.usergrid.console.deleteUsers = deleteUsers;
-    
+
     /*******************************************************************
      * 
      * User
@@ -1715,19 +1718,26 @@ function usergrid_console_app() {
     }
     usergrid.console.requestGroups = requestGroups;
 
-    function deleteGroups() {
-        $('#search-user-groupname').val('');
-        $("input[id^=groupListItem]").each( function() {
-            if ($(this).prop("checked")) {  
+    $("#delete-groups-link").click(deleteGroups);
+    function deleteGroups(e) {
+        e.preventDefault();
+
+        var items = $("#groups-response-table input[id^=groupListItem]:checked");
+        if(!items.length){
+            alert("Please, first select the items you want to delete");
+            return;
+        }
+
+        confirmDelete(function(){
+            items.each(function() {
                 var groupId = $(this).attr("value");
                 client.deleteGroup(current_application_id, groupId, requestGroups,
                 function() {
                     alert("Unable to delete group: " + client.getLastErrorMessage(groupId));
                 });
-            }
-        });        
+            });
+        });
     }
-    window.usergrid.console.deleteGroups = deleteGroups;
 
     /*******************************************************************
      * 
@@ -1922,18 +1932,26 @@ function usergrid_console_app() {
         }, response);
     }
 
-    function deleteRoles() {
-        $("input[id^=roleListItem]").each( function() {
-            if ($(this).prop("checked")) {
+    $("#delete-roles-link").click(deleteRoles);
+    function deleteRoles(e) {
+        e.preventDefault();
+
+        var items = $("#roles-response-table input[id^=roleListItem]:checked");
+        if(!items.length){
+            alert("Please, first select the items you want to delete");
+            return;
+        }
+
+        confirmDelete(function(){
+            items.each(function() {
                 var roleId = $(this).attr("value");
                 client.deleteEntity(current_application_id, roleId, 'role', requestRoles,
                 function() {
                     alert("Unable to delete role: " + client.getLastErrorMessage(roleId));
                 });
-            }
+            });
         });
     }
-    window.usergrid.console.deleteRoles = deleteRoles;
 
     /*******************************************************************
      * 
@@ -2017,7 +2035,9 @@ function usergrid_console_app() {
 
     function deleteRolePermission(roleName, permission) {
         console.log("delete " + roleName + " - " + permission);
-        client.deleteApplicationRolePermission(current_application_id, roleName, permission, requestRole, requestRole);
+        confirmDelete(function(){
+            client.deleteApplicationRolePermission(current_application_id, roleName, permission, requestRole, requestRole);
+        });
     }
     window.usergrid.console.deleteRolePermission = deleteRolePermission;
 
@@ -2560,14 +2580,14 @@ function usergrid_console_app() {
         var pathInput = $("#role-permission-path-entry-input");
         var list = [];
         for (var i in applicationData.Collections)
-            list.push('/' + applicationData.Collections[i].name);
+            list.push('/' + applicationData.Collections[i].name + '/');
         pathInput.typeahead({source:list});
     }
     function updateQueryAutocompleteCollections(){
         var pathInput = $("#query-path");
         var list = [];
         for (var i in applicationData.Collections)
-            list.push('/' + applicationData.Collections[i].name);
+            list.push('/' + applicationData.Collections[i].name + '/');
         pathInput.typeahead({source:list});
         pathInput.data('typeahead').source = list;
     }

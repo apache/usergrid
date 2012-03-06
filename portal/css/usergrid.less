@@ -436,14 +436,17 @@ a:active {
 
 /*-----------------------------------------------------------*/
 .query-result-row {
-	margin: 0px 0px 0px 0px;
-   tr{
-    border: 	1px solid @h3Color;
+    border-top: 1px solid #CCCCCC;
+    padding: 0px;
+    background: white;
+    &:nth-child(2n){
+        background: #EEE;
     }
+    margin: 0px 0px 0px 0px;
 }
 
 .query-result-row .query-result-portlet{
-    margin: 1px 0 5px 35px;
+    margin: 0 0 5px 21px;
 }
 .query-result-portlet {
 	font-size: 12px;
@@ -474,25 +477,9 @@ a:active {
 	padding: 4px 4px;
 }
 
-.query-result-json-border {
-	height: 150px;
-	overflow-x: hidden;
-	overflow-y: auto;
-	padding: 0px 0px 0px 8px;
-}
-
-.query-result-json-inner {
-	padding: 8px 0px;
-	margin: 0px;
-	font-family: sans-serif;
-	font-size: 12px;
-}
-
 .query-result-header {
 	font-family: sans-serif;
 	font-weight: bold;
-	border: 1px solid #666;
-	background-color: #f0f0f0;
 }
 
 .query-result-user-picture {
@@ -506,11 +493,24 @@ a:active {
 	margin: 0px;
 	width: 100%;
     tr{
-        border-bottom: 1px solid @h3Color;
-    }
+         border-bottom: 1px solid @h3Color;
+        &:last-child {
+            border-bottom: none;
+        }
+     }
 }
 
-
+.query-result-table-obj {
+    tr {
+        .zebraRows;
+    }
+    .query-result-table-obj {
+        tr {
+            background: transparent;
+            border-top: none;
+        }
+    }
+}
 
 .query-result-td-checkbox input {
 	width: 20px;
@@ -553,6 +553,9 @@ a:active {
 .query-result-header-name {
 	padding-left: 8px;
 	font-size: 18px;
+}
+.query-result-table-name{
+    width: 25%;
 }
 
 /*-------------------------------------------------*/
@@ -940,9 +943,13 @@ a:active {
  }
 
  .query-result-header{
-   #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+
  }
 
+.query-result-json-inner {
+	border: none;
+	margin: 0px;
+}
 
 .query-response-empty{
     margin: 15px;
@@ -980,15 +987,19 @@ a:active {
 }
 
 /*------------------ Home Page ------------------*/
+.zebraRows{
+    border-top: 1px solid #CCCCCC;
+    padding: 10px;
+    background: white;
+    &:nth-child(2n){
+        background: #EEE;
+    }
+}
+
 #organization-applications{
     padding: 0px;
     .application-row{
-        border-top: 1px solid #CCCCCC;
-        //#gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
-        padding: 10px;
-    }
-    .application-row:nth-child(2n){
-        background: #EEE;
+        .zebraRows;
     }
     .alert{
         margin: 15px;
@@ -1002,10 +1013,7 @@ a:active {
         margin: 15px;
     }
     .admin-row{
-        //border: 1px solid #CCCCCC;
-        border-top: 1px solid #CCCCCC;
-        #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
-        padding: 10px;
+        .zebraRows;
     }
     a{
         padding: 10px;
@@ -1019,9 +1027,8 @@ a:active {
         margin: 15px;
     }
     .organization-activity-row{
+        .zebraRows;
         line-height: 25px;
-        #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
-        padding: 10px;
         .time{
             color:#888;
             width:170px;
@@ -1036,6 +1043,19 @@ a:active {
     }
 }
 
+#organizations{
+    padding: 0px;
+    .alert{
+        display: inline-block;
+        margin: 15px;
+    }
+    .row{
+        .zebraRows;
+    }
+    a{
+        padding: 3px 10px;
+    }
+}
 /*---------- -------------------------------*/
 
 .smallgravatar{
