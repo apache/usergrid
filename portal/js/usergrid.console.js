@@ -902,7 +902,6 @@ function usergrid_console_app() {
     function formClearErrors(form){
         form.find(".ui-state-error").removeClass("ui-state-error");
         form.find(".error").removeClass("error");
-        form.find(".validateTips").remove();
         form.find(".help-block").empty().hide();
     }
     function submitApplication() {
