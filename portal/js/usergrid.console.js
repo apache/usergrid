@@ -1132,7 +1132,7 @@ function usergrid_console_app() {
         data.addColumn('string', 'Entity');
         data.addColumn('number', 'Count');
         var rows = [];
-        var t = '<table id="application-panel-entity-counts">';
+        var t = '<table class="table table-striped table-bordered" id="application-panel-entity-counts">';
         var collectionNames = keys(applicationData.Collections).sort();
 
         var entity_count = 0;
