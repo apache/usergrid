@@ -61,13 +61,6 @@ https://usergrid.ci.cloudbees.com/job/Usergrid%20Nightly/lastSuccessfulBuild/org
 
 Licenses
 
-All source code files have copyright headers indicating their license under
-either the GPL, AGPL, or LGPL.
+Usergrid is licensed under the Apache License, Version 2.
 
-All files under the core and config subdirectories are part of the "Usergrid
-Core". These files are intended to be licensed under the GPL and should have
-such indicated in their copyright headers.
 
-All files under the other sub-directories are part of the "Usergrid Stack".
-These files are intended to be licensed under the Affero GPL and should have
-such indicated in their copyright headers.

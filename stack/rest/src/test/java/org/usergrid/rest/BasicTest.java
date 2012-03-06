@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2012 Apigee Corporation
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 package org.usergrid.rest;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
@@ -59,21 +74,11 @@ public class BasicTest extends AbstractRestTest {
 
 		// test get token for admin user with correct default password
 
-		node = resource().path("/management/token")
-				.queryParam("grant_type", "password")
-				.queryParam("username", "test@usergrid.com")
-				.queryParam("password", "test")
-				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-
-		logNode(node);
-
-		String access_token = node.get("access_token").getTextValue();
-		assertTrue(isNotBlank(access_token));
-
+		String mgmtToken = mgmtToken();
 		// test get admin user with token
 
 		node = resource().path("/management/users/test@usergrid.com")
-				.queryParam("access_token", access_token)
+				.queryParam("access_token", mgmtToken)
 				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 
 		logNode(node);
@@ -82,22 +87,6 @@ public class BasicTest extends AbstractRestTest {
 				node.get("data").get("organizations").get("test-organization")
 						.get("users").get("test").get("name").getTextValue());
 
-		// test create app user with token
-
-		Map<String, String> payload = hashMap("email", "ed@anuff.com")
-				.map("username", "edanuff").map("name", "Ed Anuff")
-				.map("password", "sesame").map("pin", "1234");
-
-		node = resource().path("/test-app/users")
-				.queryParam("access_token", access_token)
-				.accept(MediaType.APPLICATION_JSON)
-				.type(MediaType.APPLICATION_JSON_TYPE)
-				.post(JsonNode.class, payload);
-
-		logNode(node);
-
-		assertEquals("edanuff", node.get("entities").get(0).get("username")
-				.getTextValue());
 
 		// test login user with incorrect password
 
@@ -237,7 +226,7 @@ public class BasicTest extends AbstractRestTest {
 
 		// test create user with guest permissions (no token)
 
-		payload = hashMap("email", "ed.anuff@gmail.com")
+		Map<String,String> payload = hashMap("email", "ed.anuff@gmail.com")
 				.map("username", "ed.anuff").map("name", "Ed Anuff")
 				.map("password", "sesame").map("pin", "1234");
 
