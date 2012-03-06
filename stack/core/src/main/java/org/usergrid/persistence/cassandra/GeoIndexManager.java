@@ -32,6 +32,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
@@ -242,21 +243,37 @@ public class GeoIndexManager {
 
 		List<EntityLocationRef> list = new ArrayList<EntityLocationRef>();
 
+		List<Object> keys = new ArrayList<Object>();
 		for (String geoCell : curGeocellsUnique) {
-			logger.info("Finding entities for cell: " + geoCell);
-			List<HColumn<ByteBuffer, ByteBuffer>> columns;
-			try {
-				columns = cass.getColumns(
-						cass.getApplicationKeyspace(em.applicationId),
-						ApplicationCF.ENTITY_INDEX, key(key, geoCell),
-						startResult, null, count, reversed);
+			keys.add(key(key, geoCell));
+		}
+		try {
+			Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> rows = cass
+					.multiGetColumns(
+							cass.getApplicationKeyspace(em.applicationId),
+							ApplicationCF.ENTITY_INDEX, keys, startResult,
+							null, count, reversed);
+
+			for (List<HColumn<ByteBuffer, ByteBuffer>> columns : rows.values()) {
 				List<EntityLocationRef> entries = getLocationIndexEntries(columns);
 				list = mergeLocationEntries(list, entries);
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
-
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+		/*
+		 * for (String geoCell : curGeocellsUnique) {
+		 * logger.info("Finding entities for cell: " + geoCell);
+		 * List<HColumn<ByteBuffer, ByteBuffer>> columns; try { columns =
+		 * cass.getColumns( cass.getApplicationKeyspace(em.applicationId),
+		 * ApplicationCF.ENTITY_INDEX, key(key, geoCell), startResult, null,
+		 * count, reversed); List<EntityLocationRef> entries =
+		 * getLocationIndexEntries(columns); list = mergeLocationEntries(list,
+		 * entries); } catch (Exception e) { e.printStackTrace(); }
+		 * 
+		 * }
+		 */
+
 		return list;
 	}
 

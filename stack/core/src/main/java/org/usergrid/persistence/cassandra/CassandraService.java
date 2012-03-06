@@ -34,6 +34,7 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.batch
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.buildSetIdListMutator;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
+import static org.usergrid.utils.ConversionUtils.bytebuffers;
 import static org.usergrid.utils.ConversionUtils.string;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
@@ -239,13 +240,14 @@ public class CassandraService {
 		return ko;
 	}
 
-  /**
-   * The Usergrid_Applications keyspace directly
-   * @return
-   */
-  public Keyspace getUsergridApplicationKeyspace() {
-    return getKeyspace(STATIC_APPLICATION_KEYSPACE, null);
-  }
+	/**
+	 * The Usergrid_Applications keyspace directly
+	 * 
+	 * @return
+	 */
+	public Keyspace getUsergridApplicationKeyspace() {
+		return getKeyspace(STATIC_APPLICATION_KEYSPACE, null);
+	}
 
 	public Keyspace getSystemKeyspace() {
 		return systemKeyspace;
@@ -541,6 +543,51 @@ public class CassandraService {
 				db_logger.info("getColumns returned " + results.size()
 						+ " columns");
 			}
+		}
+
+		return results;
+	}
+
+	public Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> multiGetColumns(
+			Keyspace ko, Object columnFamily, List<?> keys, Object start,
+			Object finish, int count, boolean reversed) throws Exception {
+
+		if (db_logger.isInfoEnabled()) {
+			db_logger.info("multiGetColumns cf=" + columnFamily + " keys="
+					+ keys + " start=" + start + " finish=" + finish
+					+ " count=" + count + " reversed=" + reversed);
+		}
+
+		MultigetSliceQuery<ByteBuffer, ByteBuffer, ByteBuffer> q = createMultigetSliceQuery(
+				ko, be, be, be);
+		q.setColumnFamily(columnFamily.toString());
+		q.setKeys(bytebuffers(keys));
+
+		ByteBuffer start_bytes = null;
+		if (start instanceof DynamicComposite) {
+			start_bytes = ((DynamicComposite) start).serialize();
+		} else if (start instanceof List) {
+			start_bytes = DynamicComposite.toByteBuffer((List<?>) start);
+		} else {
+			start_bytes = bytebuffer(start);
+		}
+
+		ByteBuffer finish_bytes = null;
+		if (finish instanceof DynamicComposite) {
+			finish_bytes = ((DynamicComposite) finish).serialize();
+		} else if (finish instanceof List) {
+			finish_bytes = DynamicComposite.toByteBuffer((List<?>) finish);
+		} else {
+			finish_bytes = bytebuffer(finish);
+		}
+
+		q.setRange(start_bytes, finish_bytes, reversed, count);
+		QueryResult<Rows<ByteBuffer, ByteBuffer, ByteBuffer>> r = q.execute();
+		Rows<ByteBuffer, ByteBuffer, ByteBuffer> rows = r.get();
+
+		Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> results = new LinkedHashMap<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>>();
+		for (Row<ByteBuffer, ByteBuffer, ByteBuffer> row : rows) {
+			results.put(row.getKey(), row.getColumnSlice().getColumns());
 		}
 
 		return results;
