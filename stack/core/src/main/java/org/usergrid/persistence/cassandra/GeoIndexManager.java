@@ -280,7 +280,7 @@ public class GeoIndexManager {
 		return results;
 	}
 
-	public static Mutator<ByteBuffer> addLocationEntryToMutator(
+	public static Mutator<ByteBuffer> addLocationEntryInsertionToMutator(
 			Mutator<ByteBuffer> m, Object key, EntityLocationRef entry) {
 
 		HColumn<ByteBuffer, ByteBuffer> column = createColumn(
@@ -309,13 +309,55 @@ public class GeoIndexManager {
 				collectionName, propertyName);
 
 		for (String cell : cells) {
-			addLocationEntryToMutator(m, key(key, cell), location);
+			addLocationEntryInsertionToMutator(m, key(key, cell), location);
 		}
 
 		batchExecute(m, CassandraService.RETRY_COUNT);
 
 		logger.info("Geocells to be saved for Point(" + location.latitude + ","
 				+ location.longitude + ") are: " + cells);
+	}
+
+	public static Mutator<ByteBuffer> addLocationEntryDeletionToMutator(
+			Mutator<ByteBuffer> m, Object key, EntityLocationRef entry) {
+
+		m.addDeletion(bytebuffer(key), ApplicationCF.ENTITY_INDEX.toString(),
+				DynamicComposite.toByteBuffer(entry.getUuid(), entry.getType(),
+						entry.getTimestampUuid()), ByteBufferSerializer.get(),
+				getTimestampInMicros(entry.getTimestampUuid()) + 1);
+
+		return m;
+	}
+
+	public void batchDeleteLocation(Mutator<ByteBuffer> m,
+			EntityRef headEntity, String collectionName, String propertyName,
+			EntityLocationRef location) {
+
+		Point p = location.getPoint();
+		List<String> cells = GeocellManager.generateGeoCell(p);
+
+		Object key = key(headEntity.getUuid(), DICTIONARY_LOCATIONS,
+				collectionName, propertyName);
+
+		for (String cell : cells) {
+			addLocationEntryDeletionToMutator(m, key(key, cell), location);
+		}
+
+		logger.info("Geocells to be deleted for Point(" + location.latitude
+				+ "," + location.longitude + ") are: " + cells);
+	}
+
+	public void deleteLocation(EntityRef headEntity, String collectionName,
+			String propertyName, EntityLocationRef location) {
+
+		Keyspace ko = cass.getApplicationKeyspace(em.applicationId);
+		Mutator<ByteBuffer> m = createMutator(ko, ByteBufferSerializer.get());
+
+		batchDeleteLocation(m, headEntity, collectionName, propertyName,
+				location);
+
+		batchExecute(m, CassandraService.RETRY_COUNT);
+
 	}
 
 }

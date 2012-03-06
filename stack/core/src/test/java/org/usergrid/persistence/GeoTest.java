@@ -77,5 +77,15 @@ public class GeoTest extends AbstractPersistenceTest {
 
 		assertEquals(1, results.size());
 
+		geo.deleteLocation(em.getApplicationRef(), "users", "location", loc);
+
+		results = geo.proximitySearchCollection(em.getApplicationRef(),
+				"users", "location", center, 400, null, 10, false,
+				Level.ALL_PROPERTIES);
+
+		this.dump(results.getEntities());
+
+		assertEquals(0, results.size());
+
 	}
 }
