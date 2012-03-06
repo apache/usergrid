@@ -2933,4 +2933,9 @@ public class EntityManagerImpl implements EntityManager,
 		this.applicationContext = applicationContext;
 	}
 
+	public GeoIndexManager getGeoIndexManager() {
+		return applicationContext.getAutowireCapableBeanFactory()
+				.createBean(GeoIndexManager.class).init(this);
+	}
+
 }
