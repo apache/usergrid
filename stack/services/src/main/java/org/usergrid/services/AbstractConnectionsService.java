@@ -295,7 +295,7 @@ public class AbstractConnectionsService extends AbstractService {
 
 		Entity entity = em.get(id);
 		if (entity == null) {
-			return null;
+			throw new ServiceResourceNotFoundException(context);
 		}
 		entity = importEntity(context, entity);
 
@@ -331,11 +331,11 @@ public class AbstractConnectionsService extends AbstractService {
 
 			EntityRef ref = em.getAlias(query.getEntityType(), name);
 			if (ref == null) {
-				return null;
+				throw new ServiceResourceNotFoundException(context);
 			}
 			Entity entity = em.get(ref);
 			if (entity == null) {
-				return null;
+				throw new ServiceResourceNotFoundException(context);
 			}
 			entity = importEntity(context, entity);
 
@@ -362,7 +362,7 @@ public class AbstractConnectionsService extends AbstractService {
 
 		Entity entity = em.get(id);
 		if (entity == null) {
-			return null;
+			throw new ServiceResourceNotFoundException(context);
 		}
 		entity = importEntity(context, entity);
 
@@ -392,11 +392,11 @@ public class AbstractConnectionsService extends AbstractService {
 
 			EntityRef ref = em.getAlias(query.getEntityType(), name);
 			if (ref == null) {
-				return null;
+				throw new ServiceResourceNotFoundException(context);
 			}
 			Entity entity = em.get(ref);
 			if (entity == null) {
-				return null;
+				throw new ServiceResourceNotFoundException(context);
 			}
 			entity = importEntity(context, entity);
 
