@@ -2580,14 +2580,14 @@ function usergrid_console_app() {
         var pathInput = $("#role-permission-path-entry-input");
         var list = [];
         for (var i in applicationData.Collections)
-            list.push('/' + applicationData.Collections[i].name);
+            list.push('/' + applicationData.Collections[i].name + '/');
         pathInput.typeahead({source:list});
     }
     function updateQueryAutocompleteCollections(){
         var pathInput = $("#query-path");
         var list = [];
         for (var i in applicationData.Collections)
-            list.push('/' + applicationData.Collections[i].name);
+            list.push('/' + applicationData.Collections[i].name + '/');
         pathInput.typeahead({source:list});
         pathInput.data('typeahead').source = list;
     }
