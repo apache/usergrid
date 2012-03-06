@@ -60,7 +60,7 @@ public class GeoTest extends AbstractPersistenceTest {
 		EntityLocationRef loc = new EntityLocationRef(user, 37.776753,
 				-122.407846);
 		GeoIndexManager geo = ((EntityManagerImpl) em).getGeoIndexManager();
-		geo.storeLocation(em.getApplicationRef(), "users", "location", loc);
+		geo.storeLocationInIndex(em.getApplicationRef(), "users", "location", loc);
 
 		Point center = new Point(37.774277, -122.404744);
 		Results results = geo.proximitySearchCollection(em.getApplicationRef(),
@@ -77,7 +77,7 @@ public class GeoTest extends AbstractPersistenceTest {
 
 		assertEquals(1, results.size());
 
-		geo.deleteLocation(em.getApplicationRef(), "users", "location", loc);
+		geo.removeLocationFromIndex(em.getApplicationRef(), "users", "location", loc);
 
 		results = geo.proximitySearchCollection(em.getApplicationRef(),
 				"users", "location", center, 400, null, 10, false,

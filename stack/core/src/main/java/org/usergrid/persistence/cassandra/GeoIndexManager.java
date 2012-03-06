@@ -17,7 +17,11 @@ package org.usergrid.persistence.cassandra;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static org.usergrid.persistence.Schema.DICTIONARY_LOCATIONS;
+import static org.usergrid.persistence.Schema.DICTIONARY_GEOCELLS;
+import static org.usergrid.persistence.Schema.INDEX_CONNECTIONS;
+import static org.usergrid.persistence.Schema.getDefaultSchema;
+import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
+import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.utils.ClassUtils.cast;
@@ -44,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
+import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.UUIDUtils;
 
 import com.beoui.geocell.GeocellManager;
@@ -149,6 +154,22 @@ public class GeoIndexManager {
 			return new Point(latitude, longitude);
 		}
 
+		public ByteBuffer getColumnName() {
+			return DynamicComposite.toByteBuffer(uuid, type, timestampUuid);
+		}
+
+		public ByteBuffer getColumnValue() {
+			return DynamicComposite.toByteBuffer(latitude, longitude);
+		}
+
+		public long getTimestampInMicros() {
+			return UUIDUtils.getTimestampInMicros(timestampUuid);
+		}
+
+		public long getTimestampInMillis() {
+			return UUIDUtils.getTimestampInMillis(timestampUuid);
+		}
+
 	}
 
 	EntityManagerImpl em;
@@ -251,7 +272,7 @@ public class GeoIndexManager {
 			public <T> List<T> query(GeocellQuery baseQuery,
 					List<String> curGeocellsUnique, Class<T> entityClass) {
 				return (List<T>) GeoIndexManager.this.query(
-						key(headEntity.getUuid(), DICTIONARY_LOCATIONS,
+						key(headEntity.getUuid(), DICTIONARY_GEOCELLS,
 								collectionName, propertyName),
 						curGeocellsUnique, startResult, count, reversed);
 			}
@@ -281,79 +302,208 @@ public class GeoIndexManager {
 	}
 
 	public static Mutator<ByteBuffer> addLocationEntryInsertionToMutator(
-			Mutator<ByteBuffer> m, Object key, EntityLocationRef entry) {
+			Mutator<ByteBuffer> m, Object key, CFEnum cf,
+			EntityLocationRef entry) {
 
 		HColumn<ByteBuffer, ByteBuffer> column = createColumn(
-				DynamicComposite.toByteBuffer(entry.getUuid(), entry.getType(),
-						entry.getTimestampUuid()),
-				DynamicComposite.toByteBuffer(entry.getLatitude(),
-						entry.getLongitude()),
-				getTimestampInMicros(entry.getTimestampUuid()),
-				ByteBufferSerializer.get(), ByteBufferSerializer.get());
-		m.addInsertion(bytebuffer(key), ApplicationCF.ENTITY_INDEX.toString(),
-				column);
+				entry.getColumnName(), entry.getColumnValue(),
+				entry.getTimestampInMicros(), ByteBufferSerializer.get(),
+				ByteBufferSerializer.get());
+		m.addInsertion(bytebuffer(key), cf.toString(), column);
 
 		return m;
 	}
 
-	public void storeLocation(EntityRef headEntity, String collectionName,
-			String propertyName, EntityLocationRef location) {
+	private Mutator<ByteBuffer> batchAddConnectionIndexEntries(
+			Mutator<ByteBuffer> m, String propertyName, String geoCell,
+			UUID[] index_keys, ByteBuffer columnName, ByteBuffer columnValue,
+			long timestamp) {
 
-		Point p = location.getPoint();
-		List<String> cells = GeocellManager.generateGeoCell(p);
+		// entity_id,prop_name
+		Object property_index_key = key(index_keys[ConnectionRefImpl.ALL],
+				INDEX_CONNECTIONS, propertyName, geoCell);
 
-		Keyspace ko = cass.getApplicationKeyspace(em.applicationId);
-		Mutator<ByteBuffer> m = createMutator(ko, ByteBufferSerializer.get());
+		// entity_id,entity_type,prop_name
+		Object entity_type_prop_index_key = key(
+				index_keys[ConnectionRefImpl.BY_ENTITY_TYPE],
+				INDEX_CONNECTIONS, propertyName, geoCell);
 
-		Object key = key(headEntity.getUuid(), DICTIONARY_LOCATIONS,
-				collectionName, propertyName);
+		// entity_id,connection_type,prop_name
+		Object connection_type_prop_index_key = key(
+				index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE],
+				INDEX_CONNECTIONS, propertyName, geoCell);
 
-		for (String cell : cells) {
-			addLocationEntryInsertionToMutator(m, key(key, cell), location);
-		}
+		// entity_id,connection_type,entity_type,prop_name
+		Object connection_type_and_entity_type_prop_index_key = key(
+				index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE],
+				INDEX_CONNECTIONS, propertyName, geoCell);
 
-		batchExecute(m, CassandraService.RETRY_COUNT);
+		// composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
+		addInsertToMutator(m, ENTITY_INDEX, property_index_key, columnName,
+				columnValue, timestamp);
 
-		logger.info("Geocells to be saved for Point(" + location.latitude + ","
-				+ location.longitude + ") are: " + cells);
+		// composite(property_value,connected_entity_id,connection_type,entry_timestamp)
+		addInsertToMutator(m, ENTITY_INDEX, entity_type_prop_index_key,
+				columnName, columnValue, timestamp);
+
+		// composite(property_value,connected_entity_id,entity_type,entry_timestamp)
+		addInsertToMutator(m, ENTITY_INDEX, connection_type_prop_index_key,
+				columnName, columnValue, timestamp);
+
+		// composite(property_value,connected_entity_id,entry_timestamp)
+		addInsertToMutator(m, ENTITY_INDEX,
+				connection_type_and_entity_type_prop_index_key, columnName,
+				columnValue, timestamp);
+
+		return m;
 	}
 
-	public static Mutator<ByteBuffer> addLocationEntryDeletionToMutator(
-			Mutator<ByteBuffer> m, Object key, EntityLocationRef entry) {
+	private static Mutator<ByteBuffer> addLocationEntryDeletionToMutator(
+			Mutator<ByteBuffer> m, CFEnum cf, Object key,
+			EntityLocationRef entry) {
 
-		m.addDeletion(bytebuffer(key), ApplicationCF.ENTITY_INDEX.toString(),
-				DynamicComposite.toByteBuffer(entry.getUuid(), entry.getType(),
+		m.addDeletion(bytebuffer(key), cf.toString(), DynamicComposite
+				.toByteBuffer(entry.getUuid(), entry.getType(),
 						entry.getTimestampUuid()), ByteBufferSerializer.get(),
 				getTimestampInMicros(entry.getTimestampUuid()) + 1);
 
 		return m;
 	}
 
-	public void batchDeleteLocation(Mutator<ByteBuffer> m,
-			EntityRef headEntity, String collectionName, String propertyName,
+	private Mutator<ByteBuffer> batchDeleteConnectionIndexEntries(
+			Mutator<ByteBuffer> m, String propertyName, String geoCell,
+			UUID[] index_keys, ByteBuffer columnName, long timestamp) {
+
+		// entity_id,prop_name
+		Object property_index_key = key(index_keys[ConnectionRefImpl.ALL],
+				INDEX_CONNECTIONS, propertyName, geoCell);
+
+		// entity_id,entity_type,prop_name
+		Object entity_type_prop_index_key = key(
+				index_keys[ConnectionRefImpl.BY_ENTITY_TYPE],
+				INDEX_CONNECTIONS, propertyName, geoCell);
+
+		// entity_id,connection_type,prop_name
+		Object connection_type_prop_index_key = key(
+				index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE],
+				INDEX_CONNECTIONS, propertyName, geoCell);
+
+		// entity_id,connection_type,entity_type,prop_name
+		Object connection_type_and_entity_type_prop_index_key = key(
+				index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE],
+				INDEX_CONNECTIONS, propertyName, geoCell);
+
+		// composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
+		m.addDeletion(bytebuffer(property_index_key), ENTITY_INDEX.toString(),
+				columnName, ByteBufferSerializer.get(), timestamp);
+
+		// composite(property_value,connected_entity_id,connection_type,entry_timestamp)
+		m.addDeletion(bytebuffer(entity_type_prop_index_key),
+				ENTITY_INDEX.toString(), columnName,
+				ByteBufferSerializer.get(), timestamp);
+
+		// composite(property_value,connected_entity_id,entity_type,entry_timestamp)
+		m.addDeletion(bytebuffer(connection_type_prop_index_key),
+				ENTITY_INDEX.toString(), columnName,
+				ByteBufferSerializer.get(), timestamp);
+
+		// composite(property_value,connected_entity_id,entry_timestamp)
+		m.addDeletion(
+				bytebuffer(connection_type_and_entity_type_prop_index_key),
+				ENTITY_INDEX.toString(), columnName,
+				ByteBufferSerializer.get(), timestamp);
+
+		return m;
+	}
+
+	public void batchStoreLocationInIndex(Mutator<ByteBuffer> m,
+			EntityRef owner, String collectionName, String propertyName,
 			EntityLocationRef location) {
 
 		Point p = location.getPoint();
 		List<String> cells = GeocellManager.generateGeoCell(p);
 
-		Object key = key(headEntity.getUuid(), DICTIONARY_LOCATIONS,
-				collectionName, propertyName);
+		CollectionInfo collection = getDefaultSchema().getCollection(
+				owner.getType(), collectionName);
 
-		for (String cell : cells) {
-			addLocationEntryDeletionToMutator(m, key(key, cell), location);
+		if (collection != null) {
+			Object key = key(owner.getUuid(), DICTIONARY_GEOCELLS,
+					collectionName, propertyName);
+			for (String cell : cells) {
+				addLocationEntryInsertionToMutator(m, key(key, cell),
+						ApplicationCF.ENTITY_INDEX, location);
+			}
+		} else {
+
+			ByteBuffer columnName = location.getColumnName();
+			ByteBuffer columnValue = location.getColumnValue();
+			long ts = location.getTimestampInMicros();
+			UUID[] index_keys = ConnectionRefImpl.getIndexIds(owner.getUuid(),
+					collectionName, location.getType());
+			for (String cell : cells) {
+				batchAddConnectionIndexEntries(m, propertyName, cell,
+						index_keys, columnName, columnValue, ts);
+			}
+		}
+
+		logger.info("Geocells to be saved for Point(" + location.latitude + ","
+				+ location.longitude + ") are: " + cells);
+	}
+
+	public void storeLocationInIndex(EntityRef owner, String collectionName,
+			String propertyName, EntityLocationRef location) {
+
+		Keyspace ko = cass.getApplicationKeyspace(em.applicationId);
+		Mutator<ByteBuffer> m = createMutator(ko, ByteBufferSerializer.get());
+
+		batchStoreLocationInIndex(m, owner, collectionName, propertyName,
+				location);
+
+		batchExecute(m, CassandraService.RETRY_COUNT);
+
+	}
+
+	public void batchRemoveLocationFromIndex(Mutator<ByteBuffer> m,
+			EntityRef owner, String collectionName, String propertyName,
+			EntityLocationRef location) {
+
+		Point p = location.getPoint();
+		List<String> cells = GeocellManager.generateGeoCell(p);
+
+		CollectionInfo collection = getDefaultSchema().getCollection(
+				owner.getType(), collectionName);
+
+		if (collection != null) {
+			Object key = key(owner.getUuid(), DICTIONARY_GEOCELLS,
+					collectionName, propertyName);
+
+			for (String cell : cells) {
+				addLocationEntryDeletionToMutator(m,
+						ApplicationCF.ENTITY_INDEX, key(key, cell), location);
+			}
+		} else {
+
+			ByteBuffer columnName = location.getColumnName();
+			long ts = location.getTimestampInMicros();
+			UUID[] index_keys = ConnectionRefImpl.getIndexIds(owner.getUuid(),
+					collectionName, location.getType());
+			for (String cell : cells) {
+				batchDeleteConnectionIndexEntries(m, propertyName, cell,
+						index_keys, columnName, ts);
+			}
 		}
 
 		logger.info("Geocells to be deleted for Point(" + location.latitude
 				+ "," + location.longitude + ") are: " + cells);
 	}
 
-	public void deleteLocation(EntityRef headEntity, String collectionName,
+	public void removeLocationFromIndex(EntityRef owner, String collectionName,
 			String propertyName, EntityLocationRef location) {
 
 		Keyspace ko = cass.getApplicationKeyspace(em.applicationId);
 		Mutator<ByteBuffer> m = createMutator(ko, ByteBufferSerializer.get());
 
-		batchDeleteLocation(m, headEntity, collectionName, propertyName,
+		batchRemoveLocationFromIndex(m, owner, collectionName, propertyName,
 				location);
 
 		batchExecute(m, CassandraService.RETRY_COUNT);
