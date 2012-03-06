@@ -839,8 +839,8 @@ usergrid.Client = function(options) {
        localStorage.removeItem('usergrid_access_token');
         var formdata = {
             username: email,
-            password: password,
-            invite: "true"
+            password: '',
+            invite: true
         };
         apiRequest("POST", "/"+ applicationId + "/token", formdata, null,
         function(response) {
