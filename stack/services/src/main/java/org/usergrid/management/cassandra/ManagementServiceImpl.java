@@ -39,6 +39,7 @@ import static org.usergrid.security.oauth.ClientCredentialsInfo.getTypeFromClien
 import static org.usergrid.security.oauth.ClientCredentialsInfo.getUUIDFromClientId;
 import static org.usergrid.services.ServiceParameter.parameters;
 import static org.usergrid.services.ServicePayload.payload;
+import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.ListUtils.anyNull;
 import static org.usergrid.utils.MailUtils.sendHtmlMail;
@@ -138,6 +139,7 @@ public class ManagementServiceImpl implements ManagementService {
 	public static String EMAIL_SYSADMIN_ADMIN_ACTIVATION = "usergrid.management.email.sysadmin-admin-activation";
 	public static String EMAIL_ADMIN_ACTIVATION = "usergrid.management.email.admin-activation";
 	public static String EMAIL_ADMIN_ACTIVATED = "usergrid.management.email.admin-activated";
+	public static String EMAIL_ADMIN_INVITED = "usergrid.management.email.admin-invited";
 
 	public static String EMAIL_ADMIN_USER_ACTIVATION = "usergrid.management.email.admin-user-activation";
 	public static String EMAIL_USER_ACTIVATION = "usergrid.management.email.user-activation";
@@ -145,6 +147,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 	public static String EMAIL_USER_PASSWORD_RESET = "usergrid.management.email.user-password-reset";
 	public static String EMAIL_USER_PIN_REQUEST = "usergrid.management.email.user-pin";
+
+	public static String EMAIL_FOOTER = "usergrid.management.email.footer";
 
 	protected ServiceManagerFactory smf;
 
@@ -640,9 +644,18 @@ public class ManagementServiceImpl implements ManagementService {
 			String password, boolean activated, boolean disabled,
 			boolean sendEmail) throws Exception {
 
-		if ((username == null) || (name == null) || (email == null)
-				|| (password == null)) {
+		if (email == null) {
 			return null;
+		}
+		if (username == null) {
+			username = email;
+		}
+		if (name == null) {
+			name = email;
+		}
+
+		if (isBlank(password)) {
+			password = encodeBase64URLSafeString(bytes(UUID.randomUUID()));
 		}
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
@@ -1679,6 +1692,10 @@ public class ManagementServiceImpl implements ManagementService {
 				.getProperty(propertyName));
 	}
 
+	private String appendEmailFooter(String msg) {
+		return msg + "\n" + properties.getProperty(EMAIL_FOOTER);
+	}
+
 	@Override
 	public void sendAdminUserPasswordReminderEmail(UserInfo user)
 			throws Exception {
@@ -1693,8 +1710,8 @@ public class ManagementServiceImpl implements ManagementService {
 				user.getDisplayEmailAddress(),
 				getPropertyValue(EMAIL_MAILER),
 				"Password Reset",
-				emailMsg(hashMap("reset_url", reset_url),
-						EMAIL_ADMIN_PASSWORD_RESET));
+				appendEmailFooter(emailMsg(hashMap("reset_url", reset_url),
+						EMAIL_ADMIN_PASSWORD_RESET)));
 
 	}
 
@@ -1739,6 +1756,14 @@ public class ManagementServiceImpl implements ManagementService {
 					organization.getUuid().toString())
 					+ "?token=" + token;
 			if (newOrganizationsNeedSysAdminApproval()) {
+				List<UserInfo> users = getAdminUsersForOrganization(organization
+						.getUuid());
+				String organization_owners = null;
+				for (UserInfo user : users) {
+					organization_owners = (organization_owners == null) ? user
+							.getDisplayEmailAddress() : organization_owners
+							+ ", " + user.getDisplayEmailAddress();
+				}
 				activation_url += "&confirm=true";
 				sendHtmlMail(
 						properties,
@@ -1746,11 +1771,13 @@ public class ManagementServiceImpl implements ManagementService {
 						getPropertyValue(EMAIL_MAILER),
 						"Request For Organization Account Activation "
 								+ organization.getName(),
-						emailMsg(
+						appendEmailFooter(emailMsg(
 								hashMap("organization_name",
 										organization.getName()).map(
-										"activation_url", activation_url),
-								EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION));
+										"activation_url", activation_url).map(
+										"organization_owners",
+										organization_owners),
+								EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION)));
 			} else {
 				sendOrganizationEmail(
 						organization,
@@ -1787,7 +1814,8 @@ public class ManagementServiceImpl implements ManagementService {
 				.getUuid());
 		for (UserInfo user : users) {
 			sendHtmlMail(properties, user.getDisplayEmailAddress(),
-					getPropertyValue(EMAIL_MAILER), subject, html);
+					getPropertyValue(EMAIL_MAILER), subject,
+					appendEmailFooter(html));
 		}
 
 	}
@@ -1806,10 +1834,10 @@ public class ManagementServiceImpl implements ManagementService {
 					getPropertyValue("usergrid.sysadmin.email"),
 					getPropertyValue(EMAIL_MAILER),
 					"Request For User Account Activation " + user.getEmail(),
-					emailMsg(
+					appendEmailFooter(emailMsg(
 							hashMap("user_email", user.getEmail()).map(
 									"activation_url", activation_url),
-							EMAIL_SYSADMIN_ADMIN_ACTIVATION));
+							EMAIL_SYSADMIN_ADMIN_ACTIVATION)));
 		} else {
 			sendAdminUserEmail(
 					user,
@@ -1830,10 +1858,22 @@ public class ManagementServiceImpl implements ManagementService {
 	}
 
 	@Override
+	public void sendAdminUserInvitedEmail(UserInfo user,
+			OrganizationInfo organization) throws Exception {
+		sendAdminUserEmail(
+				user,
+				"User Invited To Organization",
+				emailMsg(hashMap("organization_name", organization.getName()),
+						EMAIL_ADMIN_INVITED));
+
+	}
+
+	@Override
 	public void sendAdminUserEmail(UserInfo user, String subject, String html)
 			throws Exception {
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				getPropertyValue(EMAIL_MAILER), subject, html);
+				getPropertyValue(EMAIL_MAILER), subject,
+				appendEmailFooter(html));
 
 	}
 
@@ -1961,8 +2001,8 @@ public class ManagementServiceImpl implements ManagementService {
 				user.getDisplayEmailAddress(),
 				getPropertyValue(EMAIL_MAILER),
 				"Password Reset",
-				emailMsg(hashMap("reset_url", reset_url),
-						EMAIL_USER_PASSWORD_RESET));
+				appendEmailFooter(emailMsg(hashMap("reset_url", reset_url),
+						EMAIL_USER_PASSWORD_RESET)));
 
 	}
 
@@ -2060,7 +2100,8 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAppUserEmail(User user, String subject, String html)
 			throws Exception {
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				getPropertyValue(EMAIL_MAILER), subject, html);
+				getPropertyValue(EMAIL_MAILER), subject,
+				appendEmailFooter(html));
 
 	}
 
@@ -2095,9 +2136,13 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 		String pin = getCredentialsSecret((CredentialsInfo) em
 				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS, "pin"));
-		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				getPropertyValue(EMAIL_MAILER), "Your app pin",
-				emailMsg(hashMap("pin", pin), EMAIL_USER_PIN_REQUEST));
+		sendHtmlMail(
+				properties,
+				user.getDisplayEmailAddress(),
+				getPropertyValue(EMAIL_MAILER),
+				"Your app pin",
+				appendEmailFooter(emailMsg(hashMap("pin", pin),
+						EMAIL_USER_PIN_REQUEST)));
 
 	}
 

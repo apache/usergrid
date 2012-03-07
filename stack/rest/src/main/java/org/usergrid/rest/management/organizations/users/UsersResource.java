@@ -94,36 +94,14 @@ public class UsersResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("new user for organization");
-
 		String email = string(json.get("email"));
+		String username = string(json.get("username"));
+		String name = string(json.get("name"));
 		String password = string(json.get("password"));
 		boolean invite = getBoolean(getObject(json, "invite", true));
 
-		UserInfo user = null;
-		if (invite) {
-			user = management.getAdminUserByEmail(email);
-		}
-
-		if (user == null) {
-			user = management.createAdminUser(email, email, email, password,
-					false, false, true);
-		}
-
-		if (user == null) {
-			return null;
-		}
-
-		management.addAdminUserToOrganization(user.getUuid(),
-				organization.getUuid());
-
-		Map<String, Object> result = new LinkedHashMap<String, Object>();
-		result.put("user", user);
-		response.setData(result);
-		response.setSuccess();
-
-		return new JSONWithPadding(response, callback);
+		return newUserForOrganizationFromForm(ui, username, name, email,
+				password, invite, callback);
 	}
 
 	@RequireOrganizationAccess
@@ -158,6 +136,8 @@ public class UsersResource extends AbstractContextResource {
 
 		management.addAdminUserToOrganization(user.getUuid(),
 				organization.getUuid());
+
+		management.sendAdminUserInvitedEmail(user, organization);
 
 		Map<String, Object> result = new LinkedHashMap<String, Object>();
 		result.put("user", user);
