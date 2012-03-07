@@ -17,6 +17,7 @@ package org.usergrid.persistence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.usergrid.persistence.Results.Level.ALL_PROPERTIES;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,7 +26,6 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.cassandra.EntityManagerImpl;
 import org.usergrid.persistence.cassandra.GeoIndexManager;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
@@ -60,34 +60,60 @@ public class GeoTest extends AbstractPersistenceTest {
 		EntityLocationRef loc = new EntityLocationRef(user, 37.776753,
 				-122.407846);
 		GeoIndexManager geo = ((EntityManagerImpl) em).getGeoIndexManager();
-		geo.storeLocationInIndex(em.getApplicationRef(), "users", "location",
-				loc);
+		geo.storeLocationInCollectionIndex(em.getApplicationRef(), "users",
+				"location.coordinates", loc);
 
 		Point center = new Point(37.774277, -122.404744);
 		Results results = geo.proximitySearchCollection(em.getApplicationRef(),
-				"users", "location", center, 200, null, 10, false,
-				Level.ALL_PROPERTIES);
+				"users", "location.coordinates", center, 200, null, 10, false,
+				ALL_PROPERTIES);
 
 		assertEquals(0, results.size());
 
 		results = geo.proximitySearchCollection(em.getApplicationRef(),
-				"users", "location", center, 400, null, 10, false,
-				Level.ALL_PROPERTIES);
+				"users", "location.coordinates", center, 400, null, 10, false,
+				ALL_PROPERTIES);
 
 		this.dump(results.getEntities());
 
 		assertEquals(1, results.size());
 
-		geo.removeLocationFromIndex(em.getApplicationRef(), "users",
-				"location", loc);
+		geo.removeLocationFromCollectionIndex(em.getApplicationRef(), "users",
+				"location.coordinates", loc);
 
 		results = geo.proximitySearchCollection(em.getApplicationRef(),
-				"users", "location", center, 400, null, 10, false,
-				Level.ALL_PROPERTIES);
+				"users", "location.coordinates", center, 400, null, 10, false,
+				ALL_PROPERTIES);
 
 		this.dump(results.getEntities());
 
 		assertEquals(0, results.size());
+
+		Map<String, Object> latlong = new LinkedHashMap<String, Object>();
+		latlong.put("latitude", 37.426373);
+		latlong.put("longitude", -122.14108);
+
+		em.setProperty(user, "location", latlong);
+
+		center = new Point(37.774277, -122.404744);
+		results = geo.proximitySearchCollection(em.getApplicationRef(),
+				"users", "location.coordinates", center, 200, null, 10, false,
+				ALL_PROPERTIES);
+
+		assertEquals(0, results.size());
+
+		latlong = new LinkedHashMap<String, Object>();
+		latlong.put("latitude", 37.774277);
+		latlong.put("longitude", -122.404744);
+
+		em.setProperty(user, "location", latlong);
+
+		center = new Point(37.428526, -122.140916);
+		results = geo.proximitySearchCollection(em.getApplicationRef(),
+				"users", "location.coordinates", center, 1000, null, 10, false,
+				ALL_PROPERTIES);
+
+		assertEquals(1, results.size());
 
 	}
 }

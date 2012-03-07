@@ -68,6 +68,10 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.persistence.cassandra.CassandraService.DEFAULT_SEARCH_COUNT;
 import static org.usergrid.persistence.cassandra.CassandraService.INDEX_ENTRY_LIST_COUNT;
 import static org.usergrid.persistence.cassandra.ConnectionRefImpl.CONNECTION_ENTITY_CONNECTION_TYPE;
+import static org.usergrid.persistence.cassandra.GeoIndexManager.batchDeleteLocationInConnectionsIndex;
+import static org.usergrid.persistence.cassandra.GeoIndexManager.batchRemoveLocationFromCollectionIndex;
+import static org.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInConnectionsIndex;
+import static org.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInCollectionIndex;
 import static org.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
 import static org.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
 import static org.usergrid.persistence.cassandra.IndexUpdate.validIndexableValue;
@@ -85,6 +89,7 @@ import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
 import java.nio.ByteBuffer;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -133,6 +138,7 @@ import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.SimpleCollectionRef;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.SimpleRoleRef;
+import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.cassandra.QueryProcessor.QuerySlice;
 import org.usergrid.persistence.entities.Group;
@@ -439,6 +445,15 @@ public class RelationManagerImpl implements RelationManager,
 						}
 					}
 				}
+
+				if ("location.coordinates".equals(entry.getPath())) {
+					EntityLocationRef loc = new EntityLocationRef(
+							indexUpdate.getEntity(), entry.getTimestampUuid(),
+							entry.getValue().toString());
+					batchRemoveLocationFromCollectionIndex(indexUpdate.getBatch(),
+							index_key, loc);
+				}
+
 			} else {
 				logger.error("Unexpected condition - deserialized property value is null");
 			}
@@ -491,6 +506,15 @@ public class RelationManagerImpl implements RelationManager,
 
 						}
 					}
+				}
+
+				if ("location.coordinates".equals(indexEntry.getPath())) {
+					EntityLocationRef loc = new EntityLocationRef(
+							indexUpdate.getEntity(),
+							indexEntry.getTimestampUuid(), indexEntry
+									.getValue().toString());
+					batchStoreLocationInCollectionIndex(indexUpdate.getBatch(),
+							index_key, loc);
 				}
 
 				// i++;
@@ -1066,6 +1090,15 @@ public class RelationManagerImpl implements RelationManager,
 				batchDeleteConnectionIndexEntries(indexUpdate, entry,
 						connection, index_keys);
 
+				if ("location.coordinates".equals(entry.getPath())) {
+					EntityLocationRef loc = new EntityLocationRef(
+							indexUpdate.getEntity(), entry.getTimestampUuid(),
+							entry.getValue().toString());
+					batchDeleteLocationInConnectionsIndex(
+							indexUpdate.getBatch(), index_keys,
+							entry.getPath(), loc);
+				}
+
 			} else {
 				logger.error("Unexpected condition - deserialized property value is null");
 			}
@@ -1080,6 +1113,15 @@ public class RelationManagerImpl implements RelationManager,
 				batchAddConnectionIndexEntries(indexUpdate, indexEntry,
 						connection, index_keys);
 
+				if ("location.coordinates".equals(indexEntry.getPath())) {
+					EntityLocationRef loc = new EntityLocationRef(
+							indexUpdate.getEntity(),
+							indexEntry.getTimestampUuid(), indexEntry
+									.getValue().toString());
+					batchStoreLocationInConnectionsIndex(
+							indexUpdate.getBatch(), index_keys,
+							indexEntry.getPath(), loc);
+				}
 			}
 
 			/*
@@ -1508,6 +1550,18 @@ public class RelationManagerImpl implements RelationManager,
 
 			List<Map.Entry<String, Object>> list = IndexUtils.getKeyValueList(
 					entryName, entryValue, fulltextIndexed);
+
+			if (entryName.equalsIgnoreCase("location")
+					&& (entryValue instanceof Map)) {
+				@SuppressWarnings("rawtypes")
+				double latitude = MapUtils.getDoubleValue((Map) entryValue,
+						"latitude");
+				@SuppressWarnings("rawtypes")
+				double longitude = MapUtils.getDoubleValue((Map) entryValue,
+						"longitude");
+				list.add(new AbstractMap.SimpleEntry<String, Object>(
+						"location.coordinates", latitude + "," + longitude));
+			}
 
 			for (Map.Entry<String, Object> indexEntry : list) {
 
