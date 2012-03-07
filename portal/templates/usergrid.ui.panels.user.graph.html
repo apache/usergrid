@@ -1,35 +1,45 @@
 <div class="console-section">
-	<h3>
-		{{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
-		<div class="user-profile-header-name{{if picture}} user-profile-picture-vert-offset{{/if}}">
-			{{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
-			${name}
-			{{if path}}</a>{{/if}}
-		</div>
-	</h3>
-	<div class="console-section-contents">
-        <div class="user-roles-title">Following </div>
-		<div class="user-panel-section">
-			{{if following}}
-			{{each following}}
-			<div>${$index + 1}: <em>${name}.</em></div>
-			{{/each}}
-			{{else}}
-			<div class="user-panel-section-message">Not following anyone</div>
-			{{/if}}
-		</div>
-        <br/>
+  <h3>
+    {{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
+    <div class="user-profile-header-name{{if picture}} user-profile-picture-vert-offset{{/if}}">
+      {{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+	${name}
+	{{if path}}</a>{{/if}}
+    </div>
+  </h3>
+  <div class="console-section-contents">
+    <div class="user-roles-title">Following </div>
+    <div class="user-panel-section">
+      <table class="table">
+	<tbody>
+	  {{if following}}
+	  {{each following}}
+	  <tr class="zebraRows">
+	    <td>${$index + 1}: <em>${name}</em>.</td>
+	  </tr>
+	  {{/each}}
+	  {{else}}
+	  <div class="user-panel-section-message">Not following anyone</div>
+	  {{/if}}
+	</tbody>
+      </table>
+    </div>
 
-        <div class="user-roles-title">Followers </div>
-		<div class="user-panel-section">
-			{{if followers}}
-			{{each followers}}
-			<div>${$index + 1}: <em>${name}.</em></div>
-			{{/each}}
-			{{else}}
-			<div class="user-panel-section-message">No followers</div>
-			{{/if}}
-		</div>
-	</div>
+    <div class="user-roles-title">Followers </div>
+    <div class="user-panel-section">
+      <table class="table">
+	<tbody>
+	  {{if followers}}
+	  {{each followers}}
+	  <tr class="zebraRows">
+	    <td>${$index + 1}: <em>${name}</em>.</td>
+	  </tr>
+	  {{/each}}
+	  {{else}}
+	  <div class="user-panel-section-message">No followers</div>
+	  {{/if}}
+	</tbody>
+      </table>
+    </div>
+  </div>
 </div>
-
