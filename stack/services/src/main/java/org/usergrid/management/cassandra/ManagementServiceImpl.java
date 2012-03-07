@@ -148,6 +148,8 @@ public class ManagementServiceImpl implements ManagementService {
 	public static String EMAIL_USER_PASSWORD_RESET = "usergrid.management.email.user-password-reset";
 	public static String EMAIL_USER_PIN_REQUEST = "usergrid.management.email.user-pin";
 
+	public static String EMAIL_FOOTER = "usergrid.management.email.footer";
+
 	protected ServiceManagerFactory smf;
 
 	protected EntityManagerFactory emf;
@@ -1685,9 +1687,15 @@ public class ManagementServiceImpl implements ManagementService {
 				User.ENTITY_TYPE, userId), "disabled"));
 	}
 
+	private String emailMsg(String propertyName) {
+		return properties.getProperty(propertyName) + "\n"
+				+ properties.getProperty(EMAIL_FOOTER);
+	}
+
 	private String emailMsg(Map<String, String> values, String propertyName) {
-		return new StrSubstitutor(values).replace(properties
-				.getProperty(propertyName));
+		StrSubstitutor substitutor = new StrSubstitutor(values);
+		return substitutor.replace(properties.getProperty(propertyName)) + "\n"
+				+ substitutor.replace(properties.getProperty(EMAIL_FOOTER));
 	}
 
 	@Override
@@ -1808,7 +1816,7 @@ public class ManagementServiceImpl implements ManagementService {
 				.getUuid());
 		for (UserInfo user : users) {
 			sendHtmlMail(properties, user.getDisplayEmailAddress(),
-					getPropertyValue(EMAIL_MAILER), subject, html);
+					getPropertyValue(EMAIL_MAILER), subject, emailMsg(html));
 		}
 
 	}
@@ -1865,7 +1873,7 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAdminUserEmail(UserInfo user, String subject, String html)
 			throws Exception {
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				getPropertyValue(EMAIL_MAILER), subject, html);
+				getPropertyValue(EMAIL_MAILER), subject, emailMsg(html));
 
 	}
 
@@ -2092,7 +2100,7 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAppUserEmail(User user, String subject, String html)
 			throws Exception {
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				getPropertyValue(EMAIL_MAILER), subject, html);
+				getPropertyValue(EMAIL_MAILER), subject, emailMsg(html));
 
 	}
 
