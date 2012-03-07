@@ -98,7 +98,8 @@ public class UserInfo {
 
 	public String getHTMLDisplayEmailAddress() {
 		if (isNotBlank(name)) {
-			return name + " <a href=\"mailto:" + email + "\">" + email + "</a>";
+			return name + " &lt;<a href=\"mailto:" + email + "\">" + email
+					+ "</a>&gt;";
 		}
 		return email;
 	}
