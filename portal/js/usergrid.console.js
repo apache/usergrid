@@ -2599,7 +2599,7 @@ function usergrid_console_app() {
         var pathInput = $("#role-permission-path-entry-input");
         var list = [];
         for (var i in applicationData.Collections)
-            list.push('/' + applicationData.Collections[i].name + '/');
+            list.push('/' + applicationData.Collections[i].name + '/*');
         pathInput.typeahead({source:list});
     }
     function updateQueryAutocompleteCollections(){
