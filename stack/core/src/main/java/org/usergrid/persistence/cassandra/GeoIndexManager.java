@@ -24,11 +24,11 @@ import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.logBatchOperation;
 import static org.usergrid.utils.ClassUtils.cast;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterLast;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
-import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -36,6 +36,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.persistence.Id;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.DoubleSerializer;
@@ -67,6 +69,7 @@ public class GeoIndexManager {
 
 	public static class EntityLocationRef implements EntityRef {
 
+		@Id
 		private UUID uuid;
 
 		private String type;
@@ -165,12 +168,12 @@ public class GeoIndexManager {
 			return new Point(latitude, longitude);
 		}
 
-		public ByteBuffer getColumnName() {
-			return DynamicComposite.toByteBuffer(uuid, type, timestampUuid);
+		public DynamicComposite getColumnName() {
+			return new DynamicComposite(uuid, type, timestampUuid);
 		}
 
-		public ByteBuffer getColumnValue() {
-			return DynamicComposite.toByteBuffer(latitude, longitude);
+		public DynamicComposite getColumnValue() {
+			return new DynamicComposite(latitude, longitude);
 		}
 
 		public long getTimestampInMicros() {
@@ -319,10 +322,16 @@ public class GeoIndexManager {
 	public static Mutator<ByteBuffer> addLocationEntryInsertionToMutator(
 			Mutator<ByteBuffer> m, Object key, EntityLocationRef entry) {
 
+		DynamicComposite columnName = entry.getColumnName();
+		DynamicComposite columnValue = entry.getColumnValue();
+		long ts = entry.getTimestampInMicros();
+
+		logBatchOperation("Insert", ENTITY_INDEX, key, columnName, columnValue,
+				ts);
+
 		HColumn<ByteBuffer, ByteBuffer> column = createColumn(
-				entry.getColumnName(), entry.getColumnValue(),
-				entry.getTimestampInMicros(), ByteBufferSerializer.get(),
-				ByteBufferSerializer.get());
+				columnName.serialize(), columnValue.serialize(), ts,
+				ByteBufferSerializer.get(), ByteBufferSerializer.get());
 		m.addInsertion(bytebuffer(key), ENTITY_INDEX.toString(), column);
 
 		return m;
@@ -379,8 +388,8 @@ public class GeoIndexManager {
 		Point p = location.getPoint();
 		List<String> cells = GeocellManager.generateGeoCell(p);
 
-		ByteBuffer columnName = location.getColumnName();
-		ByteBuffer columnValue = location.getColumnValue();
+		ByteBuffer columnName = location.getColumnName().serialize();
+		ByteBuffer columnValue = location.getColumnValue().serialize();
 		long ts = location.getTimestampInMicros();
 		for (String cell : cells) {
 			batchAddConnectionIndexEntries(m, propertyName, cell, index_keys,
@@ -394,10 +403,13 @@ public class GeoIndexManager {
 	private static Mutator<ByteBuffer> addLocationEntryDeletionToMutator(
 			Mutator<ByteBuffer> m, Object key, EntityLocationRef entry) {
 
+		DynamicComposite columnName = entry.getColumnName();
+		long ts = entry.getTimestampInMicros();
+
+		logBatchOperation("Delete", ENTITY_INDEX, key, columnName, null, ts);
+
 		m.addDeletion(bytebuffer(key), ENTITY_INDEX.toString(),
-				DynamicComposite.toByteBuffer(entry.getUuid(), entry.getType(),
-						entry.getTimestampUuid()), ByteBufferSerializer.get(),
-				getTimestampInMicros(entry.getTimestampUuid()) + 1);
+				columnName.serialize(), ByteBufferSerializer.get(), ts + 1);
 
 		return m;
 	}
@@ -455,7 +467,7 @@ public class GeoIndexManager {
 		Point p = location.getPoint();
 		List<String> cells = GeocellManager.generateGeoCell(p);
 
-		ByteBuffer columnName = location.getColumnName();
+		ByteBuffer columnName = location.getColumnName().serialize();
 		long ts = location.getTimestampInMicros();
 		for (String cell : cells) {
 			batchDeleteConnectionIndexEntries(m, propertyName, cell,

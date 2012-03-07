@@ -70,8 +70,8 @@ import static org.usergrid.persistence.cassandra.CassandraService.INDEX_ENTRY_LI
 import static org.usergrid.persistence.cassandra.ConnectionRefImpl.CONNECTION_ENTITY_CONNECTION_TYPE;
 import static org.usergrid.persistence.cassandra.GeoIndexManager.batchDeleteLocationInConnectionsIndex;
 import static org.usergrid.persistence.cassandra.GeoIndexManager.batchRemoveLocationFromCollectionIndex;
-import static org.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInConnectionsIndex;
 import static org.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInCollectionIndex;
+import static org.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInConnectionsIndex;
 import static org.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
 import static org.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
 import static org.usergrid.persistence.cassandra.IndexUpdate.validIndexableValue;
@@ -450,8 +450,8 @@ public class RelationManagerImpl implements RelationManager,
 					EntityLocationRef loc = new EntityLocationRef(
 							indexUpdate.getEntity(), entry.getTimestampUuid(),
 							entry.getValue().toString());
-					batchRemoveLocationFromCollectionIndex(indexUpdate.getBatch(),
-							index_key, loc);
+					batchRemoveLocationFromCollectionIndex(
+							indexUpdate.getBatch(), index_key, loc);
 				}
 
 			} else {
@@ -1593,12 +1593,13 @@ public class RelationManagerImpl implements RelationManager,
 						name = name.substring(entryName.length());
 					}
 
+					byte code = indexValueCode(indexEntry.getValue());
+					Object val = toIndexableValue(indexEntry.getValue());
 					addInsertToMutator(
 							batch,
 							ENTITY_INDEX_ENTRIES,
 							entity.getUuid(),
-							asList(entryName, indexValueCode(entryValue),
-									toIndexableValue(entryValue),
+							asList(entryName, code, val,
 									indexUpdate.getTimestampUuid(), name),
 							null, timestamp);
 

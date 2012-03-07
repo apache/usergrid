@@ -89,11 +89,7 @@ public class GeoTest extends AbstractPersistenceTest {
 
 		assertEquals(0, results.size());
 
-		Map<String, Object> latlong = new LinkedHashMap<String, Object>();
-		latlong.put("latitude", 37.426373);
-		latlong.put("longitude", -122.14108);
-
-		em.setProperty(user, "location", latlong);
+		updatePos(em, user, 37.426373, -122.14108);
 
 		center = new Point(37.774277, -122.404744);
 		results = geo.proximitySearchCollection(em.getApplicationRef(),
@@ -102,18 +98,32 @@ public class GeoTest extends AbstractPersistenceTest {
 
 		assertEquals(0, results.size());
 
-		latlong = new LinkedHashMap<String, Object>();
-		latlong.put("latitude", 37.774277);
-		latlong.put("longitude", -122.404744);
+		updatePos(em, user, 37.774277, -122.404744);
 
-		em.setProperty(user, "location", latlong);
-
-		center = new Point(37.428526, -122.140916);
+		center = new Point(37.776753, -122.407846);
 		results = geo.proximitySearchCollection(em.getApplicationRef(),
 				"users", "location.coordinates", center, 1000, null, 10, false,
 				ALL_PROPERTIES);
 
 		assertEquals(1, results.size());
 
+		updatePos(em, user, 37.776753, -122.407846);
+
+		center = new Point(37.428526, -122.140916);
+		results = geo.proximitySearchCollection(em.getApplicationRef(),
+				"users", "location.coordinates", center, 1000, null, 10, false,
+				ALL_PROPERTIES);
+
+		assertEquals(0, results.size());
+
+	}
+
+	public void updatePos(EntityManager em, EntityRef entity, double latitude,
+			double longitude) throws Exception {
+		Map<String, Object> latlong = new LinkedHashMap<String, Object>();
+		latlong.put("latitude", latitude);
+		latlong.put("longitude", longitude);
+
+		em.setProperty(entity, "location", latlong);
 	}
 }
