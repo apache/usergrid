@@ -902,7 +902,6 @@ function usergrid_console_app() {
     function formClearErrors(form){
         form.find(".ui-state-error").removeClass("ui-state-error");
         form.find(".error").removeClass("error");
-        form.find(".validateTips").remove();
         form.find(".help-block").empty().hide();
     }
     function submitApplication() {
@@ -1136,7 +1135,7 @@ function usergrid_console_app() {
         data.addColumn('string', 'Entity');
         data.addColumn('number', 'Count');
         var rows = [];
-        var t = '<table id="application-panel-entity-counts">';
+        var t = '<table class="table table-bordered" id="application-panel-entity-counts">';
         var collectionNames = keys(applicationData.Collections).sort();
 
         var entity_count = 0;
@@ -1145,7 +1144,7 @@ function usergrid_console_app() {
             var collection = applicationData.Collections[collectionName];
             var row = [collectionName, {v: collection.count}];
             rows.push(row);
-            t += "<tr><td>" + collection.count + "</td><td>" + collectionName + "</td></tr>";
+            t += "<tr class=\"zebraRows\"><td>" + collection.count + "</td><td>" + collectionName + "</td></tr>";
             entity_count += collection.count;
         }
         t += "<tr id=\"application-panel-entity-total\"><th>" + entity_count + "</th><th>entities total</th></tr>";
