@@ -1175,6 +1175,14 @@ usergrid.Client = function(options) {
     }
     this.addUserToRole = addUserToRole;
 
+    function removeUserFromRole(applicationId, username, rolename, success, failure) {
+        if (!self.loggedInUser) {
+            failure();
+        }
+        apiRequest("DELETE",  "/" + applicationId + "/users/" + username + "/roles/" + rolename, null, null, success, failure);
+    }
+    this.removeUserFromRole = removeUserFromRole;
+
     function requestRoles(applicationId, success, failure) {
         apiGetRequest("/" + applicationId + "/rolenames", null, success, failure);
     }

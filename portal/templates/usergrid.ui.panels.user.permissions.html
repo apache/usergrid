@@ -8,25 +8,32 @@
 		</div>
         <div class="bar">
             <a data-toggle="modal" href="#dialog-form-add-user-to-role"></i> Add </a>
-            <a data-toggle="modal" href="#" onclick="usergrid.console.deleteUserFromRoles();"></i> Delete </a>
+            <a data-toggle="modal" href="#" onclick="usergrid.console.deleteUsersFromRoles('${username}'); return false;"></i> Remove </a>
         </div>
 	</h3>
 	<div class="console-section-contents">
 		<div class="user-panel-section">
 			<div class="user-roles-title">Roles </div>
-			{{if roles}}
+			{{if roles.length > 0}}
 			{{each roles}}
-			<div class="user-role-row" id="user-role-row-${$index}">
-				<a href="" onclick="usergrid.console.pageOpenRole('${$index}'); return false;">
-					<span class="user-role-row-title">${title}</span>
-					<span class="user-role-row-name">(${name})</span>
-				</a>
-			</div>
+            <div class="query-result-row entity_list_item" id="users-roles-response-table">
+                <table class="query-result-table">
+                    <tr class="query-result-header">
+                        <td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="userRoleItem" value="${name}" /></td>
+                        <td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
+                            {{if path}}<a href="" onclick="usergrid.console.pageOpenRole('${name}'); return false;">{{/if}}
+                            <span class="user-role-row-title">${title}</span>
+                            <span class="user-role-row-name">(${name})</span>
+                            {{if path}}</a>{{/if}}
+                        </td>
+                    </tr>
+                </table>
+            </div>
 			{{/each}}
 			{{else}}
 			<div class="user-panel-section-message">No Roles</div>
 			{{/if}}
-            
+            <br/>
             <div class="user-roles-title">Permissions </div>
             <h4>Add Permission Rule</h4>
             <form id="role-permissions-form" action="" onsubmit="usergrid.console.addRolePermission('${role}'); return false;" class="well form-inline" autocomplete="off">
@@ -81,16 +88,3 @@
 	</div>
 </div>
 <input type="hidden" name="role-form-username" id="role-form-username" value="${$data.entity.username}"/>
-<!--
-<div class="user-panel-section">
-			<div class="user-permissions-title">Permissions</div>
-			{{if metadata.sets.permissions.roles}}
-			{{each metadata.sets.permissions.roles}}
-			<div data-permission="${$value}"><em>${$value}</em></div>
-			{{/each}}
-			{{else}}
-			<div class="user-panel-section-message">No User-specific Permissions</div>
-			{{/if}}
-		</div> -->
-
-

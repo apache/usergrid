@@ -1097,6 +1097,24 @@ function usergrid_console_app() {
         }
     }
 
+    function deleteUsersFromRoles(username) {
+        var items = $("#users-permissions-response-table input[id^=userRoleItem]:checked");
+        if(!items.length){
+            alert("Please, first select the items you want to delete");
+            return;
+        }
+
+        confirmDelete(function(){
+            items.each(function() {
+                var roleId = $(this).attr("value");
+                client.removeUserFromRole(current_application_id, username, roleId, function() {pageSelectUserPermissions (username);}, function() {
+                    alert("Unable to remove user from role: " + client.getLastErrorMessage('An internal error occured'));
+                });
+            });
+        });
+    }
+    window.usergrid.console.deleteUsersFromRoles = deleteUsersFromRoles;
+
     /*******************************************************************
      *
      * Generic page select
@@ -1425,7 +1443,7 @@ function usergrid_console_app() {
         Pages.SelectPanel('user');
         requestUser(userId);
         selectTabButton("#button-user-profile");
-        showPanelContent("#user-panel", "#user-panel-profile");
+        showPanelContent("#user-panel", "#user-panel-profile");        
     }
     window.usergrid.console.pageOpenUserProfile = pageOpenUserProfile;
 
@@ -1496,6 +1514,7 @@ function usergrid_console_app() {
             
             $.tmpl("usergrid.ui.panels.user.permissions.html", user_data, options).appendTo("#user-panel-permissions");
             updateRolesAutocomplete();
+            updatePermissionAutocompleteCollections();
         }
     }
 
