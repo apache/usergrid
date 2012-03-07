@@ -96,6 +96,13 @@ public class UserInfo {
 		return email;
 	}
 
+	public String getHTMLDisplayEmailAddress() {
+		if (isNotBlank(name)) {
+			return name + " <a href=\"mailto:" + email + "\">" + email + "</a>";
+		}
+		return email;
+	}
+
 	public boolean isActivated() {
 		return activated;
 	}

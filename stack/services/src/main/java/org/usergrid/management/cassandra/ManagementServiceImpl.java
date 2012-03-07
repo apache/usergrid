@@ -1761,8 +1761,8 @@ public class ManagementServiceImpl implements ManagementService {
 				String organization_owners = null;
 				for (UserInfo user : users) {
 					organization_owners = (organization_owners == null) ? user
-							.getDisplayEmailAddress() : organization_owners
-							+ ", " + user.getDisplayEmailAddress();
+							.getHTMLDisplayEmailAddress() : organization_owners
+							+ ", " + user.getHTMLDisplayEmailAddress();
 				}
 				activation_url += "&confirm=true";
 				sendHtmlMail(
