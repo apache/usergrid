@@ -9,27 +9,56 @@
 	</h3>
 	<div class="console-section-contents">
         <div class="user-roles-title">Following </div>
-		<div class="user-panel-section">
-			{{if following}}
-			{{each following}}
-			<div>${$index + 1}: <em>${name}.</em></div>
-			{{/each}}
+        <div class="user-panel-section">
+            {{if following}}
+                {{if following.length > 0}}
+                {{each following}}
+                <div class="query-result-row entity_list_item" id="users-roles-response-table">
+                    <table class="query-result-table">
+                        <tr class="query-result-header">
+                            <td class="query-result-td-checkbox"><!--<input type="checkbox" name="${name}" id="userRoleItem" value="${name}" />--></td>
+                            <td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
+                                {{if path}}<a href="" onclick="usergrid.console.pageOpenUserProfile('${username}'); return false;">{{/if}}
+                                    <span class="user-role-row-name">${name}</span>
+                                    <span class="user-role-row-title"><a href="mailto:${email}">${email}</a></span>
+                                {{if path}}</a>{{/if}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                {{/each}}
+                {{/if}}
 			{{else}}
 			<div class="user-panel-section-message">Not following anyone</div>
 			{{/if}}
-		</div>
+            <br/>
+        </div>
         <br/>
-
         <div class="user-roles-title">Followers </div>
-		<div class="user-panel-section">
-			{{if followers}}
-			{{each followers}}
-			<div>${$index + 1}: <em>${name}.</em></div>
-			{{/each}}
+        <div class="user-panel-section">
+            {{if followers}}
+                {{if followers.length > 0}}
+                {{each followers}}
+                <div class="query-result-row entity_list_item" id="users-roles-response-table">
+                    <table class="query-result-table">
+                        <tr class="query-result-header">
+                            <td class="query-result-td-checkbox"><!--<input type="checkbox" name="${name}" id="userRoleItem" value="${name}" />--></td>
+                            <td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
+                                {{if path}}<a href="" onclick="usergrid.console.pageOpenUserProfile('${username}'); return false;">{{/if}}
+                                    <span class="user-role-row-name">${name}</span>
+                                    <span class="user-role-row-title"><a href="mailto:${email}">${email}</a></span>
+                                {{if path}}</a>{{/if}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                {{/each}}
+                {{/if}}
 			{{else}}
 			<div class="user-panel-section-message">No followers</div>
 			{{/if}}
-		</div>
+            <br/>
+        </div>
 	</div>
 </div>
 
