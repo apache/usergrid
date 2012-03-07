@@ -1687,15 +1687,13 @@ public class ManagementServiceImpl implements ManagementService {
 				User.ENTITY_TYPE, userId), "disabled"));
 	}
 
-	private String emailMsg(String propertyName) {
-		return properties.getProperty(propertyName) + "\n"
-				+ properties.getProperty(EMAIL_FOOTER);
+	private String emailMsg(Map<String, String> values, String propertyName) {
+		return new StrSubstitutor(values).replace(properties
+				.getProperty(propertyName));
 	}
 
-	private String emailMsg(Map<String, String> values, String propertyName) {
-		StrSubstitutor substitutor = new StrSubstitutor(values);
-		return substitutor.replace(properties.getProperty(propertyName)) + "\n"
-				+ substitutor.replace(properties.getProperty(EMAIL_FOOTER));
+	private String appendEmailFooter(String msg) {
+		return msg + "\n" + properties.getProperty(EMAIL_FOOTER);
 	}
 
 	@Override
@@ -1712,8 +1710,8 @@ public class ManagementServiceImpl implements ManagementService {
 				user.getDisplayEmailAddress(),
 				getPropertyValue(EMAIL_MAILER),
 				"Password Reset",
-				emailMsg(hashMap("reset_url", reset_url),
-						EMAIL_ADMIN_PASSWORD_RESET));
+				appendEmailFooter(emailMsg(hashMap("reset_url", reset_url),
+						EMAIL_ADMIN_PASSWORD_RESET)));
 
 	}
 
@@ -1773,13 +1771,13 @@ public class ManagementServiceImpl implements ManagementService {
 						getPropertyValue(EMAIL_MAILER),
 						"Request For Organization Account Activation "
 								+ organization.getName(),
-						emailMsg(
+						appendEmailFooter(emailMsg(
 								hashMap("organization_name",
 										organization.getName()).map(
 										"activation_url", activation_url).map(
 										"organization_owners",
 										organization_owners),
-								EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION));
+								EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION)));
 			} else {
 				sendOrganizationEmail(
 						organization,
@@ -1816,7 +1814,8 @@ public class ManagementServiceImpl implements ManagementService {
 				.getUuid());
 		for (UserInfo user : users) {
 			sendHtmlMail(properties, user.getDisplayEmailAddress(),
-					getPropertyValue(EMAIL_MAILER), subject, emailMsg(html));
+					getPropertyValue(EMAIL_MAILER), subject,
+					appendEmailFooter(html));
 		}
 
 	}
@@ -1835,10 +1834,10 @@ public class ManagementServiceImpl implements ManagementService {
 					getPropertyValue("usergrid.sysadmin.email"),
 					getPropertyValue(EMAIL_MAILER),
 					"Request For User Account Activation " + user.getEmail(),
-					emailMsg(
+					appendEmailFooter(emailMsg(
 							hashMap("user_email", user.getEmail()).map(
 									"activation_url", activation_url),
-							EMAIL_SYSADMIN_ADMIN_ACTIVATION));
+							EMAIL_SYSADMIN_ADMIN_ACTIVATION)));
 		} else {
 			sendAdminUserEmail(
 					user,
@@ -1873,7 +1872,8 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAdminUserEmail(UserInfo user, String subject, String html)
 			throws Exception {
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				getPropertyValue(EMAIL_MAILER), subject, emailMsg(html));
+				getPropertyValue(EMAIL_MAILER), subject,
+				appendEmailFooter(html));
 
 	}
 
@@ -2001,8 +2001,8 @@ public class ManagementServiceImpl implements ManagementService {
 				user.getDisplayEmailAddress(),
 				getPropertyValue(EMAIL_MAILER),
 				"Password Reset",
-				emailMsg(hashMap("reset_url", reset_url),
-						EMAIL_USER_PASSWORD_RESET));
+				appendEmailFooter(emailMsg(hashMap("reset_url", reset_url),
+						EMAIL_USER_PASSWORD_RESET)));
 
 	}
 
@@ -2100,7 +2100,8 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAppUserEmail(User user, String subject, String html)
 			throws Exception {
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				getPropertyValue(EMAIL_MAILER), subject, emailMsg(html));
+				getPropertyValue(EMAIL_MAILER), subject,
+				appendEmailFooter(html));
 
 	}
 
@@ -2135,9 +2136,13 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 		String pin = getCredentialsSecret((CredentialsInfo) em
 				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS, "pin"));
-		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				getPropertyValue(EMAIL_MAILER), "Your app pin",
-				emailMsg(hashMap("pin", pin), EMAIL_USER_PIN_REQUEST));
+		sendHtmlMail(
+				properties,
+				user.getDisplayEmailAddress(),
+				getPropertyValue(EMAIL_MAILER),
+				"Your app pin",
+				appendEmailFooter(emailMsg(hashMap("pin", pin),
+						EMAIL_USER_PIN_REQUEST)));
 
 	}
 
