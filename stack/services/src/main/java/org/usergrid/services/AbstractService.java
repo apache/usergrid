@@ -294,6 +294,10 @@ public abstract class AbstractService implements Service {
 	@Override
 	public Entity importEntity(ServiceRequest request, Entity entity)
 			throws Exception {
+		if (entity == null) {
+			return null;
+		}
+
 		if (!isRootService()) {
 			return sm.importEntity(request, entity);
 		}

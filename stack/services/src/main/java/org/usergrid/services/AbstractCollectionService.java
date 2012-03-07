@@ -364,7 +364,7 @@ public class AbstractCollectionService extends AbstractService {
 
 		Entity entity = em.get(id);
 		if (entity == null) {
-			return null;
+			throw new ServiceResourceNotFoundException(context);
 		}
 		entity = importEntity(context, entity);
 
@@ -402,6 +402,9 @@ public class AbstractCollectionService extends AbstractService {
 		}
 
 		Entity item = em.get(id);
+		if (item == null) {
+			throw new ServiceResourceNotFoundException(context);
+		}
 		item = importEntity(context, item);
 
 		em.removeFromCollection(context.getOwner(),
@@ -425,6 +428,9 @@ public class AbstractCollectionService extends AbstractService {
 			throw new ServiceResourceNotFoundException(context);
 		}
 		Entity entity = em.get(ref);
+		if (entity == null) {
+			throw new ServiceResourceNotFoundException(context);
+		}
 		entity = importEntity(context, entity);
 
 		checkPermissionsForEntity(context, entity);
