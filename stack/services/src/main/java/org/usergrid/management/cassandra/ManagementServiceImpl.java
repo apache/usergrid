@@ -39,6 +39,7 @@ import static org.usergrid.security.oauth.ClientCredentialsInfo.getTypeFromClien
 import static org.usergrid.security.oauth.ClientCredentialsInfo.getUUIDFromClientId;
 import static org.usergrid.services.ServiceParameter.parameters;
 import static org.usergrid.services.ServicePayload.payload;
+import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.ListUtils.anyNull;
 import static org.usergrid.utils.MailUtils.sendHtmlMail;
@@ -138,6 +139,7 @@ public class ManagementServiceImpl implements ManagementService {
 	public static String EMAIL_SYSADMIN_ADMIN_ACTIVATION = "usergrid.management.email.sysadmin-admin-activation";
 	public static String EMAIL_ADMIN_ACTIVATION = "usergrid.management.email.admin-activation";
 	public static String EMAIL_ADMIN_ACTIVATED = "usergrid.management.email.admin-activated";
+	public static String EMAIL_ADMIN_INVITED = "usergrid.management.email.admin-invited";
 
 	public static String EMAIL_ADMIN_USER_ACTIVATION = "usergrid.management.email.admin-user-activation";
 	public static String EMAIL_USER_ACTIVATION = "usergrid.management.email.user-activation";
@@ -640,9 +642,18 @@ public class ManagementServiceImpl implements ManagementService {
 			String password, boolean activated, boolean disabled,
 			boolean sendEmail) throws Exception {
 
-		if ((username == null) || (name == null) || (email == null)
-				|| (password == null)) {
+		if (email == null) {
 			return null;
+		}
+		if (username == null) {
+			username = email;
+		}
+		if (name == null) {
+			name = email;
+		}
+
+		if (isBlank(password)) {
+			password = encodeBase64URLSafeString(bytes(UUID.randomUUID()));
 		}
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
@@ -1739,6 +1750,14 @@ public class ManagementServiceImpl implements ManagementService {
 					organization.getUuid().toString())
 					+ "?token=" + token;
 			if (newOrganizationsNeedSysAdminApproval()) {
+				List<UserInfo> users = getAdminUsersForOrganization(organization
+						.getUuid());
+				String organization_owners = null;
+				for (UserInfo user : users) {
+					organization_owners = (organization_owners == null) ? user
+							.getDisplayEmailAddress() : organization_owners
+							+ ", " + user.getDisplayEmailAddress();
+				}
 				activation_url += "&confirm=true";
 				sendHtmlMail(
 						properties,
@@ -1749,7 +1768,9 @@ public class ManagementServiceImpl implements ManagementService {
 						emailMsg(
 								hashMap("organization_name",
 										organization.getName()).map(
-										"activation_url", activation_url),
+										"activation_url", activation_url).map(
+										"organization_owners",
+										organization_owners),
 								EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION));
 			} else {
 				sendOrganizationEmail(
@@ -1826,6 +1847,17 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAdminUserActivatedEmail(UserInfo user) throws Exception {
 		sendAdminUserEmail(user, "User Account Activated",
 				getPropertyValue(EMAIL_ADMIN_ACTIVATED));
+
+	}
+
+	@Override
+	public void sendAdminUserInvitedEmail(UserInfo user,
+			OrganizationInfo organization) throws Exception {
+		sendAdminUserEmail(
+				user,
+				"User Invited To Organization",
+				emailMsg(hashMap("organization_name", organization.getName()),
+						EMAIL_ADMIN_INVITED));
 
 	}
 

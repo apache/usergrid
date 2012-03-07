@@ -323,4 +323,7 @@ public interface ManagementService {
 
 	public abstract long getMaxTokenAge();
 
+	public void sendAdminUserInvitedEmail(UserInfo user,
+			OrganizationInfo organization) throws Exception;
+
 }
