@@ -11,7 +11,9 @@
                             </td>
                             <td class="actor" width="300">
                                <img src="${entity.actor.gravatar}"/>
-                               ${entity.actor.displayName} (${entity.actor.email})
+			       <a href="" onclick="usergrid.console.pageOpenUserActivities(${entity.actor.uuid}); return false;">
+				 ${entity.actor.displayName} (${entity.actor.email})
+			       </a>
                             </td>
                             <td class="verb" width="75">
                                - ${entity.verb}

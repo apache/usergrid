@@ -1526,6 +1526,14 @@ function usergrid_console_app() {
     }
     window.usergrid.console.pageOpenUserProfile = pageOpenUserProfile;
 
+    function pageOpenUserActivities(userId) {
+        Pages.SelectPanel('user');
+        requestUser(userId);
+        selectTabButton("#button-user-activities");
+        showPanelContent("#user-panel", "#user-panel-activities");        
+    }
+    window.usergrid.console.pageOpenUserActivities = pageOpenUserActivities;
+
     function pageSelectUserPermissions(userId) {
         Pages.SelectPanel('user');
         requestUser(userId);
