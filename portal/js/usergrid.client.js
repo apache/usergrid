@@ -1162,7 +1162,15 @@ usergrid.Client = function(options) {
         apiRequest("POST", "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, "{ }", success, failure);
     }
     this.addUserToGroup = addUserToGroup;
-   
+
+    function removeUserFromGroup(applicationId, groupId, username, success, failure) {
+        if (!self.loggedInUser) {
+            failure();
+        }
+        apiRequest("DELETE",  "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, null, success, failure);
+    }
+    this.removeUserFromGroup = removeUserFromGroup;
+
     function entitySearch(applicationId, searchType, searchString, success, failure) {
        return queryEntities(searchType, arguments);
     }

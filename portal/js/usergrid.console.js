@@ -1135,6 +1135,43 @@ function usergrid_console_app() {
     }
     window.usergrid.console.deleteRoleFromUser = deleteRoleFromUser;
 
+
+    function removeUserFromGroup(username) {
+        var items = $("#user-panel-memberships input[id^=userGroupItem]:checked");
+        if(!items.length){
+            alert("Please, first select the items you want to delete");
+            return;
+        }
+
+        confirmDelete(function(){
+            items.each(function() {
+                var groupId = $(this).attr("value");
+                client.removeUserFromGroup(current_application_id, groupId, username, function() {pageSelectUserGroups (username);}, function() {
+                    alert("Unable to remove user from role: " + client.getLastErrorMessage('An internal error occured'));
+                });
+            });
+        });
+    }
+    window.usergrid.console.removeUserFromGroup = removeUserFromGroup;
+
+    function removeGroupFromUser(groupId) {
+        var items = $("#group-panel-memberships input[id^=userGroupItem]:checked");
+        if(!items.length){
+            alert("Please, first select the items you want to delete");
+            return;
+        }
+
+        confirmDelete(function(){
+            items.each(function() {
+                var username = $(this).attr("value");
+                client.removeUserFromGroup(current_application_id, groupId, username, function() {pageSelectGroupMemberships(groupId);}, function() {
+                    alert("Unable to remove user from role: " + client.getLastErrorMessage('An internal error occured'));
+                });
+            });
+        });
+    }
+    window.usergrid.console.removeGroupFromUser = removeGroupFromUser;
+
     /*******************************************************************
      *
      * Generic page select
@@ -1475,6 +1512,14 @@ function usergrid_console_app() {
     }
     window.usergrid.console.pageSelectUserPermissions = pageSelectUserPermissions;
 
+    function pageSelectUserGroups(userId) {
+        Pages.SelectPanel('user');
+        requestUser(userId);
+        selectTabButton("#button-user-memberships");
+        showPanelContent("#user-panel", "#user-panel-memberships");
+    }
+    window.usergrid.console.pageSelectUserGroups = pageSelectUserGroups;
+
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.profile.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.memberships.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.activities.html");
@@ -1790,6 +1835,14 @@ function usergrid_console_app() {
         showPanelContent("#group-panel", "#group-panel-details");
     }
     window.usergrid.console.pageOpenGroupProfile = pageOpenGroupProfile;
+
+    function pageSelectGroupMemberships(groupId) {
+        Pages.SelectPanel('group');
+        requestGroup(groupId);
+        selectTabButton("#button-group-memberships");
+        showPanelContent("#group-panel", "#group-panel-memberships");
+    }
+    window.usergrid.console.pageSelectGroupMemberships = pageSelectGroupMemberships;
 
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.details.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.memberships.html");

@@ -5,6 +5,7 @@
         {{if path}}</a>{{/if}}
         <div class="bar">
             <a class="" data-toggle="modal" href="#dialog-form-add-user-to-group">Add a User to this Group</a>
+            <a data-toggle="modal" href="#" onclick="usergrid.console.removeGroupFromUser('${uuid}'); return false;"> Remove </a>
             <input type="hidden" value="${uuid}" id="search-user-groupid" name="search-user-groupid">
         </div>
     </h3>
@@ -12,9 +13,16 @@
         <div class="group-panel-section">
             {{if memberships}}
             {{each memberships}}
-            <div class="group-user-row" id="group-user-row-${$index}">
-                <span class="group-user-row-title">${$value.name}</span>
-                <span class="group-user-row-name">(${$value.username})</span>
+            <div class="query-result-row entity_list_item">
+                <table class="query-result-table">
+                    <tr class="query-result-header">
+                        <td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="userGroupItem" value="${$value.uuid}" /></td>
+                        <td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
+                            <span class="group-user-row-title">${$value.name}</span>
+                            <span class="group-user-row-name">(${$value.username})</span>
+                        </td>
+                    </tr>
+                </table>
             </div>
             {{/each}}
             {{else}}
