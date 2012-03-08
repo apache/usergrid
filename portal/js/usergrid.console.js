@@ -15,8 +15,8 @@ function usergrid_console_app() {
     var usernameRegex = /^([0-9a-zA-Z\.\-])+$/;
     var usernameAllowedCharsMessage = 'Username feild only allows : A-Z, a-z, 0-9, dot, and dash';
     var organizationnameAllowedCharsMessage = 'Organization name feild only allows : A-Z, a-z, 0-9, dot, and dash';
-    var nameRegex = /^([ 0-9a-zA-Z\.\-])+$/;
-    var nameAllowedCharsMessage = 'Name feild only allows : space, A-Z, a-z, 0-9, dot, and dash';
+    var nameRegex = /^([ 0-9a-zA-Z\.\-!?/])+$/
+    var nameAllowedCharsMessage = 'Name feild only allows : space, A-Z, a-z, 0-9, dot, and dash, /, !, and ?';
     var titleRegex = /^([ 0-9a-zA-Z\.\-!?/])+$/;
     var titleAllowedCharsMessage = 'Title feild only allows : space, A-Z, a-z, 0-9, dot, dash, /, !, and ?';
     var alphaNumRegex = /^([0-9a-zA-Z])+$/;
@@ -972,7 +972,10 @@ function usergrid_console_app() {
         var new_user_email = $("#new-user-email");
         var new_user_password = $("#new-user-password");
 
-        var bValid = checkRegexp2(new_user_username,usernameRegex, usernameAllowedCharsMessage)
+        var bValid =
+            checkLength2(new_user_fullname, 1, 80)
+            && checkRegexp2(new_user_fullname, nameRegex, nameAllowedCharsMessage)
+            && checkRegexp2(new_user_username, usernameRegex, usernameAllowedCharsMessage)
             && checkLength2(new_user_email, 6, 80)
             && checkRegexp2(new_user_email,emailRegex, emailAllowedCharsMessage)
             && checkLength2(new_user_password, 5, 16)
