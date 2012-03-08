@@ -485,14 +485,11 @@ public class QueryProcessor {
 			final int prime = 31;
 			int result = 1;
 			result = prime * result
-					+ ((cursor == null) ? 0 : cursor.hashCode());
-			result = prime * result
 					+ ((finish == null) ? 0 : finish.hashCode());
 			result = prime * result
 					+ ((propertyName == null) ? 0 : propertyName.hashCode());
 			result = prime * result + (reversed ? 1231 : 1237);
 			result = prime * result + ((start == null) ? 0 : start.hashCode());
-			result = prime * result + ((value == null) ? 0 : value.hashCode());
 			return result;
 		}
 
@@ -508,13 +505,6 @@ public class QueryProcessor {
 				return false;
 			}
 			QuerySlice other = (QuerySlice) obj;
-			if (cursor == null) {
-				if (other.cursor != null) {
-					return false;
-				}
-			} else if (!cursor.equals(other.cursor)) {
-				return false;
-			}
 			if (finish == null) {
 				if (other.finish != null) {
 					return false;
@@ -537,13 +527,6 @@ public class QueryProcessor {
 					return false;
 				}
 			} else if (!start.equals(other.start)) {
-				return false;
-			}
-			if (value == null) {
-				if (other.value != null) {
-					return false;
-				}
-			} else if (!value.equals(other.value)) {
 				return false;
 			}
 			return true;
