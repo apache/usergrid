@@ -1986,9 +1986,9 @@ function usergrid_console_app() {
         showPanel("#role-panel");
         $('#role-panel-list').hide();
         //show the search tab
-        selectTabButton('#button-role-search');
+        selectTabButton('#button-role-settings');
         //populate the panel content
-        $('#role-panel-search').show();
+        $('#role-panel-settings').show();
     }
     window.usergrid.console.pageOpenRole = pageOpenRole;
 
