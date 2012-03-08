@@ -14,16 +14,18 @@
                 {{if following.length > 0}}
                 {{each following}}
                 <div class="query-result-row entity_list_item" id="users-roles-response-table">
-                    <table class="query-result-table">
-                        <tr class="query-result-header">
-                            <td class="query-result-td-checkbox"><!--<input type="checkbox" name="${name}" id="userRoleItem" value="${name}" />--></td>
-                            <td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
-                                {{if path}}<a href="" onclick="usergrid.console.pageOpenUserProfile('${username}'); return false;">{{/if}}
-                                    <span class="user-role-row-name">${name}</span>
-                                    <span class="user-role-row-title"><a href="mailto:${email}">${email}</a></span>
-                                {{if path}}</a>{{/if}}
-                            </td>
-                        </tr>
+                    <table class="table">
+                        <tbody>
+                            <tr class="zebraRows">
+                                <td class="query-result-td-checkbox"><!--<input type="checkbox" name="${name}" id="userRoleItem" value="${name}" />--></td>
+                                <td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
+                                    {{if path}}<a href="" onclick="usergrid.console.pageOpenUserProfile('${username}'); return false;">{{/if}}
+                                        <span class="user-role-row-name">${name}</span>
+                                        <span class="user-role-row-title"><a href="mailto:${email}">${email}</a></span>
+                                    {{if path}}</a>{{/if}}
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
                 {{/each}}
@@ -40,16 +42,18 @@
                 {{if followers.length > 0}}
                 {{each followers}}
                 <div class="query-result-row entity_list_item" id="users-roles-response-table">
-                    <table class="query-result-table">
-                        <tr class="query-result-header">
-                            <td class="query-result-td-checkbox"><!--<input type="checkbox" name="${name}" id="userRoleItem" value="${name}" />--></td>
-                            <td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
-                                {{if path}}<a href="" onclick="usergrid.console.pageOpenUserProfile('${username}'); return false;">{{/if}}
-                                    <span class="user-role-row-name">${name}</span>
-                                    <span class="user-role-row-title"><a href="mailto:${email}">${email}</a></span>
-                                {{if path}}</a>{{/if}}
-                            </td>
-                        </tr>
+                    <table class="table">
+                        <tbody>
+                            <tr class="zebraRows">
+                                <td class="query-result-td-checkbox"><!--<input type="checkbox" name="${name}" id="userRoleItem" value="${name}" />--></td>
+                                <td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
+                                    {{if path}}<a href="" onclick="usergrid.console.pageOpenUserProfile('${username}'); return false;">{{/if}}
+                                        <span class="user-role-row-name">${name}</span>
+                                        <span class="user-role-row-title"><a href="mailto:${email}">${email}</a></span>
+                                    {{if path}}</a>{{/if}}
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
                 {{/each}}
@@ -61,4 +65,3 @@
         </div>
 	</div>
 </div>
-
