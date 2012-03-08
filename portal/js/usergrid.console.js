@@ -1504,6 +1504,12 @@ function usergrid_console_app() {
         form.modal("show");
     }
 
+    function alertDialog(message){
+        var form = $("#alertDialog");
+        $('#alert-message').html(message);
+        form.modal("show");
+    }
+
     $("#delete-users-link").click(deleteUsers);
     function deleteUsers(e) {
         e.preventDefault();
@@ -2259,6 +2265,8 @@ function usergrid_console_app() {
         console.log("add " + roleName + " - " + permission);
         if (ops) {
             client.addApplicationRolePermission(current_application_id, roleName, permission, requestRole, requestRole);
+        } else {
+           alertDialog('Please select a verb');
         }
     }
     window.usergrid.console.addRolePermission = addRolePermission;
@@ -2307,6 +2315,8 @@ function usergrid_console_app() {
                 function() {
                     alert("Unable to add permission: " + client.getLastErrorMessage('An internal error occured'));
                 });
+        } else {
+           alertDialog('Please select a verb');
         }
     }
     window.usergrid.console.addUserPermission = addUserPermission;
