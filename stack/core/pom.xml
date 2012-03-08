@@ -297,6 +297,10 @@
 			<artifactId>guava</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.beoui</groupId>
+			<artifactId>geocell</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.codehaus.jackson</groupId>
 			<artifactId>jackson-core-asl</artifactId>
 		</dependency>

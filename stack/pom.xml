@@ -38,9 +38,9 @@
 		<module>rest</module>
 		<module>standalone</module>
 		<module>launcher</module>
-                <module>count-common</module>
-                <module>count-batcher</module>
-                <module>count-inserter</module>
+		<module>count-common</module>
+		<module>count-batcher</module>
+		<module>count-inserter</module>
 	</modules>
 
 
@@ -186,6 +186,11 @@
 				<groupId>de.undercouch</groupId>
 				<artifactId>bson4jackson</artifactId>
 				<version>1.1.2</version>
+			</dependency>
+			<dependency>
+				<groupId>com.beoui</groupId>
+				<artifactId>geocell</artifactId>
+				<version>0.0.8</version>
 			</dependency>
 			<dependency>
 				<groupId>javaee</groupId>
@@ -546,6 +551,11 @@
 		<repository>
 			<id>JBoss repository</id>
 			<url>http://repository.jboss.com/maven2/</url>
+		</repository>
+		<repository>
+			<id>javageomodel-repo</id>
+			<name>GeocellJava Repository</name>
+			<url>http://javageomodel.googlecode.com/svn/repository</url>
 		</repository>
 	</repositories>
 

@@ -23,9 +23,9 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.junit.Test;
 import org.usergrid.persistence.Query.FilterPredicate;
 import org.usergrid.persistence.Query.SortDirection;
 import org.usergrid.persistence.cassandra.QueryProcessor;
@@ -33,8 +33,10 @@ import org.usergrid.utils.JsonUtils;
 
 public class QueryTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(QueryTest.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(QueryTest.class);
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testQuery() throws Exception {
 		logger.info("testQuery");
@@ -48,6 +50,7 @@ public class QueryTest {
 		q.addFilter("e in 5,6");
 		q.addFilter("f=6.0");
 		q.addFilter("g=.05");
+		q.addFilter("loc within .05 of 5,6");
 
 		Iterator<FilterPredicate> i = q.getFilterPredicates().iterator();
 
@@ -72,6 +75,10 @@ public class QueryTest {
 
 		f = i.next();
 		testPredicate(f, "g", Query.FilterOperator.EQUAL, new Float(.05));
+
+		f = i.next();
+		testPredicate(f, "loc.coordinates", Query.FilterOperator.WITHIN,
+				Arrays.asList(new Float(.05), new Long(5), new Long(6)));
 
 		q = Query.fromQL("select * where a = 5");
 		i = q.getFilterPredicates().iterator();
@@ -109,6 +116,14 @@ public class QueryTest {
 		assertEquals("b", q.getSortPredicates().get(1).getPropertyName());
 		assertEquals(SortDirection.DESCENDING, q.getSortPredicates().get(1)
 				.getDirection());
+
+		q = Query.fromQL("select * where loc within 5 of 6,7");
+		i = q.getFilterPredicates().iterator();
+		f = i.next();
+		testPredicate(f, "loc.coordinates", Query.FilterOperator.WITHIN,
+				Arrays.asList(new Long(5), new Long(6), new Long(7)));
+		logger.info(q.toString());
+
 	}
 
 	public void testPredicate(FilterPredicate f, String name,
@@ -176,6 +191,11 @@ public class QueryTest {
 		q.addFilter("name <= 'david'");
 		qp = new QueryProcessor(q);
 		testStringRange("bob", false, "david", true, qp, 1);
+
+		q = new Query();
+		q.addFilter("loc within 5 of 6,7");
+		qp = new QueryProcessor(q);
+
 	}
 
 	public void testIntRange(int start, boolean startInclusive, int finish,

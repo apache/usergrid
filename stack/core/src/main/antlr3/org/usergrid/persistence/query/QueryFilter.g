@@ -45,13 +45,13 @@ import org.slf4j.LoggerFactory;
 ID  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'.')*
     ;
 
-INT :	'0'..'9'+
+INT :	('-')? '0'..'9'+
     ;
 
 FLOAT
-    :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
+    :  ('-')? ( ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
     |   '.' ('0'..'9')+ EXPONENT?
-    |   ('0'..'9')+ EXPONENT
+    |   ('0'..'9')+ EXPONENT)
     ;
     
 STRING
@@ -102,23 +102,27 @@ property
 	:	 (ID);
 	
 operator 
-	:	('<' | '<=' | '=' | '>' | '>=' | 'in' | 'eq' | 'lt' | 'gt' | 'lte' | 'gte' | 'contains');
+	:	('<' | '<=' | '=' | '>' | '>=' | 'in' | 'eq' | 'lt' | 'gt' | 'lte' | 'gte' | 'contains' | 'within');
 
 value 	:	(BOOLEAN | STRING | INT | FLOAT | UUID);
 
 second_value 	:	(BOOLEAN | STRING | INT | FLOAT | UUID);
 
+third_value 	:	(BOOLEAN | STRING | INT | FLOAT | UUID);
+
 filter returns [FilterPredicate filter] 
-    :   property operator value (',' second_value)? {
+    :   property operator value ((',' | 'of') second_value ( ',' third_value)?)?  {
     
 String property = $property.text;
 String operator = $operator.text;
 String value = $value.text;
 String second_value = $second_value.text;
-filter = new FilterPredicate(property, operator, value, second_value);
+String third_value = $third_value.text;
+filter = new FilterPredicate(property, operator, value, second_value, third_value);
 //System.out.println("Parsed query filter: " + property + " " + operator + " " + value + " " + second_value);
     
 } EOF ;
+
 
 select_subject
 	:	ID {
@@ -140,8 +144,9 @@ query.addSelect($select_assign_source.text, $select_assign_target.text);
 
 };
 	 
+
 where
-	:	(property operator value (',' second_value)? {
+	:	(property operator value ((',' | 'of') second_value ( ',' third_value)?)? {
     
 String property = $property.text;
 String operator = $operator.text;
@@ -149,7 +154,9 @@ String value = $value.text;
 int value_type = $value.start != null ? $value.start.getType() : 0;
 String second_value = $second_value.text;
 int second_value_type = $second_value.start != null ? $second_value.start.getType() : 0;
-FilterPredicate filter = new FilterPredicate(property, operator, value, value_type, second_value, second_value_type);
+String third_value = $third_value.text;
+int third_value_type = $third_value.start != null ? $third_value.start.getType() : 0;
+FilterPredicate filter = new FilterPredicate(property, operator, value, value_type, second_value, second_value_type, third_value, third_value_type);
 query.addFilter(filter);
 //System.out.println("Parsed query filter: " + property + " " + operator + " " + value + " " + second_value);
     
