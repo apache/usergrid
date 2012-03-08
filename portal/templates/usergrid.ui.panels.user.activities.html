@@ -7,7 +7,7 @@
 			{{if path}}</a>{{/if}}
 		</div>
 	</h3>
-	<div class="console-section-contents">
+	<div class="console-section-contents listContent">
 			{{if activities}}
 			{{each activities}}
             <div class="query-result-row entity_list_item">
@@ -16,7 +16,7 @@
                         <!--<td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="${id}" value="${entity.uuid}" /></td>-->
                         <td class="query-result-td-header-name">
                             <div class="query-result-header-name query-result-picture-vert-offset">
-                                <span id="activities-date-field">${$value.created}</span>: <em>${$value.actor.displayName} (${$value.actor.email}) - ${$value.verb}: ${$value.content}</em>
+                                <span id="activities-date-field">${$value.created}</span>: ${$value.actor.displayName} (${$value.actor.email}) - ${$value.verb}: ${$value.content}
                             </div>
                         </td>
                     </tr>
