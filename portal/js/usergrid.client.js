@@ -734,10 +734,8 @@ usergrid.Client = function(options) {
     }
     this.addApplicationUserPermission = addApplicationUserPermission;
 
-   
-
     function deleteApplicationUserPermission(applicationId, userName, permission, success, failure) {
-        apiRequest("DELETE", "/" + applicationId + "/users/" + userName, {
+        apiRequest("DELETE", "/" + applicationId + "/users/" + userName + "/permissions", {
             permission : permission
         }, null, success, failure);
     }

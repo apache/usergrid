@@ -9,12 +9,21 @@ function usergrid_console_app() {
     var self = this;
 
     var emailRegex = /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i;
+    var emailAllowedCharsMessage = 'eg. example@apigee.com';
     var passwordRegex = /^([0-9a-zA-Z@#$%^&?!<>;:.|,'"~*-_=+\[\]\(\)\{\}\\/])+$/;
-    var passwordAllowedCharsMessage = 'Password field only allows: `0-9, a-z, A-Z, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . < > / ? !';
+    var passwordAllowedCharsMessage = 'Password field only allows: 0-9, a-z, A-Z, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . < > / ? !';
     var usernameRegex = /^([0-9a-zA-Z\.\-])+$/;
-    var nameRegex = /^([ 0-9a-zA-Z\.\-])+$/;
+    var usernameAllowedCharsMessage = 'Username feild only allows : A-Z, a-z, 0-9, dot, and dash';
+    var organizationnameAllowedCharsMessage = 'Organization name feild only allows : A-Z, a-z, 0-9, dot, and dash';
+    var nameRegex = /^([ 0-9a-zA-Z\.\-!?/])+$/
+    var nameAllowedCharsMessage = 'Name feild only allows : space, A-Z, a-z, 0-9, dot, and dash, /, !, and ?';
+    var titleRegex = /^([ 0-9a-zA-Z\.\-!?/])+$/;
+    var titleAllowedCharsMessage = 'Title feild only allows : space, A-Z, a-z, 0-9, dot, dash, /, !, and ?';
     var alphaNumRegex = /^([0-9a-zA-Z])+$/;
+    var alphaNumAllowedCharsMessage = 'Collection name only allows : a-z 0-9';
     var pathRegex = /^([0-9a-z\.\-\/])+$/;
+    var pathAllowedCharsMessage = 'Path only allows : /, a-z, 0-9, dot, and dash';
+    var roleAllowedCharsMessage = 'Path only allows : /, a-z, 0-9, dot, and dash';
 
     var applications = {};
     var applications_by_id = {};
@@ -913,7 +922,7 @@ function usergrid_console_app() {
         var new_application_name = $("#new-application-name");
 
         var bValid = checkLength2(new_application_name, 4, 80)
-            && checkRegexp2(new_application_name, usernameRegex, "only allows : a-z, 0-9, dot, and dash");
+            && checkRegexp2(new_application_name, usernameRegex, usernameAllowedCharsMessage);
 
         if (bValid) {
             client.createApplication(form.serializeObject(), requestApplications, function() {
@@ -928,7 +937,7 @@ function usergrid_console_app() {
 
         var new_admin_email = $("#new-admin-email");
         var bValid = checkLength2(new_admin_email, 6, 80)
-            && checkRegexp2(new_admin_email,emailRegex, "eg. example@apigee.com");
+            && checkRegexp2(new_admin_email,emailRegex, emailAllowedCharsMessage);
         if (bValid) {
             var data = form.serializeObject();
             client.createAdmin(data, requestAdmins, function () {
@@ -944,7 +953,7 @@ function usergrid_console_app() {
         var new_organization_name = $("#new-organization-name");
 
         var bValid = checkLength2(new_organization_name, 4, 80)
-            && checkRegexp2(new_organization_name, usernameRegex, "Organization name only allow : a-z, 0-9, dot, and dash.");
+            && checkRegexp2(new_organization_name, usernameRegex, organizationnameAllowedCharsMessage);
 
         if (bValid) {
             var data = form.serializeObject();
@@ -963,9 +972,12 @@ function usergrid_console_app() {
         var new_user_email = $("#new-user-email");
         var new_user_password = $("#new-user-password");
 
-        var bValid = checkRegexp2(new_user_username,usernameRegex,"Username only allows : a-z, 0-9, dot, and dash")
+        var bValid =
+            checkLength2(new_user_fullname, 1, 80)
+            && checkRegexp2(new_user_fullname, nameRegex, nameAllowedCharsMessage)
+            && checkRegexp2(new_user_username, usernameRegex, usernameAllowedCharsMessage)
             && checkLength2(new_user_email, 6, 80)
-            && checkRegexp2(new_user_email,emailRegex,"eg. ui@jquery.com")
+            && checkRegexp2(new_user_email,emailRegex, emailAllowedCharsMessage)
             && checkLength2(new_user_password, 5, 16)
             && checkRegexp2(new_user_password,passwordRegex, passwordAllowedCharsMessage);
 
@@ -986,9 +998,9 @@ function usergrid_console_app() {
         var new_role_title = $("#new-role-title");
 
         var bValid = checkLength2(new_role_name, 1, 80)
-            && checkRegexp2(new_role_name, usernameRegex, "Name only allows : a-z, 0-9, dot, and dash")
+            && checkRegexp2(new_role_name, usernameRegex, usernameAllowedCharsMessage)
             && checkLength2(new_role_title, 1, 80)
-            && checkRegexp2(new_role_title, usernameRegex, "Title only allows : a-z, 0-9, dot, and dash");
+            && checkRegexp2(new_role_title,titleRegex, titleAllowedCharsMessage);
 
         if (bValid) {
             var data = form.serializeObject();
@@ -1005,7 +1017,7 @@ function usergrid_console_app() {
         var new_collection_name = $("#new-collection-name");
 
         var bValid = checkLength2(new_collection_name, 4, 80)
-            && checkRegexp2(new_collection_name, alphaNumRegex, "Collection name only allow : a-z 0-9");
+            && checkRegexp2(new_collection_name, alphaNumRegex, alphaNumAllowedCharsMessage);
 
         if (bValid) {
             var data = form.serializeObject();
@@ -1023,9 +1035,9 @@ function usergrid_console_app() {
         var new_group_path = $("#new-group-path");
 
         var bValid = checkLength2(new_group_title, 1, 80)
-            && checkRegexp2(new_group_title, nameRegex, "Display Name only allows : A-Z, a-z, 0-9, space, dot, and dash")
+            && checkRegexp2(new_group_title, nameRegex, nameAllowedCharsMessage)
             && checkLength2(new_group_path, 1, 80)
-            && checkRegexp2(new_group_path, pathRegex, "Path only allows : /, a-z, 0-9, dot, and dash");
+            && checkRegexp2(new_group_path, pathRegex, pathAllowedCharsMessage);
 
         if (bValid) {
             var data = form.serializeObject();
@@ -1040,7 +1052,7 @@ function usergrid_console_app() {
         formClearErrors(form);
         var add_group_groupname = $("#search-group-name-input");
         var bValid = checkLength2(add_group_groupname, 1, 80)
-            && checkRegexp2(add_group_groupname, usernameRegex, "Group name name only allows : a-z, 0-9, dot, and dash.");
+            && checkRegexp2(add_group_groupname, usernameRegex, usernameAllowedCharsMessage);
 
         if (bValid) {
             group = $('#search-group-name-input').val();
@@ -1060,7 +1072,7 @@ function usergrid_console_app() {
         formClearErrors(form);
         var add_user_username = $("#search-user-name-input");
         var bValid = checkLength2(add_user_username, 1, 80)
-            && checkRegexp2(add_user_username, usernameRegex, "Username name only allows : a-z, 0-9, dot, and dash.");
+            && checkRegexp2(add_user_username, usernameRegex, usernameAllowedCharsMessage);
 
         if (bValid) {
             username = $('#search-user-name-input').val();
@@ -1082,7 +1094,7 @@ function usergrid_console_app() {
         var roleIdField = $('#search-roles-user-name-input');
 
         var bValid = checkLength2(roleIdField, 1, 80)
-            && checkRegexp2(roleIdField, usernameRegex, "username only allows : a-z, 0-9, dot, and dash")
+            && checkRegexp2(roleIdField, usernameRegex, usernameAllowedCharsMessage)
 
         var username = $('#search-roles-user-name-input').val();
         if (bValid) {
@@ -1103,7 +1115,7 @@ function usergrid_console_app() {
         var roleIdField = $('#search-role-name-input');
 
         var bValid = checkLength2(roleIdField, 1, 80)
-            && checkRegexp2(roleIdField, pathRegex, "Role only allows : a-z, 0-9, dot, and dash")
+            && checkRegexp2(roleIdField, pathRegex, roleAllowedCharsMessage)
 
         var username = $('#role-form-username').val();
         var roleId = $('#search-role-name-input').val();
@@ -1692,9 +1704,35 @@ function usergrid_console_app() {
             })
 
             client.queryUserPermissions(current_application_id, entity.uuid, function(response) {
-                if (user_data && response.entities && (response.entities.length > 0)) {
-                    user_data.permissions = response.entities;
-                    redrawUserPanel();
+                var permissions = {};
+                if (user_data && response.data && (response.data.length > 0)) {
+                    
+                     if (response.data) {
+                        var perms = response.data;
+                        var count = 0;
+                        for (var i in perms) {
+                            count++;
+                            var perm = perms[i];
+                            var parts = perm.split(':');
+                            var ops_part = "";
+                            var path_part = parts[0];
+                            if (parts.length > 1) {
+                                ops_part = parts[0];
+                                path_part = parts[1];
+                            }
+                            ops_part.replace("*", "get,post,put,delete")
+                            var ops = ops_part.split(',');
+                            permissions[perm] = {ops : {}, path : path_part, perm : perm};
+                            for (var j in ops) {
+                                permissions[perm].ops[ops[j]] = true;
+                            }
+                        }
+                        if (count == 0) {
+                            permissions = null;
+                        }
+                        user_data.permissions = permissions;
+                        redrawUserPanel();
+                     }
                 }
             })
 
@@ -2973,12 +3011,12 @@ function usergrid_console_app() {
     function signup() {
         var organization_name = $("#signup-organization-name").val();
         if (!(usernameRegex.test(organization_name))) {
-            displaySignupError("Invalid organization name, only a-z, 0-9, dot, and dash.");
+            displaySignupError("Invalid organization name: " + organizationnameAllowedCharsMessage);
             return;
         }
         var username = $("#signup-username").val();
         if (!(usernameRegex.test(username))) {
-            displaySignupError("Invalid username, only a-z, 0-9, dot, and dash.");
+            displaySignupError("Invalid username: " + usernameAllowedCharsMessage);
             return;
         }
         var name = $("#signup-name").val();
@@ -2988,7 +3026,7 @@ function usergrid_console_app() {
         }
         var email = $("#signup-email").val();
         if (!(emailRegex.test(email))) {
-            displaySignupError("Invalid email.");
+            displaySignupError("Invalid email: " + emailAllowedCharsMessage);
             return;
         }
         var password = $("#signup-password").val();
