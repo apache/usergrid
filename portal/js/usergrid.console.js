@@ -1601,7 +1601,7 @@ function usergrid_console_app() {
             
             $.tmpl("usergrid.ui.panels.user.permissions.html", user_data, options).appendTo("#user-panel-permissions");
             updateRolesAutocomplete();
-            updatePermissionAutocompleteCollections();
+            updateQueryAutocompleteCollectionsUsers();
         }
     }
 
@@ -2225,6 +2225,54 @@ function usergrid_console_app() {
     }
     window.usergrid.console.addRolePermission = addRolePermission;
 
+    function deleteUserPermission(userName, permission) {
+        console.log("delete " + userName + " - " + permission);
+        confirmDelete(function(){
+            client.deleteApplicationUserPermission(current_application_id, userName, permission,
+                function() {
+                    pageSelectUserPermissions (userName);
+                },
+                function() {
+                    alert("Unable to delete permission: " + client.getLastErrorMessage('An internal error occured'));
+                });
+        });
+    }
+    window.usergrid.console.deleteUserPermission = deleteUserPermission;
+
+    function addUserPermission(userName) {
+        var path = $('#user-permission-path-entry-input').val();
+        var ops = "";
+        var s = "";
+        if ($('#user-permission-op-get-checkbox').prop("checked")) {
+            ops = "get";
+            s = ",";
+        }
+        if ($('#user-permission-op-post-checkbox').prop("checked")) {
+            ops = ops + s + "post";
+            s = ",";
+        }
+        if ($('#user-permission-op-put-checkbox').prop("checked")) {
+            ops =  ops + s + "put";
+            s = ",";
+        }
+        if ($('#user-permission-op-delete-checkbox').prop("checked")) {
+            ops =  ops + s + "delete";
+            s = ",";
+        }
+        var permission = ops + ":" + path;
+        console.log("add " + userName + " - " + permission);
+        if (ops) {
+            client.addApplicationUserPermission(current_application_id, userName, permission, 
+                function() {                    
+                    pageSelectUserPermissions (userName);
+                },
+                function() {
+                    alert("Unable to add permission: " + client.getLastErrorMessage('An internal error occured'));
+                });
+        }
+    }
+    window.usergrid.console.addUserPermission = addUserPermission;
+
     /*******************************************************************
      * 
      * Activities
@@ -2757,6 +2805,16 @@ function usergrid_console_app() {
             list.push('/' + applicationData.Collections[i].name + '/*');
         pathInput.typeahead({source:list});
     }
+
+    function updateQueryAutocompleteCollectionsUsers(){
+        var pathInput = $("#user-permission-path-entry-input");
+        var list = [];
+        for (var i in applicationData.Collections)
+            list.push('/' + applicationData.Collections[i].name + '/');
+        pathInput.typeahead({source:list});
+        pathInput.data('typeahead').source = list;
+    }
+
     function updateQueryAutocompleteCollections(){
         var pathInput = $("#query-path");
         var list = [];
