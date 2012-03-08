@@ -16,7 +16,9 @@
 package org.usergrid.mq.cassandra;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
+import static org.usergrid.mq.Message.MESSAGE_ID;
 import static org.usergrid.mq.Message.MESSAGE_PROPERTIES;
+import static org.usergrid.mq.Message.MESSAGE_TYPE;
 import static org.usergrid.mq.Queue.QUEUE_NEWEST;
 import static org.usergrid.mq.Queue.QUEUE_OLDEST;
 import static org.usergrid.mq.Queue.QUEUE_PROPERTIES;
@@ -67,8 +69,8 @@ public class CassandraMQUtils {
 			Object key, Object columnName, Object columnValue, long timestamp) {
 
 		if (batch_logger.isInfoEnabled()) {
-            batch_logger.info("{} cf={} key={} name={} value={}",
-                    new Object[]{operation, columnFamily, key, columnName, columnValue});
+			batch_logger.info("{} cf={} key={} name={} value={}", new Object[] {
+					operation, columnFamily, key, columnName, columnValue });
 		}
 
 	}
@@ -89,7 +91,8 @@ public class CassandraMQUtils {
 				.entrySet()) {
 			if (property.getValue() == null) {
 				columns.put(bytebuffer(property.getKey()), null);
-			} else if (MESSAGE_PROPERTIES.containsKey(property.getKey())) {
+			} else if (MESSAGE_TYPE.equals(property.getKey())
+					|| MESSAGE_ID.equals(property.getKey())) {
 				columns.put(bytebuffer(property.getKey()),
 						bytebuffer(property.getValue()));
 			} else {
@@ -134,7 +137,8 @@ public class CassandraMQUtils {
 
 		Map<String, Object> properties = new HashMap<String, Object>();
 		for (HColumn<String, ByteBuffer> column : columns) {
-			if (MESSAGE_PROPERTIES.containsKey(column.getName())) {
+			if (MESSAGE_TYPE.equals(column.getName())
+					|| MESSAGE_ID.equals(column.getName())) {
 				properties.put(
 						column.getName(),
 						object(MESSAGE_PROPERTIES.get(column.getName()),
