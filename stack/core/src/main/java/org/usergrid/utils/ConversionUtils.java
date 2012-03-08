@@ -267,6 +267,14 @@ public class ConversionUtils {
 		return ByteBuffer.wrap(bytes(obj));
 	}
 
+	public static List<ByteBuffer> bytebuffers(List<?> l) {
+		List<ByteBuffer> results = new ArrayList<ByteBuffer>(l.size());
+		for (Object o : l) {
+			results.add(bytebuffer(o));
+		}
+		return results;
+	}
+
 	/**
 	 * @param bytes
 	 * @return

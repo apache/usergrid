@@ -68,6 +68,10 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.persistence.cassandra.CassandraService.DEFAULT_SEARCH_COUNT;
 import static org.usergrid.persistence.cassandra.CassandraService.INDEX_ENTRY_LIST_COUNT;
 import static org.usergrid.persistence.cassandra.ConnectionRefImpl.CONNECTION_ENTITY_CONNECTION_TYPE;
+import static org.usergrid.persistence.cassandra.GeoIndexManager.batchDeleteLocationInConnectionsIndex;
+import static org.usergrid.persistence.cassandra.GeoIndexManager.batchRemoveLocationFromCollectionIndex;
+import static org.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInCollectionIndex;
+import static org.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInConnectionsIndex;
 import static org.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
 import static org.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
 import static org.usergrid.persistence.cassandra.IndexUpdate.validIndexableValue;
@@ -77,6 +81,7 @@ import static org.usergrid.utils.CompositeUtils.setEqualityFlag;
 import static org.usergrid.utils.CompositeUtils.setGreaterThanEqualityFlag;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.ConversionUtils.bytes;
+import static org.usergrid.utils.ConversionUtils.getDouble;
 import static org.usergrid.utils.ConversionUtils.string;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.InflectionUtils.singularize;
@@ -85,6 +90,7 @@ import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
 import java.nio.ByteBuffer;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -124,6 +130,7 @@ import org.usergrid.persistence.ConnectionRef;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Query;
+import org.usergrid.persistence.Query.FilterOperator;
 import org.usergrid.persistence.Query.FilterPredicate;
 import org.usergrid.persistence.RelationManager;
 import org.usergrid.persistence.Results;
@@ -133,6 +140,7 @@ import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.SimpleCollectionRef;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.SimpleRoleRef;
+import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.cassandra.QueryProcessor.QuerySlice;
 import org.usergrid.persistence.entities.Group;
@@ -140,6 +148,8 @@ import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
+
+import com.beoui.geocell.model.Point;
 
 public class RelationManagerImpl implements RelationManager,
 		ApplicationContextAware {
@@ -439,6 +449,15 @@ public class RelationManagerImpl implements RelationManager,
 						}
 					}
 				}
+
+				if ("location.coordinates".equals(entry.getPath())) {
+					EntityLocationRef loc = new EntityLocationRef(
+							indexUpdate.getEntity(), entry.getTimestampUuid(),
+							entry.getValue().toString());
+					batchRemoveLocationFromCollectionIndex(
+							indexUpdate.getBatch(), index_key, loc);
+				}
+
 			} else {
 				logger.error("Unexpected condition - deserialized property value is null");
 			}
@@ -491,6 +510,15 @@ public class RelationManagerImpl implements RelationManager,
 
 						}
 					}
+				}
+
+				if ("location.coordinates".equals(indexEntry.getPath())) {
+					EntityLocationRef loc = new EntityLocationRef(
+							indexUpdate.getEntity(),
+							indexEntry.getTimestampUuid(), indexEntry
+									.getValue().toString());
+					batchStoreLocationInCollectionIndex(indexUpdate.getBatch(),
+							index_key, loc);
 				}
 
 				// i++;
@@ -1066,6 +1094,15 @@ public class RelationManagerImpl implements RelationManager,
 				batchDeleteConnectionIndexEntries(indexUpdate, entry,
 						connection, index_keys);
 
+				if ("location.coordinates".equals(entry.getPath())) {
+					EntityLocationRef loc = new EntityLocationRef(
+							indexUpdate.getEntity(), entry.getTimestampUuid(),
+							entry.getValue().toString());
+					batchDeleteLocationInConnectionsIndex(
+							indexUpdate.getBatch(), index_keys,
+							entry.getPath(), loc);
+				}
+
 			} else {
 				logger.error("Unexpected condition - deserialized property value is null");
 			}
@@ -1080,6 +1117,15 @@ public class RelationManagerImpl implements RelationManager,
 				batchAddConnectionIndexEntries(indexUpdate, indexEntry,
 						connection, index_keys);
 
+				if ("location.coordinates".equals(indexEntry.getPath())) {
+					EntityLocationRef loc = new EntityLocationRef(
+							indexUpdate.getEntity(),
+							indexEntry.getTimestampUuid(), indexEntry
+									.getValue().toString());
+					batchStoreLocationInConnectionsIndex(
+							indexUpdate.getBatch(), index_keys,
+							indexEntry.getPath(), loc);
+				}
 			}
 
 			/*
@@ -1509,6 +1555,18 @@ public class RelationManagerImpl implements RelationManager,
 			List<Map.Entry<String, Object>> list = IndexUtils.getKeyValueList(
 					entryName, entryValue, fulltextIndexed);
 
+			if (entryName.equalsIgnoreCase("location")
+					&& (entryValue instanceof Map)) {
+				@SuppressWarnings("rawtypes")
+				double latitude = MapUtils.getDoubleValue((Map) entryValue,
+						"latitude");
+				@SuppressWarnings("rawtypes")
+				double longitude = MapUtils.getDoubleValue((Map) entryValue,
+						"longitude");
+				list.add(new AbstractMap.SimpleEntry<String, Object>(
+						"location.coordinates", latitude + "," + longitude));
+			}
+
 			for (Map.Entry<String, Object> indexEntry : list) {
 
 				if (validIndexableValue(indexEntry.getValue())) {
@@ -1539,12 +1597,13 @@ public class RelationManagerImpl implements RelationManager,
 						name = name.substring(entryName.length());
 					}
 
+					byte code = indexValueCode(indexEntry.getValue());
+					Object val = toIndexableValue(indexEntry.getValue());
 					addInsertToMutator(
 							batch,
 							ENTITY_INDEX_ENTRIES,
 							entity.getUuid(),
-							asList(entryName, indexValueCode(entryValue),
-									toIndexableValue(entryValue),
+							asList(entryName, code, val,
 									indexUpdate.getTimestampUuid(), name),
 							null, timestamp);
 
@@ -2078,9 +2137,26 @@ public class RelationManagerImpl implements RelationManager,
 		return getIndexResults(results, true, null, itemType, level);
 	}
 
+	@SuppressWarnings("rawtypes")
 	public Results searchCollection(String collectionName, String itemType,
 			Map<String, Object> subkeyProperties, Object subkey_key,
 			QuerySlice slice, int count, Level level) throws Exception {
+
+		if (slice.operator == FilterOperator.WITHIN) {
+			Object v = slice.getValue();
+			if ((v instanceof List) && (((List) v).size() >= 3)) {
+				double maxDistance = getDouble(((List) v).get(0));
+				double latitude = getDouble(((List) v).get(1));
+				double longitude = getDouble(((List) v).get(2));
+				Results r = em.getGeoIndexManager().proximitySearchCollection(
+						getHeadEntity(), collectionName,
+						slice.getPropertyName(),
+						new Point(latitude, longitude), maxDistance, null,
+						count, false, level);
+				return r;
+			}
+			return new Results();
+		}
 
 		Object indexKey = key(headEntity.getUuid(), collectionName);
 		if (subkeyProperties != null) {
@@ -2152,8 +2228,24 @@ public class RelationManagerImpl implements RelationManager,
 				connection.getConnectedEntityType(), level);
 	}
 
+	@SuppressWarnings("rawtypes")
 	public Results searchConnections(ConnectionRefImpl connection,
 			QuerySlice slice, int count, Level level) throws Exception {
+
+		if (slice.operator == FilterOperator.WITHIN) {
+			Object v = slice.getValue();
+			if ((v instanceof List) && (((List) v).size() >= 3)) {
+				double maxDistance = getDouble(((List) v).get(0));
+				double latitude = getDouble(((List) v).get(1));
+				double longitude = getDouble(((List) v).get(2));
+				Results r = em.getGeoIndexManager().proximitySearchConnections(
+						connection.getIndexId(), slice.getPropertyName(),
+						new Point(latitude, longitude), maxDistance, null,
+						count, false, level);
+				return r;
+			}
+			return new Results();
+		}
 
 		List<HColumn<ByteBuffer, ByteBuffer>> results = searchIndex(
 				key(connection.getIndexId(), INDEX_CONNECTIONS), slice, count);
@@ -2480,6 +2572,7 @@ public class RelationManagerImpl implements RelationManager,
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Results searchCollection(String collectionName, Query query)
 			throws Exception {

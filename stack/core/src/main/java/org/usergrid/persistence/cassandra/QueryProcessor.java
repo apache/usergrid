@@ -48,7 +48,8 @@ import org.usergrid.utils.StringUtils;
 
 public class QueryProcessor {
 
-	private static final Logger logger = LoggerFactory.getLogger(QueryProcessor.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(QueryProcessor.class);
 
 	Query query;
 
@@ -91,10 +92,14 @@ public class QueryProcessor {
 		// consolidate all the filters into a set of ranges
 		Set<String> names = getFilterPropertyNames();
 		for (String name : names) {
+			FilterOperator operator = null;
+			Object value = null;
 			RangeValue start = null;
 			RangeValue finish = null;
 			for (FilterPredicate f : filters) {
 				if (f.getPropertyName().equals(name)) {
+					operator = f.getOperator();
+					value = f.getValue();
 					RangePair r = getRangeForFilter(f);
 					if (r.start != null) {
 						if ((start == null)
@@ -110,7 +115,8 @@ public class QueryProcessor {
 					}
 				}
 			}
-			slices.add(new QuerySlice(name, start, finish, null, false));
+			slices.add(new QuerySlice(name, operator, value, start, finish,
+					null, false));
 		}
 
 		// process sorts
@@ -118,7 +124,7 @@ public class QueryProcessor {
 			// if no filters, turn first filter into a sort
 			SortPredicate sort = ListUtils.dequeue(sorts);
 			slices.add(new QuerySlice(sort.getPropertyName(), null, null, null,
-					sort.getDirection() == DESCENDING));
+					null, null, sort.getDirection() == DESCENDING));
 		} else if (sorts.size() > 0) {
 			// match up sorts with existing filters
 			for (ListIterator<SortPredicate> iter = sorts.listIterator(); iter
@@ -407,14 +413,19 @@ public class QueryProcessor {
 	public static class QuerySlice {
 
 		String propertyName;
+		FilterOperator operator;
+		Object value;
 		RangeValue start;
 		RangeValue finish;
 		ByteBuffer cursor;
 		boolean reversed;
 
-		QuerySlice(String propertyName, RangeValue start, RangeValue finish,
-				ByteBuffer cursor, boolean reversed) {
+		QuerySlice(String propertyName, FilterOperator operator, Object value,
+				RangeValue start, RangeValue finish, ByteBuffer cursor,
+				boolean reversed) {
 			this.propertyName = propertyName;
+			this.operator = operator;
+			this.value = value;
 			this.start = start;
 			this.finish = finish;
 			this.cursor = cursor;
@@ -443,6 +454,14 @@ public class QueryProcessor {
 
 		public void setFinish(RangeValue finish) {
 			this.finish = finish;
+		}
+
+		public Object getValue() {
+			return value;
+		}
+
+		public void setValue(Object value) {
+			this.value = value;
 		}
 
 		public ByteBuffer getCursor() {

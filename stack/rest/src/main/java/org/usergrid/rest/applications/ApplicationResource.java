@@ -63,6 +63,7 @@ import org.usergrid.mq.QueueManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.ApiResponse;
+import org.usergrid.rest.applications.events.EventsResource;
 import org.usergrid.rest.applications.queues.QueueResource;
 import org.usergrid.rest.applications.users.UsersResource;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
@@ -95,6 +96,10 @@ public class ApplicationResource extends ServiceResource {
 		return this;
 	}
 
+	public QueueManager getQueues() {
+		return queues;
+	}
+
 	@Override
 	public UUID getApplicationId() {
 		return applicationId;
@@ -111,11 +116,25 @@ public class ApplicationResource extends ServiceResource {
 		return getSubResource(QueueResource.class).init(queues, "");
 	}
 
-	@GET
 	@RequireApplicationAccess
 	@Path("events")
-	public QueueResource getEventsResource() throws Exception {
-		return getSubResource(QueueResource.class).init(queues, "/events");
+	public EventsResource getEventsResource(@Context UriInfo ui)
+			throws Exception {
+		addParameter(getServiceParameters(), "events");
+
+		PathSegment ps = getFirstPathSegment("events");
+		if (ps != null) {
+			addMatrixParams(getServiceParameters(), ui, ps);
+		}
+
+		return getSubResource(EventsResource.class);
+	}
+
+	@RequireApplicationAccess
+	@Path("event")
+	public EventsResource getEventResource(@Context UriInfo ui)
+			throws Exception {
+		return getEventsResource(ui);
 	}
 
 	@Path("users")
