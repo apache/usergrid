@@ -1684,9 +1684,35 @@ function usergrid_console_app() {
             })
 
             client.queryUserPermissions(current_application_id, entity.uuid, function(response) {
-                if (user_data && response.entities && (response.entities.length > 0)) {
-                    user_data.permissions = response.entities;
-                    redrawUserPanel();
+                var permissions = {};
+                if (user_data && response.data && (response.data.length > 0)) {
+                    
+                     if (response.data) {
+                        var perms = response.data;
+                        var count = 0;
+                        for (var i in perms) {
+                            count++;
+                            var perm = perms[i];
+                            var parts = perm.split(':');
+                            var ops_part = "";
+                            var path_part = parts[0];
+                            if (parts.length > 1) {
+                                ops_part = parts[0];
+                                path_part = parts[1];
+                            }
+                            ops_part.replace("*", "get,post,put,delete")
+                            var ops = ops_part.split(',');
+                            permissions[perm] = {ops : {}, path : path_part, perm : perm};
+                            for (var j in ops) {
+                                permissions[perm].ops[ops[j]] = true;
+                            }
+                        }
+                        if (count == 0) {
+                            permissions = null;
+                        }
+                        user_data.permissions = permissions;
+                        redrawUserPanel();
+                     }
                 }
             })
 
