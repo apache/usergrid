@@ -955,16 +955,18 @@ public class EntityManagerImpl implements EntityManager,
 		A entity = EntityFactory.newEntity(itemId, eType, entityClass);
 		logger.info("Entity created of type {}", entity.getClass().getName());
 
-		if (entity instanceof Event) {
+		if (Event.ENTITY_TYPE.equals(eType)) {
+			Event event = (Event) entity.toTypedEntity();
 			for (String prop_name : properties.keySet()) {
 				Object propertyValue = properties.get(prop_name);
 				if (propertyValue != null) {
-					entity.setProperty(prop_name, propertyValue);
+					event.setProperty(prop_name, propertyValue);
 				}
 			}
-			storeEventAsMessage(m, (Event) entity, timestamp);
+			Message message = storeEventAsMessage(m, event, timestamp);
 			incrementEntityCollection("events");
 
+			entity.setUuid(message.getUuid());
 			return entity;
 		}
 
@@ -1047,7 +1049,7 @@ public class EntityManagerImpl implements EntityManager,
 
 	}
 
-	public Event storeEventAsMessage(Mutator<ByteBuffer> m, Event event,
+	public Message storeEventAsMessage(Mutator<ByteBuffer> m, Event event,
 			long timestamp) {
 
 		counterUtils.addEventCounterMutations(m, applicationId, event,
@@ -1062,7 +1064,7 @@ public class EntityManagerImpl implements EntityManager,
 		message.setTimestamp(timestamp);
 		q.postToQueue("events", message);
 
-		return event;
+		return message;
 	}
 
 	/**
