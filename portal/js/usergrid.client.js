@@ -708,6 +708,11 @@ usergrid.Client = function(options) {
     }
     this.requestApplicationRolePermissions = requestApplicationRolePermissions;
 
+    function requestApplicationRoleUsers(applicationId, roleName, success, failure) {
+        apiGetRequest("/" + applicationId + "/rolenames/" + roleName + "/users/", null, success, failure);
+    }
+    this.requestApplicationRoleUsers = requestApplicationRoleUsers;
+
     function addApplicationRolePermission(applicationId, roleName, permission, success, failure) {
         apiRequest("POST", "/" + applicationId + "/rolenames/" + roleName, null, JSON.stringify({
             permission : permission

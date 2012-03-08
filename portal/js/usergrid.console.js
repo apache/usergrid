@@ -2032,9 +2032,46 @@ function usergrid_console_app() {
         }
     }
 
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.permissions.html");
+    var rolesUsersResults = ''
+    function displayRolesUsers(response) {
+        roles = {};
+        if (response.data) {
+            roles = response.data;
+        }
+        rolesUsersResults = usergrid.console.ui.displayEntityListResponse({query: roles_query}, {
+            "listItemTemplate" : "usergrid.ui.panels.roles.users.html",
+            "getListItemTemplateOptions" : function(entity, path) {
+                var name = entity.name;
+                var title = entity.title;
+                var username = entity.username;
+                var id = 'roleUserListItem';
+                return {
+                    entity : entity,
+                    name : name,
+                    username: username,
+                    id: id
+                };
+            },
+            "onRender" : function() {
+                //$("#users-by-alphabetical").show();
+            },
+            "onNoEntities" : function() {
+                if (userLetter != "*") return "No roles found";
+                return null;
+            },
+            "output" : "#roles-response-table",
+            "nextPrevDiv" : "#roles-next-prev",
+            "prevButton" : "#button-roles-prev",
+            "nextButton" : "#button-roles-next",
+            "noEntitiesMsg" : "No Users found"
+        }, response);
+    }
+
     function requestRole() {
         $("#role-section-title").html("");
         $("#role-permissions").html("");
+        $("#role-users").html("");
         client.requestApplicationRoles(current_application_id, function(response) {
             displayRoles(response);
             $("#role-section-title").html(roles[current_role_name] + " Role");
@@ -2046,6 +2083,15 @@ function usergrid_console_app() {
             function() {
                 $("#application-roles").html("<h2>Unable to retrieve " + roles[current_role_name] + " role permissions.</h2>");
             });
+            client.requestApplicationRoleUsers(current_application_id, current_role_name,
+                function(response) {
+                    displayRolesUsers(response);
+                },
+                function() {
+                    $("#application-roles").html("<h2>Unable to retrieve " + roles[current_role_name] + " role permissions.</h2>");
+                }
+            );
+
         },
         function() {
             $("#application-roles").html("<h2>Unable to retrieve roles list.</h2>");
