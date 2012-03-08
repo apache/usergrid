@@ -403,6 +403,9 @@ usergrid.Client = function(options) {
                             }
                             else if (error == "unauthorized") {
                                 force_logout = true;
+                            }                            
+                            else if (error == "expired_token") {
+                                force_logout = true;
                             }
                             else if (error == "web_application") {
                                 //TBD::should we do something here?                                
