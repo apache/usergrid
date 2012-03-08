@@ -204,9 +204,18 @@ a:active {
 .icon-black{
     background-image: url(../bootstrap/img/glyphicons-halflings.png);
 }
+
+
 //----------Login, Signup, Forgot ------------------------------------------------------------
+
 #login-page, #signup-page {
 	margin:50px auto;
+}
+
+#login-area, #signup-area {
+    position: relative;
+    margin-left: -230px;
+    left: 50%;
 }
 
 .the-grid {
@@ -700,6 +709,43 @@ a:active {
 }
 .ui-dialog{
 	padding: 0;
+}
+
+
+/*------------ btn-usergrid --------------------------*/
+.btn-usergrid,
+.btn-usergrid:hover {
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+}
+
+.btn-usergrid.active {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.btn-usergrid {
+  background-color: #FF3B00;
+  background-image: -moz-linear-gradient(top, #F17221, #C84B27);
+  background-image: -ms-linear-gradient(top, #F17221, #C84B27);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#F17221), to(#C84B27));
+  background-image: -webkit-linear-gradient(top, #F17221, #C84B27);
+  background-image: -o-linear-gradient(top, #F17221, #C84B27);
+  background-image: linear-gradient(top, #F17221, #C84B27);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#F17221', endColorstr='#C84B27', GradientType=0);
+  border-color: #C84B27 #C84B27 #ad6704;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+}
+.btn-usergrid:hover,
+.btn-usergrid:active,
+.btn-usergrid.active,
+.btn-usergrid.disabled,
+.btn-usergrid[disabled] {
+  background-color: #C84B27;
+}
+.btn-usergrid:active, .btn-usergrid.active {
+  background-color: #c67605 \9;
 }
 
 /*------------ bootstrap --------------------------*/
