@@ -12,10 +12,10 @@
         <div class="user-panel-section">
             {{if following}}
                 {{if following.length > 0}}
-                {{each following}}
                 <div class="query-result-row entity_list_item" id="users-roles-response-table">
                     <table class="table">
                         <tbody>
+			  {{each following}}
                             <tr class="zebraRows">
                                 <td class="query-result-td-checkbox"><!--<input type="checkbox" name="${name}" id="userRoleItem" value="${name}" />--></td>
                                 <td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
@@ -25,14 +25,14 @@
                                     {{if path}}</a>{{/if}}
                                 </td>
                             </tr>
-                        </tbody>
+                          {{/each}}
+			</tbody>
                     </table>
                 </div>
-                {{/each}}
                 {{/if}}
-			{{else}}
-			<div class="user-panel-section-message">Not following anyone</div>
-			{{/if}}
+		    {{else}}
+		    <div class="user-panel-section-message">Not following anyone</div>
+		    {{/if}}
             <br/>
         </div>
         <br/>
@@ -40,10 +40,10 @@
         <div class="user-panel-section">
             {{if followers}}
                 {{if followers.length > 0}}
-                {{each followers}}
                 <div class="query-result-row entity_list_item" id="users-roles-response-table">
                     <table class="table">
                         <tbody>
+			  {{each followers}}
                             <tr class="zebraRows">
                                 <td class="query-result-td-checkbox"><!--<input type="checkbox" name="${name}" id="userRoleItem" value="${name}" />--></td>
                                 <td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
@@ -53,10 +53,10 @@
                                     {{if path}}</a>{{/if}}
                                 </td>
                             </tr>
+			    {{/each}}
                         </tbody>
                     </table>
                 </div>
-                {{/each}}
                 {{/if}}
 			{{else}}
 			<div class="user-panel-section-message">No followers</div>
