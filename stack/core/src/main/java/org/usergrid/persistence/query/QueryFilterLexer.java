@@ -1,19 +1,4 @@
-/*******************************************************************************
- * Copyright 2012 Apigee Corporation
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
-// $ANTLR 3.1.3 Mar 17, 2009 19:23:44 org/usergrid/persistence/query/QueryFilter.g 2012-02-28 15:25:28
+// $ANTLR 3.1.3 Mar 17, 2009 19:23:44 org/usergrid/persistence/query/QueryFilter.g 2012-03-07 22:01:45
 
 package org.usergrid.persistence.query;
 
@@ -28,6 +13,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class QueryFilterLexer extends Lexer {
+    public static final int T__40=40;
     public static final int EXPONENT=6;
     public static final int T__29=29;
     public static final int T__28=28;
@@ -63,6 +49,7 @@ public class QueryFilterLexer extends Lexer {
     public static final int T__36=36;
     public static final int T__37=37;
     public static final int T__38=38;
+    public static final int T__39=39;
     public static final int STRING=9;
 
 
@@ -342,10 +329,11 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__28;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/QueryFilter.g:33:7: ( ',' )
-            // org/usergrid/persistence/query/QueryFilter.g:33:9: ','
+            // org/usergrid/persistence/query/QueryFilter.g:33:7: ( 'within' )
+            // org/usergrid/persistence/query/QueryFilter.g:33:9: 'within'
             {
-            match(','); 
+            match("within"); 
+
 
             }
 
@@ -362,10 +350,10 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__29;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/QueryFilter.g:34:7: ( ':' )
-            // org/usergrid/persistence/query/QueryFilter.g:34:9: ':'
+            // org/usergrid/persistence/query/QueryFilter.g:34:7: ( ',' )
+            // org/usergrid/persistence/query/QueryFilter.g:34:9: ','
             {
-            match(':'); 
+            match(','); 
 
             }
 
@@ -382,10 +370,10 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__30;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/QueryFilter.g:35:7: ( 'asc' )
-            // org/usergrid/persistence/query/QueryFilter.g:35:9: 'asc'
+            // org/usergrid/persistence/query/QueryFilter.g:35:7: ( 'of' )
+            // org/usergrid/persistence/query/QueryFilter.g:35:9: 'of'
             {
-            match("asc"); 
+            match("of"); 
 
 
             }
@@ -403,11 +391,10 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__31;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/QueryFilter.g:36:7: ( 'desc' )
-            // org/usergrid/persistence/query/QueryFilter.g:36:9: 'desc'
+            // org/usergrid/persistence/query/QueryFilter.g:36:7: ( ':' )
+            // org/usergrid/persistence/query/QueryFilter.g:36:9: ':'
             {
-            match("desc"); 
-
+            match(':'); 
 
             }
 
@@ -424,10 +411,11 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__32;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/QueryFilter.g:37:7: ( '*' )
-            // org/usergrid/persistence/query/QueryFilter.g:37:9: '*'
+            // org/usergrid/persistence/query/QueryFilter.g:37:7: ( 'asc' )
+            // org/usergrid/persistence/query/QueryFilter.g:37:9: 'asc'
             {
-            match('*'); 
+            match("asc"); 
+
 
             }
 
@@ -444,10 +432,11 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__33;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/QueryFilter.g:38:7: ( '{' )
-            // org/usergrid/persistence/query/QueryFilter.g:38:9: '{'
+            // org/usergrid/persistence/query/QueryFilter.g:38:7: ( 'desc' )
+            // org/usergrid/persistence/query/QueryFilter.g:38:9: 'desc'
             {
-            match('{'); 
+            match("desc"); 
+
 
             }
 
@@ -464,10 +453,10 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__34;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/QueryFilter.g:39:7: ( '}' )
-            // org/usergrid/persistence/query/QueryFilter.g:39:9: '}'
+            // org/usergrid/persistence/query/QueryFilter.g:39:7: ( '*' )
+            // org/usergrid/persistence/query/QueryFilter.g:39:9: '*'
             {
-            match('}'); 
+            match('*'); 
 
             }
 
@@ -484,11 +473,10 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__35;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/QueryFilter.g:40:7: ( 'select' )
-            // org/usergrid/persistence/query/QueryFilter.g:40:9: 'select'
+            // org/usergrid/persistence/query/QueryFilter.g:40:7: ( '{' )
+            // org/usergrid/persistence/query/QueryFilter.g:40:9: '{'
             {
-            match("select"); 
-
+            match('{'); 
 
             }
 
@@ -505,11 +493,10 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__36;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/QueryFilter.g:41:7: ( 'where' )
-            // org/usergrid/persistence/query/QueryFilter.g:41:9: 'where'
+            // org/usergrid/persistence/query/QueryFilter.g:41:7: ( '}' )
+            // org/usergrid/persistence/query/QueryFilter.g:41:9: '}'
             {
-            match("where"); 
-
+            match('}'); 
 
             }
 
@@ -526,10 +513,10 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__37;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/QueryFilter.g:42:7: ( 'and' )
-            // org/usergrid/persistence/query/QueryFilter.g:42:9: 'and'
+            // org/usergrid/persistence/query/QueryFilter.g:42:7: ( 'select' )
+            // org/usergrid/persistence/query/QueryFilter.g:42:9: 'select'
             {
-            match("and"); 
+            match("select"); 
 
 
             }
@@ -547,8 +534,50 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__38;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/QueryFilter.g:43:7: ( 'order by' )
-            // org/usergrid/persistence/query/QueryFilter.g:43:9: 'order by'
+            // org/usergrid/persistence/query/QueryFilter.g:43:7: ( 'where' )
+            // org/usergrid/persistence/query/QueryFilter.g:43:9: 'where'
+            {
+            match("where"); 
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end "T__38"
+
+    // $ANTLR start "T__39"
+    public final void mT__39() throws RecognitionException {
+        try {
+            int _type = T__39;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // org/usergrid/persistence/query/QueryFilter.g:44:7: ( 'and' )
+            // org/usergrid/persistence/query/QueryFilter.g:44:9: 'and'
+            {
+            match("and"); 
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end "T__39"
+
+    // $ANTLR start "T__40"
+    public final void mT__40() throws RecognitionException {
+        try {
+            int _type = T__40;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // org/usergrid/persistence/query/QueryFilter.g:45:7: ( 'order by' )
+            // org/usergrid/persistence/query/QueryFilter.g:45:9: 'order by'
             {
             match("order by"); 
 
@@ -561,7 +590,7 @@ public class QueryFilterLexer extends Lexer {
         finally {
         }
     }
-    // $ANTLR end "T__38"
+    // $ANTLR end "T__40"
 
     // $ANTLR start "ID"
     public final void mID() throws RecognitionException {
@@ -1428,8 +1457,8 @@ public class QueryFilterLexer extends Lexer {
     // $ANTLR end "WS"
 
     public void mTokens() throws RecognitionException {
-        // org/usergrid/persistence/query/QueryFilter.g:1:8: ( T__16 | T__17 | T__18 | T__19 | T__20 | T__21 | T__22 | T__23 | T__24 | T__25 | T__26 | T__27 | T__28 | T__29 | T__30 | T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | ID | INT | FLOAT | STRING | UUID | WS )
-        int alt17=29;
+        // org/usergrid/persistence/query/QueryFilter.g:1:8: ( T__16 | T__17 | T__18 | T__19 | T__20 | T__21 | T__22 | T__23 | T__24 | T__25 | T__26 | T__27 | T__28 | T__29 | T__30 | T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | T__39 | T__40 | ID | INT | FLOAT | STRING | UUID | WS )
+        int alt17=31;
         alt17 = dfa17.predict(input);
         switch (alt17) {
             case 1 :
@@ -1594,42 +1623,56 @@ public class QueryFilterLexer extends Lexer {
                 }
                 break;
             case 24 :
-                // org/usergrid/persistence/query/QueryFilter.g:1:148: ID
+                // org/usergrid/persistence/query/QueryFilter.g:1:148: T__39
+                {
+                mT__39(); 
+
+                }
+                break;
+            case 25 :
+                // org/usergrid/persistence/query/QueryFilter.g:1:154: T__40
+                {
+                mT__40(); 
+
+                }
+                break;
+            case 26 :
+                // org/usergrid/persistence/query/QueryFilter.g:1:160: ID
                 {
                 mID(); 
 
                 }
                 break;
-            case 25 :
-                // org/usergrid/persistence/query/QueryFilter.g:1:151: INT
+            case 27 :
+                // org/usergrid/persistence/query/QueryFilter.g:1:163: INT
                 {
                 mINT(); 
 
                 }
                 break;
-            case 26 :
-                // org/usergrid/persistence/query/QueryFilter.g:1:155: FLOAT
+            case 28 :
+                // org/usergrid/persistence/query/QueryFilter.g:1:167: FLOAT
                 {
                 mFLOAT(); 
 
                 }
                 break;
-            case 27 :
-                // org/usergrid/persistence/query/QueryFilter.g:1:161: STRING
+            case 29 :
+                // org/usergrid/persistence/query/QueryFilter.g:1:173: STRING
                 {
                 mSTRING(); 
 
                 }
                 break;
-            case 28 :
-                // org/usergrid/persistence/query/QueryFilter.g:1:168: UUID
+            case 30 :
+                // org/usergrid/persistence/query/QueryFilter.g:1:180: UUID
                 {
                 mUUID(); 
 
                 }
                 break;
-            case 29 :
-                // org/usergrid/persistence/query/QueryFilter.g:1:173: WS
+            case 31 :
+                // org/usergrid/persistence/query/QueryFilter.g:1:185: WS
                 {
                 mWS(); 
 
@@ -1697,47 +1740,48 @@ public class QueryFilterLexer extends Lexer {
         }
     }
     static final String DFA17_eotS =
-        "\1\uffff\1\32\1\uffff\1\34\5\27\2\uffff\2\27\3\uffff\4\27\1\51\10"+
-        "\uffff\1\55\1\56\1\27\1\61\1\63\7\27\1\uffff\1\51\4\uffff\1\27\1"+
-        "\77\1\uffff\1\100\1\uffff\1\27\1\102\1\103\4\27\1\51\1\uffff\1\25"+
-        "\1\27\2\uffff\1\27\2\uffff\1\115\3\27\1\51\1\uffff\1\25\2\27\1\uffff"+
-        "\1\27\1\127\1\27\1\51\1\uffff\1\25\2\27\1\136\2\uffff\1\51\1\uffff"+
-        "\1\25\2\27\1\uffff\1\51\1\uffff\1\25\1\27\1\147\1\51\1\uffff\1\25"+
-        "\1\uffff\1\51\1\uffff\4\25";
+        "\1\uffff\1\32\1\uffff\1\34\6\27\1\uffff\1\27\1\uffff\2\27\3\uffff"+
+        "\2\27\1\55\10\uffff\1\57\1\60\1\27\1\63\1\65\3\27\1\71\5\27\1\uffff"+
+        "\1\55\4\uffff\1\27\1\103\1\uffff\1\104\1\uffff\3\27\1\uffff\1\27"+
+        "\1\111\1\112\2\27\1\25\1\55\1\uffff\1\27\2\uffff\4\27\2\uffff\1"+
+        "\125\1\27\1\25\1\uffff\1\55\3\27\1\135\1\27\1\uffff\1\27\1\25\1"+
+        "\55\1\uffff\2\27\1\145\2\uffff\1\146\1\25\1\uffff\1\55\2\27\2\uffff"+
+        "\1\25\1\55\1\uffff\1\27\1\157\1\25\1\uffff\1\55\2\uffff\1\55\4\25";
     static final String DFA17_eofS =
-        "\156\uffff";
+        "\166\uffff";
     static final String DFA17_minS =
-        "\1\11\1\75\1\uffff\1\75\1\156\1\60\2\164\1\60\2\uffff\2\60\3\uffff"+
-        "\1\145\1\150\1\162\1\60\1\56\10\uffff\2\56\1\60\2\56\1\156\1\143"+
-        "\1\144\1\60\1\154\1\145\1\144\1\uffff\1\56\1\53\3\uffff\1\60\1\56"+
-        "\1\uffff\1\56\1\uffff\1\164\2\56\1\143\1\145\1\162\1\145\1\56\1"+
-        "\53\2\60\2\uffff\1\141\2\uffff\1\56\1\143\1\145\1\162\1\56\1\53"+
-        "\2\60\1\151\1\uffff\1\164\1\56\1\40\1\56\1\53\2\60\1\156\1\56\2"+
-        "\uffff\1\56\1\53\2\60\1\163\1\uffff\1\56\1\53\1\60\1\55\1\56\1\55"+
-        "\1\53\1\55\1\uffff\1\56\4\60\1\55";
+        "\1\11\1\75\1\uffff\1\75\1\156\1\60\2\164\1\60\1\150\1\uffff\1\146"+
+        "\1\uffff\2\60\3\uffff\1\145\1\60\1\56\10\uffff\2\56\1\60\2\56\1"+
+        "\156\1\164\1\145\1\56\1\144\1\143\1\144\1\60\1\154\1\53\1\56\4\uffff"+
+        "\1\60\1\56\1\uffff\1\56\1\uffff\1\164\1\150\1\162\1\uffff\1\145"+
+        "\2\56\1\143\1\145\1\60\1\56\1\53\1\60\2\uffff\1\141\1\151\1\145"+
+        "\1\162\2\uffff\1\56\1\143\1\60\1\53\1\56\1\60\1\151\1\156\1\56\1"+
+        "\40\1\uffff\1\164\1\60\1\56\1\53\1\60\1\156\1\56\2\uffff\1\56\1"+
+        "\60\1\53\1\56\1\60\1\163\2\uffff\1\60\1\56\1\53\1\55\1\56\1\55\1"+
+        "\53\1\55\1\uffff\1\60\1\56\3\60\1\55";
     static final String DFA17_maxS =
-        "\1\175\1\75\1\uffff\1\75\1\156\1\161\2\164\1\157\2\uffff\1\163\1"+
-        "\146\3\uffff\1\145\1\150\1\162\2\146\10\uffff\2\172\1\146\2\172"+
-        "\1\156\1\143\1\144\1\163\1\154\1\145\1\144\1\uffff\2\146\3\uffff"+
-        "\1\146\1\172\1\uffff\1\172\1\uffff\1\164\2\172\1\143\1\145\1\162"+
-        "\1\145\4\146\2\uffff\1\141\2\uffff\1\172\1\143\1\145\1\162\4\146"+
-        "\1\151\1\uffff\1\164\1\172\1\40\4\146\1\156\1\172\2\uffff\4\146"+
-        "\1\163\1\uffff\3\146\1\55\1\172\1\145\1\71\1\55\1\uffff\1\145\4"+
-        "\146\1\55";
+        "\1\175\1\75\1\uffff\1\75\1\156\1\161\2\164\1\157\1\151\1\uffff\1"+
+        "\162\1\uffff\1\163\1\146\3\uffff\1\145\2\146\10\uffff\2\172\1\146"+
+        "\2\172\1\156\1\164\1\145\1\172\1\144\1\143\1\144\1\163\1\154\2\146"+
+        "\4\uffff\1\146\1\172\1\uffff\1\172\1\uffff\1\164\1\150\1\162\1\uffff"+
+        "\1\145\2\172\1\143\1\145\4\146\2\uffff\1\141\1\151\1\145\1\162\2"+
+        "\uffff\1\172\1\143\4\146\1\151\1\156\1\172\1\40\1\uffff\1\164\4"+
+        "\146\1\156\1\172\2\uffff\1\172\4\146\1\163\2\uffff\3\146\1\55\1"+
+        "\172\1\55\1\71\1\145\1\uffff\1\146\1\145\3\146\1\55";
     static final String DFA17_acceptS =
-        "\2\uffff\1\3\6\uffff\1\15\1\16\2\uffff\1\21\1\22\1\23\5\uffff\1"+
-        "\32\1\33\1\30\1\35\1\2\1\1\1\5\1\4\14\uffff\1\31\2\uffff\1\34\1"+
-        "\6\1\7\2\uffff\1\10\1\uffff\1\11\13\uffff\1\12\1\13\1\uffff\1\17"+
-        "\1\26\11\uffff\1\20\11\uffff\1\25\1\27\5\uffff\1\24\10\uffff\1\14"+
-        "\6\uffff";
+        "\2\uffff\1\3\7\uffff\1\16\1\uffff\1\20\2\uffff\1\23\1\24\1\25\3"+
+        "\uffff\1\34\1\35\1\32\1\37\1\2\1\1\1\5\1\4\20\uffff\1\33\1\36\1"+
+        "\6\1\7\2\uffff\1\10\1\uffff\1\11\3\uffff\1\17\11\uffff\1\12\1\13"+
+        "\4\uffff\1\21\1\30\12\uffff\1\22\7\uffff\1\27\1\31\6\uffff\1\15"+
+        "\1\26\10\uffff\1\14\6\uffff";
     static final String DFA17_specialS =
-        "\156\uffff}>";
+        "\166\uffff}>";
     static final String[] DFA17_transitionS = {
-            "\2\30\1\uffff\2\30\22\uffff\1\30\6\uffff\1\26\2\uffff\1\15\1"+
-            "\uffff\1\11\1\uffff\1\25\1\uffff\12\24\1\12\1\uffff\1\1\1\2"+
-            "\1\3\2\uffff\6\23\24\27\4\uffff\1\27\1\uffff\1\13\1\23\1\10"+
-            "\1\14\1\5\1\23\1\7\1\27\1\4\2\27\1\6\2\27\1\22\3\27\1\20\3\27"+
-            "\1\21\3\27\1\16\1\uffff\1\17",
+            "\2\30\1\uffff\2\30\22\uffff\1\30\6\uffff\1\26\2\uffff\1\17\1"+
+            "\uffff\1\12\1\uffff\1\25\1\uffff\12\24\1\14\1\uffff\1\1\1\2"+
+            "\1\3\2\uffff\6\23\24\27\4\uffff\1\27\1\uffff\1\15\1\23\1\10"+
+            "\1\16\1\5\1\23\1\7\1\27\1\4\2\27\1\6\2\27\1\13\3\27\1\22\3\27"+
+            "\1\11\3\27\1\20\1\uffff\1\21",
             "\1\31",
             "",
             "\1\33",
@@ -1746,19 +1790,19 @@ public class QueryFilterLexer extends Lexer {
             "\1\40",
             "\1\41",
             "\12\37\7\uffff\6\37\32\uffff\6\37\10\uffff\1\42",
+            "\1\44\1\43",
+            "",
+            "\1\45\13\uffff\1\46",
+            "",
+            "\12\37\7\uffff\6\37\32\uffff\6\37\7\uffff\1\50\4\uffff\1\47",
+            "\12\37\7\uffff\6\37\32\uffff\4\37\1\51\1\37",
             "",
             "",
-            "\12\37\7\uffff\6\37\32\uffff\6\37\7\uffff\1\44\4\uffff\1\43",
-            "\12\37\7\uffff\6\37\32\uffff\4\37\1\45\1\37",
             "",
-            "",
-            "",
-            "\1\46",
-            "\1\47",
-            "\1\50",
+            "\1\52",
             "\12\37\7\uffff\6\37\32\uffff\6\37",
-            "\1\25\1\uffff\12\52\7\uffff\4\54\1\53\1\54\32\uffff\4\54\1"+
-            "\53\1\54",
+            "\1\25\1\uffff\12\54\7\uffff\4\56\1\53\1\56\32\uffff\4\56\1"+
+            "\53\1\56",
             "",
             "",
             "",
@@ -1769,93 +1813,101 @@ public class QueryFilterLexer extends Lexer {
             "",
             "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
             "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
-            "\12\57\7\uffff\6\57\32\uffff\6\57",
-            "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\4\27"+
-            "\1\60\25\27",
+            "\12\61\7\uffff\6\61\32\uffff\6\61",
             "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\4\27"+
             "\1\62\25\27",
-            "\1\64",
-            "\1\65",
+            "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\4\27"+
+            "\1\64\25\27",
             "\1\66",
-            "\12\57\7\uffff\6\57\32\uffff\6\57\14\uffff\1\67",
+            "\1\67",
             "\1\70",
-            "\1\71",
+            "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
             "\1\72",
+            "\1\73",
+            "\1\74",
+            "\12\61\7\uffff\6\61\32\uffff\6\61\14\uffff\1\75",
+            "\1\76",
+            "\1\25\1\uffff\1\25\2\uffff\12\77\7\uffff\6\56\32\uffff\6\56",
+            "\1\25\1\uffff\12\100\7\uffff\4\56\1\101\1\56\32\uffff\4\56"+
+            "\1\101\1\56",
             "",
-            "\1\25\1\uffff\12\73\7\uffff\4\54\1\74\1\54\32\uffff\4\54\1"+
-            "\74\1\54",
-            "\1\25\1\uffff\1\25\2\uffff\12\75\7\uffff\6\54\32\uffff\6\54",
             "",
             "",
             "",
-            "\12\76\7\uffff\6\76\32\uffff\6\76",
+            "\12\102\7\uffff\6\102\32\uffff\6\102",
             "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
             "",
             "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
             "",
-            "\1\101",
-            "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
-            "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
-            "\1\104",
             "\1\105",
             "\1\106",
             "\1\107",
-            "\1\25\1\uffff\12\110\7\uffff\4\54\1\111\1\54\32\uffff\4\54"+
-            "\1\111\1\54",
-            "\1\25\1\uffff\1\25\2\uffff\12\112\7\uffff\6\54\32\uffff\6\54",
-            "\12\112\7\uffff\6\54\32\uffff\6\54",
-            "\12\113\7\uffff\6\113\32\uffff\6\113",
             "",
-            "",
+            "\1\110",
+            "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
+            "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
+            "\1\113",
             "\1\114",
+            "\12\115\7\uffff\6\56\32\uffff\6\56",
+            "\1\25\1\uffff\12\117\7\uffff\4\56\1\116\1\56\32\uffff\4\56"+
+            "\1\116\1\56",
+            "\1\25\1\uffff\1\25\2\uffff\12\115\7\uffff\6\56\32\uffff\6\56",
+            "\12\120\7\uffff\6\120\32\uffff\6\120",
+            "",
+            "",
+            "\1\121",
+            "\1\122",
+            "\1\123",
+            "\1\124",
             "",
             "",
             "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
-            "\1\116",
-            "\1\117",
-            "\1\120",
-            "\1\25\1\uffff\12\121\7\uffff\4\54\1\122\1\54\32\uffff\4\54"+
-            "\1\122\1\54",
-            "\1\25\1\uffff\1\25\2\uffff\12\123\7\uffff\6\54\32\uffff\6\54",
-            "\12\123\7\uffff\6\54\32\uffff\6\54",
-            "\12\124\7\uffff\6\124\32\uffff\6\124",
-            "\1\125",
-            "",
             "\1\126",
+            "\12\127\7\uffff\6\56\32\uffff\6\56",
+            "\1\25\1\uffff\1\25\2\uffff\12\127\7\uffff\6\56\32\uffff\6\56",
+            "\1\25\1\uffff\12\130\7\uffff\4\56\1\131\1\56\32\uffff\4\56"+
+            "\1\131\1\56",
+            "\12\132\7\uffff\6\132\32\uffff\6\132",
+            "\1\133",
+            "\1\134",
             "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
-            "\1\130",
-            "\1\25\1\uffff\12\131\7\uffff\4\54\1\132\1\54\32\uffff\4\54"+
-            "\1\132\1\54",
-            "\1\25\1\uffff\1\25\2\uffff\12\133\7\uffff\6\54\32\uffff\6\54",
-            "\12\133\7\uffff\6\54\32\uffff\6\54",
-            "\12\134\7\uffff\6\134\32\uffff\6\134",
-            "\1\135",
+            "\1\136",
+            "",
+            "\1\137",
+            "\12\140\7\uffff\6\56\32\uffff\6\56",
+            "\1\25\1\uffff\12\142\7\uffff\4\56\1\141\1\56\32\uffff\4\56"+
+            "\1\141\1\56",
+            "\1\25\1\uffff\1\25\2\uffff\12\140\7\uffff\6\56\32\uffff\6\56",
+            "\12\143\7\uffff\6\143\32\uffff\6\143",
+            "\1\144",
             "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
             "",
             "",
-            "\1\25\1\uffff\12\137\7\uffff\4\54\1\140\1\54\32\uffff\4\54"+
-            "\1\140\1\54",
-            "\1\25\1\uffff\1\25\2\uffff\12\141\7\uffff\6\54\32\uffff\6\54",
-            "\12\141\7\uffff\6\54\32\uffff\6\54",
-            "\12\142\7\uffff\6\142\32\uffff\6\142",
-            "\1\143",
-            "",
-            "\1\25\1\uffff\12\144\7\uffff\4\54\1\145\1\54\32\uffff\4\54"+
-            "\1\145\1\54",
-            "\1\25\1\uffff\1\25\2\uffff\12\146\7\uffff\6\54\32\uffff\6\54",
-            "\12\146\7\uffff\6\54\32\uffff\6\54",
-            "\1\54",
             "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
-            "\1\54\1\25\1\uffff\12\150\13\uffff\1\25\37\uffff\1\25",
-            "\1\25\1\uffff\1\151\2\uffff\12\25",
-            "\1\54",
+            "\12\147\7\uffff\6\56\32\uffff\6\56",
+            "\1\25\1\uffff\1\25\2\uffff\12\147\7\uffff\6\56\32\uffff\6\56",
+            "\1\25\1\uffff\12\150\7\uffff\4\56\1\151\1\56\32\uffff\4\56"+
+            "\1\151\1\56",
+            "\12\152\7\uffff\6\152\32\uffff\6\152",
+            "\1\153",
             "",
-            "\1\25\1\uffff\12\150\13\uffff\1\25\37\uffff\1\25",
-            "\12\152\7\uffff\6\54\32\uffff\6\54",
-            "\12\153\7\uffff\6\54\32\uffff\6\54",
-            "\12\154\7\uffff\6\54\32\uffff\6\54",
-            "\12\155\7\uffff\6\54\32\uffff\6\54",
-            "\1\54"
+            "",
+            "\12\154\7\uffff\6\56\32\uffff\6\56",
+            "\1\25\1\uffff\12\156\7\uffff\4\56\1\155\1\56\32\uffff\4\56"+
+            "\1\155\1\56",
+            "\1\25\1\uffff\1\25\2\uffff\12\154\7\uffff\6\56\32\uffff\6\56",
+            "\1\56",
+            "\1\27\1\uffff\12\27\7\uffff\32\27\4\uffff\1\27\1\uffff\32\27",
+            "\1\56",
+            "\1\25\1\uffff\1\160\2\uffff\12\25",
+            "\1\56\1\25\1\uffff\12\161\13\uffff\1\25\37\uffff\1\25",
+            "",
+            "\12\162\7\uffff\6\56\32\uffff\6\56",
+            "\1\25\1\uffff\12\161\13\uffff\1\25\37\uffff\1\25",
+            "\12\163\7\uffff\6\56\32\uffff\6\56",
+            "\12\164\7\uffff\6\56\32\uffff\6\56",
+            "\12\165\7\uffff\6\56\32\uffff\6\56",
+            "\1\56"
     };
 
     static final short[] DFA17_eot = DFA.unpackEncodedString(DFA17_eotS);
@@ -1888,7 +1940,7 @@ public class QueryFilterLexer extends Lexer {
             this.transition = DFA17_transition;
         }
         public String getDescription() {
-            return "1:1: Tokens : ( T__16 | T__17 | T__18 | T__19 | T__20 | T__21 | T__22 | T__23 | T__24 | T__25 | T__26 | T__27 | T__28 | T__29 | T__30 | T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | ID | INT | FLOAT | STRING | UUID | WS );";
+            return "1:1: Tokens : ( T__16 | T__17 | T__18 | T__19 | T__20 | T__21 | T__22 | T__23 | T__24 | T__25 | T__26 | T__27 | T__28 | T__29 | T__30 | T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | T__39 | T__40 | ID | INT | FLOAT | STRING | UUID | WS );";
         }
     }
  

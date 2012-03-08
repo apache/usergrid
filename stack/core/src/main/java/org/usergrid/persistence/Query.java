@@ -1149,7 +1149,8 @@ public class Query {
 	public static enum FilterOperator {
 		LESS_THAN("<", "lt"), LESS_THAN_OR_EQUAL("<=", "lte"), GREATER_THAN(
 				">", "gt"), GREATER_THAN_OR_EQUAL(">=", "gte"), EQUAL("=", "eq"), NOT_EQUAL(
-				"!=", "ne"), IN("in", null), CONTAINS("contains", null);
+				"!=", "ne"), IN("in", null), CONTAINS("contains", null), WITHIN(
+				"within", null);
 
 		private final String shortName;
 		private final String textName;
@@ -1292,7 +1293,8 @@ public class Query {
 			if (operator == null) {
 				throw new NullPointerException("Operator was null");
 			}
-			if (operator == Query.FilterOperator.IN) {
+			if ((operator == Query.FilterOperator.IN)
+					|| (operator == Query.FilterOperator.WITHIN)) {
 				if ((!(value instanceof Collection))
 						&& (value instanceof Iterable)) {
 					List newValue = new ArrayList();
@@ -1315,13 +1317,19 @@ public class Query {
 		}
 
 		public FilterPredicate(String propertyName, String operator,
-				String value, String secondValue) {
+				String value, String secondValue, String thirdValue) {
 			this.propertyName = propertyName;
 			this.operator = FilterOperator.find(operator);
 			Object first_obj = parseValue(value, 0);
 			Object second_obj = parseValue(secondValue, 0);
+			Object third_obj = parseValue(thirdValue, 0);
 			if (second_obj != null) {
-				this.value = Arrays.asList(first_obj, second_obj);
+				if (third_obj != null) {
+					this.value = Arrays
+							.asList(first_obj, second_obj, third_obj);
+				} else {
+					this.value = Arrays.asList(first_obj, second_obj);
+				}
 			} else {
 				this.value = first_obj;
 			}
@@ -1329,13 +1337,19 @@ public class Query {
 
 		public FilterPredicate(String propertyName, String operator,
 				String value, int valueType, String secondValue,
-				int secondValueType) {
+				int secondValueType, String thirdValue, int thirdValueType) {
 			this.propertyName = propertyName;
 			this.operator = FilterOperator.find(operator);
 			Object first_obj = parseValue(value, valueType);
 			Object second_obj = parseValue(secondValue, secondValueType);
+			Object third_obj = parseValue(thirdValue, thirdValueType);
 			if (second_obj != null) {
-				this.value = Arrays.asList(first_obj, second_obj);
+				if (third_obj != null) {
+					this.value = Arrays
+							.asList(first_obj, second_obj, third_obj);
+				} else {
+					this.value = Arrays.asList(first_obj, second_obj);
+				}
 			} else {
 				this.value = first_obj;
 			}
