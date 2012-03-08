@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.Query;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.services.AbstractCollectionService;
 import org.usergrid.services.ServiceContext;
@@ -142,9 +143,40 @@ public class UsersService extends AbstractCollectionService {
 				return getApplicationRolePermissions(roleName);
 			}
 
+		} else if ("permissions".equalsIgnoreCase(dictionary)) {
+			EntityRef entityRef = refs.get(0);
+			checkPermissionsForEntitySubPath(context, entityRef, "permissions");
+
+			return genericServiceResults().withData(
+					em.getUserPermissions(entityRef.getUuid()));
+
 		}
 
 		return super.getEntityDictionary(context, refs, dictionary);
+	}
+
+	@Override
+	public ServiceResults postEntityDictionary(ServiceContext context,
+			List<EntityRef> refs, String dictionary, ServicePayload payload)
+			throws Exception {
+
+		if ("permissions".equalsIgnoreCase(dictionary)) {
+			EntityRef entityRef = refs.get(0);
+			checkPermissionsForEntitySubPath(context, entityRef, "permissions");
+
+			String permission = payload.getStringProperty("permission");
+			if (isBlank(permission)) {
+				return null;
+			}
+
+			em.grantUserPermission(entityRef.getUuid(), permission);
+
+			return genericServiceResults().withData(
+					em.getUserPermissions(entityRef.getUuid()));
+
+		}
+
+		return super.postEntityDictionary(context, refs, dictionary, payload);
 	}
 
 	@Override
@@ -190,6 +222,27 @@ public class UsersService extends AbstractCollectionService {
 				return deleteUserRole(entityRef.getUuid(), roleName);
 
 			}
+		} else if ("permissions".equalsIgnoreCase(dictionary)) {
+			EntityRef entityRef = refs.get(0);
+			checkPermissionsForEntitySubPath(context, entityRef, "permissions");
+
+			Query q = context.getParameters().get(1).getQuery();
+			if (q == null) {
+				return null;
+			}
+
+			List<String> permissions = q.getPermissions();
+			if (permissions == null) {
+				return null;
+			}
+
+			for (String permission : permissions) {
+				em.revokeUserPermission(entityRef.getUuid(), permission);
+			}
+
+			return genericServiceResults().withData(
+					em.getUserPermissions(entityRef.getUuid()));
+
 		}
 
 		return super.deleteEntityDictionary(context, refs, dictionary);
