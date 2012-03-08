@@ -1116,6 +1116,25 @@ function usergrid_console_app() {
     }
     window.usergrid.console.deleteUsersFromRoles = deleteUsersFromRoles;
 
+
+    function deleteRoleFromUser(roleId, rolename) {
+        var items = $("#role-users input[id^=userRoleItem]:checked");
+        if(!items.length){
+            alert("Please, first select the items you want to delete");
+            return;
+        }
+
+        confirmDelete(function(){
+            items.each(function() {
+                var username = $(this).attr("value");
+                client.removeUserFromRole(current_application_id, username, roleId, function() {pageSelectRoleUsers (roleId, rolename);}, function() {
+                    alert("Unable to remove user from role: " + client.getLastErrorMessage('An internal error occured'));
+                });
+            });
+        });
+    }
+    window.usergrid.console.deleteRoleFromUser = deleteRoleFromUser;
+
     /*******************************************************************
      *
      * Generic page select
@@ -1979,9 +1998,11 @@ function usergrid_console_app() {
      ******************************************************************/
 
     var current_role_name = "";
+    var current_role_id = "";
 
-    function pageOpenRole(roleName) {
+    function pageOpenRole(roleName, roleId) {
         current_role_name = roleName;
+        current_role_id = roleId;
         requestRole();
         showPanel("#role-panel");
         $('#role-panel-list').hide();
@@ -1991,6 +2012,19 @@ function usergrid_console_app() {
         $('#role-panel-settings').show();
     }
     window.usergrid.console.pageOpenRole = pageOpenRole;
+
+    function pageSelectRoleUsers (roleName, roleId){
+        current_role_name = roleName;
+        current_role_id = roleId;
+        requestRole();
+        showPanel("#role-panel");
+        $('#role-panel-list').hide();
+        //show the search tab
+        selectTabButton('#button-role-users');
+        //populate the panel content
+        $('#role-panel-users').show();
+    }
+    window.usergrid.console.pageSelectRoleUsers = pageSelectRoleUsers;
 
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.permissions.html");
 
@@ -2032,40 +2066,20 @@ function usergrid_console_app() {
         }
     }
 
-    usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.permissions.html");
+    usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.users.html");
     var rolesUsersResults = ''
     function displayRolesUsers(response) {
-        roles = {};
-        if (response.data) {
-            roles = response.data;
+        data = {};
+        data.roleId = current_role_id;
+        data.rolename = current_role_name;
+        if (response.entities) {
+            data.users = response.entities;
         }
-        rolesUsersResults = usergrid.console.ui.displayEntityListResponse({query: roles_query}, {
-            "listItemTemplate" : "usergrid.ui.panels.roles.users.html",
-            "getListItemTemplateOptions" : function(entity, path) {
-                var name = entity.name;
-                var title = entity.title;
-                var username = entity.username;
-                var id = 'roleUserListItem';
-                return {
-                    entity : entity,
-                    name : name,
-                    username: username,
-                    id: id
-                };
-            },
-            "onRender" : function() {
-                //$("#users-by-alphabetical").show();
-            },
-            "onNoEntities" : function() {
-                if (userLetter != "*") return "No roles found";
-                return null;
-            },
-            "output" : "#roles-response-table",
-            "nextPrevDiv" : "#roles-next-prev",
-            "prevButton" : "#button-roles-prev",
-            "nextButton" : "#button-roles-next",
-            "noEntitiesMsg" : "No Users found"
-        }, response);
+        $.tmpl("usergrid.ui.panels.role.users.html", {"data" : data}, {}).appendTo("#role-users");
+    }
+
+    function selectAllRolesUsers(){
+        $('[id=userRoleItem]').attr('checked', 'true');
     }
 
     function requestRole() {
@@ -2083,7 +2097,7 @@ function usergrid_console_app() {
             function() {
                 $("#application-roles").html("<h2>Unable to retrieve " + roles[current_role_name] + " role permissions.</h2>");
             });
-            client.requestApplicationRoleUsers(current_application_id, current_role_name,
+            client.requestApplicationRoleUsers(current_application_id, current_role_id,
                 function(response) {
                     displayRolesUsers(response);
                 },

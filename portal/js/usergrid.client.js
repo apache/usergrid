@@ -708,8 +708,8 @@ usergrid.Client = function(options) {
     }
     this.requestApplicationRolePermissions = requestApplicationRolePermissions;
 
-    function requestApplicationRoleUsers(applicationId, roleName, success, failure) {
-        apiGetRequest("/" + applicationId + "/rolenames/" + roleName + "/users/", null, success, failure);
+    function requestApplicationRoleUsers(applicationId, roleId, success, failure) {
+        apiGetRequest("/" + applicationId + "/roles/" + roleId + "/users/", null, success, failure);
     }
     this.requestApplicationRoleUsers = requestApplicationRoleUsers;
 
@@ -1183,11 +1183,11 @@ usergrid.Client = function(options) {
     }
     this.addUserToRole = addUserToRole;
 
-    function removeUserFromRole(applicationId, username, rolename, success, failure) {
+    function removeUserFromRole(applicationId, username, roleId, success, failure) {
         if (!self.loggedInUser) {
             failure();
         }
-        apiRequest("DELETE",  "/" + applicationId + "/users/" + username + "/roles/" + rolename, null, null, success, failure);
+        apiRequest("DELETE",  "/" + applicationId + "/users/" + username + "/roles/" + roleId, null, null, success, failure);
     }
     this.removeUserFromRole = removeUserFromRole;
 
