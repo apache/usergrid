@@ -226,7 +226,7 @@ public class UsersService extends AbstractCollectionService {
 			EntityRef entityRef = refs.get(0);
 			checkPermissionsForEntitySubPath(context, entityRef, "permissions");
 
-			Query q = context.getParameters().get(1).getQuery();
+			Query q = context.getParameters().get(0).getQuery();
 			if (q == null) {
 				return null;
 			}
