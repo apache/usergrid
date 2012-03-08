@@ -737,7 +737,6 @@ usergrid.Client = function(options) {
    
 
     function deleteApplicationUserPermission(applicationId, userName, permission, success, failure) {
-        // DELETE /<app_id>/users/<user_id>/permissions?permission=<permission> - to delete a permission
         apiRequest("DELETE", "/" + applicationId + "/users/" + userName, {
             permission : permission
         }, null, success, failure);
