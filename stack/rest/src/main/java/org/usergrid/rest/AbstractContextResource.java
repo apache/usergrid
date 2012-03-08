@@ -120,7 +120,7 @@ public abstract class AbstractContextResource {
 		if (!useReCaptcha()) {
 			return "";
 		}
-		ReCaptcha c = ReCaptchaFactory.newReCaptcha(
+		ReCaptcha c = ReCaptchaFactory.newSecureReCaptcha(
 				properties.getProperty("usergrid.recaptcha.public"),
 				properties.getProperty("usergrid.recaptcha.private"), false);
 		return c.createRecaptchaHtml(null, null);
