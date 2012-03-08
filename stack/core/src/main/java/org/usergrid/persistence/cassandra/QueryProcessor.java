@@ -48,7 +48,8 @@ import org.usergrid.utils.StringUtils;
 
 public class QueryProcessor {
 
-	private static final Logger logger = LoggerFactory.getLogger(QueryProcessor.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(QueryProcessor.class);
 
 	Query query;
 
@@ -91,10 +92,14 @@ public class QueryProcessor {
 		// consolidate all the filters into a set of ranges
 		Set<String> names = getFilterPropertyNames();
 		for (String name : names) {
+			FilterOperator operator = null;
+			Object value = null;
 			RangeValue start = null;
 			RangeValue finish = null;
 			for (FilterPredicate f : filters) {
 				if (f.getPropertyName().equals(name)) {
+					operator = f.getOperator();
+					value = f.getValue();
 					RangePair r = getRangeForFilter(f);
 					if (r.start != null) {
 						if ((start == null)
@@ -110,7 +115,8 @@ public class QueryProcessor {
 					}
 				}
 			}
-			slices.add(new QuerySlice(name, start, finish, null, false));
+			slices.add(new QuerySlice(name, operator, value, start, finish,
+					null, false));
 		}
 
 		// process sorts
@@ -118,7 +124,7 @@ public class QueryProcessor {
 			// if no filters, turn first filter into a sort
 			SortPredicate sort = ListUtils.dequeue(sorts);
 			slices.add(new QuerySlice(sort.getPropertyName(), null, null, null,
-					sort.getDirection() == DESCENDING));
+					null, null, sort.getDirection() == DESCENDING));
 		} else if (sorts.size() > 0) {
 			// match up sorts with existing filters
 			for (ListIterator<SortPredicate> iter = sorts.listIterator(); iter
@@ -407,14 +413,19 @@ public class QueryProcessor {
 	public static class QuerySlice {
 
 		String propertyName;
+		FilterOperator operator;
+		Object value;
 		RangeValue start;
 		RangeValue finish;
 		ByteBuffer cursor;
 		boolean reversed;
 
-		QuerySlice(String propertyName, RangeValue start, RangeValue finish,
-				ByteBuffer cursor, boolean reversed) {
+		QuerySlice(String propertyName, FilterOperator operator, Object value,
+				RangeValue start, RangeValue finish, ByteBuffer cursor,
+				boolean reversed) {
 			this.propertyName = propertyName;
+			this.operator = operator;
+			this.value = value;
 			this.start = start;
 			this.finish = finish;
 			this.cursor = cursor;
@@ -445,6 +456,14 @@ public class QueryProcessor {
 			this.finish = finish;
 		}
 
+		public Object getValue() {
+			return value;
+		}
+
+		public void setValue(Object value) {
+			this.value = value;
+		}
+
 		public ByteBuffer getCursor() {
 			return cursor;
 		}
@@ -466,11 +485,14 @@ public class QueryProcessor {
 			final int prime = 31;
 			int result = 1;
 			result = prime * result
+					+ ((cursor == null) ? 0 : cursor.hashCode());
+			result = prime * result
 					+ ((finish == null) ? 0 : finish.hashCode());
 			result = prime * result
 					+ ((propertyName == null) ? 0 : propertyName.hashCode());
 			result = prime * result + (reversed ? 1231 : 1237);
 			result = prime * result + ((start == null) ? 0 : start.hashCode());
+			result = prime * result + ((value == null) ? 0 : value.hashCode());
 			return result;
 		}
 
@@ -486,6 +508,13 @@ public class QueryProcessor {
 				return false;
 			}
 			QuerySlice other = (QuerySlice) obj;
+			if (cursor == null) {
+				if (other.cursor != null) {
+					return false;
+				}
+			} else if (!cursor.equals(other.cursor)) {
+				return false;
+			}
 			if (finish == null) {
 				if (other.finish != null) {
 					return false;
@@ -508,6 +537,13 @@ public class QueryProcessor {
 					return false;
 				}
 			} else if (!start.equals(other.start)) {
+				return false;
+			}
+			if (value == null) {
+				if (other.value != null) {
+					return false;
+				}
+			} else if (!value.equals(other.value)) {
 				return false;
 			}
 			return true;

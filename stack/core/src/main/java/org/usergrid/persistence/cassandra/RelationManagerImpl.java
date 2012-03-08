@@ -81,6 +81,7 @@ import static org.usergrid.utils.CompositeUtils.setEqualityFlag;
 import static org.usergrid.utils.CompositeUtils.setGreaterThanEqualityFlag;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.ConversionUtils.bytes;
+import static org.usergrid.utils.ConversionUtils.getDouble;
 import static org.usergrid.utils.ConversionUtils.string;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.InflectionUtils.singularize;
@@ -129,6 +130,7 @@ import org.usergrid.persistence.ConnectionRef;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Query;
+import org.usergrid.persistence.Query.FilterOperator;
 import org.usergrid.persistence.Query.FilterPredicate;
 import org.usergrid.persistence.RelationManager;
 import org.usergrid.persistence.Results;
@@ -146,6 +148,8 @@ import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
+
+import com.beoui.geocell.model.Point;
 
 public class RelationManagerImpl implements RelationManager,
 		ApplicationContextAware {
@@ -2133,9 +2137,26 @@ public class RelationManagerImpl implements RelationManager,
 		return getIndexResults(results, true, null, itemType, level);
 	}
 
+	@SuppressWarnings("rawtypes")
 	public Results searchCollection(String collectionName, String itemType,
 			Map<String, Object> subkeyProperties, Object subkey_key,
 			QuerySlice slice, int count, Level level) throws Exception {
+
+		if (slice.operator == FilterOperator.WITHIN) {
+			Object v = slice.getValue();
+			if ((v instanceof List) && (((List) v).size() >= 3)) {
+				double maxDistance = getDouble(((List) v).get(0));
+				double latitude = getDouble(((List) v).get(1));
+				double longitude = getDouble(((List) v).get(2));
+				Results r = em.getGeoIndexManager().proximitySearchCollection(
+						getHeadEntity(), collectionName,
+						slice.getPropertyName(),
+						new Point(latitude, longitude), maxDistance, null,
+						count, false, level);
+				return r;
+			}
+			return new Results();
+		}
 
 		Object indexKey = key(headEntity.getUuid(), collectionName);
 		if (subkeyProperties != null) {
@@ -2207,8 +2228,24 @@ public class RelationManagerImpl implements RelationManager,
 				connection.getConnectedEntityType(), level);
 	}
 
+	@SuppressWarnings("rawtypes")
 	public Results searchConnections(ConnectionRefImpl connection,
 			QuerySlice slice, int count, Level level) throws Exception {
+
+		if (slice.operator == FilterOperator.WITHIN) {
+			Object v = slice.getValue();
+			if ((v instanceof List) && (((List) v).size() >= 3)) {
+				double maxDistance = getDouble(((List) v).get(0));
+				double latitude = getDouble(((List) v).get(1));
+				double longitude = getDouble(((List) v).get(2));
+				Results r = em.getGeoIndexManager().proximitySearchConnections(
+						connection.getIndexId(), slice.getPropertyName(),
+						new Point(latitude, longitude), maxDistance, null,
+						count, false, level);
+				return r;
+			}
+			return new Results();
+		}
 
 		List<HColumn<ByteBuffer, ByteBuffer>> results = searchIndex(
 				key(connection.getIndexId(), INDEX_CONNECTIONS), slice, count);
@@ -2535,6 +2572,7 @@ public class RelationManagerImpl implements RelationManager,
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Results searchCollection(String collectionName, Query query)
 			throws Exception {

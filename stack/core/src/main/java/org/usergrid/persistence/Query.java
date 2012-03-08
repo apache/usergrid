@@ -1411,16 +1411,28 @@ public class Query {
 				return null;
 			}
 			if (p.operator == FilterOperator.CONTAINS) {
-				String propertyName = p.propertyName;
-				if (StringUtils.isNotEmpty(propertyName)) {
-					propertyName += ".keywords";
-				} else {
-					propertyName = "keywords";
-				}
+				String propertyName = appendSuffix(p.propertyName, "keywords");
 				return new FilterPredicate(propertyName, FilterOperator.EQUAL,
 						p.value);
+			} else if (p.operator == FilterOperator.WITHIN) {
+				String propertyName = appendSuffix(p.propertyName,
+						"coordinates");
+				return new FilterPredicate(propertyName, FilterOperator.WITHIN,
+						p.value);
 			}
+
 			return p;
+		}
+
+		private static String appendSuffix(String str, String suffix) {
+			if (StringUtils.isNotEmpty(str)) {
+				if (!str.endsWith("." + suffix)) {
+					str += "." + suffix;
+				}
+			} else {
+				str = suffix;
+			}
+			return str;
 		}
 
 		public String getPropertyName() {

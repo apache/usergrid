@@ -77,7 +77,7 @@ public class QueryTest {
 		testPredicate(f, "g", Query.FilterOperator.EQUAL, new Float(.05));
 
 		f = i.next();
-		testPredicate(f, "loc", Query.FilterOperator.WITHIN,
+		testPredicate(f, "loc.coordinates", Query.FilterOperator.WITHIN,
 				Arrays.asList(new Float(.05), new Long(5), new Long(6)));
 
 		q = Query.fromQL("select * where a = 5");
@@ -120,7 +120,7 @@ public class QueryTest {
 		q = Query.fromQL("select * where loc within 5 of 6,7");
 		i = q.getFilterPredicates().iterator();
 		f = i.next();
-		testPredicate(f, "loc", Query.FilterOperator.WITHIN,
+		testPredicate(f, "loc.coordinates", Query.FilterOperator.WITHIN,
 				Arrays.asList(new Long(5), new Long(6), new Long(7)));
 		logger.info(q.toString());
 
@@ -191,6 +191,11 @@ public class QueryTest {
 		q.addFilter("name <= 'david'");
 		qp = new QueryProcessor(q);
 		testStringRange("bob", false, "david", true, qp, 1);
+
+		q = new Query();
+		q.addFilter("loc within 5 of 6,7");
+		qp = new QueryProcessor(q);
+
 	}
 
 	public void testIntRange(int start, boolean startInclusive, int finish,

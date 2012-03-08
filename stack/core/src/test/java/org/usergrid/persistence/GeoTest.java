@@ -107,6 +107,10 @@ public class GeoTest extends AbstractPersistenceTest {
 
 		assertEquals(1, results.size());
 
+		results = em.searchCollection(em.getApplicationRef(), "users",
+				Query.fromQL("location within 1000 of 37.776753, -122.407846"));
+		assertEquals(1, results.size());
+
 		updatePos(em, user, 37.776753, -122.407846);
 
 		center = new Point(37.428526, -122.140916);
@@ -116,6 +120,36 @@ public class GeoTest extends AbstractPersistenceTest {
 
 		assertEquals(0, results.size());
 
+		results = em.searchCollection(em.getApplicationRef(), "users",
+				Query.fromQL("location within 1000 of 37.428526, -122.140916"));
+		assertEquals(0, results.size());
+
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("name", "Brickhouse");
+		properties.put("address", "426 Brannan Street");
+		properties.put("location", getLocation(37.779632, -122.395131));
+
+		Entity restaurant = em.create("restaurant", properties);
+		assertNotNull(restaurant);
+
+		em.createConnection(user, "likes", restaurant);
+
+		results = em.searchConnectedEntities(user,
+				Query.fromQL("location within 2000 of 37.776753, -122.407846"));
+		assertEquals(1, results.size());
+
+		results = em.searchConnectedEntities(user,
+				Query.fromQL("location within 1000 of 37.776753, -122.407846"));
+		assertEquals(0, results.size());
+
+	}
+
+	public Map<String, Object> getLocation(double latitude, double longitude)
+			throws Exception {
+		Map<String, Object> latlong = new LinkedHashMap<String, Object>();
+		latlong.put("latitude", latitude);
+		latlong.put("longitude", longitude);
+		return latlong;
 	}
 
 	public void updatePos(EntityManager em, EntityRef entity, double latitude,

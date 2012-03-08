@@ -1,4 +1,4 @@
-// $ANTLR 3.1.3 Mar 17, 2009 19:23:44 org/usergrid/persistence/query/QueryFilter.g 2012-03-07 22:01:45
+// $ANTLR 3.1.3 Mar 17, 2009 19:23:44 org/usergrid/persistence/query/QueryFilter.g 2012-03-07 22:54:28
 
 package org.usergrid.persistence.query;
 
@@ -102,7 +102,7 @@ public class QueryFilterParser extends Parser {
             // org/usergrid/persistence/query/QueryFilter.g:102:5: ( ID )
             // org/usergrid/persistence/query/QueryFilter.g:102:6: ID
             {
-            match(input,ID,FOLLOW_ID_in_property585); 
+            match(input,ID,FOLLOW_ID_in_property597); 
 
             }
 
@@ -295,17 +295,17 @@ public class QueryFilterParser extends Parser {
             // org/usergrid/persistence/query/QueryFilter.g:114:5: ( property operator value ( ( ',' | 'of' ) second_value ( ',' third_value )? )? EOF )
             // org/usergrid/persistence/query/QueryFilter.g:114:9: property operator value ( ( ',' | 'of' ) second_value ( ',' third_value )? )? EOF
             {
-            pushFollow(FOLLOW_property_in_filter747);
+            pushFollow(FOLLOW_property_in_filter759);
             property1=property();
 
             state._fsp--;
 
-            pushFollow(FOLLOW_operator_in_filter749);
+            pushFollow(FOLLOW_operator_in_filter761);
             operator2=operator();
 
             state._fsp--;
 
-            pushFollow(FOLLOW_value_in_filter751);
+            pushFollow(FOLLOW_value_in_filter763);
             value3=value();
 
             state._fsp--;
@@ -330,7 +330,7 @@ public class QueryFilterParser extends Parser {
                         throw mse;
                     }
 
-                    pushFollow(FOLLOW_second_value_in_filter762);
+                    pushFollow(FOLLOW_second_value_in_filter774);
                     second_value4=second_value();
 
                     state._fsp--;
@@ -346,8 +346,8 @@ public class QueryFilterParser extends Parser {
                         case 1 :
                             // org/usergrid/persistence/query/QueryFilter.g:114:62: ',' third_value
                             {
-                            match(input,29,FOLLOW_29_in_filter766); 
-                            pushFollow(FOLLOW_third_value_in_filter768);
+                            match(input,29,FOLLOW_29_in_filter778); 
+                            pushFollow(FOLLOW_third_value_in_filter780);
                             third_value5=third_value();
 
                             state._fsp--;
@@ -375,7 +375,7 @@ public class QueryFilterParser extends Parser {
             //System.out.println("Parsed query filter: " + property + " " + operator + " " + value + " " + second_value);
                 
 
-            match(input,EOF,FOLLOW_EOF_in_filter777); 
+            match(input,EOF,FOLLOW_EOF_in_filter789); 
 
             }
 
@@ -403,7 +403,7 @@ public class QueryFilterParser extends Parser {
             // org/usergrid/persistence/query/QueryFilter.g:128:2: ( ID )
             // org/usergrid/persistence/query/QueryFilter.g:128:4: ID
             {
-            match(input,ID,FOLLOW_ID_in_select_subject788); 
+            match(input,ID,FOLLOW_ID_in_select_subject800); 
 
 
             query.addSelect(input.toString(retval.start,input.LT(-1)));
@@ -438,7 +438,7 @@ public class QueryFilterParser extends Parser {
             // org/usergrid/persistence/query/QueryFilter.g:135:2: ( ID )
             // org/usergrid/persistence/query/QueryFilter.g:135:4: ID
             {
-            match(input,ID,FOLLOW_ID_in_select_assign_target800); 
+            match(input,ID,FOLLOW_ID_in_select_assign_target812); 
 
             }
 
@@ -468,7 +468,7 @@ public class QueryFilterParser extends Parser {
             // org/usergrid/persistence/query/QueryFilter.g:138:2: ( ID )
             // org/usergrid/persistence/query/QueryFilter.g:138:4: ID
             {
-            match(input,ID,FOLLOW_ID_in_select_assign_source811); 
+            match(input,ID,FOLLOW_ID_in_select_assign_source823); 
 
             }
 
@@ -498,13 +498,13 @@ public class QueryFilterParser extends Parser {
             // org/usergrid/persistence/query/QueryFilter.g:141:2: ( select_assign_target ':' select_assign_source )
             // org/usergrid/persistence/query/QueryFilter.g:141:4: select_assign_target ':' select_assign_source
             {
-            pushFollow(FOLLOW_select_assign_target_in_select_assign824);
+            pushFollow(FOLLOW_select_assign_target_in_select_assign836);
             select_assign_target7=select_assign_target();
 
             state._fsp--;
 
-            match(input,31,FOLLOW_31_in_select_assign826); 
-            pushFollow(FOLLOW_select_assign_source_in_select_assign828);
+            match(input,31,FOLLOW_31_in_select_assign838); 
+            pushFollow(FOLLOW_select_assign_source_in_select_assign840);
             select_assign_source6=select_assign_source();
 
             state._fsp--;
@@ -550,17 +550,17 @@ public class QueryFilterParser extends Parser {
             // org/usergrid/persistence/query/QueryFilter.g:149:4: ( property operator value ( ( ',' | 'of' ) second_value ( ',' third_value )? )? )
             // org/usergrid/persistence/query/QueryFilter.g:149:5: property operator value ( ( ',' | 'of' ) second_value ( ',' third_value )? )?
             {
-            pushFollow(FOLLOW_property_in_where843);
+            pushFollow(FOLLOW_property_in_where855);
             property8=property();
 
             state._fsp--;
 
-            pushFollow(FOLLOW_operator_in_where845);
+            pushFollow(FOLLOW_operator_in_where857);
             operator9=operator();
 
             state._fsp--;
 
-            pushFollow(FOLLOW_value_in_where847);
+            pushFollow(FOLLOW_value_in_where859);
             value10=value();
 
             state._fsp--;
@@ -585,7 +585,7 @@ public class QueryFilterParser extends Parser {
                         throw mse;
                     }
 
-                    pushFollow(FOLLOW_second_value_in_where858);
+                    pushFollow(FOLLOW_second_value_in_where870);
                     second_value11=second_value();
 
                     state._fsp--;
@@ -601,8 +601,8 @@ public class QueryFilterParser extends Parser {
                         case 1 :
                             // org/usergrid/persistence/query/QueryFilter.g:149:58: ',' third_value
                             {
-                            match(input,29,FOLLOW_29_in_where862); 
-                            pushFollow(FOLLOW_third_value_in_where864);
+                            match(input,29,FOLLOW_29_in_where874); 
+                            pushFollow(FOLLOW_third_value_in_where876);
                             third_value12=third_value();
 
                             state._fsp--;
@@ -705,7 +705,7 @@ public class QueryFilterParser extends Parser {
             // org/usergrid/persistence/query/QueryFilter.g:168:4: ( property ( direction )? )
             // org/usergrid/persistence/query/QueryFilter.g:168:5: property ( direction )?
             {
-            pushFollow(FOLLOW_property_in_order897);
+            pushFollow(FOLLOW_property_in_order909);
             property13=property();
 
             state._fsp--;
@@ -721,7 +721,7 @@ public class QueryFilterParser extends Parser {
                 case 1 :
                     // org/usergrid/persistence/query/QueryFilter.g:168:14: direction
                     {
-                    pushFollow(FOLLOW_direction_in_order899);
+                    pushFollow(FOLLOW_direction_in_order911);
                     direction14=direction();
 
                     state._fsp--;
@@ -795,14 +795,14 @@ public class QueryFilterParser extends Parser {
                 case 1 :
                     // org/usergrid/persistence/query/QueryFilter.g:179:5: '*'
                     {
-                    match(input,34,FOLLOW_34_in_select_expr913); 
+                    match(input,34,FOLLOW_34_in_select_expr925); 
 
                     }
                     break;
                 case 2 :
                     // org/usergrid/persistence/query/QueryFilter.g:179:11: select_subject ( ',' select_subject )*
                     {
-                    pushFollow(FOLLOW_select_subject_in_select_expr917);
+                    pushFollow(FOLLOW_select_subject_in_select_expr929);
                     select_subject();
 
                     state._fsp--;
@@ -822,8 +822,8 @@ public class QueryFilterParser extends Parser {
                     	case 1 :
                     	    // org/usergrid/persistence/query/QueryFilter.g:179:27: ',' select_subject
                     	    {
-                    	    match(input,29,FOLLOW_29_in_select_expr920); 
-                    	    pushFollow(FOLLOW_select_subject_in_select_expr922);
+                    	    match(input,29,FOLLOW_29_in_select_expr932); 
+                    	    pushFollow(FOLLOW_select_subject_in_select_expr934);
                     	    select_subject();
 
                     	    state._fsp--;
@@ -843,8 +843,8 @@ public class QueryFilterParser extends Parser {
                 case 3 :
                     // org/usergrid/persistence/query/QueryFilter.g:179:51: '{' select_assign ( ',' select_assign )* '}'
                     {
-                    match(input,35,FOLLOW_35_in_select_expr929); 
-                    pushFollow(FOLLOW_select_assign_in_select_expr931);
+                    match(input,35,FOLLOW_35_in_select_expr941); 
+                    pushFollow(FOLLOW_select_assign_in_select_expr943);
                     select_assign();
 
                     state._fsp--;
@@ -864,8 +864,8 @@ public class QueryFilterParser extends Parser {
                     	case 1 :
                     	    // org/usergrid/persistence/query/QueryFilter.g:179:70: ',' select_assign
                     	    {
-                    	    match(input,29,FOLLOW_29_in_select_expr934); 
-                    	    pushFollow(FOLLOW_select_assign_in_select_expr936);
+                    	    match(input,29,FOLLOW_29_in_select_expr946); 
+                    	    pushFollow(FOLLOW_select_assign_in_select_expr948);
                     	    select_assign();
 
                     	    state._fsp--;
@@ -879,7 +879,7 @@ public class QueryFilterParser extends Parser {
                         }
                     } while (true);
 
-                    match(input,36,FOLLOW_36_in_select_expr941); 
+                    match(input,36,FOLLOW_36_in_select_expr953); 
 
                     }
                     break;
@@ -910,8 +910,8 @@ public class QueryFilterParser extends Parser {
             // org/usergrid/persistence/query/QueryFilter.g:182:2: ( 'select' select_expr ( 'where' where ( 'and' where )* )? ( 'order by' order ( ',' order )* )? )
             // org/usergrid/persistence/query/QueryFilter.g:182:4: 'select' select_expr ( 'where' where ( 'and' where )* )? ( 'order by' order ( ',' order )* )?
             {
-            match(input,37,FOLLOW_37_in_ql958); 
-            pushFollow(FOLLOW_select_expr_in_ql960);
+            match(input,37,FOLLOW_37_in_ql970); 
+            pushFollow(FOLLOW_select_expr_in_ql972);
             select_expr();
 
             state._fsp--;
@@ -927,8 +927,8 @@ public class QueryFilterParser extends Parser {
                 case 1 :
                     // org/usergrid/persistence/query/QueryFilter.g:182:26: 'where' where ( 'and' where )*
                     {
-                    match(input,38,FOLLOW_38_in_ql963); 
-                    pushFollow(FOLLOW_where_in_ql965);
+                    match(input,38,FOLLOW_38_in_ql975); 
+                    pushFollow(FOLLOW_where_in_ql977);
                     where();
 
                     state._fsp--;
@@ -948,8 +948,8 @@ public class QueryFilterParser extends Parser {
                     	case 1 :
                     	    // org/usergrid/persistence/query/QueryFilter.g:182:41: 'and' where
                     	    {
-                    	    match(input,39,FOLLOW_39_in_ql968); 
-                    	    pushFollow(FOLLOW_where_in_ql970);
+                    	    match(input,39,FOLLOW_39_in_ql980); 
+                    	    pushFollow(FOLLOW_where_in_ql982);
                     	    where();
 
                     	    state._fsp--;
@@ -980,8 +980,8 @@ public class QueryFilterParser extends Parser {
                 case 1 :
                     // org/usergrid/persistence/query/QueryFilter.g:182:58: 'order by' order ( ',' order )*
                     {
-                    match(input,40,FOLLOW_40_in_ql977); 
-                    pushFollow(FOLLOW_order_in_ql979);
+                    match(input,40,FOLLOW_40_in_ql989); 
+                    pushFollow(FOLLOW_order_in_ql991);
                     order();
 
                     state._fsp--;
@@ -1001,8 +1001,8 @@ public class QueryFilterParser extends Parser {
                     	case 1 :
                     	    // org/usergrid/persistence/query/QueryFilter.g:182:76: ',' order
                     	    {
-                    	    match(input,29,FOLLOW_29_in_ql982); 
-                    	    pushFollow(FOLLOW_order_in_ql984);
+                    	    match(input,29,FOLLOW_29_in_ql994); 
+                    	    pushFollow(FOLLOW_order_in_ql996);
                     	    order();
 
                     	    state._fsp--;
@@ -1046,53 +1046,53 @@ public class QueryFilterParser extends Parser {
 
  
 
-    public static final BitSet FOLLOW_ID_in_property585 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_set_in_operator597 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_set_in_value656 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_set_in_second_value683 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_set_in_third_value710 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_property_in_filter747 = new BitSet(new long[]{0x000000001FFF0000L});
-    public static final BitSet FOLLOW_operator_in_filter749 = new BitSet(new long[]{0x00000000000016A0L});
-    public static final BitSet FOLLOW_value_in_filter751 = new BitSet(new long[]{0x0000000060000000L});
-    public static final BitSet FOLLOW_set_in_filter754 = new BitSet(new long[]{0x00000000000016A0L});
-    public static final BitSet FOLLOW_second_value_in_filter762 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_29_in_filter766 = new BitSet(new long[]{0x00000000000016A0L});
-    public static final BitSet FOLLOW_third_value_in_filter768 = new BitSet(new long[]{0x0000000000000000L});
-    public static final BitSet FOLLOW_EOF_in_filter777 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ID_in_select_subject788 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ID_in_select_assign_target800 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ID_in_select_assign_source811 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_select_assign_target_in_select_assign824 = new BitSet(new long[]{0x0000000080000000L});
-    public static final BitSet FOLLOW_31_in_select_assign826 = new BitSet(new long[]{0x0000000000000010L});
-    public static final BitSet FOLLOW_select_assign_source_in_select_assign828 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_property_in_where843 = new BitSet(new long[]{0x000000001FFF0000L});
-    public static final BitSet FOLLOW_operator_in_where845 = new BitSet(new long[]{0x00000000000016A0L});
-    public static final BitSet FOLLOW_value_in_where847 = new BitSet(new long[]{0x0000000060000002L});
-    public static final BitSet FOLLOW_set_in_where850 = new BitSet(new long[]{0x00000000000016A0L});
-    public static final BitSet FOLLOW_second_value_in_where858 = new BitSet(new long[]{0x0000000020000002L});
-    public static final BitSet FOLLOW_29_in_where862 = new BitSet(new long[]{0x00000000000016A0L});
-    public static final BitSet FOLLOW_third_value_in_where864 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_set_in_direction881 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_property_in_order897 = new BitSet(new long[]{0x0000000300000002L});
-    public static final BitSet FOLLOW_direction_in_order899 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_34_in_select_expr913 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_select_subject_in_select_expr917 = new BitSet(new long[]{0x0000000020000002L});
-    public static final BitSet FOLLOW_29_in_select_expr920 = new BitSet(new long[]{0x0000000000000010L});
-    public static final BitSet FOLLOW_select_subject_in_select_expr922 = new BitSet(new long[]{0x0000000020000002L});
-    public static final BitSet FOLLOW_35_in_select_expr929 = new BitSet(new long[]{0x0000000000000010L});
-    public static final BitSet FOLLOW_select_assign_in_select_expr931 = new BitSet(new long[]{0x0000001020000000L});
-    public static final BitSet FOLLOW_29_in_select_expr934 = new BitSet(new long[]{0x0000000000000010L});
-    public static final BitSet FOLLOW_select_assign_in_select_expr936 = new BitSet(new long[]{0x0000001020000000L});
-    public static final BitSet FOLLOW_36_in_select_expr941 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_37_in_ql958 = new BitSet(new long[]{0x0000000C00000010L});
-    public static final BitSet FOLLOW_select_expr_in_ql960 = new BitSet(new long[]{0x0000014000000002L});
-    public static final BitSet FOLLOW_38_in_ql963 = new BitSet(new long[]{0x0000000000000010L});
-    public static final BitSet FOLLOW_where_in_ql965 = new BitSet(new long[]{0x0000018000000002L});
-    public static final BitSet FOLLOW_39_in_ql968 = new BitSet(new long[]{0x0000000000000010L});
-    public static final BitSet FOLLOW_where_in_ql970 = new BitSet(new long[]{0x0000018000000002L});
-    public static final BitSet FOLLOW_40_in_ql977 = new BitSet(new long[]{0x0000000000000010L});
-    public static final BitSet FOLLOW_order_in_ql979 = new BitSet(new long[]{0x0000000020000002L});
-    public static final BitSet FOLLOW_29_in_ql982 = new BitSet(new long[]{0x0000000000000010L});
-    public static final BitSet FOLLOW_order_in_ql984 = new BitSet(new long[]{0x0000000020000002L});
+    public static final BitSet FOLLOW_ID_in_property597 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_set_in_operator609 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_set_in_value668 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_set_in_second_value695 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_set_in_third_value722 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_property_in_filter759 = new BitSet(new long[]{0x000000001FFF0000L});
+    public static final BitSet FOLLOW_operator_in_filter761 = new BitSet(new long[]{0x00000000000016A0L});
+    public static final BitSet FOLLOW_value_in_filter763 = new BitSet(new long[]{0x0000000060000000L});
+    public static final BitSet FOLLOW_set_in_filter766 = new BitSet(new long[]{0x00000000000016A0L});
+    public static final BitSet FOLLOW_second_value_in_filter774 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_29_in_filter778 = new BitSet(new long[]{0x00000000000016A0L});
+    public static final BitSet FOLLOW_third_value_in_filter780 = new BitSet(new long[]{0x0000000000000000L});
+    public static final BitSet FOLLOW_EOF_in_filter789 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_ID_in_select_subject800 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_ID_in_select_assign_target812 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_ID_in_select_assign_source823 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_select_assign_target_in_select_assign836 = new BitSet(new long[]{0x0000000080000000L});
+    public static final BitSet FOLLOW_31_in_select_assign838 = new BitSet(new long[]{0x0000000000000010L});
+    public static final BitSet FOLLOW_select_assign_source_in_select_assign840 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_property_in_where855 = new BitSet(new long[]{0x000000001FFF0000L});
+    public static final BitSet FOLLOW_operator_in_where857 = new BitSet(new long[]{0x00000000000016A0L});
+    public static final BitSet FOLLOW_value_in_where859 = new BitSet(new long[]{0x0000000060000002L});
+    public static final BitSet FOLLOW_set_in_where862 = new BitSet(new long[]{0x00000000000016A0L});
+    public static final BitSet FOLLOW_second_value_in_where870 = new BitSet(new long[]{0x0000000020000002L});
+    public static final BitSet FOLLOW_29_in_where874 = new BitSet(new long[]{0x00000000000016A0L});
+    public static final BitSet FOLLOW_third_value_in_where876 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_set_in_direction893 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_property_in_order909 = new BitSet(new long[]{0x0000000300000002L});
+    public static final BitSet FOLLOW_direction_in_order911 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_34_in_select_expr925 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_select_subject_in_select_expr929 = new BitSet(new long[]{0x0000000020000002L});
+    public static final BitSet FOLLOW_29_in_select_expr932 = new BitSet(new long[]{0x0000000000000010L});
+    public static final BitSet FOLLOW_select_subject_in_select_expr934 = new BitSet(new long[]{0x0000000020000002L});
+    public static final BitSet FOLLOW_35_in_select_expr941 = new BitSet(new long[]{0x0000000000000010L});
+    public static final BitSet FOLLOW_select_assign_in_select_expr943 = new BitSet(new long[]{0x0000001020000000L});
+    public static final BitSet FOLLOW_29_in_select_expr946 = new BitSet(new long[]{0x0000000000000010L});
+    public static final BitSet FOLLOW_select_assign_in_select_expr948 = new BitSet(new long[]{0x0000001020000000L});
+    public static final BitSet FOLLOW_36_in_select_expr953 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_37_in_ql970 = new BitSet(new long[]{0x0000000C00000010L});
+    public static final BitSet FOLLOW_select_expr_in_ql972 = new BitSet(new long[]{0x0000014000000002L});
+    public static final BitSet FOLLOW_38_in_ql975 = new BitSet(new long[]{0x0000000000000010L});
+    public static final BitSet FOLLOW_where_in_ql977 = new BitSet(new long[]{0x0000018000000002L});
+    public static final BitSet FOLLOW_39_in_ql980 = new BitSet(new long[]{0x0000000000000010L});
+    public static final BitSet FOLLOW_where_in_ql982 = new BitSet(new long[]{0x0000018000000002L});
+    public static final BitSet FOLLOW_40_in_ql989 = new BitSet(new long[]{0x0000000000000010L});
+    public static final BitSet FOLLOW_order_in_ql991 = new BitSet(new long[]{0x0000000020000002L});
+    public static final BitSet FOLLOW_29_in_ql994 = new BitSet(new long[]{0x0000000000000010L});
+    public static final BitSet FOLLOW_order_in_ql996 = new BitSet(new long[]{0x0000000020000002L});
 
 }

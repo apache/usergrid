@@ -299,6 +299,26 @@ public class GeoIndexManager {
 		return doSearch(center, maxDistance, gqe, count, level);
 	}
 
+	public Results proximitySearchConnections(final UUID connectionIndexId,
+			final String propertyName, Point center, double maxDistance,
+			final UUID startResult, final int count, final boolean reversed,
+			Level level) throws Exception {
+
+		GeocellQueryEngine gqe = new GeocellQueryEngine() {
+			@SuppressWarnings("unchecked")
+			@Override
+			public <T> List<T> query(GeocellQuery baseQuery,
+					List<String> curGeocellsUnique, Class<T> entityClass) {
+				return (List<T>) GeoIndexManager.this
+						.query(key(connectionIndexId, INDEX_CONNECTIONS,
+								propertyName), curGeocellsUnique, startResult,
+								count, reversed);
+			}
+		};
+
+		return doSearch(center, maxDistance, gqe, count, level);
+	}
+
 	private Results doSearch(Point center, double maxDistance,
 			GeocellQueryEngine gqe, int count, Level level) throws Exception {
 		List<EntityLocationRef> locations = null;
