@@ -117,6 +117,7 @@
     <bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
         <constructor-arg value="3"/>
         <property name="batchSubmitter" ref="batchSubmitter"/>
+        <property name="batchSize" value="${cassandra.counter.batchOpsSize}"/>
     </bean>
 
     <bean id="batchSubmitter" class="com.usergrid.count.CassandraSubmitter">

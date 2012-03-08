@@ -54,7 +54,7 @@ public class CassandraCounterStore implements CounterStore {
             HCounterColumn column =
                     new HCounterColumnImpl(count.getColumnName(), count.getValue(), count.getColumnNameSerializer());
             mutator.addCounter(count.getKeyNameBytes(), count.getTableName(), column);
-          log.info("added counter: {} ", column);
+            log.debug("added counter: {} ", column);
         }
         try {
           mutator.execute();
