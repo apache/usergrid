@@ -38,19 +38,19 @@
             <br/>
             <div class="user-roles-title">Permissions </div>
             <h4>Add Permission Rule</h4>
-            <form id="role-permissions-form" action="" onsubmit="usergrid.console.addRolePermission('${role}'); return false;" class="well form-inline" autocomplete="off">
-                Path: <input id="role-permission-path-entry-input" type="text" name="path" value="/" />
+            <form id="role-permissions-form" action="" onsubmit="usergrid.console.addUserPermission('${uuid}'); return false;" class="well form-inline" autocomplete="off">
+                Path: <input id="user-permission-path-entry-input" type="text" name="path" value="/" />
                 <label class="checkbox">
-                    <input id="role-permission-op-get-checkbox" type="checkbox" name="get" value="get"/>
+                    <input id="user-permission-op-get-checkbox" type="checkbox" name="get" value="get"/>
                     get </label>
                 <label class="checkbox">
-                    <input id="role-permission-op-post-checkbox" type="checkbox" name="post" value="post"/>
+                    <input id="user-permission-op-post-checkbox" type="checkbox" name="post" value="post"/>
                     post </label>
                 <label class="checkbox">
-                    <input id="role-permission-op-put-checkbox" type="checkbox" name="put" value="put"/>
+                    <input id="user-permission-op-put-checkbox" type="checkbox" name="put" value="put"/>
                     put </label>
                 <label class="checkbox">
-                    <input id="role-permission-op-delete-checkbox" type="checkbox" name="delete" value="delete"/>
+                    <input id="user-permission-op-delete-checkbox" type="checkbox" name="delete" value="delete"/>
                     delete </label>
                 <button type="submit" class="btn btn-usergrid"><i class="icon-plus-sign icon-white"></i> Add</button >
             </form>
@@ -77,7 +77,7 @@
                     <td class="role-permission-op">{{if $value.ops.put}}<i class="icon-ok"></i>{{/if}}</td>
                     <td class="role-permission-op">{{if $value.ops.delete}}<i class="icon-ok"></i>{{/if}}</td>
                     <td class="role-permission-delete">
-                        <a onclick="usergrid.console.deleteRolePermission('${role}', '${$value.perm}'); return false;" href="#" class="btn btn-danger"><i class="icon-trash icon-white"></i> Remove</a>
+                        <a onclick="usergrid.console.deleteUserPermission('${role}', '${$value.perm}'); return false;" href="#" class="btn btn-danger"><i class="icon-trash icon-white"></i> Remove</a>
                     </td>
                 </tr>
             {{/each}}

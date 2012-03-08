@@ -727,12 +727,21 @@ usergrid.Client = function(options) {
     }
     this.deleteApplicationRolePermission = deleteApplicationRolePermission;
 
-    function addApplicationUserPermission(applicationId, username, permission, success, failure) {
-        apiRequest("POST", "/" + applicationId + "/users/" + username, null, JSON.stringify({
+    function addApplicationUserPermission(applicationId, userName, permission, success, failure) {
+        apiRequest("POST", "/" + applicationId + "/users/" + userName + "/permissions", null, JSON.stringify({
             permission : permission
         }), success, failure);
     }
     this.addApplicationUserPermission = addApplicationUserPermission;
+
+   
+
+    function deleteApplicationUserPermission(applicationId, userName, permission, success, failure) {
+        apiRequest("DELETE", "/" + applicationId + "/users/" + userName, {
+            permission : permission
+        }, null, success, failure);
+    }
+    this.deleteApplicationUserPermission = deleteApplicationUserPermission;
 
     //
     // Get application counters

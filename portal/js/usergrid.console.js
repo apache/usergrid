@@ -855,6 +855,7 @@ function usergrid_console_app() {
     $("#dialog-form-add-group-to-user").submit(submitAddGroupToUser);
     $("#dialog-form-add-user-to-group").submit(submitAddUserToGroup);
     $("#dialog-form-add-user-to-role").submit(submitAddUserToRole);
+    $("#dialog-form-add-role-to-user").submit(submitAddRoleToUser);
 
     function checkLength2(input, min, max) {
         if (input.val().length > max || input.val().length < min) {
@@ -1074,6 +1075,27 @@ function usergrid_console_app() {
         }
     }
 
+    function submitAddRoleToUser() {
+        var form = $(this);
+        formClearErrors(form);
+
+        var roleIdField = $('#search-roles-user-name-input');
+
+        var bValid = checkLength2(roleIdField, 1, 80)
+            && checkRegexp2(roleIdField, usernameRegex, "username only allows : a-z, 0-9, dot, and dash")
+
+        var username = $('#search-roles-user-name-input').val();
+        if (bValid) {
+            client.addUserToRole(current_application_id, current_role_id, username,
+                 function() {pageSelectRoleUsers(current_role_id, current_role_name);},
+                function() {
+                    alert("Unable to add user to role: " + client.getLastErrorMessage('An internal error occured.'));
+                }
+            );
+            $(this).modal('hide');
+        }
+    }
+
     function submitAddUserToRole() {
         var form = $(this);
         formClearErrors(form);
@@ -1089,7 +1111,7 @@ function usergrid_console_app() {
         roleId = roleId.replace('/','');
         if (bValid) {
             client.addUserToRole(current_application_id, roleId, username,
-                function() {pageSelectUserPermissions(username);},
+                 function() {pageSelectUserPermissions(username);},
                 function() {
                     alert("Unable to add user to role: " + client.getLastErrorMessage('An internal error occured.'));
                 }
@@ -1579,7 +1601,7 @@ function usergrid_console_app() {
             
             $.tmpl("usergrid.ui.panels.user.permissions.html", user_data, options).appendTo("#user-panel-permissions");
             updateRolesAutocomplete();
-            updatePermissionAutocompleteCollections();
+            updateQueryAutocompleteCollectionsUsers();
         }
     }
 
@@ -2080,7 +2102,6 @@ function usergrid_console_app() {
     window.usergrid.console.pageSelectRoleUsers = pageSelectRoleUsers;
 
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.permissions.html");
-
     var permissions = {};
     function displayPermissions(response) {
         var section = $("#role-permissions");
@@ -2122,6 +2143,7 @@ function usergrid_console_app() {
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.users.html");
     var rolesUsersResults = ''
     function displayRolesUsers(response) {
+        $("#role-users").html('');
         data = {};
         data.roleId = current_role_id;
         data.rolename = current_role_name;
@@ -2129,11 +2151,13 @@ function usergrid_console_app() {
             data.users = response.entities;
         }
         $.tmpl("usergrid.ui.panels.role.users.html", {"data" : data}, {}).appendTo("#role-users");
+        updateUsersForRolesAutocomplete();
     }
 
     function selectAllRolesUsers(){
         $('[id=userRoleItem]').attr('checked', 'true');
     }
+    window.usergrid.console.selectAllRolesUsers = selectAllRolesUsers;
 
     function requestRole() {
         $("#role-section-title").html("");
@@ -2200,6 +2224,54 @@ function usergrid_console_app() {
         }
     }
     window.usergrid.console.addRolePermission = addRolePermission;
+
+    function deleteUserPermission(userName, permission) {
+        console.log("delete " + userName + " - " + permission);
+        confirmDelete(function(){
+            client.deleteApplicationUserPermission(current_application_id, userName, permission,
+                function() {
+                    pageSelectUserPermissions (userName);
+                },
+                function() {
+                    alert("Unable to delete permission: " + client.getLastErrorMessage('An internal error occured'));
+                });
+        });
+    }
+    window.usergrid.console.deleteUserPermission = deleteUserPermission;
+
+    function addUserPermission(userName) {
+        var path = $('#user-permission-path-entry-input').val();
+        var ops = "";
+        var s = "";
+        if ($('#user-permission-op-get-checkbox').prop("checked")) {
+            ops = "get";
+            s = ",";
+        }
+        if ($('#user-permission-op-post-checkbox').prop("checked")) {
+            ops = ops + s + "post";
+            s = ",";
+        }
+        if ($('#user-permission-op-put-checkbox').prop("checked")) {
+            ops =  ops + s + "put";
+            s = ",";
+        }
+        if ($('#user-permission-op-delete-checkbox').prop("checked")) {
+            ops =  ops + s + "delete";
+            s = ",";
+        }
+        var permission = ops + ":" + path;
+        console.log("add " + userName + " - " + permission);
+        if (ops) {
+            client.addApplicationUserPermission(current_application_id, userName, permission, 
+                function() {                    
+                    pageSelectUserPermissions (userName);
+                },
+                function() {
+                    alert("Unable to add permission: " + client.getLastErrorMessage('An internal error occured'));
+                });
+        }
+    }
+    window.usergrid.console.addUserPermission = addUserPermission;
 
     /*******************************************************************
      * 
@@ -2672,7 +2744,7 @@ function usergrid_console_app() {
     function updateUsersAutocomplete(){
         client.requestUsers(current_application_id, updateUsersAutocompleteCallback, null);
         return false;
-    }
+    }    
 
     function updateUsersAutocompleteCallback(response) {
         users = {};
@@ -2688,6 +2760,24 @@ function usergrid_console_app() {
     }
     window.usergrid.console.updateUsersAutocompleteCallback = updateUsersAutocompleteCallback;
 
+    function updateUsersForRolesAutocomplete(){
+        client.requestUsers(current_application_id, updateUsersForRolesAutocompleteCallback, null);
+        return false;
+    }
+    
+    function updateUsersForRolesAutocompleteCallback(response) {
+        users = {};
+        if (response.entities) {
+            users = response.entities;
+        }
+        var pathInput = $("#search-roles-user-name-input");
+        var list = [];
+        for (var i in users)
+            list.push(users[i].username);
+        pathInput.typeahead({source:list});
+        pathInput.data('typeahead').source = list;
+    }
+    window.usergrid.console.updateUsersForRolesAutocompleteCallback = updateUsersForRolesAutocompleteCallback;
 
     function updateGroupsAutocomplete(){
         client.requestGroups(current_application_id, updateGroupsAutocompleteCallback, null);
@@ -2715,6 +2805,16 @@ function usergrid_console_app() {
             list.push('/' + applicationData.Collections[i].name + '/*');
         pathInput.typeahead({source:list});
     }
+
+    function updateQueryAutocompleteCollectionsUsers(){
+        var pathInput = $("#user-permission-path-entry-input");
+        var list = [];
+        for (var i in applicationData.Collections)
+            list.push('/' + applicationData.Collections[i].name + '/');
+        pathInput.typeahead({source:list});
+        pathInput.data('typeahead').source = list;
+    }
+
     function updateQueryAutocompleteCollections(){
         var pathInput = $("#query-path");
         var list = [];
