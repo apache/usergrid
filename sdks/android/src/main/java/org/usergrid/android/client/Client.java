@@ -38,6 +38,7 @@ import org.usergrid.android.client.response.ApiResponse;
 import org.usergrid.android.client.utils.DeviceUuidFactory;
 
 import android.content.Context;
+import android.location.Location;
 import android.util.Log;
 
 /**
@@ -449,6 +450,59 @@ public class Client {
 	}
 
 	/**
+	 * Log the user in with their Facebook access token retrived via Facebook
+	 * OAuth.
+	 * 
+	 * @param email
+	 * @param pin
+	 * @return non-null ApiResponse if request succeeds, check getError() for
+	 *         "invalid_grant" to see if access is denied.
+	 */
+	public ApiResponse authorizeAppUserViaFacebook(String fb_access_token) {
+		assertValidApplicationId();
+		loggedInUser = null;
+		accessToken = null;
+		currentOrganization = null;
+		Map<String, Object> formData = new HashMap<String, Object>();
+		formData.put("fb_access_token", fb_access_token);
+		ApiResponse response = apiRequest(HttpMethod.POST, formData, null,
+				applicationId, "auth", "facebook");
+		if (response == null) {
+			return response;
+		}
+		if (!isEmpty(response.getAccessToken()) && (response.getUser() != null)) {
+			loggedInUser = response.getUser();
+			accessToken = response.getAccessToken();
+			currentOrganization = null;
+			Log.i(TAG, "Client.authorizeAppUserViaFacebook(): Access token: "
+					+ accessToken);
+		} else {
+			Log.i(TAG, "Client.authorizeAppUserViaFacebook(): Response: "
+					+ response);
+		}
+		return response;
+	}
+
+	/**
+	 * Log the user in with their numeric pin-code and get a valid access token.
+	 * Executes asynchronously in background and the callbacks are called in the
+	 * UI thread.
+	 * 
+	 * @param email
+	 * @param pin
+	 * @param callback
+	 */
+	public void authorizeAppUserViaFacebookAsync(final String fb_access_token,
+			final ApiResponseCallback callback) {
+		(new ClientAsyncTask<ApiResponse>(callback) {
+			@Override
+			public ApiResponse doTask() {
+				return authorizeAppUserViaFacebook(fb_access_token);
+			}
+		}).execute();
+	}
+
+	/**
 	 * Log the app in with it's client id and client secret key. Not recommended
 	 * for production apps.
 	 * 
@@ -623,6 +677,7 @@ public class Client {
 	public ApiResponse createUser(String username, String name, String email,
 			String password) {
 		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put("type", "user");
 		if (username != null) {
 			properties.put("username", username);
 		}
@@ -798,9 +853,9 @@ public class Client {
 	 * @param activity
 	 * @return
 	 */
-	public ApiResponse postGroupActivity(String userId, Activity activity) {
+	public ApiResponse postGroupActivity(String groupId, Activity activity) {
 		return apiRequest(HttpMethod.POST, null, null, applicationId, "groups",
-				userId, "activities", activity.getUuid().toString());
+				groupId, "activities", activity.getUuid().toString());
 	}
 
 	/**
@@ -979,6 +1034,43 @@ public class Client {
 	}
 
 	/**
+	 * Perform a query of the users collection within the specified distance of
+	 * the specified location and optionally using the provided query command.
+	 * For example: "name contains 'ed'".
+	 * 
+	 * @param distance
+	 * @param location
+	 * @param ql
+	 * @return
+	 */
+	public Query queryUsersWithinLocation(float distance, Location location,
+			String ql) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("ql", this.makeLocationQL(distance, location, ql));
+		Query q = queryEntitiesRequest(HttpMethod.GET, params, null,
+				applicationId, "users");
+		return q;
+	}
+
+	/**
+	 * Perform a query of the users collection within the specified distance of
+	 * the specified location and optionally using the provided query command.
+	 * For example: "name contains 'ed'". Executes asynchronously in background
+	 * and the callbacks are called in the UI thread.
+	 * 
+	 * @param distance
+	 * @param location
+	 * @param callback
+	 */
+	public void queryUsersNearLocation(float distance, Location location,
+			String ql, QueryResultsCallback callback) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("ql", this.makeLocationQL(distance, location, ql));
+		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
+				applicationId, "users");
+	}
+
+	/**
 	 * Queries the users for the specified group.
 	 * 
 	 * @param groupId
@@ -1069,6 +1161,7 @@ public class Client {
 	 */
 	public ApiResponse createGroup(String groupPath, String groupTitle) {
 		Map<String, Object> data = new HashMap<String, Object>();
+		data.put("type", "group");
 		data.put("path", groupPath);
 		if (groupTitle != null) {
 			data.put("title", groupTitle);
@@ -1207,6 +1300,61 @@ public class Client {
 			String connectingEntityId, String connectionType, String ql,
 			QueryResultsCallback callback) {
 		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("ql", ql);
+		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
+				applicationId, connectingEntityType, connectingEntityId,
+				connectionType);
+	}
+
+	private String makeLocationQL(float distance, Location location, String ql) {
+		ql = (location != null ? "within " + distance + " of "
+				+ location.getLatitude() + ", " + location.getLongitude() : "")
+				+ (((ql != null) && (ql.trim().length() > 0)) ? " and " + ql
+						: "");
+		return ql;
+	}
+
+	/**
+	 * Query the connected entities within distance of a specific point.
+	 * 
+	 * @param connectingEntityType
+	 * @param connectingEntityId
+	 * @param connectionType
+	 * @param distance
+	 * @param latitude
+	 * @param longitude
+	 * @return
+	 */
+	public Query queryEntityConnectionsWithinLocation(
+			String connectingEntityType, String connectingEntityId,
+			String connectionType, float distance, Location location, String ql) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("ql", makeLocationQL(distance, location, ql));
+		Query q = queryEntitiesRequest(HttpMethod.GET, params, null,
+				applicationId, connectingEntityType, connectingEntityId,
+				connectionType);
+		return q;
+	}
+
+	/**
+	 * Query the connected entities within distance of a specific point. .
+	 * Executes asynchronously in background and the callbacks are called in the
+	 * UI thread.
+	 * 
+	 * @param connectingEntityType
+	 * @param connectingEntityId
+	 * @param connectionType
+	 * @param distance
+	 * @param latitude
+	 * @param longitude
+	 * @param callback
+	 */
+	public void queryEntityConnectionsWithinLocationAsync(
+			String connectingEntityType, String connectingEntityId,
+			String connectionType, float distance, Location location,
+			String ql, QueryResultsCallback callback) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("ql", makeLocationQL(distance, location, ql));
 		params.put("ql", ql);
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
 				applicationId, connectingEntityType, connectingEntityId,
