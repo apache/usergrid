@@ -17,6 +17,7 @@ package org.usergrid.rest.applications;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.usergrid.rest.utils.JSONPUtils.jsonMediaType;
 import static org.usergrid.rest.utils.JSONPUtils.wrapJSONPResponse;
 import static org.usergrid.rest.utils.JSONPUtils.wrapWithCallback;
@@ -24,8 +25,11 @@ import static org.usergrid.rest.utils.JSONPUtils.wrapWithCallback;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -76,11 +80,24 @@ public class AuthResource extends AbstractContextResource {
 		}
 	}
 
+	@POST
+	@Path("facebook")
+	@Consumes(APPLICATION_FORM_URLENCODED)
+	public Response authFBPost(@Context UriInfo ui,
+			@FormParam("fb_access_token") String fb_access_token,
+			@QueryParam("callback") @DefaultValue("") String callback)
+			throws Exception {
+
+		logger.info("AuthResource.authFBPost");
+
+		return authFB(ui, fb_access_token, callback);
+	}
+
 	@GET
-	@Path("fb")
+	@Path("facebook")
 	public Response authFB(@Context UriInfo ui,
 			@QueryParam("fb_access_token") String fb_access_token,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
+			@QueryParam("callback") @DefaultValue("") String callback)
 			throws Exception {
 
 		logger.info("AuthResource.authFB");
