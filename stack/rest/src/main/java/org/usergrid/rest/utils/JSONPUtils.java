@@ -15,7 +15,9 @@
  ******************************************************************************/
 package org.usergrid.rest.utils;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.usergrid.utils.JsonUtils.mapToJsonString;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,6 +27,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.MediaType;
+
+import org.usergrid.security.oauth.AccessInfo;
 
 public class JSONPUtils {
 
@@ -81,6 +85,15 @@ public class JSONPUtils {
 			return jsonResponse;
 
 		}
+	}
+
+	public static MediaType jsonMediaType(String callback) {
+		return isNotBlank(callback) ? new MediaType("application", "javascript")
+				: APPLICATION_JSON_TYPE;
+	}
+
+	public static String wrapWithCallback(AccessInfo accessInfo, String callback) {
+		return wrapJSONPResponse(callback, mapToJsonString(accessInfo));
 	}
 
 }

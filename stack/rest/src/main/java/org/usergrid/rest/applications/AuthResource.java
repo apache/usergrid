@@ -15,24 +15,47 @@
  ******************************************************************************/
 package org.usergrid.rest.applications;
 
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
+import static org.usergrid.rest.utils.JSONPUtils.jsonMediaType;
+import static org.usergrid.rest.utils.JSONPUtils.wrapJSONPResponse;
+import static org.usergrid.rest.utils.JSONPUtils.wrapWithCallback;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.amber.oauth2.common.error.OAuthError;
+import org.apache.amber.oauth2.common.message.OAuthResponse;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.Query;
+import org.usergrid.persistence.Results;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractContextResource;
-import org.usergrid.rest.ApiResponse;
+import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.services.ServiceManager;
+import org.usergrid.utils.JsonUtils;
 
-import com.sun.jersey.api.json.JSONWithPadding;
+import com.restfb.DefaultFacebookClient;
+import com.restfb.FacebookClient;
 
 @Component
 @Scope("prototype")
@@ -57,18 +80,134 @@ public class AuthResource extends AbstractContextResource {
 		}
 	}
 
+	@POST
+	@Path("facebook")
+	@Consumes(APPLICATION_FORM_URLENCODED)
+	public Response authFBPost(@Context UriInfo ui,
+			@FormParam("fb_access_token") String fb_access_token,
+			@QueryParam("callback") @DefaultValue("") String callback)
+			throws Exception {
+
+		logger.info("AuthResource.authFBPost");
+
+		return authFB(ui, fb_access_token, callback);
+	}
+
 	@GET
-	@Path("fb")
-	public JSONWithPadding authFB(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback) {
+	@Path("facebook")
+	public Response authFB(@Context UriInfo ui,
+			@QueryParam("fb_access_token") String fb_access_token,
+			@QueryParam("callback") @DefaultValue("") String callback)
+			throws Exception {
 
 		logger.info("AuthResource.authFB");
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("setup");
-		response.setSuccess();
+		try {
+			if (StringUtils.isEmpty(fb_access_token)) {
+				logger.error("Missing FB Access token");
+				OAuthResponse response = OAuthResponse
+						.errorResponse(SC_BAD_REQUEST)
+						.setError(OAuthError.TokenResponse.INVALID_REQUEST)
+						.setErrorDescription("missing access token")
+						.buildJSONMessage();
+				return Response
+						.status(response.getResponseStatus())
+						.type(jsonMediaType(callback))
+						.entity(wrapJSONPResponse(callback, response.getBody()))
+						.build();
+			}
 
-		return new JSONWithPadding(response, callback);
+			FacebookClient facebookClient = new DefaultFacebookClient(
+					fb_access_token);
+
+			com.restfb.types.User fb_user = facebookClient.fetchObject("me",
+					com.restfb.types.User.class);
+
+			User user = null;
+
+			if (fb_user != null) {
+				EntityManager em = services.getEntityManager();
+				Results r = em.searchCollection(em.getApplicationRef(),
+						"users",
+						Query.findForProperty("facebook.id", fb_user.getId()));
+
+				if (r.size() > 1) {
+					logger.error("Multiple users for FB ID: " + fb_user.getId());
+					OAuthResponse response = OAuthResponse
+							.errorResponse(SC_BAD_REQUEST)
+							.setError(OAuthError.TokenResponse.INVALID_REQUEST)
+							.setErrorDescription(
+									"multiple users with same Facebook ID")
+							.buildJSONMessage();
+					return Response
+							.status(response.getResponseStatus())
+							.type(jsonMediaType(callback))
+							.entity(wrapJSONPResponse(callback,
+									response.getBody())).build();
+				}
+
+				if (r.size() < 1) {
+					Map<String, Object> fb_map = JsonUtils.toJsonMap(fb_user);
+					Map<String, Object> properties = new LinkedHashMap<String, Object>();
+					properties.put("facebook", fb_map);
+					properties.put(
+							"username",
+							fb_user.getUsername() != null ? fb_user
+									.getUsername() : "fb_" + fb_user.getId());
+					properties.put("name", fb_user.getName());
+					if (fb_user.getEmail() != null) {
+						properties.put("email", fb_user.getEmail());
+					}
+					properties.put("picture", "http://graph.facebook.com/"
+							+ fb_user.getId() + "/picture");
+					user = em.create("user", User.class, properties);
+				} else {
+					user = (User) r.getEntity().toTypedEntity();
+					Map<String, Object> fb_map = JsonUtils.toJsonMap(fb_user);
+					Map<String, Object> properties = new LinkedHashMap<String, Object>();
+					properties.put("facebook", fb_map);
+					properties.put("picture", "http://graph.facebook.com/"
+							+ fb_user.getId() + "/picture");
+					em.updateProperties(user, properties);
+					user.setProperty("facebook", fb_map);
+					user.setProperty("picture", "http://graph.facebook.com/"
+							+ fb_user.getId() + "/picture");
+				}
+			}
+
+			if (user == null) {
+				logger.error("Unable to find or create user");
+				OAuthResponse response = OAuthResponse
+						.errorResponse(SC_BAD_REQUEST)
+						.setError(OAuthError.TokenResponse.INVALID_REQUEST)
+						.setErrorDescription("invalid user").buildJSONMessage();
+				return Response
+						.status(response.getResponseStatus())
+						.type(jsonMediaType(callback))
+						.entity(wrapJSONPResponse(callback, response.getBody()))
+						.build();
+			}
+
+			AccessInfo access_info = new AccessInfo()
+					.withExpiresIn(management.getMaxTokenAge() / 1000)
+					.withAccessToken(
+							management.getAccessTokenForAppUser(
+									services.getApplicationId(), user.getUuid()))
+					.withProperty("user", user);
+
+			return Response.status(SC_OK).type(jsonMediaType(callback))
+					.entity(wrapWithCallback(access_info, callback)).build();
+		} catch (Exception e) {
+			logger.error("FB Auth Error", e);
+			OAuthResponse response = OAuthResponse
+					.errorResponse(SC_BAD_REQUEST)
+					.setError(OAuthError.TokenResponse.INVALID_REQUEST)
+					.buildJSONMessage();
+			return Response.status(response.getResponseStatus())
+					.type(jsonMediaType(callback))
+					.entity(wrapJSONPResponse(callback, response.getBody()))
+					.build();
+		}
 	}
 
 }
