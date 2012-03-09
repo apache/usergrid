@@ -141,14 +141,20 @@ public class AuthResource extends AbstractContextResource {
 					if (fb_user.getEmail() != null) {
 						properties.put("email", fb_user.getEmail());
 					}
+					properties.put("picture", "http://graph.facebook.com/"
+							+ fb_user.getId() + "/picture");
 					user = em.create("user", User.class, properties);
 				} else {
 					user = (User) r.getEntity().toTypedEntity();
 					Map<String, Object> fb_map = JsonUtils.toJsonMap(fb_user);
 					Map<String, Object> properties = new LinkedHashMap<String, Object>();
 					properties.put("facebook", fb_map);
-					em.setProperty(user, "facebook", fb_map);
+					properties.put("picture", "http://graph.facebook.com/"
+							+ fb_user.getId() + "/picture");
+					em.updateProperties(user, properties);
 					user.setProperty("facebook", fb_map);
+					user.setProperty("picture", "http://graph.facebook.com/"
+							+ fb_user.getId() + "/picture");
 				}
 			}
 
