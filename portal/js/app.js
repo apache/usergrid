@@ -14,6 +14,11 @@ $(document).ready(function () {
         StatusBar.Init('#statusbar-placeholder');
 		usergrid.console.loginOk();
         makePanelCollapsable();
+
+	    if (getQueryParams().goto_signup) {
+		    Pages.ShowPage("signup");
+	    }
+
 	}
 
     function makePanelCollapsable(){
@@ -90,6 +95,19 @@ $(document).ready(function () {
 
 		//$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
 	}
+	
+    function getQueryParams() {
+        var query_params = {};
+        var e,
+            a = /\+/g,
+            r = /([^&=]+)=?([^&]*)/g,
+            d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
+            q = window.location.search.substring(1);
+
+        while (e = r.exec(q))
+           query_params[d(e[1])] = d(e[2]);
+        return query_params;
+    }
 
     function initConsoleFrame(){
         /*
