@@ -1,0 +1,459 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E89D6CA1150E5B2E005F5FB9 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E89D6CA0150E5B2E005F5FB9 /* UIKit.framework */; };
+		E89D6CA3150E5B2E005F5FB9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E89D6CA2150E5B2E005F5FB9 /* Foundation.framework */; };
+		E89D6CA5150E5B2E005F5FB9 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E89D6CA4150E5B2E005F5FB9 /* CoreGraphics.framework */; };
+		E89D6CAB150E5B2E005F5FB9 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = E89D6CA9150E5B2E005F5FB9 /* InfoPlist.strings */; };
+		E89D6CAD150E5B2E005F5FB9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E89D6CAC150E5B2E005F5FB9 /* main.m */; };
+		E89D6CB1150E5B2E005F5FB9 /* UGAppAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E89D6CB0150E5B2E005F5FB9 /* UGAppAppDelegate.m */; };
+		E89D6CB4150E5B2E005F5FB9 /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E89D6CB2150E5B2E005F5FB9 /* MainStoryboard_iPhone.storyboard */; };
+		E89D6CB7150E5B2E005F5FB9 /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E89D6CB5150E5B2E005F5FB9 /* MainStoryboard_iPad.storyboard */; };
+		E89D6CBA150E5B2E005F5FB9 /* UGAppViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E89D6CB9150E5B2E005F5FB9 /* UGAppViewController.m */; };
+		E89D6CC2150E5B2E005F5FB9 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E89D6CC1150E5B2E005F5FB9 /* SenTestingKit.framework */; };
+		E89D6CC3150E5B2E005F5FB9 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E89D6CA0150E5B2E005F5FB9 /* UIKit.framework */; };
+		E89D6CC4150E5B2E005F5FB9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E89D6CA2150E5B2E005F5FB9 /* Foundation.framework */; };
+		E89D6CCC150E5B2E005F5FB9 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = E89D6CCA150E5B2E005F5FB9 /* InfoPlist.strings */; };
+		E89D6CCF150E5B2E005F5FB9 /* UGAPIAppTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E89D6CCE150E5B2E005F5FB9 /* UGAPIAppTests.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E89D6CC5150E5B2E005F5FB9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E89D6C93150E5B2E005F5FB9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E89D6C9B150E5B2E005F5FB9;
+			remoteInfo = UGAPIApp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		E89D6C9C150E5B2E005F5FB9 /* UGAPIApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UGAPIApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E89D6CA0150E5B2E005F5FB9 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		E89D6CA2150E5B2E005F5FB9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		E89D6CA4150E5B2E005F5FB9 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		E89D6CA8150E5B2E005F5FB9 /* UGAPIApp-Info.plist */ = {isa = PBXFileReference; path = "UGAPIApp-Info.plist"; sourceTree = "<group>"; };
+		E89D6CAA150E5B2E005F5FB9 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		E89D6CAC150E5B2E005F5FB9 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		E89D6CAE150E5B2E005F5FB9 /* UGAPIApp-Prefix.pch */ = {isa = PBXFileReference; path = "UGAPIApp-Prefix.pch"; sourceTree = "<group>"; };
+		E89D6CAF150E5B2E005F5FB9 /* UGAppAppDelegate.h */ = {isa = PBXFileReference; path = UGAppAppDelegate.h; sourceTree = "<group>"; };
+		E89D6CB0150E5B2E005F5FB9 /* UGAppAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UGAppAppDelegate.m; sourceTree = "<group>"; };
+		E89D6CB3150E5B2E005F5FB9 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		E89D6CB6150E5B2E005F5FB9 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		E89D6CB8150E5B2E005F5FB9 /* UGAppViewController.h */ = {isa = PBXFileReference; path = UGAppViewController.h; sourceTree = "<group>"; };
+		E89D6CB9150E5B2E005F5FB9 /* UGAppViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UGAppViewController.m; sourceTree = "<group>"; };
+		E89D6CC0150E5B2E005F5FB9 /* UGAPIAppTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UGAPIAppTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E89D6CC1150E5B2E005F5FB9 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
+		E89D6CC9150E5B2E005F5FB9 /* UGAPIAppTests-Info.plist */ = {isa = PBXFileReference; path = "UGAPIAppTests-Info.plist"; sourceTree = "<group>"; };
+		E89D6CCB150E5B2E005F5FB9 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		E89D6CCD150E5B2E005F5FB9 /* UGAPIAppTests.h */ = {isa = PBXFileReference; path = UGAPIAppTests.h; sourceTree = "<group>"; };
+		E89D6CCE150E5B2E005F5FB9 /* UGAPIAppTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UGAPIAppTests.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E89D6C99150E5B2E005F5FB9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E89D6CA1150E5B2E005F5FB9 /* UIKit.framework in Frameworks */,
+				E89D6CA3150E5B2E005F5FB9 /* Foundation.framework in Frameworks */,
+				E89D6CA5150E5B2E005F5FB9 /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E89D6CBC150E5B2E005F5FB9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E89D6CC2150E5B2E005F5FB9 /* SenTestingKit.framework in Frameworks */,
+				E89D6CC3150E5B2E005F5FB9 /* UIKit.framework in Frameworks */,
+				E89D6CC4150E5B2E005F5FB9 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E89D6C91150E5B2E005F5FB9 = {
+			isa = PBXGroup;
+			children = (
+				E89D6CA6150E5B2E005F5FB9 /* UGAPIApp */,
+				E89D6CC7150E5B2E005F5FB9 /* UGAPIAppTests */,
+				E89D6C9F150E5B2E005F5FB9 /* Frameworks */,
+				E89D6C9D150E5B2E005F5FB9 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E89D6C9D150E5B2E005F5FB9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E89D6C9C150E5B2E005F5FB9 /* UGAPIApp.app */,
+				E89D6CC0150E5B2E005F5FB9 /* UGAPIAppTests.octest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E89D6C9F150E5B2E005F5FB9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E89D6CA0150E5B2E005F5FB9 /* UIKit.framework */,
+				E89D6CA2150E5B2E005F5FB9 /* Foundation.framework */,
+				E89D6CA4150E5B2E005F5FB9 /* CoreGraphics.framework */,
+				E89D6CC1150E5B2E005F5FB9 /* SenTestingKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		E89D6CA6150E5B2E005F5FB9 /* UGAPIApp */ = {
+			isa = PBXGroup;
+			children = (
+				E89D6CAF150E5B2E005F5FB9 /* UGAppAppDelegate.h */,
+				E89D6CB0150E5B2E005F5FB9 /* UGAppAppDelegate.m */,
+				E89D6CB2150E5B2E005F5FB9 /* MainStoryboard_iPhone.storyboard */,
+				E89D6CB5150E5B2E005F5FB9 /* MainStoryboard_iPad.storyboard */,
+				E89D6CB8150E5B2E005F5FB9 /* UGAppViewController.h */,
+				E89D6CB9150E5B2E005F5FB9 /* UGAppViewController.m */,
+				E89D6CA7150E5B2E005F5FB9 /* Supporting Files */,
+			);
+			path = UGAPIApp;
+			sourceTree = "<group>";
+		};
+		E89D6CA7150E5B2E005F5FB9 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				E89D6CA8150E5B2E005F5FB9 /* UGAPIApp-Info.plist */,
+				E89D6CA9150E5B2E005F5FB9 /* InfoPlist.strings */,
+				E89D6CAC150E5B2E005F5FB9 /* main.m */,
+				E89D6CAE150E5B2E005F5FB9 /* UGAPIApp-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		E89D6CC7150E5B2E005F5FB9 /* UGAPIAppTests */ = {
+			isa = PBXGroup;
+			children = (
+				E89D6CCD150E5B2E005F5FB9 /* UGAPIAppTests.h */,
+				E89D6CCE150E5B2E005F5FB9 /* UGAPIAppTests.m */,
+				E89D6CC8150E5B2E005F5FB9 /* Supporting Files */,
+			);
+			path = UGAPIAppTests;
+			sourceTree = "<group>";
+		};
+		E89D6CC8150E5B2E005F5FB9 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				E89D6CC9150E5B2E005F5FB9 /* UGAPIAppTests-Info.plist */,
+				E89D6CCA150E5B2E005F5FB9 /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E89D6C9B150E5B2E005F5FB9 /* UGAPIApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E89D6CD2150E5B2E005F5FB9 /* Build configuration list for PBXNativeTarget "UGAPIApp" */;
+			buildPhases = (
+				E89D6C98150E5B2E005F5FB9 /* Sources */,
+				E89D6C99150E5B2E005F5FB9 /* Frameworks */,
+				E89D6C9A150E5B2E005F5FB9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = UGAPIApp;
+			productName = UGAPIApp;
+			productReference = E89D6C9C150E5B2E005F5FB9 /* UGAPIApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E89D6CBF150E5B2E005F5FB9 /* UGAPIAppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E89D6CD5150E5B2E005F5FB9 /* Build configuration list for PBXNativeTarget "UGAPIAppTests" */;
+			buildPhases = (
+				E89D6CBB150E5B2E005F5FB9 /* Sources */,
+				E89D6CBC150E5B2E005F5FB9 /* Frameworks */,
+				E89D6CBD150E5B2E005F5FB9 /* Resources */,
+				E89D6CBE150E5B2E005F5FB9 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E89D6CC6150E5B2E005F5FB9 /* PBXTargetDependency */,
+			);
+			name = UGAPIAppTests;
+			productName = UGAPIAppTests;
+			productReference = E89D6CC0150E5B2E005F5FB9 /* UGAPIAppTests.octest */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E89D6C93150E5B2E005F5FB9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				CLASSPREFIX = UGApp;
+				LastUpgradeCheck = 0430;
+			};
+			buildConfigurationList = E89D6C96150E5B2E005F5FB9 /* Build configuration list for PBXProject "UGAPIApp" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = E89D6C91150E5B2E005F5FB9;
+			productRefGroup = E89D6C9D150E5B2E005F5FB9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E89D6C9B150E5B2E005F5FB9 /* UGAPIApp */,
+				E89D6CBF150E5B2E005F5FB9 /* UGAPIAppTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E89D6C9A150E5B2E005F5FB9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E89D6CAB150E5B2E005F5FB9 /* InfoPlist.strings in Resources */,
+				E89D6CB4150E5B2E005F5FB9 /* MainStoryboard_iPhone.storyboard in Resources */,
+				E89D6CB7150E5B2E005F5FB9 /* MainStoryboard_iPad.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E89D6CBD150E5B2E005F5FB9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E89D6CCC150E5B2E005F5FB9 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		E89D6CBE150E5B2E005F5FB9 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E89D6C98150E5B2E005F5FB9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E89D6CAD150E5B2E005F5FB9 /* main.m in Sources */,
+				E89D6CB1150E5B2E005F5FB9 /* UGAppAppDelegate.m in Sources */,
+				E89D6CBA150E5B2E005F5FB9 /* UGAppViewController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E89D6CBB150E5B2E005F5FB9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E89D6CCF150E5B2E005F5FB9 /* UGAPIAppTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E89D6CC6150E5B2E005F5FB9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E89D6C9B150E5B2E005F5FB9 /* UGAPIApp */;
+			targetProxy = E89D6CC5150E5B2E005F5FB9 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		E89D6CA9150E5B2E005F5FB9 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				E89D6CAA150E5B2E005F5FB9 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		E89D6CB2150E5B2E005F5FB9 /* MainStoryboard_iPhone.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				E89D6CB3150E5B2E005F5FB9 /* en */,
+			);
+			name = MainStoryboard_iPhone.storyboard;
+			sourceTree = "<group>";
+		};
+		E89D6CB5150E5B2E005F5FB9 /* MainStoryboard_iPad.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				E89D6CB6150E5B2E005F5FB9 /* en */,
+			);
+			name = MainStoryboard_iPad.storyboard;
+			sourceTree = "<group>";
+		};
+		E89D6CCA150E5B2E005F5FB9 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				E89D6CCB150E5B2E005F5FB9 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		E89D6CD0150E5B2E005F5FB9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E89D6CD1150E5B2E005F5FB9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		E89D6CD3150E5B2E005F5FB9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "UGAPIApp/UGAPIApp-Prefix.pch";
+				INFOPLIST_FILE = "UGAPIApp/UGAPIApp-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		E89D6CD4150E5B2E005F5FB9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "UGAPIApp/UGAPIApp-Prefix.pch";
+				INFOPLIST_FILE = "UGAPIApp/UGAPIApp-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		E89D6CD6150E5B2E005F5FB9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/UGAPIApp.app/UGAPIApp";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "UGAPIApp/UGAPIApp-Prefix.pch";
+				INFOPLIST_FILE = "UGAPIAppTests/UGAPIAppTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Debug;
+		};
+		E89D6CD7150E5B2E005F5FB9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/UGAPIApp.app/UGAPIApp";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "UGAPIApp/UGAPIApp-Prefix.pch";
+				INFOPLIST_FILE = "UGAPIAppTests/UGAPIAppTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E89D6C96150E5B2E005F5FB9 /* Build configuration list for PBXProject "UGAPIApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E89D6CD0150E5B2E005F5FB9 /* Debug */,
+				E89D6CD1150E5B2E005F5FB9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E89D6CD2150E5B2E005F5FB9 /* Build configuration list for PBXNativeTarget "UGAPIApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E89D6CD3150E5B2E005F5FB9 /* Debug */,
+				E89D6CD4150E5B2E005F5FB9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		E89D6CD5150E5B2E005F5FB9 /* Build configuration list for PBXNativeTarget "UGAPIAppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E89D6CD6150E5B2E005F5FB9 /* Debug */,
+				E89D6CD7150E5B2E005F5FB9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E89D6C93150E5B2E005F5FB9 /* Project object */;
+}
