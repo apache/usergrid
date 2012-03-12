@@ -1,2 +1,9 @@
 .DS_Store
-Messagee.xcodeproj/*
+*.swp
+*~.nib
+
+build/
+
+.xcodeproj/!*.xcodeproj/project.pbxproj
+UGAPIApp.xcodeproj/xcuserdata/*
+UGAPIApp.xcodeproj/project.xcworkspace/xcuserdata/*

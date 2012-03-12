@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+@class UGHTTPManager;
 
 @interface UGAppAppDelegate : UIResponder <UIApplicationDelegate>
 

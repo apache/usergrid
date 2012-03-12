@@ -7,6 +7,13 @@
 //
 
 #import "UGAppAppDelegate.h"
+#import "UGHTTPManager.h"
+#import "SBJson.h"
+#import "UGClient.h"
+#import "UGClientResponse.h"
+
+UGClient *g_client = nil;
+int g_taps = 0;
 
 @implementation UGAppAppDelegate
 
@@ -44,5 +51,80 @@
 {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 }
+
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    // called when there's a touch.
+    [self testUGClient];
+}
+
+-(void)testUGClient
+{
+    // creation and init
+    if ( !g_client )
+    {
+        g_client =[[UGClient alloc] initWithApplicationID:@"iOSSample"];
+    }
+    
+    UGClientResponse *response = nil;
+    response = [g_client logInUser:@"Alice" password:@"cheshire"];
+    if ( [response transactionState] == kUGClientResponseFailure )
+    {
+        [self outputResponse:response title:@"LOG IN ERROR"];
+        return;
+    }
+    
+    CLLocation *fakeLocation = [[CLLocation alloc] initWithLatitude:37.776753 longitude:-122.407846];
+    
+    UGQuery *query = [UGQuery new];
+    [query addRequiredWithinLocation:@"location" location:fakeLocation distance:2000];
+    
+    response = [g_client getUsers:query];
+    [self outputResponse:response title:@"getUsers Response"];
+}
+
+-(void)ugClientResponse:(UGClientResponse *)response
+{
+    // note the results
+    [self outputResponse:response title:@"Asynch Response"];
+}
+
+-(void)outputResponse:(UGClientResponse *)response title:(NSString *)title
+{
+    NSLog(@"-----%@-----", title);
+    if ( !response )
+    {
+        NSLog(@"Response is nil");
+        NSLog(@"------------------");
+        return;
+    }
+    
+    
+    if ( [response transactionState] == kUGClientResponseSuccess )
+    {
+        NSLog(@"state: SUCCESS");
+        NSLog(@"id: %d", [response transactionID]);
+        NSLog(@"raw:\n%@", [response rawResponse]);
+    }
+    else if ( [response transactionState] == kUGClientResponsePending )
+    {
+        NSLog(@"state: PENDING");
+        NSLog(@"id: %d", [response transactionID]);
+    }
+    else if ( [response transactionState] == kUGClientResponseFailure )
+    {
+        NSLog(@"state: FAILURE");
+        NSLog(@"id: %d", [response transactionID]);
+        NSLog(@"reason: '%@'", [response response]);
+        NSLog(@"raw:\n%@", [response rawResponse]);
+    }
+    else 
+    {
+        NSLog(@"Object is mangled or invalid.");
+    }
+    NSLog(@"------------------");
+}
+
+
 
 @end
