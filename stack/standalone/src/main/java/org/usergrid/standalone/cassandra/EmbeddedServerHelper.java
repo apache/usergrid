@@ -72,12 +72,12 @@ public class EmbeddedServerHelper {
 		// delete tmp dir first
 		rmdir(TMP);
 		// make a tmp dir and copy cassandra.yaml and log4j.properties to it
-		copy("/log4j.properties", TMP);
+		copy("/log4j-server.properties", TMP);
 		copy(yamlFile, TMP);
 
 		System.setProperty("cassandra.config", "file:" + TMP + yamlFile);
 		System.setProperty("log4j.configuration", "file:" + TMP
-				+ "/log4j.properties");
+				+ "/log4j-server.properties");
 		System.setProperty("cassandra-foreground", "true");
 
 		cleanupAndLeaveDirs();
