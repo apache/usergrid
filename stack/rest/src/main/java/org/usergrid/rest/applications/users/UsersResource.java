@@ -224,6 +224,11 @@ public class UsersResource extends ServiceResource {
 				management.setAppUserPin(getApplicationId(), user.getUuid(),
 						pin);
 			}
+
+			if (!activated) {
+				management.sendAppUserActivationEmail(getApplicationId(),
+						getUser());
+			}
 		}
 		return new JSONWithPadding(response, callback);
 	}
