@@ -30,10 +30,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.rest.ApiResponse;
 
 public abstract class AbstractExceptionMapper<E extends java.lang.Throwable>
 		implements ExceptionMapper<E> {
+
+	public static final Logger logger = LoggerFactory
+			.getLogger(AbstractExceptionMapper.class.getPackage().toString());
 
 	@Context
 	HttpHeaders hh;
@@ -51,6 +56,7 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable>
 	}
 
 	public Response toResponse(Status status, E e) {
+		logger.error("Error in request (" + status + ")", e);
 		ApiResponse response = new ApiResponse();
 		AuthErrorInfo authError = AuthErrorInfo.getForException(e);
 		if (authError != null) {
@@ -63,6 +69,7 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable>
 	}
 
 	public Response toResponse(Status status, String jsonResponse) {
+		logger.error("Error in request (" + status + "):\n" + jsonResponse);
 		String callback = httpServletRequest.getParameter("callback");
 		if (isJSONP() && isNotBlank(callback)) {
 			jsonResponse = wrapJSONPResponse(callback, jsonResponse);
