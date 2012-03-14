@@ -145,7 +145,7 @@ query.addSelect($select_assign_source.text, $select_assign_target.text);
 };
 	 
 
-where
+operation
 	:	(property operator value ((',' | 'of') second_value ( ',' third_value)?)? {
     
 String property = $property.text;
@@ -161,6 +161,15 @@ query.addFilter(filter);
 //System.out.println("Parsed query filter: " + property + " " + operator + " " + value + " " + second_value);
     
 } );
+
+and :
+ ( 'and' operation );
+ 
+or :
+ ( 'or' operation );
+ 
+where :
+ ( operation (and | or)+ );
 
 direction 	:	('asc' | 'desc');
 
@@ -179,7 +188,7 @@ select_expr
 	:	('*' | select_subject (',' select_subject) * | '{' select_assign (',' select_assign) * '}');	
 	 
 ql returns [Query q]
-	:	'select' select_expr ('where' where ('and' where)*)? ('order by' order (',' order)*)? {
+	:	'select' select_expr ('where' where )? ('order by' order (',' order)*)? {
 
 q = query;
 

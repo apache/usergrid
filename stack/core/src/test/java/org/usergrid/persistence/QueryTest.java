@@ -125,6 +125,29 @@ public class QueryTest {
 		logger.info(q.toString());
 
 	}
+	
+	@Test
+	public void orClauses(){
+	  Query q = Query.fromQL("select * where a = 5 or a = 6 or a = 7 or a = 10");
+	  Iterator<FilterPredicate> i = q.getFilterPredicates().iterator();
+	  
+	  FilterPredicate f = i.next();
+	  
+	  testPredicate(f, "a", Query.FilterOperator.EQUAL, new Long(5));
+	  
+	  f = i.next();
+	      
+	  testPredicate(f, "a", Query.FilterOperator.EQUAL, new Long(6));
+	  
+	  f = i.next();
+      
+      testPredicate(f, "a", Query.FilterOperator.EQUAL, new Long(7));
+      
+      f = i.next();
+      
+      testPredicate(f, "a", Query.FilterOperator.EQUAL, new Long(10));
+	  
+	}
 
 	public void testPredicate(FilterPredicate f, String name,
 			Query.FilterOperator op, Object val) {
