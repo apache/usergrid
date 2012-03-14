@@ -892,6 +892,7 @@
                                         <div class="controls">
                                             <div class="input-append">
                                                 <textarea id="query-source" class="span6 pull-left"></textarea> <span id="button-clear-query-source" class="add-on">&#215;</span>
+						<a class="btn" id="button-query-validate" href="#">Validate Json</a>
                                             </div>
                                         </div>
                                     </div>
@@ -902,10 +903,10 @@
                                         <a class="btn" id="button-query-post">Post</a>
                                         <a class="btn" id="button-query-put">Put</a>
                                         <a class="btn" id="button-query-delete">Delete</a>
-                                    <a class="btn" id="button-query-validate" href="#">Validate Json</a>
                                 </div>
                             </div>
                         </div>
+			<div id="statusbar-placeholder"></div>
                         <div id="query-response-area" class="console-section">
                             <h3 id="query-received-header">
                                 <span class="title"> Received </span>
@@ -1027,7 +1028,6 @@
             </div>
         </div>
         <div class="clear"></div>
-        <div id="statusbar-placeholder"></div>
     </div>
     <form id="confirmDialog" class="modal hide fade">
         <div class="modal-header">
