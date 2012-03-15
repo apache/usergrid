@@ -144,7 +144,7 @@ containsop :
   
 //
 operation :
- equalityop | locationop | containsop;
+ '('! expression ')'! | equalityop | locationop | containsop;
 
 //negations of operations
 notexp :
@@ -162,12 +162,12 @@ orexp :
 
 //root level boolean expression
 expression:
- orexp;
-// | '('expression')';
+  orexp;
 
-
+//direction for ordering
 direction  : ('asc' | 'desc');
 
+//order cause
 order
   : (property direction?);
 
@@ -176,6 +176,7 @@ ql returns [Query q]
 
 q = query;
 
+//TODO other stuff
 };
 
 //
