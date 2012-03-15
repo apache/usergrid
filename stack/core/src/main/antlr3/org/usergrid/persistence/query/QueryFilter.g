@@ -1,5 +1,10 @@
 grammar QueryFilter;
 
+options {
+    output=AST;
+    ASTLabelType=CommonTree;
+}
+
 @header {
 package org.usergrid.persistence.query;
 
@@ -97,101 +102,166 @@ UNICODE_ESC
     ;
 
 WS : (' ' | '\t' | '\n' | '\r' | '\f')+  {$channel=HIDDEN;};
-    
+
+LT 	:	'<' | 'lt';
+
+LTE	:	'<=' |  'lte';
+
+EQ  : '=' | 'eq';
+
+GT 	:	'>' | 'gt';
+
+GTE	:	'>=' |  'gte';	
+
+NE : '!=';
+
+
+
 property 
-	:	 (ID);
+	:	 ID;
 	
-operator 
-	:	('<' | '<=' | '=' | '>' | '>=' | 'in' | 'eq' | 'lt' | 'gt' | 'lte' | 'gte' | 'contains' | 'within');
-
-value 	:	(BOOLEAN | STRING | INT | FLOAT | UUID);
-
-second_value 	:	(BOOLEAN | STRING | INT | FLOAT | UUID);
-
-third_value 	:	(BOOLEAN | STRING | INT | FLOAT | UUID);
-
-filter returns [FilterPredicate filter] 
-    :   property operator value ((',' | 'of') second_value ( ',' third_value)?)?  {
-    
-String property = $property.text;
-String operator = $operator.text;
-String value = $value.text;
-String second_value = $second_value.text;
-String third_value = $third_value.text;
-filter = new FilterPredicate(property, operator, value, second_value, third_value);
-//System.out.println("Parsed query filter: " + property + " " + operator + " " + value + " " + second_value);
-    
-} EOF ;
-
-
-select_subject
-	:	ID {
-
-query.addSelect($select_subject.text);
-
-};
-
-select_assign_target 
-	:	ID;
+value   : BOOLEAN | STRING | INT | FLOAT | UUID;
 	
-select_assign_source 
-	:	ID;	 	 
+//mathmatical equality operations
+equalityop :	
+  property ( LT 
+	| LTE 
+	| EQ
+	| GT 
+	| GTE
+	| NE ) value;
 
-select_assign
-	:	select_assign_target ':' select_assign_source {
+//geo location search
+locationop:
 
-query.addSelect($select_assign_source.text, $select_assign_target.text);
+  property 'within' FLOAT 'of' FLOAT ',' FLOAT {
+  //TODO construct within op object
+  };
+  
+//string search
+containsop : 
+  property 'contains' STRING ;
+  
+//
+operation :
+ equalityop | locationop | containsop;
 
-};
-	 
-
-operation
-	:	(property operator value ((',' | 'of') second_value ( ',' third_value)?)? {
+//negations of operations
+notexp :
+ 'not'^ operation|operation;
     
-String property = $property.text;
-String operator = $operator.text;
-String value = $value.text;
-int value_type = $value.start != null ? $value.start.getType() : 0;
-String second_value = $second_value.text;
-int second_value_type = $second_value.start != null ? $second_value.start.getType() : 0;
-String third_value = $third_value.text;
-int third_value_type = $third_value.start != null ? $third_value.start.getType() : 0;
-FilterPredicate filter = new FilterPredicate(property, operator, value, value_type, second_value, second_value_type, third_value, third_value_type);
-query.addFilter(filter);
-//System.out.println("Parsed query filter: " + property + " " + operator + " " + value + " " + second_value);
-    
-} );
 
-and :
- ( 'and' operation );
+//and expressions contain operands.  These should always be closer to the leaves of a tree, it allows
+//for faster result intersection sooner in the query execution
+andexp :
+ notexp ('and' notexp)*;
  
-or :
- ( 'or' operation );
- 
-where :
- ( operation (and | or)+ );
+//or expression should always be after AND expressions.  This will give us a smaller result set to union when evaluating trees
+orexp :
+ andexp ('or' andexp)*;
 
-direction 	:	('asc' | 'desc');
+//root level boolean expression
+expression:
+ orexp;
+// | '('expression')';
+
+
+direction  : ('asc' | 'desc');
 
 order
-	: (property direction?){
-    
-String property = $property.text;
-String direction = $direction.text;
-SortPredicate sort = new SortPredicate(property, direction);
-query.addSort(sort);
-System.out.println("Parsed query order: " + property + " " + direction);
-    
-};
+  : (property direction?);
 
-select_expr 
-	:	('*' | select_subject (',' select_subject) * | '{' select_assign (',' select_assign) * '}');	
-	 
 ql returns [Query q]
-	:	'select' select_expr ('where' where )? ('order by' order (',' order)*)? {
+  : ('where' expression )? ('order by' order (',' order)*)? {
 
 q = query;
 
 };
+
+//
+//
+//second_value 	:	(BOOLEAN | STRING | INT | FLOAT | UUID);
+//
+//third_value 	:	(BOOLEAN | STRING | INT | FLOAT | UUID);
+//
+//filter returns [FilterPredicate filter] 
+//    :   property operator value ((',' | 'of') second_value ( ',' third_value)?)?  {
+//    
+//String property = $property.text;
+//String operator = $operator.text;
+//String value = $value.text;
+//String second_value = $second_value.text;
+//String third_value = $third_value.text;
+//filter = new FilterPredicate(property, operator, value, second_value, third_value);
+////System.out.println("Parsed query filter: " + property + " " + operator + " " + value + " " + second_value);
+//    
+//} EOF ;
+
+
+//select_subject
+//	:	ID {
+//
+//query.addSelect($select_subject.text);
+//
+//};
+//
+//select_assign_target 
+//	:	ID;
+//	
+//select_assign_source 
+//	:	ID;	 	 
+//
+//select_assign
+//	:	select_assign_target ':' select_assign_source {
+//
+//query.addSelect($select_assign_source.text, $select_assign_target.text);
+//
+//};
+	 
+
+//operation
+//	:	(property operator value ((',' | 'of') second_value ( ',' third_value)?)? {
+//    
+//String property = $property.text;
+//String operator = $operator.text;
+//String value = $value.text;
+//int value_type = $value.start != null ? $value.start.getType() : 0;
+//String second_value = $second_value.text;
+//int second_value_type = $second_value.start != null ? $second_value.start.getType() : 0;
+//String third_value = $third_value.text;
+//int third_value_type = $third_value.start != null ? $third_value.start.getType() : 0;
+//FilterPredicate filter = new FilterPredicate(property, operator, value, value_type, second_value, second_value_type, third_value, third_value_type);
+//query.addFilter(filter);
+////System.out.println("Parsed query filter: " + property + " " + operator + " " + value + " " + second_value);
+//    
+//} );
+
+
+ 
+//where :
+//  expression ;
+//
+//direction 	:	('asc' | 'desc');
+//
+//order
+//	: (property direction?){
+//    
+//String property = $property.text; 
+//String direction = $direction.text;
+//SortPredicate sort = new SortPredicate(property, direction);
+//query.addSort(sort);
+//System.out.println("Parsed query order: " + property + " " + direction);
+//    
+//};
+//
+//select_expr 
+//	:	('*' | select_subject (',' select_subject) * | '{' select_assign (',' select_assign) * '}');	
+//	 
+//ql returns [Query q]
+//	:	'select' select_expr ('where' where )? ('order by' order (',' order)*)? {
+//
+//q = query;
+//
+//};
 
 
