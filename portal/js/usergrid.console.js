@@ -1955,6 +1955,11 @@ function usergrid_console_app() {
         }
     }
 
+    function selectAllGroupMemberships(){
+        $('[id=userGroupItem]').attr('checked', 'true');
+    }
+    usergrid.console.selectAllGroupMemberships = selectAllGroupMemberships;
+
     var group_data = null;
 
     function handleGroupResponse(response) {
