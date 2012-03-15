@@ -114,11 +114,11 @@
         <constructor-arg ref="counterUtils"/>
 	</bean>
 
-    <bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
-        <constructor-arg value="3"/>
-        <property name="batchSubmitter" ref="batchSubmitter"/>
-        <property name="batchSize" value="${cassandra.counter.batchOpsSize}"/>
-    </bean>
+    <bean id="simpleBatcher" class="com.usergrid.count.ScheduledBatcher">
+   		<constructor-arg value="3" />
+        <constructor-arg value="30" />
+   		<property name="batchSubmitter" ref="batchSubmitter" />
+   	</bean>
 
     <bean id="batchSubmitter" class="com.usergrid.count.CassandraSubmitter">
         <constructor-arg ref="cassandraCounterStore"/>

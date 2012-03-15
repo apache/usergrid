@@ -18,6 +18,7 @@ package org.usergrid.rest.applications.users;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,5 +67,24 @@ public class UserResourceTest extends AbstractRestTest {
     logNode(node);
   }
 
+  @Ignore
+  @Test
+  public void test_GET_user_ok() {
+    // TODO figure out what is being overridden? why 400?
+    JsonNode node = resource().path("/test-app/users")
+            .queryParam("access_token", access_token)
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .get(JsonNode.class);
+    String uuid = node.get("entities").get(0).get("uuid").getTextValue();
+
+    node = resource().path("/test-app/users/"+ uuid)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .get(JsonNode.class);
+    logNode(node);
+    assertEquals("ed@anuff.com",node.get("entities").get(0).get("email").getTextValue());
+  }
 
 }

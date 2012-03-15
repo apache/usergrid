@@ -68,9 +68,14 @@ public class CounterUtils {
    * @param counterType
    */
   public void setCounterType(String counterType) {
-    if ( StringUtils.equals(counterType,"n") || StringUtils.equals(counterType, "p") || StringUtils.equals(counterType,"o") ) {
+    if ( counterType == null ) return;
+    if ( "n".equals(counterType) || "p".equals(counterType) || "o".equals(counterType) ) {
       this.counterType = counterType;
     }
+  }
+
+  public boolean getIsCounterBatched() {
+    return "n".equals(counterType);
   }
 
     public static class AggregateCounterSelection {
@@ -308,10 +313,11 @@ public class CounterUtils {
 
       HCounterColumn<String> c = createCounterColumn(name, value);
             m.addCounter(bytebuffer(entityId), ENTITY_COUNTERS.toString(), c);
+      addInsertToMutator(m, ENTITY_DICTIONARIES,
+      				key(entityId, DICTIONARY_COUNTERS), name, null, timestamp);
+
     }
-		addInsertToMutator(m, ENTITY_DICTIONARIES,
-				key(entityId, DICTIONARY_COUNTERS), name, null, timestamp);
-        // create and send Count
+		    // create and send Count
     if ( "n".equals(counterType) || "p".equals(counterType)) {
       PrefixedSerializer ps = new PrefixedSerializer(applicationId, UUIDSerializer.get(),
                             UUIDSerializer.get());
@@ -353,12 +359,13 @@ public class CounterUtils {
       HCounterColumn<String> c = createCounterColumn(name, value);
       ByteBuffer keybytes = bytebuffer(queueId);
       m.addCounter(keybytes, QueuesCF.COUNTERS.toString(), c);
+
+      m.addInsertion(
+    				bytebuffer(key(queueId, DICTIONARY_COUNTERS).toString()),
+    				QueuesCF.QUEUE_DICTIONARIES.toString(),
+    				createColumn(name, ByteBuffer.allocate(0), timestamp, se, be));
     }
 
-		m.addInsertion(
-				bytebuffer(key(queueId, DICTIONARY_COUNTERS).toString()),
-				QueuesCF.QUEUE_DICTIONARIES.toString(),
-				createColumn(name, ByteBuffer.allocate(0), timestamp, se, be));
         // create and send Count
     if ( "n".equals(counterType) || "p".equals(counterType)) {
         PrefixedSerializer ps = new PrefixedSerializer(applicationId, UUIDSerializer.get(),
