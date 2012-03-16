@@ -1471,9 +1471,18 @@ function usergrid_console_app() {
     usergrid.console.searchUsers = searchUsers;
 
     function selectAllUsers(){
-        $('[id=userListItem]').attr('checked', 'true');
+        $('[id=userListItem]').attr('checked', true);
+	$('#deselectAllUsers').show();
+	$('#selectAllUsers').hide();
     }
-    usergrid.console.selectAllUsers = selectAllUsers;
+    window.usergrid.console.selectAllUsers = selectAllUsers;
+
+    function deselectAllUsers(){
+        $('[id=userListItem]').attr('checked', false);
+	$('#selectAllUsers').show();
+	$('#deselectAllUsers').hide();
+    }
+    window.usergrid.console.deselectAllUsers = deselectAllUsers;
 
     var users_query = null;
     function requestUsers(search, searchType) {
@@ -1855,10 +1864,19 @@ function usergrid_console_app() {
     usergrid.console.searchGroups = searchGroups;
 
     function selectAllGroups(){
-        $('[id=groupListItem]').attr('checked', 'true');
+        $('[id=groupListItem]').attr('checked', true);
+	$('#deselectAllGroups').show();
+	$('#selectAllGroups').hide();
     }
-    usergrid.console.selectAllGroups = selectAllGroups;
-    
+    window.usergrid.console.selectAllGroups = selectAllGroups;
+
+    function deselectAllGroups(){
+        $('[id=groupListItem]').attr('checked', false);
+	$('#selectAllGroups').show();
+	$('#deselectAllGroups').hide();
+    }
+    window.usergrid.console.deselectAllGroups = deselectAllGroups;
+
     var groups_query = null;
     function requestGroups(search, searchType) {
         var query = {"ql" : "order by " + groupSortBy};
@@ -1956,9 +1974,18 @@ function usergrid_console_app() {
     }
 
     function selectAllGroupMemberships(){
-        $('[id=userGroupItem]').attr('checked', 'true');
+        $('[id=userGroupItem]').attr('checked', true);
+	$('#deselectAllGroupMemberships').show();
+	$('#selectAllGroupMemberships').hide();
     }
     usergrid.console.selectAllGroupMemberships = selectAllGroupMemberships;
+
+    function deselectAllGroupMemberships(){
+        $('[id=userGroupItem]').attr('checked', false);
+	$('#deselectAllGroupMemberships').hide();
+	$('#selectAllGroupMemberships').show();
+    }
+    usergrid.console.deselectAllGroupMemberships = deselectAllGroupMemberships;
 
     var group_data = null;
 
@@ -2212,9 +2239,18 @@ function usergrid_console_app() {
     }
 
     function selectAllRolesUsers(){
-        $('[id=userRoleItem]').attr('checked', 'true');
+        $('[id=userRoleItem]').attr('checked', true);
+	$('#deselectAllRolesUsers').show();
+	$('#selectAllRolesUsers').hide();
     }
     window.usergrid.console.selectAllRolesUsers = selectAllRolesUsers;
+
+    function deselectAllRolesUsers(){
+        $('[id=userRoleItem]').attr('checked', false);
+	$('#selectAllRolesUsers').show();
+	$('#deselectAllRolesUsers').hide();
+    }
+    window.usergrid.console.deselectAllRolesUsers = deselectAllRolesUsers;
 
     function requestRole() {
         $("#role-section-title").html("");

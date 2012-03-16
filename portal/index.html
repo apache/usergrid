@@ -29,6 +29,12 @@
     <script src="js/jquery.ui.statusbar.js" type="text/javascript"></script>
     <script src="js/jquery.ui-jalert.js" type="text/javascript"></script>
     <script src="js/date.js" type="text/javascript"></script>
+    <script src="js/usergrid.client.js" type="text/javascript"></script>
+    <script src="js/usergrid.console.js" type="text/javascript"></script>
+    <script src="js/usergrid.console.ui.js" type="text/javascript"></script>
+    <script src="js/usergrid.console.ui.navbar.js" type="text/javascript"></script>
+    <script src="js/usergrid.console.ui.collections.entity.js" type="text/javascript"></script>
+    <script src="js/usergrid.console.ui.collections.user.js" type="text/javascript"></script>
     <script src="js/less-1.2.1.min.js" type="text/javascript"></script>
     <script src="bootstrap/js/bootstrap-dropdown.js" type="text/javascript"></script>
     <script src="bootstrap/js/bootstrap-button.js" type="text/javascript"></script>
@@ -328,7 +334,8 @@
                                             <!--<option value="firstName">First Name</option>
                                             <option value="lastName">Last Name</option>-->
                                         </select>
-                                        <a class="" href="#" onclick="usergrid.console.selectAllUsers();"> Select All </a>
+                                        <a id="selectAllUsers" class="" href="#" onclick="usergrid.console.selectAllUsers();"> Select All </a>
+					<a id="deselectAllUsers" style="display: none;" class="" href="#" onclick="usergrid.console.deselectAllUsers();"> Deselect All </a>
                                         <a class="" data-toggle="modal" href="#dialog-form-new-user"> Add</a>
                                         <a id="delete-users-link" href="#"> Delete</a>
                                     </div>
@@ -508,7 +515,8 @@
                                             <option value="path">Path</option>
                                             <option value="title">Title</option>                                            
                                         </select>
-                                        <a class="" href="#" onclick="usergrid.console.selectAllGroups();"> Select All </a>
+                                        <a id="selectAllGroups" class="" href="#" onclick="usergrid.console.selectAllGroups();"> Select All </a>
+					<a id="deselectAllGroups" style="display: none;" class="" href="#" onclick="usergrid.console.deselectAllGroups();"> Deselect All </a>
                                         <a class="" data-toggle="modal" href="#dialog-form-new-group"> Add</a>
                                         <a id="delete-groups-link" href="#"> Delete </a>
                                     </div>
@@ -1080,12 +1088,4 @@ var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga
 
 </script>
 </body>
-
-<script src="js/usergrid.client.js" type="text/javascript"></script>
-<script src="js/usergrid.console.js" type="text/javascript"></script>
-<script src="js/usergrid.console.ui.js" type="text/javascript"></script>
-<script src="js/usergrid.console.ui.navbar.js" type="text/javascript"></script>
-<script src="js/usergrid.console.ui.collections.entity.js" type="text/javascript"></script>
-<script src="js/usergrid.console.ui.collections.user.js" type="text/javascript"></script>
-
 </html>

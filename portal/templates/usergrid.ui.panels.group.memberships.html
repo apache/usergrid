@@ -4,7 +4,8 @@
         ${name}
         {{if path}}</a>{{/if}}
         <div class="bar">
-            <a class="" href="#" onclick="usergrid.console.selectAllGroupMemberships();"> Select All </a>
+            <a id="selectAllGroupMemberships" class="" href="#" onclick="usergrid.console.selectAllGroupMemberships();"> Select All </a>
+            <a id="deselectAllGroupMemberships" style="display: none;" class="" href="#" onclick="usergrid.console.deselectAllGroupMemberships();"> Deselect All </a>
             <a class="" data-toggle="modal" href="#dialog-form-add-user-to-group">Add a User to this Group</a>
             <a data-toggle="modal" href="#" onclick="usergrid.console.removeGroupFromUser('${uuid}'); return false;"> Remove </a>
             <input type="hidden" value="${uuid}" id="search-user-groupid" name="search-user-groupid" >
