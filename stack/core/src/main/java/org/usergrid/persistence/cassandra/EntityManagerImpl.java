@@ -2582,11 +2582,18 @@ public class EntityManagerImpl implements EntityManager,
 	public void incrementAggregateCounters(UUID userId, UUID groupId,
 			String category, Map<String, Long> counters) {
 		long timestamp = cass.createTimestamp();
-		Mutator<ByteBuffer> m = createMutator(
-				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementAggregateCounters(m, applicationId, userId,
-				groupId, null, category, counters, timestamp);
-		batchExecute(m, CassandraService.RETRY_COUNT);
+
+    if ( counterUtils.getIsCounterBatched() ) {
+      counterUtils.batchIncrementAggregateCounters(null, applicationId, userId,
+      				groupId, null, category, counters, timestamp);
+    } else {
+      Mutator<ByteBuffer> m = createMutator(
+      				cass.getApplicationKeyspace(applicationId), be);
+      counterUtils.batchIncrementAggregateCounters(m, applicationId, userId,
+      				groupId, null, category, counters, timestamp);
+      batchExecute(m, CassandraService.RETRY_COUNT);
+    }
+
 
 	}
 
