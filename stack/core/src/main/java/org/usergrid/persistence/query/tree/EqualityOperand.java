@@ -26,6 +26,7 @@ public abstract class EqualityOperand extends Operand {
 
   protected Property property;
   protected Literal literal;
+  
   /**
    * @param property
    * @param literal

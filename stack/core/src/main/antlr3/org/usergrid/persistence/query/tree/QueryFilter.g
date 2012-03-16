@@ -122,17 +122,20 @@ GTE	:	'>=' |  'gte';
 property 
 	:	 ID<Property>;
 	
-value   : BOOLEAN<Boolean> | STRING<String> | INT<Integer> | FLOAT<Float> | UUID<UUID>;
+value   : BOOLEAN<Boolean> | STRING<StringQuery> | INT<Integer> | FLOAT<Float> | UUID<UUID>;
 	
 //begin equality expressions
 
 //mathmatical equality operations
 equalityop :	
-  property ( LT<LessThan>^
+  property ( LT<LessThan>
 	| LTE <LessThanEqual>^
 	| EQ <Equal>^
 	| GT <GreaterThan>^
-	| GTE <GreaterThanEqual>^) value;
+	| GTE <GreaterThanEqual>^) value {
+	  
+	
+	};
 //	| NE 
 
 //geo location search
