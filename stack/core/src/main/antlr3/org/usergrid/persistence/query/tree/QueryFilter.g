@@ -1,12 +1,14 @@
 grammar QueryFilter;
+//NOTES:  '^' denotes operator, all others in the string become operands
+
 
 options {
     output=AST;
-    ASTLabelType=CommonTree;
+//    ASTLabelType=CommonTree;
 }
 
 @header {
-package org.usergrid.persistence.query;
+package org.usergrid.persistence.query.tree;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +19,7 @@ import org.usergrid.persistence.Query.SortPredicate;
 }
 
 @lexer::header {
-package org.usergrid.persistence.query;
+package org.usergrid.persistence.query.tree;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,40 +115,39 @@ GT 	:	'>' | 'gt';
 
 GTE	:	'>=' |  'gte';	
 
-NE : '!=';
+//NE : '!=';
 
 
 
 property 
-	:	 ID;
+	:	 ID<Property>;
 	
-value   : BOOLEAN | STRING | INT | FLOAT | UUID;
+value   : BOOLEAN<Boolean> | STRING<String> | INT<Integer> | FLOAT<Float> | UUID<UUID>;
 	
+//begin equality expressions
+
 //mathmatical equality operations
 equalityop :	
-  property ( LT 
-	| LTE 
-	| EQ
-	| GT 
-	| GTE
-	| NE ) value;
+  property ( LT<LessThan>^
+	| LTE <LessThanEqual>^
+	| EQ <Equal>^
+	| GT <GreaterThan>^
+	| GTE <GreaterThanEqual>^) value;
+//	| NE 
 
 //geo location search
 locationop:
-
-  property 'within' FLOAT 'of' FLOAT ',' FLOAT {
-  //TODO construct within op object
-  };
+  property 'within'<Within>^ FLOAT 'of' FLOAT ',' FLOAT ;
   
 //string search
 containsop : 
-  property 'contains' STRING ;
+  property 'contains'<Contains>^ STRING ;
   
 //
 operation :
  '('! expression ')'! | equalityop | locationop | containsop;
 
-//negations of operations
+//negations of expressions
 notexp :
  'not'^ operation|operation;
     
@@ -154,27 +155,60 @@ notexp :
 //and expressions contain operands.  These should always be closer to the leaves of a tree, it allows
 //for faster result intersection sooner in the query execution
 andexp :
- notexp ('and' notexp)*;
+ notexp ('and'^ notexp)*;
  
 //or expression should always be after AND expressions.  This will give us a smaller result set to union when evaluating trees
 orexp :
- andexp ('or' andexp)*;
+ andexp ('or'^ andexp)*;
 
 //root level boolean expression
 expression:
   orexp;
 
+//end expressions
+
+//begin order clauses
+
 //direction for ordering
 direction  : ('asc' | 'desc');
 
-//order cause
+//order clause
 order
   : (property direction?);
 
-ql returns [Query q]
-  : ('where' expression )? ('order by' order (',' order)*)? {
+//end order clauses
+  
+//Begin select clauses
 
-q = query;
+select_subject
+  : ID {
+
+  query.addSelect($select_subject.text);
+
+};
+
+select_assign_target 
+  : ID;
+  
+select_assign_source 
+  : ID;    
+
+select_assign
+  : select_assign_target ':' select_assign_source {
+
+  query.addSelect($select_assign_source.text, $select_assign_target.text);
+
+};
+
+select_expr 
+  : ('*' | select_subject (',' select_subject) * | '{' select_assign (',' select_assign) * '}');  
+   
+//end select clauses
+
+ql returns [Query q]
+  : 'select' select_expr ('where' expression )? ('order by' order (',' order)*)? {
+
+//q = query;
 
 //TODO other stuff
 };
