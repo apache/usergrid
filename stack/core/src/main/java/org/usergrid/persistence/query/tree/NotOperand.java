@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
-import org.antlr.runtime.Token;
 
 
 
@@ -25,7 +24,6 @@ import org.antlr.runtime.Token;
  */
 public class NotOperand extends Operand {
 
-  private Token token;
   private Operand operand;
   
   /**
@@ -33,8 +31,7 @@ public class NotOperand extends Operand {
    * @param token
    * @param right
    */
-  public NotOperand(Token token, Operand operand) {
-    this.token = token;
+  public NotOperand(Operand operand) {
     this.operand = operand;
   }
 

@@ -119,53 +119,88 @@ GTE	:	'>=' |  'gte';
 
 
 
-property 
+property returns [Property property]
 	:	 ID<Property>;
 	
-value   : BOOLEAN<Boolean> | STRING<StringQuery> | INT<Integer> | FLOAT<Float> | UUID<UUID>;
-	
-//begin equality expressions
+booleanliteral returns [BooleanLiteral value] :
+ BOOLEAN<BooleanLiteral>;
 
+
+intliteral returns [IntegerLiteral value] :
+  INT<IntegerLiteral>;
+
+uuidliteral returns [UUIDLiteral value] :
+  UUID<UUIDLiteral>;
+
+stringliteral returns [StringLiteral value] :
+  STRING<StringLiteral>;
+  
+floatliteral returns [FloatLiteral value] :
+  FLOAT<FloatLiteral>;
+
+//We delegate to each sub class literal so we can get each type	
+value returns [Literal value]  : 
+  booleanliteral {retval.value = $booleanliteral.value;}
+  | intliteral {retval.value = $intliteral.value;}
+  | uuidliteral {retval.value = $uuidliteral.value;}
+  | stringliteral {retval.value = $stringliteral.value;}
+  | floatliteral {retval.value = $floatliteral.value;}
+  ;
+  
+
+
+//Every operand returns with the name of 'op'.  This is used because all subtrees require operands,
+//this allows us to link the java code easily by using the same name as a converntion
+
+//begin search expressions
+  
 //mathmatical equality operations
-equalityop :	
-  property ( LT<LessThan>
-	| LTE <LessThanEqual>^
-	| EQ <Equal>^
-	| GT <GreaterThan>^
-	| GTE <GreaterThanEqual>^) value {
-	  
-	
-	};
-//	| NE 
+equalityop returns [EqualityOperand op]:
+  p=property LT v=value { retval.op = new LessThan(p.property, v.value);}
+  |p=property LTE v=value { retval.op = new LessThanEqual(p.property, v.value);}
+  | p=property EQ v=value { retval.op = new Equal(p.property, v.value);}
+  |p=property GT v=value { retval.op = new GreaterThan(p.property, v.value);}
+  |p=property GTE v=value { retval.op = new LessThan(p.property, v.value);}
+  ; 
 
 //geo location search
-locationop:
-  property 'within'<Within>^ FLOAT 'of' FLOAT ',' FLOAT ;
+locationop returns [Within op]:
+  p=property 'within' distance=floatliteral 'of' lattitude=floatliteral ',' longitude=floatliteral {
+    retval.op = new Within(p.property, distance.value, lattitude.value, longitude.value);
+  };//-> ^('within'<Within>[$property, $distance, $lat, $long]);
   
 //string search
-containsop : 
-  property 'contains'<Contains>^ STRING ;
+containsop returns [Contains op] : 
+  p=property 'contains' s=stringliteral {
+    retval.op = new Contains(p.property, s.value);
+  };
   
 //
-operation :
- '('! expression ')'! | equalityop | locationop | containsop;
+operation returns [Operand op] :
+ '(' exp=expression ')'  { retval.op = exp.op; }
+   | equalityop { retval.op = $equalityop.op; }
+   | locationop { retval.op = $locationop.op; }
+   | containsop { retval.op = $containsop.op; }
+   ;
 
 //negations of expressions
-notexp :
- 'not'^ operation|operation;
-    
+notexp returns [Operand op]:
+//only link if we have the not
+ 'not'^ operation { retval.op = new NotOperand($operation.op);} 
+ |operation { retval.op = $operation.op; }
+ ;
 
 //and expressions contain operands.  These should always be closer to the leaves of a tree, it allows
 //for faster result intersection sooner in the query execution
-andexp :
- notexp ('and'^ notexp)*;
+andexp returns [AndOperand op]:
+ left=notexp ('and' right=notexp {retval.op = new AndOperand(left.op, right.op); } )*;
  
 //or expression should always be after AND expressions.  This will give us a smaller result set to union when evaluating trees
-orexp :
- andexp ('or'^ andexp)*;
+orexp returns [OrOperand op]:
+ left=andexp ('or' right=andexp {retval.op = new OrOperand(left.op, right.op); })*;
 
 //root level boolean expression
-expression:
+expression returns [Operand op]:
   orexp;
 
 //end expressions
@@ -190,16 +225,12 @@ select_subject
 
 };
 
-select_assign_target 
-  : ID;
-  
-select_assign_source 
-  : ID;    
+ 
 
 select_assign
-  : select_assign_target ':' select_assign_source {
+  : target=ID ':' source=ID {
 
-  query.addSelect($select_assign_source.text, $select_assign_target.text);
+  query.addSelect($target.text, $source.text);
 
 };
 

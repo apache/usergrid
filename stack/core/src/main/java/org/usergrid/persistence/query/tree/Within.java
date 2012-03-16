@@ -22,15 +22,15 @@ package org.usergrid.persistence.query.tree;
 public class Within extends Operand {
 
   private Property property;
-  private Float radius;
-  private Float lattitude;
-  private Float longitude;
+  private FloatLiteral radius;
+  private FloatLiteral lattitude;
+  private FloatLiteral longitude;
   
   /**
    * @param property
    * @param literal
    */
-  public Within(Property property, Float radius, Float lattitude, Float longitude ) {
+  public Within(Property property, FloatLiteral radius, FloatLiteral lattitude, FloatLiteral longitude ) {
     this.property = property;
     this.radius = radius;
     this.lattitude = lattitude;

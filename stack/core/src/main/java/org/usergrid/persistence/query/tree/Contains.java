@@ -22,14 +22,14 @@ package org.usergrid.persistence.query.tree;
 public class Contains extends Operand {
 
   private Property property;
-  private QueryString string;
+  private StringLiteral string;
   
   
   /**
    * @param property
    * @param literal
    */
-  public Contains(Property property, QueryString string ) {
+  public Contains(Property property, StringLiteral string ) {
     this.property = property;
     this.string =  string;
   }

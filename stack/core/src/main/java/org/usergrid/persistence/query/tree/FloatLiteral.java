@@ -23,12 +23,12 @@ import org.antlr.runtime.Token;
  * @author tnine
  *
  */
-public class Boolean extends Literal {
+public class FloatLiteral extends Literal {
 
   /**
    * @param t
    */
-  protected Boolean(Token t) {
+  protected FloatLiteral(Token t) {
     super(t);
   }
 

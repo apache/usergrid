@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
-import org.antlr.runtime.Token;
 
 
 
@@ -30,8 +29,8 @@ public class AndOperand extends BooleanOperand {
    * @param token
    * @param right
    */
-  public AndOperand(Operand left, Token token, Operand right) {
-    super(left, token, right);
+  public AndOperand(Operand left, Operand right) {
+    super(left, right);
   }
 
 }

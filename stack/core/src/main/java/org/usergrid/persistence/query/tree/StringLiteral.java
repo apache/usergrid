@@ -23,12 +23,12 @@ import org.antlr.runtime.Token;
  * @author tnine
  *
  */
-public class UUID extends Literal {
+public class StringLiteral extends Literal {
 
   /**
    * @param t
    */
-  protected UUID(Token t) {
+  protected StringLiteral(Token t) {
     super(t);
   }
 
