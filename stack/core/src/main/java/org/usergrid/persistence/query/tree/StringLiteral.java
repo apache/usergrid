@@ -25,11 +25,18 @@ import org.antlr.runtime.Token;
  */
 public class StringLiteral extends Literal {
 
+  private String value;
+  
   /**
    * @param t
    */
   protected StringLiteral(Token t) {
     super(t);
+    value = t.getText();
+  }
+  
+  public String getValue(){
+    return this.value;
   }
 
 }

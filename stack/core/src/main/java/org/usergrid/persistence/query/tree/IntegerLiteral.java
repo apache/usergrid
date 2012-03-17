@@ -23,13 +23,26 @@ import org.antlr.runtime.Token;
  * @author tnine
  *
  */
-public class IntegerLiteral extends Literal {
+public class IntegerLiteral extends Literal<Integer> {
 
+  private int value;
+  
   /**
    * @param t
    */
   protected IntegerLiteral(Token t) {
     super(t);
+    this.value = Integer.valueOf(t.getText());
   }
+  
+  /**
+   * 
+   * @return
+   */
+  public Integer getValue(){
+    return this.value;
+  }
+  
+  
 
 }

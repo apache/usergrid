@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import java.util.UUID;
+
 import org.antlr.runtime.Token;
 
 
@@ -25,11 +27,18 @@ import org.antlr.runtime.Token;
  */
 public class UUIDLiteral extends Literal {
 
+  private UUID value;
+  
   /**
    * @param t
    */
   protected UUIDLiteral(Token t) {
     super(t);
+    value = UUID.fromString(t.getText());
+  }
+  
+  public UUID getValue(){
+    return this.value;
   }
 
 }

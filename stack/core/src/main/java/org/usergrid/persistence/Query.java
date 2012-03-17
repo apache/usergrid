@@ -51,8 +51,9 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Results.Level;
-import org.usergrid.persistence.query.QueryFilterLexer;
-import org.usergrid.persistence.query.QueryFilterParser;
+import org.usergrid.persistence.query.tree.Operand;
+import org.usergrid.persistence.query.tree.QueryFilterLexer;
+import org.usergrid.persistence.query.tree.QueryFilterParser;
 import org.usergrid.utils.JsonUtils;
 
 public class Query {
@@ -63,7 +64,8 @@ public class Query {
 
 	protected String type;
 	protected List<SortPredicate> sortPredicates = new ArrayList<SortPredicate>();
-	protected List<FilterPredicate> filterPredicates = new ArrayList<FilterPredicate>();
+	protected Operand rootOperand;
+//	protected List<FilterPredicate> filterPredicates = new ArrayList<FilterPredicate>();
 	protected UUID startResult;
 	protected String cursor;
 	protected int limit = 0;
@@ -98,8 +100,9 @@ public class Query {
 			type = q.type;
 			sortPredicates = q.sortPredicates != null ? new ArrayList<SortPredicate>(
 					q.sortPredicates) : null;
-			filterPredicates = q.filterPredicates != null ? new ArrayList<FilterPredicate>(
-					q.filterPredicates) : null;
+			rootOperand = q.rootOperand;
+//			filterPredicates = q.filterPredicates != null ? new ArrayList<FilterPredicate>(
+//					q.filterPredicates) : null;
 			startResult = q.startResult;
 			cursor = q.cursor;
 			limit = q.limit;
@@ -150,7 +153,7 @@ public class Query {
 			QueryFilterLexer lexer = new QueryFilterLexer(in);
 			CommonTokenStream tokens = new CommonTokenStream(lexer);
 			QueryFilterParser parser = new QueryFilterParser(tokens);
-			Query q = parser.ql();
+			Query q = parser.ql().query;
 			return q;
 		} catch (Exception e) {
 			logger.error("Unable to parse \"" + ql + "\"", e);
@@ -164,196 +167,198 @@ public class Query {
 		}
 		return query;
 	}
+	
+	
 
-	public static Query fromJsonString(String json) {
-		Object o = JsonUtils.parse(json);
-		if (o instanceof Map) {
-			@SuppressWarnings({ "unchecked", "rawtypes" })
-			Map<String, List<String>> params = cast(toMapList((Map) o));
-			return fromQueryParams(params);
-		}
-		return null;
-	}
+//	public static Query fromJsonString(String json) {
+//		Object o = JsonUtils.parse(json);
+//		if (o instanceof Map) {
+//			@SuppressWarnings({ "unchecked", "rawtypes" })
+//			Map<String, List<String>> params = cast(toMapList((Map) o));
+//			return fromQueryParams(params);
+//		}
+//		return null;
+//	}
 
-	public static Query fromQueryParams(Map<String, List<String>> params) {
-		String type = null;
-		Query q = null;
-		String ql = null;
-		String connection = null;
-		UUID start = null;
-		String cursor = null;
-		Integer limit = null;
-		List<String> permissions = null;
-		Boolean reversed = null;
-		Long startTime = null;
-		Long finishTime = null;
-		Boolean pad = null;
-		CounterResolution resolution = null;
-		List<Identifier> users = null;
-		List<Identifier> groups = null;
-		List<Identifier> identifiers = null;
-		List<String> categories = null;
-		List<CounterFilterPredicate> counterFilters = null;
+//	public static Query fromQueryParams(Map<String, List<String>> params) {
+//		String type = null;
+//		Query q = null;
+//		String ql = null;
+//		String connection = null;
+//		UUID start = null;
+//		String cursor = null;
+//		Integer limit = null;
+//		List<String> permissions = null;
+//		Boolean reversed = null;
+//		Long startTime = null;
+//		Long finishTime = null;
+//		Boolean pad = null;
+//		CounterResolution resolution = null;
+//		List<Identifier> users = null;
+//		List<Identifier> groups = null;
+//		List<Identifier> identifiers = null;
+//		List<String> categories = null;
+//		List<CounterFilterPredicate> counterFilters = null;
+//
+//		List<String> l = null;
+//
+//		ql = first(params.get("ql"));
+//		type = first(params.get("type"));
+//		reversed = firstBoolean(params.get("reversed"));
+//		connection = first(params.get("connection"));
+//		start = firstUuid(params.get("start"));
+//		cursor = first(params.get("cursor"));
+//		limit = firstInteger(params.get("limit"));
+//		permissions = params.get("permission");
+//		startTime = firstLong(params.get("start_time"));
+//		finishTime = firstLong(params.get("end_time"));
+//
+//		l = params.get("resolution");
+//		if (!isEmpty(l)) {
+//			resolution = CounterResolution.fromString(l.get(0));
+//		}
+//
+//		users = Identifier.fromList(params.get("user"));
+//		groups = Identifier.fromList(params.get("group"));
+//
+//		categories = params.get("category");
+//
+//		l = params.get("counter");
+//		if (!isEmpty(l)) {
+//			counterFilters = CounterFilterPredicate.fromList(l);
+//		}
+//
+//		pad = firstBoolean(params.get("pad"));
+//
+//		for (Entry<String, List<String>> param : params.entrySet()) {
+//			if ((param.getValue() == null) || (param.getValue().size() == 0)) {
+//				Identifier identifier = Identifier.from(param.getKey());
+//				if (identifier != null) {
+//					if (identifiers == null) {
+//						identifiers = new ArrayList<Identifier>();
+//					}
+//					identifiers.add(identifier);
+//				}
+//			}
+//		}
+//
+//		if (ql != null) {
+//			q = Query.fromQL(ql);
+//		}
+//
+//		l = params.get("filter");
+//		if (!isEmpty(l)) {
+//			q = newQueryIfNull(q);
+//			for (String s : l) {
+//				q.addFilter(s);
+//			}
+//		}
+//
+//		l = params.get("sort");
+//		if (!isEmpty(l)) {
+//			q = newQueryIfNull(q);
+//			for (String s : l) {
+//				q.addSort(s);
+//			}
+//		}
+//
+//		if (type != null) {
+//			q = newQueryIfNull(q);
+//			q.setEntityType(type);
+//		}
+//
+//		if (connection != null) {
+//			q = newQueryIfNull(q);
+//			q.setConnectionType(connection);
+//		}
+//
+//		if (permissions != null) {
+//			q = newQueryIfNull(q);
+//			q.setPermissions(permissions);
+//		}
+//
+//		if (start != null) {
+//			q = newQueryIfNull(q);
+//			q.setStartResult(start);
+//		}
+//
+//		if (cursor != null) {
+//			q = newQueryIfNull(q);
+//			q.setCursor(cursor);
+//		}
+//
+//		if (limit != null) {
+//			q = newQueryIfNull(q);
+//			q.setLimit(limit);
+//		}
+//
+//		if (startTime != null) {
+//			q = newQueryIfNull(q);
+//			q.setStartTime(startTime);
+//		}
+//
+//		if (finishTime != null) {
+//			q = newQueryIfNull(q);
+//			q.setFinishTime(finishTime);
+//		}
+//
+//		if (resolution != null) {
+//			q = newQueryIfNull(q);
+//			q.setResolution(resolution);
+//		}
+//
+//		if (categories != null) {
+//			q = newQueryIfNull(q);
+//			q.setCategories(categories);
+//		}
+//
+//		if (counterFilters != null) {
+//			q = newQueryIfNull(q);
+//			q.setCounterFilters(counterFilters);
+//		}
+//
+//		if (pad != null) {
+//			q = newQueryIfNull(q);
+//			q.setPad(pad);
+//		}
+//
+//		if (users != null) {
+//			q = newQueryIfNull(q);
+//			q.setUsers(users);
+//		}
+//
+//		if (groups != null) {
+//			q = newQueryIfNull(q);
+//			q.setGroups(groups);
+//		}
+//
+//		if (identifiers != null) {
+//			q = newQueryIfNull(q);
+//			q.setIdentifiers(identifiers);
+//		}
+//
+//		if (reversed != null) {
+//			q = newQueryIfNull(q);
+//			q.setReversed(reversed);
+//		}
+//
+//		return q;
+//	}
 
-		List<String> l = null;
-
-		ql = first(params.get("ql"));
-		type = first(params.get("type"));
-		reversed = firstBoolean(params.get("reversed"));
-		connection = first(params.get("connection"));
-		start = firstUuid(params.get("start"));
-		cursor = first(params.get("cursor"));
-		limit = firstInteger(params.get("limit"));
-		permissions = params.get("permission");
-		startTime = firstLong(params.get("start_time"));
-		finishTime = firstLong(params.get("end_time"));
-
-		l = params.get("resolution");
-		if (!isEmpty(l)) {
-			resolution = CounterResolution.fromString(l.get(0));
-		}
-
-		users = Identifier.fromList(params.get("user"));
-		groups = Identifier.fromList(params.get("group"));
-
-		categories = params.get("category");
-
-		l = params.get("counter");
-		if (!isEmpty(l)) {
-			counterFilters = CounterFilterPredicate.fromList(l);
-		}
-
-		pad = firstBoolean(params.get("pad"));
-
-		for (Entry<String, List<String>> param : params.entrySet()) {
-			if ((param.getValue() == null) || (param.getValue().size() == 0)) {
-				Identifier identifier = Identifier.from(param.getKey());
-				if (identifier != null) {
-					if (identifiers == null) {
-						identifiers = new ArrayList<Identifier>();
-					}
-					identifiers.add(identifier);
-				}
-			}
-		}
-
-		if (ql != null) {
-			q = Query.fromQL(ql);
-		}
-
-		l = params.get("filter");
-		if (!isEmpty(l)) {
-			q = newQueryIfNull(q);
-			for (String s : l) {
-				q.addFilter(s);
-			}
-		}
-
-		l = params.get("sort");
-		if (!isEmpty(l)) {
-			q = newQueryIfNull(q);
-			for (String s : l) {
-				q.addSort(s);
-			}
-		}
-
-		if (type != null) {
-			q = newQueryIfNull(q);
-			q.setEntityType(type);
-		}
-
-		if (connection != null) {
-			q = newQueryIfNull(q);
-			q.setConnectionType(connection);
-		}
-
-		if (permissions != null) {
-			q = newQueryIfNull(q);
-			q.setPermissions(permissions);
-		}
-
-		if (start != null) {
-			q = newQueryIfNull(q);
-			q.setStartResult(start);
-		}
-
-		if (cursor != null) {
-			q = newQueryIfNull(q);
-			q.setCursor(cursor);
-		}
-
-		if (limit != null) {
-			q = newQueryIfNull(q);
-			q.setLimit(limit);
-		}
-
-		if (startTime != null) {
-			q = newQueryIfNull(q);
-			q.setStartTime(startTime);
-		}
-
-		if (finishTime != null) {
-			q = newQueryIfNull(q);
-			q.setFinishTime(finishTime);
-		}
-
-		if (resolution != null) {
-			q = newQueryIfNull(q);
-			q.setResolution(resolution);
-		}
-
-		if (categories != null) {
-			q = newQueryIfNull(q);
-			q.setCategories(categories);
-		}
-
-		if (counterFilters != null) {
-			q = newQueryIfNull(q);
-			q.setCounterFilters(counterFilters);
-		}
-
-		if (pad != null) {
-			q = newQueryIfNull(q);
-			q.setPad(pad);
-		}
-
-		if (users != null) {
-			q = newQueryIfNull(q);
-			q.setUsers(users);
-		}
-
-		if (groups != null) {
-			q = newQueryIfNull(q);
-			q.setGroups(groups);
-		}
-
-		if (identifiers != null) {
-			q = newQueryIfNull(q);
-			q.setIdentifiers(identifiers);
-		}
-
-		if (reversed != null) {
-			q = newQueryIfNull(q);
-			q.setReversed(reversed);
-		}
-
-		return q;
-	}
-
-	public static Query searchForProperty(String propertyName,
-			Object propertyValue) {
-		Query q = new Query();
-		q.addEqualityFilter(propertyName, propertyValue);
-		return q;
-	}
-
-	public static Query findForProperty(String propertyName,
-			Object propertyValue) {
-		Query q = new Query();
-		q.addEqualityFilter(propertyName, propertyValue);
-		q.setLimit(1);
-		return q;
-	}
+//	public static Query searchForProperty(String propertyName,
+//			Object propertyValue) {
+//		Query q = new Query();
+//		q.addEqualityFilter(propertyName, propertyValue);
+//		return q;
+//	}
+//
+//	public static Query findForProperty(String propertyName,
+//			Object propertyValue) {
+//		Query q = new Query();
+//		q.addEqualityFilter(propertyName, propertyValue);
+//		q.setLimit(1);
+//		return q;
+//	}
 
 	public static Query fromUUID(UUID uuid) {
 		Query q = new Query();
@@ -454,6 +459,19 @@ public class Query {
 		return this;
 	}
 
+	public Query setRootOperand(Operand op){
+	  this.rootOperand = op;
+	  return this;
+	}
+	
+	/**
+	 * Get the root operand of the tree in the where clause
+	 * @return
+	 */
+	public Operand getRootOperand(){
+	  return this.rootOperand;
+	}
+	
 	public Query addSelect(String select) {
 
 		return addSelect(select, null);
@@ -581,165 +599,165 @@ public class Query {
 		return !sortPredicates.isEmpty();
 	}
 
-	public Query addEqualityFilter(String propertyName, Object value) {
-		return addFilter(propertyName, FilterOperator.EQUAL, value);
-	}
+//	public Query addEqualityFilter(String propertyName, Object value) {
+//		return addFilter(propertyName, FilterOperator.EQUAL, value);
+//	}
 
-	public Query addFilter(String propertyName, FilterOperator operator,
-			Object value) {
-		if ((propertyName == null) || (operator == null) || (value == null)) {
-			return this;
-		}
-		if (PROPERTY_TYPE.equalsIgnoreCase(propertyName) && (value != null)) {
-			if (operator == FilterOperator.EQUAL) {
-				type = value.toString();
-			}
-		} else if ("connection".equalsIgnoreCase(propertyName)
-				&& (value != null)) {
-			if (operator == FilterOperator.EQUAL) {
-				connection = value.toString();
-			}
-		} else {
-			for (FilterPredicate f : filterPredicates) {
-				if (f.getPropertyName().equals(propertyName)
-						&& f.getValue().equals(value) && "*".equals(value)) {
-					logger.error("Attempted to set wildcard wilder for "
-							+ f.getPropertyName()
-							+ " more than once, discardng...");
-					return this;
-				}
-			}
-			filterPredicates.add(FilterPredicate.normalize(new FilterPredicate(
-					propertyName, operator, value)));
-		}
-		return this;
-	}
+//	public Query addFilter(String propertyName, FilterOperator operator,
+//			Object value) {
+//		if ((propertyName == null) || (operator == null) || (value == null)) {
+//			return this;
+//		}
+//		if (PROPERTY_TYPE.equalsIgnoreCase(propertyName) && (value != null)) {
+//			if (operator == FilterOperator.EQUAL) {
+//				type = value.toString();
+//			}
+//		} else if ("connection".equalsIgnoreCase(propertyName)
+//				&& (value != null)) {
+//			if (operator == FilterOperator.EQUAL) {
+//				connection = value.toString();
+//			}
+//		} else {
+//			for (FilterPredicate f : filterPredicates) {
+//				if (f.getPropertyName().equals(propertyName)
+//						&& f.getValue().equals(value) && "*".equals(value)) {
+//					logger.error("Attempted to set wildcard wilder for "
+//							+ f.getPropertyName()
+//							+ " more than once, discardng...");
+//					return this;
+//				}
+//			}
+//			filterPredicates.add(FilterPredicate.normalize(new FilterPredicate(
+//					propertyName, operator, value)));
+//		}
+//		return this;
+//	}
 
-	public Query addFilter(String filterStr) {
-		if (filterStr == null) {
-			return this;
-		}
-		FilterPredicate filter = FilterPredicate.valueOf(filterStr);
-		if ((filter != null) && (filter.propertyName != null)
-				&& (filter.operator != null) && (filter.value != null)) {
+//	public Query addFilter(String filterStr) {
+//		if (filterStr == null) {
+//			return this;
+//		}
+//		FilterPredicate filter = FilterPredicate.valueOf(filterStr);
+//		if ((filter != null) && (filter.propertyName != null)
+//				&& (filter.operator != null) && (filter.value != null)) {
+//
+//			if (PROPERTY_TYPE.equalsIgnoreCase(filter.propertyName)) {
+//				if (filter.operator == FilterOperator.EQUAL) {
+//					type = filter.value.toString();
+//				}
+//			} else if ("connection".equalsIgnoreCase(filter.propertyName)) {
+//				if (filter.operator == FilterOperator.EQUAL) {
+//					connection = filter.value.toString();
+//				}
+//			} else {
+//				for (FilterPredicate f : filterPredicates) {
+//					if (f.getPropertyName().equals(filter.getPropertyName())
+//							&& f.getValue().equals(filter.getValue())
+//							&& "*".equals(filter.getValue())) {
+//						logger.error("Attempted to set wildcard wilder for "
+//								+ f.getPropertyName()
+//								+ " more than once, discardng...");
+//						return this;
+//					}
+//				}
+//				filterPredicates.add(filter);
+//			}
+//		} else {
+//			logger.error("Unable to add filter to query: " + filterStr);
+//		}
+//		return this;
+//	}
 
-			if (PROPERTY_TYPE.equalsIgnoreCase(filter.propertyName)) {
-				if (filter.operator == FilterOperator.EQUAL) {
-					type = filter.value.toString();
-				}
-			} else if ("connection".equalsIgnoreCase(filter.propertyName)) {
-				if (filter.operator == FilterOperator.EQUAL) {
-					connection = filter.value.toString();
-				}
-			} else {
-				for (FilterPredicate f : filterPredicates) {
-					if (f.getPropertyName().equals(filter.getPropertyName())
-							&& f.getValue().equals(filter.getValue())
-							&& "*".equals(filter.getValue())) {
-						logger.error("Attempted to set wildcard wilder for "
-								+ f.getPropertyName()
-								+ " more than once, discardng...");
-						return this;
-					}
-				}
-				filterPredicates.add(filter);
-			}
-		} else {
-			logger.error("Unable to add filter to query: " + filterStr);
-		}
-		return this;
-	}
+//	public Query addFilter(FilterPredicate filter) {
+//		filter = FilterPredicate.normalize(filter);
+//		if ((filter != null) && (filter.propertyName != null)
+//				&& (filter.operator != null) && (filter.value != null)) {
+//
+//			if (PROPERTY_TYPE.equalsIgnoreCase(filter.propertyName)) {
+//				if (filter.operator == FilterOperator.EQUAL) {
+//					type = filter.value.toString();
+//				}
+//			} else if ("connection".equalsIgnoreCase(filter.propertyName)) {
+//				if (filter.operator == FilterOperator.EQUAL) {
+//					connection = filter.value.toString();
+//				}
+//			} else {
+//				filterPredicates.add(filter);
+//			}
+//		}
+//		return this;
+//	}
 
-	public Query addFilter(FilterPredicate filter) {
-		filter = FilterPredicate.normalize(filter);
-		if ((filter != null) && (filter.propertyName != null)
-				&& (filter.operator != null) && (filter.value != null)) {
+//	public List<FilterPredicate> getFilterPredicates() {
+//		return filterPredicates;
+//	}
+//
+//	public boolean hasFilterPredicates() {
+//		return !filterPredicates.isEmpty();
+//	}
+//
+//	public boolean hasFilterPredicatesExcludingSubkeys(
+//			Map<String, Object> subkeyProperties) {
+//		return !filterPredicates.isEmpty();
+//	}
+//
+//	public Map<String, Object> getEqualityFilters() {
+//		Map<String, Object> map = new LinkedHashMap<String, Object>();
+//
+//		for (FilterPredicate f : filterPredicates) {
+//			if (f.operator == FilterOperator.EQUAL) {
+//				Object val = f.getStartValue();
+//				if (val != null) {
+//					map.put(f.getPropertyName(), val);
+//				}
+//			}
+//		}
+//		return map.size() > 0 ? map : null;
+//	}
+//
+//	public boolean hasFiltersForProperty(String name) {
+//		return hasFiltersForProperty(FilterOperator.EQUAL, name);
+//	}
+//
+//	public boolean hasFiltersForProperty(FilterOperator operator, String name) {
+//		return getFilterForProperty(operator, name) != null;
+//	}
 
-			if (PROPERTY_TYPE.equalsIgnoreCase(filter.propertyName)) {
-				if (filter.operator == FilterOperator.EQUAL) {
-					type = filter.value.toString();
-				}
-			} else if ("connection".equalsIgnoreCase(filter.propertyName)) {
-				if (filter.operator == FilterOperator.EQUAL) {
-					connection = filter.value.toString();
-				}
-			} else {
-				filterPredicates.add(filter);
-			}
-		}
-		return this;
-	}
+//	public FilterPredicate getFilterForProperty(FilterOperator operator,
+//			String name) {
+//		if (name == null) {
+//			return null;
+//		}
+//		ListIterator<FilterPredicate> iterator = filterPredicates
+//				.listIterator();
+//		while (iterator.hasNext()) {
+//			FilterPredicate f = iterator.next();
+//			if (f.propertyName.equalsIgnoreCase(name)) {
+//				if (operator != null) {
+//					if (operator == f.operator) {
+//						return f;
+//					}
+//				} else {
+//					return f;
+//				}
+//			}
+//		}
+//		return null;
+//	}
 
-	public List<FilterPredicate> getFilterPredicates() {
-		return filterPredicates;
-	}
-
-	public boolean hasFilterPredicates() {
-		return !filterPredicates.isEmpty();
-	}
-
-	public boolean hasFilterPredicatesExcludingSubkeys(
-			Map<String, Object> subkeyProperties) {
-		return !filterPredicates.isEmpty();
-	}
-
-	public Map<String, Object> getEqualityFilters() {
-		Map<String, Object> map = new LinkedHashMap<String, Object>();
-
-		for (FilterPredicate f : filterPredicates) {
-			if (f.operator == FilterOperator.EQUAL) {
-				Object val = f.getStartValue();
-				if (val != null) {
-					map.put(f.getPropertyName(), val);
-				}
-			}
-		}
-		return map.size() > 0 ? map : null;
-	}
-
-	public boolean hasFiltersForProperty(String name) {
-		return hasFiltersForProperty(FilterOperator.EQUAL, name);
-	}
-
-	public boolean hasFiltersForProperty(FilterOperator operator, String name) {
-		return getFilterForProperty(operator, name) != null;
-	}
-
-	public FilterPredicate getFilterForProperty(FilterOperator operator,
-			String name) {
-		if (name == null) {
-			return null;
-		}
-		ListIterator<FilterPredicate> iterator = filterPredicates
-				.listIterator();
-		while (iterator.hasNext()) {
-			FilterPredicate f = iterator.next();
-			if (f.propertyName.equalsIgnoreCase(name)) {
-				if (operator != null) {
-					if (operator == f.operator) {
-						return f;
-					}
-				} else {
-					return f;
-				}
-			}
-		}
-		return null;
-	}
-
-	public void removeFiltersForProperty(String name) {
-		if (name == null) {
-			return;
-		}
-		ListIterator<FilterPredicate> iterator = filterPredicates
-				.listIterator();
-		while (iterator.hasNext()) {
-			FilterPredicate f = iterator.next();
-			if (f.propertyName.equalsIgnoreCase(name)) {
-				iterator.remove();
-			}
-		}
-	}
+//	public void removeFiltersForProperty(String name) {
+//		if (name == null) {
+//			return;
+//		}
+//		ListIterator<FilterPredicate> iterator = filterPredicates
+//				.listIterator();
+//		while (iterator.hasNext()) {
+//			FilterPredicate f = iterator.next();
+//			if (f.propertyName.equalsIgnoreCase(name)) {
+//				iterator.remove();
+//			}
+//		}
+//	}
 
 	public void setStartResult(UUID startResult) {
 		this.startResult = startResult;
@@ -902,24 +920,24 @@ public class Query {
 		this.identifiers = identifiers;
 	}
 
-	public boolean containsUuidIdentifersOnly() {
-		if (hasFilterPredicates()) {
-			return false;
-		}
-		if ((identifiers == null) || identifiers.isEmpty()) {
-			return false;
-		}
-		for (Identifier identifier : identifiers) {
-			if (!identifier.isUUID()) {
-				return false;
-			}
-		}
-		return true;
-	}
+//	public boolean containsUuidIdentifersOnly() {
+//		if (hasFilterPredicates()) {
+//			return false;
+//		}
+//		if ((identifiers == null) || identifiers.isEmpty()) {
+//			return false;
+//		}
+//		for (Identifier identifier : identifiers) {
+//			if (!identifier.isUUID()) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
 
-	public boolean containsSingleUuidIdentifier() {
-		return containsUuidIdentifersOnly() && (identifiers.size() == 1);
-	}
+//	public boolean containsSingleUuidIdentifier() {
+//		return containsUuidIdentifersOnly() && (identifiers.size() == 1);
+//	}
 
 	public List<UUID> getUuidIdentifiers() {
 		if ((identifiers == null) || identifiers.isEmpty()) {
@@ -934,31 +952,31 @@ public class Query {
 		return ids;
 	}
 
-	public UUID getSingleUuidIdentifier() {
-		if (!containsSingleUuidIdentifier()) {
-			return null;
-		}
-		return (identifiers.get(0).getUUID());
-	}
+//	public UUID getSingleUuidIdentifier() {
+//		if (!containsSingleUuidIdentifier()) {
+//			return null;
+//		}
+//		return (identifiers.get(0).getUUID());
+//	}
+//
+//	public boolean containsNameIdentifiersOnly() {
+//		if (hasFilterPredicates()) {
+//			return false;
+//		}
+//		if ((identifiers == null) || identifiers.isEmpty()) {
+//			return false;
+//		}
+//		for (Identifier identifier : identifiers) {
+//			if (!identifier.isName()) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
 
-	public boolean containsNameIdentifiersOnly() {
-		if (hasFilterPredicates()) {
-			return false;
-		}
-		if ((identifiers == null) || identifiers.isEmpty()) {
-			return false;
-		}
-		for (Identifier identifier : identifiers) {
-			if (!identifier.isName()) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public boolean containsSingleNameIdentifier() {
-		return containsNameIdentifiersOnly() && (identifiers.size() == 1);
-	}
+//	public boolean containsSingleNameIdentifier() {
+//		return containsNameIdentifiersOnly() && (identifiers.size() == 1);
+//	}
 
 	public List<String> getNameIdentifiers() {
 		if ((identifiers == null) || identifiers.isEmpty()) {
@@ -972,32 +990,32 @@ public class Query {
 		}
 		return names;
 	}
+//
+//	public String getSingleNameIdentifier() {
+//		if (!containsSingleNameIdentifier()) {
+//			return null;
+//		}
+//		return (identifiers.get(0).toString());
+//	}
+//
+//	public boolean containsEmailIdentifiersOnly() {
+//		if (hasFilterPredicates()) {
+//			return false;
+//		}
+//		if ((identifiers == null) || identifiers.isEmpty()) {
+//			return false;
+//		}
+//		for (Identifier identifier : identifiers) {
+//			if (identifier.isEmail()) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
 
-	public String getSingleNameIdentifier() {
-		if (!containsSingleNameIdentifier()) {
-			return null;
-		}
-		return (identifiers.get(0).toString());
-	}
-
-	public boolean containsEmailIdentifiersOnly() {
-		if (hasFilterPredicates()) {
-			return false;
-		}
-		if ((identifiers == null) || identifiers.isEmpty()) {
-			return false;
-		}
-		for (Identifier identifier : identifiers) {
-			if (identifier.isEmail()) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public boolean containsSingleEmailIdentifier() {
-		return containsEmailIdentifiersOnly() && (identifiers.size() == 1);
-	}
+//	public boolean containsSingleEmailIdentifier() {
+//		return containsEmailIdentifiersOnly() && (identifiers.size() == 1);
+//	}
 
 	public List<String> getEmailIdentifiers() {
 		if ((identifiers == null) || identifiers.isEmpty()) {
@@ -1012,32 +1030,32 @@ public class Query {
 		return emails;
 	}
 
-	public String getSingleEmailIdentifier() {
-		if (!containsSingleEmailIdentifier()) {
-			return null;
-		}
-		return (identifiers.get(0).toString());
-	}
+//	public String getSingleEmailIdentifier() {
+//		if (!containsSingleEmailIdentifier()) {
+//			return null;
+//		}
+//		return (identifiers.get(0).toString());
+//	}
+//
+//	public boolean containsNameOrEmailIdentifiersOnly() {
+//		if (hasFilterPredicates()) {
+//			return false;
+//		}
+//		if ((identifiers == null) || identifiers.isEmpty()) {
+//			return false;
+//		}
+//		for (Identifier identifier : identifiers) {
+//			if (!identifier.isEmail() && !identifier.isName()) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
 
-	public boolean containsNameOrEmailIdentifiersOnly() {
-		if (hasFilterPredicates()) {
-			return false;
-		}
-		if ((identifiers == null) || identifiers.isEmpty()) {
-			return false;
-		}
-		for (Identifier identifier : identifiers) {
-			if (!identifier.isEmail() && !identifier.isName()) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public boolean containsSingleNameOrEmailIdentifier() {
-		return containsNameOrEmailIdentifiersOnly()
-				&& (identifiers.size() == 1);
-	}
+//	public boolean containsSingleNameOrEmailIdentifier() {
+//		return containsNameOrEmailIdentifiersOnly()
+//				&& (identifiers.size() == 1);
+//	}
 
 	public List<String> getNameAndEmailIdentifiers() {
 		if ((identifiers == null) || identifiers.isEmpty()) {
@@ -1054,12 +1072,12 @@ public class Query {
 		return ids;
 	}
 
-	public String getSingleNameOrEmailIdentifier() {
-		if (!containsSingleNameOrEmailIdentifier()) {
-			return null;
-		}
-		return (identifiers.get(0).toString());
-	}
+//	public String getSingleNameOrEmailIdentifier() {
+//		if (!containsSingleNameOrEmailIdentifier()) {
+//			return null;
+//		}
+//		return (identifiers.get(0).toString());
+//	}
 
 	public List<String> getCategories() {
 		return categories;
@@ -1097,7 +1115,7 @@ public class Query {
 
 	@Override
 	public String toString() {
-		if (selectSubjects.isEmpty() && filterPredicates.isEmpty()) {
+		if (selectSubjects.isEmpty()) {
 			return "";
 		}
 
@@ -1132,17 +1150,17 @@ public class Query {
 		} else {
 			s.append(type);
 		}
-		if (!filterPredicates.isEmpty()) {
-			s.append(" where ");
-			boolean first = true;
-			for (FilterPredicate f : filterPredicates) {
-				if (!first) {
-					s.append(" and ");
-				}
-				s.append(f.toString());
-				first = false;
-			}
-		}
+//		if (!filterPredicates.isEmpty()) {
+//			s.append(" where ");
+//			boolean first = true;
+//			for (FilterPredicate f : filterPredicates) {
+//				if (!first) {
+//					s.append(" and ");
+//				}
+//				s.append(f.toString());
+//				first = false;
+//			}
+//		}
 		return s.toString();
 	}
 
@@ -1388,52 +1406,52 @@ public class Query {
 
 			return null;
 		}
+//
+//		public static FilterPredicate valueOf(String str) {
+//			if (str == null) {
+//				return null;
+//			}
+//			try {
+//				ANTLRStringStream in = new ANTLRStringStream(str.trim());
+//				QueryFilterLexer lexer = new QueryFilterLexer(in);
+//				CommonTokenStream tokens = new CommonTokenStream(lexer);
+//				QueryFilterParser parser = new QueryFilterParser(tokens);
+//				FilterPredicate filter = parser.filter();
+//				return normalize(filter);
+//			} catch (Exception e) {
+//				logger.error("Unable to parse \"" + str + "\"", e);
+//			}
+//			return null;
+//		}
+//
+//		public static FilterPredicate normalize(FilterPredicate p) {
+//			if (p == null) {
+//				return null;
+//			}
+//			if (p.operator == FilterOperator.CONTAINS) {
+//				String propertyName = appendSuffix(p.propertyName, "keywords");
+//				return new FilterPredicate(propertyName, FilterOperator.EQUAL,
+//						p.value);
+//			} else if (p.operator == FilterOperator.WITHIN) {
+//				String propertyName = appendSuffix(p.propertyName,
+//						"coordinates");
+//				return new FilterPredicate(propertyName, FilterOperator.WITHIN,
+//						p.value);
+//			}
+//
+//			return p;
+//		}
 
-		public static FilterPredicate valueOf(String str) {
-			if (str == null) {
-				return null;
-			}
-			try {
-				ANTLRStringStream in = new ANTLRStringStream(str.trim());
-				QueryFilterLexer lexer = new QueryFilterLexer(in);
-				CommonTokenStream tokens = new CommonTokenStream(lexer);
-				QueryFilterParser parser = new QueryFilterParser(tokens);
-				FilterPredicate filter = parser.filter();
-				return normalize(filter);
-			} catch (Exception e) {
-				logger.error("Unable to parse \"" + str + "\"", e);
-			}
-			return null;
-		}
-
-		public static FilterPredicate normalize(FilterPredicate p) {
-			if (p == null) {
-				return null;
-			}
-			if (p.operator == FilterOperator.CONTAINS) {
-				String propertyName = appendSuffix(p.propertyName, "keywords");
-				return new FilterPredicate(propertyName, FilterOperator.EQUAL,
-						p.value);
-			} else if (p.operator == FilterOperator.WITHIN) {
-				String propertyName = appendSuffix(p.propertyName,
-						"coordinates");
-				return new FilterPredicate(propertyName, FilterOperator.WITHIN,
-						p.value);
-			}
-
-			return p;
-		}
-
-		private static String appendSuffix(String str, String suffix) {
-			if (StringUtils.isNotEmpty(str)) {
-				if (!str.endsWith("." + suffix)) {
-					str += "." + suffix;
-				}
-			} else {
-				str = suffix;
-			}
-			return str;
-		}
+//		private static String appendSuffix(String str, String suffix) {
+//			if (StringUtils.isNotEmpty(str)) {
+//				if (!str.endsWith("." + suffix)) {
+//					str += "." + suffix;
+//				}
+//			} else {
+//				str = suffix;
+//			}
+//			return str;
+//		}
 
 		public String getPropertyName() {
 			return propertyName;

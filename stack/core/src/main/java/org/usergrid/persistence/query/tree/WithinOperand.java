@@ -15,23 +15,36 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import org.antlr.runtime.Token;
+
 /**
  * @author tnine
  *
  */
-public class Contains extends Operand {
+public class WithinOperand extends Operand {
 
   private Property property;
-  private StringLiteral string;
-  
+  private FloatLiteral radius;
+  private FloatLiteral lattitude;
+  private FloatLiteral longitude;
   
   /**
    * @param property
    * @param literal
    */
-  public Contains(Property property, StringLiteral string ) {
+  public WithinOperand(Token t ) {
+    super(t);
     this.property = property;
-    this.string =  string;
+    this.radius = radius;
+    this.lattitude = lattitude;
+    this.longitude = longitude;
   }
 
+  /* (non-Javadoc)
+   * @see org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence.query.tree.QueryVisitor)
+   */
+  @Override
+  public void visit(QueryVisitor visitor) {
+    visitor.visit(this);
+  }
 }

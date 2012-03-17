@@ -17,16 +17,29 @@ package org.usergrid.persistence.query.tree;
 
 import org.antlr.runtime.Token;
 
-
 /**
  * A property
+ * 
  * @author tnine
- *
+ * 
  */
-public class Property extends Literal {
+public class Property extends Literal<String> {
+
+  private String property;
 
   protected Property(Token t) {
     super(t);
+    this.property = t.getText();
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.usergrid.persistence.query.tree.Literal#getValue()
+   */
+  @Override
+  public String getValue() {
+    return this.property;
   }
 
 }

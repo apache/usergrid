@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import org.antlr.runtime.Token;
+
 
 /**
  * @author tnine
@@ -26,8 +28,16 @@ public class LessThan extends EqualityOperand{
    * @param property
    * @param literal
    */
-  public LessThan(Property property, Literal literal) {
-    super(property, literal);
+  public LessThan(Token t) {
+    super(t);
+  }
+  
+  /* (non-Javadoc)
+   * @see org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence.query.tree.QueryVisitor)
+   */
+  @Override
+  public void visit(QueryVisitor visitor) {
+    visitor.visit(this);
   }
 
  

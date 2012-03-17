@@ -119,32 +119,30 @@ GTE	:	'>=' |  'gte';
 
 
 
-property returns [Property property]
-	:	 ID<Property>;
+property :	ID<Property>;
 	
-booleanliteral returns [BooleanLiteral value] :
- BOOLEAN<BooleanLiteral>;
+booleanliteral: BOOLEAN<BooleanLiteral>;
 
 
-intliteral returns [IntegerLiteral value] :
-  INT<IntegerLiteral>;
+intliteral :
+  INT<IntegerLiteral> ;
 
-uuidliteral returns [UUIDLiteral value] :
+uuidliteral :
   UUID<UUIDLiteral>;
 
-stringliteral returns [StringLiteral value] :
+stringliteral :
   STRING<StringLiteral>;
   
-floatliteral returns [FloatLiteral value] :
-  FLOAT<FloatLiteral>;
+floatliteral :
+  FLOAT<FloatLiteral> ;
 
 //We delegate to each sub class literal so we can get each type	
-value returns [Literal value]  : 
-  booleanliteral {retval.value = $booleanliteral.value;}
-  | intliteral {retval.value = $intliteral.value;}
-  | uuidliteral {retval.value = $uuidliteral.value;}
-  | stringliteral {retval.value = $stringliteral.value;}
-  | floatliteral {retval.value = $floatliteral.value;}
+value : 
+  booleanliteral
+  | intliteral
+  | uuidliteral
+  | stringliteral
+  | floatliteral
   ;
   
 
@@ -155,53 +153,48 @@ value returns [Literal value]  :
 //begin search expressions
   
 //mathmatical equality operations
-equalityop returns [EqualityOperand op]:
-  p=property LT v=value { retval.op = new LessThan(p.property, v.value);}
-  |p=property LTE v=value { retval.op = new LessThanEqual(p.property, v.value);}
-  | p=property EQ v=value { retval.op = new Equal(p.property, v.value);}
-  |p=property GT v=value { retval.op = new GreaterThan(p.property, v.value);}
-  |p=property GTE v=value { retval.op = new LessThan(p.property, v.value);}
+equalityop :
+  property LT<LessThan>^ value
+  |property LTE<LessThanEqual>^ value
+  |property EQ<Equal>^ value
+  |property GT<GreaterThan>^ value
+  |property GTE<GreaterThanEqual>^ value
   ; 
 
 //geo location search
-locationop returns [Within op]:
-  p=property 'within' distance=floatliteral 'of' lattitude=floatliteral ',' longitude=floatliteral {
-    retval.op = new Within(p.property, distance.value, lattitude.value, longitude.value);
-  };//-> ^('within'<Within>[$property, $distance, $lat, $long]);
+locationop :
+  property 'within'<WithinOperand>^ floatliteral 'of' floatliteral ',' floatliteral;
   
 //string search
-containsop returns [Contains op] : 
-  p=property 'contains' s=stringliteral {
-    retval.op = new Contains(p.property, s.value);
-  };
-  
+containsop :
+  property 'contains'<ContainsOperand>^ stringliteral;
 //
-operation returns [Operand op] :
- '(' exp=expression ')'  { retval.op = exp.op; }
-   | equalityop { retval.op = $equalityop.op; }
-   | locationop { retval.op = $locationop.op; }
-   | containsop { retval.op = $containsop.op; }
+operation :
+ '('! expression ')'!
+   | equalityop 
+   | locationop 
+   | containsop 
    ;
 
 //negations of expressions
-notexp returns [Operand op]:
+notexp :
 //only link if we have the not
- 'not'^ operation { retval.op = new NotOperand($operation.op);} 
- |operation { retval.op = $operation.op; }
+ 'not'<NotOperand>^ operation  
+ |operation 
  ;
 
 //and expressions contain operands.  These should always be closer to the leaves of a tree, it allows
 //for faster result intersection sooner in the query execution
-andexp returns [AndOperand op]:
- left=notexp ('and' right=notexp {retval.op = new AndOperand(left.op, right.op); } )*;
+andexp :
+ notexp ('and'<AndOperand>^ notexp )*;
+ 
  
 //or expression should always be after AND expressions.  This will give us a smaller result set to union when evaluating trees
-orexp returns [OrOperand op]:
- left=andexp ('or' right=andexp {retval.op = new OrOperand(left.op, right.op); })*;
+//also a root level expression
+expression :
+ andexp ('or'<OrOperand>^ andexp )*;
 
-//root level boolean expression
-expression returns [Operand op]:
-  orexp;
+
 
 //end expressions
 
@@ -212,7 +205,12 @@ direction  : ('asc' | 'desc');
 
 //order clause
 order
-  : (property direction?);
+  : (property direction?){
+		String property = $property.text; 
+		String direction = $direction.text;
+		query.addSort(new SortPredicate(property, direction));
+    
+  };
 
 //end order clauses
   
@@ -221,7 +219,7 @@ order
 select_subject
   : ID {
 
-  query.addSelect($select_subject.text);
+  query.addSelect($ID.text);
 
 };
 
@@ -239,98 +237,16 @@ select_expr
    
 //end select clauses
 
-ql returns [Query q]
-  : 'select' select_expr ('where' expression )? ('order by' order (',' order)*)? {
+ql returns [Query query]
+  : 'select'! select_expr! ('where'! expression )? ('order by'! order! (','! order!)*)? {
 
-//q = query;
+  
+  query.setRootOperand((Operand)$expression.tree);
+  
+  retval.query = query;
 
-//TODO other stuff
+
 };
 
-//
-//
-//second_value 	:	(BOOLEAN | STRING | INT | FLOAT | UUID);
-//
-//third_value 	:	(BOOLEAN | STRING | INT | FLOAT | UUID);
-//
-//filter returns [FilterPredicate filter] 
-//    :   property operator value ((',' | 'of') second_value ( ',' third_value)?)?  {
-//    
-//String property = $property.text;
-//String operator = $operator.text;
-//String value = $value.text;
-//String second_value = $second_value.text;
-//String third_value = $third_value.text;
-//filter = new FilterPredicate(property, operator, value, second_value, third_value);
-////System.out.println("Parsed query filter: " + property + " " + operator + " " + value + " " + second_value);
-//    
-//} EOF ;
-
-
-//select_subject
-//	:	ID {
-//
-//query.addSelect($select_subject.text);
-//
-//};
-//
-//select_assign_target 
-//	:	ID;
-//	
-//select_assign_source 
-//	:	ID;	 	 
-//
-//select_assign
-//	:	select_assign_target ':' select_assign_source {
-//
-//query.addSelect($select_assign_source.text, $select_assign_target.text);
-//
-//};
-	 
-
-//operation
-//	:	(property operator value ((',' | 'of') second_value ( ',' third_value)?)? {
-//    
-//String property = $property.text;
-//String operator = $operator.text;
-//String value = $value.text;
-//int value_type = $value.start != null ? $value.start.getType() : 0;
-//String second_value = $second_value.text;
-//int second_value_type = $second_value.start != null ? $second_value.start.getType() : 0;
-//String third_value = $third_value.text;
-//int third_value_type = $third_value.start != null ? $third_value.start.getType() : 0;
-//FilterPredicate filter = new FilterPredicate(property, operator, value, value_type, second_value, second_value_type, third_value, third_value_type);
-//query.addFilter(filter);
-////System.out.println("Parsed query filter: " + property + " " + operator + " " + value + " " + second_value);
-//    
-//} );
-
-
- 
-//where :
-//  expression ;
-//
-//direction 	:	('asc' | 'desc');
-//
-//order
-//	: (property direction?){
-//    
-//String property = $property.text; 
-//String direction = $direction.text;
-//SortPredicate sort = new SortPredicate(property, direction);
-//query.addSort(sort);
-//System.out.println("Parsed query order: " + property + " " + direction);
-//    
-//};
-//
-//select_expr 
-//	:	('*' | select_subject (',' select_subject) * | '{' select_assign (',' select_assign) * '}');	
-//	 
-//ql returns [Query q]
-//	:	'select' select_expr ('where' where )? ('order by' order (',' order)*)? {
-//
-//q = query;
-//
-//};
 
 

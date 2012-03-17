@@ -17,19 +17,23 @@ package org.usergrid.persistence.query.tree;
 
 import org.antlr.runtime.Token;
 
-
-
 /**
  * @author tnine
- *
+ * 
  */
-public class BooleanLiteral extends Literal {
+public class BooleanLiteral extends Literal<Boolean> {
+
+  private boolean value;
 
   /**
    * @param t
    */
   protected BooleanLiteral(Token t) {
     super(t);
+    value = Boolean.valueOf(t.getText());
   }
 
+  public Boolean getValue() {
+    return value;
+  }
 }

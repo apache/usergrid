@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import org.antlr.runtime.Token;
+
 
 
 
@@ -24,15 +26,27 @@ package org.usergrid.persistence.query.tree;
  */
 public class NotOperand extends Operand {
 
-  private Operand operand;
+  
+  public NotOperand(Token t){
+    super(t);
+  }
   
   /**
-   * @param left
-   * @param token
-   * @param right
+   * get the only child operation 
+   * @return
    */
-  public NotOperand(Operand operand) {
-    this.operand = operand;
+  public Operand getOperation(){
+    return (Operand) this.children.get(0);
   }
+  
+  /* (non-Javadoc)
+   * @see org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence.query.tree.QueryVisitor)
+   */
+  @Override
+  public void visit(QueryVisitor visitor) {
+    visitor.visit(this);
+  }
+  
+  
 
 }

@@ -16,6 +16,8 @@
 package org.usergrid.persistence.query.tree;
 
 import org.antlr.runtime.Token;
+import org.antlr.runtime.tree.CommonTree;
+
 
 
 
@@ -24,13 +26,14 @@ import org.antlr.runtime.Token;
  * @author tnine
  *
  */
-public abstract class Literal {
+public abstract class Literal<V> extends CommonTree{
 
-  protected Token t;
-  
+ 
   protected Literal(Token t){
-    this.t = t;
+    super(t);
   }
+  
+  public abstract V getValue();
   
   
 }

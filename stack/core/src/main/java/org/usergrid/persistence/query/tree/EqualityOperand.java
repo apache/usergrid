@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import org.antlr.runtime.Token;
+
 /**
  * A base class for any equality expression.  Expressions must have a property and a value.  
  * Examples are >=, >, =, <, <=,
@@ -24,18 +26,30 @@ package org.usergrid.persistence.query.tree;
  */
 public abstract class EqualityOperand extends Operand {
 
-  protected Property property;
-  protected Literal literal;
   
   /**
    * @param property
    * @param literal
    */
-  public EqualityOperand(Property property, Literal literal) {
-    super();
-    this.property = property;
-    this.literal = literal;
+  public EqualityOperand(Token t) {
+    super(t);
+ }
+
+  /**
+   * @return the property
+   */
+  public Property getProperty() {
+   return (Property) this.children.get(0);
   }
+
+  /**
+   * @return the literal
+   */
+  public Literal getLiteral() {
+    return (Literal) this.children.get(1);
+  }
+  
+  
   
 
 }

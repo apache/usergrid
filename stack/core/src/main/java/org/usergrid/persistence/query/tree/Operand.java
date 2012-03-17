@@ -15,12 +15,32 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import org.antlr.runtime.tree.CommonTree;
+
+import org.antlr.runtime.Token;
+
 /**
- * Any logical operation should subclass.  Both boolean and equality operands are examples of operands
+ * Any logical operation should subclass.  Boolean logic, equality, not, contains, within and others are examples of operands
  * 
  * @author tnine
  *
  */
-public abstract class Operand {
+public abstract class Operand extends CommonTree{
 
+  
+  /**
+   * Default constructor to take a token
+   * @param t
+   */
+  public Operand(Token t){
+    super(t);
+  }
+  
+  /**
+   * Visitor method
+   * @param visitor
+   */
+  public abstract void visit(QueryVisitor visitor);
+  
+  
 }

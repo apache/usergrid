@@ -1,4 +1,4 @@
-// $ANTLR 3.1.3 Mar 17, 2009 19:23:44 org/usergrid/persistence/query/tree/QueryFilter.g 2012-03-16 13:52:58
+// $ANTLR 3.4 org/usergrid/persistence/query/tree/QueryFilter.g 2012-03-17 13:03:29
 
 package org.usergrid.persistence.query.tree;
 
@@ -12,43 +12,44 @@ import java.util.Stack;
 import java.util.List;
 import java.util.ArrayList;
 
+@SuppressWarnings({"all", "warnings", "unchecked"})
 public class QueryFilterLexer extends Lexer {
-    public static final int EXPONENT=6;
-    public static final int LT=16;
-    public static final int T__29=29;
-    public static final int T__28=28;
-    public static final int T__27=27;
-    public static final int T__26=26;
-    public static final int UUID=12;
-    public static final int T__25=25;
-    public static final int T__24=24;
-    public static final int T__23=23;
-    public static final int T__22=22;
-    public static final int T__21=21;
-    public static final int UNICODE_ESC=13;
-    public static final int GTE=20;
-    public static final int OCTAL_ESC=14;
-    public static final int HEX_DIGIT=11;
-    public static final int INT=5;
-    public static final int FLOAT=7;
-    public static final int ID=4;
     public static final int EOF=-1;
-    public static final int LTE=17;
+    public static final int T__21=21;
+    public static final int T__22=22;
+    public static final int T__23=23;
+    public static final int T__24=24;
+    public static final int T__25=25;
+    public static final int T__26=26;
+    public static final int T__27=27;
+    public static final int T__28=28;
+    public static final int T__29=29;
     public static final int T__30=30;
     public static final int T__31=31;
     public static final int T__32=32;
     public static final int T__33=33;
-    public static final int ESC_SEQ=8;
-    public static final int BOOLEAN=10;
-    public static final int WS=15;
     public static final int T__34=34;
     public static final int T__35=35;
     public static final int T__36=36;
     public static final int T__37=37;
     public static final int T__38=38;
-    public static final int GT=19;
-    public static final int EQ=18;
-    public static final int STRING=9;
+    public static final int BOOLEAN=4;
+    public static final int EQ=5;
+    public static final int ESC_SEQ=6;
+    public static final int EXPONENT=7;
+    public static final int FLOAT=8;
+    public static final int GT=9;
+    public static final int GTE=10;
+    public static final int HEX_DIGIT=11;
+    public static final int ID=12;
+    public static final int INT=13;
+    public static final int LT=14;
+    public static final int LTE=15;
+    public static final int OCTAL_ESC=16;
+    public static final int STRING=17;
+    public static final int UNICODE_ESC=18;
+    public static final int UUID=19;
+    public static final int WS=20;
 
 
       private static final Logger logger = LoggerFactory
@@ -62,14 +63,16 @@ public class QueryFilterLexer extends Lexer {
 
     // delegates
     // delegators
+    public Lexer[] getDelegates() {
+        return new Lexer[] {};
+    }
 
-    public QueryFilterLexer() {;} 
+    public QueryFilterLexer() {} 
     public QueryFilterLexer(CharStream input) {
         this(input, new RecognizerSharedState());
     }
     public QueryFilterLexer(CharStream input, RecognizerSharedState state) {
         super(input,state);
-
     }
     public String getGrammarFileName() { return "org/usergrid/persistence/query/tree/QueryFilter.g"; }
 
@@ -78,11 +81,10 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__21;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:21:7: ( 'within' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:21:9: 'within'
+            // org/usergrid/persistence/query/tree/QueryFilter.g:20:7: ( '(' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:20:9: '('
             {
-            match("within"); 
-
+            match('('); 
 
             }
 
@@ -90,6 +92,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "T__21"
@@ -99,11 +102,10 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__22;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:22:7: ( 'of' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:22:9: 'of'
+            // org/usergrid/persistence/query/tree/QueryFilter.g:21:7: ( ')' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:21:9: ')'
             {
-            match("of"); 
-
+            match(')'); 
 
             }
 
@@ -111,6 +113,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "T__22"
@@ -119,6 +122,27 @@ public class QueryFilterLexer extends Lexer {
     public final void mT__23() throws RecognitionException {
         try {
             int _type = T__23;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // org/usergrid/persistence/query/tree/QueryFilter.g:22:7: ( '*' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:22:9: '*'
+            {
+            match('*'); 
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__23"
+
+    // $ANTLR start "T__24"
+    public final void mT__24() throws RecognitionException {
+        try {
+            int _type = T__24;
             int _channel = DEFAULT_TOKEN_CHANNEL;
             // org/usergrid/persistence/query/tree/QueryFilter.g:23:7: ( ',' )
             // org/usergrid/persistence/query/tree/QueryFilter.g:23:9: ','
@@ -131,27 +155,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
-        }
-    }
-    // $ANTLR end "T__23"
-
-    // $ANTLR start "T__24"
-    public final void mT__24() throws RecognitionException {
-        try {
-            int _type = T__24;
-            int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:24:7: ( 'contains' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:24:9: 'contains'
-            {
-            match("contains"); 
-
-
-            }
-
-            state.type = _type;
-            state.channel = _channel;
-        }
-        finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "T__24"
@@ -161,153 +165,8 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__25;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:25:7: ( '(' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:25:9: '('
-            {
-            match('('); 
-
-            }
-
-            state.type = _type;
-            state.channel = _channel;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end "T__25"
-
-    // $ANTLR start "T__26"
-    public final void mT__26() throws RecognitionException {
-        try {
-            int _type = T__26;
-            int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:26:7: ( ')' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:26:9: ')'
-            {
-            match(')'); 
-
-            }
-
-            state.type = _type;
-            state.channel = _channel;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end "T__26"
-
-    // $ANTLR start "T__27"
-    public final void mT__27() throws RecognitionException {
-        try {
-            int _type = T__27;
-            int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:27:7: ( 'not' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:27:9: 'not'
-            {
-            match("not"); 
-
-
-            }
-
-            state.type = _type;
-            state.channel = _channel;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end "T__27"
-
-    // $ANTLR start "T__28"
-    public final void mT__28() throws RecognitionException {
-        try {
-            int _type = T__28;
-            int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:28:7: ( 'and' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:28:9: 'and'
-            {
-            match("and"); 
-
-
-            }
-
-            state.type = _type;
-            state.channel = _channel;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end "T__28"
-
-    // $ANTLR start "T__29"
-    public final void mT__29() throws RecognitionException {
-        try {
-            int _type = T__29;
-            int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:29:7: ( 'or' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:29:9: 'or'
-            {
-            match("or"); 
-
-
-            }
-
-            state.type = _type;
-            state.channel = _channel;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end "T__29"
-
-    // $ANTLR start "T__30"
-    public final void mT__30() throws RecognitionException {
-        try {
-            int _type = T__30;
-            int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:30:7: ( 'asc' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:30:9: 'asc'
-            {
-            match("asc"); 
-
-
-            }
-
-            state.type = _type;
-            state.channel = _channel;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end "T__30"
-
-    // $ANTLR start "T__31"
-    public final void mT__31() throws RecognitionException {
-        try {
-            int _type = T__31;
-            int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:31:7: ( 'desc' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:31:9: 'desc'
-            {
-            match("desc"); 
-
-
-            }
-
-            state.type = _type;
-            state.channel = _channel;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end "T__31"
-
-    // $ANTLR start "T__32"
-    public final void mT__32() throws RecognitionException {
-        try {
-            int _type = T__32;
-            int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:32:7: ( ':' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:32:9: ':'
+            // org/usergrid/persistence/query/tree/QueryFilter.g:24:7: ( ':' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:24:9: ':'
             {
             match(':'); 
 
@@ -317,6 +176,168 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__25"
+
+    // $ANTLR start "T__26"
+    public final void mT__26() throws RecognitionException {
+        try {
+            int _type = T__26;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // org/usergrid/persistence/query/tree/QueryFilter.g:25:7: ( 'and' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:25:9: 'and'
+            {
+            match("and"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__26"
+
+    // $ANTLR start "T__27"
+    public final void mT__27() throws RecognitionException {
+        try {
+            int _type = T__27;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // org/usergrid/persistence/query/tree/QueryFilter.g:26:7: ( 'asc' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:26:9: 'asc'
+            {
+            match("asc"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__27"
+
+    // $ANTLR start "T__28"
+    public final void mT__28() throws RecognitionException {
+        try {
+            int _type = T__28;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // org/usergrid/persistence/query/tree/QueryFilter.g:27:7: ( 'contains' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:27:9: 'contains'
+            {
+            match("contains"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__28"
+
+    // $ANTLR start "T__29"
+    public final void mT__29() throws RecognitionException {
+        try {
+            int _type = T__29;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // org/usergrid/persistence/query/tree/QueryFilter.g:28:7: ( 'desc' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:28:9: 'desc'
+            {
+            match("desc"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__29"
+
+    // $ANTLR start "T__30"
+    public final void mT__30() throws RecognitionException {
+        try {
+            int _type = T__30;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // org/usergrid/persistence/query/tree/QueryFilter.g:29:7: ( 'not' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:29:9: 'not'
+            {
+            match("not"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__30"
+
+    // $ANTLR start "T__31"
+    public final void mT__31() throws RecognitionException {
+        try {
+            int _type = T__31;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // org/usergrid/persistence/query/tree/QueryFilter.g:30:7: ( 'of' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:30:9: 'of'
+            {
+            match("of"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__31"
+
+    // $ANTLR start "T__32"
+    public final void mT__32() throws RecognitionException {
+        try {
+            int _type = T__32;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // org/usergrid/persistence/query/tree/QueryFilter.g:31:7: ( 'or' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:31:9: 'or'
+            {
+            match("or"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "T__32"
@@ -326,10 +347,12 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__33;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:33:7: ( '*' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:33:9: '*'
+            // org/usergrid/persistence/query/tree/QueryFilter.g:32:7: ( 'order by' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:32:9: 'order by'
             {
-            match('*'); 
+            match("order by"); 
+
+
 
             }
 
@@ -337,6 +360,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "T__33"
@@ -346,10 +370,12 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__34;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:34:7: ( '{' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:34:9: '{'
+            // org/usergrid/persistence/query/tree/QueryFilter.g:33:7: ( 'select' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:33:9: 'select'
             {
-            match('{'); 
+            match("select"); 
+
+
 
             }
 
@@ -357,6 +383,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "T__34"
@@ -366,10 +393,12 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__35;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:35:7: ( '}' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:35:9: '}'
+            // org/usergrid/persistence/query/tree/QueryFilter.g:34:7: ( 'where' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:34:9: 'where'
             {
-            match('}'); 
+            match("where"); 
+
+
 
             }
 
@@ -377,6 +406,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "T__35"
@@ -386,10 +416,11 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__36;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:36:7: ( 'select' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:36:9: 'select'
+            // org/usergrid/persistence/query/tree/QueryFilter.g:35:7: ( 'within' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:35:9: 'within'
             {
-            match("select"); 
+            match("within"); 
+
 
 
             }
@@ -398,6 +429,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "T__36"
@@ -407,11 +439,10 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__37;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:37:7: ( 'where' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:37:9: 'where'
+            // org/usergrid/persistence/query/tree/QueryFilter.g:36:7: ( '{' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:36:9: '{'
             {
-            match("where"); 
-
+            match('{'); 
 
             }
 
@@ -419,6 +450,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "T__37"
@@ -428,11 +460,10 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = T__38;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:38:7: ( 'order by' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:38:9: 'order by'
+            // org/usergrid/persistence/query/tree/QueryFilter.g:37:7: ( '}' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:37:9: '}'
             {
-            match("order by"); 
-
+            match('}'); 
 
             }
 
@@ -440,6 +471,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "T__38"
@@ -452,38 +484,104 @@ public class QueryFilterLexer extends Lexer {
             // org/usergrid/persistence/query/tree/QueryFilter.g:52:5: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' | '.' )* )
             // org/usergrid/persistence/query/tree/QueryFilter.g:52:7: ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' | '.' )*
             {
-            if ( (input.LA(1)>='A' && input.LA(1)<='Z')||input.LA(1)=='_'||(input.LA(1)>='a' && input.LA(1)<='z') ) {
+            if ( (input.LA(1) >= 'A' && input.LA(1) <= 'Z')||input.LA(1)=='_'||(input.LA(1) >= 'a' && input.LA(1) <= 'z') ) {
                 input.consume();
-
             }
             else {
                 MismatchedSetException mse = new MismatchedSetException(null,input);
                 recover(mse);
-                throw mse;}
+                throw mse;
+            }
+
 
             // org/usergrid/persistence/query/tree/QueryFilter.g:52:31: ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' | '.' )*
             loop1:
             do {
                 int alt1=2;
-                int LA1_0 = input.LA(1);
-
-                if ( (LA1_0=='.'||(LA1_0>='0' && LA1_0<='9')||(LA1_0>='A' && LA1_0<='Z')||LA1_0=='_'||(LA1_0>='a' && LA1_0<='z')) ) {
+                switch ( input.LA(1) ) {
+                case '.':
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                case 'A':
+                case 'B':
+                case 'C':
+                case 'D':
+                case 'E':
+                case 'F':
+                case 'G':
+                case 'H':
+                case 'I':
+                case 'J':
+                case 'K':
+                case 'L':
+                case 'M':
+                case 'N':
+                case 'O':
+                case 'P':
+                case 'Q':
+                case 'R':
+                case 'S':
+                case 'T':
+                case 'U':
+                case 'V':
+                case 'W':
+                case 'X':
+                case 'Y':
+                case 'Z':
+                case '_':
+                case 'a':
+                case 'b':
+                case 'c':
+                case 'd':
+                case 'e':
+                case 'f':
+                case 'g':
+                case 'h':
+                case 'i':
+                case 'j':
+                case 'k':
+                case 'l':
+                case 'm':
+                case 'n':
+                case 'o':
+                case 'p':
+                case 'q':
+                case 'r':
+                case 's':
+                case 't':
+                case 'u':
+                case 'v':
+                case 'w':
+                case 'x':
+                case 'y':
+                case 'z':
+                    {
                     alt1=1;
-                }
+                    }
+                    break;
 
+                }
 
                 switch (alt1) {
             	case 1 :
             	    // org/usergrid/persistence/query/tree/QueryFilter.g:
             	    {
-            	    if ( input.LA(1)=='.'||(input.LA(1)>='0' && input.LA(1)<='9')||(input.LA(1)>='A' && input.LA(1)<='Z')||input.LA(1)=='_'||(input.LA(1)>='a' && input.LA(1)<='z') ) {
+            	    if ( input.LA(1)=='.'||(input.LA(1) >= '0' && input.LA(1) <= '9')||(input.LA(1) >= 'A' && input.LA(1) <= 'Z')||input.LA(1)=='_'||(input.LA(1) >= 'a' && input.LA(1) <= 'z') ) {
             	        input.consume();
-
             	    }
             	    else {
             	        MismatchedSetException mse = new MismatchedSetException(null,input);
             	        recover(mse);
-            	        throw mse;}
+            	        throw mse;
+            	    }
 
 
             	    }
@@ -501,6 +599,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "ID"
@@ -515,11 +614,14 @@ public class QueryFilterLexer extends Lexer {
             {
             // org/usergrid/persistence/query/tree/QueryFilter.g:55:7: ( '-' )?
             int alt2=2;
-            int LA2_0 = input.LA(1);
-
-            if ( (LA2_0=='-') ) {
-                alt2=1;
+            switch ( input.LA(1) ) {
+                case '-':
+                    {
+                    alt2=1;
+                    }
+                    break;
             }
+
             switch (alt2) {
                 case 1 :
                     // org/usergrid/persistence/query/tree/QueryFilter.g:55:8: '-'
@@ -531,23 +633,43 @@ public class QueryFilterLexer extends Lexer {
 
             }
 
+
             // org/usergrid/persistence/query/tree/QueryFilter.g:55:14: ( '0' .. '9' )+
             int cnt3=0;
             loop3:
             do {
                 int alt3=2;
-                int LA3_0 = input.LA(1);
-
-                if ( ((LA3_0>='0' && LA3_0<='9')) ) {
+                switch ( input.LA(1) ) {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    {
                     alt3=1;
-                }
+                    }
+                    break;
 
+                }
 
                 switch (alt3) {
             	case 1 :
-            	    // org/usergrid/persistence/query/tree/QueryFilter.g:55:14: '0' .. '9'
+            	    // org/usergrid/persistence/query/tree/QueryFilter.g:
             	    {
-            	    matchRange('0','9'); 
+            	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
+            	        input.consume();
+            	    }
+            	    else {
+            	        MismatchedSetException mse = new MismatchedSetException(null,input);
+            	        recover(mse);
+            	        throw mse;
+            	    }
+
 
             	    }
             	    break;
@@ -568,6 +690,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "INT"
@@ -582,11 +705,14 @@ public class QueryFilterLexer extends Lexer {
             {
             // org/usergrid/persistence/query/tree/QueryFilter.g:59:8: ( '-' )?
             int alt4=2;
-            int LA4_0 = input.LA(1);
-
-            if ( (LA4_0=='-') ) {
-                alt4=1;
+            switch ( input.LA(1) ) {
+                case '-':
+                    {
+                    alt4=1;
+                    }
+                    break;
             }
+
             switch (alt4) {
                 case 1 :
                     // org/usergrid/persistence/query/tree/QueryFilter.g:59:9: '-'
@@ -597,6 +723,7 @@ public class QueryFilterLexer extends Lexer {
                     break;
 
             }
+
 
             // org/usergrid/persistence/query/tree/QueryFilter.g:59:15: ( ( '0' .. '9' )+ '.' ( '0' .. '9' )* ( EXPONENT )? | '.' ( '0' .. '9' )+ ( EXPONENT )? | ( '0' .. '9' )+ EXPONENT )
             int alt11=3;
@@ -610,18 +737,37 @@ public class QueryFilterLexer extends Lexer {
                     loop5:
                     do {
                         int alt5=2;
-                        int LA5_0 = input.LA(1);
-
-                        if ( ((LA5_0>='0' && LA5_0<='9')) ) {
+                        switch ( input.LA(1) ) {
+                        case '0':
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '4':
+                        case '5':
+                        case '6':
+                        case '7':
+                        case '8':
+                        case '9':
+                            {
                             alt5=1;
-                        }
+                            }
+                            break;
 
+                        }
 
                         switch (alt5) {
                     	case 1 :
-                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:59:18: '0' .. '9'
+                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:
                     	    {
-                    	    matchRange('0','9'); 
+                    	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
+                    	        input.consume();
+                    	    }
+                    	    else {
+                    	        MismatchedSetException mse = new MismatchedSetException(null,input);
+                    	        recover(mse);
+                    	        throw mse;
+                    	    }
+
 
                     	    }
                     	    break;
@@ -635,23 +781,44 @@ public class QueryFilterLexer extends Lexer {
                         cnt5++;
                     } while (true);
 
+
                     match('.'); 
+
                     // org/usergrid/persistence/query/tree/QueryFilter.g:59:33: ( '0' .. '9' )*
                     loop6:
                     do {
                         int alt6=2;
-                        int LA6_0 = input.LA(1);
-
-                        if ( ((LA6_0>='0' && LA6_0<='9')) ) {
+                        switch ( input.LA(1) ) {
+                        case '0':
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '4':
+                        case '5':
+                        case '6':
+                        case '7':
+                        case '8':
+                        case '9':
+                            {
                             alt6=1;
-                        }
+                            }
+                            break;
 
+                        }
 
                         switch (alt6) {
                     	case 1 :
-                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:59:34: '0' .. '9'
+                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:
                     	    {
-                    	    matchRange('0','9'); 
+                    	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
+                    	        input.consume();
+                    	    }
+                    	    else {
+                    	        MismatchedSetException mse = new MismatchedSetException(null,input);
+                    	        recover(mse);
+                    	        throw mse;
+                    	    }
+
 
                     	    }
                     	    break;
@@ -661,18 +828,24 @@ public class QueryFilterLexer extends Lexer {
                         }
                     } while (true);
 
+
                     // org/usergrid/persistence/query/tree/QueryFilter.g:59:45: ( EXPONENT )?
                     int alt7=2;
-                    int LA7_0 = input.LA(1);
-
-                    if ( (LA7_0=='E'||LA7_0=='e') ) {
-                        alt7=1;
+                    switch ( input.LA(1) ) {
+                        case 'E':
+                        case 'e':
+                            {
+                            alt7=1;
+                            }
+                            break;
                     }
+
                     switch (alt7) {
                         case 1 :
                             // org/usergrid/persistence/query/tree/QueryFilter.g:59:45: EXPONENT
                             {
                             mEXPONENT(); 
+
 
                             }
                             break;
@@ -686,23 +859,43 @@ public class QueryFilterLexer extends Lexer {
                     // org/usergrid/persistence/query/tree/QueryFilter.g:60:9: '.' ( '0' .. '9' )+ ( EXPONENT )?
                     {
                     match('.'); 
+
                     // org/usergrid/persistence/query/tree/QueryFilter.g:60:13: ( '0' .. '9' )+
                     int cnt8=0;
                     loop8:
                     do {
                         int alt8=2;
-                        int LA8_0 = input.LA(1);
-
-                        if ( ((LA8_0>='0' && LA8_0<='9')) ) {
+                        switch ( input.LA(1) ) {
+                        case '0':
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '4':
+                        case '5':
+                        case '6':
+                        case '7':
+                        case '8':
+                        case '9':
+                            {
                             alt8=1;
-                        }
+                            }
+                            break;
 
+                        }
 
                         switch (alt8) {
                     	case 1 :
-                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:60:14: '0' .. '9'
+                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:
                     	    {
-                    	    matchRange('0','9'); 
+                    	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
+                    	        input.consume();
+                    	    }
+                    	    else {
+                    	        MismatchedSetException mse = new MismatchedSetException(null,input);
+                    	        recover(mse);
+                    	        throw mse;
+                    	    }
+
 
                     	    }
                     	    break;
@@ -716,18 +909,24 @@ public class QueryFilterLexer extends Lexer {
                         cnt8++;
                     } while (true);
 
+
                     // org/usergrid/persistence/query/tree/QueryFilter.g:60:25: ( EXPONENT )?
                     int alt9=2;
-                    int LA9_0 = input.LA(1);
-
-                    if ( (LA9_0=='E'||LA9_0=='e') ) {
-                        alt9=1;
+                    switch ( input.LA(1) ) {
+                        case 'E':
+                        case 'e':
+                            {
+                            alt9=1;
+                            }
+                            break;
                     }
+
                     switch (alt9) {
                         case 1 :
                             // org/usergrid/persistence/query/tree/QueryFilter.g:60:25: EXPONENT
                             {
                             mEXPONENT(); 
+
 
                             }
                             break;
@@ -745,18 +944,37 @@ public class QueryFilterLexer extends Lexer {
                     loop10:
                     do {
                         int alt10=2;
-                        int LA10_0 = input.LA(1);
-
-                        if ( ((LA10_0>='0' && LA10_0<='9')) ) {
+                        switch ( input.LA(1) ) {
+                        case '0':
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '4':
+                        case '5':
+                        case '6':
+                        case '7':
+                        case '8':
+                        case '9':
+                            {
                             alt10=1;
-                        }
+                            }
+                            break;
 
+                        }
 
                         switch (alt10) {
                     	case 1 :
-                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:61:10: '0' .. '9'
+                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:
                     	    {
-                    	    matchRange('0','9'); 
+                    	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
+                    	        input.consume();
+                    	    }
+                    	    else {
+                    	        MismatchedSetException mse = new MismatchedSetException(null,input);
+                    	        recover(mse);
+                    	        throw mse;
+                    	    }
+
 
                     	    }
                     	    break;
@@ -770,7 +988,9 @@ public class QueryFilterLexer extends Lexer {
                         cnt10++;
                     } while (true);
 
+
                     mEXPONENT(); 
+
 
                     }
                     break;
@@ -784,6 +1004,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "FLOAT"
@@ -793,11 +1014,12 @@ public class QueryFilterLexer extends Lexer {
         try {
             int _type = STRING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // org/usergrid/persistence/query/tree/QueryFilter.g:65:5: ( '\\'' ( ESC_SEQ | ~ ( '\\\\' | '\\'' ) )* '\\'' )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:65:8: '\\'' ( ESC_SEQ | ~ ( '\\\\' | '\\'' ) )* '\\''
+            // org/usergrid/persistence/query/tree/QueryFilter.g:65:5: ( '\\'' ( ESC_SEQ |~ ( '\\\\' | '\\'' ) )* '\\'' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:65:8: '\\'' ( ESC_SEQ |~ ( '\\\\' | '\\'' ) )* '\\''
             {
             match('\''); 
-            // org/usergrid/persistence/query/tree/QueryFilter.g:65:13: ( ESC_SEQ | ~ ( '\\\\' | '\\'' ) )*
+
+            // org/usergrid/persistence/query/tree/QueryFilter.g:65:13: ( ESC_SEQ |~ ( '\\\\' | '\\'' ) )*
             loop12:
             do {
                 int alt12=3;
@@ -806,7 +1028,7 @@ public class QueryFilterLexer extends Lexer {
                 if ( (LA12_0=='\\') ) {
                     alt12=1;
                 }
-                else if ( ((LA12_0>='\u0000' && LA12_0<='&')||(LA12_0>='(' && LA12_0<='[')||(LA12_0>=']' && LA12_0<='\uFFFF')) ) {
+                else if ( ((LA12_0 >= '\u0000' && LA12_0 <= '&')||(LA12_0 >= '(' && LA12_0 <= '[')||(LA12_0 >= ']' && LA12_0 <= '\uFFFF')) ) {
                     alt12=2;
                 }
 
@@ -817,19 +1039,20 @@ public class QueryFilterLexer extends Lexer {
             	    {
             	    mESC_SEQ(); 
 
+
             	    }
             	    break;
             	case 2 :
             	    // org/usergrid/persistence/query/tree/QueryFilter.g:65:25: ~ ( '\\\\' | '\\'' )
             	    {
-            	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='&')||(input.LA(1)>='(' && input.LA(1)<='[')||(input.LA(1)>=']' && input.LA(1)<='\uFFFF') ) {
+            	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '&')||(input.LA(1) >= '(' && input.LA(1) <= '[')||(input.LA(1) >= ']' && input.LA(1) <= '\uFFFF') ) {
             	        input.consume();
-
             	    }
             	    else {
             	        MismatchedSetException mse = new MismatchedSetException(null,input);
             	        recover(mse);
-            	        throw mse;}
+            	        throw mse;
+            	    }
 
 
             	    }
@@ -840,6 +1063,7 @@ public class QueryFilterLexer extends Lexer {
                 }
             } while (true);
 
+
             match('\''); 
 
             }
@@ -848,6 +1072,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "STRING"
@@ -855,38 +1080,45 @@ public class QueryFilterLexer extends Lexer {
     // $ANTLR start "BOOLEAN"
     public final void mBOOLEAN() throws RecognitionException {
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:69:9: ( ( 'true' | 'false' ) )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:69:11: ( 'true' | 'false' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:70:9: ( ( 'true' | 'false' ) )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:70:11: ( 'true' | 'false' )
             {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:69:11: ( 'true' | 'false' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:70:11: ( 'true' | 'false' )
             int alt13=2;
-            int LA13_0 = input.LA(1);
-
-            if ( (LA13_0=='t') ) {
+            switch ( input.LA(1) ) {
+            case 't':
+                {
                 alt13=1;
-            }
-            else if ( (LA13_0=='f') ) {
+                }
+                break;
+            case 'f':
+                {
                 alt13=2;
-            }
-            else {
+                }
+                break;
+            default:
                 NoViableAltException nvae =
                     new NoViableAltException("", 13, 0, input);
 
                 throw nvae;
+
             }
+
             switch (alt13) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:69:12: 'true'
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:70:12: 'true'
                     {
                     match("true"); 
+
 
 
                     }
                     break;
                 case 2 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:69:20: 'false'
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:70:20: 'false'
                     {
                     match("false"); 
+
 
 
                     }
@@ -897,8 +1129,10 @@ public class QueryFilterLexer extends Lexer {
 
             }
 
+
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "BOOLEAN"
@@ -912,41 +1146,108 @@ public class QueryFilterLexer extends Lexer {
             // org/usergrid/persistence/query/tree/QueryFilter.g:71:8: HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
             {
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             match('-'); 
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             match('-'); 
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             match('-'); 
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             match('-'); 
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
 
             }
 
@@ -954,6 +1255,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "UUID"
@@ -961,37 +1263,42 @@ public class QueryFilterLexer extends Lexer {
     // $ANTLR start "EXPONENT"
     public final void mEXPONENT() throws RecognitionException {
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:82:10: ( ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:82:12: ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
+            // org/usergrid/persistence/query/tree/QueryFilter.g:83:10: ( ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:83:12: ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
             {
             if ( input.LA(1)=='E'||input.LA(1)=='e' ) {
                 input.consume();
-
             }
             else {
                 MismatchedSetException mse = new MismatchedSetException(null,input);
                 recover(mse);
-                throw mse;}
-
-            // org/usergrid/persistence/query/tree/QueryFilter.g:82:22: ( '+' | '-' )?
-            int alt14=2;
-            int LA14_0 = input.LA(1);
-
-            if ( (LA14_0=='+'||LA14_0=='-') ) {
-                alt14=1;
+                throw mse;
             }
+
+
+            // org/usergrid/persistence/query/tree/QueryFilter.g:83:22: ( '+' | '-' )?
+            int alt14=2;
+            switch ( input.LA(1) ) {
+                case '+':
+                case '-':
+                    {
+                    alt14=1;
+                    }
+                    break;
+            }
+
             switch (alt14) {
                 case 1 :
                     // org/usergrid/persistence/query/tree/QueryFilter.g:
                     {
                     if ( input.LA(1)=='+'||input.LA(1)=='-' ) {
                         input.consume();
-
                     }
                     else {
                         MismatchedSetException mse = new MismatchedSetException(null,input);
                         recover(mse);
-                        throw mse;}
+                        throw mse;
+                    }
 
 
                     }
@@ -999,23 +1306,43 @@ public class QueryFilterLexer extends Lexer {
 
             }
 
-            // org/usergrid/persistence/query/tree/QueryFilter.g:82:33: ( '0' .. '9' )+
+
+            // org/usergrid/persistence/query/tree/QueryFilter.g:83:33: ( '0' .. '9' )+
             int cnt15=0;
             loop15:
             do {
                 int alt15=2;
-                int LA15_0 = input.LA(1);
-
-                if ( ((LA15_0>='0' && LA15_0<='9')) ) {
+                switch ( input.LA(1) ) {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    {
                     alt15=1;
-                }
+                    }
+                    break;
 
+                }
 
                 switch (alt15) {
             	case 1 :
-            	    // org/usergrid/persistence/query/tree/QueryFilter.g:82:34: '0' .. '9'
+            	    // org/usergrid/persistence/query/tree/QueryFilter.g:
             	    {
-            	    matchRange('0','9'); 
+            	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
+            	        input.consume();
+            	    }
+            	    else {
+            	        MismatchedSetException mse = new MismatchedSetException(null,input);
+            	        recover(mse);
+            	        throw mse;
+            	    }
+
 
             	    }
             	    break;
@@ -1032,8 +1359,10 @@ public class QueryFilterLexer extends Lexer {
 
             }
 
+
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "EXPONENT"
@@ -1041,23 +1370,25 @@ public class QueryFilterLexer extends Lexer {
     // $ANTLR start "HEX_DIGIT"
     public final void mHEX_DIGIT() throws RecognitionException {
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:85:11: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:85:13: ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:86:11: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:
             {
-            if ( (input.LA(1)>='0' && input.LA(1)<='9')||(input.LA(1)>='A' && input.LA(1)<='F')||(input.LA(1)>='a' && input.LA(1)<='f') ) {
+            if ( (input.LA(1) >= '0' && input.LA(1) <= '9')||(input.LA(1) >= 'A' && input.LA(1) <= 'F')||(input.LA(1) >= 'a' && input.LA(1) <= 'f') ) {
                 input.consume();
-
             }
             else {
                 MismatchedSetException mse = new MismatchedSetException(null,input);
                 recover(mse);
-                throw mse;}
+                throw mse;
+            }
 
 
             }
 
+
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "HEX_DIGIT"
@@ -1065,11 +1396,11 @@ public class QueryFilterLexer extends Lexer {
     // $ANTLR start "ESC_SEQ"
     public final void mESC_SEQ() throws RecognitionException {
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:89:5: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' ) | UNICODE_ESC | OCTAL_ESC )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:90:5: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' ) | UNICODE_ESC | OCTAL_ESC )
             int alt16=3;
-            int LA16_0 = input.LA(1);
-
-            if ( (LA16_0=='\\') ) {
+            switch ( input.LA(1) ) {
+            case '\\':
+                {
                 switch ( input.LA(2) ) {
                 case '\"':
                 case '\'':
@@ -1105,50 +1436,59 @@ public class QueryFilterLexer extends Lexer {
                         new NoViableAltException("", 16, 1, input);
 
                     throw nvae;
+
                 }
 
-            }
-            else {
+                }
+                break;
+            default:
                 NoViableAltException nvae =
                     new NoViableAltException("", 16, 0, input);
 
                 throw nvae;
+
             }
+
             switch (alt16) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:89:9: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' )
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:90:9: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' )
                     {
                     match('\\'); 
+
                     if ( input.LA(1)=='\"'||input.LA(1)=='\''||input.LA(1)=='\\'||input.LA(1)=='b'||input.LA(1)=='f'||input.LA(1)=='n'||input.LA(1)=='r'||input.LA(1)=='t' ) {
                         input.consume();
-
                     }
                     else {
                         MismatchedSetException mse = new MismatchedSetException(null,input);
                         recover(mse);
-                        throw mse;}
+                        throw mse;
+                    }
 
 
                     }
                     break;
                 case 2 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:90:9: UNICODE_ESC
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:91:9: UNICODE_ESC
                     {
                     mUNICODE_ESC(); 
+
 
                     }
                     break;
                 case 3 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:91:9: OCTAL_ESC
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:92:9: OCTAL_ESC
                     {
                     mOCTAL_ESC(); 
+
 
                     }
                     break;
 
             }
+
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "ESC_SEQ"
@@ -1156,109 +1496,171 @@ public class QueryFilterLexer extends Lexer {
     // $ANTLR start "OCTAL_ESC"
     public final void mOCTAL_ESC() throws RecognitionException {
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:96:5: ( '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:97:5: ( '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) )
             int alt17=3;
-            int LA17_0 = input.LA(1);
-
-            if ( (LA17_0=='\\') ) {
-                int LA17_1 = input.LA(2);
-
-                if ( ((LA17_1>='0' && LA17_1<='3')) ) {
-                    int LA17_2 = input.LA(3);
-
-                    if ( ((LA17_2>='0' && LA17_2<='7')) ) {
-                        int LA17_4 = input.LA(4);
-
-                        if ( ((LA17_4>='0' && LA17_4<='7')) ) {
+            switch ( input.LA(1) ) {
+            case '\\':
+                {
+                switch ( input.LA(2) ) {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                    {
+                    switch ( input.LA(3) ) {
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                        {
+                        switch ( input.LA(4) ) {
+                        case '0':
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '4':
+                        case '5':
+                        case '6':
+                        case '7':
+                            {
                             alt17=1;
+                            }
+                            break;
+                        default:
+                            alt17=2;
                         }
-                        else {
-                            alt17=2;}
-                    }
-                    else {
-                        alt17=3;}
-                }
-                else if ( ((LA17_1>='4' && LA17_1<='7')) ) {
-                    int LA17_3 = input.LA(3);
 
-                    if ( ((LA17_3>='0' && LA17_3<='7')) ) {
-                        alt17=2;
+                        }
+                        break;
+                    default:
+                        alt17=3;
                     }
-                    else {
-                        alt17=3;}
-                }
-                else {
+
+                    }
+                    break;
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                    {
+                    switch ( input.LA(3) ) {
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                        {
+                        alt17=2;
+                        }
+                        break;
+                    default:
+                        alt17=3;
+                    }
+
+                    }
+                    break;
+                default:
                     NoViableAltException nvae =
                         new NoViableAltException("", 17, 1, input);
 
                     throw nvae;
+
                 }
-            }
-            else {
+
+                }
+                break;
+            default:
                 NoViableAltException nvae =
                     new NoViableAltException("", 17, 0, input);
 
                 throw nvae;
+
             }
+
             switch (alt17) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:96:9: '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:97:9: '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
                     {
                     match('\\'); 
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:96:14: ( '0' .. '3' )
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:96:15: '0' .. '3'
-                    {
-                    matchRange('0','3'); 
 
+                    if ( (input.LA(1) >= '0' && input.LA(1) <= '3') ) {
+                        input.consume();
+                    }
+                    else {
+                        MismatchedSetException mse = new MismatchedSetException(null,input);
+                        recover(mse);
+                        throw mse;
                     }
 
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:96:25: ( '0' .. '7' )
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:96:26: '0' .. '7'
-                    {
-                    matchRange('0','7'); 
 
+                    if ( (input.LA(1) >= '0' && input.LA(1) <= '7') ) {
+                        input.consume();
+                    }
+                    else {
+                        MismatchedSetException mse = new MismatchedSetException(null,input);
+                        recover(mse);
+                        throw mse;
                     }
 
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:96:36: ( '0' .. '7' )
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:96:37: '0' .. '7'
-                    {
-                    matchRange('0','7'); 
 
+                    if ( (input.LA(1) >= '0' && input.LA(1) <= '7') ) {
+                        input.consume();
+                    }
+                    else {
+                        MismatchedSetException mse = new MismatchedSetException(null,input);
+                        recover(mse);
+                        throw mse;
                     }
 
 
                     }
                     break;
                 case 2 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:97:9: '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:98:9: '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
                     {
                     match('\\'); 
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:97:14: ( '0' .. '7' )
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:97:15: '0' .. '7'
-                    {
-                    matchRange('0','7'); 
 
+                    if ( (input.LA(1) >= '0' && input.LA(1) <= '7') ) {
+                        input.consume();
+                    }
+                    else {
+                        MismatchedSetException mse = new MismatchedSetException(null,input);
+                        recover(mse);
+                        throw mse;
                     }
 
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:97:25: ( '0' .. '7' )
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:97:26: '0' .. '7'
-                    {
-                    matchRange('0','7'); 
 
+                    if ( (input.LA(1) >= '0' && input.LA(1) <= '7') ) {
+                        input.consume();
+                    }
+                    else {
+                        MismatchedSetException mse = new MismatchedSetException(null,input);
+                        recover(mse);
+                        throw mse;
                     }
 
 
                     }
                     break;
                 case 3 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:98:9: '\\\\' ( '0' .. '7' )
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:99:9: '\\\\' ( '0' .. '7' )
                     {
                     match('\\'); 
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:98:14: ( '0' .. '7' )
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:98:15: '0' .. '7'
-                    {
-                    matchRange('0','7'); 
 
+                    if ( (input.LA(1) >= '0' && input.LA(1) <= '7') ) {
+                        input.consume();
+                    }
+                    else {
+                        MismatchedSetException mse = new MismatchedSetException(null,input);
+                        recover(mse);
+                        throw mse;
                     }
 
 
@@ -1266,8 +1668,10 @@ public class QueryFilterLexer extends Lexer {
                     break;
 
             }
+
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "OCTAL_ESC"
@@ -1275,20 +1679,31 @@ public class QueryFilterLexer extends Lexer {
     // $ANTLR start "UNICODE_ESC"
     public final void mUNICODE_ESC() throws RecognitionException {
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:103:5: ( '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:103:9: '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+            // org/usergrid/persistence/query/tree/QueryFilter.g:104:5: ( '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:104:9: '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
             {
             match('\\'); 
+
             match('u'); 
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
+
             mHEX_DIGIT(); 
+
 
             }
 
+
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "UNICODE_ESC"
@@ -1306,25 +1721,31 @@ public class QueryFilterLexer extends Lexer {
             loop18:
             do {
                 int alt18=2;
-                int LA18_0 = input.LA(1);
-
-                if ( ((LA18_0>='\t' && LA18_0<='\n')||(LA18_0>='\f' && LA18_0<='\r')||LA18_0==' ') ) {
+                switch ( input.LA(1) ) {
+                case '\t':
+                case '\n':
+                case '\f':
+                case '\r':
+                case ' ':
+                    {
                     alt18=1;
-                }
+                    }
+                    break;
 
+                }
 
                 switch (alt18) {
             	case 1 :
             	    // org/usergrid/persistence/query/tree/QueryFilter.g:
             	    {
-            	    if ( (input.LA(1)>='\t' && input.LA(1)<='\n')||(input.LA(1)>='\f' && input.LA(1)<='\r')||input.LA(1)==' ' ) {
+            	    if ( (input.LA(1) >= '\t' && input.LA(1) <= '\n')||(input.LA(1) >= '\f' && input.LA(1) <= '\r')||input.LA(1)==' ' ) {
             	        input.consume();
-
             	    }
             	    else {
             	        MismatchedSetException mse = new MismatchedSetException(null,input);
             	        recover(mse);
-            	        throw mse;}
+            	        throw mse;
+            	    }
 
 
             	    }
@@ -1339,6 +1760,7 @@ public class QueryFilterLexer extends Lexer {
                 cnt18++;
             } while (true);
 
+
             _channel=HIDDEN;
 
             }
@@ -1347,6 +1769,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "WS"
@@ -1358,20 +1781,25 @@ public class QueryFilterLexer extends Lexer {
             int _channel = DEFAULT_TOKEN_CHANNEL;
             // org/usergrid/persistence/query/tree/QueryFilter.g:108:5: ( '<' | 'lt' )
             int alt19=2;
-            int LA19_0 = input.LA(1);
-
-            if ( (LA19_0=='<') ) {
+            switch ( input.LA(1) ) {
+            case '<':
+                {
                 alt19=1;
-            }
-            else if ( (LA19_0=='l') ) {
+                }
+                break;
+            case 'l':
+                {
                 alt19=2;
-            }
-            else {
+                }
+                break;
+            default:
                 NoViableAltException nvae =
                     new NoViableAltException("", 19, 0, input);
 
                 throw nvae;
+
             }
+
             switch (alt19) {
                 case 1 :
                     // org/usergrid/persistence/query/tree/QueryFilter.g:108:7: '<'
@@ -1386,6 +1814,7 @@ public class QueryFilterLexer extends Lexer {
                     match("lt"); 
 
 
+
                     }
                     break;
 
@@ -1394,6 +1823,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "LT"
@@ -1405,25 +1835,31 @@ public class QueryFilterLexer extends Lexer {
             int _channel = DEFAULT_TOKEN_CHANNEL;
             // org/usergrid/persistence/query/tree/QueryFilter.g:110:5: ( '<=' | 'lte' )
             int alt20=2;
-            int LA20_0 = input.LA(1);
-
-            if ( (LA20_0=='<') ) {
+            switch ( input.LA(1) ) {
+            case '<':
+                {
                 alt20=1;
-            }
-            else if ( (LA20_0=='l') ) {
+                }
+                break;
+            case 'l':
+                {
                 alt20=2;
-            }
-            else {
+                }
+                break;
+            default:
                 NoViableAltException nvae =
                     new NoViableAltException("", 20, 0, input);
 
                 throw nvae;
+
             }
+
             switch (alt20) {
                 case 1 :
                     // org/usergrid/persistence/query/tree/QueryFilter.g:110:7: '<='
                     {
                     match("<="); 
+
 
 
                     }
@@ -1434,6 +1870,7 @@ public class QueryFilterLexer extends Lexer {
                     match("lte"); 
 
 
+
                     }
                     break;
 
@@ -1442,6 +1879,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "LTE"
@@ -1453,20 +1891,25 @@ public class QueryFilterLexer extends Lexer {
             int _channel = DEFAULT_TOKEN_CHANNEL;
             // org/usergrid/persistence/query/tree/QueryFilter.g:112:5: ( '=' | 'eq' )
             int alt21=2;
-            int LA21_0 = input.LA(1);
-
-            if ( (LA21_0=='=') ) {
+            switch ( input.LA(1) ) {
+            case '=':
+                {
                 alt21=1;
-            }
-            else if ( (LA21_0=='e') ) {
+                }
+                break;
+            case 'e':
+                {
                 alt21=2;
-            }
-            else {
+                }
+                break;
+            default:
                 NoViableAltException nvae =
                     new NoViableAltException("", 21, 0, input);
 
                 throw nvae;
+
             }
+
             switch (alt21) {
                 case 1 :
                     // org/usergrid/persistence/query/tree/QueryFilter.g:112:7: '='
@@ -1481,6 +1924,7 @@ public class QueryFilterLexer extends Lexer {
                     match("eq"); 
 
 
+
                     }
                     break;
 
@@ -1489,6 +1933,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "EQ"
@@ -1500,20 +1945,25 @@ public class QueryFilterLexer extends Lexer {
             int _channel = DEFAULT_TOKEN_CHANNEL;
             // org/usergrid/persistence/query/tree/QueryFilter.g:114:5: ( '>' | 'gt' )
             int alt22=2;
-            int LA22_0 = input.LA(1);
-
-            if ( (LA22_0=='>') ) {
+            switch ( input.LA(1) ) {
+            case '>':
+                {
                 alt22=1;
-            }
-            else if ( (LA22_0=='g') ) {
+                }
+                break;
+            case 'g':
+                {
                 alt22=2;
-            }
-            else {
+                }
+                break;
+            default:
                 NoViableAltException nvae =
                     new NoViableAltException("", 22, 0, input);
 
                 throw nvae;
+
             }
+
             switch (alt22) {
                 case 1 :
                     // org/usergrid/persistence/query/tree/QueryFilter.g:114:7: '>'
@@ -1528,6 +1978,7 @@ public class QueryFilterLexer extends Lexer {
                     match("gt"); 
 
 
+
                     }
                     break;
 
@@ -1536,6 +1987,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "GT"
@@ -1547,25 +1999,31 @@ public class QueryFilterLexer extends Lexer {
             int _channel = DEFAULT_TOKEN_CHANNEL;
             // org/usergrid/persistence/query/tree/QueryFilter.g:116:5: ( '>=' | 'gte' )
             int alt23=2;
-            int LA23_0 = input.LA(1);
-
-            if ( (LA23_0=='>') ) {
+            switch ( input.LA(1) ) {
+            case '>':
+                {
                 alt23=1;
-            }
-            else if ( (LA23_0=='g') ) {
+                }
+                break;
+            case 'g':
+                {
                 alt23=2;
-            }
-            else {
+                }
+                break;
+            default:
                 NoViableAltException nvae =
                     new NoViableAltException("", 23, 0, input);
 
                 throw nvae;
+
             }
+
             switch (alt23) {
                 case 1 :
                     // org/usergrid/persistence/query/tree/QueryFilter.g:116:7: '>='
                     {
                     match(">="); 
+
 
 
                     }
@@ -1576,6 +2034,7 @@ public class QueryFilterLexer extends Lexer {
                     match("gte"); 
 
 
+
                     }
                     break;
 
@@ -1584,6 +2043,7 @@ public class QueryFilterLexer extends Lexer {
             state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
     // $ANTLR end "GTE"
@@ -1598,12 +2058,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mT__21(); 
 
+
                 }
                 break;
             case 2 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:16: T__22
                 {
                 mT__22(); 
+
 
                 }
                 break;
@@ -1612,12 +2074,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mT__23(); 
 
+
                 }
                 break;
             case 4 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:28: T__24
                 {
                 mT__24(); 
+
 
                 }
                 break;
@@ -1626,12 +2090,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mT__25(); 
 
+
                 }
                 break;
             case 6 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:40: T__26
                 {
                 mT__26(); 
+
 
                 }
                 break;
@@ -1640,12 +2106,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mT__27(); 
 
+
                 }
                 break;
             case 8 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:52: T__28
                 {
                 mT__28(); 
+
 
                 }
                 break;
@@ -1654,12 +2122,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mT__29(); 
 
+
                 }
                 break;
             case 10 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:64: T__30
                 {
                 mT__30(); 
+
 
                 }
                 break;
@@ -1668,12 +2138,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mT__31(); 
 
+
                 }
                 break;
             case 12 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:76: T__32
                 {
                 mT__32(); 
+
 
                 }
                 break;
@@ -1682,12 +2154,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mT__33(); 
 
+
                 }
                 break;
             case 14 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:88: T__34
                 {
                 mT__34(); 
+
 
                 }
                 break;
@@ -1696,12 +2170,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mT__35(); 
 
+
                 }
                 break;
             case 16 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:100: T__36
                 {
                 mT__36(); 
+
 
                 }
                 break;
@@ -1710,12 +2186,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mT__37(); 
 
+
                 }
                 break;
             case 18 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:112: T__38
                 {
                 mT__38(); 
+
 
                 }
                 break;
@@ -1724,12 +2202,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mID(); 
 
+
                 }
                 break;
             case 20 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:121: INT
                 {
                 mINT(); 
+
 
                 }
                 break;
@@ -1738,12 +2218,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mFLOAT(); 
 
+
                 }
                 break;
             case 22 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:131: STRING
                 {
                 mSTRING(); 
+
 
                 }
                 break;
@@ -1752,12 +2234,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mUUID(); 
 
+
                 }
                 break;
             case 24 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:143: WS
                 {
                 mWS(); 
+
 
                 }
                 break;
@@ -1766,12 +2250,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mLT(); 
 
+
                 }
                 break;
             case 26 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:149: LTE
                 {
                 mLTE(); 
+
 
                 }
                 break;
@@ -1780,6 +2266,7 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mEQ(); 
 
+
                 }
                 break;
             case 28 :
@@ -1787,12 +2274,14 @@ public class QueryFilterLexer extends Lexer {
                 {
                 mGT(); 
 
+
                 }
                 break;
             case 29 :
                 // org/usergrid/persistence/query/tree/QueryFilter.g:1:159: GTE
                 {
                 mGTE(); 
+
 
                 }
                 break;
@@ -1858,67 +2347,65 @@ public class QueryFilterLexer extends Lexer {
         }
     }
     static final String DFA24_eotS =
-        "\1\uffff\2\33\1\uffff\1\33\2\uffff\3\33\4\uffff\2\33\1\uffff\1\51"+
-        "\2\uffff\1\33\1\uffff\1\57\1\33\1\uffff\1\33\1\62\1\uffff\2\33\1"+
-        "\65\1\67\7\33\1\uffff\1\51\1\uffff\1\51\2\uffff\1\33\2\uffff\1\33"+
-        "\2\uffff\2\33\1\uffff\1\33\1\uffff\2\33\1\111\1\112\1\113\2\33\1"+
-        "\51\1\uffff\1\22\2\uffff\5\33\3\uffff\1\126\1\33\1\51\1\uffff\1"+
-        "\22\1\33\1\134\3\33\1\uffff\1\33\1\51\1\uffff\1\22\1\144\2\uffff"+
-        "\2\33\1\147\1\51\1\uffff\1\22\1\uffff\2\33\1\uffff\1\51\1\uffff"+
-        "\1\22\1\160\1\33\1\51\1\uffff\1\22\2\uffff\4\22";
+        "\6\uffff\7\33\2\uffff\1\33\1\uffff\1\51\2\uffff\1\33\1\uffff\1\57"+
+        "\1\33\1\uffff\1\33\1\62\1\uffff\6\33\1\71\1\73\3\33\1\uffff\1\51"+
+        "\1\uffff\1\51\2\uffff\1\33\2\uffff\1\33\2\uffff\1\104\1\105\3\33"+
+        "\1\111\1\uffff\1\33\1\uffff\3\33\1\51\1\uffff\1\22\4\uffff\2\33"+
+        "\1\123\1\uffff\4\33\1\51\1\uffff\1\22\2\33\1\uffff\2\33\1\137\1"+
+        "\33\1\51\1\uffff\1\22\2\33\1\uffff\1\146\1\uffff\1\147\1\51\1\uffff"+
+        "\1\22\2\33\2\uffff\1\51\1\uffff\1\22\1\33\1\160\1\51\1\uffff\1\22"+
+        "\2\uffff\4\22";
     static final String DFA24_eofS =
         "\166\uffff";
     static final String DFA24_minS =
-        "\1\11\1\150\1\146\1\uffff\1\60\2\uffff\1\157\2\60\4\uffff\1\145"+
-        "\1\60\2\56\2\uffff\1\164\1\uffff\1\75\1\164\1\uffff\1\60\1\75\1"+
-        "\uffff\1\164\1\145\2\56\1\156\1\60\1\164\1\144\1\143\1\60\1\154"+
-        "\1\uffff\1\56\1\uffff\1\56\1\53\1\uffff\1\145\2\uffff\1\145\2\uffff"+
-        "\1\150\1\162\1\uffff\1\145\1\uffff\1\164\1\60\3\56\1\143\1\145\1"+
-        "\56\1\53\1\60\2\uffff\1\151\1\145\1\162\1\141\1\60\3\uffff\1\56"+
-        "\1\143\1\56\1\53\1\60\1\156\1\56\1\40\1\151\1\60\1\uffff\1\164\1"+
-        "\56\1\53\1\60\1\56\2\uffff\1\156\1\60\2\56\1\53\1\60\1\uffff\1\163"+
-        "\1\60\1\uffff\1\56\1\53\1\60\1\56\2\55\1\53\1\55\1\uffff\4\60\1"+
-        "\55";
+        "\1\11\5\uffff\3\60\1\157\1\146\1\145\1\150\2\uffff\1\60\2\56\2\uffff"+
+        "\1\164\1\uffff\1\75\1\164\1\uffff\1\60\1\75\1\uffff\1\144\1\143"+
+        "\1\60\1\156\1\60\1\164\2\56\1\154\1\145\1\164\1\uffff\1\56\1\uffff"+
+        "\1\56\1\53\1\uffff\1\145\2\uffff\1\145\2\uffff\2\56\1\60\1\164\1"+
+        "\143\1\56\1\uffff\1\145\1\uffff\1\145\1\162\1\150\1\56\1\53\1\60"+
+        "\4\uffff\1\60\1\141\1\56\1\uffff\1\162\1\143\1\145\1\151\1\56\1"+
+        "\53\2\60\1\151\1\uffff\1\40\1\164\1\56\1\156\1\56\1\53\2\60\1\156"+
+        "\1\uffff\1\56\1\uffff\2\56\1\53\2\60\1\163\2\uffff\1\56\1\53\1\60"+
+        "\1\55\1\56\1\55\1\53\1\55\1\uffff\4\60\1\55";
     static final String DFA24_maxS =
-        "\1\175\1\151\1\162\1\uffff\1\157\2\uffff\1\157\1\163\1\146\4\uffff"+
-        "\1\145\1\161\1\71\1\146\2\uffff\1\164\1\uffff\1\75\1\164\1\uffff"+
-        "\1\146\1\75\1\uffff\1\164\1\145\2\172\1\156\1\146\1\164\1\144\1"+
-        "\143\1\163\1\154\1\uffff\1\145\1\uffff\2\146\1\uffff\1\145\2\uffff"+
-        "\1\145\2\uffff\1\150\1\162\1\uffff\1\145\1\uffff\1\164\1\146\3\172"+
-        "\1\143\1\145\3\146\2\uffff\1\151\1\145\1\162\1\141\1\146\3\uffff"+
-        "\1\172\1\143\3\146\1\156\1\172\1\40\1\151\1\146\1\uffff\1\164\3"+
-        "\146\1\172\2\uffff\1\156\1\146\1\172\3\146\1\uffff\1\163\1\146\1"+
-        "\uffff\3\146\1\172\1\55\1\145\1\71\1\55\1\uffff\4\146\1\55";
+        "\1\175\5\uffff\1\163\1\157\1\146\1\157\1\162\1\145\1\151\2\uffff"+
+        "\1\161\1\71\1\146\2\uffff\1\164\1\uffff\1\75\1\164\1\uffff\1\146"+
+        "\1\75\1\uffff\1\144\1\143\1\146\1\156\1\163\1\164\2\172\1\154\1"+
+        "\145\1\164\1\uffff\1\145\1\uffff\2\146\1\uffff\1\145\2\uffff\1\145"+
+        "\2\uffff\2\172\1\146\1\164\1\143\1\172\1\uffff\1\145\1\uffff\1\145"+
+        "\1\162\1\150\3\146\4\uffff\1\146\1\141\1\172\1\uffff\1\162\1\143"+
+        "\1\145\1\151\4\146\1\151\1\uffff\1\40\1\164\1\172\1\156\4\146\1"+
+        "\156\1\uffff\1\172\1\uffff\1\172\4\146\1\163\2\uffff\3\146\1\55"+
+        "\1\172\1\145\1\71\1\55\1\uffff\4\146\1\55";
     static final String DFA24_acceptS =
-        "\3\uffff\1\3\1\uffff\1\5\1\6\3\uffff\1\14\1\15\1\16\1\17\4\uffff"+
-        "\1\25\1\26\1\uffff\1\30\2\uffff\1\33\2\uffff\1\23\13\uffff\1\23"+
-        "\1\uffff\1\24\2\uffff\1\27\1\uffff\1\32\1\31\1\uffff\1\35\1\34\2"+
-        "\uffff\1\2\1\uffff\1\11\12\uffff\2\23\5\uffff\1\7\1\10\1\12\12\uffff"+
-        "\1\13\5\uffff\1\21\1\22\6\uffff\1\1\2\uffff\1\20\10\uffff\1\4\5"+
-        "\uffff";
+        "\1\uffff\1\1\1\2\1\3\1\4\1\5\7\uffff\1\21\1\22\3\uffff\1\25\1\26"+
+        "\1\uffff\1\30\2\uffff\1\33\2\uffff\1\23\13\uffff\1\23\1\uffff\1"+
+        "\24\2\uffff\1\27\1\uffff\1\32\1\31\1\uffff\1\35\1\34\6\uffff\1\13"+
+        "\1\uffff\1\14\6\uffff\2\23\1\6\1\7\3\uffff\1\12\11\uffff\1\11\11"+
+        "\uffff\1\15\1\uffff\1\17\6\uffff\1\16\1\20\10\uffff\1\10\5\uffff";
     static final String DFA24_specialS =
         "\166\uffff}>";
     static final String[] DFA24_transitionS = {
-            "\2\25\1\uffff\2\25\22\uffff\1\25\6\uffff\1\23\1\5\1\6\1\13\1"+
-            "\uffff\1\3\1\20\1\22\1\uffff\12\21\1\12\1\uffff\1\26\1\30\1"+
-            "\32\2\uffff\6\31\24\33\4\uffff\1\33\1\uffff\1\10\1\31\1\4\1"+
-            "\11\1\17\1\31\1\27\4\33\1\24\1\33\1\7\1\2\3\33\1\16\3\33\1\1"+
-            "\3\33\1\14\1\uffff\1\15",
-            "\1\35\1\34",
-            "\1\36\13\uffff\1\37",
-            "",
-            "\12\41\7\uffff\6\41\32\uffff\6\41\10\uffff\1\40",
-            "",
-            "",
-            "\1\42",
-            "\12\41\7\uffff\6\41\32\uffff\6\41\7\uffff\1\43\4\uffff\1\44",
-            "\12\41\7\uffff\6\41\32\uffff\4\41\1\45\1\41",
+            "\2\25\1\uffff\2\25\22\uffff\1\25\6\uffff\1\23\1\1\1\2\1\3\1"+
+            "\uffff\1\4\1\20\1\22\1\uffff\12\21\1\5\1\uffff\1\26\1\30\1\32"+
+            "\2\uffff\6\31\24\33\4\uffff\1\33\1\uffff\1\6\1\31\1\7\1\10\1"+
+            "\17\1\31\1\27\4\33\1\24\1\33\1\11\1\12\3\33\1\13\3\33\1\14\3"+
+            "\33\1\15\1\uffff\1\16",
             "",
             "",
             "",
             "",
-            "\1\46",
-            "\12\41\7\uffff\6\41\32\uffff\6\41\12\uffff\1\47",
+            "",
+            "\12\36\7\uffff\6\36\32\uffff\6\36\7\uffff\1\34\4\uffff\1\35",
+            "\12\36\7\uffff\6\36\32\uffff\6\36\10\uffff\1\37",
+            "\12\36\7\uffff\6\36\32\uffff\4\36\1\40\1\36",
+            "\1\41",
+            "\1\42\13\uffff\1\43",
+            "\1\44",
+            "\1\45\1\46",
+            "",
+            "",
+            "\12\36\7\uffff\6\36\32\uffff\6\36\12\uffff\1\47",
             "\1\22\1\uffff\12\50",
             "\1\22\1\uffff\12\52\7\uffff\4\54\1\53\1\54\32\uffff\4\54\1"+
             "\53\1\54",
@@ -1929,20 +2416,20 @@ public class QueryFilterLexer extends Lexer {
             "\1\56",
             "\1\60",
             "",
-            "\12\41\7\uffff\6\41\32\uffff\6\41",
+            "\12\36\7\uffff\6\36\32\uffff\6\36",
             "\1\61",
             "",
             "\1\63",
             "\1\64",
+            "\12\65\7\uffff\6\65\32\uffff\6\65",
+            "\1\66",
+            "\12\65\7\uffff\6\65\32\uffff\6\65\14\uffff\1\67",
+            "\1\70",
             "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\32\33",
             "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\3\33"+
-            "\1\66\26\33",
-            "\1\70",
-            "\12\71\7\uffff\6\71\32\uffff\6\71",
-            "\1\72",
-            "\1\73",
+            "\1\72\26\33",
             "\1\74",
-            "\12\71\7\uffff\6\71\32\uffff\6\71\14\uffff\1\75",
+            "\1\75",
             "\1\76",
             "",
             "\1\22\1\uffff\12\50\13\uffff\1\22\37\uffff\1\22",
@@ -1957,16 +2444,16 @@ public class QueryFilterLexer extends Lexer {
             "\1\103",
             "",
             "",
-            "\1\104",
-            "\1\105",
-            "",
-            "\1\106",
-            "",
+            "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\32\33",
+            "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\32\33",
+            "\12\106\7\uffff\6\106\32\uffff\6\106",
             "\1\107",
-            "\12\110\7\uffff\6\110\32\uffff\6\110",
+            "\1\110",
             "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\32\33",
-            "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\32\33",
-            "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\32\33",
+            "",
+            "\1\112",
+            "",
+            "\1\113",
             "\1\114",
             "\1\115",
             "\1\22\1\uffff\12\116\7\uffff\4\54\1\117\1\54\32\uffff\4\54"+
@@ -1975,51 +2462,51 @@ public class QueryFilterLexer extends Lexer {
             "\12\120\7\uffff\6\54\32\uffff\6\54",
             "",
             "",
-            "\1\121",
+            "",
+            "",
+            "\12\121\7\uffff\6\121\32\uffff\6\121",
             "\1\122",
-            "\1\123",
-            "\1\124",
-            "\12\125\7\uffff\6\125\32\uffff\6\125",
-            "",
-            "",
-            "",
             "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\32\33",
+            "",
+            "\1\124",
+            "\1\125",
+            "\1\126",
             "\1\127",
             "\1\22\1\uffff\12\130\7\uffff\4\54\1\131\1\54\32\uffff\4\54"+
             "\1\131\1\54",
             "\1\22\1\uffff\1\22\2\uffff\12\132\7\uffff\6\54\32\uffff\6\54",
             "\12\132\7\uffff\6\54\32\uffff\6\54",
-            "\1\133",
-            "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\32\33",
+            "\12\133\7\uffff\6\133\32\uffff\6\133",
+            "\1\134",
+            "",
             "\1\135",
             "\1\136",
-            "\12\137\7\uffff\6\137\32\uffff\6\137",
-            "",
+            "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\32\33",
             "\1\140",
             "\1\22\1\uffff\12\141\7\uffff\4\54\1\142\1\54\32\uffff\4\54"+
             "\1\142\1\54",
             "\1\22\1\uffff\1\22\2\uffff\12\143\7\uffff\6\54\32\uffff\6\54",
             "\12\143\7\uffff\6\54\32\uffff\6\54",
+            "\12\144\7\uffff\6\144\32\uffff\6\144",
+            "\1\145",
+            "",
             "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\32\33",
             "",
-            "",
-            "\1\145",
-            "\12\146\7\uffff\6\146\32\uffff\6\146",
             "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\32\33",
             "\1\22\1\uffff\12\150\7\uffff\4\54\1\151\1\54\32\uffff\4\54"+
             "\1\151\1\54",
             "\1\22\1\uffff\1\22\2\uffff\12\152\7\uffff\6\54\32\uffff\6\54",
             "\12\152\7\uffff\6\54\32\uffff\6\54",
+            "\12\153\7\uffff\6\153\32\uffff\6\153",
+            "\1\154",
             "",
-            "\1\153",
-            "\12\154\7\uffff\6\154\32\uffff\6\154",
             "",
             "\1\22\1\uffff\12\155\7\uffff\4\54\1\156\1\54\32\uffff\4\54"+
             "\1\156\1\54",
             "\1\22\1\uffff\1\22\2\uffff\12\157\7\uffff\6\54\32\uffff\6\54",
             "\12\157\7\uffff\6\54\32\uffff\6\54",
-            "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\32\33",
             "\1\54",
+            "\1\33\1\uffff\12\33\7\uffff\32\33\4\uffff\1\33\1\uffff\32\33",
             "\1\54\1\22\1\uffff\12\50\13\uffff\1\22\37\uffff\1\22",
             "\1\22\1\uffff\1\161\2\uffff\12\22",
             "\1\54",
