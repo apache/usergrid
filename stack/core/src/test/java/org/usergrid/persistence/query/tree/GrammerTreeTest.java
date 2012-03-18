@@ -15,10 +15,9 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,11 +25,10 @@ import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenRewriteStream;
 import org.junit.Test;
-import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.Query;
 
 /**
- * @author apigee
+ * @author tnine
  * 
  */
 public class GrammerTreeTest {
@@ -321,6 +319,43 @@ public class GrammerTreeTest {
     
     assertEquals(0, identifiers.size());
 
+  }
+  
+  @Test
+  public void selectGeo() throws RecognitionException{
+    String queryString = "select * where a within .1 of -40.343666, 175.630917";
+
+    ANTLRStringStream in = new ANTLRStringStream(queryString);
+    QueryFilterLexer lexer = new QueryFilterLexer(in);
+    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+    QueryFilterParser parser = new QueryFilterParser(tokens);
+
+    Query query = parser.ql().query;
+
+    WithinOperand operand = (WithinOperand) query.getRootOperand();
+    
+    assertEquals("a", operand.getProperty().getValue());
+    assertEquals(.1f, operand.getDistance().getValue().floatValue(), 0);
+    assertEquals(-40.343666f, operand.getLattitude().getValue().floatValue(), 0);
+    assertEquals(175.630917f, operand.getLongitude().getValue().floatValue(), 0);
+  }
+  
+  @Test
+  public void selectDistance() throws RecognitionException{
+    String queryString = "select * where a contains 'foo'";
+
+    ANTLRStringStream in = new ANTLRStringStream(queryString);
+    QueryFilterLexer lexer = new QueryFilterLexer(in);
+    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+    QueryFilterParser parser = new QueryFilterParser(tokens);
+
+    Query query = parser.ql().query;
+
+    ContainsOperand operand = (ContainsOperand) query.getRootOperand();
+    
+    assertEquals("a", operand.getProperty().getValue());
+    assertEquals("'foo'", operand.getString().getValue());
+    
   }
   
   @Test

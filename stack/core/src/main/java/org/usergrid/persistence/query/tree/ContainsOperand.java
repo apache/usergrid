@@ -23,8 +23,6 @@ import org.antlr.runtime.Token;
  */
 public class ContainsOperand extends Operand {
 
-  private Property property;
-  private StringLiteral string;
   
   
   /**
@@ -41,6 +39,14 @@ public class ContainsOperand extends Operand {
   @Override
   public void visit(QueryVisitor visitor) {
     visitor.visit(this);
+  }
+  
+  public Property getProperty(){
+    return (Property) this.children.get(0);
+  }
+  
+  public StringLiteral getString(){
+    return (StringLiteral) this.children.get(1);
   }
 
 }

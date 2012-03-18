@@ -81,72 +81,72 @@ public class QueueQuery extends Query {
 		return query;
 	}
 
-//	public static QueueQuery fromQueryParams(Map<String, List<String>> params) {
-//
-//		QueueQuery query = null;
-//
-//		Query q = Query.fromQueryParams(params);
-//		if (q != null) {
-//			query = new QueueQuery(q);
-//		}
-//
-//		String consumer = first(params.get("consumer"));
-//
-//		if (consumer != null) {
-//			query = newQueryIfNull(query);
-//			query.setConsumerId(getConsumerId(consumer));
-//		}
-//
-//		UUID last = tryGetUUID(first(params.get("last")));
-//		if (last != null) {
-//			query = newQueryIfNull(query);
-//			query.setLastMessageId(last);
-//		}
-//
-//		if (params.containsKey("time")) {
-//			query = newQueryIfNull(query);
-//			long t = getLong(first(params.get("time")));
-//			if (t > 0) {
-//				query.setLastTimestamp(t);
-//			}
-//		}
-//
-//		if (params.containsKey("prev")) {
-//			query = newQueryIfNull(query);
-//			query.setPreviousCount(getInt(first(params.get("prev"))));
-//		}
-//
-//		if (params.containsKey("next")) {
-//			query = newQueryIfNull(query);
-//			query.setNextCount(getInt(first(params.get("next"))));
-//		}
-//
-//		if (params.containsKey("pos")) {
-//			query = newQueryIfNull(query);
-//			QueuePosition pos = QueuePosition.find(first(params.get("pos")));
-//			if (pos != null) {
-//				query.setPosition(pos);
-//			}
-//		}
-//
-//		if (params.containsKey("update")) {
-//			query = newQueryIfNull(query);
-//			query.setUpdate(ConversionUtils.getBoolean(first(params
-//					.get("update"))));
-//		}
-//
-//		if (params.containsKey("synchronized")) {
-//			query = newQueryIfNull(query);
-//			query.setSynchronized(ConversionUtils.getBoolean(first(params
-//					.get("synchronized"))));
-//		}
-//
-//		if ((query != null) && (consumer != null)) {
-//			query.setPositionIfUnset(QueuePosition.CONSUMER);
-//		}
-//
-//		return query;
-//	}
+	public static QueueQuery fromQueryParams(Map<String, List<String>> params) {
+
+		QueueQuery query = null;
+
+		Query q = Query.fromQueryParams(params);
+		if (q != null) {
+			query = new QueueQuery(q);
+		}
+
+		String consumer = first(params.get("consumer"));
+
+		if (consumer != null) {
+			query = newQueryIfNull(query);
+			query.setConsumerId(getConsumerId(consumer));
+		}
+
+		UUID last = tryGetUUID(first(params.get("last")));
+		if (last != null) {
+			query = newQueryIfNull(query);
+			query.setLastMessageId(last);
+		}
+
+		if (params.containsKey("time")) {
+			query = newQueryIfNull(query);
+			long t = getLong(first(params.get("time")));
+			if (t > 0) {
+				query.setLastTimestamp(t);
+			}
+		}
+
+		if (params.containsKey("prev")) {
+			query = newQueryIfNull(query);
+			query.setPreviousCount(getInt(first(params.get("prev"))));
+		}
+
+		if (params.containsKey("next")) {
+			query = newQueryIfNull(query);
+			query.setNextCount(getInt(first(params.get("next"))));
+		}
+
+		if (params.containsKey("pos")) {
+			query = newQueryIfNull(query);
+			QueuePosition pos = QueuePosition.find(first(params.get("pos")));
+			if (pos != null) {
+				query.setPosition(pos);
+			}
+		}
+
+		if (params.containsKey("update")) {
+			query = newQueryIfNull(query);
+			query.setUpdate(ConversionUtils.getBoolean(first(params
+					.get("update"))));
+		}
+
+		if (params.containsKey("synchronized")) {
+			query = newQueryIfNull(query);
+			query.setSynchronized(ConversionUtils.getBoolean(first(params
+					.get("synchronized"))));
+		}
+
+		if ((query != null) && (consumer != null)) {
+			query.setPositionIfUnset(QueuePosition.CONSUMER);
+		}
+
+		return query;
+	}
 
 	public UUID getConsumerId() {
 		return consumerId;

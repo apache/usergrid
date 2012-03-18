@@ -15,36 +15,38 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
-import org.antlr.runtime.Token;
+import java.util.UUID;
 
 /**
- * A property
- * 
+ * Simple factory for generating literal instance based on the runtime value
  * @author tnine
- * 
+ *
  */
-public class Property extends Literal<String> {
+public class LiteralFactory {
 
-  private String property;
-
-  public Property(Token t) {
-    super(t);
-    this.property = t.getText();
-  }
-  
-  public Property(String property){
-    super(null);
-    this.property = property;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.usergrid.persistence.query.tree.Literal#getValue()
+  /**
+   * Generate the correct literal subclass based on the runtime instance.
+   * @param value
+   * @return
    */
-  @Override
-  public String getValue() {
-    return this.property;
+  public static final Literal<?> getLiteral(Object value){
+    if(value instanceof Integer){
+      return new IntegerLiteral((Integer)value);
+    }
+    
+    if(value instanceof String){
+      return new StringLiteral((String) value);
+    }
+    
+    if(value instanceof Float){
+      return new FloatLiteral((Float)value);
+    }
+    
+    if(value instanceof UUID){
+      return new UUIDLiteral((UUID)value);
+    }
+    
+    throw new UnsupportedOperationException(String.format("Unsupported type of %s was passed when trying to construct a literal", value.getClass()));
+    
   }
-
 }

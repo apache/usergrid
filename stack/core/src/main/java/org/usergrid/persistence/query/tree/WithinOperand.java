@@ -23,21 +23,13 @@ import org.antlr.runtime.Token;
  */
 public class WithinOperand extends Operand {
 
-  private Property property;
-  private FloatLiteral radius;
-  private FloatLiteral lattitude;
-  private FloatLiteral longitude;
-  
+ 
   /**
    * @param property
    * @param literal
    */
   public WithinOperand(Token t ) {
     super(t);
-    this.property = property;
-    this.radius = radius;
-    this.lattitude = lattitude;
-    this.longitude = longitude;
   }
 
   /* (non-Javadoc)
@@ -46,5 +38,37 @@ public class WithinOperand extends Operand {
   @Override
   public void visit(QueryVisitor visitor) {
     visitor.visit(this);
+  }
+  
+  /**
+   * 
+   * @return
+   */
+  public Property getProperty(){
+    return (Property) this.children.get(0);
+  }
+  
+  /**
+   * 
+   * @return
+   */
+  public FloatLiteral getDistance(){
+    return (FloatLiteral) this.children.get(1);
+  }
+  
+  
+  
+  /**
+   * @return
+   */
+  public FloatLiteral getLattitude(){
+    return (FloatLiteral) this.children.get(2);
+  }
+  
+  /**
+   * @return
+   */
+  public FloatLiteral getLongitude(){
+    return (FloatLiteral) this.children.get(3);
   }
 }

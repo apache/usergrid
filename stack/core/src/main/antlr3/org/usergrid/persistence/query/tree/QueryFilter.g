@@ -163,7 +163,7 @@ equalityop :
 
 //geo location search
 locationop :
-  property 'within'<WithinOperand>^ floatliteral 'of' floatliteral ',' floatliteral;
+  property 'within'<WithinOperand>^ floatliteral 'of'! floatliteral ','! floatliteral;
   
 //string search
 containsop :

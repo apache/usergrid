@@ -30,9 +30,18 @@ public class IntegerLiteral extends Literal<Integer> {
   /**
    * @param t
    */
-  protected IntegerLiteral(Token t) {
+  public IntegerLiteral(Token t) {
     super(t);
     this.value = Integer.valueOf(t.getText());
+  }
+  
+  /**
+   * 
+   * @param value
+   */
+  public IntegerLiteral(int value){
+    super(null);
+    this.value = value;
   }
   
   /**

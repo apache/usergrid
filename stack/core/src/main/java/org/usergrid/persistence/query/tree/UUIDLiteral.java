@@ -25,17 +25,24 @@ import org.antlr.runtime.Token;
  * @author tnine
  *
  */
-public class UUIDLiteral extends Literal {
+public class UUIDLiteral extends Literal<UUID> {
 
   private UUID value;
   
   /**
    * @param t
    */
-  protected UUIDLiteral(Token t) {
+  public UUIDLiteral(Token t) {
     super(t);
     value = UUID.fromString(t.getText());
   }
+  
+  
+  public UUIDLiteral(UUID value) {
+    super(null);
+   this.value = value;
+  }
+  
   
   public UUID getValue(){
     return this.value;

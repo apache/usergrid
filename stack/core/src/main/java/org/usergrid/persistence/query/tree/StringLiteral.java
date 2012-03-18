@@ -23,16 +23,21 @@ import org.antlr.runtime.Token;
  * @author tnine
  *
  */
-public class StringLiteral extends Literal {
+public class StringLiteral extends Literal<String> {
 
   private String value;
   
   /**
    * @param t
    */
-  protected StringLiteral(Token t) {
+  public StringLiteral(Token t) {
     super(t);
     value = t.getText();
+  }
+  
+  public StringLiteral(String value){
+    super(null);
+    this.value = value;
   }
   
   public String getValue(){

@@ -26,13 +26,21 @@ import org.antlr.runtime.Token;
 public class FloatLiteral extends Literal<Float> {
 
   private float value;
+  
   /**
    * @param t
    */
-  protected FloatLiteral(Token t) {
+  public FloatLiteral(Token t) {
     super(t);
     value = Float.valueOf(t.getText());
   }
+  
+  public FloatLiteral(float f){
+    super(null);
+    value = f;
+  }
+  
+  
   /**
    * @return the value
    */

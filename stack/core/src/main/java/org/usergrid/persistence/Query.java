@@ -51,8 +51,13 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Results.Level;
-import org.usergrid.persistence.query.QueryFilterLexer;
-import org.usergrid.persistence.query.QueryFilterParser;
+import org.usergrid.persistence.query.tree.AndOperand;
+import org.usergrid.persistence.query.tree.Equal;
+import org.usergrid.persistence.query.tree.LiteralFactory;
+import org.usergrid.persistence.query.tree.Operand;
+import org.usergrid.persistence.query.tree.Property;
+import org.usergrid.persistence.query.tree.QueryFilterLexer;
+import org.usergrid.persistence.query.tree.QueryFilterParser;
 import org.usergrid.utils.JsonUtils;
 
 public class Query {
@@ -64,6 +69,7 @@ public class Query {
 	protected String type;
 	protected List<SortPredicate> sortPredicates = new ArrayList<SortPredicate>();
 	protected List<FilterPredicate> filterPredicates = new ArrayList<FilterPredicate>();
+	protected Operand rootOperand;
 	protected UUID startResult;
 	protected String cursor;
 	protected int limit = 0;
@@ -150,13 +156,15 @@ public class Query {
 			QueryFilterLexer lexer = new QueryFilterLexer(in);
 			CommonTokenStream tokens = new CommonTokenStream(lexer);
 			QueryFilterParser parser = new QueryFilterParser(tokens);
-			Query q = parser.ql();
+			Query q = parser.ql().query;
 			return q;
 		} catch (Exception e) {
 			logger.error("Unable to parse \"" + ql + "\"", e);
 		}
 		return null;
 	}
+	
+	
 
 	public static Query newQueryIfNull(Query query) {
 		if (query == null) {
@@ -378,8 +386,21 @@ public class Query {
 		q.addIdentifier(Identifier.from(id));
 		return q;
 	}
+	
+	
 
-	public boolean isIdsOnly() {
+	/**
+   * @param rootOperand the rootOperand to set
+   */
+  public void setRootOperand(Operand rootOperand) {
+    this.rootOperand = rootOperand;
+  }
+
+  public Operand getRootOperand(){
+    return this.rootOperand;
+  }
+  
+  public boolean isIdsOnly() {
 		if ((selectSubjects.size() == 1)
 				&& selectSubjects.containsKey(PROPERTY_UUID)) {
 			level = Level.IDS;
@@ -582,76 +603,109 @@ public class Query {
 	}
 
 	public Query addEqualityFilter(String propertyName, Object value) {
-		return addFilter(propertyName, FilterOperator.EQUAL, value);
+	  
+	  Equal equal = new Equal(null);
+	  equal.addChild(new Property(propertyName));
+	  equal.addChild(LiteralFactory.getLiteral(value));
+	  
+	  
+	  addNewOperation(equal);
+	  
+	  return this;
+	  
 	}
 
-	public Query addFilter(String propertyName, FilterOperator operator,
-			Object value) {
-		if ((propertyName == null) || (operator == null) || (value == null)) {
-			return this;
-		}
-		if (PROPERTY_TYPE.equalsIgnoreCase(propertyName) && (value != null)) {
-			if (operator == FilterOperator.EQUAL) {
-				type = value.toString();
-			}
-		} else if ("connection".equalsIgnoreCase(propertyName)
-				&& (value != null)) {
-			if (operator == FilterOperator.EQUAL) {
-				connection = value.toString();
-			}
-		} else {
-			for (FilterPredicate f : filterPredicates) {
-				if (f.getPropertyName().equals(propertyName)
-						&& f.getValue().equals(value) && "*".equals(value)) {
-					logger.error("Attempted to set wildcard wilder for "
-							+ f.getPropertyName()
-							+ " more than once, discardng...");
-					return this;
-				}
-			}
-			filterPredicates.add(FilterPredicate.normalize(new FilterPredicate(
-					propertyName, operator, value)));
-		}
-		return this;
+	/**
+	 * Add a new operation to our current tree.  Always performs an && with the current operation if one
+	 * exists
+	 * @param op
+	 */
+	private void addNewOperation(Operand op){
+	  
+	  if(rootOperand == null){
+        rootOperand = op;
+        return;
+      }
+      
+      //otherwise, we want to logically && this with the current query tree
+      AndOperand and = new AndOperand(null);
+      and.addChild(rootOperand);
+      and.addChild(op);
+      
+      rootOperand = and;
 	}
+//	public Query addFilter(String propertyName, FilterOperator operator,
+//			Object value) {
+//		if ((propertyName == null) || (operator == null) || (value == null)) {
+//			return this;
+//		}
+//		if (PROPERTY_TYPE.equalsIgnoreCase(propertyName) && (value != null)) {
+//			if (operator == FilterOperator.EQUAL) {
+//				type = value.toString();
+//			}
+//		} else if ("connection".equalsIgnoreCase(propertyName)
+//				&& (value != null)) {
+//			if (operator == FilterOperator.EQUAL) {
+//				connection = value.toString();
+//			}
+//		} else {
+//			for (FilterPredicate f : filterPredicates) {
+//				if (f.getPropertyName().equals(propertyName)
+//						&& f.getValue().equals(value) && "*".equals(value)) {
+//					logger.error("Attempted to set wildcard wilder for "
+//							+ f.getPropertyName()
+//							+ " more than once, discardng...");
+//					return this;
+//				}
+//			}
+//			filterPredicates.add(FilterPredicate.normalize(new FilterPredicate(
+//					propertyName, operator, value)));
+//		}
+//		return this;
+//	}
 
 	public Query addFilter(String filterStr) {
-		if (filterStr == null) {
-			return this;
-		}
-		FilterPredicate filter = FilterPredicate.valueOf(filterStr);
-		if ((filter != null) && (filter.propertyName != null)
-				&& (filter.operator != null) && (filter.value != null)) {
-
-			if (PROPERTY_TYPE.equalsIgnoreCase(filter.propertyName)) {
-				if (filter.operator == FilterOperator.EQUAL) {
-					type = filter.value.toString();
-				}
-			} else if ("connection".equalsIgnoreCase(filter.propertyName)) {
-				if (filter.operator == FilterOperator.EQUAL) {
-					connection = filter.value.toString();
-				}
-			} else {
-				for (FilterPredicate f : filterPredicates) {
-					if (f.getPropertyName().equals(filter.getPropertyName())
-							&& f.getValue().equals(filter.getValue())
-							&& "*".equals(filter.getValue())) {
-						logger.error("Attempted to set wildcard wilder for "
-								+ f.getPropertyName()
-								+ " more than once, discardng...");
-						return this;
-					}
-				}
-				filterPredicates.add(filter);
-			}
-		} else {
-			logger.error("Unable to add filter to query: " + filterStr);
-		}
+	  
+	  Query newFilter = fromQL(filterStr);
+	  
+	  addNewOperation(newFilter.getRootOperand());
+	  
+//		if (filterStr == null) {
+//			return this;
+//		}
+//		FilterPredicate filter = FilterPredicate.valueOf(filterStr);
+//		if ((filter != null) && (filter.propertyName != null)
+//				&& (filter.operator != null) && (filter.value != null)) {
+//
+//			if (PROPERTY_TYPE.equalsIgnoreCase(filter.propertyName)) {
+//				if (filter.operator == FilterOperator.EQUAL) {
+//					type = filter.value.toString();
+//				}
+//			} else if ("connection".equalsIgnoreCase(filter.propertyName)) {
+//				if (filter.operator == FilterOperator.EQUAL) {
+//					connection = filter.value.toString();
+//				}
+//			} else {
+//				for (FilterPredicate f : filterPredicates) {
+//					if (f.getPropertyName().equals(filter.getPropertyName())
+//							&& f.getValue().equals(filter.getValue())
+//							&& "*".equals(filter.getValue())) {
+//						logger.error("Attempted to set wildcard wilder for "
+//								+ f.getPropertyName()
+//								+ " more than once, discardng...");
+//						return this;
+//					}
+//				}
+//				filterPredicates.add(filter);
+//			}
+//		} else {
+//			logger.error("Unable to add filter to query: " + filterStr);
+//		}
 		return this;
 	}
 
 	public Query addFilter(FilterPredicate filter) {
-		filter = FilterPredicate.normalize(filter);
+//		filter = FilterPredicate.normalize(filter);
 		if ((filter != null) && (filter.propertyName != null)
 				&& (filter.operator != null) && (filter.value != null)) {
 
@@ -1389,40 +1443,40 @@ public class Query {
 			return null;
 		}
 
-		public static FilterPredicate valueOf(String str) {
-			if (str == null) {
-				return null;
-			}
-			try {
-				ANTLRStringStream in = new ANTLRStringStream(str.trim());
-				QueryFilterLexer lexer = new QueryFilterLexer(in);
-				CommonTokenStream tokens = new CommonTokenStream(lexer);
-				QueryFilterParser parser = new QueryFilterParser(tokens);
-				FilterPredicate filter = parser.filter();
-				return normalize(filter);
-			} catch (Exception e) {
-				logger.error("Unable to parse \"" + str + "\"", e);
-			}
-			return null;
-		}
+//		public static FilterPredicate valueOf(String str) {
+//			if (str == null) {
+//				return null;
+//			}
+//			try {
+//				ANTLRStringStream in = new ANTLRStringStream(str.trim());
+//				QueryFilterLexer lexer = new QueryFilterLexer(in);
+//				CommonTokenStream tokens = new CommonTokenStream(lexer);
+//				QueryFilterParser parser = new QueryFilterParser(tokens);
+//				FilterPredicate filter = parser.filter();
+//				return normalize(filter);
+//			} catch (Exception e) {
+//				logger.error("Unable to parse \"" + str + "\"", e);
+//			}
+//			return null;
+//		}
 
-		public static FilterPredicate normalize(FilterPredicate p) {
-			if (p == null) {
-				return null;
-			}
-			if (p.operator == FilterOperator.CONTAINS) {
-				String propertyName = appendSuffix(p.propertyName, "keywords");
-				return new FilterPredicate(propertyName, FilterOperator.EQUAL,
-						p.value);
-			} else if (p.operator == FilterOperator.WITHIN) {
-				String propertyName = appendSuffix(p.propertyName,
-						"coordinates");
-				return new FilterPredicate(propertyName, FilterOperator.WITHIN,
-						p.value);
-			}
-
-			return p;
-		}
+//		public static FilterPredicate normalize(FilterPredicate p) {
+//			if (p == null) {
+//				return null;
+//			}
+//			if (p.operator == FilterOperator.CONTAINS) {
+//				String propertyName = appendSuffix(p.propertyName, "keywords");
+//				return new FilterPredicate(propertyName, FilterOperator.EQUAL,
+//						p.value);
+//			} else if (p.operator == FilterOperator.WITHIN) {
+//				String propertyName = appendSuffix(p.propertyName,
+//						"coordinates");
+//				return new FilterPredicate(propertyName, FilterOperator.WITHIN,
+//						p.value);
+//			}
+//
+//			return p;
+//		}
 
 		private static String appendSuffix(String str, String suffix) {
 			if (StringUtils.isNotEmpty(str)) {
