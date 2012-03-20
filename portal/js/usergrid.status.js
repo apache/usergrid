@@ -13,23 +13,42 @@ var StatusBar = function () {
     };
 
     self.showAlert = function (msg, type) {
-        if(!type)
-            type = 'info';
-        var item = $('<div class="alert alert-' + type + ' ">' + msg + '</div>');
-        self.box.show().prepend(item);
-        item.show();
-        var t = setTimeout(removeOldesAlert, 4000);
+      if(!type) {
+          type = 'info';
+          var item = $('<div class="alert alert-' + type + ' ">' + msg + '</div>');
+          self.box.find(".alert").remove();
+          self.box.show().prepend(item);
+          item.show();
+          var t = setTimeout(removeOldestAlert, 4000);	
+      } else if (type = 'error') {
+          var closebutton = '<div style="float: right;"><a href="#" onclick="closeErrorMessage();" style="color: #B94A48;">close</a></div>'
+          var item = $('<div class="alert alert-' + type + ' ">' + msg + closebutton + '</div>');
+          self.box.find(".alert").remove();
+          self.box.show().prepend(item);
+          item.show();
+      } else {
+          var item = $('<div class="alert alert-' + type + ' ">' + msg + '</div>');
+          self.box.find(".alert").remove();
+          self.box.show().prepend(item);
+          item.show();
+          var t = setTimeout(removeOldestAlert, 4000);
+      };
     };
 
-    var removeOldesAlert = function () {
-        var oldItem = self.box.find(":last-child");
-        oldItem.remove();
-        if (self.box.children().length == 0) {
-            self.box.hide();
-        }
+    closeErrorMessage = function() {
+      self.box.hide();
+    };
+
+    var removeOldestAlert = function () {
+      if (self.box.find(":first-child").hasClass("alert-info")) {
+        var oldItem = self.box;
+        oldItem.hide();
+      }
+
+      if (self.box.children().length == 0) {
+          self.box.hide();
+      }
     };
 
     return self;
 }();
-
-
