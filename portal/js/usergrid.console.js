@@ -13,12 +13,12 @@ function usergrid_console_app() {
     var passwordRegex = /^([0-9a-zA-Z@#$%^&?!<>;:.|,'"~*-_=+\[\]\(\)\{\}\\/])+$/;
     var passwordAllowedCharsMessage = 'Password field only allows: 0-9, a-z, A-Z, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . < > / ? !';
     var usernameRegex = /^([0-9a-zA-Z\.\-])+$/;
-    var usernameAllowedCharsMessage = 'Username feild only allows : A-Z, a-z, 0-9, dot, and dash';
-    var organizationnameAllowedCharsMessage = 'Organization name feild only allows : A-Z, a-z, 0-9, dot, and dash';
+    var usernameAllowedCharsMessage = 'Username field only allows : A-Z, a-z, 0-9, dot, and dash';
+    var organizationnameAllowedCharsMessage = 'Organization name field only allows : A-Z, a-z, 0-9, dot, and dash';
     var nameRegex = /^([ 0-9a-zA-Z\.\-!?/])+$/
-    var nameAllowedCharsMessage = 'Name feild only allows : space, A-Z, a-z, 0-9, dot, and dash, /, !, and ?';
+    var nameAllowedCharsMessage = 'Name field only allows : space, A-Z, a-z, 0-9, dot, and dash, /, !, and ?';
     var titleRegex = /^([ 0-9a-zA-Z\.\-!?/])+$/;
-    var titleAllowedCharsMessage = 'Title feild only allows : space, A-Z, a-z, 0-9, dot, dash, /, !, and ?';
+    var titleAllowedCharsMessage = 'Title field only allows : space, A-Z, a-z, 0-9, dot, dash, /, !, and ?';
     var alphaNumRegex = /^([0-9a-zA-Z])+$/;
     var alphaNumAllowedCharsMessage = 'Collection name only allows : a-z 0-9';
     var pathRegex = /^([0-9a-z\.\-\/])+$/;
