@@ -31,7 +31,7 @@ import org.usergrid.persistence.Query;
  * @author tnine
  * 
  */
-public class GrammerTreeTest {
+public class GrammarTreeTest {
 
   /**
    * Simple test that constructs and AST from the ANTLR generated files

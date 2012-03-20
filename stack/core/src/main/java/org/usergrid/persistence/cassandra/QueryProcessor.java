@@ -42,6 +42,18 @@ import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Query.FilterOperator;
 import org.usergrid.persistence.Query.FilterPredicate;
 import org.usergrid.persistence.Query.SortPredicate;
+import org.usergrid.persistence.query.tree.AndOperand;
+import org.usergrid.persistence.query.tree.ContainsOperand;
+import org.usergrid.persistence.query.tree.Equal;
+import org.usergrid.persistence.query.tree.GreaterThan;
+import org.usergrid.persistence.query.tree.GreaterThanEqual;
+import org.usergrid.persistence.query.tree.LessThan;
+import org.usergrid.persistence.query.tree.LessThanEqual;
+import org.usergrid.persistence.query.tree.NotOperand;
+import org.usergrid.persistence.query.tree.Operand;
+import org.usergrid.persistence.query.tree.OrOperand;
+import org.usergrid.persistence.query.tree.QueryVisitor;
+import org.usergrid.persistence.query.tree.WithinOperand;
 import org.usergrid.utils.ListUtils;
 import org.usergrid.utils.NumberUtils;
 import org.usergrid.utils.StringUtils;
@@ -51,18 +63,20 @@ public class QueryProcessor {
 	private static final Logger logger = LoggerFactory
 			.getLogger(QueryProcessor.class);
 
-	Query query;
+	private Query query;
 
-	String cursor;
-	List<QuerySlice> slices;
-	List<FilterPredicate> filters;
-	List<SortPredicate> sorts;
+	private String cursor;
+	private Operand rootOperand;
+//	private List<QuerySlice> slices;
+//	List<FilterPredicate> filters;
+	private List<SortPredicate> sorts;
 
 	public QueryProcessor(Query query) {
 		this.query = query;
 		cursor = query.getCursor();
-		filters = query.getFilterPredicates();
+//		filters = query.getFilterPredicates();
 		sorts = query.getSortPredicates();
+		rootOperand = query.getRootOperand();
 		process();
 	}
 
@@ -74,19 +88,29 @@ public class QueryProcessor {
 		return cursor;
 	}
 
-	public List<QuerySlice> getSlices() {
-		return slices;
-	}
-
-	public List<FilterPredicate> getFilters() {
-		return filters;
-	}
-
-	public List<SortPredicate> getSorts() {
-		return sorts;
-	}
+//	public List<QuerySlice> getSlices() {
+//		return slices;
+//	}
+//
+//	public List<FilterPredicate> getFilters() {
+//		return filters;
+//	}
+//
+//	public List<SortPredicate> getSorts() {
+//		return sorts;
+//	}
 
 	private void process() {
+	    
+	   
+	    
+	    if(rootOperand != null){
+	        QueryVisitor visitor = new TreeEvaluator();
+	        rootOperand.visit(visitor);
+	    }
+	    
+	    //TODO TN start visitor here to create and execute the filters and ranges
+	    
 		slices = new ArrayList<QuerySlice>();
 
 		// consolidate all the filters into a set of ranges
@@ -532,6 +556,80 @@ public class QueryProcessor {
 			return true;
 		}
 
+	}
+	
+	private class TreeEvaluator implements QueryVisitor{
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.AndOperand)
+         */
+        @Override
+        public void visit(AndOperand op) {
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.OrOperand)
+         */
+        @Override
+        public void visit(OrOperand op) {
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.NotOperand)
+         */
+        @Override
+        public void visit(NotOperand op) {
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.LessThan)
+         */
+        @Override
+        public void visit(LessThan op) {
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.ContainsOperand)
+         */
+        @Override
+        public void visit(ContainsOperand op) {
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.WithinOperand)
+         */
+        @Override
+        public void visit(WithinOperand op) {
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.LessThanEqual)
+         */
+        @Override
+        public void visit(LessThanEqual op) {
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.Equal)
+         */
+        @Override
+        public void visit(Equal op) {
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.GreaterThan)
+         */
+        @Override
+        public void visit(GreaterThan op) {
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.GreaterThanEqual)
+         */
+        @Override
+        public void visit(GreaterThanEqual op) {
+        }
+	    
 	}
 
 }

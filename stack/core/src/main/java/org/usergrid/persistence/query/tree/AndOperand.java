@@ -17,29 +17,31 @@ package org.usergrid.persistence.query.tree;
 
 import org.antlr.runtime.Token;
 
-
-
 /**
  * @author tnine
- *
+ * 
  */
 public class AndOperand extends BooleanOperand {
 
-  /**
-   * @param left
-   * @param token
-   * @param right
-   */
-  public AndOperand(Token t) {
-    super(t);
-  }
+    public AndOperand() {
+        super(null);
 
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence.query.tree.QueryVisitor)
-   */
-  @Override
-  public void visit(QueryVisitor visitor) {
-    visitor.visit(this);
-  }
+    }
+
+    public AndOperand(Token t) {
+        super(t);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence
+     * .query.tree.QueryVisitor)
+     */
+    @Override
+    public void visit(QueryVisitor visitor) {
+        visitor.visit(this);
+    }
 
 }

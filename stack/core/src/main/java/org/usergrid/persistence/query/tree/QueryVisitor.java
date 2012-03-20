@@ -16,97 +16,62 @@
 package org.usergrid.persistence.query.tree;
 
 /**
- * I purposefully didn't create an interface for this visitor, we'll only every have 1 impl
+ * Interface for visiting nodes in our AST as we produce
+ * 
  * @author tnine
  * 
  */
-public class QueryVisitor {
+public interface QueryVisitor {
 
-  
-  
-  
-  /**
-   * 
-   * @param op
-   */
-  public void visit(AndOperand op) {
-    op.getLeft().visit(this);
-    op.getRight().visit(this);
-    
-    //do op;
-  }
+    /**
+     * 
+     * @param op
+     */
+    public void visit(AndOperand op);
 
-  /**
-   * @param op
-   */
-  public void visit(OrOperand op) {
-    op.getLeft().visit(this);
-    op.getRight().visit(this);
-    
-    //do op;
-  }
+    /**
+     * @param op
+     */
+    public void visit(OrOperand op);
 
-  
-  /**
-   * @param op
-   */
-  public void visit(NotOperand op) {
-    op.getOperation().visit(this);
-    
-    //intersect
-  }
-  
- 
+    /**
+     * @param op
+     */
+    public void visit(NotOperand op);
 
-  /**
-   * @param op
-   */
-  public void visit(LessThan op) {
+    /**
+     * @param op
+     */
+    public void visit(LessThan op);
 
-  }
+    /**
+     * @param op
+     */
+    public void visit(ContainsOperand op);
 
+    /**
+     * @param op
+     */
+    public void visit(WithinOperand op);
 
-  /**
-   * @param op
-   */
-  public void visit(ContainsOperand op) {
+    /**
+     * @param op
+     */
+    public void visit(LessThanEqual op);
 
-  }
-  
-  /**
-   * @param op
-   */
-  public void visit(WithinOperand op) {
+    /**
+     * @param op
+     */
+    public void visit(Equal op);
 
-  }
-  
-  /**
-   * @param op
-   */
-  public void visit(LessThanEqual op) {
+    /**
+     * @param op
+     */
+    public void visit(GreaterThan op);
 
-  }
-  
-  /**
-   * @param op
-   */
-  public void visit(Equal op) {
-
-  }
-
-  /**
-   * @param op
-   */
-  public void visit(GreaterThan op) {
-
-  }
-
-  /**
-   * @param op
-   */
-  public void visit(GreaterThanEqual op) {
-
-  }
-  
+    /**
+     * @param op
+     */
+    public void visit(GreaterThanEqual op);
 
 }

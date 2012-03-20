@@ -53,11 +53,13 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.query.tree.AndOperand;
 import org.usergrid.persistence.query.tree.Equal;
+import org.usergrid.persistence.query.tree.EqualityOperand;
 import org.usergrid.persistence.query.tree.LiteralFactory;
 import org.usergrid.persistence.query.tree.Operand;
 import org.usergrid.persistence.query.tree.Property;
 import org.usergrid.persistence.query.tree.QueryFilterLexer;
 import org.usergrid.persistence.query.tree.QueryFilterParser;
+import org.usergrid.persistence.query.tree.QueryVisitor;
 import org.usergrid.utils.JsonUtils;
 
 public class Query {
@@ -68,7 +70,7 @@ public class Query {
 
 	protected String type;
 	protected List<SortPredicate> sortPredicates = new ArrayList<SortPredicate>();
-	protected List<FilterPredicate> filterPredicates = new ArrayList<FilterPredicate>();
+//	protected List<FilterPredicate> filterPredicates = new ArrayList<FilterPredicate>();
 	protected Operand rootOperand;
 	protected UUID startResult;
 	protected String cursor;
@@ -104,8 +106,8 @@ public class Query {
 			type = q.type;
 			sortPredicates = q.sortPredicates != null ? new ArrayList<SortPredicate>(
 					q.sortPredicates) : null;
-			filterPredicates = q.filterPredicates != null ? new ArrayList<FilterPredicate>(
-					q.filterPredicates) : null;
+//			filterPredicates = q.filterPredicates != null ? new ArrayList<FilterPredicate>(
+//					q.filterPredicates) : null;
 			startResult = q.startResult;
 			cursor = q.cursor;
 			limit = q.limit;
@@ -163,8 +165,6 @@ public class Query {
 		}
 		return null;
 	}
-	
-	
 
 	public static Query newQueryIfNull(Query query) {
 		if (query == null) {
@@ -386,21 +386,8 @@ public class Query {
 		q.addIdentifier(Identifier.from(id));
 		return q;
 	}
-	
-	
 
-	/**
-   * @param rootOperand the rootOperand to set
-   */
-  public void setRootOperand(Operand rootOperand) {
-    this.rootOperand = rootOperand;
-  }
-
-  public Operand getRootOperand(){
-    return this.rootOperand;
-  }
-  
-  public boolean isIdsOnly() {
+	public boolean isIdsOnly() {
 		if ((selectSubjects.size() == 1)
 				&& selectSubjects.containsKey(PROPERTY_UUID)) {
 			level = Level.IDS;
@@ -603,37 +590,33 @@ public class Query {
 	}
 
 	public Query addEqualityFilter(String propertyName, Object value) {
-	  
-	  Equal equal = new Equal(null);
-	  equal.addChild(new Property(propertyName));
-	  equal.addChild(LiteralFactory.getLiteral(value));
-	  
-	  
-	  addNewOperation(equal);
-	  
-	  return this;
-	  
+	    Equal equality = new Equal(null);
+	    equality.addChild(new Property(propertyName));
+	    equality.addChild(LiteralFactory.getLiteral(value));
+	    
+	    addClause(equality);
+	    
+	    return this;
+	    
+	    
+	}
+	
+	private void addClause(EqualityOperand equals){
+	   if(rootOperand == null){
+	       rootOperand = equals;
+	       return;
+	   }
+	   
+	   AndOperand and = new AndOperand();
+	   and.addChild(rootOperand);
+	   and.addChild(equals);
+	   
+	   //redirect the root to new && clause 
+	   rootOperand = and;
 	}
 
-	/**
-	 * Add a new operation to our current tree.  Always performs an && with the current operation if one
-	 * exists
-	 * @param op
-	 */
-	private void addNewOperation(Operand op){
-	  
-	  if(rootOperand == null){
-        rootOperand = op;
-        return;
-      }
-      
-      //otherwise, we want to logically && this with the current query tree
-      AndOperand and = new AndOperand(null);
-      and.addChild(rootOperand);
-      and.addChild(op);
-      
-      rootOperand = and;
-	}
+	
+	
 //	public Query addFilter(String propertyName, FilterOperator operator,
 //			Object value) {
 //		if ((propertyName == null) || (operator == null) || (value == null)) {
@@ -665,11 +648,6 @@ public class Query {
 //	}
 
 	public Query addFilter(String filterStr) {
-	  
-	  Query newFilter = fromQL(filterStr);
-	  
-	  addNewOperation(newFilter.getRootOperand());
-	  
 //		if (filterStr == null) {
 //			return this;
 //		}
@@ -704,96 +682,103 @@ public class Query {
 		return this;
 	}
 
-	public Query addFilter(FilterPredicate filter) {
+//	public Query addFilter(FilterPredicate filter) {
 //		filter = FilterPredicate.normalize(filter);
-		if ((filter != null) && (filter.propertyName != null)
-				&& (filter.operator != null) && (filter.value != null)) {
+//		if ((filter != null) && (filter.propertyName != null)
+//				&& (filter.operator != null) && (filter.value != null)) {
+//
+//			if (PROPERTY_TYPE.equalsIgnoreCase(filter.propertyName)) {
+//				if (filter.operator == FilterOperator.EQUAL) {
+//					type = filter.value.toString();
+//				}
+//			} else if ("connection".equalsIgnoreCase(filter.propertyName)) {
+//				if (filter.operator == FilterOperator.EQUAL) {
+//					connection = filter.value.toString();
+//				}
+//			} else {
+//				filterPredicates.add(filter);
+//			}
+//		}
+//		return this;
+//	}
 
-			if (PROPERTY_TYPE.equalsIgnoreCase(filter.propertyName)) {
-				if (filter.operator == FilterOperator.EQUAL) {
-					type = filter.value.toString();
-				}
-			} else if ("connection".equalsIgnoreCase(filter.propertyName)) {
-				if (filter.operator == FilterOperator.EQUAL) {
-					connection = filter.value.toString();
-				}
-			} else {
-				filterPredicates.add(filter);
-			}
-		}
-		return this;
+	public Operand getRootOperand(){
+	    return this.rootOperand;
 	}
-
-	public List<FilterPredicate> getFilterPredicates() {
-		return filterPredicates;
+	
+	public void setRootOperand(Operand root){
+	    this.rootOperand = root;
 	}
+	
+//	public List<FilterPredicate> getFilterPredicates() {
+//		return filterPredicates;
+//	}
+//
+//	public boolean hasFilterPredicates() {
+//		return !filterPredicates.isEmpty();
+//	}
+//
+//	public boolean hasFilterPredicatesExcludingSubkeys(
+//			Map<String, Object> subkeyProperties) {
+//		return !filterPredicates.isEmpty();
+//	}
 
-	public boolean hasFilterPredicates() {
-		return !filterPredicates.isEmpty();
-	}
+//	public Map<String, Object> getEqualityFilters() {
+//		Map<String, Object> map = new LinkedHashMap<String, Object>();
+//
+//		for (FilterPredicate f : filterPredicates) {
+//			if (f.operator == FilterOperator.EQUAL) {
+//				Object val = f.getStartValue();
+//				if (val != null) {
+//					map.put(f.getPropertyName(), val);
+//				}
+//			}
+//		}
+//		return map.size() > 0 ? map : null;
+//	}
 
-	public boolean hasFilterPredicatesExcludingSubkeys(
-			Map<String, Object> subkeyProperties) {
-		return !filterPredicates.isEmpty();
-	}
+//	public boolean hasFiltersForProperty(String name) {
+//		return hasFiltersForProperty(FilterOperator.EQUAL, name);
+//	}
 
-	public Map<String, Object> getEqualityFilters() {
-		Map<String, Object> map = new LinkedHashMap<String, Object>();
+//	public boolean hasFiltersForProperty(FilterOperator operator, String name) {
+//		return getFilterForProperty(operator, name) != null;
+//	}
 
-		for (FilterPredicate f : filterPredicates) {
-			if (f.operator == FilterOperator.EQUAL) {
-				Object val = f.getStartValue();
-				if (val != null) {
-					map.put(f.getPropertyName(), val);
-				}
-			}
-		}
-		return map.size() > 0 ? map : null;
-	}
+//	public FilterPredicate getFilterForProperty(FilterOperator operator, String name) {
+//		if (name == null) {
+//			return null;
+//		}
+//		ListIterator<FilterPredicate> iterator = filterPredicates
+//				.listIterator();
+//		while (iterator.hasNext()) {
+//			FilterPredicate f = iterator.next();
+//			if (f.propertyName.equalsIgnoreCase(name)) {
+//				if (operator != null) {
+//					if (operator == f.operator) {
+//						return f;
+//					}
+//				} else {
+//					return f;
+//				}
+//			}
+//		}
+//		return null;
+//	}
 
-	public boolean hasFiltersForProperty(String name) {
-		return hasFiltersForProperty(FilterOperator.EQUAL, name);
-	}
-
-	public boolean hasFiltersForProperty(FilterOperator operator, String name) {
-		return getFilterForProperty(operator, name) != null;
-	}
-
-	public FilterPredicate getFilterForProperty(FilterOperator operator,
-			String name) {
-		if (name == null) {
-			return null;
-		}
-		ListIterator<FilterPredicate> iterator = filterPredicates
-				.listIterator();
-		while (iterator.hasNext()) {
-			FilterPredicate f = iterator.next();
-			if (f.propertyName.equalsIgnoreCase(name)) {
-				if (operator != null) {
-					if (operator == f.operator) {
-						return f;
-					}
-				} else {
-					return f;
-				}
-			}
-		}
-		return null;
-	}
-
-	public void removeFiltersForProperty(String name) {
-		if (name == null) {
-			return;
-		}
-		ListIterator<FilterPredicate> iterator = filterPredicates
-				.listIterator();
-		while (iterator.hasNext()) {
-			FilterPredicate f = iterator.next();
-			if (f.propertyName.equalsIgnoreCase(name)) {
-				iterator.remove();
-			}
-		}
-	}
+//	public void removeFiltersForProperty(String name) {
+//		if (name == null) {
+//			return;
+//		}
+//		ListIterator<FilterPredicate> iterator = filterPredicates
+//				.listIterator();
+//		while (iterator.hasNext()) {
+//			FilterPredicate f = iterator.next();
+//			if (f.propertyName.equalsIgnoreCase(name)) {
+//				iterator.remove();
+//			}
+//		}
+//	}
 
 	public void setStartResult(UUID startResult) {
 		this.startResult = startResult;
@@ -956,24 +941,24 @@ public class Query {
 		this.identifiers = identifiers;
 	}
 
-	public boolean containsUuidIdentifersOnly() {
-		if (hasFilterPredicates()) {
-			return false;
-		}
-		if ((identifiers == null) || identifiers.isEmpty()) {
-			return false;
-		}
-		for (Identifier identifier : identifiers) {
-			if (!identifier.isUUID()) {
-				return false;
-			}
-		}
-		return true;
-	}
+//	public boolean containsUuidIdentifersOnly() {
+//		if (hasFilterPredicates()) {
+//			return false;
+//		}
+//		if ((identifiers == null) || identifiers.isEmpty()) {
+//			return false;
+//		}
+//		for (Identifier identifier : identifiers) {
+//			if (!identifier.isUUID()) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
 
-	public boolean containsSingleUuidIdentifier() {
-		return containsUuidIdentifersOnly() && (identifiers.size() == 1);
-	}
+//	public boolean containsSingleUuidIdentifier() {
+//		return containsUuidIdentifersOnly() && (identifiers.size() == 1);
+//	}
 
 	public List<UUID> getUuidIdentifiers() {
 		if ((identifiers == null) || identifiers.isEmpty()) {
@@ -988,31 +973,31 @@ public class Query {
 		return ids;
 	}
 
-	public UUID getSingleUuidIdentifier() {
-		if (!containsSingleUuidIdentifier()) {
-			return null;
-		}
-		return (identifiers.get(0).getUUID());
-	}
+//	public UUID getSingleUuidIdentifier() {
+//		if (!containsSingleUuidIdentifier()) {
+//			return null;
+//		}
+//		return (identifiers.get(0).getUUID());
+//	}
+//
+//	public boolean containsNameIdentifiersOnly() {
+//		if (hasFilterPredicates()) {
+//			return false;
+//		}
+//		if ((identifiers == null) || identifiers.isEmpty()) {
+//			return false;
+//		}
+//		for (Identifier identifier : identifiers) {
+//			if (!identifier.isName()) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
 
-	public boolean containsNameIdentifiersOnly() {
-		if (hasFilterPredicates()) {
-			return false;
-		}
-		if ((identifiers == null) || identifiers.isEmpty()) {
-			return false;
-		}
-		for (Identifier identifier : identifiers) {
-			if (!identifier.isName()) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public boolean containsSingleNameIdentifier() {
-		return containsNameIdentifiersOnly() && (identifiers.size() == 1);
-	}
+//	public boolean containsSingleNameIdentifier() {
+//		return containsNameIdentifiersOnly() && (identifiers.size() == 1);
+//	}
 
 	public List<String> getNameIdentifiers() {
 		if ((identifiers == null) || identifiers.isEmpty()) {
@@ -1027,31 +1012,31 @@ public class Query {
 		return names;
 	}
 
-	public String getSingleNameIdentifier() {
-		if (!containsSingleNameIdentifier()) {
-			return null;
-		}
-		return (identifiers.get(0).toString());
-	}
-
-	public boolean containsEmailIdentifiersOnly() {
-		if (hasFilterPredicates()) {
-			return false;
-		}
-		if ((identifiers == null) || identifiers.isEmpty()) {
-			return false;
-		}
-		for (Identifier identifier : identifiers) {
-			if (identifier.isEmail()) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public boolean containsSingleEmailIdentifier() {
-		return containsEmailIdentifiersOnly() && (identifiers.size() == 1);
-	}
+//	public String getSingleNameIdentifier() {
+//		if (!containsSingleNameIdentifier()) {
+//			return null;
+//		}
+//		return (identifiers.get(0).toString());
+//	}
+//
+//	public boolean containsEmailIdentifiersOnly() {
+//		if (hasFilterPredicates()) {
+//			return false;
+//		}
+//		if ((identifiers == null) || identifiers.isEmpty()) {
+//			return false;
+//		}
+//		for (Identifier identifier : identifiers) {
+//			if (identifier.isEmail()) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
+//
+//	public boolean containsSingleEmailIdentifier() {
+//		return containsEmailIdentifiersOnly() && (identifiers.size() == 1);
+//	}
 
 	public List<String> getEmailIdentifiers() {
 		if ((identifiers == null) || identifiers.isEmpty()) {
@@ -1065,33 +1050,33 @@ public class Query {
 		}
 		return emails;
 	}
-
-	public String getSingleEmailIdentifier() {
-		if (!containsSingleEmailIdentifier()) {
-			return null;
-		}
-		return (identifiers.get(0).toString());
-	}
-
-	public boolean containsNameOrEmailIdentifiersOnly() {
-		if (hasFilterPredicates()) {
-			return false;
-		}
-		if ((identifiers == null) || identifiers.isEmpty()) {
-			return false;
-		}
-		for (Identifier identifier : identifiers) {
-			if (!identifier.isEmail() && !identifier.isName()) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public boolean containsSingleNameOrEmailIdentifier() {
-		return containsNameOrEmailIdentifiersOnly()
-				&& (identifiers.size() == 1);
-	}
+//
+//	public String getSingleEmailIdentifier() {
+//		if (!containsSingleEmailIdentifier()) {
+//			return null;
+//		}
+//		return (identifiers.get(0).toString());
+//	}
+//
+//	public boolean containsNameOrEmailIdentifiersOnly() {
+//		if (hasFilterPredicates()) {
+//			return false;
+//		}
+//		if ((identifiers == null) || identifiers.isEmpty()) {
+//			return false;
+//		}
+//		for (Identifier identifier : identifiers) {
+//			if (!identifier.isEmail() && !identifier.isName()) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
+//
+//	public boolean containsSingleNameOrEmailIdentifier() {
+//		return containsNameOrEmailIdentifiersOnly()
+//				&& (identifiers.size() == 1);
+//	}
 
 	public List<String> getNameAndEmailIdentifiers() {
 		if ((identifiers == null) || identifiers.isEmpty()) {
@@ -1108,13 +1093,13 @@ public class Query {
 		return ids;
 	}
 
-	public String getSingleNameOrEmailIdentifier() {
-		if (!containsSingleNameOrEmailIdentifier()) {
-			return null;
-		}
-		return (identifiers.get(0).toString());
-	}
-
+//	public String getSingleNameOrEmailIdentifier() {
+//		if (!containsSingleNameOrEmailIdentifier()) {
+//			return null;
+//		}
+//		return (identifiers.get(0).toString());
+//	}
+//
 	public List<String> getCategories() {
 		return categories;
 	}
@@ -1151,53 +1136,54 @@ public class Query {
 
 	@Override
 	public String toString() {
-		if (selectSubjects.isEmpty() && filterPredicates.isEmpty()) {
-			return "";
-		}
-
-		StringBuilder s = new StringBuilder("select ");
-		if (type == null) {
-			if (selectSubjects.isEmpty()) {
-				s.append("*");
-			} else {
-				if (mergeSelectResults) {
-					s.append("{ ");
-					boolean first = true;
-					for (Map.Entry<String, String> select : selectSubjects
-							.entrySet()) {
-						if (!first) {
-							s.append(", ");
-						}
-						s.append(select.getValue() + " : " + select.getKey());
-						first = false;
-					}
-					s.append(" }");
-				} else {
-					boolean first = true;
-					for (String select : selectSubjects.keySet()) {
-						if (!first) {
-							s.append(", ");
-						}
-						s.append(select);
-						first = false;
-					}
-				}
-			}
-		} else {
-			s.append(type);
-		}
-		if (!filterPredicates.isEmpty()) {
-			s.append(" where ");
-			boolean first = true;
-			for (FilterPredicate f : filterPredicates) {
-				if (!first) {
-					s.append(" and ");
-				}
-				s.append(f.toString());
-				first = false;
-			}
-		}
-		return s.toString();
+	    return "";
+//		if (selectSubjects.isEmpty() && filterPredicates.isEmpty()) {
+//			return "";
+//		}
+//
+//		StringBuilder s = new StringBuilder("select ");
+//		if (type == null) {
+//			if (selectSubjects.isEmpty()) {
+//				s.append("*");
+//			} else {
+//				if (mergeSelectResults) {
+//					s.append("{ ");
+//					boolean first = true;
+//					for (Map.Entry<String, String> select : selectSubjects
+//							.entrySet()) {
+//						if (!first) {
+//							s.append(", ");
+//						}
+//						s.append(select.getValue() + " : " + select.getKey());
+//						first = false;
+//					}
+//					s.append(" }");
+//				} else {
+//					boolean first = true;
+//					for (String select : selectSubjects.keySet()) {
+//						if (!first) {
+//							s.append(", ");
+//						}
+//						s.append(select);
+//						first = false;
+//					}
+//				}
+//			}
+//		} else {
+//			s.append(type);
+//		}
+//		if (!filterPredicates.isEmpty()) {
+//			s.append(" where ");
+//			boolean first = true;
+//			for (FilterPredicate f : filterPredicates) {
+//				if (!first) {
+//					s.append(" and ");
+//				}
+//				s.append(f.toString());
+//				first = false;
+//			}
+//		}
+//		return s.toString();
 	}
 
 	public static enum FilterOperator {
@@ -1460,23 +1446,23 @@ public class Query {
 //			return null;
 //		}
 
-//		public static FilterPredicate normalize(FilterPredicate p) {
-//			if (p == null) {
-//				return null;
-//			}
-//			if (p.operator == FilterOperator.CONTAINS) {
-//				String propertyName = appendSuffix(p.propertyName, "keywords");
-//				return new FilterPredicate(propertyName, FilterOperator.EQUAL,
-//						p.value);
-//			} else if (p.operator == FilterOperator.WITHIN) {
-//				String propertyName = appendSuffix(p.propertyName,
-//						"coordinates");
-//				return new FilterPredicate(propertyName, FilterOperator.WITHIN,
-//						p.value);
-//			}
-//
-//			return p;
-//		}
+		public static FilterPredicate normalize(FilterPredicate p) {
+			if (p == null) {
+				return null;
+			}
+			if (p.operator == FilterOperator.CONTAINS) {
+				String propertyName = appendSuffix(p.propertyName, "keywords");
+				return new FilterPredicate(propertyName, FilterOperator.EQUAL,
+						p.value);
+			} else if (p.operator == FilterOperator.WITHIN) {
+				String propertyName = appendSuffix(p.propertyName,
+						"coordinates");
+				return new FilterPredicate(propertyName, FilterOperator.WITHIN,
+						p.value);
+			}
+
+			return p;
+		}
 
 		private static String appendSuffix(String str, String suffix) {
 			if (StringUtils.isNotEmpty(str)) {

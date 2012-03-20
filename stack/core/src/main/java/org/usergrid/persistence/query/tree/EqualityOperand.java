@@ -45,8 +45,8 @@ public abstract class EqualityOperand extends Operand {
   /**
    * @return the literal
    */
-  public Literal getLiteral() {
-    return (Literal) this.children.get(1);
+  public Literal<?> getLiteral() {
+    return (Literal<?>) this.children.get(1);
   }
   
   
