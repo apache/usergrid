@@ -958,7 +958,7 @@ function usergrid_console_app() {
         if (bValid) {
             var data = form.serializeObject();
             client.createOrganization(data,requestOrganizations, function() {
-                alert("Unable to create orgnization: " + client.getLastErrorMessage(data.name));
+                alert("Unable to create organization: " + client.getLastErrorMessage(data.name));
             });
             $(this).modal('hide');
         }
@@ -3266,7 +3266,7 @@ function usergrid_console_app() {
         if (confirm('Are you sure you want to leave this Organization?')) {
             client.leaveOrganization(name,requestOrganizations,
             function() {
-                alert("Unable to leave orgnization: " + client.getLastErrorMessage('There was an error processing your request'));
+                alert("Unable to leave organization: " + client.getLastErrorMessage('There was an error processing your request'));
             });
         }
     }
