@@ -4,21 +4,7 @@
     <title>Usergrid Admin Portal </title>
     <link rel="shortcut icon" href="/misc/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" type="text/css" href="css/reset.css"/>
-    <link rel="stylesheet" type="text/css" href="css/custom-theme/jquery-ui-1.8.9.custom.css"/>
-    <link rel="stylesheet" type="text/css" href="css/jquery-ui-timepicker.css"/>
-    <link rel="stylesheet" type="text/css" href="css/jquery.ui.statusbar.css"/>
-    <link rel="stylesheet" type="text/css" href="css/jquery.ui-jalert.css"/>
-    <link rel="stylesheet" type="text/css" href="css/jquery.ui.selectmenu.css"/>
     <link rel="stylesheet/less" type="text/css" href="css/usergrid.less"/>
-    <script src="js/json2.js" type="text/javascript"></script>
-    <script src="js/jsonlint.js" type="text/javascript"></script>
-    <script src="js/MD5.js" type="text/javascript"></script>
-    <script src="https://www.google.com/jsapi" type="text/javascript"></script>
-    <script type="text/javascript">
-        google.load('visualization', '1', {
-            packages:[ 'corechart' ]
-        });
-    </script>
     <script src="js/jquery-1.7.1.min.js" type="text/javascript"></script>
     <script src="js/jquery-ui.min.js" type="text/javascript"></script>
     <script src="js/jquery.dataset.js" type="text/javascript"></script>
@@ -38,11 +24,6 @@
     <script src="js/less-1.2.1.min.js" type="text/javascript"></script>
     <script src="bootstrap/js/bootstrap-dropdown.js" type="text/javascript"></script>
     <script src="bootstrap/js/bootstrap-button.js" type="text/javascript"></script>
-    <script src="bootstrap/js/bootstrap-typeahead.js" type="text/javascript"></script>
-    <script src="bootstrap/js/bootstrap-modal.js" type="text/javascript"></script>
-    <script src="js/usergrid.pages.js" type="text/javascript"></script>
-    <script src="js/app.js" type="text/javascript"></script>
-    <script src="js/usergrid.status.js" type="text/javascript"></script>
 </head>
 <body>
 <div id="fullContainer">
@@ -321,7 +302,7 @@
                     </div>
                     <div id="users-panel" style="display: none">
                         <ul id="users-panel-tab-bar" class="nav nav-tabs">
-                            <li class="active"><a id="button-users-list" href="#">List</a></li>               
+                            <li class="active"><a id="button-users-list" href="#">List</a></li>
                         </ul>
                         <div id="users-panel-list" class="panel-content">
                             <div class="console-section">
@@ -513,7 +494,7 @@
                                         <input onkeyup="usergrid.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search" placeholder="Search"/>
                                         <select id="search-group-type" onChange="usergrid.console.searchGroups();" class="input-medium search">
                                             <option value="path">Path</option>
-                                            <option value="title">Title</option>                                            
+                                            <option value="title">Title</option>
                                         </select>
                                         <a id="selectAllGroups" class="" href="#" onclick="usergrid.console.selectAllGroups();"> Select All </a>
 					<a id="deselectAllGroups" style="display: none;" class="" href="#" onclick="usergrid.console.deselectAllGroups();"> Deselect All </a>
@@ -690,7 +671,7 @@
                                 <h3><span class="title"> Activities </span>
                                     <div class="bar">
                                         <input onkeyup="usergrid.console.searchActivities();" type="text" name="search-activities" id="search-activities" class="input-small search" placeholder="Search"/>
-                                        <select id="search-activities-type" onChange="usergrid.console.searchActivities();" class="input-medium search">                                            
+                                        <select id="search-activities-type" onChange="usergrid.console.searchActivities();" class="input-medium search">
                                             <option value="content">Content</option>
                                             <option value="actor">Actor</option>
                                         </select>
@@ -1088,4 +1069,30 @@ var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga
 
 </script>
 </body>
+
+<link rel="stylesheet" type="text/css" href="css/custom-theme/jquery-ui-1.8.9.custom.css"/>
+<link rel="stylesheet" type="text/css" href="css/jquery-ui-timepicker.css"/>
+<link rel="stylesheet" type="text/css" href="css/jquery.ui.statusbar.css"/>
+<link rel="stylesheet" type="text/css" href="css/jquery.ui-jalert.css"/>
+<link rel="stylesheet" type="text/css" href="css/jquery.ui.selectmenu.css"/>
+
+<script src="js/json2.js" type="text/javascript"></script>
+<script src="js/jsonlint.js" type="text/javascript"></script>
+<script src="js/MD5.js" type="text/javascript"></script>
+<script src="https://www.google.com/jsapi" type="text/javascript"></script>
+<script type="text/javascript">
+  google.load('visualization', '1', {
+  packages:[ 'corechart' ]
+  });
+</script>
+
+
+<script src="bootstrap/js/bootstrap-typeahead.js" type="text/javascript"></script>
+<script src="bootstrap/js/bootstrap-modal.js" type="text/javascript"></script>
+<script src="js/usergrid.pages.js" type="text/javascript"></script>
+<script src="js/app.js" type="text/javascript"></script>
+<script src="js/usergrid.status.js" type="text/javascript"></script>
+
+
+
 </html>
