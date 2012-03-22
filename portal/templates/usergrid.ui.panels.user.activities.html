@@ -8,23 +8,28 @@
 		</div>
 	</h3>
 	<div class="console-section-contents listContent">
-			{{if activities}}
-			{{each activities}}
-            <div class="query-result-row entity_list_item">
-                <table class="query-result-table">
-                    <tr class="query-result-header">
-                        <!--<td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="${id}" value="${entity.uuid}" /></td>-->
-                        <td class="query-result-td-header-name">
-                            <div class="query-result-header-name query-result-picture-vert-offset">
-                                <span id="activities-date-field">${$value.created}</span>: ${$value.actor.displayName} (${$value.actor.email}) - ${$value.verb}: ${$value.content}
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-			{{/each}}
-			{{else}}
-			<div class="user-panel-section-message">No User Activities</div>
-			{{/if}}
+    {{if activities}}
+    {{each activities}}
+      <div class="query-result-row entity_list_item">
+        <table class="query-result-table activities-table table">
+          <tr class="">
+            <!--<td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="${id}" value="${entity.uuid}" /></td>-->
+            <td class="created">
+              ${$value.created}<br />
+              <strong>${$value.content}</strong>
+            </td>
+            <td class="actor">
+              <strong>${$value.actor.displayName} (${$value.actor.email}) </strong>
+            </td>
+            <td class="verb">
+              ${$value.verb}
+            </td>
+          </tr>
+        </table>
+      </div>
+    {{/each}}
+    {{else}}
+    <div class="user-panel-section-message">No User Activities</div>
+    {{/if}}
 	</div>
 </div>
