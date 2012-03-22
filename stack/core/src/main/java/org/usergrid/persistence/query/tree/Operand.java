@@ -37,6 +37,13 @@ public abstract class Operand extends CommonTree{
   }
   
   /**
+   * Get the pointer to the parent node
+   */
+  public Operand getParent(){
+      return (Operand) super.getParent();
+  }
+  
+  /**
    * Visitor method
    * @param visitor
    */

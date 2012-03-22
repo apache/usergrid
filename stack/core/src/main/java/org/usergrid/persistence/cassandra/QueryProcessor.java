@@ -39,6 +39,7 @@ import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.query.tree.AndOperand;
 import org.usergrid.persistence.query.tree.ContainsOperand;
 import org.usergrid.persistence.query.tree.Equal;
+import org.usergrid.persistence.query.tree.EqualityOperand;
 import org.usergrid.persistence.query.tree.GreaterThan;
 import org.usergrid.persistence.query.tree.GreaterThanEqual;
 import org.usergrid.persistence.query.tree.LessThan;
@@ -142,7 +143,10 @@ public class QueryProcessor {
 
             // otherwise create a new AND node from the result of the visit
 
-            AndNode newNode = new AndNode(nodes.pop(), nodes.pop());
+            QueryNode right = nodes.pop();
+            QueryNode left = nodes.pop();
+
+            AndNode newNode = new AndNode(left, right);
 
             nodes.push(newNode);
         }
@@ -157,12 +161,27 @@ public class QueryProcessor {
         @Override
         public void visit(OrOperand op) {
 
-            op.getLeft().visit(this);
+            // we need to create a new slicenode for the children of this
+            // operation
 
-            op.getRight().visit(this);
+            Operand left = op.getLeft();
+            Operand right = op.getRight();
+
+            // we only create a new slice node if our children are && and ||
+            // operations
+            createNewSlice(left);
+
+            left.visit(this);
+
+            createNewSlice(right);
+
+            right.visit(this);
+
+            QueryNode rightResult = nodes.pop();
+            QueryNode leftResult = nodes.pop();
 
             // rewrite with the new Or operand
-            OrNode orNode = new OrNode(nodes.pop(), nodes.pop());
+            OrNode orNode = new OrNode(leftResult, rightResult);
 
             nodes.push(orNode);
 
@@ -180,7 +199,12 @@ public class QueryProcessor {
 
             // create a new context since any child of NOT will need to be
             // evaluated independently
-            op.getOperation().visit(this);
+            
+            Operand child = op.getOperation();
+            
+            createNewSlice(child);
+            
+            child.visit(this);
 
             NotNode not = new NotNode(nodes.pop());
             nodes.push(not);
@@ -198,12 +222,12 @@ public class QueryProcessor {
             String fieldName = appendSuffix(op.getProperty().getValue(),
                     "keywords");
 
-            StringLiteral value = (StringLiteral) op.getString();
+            String string = ((StringLiteral) op.getString()).getValue();
 
-            SliceNode node = getUnionNode();
+            SliceNode node = getUnionNode(op);
 
-            node.setStart(fieldName, value, true);
-            node.setFinish(fieldName, value, true);
+            node.setStart(fieldName, string, true);
+            node.setFinish(fieldName, string, true);
 
         }
 
@@ -236,7 +260,7 @@ public class QueryProcessor {
          */
         @Override
         public void visit(LessThan op) {
-            getUnionNode().setFinish(op.getProperty().getValue(),
+            getUnionNode(op).setFinish(op.getProperty().getValue(),
                     op.getLiteral().getValue(), false);
         }
 
@@ -249,7 +273,7 @@ public class QueryProcessor {
          */
         @Override
         public void visit(LessThanEqual op) {
-            getUnionNode().setFinish(op.getProperty().getValue(),
+            getUnionNode(op).setFinish(op.getProperty().getValue(),
                     op.getLiteral().getValue(), true);
         }
 
@@ -264,7 +288,7 @@ public class QueryProcessor {
         public void visit(Equal op) {
             String fieldName = op.getProperty().getValue();
             Literal<?> literal = op.getLiteral();
-            SliceNode node = getUnionNode();
+            SliceNode node = getUnionNode(op);
 
             // this is an edge case. If we get more edge cases, we need to push
             // this down into the literals and let the objects
@@ -295,7 +319,7 @@ public class QueryProcessor {
          */
         @Override
         public void visit(GreaterThan op) {
-            getUnionNode().setStart(op.getProperty().getValue(),
+            getUnionNode(op).setStart(op.getProperty().getValue(),
                     op.getLiteral().getValue(), false);
         }
 
@@ -308,7 +332,7 @@ public class QueryProcessor {
          */
         @Override
         public void visit(GreaterThanEqual op) {
-            getUnionNode().setStart(op.getProperty().getValue(),
+            getUnionNode(op).setStart(op.getProperty().getValue(),
                     op.getLiteral().getValue(), true);
         }
 
@@ -317,19 +341,50 @@ public class QueryProcessor {
          * we can compress multile 'AND' operations and ranges into a single
          * node. Otherwise a new node is created and pushed to the stack
          * 
+         * @param current
+         *            The current operand node
          * @return
          */
-        private SliceNode getUnionNode() {
+        private SliceNode getUnionNode(Operand current) {
 
+            /**
+             * we only create a new slice node in 3 situations 1. No nodes exist
+             * 2. The parent node is not an AND node. Meaning we can't add this
+             * slice to the current set of slices 3. Our current top of stack is
+             * not a slice node.
+             */
+            // no nodes exist
             if (nodes.size() == 0 || !(nodes.peek() instanceof SliceNode)) {
-                SliceNode newUnion = new SliceNode(contextCount++);
-
-                nodes.push(newUnion);
-
-                return newUnion;
+                return newSliceNode();
             }
 
             return (SliceNode) nodes.peek();
+
+        }
+
+        /**
+         * The new slice node
+         * 
+         * @return
+         */
+        private SliceNode newSliceNode() {
+            SliceNode sliceNode = new SliceNode(contextCount++);
+
+            nodes.push(sliceNode);
+
+            return sliceNode;
+        }
+
+        /**
+         * Create a new slice if one will be required within the context of this
+         * node
+         * 
+         * @param child
+         */
+        private void createNewSlice(Operand child) {
+            if (child instanceof EqualityOperand || child instanceof AndOperand) {
+                newSliceNode();
+            }
 
         }
 

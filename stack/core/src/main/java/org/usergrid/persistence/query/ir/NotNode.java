@@ -31,6 +31,14 @@ public class NotNode extends QueryNode {
         this.child = child;
     }
 
+    /**
+     * @return the child
+     */
+    public QueryNode getChild() {
+        return child;
+    }
+
+    
  
 
 }

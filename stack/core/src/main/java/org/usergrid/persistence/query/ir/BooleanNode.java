@@ -28,4 +28,18 @@ public class BooleanNode extends QueryNode {
         this.left = left;
         this.right = right;
     }
+
+    /**
+     * @return the left
+     */
+    public QueryNode getLeft() {
+        return left;
+    }
+
+    /**
+     * @return the right
+     */
+    public QueryNode getRight() {
+        return right;
+    }
 }

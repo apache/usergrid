@@ -124,7 +124,7 @@ import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.CounterUtils;
 import org.usergrid.persistence.cassandra.CounterUtils.AggregateCounterSelection;
 import org.usergrid.persistence.cassandra.QueryProcessor;
-import org.usergrid.persistence.cassandra.QueryProcessor.QuerySlice;
+import org.usergrid.persistence.query.ir.QuerySlice;
 import org.usergrid.utils.UUIDUtils;
 
 import com.fasterxml.uuid.UUIDComparator;
