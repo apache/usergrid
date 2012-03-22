@@ -13,28 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.persistence.query.tree;
-
-import org.antlr.runtime.Token;
-import org.antlr.runtime.tree.CommonTree;
-
-
-
+package org.usergrid.persistence.query.ir;
 
 /**
- * Abstract class for literals
  * @author tnine
  *
  */
-public abstract class Literal<V> extends CommonTree{
+public class BooleanNode extends QueryNode {
 
- 
-  protected Literal(Token t){
-    super(t);
-  }
-  
-  public abstract V getValue();
-  
-  
-  
+    protected QueryNode left;
+    protected QueryNode right;
+    
+    public BooleanNode(QueryNode left, QueryNode right){
+        this.left = left;
+        this.right = right;
+    }
 }

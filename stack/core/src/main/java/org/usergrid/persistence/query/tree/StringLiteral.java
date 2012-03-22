@@ -15,33 +15,67 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import static org.apache.commons.lang.StringUtils.removeEnd;
+
 import org.antlr.runtime.Token;
-
-
 
 /**
  * @author tnine
- *
+ * 
  */
 public class StringLiteral extends Literal<String> {
 
-  private String value;
-  
-  /**
-   * @param t
-   */
-  public StringLiteral(Token t) {
-    super(t);
-    value = t.getText();
-  }
-  
-  public StringLiteral(String value){
-    super(null);
-    this.value = value;
-  }
-  
-  public String getValue(){
-    return this.value;
-  }
+    private String value;
+    private String finishValue;
+
+    /**
+     * @param t
+     */
+    public StringLiteral(Token t) {
+        super(t);
+        parseValue(t.getText());
+    }
+
+    public StringLiteral(String value) {
+        super(null);
+        parseValue(value);
+
+    }
+
+    /**
+     * Parse the value and set the optional end value
+     * @param value
+     */
+    private void parseValue(String value) {
+        value = value.substring(1, value.length() - 1);
+
+        this.value = value;
+
+        if ("*".equals(value)) {
+            this.value = null;
+            return;
+        }
+
+        if (value != null && value.endsWith("*")) {
+            value = removeEnd(value.toString(), "*");
+
+            finishValue = value + "\uFFFF";
+           
+        } 
+        
+    }
+
+    /**
+     * If this were a string literal
+     * 
+     * @return
+     */
+    public String getEndValue() {
+        return this.finishValue;
+    }
+
+    public String getValue() {
+        return this.value;
+    }
 
 }

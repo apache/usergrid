@@ -17,31 +17,25 @@ package org.usergrid.persistence.cassandra;
 
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
-import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.removeEnd;
 import static org.apache.commons.lang.StringUtils.split;
-import static org.usergrid.persistence.Query.SortDirection.DESCENDING;
-import static org.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
-import static org.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Set;
+import java.util.Map;
+import java.util.Stack;
 
-import org.apache.commons.collections.comparators.ComparatorChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityPropertyComparator;
 import org.usergrid.persistence.Query;
-import org.usergrid.persistence.Query.FilterOperator;
-import org.usergrid.persistence.Query.FilterPredicate;
 import org.usergrid.persistence.Query.SortPredicate;
+import org.usergrid.persistence.query.ir.AndNode;
+import org.usergrid.persistence.query.ir.NotNode;
+import org.usergrid.persistence.query.ir.OrNode;
+import org.usergrid.persistence.query.ir.QueryNode;
+import org.usergrid.persistence.query.ir.UnionNode;
+import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.query.tree.AndOperand;
 import org.usergrid.persistence.query.tree.ContainsOperand;
 import org.usergrid.persistence.query.tree.Equal;
@@ -49,587 +43,392 @@ import org.usergrid.persistence.query.tree.GreaterThan;
 import org.usergrid.persistence.query.tree.GreaterThanEqual;
 import org.usergrid.persistence.query.tree.LessThan;
 import org.usergrid.persistence.query.tree.LessThanEqual;
+import org.usergrid.persistence.query.tree.Literal;
 import org.usergrid.persistence.query.tree.NotOperand;
 import org.usergrid.persistence.query.tree.Operand;
 import org.usergrid.persistence.query.tree.OrOperand;
 import org.usergrid.persistence.query.tree.QueryVisitor;
+import org.usergrid.persistence.query.tree.StringLiteral;
 import org.usergrid.persistence.query.tree.WithinOperand;
-import org.usergrid.utils.ListUtils;
-import org.usergrid.utils.NumberUtils;
 import org.usergrid.utils.StringUtils;
 
 public class QueryProcessor {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(QueryProcessor.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(QueryProcessor.class);
 
-	private Query query;
+    private Query query;
 
-	private String cursor;
-	private Operand rootOperand;
-//	private List<QuerySlice> slices;
-//	List<FilterPredicate> filters;
-	private List<SortPredicate> sorts;
+    private Operand rootOperand;
+    private SortCache sortCache;
+    private CursorCache cursorCache;
+    private QueryNode rootNode;
 
-	public QueryProcessor(Query query) {
-		this.query = query;
-		cursor = query.getCursor();
-//		filters = query.getFilterPredicates();
-		sorts = query.getSortPredicates();
-		rootOperand = query.getRootOperand();
-		process();
-	}
+    public QueryProcessor(Query query) {
+        this.query = query;
+        sortCache = new SortCache(query.getSortPredicates());
+        cursorCache = new CursorCache(query.getCursor());
+        rootOperand = query.getRootOperand();
+        process();
+    }
 
-	public Query getQuery() {
-		return query;
-	}
 
-	public String getCursor() {
-		return cursor;
-	}
+    private void process() {
 
-//	public List<QuerySlice> getSlices() {
-//		return slices;
-//	}
-//
-//	public List<FilterPredicate> getFilters() {
-//		return filters;
-//	}
-//
-//	public List<SortPredicate> getSorts() {
-//		return sorts;
-//	}
+        //no operand.  Check for sorts
+        if (rootOperand != null) {
+            // visit the tree
+            
+            TreeEvaluator visitor = new TreeEvaluator(cursorCache, sortCache);
+            
+            rootOperand.visit(visitor);
+            
+            rootNode = visitor.getRootNode();
+            
+            return;
+        }
+        
+        if(sortCache.sorts.size() > 0){
+            UnionNode union = new UnionNode(0);
+            
+//            TODO create a union with orders union.
+        }
+        
+      
+      
 
-	private void process() {
-	    
-	   
-	    
-	    if(rootOperand != null){
-	        QueryVisitor visitor = new TreeEvaluator();
-	        rootOperand.visit(visitor);
-	    }
-	    
-	    //TODO TN start visitor here to create and execute the filters and ranges
-	    
-		slices = new ArrayList<QuerySlice>();
+    }
+    
+    public QueryNode getFirstNode(){
+        return rootNode;
+    }
 
-		// consolidate all the filters into a set of ranges
-		Set<String> names = getFilterPropertyNames();
-		for (String name : names) {
-			FilterOperator operator = null;
-			Object value = null;
-			RangeValue start = null;
-			RangeValue finish = null;
-			for (FilterPredicate f : filters) {
-				if (f.getPropertyName().equals(name)) {
-					operator = f.getOperator();
-					value = f.getValue();
-					RangePair r = getRangeForFilter(f);
-					if (r.start != null) {
-						if ((start == null)
-								|| (r.start.compareTo(start, false) < 0)) {
-							start = r.start;
-						}
-					}
-					if (r.finish != null) {
-						if ((finish == null)
-								|| (r.finish.compareTo(finish, true) > 0)) {
-							finish = r.finish;
-						}
-					}
-				}
-			}
-			slices.add(new QuerySlice(name, operator, value, start, finish,
-					null, false));
-		}
+    
 
-		// process sorts
-		if ((slices.size() == 0) && (sorts.size() > 0)) {
-			// if no filters, turn first filter into a sort
-			SortPredicate sort = ListUtils.dequeue(sorts);
-			slices.add(new QuerySlice(sort.getPropertyName(), null, null, null,
-					null, null, sort.getDirection() == DESCENDING));
-		} else if (sorts.size() > 0) {
-			// match up sorts with existing filters
-			for (ListIterator<SortPredicate> iter = sorts.listIterator(); iter
-					.hasNext();) {
-				SortPredicate sort = iter.next();
-				QuerySlice slice = getSliceForProperty(sort.getPropertyName());
-				if (slice != null) {
-					slice.reversed = sort.getDirection() == DESCENDING;
-					iter.remove();
-				}
-			}
-		}
+    private class TreeEvaluator implements QueryVisitor {
 
-		// attach cursors to slices
-		if ((cursor != null) && (cursor.indexOf(':') >= 0)) {
-			String[] cursors = split(cursor, '|');
-			for (String c : cursors) {
-				String[] parts = split(c, ':');
-				if (parts.length == 2) {
-					int cursorHashCode = parseInt(parts[0]);
-					for (QuerySlice slice : slices) {
-						int sliceHashCode = slice.hashCode();
-						logger.info("Comparing cursor hashcode "
-								+ cursorHashCode + " to " + sliceHashCode);
-						if (sliceHashCode == cursorHashCode) {
-							if (isNotBlank(parts[1])) {
-								ByteBuffer cursorBytes = ByteBuffer
-										.wrap(decodeBase64(parts[1]));
-								slice.setCursor(cursorBytes);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+        private CursorCache cursorCache;
+        private SortCache sortCache;
 
-	@SuppressWarnings("unchecked")
-	public List<Entity> sort(List<Entity> entities) {
+        // stack for nodes that will be used to construct the tree and create
+        // objects
+        private Stack<QueryNode> nodes = new Stack<QueryNode>();
 
-		if ((entities != null) && (sorts.size() > 0)) {
-			// Performing in memory sort
-			logger.info("Performing in-memory sort of " + entities.size()
-					+ " entities");
-			ComparatorChain chain = new ComparatorChain();
-			for (SortPredicate sort : sorts) {
-				chain.addComparator(
-						new EntityPropertyComparator(sort.getPropertyName()),
-						sort.getDirection() == DESCENDING);
-			}
-			Collections.sort(entities, chain);
-		}
-		return entities;
-	}
+        private int contextCount = -1;
 
-	private Set<String> getFilterPropertyNames() {
-		Set<String> names = new LinkedHashSet<String>();
-		for (FilterPredicate f : filters) {
-			names.add(f.getPropertyName());
-		}
-		return names;
-	}
+        /**
+         * Create a tree visitor to evaluate our AST
+         * 
+         * @param cursorCache
+         * @param sortCache
+         */
+        public TreeEvaluator(CursorCache cursorCache, SortCache sortCache) {
+            this.cursorCache = cursorCache;
+            this.sortCache = sortCache;
+        }
 
-	public QuerySlice getSliceForProperty(String name) {
-		for (QuerySlice s : slices) {
-			if (s.propertyName.equals(name)) {
-				return s;
-			}
-		}
-		return null;
-	}
-
-	public static class RangeValue {
-		byte code;
-		Object value;
-		boolean inclusive;
-
-		public RangeValue(byte code, Object value, boolean inclusive) {
-			this.code = code;
-			this.value = value;
-			this.inclusive = inclusive;
-		}
-
-		public byte getCode() {
-			return code;
-		}
-
-		public void setCode(byte code) {
-			this.code = code;
-		}
-
-		public Object getValue() {
-			return value;
-		}
-
-		public void setValue(Object value) {
-			this.value = value;
-		}
-
-		public boolean isInclusive() {
-			return inclusive;
-		}
-
-		public void setInclusive(boolean inclusive) {
-			this.inclusive = inclusive;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + code;
-			result = prime * result + (inclusive ? 1231 : 1237);
-			result = prime * result + ((value == null) ? 0 : value.hashCode());
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (obj == null) {
-				return false;
-			}
-			if (getClass() != obj.getClass()) {
-				return false;
-			}
-			RangeValue other = (RangeValue) obj;
-			if (code != other.code) {
-				return false;
-			}
-			if (inclusive != other.inclusive) {
-				return false;
-			}
-			if (value == null) {
-				if (other.value != null) {
-					return false;
-				}
-			} else if (!value.equals(other.value)) {
-				return false;
-			}
-			return true;
-		}
-
-		public int compareTo(RangeValue other, boolean finish) {
-			if (other == null) {
-				return 1;
-			}
-			if (code != other.code) {
-				return NumberUtils.sign(code - other.code);
-			}
-			@SuppressWarnings({ "unchecked", "rawtypes" })
-			int c = ((Comparable) value).compareTo(other.value);
-			if (c != 0) {
-				return c;
-			}
-			if (finish) {
-				// for finish values, inclusive means <= which is greater than <
-				if (inclusive != other.inclusive) {
-					return inclusive ? 1 : -1;
-				}
-			} else {
-				// for start values, inclusive means >= which is lest than >
-				if (inclusive != other.inclusive) {
-					return inclusive ? -1 : 1;
-				}
-			}
-			return 0;
-		}
-
-		public static int compare(RangeValue v1, RangeValue v2, boolean finish) {
-			if (v1 == null) {
-				if (v2 == null) {
-					return 0;
-				}
-				return -1;
-			}
-			return v1.compareTo(v2, finish);
-		}
-	}
-
-	public static class RangePair {
-		RangeValue start;
-		RangeValue finish;
-
-		public RangePair(RangeValue start, RangeValue finish) {
-			this.start = start;
-			this.finish = finish;
-		}
-
-		public RangeValue getStart() {
-			return start;
-		}
-
-		public void setStart(RangeValue start) {
-			this.start = start;
-		}
-
-		public RangeValue getFinish() {
-			return finish;
-		}
-
-		public void setFinish(RangeValue finish) {
-			this.finish = finish;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result
-					+ ((finish == null) ? 0 : finish.hashCode());
-			result = prime * result + ((start == null) ? 0 : start.hashCode());
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (obj == null) {
-				return false;
-			}
-			if (getClass() != obj.getClass()) {
-				return false;
-			}
-			RangePair other = (RangePair) obj;
-			if (finish == null) {
-				if (other.finish != null) {
-					return false;
-				}
-			} else if (!finish.equals(other.finish)) {
-				return false;
-			}
-			if (start == null) {
-				if (other.start != null) {
-					return false;
-				}
-			} else if (!start.equals(other.start)) {
-				return false;
-			}
-			return true;
-		}
-	}
-
-	public RangePair getRangeForFilter(FilterPredicate f) {
-		Object searchStartValue = toIndexableValue(f.getStartValue());
-		Object searchFinishValue = toIndexableValue(f.getFinishValue());
-		if (StringUtils.isString(searchStartValue)
-				&& StringUtils.isStringOrNull(searchFinishValue)) {
-			if ("*".equals(searchStartValue)) {
-				searchStartValue = null;
-			}
-			if (searchFinishValue == null) {
-				searchFinishValue = searchStartValue;
-				;
-			}
-			if ((searchStartValue != null)
-					&& searchStartValue.toString().endsWith("*")) {
-				searchStartValue = removeEnd(searchStartValue.toString(), "*");
-				searchFinishValue = searchStartValue + "\uFFFF";
-				if (isBlank(searchStartValue.toString())) {
-					searchStartValue = "\0000";
-				}
-			} else if (searchFinishValue != null) {
-				searchFinishValue = searchFinishValue + "\u0000";
-			}
-		}
-		RangeValue rangeStart = null;
-		if (searchStartValue != null) {
-			rangeStart = new RangeValue(indexValueCode(searchStartValue),
-					searchStartValue,
-					f.getOperator() != FilterOperator.GREATER_THAN);
-		}
-		RangeValue rangeFinish = null;
-		if (searchFinishValue != null) {
-			rangeFinish = new RangeValue(indexValueCode(searchFinishValue),
-					searchFinishValue,
-					f.getOperator() != FilterOperator.LESS_THAN);
-		}
-		return new RangePair(rangeStart, rangeFinish);
-	}
-
-	public static class QuerySlice {
-
-		String propertyName;
-		FilterOperator operator;
-		Object value;
-		RangeValue start;
-		RangeValue finish;
-		ByteBuffer cursor;
-		boolean reversed;
-
-		QuerySlice(String propertyName, FilterOperator operator, Object value,
-				RangeValue start, RangeValue finish, ByteBuffer cursor,
-				boolean reversed) {
-			this.propertyName = propertyName;
-			this.operator = operator;
-			this.value = value;
-			this.start = start;
-			this.finish = finish;
-			this.cursor = cursor;
-			this.reversed = reversed;
-		}
-
-		public String getPropertyName() {
-			return propertyName;
-		}
-
-		public void setPropertyName(String propertyName) {
-			this.propertyName = propertyName;
-		}
-
-		public RangeValue getStart() {
-			return start;
-		}
-
-		public void setStart(RangeValue start) {
-			this.start = start;
-		}
-
-		public RangeValue getFinish() {
-			return finish;
-		}
-
-		public void setFinish(RangeValue finish) {
-			this.finish = finish;
-		}
-
-		public Object getValue() {
-			return value;
-		}
-
-		public void setValue(Object value) {
-			this.value = value;
-		}
-
-		public ByteBuffer getCursor() {
-			return cursor;
-		}
-
-		public void setCursor(ByteBuffer cursor) {
-			this.cursor = cursor;
-		}
-
-		public boolean isReversed() {
-			return reversed;
-		}
-
-		public void setReversed(boolean reversed) {
-			this.reversed = reversed;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result
-					+ ((finish == null) ? 0 : finish.hashCode());
-			result = prime * result
-					+ ((propertyName == null) ? 0 : propertyName.hashCode());
-			result = prime * result + (reversed ? 1231 : 1237);
-			result = prime * result + ((start == null) ? 0 : start.hashCode());
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (obj == null) {
-				return false;
-			}
-			if (getClass() != obj.getClass()) {
-				return false;
-			}
-			QuerySlice other = (QuerySlice) obj;
-			if (finish == null) {
-				if (other.finish != null) {
-					return false;
-				}
-			} else if (!finish.equals(other.finish)) {
-				return false;
-			}
-			if (propertyName == null) {
-				if (other.propertyName != null) {
-					return false;
-				}
-			} else if (!propertyName.equals(other.propertyName)) {
-				return false;
-			}
-			if (reversed != other.reversed) {
-				return false;
-			}
-			if (start == null) {
-				if (other.start != null) {
-					return false;
-				}
-			} else if (!start.equals(other.start)) {
-				return false;
-			}
-			return true;
-		}
-
-	}
-	
-	private class TreeEvaluator implements QueryVisitor{
-
-        /* (non-Javadoc)
-         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.AndOperand)
+       /**
+        * Get the root node in our tree for runtime evaluation
+        * @return
+        */
+        public QueryNode getRootNode(){
+            return nodes.pop();
+        }
+        
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid
+         * .persistence.query.tree.AndOperand)
          */
         @Override
         public void visit(AndOperand op) {
+
+            op.getLeft().visit(this);
+            
+            QueryNode leftResult = nodes.peek(); 
+            
+            op.getRight().visit(this);
+            
+            QueryNode rightResult = nodes.peek();
+            
+            //if the result of the left and right are the same, we don't want to create an AND.  We'll use the Union.  Do nothing
+            if(leftResult == rightResult){
+                return;
+            }
+            
+            //otherwise create a new AND node from the result of the visit
+            
+            AndNode newNode = new AndNode(nodes.pop(), nodes.pop());
+            
+            nodes.push(newNode);
         }
 
-        /* (non-Javadoc)
-         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.OrOperand)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid
+         * .persistence.query.tree.OrOperand)
          */
         @Override
         public void visit(OrOperand op) {
+
+            op.getLeft().visit(this);;
+            op.getRight().visit(this);
+
+            //rewrite with the new Or operand
+            OrNode orNode = new OrNode(nodes.pop(), nodes.pop());
+            
+            nodes.push(orNode);
+
         }
 
-        /* (non-Javadoc)
-         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.NotOperand)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid
+         * .persistence.query.tree.NotOperand)
          */
         @Override
         public void visit(NotOperand op) {
+
+            // create a new context since any child of NOT will need to be
+            // evaluated independently
+            op.getOperation().visit(this);
+            
+            NotNode not = new NotNode(nodes.pop());
+            nodes.push(not);
         }
 
-        /* (non-Javadoc)
-         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.LessThan)
-         */
-        @Override
-        public void visit(LessThan op) {
-        }
-
-        /* (non-Javadoc)
-         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.ContainsOperand)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid
+         * .persistence.query.tree.ContainsOperand)
          */
         @Override
         public void visit(ContainsOperand op) {
+            String fieldName = appendSuffix(op.getProperty().getValue(),
+                    "keywords");
+
+            StringLiteral value = (StringLiteral) op.getString();
+
+            UnionNode node = getUnionNode();
+
+            node.setStart(fieldName, value, true);
+            node.setFinish(fieldName, value, true);
+
         }
 
-        /* (non-Javadoc)
-         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.WithinOperand)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid
+         * .persistence.query.tree.WithinOperand)
          */
         @Override
         public void visit(WithinOperand op) {
+
+            // change the property name to coordinates
+            String propertyName = appendSuffix(op.getProperty().getValue(),
+                    "coordinates");
+
+            nodes.push(new WithinNode(propertyName, op.getDistance().getValue(), op.getLattitude().getValue(), op.getLongitude().getValue()));
+           
         }
 
-        /* (non-Javadoc)
-         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.LessThanEqual)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid
+         * .persistence.query.tree.LessThan)
+         */
+        @Override
+        public void visit(LessThan op) {
+            getUnionNode().setFinish(op.getProperty().getValue(),
+                    op.getLiteral().getValue(), false);
+        }
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid
+         * .persistence.query.tree.LessThanEqual)
          */
         @Override
         public void visit(LessThanEqual op) {
+            getUnionNode().setFinish(op.getProperty().getValue(),
+                    op.getLiteral().getValue(), true);
         }
 
-        /* (non-Javadoc)
-         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.Equal)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid
+         * .persistence.query.tree.Equal)
          */
         @Override
         public void visit(Equal op) {
+            String fieldName = op.getProperty().getValue();
+            Literal<?> literal = op.getLiteral();
+            UnionNode node = getUnionNode();
+
+            // this is an edge case. If we get more edge cases, we need to push
+            // this down into the literals and let the objects
+            // handle this
+            if (literal instanceof StringLiteral) {
+
+                StringLiteral stringLiteral = (StringLiteral) literal;
+
+                String endValue = stringLiteral.getEndValue();
+
+                if (endValue != null) {
+                    node.setFinish(fieldName, endValue, false);
+                }
+            }
+
+            node.setStart(fieldName, literal.getValue(), true);
+
         }
 
-        /* (non-Javadoc)
-         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.GreaterThan)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid
+         * .persistence.query.tree.GreaterThan)
          */
         @Override
         public void visit(GreaterThan op) {
+            getUnionNode().setStart(op.getProperty().getValue(),
+                    op.getLiteral().getValue(), false);
         }
 
-        /* (non-Javadoc)
-         * @see org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid.persistence.query.tree.GreaterThanEqual)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.usergrid.persistence.query.tree.QueryVisitor#visit(org.usergrid
+         * .persistence.query.tree.GreaterThanEqual)
          */
         @Override
         public void visit(GreaterThanEqual op) {
+            getUnionNode().setStart(op.getProperty().getValue(),
+                    op.getLiteral().getValue(), true);
         }
-	    
-	}
+
+        /**
+         * Return the current leaf node to add to if it exists. This means that we can compress multile 'AND' operations and ranges into a single node.  
+         * Otherwise a new node is created and pushed to the stack
+         * 
+         * @return
+         */
+        private UnionNode getUnionNode() {
+            QueryNode currentLeaf = nodes.peek();
+
+            if (currentLeaf instanceof UnionNode) {
+                return (UnionNode) currentLeaf;
+            }
+
+            UnionNode newUnion = new UnionNode(contextCount++);
+
+            nodes.push(newUnion);
+
+            return newUnion;
+
+        }
+
+        /**
+         * 
+         * @param str
+         * @param suffix
+         * @return
+         */
+        private String appendSuffix(String str, String suffix) {
+            if (StringUtils.isNotEmpty(str)) {
+                if (!str.endsWith("." + suffix)) {
+                    str += "." + suffix;
+                }
+            } else {
+                str = suffix;
+            }
+            return str;
+        }
+
+    }
+
+    /**
+     * Internal cursor parsing
+     * 
+     * @author tnine
+     * 
+     */
+    public static class CursorCache {
+
+        private Map<Integer, ByteBuffer> cursors = new HashMap<Integer, ByteBuffer>();
+
+        private CursorCache(String cursorString) {
+
+            // nothing to do
+            if (cursorString == null || cursorString.indexOf(':') < 0) {
+                return;
+            }
+
+            String[] cursorTokens = split(cursorString, '|');
+
+            for (String c : cursorTokens) {
+
+                String[] parts = split(c, ':');
+
+                if (parts.length == 2 && isNotBlank(parts[1])) {
+
+                    int hashCode = parseInt(parts[0]);
+
+                    ByteBuffer cursorBytes = ByteBuffer
+                            .wrap(decodeBase64(parts[1]));
+
+                    cursors.put(hashCode, cursorBytes);
+                }
+            }
+
+        }
+
+        /**
+         * Get the cursor by the hashcode of the slice
+         * 
+         * @param sliceHash
+         * @return
+         */
+        public ByteBuffer getCursorBytes(int sliceHash) {
+            return cursors.get(sliceHash);
+        }
+    }
+
+    /**
+     * The sort cache
+     * @author tnine
+     *
+     */
+    public static class SortCache {
+        private Map<String, SortPredicate> sorts = new HashMap<String, SortPredicate>();
+
+        private SortCache(List<SortPredicate> sortPredicates) {
+            for (SortPredicate sort : sortPredicates) {
+                sorts.put(sort.getPropertyName(), sort);
+            }
+        }
+
+        public SortPredicate getSort(String fieldName) {
+            return sorts.get(fieldName);
+        }
+    }
 
 }
