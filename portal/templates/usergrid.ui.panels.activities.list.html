@@ -1,30 +1,20 @@
-<div class="query-result-row entity_list_item">
-	<table class="query-result-table">
-		<tr class="query-result-header">
-			<!--<td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="${id}" value="${entity.uuid}" /></td>-->
-			<td class="query-result-td-header-name">
-                <div class="query-result-header-name query-result-picture-vert-offset">
-                    <table id="activities-list-view">
-                        <tr>
-                            <td class="created">
-                               ${created}:
-                            </td>
-                            <td class="actor" width="300">
-                               <img src="${entity.actor.gravatar}"/>
-			       <a href="" onclick="usergrid.console.pageOpenUserActivities(${entity.actor.uuid}); return false;">
-				 ${entity.actor.displayName} (${entity.actor.email})
-			       </a>
-                            </td>
-                            <td class="verb" width="75">
-                               - ${entity.verb}
-                            </td>
-                            <td class="content">
-                                <em>${entity.content}</em>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-			</td>
-		</tr>
-	</table>
+<div class="query-result-row entity_list_item table">
+  <table class="query-result-table activities-table">
+    <tr class="">
+      <!--<td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="${id}" value="${entity.uuid}" /></td>-->
+        <td class="created">
+          ${created} </br>
+          <strong>${entity.content}</strong>
+        </td>
+        <td class="actor">
+           <img src="${entity.actor.gravatar}"/>
+           <a href="" onclick="usergrid.console.pageOpenUserActivities(${entity.actor.uuid}); return false;">
+              <strong>${entity.actor.displayName} (${entity.actor.email})</strong>
+           </a>
+        </td>
+        <td class="verb">
+           - ${entity.verb}
+        </td>
+    </tr>
+  </table>
 </div>
