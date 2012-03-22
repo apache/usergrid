@@ -16,6 +16,9 @@
 package org.usergrid.persistence.query.ir;
 
 /**
+ * Node where the results need intersected.  Used instead of a SliceNode when one of the children is an operation
+ * other than slices.  I.E OR, NOT etc
+ * 
  * @author tnine
  *
  */

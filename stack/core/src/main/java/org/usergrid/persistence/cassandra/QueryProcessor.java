@@ -34,7 +34,7 @@ import org.usergrid.persistence.query.ir.AndNode;
 import org.usergrid.persistence.query.ir.NotNode;
 import org.usergrid.persistence.query.ir.OrNode;
 import org.usergrid.persistence.query.ir.QueryNode;
-import org.usergrid.persistence.query.ir.UnionNode;
+import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.query.tree.AndOperand;
 import org.usergrid.persistence.query.tree.ContainsOperand;
@@ -72,43 +72,34 @@ public class QueryProcessor {
         process();
     }
 
-
     private void process() {
 
-        //no operand.  Check for sorts
+        // no operand. Check for sorts
         if (rootOperand != null) {
             // visit the tree
-            
-            TreeEvaluator visitor = new TreeEvaluator(cursorCache, sortCache);
-            
+
+            TreeEvaluator visitor = new TreeEvaluator();
+
             rootOperand.visit(visitor);
-            
+
             rootNode = visitor.getRootNode();
-            
+
             return;
         }
-        
-        if(sortCache.sorts.size() > 0){
-            UnionNode union = new UnionNode(0);
-            
-//            TODO create a union with orders union.
+
+        if (sortCache.sorts.size() > 0) {
+            SliceNode union = new SliceNode(0);
+
+            // TODO create a union with orders union.
         }
-        
-      
-      
 
     }
-    
-    public QueryNode getFirstNode(){
+
+    public QueryNode getFirstNode() {
         return rootNode;
     }
 
-    
-
     private class TreeEvaluator implements QueryVisitor {
-
-        private CursorCache cursorCache;
-        private SortCache sortCache;
 
         // stack for nodes that will be used to construct the tree and create
         // objects
@@ -117,24 +108,14 @@ public class QueryProcessor {
         private int contextCount = -1;
 
         /**
-         * Create a tree visitor to evaluate our AST
+         * Get the root node in our tree for runtime evaluation
          * 
-         * @param cursorCache
-         * @param sortCache
+         * @return
          */
-        public TreeEvaluator(CursorCache cursorCache, SortCache sortCache) {
-            this.cursorCache = cursorCache;
-            this.sortCache = sortCache;
-        }
-
-       /**
-        * Get the root node in our tree for runtime evaluation
-        * @return
-        */
-        public QueryNode getRootNode(){
+        public QueryNode getRootNode() {
             return nodes.pop();
         }
-        
+
         /*
          * (non-Javadoc)
          * 
@@ -146,22 +127,23 @@ public class QueryProcessor {
         public void visit(AndOperand op) {
 
             op.getLeft().visit(this);
-            
-            QueryNode leftResult = nodes.peek(); 
-            
+
+            QueryNode leftResult = nodes.peek();
+
             op.getRight().visit(this);
-            
+
             QueryNode rightResult = nodes.peek();
-            
-            //if the result of the left and right are the same, we don't want to create an AND.  We'll use the Union.  Do nothing
-            if(leftResult == rightResult){
+
+            // if the result of the left and right are the same, we don't want
+            // to create an AND. We'll use the Union. Do nothing
+            if (leftResult == rightResult) {
                 return;
             }
-            
-            //otherwise create a new AND node from the result of the visit
-            
+
+            // otherwise create a new AND node from the result of the visit
+
             AndNode newNode = new AndNode(nodes.pop(), nodes.pop());
-            
+
             nodes.push(newNode);
         }
 
@@ -175,12 +157,13 @@ public class QueryProcessor {
         @Override
         public void visit(OrOperand op) {
 
-            op.getLeft().visit(this);;
+            op.getLeft().visit(this);
+
             op.getRight().visit(this);
 
-            //rewrite with the new Or operand
+            // rewrite with the new Or operand
             OrNode orNode = new OrNode(nodes.pop(), nodes.pop());
-            
+
             nodes.push(orNode);
 
         }
@@ -198,7 +181,7 @@ public class QueryProcessor {
             // create a new context since any child of NOT will need to be
             // evaluated independently
             op.getOperation().visit(this);
-            
+
             NotNode not = new NotNode(nodes.pop());
             nodes.push(not);
         }
@@ -217,7 +200,7 @@ public class QueryProcessor {
 
             StringLiteral value = (StringLiteral) op.getString();
 
-            UnionNode node = getUnionNode();
+            SliceNode node = getUnionNode();
 
             node.setStart(fieldName, value, true);
             node.setFinish(fieldName, value, true);
@@ -238,8 +221,10 @@ public class QueryProcessor {
             String propertyName = appendSuffix(op.getProperty().getValue(),
                     "coordinates");
 
-            nodes.push(new WithinNode(propertyName, op.getDistance().getValue(), op.getLattitude().getValue(), op.getLongitude().getValue()));
-           
+            nodes.push(new WithinNode(propertyName,
+                    op.getDistance().getValue(), op.getLattitude().getValue(),
+                    op.getLongitude().getValue()));
+
         }
 
         /*
@@ -279,7 +264,7 @@ public class QueryProcessor {
         public void visit(Equal op) {
             String fieldName = op.getProperty().getValue();
             Literal<?> literal = op.getLiteral();
-            UnionNode node = getUnionNode();
+            SliceNode node = getUnionNode();
 
             // this is an edge case. If we get more edge cases, we need to push
             // this down into the literals and let the objects
@@ -293,6 +278,8 @@ public class QueryProcessor {
                 if (endValue != null) {
                     node.setFinish(fieldName, endValue, false);
                 }
+            } else {
+                node.setFinish(fieldName, literal.getValue(), true);
             }
 
             node.setStart(fieldName, literal.getValue(), true);
@@ -326,23 +313,23 @@ public class QueryProcessor {
         }
 
         /**
-         * Return the current leaf node to add to if it exists. This means that we can compress multile 'AND' operations and ranges into a single node.  
-         * Otherwise a new node is created and pushed to the stack
+         * Return the current leaf node to add to if it exists. This means that
+         * we can compress multile 'AND' operations and ranges into a single
+         * node. Otherwise a new node is created and pushed to the stack
          * 
          * @return
          */
-        private UnionNode getUnionNode() {
-            QueryNode currentLeaf = nodes.peek();
+        private SliceNode getUnionNode() {
 
-            if (currentLeaf instanceof UnionNode) {
-                return (UnionNode) currentLeaf;
+            if (nodes.size() == 0 || !(nodes.peek() instanceof SliceNode)) {
+                SliceNode newUnion = new SliceNode(contextCount++);
+
+                nodes.push(newUnion);
+
+                return newUnion;
             }
 
-            UnionNode newUnion = new UnionNode(contextCount++);
-
-            nodes.push(newUnion);
-
-            return newUnion;
+            return (SliceNode) nodes.peek();
 
         }
 
@@ -414,8 +401,9 @@ public class QueryProcessor {
 
     /**
      * The sort cache
+     * 
      * @author tnine
-     *
+     * 
      */
     public static class SortCache {
         private Map<String, SortPredicate> sorts = new HashMap<String, SortPredicate>();

@@ -33,7 +33,7 @@ import org.usergrid.persistence.query.ir.QuerySlice.RangeValue;
  * @author tnine
  * 
  */
-public class UnionNode extends QueryNode {
+public class SliceNode extends QueryNode {
 
     /**
      * A context within a tree to allow for operand and range scan
@@ -64,7 +64,7 @@ public class UnionNode extends QueryNode {
      * 
      * @param id
      */
-    public UnionNode(int id) {
+    public SliceNode(int id) {
         this.id = id;
     }
 
@@ -160,6 +160,7 @@ public class UnionNode extends QueryNode {
     public Collection<QuerySlice> getAllSlices() {
         return this.pairs.values();
     }
-
+    
+ 
     
 }
