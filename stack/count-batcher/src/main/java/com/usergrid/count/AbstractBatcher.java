@@ -41,8 +41,8 @@ public abstract class AbstractBatcher implements Batcher {
     protected BatchSubmitter batchSubmitter;
 
     private int queueSize;
+    private Batch batch;
 
-    private ArrayBlockingQueue<Batch> queue;
     private final AtomicLong opCount = new AtomicLong();
     private final Timer addTimer =
             Metrics.newTimer(AbstractBatcher.class, "add_invocation", TimeUnit.MICROSECONDS, TimeUnit.SECONDS);
@@ -52,11 +52,7 @@ public abstract class AbstractBatcher implements Batcher {
             Metrics.newCounter(AbstractBatcher.class,"counter_existed");
 
     public AbstractBatcher(int queueSize) {
-        this.queueSize = queueSize;
-        queue = new ArrayBlockingQueue<Batch>(queueSize, true);
-        while ( queue.size() < queueSize ) {
-            queue.add(new Batch());
-        }
+      batch = new Batch();
     }
 
     public void setBatchSubmitter(BatchSubmitter batchSubmitter) {
@@ -80,30 +76,17 @@ public abstract class AbstractBatcher implements Batcher {
      * @throws CounterProcessingUnavailableException
      */
     public void add(Count count) throws CounterProcessingUnavailableException {
-        invocationCounter.inc();
-        final TimerContext context = addTimer.time();
-        Batch batch = null;
-        try {
-            batch = queue.poll(100L, TimeUnit.MILLISECONDS);
-            batch.add(count);
+      invocationCounter.inc();
+      final TimerContext context = addTimer.time();
 
-            boolean wasSubmitted = maybeSubmit(batch);
-            if ( wasSubmitted ) {
-                queue.offer(new Batch());
-            } else {
-                queue.offer(batch);
-            }
-        } catch (InterruptedException ie) {
-            ie.printStackTrace();
-        } finally {
-            context.stop();
-            if ( batch == null ) {
-                throw new CounterProcessingUnavailableException("Timed out polling for available batch");
-            }
+      batch.add(count);
+      synchronized(batch) {
+        boolean wasSubmitted = maybeSubmit(batch);
+        if ( wasSubmitted ) {
+          batch.clear();
         }
-
-
-
+      }
+      context.stop();
     }
 
     class Batch {
@@ -112,6 +95,11 @@ public abstract class AbstractBatcher implements Batcher {
 
         Batch() {
             counts = new HashMap<String, Count>();
+        }
+
+        void clear() {
+          counts.clear();
+          localCallCounter.set(0);
         }
 
         void add(Count count) {

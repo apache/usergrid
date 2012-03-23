@@ -17,10 +17,12 @@ package org.usergrid.rest;
 
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -34,8 +36,16 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.*;
+import com.yammer.metrics.core.Timer;
+import com.yammer.metrics.reporting.CsvReporter;
+import com.yammer.metrics.stats.Snapshot;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authz.UnauthorizedException;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
@@ -57,7 +67,17 @@ import com.sun.jersey.api.json.JSONWithPadding;
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })
-public class RootResource extends AbstractContextResource {
+public class RootResource extends AbstractContextResource implements MetricProcessor<RootResource.MetricContext> {
+
+  static final class MetricContext {
+    final boolean showFullSamples;
+    final ObjectNode objectNode;
+
+    MetricContext(ObjectNode objectNode, boolean showFullSamples) {
+        this.objectNode = objectNode;
+        this.showFullSamples = showFullSamples;
+    }
+  }
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(RootResource.class);
@@ -123,9 +143,40 @@ public class RootResource extends AbstractContextResource {
 		ObjectNode node = JsonNodeFactory.instance.objectNode();
 		node.put("started", started);
 		node.put("uptime", System.currentTimeMillis() - started);
+    dumpMetrics(node);
 		response.setProperty("status", node);
 		return new JSONWithPadding(response, callback);
 	}
+
+  private void dumpMetrics(ObjectNode node) {
+    MetricsRegistry registry = Metrics.defaultRegistry();
+
+    for (Map.Entry<String, SortedMap<MetricName, Metric>> entry : registry.groupedMetrics().entrySet()) {
+
+      ObjectNode meterNode = JsonNodeFactory.instance.objectNode();
+
+        for (Map.Entry<MetricName, Metric> subEntry : entry.getValue().entrySet()) {
+          ObjectNode metricNode = JsonNodeFactory.instance.objectNode();
+
+          try {
+            subEntry.getValue()
+                    .processWith(this,
+                            subEntry.getKey(),
+                            new MetricContext(metricNode, true));
+          } catch (Exception e) {
+            logger.warn("Error writing out {}", subEntry.getKey(), e);
+          }
+          meterNode.put(subEntry.getKey().getName(), metricNode);
+
+        }
+      node.put(entry.getKey(),meterNode);
+
+
+    }
+
+
+  }
+
 
 	@Path("{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
 	public ApplicationResource getApplicationById(
@@ -194,5 +245,111 @@ public class RootResource extends AbstractContextResource {
 			throws Exception {
 		return getApplicationByName(applicationName);
 	}
+
+  @Override
+  public void processHistogram(MetricName name, Histogram histogram, MetricContext context) throws Exception {
+    final ObjectNode node = context.objectNode;
+    node.put("type", "histogram");
+    node.put("count", histogram.count());
+    writeSummarizable(histogram, node);
+    writeSampling(histogram, node);
+    /*
+    if (context.showFullSamples) {
+        node.put("values", histogram.getSnapshot().getValues());
+    }
+    */
+
+
+  }
+
+  @Override
+  public void processCounter(MetricName name, Counter counter, MetricContext context) throws Exception {
+    final ObjectNode node = context.objectNode;
+    node.put("type", "counter");
+    node.put("count", counter.count());
+
+  }
+
+  @Override
+  public void processGauge(MetricName name, Gauge<?> gauge, MetricContext context) throws Exception {
+    final ObjectNode node = context.objectNode;
+
+
+    node.put("type", "gauge");
+    //node.put("value", evaluateGauge(gauge));
+    node.put("vale","[disabled]");
+  }
+
+  @Override
+  public void processMeter(MetricName name, Metered meter, MetricContext context) throws Exception {
+    final ObjectNode node = context.objectNode;
+
+    node.put("type", "meter");
+    node.put("event_type", meter.eventType());
+    writeMeteredFields(meter, node);
+
+
+  }
+
+  @Override
+  public void processTimer(MetricName name, Timer timer, MetricContext context) throws Exception {
+    final ObjectNode node = context.objectNode;
+
+
+    node.put("type", "timer");
+    //json.writeFieldName("duration");
+    node.put("unit", timer.durationUnit().toString().toLowerCase());
+    ObjectNode durationNode = JsonNodeFactory.instance.objectNode();
+    writeSummarizable(timer, durationNode);
+    writeSampling(timer, durationNode);
+    node.put("duration",durationNode);
+    /*
+                  if (context.showFullSamples) {
+                      json.writeObjectField("values", timer.getSnapshot().getValues());
+                  }
+*/
+
+
+                  writeMeteredFields(timer, node);
+
+      }
+
+      private static Object evaluateGauge(Gauge<?> gauge) {
+          try {
+              return gauge.value();
+          } catch (RuntimeException e) {
+              logger.warn("Error evaluating gauge", e);
+              return "error reading gauge: " + e.getMessage();
+          }
+      }
+
+      private static void writeSummarizable(Summarizable metric, ObjectNode mNode) throws IOException {
+          mNode.put("min", metric.min());
+          mNode.put("max", metric.max());
+          mNode.put("mean", metric.mean());
+          mNode.put("std_dev", metric.stdDev());
+      }
+
+      private static void writeSampling(Sampling metric, ObjectNode mNode) throws IOException {
+
+          final Snapshot snapshot = metric.getSnapshot();
+          mNode.put("median", snapshot.getMedian());
+          mNode.put("p75", snapshot.get75thPercentile());
+          mNode.put("p95", snapshot.get95thPercentile());
+          mNode.put("p98", snapshot.get98thPercentile());
+          mNode.put("p99", snapshot.get99thPercentile());
+          mNode.put("p999", snapshot.get999thPercentile());
+      }
+
+  private static void writeMeteredFields(Metered metered, ObjectNode node) throws IOException {
+    ObjectNode mNode = JsonNodeFactory.instance.objectNode();
+    mNode.put("unit", metered.rateUnit().toString().toLowerCase());
+    mNode.put("count", metered.count());
+    mNode.put("mean", metered.meanRate());
+    mNode.put("m1", metered.oneMinuteRate());
+    mNode.put("m5", metered.fiveMinuteRate());
+    mNode.put("m15", metered.fifteenMinuteRate());
+    node.put("rate",mNode);
+  }
 
 }

@@ -380,7 +380,12 @@
 			<groupId>org.apache.amber</groupId>
 			<artifactId>oauth2-resourceserver</artifactId>
 		</dependency>
-		<dependency>
+        <dependency>
+            <groupId>com.yammer.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+        <dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
