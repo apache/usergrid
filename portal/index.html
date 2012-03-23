@@ -69,6 +69,7 @@
         <div id="api-activity" class="alert">Loading...</div>
     </div>
     <div id="pages">
+
         <div id="login-page" class="container-fluid">
             <div class="row">
                 <div id="login-area" class="span6 offset1">
@@ -204,6 +205,7 @@
                         <li><a href="http://apigee.com/docs/usergrid" target="_blank"><i class="icon-question-sign"></i> Help</a></li>
                     </ul>
                 </div>
+
                 <div id="console-panels" class="container-fluid">
                     <div id="organization-panel" style="display: none">
                         <div id="console-panel-nav-bar"></div>
@@ -316,7 +318,107 @@
                             </div>
                         </div>
                     </div>
+        <div id="account-panel" class="container-fluid hide">
+            <div class="span offset1">
+                <h2>Account Settings </h2>
+                <div id="account-panels">
+                    <div class="panel-content">
+                        <div class="console-section">
+                            <h3><span class="title"> Personal Account </span> </h3>
+                            <div class="console-section-contents">
+                                <form name="update-account-form" id="update-account-form" class="form-horizontal">
+                                    <fieldset>
+                                        <div class="control-group">
+                                            <label id="update-account-id-label" class="control-label" for="update-account-id">UUID</label>
+                                            <div class="controls">
+                                                <input type="text" name="update-account-username" id="update-account-id" class="span4 uneditable-input" value="loading..." size="20"/>
+                                            </div>
+                                        </div>
+                                        <div class="control-group">
+                                            <label class="control-label" for="update-account-username">Username </label>
+                                            <div class="controls">
+                                                <input type="text" name="update-account-username" id="update-account-username" class="span4" value="" size="20"/>
+                                            </div>
+                                        </div>
+                                        <div class="control-group">
+                                            <label class="control-label" for="update-account-name">Name </label>
+                                            <div class="controls">
+                                                <input type="text" name="update-account-name" id="update-account-name" class="span4" value="" size="20"/>
+                                            </div>
+                                        </div>
+                                        <div class="control-group">
+                                            <label class="control-label" for="update-account-email"> Email</label>
+                                            <div class="controls">
+                                                <input type="text" name="update-account-email" id="update-account-email" class="span4" value="" size="20"/>
+                                            </div>
+                                        </div>
+                                        <div class="control-group">
+                                            <label class="control-label" for="old-account-password">Old Password</label>
+                                            <div class="controls">
+                                                <input type="password" name="old-account-password" id="old-account-password" class="span4" value="" size="20"/>
+                                                <span class="help-block">Leave blank to keep current password unchanged</span>
+                                            </div>
+                                        </div>
+                                        <div class="control-group">
+                                            <label class="control-label" for="update-account-password">New Password</label>
+                                            <div class="controls">
+                                                <input type="password" name="update-account-password" id="update-account-password" class="span4" value="" size="20"/>
+                                                <span class="help-block">Leave blank to keep current password unchanged</span>
+                                            </div>
+                                        </div>
+                                        <div class="control-group">
+                                            <label class="control-label" for="update-account-password-repeat">Confirm New Password</label>
+                                            <div class="controls">
+                                                <input type="password" name="update-account-password-repeat" id="update-account-password-repeat" class="span4" value="" size="20"/>
+                                                <span class="help-block">Leave blank to keep current password unchanged</span>
+                                            </div>
+                                        </div>
+                                    </fieldset>
+                                    <div class="form-actions">
+                                        <input type="button" name="button-update-account" id="button-update-account" value="Update" class="btn btn-usergrid span"/>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="console-section">
+                        <h3><span class="title"> Organizations </span>
+                            <div class="bar">
+                                <a class="" data-toggle="modal" href="#dialog-form-new-organization"></i> Add </a>
+                            </div>
+                        </h3>
+                        <div class="console-section-contents" id="organizations">
+                        </div>
+                    </div>
+                </div>
+                <form id="dialog-form-new-organization" class="modal hide fade">
+                    <div class="modal-header">
+                        <a class="close" data-dismiss="modal">x</a>
+                        <h4>Create new organization</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p class="validateTips">All form fields are required.</p>
+                        <fieldset>
+                            <div class="control-group">
+                                <label for="new-organization-name">Name</label>
+                                <div class="controls">
+                                    <input type="text" name="organization" id="new-organization-name" class="input-xlarge"/>
+                                    <p class="help-block hide"></p>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="submit" class="btn btn-usergrid" value="Create"/>
+                        <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
+                    </div>
+                </form>
+            </div>
+        </div>
                     <div id="users-panel" style="display: none">
+
                         <ul id="users-panel-tab-bar" class="nav nav-tabs">
                             <li class="active"><a id="button-users-list" href="#">List</a></li>
                         </ul>
@@ -925,105 +1027,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div id="account-page" class="container-fluid">
-            <div class="span offset1">
-                <h2>Account Settings </h2>
-                <div id="account-panels">
-                    <div class="panel-content">
-                        <div class="console-section">
-                            <h3><span class="title"> Personal Account </span> </h3>
-                            <div class="console-section-contents">
-                                <form name="update-account-form" id="update-account-form" class="form-horizontal">
-                                    <fieldset>
-                                        <div class="control-group">
-                                            <label id="update-account-id-label" class="control-label" for="update-account-id">UUID</label>
-                                            <div class="controls">
-                                                <input type="text" name="update-account-username" id="update-account-id" class="span4 uneditable-input" value="loading..." size="20"/>
-                                            </div>
-                                        </div>
-                                        <div class="control-group">
-                                            <label class="control-label" for="update-account-username">Username </label>
-                                            <div class="controls">
-                                                <input type="text" name="update-account-username" id="update-account-username" class="span4" value="" size="20"/>
-                                            </div>
-                                        </div>
-                                        <div class="control-group">
-                                            <label class="control-label" for="update-account-name">Name </label>
-                                            <div class="controls">
-                                                <input type="text" name="update-account-name" id="update-account-name" class="span4" value="" size="20"/>
-                                            </div>
-                                        </div>
-                                        <div class="control-group">
-                                            <label class="control-label" for="update-account-email"> Email</label>
-                                            <div class="controls">
-                                                <input type="text" name="update-account-email" id="update-account-email" class="span4" value="" size="20"/>
-                                            </div>
-                                        </div>
-                                        <div class="control-group">
-                                            <label class="control-label" for="old-account-password">Old Password</label>
-                                            <div class="controls">
-                                                <input type="password" name="old-account-password" id="old-account-password" class="span4" value="" size="20"/>
-                                                <span class="help-block">Leave blank to keep current password unchanged</span>
-                                            </div>
-                                        </div>
-                                        <div class="control-group">
-                                            <label class="control-label" for="update-account-password">New Password</label>
-                                            <div class="controls">
-                                                <input type="password" name="update-account-password" id="update-account-password" class="span4" value="" size="20"/>
-                                                <span class="help-block">Leave blank to keep current password unchanged</span>
-                                            </div>
-                                        </div>
-                                        <div class="control-group">
-                                            <label class="control-label" for="update-account-password-repeat">Confirm New Password</label>
-                                            <div class="controls">
-                                                <input type="password" name="update-account-password-repeat" id="update-account-password-repeat" class="span4" value="" size="20"/>
-                                                <span class="help-block">Leave blank to keep current password unchanged</span>
-                                            </div>
-                                        </div>
-                                    </fieldset>
-                                    <div class="form-actions">
-                                        <input type="button" name="button-update-account" id="button-update-account" value="Update" class="btn btn-usergrid span"/>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="panel-content">
-                    <div class="console-section">
-                        <h3><span class="title"> Organizations </span>
-                            <div class="bar">
-                                <a class="" data-toggle="modal" href="#dialog-form-new-organization"></i> Add </a>
-                            </div>
-                        </h3>
-                        <div class="console-section-contents" id="organizations">
-                        </div>
-                    </div>
-                </div>
-                <form id="dialog-form-new-organization" class="modal hide fade">
-                    <div class="modal-header">
-                        <a class="close" data-dismiss="modal">x</a>
-                        <h4>Create new organization</h4>
-                    </div>
-                    <div class="modal-body">
-                        <p class="validateTips">All form fields are required.</p>
-                        <fieldset>
-                            <div class="control-group">
-                                <label for="new-organization-name">Name</label>
-                                <div class="controls">
-                                    <input type="text" name="organization" id="new-organization-name" class="input-xlarge"/>
-                                    <p class="help-block hide"></p>
-                                </div>
-                            </div>
-                        </fieldset>
-                    </div>
-                    <div class="modal-footer">
-                        <input type="submit" class="btn btn-usergrid" value="Create"/>
-                        <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
-                    </div>
-                </form>
             </div>
         </div>
         <div class="clear"></div>

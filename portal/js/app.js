@@ -12,7 +12,7 @@ $(document).ready(function () {
 		usergrid_console_app();
 		InitMenu();
         StatusBar.Init('#statusbar-placeholder');
-		usergrid.console.loginOk();
+		    usergrid.console.loginOk();
         makePanelCollapsable();
 	}
 
@@ -70,13 +70,13 @@ $(document).ready(function () {
         Pages.AddPage({name:'post-signup', menu:publicMenu});
 
         Pages.AddPage({name:'console', menu:privateMenu, initFunction:InitConsole, showFunction:usergrid.console.pageSelectHome});
-        Pages.AddPage({name:'account', menu:privateMenu, showFunction:usergrid.console.requestAccountSettings});
+   
 	}
 
 	function InitConsole() {
 		//Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
 		Pages.AddPanel('organization', null, null, null, null);
-        Pages.AddPanel('console', null, null, initConsoleFrame,null );
+    Pages.AddPanel('console', null, null, initConsoleFrame,null );
 		Pages.AddPanel('application', null, null, null, usergrid.console.pageSelectApplication);
 		Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
 		Pages.AddPanel('users', null, null, null, usergrid.console.pageSelectUsers);
@@ -88,7 +88,8 @@ $(document).ready(function () {
 		Pages.AddPanel('analytics', null, null, null, usergrid.console.pageSelectAnalytics);
 		Pages.AddPanel('settings', null, null, null, usergrid.console.pageSelectSettings);
 		Pages.AddPanel('shell', null, null, null, usergrid.console.pageSelectShell);
-
+    console.log(usergrid.console.requestAccountSettings);
+    Pages.AddPanel('account', "#account-link", null, null, null, usergrid.console.requestAccountSettings);
 		//$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
 	}
 
