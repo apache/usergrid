@@ -65,8 +65,9 @@ $(document).ready(function () {
 		Pages.AddPage({name:'login', menu:publicMenu});
 		Pages.ShowPage('login');
 
-		Pages.AddPage({name:'signup', menu:publicMenu});
-		Pages.AddPage({name:'forgot-password', menu:publicMenu});
+        Pages.AddPage({name:'signup', menu:publicMenu});		
+        Pages.AddPage({name:'forgot-password', menu:publicMenu});
+        Pages.AddPage({name:'post-signup', menu:publicMenu});
 
         Pages.AddPage({name:'console', menu:privateMenu, initFunction:InitConsole, showFunction:usergrid.console.pageSelectHome});
         Pages.AddPage({name:'account', menu:privateMenu, showFunction:usergrid.console.requestAccountSettings});

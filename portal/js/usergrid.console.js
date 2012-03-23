@@ -3094,7 +3094,7 @@ function usergrid_console_app() {
         function(response) {
             clearSignupError();
             clearSignupForm();
-            Pages.ShowPage("login");
+            Pages.ShowPage('post-signup');
         },
         function(response) {
             displaySignupError(client.getLastErrorMessage("Unable to create new organization at this time"));
@@ -3418,6 +3418,12 @@ function usergrid_console_app() {
         requestApplicationCounters();
         return false;
     });
+    
+    $('#link-signup-login').click(function() {
+        Pages.ShowPage('login');        
+        return false;
+    });
+    
 
     //$("#console-panel-nav-bar").usergrid_console_navbar({crumbs : [{title : "Hello"}, {title : "Goodbye"}], tabs : [{title : "Hello"}, {title : "Goodbye"}]});
 
