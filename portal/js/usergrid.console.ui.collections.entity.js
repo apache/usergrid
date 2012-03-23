@@ -121,8 +121,13 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 				
 		getContents : function() {
 			var entity_contents = $.extend( false, { }, this.options.entity);
-            var path = entity_contents['metadata']['path'];
-            entity_contents = $.extend( false, entity_contents, {'path': path});
+			var path = entity_contents['metadata']['path'];
+			entity_contents = $.extend( false, entity_contents, {'path': path});
+			var sets = entity_contents['metadata']['sets'];
+			entity_contents = $.extend( false, entity_contents, {'sets': sets});
+			var collections = entity_contents['metadata']['collections'];
+			entity_contents = $.extend( false, entity_contents, {'collections': collections});
+
 			delete entity_contents['metadata'];
 			return $.tmpl("usergrid.ui.collections.entity.contents.html", {
 				entity : entity_contents
