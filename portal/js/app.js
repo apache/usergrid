@@ -88,8 +88,7 @@ $(document).ready(function () {
 		Pages.AddPanel('analytics', null, null, null, usergrid.console.pageSelectAnalytics);
 		Pages.AddPanel('settings', null, null, null, usergrid.console.pageSelectSettings);
 		Pages.AddPanel('shell', null, null, null, usergrid.console.pageSelectShell);
-    console.log(usergrid.console.requestAccountSettings);
-    Pages.AddPanel('account', "#account-link", null, null, null, usergrid.console.requestAccountSettings);
+    Pages.AddPanel('account', "#account-link", null, null, usergrid.console.requestAccountSettings);
 		//$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
 	}
 
