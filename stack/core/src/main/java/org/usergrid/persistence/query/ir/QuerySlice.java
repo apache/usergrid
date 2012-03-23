@@ -27,24 +27,24 @@ import org.usergrid.utils.NumberUtils;
  */
 public class QuerySlice {
 
-    String propertyName;
+    private String propertyName;
     // Object value;
-    RangeValue start;
-    RangeValue finish;
-    ByteBuffer cursor;
-    boolean reversed;
+    private RangeValue start;
+    private RangeValue finish;
+    private ByteBuffer cursor;
+    private boolean reversed;
     private int nodeId;
 
-    public QuerySlice(String propertyName, Object value, RangeValue start,
-            RangeValue finish, ByteBuffer cursor, boolean reversed, int nodeId) {
-        this.propertyName = propertyName;
-        // this.value = value;
-        this.start = start;
-        this.finish = finish;
-        this.cursor = cursor;
-        this.reversed = reversed;
-        this.nodeId = nodeId;
-    }
+//    public QuerySlice(String propertyName, Object value, RangeValue start,
+//            RangeValue finish, ByteBuffer cursor, boolean reversed, int nodeId) {
+//        this.propertyName = propertyName;
+//        // this.value = value;
+//        this.start = start;
+//        this.finish = finish;
+//        this.cursor = cursor;
+//        this.reversed = reversed;
+//        this.nodeId = nodeId;
+//    }
 
     /**
      * @param propertyName
@@ -53,7 +53,7 @@ public class QuerySlice {
      * @param cursor
      * @param reversed
      */
-    public QuerySlice(String propertyName, int nodeId) {
+    public QuerySlice(String propertyName, int nodeId ) {
         this.propertyName = propertyName;
         this.nodeId = nodeId;
     }
@@ -104,6 +104,15 @@ public class QuerySlice {
 
     public void setReversed(boolean reversed) {
         this.reversed = reversed;
+    }
+
+    /**
+     * True if this slice represents an equals operation
+     * @return the equals
+     */
+    public boolean isEquals() {
+        //either both are null
+        return (start == null && finish == null) || (start != null && finish != null && start.equals(finish));
     }
 
     @Override
@@ -193,6 +202,8 @@ public class QuerySlice {
             this.inclusive = inclusive;
         }
 
+  
+        
         @Override
         public int hashCode() {
             final int prime = 31;
@@ -268,69 +279,5 @@ public class QuerySlice {
         }
     }
 
-    // public static class RangePair {
-    // RangeValue start;
-    // RangeValue finish;
-    //
-    // public RangePair(RangeValue start, RangeValue finish) {
-    // this.start = start;
-    // this.finish = finish;
-    // }
-    //
-    // public RangeValue getStart() {
-    // return start;
-    // }
-    //
-    // public void setStart(RangeValue start) {
-    // this.start = start;
-    // }
-    //
-    // public RangeValue getFinish() {
-    // return finish;
-    // }
-    //
-    // public void setFinish(RangeValue finish) {
-    // this.finish = finish;
-    // }
-    //
-    // @Override
-    // public int hashCode() {
-    // final int prime = 31;
-    // int result = 1;
-    // result = prime * result
-    // + ((finish == null) ? 0 : finish.hashCode());
-    // result = prime * result + ((start == null) ? 0 : start.hashCode());
-    // return result;
-    // }
-    //
-    // @Override
-    // public boolean equals(Object obj) {
-    // if (this == obj) {
-    // return true;
-    // }
-    // if (obj == null) {
-    // return false;
-    // }
-    // if (getClass() != obj.getClass()) {
-    // return false;
-    // }
-    // RangePair other = (RangePair) obj;
-    // if (finish == null) {
-    // if (other.finish != null) {
-    // return false;
-    // }
-    // } else if (!finish.equals(other.finish)) {
-    // return false;
-    // }
-    // if (start == null) {
-    // if (other.start != null) {
-    // return false;
-    // }
-    // } else if (!start.equals(other.start)) {
-    // return false;
-    // }
-    // return true;
-    // }
-    // }
 
 }

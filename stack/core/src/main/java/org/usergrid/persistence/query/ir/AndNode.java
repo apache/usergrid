@@ -36,7 +36,7 @@ public class AndNode extends BooleanNode {
      * @see org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence.query.ir.NodeVisitor)
      */
     @Override
-    public void visit(NodeVisitor visitor) {
+    public void visit(NodeVisitor visitor) throws Exception {
         visitor.visit(this);
     }
 

@@ -138,7 +138,7 @@ public class SliceNode extends QueryNode {
      * @param fieldName
      * @return
      */
-    private QuerySlice getSlice(String fieldName) {
+    public QuerySlice getSlice(String fieldName) {
         QuerySlice pair = this.pairs.get(fieldName);
 
         if (pair == null) {
@@ -150,6 +150,18 @@ public class SliceNode extends QueryNode {
 
     }
 
+ 
+    /**
+     * Remove this slice by name.
+     * Useful when using subkeys
+     * 
+     * @param fieldName
+     */
+    public void removeSlice(String fieldName){
+        this.pairs.remove(fieldName);
+    }
+    
+    
     /**
      * Get all slices in our context
      * 
@@ -163,7 +175,7 @@ public class SliceNode extends QueryNode {
      * @see org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence.query.ir.NodeVisitor)
      */
     @Override
-    public void visit(NodeVisitor visitor) {
+    public void visit(NodeVisitor visitor) throws Exception {
         visitor.visit(this);
     }
     

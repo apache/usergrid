@@ -529,10 +529,18 @@ public class EntityManagerImpl implements EntityManager,
 		String propertyPath = "/" + defaultCollectionName(entityType) + "/@"
 				+ propertyName;
 		cass.getLockManager().lock(applicationId, propertyPath);
+		
+		 
+        Query query = new Query();
+        query.setEntityType(entityType);
+        query.addEqualityFilter(propertyName, propertyValue);
+        query.setLimit(1000);
+        query.setResultsLevel(IDS);
+       
+        
 
 		Results r = getRelationManager(ref(applicationId)).searchCollection(
-				pluralize(entityType), entityType, null, null, propertyName,
-				propertyValue, null, null, null, 1000, false, IDS);
+				pluralize(entityType), query);
 
 		cass.getLockManager().unlock(applicationId, propertyPath);
 
@@ -1661,10 +1669,15 @@ public class EntityManagerImpl implements EntityManager,
 			return this.getAlias(null, "user", identifier.getName());
 		}
 		if (identifier.isEmail()) {
+		    
+		    Query query = new Query();
+		    query.setEntityType("user");
+		    query.addEqualityFilter("email", identifier.getEmail());
+		    query.setLimit(1);
+		    query.setResultsLevel(REFS);
+		    
 			Results r = getRelationManager(ref(applicationId))
-					.searchCollection("users", "user", null, null, "email",
-							identifier.getEmail(), null, null, null, 1, false,
-							REFS);
+					.searchCollection("users", query);
 			if (r != null) {
 				return r.getRef();
 			}

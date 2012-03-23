@@ -15,9 +15,6 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir;
 
-import java.util.Stack;
-
-import org.usergrid.persistence.Results;
 
 /**
  * @author tnine
@@ -28,30 +25,35 @@ public interface NodeVisitor {
      /**
      * 
      * @param node
+     * @throws Exception 
      */
-    public void visit(AndNode node);
+    public void visit(AndNode node) throws Exception;
     
     /**
      * 
      * @param node
+     * @throws Exception 
      */
-    public void visit(NotNode node);
+    public void visit(NotNode node) throws Exception;
     
     /**
      * 
      * @param node
+     * @throws Exception 
      */
-    public void visit(OrNode node);
+    public void visit(OrNode node) throws Exception;
     
     /**
      * 
      * @param node
+     * @throws Exception 
      */
-    public void visit(SliceNode node);
+    public void visit(SliceNode node) throws Exception;
     
     /**
      * 
      * @param node
+     * @throws Exception 
      */
-    public void visit(WithinNode node);
+    public void visit(WithinNode node) throws Exception;
 }

@@ -21,19 +21,25 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.split;
 
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.commons.collections.comparators.ComparatorChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.Entity;
+import org.usergrid.persistence.EntityPropertyComparator;
 import org.usergrid.persistence.Query;
+import org.usergrid.persistence.Query.SortDirection;
 import org.usergrid.persistence.Query.SortPredicate;
 import org.usergrid.persistence.query.ir.AndNode;
 import org.usergrid.persistence.query.ir.NotNode;
 import org.usergrid.persistence.query.ir.OrNode;
 import org.usergrid.persistence.query.ir.QueryNode;
+import org.usergrid.persistence.query.ir.QuerySlice;
 import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.query.tree.AndOperand;
@@ -58,15 +64,12 @@ public class QueryProcessor {
     private static final Logger logger = LoggerFactory
             .getLogger(QueryProcessor.class);
 
-    private Query query;
-
     private Operand rootOperand;
     private SortCache sortCache;
     private CursorCache cursorCache;
     private QueryNode rootNode;
 
     public QueryProcessor(Query query) {
-        this.query = query;
         sortCache = new SortCache(query.getSortPredicates());
         cursorCache = new CursorCache(query.getCursor());
         rootOperand = query.getRootOperand();
@@ -88,16 +91,72 @@ public class QueryProcessor {
             return;
         }
 
-        if (sortCache.sorts.size() > 0) {
-            SliceNode union = new SliceNode(0);
-
-            // TODO create a union with orders union.
-        }
-
     }
 
     public QueryNode getFirstNode() {
         return rootNode;
+    }
+    
+    /**
+     * Perform an in memory sort of the entities
+     * @param entities
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public List<Entity> sort(List<Entity> entities) {
+
+        if ((entities != null) && (sortCache.sorts.size() > 0)) {
+            // Performing in memory sort
+            logger.info("Performing in-memory sort of " + entities.size() + " entities");
+            ComparatorChain chain = new ComparatorChain();
+            for (SortPredicate sort : sortCache.sorts.values()) {
+                chain.addComparator(
+                        new EntityPropertyComparator(sort.getPropertyName()),
+                        sort.getDirection() == SortDirection.DESCENDING);
+            }
+            Collections.sort(entities, chain);
+        }
+        return entities;
+    }
+    
+    /**
+     * Apply cursor position and sort order to this slice.  This should only be invoke at evaluation time to ensure that the IR tree has already
+     * been fully constructed
+     * @param slice
+     */
+    public void applyCursorAndSort(QuerySlice slice){
+        
+        //apply the cursor
+        ByteBuffer cursor = cursorCache.getCursorBytes(slice.hashCode());
+        
+        if(cursor != null){
+            slice.setCursor(cursor);
+        }
+        
+        SortPredicate sort =  sortCache.getSort(slice.getPropertyName());
+        
+        if(sort != null){
+            slice.setReversed(sort.getDirection() == SortDirection.DESCENDING);
+        }
+        
+    }
+    
+    /**
+     * Update the cursor for the slice with the new value
+     * @param slice
+     */
+    public void updateCursor(QuerySlice slice, ByteBuffer value){
+        
+        cursorCache.setNextCursor(slice.hashCode(), value);
+        
+    }
+    
+    /**
+     * Get the cursor as a string.  This should only be invoked when 
+     * @return
+     */
+    public String getCursor(){
+        return cursorCache.asString();
     }
 
     private class TreeEvaluator implements QueryVisitor {
@@ -136,7 +195,7 @@ public class QueryProcessor {
             QueryNode rightResult = nodes.peek();
 
             // if the result of the left and right are the same, we don't want
-            // to create an AND. We'll use the Union. Do nothing
+            // to create an AND. We'll use the same SliceNode. Do nothing
             if (leftResult == rightResult) {
                 return;
             }
@@ -173,6 +232,8 @@ public class QueryProcessor {
 
             left.visit(this);
 
+            // we only create a new slice node if our children are && and ||
+            // operations
             createNewSlice(right);
 
             right.visit(this);
@@ -406,6 +467,8 @@ public class QueryProcessor {
         }
 
     }
+    
+   
 
     /**
      * Internal cursor parsing
@@ -417,6 +480,10 @@ public class QueryProcessor {
 
         private Map<Integer, ByteBuffer> cursors = new HashMap<Integer, ByteBuffer>();
 
+        /**
+         * Create a new cursor cache from the string if passed
+         * @param cursorString
+         */
         private CursorCache(String cursorString) {
 
             // nothing to do
@@ -442,6 +509,16 @@ public class QueryProcessor {
             }
 
         }
+        
+        /**
+         * Set the cursor with the given hash and the new byte buffer
+         * 
+         * @param sliceHash
+         * @param newCursor
+         */
+        public void setNextCursor(int sliceHash, ByteBuffer newCursor){
+            cursors.put(sliceHash, newCursor);
+        }
 
         /**
          * Get the cursor by the hashcode of the slice
@@ -451,6 +528,14 @@ public class QueryProcessor {
          */
         public ByteBuffer getCursorBytes(int sliceHash) {
             return cursors.get(sliceHash);
+        }
+        
+        /**
+         * Turn the cursor cache into a string
+         * @return
+         */
+        public String asString(){
+            return null;
         }
     }
 

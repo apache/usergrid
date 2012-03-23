@@ -391,7 +391,7 @@ public class Query {
 	 * Return true if this query has parameters
 	 * @return
 	 */
-	public boolean hasTerms(){
+	public boolean hasQueryPredicates(){
 	    return rootOperand != null;
 	}
 

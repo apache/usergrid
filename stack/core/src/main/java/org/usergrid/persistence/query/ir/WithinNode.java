@@ -75,7 +75,7 @@ public class WithinNode extends QueryNode {
      * @see org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence.query.ir.NodeVisitor)
      */
     @Override
-    public void visit(NodeVisitor visitor) {
+    public void visit(NodeVisitor visitor) throws Exception {
         visitor.visit(this);
     }
     

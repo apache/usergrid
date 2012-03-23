@@ -26,6 +26,7 @@ public abstract class QueryNode {
     /**
      * Visit this node
      * @param node
+     * @throws Exception 
      */
-    public abstract void visit(NodeVisitor visitor);
+    public abstract void visit(NodeVisitor visitor) throws Exception;
 }
