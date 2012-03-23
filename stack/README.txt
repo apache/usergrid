@@ -2,16 +2,11 @@ Usergrid Platform Stack for Mobile & Rich Client Apps
 
 For more info:
 
-Documentation:  http://usergrid.github.com/docs
+Documentation:  http://apigee.com/docs/usergrid/
 
-Homepage:       http://www.usergrid.com
+Homepage:       http://apigee.com/about/products/usergrid
 
-Blog:           http://blog.usergrid.com
-
-Google Groups:  http://groups.google.com/group/usergrid-user
-                http://groups.google.com/group/usergrid-dev
-
-Twitter:        http://twitter.com/#!/usergrid
+Google Group:   http://groups.google.com/group/usergrid
 
 
 Getting Started
