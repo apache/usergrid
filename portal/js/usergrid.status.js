@@ -21,7 +21,7 @@ var StatusBar = function () {
           item.show();
           var t = setTimeout(removeOldestAlert, 4000);	
       } else if (type = 'error') {
-          var closebutton = '<div style="float: right;"><a href="#" onclick="closeErrorMessage();" style="color: #B94A48;">close</a></div>'
+          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">×</a>'
           var item = $('<div class="alert alert-' + type + ' ">' + msg + closebutton + '</div>');
           self.box.find(".alert").remove();
           self.box.show().prepend(item);
