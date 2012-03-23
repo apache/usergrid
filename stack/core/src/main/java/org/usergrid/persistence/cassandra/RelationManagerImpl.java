@@ -96,6 +96,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
@@ -143,7 +144,13 @@ import org.usergrid.persistence.SimpleRoleRef;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.entities.Group;
+import org.usergrid.persistence.query.ir.AndNode;
+import org.usergrid.persistence.query.ir.NodeVisitor;
+import org.usergrid.persistence.query.ir.NotNode;
+import org.usergrid.persistence.query.ir.OrNode;
 import org.usergrid.persistence.query.ir.QuerySlice;
+import org.usergrid.persistence.query.ir.SliceNode;
+import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
@@ -318,12 +325,15 @@ public class RelationManagerImpl implements RelationManager,
 	 */
 	public Object getCFKeyForSubkey(CollectionInfo collection,
 			Map<String, Object> properties, Query query) {
-		if ((query != null) && (properties == null)) {
+		
+	    if ((query != null) && (properties == null)) {
 			properties = query.getEqualityFilters();
 		}
+	    
 		if (properties == null) {
 			return null;
 		}
+		
 		Set<String> keys_used = new LinkedHashSet<String>();
 		Object best_key = null;
 		int most_keys_matched = 0;
@@ -351,6 +361,7 @@ public class RelationManagerImpl implements RelationManager,
 				}
 			}
 		}
+		
 		if (query != null) {
 			for (String key : keys_used) {
 				query.removeFiltersForProperty(key);
@@ -2142,8 +2153,11 @@ public class RelationManagerImpl implements RelationManager,
 			Map<String, Object> subkeyProperties, Object subkey_key,
 			QuerySlice slice, int count, Level level) throws Exception {
 
+//	    TODO Todd finish this 
+	    
 		if (slice.operator == FilterOperator.WITHIN) {
-			Object v = slice.getValue();
+			
+		    Object v = slice.getValue();
 			if ((v instanceof List) && (((List) v).size() >= 3)) {
 				double maxDistance = getDouble(((List) v).get(0));
 				double latitude = getDouble(((List) v).get(1));
@@ -2159,6 +2173,7 @@ public class RelationManagerImpl implements RelationManager,
 		}
 
 		Object indexKey = key(headEntity.getUuid(), collectionName);
+		
 		if (subkeyProperties != null) {
 			if (subkey_key == null) {
 				String collectionType = em.getEntityType(headEntity.getUuid());
@@ -2586,8 +2601,12 @@ public class RelationManagerImpl implements RelationManager,
 		CollectionInfo collection = getDefaultSchema().getCollection(
 				headEntity.getType(), collectionName);
 
+		
 		Object subkey_key = null;
+		
+		//properties that are used in search
 		Map<String, Object> subkeyProperties = query.getEqualityFilters();
+		
 		if (subkeyProperties != null) {
 			subkey_key = getCFKeyForSubkey(collection, subkeyProperties, query);
 		}
@@ -2633,6 +2652,7 @@ public class RelationManagerImpl implements RelationManager,
 		}
 		for (QuerySlice slice : slices) {
 
+		    //TODO Todd change to visitor here
 			Results r = searchCollection(collectionName, collection.getType(),
 					subkeyProperties, subkey_key, slice, search_count,
 					query.getResultsLevel());
@@ -2905,7 +2925,7 @@ public class RelationManagerImpl implements RelationManager,
 
 		headEntity = em.validate(headEntity);
 
-		if (!query.hasFilterPredicates() && !query.hasSortPredicates()) {
+		if (!query.hasTerms() && !query.hasSortPredicates()) {
 			List<ConnectionRefImpl> connections = getConnections(
 					new ConnectionRefImpl(headEntity,
 							new ConnectedEntityRefImpl(NULL_ID),
@@ -3060,4 +3080,64 @@ public class RelationManagerImpl implements RelationManager,
 		this.applicationContext = applicationContext;
 	}
 
+	/**
+	 * Simple search visitor that performs all the joining
+	 * 
+	 * @author tnine
+	 *
+	 */
+	private class CollectionSearchVisitor implements NodeVisitor{
+
+	    private String collectionName;
+	    
+	    //maximum size to return
+	    private int count;
+	    
+	    private Stack<Results> results = new Stack<Results>();
+	    
+	    
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.persistence.query.ir.AndNode)
+         */
+        @Override
+        public void visit(AndNode node) {
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.persistence.query.ir.NotNode)
+         */
+        @Override
+        public void visit(NotNode node) {
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.persistence.query.ir.OrNode)
+         */
+        @Override
+        public void visit(OrNode node) {
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.persistence.query.ir.SliceNode)
+         */
+        @Override
+        public void visit(SliceNode node) {
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.persistence.query.ir.WithinNode)
+         */
+        @Override
+        public void visit(WithinNode node) {
+           
+           
+            Results r = em.getGeoIndexManager().proximitySearchCollection(
+                    getHeadEntity(), collectionName,
+                    node.getPropertyName(),
+                    new Point(node.getLattitude(), node.getLongitude()), node.getDistance(), null,
+                    count, false, level);
+            return r;
+        }
+	    
+	}
 }

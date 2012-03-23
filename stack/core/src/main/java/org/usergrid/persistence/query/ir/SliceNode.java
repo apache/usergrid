@@ -18,12 +18,10 @@ package org.usergrid.persistence.query.ir;
 import static org.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
 import static org.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
 
-import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.usergrid.persistence.cassandra.QueryProcessor.CursorCache;
 import org.usergrid.persistence.query.ir.QuerySlice.RangeValue;
 
 /**
@@ -159,6 +157,14 @@ public class SliceNode extends QueryNode {
      */
     public Collection<QuerySlice> getAllSlices() {
         return this.pairs.values();
+    }
+
+    /* (non-Javadoc)
+     * @see org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence.query.ir.NodeVisitor)
+     */
+    @Override
+    public void visit(NodeVisitor visitor) {
+        visitor.visit(this);
     }
     
  

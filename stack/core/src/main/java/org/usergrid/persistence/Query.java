@@ -386,6 +386,14 @@ public class Query {
 		q.addIdentifier(Identifier.from(id));
 		return q;
 	}
+	
+	/**
+	 * Return true if this query has parameters
+	 * @return
+	 */
+	public boolean hasTerms(){
+	    return rootOperand != null;
+	}
 
 	public boolean isIdsOnly() {
 		if ((selectSubjects.size() == 1)
@@ -422,7 +430,8 @@ public class Query {
 		this.level = level;
 		return this;
 	}
-
+	
+	
 	public String getEntityType() {
 		return type;
 	}

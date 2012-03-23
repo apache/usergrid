@@ -19,7 +19,7 @@ package org.usergrid.persistence.query.ir;
  * @author tnine
  *
  */
-public class BooleanNode extends QueryNode {
+public abstract class BooleanNode extends QueryNode {
 
     protected QueryNode left;
     protected QueryNode right;
@@ -42,4 +42,6 @@ public class BooleanNode extends QueryNode {
     public QueryNode getRight() {
         return right;
     }
+
+   
 }

@@ -47,9 +47,9 @@ public class QueryTest {
 		q.addFilter("b='hello'");
 		q.addFilter("c < 7");
 		q.addFilter("d gt 5");
-		q.addFilter("e in 5,6");
-		q.addFilter("f=6.0");
-		q.addFilter("g=.05");
+//		q.addFilter("e in 5,6");
+		q.addFilter("f = 6.0");
+		q.addFilter("g = .05");
 		q.addFilter("loc within .05 of 5,6");
 
 		Iterator<FilterPredicate> i = q.getFilterPredicates().iterator();

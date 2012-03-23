@@ -15,31 +15,43 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir;
 
+import java.util.Stack;
+
+import org.usergrid.persistence.Results;
+
 /**
- * Node where the results need intersected.  Used instead of a SliceNode when one of the children is an operation
- * other than slices.  I.E OR, NOT etc
- * 
  * @author tnine
  *
  */
-public class AndNode extends BooleanNode {
+public interface NodeVisitor {
 
+     /**
+     * 
+     * @param node
+     */
+    public void visit(AndNode node);
+    
     /**
-     * @param left
-     * @param right
+     * 
+     * @param node
      */
-    public AndNode(QueryNode left, QueryNode right) {
-        super(left, right);
-    }
-
-    /* (non-Javadoc)
-     * @see org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence.query.ir.NodeVisitor)
+    public void visit(NotNode node);
+    
+    /**
+     * 
+     * @param node
      */
-    @Override
-    public void visit(NodeVisitor visitor) {
-        visitor.visit(this);
-    }
-
- 
-
+    public void visit(OrNode node);
+    
+    /**
+     * 
+     * @param node
+     */
+    public void visit(SliceNode node);
+    
+    /**
+     * 
+     * @param node
+     */
+    public void visit(WithinNode node);
 }

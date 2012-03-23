@@ -16,10 +16,16 @@
 package org.usergrid.persistence.query.ir;
 
 /**
+ * The visit the node
+ * 
  * @author tnine
  *
  */
 public abstract class QueryNode {
 
-    
+    /**
+     * Visit this node
+     * @param node
+     */
+    public abstract void visit(NodeVisitor visitor);
 }

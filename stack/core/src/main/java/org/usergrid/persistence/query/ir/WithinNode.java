@@ -69,6 +69,15 @@ public class WithinNode extends QueryNode {
     public float getLongitude() {
         return longitude;
     }
+
+
+    /* (non-Javadoc)
+     * @see org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence.query.ir.NodeVisitor)
+     */
+    @Override
+    public void visit(NodeVisitor visitor) {
+        visitor.visit(this);
+    }
     
   
 }
