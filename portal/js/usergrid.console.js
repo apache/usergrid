@@ -1603,7 +1603,7 @@ function usergrid_console_app() {
     window.usergrid.console.saveGroupProfile = saveGroupProfile;
 
     function completeSaveProfile(){
-        $("#user-information-saved").text("Information Saved.").show();
+        $("#information-saved").text("Information Saved.").show();
     }
 
     function redrawUserPanel() {
