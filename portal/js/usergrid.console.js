@@ -3193,15 +3193,12 @@ function usergrid_console_app() {
     });
 
     function requestAccountSettings() {
-        alert("hola, culeros");
         $("#update-account-id").val(client.loggedInUser.uuid);
         $("#update-account-name").val("");
         $("#update-account-email").val("");
         $("#old-account-password").val("");
         $("#update-account-password").val("");
         $("#update-account-password-repeat").val("");
-
-        return;
         client.requestAdminUser(displayAccountSettings,
         function() {
         });
