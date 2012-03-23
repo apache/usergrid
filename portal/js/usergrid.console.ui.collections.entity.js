@@ -208,7 +208,19 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
                 }                
 				return false;
 			});
-
+            
+            var collections_button = o.details.find(".query-result-header-toggle-collections");
+            collections_button.click(function() {
+                if (o.collections.css('display') == 'none') {
+                    o.collections.show();
+                    o.contents.hide();
+                    o.json.hide();
+                } else {
+                    o.collections.hide();
+                }
+                return false;
+            });
+            
             var json_button = o.details.find(".query-result-header-toggle-json");
 			json_button.click(function() {
                 if (o.json.css('display') == 'none') {
