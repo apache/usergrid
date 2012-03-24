@@ -41,7 +41,7 @@ public class UserResourceTest extends AbstractRestTest {
   private static boolean userInited = false;
 
   public UserResourceTest() throws Exception {
-    super();
+
   }
 
   @Test(expected = UniformInterfaceException.class)
@@ -67,7 +67,6 @@ public class UserResourceTest extends AbstractRestTest {
     logNode(node);
   }
 
-  @Ignore
   @Test
   public void test_GET_user_ok() {
     // TODO figure out what is being overridden? why 400?
