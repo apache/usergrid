@@ -49,6 +49,18 @@ import org.slf4j.LoggerFactory;
 	}
 }
 
+//these must come before ID. Otherwise lt, lte, eq, etc will be returned as id tokens
+LT  : '<' | 'lt';
+
+LTE : '<=' |  'lte';
+
+EQ  : '=' | 'eq';
+
+GT  : '>' | 'gt';
+
+GTE : '>=' |  'gte';  
+
+
 ID  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'.')*
     ;
 
@@ -105,15 +117,6 @@ UNICODE_ESC
 
 WS : (' ' | '\t' | '\n' | '\r' | '\f')+  {$channel=HIDDEN;};
 
-LT 	:	'<' | 'lt';
-
-LTE	:	'<=' |  'lte';
-
-EQ  : '=' | 'eq';
-
-GT 	:	'>' | 'gt';
-
-GTE	:	'>=' |  'gte';	
 
 //NE : '!=';
 
