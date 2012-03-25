@@ -19,56 +19,86 @@ import org.antlr.runtime.Token;
 
 /**
  * @author tnine
- *
+ * 
  */
 public class WithinOperand extends Operand {
 
- 
-  /**
-   * @param property
-   * @param literal
-   */
-  public WithinOperand(Token t ) {
-    super(t);
-  }
+    /**
+     * @param property
+     * @param literal
+     */
+    public WithinOperand(Token t) {
+        super(t);
+    }
 
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence.query.tree.QueryVisitor)
-   */
-  @Override
-  public void visit(QueryVisitor visitor) {
-    visitor.visit(this);
-  }
-  
-  /**
-   * 
-   * @return
-   */
-  public Property getProperty(){
-    return (Property) this.children.get(0);
-  }
-  
-  /**
-   * 
-   * @return
-   */
-  public FloatLiteral getDistance(){
-    return (FloatLiteral) this.children.get(1);
-  }
-  
-  
-  
-  /**
-   * @return
-   */
-  public FloatLiteral getLattitude(){
-    return (FloatLiteral) this.children.get(2);
-  }
-  
-  /**
-   * @return
-   */
-  public FloatLiteral getLongitude(){
-    return (FloatLiteral) this.children.get(3);
-  }
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence
+     * .query.tree.QueryVisitor)
+     */
+    @Override
+    public void visit(QueryVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    /**
+     * @param propName
+     */
+    public void setProperty(String propName) {
+        setChild(0, new Property(propName));
+    }
+
+    /**
+     * @param distance
+     */
+    public void setDistance(float distance){
+        setChild(1, new FloatLiteral(distance));
+    }
+    
+    /**
+     * @param lattitude
+     */
+    public void setLattitude(float lattitude){
+        setChild(2, new FloatLiteral(lattitude));
+    }
+    
+    
+    /**
+     * @param longitude
+     */
+    public void setLongitude(float longitude){
+        setChild(3, new FloatLiteral(longitude));
+    }
+    
+    /**
+     * 
+     * @return
+     */
+    public Property getProperty() {
+        return (Property) this.children.get(0);
+    }
+
+    /**
+     * 
+     * @return
+     */
+    public FloatLiteral getDistance() {
+        return (FloatLiteral) this.children.get(1);
+    }
+
+    /**
+     * @return
+     */
+    public FloatLiteral getLattitude() {
+        return (FloatLiteral) this.children.get(2);
+    }
+
+    /**
+     * @return
+     */
+    public FloatLiteral getLongitude() {
+        return (FloatLiteral) this.children.get(3);
+    }
 }

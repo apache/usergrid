@@ -2688,13 +2688,13 @@ public class EntityManagerImpl implements EntityManager,
 				startResult, count, resultsLevel, reversed);
 	}
 
-	@Override
-	public Results getCollection(EntityRef entityRef, String collectionName,
-			Map<String, Object> subkeyProperties, UUID startResult, int count,
-			Level resultsLevel, boolean reversed) throws Exception {
-		return getRelationManager(entityRef).getCollection(collectionName,
-				subkeyProperties, startResult, count, resultsLevel, reversed);
-	}
+//	@Override
+//	public Results getCollection(EntityRef entityRef, String collectionName,
+//			Map<String, Object> subkeyProperties, UUID startResult, int count,
+//			Level resultsLevel, boolean reversed) throws Exception {
+//		return getRelationManager(entityRef).getCollection(collectionName,
+//				subkeyProperties, startResult, count, resultsLevel, reversed);
+//	}
 
 	@Override
 	public Results getCollection(UUID entityId, String collectionName,
@@ -2850,19 +2850,20 @@ public class EntityManagerImpl implements EntityManager,
 		return getRelationManager(ref(entityId)).getConnections(query);
 	}
 
-	@Override
-	public Results searchConnectedEntitiesForProperty(
-			EntityRef connectingEntity, String connectionType,
-			String connectedEntityType, String propertyName,
-			Object searchStartValue, Object searchFinishValue,
-			UUID startResult, int count, boolean reversed, Level resultsLevel)
-			throws Exception {
-		return getRelationManager(connectingEntity)
-				.searchConnectedEntitiesForProperty(connectionType,
-						connectedEntityType, propertyName, searchStartValue,
-						searchFinishValue, startResult, count, reversed,
-						resultsLevel);
-	}
+//	T.N. This isn't used anywhere.  Removing for this release
+//	@Override
+//	public Results searchConnectedEntitiesForProperty(
+//			EntityRef connectingEntity, String connectionType,
+//			String connectedEntityType, String propertyName,
+//			Object searchStartValue, Object searchFinishValue,
+//			UUID startResult, int count, boolean reversed, Level resultsLevel)
+//			throws Exception {
+//		return getRelationManager(connectingEntity)
+//				.searchConnectedEntitiesForProperty(connectionType,
+//						connectedEntityType, propertyName, searchStartValue,
+//						searchFinishValue, startResult, count, reversed,
+//						resultsLevel);
+//	}
 
 	@Override
 	public Results searchConnectedEntities(EntityRef connectingEntity,

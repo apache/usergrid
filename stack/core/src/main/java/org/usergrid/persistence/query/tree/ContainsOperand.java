@@ -41,6 +41,14 @@ public class ContainsOperand extends Operand {
     visitor.visit(this);
   }
   
+  public void setProperty(String name){
+      setChild(0, new Property(name));
+  }
+  
+  public void setValue(String value){
+      setChild(1, new StringLiteral(value));
+  }
+  
   public Property getProperty(){
     return (Property) this.children.get(0);
   }

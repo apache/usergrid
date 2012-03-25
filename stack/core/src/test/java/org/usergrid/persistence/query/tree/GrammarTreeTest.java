@@ -33,364 +33,392 @@ import org.usergrid.persistence.Query;
  */
 public class GrammarTreeTest {
 
-  /**
-   * Simple test that constructs and AST from the ANTLR generated files
-   * 
-   * @throws RecognitionException
-   */
-  @Test
-  public void equality() throws RecognitionException {
+    /**
+     * Simple test that constructs and AST from the ANTLR generated files
+     * 
+     * @throws RecognitionException
+     */
+    @Test
+    public void equality() throws RecognitionException {
 
-    String queryString = "select * where a = 5";
+        String queryString = "select * where a = 5";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    Operand root = query.getRootOperand();
+        Operand root = query.getRootOperand();
 
-    Equal equal = (Equal) root;
+        Equal equal = (Equal) root;
 
-    assertEquals("a", equal.getProperty().getValue());
+        assertEquals("a", equal.getProperty().getValue());
 
-    assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue().intValue());
+        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+                .intValue());
 
-  }
+    }
 
-  /**
-   * Simple test that constructs and AST from the ANTLR generated files
-   * 
-   * @throws RecognitionException
-   */
-  @Test
-  public void lessThan() throws RecognitionException {
+    /**
+     * Simple test that constructs and AST from the ANTLR generated files
+     * 
+     * @throws RecognitionException
+     */
+    @Test
+    public void lessThan() throws RecognitionException {
 
-    String queryString = "select * where a < 5";
+        String queryString = "select * where a < 5";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    Operand root = query.getRootOperand();
+        Operand root = query.getRootOperand();
 
-    LessThan equal = (LessThan) root;
+        LessThan equal = (LessThan) root;
 
-    assertEquals("a", equal.getProperty().getValue());
+        assertEquals("a", equal.getProperty().getValue());
 
-    assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue().intValue());
+        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+                .intValue());
+        
+        //TODO Todd fix this.
 
-  }
+//        queryString = "select * where a lt 5";
+//
+//        in = new ANTLRStringStream(queryString);
+//        lexer = new QueryFilterLexer(in);
+//        tokens = new TokenRewriteStream(lexer);
+//        parser = new QueryFilterParser(tokens);
+//
+//        query = parser.ql().query;
+//
+//        root = query.getRootOperand();
+//
+//        equal = (LessThan) root;
+//
+//        assertEquals("a", equal.getProperty().getValue());
+//
+//        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+//                .intValue());
 
-  /**
-   * Simple test that constructs and AST from the ANTLR generated files
-   * 
-   * @throws RecognitionException
-   */
-  @Test
-  public void lessThanEqual() throws RecognitionException {
+    }
 
-    String queryString = "select * where a <= 5";
+    /**
+     * Simple test that constructs and AST from the ANTLR generated files
+     * 
+     * @throws RecognitionException
+     */
+    @Test
+    public void lessThanEqual() throws RecognitionException {
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        String queryString = "select * where a <= 5";
 
-    Query query = parser.ql().query;
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Operand root = query.getRootOperand();
+        Query query = parser.ql().query;
 
-    LessThanEqual equal = (LessThanEqual) root;
+        Operand root = query.getRootOperand();
 
-    assertEquals("a", equal.getProperty().getValue());
+        LessThanEqual equal = (LessThanEqual) root;
 
-    assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue().intValue());
+        assertEquals("a", equal.getProperty().getValue());
 
-  }
+        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+                .intValue());
 
-  /**
-   * Simple test that constructs and AST from the ANTLR generated files
-   * 
-   * @throws RecognitionException
-   */
-  @Test
-  public void greaterThan() throws RecognitionException {
+    }
 
-    String queryString = "select * where a > 5";
+    /**
+     * Simple test that constructs and AST from the ANTLR generated files
+     * 
+     * @throws RecognitionException
+     */
+    @Test
+    public void greaterThan() throws RecognitionException {
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        String queryString = "select * where a > 5";
 
-    Query query = parser.ql().query;
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Operand root = query.getRootOperand();
+        Query query = parser.ql().query;
 
-    GreaterThan equal = (GreaterThan) root;
+        Operand root = query.getRootOperand();
 
-    assertEquals("a", equal.getProperty().getValue());
+        GreaterThan equal = (GreaterThan) root;
 
-    assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue().intValue());
+        assertEquals("a", equal.getProperty().getValue());
 
-  }
+        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+                .intValue());
 
-  /**
-   * Simple test that constructs and AST from the ANTLR generated files
-   * 
-   * @throws RecognitionException
-   */
-  @Test
-  public void greaterThanEqual() throws RecognitionException {
+    }
 
-    String queryString = "select * where a >= 5";
+    /**
+     * Simple test that constructs and AST from the ANTLR generated files
+     * 
+     * @throws RecognitionException
+     */
+    @Test
+    public void greaterThanEqual() throws RecognitionException {
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        String queryString = "select * where a >= 5";
 
-    Query query = parser.ql().query;
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Operand root = query.getRootOperand();
+        Query query = parser.ql().query;
 
-    GreaterThanEqual equal = (GreaterThanEqual) root;
+        Operand root = query.getRootOperand();
 
-    assertEquals("a", equal.getProperty().getValue());
+        GreaterThanEqual equal = (GreaterThanEqual) root;
 
-    assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue().intValue());
+        assertEquals("a", equal.getProperty().getValue());
 
-  }
+        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+                .intValue());
 
-  /**
-   * Test basic && expression
-   * 
-   * @throws RecognitionException
-   */
-  @Test
-  public void andExpression() throws RecognitionException {
+    }
 
-    String queryString = "select * where a = 1 and b > 2";
+    /**
+     * Test basic && expression
+     * 
+     * @throws RecognitionException
+     */
+    @Test
+    public void andExpression() throws RecognitionException {
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        String queryString = "select * where a = 1 and b > 2";
 
-    Query query = parser.ql().query;
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Operand root = query.getRootOperand();
+        Query query = parser.ql().query;
 
-    AndOperand and = (AndOperand) root;
+        Operand root = query.getRootOperand();
 
-    Equal equal = (Equal) and.getLeft();
+        AndOperand and = (AndOperand) root;
 
-    assertEquals("a", equal.getProperty().getValue());
+        Equal equal = (Equal) and.getLeft();
 
-    assertEquals(1, ((IntegerLiteral) equal.getLiteral()).getValue().intValue());
+        assertEquals("a", equal.getProperty().getValue());
 
-    GreaterThan greater = (GreaterThan) and.getRight();
+        assertEquals(1, ((IntegerLiteral) equal.getLiteral()).getValue()
+                .intValue());
 
-    assertEquals("b", greater.getProperty().getValue());
-    assertEquals(2, ((IntegerLiteral) greater.getLiteral()).getValue()
-        .intValue());
+        GreaterThan greater = (GreaterThan) and.getRight();
 
-  }
+        assertEquals("b", greater.getProperty().getValue());
+        assertEquals(2, ((IntegerLiteral) greater.getLiteral()).getValue()
+                .intValue());
 
-  /**
-   * Test basic || expression
-   * 
-   * @throws RecognitionException
-   */
-  @Test
-  public void orExpression() throws RecognitionException {
+    }
 
-    String queryString = "select * where a = 1 or b > 2";
+    /**
+     * Test basic || expression
+     * 
+     * @throws RecognitionException
+     */
+    @Test
+    public void orExpression() throws RecognitionException {
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        String queryString = "select * where a = 1 or b > 2";
 
-    Query query = parser.ql().query;
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Operand root = query.getRootOperand();
+        Query query = parser.ql().query;
 
-    OrOperand and = (OrOperand) root;
+        Operand root = query.getRootOperand();
 
-    Equal equal = (Equal) and.getLeft();
+        OrOperand and = (OrOperand) root;
 
-    assertEquals("a", equal.getProperty().getValue());
+        Equal equal = (Equal) and.getLeft();
 
-    assertEquals(1, ((IntegerLiteral) equal.getLiteral()).getValue().intValue());
+        assertEquals("a", equal.getProperty().getValue());
 
-    GreaterThan greater = (GreaterThan) and.getRight();
+        assertEquals(1, ((IntegerLiteral) equal.getLiteral()).getValue()
+                .intValue());
 
-    assertEquals("b", greater.getProperty().getValue());
-    assertEquals(2, ((IntegerLiteral) greater.getLiteral()).getValue()
-        .intValue());
+        GreaterThan greater = (GreaterThan) and.getRight();
 
-  }
+        assertEquals("b", greater.getProperty().getValue());
+        assertEquals(2, ((IntegerLiteral) greater.getLiteral()).getValue()
+                .intValue());
 
+    }
 
-  /**
-   * Test basic not expression
-   * 
-   * @throws RecognitionException
-   */
-  @Test
-  public void notExpression() throws RecognitionException {
+    /**
+     * Test basic not expression
+     * 
+     * @throws RecognitionException
+     */
+    @Test
+    public void notExpression() throws RecognitionException {
 
-    String queryString = "select * where not a = 1";
+        String queryString = "select * where not a = 1";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    Operand root = query.getRootOperand();
+        Operand root = query.getRootOperand();
 
-    NotOperand not = (NotOperand) root;
+        NotOperand not = (NotOperand) root;
 
-    Equal equal = (Equal) not.getOperation();
+        Equal equal = (Equal) not.getOperation();
 
-    assertEquals("a", equal.getProperty().getValue());
+        assertEquals("a", equal.getProperty().getValue());
 
-    assertEquals(1, ((IntegerLiteral) equal.getLiteral()).getValue().intValue());
+        assertEquals(1, ((IntegerLiteral) equal.getLiteral()).getValue()
+                .intValue());
 
-  }
+    }
 
-  /**
-   * Test basic not expression
-   * 
-   * @throws RecognitionException
-   */
-  @Test
-  public void complexExpression() throws RecognitionException {
+    /**
+     * Test basic not expression
+     * 
+     * @throws RecognitionException
+     */
+    @Test
+    public void complexExpression() throws RecognitionException {
 
-    String queryString = "select * where not a = 1";
+        String queryString = "select * where not a = 1";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    Operand root = query.getRootOperand();
+        Operand root = query.getRootOperand();
 
-    NotOperand not = (NotOperand) root;
+        NotOperand not = (NotOperand) root;
 
-    Equal equal = (Equal) not.getOperation();
+        Equal equal = (Equal) not.getOperation();
 
-    assertEquals("a", equal.getProperty().getValue());
+        assertEquals("a", equal.getProperty().getValue());
 
-    assertEquals(1, ((IntegerLiteral) equal.getLiteral()).getValue().intValue());
+        assertEquals(1, ((IntegerLiteral) equal.getLiteral()).getValue()
+                .intValue());
 
-  }
-  
+    }
 
-  /**
-   * Test basic || expression
-   * 
-   * @throws RecognitionException
-   */
-  @Test
-  public void selectAll() throws RecognitionException {
+    /**
+     * Test basic || expression
+     * 
+     * @throws RecognitionException
+     */
+    @Test
+    public void selectAll() throws RecognitionException {
 
-    String queryString = "select * where a = 1 or b > 2";
+        String queryString = "select * where a = 1 or b > 2";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    Set<String> identifiers = query.getSelectSubjects();
-    
-    assertEquals(0, identifiers.size());
+        Set<String> identifiers = query.getSelectSubjects();
 
-  }
-  
-  @Test
-  public void selectGeo() throws RecognitionException{
-    String queryString = "select * where a within .1 of -40.343666, 175.630917";
+        assertEquals(0, identifiers.size());
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+    }
 
-    Query query = parser.ql().query;
+    @Test
+    public void selectGeo() throws RecognitionException {
+        String queryString = "select * where a within .1 of -40.343666, 175.630917";
 
-    WithinOperand operand = (WithinOperand) query.getRootOperand();
-    
-    assertEquals("a", operand.getProperty().getValue());
-    assertEquals(.1f, operand.getDistance().getValue().floatValue(), 0);
-    assertEquals(-40.343666f, operand.getLattitude().getValue().floatValue(), 0);
-    assertEquals(175.630917f, operand.getLongitude().getValue().floatValue(), 0);
-  }
-  
-  @Test
-  public void selectDistance() throws RecognitionException{
-    String queryString = "select * where a contains 'foo'";
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        Query query = parser.ql().query;
 
-    Query query = parser.ql().query;
+        WithinOperand operand = (WithinOperand) query.getRootOperand();
 
-    ContainsOperand operand = (ContainsOperand) query.getRootOperand();
-    
-    assertEquals("a", operand.getProperty().getValue());
-    assertEquals("'foo'", operand.getString().getValue());
-    
-  }
-  
-  @Test
-  public void selectField() throws RecognitionException{
+        assertEquals("a", operand.getProperty().getValue());
+        assertEquals(.1f, operand.getDistance().getValue().floatValue(), 0);
+        assertEquals(-40.343666f, operand.getLattitude().getValue()
+                .floatValue(), 0);
+        assertEquals(175.630917f, operand.getLongitude().getValue()
+                .floatValue(), 0);
+    }
 
-    String queryString = "select c where a = 1 or b > 2";
+    @Test
+    public void selectDistance() throws RecognitionException {
+        String queryString = "select * where a contains 'foo'";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    Set<String> identifiers = query.getSelectSubjects();
-    
-    assertTrue(identifiers.contains("c"));
-  }
-  
-  @Test
-  public void selectRename() throws RecognitionException{
+        ContainsOperand operand = (ContainsOperand) query.getRootOperand();
 
-    String queryString = "select {source:target} where a = 1 or b > 2";
+        assertEquals("a", operand.getProperty().getValue());
+        assertEquals("foo", operand.getString().getValue());
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+    }
 
-    Query query = parser.ql().query;
+    @Test
+    public void selectField() throws RecognitionException {
 
-    Map<String, String> identifiers = query.getSelectAssignments();
-    
-    assertEquals("target", identifiers.get("source"));
-  }
+        String queryString = "select c where a = 1 or b > 2";
 
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
+
+        Query query = parser.ql().query;
+
+        Set<String> identifiers = query.getSelectSubjects();
+
+        assertTrue(identifiers.contains("c"));
+    }
+
+    @Test
+    public void selectRename() throws RecognitionException {
+
+        String queryString = "select {source:target} where a = 1 or b > 2";
+
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
+
+        Query query = parser.ql().query;
+
+        Map<String, String> identifiers = query.getSelectAssignments();
+
+        assertEquals("target", identifiers.get("source"));
+    }
 
 }

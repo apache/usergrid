@@ -1,4 +1,4 @@
-// $ANTLR 3.4 org/usergrid/persistence/query/tree/QueryFilter.g 2012-03-19 17:45:22
+// $ANTLR 3.4 org/usergrid/persistence/query/tree/QueryFilter.g 2012-03-24 22:54:57
 
 package org.usergrid.persistence.query.tree;
 
@@ -2069,7 +2069,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "ql"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:240:1: ql returns [Query query] : 'select' ! select_expr ! ( 'where' ! expression )? ( 'order by' ! order ! ( ',' ! order !)* )? ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:240:1: ql returns [Query query] : ( 'select' ! select_expr !)? ( ( 'where' !)? expression )? ( 'order by' ! order ! ( ',' ! order !)* )? ;
     public final QueryFilterParser.ql_return ql() throws RecognitionException {
         QueryFilterParser.ql_return retval = new QueryFilterParser.ql_return();
         retval.start = input.LT(1);
@@ -2096,24 +2096,16 @@ public TreeAdaptor getTreeAdaptor() {
         Object char_literal72_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:241:3: ( 'select' ! select_expr ! ( 'where' ! expression )? ( 'order by' ! order ! ( ',' ! order !)* )? )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:241:5: 'select' ! select_expr ! ( 'where' ! expression )? ( 'order by' ! order ! ( ',' ! order !)* )?
+            // org/usergrid/persistence/query/tree/QueryFilter.g:241:3: ( ( 'select' ! select_expr !)? ( ( 'where' !)? expression )? ( 'order by' ! order ! ( ',' ! order !)* )? )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:241:5: ( 'select' ! select_expr !)? ( ( 'where' !)? expression )? ( 'order by' ! order ! ( ',' ! order !)* )?
             {
             root_0 = (Object)adaptor.nil();
 
 
-            string_literal66=(Token)match(input,34,FOLLOW_34_in_ql1182); 
-
-            pushFollow(FOLLOW_select_expr_in_ql1185);
-            select_expr67=select_expr();
-
-            state._fsp--;
-
-
-            // org/usergrid/persistence/query/tree/QueryFilter.g:241:28: ( 'where' ! expression )?
+            // org/usergrid/persistence/query/tree/QueryFilter.g:241:5: ( 'select' ! select_expr !)?
             int alt11=2;
             switch ( input.LA(1) ) {
-                case 35:
+                case 34:
                     {
                     alt11=1;
                     }
@@ -2122,11 +2114,62 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt11) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:241:29: 'where' ! expression
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:241:6: 'select' ! select_expr !
                     {
-                    string_literal68=(Token)match(input,35,FOLLOW_35_in_ql1189); 
+                    string_literal66=(Token)match(input,34,FOLLOW_34_in_ql1183); 
 
-                    pushFollow(FOLLOW_expression_in_ql1192);
+                    pushFollow(FOLLOW_select_expr_in_ql1186);
+                    select_expr67=select_expr();
+
+                    state._fsp--;
+
+
+                    }
+                    break;
+
+            }
+
+
+            // org/usergrid/persistence/query/tree/QueryFilter.g:241:31: ( ( 'where' !)? expression )?
+            int alt13=2;
+            switch ( input.LA(1) ) {
+                case ID:
+                case 21:
+                case 30:
+                case 35:
+                    {
+                    alt13=1;
+                    }
+                    break;
+            }
+
+            switch (alt13) {
+                case 1 :
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:241:32: ( 'where' !)? expression
+                    {
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:241:39: ( 'where' !)?
+                    int alt12=2;
+                    switch ( input.LA(1) ) {
+                        case 35:
+                            {
+                            alt12=1;
+                            }
+                            break;
+                    }
+
+                    switch (alt12) {
+                        case 1 :
+                            // org/usergrid/persistence/query/tree/QueryFilter.g:241:39: 'where' !
+                            {
+                            string_literal68=(Token)match(input,35,FOLLOW_35_in_ql1192); 
+
+                            }
+                            break;
+
+                    }
+
+
+                    pushFollow(FOLLOW_expression_in_ql1196);
                     expression69=expression();
 
                     state._fsp--;
@@ -2139,48 +2182,48 @@ public TreeAdaptor getTreeAdaptor() {
             }
 
 
-            // org/usergrid/persistence/query/tree/QueryFilter.g:241:52: ( 'order by' ! order ! ( ',' ! order !)* )?
-            int alt13=2;
+            // org/usergrid/persistence/query/tree/QueryFilter.g:241:55: ( 'order by' ! order ! ( ',' ! order !)* )?
+            int alt15=2;
             switch ( input.LA(1) ) {
                 case 33:
                     {
-                    alt13=1;
+                    alt15=1;
                     }
                     break;
             }
 
-            switch (alt13) {
+            switch (alt15) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:241:53: 'order by' ! order ! ( ',' ! order !)*
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:241:56: 'order by' ! order ! ( ',' ! order !)*
                     {
-                    string_literal70=(Token)match(input,33,FOLLOW_33_in_ql1198); 
+                    string_literal70=(Token)match(input,33,FOLLOW_33_in_ql1201); 
 
-                    pushFollow(FOLLOW_order_in_ql1201);
+                    pushFollow(FOLLOW_order_in_ql1204);
                     order71=order();
 
                     state._fsp--;
 
 
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:241:72: ( ',' ! order !)*
-                    loop12:
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:241:75: ( ',' ! order !)*
+                    loop14:
                     do {
-                        int alt12=2;
+                        int alt14=2;
                         switch ( input.LA(1) ) {
                         case 24:
                             {
-                            alt12=1;
+                            alt14=1;
                             }
                             break;
 
                         }
 
-                        switch (alt12) {
+                        switch (alt14) {
                     	case 1 :
-                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:241:73: ',' ! order !
+                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:241:76: ',' ! order !
                     	    {
-                    	    char_literal72=(Token)match(input,24,FOLLOW_24_in_ql1205); 
+                    	    char_literal72=(Token)match(input,24,FOLLOW_24_in_ql1208); 
 
-                    	    pushFollow(FOLLOW_order_in_ql1208);
+                    	    pushFollow(FOLLOW_order_in_ql1211);
                     	    order73=order();
 
                     	    state._fsp--;
@@ -2190,7 +2233,7 @@ public TreeAdaptor getTreeAdaptor() {
                     	    break;
 
                     	default :
-                    	    break loop12;
+                    	    break loop14;
                         }
                     } while (true);
 
@@ -2203,8 +2246,9 @@ public TreeAdaptor getTreeAdaptor() {
 
 
 
-              
-              query.setRootOperand((Operand)(expression69!=null?((Object)expression69.tree):null));
+              if((expression69!=null?((Object)expression69.tree):null) instanceof Operand){
+                query.setRootOperand((Operand)(expression69!=null?((Object)expression69.tree):null));
+              }
               
               retval.query = query;
 
@@ -2305,13 +2349,13 @@ public TreeAdaptor getTreeAdaptor() {
     public static final BitSet FOLLOW_24_in_select_expr1153 = new BitSet(new long[]{0x0000000000001000L});
     public static final BitSet FOLLOW_select_assign_in_select_expr1155 = new BitSet(new long[]{0x0000004001000000L});
     public static final BitSet FOLLOW_38_in_select_expr1160 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_34_in_ql1182 = new BitSet(new long[]{0x0000002000801000L});
-    public static final BitSet FOLLOW_select_expr_in_ql1185 = new BitSet(new long[]{0x0000000A00000002L});
-    public static final BitSet FOLLOW_35_in_ql1189 = new BitSet(new long[]{0x0000000040201000L});
-    public static final BitSet FOLLOW_expression_in_ql1192 = new BitSet(new long[]{0x0000000200000002L});
-    public static final BitSet FOLLOW_33_in_ql1198 = new BitSet(new long[]{0x0000000000001000L});
-    public static final BitSet FOLLOW_order_in_ql1201 = new BitSet(new long[]{0x0000000001000002L});
-    public static final BitSet FOLLOW_24_in_ql1205 = new BitSet(new long[]{0x0000000000001000L});
-    public static final BitSet FOLLOW_order_in_ql1208 = new BitSet(new long[]{0x0000000001000002L});
+    public static final BitSet FOLLOW_34_in_ql1183 = new BitSet(new long[]{0x0000002000801000L});
+    public static final BitSet FOLLOW_select_expr_in_ql1186 = new BitSet(new long[]{0x0000000A40201002L});
+    public static final BitSet FOLLOW_35_in_ql1192 = new BitSet(new long[]{0x0000000040201000L});
+    public static final BitSet FOLLOW_expression_in_ql1196 = new BitSet(new long[]{0x0000000200000002L});
+    public static final BitSet FOLLOW_33_in_ql1201 = new BitSet(new long[]{0x0000000000001000L});
+    public static final BitSet FOLLOW_order_in_ql1204 = new BitSet(new long[]{0x0000000001000002L});
+    public static final BitSet FOLLOW_24_in_ql1208 = new BitSet(new long[]{0x0000000000001000L});
+    public static final BitSet FOLLOW_order_in_ql1211 = new BitSet(new long[]{0x0000000001000002L});
 
 }

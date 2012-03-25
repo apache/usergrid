@@ -18,38 +18,55 @@ package org.usergrid.persistence.query.tree;
 import org.antlr.runtime.Token;
 
 /**
- * A base class for any equality expression.  Expressions must have a property and a value.  
- * Examples are >=, >, =, <, <=,
- *  
+ * A base class for any equality expression. Expressions must have a property
+ * and a value. Examples are >=, >, =, <, <=,
+ * 
  * @author tnine
- *
+ * 
  */
 public abstract class EqualityOperand extends Operand {
 
-  
-  /**
-   * @param property
-   * @param literal
-   */
-  public EqualityOperand(Token t) {
-    super(t);
- }
+    /**
+     * @param property
+     * @param literal
+     */
+    public EqualityOperand(Token t) {
+        super(t);
+    }
 
-  /**
-   * @return the property
-   */
-  public Property getProperty() {
-   return (Property) this.children.get(0);
-  }
+    public EqualityOperand(String propName, Literal<?> value){
+        super(null);
+    }
+    
+    
+    /**
+     * Set the property on this operand
+     * @param name
+     */
+    public void setProperty(String name){
+        setChild(0, new Property(name));
+    }
+    
+    /**
+     * Set the literal on this operand from the given value
+     * @param literal
+     */
+    public void setLiteral(Object value){
+        setChild(1, LiteralFactory.getLiteral(value));
+    }
+    
+    /**
+           * @return the property
+           */
+    public Property getProperty() {
+        return (Property) this.children.get(0);
+    }
 
-  /**
-   * @return the literal
-   */
-  public Literal<?> getLiteral() {
-    return (Literal<?>) this.children.get(1);
-  }
-  
-  
-  
+    /**
+     * @return the literal
+     */
+    public Literal<?> getLiteral() {
+        return (Literal<?>) this.children.get(1);
+    }
 
 }

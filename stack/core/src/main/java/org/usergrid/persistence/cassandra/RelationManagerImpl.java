@@ -149,6 +149,7 @@ import org.usergrid.persistence.query.ir.NodeVisitor;
 import org.usergrid.persistence.query.ir.NotNode;
 import org.usergrid.persistence.query.ir.OrNode;
 import org.usergrid.persistence.query.ir.QuerySlice;
+import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.schema.CollectionInfo;
@@ -2165,81 +2166,81 @@ public class RelationManagerImpl implements RelationManager,
     // return getIndexResults(results, true, null, itemType, level);
     // }
 
-    /**
-     * Search connections.
-     * 
-     * @param applicationId
-     *            the application id
-     * @param connectingEntityId
-     *            the connecting entity id
-     * @param pairedConnectionType
-     *            the paired connection type
-     * @param pairedConnectingEntityId
-     *            the paired connecting entity id
-     * @param connectionType
-     *            the connection type
-     * @param connectedEntityType
-     *            the connected entity type
-     * @param searchName
-     *            the search name
-     * @param searchStartValue
-     *            the search start value
-     * @param searchFinishValue
-     *            the search finish value
-     * @param startResult
-     *            the start result
-     * @param count
-     *            the count
-     * @param outputList
-     *            the output list
-     * @param outputDetails
-     *            the output details
-     * @throws Exception
-     *             the exception
-     */
-    public Results searchConnections(ConnectionRefImpl connection,
-            String searchName, Object searchStartValue,
-            Object searchFinishValue, UUID startResult, String cursor,
-            int count, boolean reversed, Level level) throws Exception {
+//    /**
+//     * Search connections.
+//     * 
+//     * @param applicationId
+//     *            the application id
+//     * @param connectingEntityId
+//     *            the connecting entity id
+//     * @param pairedConnectionType
+//     *            the paired connection type
+//     * @param pairedConnectingEntityId
+//     *            the paired connecting entity id
+//     * @param connectionType
+//     *            the connection type
+//     * @param connectedEntityType
+//     *            the connected entity type
+//     * @param searchName
+//     *            the search name
+//     * @param searchStartValue
+//     *            the search start value
+//     * @param searchFinishValue
+//     *            the search finish value
+//     * @param startResult
+//     *            the start result
+//     * @param count
+//     *            the count
+//     * @param outputList
+//     *            the output list
+//     * @param outputDetails
+//     *            the output details
+//     * @throws Exception
+//     *             the exception
+//     */
+//    public Results searchConnections(ConnectionRefImpl connection,
+//            String searchName, Object searchStartValue,
+//            Object searchFinishValue, UUID startResult, String cursor,
+//            int count, boolean reversed, Level level) throws Exception {
+//
+//        if (NULL_ID.equals(startResult)) {
+//            startResult = null;
+//        }
+//
+//        List<HColumn<ByteBuffer, ByteBuffer>> results = searchIndex(
+//                key(connection.getIndexId(), INDEX_CONNECTIONS), searchName,
+//                searchStartValue, searchFinishValue, startResult, cursor,
+//                count, reversed);
+//
+//        return getIndexResults(results, true, connection.getConnectionType(),
+//                connection.getConnectedEntityType(), level);
+//    }
 
-        if (NULL_ID.equals(startResult)) {
-            startResult = null;
-        }
-
-        List<HColumn<ByteBuffer, ByteBuffer>> results = searchIndex(
-                key(connection.getIndexId(), INDEX_CONNECTIONS), searchName,
-                searchStartValue, searchFinishValue, startResult, cursor,
-                count, reversed);
-
-        return getIndexResults(results, true, connection.getConnectionType(),
-                connection.getConnectedEntityType(), level);
-    }
-
-    @SuppressWarnings("rawtypes")
-    public Results searchConnections(ConnectionRefImpl connection,
-            QuerySlice slice, int count, Level level) throws Exception {
-
-        // if (slice.operator == FilterOperator.WITHIN) {
-        // Object v = slice.getValue();
-        // if ((v instanceof List) && (((List) v).size() >= 3)) {
-        // double maxDistance = getDouble(((List) v).get(0));
-        // double latitude = getDouble(((List) v).get(1));
-        // double longitude = getDouble(((List) v).get(2));
-        // Results r = em.getGeoIndexManager().proximitySearchConnections(
-        // connection.getIndexId(), slice.getPropertyName(),
-        // new Point(latitude, longitude), maxDistance, null,
-        // count, false, level);
-        // return r;
-        // }
-        // return new Results();
-        // }
-
-        List<HColumn<ByteBuffer, ByteBuffer>> results = searchIndex(
-                key(connection.getIndexId(), INDEX_CONNECTIONS), slice, count);
-
-        return getIndexResults(results, true, connection.getConnectionType(),
-                connection.getConnectedEntityType(), level);
-    }
+//    @SuppressWarnings("rawtypes")
+//    public Results searchConnections(ConnectionRefImpl connection,
+//            QuerySlice slice, int count, Level level) throws Exception {
+//
+//        // if (slice.operator == FilterOperator.WITHIN) {
+//        // Object v = slice.getValue();
+//        // if ((v instanceof List) && (((List) v).size() >= 3)) {
+//        // double maxDistance = getDouble(((List) v).get(0));
+//        // double latitude = getDouble(((List) v).get(1));
+//        // double longitude = getDouble(((List) v).get(2));
+//        // Results r = em.getGeoIndexManager().proximitySearchConnections(
+//        // connection.getIndexId(), slice.getPropertyName(),
+//        // new Point(latitude, longitude), maxDistance, null,
+//        // count, false, level);
+//        // return r;
+//        // }
+//        // return new Results();
+//        // }
+//
+//        List<HColumn<ByteBuffer, ByteBuffer>> results = searchIndex(
+//                key(connection.getIndexId(), INDEX_CONNECTIONS), slice, count);
+//
+//        return getIndexResults(results, true, connection.getConnectionType(),
+//                connection.getConnectedEntityType(), level);
+//    }
 
     @Override
     public Map<String, Map<UUID, Set<String>>> getOwners() throws Exception {
@@ -2828,21 +2829,24 @@ public class RelationManagerImpl implements RelationManager,
         return null;
     }
 
-    @Override
-    public Results searchConnectedEntitiesForProperty(String connectionType,
-            String connectedEntityType, String propertyName,
-            Object searchStartValue, Object searchFinishValue,
-            UUID startResult, int count, boolean reversed, Level resultsLevel)
-            throws Exception {
-
-        Results r = searchConnections(new ConnectionRefImpl(headEntity,
-                new ConnectedEntityRefImpl(connectionType, connectedEntityType,
-                        null)), propertyName, searchStartValue,
-                searchFinishValue, startResult, null, count + 1, reversed,
-                resultsLevel);
-
-        return em.loadEntities(r, resultsLevel, count);
-    }
+//    @Override
+//    public Results searchConnectedEntitiesForProperty(String connectionType,
+//            String connectedEntityType, String propertyName,
+//            Object searchStartValue, Object searchFinishValue,
+//            UUID startResult, int count, boolean reversed, Level resultsLevel)
+//            throws Exception {
+//        
+//        Query query = new Query();
+//        query.
+//
+//        Results r = searchConnections(new ConnectionRefImpl(headEntity,
+//                new ConnectedEntityRefImpl(connectionType, connectedEntityType,
+//                        null)), propertyName, searchStartValue,
+//                searchFinishValue, startResult, null, count + 1, reversed,
+//                resultsLevel);
+//
+//        return em.loadEntities(r, resultsLevel, count);
+//    }
 
     @Override
     public Results searchConnectedEntities(Query query) throws Exception {
@@ -2911,40 +2915,60 @@ public class RelationManagerImpl implements RelationManager,
         headEntity = em.validate(headEntity);
 
         Results results = null;
-
-        List<FilterPredicate> l = query.getFilterPredicates();
-        int search_count = query.getLimit() + 1;
-       
-        if (l.size() > 1) {
-            search_count = DEFAULT_SEARCH_COUNT;
-        }
-        for (FilterPredicate f : l) {
-            String prop = f.getPropertyName();
-            Object startValue = f.getStartValue();
-            Object finishValue = f.getFinishValue();
-
-            Results r = searchConnections(
-                    new ConnectionRefImpl(
-                            headEntity,
-                            new ConnectedEntityRefImpl(
-                                    ConnectionRefImpl.CONNECTION_ENTITY_CONNECTION_TYPE,
-                                    ConnectionRefImpl.CONNECTION_ENTITY_TYPE,
-                                    null)), prop, startValue, finishValue,
-                    query.getStartResult(), f.getCursor(), search_count,
-                    query.isReversed(), Level.IDS);
-
-            if (results != null) {
-                results.and(r);
-            } else {
-                results = r;
-            }
-        }
-
-        if (results == null) {
+        
+        if(!query.hasQueryPredicates()){
             return null;
         }
+        
+        
+        QueryProcessor qp = new QueryProcessor(query);
+      
+        
+        ConnectionRefImpl connectionRef =  new ConnectionRefImpl(headEntity, new ConnectedEntityRefImpl(
+                ConnectionRefImpl.CONNECTION_ENTITY_CONNECTION_TYPE,
+                ConnectionRefImpl.CONNECTION_ENTITY_TYPE,
+                null));
+      
+        
+        SearchConnectionVisitor visitor = new SearchConnectionVisitor(query, qp, connectionRef);
+        
+        qp.getFirstNode().visit(visitor);
+        
+        results = visitor.getResults();
 
-        results.trim(query.getLimit());
+//        List<FilterPredicate> l = query.getFilterPredicates();
+//        int search_count = query.getLimit() + 1;
+//       
+//        if (l.size() > 1) {
+//            search_count = DEFAULT_SEARCH_COUNT;
+//        }
+//        for (FilterPredicate f : l) {
+//            String prop = f.getPropertyName();
+//            Object startValue = f.getStartValue();
+//            Object finishValue = f.getFinishValue();
+//
+//            Results r = searchConnections(
+//                    new ConnectionRefImpl(
+//                            headEntity,
+//                            new ConnectedEntityRefImpl(
+//                                    ConnectionRefImpl.CONNECTION_ENTITY_CONNECTION_TYPE,
+//                                    ConnectionRefImpl.CONNECTION_ENTITY_TYPE,
+//                                    null)), prop, startValue, finishValue,
+//                    query.getStartResult(), f.getCursor(), search_count,
+//                    query.isReversed(), Level.IDS);
+//
+//            if (results != null) {
+//                results.and(r);
+//            } else {
+//                results = r;
+//            }
+//        }
+//
+//        if (results == null) {
+//            return null;
+//        }
+//
+//        results.trim(query.getLimit());
 
         return (List) getConnections(results.getIds());
 
@@ -2986,110 +3010,7 @@ public class RelationManagerImpl implements RelationManager,
         this.applicationContext = applicationContext;
     }
     
-    /**
-     * Simple search visitor that performs all the joining
-     * 
-     * @author tnine
-     * 
-     */
-    private abstract class SearchVisitor implements NodeVisitor {
-
-        protected Query query;
-
-        protected QueryProcessor queryProcessor;
-
-        protected Stack<Results> results = new Stack<Results>();
-
-        /**
-         * @param query
-         * @param collectionName
-         */
-        public SearchVisitor(Query query,
-                QueryProcessor queryProcessor) {
-            this.query = query;
-            this.queryProcessor = queryProcessor;
-        }
-
-        /**
-         * Return the results if they exist, null otherwise
-         * 
-         * @return
-         */
-        public Results getResults() {
-            return results.isEmpty() ? null : results.pop();
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see
-         * org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.
-         * persistence.query.ir.AndNode)
-         */
-        @Override
-        public void visit(AndNode node) throws Exception {
-            node.getLeft().visit(this);
-            node.getRight().visit(this);
-
-            Results right = results.pop();
-            Results left = results.pop();
-
-            left.merge(right);
-
-            results.push(left);
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see
-         * org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.
-         * persistence.query.ir.NotNode)
-         */
-        @Override
-        public void visit(NotNode node) throws Exception {
-
-            // edge case where the not node is the root node. in this case we
-            // need to select all, evaluate the child, then subtract
-            if (node == queryProcessor.getFirstNode()) {
-                // do full results scan here
-            }
-
-            node.getChild().visit(this);
-
-            Results childResults = results.pop();
-
-            Results existing = results.pop();
-
-            existing.subtract(childResults);
-
-            results.push(existing);
-
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see
-         * org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.
-         * persistence.query.ir.OrNode)
-         */
-        @Override
-        public void visit(OrNode node) throws Exception {
-            node.getLeft().visit(this);
-            node.getRight().visit(this);
-
-            Results right = results.pop();
-            Results left = results.pop();
-
-            left.merge(right);
-
-            results.push(left);
-        }
-
-       
-    }
-    
+   
 
     /**
      * Simple search visitor that performs all the joining
@@ -3259,6 +3180,27 @@ public class RelationManagerImpl implements RelationManager,
                     results = r;
                 }
             }
+//            
+//            String prop = f.getPropertyName();
+//            Object startValue = f.getStartValue();
+//            Object finishValue = f.getFinishValue();
+//
+//            Results r = searchConnections(
+//                    new ConnectionRefImpl(
+//                            headEntity,
+//                            new ConnectedEntityRefImpl(
+//                                    ConnectionRefImpl.CONNECTION_ENTITY_CONNECTION_TYPE,
+//                                    ConnectionRefImpl.CONNECTION_ENTITY_TYPE,
+//                                    null)), prop, startValue, finishValue,
+//                    query.getStartResult(), f.getCursor(), search_count,
+//                    query.isReversed(), Level.IDS);
+//
+//            if (results != null) {
+//                results.and(r);
+//            } else {
+//                results = r;
+//            }
+//        }
 
             this.results.push(results);
 

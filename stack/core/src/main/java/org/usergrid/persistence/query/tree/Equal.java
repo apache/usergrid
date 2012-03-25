@@ -17,28 +17,32 @@ package org.usergrid.persistence.query.tree;
 
 import org.antlr.runtime.Token;
 
-
 /**
  * @author tnine
  * 
  */
-public class Equal extends EqualityOperand{
+public class Equal extends EqualityOperand {
 
-  /**
-   * @param property
-   * @param literal
-   */
-  public Equal(Token t) {
-    super(t);
-  }
-  
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence.query.tree.QueryVisitor)
-   */
-  @Override
-  public void visit(QueryVisitor visitor) {
-    visitor.visit(this);
-  }
+    /**
+     * @param property
+     * @param literal
+     */
+    public Equal(Token t) {
+        super(t);
+    }
 
+   
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence
+     * .query.tree.QueryVisitor)
+     */
+    @Override
+    public void visit(QueryVisitor visitor) {
+        visitor.visit(this);
+    }
 
 }

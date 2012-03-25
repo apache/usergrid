@@ -238,10 +238,11 @@ select_expr
 //end select clauses
 
 ql returns [Query query]
-  : 'select'! select_expr! ('where'! expression )? ('order by'! order! (','! order!)*)? {
+  : ('select'! select_expr!)? ('where'!? expression)? ('order by'! order! (','! order!)*)? {
 
-  
-  query.setRootOperand((Operand)$expression.tree);
+  if($expression.tree instanceof Operand){
+    query.setRootOperand((Operand)$expression.tree);
+  }
   
   retval.query = query;
 

@@ -67,6 +67,7 @@ import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -74,6 +75,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.TreeSet;
 import java.util.UUID;
 
@@ -118,13 +120,21 @@ import org.usergrid.persistence.CounterQuery;
 import org.usergrid.persistence.CounterResolution;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Query.CounterFilterPredicate;
+import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.cassandra.CassandraPersistenceUtils;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.CounterUtils;
 import org.usergrid.persistence.cassandra.CounterUtils.AggregateCounterSelection;
 import org.usergrid.persistence.cassandra.QueryProcessor;
+import org.usergrid.persistence.query.ir.AndNode;
+import org.usergrid.persistence.query.ir.NodeVisitor;
+import org.usergrid.persistence.query.ir.NotNode;
+import org.usergrid.persistence.query.ir.OrNode;
 import org.usergrid.persistence.query.ir.QuerySlice;
+import org.usergrid.persistence.query.ir.SearchVisitor;
+import org.usergrid.persistence.query.ir.SliceNode;
+import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.utils.UUIDUtils;
 
 import com.fasterxml.uuid.UUIDComparator;
@@ -764,7 +774,7 @@ public class QueueManagerImpl implements QueueManager {
 
 		TreeSet<UUID> uuid_set = new TreeSet<UUID>(new UUIDComparator());
 
-		if (!query.hasFilterPredicates()) {
+		if (!query.hasQueryPredicates()) {
 			if (prev_count > 0) {
 				uuid_set = getQueueRange(ko, queueId, bounds, uuid_set,
 						start_uuid, null, true, prev_count);
@@ -1761,7 +1771,7 @@ public class QueueManagerImpl implements QueueManager {
 		publisherQueuePath = normalizeQueuePath(publisherQueuePath);
 		UUID publisherQueueId = getQueueId(publisherQueuePath);
 
-		if (!query.hasFilterPredicates() && !query.hasSortPredicates()) {
+		if (!query.hasQueryPredicates() && !query.hasSortPredicates()) {
 
 			return getSubscribers(publisherQueuePath, null, query.getLimit());
 
@@ -1771,6 +1781,8 @@ public class QueueManagerImpl implements QueueManager {
 		String composite_cursor = null;
 
 		QueryProcessor qp = new QueryProcessor(query);
+		
+		
 		List<QuerySlice> slices = qp.getSlices();
 		int search_count = query.getLimit() + 1;
 		if (slices.size() > 1) {
@@ -1831,6 +1843,118 @@ public class QueueManagerImpl implements QueueManager {
 	public UUID getNewConsumerId() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	private class SearchQueueVisitor implements NodeVisitor{
+
+	    private Query query;
+	    private QueryProcessor queryProcessor;
+	    private Stack<QueueSet> results = new Stack<QueueSet>();
+	    private UUID publisherQueueId;
+	    
+        /**
+         * @param query
+         * @param queryProcessor
+         */
+        public SearchQueueVisitor(Query query, QueryProcessor queryProcessor, UUID publisherQueueId) {
+            this.query = query;
+            this.queryProcessor =  queryProcessor;
+            this.publisherQueueId = publisherQueueId;
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.persistence.query.ir.SliceNode)
+         */
+        @Override
+        public void visit(SliceNode node) throws Exception {
+            
+            Collection<QuerySlice> slices = node.getAllSlices();
+            
+            int search_count = query.getLimit() + 1;
+            
+            if (slices.size() > 1) {
+                search_count = DEFAULT_SEARCH_COUNT;
+            }
+            
+            QueueSet results = null;
+            
+            for (QuerySlice slice : slices) {
+
+
+                // update the cursor and order before we perform the slice
+                // operation
+                queryProcessor.applyCursorAndSort(slice);
+                
+                QueueSet r = null;
+                
+                try {
+                    r = searchQueueIndex(publisherQueueId, slice, search_count);
+                } catch (Exception e) {
+                    logger.error("Error during search", e);
+                }
+                
+
+                
+
+                if (r.getCursor() != null) {
+                    // TODO Todd finish this and set the cursor for each result
+                    // set
+                    // queryProcessor.updateCursor(slice, r.getCursor());
+                }
+
+                if (results != null) {
+                    results.and(r);
+                } else {
+                    results = r;
+                }
+                
+             
+            }
+
+            
+            this.results.push(results);
+
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.persistence.query.ir.WithinNode)
+         */
+        @Override
+        public void visit(WithinNode node) throws Exception {
+            throw new UnsupportedOperationException("Geo search on queues is not possible");
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.persistence.query.ir.AndNode)
+         */
+        @Override
+        public void visit(AndNode node) throws Exception {
+            node.getLeft().visit(this);
+            node.getRight().visit(this);
+            
+            QueueSet right = results.pop();
+            QueueSet left = results.pop();
+            
+            left.and(right);
+            
+            results.push(left);
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.persistence.query.ir.NotNode)
+         */
+        @Override
+        public void visit(NotNode node) throws Exception {
+            throw new UnsupportedOperationException("Not operations aren't supported for queues");
+        }
+
+        /* (non-Javadoc)
+         * @see org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.persistence.query.ir.OrNode)
+         */
+        @Override
+        public void visit(OrNode node) throws Exception {
+            throw new UnsupportedOperationException("Or operations aren't supported for queues");
+        }
 	}
 
 }
