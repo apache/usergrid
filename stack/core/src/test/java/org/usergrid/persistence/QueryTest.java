@@ -35,8 +35,10 @@ import org.usergrid.persistence.query.tree.ContainsOperand;
 import org.usergrid.persistence.query.tree.Equal;
 import org.usergrid.persistence.query.tree.FloatLiteral;
 import org.usergrid.persistence.query.tree.GreaterThan;
+import org.usergrid.persistence.query.tree.GreaterThanEqual;
 import org.usergrid.persistence.query.tree.IntegerLiteral;
 import org.usergrid.persistence.query.tree.LessThan;
+import org.usergrid.persistence.query.tree.LessThanEqual;
 import org.usergrid.persistence.query.tree.StringLiteral;
 import org.usergrid.persistence.query.tree.WithinOperand;
 import org.usergrid.utils.JsonUtils;
@@ -57,8 +59,7 @@ public class QueryTest {
         q.addFilter("a=5");
         q.addFilter("b='hello'");
         q.addFilter("c < 7");
-//        q.addFilter("d gt 5");
-        q.addFilter("d > 5");
+        q.addFilter("d gt 5");
         // q.addFilter("e in 5,6");
         q.addFilter("f = 6.0");
         q.addFilter("g = .05");
@@ -106,76 +107,72 @@ public class QueryTest {
         and = (AndOperand) and.getLeft();
         equal = (Equal) and.getRight();
 
-        assertEquals("b", lt.getProperty().getValue());
-        assertEquals("hello", ((StringLiteral) lt.getLiteral()).getValue());
+        assertEquals("b", equal.getProperty().getValue());
+        assertEquals("hello", ((StringLiteral) equal.getLiteral()).getValue());
         
         
-        and = (AndOperand) and.getLeft();
-        equal = (Equal) and.getRight();
-
-        assertEquals("a", lt.getProperty().getValue());
-        assertEquals(5, ((IntegerLiteral) lt.getLiteral()).getValue().intValue());
-
-
-
+        equal = (Equal) and.getLeft();
         
 
-        // These tests are now obscelete See GrammarTreeTest
-        // q = Query.fromQL("select * where a = 5");
-        // i = q.getFilterPredicates().iterator();
-        // f = i.next();
-        // testPredicate(f, "a", Query.FilterOperator.EQUAL, new Long(5));
-        // logger.info(q.toString());
-        //
-        // q = Query.fromQL("select * where a = 5 and b = \'hello\'");
-        // i = q.getFilterPredicates().iterator();
-        // f = i.next();
-        // testPredicate(f, "a", Query.FilterOperator.EQUAL, new Long(5));
-        // f = i.next();
-        // testPredicate(f, "b", Query.FilterOperator.EQUAL, "hello");
-        // logger.info(q.toString());
-        //
-        // q = Query.fromQL("select * where a = 5 and b = \'hello\' and c<7");
-        // i = q.getFilterPredicates().iterator();
-        // f = i.next();
-        // testPredicate(f, "a", Query.FilterOperator.EQUAL, new Long(5));
-        // f = i.next();
-        // testPredicate(f, "b", Query.FilterOperator.EQUAL, "hello");
-        // f = i.next();
-        // testPredicate(f, "c", Query.FilterOperator.LESS_THAN, new Long(7));
-        // logger.info(q.toString());
-        //
-        // q = Query.fromQL("order by a asc");
-        // assertNotNull(q.getSortPredicates());
-        // assertEquals(1, q.getSortPredicates().size());
-        // assertEquals("a", q.getSortPredicates().get(0).getPropertyName());
-        //
-        // q = Query.fromQL("order by a,b desc");
-        // assertNotNull(q.getSortPredicates());
-        // assertEquals(2, q.getSortPredicates().size());
-        // assertEquals("a", q.getSortPredicates().get(0).getPropertyName());
-        // assertEquals("b", q.getSortPredicates().get(1).getPropertyName());
-        // assertEquals(SortDirection.DESCENDING, q.getSortPredicates().get(1)
-        // .getDirection());
-        //
-        // q = Query.fromQL("select * where loc within 5 of 6,7");
-        // i = q.getFilterPredicates().iterator();
-        // f = i.next();
-        // testPredicate(f, "loc.coordinates", Query.FilterOperator.WITHIN,
-        // Arrays.asList(new Long(5), new Long(6), new Long(7)));
-        // logger.info(q.toString());
-
+        assertEquals("a", equal.getProperty().getValue());
+        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue().intValue());
     }
 
-    public void testPredicate(FilterPredicate f, String name,
-            Query.FilterOperator op, Object val) {
-        logger.info("Checking filter: " + f);
-        assertEquals("Predicate property name not correct", name,
-                f.getPropertyName());
-        assertEquals("first predicate operator not correct", op,
-                f.getOperator());
-        assertEquals("first predicate value not correct", val, f.getValue());
-
+    @Test
+    public void testCodeEquals(){
+        Query query = new Query();
+        query.addEqualityFilter("foo", "bar");
+        
+        Equal equal = (Equal) query.getRootOperand();
+        
+        assertEquals("foo", equal.getProperty().getValue());
+        assertEquals("bar", equal.getLiteral().getValue());
+    }
+    
+    @Test
+    public void testCodeLessThan(){
+        Query query = new Query();
+        query.addLessThanFilter("foo", 5);
+        
+        LessThan equal = (LessThan) query.getRootOperand();
+        
+        assertEquals("foo", equal.getProperty().getValue());
+        assertEquals(5, equal.getLiteral().getValue());
+    }
+    
+    
+    @Test
+    public void testCodeLessThanEqual(){
+        Query query = new Query();
+        query.addLessThanEqualFilter("foo", 5);
+        
+        LessThanEqual equal = (LessThanEqual) query.getRootOperand();
+        
+        assertEquals("foo", equal.getProperty().getValue());
+        assertEquals(5, equal.getLiteral().getValue());
+    }
+    
+    @Test
+    public void testCodeGreaterThan(){
+        Query query = new Query();
+        query.addGreaterThanFilter("foo", 5);
+        
+        GreaterThan equal = (GreaterThan) query.getRootOperand();
+        
+        assertEquals("foo", equal.getProperty().getValue());
+        assertEquals(5, equal.getLiteral().getValue());
+    }
+    
+    
+    @Test
+    public void testCodeGreaterThanEqual(){
+        Query query = new Query();
+        query.addGreaterThanEqualFilter("foo", 5);
+        
+        GreaterThanEqual equal = (GreaterThanEqual) query.getRootOperand();
+        
+        assertEquals("foo", equal.getProperty().getValue());
+        assertEquals(5, equal.getLiteral().getValue());
     }
 
     @Test

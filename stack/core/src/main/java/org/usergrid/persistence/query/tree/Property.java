@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
 
 /**
@@ -33,7 +34,7 @@ public class Property extends Literal<String> {
   }
   
   public Property(String property){
-    super(null);
+    super(new ClassicToken(0, property));
     this.property = property;
   }
 

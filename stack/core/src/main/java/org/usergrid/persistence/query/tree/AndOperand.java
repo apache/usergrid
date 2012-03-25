@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.Token;
 
 /**
@@ -24,7 +25,7 @@ import org.antlr.runtime.Token;
 public class AndOperand extends BooleanOperand {
 
     public AndOperand() {
-        super(null);
+        super(new CommonToken(0, "and"));
 
     }
 

@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
 
 /**
@@ -31,6 +32,15 @@ public class BooleanLiteral extends Literal<Boolean> {
   protected BooleanLiteral(Token t) {
     super(t);
     value = Boolean.valueOf(t.getText());
+  }
+  
+  /**
+   * The boolean literal
+   * @param value
+   */
+  public BooleanLiteral(boolean value){
+      super(new ClassicToken(0, String.valueOf(value)));
+      this.value = value;
   }
 
   public Boolean getValue() {

@@ -17,35 +17,32 @@ package org.usergrid.persistence.query.tree;
 
 import java.util.UUID;
 
+import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
-
-
 
 /**
  * @author tnine
- *
+ * 
  */
 public class UUIDLiteral extends Literal<UUID> {
 
-  private UUID value;
-  
-  /**
-   * @param t
-   */
-  public UUIDLiteral(Token t) {
-    super(t);
-    value = UUID.fromString(t.getText());
-  }
-  
-  
-  public UUIDLiteral(UUID value) {
-    super(null);
-   this.value = value;
-  }
-  
-  
-  public UUID getValue(){
-    return this.value;
-  }
+    private UUID value;
+
+    /**
+     * @param t
+     */
+    public UUIDLiteral(Token t) {
+        super(t);
+        value = UUID.fromString(t.getText());
+    }
+
+    public UUIDLiteral(UUID value) {
+        super(new ClassicToken(0, String.valueOf(value)));
+        this.value = value;
+    }
+
+    public UUID getValue() {
+        return this.value;
+    }
 
 }

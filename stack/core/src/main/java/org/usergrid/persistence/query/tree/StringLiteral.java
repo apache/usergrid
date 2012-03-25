@@ -17,6 +17,7 @@ package org.usergrid.persistence.query.tree;
 
 import static org.apache.commons.lang.StringUtils.removeEnd;
 
+import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
 
 /**
@@ -33,11 +34,14 @@ public class StringLiteral extends Literal<String> {
      */
     public StringLiteral(Token t) {
         super(t);
-        parseValue(t.getText());
+        value = t.getText();
+        value = value.substring(1, value.length() - 1);
+
+        parseValue(value);
     }
 
     public StringLiteral(String value) {
-        super(null);
+        super(new ClassicToken(0, value));
         parseValue(value);
 
     }
@@ -47,8 +51,7 @@ public class StringLiteral extends Literal<String> {
      * @param value
      */
     private void parseValue(String value) {
-        value = value.substring(1, value.length() - 1);
-
+       
         this.value = value;
 
         if ("*".equals(value)) {

@@ -44,7 +44,7 @@ public abstract class EqualityOperand extends Operand {
      * @param name
      */
     public void setProperty(String name){
-        setChild(0, new Property(name));
+       setAtIndex(0, new Property(name));
     }
     
     /**
@@ -52,7 +52,25 @@ public abstract class EqualityOperand extends Operand {
      * @param literal
      */
     public void setLiteral(Object value){
-        setChild(1, LiteralFactory.getLiteral(value));
+        setAtIndex(1, LiteralFactory.getLiteral(value));
+    }
+    
+    /**
+     * Set the child at the specified index.  If it doesn't exist, it's added until it does
+     * @param index
+     * @param value
+     */
+    private void setAtIndex(int index, Literal<?> value){
+        
+        if(children == null){
+            children = createChildrenList();
+        }
+        
+        while(children.size() -1 < index){
+            children.add(null);
+        }
+        
+        setChild(index, value);
     }
     
     /**

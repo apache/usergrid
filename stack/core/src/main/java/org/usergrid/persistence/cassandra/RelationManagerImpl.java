@@ -3047,9 +3047,7 @@ public class RelationManagerImpl implements RelationManager,
             // level. If so we can just use them as a row key for faster seek
             Object joinedRowKey = getCFKeyForSubkey(collection, node);
 
-            Object indexKey = key(headEntity.getUuid(), collection.getName());
-
-            indexKey = key(headEntity.getUuid(), collection.getName(),
+            Object indexKey = joinedRowKey == null ? key(headEntity.getUuid(), collection.getName()) : key(headEntity.getUuid(), collection.getName(),
                     joinedRowKey);
 
             Results results = null;

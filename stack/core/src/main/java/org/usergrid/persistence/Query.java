@@ -46,6 +46,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.antlr.runtime.ANTLRStringStream;
+import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenRewriteStream;
@@ -675,7 +676,7 @@ public class Query {
      * @return
      */
     public Query addEqualityFilter(String propName, Object value) {
-        Equal equality = new Equal(null);
+        Equal equality = new Equal(new ClassicToken(0, "="));
 
         addClause(equality, propName, value);
 

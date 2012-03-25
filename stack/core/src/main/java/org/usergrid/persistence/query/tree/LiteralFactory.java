@@ -46,6 +46,10 @@ public class LiteralFactory {
       return new UUIDLiteral((UUID)value);
     }
     
+    if(value instanceof Boolean){
+        return new BooleanLiteral((Boolean)value);
+    }
+    
     throw new UnsupportedOperationException(String.format("Unsupported type of %s was passed when trying to construct a literal", value.getClass()));
     
   }

@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
 
 
@@ -40,7 +41,7 @@ public class IntegerLiteral extends Literal<Integer> {
    * @param value
    */
   public IntegerLiteral(int value){
-    super(null);
+    super(new ClassicToken(0, String.valueOf(value)));
     this.value = value;
   }
   
