@@ -1,4 +1,4 @@
-// $ANTLR 3.4 org/usergrid/persistence/query/tree/QueryFilter.g 2012-03-24 22:54:57
+// $ANTLR 3.4 org/usergrid/persistence/query/tree/QueryFilter.g 2012-03-25 10:43:27
 
 package org.usergrid.persistence.query.tree;
 
@@ -106,7 +106,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "property"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:122:1: property : ID ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:125:1: property : ID ;
     public final QueryFilterParser.property_return property() throws RecognitionException {
         QueryFilterParser.property_return retval = new QueryFilterParser.property_return();
         retval.start = input.LT(1);
@@ -119,13 +119,13 @@ public TreeAdaptor getTreeAdaptor() {
         Object ID1_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:122:10: ( ID )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:122:12: ID
+            // org/usergrid/persistence/query/tree/QueryFilter.g:125:10: ( ID )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:125:12: ID
             {
             root_0 = (Object)adaptor.nil();
 
 
-            ID1=(Token)match(input,ID,FOLLOW_ID_in_property676); 
+            ID1=(Token)match(input,ID,FOLLOW_ID_in_property680); 
             ID1_tree = 
             new Property(ID1) 
             ;
@@ -163,7 +163,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "booleanliteral"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:124:1: booleanliteral : BOOLEAN ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:127:1: booleanliteral : BOOLEAN ;
     public final QueryFilterParser.booleanliteral_return booleanliteral() throws RecognitionException {
         QueryFilterParser.booleanliteral_return retval = new QueryFilterParser.booleanliteral_return();
         retval.start = input.LT(1);
@@ -176,13 +176,13 @@ public TreeAdaptor getTreeAdaptor() {
         Object BOOLEAN2_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:124:15: ( BOOLEAN )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:124:17: BOOLEAN
+            // org/usergrid/persistence/query/tree/QueryFilter.g:127:15: ( BOOLEAN )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:127:17: BOOLEAN
             {
             root_0 = (Object)adaptor.nil();
 
 
-            BOOLEAN2=(Token)match(input,BOOLEAN,FOLLOW_BOOLEAN_in_booleanliteral687); 
+            BOOLEAN2=(Token)match(input,BOOLEAN,FOLLOW_BOOLEAN_in_booleanliteral691); 
             BOOLEAN2_tree = 
             new BooleanLiteral(BOOLEAN2) 
             ;
@@ -220,7 +220,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "intliteral"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:127:1: intliteral : INT ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:130:1: intliteral : INT ;
     public final QueryFilterParser.intliteral_return intliteral() throws RecognitionException {
         QueryFilterParser.intliteral_return retval = new QueryFilterParser.intliteral_return();
         retval.start = input.LT(1);
@@ -233,13 +233,13 @@ public TreeAdaptor getTreeAdaptor() {
         Object INT3_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:127:12: ( INT )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:128:3: INT
+            // org/usergrid/persistence/query/tree/QueryFilter.g:130:12: ( INT )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:131:3: INT
             {
             root_0 = (Object)adaptor.nil();
 
 
-            INT3=(Token)match(input,INT,FOLLOW_INT_in_intliteral701); 
+            INT3=(Token)match(input,INT,FOLLOW_INT_in_intliteral705); 
             INT3_tree = 
             new IntegerLiteral(INT3) 
             ;
@@ -277,7 +277,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "uuidliteral"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:130:1: uuidliteral : UUID ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:133:1: uuidliteral : UUID ;
     public final QueryFilterParser.uuidliteral_return uuidliteral() throws RecognitionException {
         QueryFilterParser.uuidliteral_return retval = new QueryFilterParser.uuidliteral_return();
         retval.start = input.LT(1);
@@ -290,13 +290,13 @@ public TreeAdaptor getTreeAdaptor() {
         Object UUID4_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:130:13: ( UUID )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:131:3: UUID
+            // org/usergrid/persistence/query/tree/QueryFilter.g:133:13: ( UUID )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:134:3: UUID
             {
             root_0 = (Object)adaptor.nil();
 
 
-            UUID4=(Token)match(input,UUID,FOLLOW_UUID_in_uuidliteral715); 
+            UUID4=(Token)match(input,UUID,FOLLOW_UUID_in_uuidliteral719); 
             UUID4_tree = 
             new UUIDLiteral(UUID4) 
             ;
@@ -334,7 +334,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "stringliteral"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:133:1: stringliteral : STRING ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:136:1: stringliteral : STRING ;
     public final QueryFilterParser.stringliteral_return stringliteral() throws RecognitionException {
         QueryFilterParser.stringliteral_return retval = new QueryFilterParser.stringliteral_return();
         retval.start = input.LT(1);
@@ -347,13 +347,13 @@ public TreeAdaptor getTreeAdaptor() {
         Object STRING5_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:133:15: ( STRING )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:134:3: STRING
+            // org/usergrid/persistence/query/tree/QueryFilter.g:136:15: ( STRING )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:137:3: STRING
             {
             root_0 = (Object)adaptor.nil();
 
 
-            STRING5=(Token)match(input,STRING,FOLLOW_STRING_in_stringliteral728); 
+            STRING5=(Token)match(input,STRING,FOLLOW_STRING_in_stringliteral732); 
             STRING5_tree = 
             new StringLiteral(STRING5) 
             ;
@@ -391,7 +391,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "floatliteral"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:136:1: floatliteral : FLOAT ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:139:1: floatliteral : FLOAT ;
     public final QueryFilterParser.floatliteral_return floatliteral() throws RecognitionException {
         QueryFilterParser.floatliteral_return retval = new QueryFilterParser.floatliteral_return();
         retval.start = input.LT(1);
@@ -404,13 +404,13 @@ public TreeAdaptor getTreeAdaptor() {
         Object FLOAT6_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:136:14: ( FLOAT )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:137:3: FLOAT
+            // org/usergrid/persistence/query/tree/QueryFilter.g:139:14: ( FLOAT )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:140:3: FLOAT
             {
             root_0 = (Object)adaptor.nil();
 
 
-            FLOAT6=(Token)match(input,FLOAT,FOLLOW_FLOAT_in_floatliteral743); 
+            FLOAT6=(Token)match(input,FLOAT,FOLLOW_FLOAT_in_floatliteral747); 
             FLOAT6_tree = 
             new FloatLiteral(FLOAT6) 
             ;
@@ -448,7 +448,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "value"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:140:1: value : ( booleanliteral | intliteral | uuidliteral | stringliteral | floatliteral );
+    // org/usergrid/persistence/query/tree/QueryFilter.g:143:1: value : ( booleanliteral | intliteral | uuidliteral | stringliteral | floatliteral );
     public final QueryFilterParser.value_return value() throws RecognitionException {
         QueryFilterParser.value_return retval = new QueryFilterParser.value_return();
         retval.start = input.LT(1);
@@ -469,7 +469,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:140:7: ( booleanliteral | intliteral | uuidliteral | stringliteral | floatliteral )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:143:7: ( booleanliteral | intliteral | uuidliteral | stringliteral | floatliteral )
             int alt1=5;
             switch ( input.LA(1) ) {
             case BOOLEAN:
@@ -507,12 +507,12 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt1) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:141:3: booleanliteral
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:144:3: booleanliteral
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_booleanliteral_in_value759);
+                    pushFollow(FOLLOW_booleanliteral_in_value763);
                     booleanliteral7=booleanliteral();
 
                     state._fsp--;
@@ -522,12 +522,12 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:142:5: intliteral
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:145:5: intliteral
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_intliteral_in_value765);
+                    pushFollow(FOLLOW_intliteral_in_value769);
                     intliteral8=intliteral();
 
                     state._fsp--;
@@ -537,12 +537,12 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:143:5: uuidliteral
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:146:5: uuidliteral
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_uuidliteral_in_value771);
+                    pushFollow(FOLLOW_uuidliteral_in_value775);
                     uuidliteral9=uuidliteral();
 
                     state._fsp--;
@@ -552,12 +552,12 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:144:5: stringliteral
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:147:5: stringliteral
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_stringliteral_in_value777);
+                    pushFollow(FOLLOW_stringliteral_in_value781);
                     stringliteral10=stringliteral();
 
                     state._fsp--;
@@ -567,12 +567,12 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 5 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:145:5: floatliteral
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:148:5: floatliteral
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_floatliteral_in_value783);
+                    pushFollow(FOLLOW_floatliteral_in_value787);
                     floatliteral11=floatliteral();
 
                     state._fsp--;
@@ -612,7 +612,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "equalityop"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:156:1: equalityop : ( property LT ^ value | property LTE ^ value | property EQ ^ value | property GT ^ value | property GTE ^ value );
+    // org/usergrid/persistence/query/tree/QueryFilter.g:159:1: equalityop : ( property LT ^ value | property LTE ^ value | property EQ ^ value | property GT ^ value | property GTE ^ value );
     public final QueryFilterParser.equalityop_return equalityop() throws RecognitionException {
         QueryFilterParser.equalityop_return retval = new QueryFilterParser.equalityop_return();
         retval.start = input.LT(1);
@@ -653,7 +653,7 @@ public TreeAdaptor getTreeAdaptor() {
         Object GTE25_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:156:12: ( property LT ^ value | property LTE ^ value | property EQ ^ value | property GT ^ value | property GTE ^ value )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:159:12: ( property LT ^ value | property LTE ^ value | property EQ ^ value | property GT ^ value | property GTE ^ value )
             int alt2=5;
             switch ( input.LA(1) ) {
             case ID:
@@ -704,26 +704,26 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt2) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:157:3: property LT ^ value
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:160:3: property LT ^ value
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_property_in_equalityop808);
+                    pushFollow(FOLLOW_property_in_equalityop812);
                     property12=property();
 
                     state._fsp--;
 
                     adaptor.addChild(root_0, property12.getTree());
 
-                    LT13=(Token)match(input,LT,FOLLOW_LT_in_equalityop810); 
+                    LT13=(Token)match(input,LT,FOLLOW_LT_in_equalityop814); 
                     LT13_tree = 
                     new LessThan(LT13) 
                     ;
                     root_0 = (Object)adaptor.becomeRoot(LT13_tree, root_0);
 
 
-                    pushFollow(FOLLOW_value_in_equalityop816);
+                    pushFollow(FOLLOW_value_in_equalityop820);
                     value14=value();
 
                     state._fsp--;
@@ -733,26 +733,26 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:158:4: property LTE ^ value
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:161:4: property LTE ^ value
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_property_in_equalityop821);
+                    pushFollow(FOLLOW_property_in_equalityop825);
                     property15=property();
 
                     state._fsp--;
 
                     adaptor.addChild(root_0, property15.getTree());
 
-                    LTE16=(Token)match(input,LTE,FOLLOW_LTE_in_equalityop823); 
+                    LTE16=(Token)match(input,LTE,FOLLOW_LTE_in_equalityop827); 
                     LTE16_tree = 
                     new LessThanEqual(LTE16) 
                     ;
                     root_0 = (Object)adaptor.becomeRoot(LTE16_tree, root_0);
 
 
-                    pushFollow(FOLLOW_value_in_equalityop829);
+                    pushFollow(FOLLOW_value_in_equalityop833);
                     value17=value();
 
                     state._fsp--;
@@ -762,26 +762,26 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:159:4: property EQ ^ value
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:162:4: property EQ ^ value
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_property_in_equalityop834);
+                    pushFollow(FOLLOW_property_in_equalityop838);
                     property18=property();
 
                     state._fsp--;
 
                     adaptor.addChild(root_0, property18.getTree());
 
-                    EQ19=(Token)match(input,EQ,FOLLOW_EQ_in_equalityop836); 
+                    EQ19=(Token)match(input,EQ,FOLLOW_EQ_in_equalityop840); 
                     EQ19_tree = 
                     new Equal(EQ19) 
                     ;
                     root_0 = (Object)adaptor.becomeRoot(EQ19_tree, root_0);
 
 
-                    pushFollow(FOLLOW_value_in_equalityop842);
+                    pushFollow(FOLLOW_value_in_equalityop846);
                     value20=value();
 
                     state._fsp--;
@@ -791,26 +791,26 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:160:4: property GT ^ value
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:163:4: property GT ^ value
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_property_in_equalityop847);
+                    pushFollow(FOLLOW_property_in_equalityop851);
                     property21=property();
 
                     state._fsp--;
 
                     adaptor.addChild(root_0, property21.getTree());
 
-                    GT22=(Token)match(input,GT,FOLLOW_GT_in_equalityop849); 
+                    GT22=(Token)match(input,GT,FOLLOW_GT_in_equalityop853); 
                     GT22_tree = 
                     new GreaterThan(GT22) 
                     ;
                     root_0 = (Object)adaptor.becomeRoot(GT22_tree, root_0);
 
 
-                    pushFollow(FOLLOW_value_in_equalityop855);
+                    pushFollow(FOLLOW_value_in_equalityop859);
                     value23=value();
 
                     state._fsp--;
@@ -820,26 +820,26 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 5 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:161:4: property GTE ^ value
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:164:4: property GTE ^ value
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_property_in_equalityop860);
+                    pushFollow(FOLLOW_property_in_equalityop864);
                     property24=property();
 
                     state._fsp--;
 
                     adaptor.addChild(root_0, property24.getTree());
 
-                    GTE25=(Token)match(input,GTE,FOLLOW_GTE_in_equalityop862); 
+                    GTE25=(Token)match(input,GTE,FOLLOW_GTE_in_equalityop866); 
                     GTE25_tree = 
                     new GreaterThanEqual(GTE25) 
                     ;
                     root_0 = (Object)adaptor.becomeRoot(GTE25_tree, root_0);
 
 
-                    pushFollow(FOLLOW_value_in_equalityop868);
+                    pushFollow(FOLLOW_value_in_equalityop872);
                     value26=value();
 
                     state._fsp--;
@@ -879,7 +879,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "locationop"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:165:1: locationop : property 'within' ^ floatliteral 'of' ! floatliteral ',' ! floatliteral ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:168:1: locationop : property 'within' ^ floatliteral 'of' ! floatliteral ',' ! floatliteral ;
     public final QueryFilterParser.locationop_return locationop() throws RecognitionException {
         QueryFilterParser.locationop_return retval = new QueryFilterParser.locationop_return();
         retval.start = input.LT(1);
@@ -904,45 +904,45 @@ public TreeAdaptor getTreeAdaptor() {
         Object char_literal32_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:165:12: ( property 'within' ^ floatliteral 'of' ! floatliteral ',' ! floatliteral )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:166:3: property 'within' ^ floatliteral 'of' ! floatliteral ',' ! floatliteral
+            // org/usergrid/persistence/query/tree/QueryFilter.g:168:12: ( property 'within' ^ floatliteral 'of' ! floatliteral ',' ! floatliteral )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:169:3: property 'within' ^ floatliteral 'of' ! floatliteral ',' ! floatliteral
             {
             root_0 = (Object)adaptor.nil();
 
 
-            pushFollow(FOLLOW_property_in_locationop883);
+            pushFollow(FOLLOW_property_in_locationop887);
             property27=property();
 
             state._fsp--;
 
             adaptor.addChild(root_0, property27.getTree());
 
-            string_literal28=(Token)match(input,36,FOLLOW_36_in_locationop885); 
+            string_literal28=(Token)match(input,36,FOLLOW_36_in_locationop889); 
             string_literal28_tree = 
             new WithinOperand(string_literal28) 
             ;
             root_0 = (Object)adaptor.becomeRoot(string_literal28_tree, root_0);
 
 
-            pushFollow(FOLLOW_floatliteral_in_locationop891);
+            pushFollow(FOLLOW_floatliteral_in_locationop895);
             floatliteral29=floatliteral();
 
             state._fsp--;
 
             adaptor.addChild(root_0, floatliteral29.getTree());
 
-            string_literal30=(Token)match(input,31,FOLLOW_31_in_locationop893); 
+            string_literal30=(Token)match(input,31,FOLLOW_31_in_locationop897); 
 
-            pushFollow(FOLLOW_floatliteral_in_locationop896);
+            pushFollow(FOLLOW_floatliteral_in_locationop900);
             floatliteral31=floatliteral();
 
             state._fsp--;
 
             adaptor.addChild(root_0, floatliteral31.getTree());
 
-            char_literal32=(Token)match(input,24,FOLLOW_24_in_locationop898); 
+            char_literal32=(Token)match(input,24,FOLLOW_24_in_locationop902); 
 
-            pushFollow(FOLLOW_floatliteral_in_locationop901);
+            pushFollow(FOLLOW_floatliteral_in_locationop905);
             floatliteral33=floatliteral();
 
             state._fsp--;
@@ -980,7 +980,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "containsop"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:169:1: containsop : property 'contains' ^ stringliteral ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:172:1: containsop : property 'contains' ^ stringliteral ;
     public final QueryFilterParser.containsop_return containsop() throws RecognitionException {
         QueryFilterParser.containsop_return retval = new QueryFilterParser.containsop_return();
         retval.start = input.LT(1);
@@ -997,27 +997,27 @@ public TreeAdaptor getTreeAdaptor() {
         Object string_literal35_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:169:12: ( property 'contains' ^ stringliteral )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:170:3: property 'contains' ^ stringliteral
+            // org/usergrid/persistence/query/tree/QueryFilter.g:172:12: ( property 'contains' ^ stringliteral )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:173:3: property 'contains' ^ stringliteral
             {
             root_0 = (Object)adaptor.nil();
 
 
-            pushFollow(FOLLOW_property_in_containsop914);
+            pushFollow(FOLLOW_property_in_containsop918);
             property34=property();
 
             state._fsp--;
 
             adaptor.addChild(root_0, property34.getTree());
 
-            string_literal35=(Token)match(input,28,FOLLOW_28_in_containsop916); 
+            string_literal35=(Token)match(input,28,FOLLOW_28_in_containsop920); 
             string_literal35_tree = 
             new ContainsOperand(string_literal35) 
             ;
             root_0 = (Object)adaptor.becomeRoot(string_literal35_tree, root_0);
 
 
-            pushFollow(FOLLOW_stringliteral_in_containsop922);
+            pushFollow(FOLLOW_stringliteral_in_containsop926);
             stringliteral36=stringliteral();
 
             state._fsp--;
@@ -1055,7 +1055,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "operation"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:172:1: operation : ( '(' ! expression ')' !| equalityop | locationop | containsop );
+    // org/usergrid/persistence/query/tree/QueryFilter.g:175:1: operation : ( '(' ! expression ')' !| equalityop | locationop | containsop );
     public final QueryFilterParser.operation_return operation() throws RecognitionException {
         QueryFilterParser.operation_return retval = new QueryFilterParser.operation_return();
         retval.start = input.LT(1);
@@ -1078,7 +1078,7 @@ public TreeAdaptor getTreeAdaptor() {
         Object char_literal39_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:172:11: ( '(' ! expression ')' !| equalityop | locationop | containsop )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:175:11: ( '(' ! expression ')' !| equalityop | locationop | containsop )
             int alt3=4;
             switch ( input.LA(1) ) {
             case 21:
@@ -1128,31 +1128,31 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt3) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:173:2: '(' ! expression ')' !
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:176:2: '(' ! expression ')' !
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    char_literal37=(Token)match(input,21,FOLLOW_21_in_operation931); 
+                    char_literal37=(Token)match(input,21,FOLLOW_21_in_operation935); 
 
-                    pushFollow(FOLLOW_expression_in_operation934);
+                    pushFollow(FOLLOW_expression_in_operation938);
                     expression38=expression();
 
                     state._fsp--;
 
                     adaptor.addChild(root_0, expression38.getTree());
 
-                    char_literal39=(Token)match(input,22,FOLLOW_22_in_operation936); 
+                    char_literal39=(Token)match(input,22,FOLLOW_22_in_operation940); 
 
                     }
                     break;
                 case 2 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:174:6: equalityop
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:177:6: equalityop
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_equalityop_in_operation944);
+                    pushFollow(FOLLOW_equalityop_in_operation948);
                     equalityop40=equalityop();
 
                     state._fsp--;
@@ -1162,12 +1162,12 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:175:6: locationop
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:178:6: locationop
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_locationop_in_operation952);
+                    pushFollow(FOLLOW_locationop_in_operation956);
                     locationop41=locationop();
 
                     state._fsp--;
@@ -1177,12 +1177,12 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:176:6: containsop
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:179:6: containsop
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_containsop_in_operation960);
+                    pushFollow(FOLLOW_containsop_in_operation964);
                     containsop42=containsop();
 
                     state._fsp--;
@@ -1222,7 +1222,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "notexp"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:180:1: notexp : ( 'not' ^ operation | operation );
+    // org/usergrid/persistence/query/tree/QueryFilter.g:183:1: notexp : ( 'not' ^ operation | operation );
     public final QueryFilterParser.notexp_return notexp() throws RecognitionException {
         QueryFilterParser.notexp_return retval = new QueryFilterParser.notexp_return();
         retval.start = input.LT(1);
@@ -1239,7 +1239,7 @@ public TreeAdaptor getTreeAdaptor() {
         Object string_literal43_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:180:8: ( 'not' ^ operation | operation )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:183:8: ( 'not' ^ operation | operation )
             int alt4=2;
             switch ( input.LA(1) ) {
             case 30:
@@ -1263,19 +1263,19 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt4) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:182:2: 'not' ^ operation
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:185:2: 'not' ^ operation
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    string_literal43=(Token)match(input,30,FOLLOW_30_in_notexp976); 
+                    string_literal43=(Token)match(input,30,FOLLOW_30_in_notexp980); 
                     string_literal43_tree = 
                     new NotOperand(string_literal43) 
                     ;
                     root_0 = (Object)adaptor.becomeRoot(string_literal43_tree, root_0);
 
 
-                    pushFollow(FOLLOW_operation_in_notexp982);
+                    pushFollow(FOLLOW_operation_in_notexp986);
                     operation44=operation();
 
                     state._fsp--;
@@ -1285,12 +1285,12 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:183:3: operation
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:186:3: operation
                     {
                     root_0 = (Object)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_operation_in_notexp988);
+                    pushFollow(FOLLOW_operation_in_notexp992);
                     operation45=operation();
 
                     state._fsp--;
@@ -1330,7 +1330,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "andexp"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:188:1: andexp : notexp ( 'and' ^ notexp )* ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:191:1: andexp : notexp ( 'and' ^ notexp )* ;
     public final QueryFilterParser.andexp_return andexp() throws RecognitionException {
         QueryFilterParser.andexp_return retval = new QueryFilterParser.andexp_return();
         retval.start = input.LT(1);
@@ -1347,20 +1347,20 @@ public TreeAdaptor getTreeAdaptor() {
         Object string_literal47_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:188:8: ( notexp ( 'and' ^ notexp )* )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:189:2: notexp ( 'and' ^ notexp )*
+            // org/usergrid/persistence/query/tree/QueryFilter.g:191:8: ( notexp ( 'and' ^ notexp )* )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:192:2: notexp ( 'and' ^ notexp )*
             {
             root_0 = (Object)adaptor.nil();
 
 
-            pushFollow(FOLLOW_notexp_in_andexp1002);
+            pushFollow(FOLLOW_notexp_in_andexp1006);
             notexp46=notexp();
 
             state._fsp--;
 
             adaptor.addChild(root_0, notexp46.getTree());
 
-            // org/usergrid/persistence/query/tree/QueryFilter.g:189:9: ( 'and' ^ notexp )*
+            // org/usergrid/persistence/query/tree/QueryFilter.g:192:9: ( 'and' ^ notexp )*
             loop5:
             do {
                 int alt5=2;
@@ -1375,16 +1375,16 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt5) {
             	case 1 :
-            	    // org/usergrid/persistence/query/tree/QueryFilter.g:189:10: 'and' ^ notexp
+            	    // org/usergrid/persistence/query/tree/QueryFilter.g:192:10: 'and' ^ notexp
             	    {
-            	    string_literal47=(Token)match(input,26,FOLLOW_26_in_andexp1005); 
+            	    string_literal47=(Token)match(input,26,FOLLOW_26_in_andexp1009); 
             	    string_literal47_tree = 
             	    new AndOperand(string_literal47) 
             	    ;
             	    root_0 = (Object)adaptor.becomeRoot(string_literal47_tree, root_0);
 
 
-            	    pushFollow(FOLLOW_notexp_in_andexp1011);
+            	    pushFollow(FOLLOW_notexp_in_andexp1015);
             	    notexp48=notexp();
 
             	    state._fsp--;
@@ -1431,7 +1431,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "expression"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:194:1: expression : andexp ( 'or' ^ andexp )* ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:197:1: expression : andexp ( 'or' ^ andexp )* ;
     public final QueryFilterParser.expression_return expression() throws RecognitionException {
         QueryFilterParser.expression_return retval = new QueryFilterParser.expression_return();
         retval.start = input.LT(1);
@@ -1448,20 +1448,20 @@ public TreeAdaptor getTreeAdaptor() {
         Object string_literal50_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:194:12: ( andexp ( 'or' ^ andexp )* )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:195:2: andexp ( 'or' ^ andexp )*
+            // org/usergrid/persistence/query/tree/QueryFilter.g:197:12: ( andexp ( 'or' ^ andexp )* )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:198:2: andexp ( 'or' ^ andexp )*
             {
             root_0 = (Object)adaptor.nil();
 
 
-            pushFollow(FOLLOW_andexp_in_expression1028);
+            pushFollow(FOLLOW_andexp_in_expression1032);
             andexp49=andexp();
 
             state._fsp--;
 
             adaptor.addChild(root_0, andexp49.getTree());
 
-            // org/usergrid/persistence/query/tree/QueryFilter.g:195:9: ( 'or' ^ andexp )*
+            // org/usergrid/persistence/query/tree/QueryFilter.g:198:9: ( 'or' ^ andexp )*
             loop6:
             do {
                 int alt6=2;
@@ -1476,16 +1476,16 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt6) {
             	case 1 :
-            	    // org/usergrid/persistence/query/tree/QueryFilter.g:195:10: 'or' ^ andexp
+            	    // org/usergrid/persistence/query/tree/QueryFilter.g:198:10: 'or' ^ andexp
             	    {
-            	    string_literal50=(Token)match(input,32,FOLLOW_32_in_expression1031); 
+            	    string_literal50=(Token)match(input,32,FOLLOW_32_in_expression1035); 
             	    string_literal50_tree = 
             	    new OrOperand(string_literal50) 
             	    ;
             	    root_0 = (Object)adaptor.becomeRoot(string_literal50_tree, root_0);
 
 
-            	    pushFollow(FOLLOW_andexp_in_expression1037);
+            	    pushFollow(FOLLOW_andexp_in_expression1041);
             	    andexp51=andexp();
 
             	    state._fsp--;
@@ -1532,7 +1532,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "direction"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:204:1: direction : ( 'asc' | 'desc' ) ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:207:1: direction : ( 'asc' | 'desc' ) ;
     public final QueryFilterParser.direction_return direction() throws RecognitionException {
         QueryFilterParser.direction_return retval = new QueryFilterParser.direction_return();
         retval.start = input.LT(1);
@@ -1545,7 +1545,7 @@ public TreeAdaptor getTreeAdaptor() {
         Object set52_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:204:12: ( ( 'asc' | 'desc' ) )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:207:12: ( ( 'asc' | 'desc' ) )
             // org/usergrid/persistence/query/tree/QueryFilter.g:
             {
             root_0 = (Object)adaptor.nil();
@@ -1597,7 +1597,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "order"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:207:1: order : ( property ( direction )? ) ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:210:1: order : ( property ( direction )? ) ;
     public final QueryFilterParser.order_return order() throws RecognitionException {
         QueryFilterParser.order_return retval = new QueryFilterParser.order_return();
         retval.start = input.LT(1);
@@ -1612,23 +1612,23 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:208:3: ( ( property ( direction )? ) )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:208:5: ( property ( direction )? )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:211:3: ( ( property ( direction )? ) )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:211:5: ( property ( direction )? )
             {
             root_0 = (Object)adaptor.nil();
 
 
-            // org/usergrid/persistence/query/tree/QueryFilter.g:208:5: ( property ( direction )? )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:208:6: property ( direction )?
+            // org/usergrid/persistence/query/tree/QueryFilter.g:211:5: ( property ( direction )? )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:211:6: property ( direction )?
             {
-            pushFollow(FOLLOW_property_in_order1074);
+            pushFollow(FOLLOW_property_in_order1078);
             property53=property();
 
             state._fsp--;
 
             adaptor.addChild(root_0, property53.getTree());
 
-            // org/usergrid/persistence/query/tree/QueryFilter.g:208:15: ( direction )?
+            // org/usergrid/persistence/query/tree/QueryFilter.g:211:15: ( direction )?
             int alt7=2;
             switch ( input.LA(1) ) {
                 case 27:
@@ -1641,9 +1641,9 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt7) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:208:15: direction
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:211:15: direction
                     {
-                    pushFollow(FOLLOW_direction_in_order1076);
+                    pushFollow(FOLLOW_direction_in_order1080);
                     direction54=direction();
 
                     state._fsp--;
@@ -1697,7 +1697,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "select_subject"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:219:1: select_subject : ID ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:222:1: select_subject : ID ;
     public final QueryFilterParser.select_subject_return select_subject() throws RecognitionException {
         QueryFilterParser.select_subject_return retval = new QueryFilterParser.select_subject_return();
         retval.start = input.LT(1);
@@ -1710,13 +1710,13 @@ public TreeAdaptor getTreeAdaptor() {
         Object ID55_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:220:3: ( ID )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:220:5: ID
+            // org/usergrid/persistence/query/tree/QueryFilter.g:223:3: ( ID )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:223:5: ID
             {
             root_0 = (Object)adaptor.nil();
 
 
-            ID55=(Token)match(input,ID,FOLLOW_ID_in_select_subject1095); 
+            ID55=(Token)match(input,ID,FOLLOW_ID_in_select_subject1099); 
             ID55_tree = 
             (Object)adaptor.create(ID55)
             ;
@@ -1760,7 +1760,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "select_assign"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:228:1: select_assign : target= ID ':' source= ID ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:231:1: select_assign : target= ID ':' source= ID ;
     public final QueryFilterParser.select_assign_return select_assign() throws RecognitionException {
         QueryFilterParser.select_assign_return retval = new QueryFilterParser.select_assign_return();
         retval.start = input.LT(1);
@@ -1777,27 +1777,27 @@ public TreeAdaptor getTreeAdaptor() {
         Object char_literal56_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:229:3: (target= ID ':' source= ID )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:229:5: target= ID ':' source= ID
+            // org/usergrid/persistence/query/tree/QueryFilter.g:232:3: (target= ID ':' source= ID )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:232:5: target= ID ':' source= ID
             {
             root_0 = (Object)adaptor.nil();
 
 
-            target=(Token)match(input,ID,FOLLOW_ID_in_select_assign1112); 
+            target=(Token)match(input,ID,FOLLOW_ID_in_select_assign1116); 
             target_tree = 
             (Object)adaptor.create(target)
             ;
             adaptor.addChild(root_0, target_tree);
 
 
-            char_literal56=(Token)match(input,25,FOLLOW_25_in_select_assign1114); 
+            char_literal56=(Token)match(input,25,FOLLOW_25_in_select_assign1118); 
             char_literal56_tree = 
             (Object)adaptor.create(char_literal56)
             ;
             adaptor.addChild(root_0, char_literal56_tree);
 
 
-            source=(Token)match(input,ID,FOLLOW_ID_in_select_assign1118); 
+            source=(Token)match(input,ID,FOLLOW_ID_in_select_assign1122); 
             source_tree = 
             (Object)adaptor.create(source)
             ;
@@ -1841,7 +1841,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "select_expr"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:235:1: select_expr : ( '*' | select_subject ( ',' select_subject )* | '{' select_assign ( ',' select_assign )* '}' ) ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:238:1: select_expr : ( '*' | select_subject ( ',' select_subject )* | '{' select_assign ( ',' select_assign )* '}' ) ;
     public final QueryFilterParser.select_expr_return select_expr() throws RecognitionException {
         QueryFilterParser.select_expr_return retval = new QueryFilterParser.select_expr_return();
         retval.start = input.LT(1);
@@ -1870,13 +1870,13 @@ public TreeAdaptor getTreeAdaptor() {
         Object char_literal65_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:236:3: ( ( '*' | select_subject ( ',' select_subject )* | '{' select_assign ( ',' select_assign )* '}' ) )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:236:5: ( '*' | select_subject ( ',' select_subject )* | '{' select_assign ( ',' select_assign )* '}' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:239:3: ( ( '*' | select_subject ( ',' select_subject )* | '{' select_assign ( ',' select_assign )* '}' ) )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:239:5: ( '*' | select_subject ( ',' select_subject )* | '{' select_assign ( ',' select_assign )* '}' )
             {
             root_0 = (Object)adaptor.nil();
 
 
-            // org/usergrid/persistence/query/tree/QueryFilter.g:236:5: ( '*' | select_subject ( ',' select_subject )* | '{' select_assign ( ',' select_assign )* '}' )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:239:5: ( '*' | select_subject ( ',' select_subject )* | '{' select_assign ( ',' select_assign )* '}' )
             int alt10=3;
             switch ( input.LA(1) ) {
             case 23:
@@ -1904,9 +1904,9 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt10) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:236:6: '*'
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:239:6: '*'
                     {
-                    char_literal57=(Token)match(input,23,FOLLOW_23_in_select_expr1132); 
+                    char_literal57=(Token)match(input,23,FOLLOW_23_in_select_expr1136); 
                     char_literal57_tree = 
                     (Object)adaptor.create(char_literal57)
                     ;
@@ -1916,16 +1916,16 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:236:12: select_subject ( ',' select_subject )*
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:239:12: select_subject ( ',' select_subject )*
                     {
-                    pushFollow(FOLLOW_select_subject_in_select_expr1136);
+                    pushFollow(FOLLOW_select_subject_in_select_expr1140);
                     select_subject58=select_subject();
 
                     state._fsp--;
 
                     adaptor.addChild(root_0, select_subject58.getTree());
 
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:236:27: ( ',' select_subject )*
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:239:27: ( ',' select_subject )*
                     loop8:
                     do {
                         int alt8=2;
@@ -1940,16 +1940,16 @@ public TreeAdaptor getTreeAdaptor() {
 
                         switch (alt8) {
                     	case 1 :
-                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:236:28: ',' select_subject
+                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:239:28: ',' select_subject
                     	    {
-                    	    char_literal59=(Token)match(input,24,FOLLOW_24_in_select_expr1139); 
+                    	    char_literal59=(Token)match(input,24,FOLLOW_24_in_select_expr1143); 
                     	    char_literal59_tree = 
                     	    (Object)adaptor.create(char_literal59)
                     	    ;
                     	    adaptor.addChild(root_0, char_literal59_tree);
 
 
-                    	    pushFollow(FOLLOW_select_subject_in_select_expr1141);
+                    	    pushFollow(FOLLOW_select_subject_in_select_expr1145);
                     	    select_subject60=select_subject();
 
                     	    state._fsp--;
@@ -1968,23 +1968,23 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:236:52: '{' select_assign ( ',' select_assign )* '}'
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:239:52: '{' select_assign ( ',' select_assign )* '}'
                     {
-                    char_literal61=(Token)match(input,37,FOLLOW_37_in_select_expr1148); 
+                    char_literal61=(Token)match(input,37,FOLLOW_37_in_select_expr1152); 
                     char_literal61_tree = 
                     (Object)adaptor.create(char_literal61)
                     ;
                     adaptor.addChild(root_0, char_literal61_tree);
 
 
-                    pushFollow(FOLLOW_select_assign_in_select_expr1150);
+                    pushFollow(FOLLOW_select_assign_in_select_expr1154);
                     select_assign62=select_assign();
 
                     state._fsp--;
 
                     adaptor.addChild(root_0, select_assign62.getTree());
 
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:236:70: ( ',' select_assign )*
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:239:70: ( ',' select_assign )*
                     loop9:
                     do {
                         int alt9=2;
@@ -1999,16 +1999,16 @@ public TreeAdaptor getTreeAdaptor() {
 
                         switch (alt9) {
                     	case 1 :
-                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:236:71: ',' select_assign
+                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:239:71: ',' select_assign
                     	    {
-                    	    char_literal63=(Token)match(input,24,FOLLOW_24_in_select_expr1153); 
+                    	    char_literal63=(Token)match(input,24,FOLLOW_24_in_select_expr1157); 
                     	    char_literal63_tree = 
                     	    (Object)adaptor.create(char_literal63)
                     	    ;
                     	    adaptor.addChild(root_0, char_literal63_tree);
 
 
-                    	    pushFollow(FOLLOW_select_assign_in_select_expr1155);
+                    	    pushFollow(FOLLOW_select_assign_in_select_expr1159);
                     	    select_assign64=select_assign();
 
                     	    state._fsp--;
@@ -2024,7 +2024,7 @@ public TreeAdaptor getTreeAdaptor() {
                     } while (true);
 
 
-                    char_literal65=(Token)match(input,38,FOLLOW_38_in_select_expr1160); 
+                    char_literal65=(Token)match(input,38,FOLLOW_38_in_select_expr1164); 
                     char_literal65_tree = 
                     (Object)adaptor.create(char_literal65)
                     ;
@@ -2069,7 +2069,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "ql"
-    // org/usergrid/persistence/query/tree/QueryFilter.g:240:1: ql returns [Query query] : ( 'select' ! select_expr !)? ( ( 'where' !)? expression )? ( 'order by' ! order ! ( ',' ! order !)* )? ;
+    // org/usergrid/persistence/query/tree/QueryFilter.g:243:1: ql returns [Query query] : ( 'select' ! select_expr !)? ( ( 'where' !)? expression )? ( 'order by' ! order ! ( ',' ! order !)* )? ;
     public final QueryFilterParser.ql_return ql() throws RecognitionException {
         QueryFilterParser.ql_return retval = new QueryFilterParser.ql_return();
         retval.start = input.LT(1);
@@ -2096,13 +2096,13 @@ public TreeAdaptor getTreeAdaptor() {
         Object char_literal72_tree=null;
 
         try {
-            // org/usergrid/persistence/query/tree/QueryFilter.g:241:3: ( ( 'select' ! select_expr !)? ( ( 'where' !)? expression )? ( 'order by' ! order ! ( ',' ! order !)* )? )
-            // org/usergrid/persistence/query/tree/QueryFilter.g:241:5: ( 'select' ! select_expr !)? ( ( 'where' !)? expression )? ( 'order by' ! order ! ( ',' ! order !)* )?
+            // org/usergrid/persistence/query/tree/QueryFilter.g:244:3: ( ( 'select' ! select_expr !)? ( ( 'where' !)? expression )? ( 'order by' ! order ! ( ',' ! order !)* )? )
+            // org/usergrid/persistence/query/tree/QueryFilter.g:244:5: ( 'select' ! select_expr !)? ( ( 'where' !)? expression )? ( 'order by' ! order ! ( ',' ! order !)* )?
             {
             root_0 = (Object)adaptor.nil();
 
 
-            // org/usergrid/persistence/query/tree/QueryFilter.g:241:5: ( 'select' ! select_expr !)?
+            // org/usergrid/persistence/query/tree/QueryFilter.g:244:5: ( 'select' ! select_expr !)?
             int alt11=2;
             switch ( input.LA(1) ) {
                 case 34:
@@ -2114,11 +2114,11 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt11) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:241:6: 'select' ! select_expr !
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:244:6: 'select' ! select_expr !
                     {
-                    string_literal66=(Token)match(input,34,FOLLOW_34_in_ql1183); 
+                    string_literal66=(Token)match(input,34,FOLLOW_34_in_ql1187); 
 
-                    pushFollow(FOLLOW_select_expr_in_ql1186);
+                    pushFollow(FOLLOW_select_expr_in_ql1190);
                     select_expr67=select_expr();
 
                     state._fsp--;
@@ -2130,7 +2130,7 @@ public TreeAdaptor getTreeAdaptor() {
             }
 
 
-            // org/usergrid/persistence/query/tree/QueryFilter.g:241:31: ( ( 'where' !)? expression )?
+            // org/usergrid/persistence/query/tree/QueryFilter.g:244:31: ( ( 'where' !)? expression )?
             int alt13=2;
             switch ( input.LA(1) ) {
                 case ID:
@@ -2145,9 +2145,9 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt13) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:241:32: ( 'where' !)? expression
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:244:32: ( 'where' !)? expression
                     {
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:241:39: ( 'where' !)?
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:244:39: ( 'where' !)?
                     int alt12=2;
                     switch ( input.LA(1) ) {
                         case 35:
@@ -2159,9 +2159,9 @@ public TreeAdaptor getTreeAdaptor() {
 
                     switch (alt12) {
                         case 1 :
-                            // org/usergrid/persistence/query/tree/QueryFilter.g:241:39: 'where' !
+                            // org/usergrid/persistence/query/tree/QueryFilter.g:244:39: 'where' !
                             {
-                            string_literal68=(Token)match(input,35,FOLLOW_35_in_ql1192); 
+                            string_literal68=(Token)match(input,35,FOLLOW_35_in_ql1196); 
 
                             }
                             break;
@@ -2169,7 +2169,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
 
 
-                    pushFollow(FOLLOW_expression_in_ql1196);
+                    pushFollow(FOLLOW_expression_in_ql1200);
                     expression69=expression();
 
                     state._fsp--;
@@ -2182,7 +2182,7 @@ public TreeAdaptor getTreeAdaptor() {
             }
 
 
-            // org/usergrid/persistence/query/tree/QueryFilter.g:241:55: ( 'order by' ! order ! ( ',' ! order !)* )?
+            // org/usergrid/persistence/query/tree/QueryFilter.g:244:55: ( 'order by' ! order ! ( ',' ! order !)* )?
             int alt15=2;
             switch ( input.LA(1) ) {
                 case 33:
@@ -2194,17 +2194,17 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt15) {
                 case 1 :
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:241:56: 'order by' ! order ! ( ',' ! order !)*
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:244:56: 'order by' ! order ! ( ',' ! order !)*
                     {
-                    string_literal70=(Token)match(input,33,FOLLOW_33_in_ql1201); 
+                    string_literal70=(Token)match(input,33,FOLLOW_33_in_ql1205); 
 
-                    pushFollow(FOLLOW_order_in_ql1204);
+                    pushFollow(FOLLOW_order_in_ql1208);
                     order71=order();
 
                     state._fsp--;
 
 
-                    // org/usergrid/persistence/query/tree/QueryFilter.g:241:75: ( ',' ! order !)*
+                    // org/usergrid/persistence/query/tree/QueryFilter.g:244:75: ( ',' ! order !)*
                     loop14:
                     do {
                         int alt14=2;
@@ -2219,11 +2219,11 @@ public TreeAdaptor getTreeAdaptor() {
 
                         switch (alt14) {
                     	case 1 :
-                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:241:76: ',' ! order !
+                    	    // org/usergrid/persistence/query/tree/QueryFilter.g:244:76: ',' ! order !
                     	    {
-                    	    char_literal72=(Token)match(input,24,FOLLOW_24_in_ql1208); 
+                    	    char_literal72=(Token)match(input,24,FOLLOW_24_in_ql1212); 
 
-                    	    pushFollow(FOLLOW_order_in_ql1211);
+                    	    pushFollow(FOLLOW_order_in_ql1215);
                     	    order73=order();
 
                     	    state._fsp--;
@@ -2283,79 +2283,79 @@ public TreeAdaptor getTreeAdaptor() {
 
  
 
-    public static final BitSet FOLLOW_ID_in_property676 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_BOOLEAN_in_booleanliteral687 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_INT_in_intliteral701 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_UUID_in_uuidliteral715 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_STRING_in_stringliteral728 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_FLOAT_in_floatliteral743 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_booleanliteral_in_value759 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_intliteral_in_value765 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_uuidliteral_in_value771 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_stringliteral_in_value777 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_floatliteral_in_value783 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_property_in_equalityop808 = new BitSet(new long[]{0x0000000000004000L});
-    public static final BitSet FOLLOW_LT_in_equalityop810 = new BitSet(new long[]{0x00000000000A2110L});
-    public static final BitSet FOLLOW_value_in_equalityop816 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_property_in_equalityop821 = new BitSet(new long[]{0x0000000000008000L});
-    public static final BitSet FOLLOW_LTE_in_equalityop823 = new BitSet(new long[]{0x00000000000A2110L});
-    public static final BitSet FOLLOW_value_in_equalityop829 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_property_in_equalityop834 = new BitSet(new long[]{0x0000000000000020L});
-    public static final BitSet FOLLOW_EQ_in_equalityop836 = new BitSet(new long[]{0x00000000000A2110L});
-    public static final BitSet FOLLOW_value_in_equalityop842 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_property_in_equalityop847 = new BitSet(new long[]{0x0000000000000200L});
-    public static final BitSet FOLLOW_GT_in_equalityop849 = new BitSet(new long[]{0x00000000000A2110L});
-    public static final BitSet FOLLOW_value_in_equalityop855 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_property_in_equalityop860 = new BitSet(new long[]{0x0000000000000400L});
-    public static final BitSet FOLLOW_GTE_in_equalityop862 = new BitSet(new long[]{0x00000000000A2110L});
-    public static final BitSet FOLLOW_value_in_equalityop868 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_property_in_locationop883 = new BitSet(new long[]{0x0000001000000000L});
-    public static final BitSet FOLLOW_36_in_locationop885 = new BitSet(new long[]{0x0000000000000100L});
-    public static final BitSet FOLLOW_floatliteral_in_locationop891 = new BitSet(new long[]{0x0000000080000000L});
-    public static final BitSet FOLLOW_31_in_locationop893 = new BitSet(new long[]{0x0000000000000100L});
-    public static final BitSet FOLLOW_floatliteral_in_locationop896 = new BitSet(new long[]{0x0000000001000000L});
-    public static final BitSet FOLLOW_24_in_locationop898 = new BitSet(new long[]{0x0000000000000100L});
-    public static final BitSet FOLLOW_floatliteral_in_locationop901 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_property_in_containsop914 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_28_in_containsop916 = new BitSet(new long[]{0x0000000000020000L});
-    public static final BitSet FOLLOW_stringliteral_in_containsop922 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_21_in_operation931 = new BitSet(new long[]{0x0000000040201000L});
-    public static final BitSet FOLLOW_expression_in_operation934 = new BitSet(new long[]{0x0000000000400000L});
-    public static final BitSet FOLLOW_22_in_operation936 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_equalityop_in_operation944 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_locationop_in_operation952 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_containsop_in_operation960 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_30_in_notexp976 = new BitSet(new long[]{0x0000000000201000L});
-    public static final BitSet FOLLOW_operation_in_notexp982 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_operation_in_notexp988 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_notexp_in_andexp1002 = new BitSet(new long[]{0x0000000004000002L});
-    public static final BitSet FOLLOW_26_in_andexp1005 = new BitSet(new long[]{0x0000000040201000L});
-    public static final BitSet FOLLOW_notexp_in_andexp1011 = new BitSet(new long[]{0x0000000004000002L});
-    public static final BitSet FOLLOW_andexp_in_expression1028 = new BitSet(new long[]{0x0000000100000002L});
-    public static final BitSet FOLLOW_32_in_expression1031 = new BitSet(new long[]{0x0000000040201000L});
-    public static final BitSet FOLLOW_andexp_in_expression1037 = new BitSet(new long[]{0x0000000100000002L});
-    public static final BitSet FOLLOW_property_in_order1074 = new BitSet(new long[]{0x0000000028000002L});
-    public static final BitSet FOLLOW_direction_in_order1076 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ID_in_select_subject1095 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ID_in_select_assign1112 = new BitSet(new long[]{0x0000000002000000L});
-    public static final BitSet FOLLOW_25_in_select_assign1114 = new BitSet(new long[]{0x0000000000001000L});
-    public static final BitSet FOLLOW_ID_in_select_assign1118 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_23_in_select_expr1132 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_select_subject_in_select_expr1136 = new BitSet(new long[]{0x0000000001000002L});
-    public static final BitSet FOLLOW_24_in_select_expr1139 = new BitSet(new long[]{0x0000000000001000L});
-    public static final BitSet FOLLOW_select_subject_in_select_expr1141 = new BitSet(new long[]{0x0000000001000002L});
-    public static final BitSet FOLLOW_37_in_select_expr1148 = new BitSet(new long[]{0x0000000000001000L});
-    public static final BitSet FOLLOW_select_assign_in_select_expr1150 = new BitSet(new long[]{0x0000004001000000L});
-    public static final BitSet FOLLOW_24_in_select_expr1153 = new BitSet(new long[]{0x0000000000001000L});
-    public static final BitSet FOLLOW_select_assign_in_select_expr1155 = new BitSet(new long[]{0x0000004001000000L});
-    public static final BitSet FOLLOW_38_in_select_expr1160 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_34_in_ql1183 = new BitSet(new long[]{0x0000002000801000L});
-    public static final BitSet FOLLOW_select_expr_in_ql1186 = new BitSet(new long[]{0x0000000A40201002L});
-    public static final BitSet FOLLOW_35_in_ql1192 = new BitSet(new long[]{0x0000000040201000L});
-    public static final BitSet FOLLOW_expression_in_ql1196 = new BitSet(new long[]{0x0000000200000002L});
-    public static final BitSet FOLLOW_33_in_ql1201 = new BitSet(new long[]{0x0000000000001000L});
-    public static final BitSet FOLLOW_order_in_ql1204 = new BitSet(new long[]{0x0000000001000002L});
-    public static final BitSet FOLLOW_24_in_ql1208 = new BitSet(new long[]{0x0000000000001000L});
-    public static final BitSet FOLLOW_order_in_ql1211 = new BitSet(new long[]{0x0000000001000002L});
+    public static final BitSet FOLLOW_ID_in_property680 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_BOOLEAN_in_booleanliteral691 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_INT_in_intliteral705 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_UUID_in_uuidliteral719 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_STRING_in_stringliteral732 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_FLOAT_in_floatliteral747 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_booleanliteral_in_value763 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_intliteral_in_value769 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_uuidliteral_in_value775 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_stringliteral_in_value781 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_floatliteral_in_value787 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_property_in_equalityop812 = new BitSet(new long[]{0x0000000000004000L});
+    public static final BitSet FOLLOW_LT_in_equalityop814 = new BitSet(new long[]{0x00000000000A2110L});
+    public static final BitSet FOLLOW_value_in_equalityop820 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_property_in_equalityop825 = new BitSet(new long[]{0x0000000000008000L});
+    public static final BitSet FOLLOW_LTE_in_equalityop827 = new BitSet(new long[]{0x00000000000A2110L});
+    public static final BitSet FOLLOW_value_in_equalityop833 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_property_in_equalityop838 = new BitSet(new long[]{0x0000000000000020L});
+    public static final BitSet FOLLOW_EQ_in_equalityop840 = new BitSet(new long[]{0x00000000000A2110L});
+    public static final BitSet FOLLOW_value_in_equalityop846 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_property_in_equalityop851 = new BitSet(new long[]{0x0000000000000200L});
+    public static final BitSet FOLLOW_GT_in_equalityop853 = new BitSet(new long[]{0x00000000000A2110L});
+    public static final BitSet FOLLOW_value_in_equalityop859 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_property_in_equalityop864 = new BitSet(new long[]{0x0000000000000400L});
+    public static final BitSet FOLLOW_GTE_in_equalityop866 = new BitSet(new long[]{0x00000000000A2110L});
+    public static final BitSet FOLLOW_value_in_equalityop872 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_property_in_locationop887 = new BitSet(new long[]{0x0000001000000000L});
+    public static final BitSet FOLLOW_36_in_locationop889 = new BitSet(new long[]{0x0000000000000100L});
+    public static final BitSet FOLLOW_floatliteral_in_locationop895 = new BitSet(new long[]{0x0000000080000000L});
+    public static final BitSet FOLLOW_31_in_locationop897 = new BitSet(new long[]{0x0000000000000100L});
+    public static final BitSet FOLLOW_floatliteral_in_locationop900 = new BitSet(new long[]{0x0000000001000000L});
+    public static final BitSet FOLLOW_24_in_locationop902 = new BitSet(new long[]{0x0000000000000100L});
+    public static final BitSet FOLLOW_floatliteral_in_locationop905 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_property_in_containsop918 = new BitSet(new long[]{0x0000000010000000L});
+    public static final BitSet FOLLOW_28_in_containsop920 = new BitSet(new long[]{0x0000000000020000L});
+    public static final BitSet FOLLOW_stringliteral_in_containsop926 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_21_in_operation935 = new BitSet(new long[]{0x0000000040201000L});
+    public static final BitSet FOLLOW_expression_in_operation938 = new BitSet(new long[]{0x0000000000400000L});
+    public static final BitSet FOLLOW_22_in_operation940 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_equalityop_in_operation948 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_locationop_in_operation956 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_containsop_in_operation964 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_30_in_notexp980 = new BitSet(new long[]{0x0000000000201000L});
+    public static final BitSet FOLLOW_operation_in_notexp986 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_operation_in_notexp992 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_notexp_in_andexp1006 = new BitSet(new long[]{0x0000000004000002L});
+    public static final BitSet FOLLOW_26_in_andexp1009 = new BitSet(new long[]{0x0000000040201000L});
+    public static final BitSet FOLLOW_notexp_in_andexp1015 = new BitSet(new long[]{0x0000000004000002L});
+    public static final BitSet FOLLOW_andexp_in_expression1032 = new BitSet(new long[]{0x0000000100000002L});
+    public static final BitSet FOLLOW_32_in_expression1035 = new BitSet(new long[]{0x0000000040201000L});
+    public static final BitSet FOLLOW_andexp_in_expression1041 = new BitSet(new long[]{0x0000000100000002L});
+    public static final BitSet FOLLOW_property_in_order1078 = new BitSet(new long[]{0x0000000028000002L});
+    public static final BitSet FOLLOW_direction_in_order1080 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_ID_in_select_subject1099 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_ID_in_select_assign1116 = new BitSet(new long[]{0x0000000002000000L});
+    public static final BitSet FOLLOW_25_in_select_assign1118 = new BitSet(new long[]{0x0000000000001000L});
+    public static final BitSet FOLLOW_ID_in_select_assign1122 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_23_in_select_expr1136 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_select_subject_in_select_expr1140 = new BitSet(new long[]{0x0000000001000002L});
+    public static final BitSet FOLLOW_24_in_select_expr1143 = new BitSet(new long[]{0x0000000000001000L});
+    public static final BitSet FOLLOW_select_subject_in_select_expr1145 = new BitSet(new long[]{0x0000000001000002L});
+    public static final BitSet FOLLOW_37_in_select_expr1152 = new BitSet(new long[]{0x0000000000001000L});
+    public static final BitSet FOLLOW_select_assign_in_select_expr1154 = new BitSet(new long[]{0x0000004001000000L});
+    public static final BitSet FOLLOW_24_in_select_expr1157 = new BitSet(new long[]{0x0000000000001000L});
+    public static final BitSet FOLLOW_select_assign_in_select_expr1159 = new BitSet(new long[]{0x0000004001000000L});
+    public static final BitSet FOLLOW_38_in_select_expr1164 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_34_in_ql1187 = new BitSet(new long[]{0x0000002000801000L});
+    public static final BitSet FOLLOW_select_expr_in_ql1190 = new BitSet(new long[]{0x0000000A40201002L});
+    public static final BitSet FOLLOW_35_in_ql1196 = new BitSet(new long[]{0x0000000040201000L});
+    public static final BitSet FOLLOW_expression_in_ql1200 = new BitSet(new long[]{0x0000000200000002L});
+    public static final BitSet FOLLOW_33_in_ql1205 = new BitSet(new long[]{0x0000000000001000L});
+    public static final BitSet FOLLOW_order_in_ql1208 = new BitSet(new long[]{0x0000000001000002L});
+    public static final BitSet FOLLOW_24_in_ql1212 = new BitSet(new long[]{0x0000000000001000L});
+    public static final BitSet FOLLOW_order_in_ql1215 = new BitSet(new long[]{0x0000000001000002L});
 
 }

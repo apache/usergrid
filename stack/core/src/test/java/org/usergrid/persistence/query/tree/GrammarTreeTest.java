@@ -86,26 +86,26 @@ public class GrammarTreeTest {
 
         assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
                 .intValue());
-        
-        //TODO Todd fix this.
 
-//        queryString = "select * where a lt 5";
-//
-//        in = new ANTLRStringStream(queryString);
-//        lexer = new QueryFilterLexer(in);
-//        tokens = new TokenRewriteStream(lexer);
-//        parser = new QueryFilterParser(tokens);
-//
-//        query = parser.ql().query;
-//
-//        root = query.getRootOperand();
-//
-//        equal = (LessThan) root;
-//
-//        assertEquals("a", equal.getProperty().getValue());
-//
-//        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
-//                .intValue());
+        // TODO Todd fix this.
+
+        queryString = "select * where a lt 5";
+
+        in = new ANTLRStringStream(queryString);
+        lexer = new QueryFilterLexer(in);
+        tokens = new TokenRewriteStream(lexer);
+        parser = new QueryFilterParser(tokens);
+
+        query = parser.ql().query;
+
+        root = query.getRootOperand();
+
+        equal = (LessThan) root;
+
+        assertEquals("a", equal.getProperty().getValue());
+
+        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+                .intValue());
 
     }
 
@@ -129,6 +129,24 @@ public class GrammarTreeTest {
         Operand root = query.getRootOperand();
 
         LessThanEqual equal = (LessThanEqual) root;
+
+        assertEquals("a", equal.getProperty().getValue());
+
+        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+                .intValue());
+
+        queryString = "select * where a lte 5";
+
+        in = new ANTLRStringStream(queryString);
+        lexer = new QueryFilterLexer(in);
+        tokens = new TokenRewriteStream(lexer);
+        parser = new QueryFilterParser(tokens);
+
+        query = parser.ql().query;
+
+        root = query.getRootOperand();
+
+        equal = (LessThanEqual) root;
 
         assertEquals("a", equal.getProperty().getValue());
 
@@ -163,6 +181,24 @@ public class GrammarTreeTest {
         assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
+        queryString = "select * where a gt 5";
+
+        in = new ANTLRStringStream(queryString);
+        lexer = new QueryFilterLexer(in);
+        tokens = new TokenRewriteStream(lexer);
+        parser = new QueryFilterParser(tokens);
+
+        query = parser.ql().query;
+
+        root = query.getRootOperand();
+
+        equal = (GreaterThan) root;
+
+        assertEquals("a", equal.getProperty().getValue());
+
+        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+                .intValue());
+
     }
 
     /**
@@ -185,6 +221,24 @@ public class GrammarTreeTest {
         Operand root = query.getRootOperand();
 
         GreaterThanEqual equal = (GreaterThanEqual) root;
+
+        assertEquals("a", equal.getProperty().getValue());
+
+        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+                .intValue());
+
+        queryString = "select * where a gte 5";
+
+        in = new ANTLRStringStream(queryString);
+        lexer = new QueryFilterLexer(in);
+        tokens = new TokenRewriteStream(lexer);
+        parser = new QueryFilterParser(tokens);
+
+        query = parser.ql().query;
+
+        root = query.getRootOperand();
+
+        equal = (GreaterThanEqual) root;
 
         assertEquals("a", equal.getProperty().getValue());
 
