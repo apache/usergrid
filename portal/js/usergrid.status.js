@@ -13,26 +13,16 @@ var StatusBar = function () {
     };
 
     self.showAlert = function (msg, type) {
-      if(!type) {
-          type = 'info';
-          var item = $('<div class="alert alert-' + type + ' ">' + msg + '</div>');
-          self.box.find(".alert").remove();
-          self.box.show().prepend(item);
-          item.show();
-          var t = setTimeout(removeOldestAlert, 4000);	
-      } else if (type = 'error') {
-          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">×</a>'
-          var item = $('<div class="alert alert-' + type + ' ">' + msg + closebutton + '</div>');
-          self.box.find(".alert").remove();
-          self.box.show().prepend(item);
-          item.show();
-      } else {
-          var item = $('<div class="alert alert-' + type + ' ">' + msg + '</div>');
-          self.box.find(".alert").remove();
-          self.box.show().prepend(item);
-          item.show();
-          var t = setTimeout(removeOldestAlert, 4000);
-      };
+      if (!type) {
+        type = 'info';
+      }
+      
+      var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+      var item = $('<div class="alert alert-' + type + ' ">' + msg + closebutton + '</div>');
+      self.box.find(".alert").remove();
+      self.box.show().prepend(item);
+      item.show();
+      
     };
 
     closeErrorMessage = function() {
