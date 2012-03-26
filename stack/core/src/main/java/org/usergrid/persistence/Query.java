@@ -407,6 +407,62 @@ public class Query {
     public boolean hasQueryPredicates() {
         return rootOperand != null;
     }
+    
+    public boolean containsNameOrEmailIdentifiersOnly() {
+        if (hasQueryPredicates()) {
+            return false;
+        }
+        if ((identifiers == null) || identifiers.isEmpty()) {
+            return false;
+        }
+        for (Identifier identifier : identifiers) {
+            if (!identifier.isEmail() && !identifier.isName()) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    public String getSingleNameOrEmailIdentifier() {
+        if (!containsSingleNameOrEmailIdentifier()) {
+            return null;
+        }
+        return (identifiers.get(0).toString());
+    }
+
+    public boolean containsSingleNameOrEmailIdentifier() {
+        return containsNameOrEmailIdentifiersOnly()
+                && (identifiers.size() == 1);
+    }
+
+    
+    public boolean containsSingleUuidIdentifier() {
+        return containsUuidIdentifersOnly() && (identifiers.size() == 1);
+    }
+    
+
+    public boolean containsUuidIdentifersOnly() {
+        if (hasQueryPredicates()) {
+            return false;
+        }
+        if ((identifiers == null) || identifiers.isEmpty()) {
+            return false;
+        }
+        for (Identifier identifier : identifiers) {
+            if (!identifier.isUUID()) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    public UUID getSingleUuidIdentifier() {
+        if (!containsSingleUuidIdentifier()) {
+            return null;
+        }
+        return (identifiers.get(0).getUUID());
+    }
+
 
     public boolean isIdsOnly() {
         if ((selectSubjects.size() == 1)
@@ -772,91 +828,7 @@ public class Query {
         rootOperand = and;
     }
 
-    // public Query addFilter(String propertyName, FilterOperator operator,
-    // Object value) {
-    // if ((propertyName == null) || (operator == null) || (value == null)) {
-    // return this;
-    // }
-    // if (PROPERTY_TYPE.equalsIgnoreCase(propertyName) && (value != null)) {
-    // if (operator == FilterOperator.EQUAL) {
-    // type = value.toString();
-    // }
-    // } else if ("connection".equalsIgnoreCase(propertyName)
-    // && (value != null)) {
-    // if (operator == FilterOperator.EQUAL) {
-    // connection = value.toString();
-    // }
-    // } else {
-    // for (FilterPredicate f : filterPredicates) {
-    // if (f.getPropertyName().equals(propertyName)
-    // && f.getValue().equals(value) && "*".equals(value)) {
-    // logger.error("Attempted to set wildcard wilder for "
-    // + f.getPropertyName()
-    // + " more than once, discardng...");
-    // return this;
-    // }
-    // }
-    // filterPredicates.add(FilterPredicate.normalize(new FilterPredicate(
-    // propertyName, operator, value)));
-    // }
-    // return this;
-    // }
-
-    // public Query addFilter(String filterStr) {
-    // if (filterStr == null) {
-    // return this;
-    // }
-    // FilterPredicate filter = FilterPredicate.valueOf(filterStr);
-    // if ((filter != null) && (filter.propertyName != null)
-    // && (filter.operator != null) && (filter.value != null)) {
-    //
-    // if (PROPERTY_TYPE.equalsIgnoreCase(filter.propertyName)) {
-    // if (filter.operator == FilterOperator.EQUAL) {
-    // type = filter.value.toString();
-    // }
-    // } else if ("connection".equalsIgnoreCase(filter.propertyName)) {
-    // if (filter.operator == FilterOperator.EQUAL) {
-    // connection = filter.value.toString();
-    // }
-    // } else {
-    // for (FilterPredicate f : filterPredicates) {
-    // if (f.getPropertyName().equals(filter.getPropertyName())
-    // && f.getValue().equals(filter.getValue())
-    // && "*".equals(filter.getValue())) {
-    // logger.error("Attempted to set wildcard wilder for "
-    // + f.getPropertyName()
-    // + " more than once, discardng...");
-    // return this;
-    // }
-    // }
-    // filterPredicates.add(filter);
-    // }
-    // } else {
-    // logger.error("Unable to add filter to query: " + filterStr);
-    // }
-    // return this;
-    // }
-
-    // public Query addFilter(FilterPredicate filter) {
-    // filter = FilterPredicate.normalize(filter);
-    // if ((filter != null) && (filter.propertyName != null)
-    // && (filter.operator != null) && (filter.value != null)) {
-    //
-    // if (PROPERTY_TYPE.equalsIgnoreCase(filter.propertyName)) {
-    // if (filter.operator == FilterOperator.EQUAL) {
-    // type = filter.value.toString();
-    // }
-    // } else if ("connection".equalsIgnoreCase(filter.propertyName)) {
-    // if (filter.operator == FilterOperator.EQUAL) {
-    // connection = filter.value.toString();
-    // }
-    // } else {
-    // filterPredicates.add(filter);
-    // }
-    // }
-    // return this;
-    // }
-
+ 
     public Operand getRootOperand() {
         return this.rootOperand;
     }
@@ -865,78 +837,7 @@ public class Query {
         this.rootOperand = root;
     }
 
-    // public List<FilterPredicate> getFilterPredicates() {
-    // return filterPredicates;
-    // }
-    //
-    // public boolean hasFilterPredicates() {
-    // return !filterPredicates.isEmpty();
-    // }
-    //
-    // public boolean hasFilterPredicatesExcludingSubkeys(
-    // Map<String, Object> subkeyProperties) {
-    // return !filterPredicates.isEmpty();
-    // }
-
-    // public Map<String, Object> getEqualityFilters() {
-    // Map<String, Object> map = new LinkedHashMap<String, Object>();
-    //
-    // for (FilterPredicate f : filterPredicates) {
-    // if (f.operator == FilterOperator.EQUAL) {
-    // Object val = f.getStartValue();
-    // if (val != null) {
-    // map.put(f.getPropertyName(), val);
-    // }
-    // }
-    // }
-    // return map.size() > 0 ? map : null;
-    // }
-
-    // public boolean hasFiltersForProperty(String name) {
-    // return hasFiltersForProperty(FilterOperator.EQUAL, name);
-    // }
-
-    // public boolean hasFiltersForProperty(FilterOperator operator, String
-    // name) {
-    // return getFilterForProperty(operator, name) != null;
-    // }
-
-    // public FilterPredicate getFilterForProperty(FilterOperator operator,
-    // String name) {
-    // if (name == null) {
-    // return null;
-    // }
-    // ListIterator<FilterPredicate> iterator = filterPredicates
-    // .listIterator();
-    // while (iterator.hasNext()) {
-    // FilterPredicate f = iterator.next();
-    // if (f.propertyName.equalsIgnoreCase(name)) {
-    // if (operator != null) {
-    // if (operator == f.operator) {
-    // return f;
-    // }
-    // } else {
-    // return f;
-    // }
-    // }
-    // }
-    // return null;
-    // }
-
-    // public void removeFiltersForProperty(String name) {
-    // if (name == null) {
-    // return;
-    // }
-    // ListIterator<FilterPredicate> iterator = filterPredicates
-    // .listIterator();
-    // while (iterator.hasNext()) {
-    // FilterPredicate f = iterator.next();
-    // if (f.propertyName.equalsIgnoreCase(name)) {
-    // iterator.remove();
-    // }
-    // }
-    // }
-
+    
     public void setStartResult(UUID startResult) {
         this.startResult = startResult;
     }

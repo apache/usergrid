@@ -221,7 +221,7 @@ public class AbstractConnectionsService extends AbstractService {
 
 		checkPermissionsForCollection(context);
 
-		if (!query.hasFilterPredicates() && (query.getEntityType() != null)
+		if (!query.hasQueryPredicates() && (query.getEntityType() != null)
 				&& query.containsNameOrEmailIdentifiersOnly()) {
 
 			String name = query.getSingleNameOrEmailIdentifier();
@@ -263,7 +263,7 @@ public class AbstractConnectionsService extends AbstractService {
 		Results r = null;
 
 		if (connecting()) {
-			if (query.hasFilterPredicates()) {
+			if (query.hasQueryPredicates()) {
 				logger.info("Attempted query of backwards connections");
 				return null;
 			} else {
@@ -318,7 +318,7 @@ public class AbstractConnectionsService extends AbstractService {
 
 		checkPermissionsForCollection(context);
 
-		if (!query.hasFilterPredicates() && (query.getEntityType() != null)
+		if (!query.hasQueryPredicates() && (query.getEntityType() != null)
 				&& query.containsSingleNameOrEmailIdentifier()) {
 
 			String name = query.getSingleNameOrEmailIdentifier();
@@ -379,7 +379,7 @@ public class AbstractConnectionsService extends AbstractService {
 
 		checkPermissionsForCollection(context);
 
-		if (!query.hasFilterPredicates() && (query.getEntityType() != null)
+		if (!query.hasQueryPredicates() && (query.getEntityType() != null)
 				&& query.containsNameOrEmailIdentifiersOnly()) {
 
 			String name = query.getSingleNameOrEmailIdentifier();
