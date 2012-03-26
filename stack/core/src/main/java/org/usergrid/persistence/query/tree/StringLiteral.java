@@ -64,7 +64,11 @@ public class StringLiteral extends Literal<String> {
 
             finishValue = value + "\uFFFF";
            
-        } 
+        }
+        //set the end value to the same as the start value
+        else{
+            finishValue = value;
+        }
         
     }
 

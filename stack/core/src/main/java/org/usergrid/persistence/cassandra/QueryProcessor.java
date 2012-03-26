@@ -361,7 +361,7 @@ public class QueryProcessor {
                 String endValue = stringLiteral.getEndValue();
 
                 if (endValue != null) {
-                    node.setFinish(fieldName, endValue, false);
+                    node.setFinish(fieldName, endValue, true);
                 }
             } else {
                 node.setFinish(fieldName, literal.getValue(), true);
@@ -429,7 +429,7 @@ public class QueryProcessor {
          * @return
          */
         private SliceNode newSliceNode() {
-            SliceNode sliceNode = new SliceNode(contextCount++);
+            SliceNode sliceNode = new SliceNode(++contextCount);
 
             nodes.push(sliceNode);
 

@@ -54,7 +54,6 @@ public class SliceNode extends QueryNode {
 
     private int id;
 
-
     /**
      * Set the id for construction. Just a counter. Used for creating tokens and
      * things like tokens where the same property can be used in 2 different
@@ -150,18 +149,26 @@ public class SliceNode extends QueryNode {
 
     }
 
- 
     /**
-     * Remove this slice by name.
-     * Useful when using subkeys
+     * Remove this slice by name. Useful when using subkeys
      * 
      * @param fieldName
      */
-    public void removeSlice(String fieldName){
+    public void removeSlice(String fieldName) {
         this.pairs.remove(fieldName);
+
+        // if we're the last prop slice pair to be removed, we want to add a
+        // select all to get all results in the slice.
+
+        if (this.pairs.size() == 0) {
+            QuerySlice allSlice = new QuerySlice(null, id++);
+            allSlice.setStart(null);
+            allSlice.setFinish(null);
+            this.pairs.put(null, allSlice);
+        }
+
     }
-    
-    
+
     /**
      * Get all slices in our context
      * 
@@ -171,14 +178,16 @@ public class SliceNode extends QueryNode {
         return this.pairs.values();
     }
 
-    /* (non-Javadoc)
-     * @see org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence.query.ir.NodeVisitor)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence
+     * .query.ir.NodeVisitor)
      */
     @Override
     public void visit(NodeVisitor visitor) throws Exception {
         visitor.visit(this);
     }
-    
- 
-    
+
 }

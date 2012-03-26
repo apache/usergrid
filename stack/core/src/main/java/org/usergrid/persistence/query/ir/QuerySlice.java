@@ -167,6 +167,16 @@ public class QuerySlice {
         return true;
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "QuerySlice [propertyName=" + propertyName + ", start=" + start
+                + ", finish=" + finish + ", cursor=" + cursor + ", reversed="
+                + reversed + ", nodeId=" + nodeId + "]";
+    }
+
     public static class RangeValue {
         byte code;
         Object value;
@@ -266,6 +276,15 @@ public class QuerySlice {
                 }
             }
             return 0;
+        }
+
+        /* (non-Javadoc)
+         * @see java.lang.Object#toString()
+         */
+        @Override
+        public String toString() {
+            return "RangeValue [code=" + code + ", value=" + value
+                    + ", inclusive=" + inclusive + "]";
         }
 
         public static int compare(RangeValue v1, RangeValue v2, boolean finish) {
