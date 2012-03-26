@@ -65,7 +65,6 @@ import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDe
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
-import static org.usergrid.persistence.cassandra.CassandraService.DEFAULT_SEARCH_COUNT;
 import static org.usergrid.persistence.cassandra.CassandraService.INDEX_ENTRY_LIST_COUNT;
 import static org.usergrid.persistence.cassandra.ConnectionRefImpl.CONNECTION_ENTITY_CONNECTION_TYPE;
 import static org.usergrid.persistence.cassandra.GeoIndexManager.batchDeleteLocationInConnectionsIndex;
@@ -81,7 +80,6 @@ import static org.usergrid.utils.CompositeUtils.setEqualityFlag;
 import static org.usergrid.utils.CompositeUtils.setGreaterThanEqualityFlag;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.ConversionUtils.bytes;
-import static org.usergrid.utils.ConversionUtils.getDouble;
 import static org.usergrid.utils.ConversionUtils.string;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.InflectionUtils.singularize;
@@ -96,7 +94,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
@@ -131,8 +128,6 @@ import org.usergrid.persistence.ConnectionRef;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Query;
-import org.usergrid.persistence.Query.FilterOperator;
-import org.usergrid.persistence.Query.FilterPredicate;
 import org.usergrid.persistence.RelationManager;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
@@ -144,10 +139,6 @@ import org.usergrid.persistence.SimpleRoleRef;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.entities.Group;
-import org.usergrid.persistence.query.ir.AndNode;
-import org.usergrid.persistence.query.ir.NodeVisitor;
-import org.usergrid.persistence.query.ir.NotNode;
-import org.usergrid.persistence.query.ir.OrNode;
 import org.usergrid.persistence.query.ir.QuerySlice;
 import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.persistence.query.ir.SliceNode;
@@ -2561,7 +2552,6 @@ public class RelationManagerImpl implements RelationManager,
         }
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     public Results searchCollection(String collectionName, Query query)
             throws Exception {
@@ -2601,8 +2591,6 @@ public class RelationManagerImpl implements RelationManager,
         // we have something to search with, visit our tree and evaluate the
         // results
 
-        String composite_cursor = null;
-
         QueryProcessor qp = new QueryProcessor(query);
         SearchCollectionVisitor visitor = new SearchCollectionVisitor(query,
                 qp, collection);
@@ -2630,11 +2618,7 @@ public class RelationManagerImpl implements RelationManager,
         if (results != null) {
             results.setQuery(query);
 
-            if (results.hasMoreResults() && (composite_cursor != null)) {
-                results.setCursor(composite_cursor);
-            } else {
-                results.setCursor(null);
-            }
+            results.setCursor(null);
         }
         if (results.getLevel().ordinal() >= Results.Level.CORE_PROPERTIES
                 .ordinal()) {
@@ -2645,6 +2629,10 @@ public class RelationManagerImpl implements RelationManager,
         }
         logger.info("Query cursor: " + results.getCursor());
 
+        
+        //now we need to set the cursor from our tree evaluation for return
+        results.setCursor(qp.getCursor());
+        
         return results;
     }
 
@@ -3079,9 +3067,9 @@ public class RelationManagerImpl implements RelationManager,
                 }
 
                 if (r.getCursor() != null) {
-                    // TODO Todd finish this and set the cursor for each result
-                    // set
-                    // queryProcessor.updateCursor(slice, r.getCursor());
+                    //TODO T.N. cursors need changed to ByteBuffers for internal efficiency.  We won't serialize
+                    //until the last join occurs
+                     queryProcessor.updateCursor(slice, r.getCursor());
                 }
 
                 if (results != null) {

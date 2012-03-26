@@ -17,6 +17,8 @@ package org.usergrid.persistence.cassandra;
 
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
+import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
+import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.split;
 
@@ -25,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Stack;
 
 import org.apache.commons.collections.comparators.ComparatorChain;
@@ -90,9 +93,10 @@ public class QueryProcessor {
 
             return;
         }
-        
-        //see if we have sorts, if so, we can add them all as a single node at the root
-        if(sortCache.hasSorts()){
+
+        // see if we have sorts, if so, we can add them all as a single node at
+        // the root
+        if (sortCache.hasSorts()) {
             rootNode = sortCache.generateSorts();
         }
 
@@ -134,7 +138,12 @@ public class QueryProcessor {
      * @param slice
      */
     public void applyCursorAndSort(QuerySlice slice) {
+        //apply the sort first, since this can change the hash code
+        SortPredicate sort = sortCache.getSort(slice.getPropertyName());
 
+        if (sort != null) {
+            slice.setReversed(sort.getDirection() == SortDirection.DESCENDING);
+        }
         // apply the cursor
         ByteBuffer cursor = cursorCache.getCursorBytes(slice.hashCode());
 
@@ -142,11 +151,7 @@ public class QueryProcessor {
             slice.setCursor(cursor);
         }
 
-        SortPredicate sort = sortCache.getSort(slice.getPropertyName());
-
-        if (sort != null) {
-            slice.setReversed(sort.getDirection() == SortDirection.DESCENDING);
-        }
+       
 
     }
 
@@ -168,6 +173,22 @@ public class QueryProcessor {
      */
     public String getCursor() {
         return cursorCache.asString();
+    }
+
+    /**
+     * Update the cursor cache with the new cursor value for the given slice and
+     * value. The cache can then be serialized to a string and returned to the
+     * user after all tree operations have completed.
+     * 
+     * @param slice
+     * @param cursorValue
+     */
+    public void updateCursor(QuerySlice slice, String cursorValue) {
+        // TODO T.N. This is inefficient, we should deal with ByteBuffers
+        // internally and and only expose
+        // strings at the interface level
+        cursorCache.setNextCursor(slice.hashCode(),
+                ByteBuffer.wrap(decodeBase64(cursorValue)));
     }
 
     private class TreeEvaluator implements QueryVisitor {
@@ -546,7 +567,26 @@ public class QueryProcessor {
          * @return
          */
         public String asString() {
-            return null;
+            /**
+             * No cursors to return
+             */
+            if(cursors.size() == 0){
+                return null;
+            }
+            
+            StringBuffer buff = new StringBuffer();
+
+            for (Entry<Integer, ByteBuffer> entry : cursors.entrySet()) {
+                buff.append(entry.getKey());
+                buff.append(":");
+                buff.append(encodeBase64URLSafeString(bytes(entry.getValue())));
+                buff.append("|");
+            }
+
+            // trim off the last pipe
+            buff.setLength(buff.length() - 1);
+
+            return buff.toString();
         }
     }
 
@@ -581,19 +621,22 @@ public class QueryProcessor {
         }
 
         /**
-         * Generate a slice node with scan ranges for all the properties in our sort cache
+         * Generate a slice node with scan ranges for all the properties in our
+         * sort cache
+         * 
          * @return
          */
         public SliceNode generateSorts() {
-          
-            //the value is irrelevant since we'll only ever have 1 slice node if this is called
+
+            // the value is irrelevant since we'll only ever have 1 slice node
+            // if this is called
             SliceNode node = new SliceNode(0);
-            
-            for(SortPredicate predicate: originalValue){
+
+            for (SortPredicate predicate : originalValue) {
                 node.setStart(predicate.getPropertyName(), null, true);
                 node.setFinish(predicate.getPropertyName(), null, false);
             }
-            
+
             return node;
         }
     }

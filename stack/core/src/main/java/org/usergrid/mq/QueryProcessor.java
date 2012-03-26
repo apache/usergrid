@@ -472,8 +472,10 @@ public class QueryProcessor {
 					+ ((finish == null) ? 0 : finish.hashCode());
 			result = prime * result
 					+ ((propertyName == null) ? 0 : propertyName.hashCode());
-			result = prime * result + (reversed ? 1231 : 1237);
 			result = prime * result + ((start == null) ? 0 : start.hashCode());
+			
+			//NOTE.  We have explicitly left out direction.  According to IndexTest:testCollectionOrdering, a cursor can be used and change direction
+			//of the ordering.  
 			return result;
 		}
 
@@ -503,9 +505,7 @@ public class QueryProcessor {
 			} else if (!propertyName.equals(other.propertyName)) {
 				return false;
 			}
-			if (reversed != other.reversed) {
-				return false;
-			}
+		
 			if (start == null) {
 				if (other.start != null) {
 					return false;
