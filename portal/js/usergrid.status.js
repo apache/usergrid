@@ -29,16 +29,5 @@ var StatusBar = function () {
       self.box.hide();
     };
 
-    var removeOldestAlert = function () {
-      if (self.box.find(":first-child").hasClass("alert-info")) {
-        var oldItem = self.box;
-        oldItem.hide();
-      }
-
-      if (self.box.children().length == 0) {
-          self.box.hide();
-      }
-    };
-
     return self;
 }();
