@@ -380,7 +380,7 @@ public class RelationManagerImpl implements RelationManager,
         // by adding it to the row key
         if (fields_used != null) {
             for (String field : fields_used) {
-                node.removeSlice(field);
+                node.removeSlice(field, collection);
             }
         }
 
@@ -3038,7 +3038,7 @@ public class RelationManagerImpl implements RelationManager,
 
             // check if we have sub keys for equality clauses at this node
             // level. If so we can just use them as a row key for faster seek
-           
+
             // Object indexKey = key(headEntity.getUuid(), collection.getName())
             // ;
             Results results = null;
@@ -3047,26 +3047,25 @@ public class RelationManagerImpl implements RelationManager,
 
             Level resultsLevel = query.getResultsLevel();
 
-//            key(owner.getUuid(),
-//                    collectionName, subkey_key,
-//                    indexEntry.getPath())
+            // key(owner.getUuid(),
+            // collectionName, subkey_key,
+            // indexEntry.getPath())
             Object subKey = getCFKeyForSubkey(collection, node);
 
-//                    
+            //
             for (QuerySlice slice : node.getAllSlices()) {
-   
-                
-               Object indexKey = subKey == null ? key(headEntity.getUuid(),
-                        collection.getName(), slice.getPropertyName()) 
-                        : key(headEntity.getUuid(),
-                        collection.getName(), subKey, slice.getPropertyName());
 
-                
+                // NOTE we explicitly do not append the slice value here. This is
+                // done in the searchIndex
+                // method below
+                Object indexKey = subKey == null ? key(headEntity.getUuid(),
+                        collection.getName()) : key(headEntity.getUuid(),
+                        collection.getName(), subKey);
+
                 // update the cursor and order before we perform the slice
-                // operation.  Should be done after subkeying since this can change the hash value of the slice
+                // operation. Should be done after subkeying since this can
+                // change the hash value of the slice
                 queryProcessor.applyCursorAndSort(slice);
-              
-                
 
                 List<HColumn<ByteBuffer, ByteBuffer>> columns = searchIndex(
                         indexKey, slice, limit);
