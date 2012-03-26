@@ -416,11 +416,28 @@ public class GrammarTreeTest {
         WithinOperand operand = (WithinOperand) query.getRootOperand();
 
         assertEquals("a", operand.getProperty().getValue());
-        assertEquals(.1f, operand.getDistance().getValue().floatValue(), 0);
-        assertEquals(-40.343666f, operand.getLattitude().getValue()
-                .floatValue(), 0);
-        assertEquals(175.630917f, operand.getLongitude().getValue()
-                .floatValue(), 0);
+        assertEquals(.1f, operand.getDistance().getFloatValue(), 0);
+        assertEquals(-40.343666f, operand.getLattitude().getFloatValue(), 0);
+        assertEquals(175.630917f, operand.getLongitude().getFloatValue(), 0);
+    }
+
+    @Test
+    public void selectGeoWithInt() throws RecognitionException {
+        String queryString = "select * where a within 1 of -40.343666, 175.630917";
+
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
+
+        Query query = parser.ql().query;
+
+        WithinOperand operand = (WithinOperand) query.getRootOperand();
+
+        assertEquals("a", operand.getProperty().getValue());
+        assertEquals(1, operand.getDistance().getFloatValue(), 0);
+        assertEquals(-40.343666f, operand.getLattitude().getFloatValue(), 0);
+        assertEquals(175.630917f, operand.getLongitude().getFloatValue(), 0);
     }
 
     @Test

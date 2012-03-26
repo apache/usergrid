@@ -15,52 +15,15 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
-import org.antlr.runtime.ClassicToken;
-import org.antlr.runtime.Token;
-
-
-
 /**
  * @author tnine
  *
  */
-public class IntegerLiteral extends Literal<Integer> implements NumericLiteral{
+public interface NumericLiteral {
 
-  private int value;
-  
-  /**
-   * @param t
-   */
-  public IntegerLiteral(Token t) {
-    super(t);
-    this.value = Integer.valueOf(t.getText());
-  }
-  
-  /**
-   * 
-   * @param value
-   */
-  public IntegerLiteral(int value){
-    super(new ClassicToken(0, String.valueOf(value)));
-    this.value = value;
-  }
-  
-  /**
-   * 
-   * @return
-   */
-  public Integer getValue(){
-    return this.value;
-  }
-
-/* (non-Javadoc)
- * @see org.usergrid.persistence.query.tree.NumericLiteral#getFloatValue()
- */
-@Override
-public float getFloatValue() {
-    return value;
-}
-  
-  
-
+    /**
+     * Return the value of this numeric literal as a float
+     * @return
+     */
+    public float getFloatValue();
 }

@@ -74,9 +74,9 @@ public class QueryTest {
         WithinOperand op = (WithinOperand) and.getRight();
 
         assertEquals("loc", op.getProperty().getValue());
-        assertEquals(.05f, op.getDistance().getValue(), 0);
-        assertEquals(5f, op.getLattitude().getValue(), 0);
-        assertEquals(6f, op.getLongitude().getValue(), 0);
+        assertEquals(.05f, op.getDistance().getFloatValue(), 0);
+        assertEquals(5f, op.getLattitude().getFloatValue(), 0);
+        assertEquals(6f, op.getLongitude().getFloatValue(), 0);
 
         and = (AndOperand) and.getLeft();
         Equal equal = (Equal) and.getRight();

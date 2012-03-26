@@ -76,11 +76,19 @@ public class SliceNode extends QueryNode {
      */
     public void setStart(String fieldName, Object start, boolean inclusive) {
         QuerySlice slice = getSlice(fieldName);
+        
+        //if the value is null don't set the range on the slice
+        if(start == null){
+            return;
+        }
+        
         RangeValue existingStart = slice.getStart();
 
         Object indexedValue = toIndexableValue(start);
         byte code = indexValueCode(indexedValue);
 
+        
+        
         RangeValue newStart = new RangeValue(code, indexedValue, inclusive);
 
         if (existingStart == null) {
@@ -109,6 +117,12 @@ public class SliceNode extends QueryNode {
      */
     public void setFinish(String fieldName, Object finish, boolean inclusive) {
         QuerySlice slice = getSlice(fieldName);
+        
+        //if the value is null don't set the range on the slice
+        if(finish == null){
+            return;
+        }
+        
         RangeValue existingFinish = slice.getFinish();
 
         Object indexedValue = toIndexableValue(finish);

@@ -2867,7 +2867,7 @@ public class EntityManagerImpl implements EntityManager,
 
 	@Override
 	public Results searchConnectedEntities(EntityRef connectingEntity,
-			Query query) throws Exception {
+			Query query) throws Exception { 
 		return getRelationManager(connectingEntity).searchConnectedEntities(
 				query);
 	}

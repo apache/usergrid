@@ -22,7 +22,7 @@ import org.antlr.runtime.Token;
  * @author tnine
  * 
  */
-public class FloatLiteral extends Literal<Float> {
+public class FloatLiteral extends Literal<Float> implements NumericLiteral {
 
     private float value;
 
@@ -44,6 +44,14 @@ public class FloatLiteral extends Literal<Float> {
      */
     public Float getValue() {
         return value;
+    }
+
+    /* (non-Javadoc)
+     * @see org.usergrid.persistence.query.tree.NumericLiteral#getFloatValue()
+     */
+    @Override
+    public float getFloatValue() {
+       return value;
     }
 
 }

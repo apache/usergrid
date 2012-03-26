@@ -90,15 +90,21 @@ public class QueryProcessor {
 
             return;
         }
+        
+        //see if we have sorts, if so, we can add them all as a single node at the root
+        if(sortCache.hasSorts()){
+            rootNode = sortCache.generateSorts();
+        }
 
     }
 
     public QueryNode getFirstNode() {
         return rootNode;
     }
-    
+
     /**
      * Perform an in memory sort of the entities
+     * 
      * @param entities
      * @return
      */
@@ -107,7 +113,8 @@ public class QueryProcessor {
 
         if ((entities != null) && (sortCache.sorts.size() > 0)) {
             // Performing in memory sort
-            logger.info("Performing in-memory sort of " + entities.size() + " entities");
+            logger.info("Performing in-memory sort of " + entities.size()
+                    + " entities");
             ComparatorChain chain = new ComparatorChain();
             for (SortPredicate sort : sortCache.sorts.values()) {
                 chain.addComparator(
@@ -118,44 +125,48 @@ public class QueryProcessor {
         }
         return entities;
     }
-    
+
     /**
-     * Apply cursor position and sort order to this slice.  This should only be invoke at evaluation time to ensure that the IR tree has already
-     * been fully constructed
+     * Apply cursor position and sort order to this slice. This should only be
+     * invoke at evaluation time to ensure that the IR tree has already been
+     * fully constructed
+     * 
      * @param slice
      */
-    public void applyCursorAndSort(QuerySlice slice){
-        
-        //apply the cursor
+    public void applyCursorAndSort(QuerySlice slice) {
+
+        // apply the cursor
         ByteBuffer cursor = cursorCache.getCursorBytes(slice.hashCode());
-        
-        if(cursor != null){
+
+        if (cursor != null) {
             slice.setCursor(cursor);
         }
-        
-        SortPredicate sort =  sortCache.getSort(slice.getPropertyName());
-        
-        if(sort != null){
+
+        SortPredicate sort = sortCache.getSort(slice.getPropertyName());
+
+        if (sort != null) {
             slice.setReversed(sort.getDirection() == SortDirection.DESCENDING);
         }
-        
+
     }
-    
+
     /**
      * Update the cursor for the slice with the new value
+     * 
      * @param slice
      */
-    public void updateCursor(QuerySlice slice, ByteBuffer value){
-        
+    public void updateCursor(QuerySlice slice, ByteBuffer value) {
+
         cursorCache.setNextCursor(slice.hashCode(), value);
-        
+
     }
-    
+
     /**
-     * Get the cursor as a string.  This should only be invoked when 
+     * Get the cursor as a string. This should only be invoked when
+     * 
      * @return
      */
-    public String getCursor(){
+    public String getCursor() {
         return cursorCache.asString();
     }
 
@@ -260,11 +271,11 @@ public class QueryProcessor {
 
             // create a new context since any child of NOT will need to be
             // evaluated independently
-            
+
             Operand child = op.getOperation();
-            
+
             createNewSlice(child);
-            
+
             child.visit(this);
 
             NotNode not = new NotNode(nodes.pop());
@@ -306,9 +317,9 @@ public class QueryProcessor {
             String propertyName = appendSuffix(op.getProperty().getValue(),
                     "coordinates");
 
-            nodes.push(new WithinNode(propertyName,
-                    op.getDistance().getValue(), op.getLattitude().getValue(),
-                    op.getLongitude().getValue()));
+            nodes.push(new WithinNode(propertyName, op.getDistance()
+                    .getFloatValue(), op.getLattitude().getFloatValue(), op
+                    .getLongitude().getFloatValue()));
 
         }
 
@@ -467,8 +478,6 @@ public class QueryProcessor {
         }
 
     }
-    
-   
 
     /**
      * Internal cursor parsing
@@ -482,6 +491,7 @@ public class QueryProcessor {
 
         /**
          * Create a new cursor cache from the string if passed
+         * 
          * @param cursorString
          */
         private CursorCache(String cursorString) {
@@ -509,14 +519,14 @@ public class QueryProcessor {
             }
 
         }
-        
+
         /**
          * Set the cursor with the given hash and the new byte buffer
          * 
          * @param sliceHash
          * @param newCursor
          */
-        public void setNextCursor(int sliceHash, ByteBuffer newCursor){
+        public void setNextCursor(int sliceHash, ByteBuffer newCursor) {
             cursors.put(sliceHash, newCursor);
         }
 
@@ -529,12 +539,13 @@ public class QueryProcessor {
         public ByteBuffer getCursorBytes(int sliceHash) {
             return cursors.get(sliceHash);
         }
-        
+
         /**
          * Turn the cursor cache into a string
+         * 
          * @return
          */
-        public String asString(){
+        public String asString() {
             return null;
         }
     }
@@ -547,8 +558,10 @@ public class QueryProcessor {
      */
     public static class SortCache {
         private Map<String, SortPredicate> sorts = new HashMap<String, SortPredicate>();
+        private List<SortPredicate> originalValue;
 
         private SortCache(List<SortPredicate> sortPredicates) {
+            originalValue = sortPredicates;
             for (SortPredicate sort : sortPredicates) {
                 sorts.put(sort.getPropertyName(), sort);
             }
@@ -556,6 +569,32 @@ public class QueryProcessor {
 
         public SortPredicate getSort(String fieldName) {
             return sorts.get(fieldName);
+        }
+
+        /**
+         * Return true if we have sorts
+         * 
+         * @return
+         */
+        public boolean hasSorts() {
+            return sorts.size() > 0;
+        }
+
+        /**
+         * Generate a slice node with scan ranges for all the properties in our sort cache
+         * @return
+         */
+        public SliceNode generateSorts() {
+          
+            //the value is irrelevant since we'll only ever have 1 slice node if this is called
+            SliceNode node = new SliceNode(0);
+            
+            for(SortPredicate predicate: originalValue){
+                node.setStart(predicate.getPropertyName(), null, true);
+                node.setFinish(predicate.getPropertyName(), null, false);
+            }
+            
+            return node;
         }
     }
 

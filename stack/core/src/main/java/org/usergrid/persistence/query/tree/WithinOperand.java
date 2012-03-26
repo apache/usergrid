@@ -84,21 +84,21 @@ public class WithinOperand extends Operand {
      * 
      * @return
      */
-    public FloatLiteral getDistance() {
-        return (FloatLiteral) this.children.get(1);
+    public NumericLiteral getDistance() {
+        return (NumericLiteral) this.children.get(1);
     }
 
     /**
      * @return
      */
-    public FloatLiteral getLattitude() {
-        return (FloatLiteral) this.children.get(2);
+    public NumericLiteral getLattitude() {
+        return (NumericLiteral) this.children.get(2);
     }
 
     /**
      * @return
      */
-    public FloatLiteral getLongitude() {
-        return (FloatLiteral) this.children.get(3);
+    public NumericLiteral getLongitude() {
+        return (NumericLiteral) this.children.get(3);
     }
 }
