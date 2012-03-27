@@ -1,19 +1,20 @@
 // $ANTLR 3.1.3 Mar 17, 2009 19:23:44 org/usergrid/persistence/query/QueryFilter.g 2012-03-07 22:54:28
 
-package org.usergrid.persistence.query;
+package org.usergrid.mq;
 
+import org.antlr.runtime.BitSet;
+import org.antlr.runtime.MismatchedSetException;
+import org.antlr.runtime.NoViableAltException;
+import org.antlr.runtime.Parser;
+import org.antlr.runtime.ParserRuleReturnScope;
+import org.antlr.runtime.RecognitionException;
+import org.antlr.runtime.RecognizerSharedState;
+import org.antlr.runtime.Token;
+import org.antlr.runtime.TokenStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.Query;
-import org.usergrid.persistence.Query.FilterPredicate;
-import org.usergrid.persistence.Query.SortPredicate;
-
-
-
-import org.antlr.runtime.*;
-import java.util.Stack;
-import java.util.List;
-import java.util.ArrayList;
+import org.usergrid.mq.Query.FilterPredicate;
+import org.usergrid.mq.Query.SortPredicate;
 
 public class QueryFilterParser extends Parser {
     public static final String[] tokenNames = new String[] {

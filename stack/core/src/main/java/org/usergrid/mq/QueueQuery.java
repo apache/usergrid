@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.usergrid.persistence.Query;
 import org.usergrid.utils.ConversionUtils;
 
 public class QueueQuery extends Query {

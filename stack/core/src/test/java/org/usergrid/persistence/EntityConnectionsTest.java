@@ -134,58 +134,59 @@ public class EntityConnectionsTest extends AbstractPersistenceTest {
 
 		logger.info("\n\nSearching Award A for recipients with the name Dylan\n");
 
-		Results found_entities = em.searchConnectedEntitiesForProperty(awardA,
-				"awarded", "cat", "name", "Dylan", null, null, 1, false,
-				Results.Level.IDS);
-		assertNotNull(found_entities);
-		assertEquals("Wrong number of results found", 1, found_entities.size());
-
-		UUID found_cat_id = found_entities.getId();
-		assertNotNull(found_cat_id);
-
-		Entity found_cat = em.get(found_cat_id);
-		logger.info("Found cat id: " + found_cat.getUuid());
-		logger.info("Found cat name: " + found_cat.getProperty("name"));
-
-		logger.info("\n\nSetting 'foo'='bar' for found recipient (Dylan)\n");
-
-		em.setProperty(found_cat, "foo", "bar");
-
-		logger.info("\n\nSearching Group A for members with 'foo'='bar'\n");
-
-		found_entities = em.searchConnectedEntitiesForProperty(awardA,
-				"awarded", "cat", "foo", "bar", null, null, 1, false,
-				Results.Level.IDS);
-		assertNotNull(found_entities);
-		assertEquals("Wrong number of results found", 1, found_entities.size());
-
-		logger.info("\n\nSetting 'foo'='baz' for found member (Dylan)\n");
-
-		em.setProperty(found_cat, "foo", "baz");
-
-		logger.info("\n\nSearching award A for members with 'foo'='bar', expecting to get no results\n");
-
-		found_entities = em.searchConnectedEntitiesForProperty(awardA,
-				"awarded", "cat", "foo", "bar", null, null, 1, false,
-				Results.Level.IDS);
-		assertNotNull(found_entities);
-		assertEquals("Wrong number of results found", 0, found_entities.size());
-
-		logger.info("\n\nSearching Group A for members with 'foo'='baz'\n");
-
-		found_entities = em.searchConnectedEntitiesForProperty(awardA,
-				"awarded", "cat", "foo", "baz", null, null, 1, false,
-				Results.Level.IDS);
-		assertNotNull(found_entities);
-		assertEquals("Wrong number of results found", 1, found_entities.size());
-
-		em.deleteConnection(em.connectionRef(awardA, "awarded", catA));
-
-		found_entities = em.searchConnectedEntitiesForProperty(awardA,
-				"awarded", "cat", "foo", "baz", null, null, 1, false,
-				Results.Level.IDS);
-		assertNotNull(found_entities);
-		assertEquals("Wrong number of results found", 0, found_entities.size());
+//      T.N. This isn't used anywhere.  Removing for this release
+//		Results found_entities = em.searchConnectedEntitiesForProperty(awardA,
+//				"awarded", "cat", "name", "Dylan", null, null, 1, false,
+//				Results.Level.IDS);
+//		assertNotNull(found_entities);
+//		assertEquals("Wrong number of results found", 1, found_entities.size());
+//
+//		UUID found_cat_id = found_entities.getId();
+//		assertNotNull(found_cat_id);
+//
+//		Entity found_cat = em.get(found_cat_id);
+//		logger.info("Found cat id: " + found_cat.getUuid());
+//		logger.info("Found cat name: " + found_cat.getProperty("name"));
+//
+//		logger.info("\n\nSetting 'foo'='bar' for found recipient (Dylan)\n");
+//
+//		em.setProperty(found_cat, "foo", "bar");
+//
+//		logger.info("\n\nSearching Group A for members with 'foo'='bar'\n");
+//
+//		found_entities = em.searchConnectedEntitiesForProperty(awardA,
+//				"awarded", "cat", "foo", "bar", null, null, 1, false,
+//				Results.Level.IDS);
+//		assertNotNull(found_entities);
+//		assertEquals("Wrong number of results found", 1, found_entities.size());
+//
+//		logger.info("\n\nSetting 'foo'='baz' for found member (Dylan)\n");
+//
+//		em.setProperty(found_cat, "foo", "baz");
+//
+//		logger.info("\n\nSearching award A for members with 'foo'='bar', expecting to get no results\n");
+//
+//		found_entities = em.searchConnectedEntitiesForProperty(awardA,
+//				"awarded", "cat", "foo", "bar", null, null, 1, false,
+//				Results.Level.IDS);
+//		assertNotNull(found_entities);
+//		assertEquals("Wrong number of results found", 0, found_entities.size());
+//
+//		logger.info("\n\nSearching Group A for members with 'foo'='baz'\n");
+//
+//		found_entities = em.searchConnectedEntitiesForProperty(awardA,
+//				"awarded", "cat", "foo", "baz", null, null, 1, false,
+//				Results.Level.IDS);
+//		assertNotNull(found_entities);
+//		assertEquals("Wrong number of results found", 1, found_entities.size());
+//
+//		em.deleteConnection(em.connectionRef(awardA, "awarded", catA));
+//
+//		found_entities = em.searchConnectedEntitiesForProperty(awardA,
+//				"awarded", "cat", "foo", "baz", null, null, 1, false,
+//				Results.Level.IDS);
+//		assertNotNull(found_entities);
+//		assertEquals("Wrong number of results found", 0, found_entities.size());
 
 	}
 

@@ -35,9 +35,10 @@ public interface RelationManager {
 			int count, Results.Level resultsLevel, boolean reversed)
 			throws Exception;
 
-	public Results getCollection(String collectionName,
-			Map<String, Object> subkeyProperties, UUID startResult, int count,
-			Results.Level resultsLevel, boolean reversed) throws Exception;
+//	T.N. This isn't used anywhere.  Removing for this release
+//	public Results getCollection(String collectionName,
+//			Map<String, Object> subkeyProperties, UUID startResult, int count,
+//			Results.Level resultsLevel, boolean reversed) throws Exception;
 
 	public Results getCollection(String collectionName, Query query,
 			Results.Level resultsLevel) throws Exception;
@@ -103,11 +104,11 @@ public interface RelationManager {
 	public List<ConnectedEntityRef> getConnections(Query query)
 			throws Exception;
 
-	public Results searchConnectedEntitiesForProperty(String connectionType,
-			String connectedEntityType, String propertyName,
-			Object searchStartValue, Object searchFinishValue,
-			UUID startResult, int count, boolean reversed, Level resultsLevel)
-			throws Exception;
+//	public Results searchConnectedEntitiesForProperty(String connectionType,
+//			String connectedEntityType, String propertyName,
+//			Object searchStartValue, Object searchFinishValue,
+//			UUID startResult, int count, boolean reversed, Level resultsLevel)
+//			throws Exception;
 
 	public Results searchConnectedEntities(Query query) throws Exception;
 
