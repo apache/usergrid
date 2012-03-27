@@ -23,12 +23,11 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.junit.Test;
 import org.usergrid.persistence.AbstractPersistenceTest;
 import org.usergrid.persistence.EntityManager;
-import org.usergrid.persistence.Query;
 import org.usergrid.utils.JsonUtils;
 
 public class MessagesTest extends AbstractPersistenceTest {

@@ -30,202 +30,206 @@ import org.usergrid.utils.JsonUtils;
 
 public class CollectionTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(CollectionTest.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(CollectionTest.class);
 
-	@SuppressWarnings("serial")
-	@Test
-	public void testCollection() throws Exception {
-		UUID applicationId = createApplication("testCollection");
-		assertNotNull(applicationId);
+    @SuppressWarnings("serial")
+    @Test
+    public void testCollection() throws Exception {
+        UUID applicationId = createApplication("testCollection");
+        assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
-		assertNotNull(em);
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
 
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "edanuff");
-		properties.put("email", "ed@anuff.com");
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
 
-		Entity user = em.create("user", properties);
-		assertNotNull(user);
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("actor", new LinkedHashMap<String, Object>() {
-			{
-				put("displayName", "Ed Anuff");
-				put("objectType", "person");
-			}
-		});
-		properties.put("verb", "tweet");
-		properties.put("content", "I ate a sammich");
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("actor", new LinkedHashMap<String, Object>() {
+            {
+                put("displayName", "Ed Anuff");
+                put("objectType", "person");
+            }
+        });
+        properties.put("verb", "tweet");
+        properties.put("content", "I ate a sammich");
 
-		Entity activity = em.create("activity", properties);
-		assertNotNull(activity);
+        Entity activity = em.create("activity", properties);
+        assertNotNull(activity);
 
-		logger.info("" + activity.getClass());
-		logger.info(JsonUtils.mapToFormattedJsonString(activity));
+        logger.info("" + activity.getClass());
+        logger.info(JsonUtils.mapToFormattedJsonString(activity));
 
-		activity = em.get(activity.getUuid());
+        activity = em.get(activity.getUuid());
 
-		logger.info("" + activity.getClass());
-		logger.info(JsonUtils.mapToFormattedJsonString(activity));
+        logger.info("" + activity.getClass());
+        logger.info(JsonUtils.mapToFormattedJsonString(activity));
 
-		em.addToCollection(user, "activities", activity);
+        em.addToCollection(user, "activities", activity);
 
-		Results r = em.getCollection(user, "activities", null, null, 10,
-				Results.Level.LINKED_PROPERTIES, false);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
-		assertEquals(1, r.size());
+        // T.N. This isn't used anywhere. Removing for this release
+        // Results r = em.getCollection(user, "activities", null, null, 10,
+        // Results.Level.LINKED_PROPERTIES, false);
+        // logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        // assertEquals(1, r.size());
+        //
+        // properties = new LinkedHashMap<String, Object>();
+        // properties.put("foo", "bar");
+        // em.updateProperties(new SimpleCollectionRef(user, "activities",
+        // activity), properties);
+        //
+        // r = em.getCollection(user, "activities", null, null, 10,
+        // Results.Level.LINKED_PROPERTIES, false);
+        // logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        // assertEquals(1, r.size());
+        //
+        // em.removeFromCollection(user, "activities", activity);
+        //
+        // r = em.getCollection(user, "activities", null, null, 10,
+        // Results.Level.LINKED_PROPERTIES, false);
+        // logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        // assertEquals(0, r.size());
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("foo", "bar");
-		em.updateProperties(new SimpleCollectionRef(user, "activities",
-				activity), properties);
+    }
 
-		r = em.getCollection(user, "activities", null, null, 10,
-				Results.Level.LINKED_PROPERTIES, false);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
-		assertEquals(1, r.size());
+    @Test
+    public void testGroups() throws Exception {
+        UUID applicationId = createApplication("testGroups");
+        assertNotNull(applicationId);
 
-		em.removeFromCollection(user, "activities", activity);
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
 
-		r = em.getCollection(user, "activities", null, null, 10,
-				Results.Level.LINKED_PROPERTIES, false);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
-		assertEquals(0, r.size());
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
 
-	}
+        Entity user1 = em.create("user", properties);
+        assertNotNull(user1);
 
-	@Test
-	public void testGroups() throws Exception {
-		UUID applicationId = createApplication("testGroups");
-		assertNotNull(applicationId);
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "djacobs");
+        properties.put("email", "djacobs@gmail.com");
 
-		EntityManager em = emf.getEntityManager(applicationId);
-		assertNotNull(em);
+        Entity user2 = em.create("user", properties);
+        assertNotNull(user2);
 
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "edanuff");
-		properties.put("email", "ed@anuff.com");
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("path", "group1");
+        Entity group = em.create("group", properties);
+        assertNotNull(group);
 
-		Entity user1 = em.create("user", properties);
-		assertNotNull(user1);
+        em.addToCollection(group, "users", user1);
+        em.addToCollection(group, "users", user2);
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "djacobs");
-		properties.put("email", "djacobs@gmail.com");
+        // T.N. This isn't used anywhere. Removing for this release
+        // Results r = em.getCollection(group, "users", null, null, 10,
+        // Results.Level.LINKED_PROPERTIES, false);
+        // logger.info("Users in group: "
+        // + JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        // assertEquals(2, r.size());
 
-		Entity user2 = em.create("user", properties);
-		assertNotNull(user2);
+        // T.N. This isn't used anywhere. Removing for this release
+        // r = em.getCollection(user1, "groups", null, null, 10,
+        // Results.Level.LINKED_PROPERTIES, false);
+        // logger.info("User in groups: "
+        // + JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        // assertEquals(1, r.size());
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("path", "group1");
-		Entity group = em.create("group", properties);
-		assertNotNull(group);
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("nickname", "ed");
+        em.updateProperties(new SimpleCollectionRef(group, "users", user1),
+                properties);
+        // T.N. This isn't used anywhere. Removing for this release
+        // r = em.getCollection(group, "users", null, null, 10,
+        // Results.Level.LINKED_PROPERTIES, false);
+        // logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        // assertEquals(2, r.size());
 
-		em.addToCollection(group, "users", user1);
-		em.addToCollection(group, "users", user2);
+        Results r = em.searchCollection(group, "users",
+                new Query().addEqualityFilter("member.nickname", "ed")
+                        .withResultsLevel(Results.Level.LINKED_PROPERTIES));
+        logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        assertEquals(1, r.size());
 
-		Results r = em.getCollection(group, "users", null, null, 10,
-				Results.Level.LINKED_PROPERTIES, false);
-		logger.info("Users in group: "
-				+ JsonUtils.mapToFormattedJsonString(r.getEntities()));
-		assertEquals(2, r.size());
+        em.removeFromCollection(user1, "groups", group);
 
-		r = em.getCollection(user1, "groups", null, null, 10,
-				Results.Level.LINKED_PROPERTIES, false);
-		logger.info("User in groups: "
-				+ JsonUtils.mapToFormattedJsonString(r.getEntities()));
-		assertEquals(1, r.size());
+        // T.N. This isn't used anywhere. Removing for this release
+        // r = em.getCollection(group, "users", null, null, 10,
+        // Results.Level.LINKED_PROPERTIES, false);
+        // logger.info("Users in group: "
+        // + JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        // assertEquals(1, r.size());
+        //
+        // r = em.getCollection(user1, "groups", null, null, 10,
+        // Results.Level.LINKED_PROPERTIES, false);
+        // logger.info("User in groups: "
+        // + JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        // assertEquals(0, r.size());
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("nickname", "ed");
-		em.updateProperties(new SimpleCollectionRef(group, "users", user1),
-				properties);
+    }
 
-		r = em.getCollection(group, "users", null, null, 10,
-				Results.Level.LINKED_PROPERTIES, false);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
-		assertEquals(2, r.size());
+    @Test
+    public void testSubkeys() throws Exception {
 
-		r = em.searchCollection(group, "users",
-				new Query().addEqualityFilter("member.nickname", "ed")
-						.withResultsLevel(Results.Level.LINKED_PROPERTIES));
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
-		assertEquals(1, r.size());
+        UUID applicationId = createApplication("testSubkeys");
+        assertNotNull(applicationId);
 
-		em.removeFromCollection(user1, "groups", group);
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
 
-		r = em.getCollection(group, "users", null, null, 10,
-				Results.Level.LINKED_PROPERTIES, false);
-		logger.info("Users in group: "
-				+ JsonUtils.mapToFormattedJsonString(r.getEntities()));
-		assertEquals(1, r.size());
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
 
-		r = em.getCollection(user1, "groups", null, null, 10,
-				Results.Level.LINKED_PROPERTIES, false);
-		logger.info("User in groups: "
-				+ JsonUtils.mapToFormattedJsonString(r.getEntities()));
-		assertEquals(0, r.size());
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
 
-	}
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("actor",
+                hashMap("displayName", "Ed Anuff").map("objectType", "person"));
+        properties.put("verb", "tweet");
+        properties.put("content", "I ate a sammich");
 
-	@Test
-	public void testSubkeys() throws Exception {
+        em.addToCollection(user, "activities",
+                em.create("activity", properties));
 
-		UUID applicationId = createApplication("testSubkeys");
-		assertNotNull(applicationId);
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("actor",
+                hashMap("displayName", "Ed Anuff").map("objectType", "person"));
+        properties.put("verb", "post");
+        properties.put("content", "I wrote a blog post");
 
-		EntityManager em = emf.getEntityManager(applicationId);
-		assertNotNull(em);
+        em.addToCollection(user, "activities",
+                em.create("activity", properties));
 
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "edanuff");
-		properties.put("email", "ed@anuff.com");
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("actor",
+                hashMap("displayName", "Ed Anuff").map("objectType", "person"));
+        properties.put("verb", "tweet");
+        properties.put("content", "I ate another sammich");
 
-		Entity user = em.create("user", properties);
-		assertNotNull(user);
+        em.addToCollection(user, "activities",
+                em.create("activity", properties));
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("actor",
-				hashMap("displayName", "Ed Anuff").map("objectType", "person"));
-		properties.put("verb", "tweet");
-		properties.put("content", "I ate a sammich");
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("actor",
+                hashMap("displayName", "Ed Anuff").map("objectType", "person"));
+        properties.put("verb", "post");
+        properties.put("content", "I wrote another blog post");
 
-		em.addToCollection(user, "activities",
-				em.create("activity", properties));
+        em.addToCollection(user, "activities",
+                em.create("activity", properties));
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("actor",
-				hashMap("displayName", "Ed Anuff").map("objectType", "person"));
-		properties.put("verb", "post");
-		properties.put("content", "I wrote a blog post");
+        Results r = em.searchCollection(user, "activities",
+                Query.searchForProperty("verb", "post"));
+        logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        assertEquals(2, r.size());
 
-		em.addToCollection(user, "activities",
-				em.create("activity", properties));
-
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("actor",
-				hashMap("displayName", "Ed Anuff").map("objectType", "person"));
-		properties.put("verb", "tweet");
-		properties.put("content", "I ate another sammich");
-
-		em.addToCollection(user, "activities",
-				em.create("activity", properties));
-
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("actor",
-				hashMap("displayName", "Ed Anuff").map("objectType", "person"));
-		properties.put("verb", "post");
-		properties.put("content", "I wrote another blog post");
-
-		em.addToCollection(user, "activities",
-				em.create("activity", properties));
-
-		Results r = em.searchCollection(user, "activities",
-				Query.searchForProperty("verb", "post"));
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
-		assertEquals(2, r.size());
-
-	}
+    }
 }
