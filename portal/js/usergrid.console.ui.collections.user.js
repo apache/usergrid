@@ -3,6 +3,13 @@ usergrid.console = usergrid.console || {};
 usergrid.console.ui = usergrid.console.ui || { };
 usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 
+
+    function dateToString(numberDate){
+        var date = new Date(numberDate);
+        //var milisecs = date.getMilliseconds()/1000; //not showing secs per ea
+        return date.toString('dd MMM yyyy - h:mm tt '); //:ss' + milisecs.toFixed(3));
+    }
+
 (function($) {
     //This code block *WILL NOT* load before the document is complete
     
@@ -135,7 +142,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
             } else if (entity.username) {
                 name = name + " : " + entity.username;
             }
-            
+
             var path = this.options.path;
             
             var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
@@ -183,6 +190,9 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
             var metadata = entity.metadata;
             if ($.isEmptyObject(metadata)) metadata = null;
             
+            entity_contents.created = dateToString(entity_contents.created);
+            entity_contents.modified = dateToString(entity_contents.modified); 
+
             var details = $.tmpl("usergrid.ui.collections.user.detail.html", {
                 entity : entity_contents,
                 picture : entity.picture,

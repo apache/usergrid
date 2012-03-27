@@ -1170,7 +1170,6 @@ function usergrid_console_app() {
     }
     window.usergrid.console.deleteRoleFromUser = deleteRoleFromUser;
 
-
     function removeUserFromGroup(username) {
         var items = $("#user-panel-memberships input[id^=userGroupItem]:checked");
         if(!items.length){
@@ -1670,6 +1669,9 @@ function usergrid_console_app() {
             var entity_contents = $.extend( false, { }, entity);
             delete entity_contents['metadata'];
             
+            entity_contents.created = dateToString(entity_contents.created);
+            entity_contents.modified = dateToString(entity_contents.modified);
+
             var metadata = entity.metadata;
             if ($.isEmptyObject(metadata)) metadata = null;
             
@@ -2020,6 +2022,9 @@ function usergrid_console_app() {
             if ($.isEmptyObject(entity_path)) {
                 entity_path = path + "/" + entity.uuid;
             }
+
+            entity_contents.created = dateToString(entity_contents.created);
+            entity_contents.modified = dateToString(entity_contents.modified);
 
             group_data = {
                 entity : entity_contents,
