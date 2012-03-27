@@ -24,10 +24,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Counter;
+import com.yammer.metrics.core.Timer;
+import com.yammer.metrics.core.TimerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,11 +59,18 @@ public class MeteringFilter implements ContainerRequestFilter,
 	ServiceManagerFactory smf;
 	Properties properties;
 	ManagementService management;
+  final Counter activeRequests;
+  final Timer requestTimer;
 
 	private static final Logger logger = LoggerFactory.getLogger(MeteringFilter.class);
 
 	public MeteringFilter() {
 		logger.info("MeteringFilter installed");
+    this.activeRequests = Metrics.newCounter(MeteringFilter.class, "activeRequests");
+    this.requestTimer = Metrics.newTimer(MeteringFilter.class,
+            "requests",
+            TimeUnit.MILLISECONDS,
+            TimeUnit.SECONDS);
 	}
 
 	@Autowired
@@ -85,10 +97,12 @@ public class MeteringFilter implements ContainerRequestFilter,
 	public ContainerRequest filter(ContainerRequest request) {
 
 		try {
+      activeRequests.inc();
 			request.setEntityInputStream(new InputStreamAdapter(request
 					.getEntityInputStream()));
 			httpServletRequest.setAttribute("application.request.timetamp",
 					System.currentTimeMillis());
+      httpServletRequest.setAttribute("application.request.requestTimer",requestTimer.time());
 		} catch (Exception e) {
 			logger.error("Unable to capture request", e);
 		}
@@ -96,6 +110,7 @@ public class MeteringFilter implements ContainerRequestFilter,
 	}
 
 	public void countDataWritten(long written) {
+    TimerContext timer = (TimerContext)httpServletRequest.getAttribute("application.request.requestTimer");
 		try {
 			UUID applicationId = (UUID) httpServletRequest
 					.getAttribute("applicationId");
@@ -105,6 +120,7 @@ public class MeteringFilter implements ContainerRequestFilter,
 
 				Long timestamp = (Long) httpServletRequest
 						.getAttribute("application.request.timetamp");
+
 				if ((timestamp != null) && (timestamp > 0)) {
 					long time = System.currentTimeMillis() - timestamp;
 					logger.info("Application: {}, spent {} milliseconds of CPU time", applicationId, time);
@@ -133,7 +149,13 @@ public class MeteringFilter implements ContainerRequestFilter,
 			}
 		} catch (Exception e) {
 			logger.error("Unable to capture output", e);
-		}
+		} finally {
+      if (timer != null ) {
+        timer.stop();
+      }
+      activeRequests.dec();
+    }
+
 	}
 
 	public void countDataRead(long read) {

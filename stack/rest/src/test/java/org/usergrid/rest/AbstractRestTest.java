@@ -59,7 +59,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 	static EmbeddedServerHelper embedded = null;
   static boolean usersSetup = false;
 
-  protected String access_token;
+  protected static String access_token;
 
 	static ClientConfig clientConfig = new DefaultClientConfig();
 	static {
@@ -156,6 +156,7 @@ public abstract class AbstractRestTest extends JerseyTest {
    */
   @Before
   public void acquireToken() {
+    if ( access_token != null ) return;
     JsonNode node = resource().path("/test-app/token")
                 .queryParam("grant_type", "password")
                 .queryParam("username", "ed@anuff.com")

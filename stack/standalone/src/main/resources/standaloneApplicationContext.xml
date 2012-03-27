@@ -113,8 +113,9 @@
 		<constructor-arg ref="counterUtils" />
 	</bean>
 
-	<bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
+	<bean id="simpleBatcher" class="com.usergrid.count.ScheduledBatcher">
 		<constructor-arg value="3" />
+        <constructor-arg value="30" />
 		<property name="batchSubmitter" ref="batchSubmitter" />
 	</bean>
 
