@@ -75,7 +75,7 @@ public class SliceNode extends QueryNode {
      * @param includeEnd
      */
     public void setStart(String fieldName, Object start, boolean inclusive) {
-        QuerySlice slice = getSlice(fieldName);
+        QuerySlice slice = getOrCreateSlice(fieldName);
         
         //if the value is null don't set the range on the slice
         if(start == null){
@@ -116,7 +116,7 @@ public class SliceNode extends QueryNode {
      * @param inclusive
      */
     public void setFinish(String fieldName, Object finish, boolean inclusive) {
-        QuerySlice slice = getSlice(fieldName);
+        QuerySlice slice = getOrCreateSlice(fieldName);
         
         //if the value is null don't set the range on the slice
         if(finish == null){
@@ -152,7 +152,7 @@ public class SliceNode extends QueryNode {
      * @param fieldName
      * @return
      */
-    public QuerySlice getSlice(String fieldName) {
+    private QuerySlice getOrCreateSlice(String fieldName) {
         QuerySlice pair = this.pairs.get(fieldName);
 
         if (pair == null) {
@@ -162,6 +162,16 @@ public class SliceNode extends QueryNode {
 
         return pair;
 
+    }
+    
+    /**
+     * Get the slice by field name if it exists.  Null otherwise
+     * 
+     * @param fieldName
+     * @return
+     */
+    public QuerySlice getSlice(String fieldName){
+        return this.pairs.get(fieldName);
     }
 
     /**

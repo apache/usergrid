@@ -136,6 +136,7 @@ public class Query {
             finishTime = q.finishTime;
             resolution = q.resolution;
             pad = q.pad;
+            rootOperand = q.rootOperand;
             users = q.users != null ? new ArrayList<Identifier>(q.users) : null;
             groups = q.groups != null ? new ArrayList<Identifier>(q.groups)
                     : null;
@@ -145,6 +146,7 @@ public class Query {
                     q.categories) : null;
             counterFilters = q.counterFilters != null ? new ArrayList<CounterFilterPredicate>(
                     q.counterFilters) : null;
+            
         }
     }
 

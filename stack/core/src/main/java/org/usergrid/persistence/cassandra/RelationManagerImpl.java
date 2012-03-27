@@ -2592,8 +2592,7 @@ public class RelationManagerImpl implements RelationManager,
         // results
 
         QueryProcessor qp = new QueryProcessor(query);
-        SearchCollectionVisitor visitor = new SearchCollectionVisitor(query,
-                qp, collection);
+        SearchCollectionVisitor visitor = new SearchCollectionVisitor(query, qp, collection);
         qp.getFirstNode().visit(visitor);
 
         Results results = visitor.getResults();
@@ -2872,6 +2871,8 @@ public class RelationManagerImpl implements RelationManager,
         QueryProcessor qp = new QueryProcessor(query);
         SearchConnectionVisitor visitor = new SearchConnectionVisitor(query,
                 qp, connectionRef);
+        
+        qp.getFirstNode().visit(visitor);
 
         results = visitor.getResults();
 

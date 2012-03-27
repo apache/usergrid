@@ -111,8 +111,8 @@ public class QuerySlice {
      * @return the equals
      */
     public boolean isEquals() {
-        //either both are null
-        return (start == null && finish == null) || (start != null && finish != null && start.equals(finish));
+        //note that both null is a full scan range and should not be considered equal
+        return start != null && finish != null && start.equals(finish);
     }
 
     @Override

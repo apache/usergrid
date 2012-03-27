@@ -634,7 +634,7 @@ public class QueryProcessor {
 
             for (SortPredicate predicate : originalValue) {
                 node.setStart(predicate.getPropertyName(), null, true);
-                node.setFinish(predicate.getPropertyName(), null, false);
+                node.setFinish(predicate.getPropertyName(), null, true);
             }
 
             return node;

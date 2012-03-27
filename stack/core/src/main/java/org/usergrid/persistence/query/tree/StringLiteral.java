@@ -56,13 +56,14 @@ public class StringLiteral extends Literal<String> {
 
         if ("*".equals(value)) {
             this.value = null;
+            this.finishValue = null;
             return;
         }
 
         if (value != null && value.endsWith("*")) {
-            value = removeEnd(value.toString(), "*");
+            this.value = removeEnd(value.toString(), "*");
 
-            finishValue = value + "\uFFFF";
+            finishValue = this.value + "\uFFFF";
            
         }
         //set the end value to the same as the start value
