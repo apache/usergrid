@@ -9,31 +9,28 @@
 			</div>
 		</td>
 		<td class="query-result-td-header-buttons btn-group">
-			<button class="query-result-header-toggle-json button">JSON</button>
-			<a class="query-result-header-link btn" target="_blank" href="${uri}">Link</a>
+            <button class="query-result-header-toggle-contents btn">Contents</button>
+			<button class="query-result-header-toggle-json btn">JSON</button>
 		</td>
 	</tr>
 </table>
+<!--
 <div class="query-result-edit query-result-portlet">
 	<div class="query-result-portlet-title">Edit</div>
 	<div class="query-result-form"></div>
 </div>
+
 {{if collections}}
 <div class="query-result-collections query-result-portlet">
 	<div class="query-result-portlet-title">Collections</div>
 	{{html $item.makeObjectTable(collections, $item.tableOpts, "all_collections") }}
 </div>
 {{/if}}
+-->
 <div class="query-result-contents query-result-portlet">
 	<div class="query-result-portlet-title">Contents</div>
 	{{html $item.makeObjectTable(entity, $item.tableOpts)}}
 </div>
-{{if metadata}}
-<div class="query-result-metadata query-result-portlet">
-	<div class="query-result-portlet-title">Metadata</div>
-	{{html $item.makeObjectTable(metadata, $item.metadataTableOpts) }}
-</div>
-{{/if}}
 <div class="query-result-json query-result-portlet" style="display: none">
 	<div class="query-result-portlet-title">JSON</div>
 	<div class="query-result-json-border">

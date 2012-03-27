@@ -121,8 +121,13 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 				
 		getContents : function() {
 			var entity_contents = $.extend( false, { }, this.options.entity);
-            var path = entity_contents['metadata']['path'];
-            entity_contents = $.extend( false, entity_contents, {'path': path});
+			var path = entity_contents['metadata']['path'];
+			entity_contents = $.extend( false, entity_contents, {'path': path});
+			var sets = entity_contents['metadata']['sets'];
+			entity_contents = $.extend( false, entity_contents, {'sets': sets});
+			var collections = entity_contents['metadata']['collections'];
+			entity_contents = $.extend( false, entity_contents, {'collections': collections});
+
 			delete entity_contents['metadata'];
 			return $.tmpl("usergrid.ui.collections.entity.contents.html", {
 				entity : entity_contents
@@ -203,7 +208,19 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
                 }                
 				return false;
 			});
-
+            
+            var collections_button = o.details.find(".query-result-header-toggle-collections");
+            collections_button.click(function() {
+                if (o.collections.css('display') == 'none') {
+                    o.collections.show();
+                    o.contents.hide();
+                    o.json.hide();
+                } else {
+                    o.collections.hide();
+                }
+                return false;
+            });
+            
             var json_button = o.details.find(".query-result-header-toggle-json");
 			json_button.click(function() {
                 if (o.json.css('display') == 'none') {

@@ -1417,10 +1417,12 @@ function usergrid_console_app() {
                 }           
                 var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
                 var uri = (entity.metadata || { }).uri;
-                var id = 'userListItem';                          
+                var id = 'userListItem';
+                var picture = entity.picture;
+                picture = picture.replace('http://www.gravatar.com/','https://secure.gravatar.com/');
                 return {
                     entity : entity,
-                    picture : entity.picture,
+                    picture : picture,
                     name : name,
                     id: id,
                     path : path,
