@@ -1418,7 +1418,7 @@ function usergrid_console_app() {
                 var uri = (entity.metadata || { }).uri;
                 var id = 'userListItem';
                 var picture = entity.picture;
-                picture = picture.replace('http://www.gravatar.com/','https://secure.gravatar.com/');
+                if (picture) { picture = picture.replace('http://www.gravatar.com/','https://secure.gravatar.com/'); }
                 return {
                     entity : entity,
                     picture : picture,
