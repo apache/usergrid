@@ -19,6 +19,7 @@ import me.prettyprint.cassandra.serializers.SerializerTypeInferer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.TypeInferringSerializer;
 import me.prettyprint.hector.api.Serializer;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonCreator;
@@ -78,8 +79,8 @@ public class Count<K,C> {
      */
     @JsonIgnore
     public String getCounterName() {
-        return tableName + ":" + getKeyName().toString()
-                + ":" + getColumnName().toString();
+        return tableName + ":" + Hex.encodeHexString(getKeyNameBytes().array())
+                + ":" + Hex.encodeHexString(getColumnNameBytes().array());
     }
 
     public long getValue() {
