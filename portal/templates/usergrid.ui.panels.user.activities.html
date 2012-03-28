@@ -15,7 +15,7 @@
           <tr class="">
             <!--<td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="${id}" value="${entity.uuid}" /></td>-->
             <td class="created">
-              ${$value.created}<br />
+              ${dateToString($value.created)}<br />
               <strong>${$value.content}</strong>
             </td>
             <td class="actor">
