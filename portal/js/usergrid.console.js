@@ -1632,6 +1632,8 @@ function usergrid_console_app() {
             $.tmpl("usergrid.ui.panels.user.memberships.html", user_data, options).appendTo("#user-panel-memberships");
             updateGroupsAutocomplete();
             
+            console.log("USER DATA");
+            console.log(user_data);
             $.tmpl("usergrid.ui.panels.user.activities.html", user_data, options).appendTo("#user-panel-activities");
             
             $.tmpl("usergrid.ui.panels.user.graph.html", user_data, options).appendTo("#user-panel-graph");
