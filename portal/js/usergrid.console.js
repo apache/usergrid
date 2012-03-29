@@ -2418,13 +2418,17 @@ function usergrid_console_app() {
                 var id = 'activitiesListItem';
                 var created = dateToString(entity.created);
                 var uri = entity.uri;
+                var uuid = entity.uuid;
+                var email = entity.email;
                 if(entity && entity.actor && entity.actor.email)
                     entity.actor.gravatar = get_gravatar(entity.actor.email,20);
                 return {
                     entity : entity,
                     created : created,
                     id: id,
-                    uri : uri
+                    uri : uri,
+                    uuid : uuid,
+                    email : email
                 };
             },
             "onRender" : function() {
