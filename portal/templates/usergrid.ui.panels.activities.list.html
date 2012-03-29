@@ -8,8 +8,8 @@
         </td>
         <td class="actor">
            <img src="${entity.actor.gravatar}"/>
-           <a href="" onclick="usergrid.console.pageOpenUserActivities('${uuid}'); return false;"> 
-              <strong>${entity.actor.displayName} (${email})</strong>
+           <a href="" onclick="usergrid.console.pageOpenUserActivities('${entity.actor.uuid}'); return false;"> 
+              <strong>${entity.actor.displayName} (${entity.actor.email})</strong>
            </a>
         </td>
         <td class="verb">
