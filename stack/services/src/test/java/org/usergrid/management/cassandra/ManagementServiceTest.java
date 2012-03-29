@@ -9,8 +9,10 @@ import org.usergrid.management.ManagementService;
 import org.usergrid.management.ManagementTestHelper;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
+import org.usergrid.persistence.Entity;
 import org.usergrid.security.AuthPrincipalType;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -72,8 +74,18 @@ public class ManagementServiceTest {
     //managementService.getTokenForPrincipal(appUuid, authPrincipal, pUuid, salt, true);
   }
 
+  @Test
   public void testGetTokenForPrincipalUser() throws Exception {
     // create a user
+    Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    properties.put("username", "edanuff");
+    properties.put("email", "ed@anuff.com");
 
+    Entity user = helper.getEntityManagerFactory().getEntityManager(applicationId).create("user", properties);
+
+    assertNotNull(user);
+    String token = managementService.getTokenForPrincipal(MANAGEMENT_APPLICATION_ID,
+                AuthPrincipalType.APPLICATION_USER, user.getUuid(), null, true);
+    assertNotNull(token);
   }
 }
