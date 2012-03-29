@@ -1632,8 +1632,6 @@ function usergrid_console_app() {
             $.tmpl("usergrid.ui.panels.user.memberships.html", user_data, options).appendTo("#user-panel-memberships");
             updateGroupsAutocomplete();
             
-            console.log("USER DATA");
-            console.log(user_data);
             $.tmpl("usergrid.ui.panels.user.activities.html", user_data, options).appendTo("#user-panel-activities");
             
             $.tmpl("usergrid.ui.panels.user.graph.html", user_data, options).appendTo("#user-panel-graph");
@@ -1705,6 +1703,10 @@ function usergrid_console_app() {
             client.queryUserActivities(current_application_id, entity.uuid, function(response) {
                 if (user_data && response.entities && (response.entities.length > 0)) {
                     user_data.activities = response.entities;
+
+                    for (var a in user_data.activities ) { 
+                      user_data.activities[a].created = dateToString(user_data.activities[a].created)
+                    }
 
                     redrawUserPanel();
                     $('span[id^=activities-date-field]').each( function() {
