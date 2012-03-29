@@ -317,6 +317,10 @@ function usergrid_console_app() {
                 var entity = response.entities[0];
                 query_entities_by_id[entity.uuid] = entity;
 
+                entity.created = dateToString(entity.created);
+                entity.modified = dateToString(entity.modified);
+                entity.published = dateToString(entity.published);
+
                 var entity_path = (entity.metadata || {}).path;
                 if ($.isEmptyObject(entity_path)) {
                     entity_path = path + "/" + entity.uuid;
@@ -1713,8 +1717,6 @@ function usergrid_console_app() {
                         var created = dateToString(parseInt($(this).html()))
                         $(this).html(created);
                     });
-
-                    
                 }
             })
 
@@ -2400,8 +2402,8 @@ function usergrid_console_app() {
     var activities_query = null;
     var activitiesLetter = '*';
     var activitiesSortBy = 'created';
-
     var activities_query = null;
+
     function requestActivities(search, searchType) {
         var query = {"ql" : "order by " + activitiesSortBy}; //default to built in search
         if (typeof search == 'string') {
@@ -2414,7 +2416,6 @@ function usergrid_console_app() {
         return false;
     }
     usergrid.console.requestActivities = requestActivities;
-
 
     function displayActivities(response) {
         Activities = {};
@@ -2449,6 +2450,7 @@ function usergrid_console_app() {
             "nextButton" : "#button-activities-next",
             "noEntitiesMsg" : "No activities found"
         }, response);
+
     }
 
     function searchActivities(){
@@ -2821,6 +2823,7 @@ function usergrid_console_app() {
                 var id = 'collectionListItem';
                 var type = entity.type;
                 var count = entity.count;
+
                 return {
                     entity : entity,
                     name : name,
@@ -2843,6 +2846,7 @@ function usergrid_console_app() {
             "nextButton" : "#button-collections-next",
             "noEntitiesMsg" : "No collections found"
         }, response);
+
     }
 
      /*******************************************************************
