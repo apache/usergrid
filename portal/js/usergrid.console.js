@@ -317,9 +317,15 @@ function usergrid_console_app() {
                 var entity = response.entities[0];
                 query_entities_by_id[entity.uuid] = entity;
 
-                entity.created = dateToString(entity.created);
-                entity.modified = dateToString(entity.modified);
-                entity.published = dateToString(entity.published);
+                if (entity.created) {
+                  entity.created = dateToString(entity.created);
+                }
+                if (entity.modified) {
+                  entity.modified = dateToString(entity.modified);
+                }
+                if (entity.published) {
+                  entity.published = dateToString(entity.published);
+                }
 
                 var entity_path = (entity.metadata || {}).path;
                 if ($.isEmptyObject(entity_path)) {
@@ -2450,7 +2456,6 @@ function usergrid_console_app() {
             "nextButton" : "#button-activities-next",
             "noEntitiesMsg" : "No activities found"
         }, response);
-
     }
 
     function searchActivities(){
