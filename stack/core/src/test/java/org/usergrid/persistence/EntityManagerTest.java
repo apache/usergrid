@@ -19,19 +19,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.entities.Group;
+import org.usergrid.persistence.entities.User;
 
 public class EntityManagerTest extends AbstractPersistenceTest {
 
@@ -320,7 +317,44 @@ public class EntityManagerTest extends AbstractPersistenceTest {
 		assertEquals("wrong value for property beta", "alpha", json.get("a"));
 
 		em.deleteProperty(entity, "json");
-
 	}
 
+  @Test
+  public void testEntityCounters() throws Exception {
+    logger.info("EntityManagerTest#testEntityCounters");
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+
+    Group organizationEntity = new Group();
+    organizationEntity.setPath("testCounterOrg");
+    organizationEntity = em.create(organizationEntity);
+
+    UUID applicationId = emf.createApplication("testEntityCounters");
+
+    Map<String,Object> properties = new LinkedHashMap<String,Object>();
+    properties.put("name", "testEntityCounters");
+    Entity applicationEntity = em.create(applicationId, "application_info",
+            properties);
+
+    em.createConnection(new SimpleEntityRef("group", organizationEntity.getUuid()),
+            "owns", new SimpleEntityRef("application_info", applicationId));
+
+    em = emf.getEntityManager(applicationId);
+    properties = new LinkedHashMap<String, Object>();
+    properties.put("username", "edanuff");
+    properties.put("email", "ed@anuff.com");
+    Entity user = em.create("user", properties);
+
+    em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    Map<String,Long> counts = em.getEntityCounters(MANAGEMENT_APPLICATION_ID);
+    logger.info("Entity counters: {}", counts);
+    assertNotNull(counts);
+    assertEquals(4, counts.size());
+
+    em = emf.getEntityManager(applicationId);
+    counts = em.getEntityCounters(applicationId);
+    logger.info("Entity counters: {}", counts);
+    assertNotNull(counts);
+    assertEquals(3, counts.size());
+
+  }
 }

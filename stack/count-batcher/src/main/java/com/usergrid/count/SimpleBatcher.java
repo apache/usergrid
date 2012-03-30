@@ -19,6 +19,7 @@ import com.usergrid.count.common.Count;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -33,6 +34,7 @@ public class SimpleBatcher extends AbstractBatcher {
     private Logger log = LoggerFactory.getLogger(SimpleBatcher.class);
     private int batchSize = 500;
     private AtomicLong batchSubmissionCount = new AtomicLong();
+    private boolean blockingSubmit = false;
 
     public SimpleBatcher(int queueSize) {
         super(queueSize);
@@ -44,9 +46,18 @@ public class SimpleBatcher extends AbstractBatcher {
      */
     protected boolean maybeSubmit(Batch batch) {
         int localCallCount = batch.getLocalCallCount();
-        if ( localCallCount > 0 && localCallCount % batchSize == 0 ) {
-            log.info("submit triggered...");
-            batchSubmitter.submit(batch);
+        if ( batchSize == 0 || (localCallCount > 0 && localCallCount % batchSize == 0) ) {
+            log.debug("submit triggered...");
+            Future f = batchSubmitter.submit(batch);
+            if ( batchSize == 0) {
+              try {
+                f.get();
+              } catch (InterruptedException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+              } catch (ExecutionException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+              }
+            }
             batchSubmissionCount.incrementAndGet();
             return true;
         }
@@ -61,4 +72,7 @@ public class SimpleBatcher extends AbstractBatcher {
         return batchSubmissionCount.get();
     }
 
+    public void setBlockingSubmit(boolean blockingSubmit) {
+      this.blockingSubmit = blockingSubmit;
+    }
 }
