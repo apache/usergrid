@@ -12,7 +12,7 @@
 		<bundle.symbolicName>org.usergrid.mongo</bundle.symbolicName>
 		<bundle.namespace>org.usergrid</bundle.namespace>
 	</properties>
-	<artifactId>usergrid-mongo</artifactId>
+	<artifactId>usergrid-mongo-emulator</artifactId>
 	<name>${bundle.symbolicName} [${bundle.namespace}]</name>
 	<description>Mongo emulation layer for Usergrid system.</description>
 	<packaging>jar</packaging>
