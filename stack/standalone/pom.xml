@@ -175,7 +175,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.usergrid</groupId>
-			<artifactId>usergrid-mongo</artifactId>
+			<artifactId>usergrid-mongo-emulator</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
