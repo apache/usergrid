@@ -32,7 +32,7 @@ public class CountTest {
     @Test
     public void testCounterName() {
         Count count = new Count("Counters","k1","c1",1);
-        assertEquals("Counters:k1:c1",count.getCounterName());
+        assertEquals("Counters:6b31:6331",count.getCounterName());
     }
 
     @Test

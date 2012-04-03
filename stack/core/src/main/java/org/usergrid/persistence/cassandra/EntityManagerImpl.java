@@ -529,10 +529,18 @@ public class EntityManagerImpl implements EntityManager,
 		String propertyPath = "/" + defaultCollectionName(entityType) + "/@"
 				+ propertyName;
 		cass.getLockManager().lock(applicationId, propertyPath);
+		
+		 
+        Query query = new Query();
+        query.setEntityType(entityType);
+        query.addEqualityFilter(propertyName, propertyValue);
+        query.setLimit(1000);
+        query.setResultsLevel(IDS);
+       
+        
 
 		Results r = getRelationManager(ref(applicationId)).searchCollection(
-				pluralize(entityType), entityType, null, null, propertyName,
-				propertyValue, null, null, null, 1000, false, IDS);
+				pluralize(entityType), query);
 
 		cass.getLockManager().unlock(applicationId, propertyPath);
 
@@ -1661,10 +1669,15 @@ public class EntityManagerImpl implements EntityManager,
 			return this.getAlias(null, "user", identifier.getName());
 		}
 		if (identifier.isEmail()) {
+		    
+		    Query query = new Query();
+		    query.setEntityType("user");
+		    query.addEqualityFilter("email", identifier.getEmail());
+		    query.setLimit(1);
+		    query.setResultsLevel(REFS);
+		    
 			Results r = getRelationManager(ref(applicationId))
-					.searchCollection("users", "user", null, null, "email",
-							identifier.getEmail(), null, null, null, 1, false,
-							REFS);
+					.searchCollection("users", query);
 			if (r != null) {
 				return r.getRef();
 			}
@@ -2682,13 +2695,13 @@ public class EntityManagerImpl implements EntityManager,
 				startResult, count, resultsLevel, reversed);
 	}
 
-	@Override
-	public Results getCollection(EntityRef entityRef, String collectionName,
-			Map<String, Object> subkeyProperties, UUID startResult, int count,
-			Level resultsLevel, boolean reversed) throws Exception {
-		return getRelationManager(entityRef).getCollection(collectionName,
-				subkeyProperties, startResult, count, resultsLevel, reversed);
-	}
+//	@Override
+//	public Results getCollection(EntityRef entityRef, String collectionName,
+//			Map<String, Object> subkeyProperties, UUID startResult, int count,
+//			Level resultsLevel, boolean reversed) throws Exception {
+//		return getRelationManager(entityRef).getCollection(collectionName,
+//				subkeyProperties, startResult, count, resultsLevel, reversed);
+//	}
 
 	@Override
 	public Results getCollection(UUID entityId, String collectionName,
@@ -2844,23 +2857,26 @@ public class EntityManagerImpl implements EntityManager,
 		return getRelationManager(ref(entityId)).getConnections(query);
 	}
 
-	@Override
-	public Results searchConnectedEntitiesForProperty(
-			EntityRef connectingEntity, String connectionType,
-			String connectedEntityType, String propertyName,
-			Object searchStartValue, Object searchFinishValue,
-			UUID startResult, int count, boolean reversed, Level resultsLevel)
-			throws Exception {
-		return getRelationManager(connectingEntity)
-				.searchConnectedEntitiesForProperty(connectionType,
-						connectedEntityType, propertyName, searchStartValue,
-						searchFinishValue, startResult, count, reversed,
-						resultsLevel);
-	}
+//	T.N. This isn't used anywhere.  Removing for this release
+//	@Override
+//	public Results searchConnectedEntitiesForProperty(
+//			EntityRef connectingEntity, String connectionType,
+//			String connectedEntityType, String propertyName,
+//			Object searchStartValue, Object searchFinishValue,
+//			UUID startResult, int count, boolean reversed, Level resultsLevel)
+//			throws Exception {
+//		return getRelationManager(connectingEntity)
+//				.searchConnectedEntitiesForProperty(connectionType,
+//						connectedEntityType, propertyName, searchStartValue,
+//						searchFinishValue, startResult, count, reversed,
+//						resultsLevel);
+//	}
 
 	@Override
 	public Results searchConnectedEntities(EntityRef connectingEntity,
-			Query query) throws Exception {
+			Query query) throws Exception { 
+	    
+	    //TODO Todd Ed the query type and connection type needs set here.
 		return getRelationManager(connectingEntity).searchConnectedEntities(
 				query);
 	}

@@ -33,7 +33,7 @@
 		<module>core</module>
 		<module>services</module>
 		<module>tools</module>
-		<module>mongo</module>
+		<module>mongo-emulator</module>
 		<module>websocket</module>
 		<module>rest</module>
 		<module>standalone</module>
@@ -247,7 +247,7 @@
 			<dependency>
 				<groupId>org.antlr</groupId>
 				<artifactId>antlr-runtime</artifactId>
-				<version>3.2</version>
+				<version>3.4</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.activemq</groupId>

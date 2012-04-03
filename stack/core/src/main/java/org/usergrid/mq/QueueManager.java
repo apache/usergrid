@@ -20,10 +20,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.usergrid.persistence.CounterQuery;
+
 import org.usergrid.persistence.CounterResolution;
-import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
+
 
 public interface QueueManager {
 
