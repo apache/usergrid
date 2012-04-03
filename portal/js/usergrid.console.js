@@ -937,7 +937,11 @@ function usergrid_console_app() {
 
         if (bValid) {
             client.createApplication(form.serializeObject(), requestApplications, function() {
-                alert("Unable to create application: " + client.getLastErrorMessage(name));
+                closeErrorMessage = function() {
+                  $('#home-messages').hide();
+                };
+                var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+                $('#home-messages').text("Unable to create application: " + client.getLastErrorMessage(name)).prepend(closebutton).addClass('alert-error').show();
             });
             $(this).modal('hide');
         }
@@ -995,7 +999,12 @@ function usergrid_console_app() {
         if (bValid) {
             var data = form.serializeObject();
             client.createUser(current_application_id, data, requestUsers, function() {
-                alert("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'));
+                closeErrorMessage = function() {
+                  $('#users-messages').hide();
+                };
+                var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+                $('#users-messages').text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.')).prepend(closebutton).addClass('alert-error').show();
+                // alert("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'));
             });
 
             $(this).modal('hide');
@@ -1053,7 +1062,12 @@ function usergrid_console_app() {
         if (bValid) {
             var data = form.serializeObject();
             client.createGroup(current_application_id, data, requestGroups, function() {
-                alert("Unable to create group: " + client.getLastErrorMessage(data.path));
+                closeErrorMessage = function() {
+                  $('#groups-messages').hide();
+                };
+                var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+                $('#groups-messages').text("Unable to create group: " + client.getLastErrorMessage(data.path)).prepend(closebutton).addClass('alert-error').show();
+                // alert("Unable to create group: " + client.getLastErrorMessage(data.path));
             });
             $(this).modal('hide');
         }
@@ -1597,24 +1611,17 @@ function usergrid_console_app() {
 
     function saveUserProfile(uuid){
         var payload = usergrid.console.ui.jsonSchemaToPayload(usergrid.console.ui.collections.vcard_schema);
-        client.saveUserProfile(current_application_id, uuid, payload, completeSaveProfile,
+        client.saveUserProfile(current_application_id, uuid, payload, completeSave,
         function() {
-            alert("Unable to update User: " + client.getLastErrorMessage('An internal error occured.'));
+            // alert("Unable to update User: " + client.getLastErrorMessage('An internal error occured.'));
+            $(".messages").text("Unable to update User: " + client.getLastErrorMessage('An internal error occured.')).show();
         });
     }
     window.usergrid.console.saveUserProfile = saveUserProfile;
 
-    function saveGroupProfile(uuid){
-        var payload = usergrid.console.ui.jsonSchemaToPayload(usergrid.console.ui.collections.group_schema);
-        client.saveUserProfile(current_application_id, uuid, payload, completeSaveProfile,
-        function() {
-            alert("Unable to update Group: " + client.getLastErrorMessage('An internal error occured.'));
-        });
-    }
-    window.usergrid.console.saveGroupProfile = saveGroupProfile;
 
-    function completeSaveProfile(){
-        $("#information-saved").text("Information Saved.").show();
+    function completeSave(){
+        $(".messages").text("Information Saved.").show();
     }
 
     function redrawUserPanel() {
@@ -1990,6 +1997,20 @@ function usergrid_console_app() {
         }
     }
 
+    function saveGroupProfile(uuid){
+        var payload = usergrid.console.ui.jsonSchemaToPayload(usergrid.console.ui.collections.group_schema);
+        client.saveUserProfile(current_application_id, uuid, payload, completeSave,
+        function() {
+                closeErrorMessage = function() {
+                  $('#group-messages').hide();
+                };
+                var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+                $('#group-messages').text("Unable to update Group: " + client.getLastErrorMessage('An internal error occured.')).prepend(closebutton).addClass('alert-error').show();
+            // alert("Unable to update Group: " + client.getLastErrorMessage('An internal error occured.'));
+        });
+    }
+
+    window.usergrid.console.saveGroupProfile = saveGroupProfile;
     function selectAllGroupMemberships(){
         $('[id=userGroupItem]').attr('checked', true);
 	$('#deselectAllGroupMemberships').show();
