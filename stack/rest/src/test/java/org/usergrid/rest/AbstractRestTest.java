@@ -16,6 +16,10 @@
 package org.usergrid.rest;
 
 import static org.junit.Assert.assertNull;
+
+import com.sun.jersey.api.core.ResourceContext;
+import com.sun.jersey.api.spring.Autowire;
+import com.sun.jersey.spi.inject.Inject;
 import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.usergrid.utils.MapUtils.hashMap;
@@ -26,9 +30,17 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.ContextLoaderListener;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.filter.DelegatingFilterProxy;
+import org.usergrid.management.ApplicationInfo;
+import org.usergrid.management.ManagementService;
+import org.usergrid.persistence.Identifier;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.utils.MapUtils;
 
 import com.sun.jersey.api.client.config.ClientConfig;
@@ -40,6 +52,7 @@ import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerException;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.Map;
 
@@ -51,6 +64,7 @@ import java.util.Map;
  * should following the following naming convention:
  * test_[HTTP verb]_[action mapping]_[ok|fail][_[specific failure condition if multiple]
  */
+//@Autowire
 public abstract class AbstractRestTest extends JerseyTest {
 
 	private static Logger logger = LoggerFactory
@@ -61,11 +75,15 @@ public abstract class AbstractRestTest extends JerseyTest {
 
   protected static String access_token;
 
+  private ManagementService managementService;
+
 	static ClientConfig clientConfig = new DefaultClientConfig();
 	static {
 		clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING,
 				Boolean.TRUE);
 	}
+
+
 
 	public AbstractRestTest() throws TestContainerException {
 		super(
@@ -107,6 +125,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 	}
 
   protected void setupUsers() {
+
     if (usersSetup) return;
     JsonNode node = resource().path("/management/token")
         				.queryParam("grant_type", "password")
@@ -155,15 +174,14 @@ public abstract class AbstractRestTest extends JerseyTest {
    * Hook to get the token for our base user
    */
   @Before
-  public void acquireToken() {
-    if ( access_token != null ) return;
-    JsonNode node = resource().path("/test-app/token")
-                .queryParam("grant_type", "password")
-                .queryParam("username", "ed@anuff.com")
-                .queryParam("password", "sesame")
-                .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+  public void acquireToken() throws Exception {
 
-     this.access_token = node.get("access_token").getTextValue();
+    WebApplicationContext context = ContextLoader.getCurrentWebApplicationContext();
+    managementService = (ManagementService)context.getBean("managementService");
+    ApplicationInfo appInfo = managementService.getApplication("test-app");
+    User user = managementService.getAppUserByIdentifier(appInfo.getId(),Identifier.from("ed@anuff.com"));
+    this.access_token = managementService.getAccessTokenForAppUser(appInfo.getId(), user.getUuid());
+
   }
 
   /**
