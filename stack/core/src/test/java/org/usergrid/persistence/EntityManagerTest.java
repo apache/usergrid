@@ -326,6 +326,7 @@ public class EntityManagerTest extends AbstractPersistenceTest {
 
     Group organizationEntity = new Group();
     organizationEntity.setPath("testCounterOrg");
+    organizationEntity.setProperty("name","testCounterOrg");
     organizationEntity = em.create(organizationEntity);
 
     UUID applicationId = emf.createApplication("testEntityCounters");
@@ -349,6 +350,9 @@ public class EntityManagerTest extends AbstractPersistenceTest {
     logger.info("Entity counters: {}", counts);
     assertNotNull(counts);
     assertEquals(4, counts.size());
+
+    Entity entity = em.get(new SimpleEntityRef(Group.ENTITY_TYPE, organizationEntity.getUuid()));
+    assertEquals("testCounterOrg",entity.getName());
 
     em = emf.getEntityManager(applicationId);
     counts = em.getEntityCounters(applicationId);

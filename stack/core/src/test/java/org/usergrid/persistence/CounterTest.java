@@ -17,6 +17,7 @@ package org.usergrid.persistence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 import java.util.Map;
 import java.util.UUID;
@@ -118,8 +119,11 @@ public class CounterTest extends AbstractPersistenceTest {
 				counts.get("application.collection.events"));
 	}
 
-  //@Test
+  @Test
   public void testCommunityCounters() throws Exception {
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    Map<String, Long> counts = em.getApplicationCounters();
+    		logger.info(JsonUtils.mapToJsonString(counts));
     //counterUtils.incCommunityCounter(orgId, appId, cmtyMetric);
   }
 }
