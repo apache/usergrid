@@ -118,4 +118,8 @@ public class CounterTest extends AbstractPersistenceTest {
 				counts.get("application.collection.events"));
 	}
 
+  //@Test
+  public void testCommunityCounters() throws Exception {
+    //counterUtils.incCommunityCounter(orgId, appId, cmtyMetric);
+  }
 }
