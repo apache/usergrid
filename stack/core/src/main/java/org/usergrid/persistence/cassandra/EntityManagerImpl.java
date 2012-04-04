@@ -2583,11 +2583,17 @@ public class EntityManagerImpl implements EntityManager,
 	public void incrementAggregateCounters(UUID userId, UUID groupId,
 			String category, String counterName, long value) {
 		long timestamp = cass.createTimestamp();
-		Mutator<ByteBuffer> m = createMutator(
-				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementAggregateCounters(m, applicationId, userId,
-				groupId, null, category, counterName, value, timestamp);
-		batchExecute(m, CassandraService.RETRY_COUNT);
+
+    if ( counterUtils.getIsCounterBatched() ) {
+      counterUtils.batchIncrementAggregateCounters(null, applicationId, userId,
+              groupId, null, category, counterName, value, timestamp);
+    } else {
+      Mutator<ByteBuffer> m = createMutator(
+      				cass.getApplicationKeyspace(applicationId), be);
+      counterUtils.batchIncrementAggregateCounters(m, applicationId, userId,
+                    groupId, null, category, counterName, value, timestamp);
+      batchExecute(m, CassandraService.RETRY_COUNT);
+    }
 
 	}
 
@@ -2622,51 +2628,78 @@ public class EntityManagerImpl implements EntityManager,
 	@Override
 	public void incrementApplicationCounters(Map<String, Long> counts) {
 		long timestamp = cass.createTimestamp();
-		Mutator<ByteBuffer> m = createMutator(
-				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementEntityCounters(m, applicationId, counts,
-				timestamp, applicationId);
-		batchExecute(m, CassandraService.RETRY_COUNT);
+    if ( counterUtils.getIsCounterBatched() ) {
+      counterUtils.batchIncrementEntityCounters(null, applicationId, counts,
+                    timestamp, applicationId);
+    } else {
+      Mutator<ByteBuffer> m = createMutator(
+              cass.getApplicationKeyspace(applicationId), be);
+      counterUtils.batchIncrementEntityCounters(m, applicationId, counts,
+              timestamp, applicationId);
+      batchExecute(m, CassandraService.RETRY_COUNT);
+    }
 	}
 
 	@Override
 	public void incrementApplicationCounter(String name, long value) {
 		long timestamp = cass.createTimestamp();
-		Mutator<ByteBuffer> m = createMutator(
-				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementEntityCounter(m, applicationId, name, value,
-				timestamp, applicationId);
-		batchExecute(m, CassandraService.RETRY_COUNT);
+    if ( counterUtils.getIsCounterBatched() ) {
+      counterUtils.batchIncrementEntityCounter(null, applicationId, name, value,
+                    timestamp, applicationId);
+    } else {
+      Mutator<ByteBuffer> m = createMutator(
+              cass.getApplicationKeyspace(applicationId), be);
+      counterUtils.batchIncrementEntityCounter(m, applicationId, name, value,
+              timestamp, applicationId);
+      batchExecute(m, CassandraService.RETRY_COUNT);
+    }
 	}
 
 	@Override
 	public void incrementEntitiesCounters(Map<UUID, Map<String, Long>> counts) {
 		long timestamp = cass.createTimestamp();
-		Mutator<ByteBuffer> m = createMutator(
-				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementEntityCounters(m, counts, timestamp,
-				applicationId);
-		batchExecute(m, CassandraService.RETRY_COUNT);
+    if ( counterUtils.getIsCounterBatched() ) {
+      counterUtils.batchIncrementEntityCounters(null, counts, timestamp,
+                    applicationId);
+    } else {
+      Mutator<ByteBuffer> m = createMutator(
+              cass.getApplicationKeyspace(applicationId), be);
+      counterUtils.batchIncrementEntityCounters(m, counts, timestamp,
+              applicationId);
+
+      batchExecute(m, CassandraService.RETRY_COUNT);
+    }
+
 	}
 
 	@Override
 	public void incrementEntityCounters(UUID entityId, Map<String, Long> counts) {
 		long timestamp = cass.createTimestamp();
-		Mutator<ByteBuffer> m = createMutator(
-				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementEntityCounters(m, entityId, counts,
-				timestamp, applicationId);
-		batchExecute(m, CassandraService.RETRY_COUNT);
+    if ( counterUtils.getIsCounterBatched() ) {
+      counterUtils.batchIncrementEntityCounters(null, entityId, counts,
+      				timestamp, applicationId);
+    } else {
+      Mutator<ByteBuffer> m = createMutator(
+              cass.getApplicationKeyspace(applicationId), be);
+      counterUtils.batchIncrementEntityCounters(m, entityId, counts,
+              timestamp, applicationId);
+      batchExecute(m, CassandraService.RETRY_COUNT);
+    }
 	}
 
 	@Override
 	public void incrementEntityCounter(UUID entityId, String name, long value) {
 		long timestamp = cass.createTimestamp();
-		Mutator<ByteBuffer> m = createMutator(
-				cass.getApplicationKeyspace(applicationId), be);
-		counterUtils.batchIncrementEntityCounter(m, entityId, name, value,
-				timestamp, applicationId);
-		batchExecute(m, CassandraService.RETRY_COUNT);
+    if ( counterUtils.getIsCounterBatched() ) {
+      counterUtils.batchIncrementEntityCounter(null, entityId, name, value,
+                    timestamp, applicationId);
+    } else {
+      Mutator<ByteBuffer> m = createMutator(
+              cass.getApplicationKeyspace(applicationId), be);
+      counterUtils.batchIncrementEntityCounter(m, entityId, name, value,
+              timestamp, applicationId);
+      batchExecute(m, CassandraService.RETRY_COUNT);
+    }
 	}
 
 	@Override

@@ -148,17 +148,26 @@ public class CounterTest extends AbstractPersistenceTest {
     event.setTimestamp(System.currentTimeMillis());
     event.addCounter("admin_logins", 1);
     event.setGroup(organizationEntity.getUuid());
+    // TODO look at row syntax of event counters being sent
     em.create(event);
 
+    event = new Event();
+    event.setTimestamp(System.currentTimeMillis());
+    event.addCounter("admin_logins", 1);
+    em.create(event);
 
     Map<String, Long> counts = em.getApplicationCounters();
     logger.info(JsonUtils.mapToJsonString(counts));
     assertNotNull(counts.get("admin_logins"));
-    assertEquals(1,counts.get("admin_logins").longValue());
+    assertEquals(2,counts.get("admin_logins").longValue());
+    // Q's:
+    // how to "count" a login to a specific application?
+    // when org is provided, why is it returning 8? Is it 4 with one 'event'?
+    // TODO is it correct value when I switch to "original" counters?
 
 
     Results r = em.getAggregateCounters(null, null, null, "admin_logins",
-            CounterResolution.FIVE_MINUTES, ts, System.currentTimeMillis(),
+            CounterResolution.ALL, ts, System.currentTimeMillis(),
             false);
     logger.info(JsonUtils.mapToJsonString(r.getCounters()));
     assertEquals(1, r.getCounters().get(0).getValues().get(0).getValue());
