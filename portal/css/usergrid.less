@@ -451,6 +451,9 @@ a:active {
     &:nth-child(2n){
         background: #EEE;
     }
+    &:last-child {
+      border-radius: 0 0 5px 5px;
+    }
     margin: 0px 0px 0px 0px;
 }
 
@@ -816,6 +819,7 @@ a:active {
 	.console-section-contents > .row > div{
 	  	min-width: 200px;
 	}
+
 }
 
 
@@ -1047,6 +1051,12 @@ a:active {
     .alert{
         margin: 15px;
     }
+
+  .application-row {
+    &:last-child {
+      border-radius: 0 0 5px 5px;
+    }
+  }
 }
 
 #organization-admins{
@@ -1061,6 +1071,11 @@ a:active {
     a{
         padding: 10px;
     }
+  .admin-row {
+    &:last-child {
+      border-radius: 0 0 5px 5px;
+    }
+  }
 }
 
 #organization-activities{
@@ -1069,6 +1084,11 @@ a:active {
         display: inline-block;
         margin: 15px;
     }
+  .organization-activity-row {
+    &:last-child {
+      border-radius: 0 0 5px 5px;
+    }
+  }
     .organization-activity-row{
         .zebraRows;
         line-height: 25px;
