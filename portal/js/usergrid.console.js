@@ -3200,7 +3200,7 @@ function usergrid_console_app() {
         }
         client.updateAdminUser(userData,
             function(response) {
-                $.jAlert("Account settings update", '');
+                $('#account-update-modal').modal('show');
                 if ((old_pass && new_pass) && (old_pass != new_pass)) {
                 	logout();
                 	return;
