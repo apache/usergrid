@@ -8,9 +8,11 @@
         </td>
         <td class="actor">
            <img src="${entity.actor.gravatar}"/>
-           <a href="" onclick="usergrid.console.pageOpenUserActivities('${uuid}'); return false;"> 
-              <strong>${entity.actor.displayName} (${email})</strong>
-           </a>
+              {{if entity.actor.uuid}}
+              <strong><a href="#" onclick="usergrid.console.pageOpenUserProfile('${entity.actor.uuid}'); return false;">${entity.actor.displayName} {{if entity.actor.email}} (${entity.actor.email}) {{/if}}</a></strong>
+              {{else}}
+              <strong>${entity.actor.displayName} {{if entity.actor.email}} (${entity.actor.email}) {{/if}}</strong>
+              {{/if}}
         </td>
         <td class="verb">
           ${entity.verb}
