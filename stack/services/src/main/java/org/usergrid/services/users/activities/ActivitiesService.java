@@ -30,45 +30,49 @@ import org.usergrid.services.generic.GenericCollectionService;
 
 public class ActivitiesService extends GenericCollectionService {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(ActivitiesService.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(ActivitiesService.class);
 
-	public ActivitiesService() {
-		super();
-		logger.info("/users/*/activities");
-	}
+    public ActivitiesService() {
+        super();
+        logger.info("/users/*/activities");
+    }
 
-	@Override
-	public ServiceResults postCollection(ServiceContext context)
-			throws Exception {
+    @Override
+    public ServiceResults postCollection(ServiceContext context)
+            throws Exception {
 
-		ServiceResults results = super.postCollection(context);
+        // TODO Todd Nine. context.getPayload(), add the default actor with both id and
+        // email. Prefix the id with "usergrid". Both can be null so be null
+        // safe
 
-		distribute(context.getOwner(), results.getEntity());
-		return results;
-	}
+        ServiceResults results = super.postCollection(context);
 
-	@Override
-	public ServiceResults postItemById(ServiceContext context, UUID id)
-			throws Exception {
+        distribute(context.getOwner(), results.getEntity());
+        return results;
+    }
 
-		ServiceResults results = super.postItemById(context, id);
+    @Override
+    public ServiceResults postItemById(ServiceContext context, UUID id)
+            throws Exception {
 
-		distribute(context.getOwner(), results.getEntity());
-		return results;
-	}
+        ServiceResults results = super.postItemById(context, id);
 
-	public void distribute(EntityRef user, Entity activity) throws Exception {
-		if (activity == null) {
-			return;
-		}
-		em.addToCollection(user, "feed", activity);
-		Results r = em.getConnectingEntities(user.getUuid(), "following",
-				User.ENTITY_TYPE, Results.Level.REFS);
-		List<EntityRef> refs = r.getRefs();
-		if (refs != null) {
-			em.addToCollections(refs, "feed", activity);
-		}
-	}
+        distribute(context.getOwner(), results.getEntity());
+        return results;
+    }
+
+    public void distribute(EntityRef user, Entity activity) throws Exception {
+        if (activity == null) {
+            return;
+        }
+        em.addToCollection(user, "feed", activity);
+        Results r = em.getConnectingEntities(user.getUuid(), "following",
+                User.ENTITY_TYPE, Results.Level.REFS);
+        List<EntityRef> refs = r.getRefs();
+        if (refs != null) {
+            em.addToCollections(refs, "feed", activity);
+        }
+    }
 
 }
