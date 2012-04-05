@@ -326,4 +326,6 @@ public interface ManagementService {
 	public void sendAdminUserInvitedEmail(UserInfo user,
 			OrganizationInfo organization) throws Exception;
 
+  public void countAdminUserAction(UserInfo user, String action) throws Exception;
+
 }

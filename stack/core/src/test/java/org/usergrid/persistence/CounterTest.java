@@ -144,29 +144,30 @@ public class CounterTest extends AbstractPersistenceTest {
     em.createConnection(new SimpleEntityRef("group", organizationEntity.getUuid()),
             "owns", new SimpleEntityRef("application_info", applicationId));
 
+
+
     Event event = new Event();
     event.setTimestamp(System.currentTimeMillis());
-    event.addCounter("admin_logins", 1);
+    event.addCounter("admin.logins", 1);
     event.setGroup(organizationEntity.getUuid());
+
     // TODO look at row syntax of event counters being sent
     em.create(event);
-
+    /*
     event = new Event();
     event.setTimestamp(System.currentTimeMillis());
-    event.addCounter("admin_logins", 1);
+    event.addCounter("admin.logins", 1);
     em.create(event);
-
+   */
     Map<String, Long> counts = em.getApplicationCounters();
     logger.info(JsonUtils.mapToJsonString(counts));
-    assertNotNull(counts.get("admin_logins"));
-    assertEquals(2,counts.get("admin_logins").longValue());
+    assertNotNull(counts.get("admin.logins"));
+    assertEquals(1,counts.get("admin.logins").longValue());
     // Q's:
     // how to "count" a login to a specific application?
     // when org is provided, why is it returning 8? Is it 4 with one 'event'?
-    // TODO is it correct value when I switch to "original" counters?
 
-
-    Results r = em.getAggregateCounters(null, null, null, "admin_logins",
+    Results r = em.getAggregateCounters(null,null, null, "admin.logins",
             CounterResolution.ALL, ts, System.currentTimeMillis(),
             false);
     logger.info(JsonUtils.mapToJsonString(r.getCounters()));
@@ -174,7 +175,7 @@ public class CounterTest extends AbstractPersistenceTest {
     //counts = em.getEntityCounters(organizationEntity.getUuid());
     //logger.info(JsonUtils.mapToJsonString(counts));
     Query query = new Query();
-    query.addCounterFilter("admin_logins:*:*:*");
+    query.addCounterFilter("admin.logins:*:*:*");
     query.setStartTime(ts);
     query.setFinishTime(System.currentTimeMillis());
     query.setResolution(CounterResolution.SIX_HOUR);

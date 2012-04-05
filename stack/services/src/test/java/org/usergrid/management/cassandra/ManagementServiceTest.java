@@ -10,12 +10,16 @@ import org.usergrid.management.ManagementTestHelper;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.Entity;
+import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.entities.Event;
 import org.usergrid.security.AuthPrincipalType;
+import org.usergrid.utils.JsonUtils;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
@@ -87,5 +91,17 @@ public class ManagementServiceTest {
     String token = managementService.getTokenForPrincipal(MANAGEMENT_APPLICATION_ID,
                 AuthPrincipalType.APPLICATION_USER, user.getUuid(), null, true);
     assertNotNull(token);
+  }
+
+  @Test
+  public void testCountAdminUserAction() throws Exception {
+    managementService.countAdminUserAction(adminUser,"login");
+
+    EntityManager em = helper.getEntityManagerFactory().getEntityManager(MANAGEMENT_APPLICATION_ID);
+
+    Map<String, Long> counts = em.getApplicationCounters();
+    log.info(JsonUtils.mapToJsonString(counts));
+    assertNotNull(counts.get("admin.logins"));
+    assertEquals(1,counts.get("admin.logins").intValue());
   }
 }
