@@ -209,6 +209,7 @@
                 <div id="console-panels" class="container-fluid">
                     <div id="organization-panel" style="display: none">
                         <div id="console-panel-nav-bar"></div>
+                        <div id="home-messages" class="alert" style="display: none;"></div>
                         <div class="console-section">
                             <h3><span class="title"> Applications </span>
                                 <div class="bar">
@@ -252,7 +253,7 @@
                         </div>
                         <form id="dialog-form-new-application" class="modal hide fade" action="#">
                             <div class="modal-header">
-                                <a class="close" data-dismiss="modal">x</a>
+                                <a class="close" data-dismiss="modal">&times</a>
                                 <h4>Create new application</h4>
                             </div>
                             <div class="modal-body">
@@ -269,12 +270,12 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-usergrid" value="Create"/>
-                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                         <form id="dialog-form-new-admin" class="modal hide fade">
                             <div class="modal-header">
-                                <a class="close" data-dismiss="modal">x</a>
+                                <a class="close" data-dismiss="modal">&times</a>
                                 <h4>Create new administrator</h4>
                             </div>
                             <div class="modal-body">
@@ -292,7 +293,7 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-usergrid" value="Create"/>
-                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                     </div>
@@ -319,6 +320,18 @@
                         </div>
                     </div>
         <div id="account-panel" class="container-fluid hide">
+            <div id="account-update-modal" class="modal hide fade">
+              <div class="modal-header">
+              <a class="close" data-dismiss="modal">&times</a>
+              <h4>Account Settings</h4>
+              </div>
+              <div class="modal-body">
+                <p>Account settings updated.</p> 
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-usergrid" data-dismiss="modal">OK</button>
+              </div>
+            </div>
             <div class="span offset1">
                 <h2>Account Settings </h2>
                 <div id="account-panels">
@@ -395,7 +408,7 @@
                 </div>
                 <form id="dialog-form-new-organization" class="modal hide fade">
                     <div class="modal-header">
-                        <a class="close" data-dismiss="modal">x</a>
+                        <a class="close" data-dismiss="modal">&times</a>
                         <h4>Create new organization</h4>
                     </div>
                     <div class="modal-body">
@@ -412,7 +425,7 @@
                     </div>
                     <div class="modal-footer">
                         <input type="submit" class="btn btn-usergrid" value="Create"/>
-                        <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
+                        <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
                     </div>
                 </form>
             </div>
@@ -423,6 +436,7 @@
                             <li class="active"><a id="button-users-list" href="#">List</a></li>
                         </ul>
                         <div id="users-panel-list" class="panel-content">
+                        <div id="users-messages" class="alert" style="display: none;"></div>
                             <div class="console-section">
                                 <h3><span class="title"> Users </span>
                                     <div class="bar">
@@ -454,7 +468,7 @@
                         </div>
                         <form id="dialog-form-new-user" class="modal hide fade">
                             <div class="modal-header">
-                                <a class="close" data-dismiss="modal">x</a>
+                                <a class="close" data-dismiss="modal">&times</a>
                                 <h4>Create new user</h4>
                             </div>
                             <div class="modal-body">
@@ -492,13 +506,13 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-usergrid" value="Create"/>
-                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                     </div>
                     <form id="dialog-form-add-user-to-role" class="modal hide fade">
                         <div class="modal-header">
-                            <a class="close" data-dismiss="modal">x</a>
+                            <a class="close" data-dismiss="modal">&times</a>
                             <h4>Add this user to a Role</h4>
                         </div>
                         <div class="modal-body">
@@ -514,13 +528,13 @@
                             </fieldset>
                         </div>
                         <div class="modal-footer">
-                            <input type="submit" class="btn btn-primary" value="Add"/>
+                            <input type="submit" class="btn btn-usergrid" value="Add"/>
                             <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
                         </div>
                     </form>
                     <form id="dialog-form-add-role-to-user" class="modal hide fade">
                         <div class="modal-header">
-                            <a class="close" data-dismiss="modal">x</a>
+                            <a class="close" data-dismiss="modal">&times</a>
                             <h4>Add a user to this Role</h4>
                         </div>
                         <div class="modal-body">
@@ -536,7 +550,7 @@
                             </fieldset>
                         </div>
                         <div class="modal-footer">
-                            <input type="submit" class="btn btn-primary" value="Add"/>
+                            <input type="submit" class="btn btn-usergrid" value="Add"/>
                             <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
                         </div>
                     </form>
@@ -556,7 +570,7 @@
                         <div id="user-panel-permissions" class="panel-content" style="display: none;"></div>
                         <form id="dialog-form-add-user-to-role" class="modal hide fade">
                             <div class="modal-header">
-                                <a class="close" data-dismiss="modal">x</a>
+                                <a class="close" data-dismiss="modal">&times</a>
                                 <h4>Add this user to a Role</h4>
                             </div>
                             <div class="modal-body">
@@ -578,7 +592,7 @@
                         </form>
                         <form id="dialog-form-add-group-to-user" class="modal hide fade">
                             <div class="modal-header">
-                                <a class="close" data-dismiss="modal">x</a>
+                                <a class="close" data-dismiss="modal">&times</a>
                                 <h4>Add this user to a Group</h4>
                             </div>
                             <div class="modal-body">
@@ -606,6 +620,7 @@
                             </ul>
                         </div>
                         <div id="groups-panel-list" class="panel-content">
+                        <div id="groups-messages" class="alert" style="display: none;"></div>
                             <div class="console-section">
                                 <h3><span class="title"> Groups </span>
                                     <div class="bar">
@@ -640,7 +655,7 @@
                         </div>
                         <form id="dialog-form-new-group" class="modal hide fade">
                             <div class="modal-header">
-                                <a class="close" data-dismiss="modal">x</a>
+                                <a class="close" data-dismiss="modal">&times</a>
                                 <h4>Create new group</h4>
                             </div>
                             <div class="modal-body">
@@ -664,7 +679,7 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-usergrid" value="Create"/>
-                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                     </div>
@@ -682,7 +697,7 @@
                         <div id="group-panel-permissions" class="panel-content" style="display: none;"></div>
                         <form id="dialog-form-add-user-to-group" class="modal hide fade">
                             <div class="modal-header">
-                                <a class="close" data-dismiss="modal">x</a>
+                                <a class="close" data-dismiss="modal">&times</a>
                                 <h4>Add a User to this Group</h4>
                             </div>
                             <div class="modal-body">
@@ -734,7 +749,7 @@
                             </div>
                             <form id="dialog-form-new-role" class="modal hide fade">
                             <div class="modal-header">
-                                <a class="close" data-dismiss="modal">x</a>
+                                <a class="close" data-dismiss="modal">&times</a>
                                 <h4>Create new Role</h4>
                             </div>
                             <div class="modal-body">
@@ -759,7 +774,7 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-usergrid" value="Create"/>
-                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                         </div>
@@ -943,7 +958,7 @@
                         </div>
                         <form id="dialog-form-new-collection" class="modal hide fade">
                             <div class="modal-header">
-                                <a class="close" data-dismiss="modal">x</a>
+                                <a class="close" data-dismiss="modal">&times</a>
                                 <h4>Create new collection</h4>
                             </div>
                             <div class="modal-body">
@@ -961,7 +976,7 @@
                             </div>
                             <div class="modal-footer">
                                 <input type="submit" class="btn btn-usergrid" value="Create"/>
-                                <input type="reset" class="btn-link" value="Cancel" data-dismiss="modal"/>
+                                <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
                             </div>
                         </form>
                     </div>
@@ -1033,7 +1048,7 @@
     </div>
     <form id="confirmDialog" class="modal hide fade">
         <div class="modal-header">
-            <a class="close" data-dismiss="modal">x</a>
+            <a class="close" data-dismiss="modal">&times</a>
             <h4>Are you sure?</h4>
         </div>
         <div class="modal-body">
@@ -1046,7 +1061,7 @@
     </form>
     <form id="alertDialog" class="modal hide fade">
         <div class="modal-header">
-            <a class="close" data-dismiss="modal">x</a>
+            <a class="close" data-dismiss="modal">&times</a>
             <h4><span id="alert-message">Invalid Action</span></h4>
         </div>
         <div class="modal-body">

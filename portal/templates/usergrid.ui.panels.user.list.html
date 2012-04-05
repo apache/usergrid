@@ -5,7 +5,7 @@
 			<td class="query-result-td-picture"><img src="{{if picture}}${picture}{{else}}images/user_profile.png{{/if}}" class="query-result-user-picture" /></td>
 			<td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
 				{{if path}}<a href="" onclick="usergrid.console.pageOpenUserProfile('${entity.uuid}'); return false;">{{/if}}
-				${name}
+				<strong>${entity.username} :</strong> ${entity.name}
 				{{if path}}</a>{{/if}}
 			</td>
 		</tr>
