@@ -2164,11 +2164,8 @@ public class ManagementServiceImpl implements ManagementService {
 
   @Override
   public void countAdminUserAction(UserInfo user, String action) throws Exception {
-    Event event = new Event();
-    event.setTimestamp(System.currentTimeMillis());
-    event.addCounter("admin.logins", 1);
-    event.setUser(user.getUuid());
-    event.setCategory(action);
-    emf.getEntityManager(MANAGEMENT_APPLICATION_ID).create(event);
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    em.incrementAggregateCounters(user.getUuid(),null,null,"admin.logins",1);
+
   }
 }

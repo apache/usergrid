@@ -253,15 +253,15 @@ public class CounterUtils {
 							resolution.round(counterTimestamp), value, applicationId);
 				}
 			}
-
 		}
-
 	}
 
 	private void handleAggregateCounterRow(Mutator<ByteBuffer> m,
 			String key, long column, long value, UUID applicationId) {
-		// logger.info("update counts set " + column + " += " + value
-		// + " where key = \"" + key + "\"");
+    if (logger.isDebugEnabled()) {
+      logger.info("HACR: aggregateRow for app {} with key {} column {} and value {}",
+              new Object[]{applicationId, key, column, value});
+    }
     if ( "o".equals(counterType) || "p".equals(counterType)) {
       if (m != null) {
         HCounterColumn<Long> c = createCounterColumn(column, value, le);
@@ -306,18 +306,16 @@ public class CounterUtils {
 	public Mutator<ByteBuffer> batchIncrementEntityCounter(
 			Mutator<ByteBuffer> m, UUID entityId, String name, Long value,
 			long timestamp, UUID applicationId) {
-		// logger.info("Incrementing property " + name + " of entity " +
-		// entityId
-		// + " by " + value);
-    if ( "o".equals(counterType) || "p".equals(counterType)) {
-
+    if ( logger.isDebugEnabled() ) {
+      logger.debug("BIEC: Incrementing property {} of entity {} by value {}",
+              new Object[]{name, entityId, value});
+    }
+    addInsertToMutator(m, ENTITY_DICTIONARIES,
+    				key(entityId, DICTIONARY_COUNTERS), name, null, timestamp);
+		if ( "o".equals(counterType) || "p".equals(counterType)) {
       HCounterColumn<String> c = createCounterColumn(name, value);
             m.addCounter(bytebuffer(entityId), ENTITY_COUNTERS.toString(), c);
-      addInsertToMutator(m, ENTITY_DICTIONARIES,
-      				key(entityId, DICTIONARY_COUNTERS), name, null, timestamp);
-
     }
-		    // create and send Count
     if ( "n".equals(counterType) || "p".equals(counterType)) {
       PrefixedSerializer ps = new PrefixedSerializer(applicationId, UUIDSerializer.get(),
                             UUIDSerializer.get());
@@ -352,21 +350,19 @@ public class CounterUtils {
 	public Mutator<ByteBuffer> batchIncrementQueueCounter(
 			Mutator<ByteBuffer> m, UUID queueId, String name, long value,
 			long timestamp, UUID applicationId) {
-		// logger.info("Incrementing property " + name + " of entity " +
-		// entityId
-		// + " by " + value);
+    if ( logger.isDebugEnabled()) {
+      logger.debug("BIQC: Incrementing property {} of queue {} by value {}",
+              new Object[]{name, queueId, value});
+    }
+    m.addInsertion(
+        				bytebuffer(key(queueId, DICTIONARY_COUNTERS).toString()),
+        				QueuesCF.QUEUE_DICTIONARIES.toString(),
+        				createColumn(name, ByteBuffer.allocate(0), timestamp, se, be));
     if ( "o".equals(counterType) || "p".equals(counterType)) {
       HCounterColumn<String> c = createCounterColumn(name, value);
       ByteBuffer keybytes = bytebuffer(queueId);
       m.addCounter(keybytes, QueuesCF.COUNTERS.toString(), c);
-
-      m.addInsertion(
-    				bytebuffer(key(queueId, DICTIONARY_COUNTERS).toString()),
-    				QueuesCF.QUEUE_DICTIONARIES.toString(),
-    				createColumn(name, ByteBuffer.allocate(0), timestamp, se, be));
     }
-
-        // create and send Count
     if ( "n".equals(counterType) || "p".equals(counterType)) {
         PrefixedSerializer ps = new PrefixedSerializer(applicationId, UUIDSerializer.get(),
                                   UUIDSerializer.get());
