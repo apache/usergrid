@@ -30,11 +30,8 @@ import org.usergrid.persistence.entities.Event;
 import org.usergrid.utils.ConversionUtils;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.UUID;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
 import static me.prettyprint.hector.api.factory.HFactory.createCounterColumn;
@@ -192,8 +189,10 @@ public class CounterUtils {
 			String category, String name, long value, long counterTimestamp,
 			long cassandraTimestamp) {
 		for (CounterResolution resolution : CounterResolution.values()) {
+      logger.debug("BIAC for resolution {}", resolution);
 			batchIncrementAggregateCounters(m, userId, groupId, queueId,
-					category, resolution, name, value, counterTimestamp, applicationId);
+              category, resolution, name, value, counterTimestamp, applicationId);
+      logger.debug("DONE BIAC for resolution {}", resolution);
 		}
 		batchIncrementEntityCounter(m, applicationId, name, value,
 				cassandraTimestamp, applicationId);
@@ -226,7 +225,8 @@ public class CounterUtils {
 					getAggregateCounterRow(name, null, null, null, null,
 							resolution), resolution.round(counterTimestamp),
 					value, applicationId);
-
+      String currentRow = null;
+      HashSet<String> rowSet = new HashSet<String>(16);
 			for (int i = 0; i < 16; i++) {
 
 				boolean include_user = (i & 0x01) != 0;
@@ -244,14 +244,18 @@ public class CounterUtils {
 						non_null++;
 					}
 				}
-				if (non_null > 0) {
+        currentRow = getAggregateCounterRow(name, (UUID) parameters[0],
+        									(UUID) parameters[1], (UUID) parameters[2],
+        									(String) parameters[3], resolution);
+
+				if (non_null > 0 && !rowSet.contains(currentRow)) {
+          rowSet.add(currentRow);
 					handleAggregateCounterRow(
-							m,
-							getAggregateCounterRow(name, (UUID) parameters[0],
-									(UUID) parameters[1], (UUID) parameters[2],
-									(String) parameters[3], resolution),
-							resolution.round(counterTimestamp), value, applicationId);
+                  m,
+                  currentRow,
+                  resolution.round(counterTimestamp), value, applicationId);
 				}
+
 			}
 		}
 	}
