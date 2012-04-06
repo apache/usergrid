@@ -2165,7 +2165,7 @@ public class ManagementServiceImpl implements ManagementService {
   @Override
   public void countAdminUserAction(UserInfo user, String action) throws Exception {
     EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-    em.incrementAggregateCounters(user.getUuid(),null,null,"admin.logins",1);
+    em.incrementAggregateCounters(user.getUuid(),null,null,"admin_logins",1);
 
   }
 }

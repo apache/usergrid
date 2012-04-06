@@ -102,7 +102,7 @@ public class ManagementServiceTest {
     Map<String, Long> counts = em.getApplicationCounters();
     log.info(JsonUtils.mapToJsonString(counts));
     log.info(JsonUtils.mapToJsonString(em.getCounterNames()));
-    assertNotNull(counts.get("admin.logins"));
-    assertEquals(1,counts.get("admin.logins").intValue());
+    assertNotNull(counts.get("admin_logins"));
+    assertEquals(1,counts.get("admin_logins").intValue());
   }
 }
