@@ -49,7 +49,7 @@ public class User extends TypedEntity {
 	@EntityProperty(indexed = true, unique = true, basic = true)
 	protected String email;
 
-	@EntityProperty(indexed = true)
+	@EntityProperty(indexed = true, fulltextIndexed=true)
 	protected String name;
 
 	@EntityProperty(indexed = false)

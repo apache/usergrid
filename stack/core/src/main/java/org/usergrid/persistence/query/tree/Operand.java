@@ -18,6 +18,7 @@ package org.usergrid.persistence.query.tree;
 import org.antlr.runtime.tree.CommonTree;
 
 import org.antlr.runtime.Token;
+import org.usergrid.persistence.exceptions.PersistenceException;
 
 /**
  * Any logical operation should subclass.  Boolean logic, equality, not, contains, within and others are examples of operands
@@ -46,8 +47,9 @@ public abstract class Operand extends CommonTree{
   /**
    * Visitor method
    * @param visitor
+ * @throws PersistenceException 
    */
-  public abstract void visit(QueryVisitor visitor);
+  public abstract void visit(QueryVisitor visitor) throws PersistenceException;
   
   
 }

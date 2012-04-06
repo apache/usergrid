@@ -15,6 +15,10 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import org.usergrid.persistence.exceptions.NoFullTextIndexException;
+import org.usergrid.persistence.exceptions.NoIndexException;
+import org.usergrid.persistence.exceptions.PersistenceException;
+
 /**
  * Interface for visiting nodes in our AST as we produce
  * 
@@ -26,28 +30,33 @@ public interface QueryVisitor {
     /**
      * 
      * @param op
+     * @throws PersistenceException 
      */
-    public void visit(AndOperand op);
+    public void visit(AndOperand op) throws PersistenceException;
 
     /**
      * @param op
+     * @throws PersistenceException 
      */
-    public void visit(OrOperand op);
+    public void visit(OrOperand op) throws PersistenceException;
 
     /**
      * @param op
+     * @throws PersistenceException 
      */
-    public void visit(NotOperand op);
+    public void visit(NotOperand op) throws PersistenceException;
 
     /**
      * @param op
+     * @throws NoIndexException 
      */
-    public void visit(LessThan op);
+    public void visit(LessThan op) throws NoIndexException;
 
     /**
      * @param op
+     * @throws NoFullTextIndexException 
      */
-    public void visit(ContainsOperand op);
+    public void visit(ContainsOperand op) throws NoFullTextIndexException;
 
     /**
      * @param op
@@ -56,22 +65,26 @@ public interface QueryVisitor {
 
     /**
      * @param op
+     * @throws NoIndexException 
      */
-    public void visit(LessThanEqual op);
+    public void visit(LessThanEqual op) throws NoIndexException;
 
     /**
      * @param op
+     * @throws NoIndexException 
      */
-    public void visit(Equal op);
+    public void visit(Equal op) throws NoIndexException;
 
     /**
      * @param op
+     * @throws NoIndexException 
      */
-    public void visit(GreaterThan op);
+    public void visit(GreaterThan op) throws NoIndexException;
 
     /**
      * @param op
+     * @throws NoIndexException 
      */
-    public void visit(GreaterThanEqual op);
+    public void visit(GreaterThanEqual op) throws NoIndexException;
 
 }

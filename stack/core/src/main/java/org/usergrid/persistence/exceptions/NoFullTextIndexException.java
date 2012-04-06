@@ -13,32 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.persistence.query.tree;
-
-import org.antlr.runtime.Token;
-import org.usergrid.persistence.exceptions.NoIndexException;
-
+package org.usergrid.persistence.exceptions;
 
 /**
+ * Thrown when the user attempts to perform a "contains" operation on a field that isn't full text indexed
  * @author tnine
- * 
+ *
  */
-public class LessThanEqual extends EqualityOperand{
+public class NoFullTextIndexException extends
+		PersistenceException {
 
-  /**
-   * @param property
-   * @param literal
-   */
-  public LessThanEqual(Token t) {
-    super(t);
-  }
-  
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence.query.tree.QueryVisitor)
-   */
-  @Override
-  public void visit(QueryVisitor visitor) throws NoIndexException {
-    visitor.visit(this);
-  }
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	final String entityType;
+	final String propertyName;
 
+	public NoFullTextIndexException(String entityType,
+			String propertyName) {
+		super("Entity '" + entityType + "' with property named '"
+				+ propertyName + "' is not full text indexed.  You cannot use the 'contains' operand on this field");
+		this.entityType = entityType;
+		this.propertyName = propertyName;
+	}
+
+	public String getEntityType() {
+		return entityType;
+	}
+
+	public String getPropertyName() {
+		return propertyName;
+	}
+
+	
 }
