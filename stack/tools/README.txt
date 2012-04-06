@@ -14,14 +14,5 @@ Use with caution!
 
 java -jar usergrid-tools-0.0.1-SNAPSHOT.jar Cli -remote
 
-These are built by Maven using the Maven Shade Plugin:
-
-http://maven.apache.org/plugins/maven-shade-plugin/
-
-The shade plugin bundles all the dependencies into a single jar so that the
-tools can be run without any installation other than the JVM. The build
-process currently outputs a number of duplicate class warnings and we've seen
-some issues with overwritten manifest files but these should not cause the
-build to fail.
-
+java -jar usergrid-tools-0.0.1-SNAPSHOT.jar Cli -remote -host=http://server:9001
 
