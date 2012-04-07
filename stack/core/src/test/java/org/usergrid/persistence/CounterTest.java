@@ -58,7 +58,7 @@ public class CounterTest extends AbstractPersistenceTest {
 
 		Event event = null;
 
-		for (int i = 0; i < 1000; i++) {
+		for (int i = 0; i < 100; i++) {
 			event = new Event();
 			event.setTimestamp(ts + (i * 60 * 1000));
 			event.addCounter("visits", 1);
@@ -119,8 +119,8 @@ public class CounterTest extends AbstractPersistenceTest {
 		logger.info(JsonUtils.mapToJsonString(counts));
 
 		assertEquals(new Long(10), counts.get("clicks"));
-		assertEquals(new Long(2000), counts.get("visits"));
-		assertEquals(new Long(2010),
+		assertEquals(new Long(200), counts.get("visits"));
+		assertEquals(new Long(210),
 				counts.get("application.collection.events"));
 	}
 
