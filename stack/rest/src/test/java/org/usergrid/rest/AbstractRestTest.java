@@ -16,13 +16,14 @@
 package org.usergrid.rest;
 
 import static org.junit.Assert.assertNull;
-
-import com.sun.jersey.api.core.ResourceContext;
-import com.sun.jersey.api.spring.Autowire;
-import com.sun.jersey.spi.inject.Inject;
-import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.usergrid.utils.MapUtils.hashMap;
+
+import java.util.Map;
+
+import javax.ws.rs.core.MediaType;
+
+import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.AfterClass;
@@ -30,8 +31,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.WebApplicationContext;
@@ -52,86 +51,80 @@ import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerException;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import java.util.Map;
-
 /**
- * Base class for testing Usergrid Jersey-based REST API.
- * Implementations should model the paths mapped, not the method names.
- * For example, to test the the "password" mapping on
- * applications.users.UserResource for a PUT method, the test method(s)
- * should following the following naming convention:
- * test_[HTTP verb]_[action mapping]_[ok|fail][_[specific failure condition if multiple]
+ * Base class for testing Usergrid Jersey-based REST API. Implementations should
+ * model the paths mapped, not the method names. For example, to test the the
+ * "password" mapping on applications.users.UserResource for a PUT method, the
+ * test method(s) should following the following naming convention: test_[HTTP
+ * verb]_[action mapping]_[ok|fail][_[specific failure condition if multiple]
  */
-//@Autowire
+// @Autowire
 public abstract class AbstractRestTest extends JerseyTest {
 
-	private static Logger logger = LoggerFactory
-			.getLogger(AbstractRestTest.class);
+    private static Logger logger = LoggerFactory
+            .getLogger(AbstractRestTest.class);
 
-	static EmbeddedServerHelper embedded = null;
-  static boolean usersSetup = false;
+    static EmbeddedServerHelper embedded = null;
+    static boolean usersSetup = false;
 
-  protected static String access_token;
+    protected static String access_token;
 
-  private ManagementService managementService;
+    private ManagementService managementService;
 
-	static ClientConfig clientConfig = new DefaultClientConfig();
-	static {
-		clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING,
-				Boolean.TRUE);
-	}
+    static ClientConfig clientConfig = new DefaultClientConfig();
+    static {
+        clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING,
+                Boolean.TRUE);
+    }
 
+    public AbstractRestTest() throws TestContainerException {
+        super(
+                new WebAppDescriptor.Builder("org.usergrid.rest")
+                        .contextParam("contextConfigLocation",
+                                "classpath:testApplicationContext.xml")
+                        .servletClass(SpringServlet.class)
+                        .contextListenerClass(ContextLoaderListener.class)
+                        .requestListenerClass(RequestContextListener.class)
+                        .initParam("com.sun.jersey.config.property.packages",
+                                "org.usergrid.rest")
+                        .initParam(
+                                "com.sun.jersey.api.json.POJOMappingFeature",
+                                "true")
+                        .initParam(
+                                "com.sun.jersey.spi.container.ContainerRequestFilters",
+                                "org.usergrid.rest.filters.MeteringFilter,org.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter,org.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter")
+                        .initParam(
+                                "com.sun.jersey.spi.container.ContainerResponseFilters",
+                                "org.usergrid.rest.security.CrossOriginRequestFilter,org.usergrid.rest.filters.MeteringFilter")
+                        .initParam(
+                                "com.sun.jersey.spi.container.ResourceFilters",
+                                "org.usergrid.rest.security.SecuredResourceFilterFactory,com.sun.jersey.api.container.filter.RolesAllowedResourceFilterFactory")
+                        .initParam("com.sun.jersey.config.feature.DisableWADL",
+                                "true")
+                        .initParam(
+                                "com.sun.jersey.config.property.JSPTemplatesBasePath",
+                                "/WEB-INF/jsp")
+                        .initParam(
+                                "com.sun.jersey.config.property.WebPageContentRegex",
+                                "/(((images|css|js|jsp|WEB-INF/jsp)/.*)|(favicon\\.ico))")
+                        .addFilter(
+                                DelegatingFilterProxy.class,
+                                "shiroFilter",
+                                MapUtils.hashMap("targetFilterLifecycle",
+                                        "true")).clientConfig(clientConfig)
+                        .build());
+        setupUsers();
+    }
 
+    protected void setupUsers() {
 
-	public AbstractRestTest() throws TestContainerException {
-		super(
-				new WebAppDescriptor.Builder("org.usergrid.rest")
-						.contextParam("contextConfigLocation",
-								"classpath:testApplicationContext.xml")
-						.servletClass(SpringServlet.class)
-						.contextListenerClass(ContextLoaderListener.class)
-						.requestListenerClass(RequestContextListener.class)
-						.initParam("com.sun.jersey.config.property.packages",
-								"org.usergrid.rest")
-						.initParam(
-								"com.sun.jersey.api.json.POJOMappingFeature",
-								"true")
-						.initParam(
-								"com.sun.jersey.spi.container.ContainerRequestFilters",
-								"org.usergrid.rest.filters.MeteringFilter,org.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter,org.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter")
-						.initParam(
-								"com.sun.jersey.spi.container.ContainerResponseFilters",
-								"org.usergrid.rest.security.CrossOriginRequestFilter,org.usergrid.rest.filters.MeteringFilter")
-						.initParam(
-								"com.sun.jersey.spi.container.ResourceFilters",
-								"org.usergrid.rest.security.SecuredResourceFilterFactory,com.sun.jersey.api.container.filter.RolesAllowedResourceFilterFactory")
-						.initParam("com.sun.jersey.config.feature.DisableWADL",
-								"true")
-						.initParam(
-								"com.sun.jersey.config.property.JSPTemplatesBasePath",
-								"/WEB-INF/jsp")
-						.initParam(
-								"com.sun.jersey.config.property.WebPageContentRegex",
-								"/(((images|css|js|jsp|WEB-INF/jsp)/.*)|(favicon\\.ico))")
-						.addFilter(
-								DelegatingFilterProxy.class,
-								"shiroFilter",
-								MapUtils.hashMap("targetFilterLifecycle",
-										"true")).clientConfig(clientConfig)
-						.build());
-    setupUsers();
-	}
-
-  protected void setupUsers() {
-
-    if (usersSetup) return;
-    JsonNode node = resource().path("/management/token")
-        				.queryParam("grant_type", "password")
-        				.queryParam("username", "test@usergrid.com")
-        				.queryParam("password", "test")
-        				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+        if (usersSetup)
+            return;
+        JsonNode node = resource().path("/management/token")
+                .queryParam("grant_type", "password")
+                .queryParam("username", "test@usergrid.com")
+                .queryParam("password", "test")
+                .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
         String mgmToken = node.get("access_token").getTextValue();
 
         Map<String, String> payload = hashMap("email", "ed@anuff.com")
@@ -143,59 +136,64 @@ public abstract class AbstractRestTest extends JerseyTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(JsonNode.class, payload);
-    usersSetup = true;
-  }
+        usersSetup = true;
+    }
 
-	@Override
-	protected TestContainerFactory getTestContainerFactory() {
-		return new com.sun.jersey.test.framework.spi.container.grizzly2.web.GrizzlyWebTestContainerFactory();
-	}
+    @Override
+    protected TestContainerFactory getTestContainerFactory() {
+        return new com.sun.jersey.test.framework.spi.container.grizzly2.web.GrizzlyWebTestContainerFactory();
+    }
 
-	@BeforeClass
-	public static void setup() throws Exception {
-		logger.info("setup");
-		assertNull(embedded);
-		embedded = new EmbeddedServerHelper();
-		embedded.setup();
-	}
+    @BeforeClass
+    public static void setup() throws Exception {
+        logger.info("setup");
+        assertNull(embedded);
+        embedded = new EmbeddedServerHelper();
+        embedded.setup();
+    }
 
-	@AfterClass
-	public static void teardown() throws Exception {
-		logger.info("teardown");
-		EmbeddedServerHelper.teardown();
-		embedded = null;
-	}
+    @AfterClass
+    public static void teardown() throws Exception {
+        logger.info("teardown");
+        EmbeddedServerHelper.teardown();
+        embedded = null;
+    }
 
-  public static void logNode(JsonNode node) {
-  		logger.info(mapToFormattedJsonString(node));
-  }
+    public static void logNode(JsonNode node) {
+        logger.info(mapToFormattedJsonString(node));
+    }
 
-  /**
-   * Hook to get the token for our base user
-   */
-  @Before
-  public void acquireToken() throws Exception {
+    /**
+     * Hook to get the token for our base user
+     */
+    @Before
+    public void acquireToken() throws Exception {
 
-    WebApplicationContext context = ContextLoader.getCurrentWebApplicationContext();
-    managementService = (ManagementService)context.getBean("managementService");
-    ApplicationInfo appInfo = managementService.getApplication("test-app");
-    User user = managementService.getAppUserByIdentifier(appInfo.getId(),Identifier.from("ed@anuff.com"));
-    this.access_token = managementService.getAccessTokenForAppUser(appInfo.getId(), user.getUuid());
+        WebApplicationContext context = ContextLoader
+                .getCurrentWebApplicationContext();
+        managementService = (ManagementService) context
+                .getBean("managementService");
+        ApplicationInfo appInfo = managementService.getApplication("test-app");
+        User user = managementService.getAppUserByIdentifier(appInfo.getId(),
+                Identifier.from("ed@anuff.com"));
+        this.access_token = managementService.getAccessTokenForAppUser(
+                appInfo.getId(), user.getUuid());
 
-  }
+    }
 
-  /**
-   * Acquire the management token for the test@usergrid.com user
-   * @return
-   */
-  protected String mgmtToken() {
-    JsonNode node = resource().path("/management/token")
-            .queryParam("grant_type", "password")
-            .queryParam("username", "test@usergrid.com")
-            .queryParam("password", "test")
-            .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-    String mgmToken = node.get("access_token").getTextValue();
-    return mgmToken;
+    /**
+     * Acquire the management token for the test@usergrid.com user
+     * 
+     * @return
+     */
+    protected String mgmtToken() {
+        JsonNode node = resource().path("/management/token")
+                .queryParam("grant_type", "password")
+                .queryParam("username", "test@usergrid.com")
+                .queryParam("password", "test")
+                .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+        String mgmToken = node.get("access_token").getTextValue();
+        return mgmToken;
 
-  }
+    }
 }
