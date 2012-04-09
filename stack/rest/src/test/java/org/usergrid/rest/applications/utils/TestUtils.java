@@ -13,43 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.persistence.query.tree;
+package org.usergrid.rest.applications.utils;
 
-import org.antlr.runtime.tree.CommonTree;
+import java.util.UUID;
 
-import org.antlr.runtime.Token;
-import org.usergrid.persistence.exceptions.PersistenceException;
+import org.codehaus.jackson.JsonNode;
+import org.usergrid.utils.UUIDUtils;
 
 /**
- * Any logical operation should subclass.  Boolean logic, equality, not, contains, within and others are examples of operands
- * 
  * @author tnine
  *
  */
-public abstract class Operand extends CommonTree{
+public class TestUtils {
 
-  
-  /**
-   * Default constructor to take a token
-   * @param t
-   */
-  public Operand(Token t){
-    super(t);
-  }
-  
-  /**
-   * Get the pointer to the parent node
-   */
-  public Operand getParent(){
-      return (Operand) super.getParent();
-  }
-  
-  /**
-   * Visitor method
-   * @param visitor
- * @throws PersistenceException 
-   */
-  public abstract void visit(QueryVisitor visitor) throws PersistenceException;
-  
-  
+    /**
+     * Get the uuid at the given index for the root node.  If it doesn't exist, null is returned 
+     * @param rootNode
+     * @param index
+     * @return
+     */
+    public static UUID getIdFromSearchResults(JsonNode rootNode, int index) {
+        JsonNode entityArray = rootNode.get("entities");
+        
+        if(entityArray == null){
+            return null;
+        }
+        
+        JsonNode entity = entityArray.get(index);
+        
+        if(entity == null){
+            return null;
+        }
+        
+        return UUIDUtils.tryExtractUUID(entity
+                .get("uuid").asText());
+
+    }
+
 }

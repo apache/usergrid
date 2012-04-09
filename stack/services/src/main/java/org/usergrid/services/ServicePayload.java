@@ -110,6 +110,18 @@ public class ServicePayload {
 		return p.get(property);
 	}
 
+	public void setProperty(String property, Object value){
+	    Map<String, Object> p = getProperties();
+        
+	    if (p == null) {
+	        throw new NullPointerException("No payload exists, cannot add properties to it");
+        }
+	    
+	    p.put(property, value);
+        
+        
+	}
+	
 	public String getStringProperty(String property) {
 		Object obj = getProperty(property);
 		if (obj instanceof String) {

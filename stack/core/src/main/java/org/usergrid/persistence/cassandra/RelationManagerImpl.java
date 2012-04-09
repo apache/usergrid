@@ -2564,6 +2564,8 @@ public class RelationManagerImpl implements RelationManager,
 
         CollectionInfo collection = getDefaultSchema().getCollection(
                 headEntity.getType(), collectionName);
+        
+        query.setEntityType(collection.getType());
 
         boolean reversed = query.isReversed();
 
@@ -2591,7 +2593,7 @@ public class RelationManagerImpl implements RelationManager,
         // we have something to search with, visit our tree and evaluate the
         // results
 
-        QueryProcessor qp = new QueryProcessor(query);
+        QueryProcessor qp = new QueryProcessor(query, collection);
         SearchCollectionVisitor visitor = new SearchCollectionVisitor(query, qp, collection);
         qp.getFirstNode().visit(visitor);
 
@@ -2868,7 +2870,7 @@ public class RelationManagerImpl implements RelationManager,
                 new ConnectedEntityRefImpl(connectionType, connectedEntityType,
                         null));
 
-        QueryProcessor qp = new QueryProcessor(query);
+        QueryProcessor qp = new QueryProcessor(query, null);
         SearchConnectionVisitor visitor = new SearchConnectionVisitor(query,
                 qp, connectionRef);
         
@@ -2907,7 +2909,7 @@ public class RelationManagerImpl implements RelationManager,
             return null;
         }
 
-        QueryProcessor qp = new QueryProcessor(query);
+        QueryProcessor qp = new QueryProcessor(query, null);
 
         ConnectionRefImpl connectionRef = new ConnectionRefImpl(headEntity,
                 new ConnectedEntityRefImpl(
@@ -3041,6 +3043,7 @@ public class RelationManagerImpl implements RelationManager,
             // indexEntry.getPath())
             Object subKey = getCFKeyForSubkey(collection, node);
 
+            
             //
             for (QuerySlice slice : node.getAllSlices()) {
 
