@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU General Public License along with
  * Usergrid Core. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
-package org.usergrid.android.client.entities;
+package org.usergrid.java.client.entities;
 
-import static org.usergrid.android.client.utils.JsonUtils.getLongProperty;
-import static org.usergrid.android.client.utils.JsonUtils.getObjectProperty;
-import static org.usergrid.android.client.utils.JsonUtils.getStringProperty;
-import static org.usergrid.android.client.utils.JsonUtils.setLongProperty;
-import static org.usergrid.android.client.utils.JsonUtils.setObjectProperty;
-import static org.usergrid.android.client.utils.JsonUtils.setStringProperty;
+import static org.usergrid.java.client.utils.JsonUtils.getLongProperty;
+import static org.usergrid.java.client.utils.JsonUtils.getObjectProperty;
+import static org.usergrid.java.client.utils.JsonUtils.getStringProperty;
+import static org.usergrid.java.client.utils.JsonUtils.setLongProperty;
+import static org.usergrid.java.client.utils.JsonUtils.setObjectProperty;
+import static org.usergrid.java.client.utils.JsonUtils.setStringProperty;
 
 import java.util.Arrays;
 import java.util.Date;

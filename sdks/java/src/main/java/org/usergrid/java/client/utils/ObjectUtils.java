@@ -1,4 +1,4 @@
-package org.usergrid.android.client.utils;
+package org.usergrid.java.client.utils;
 
 import java.util.Map;
 

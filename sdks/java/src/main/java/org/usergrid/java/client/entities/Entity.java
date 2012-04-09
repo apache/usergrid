@@ -1,11 +1,11 @@
-package org.usergrid.android.client.entities;
+package org.usergrid.java.client.entities;
 
-import static org.usergrid.android.client.utils.JsonUtils.getStringProperty;
-import static org.usergrid.android.client.utils.JsonUtils.getUUIDProperty;
-import static org.usergrid.android.client.utils.JsonUtils.setStringProperty;
-import static org.usergrid.android.client.utils.JsonUtils.setUUIDProperty;
-import static org.usergrid.android.client.utils.JsonUtils.toJsonString;
-import static org.usergrid.android.client.utils.MapUtils.newMapWithoutKeys;
+import static org.usergrid.java.client.utils.JsonUtils.getStringProperty;
+import static org.usergrid.java.client.utils.JsonUtils.getUUIDProperty;
+import static org.usergrid.java.client.utils.JsonUtils.setStringProperty;
+import static org.usergrid.java.client.utils.JsonUtils.setUUIDProperty;
+import static org.usergrid.java.client.utils.JsonUtils.toJsonString;
+import static org.usergrid.java.client.utils.MapUtils.newMapWithoutKeys;
 
 import java.util.ArrayList;
 import java.util.HashMap;

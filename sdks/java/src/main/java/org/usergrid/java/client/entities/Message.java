@@ -1,14 +1,14 @@
-package org.usergrid.android.client.entities;
+package org.usergrid.java.client.entities;
 
 import static org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL;
-import static org.usergrid.android.client.utils.JsonUtils.getBooleanProperty;
-import static org.usergrid.android.client.utils.JsonUtils.getLongProperty;
-import static org.usergrid.android.client.utils.JsonUtils.getStringProperty;
-import static org.usergrid.android.client.utils.JsonUtils.getUUIDProperty;
-import static org.usergrid.android.client.utils.JsonUtils.setBooleanProperty;
-import static org.usergrid.android.client.utils.JsonUtils.setLongProperty;
-import static org.usergrid.android.client.utils.JsonUtils.setStringProperty;
-import static org.usergrid.android.client.utils.JsonUtils.setUUIDProperty;
+import static org.usergrid.java.client.utils.JsonUtils.getBooleanProperty;
+import static org.usergrid.java.client.utils.JsonUtils.getLongProperty;
+import static org.usergrid.java.client.utils.JsonUtils.getStringProperty;
+import static org.usergrid.java.client.utils.JsonUtils.getUUIDProperty;
+import static org.usergrid.java.client.utils.JsonUtils.setBooleanProperty;
+import static org.usergrid.java.client.utils.JsonUtils.setLongProperty;
+import static org.usergrid.java.client.utils.JsonUtils.setStringProperty;
+import static org.usergrid.java.client.utils.JsonUtils.setUUIDProperty;
 
 import java.util.List;
 import java.util.UUID;

@@ -1,6 +1,6 @@
-package org.usergrid.android.client.response;
+package org.usergrid.java.client.response;
 
-import static org.usergrid.android.client.utils.JsonUtils.toJsonString;
+import static org.usergrid.java.client.utils.JsonUtils.toJsonString;
 
 import java.util.List;
 import java.util.UUID;

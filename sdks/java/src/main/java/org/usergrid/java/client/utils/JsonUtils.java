@@ -1,4 +1,4 @@
-package org.usergrid.android.client.utils;
+package org.usergrid.java.client.utils;
 
 import java.io.IOException;
 import java.util.Map;
@@ -6,16 +6,13 @@ import java.util.UUID;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.JsonNodeFactory;
-
-import android.util.Log;
+import org.usergrid.java.client.exception.ClientException;
 
 public class JsonUtils {
 
-	private static final String TAG = "UsergridJsonUtils";
 
 	static ObjectMapper mapper = new ObjectMapper();
 
@@ -101,26 +98,24 @@ public class JsonUtils {
 		try {
 			return mapper.writeValueAsString(obj);
 		} catch (JsonGenerationException e) {
-			Log.e(TAG, "ERROR: " + e.getLocalizedMessage());
+			throw new ClientException("Unable to generate json", e);
 		} catch (JsonMappingException e) {
-			Log.e(TAG, "ERROR: " + e.getLocalizedMessage());
+		    throw new ClientException("Unable to map json", e);
 		} catch (IOException e) {
-			Log.e(TAG, "ERROR: " + e.getLocalizedMessage());
+		    throw new ClientException("IO error", e);
 		}
-		return "{}";
 	}
 
 	public static <T> T parse(String json, Class<T> c) {
 		try {
 			return mapper.readValue(json, c);
-		} catch (JsonParseException e) {
-			Log.e(TAG, "ERROR: " + e.getLocalizedMessage());
-		} catch (JsonMappingException e) {
-			Log.e(TAG, "ERROR: " + e.getLocalizedMessage());
-		} catch (IOException e) {
-			Log.e(TAG, "ERROR: " + e.getLocalizedMessage());
-		}
-		return null;
+		} catch (JsonGenerationException e) {
+            throw new ClientException("Unable to generate json", e);
+        } catch (JsonMappingException e) {
+            throw new ClientException("Unable to map json", e);
+        } catch (IOException e) {
+            throw new ClientException("IO error", e);
+        }
 	}
 
 	public static JsonNode toJsonNode(Object obj) {
@@ -130,14 +125,13 @@ public class JsonUtils {
 	public static <T> T fromJsonNode(JsonNode json, Class<T> c) {
 		try {
 			return mapper.readValue(json, c);
-		} catch (JsonParseException e) {
-			Log.e(TAG, "ERROR: " + e.getLocalizedMessage());
-		} catch (JsonMappingException e) {
-			Log.e(TAG, "ERROR: " + e.getLocalizedMessage());
-		} catch (IOException e) {
-			Log.e(TAG, "ERROR: " + e.getLocalizedMessage());
-		}
-		return null;
+		} catch (JsonGenerationException e) {
+            throw new ClientException("Unable to generate json", e);
+        } catch (JsonMappingException e) {
+            throw new ClientException("Unable to map json", e);
+        } catch (IOException e) {
+            throw new ClientException("IO error", e);
+        }
 	}
 
 	public static <T> T getObjectProperty(Map<String, JsonNode> properties,

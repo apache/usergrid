@@ -1,4 +1,4 @@
-package org.usergrid.android.client.response;
+package org.usergrid.java.client.response;
 
 import java.util.UUID;
 
