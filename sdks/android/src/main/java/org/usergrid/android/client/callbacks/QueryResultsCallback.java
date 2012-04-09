@@ -1,6 +1,6 @@
 package org.usergrid.android.client.callbacks;
 
-import org.usergrid.android.client.Client.Query;
+import org.usergrid.java.client.Client.Query;
 
 public interface QueryResultsCallback extends ClientCallback<Query> {
 

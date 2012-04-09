@@ -1,6 +1,7 @@
 package org.usergrid.android.client.callbacks;
 
-import org.usergrid.android.client.response.ApiResponse;
+import org.usergrid.java.client.response.ApiResponse;
+
 
 public interface ApiResponseCallback extends ClientCallback<ApiResponse> {
 
