@@ -18,6 +18,7 @@ package org.usergrid.persistence.cassandra;
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
+import static org.usergrid.persistence.Schema.getDefaultSchema;
 import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.split;
@@ -38,6 +39,10 @@ import org.usergrid.persistence.EntityPropertyComparator;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Query.SortDirection;
 import org.usergrid.persistence.Query.SortPredicate;
+import org.usergrid.persistence.Schema;
+import org.usergrid.persistence.exceptions.NoFullTextIndexException;
+import org.usergrid.persistence.exceptions.NoIndexException;
+import org.usergrid.persistence.exceptions.PersistenceException;
 import org.usergrid.persistence.query.ir.AndNode;
 import org.usergrid.persistence.query.ir.NotNode;
 import org.usergrid.persistence.query.ir.OrNode;
@@ -60,6 +65,7 @@ import org.usergrid.persistence.query.tree.OrOperand;
 import org.usergrid.persistence.query.tree.QueryVisitor;
 import org.usergrid.persistence.query.tree.StringLiteral;
 import org.usergrid.persistence.query.tree.WithinOperand;
+import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.StringUtils;
 
 public class QueryProcessor {
@@ -71,15 +77,19 @@ public class QueryProcessor {
     private SortCache sortCache;
     private CursorCache cursorCache;
     private QueryNode rootNode;
+    private String entityType;
+    private CollectionInfo collectionInfo;
 
-    public QueryProcessor(Query query) {
+    public QueryProcessor(Query query, CollectionInfo collectionInfo) throws PersistenceException {
         sortCache = new SortCache(query.getSortPredicates());
         cursorCache = new CursorCache(query.getCursor());
         rootOperand = query.getRootOperand();
+        entityType = query.getEntityType();
+        this.collectionInfo = collectionInfo;
         process();
     }
 
-    private void process() {
+    private void process() throws PersistenceException {
 
         // no operand. Check for sorts
         if (rootOperand != null) {
@@ -138,7 +148,7 @@ public class QueryProcessor {
      * @param slice
      */
     public void applyCursorAndSort(QuerySlice slice) {
-        //apply the sort first, since this can change the hash code
+        // apply the sort first, since this can change the hash code
         SortPredicate sort = sortCache.getSort(slice.getPropertyName());
 
         if (sort != null) {
@@ -150,8 +160,6 @@ public class QueryProcessor {
         if (cursor != null) {
             slice.setCursor(cursor);
         }
-
-       
 
     }
 
@@ -196,6 +204,9 @@ public class QueryProcessor {
         // stack for nodes that will be used to construct the tree and create
         // objects
         private Stack<QueryNode> nodes = new Stack<QueryNode>();
+        
+        private Schema schema = getDefaultSchema();
+
 
         private int contextCount = -1;
 
@@ -216,7 +227,7 @@ public class QueryProcessor {
          * .persistence.query.tree.AndOperand)
          */
         @Override
-        public void visit(AndOperand op) {
+        public void visit(AndOperand op) throws PersistenceException {
 
             op.getLeft().visit(this);
 
@@ -250,7 +261,7 @@ public class QueryProcessor {
          * .persistence.query.tree.OrOperand)
          */
         @Override
-        public void visit(OrOperand op) {
+        public void visit(OrOperand op) throws PersistenceException {
 
             // we need to create a new slicenode for the children of this
             // operation
@@ -288,7 +299,7 @@ public class QueryProcessor {
          * .persistence.query.tree.NotOperand)
          */
         @Override
-        public void visit(NotOperand op) {
+        public void visit(NotOperand op) throws PersistenceException {
 
             // create a new context since any child of NOT will need to be
             // evaluated independently
@@ -311,16 +322,24 @@ public class QueryProcessor {
          * .persistence.query.tree.ContainsOperand)
          */
         @Override
-        public void visit(ContainsOperand op) {
+        public void visit(ContainsOperand op) throws NoFullTextIndexException {
+
+            String propertyName = op.getProperty().getValue();
+
+            if (!schema.isPropertyFulltextIndexed(entityType,
+                    propertyName)) {
+                throw new NoFullTextIndexException(entityType, propertyName);
+            }
+
             String fieldName = appendSuffix(op.getProperty().getValue(),
                     "keywords");
 
-            String string = ((StringLiteral) op.getString()).getValue();
+            StringLiteral string = op.getString();
 
             SliceNode node = getUnionNode(op);
 
-            node.setStart(fieldName, string, true);
-            node.setFinish(fieldName, string, true);
+            node.setStart(fieldName, string.getValue(), true);
+            node.setFinish(fieldName, string.getEndValue(), true);
 
         }
 
@@ -352,8 +371,12 @@ public class QueryProcessor {
          * .persistence.query.tree.LessThan)
          */
         @Override
-        public void visit(LessThan op) {
-            getUnionNode(op).setFinish(op.getProperty().getValue(),
+        public void visit(LessThan op) throws NoIndexException {
+            String propertyName = op.getProperty().getValue();
+
+            checkIndexed(propertyName);
+
+            getUnionNode(op).setFinish(propertyName,
                     op.getLiteral().getValue(), false);
         }
 
@@ -365,8 +388,13 @@ public class QueryProcessor {
          * .persistence.query.tree.LessThanEqual)
          */
         @Override
-        public void visit(LessThanEqual op) {
-            getUnionNode(op).setFinish(op.getProperty().getValue(),
+        public void visit(LessThanEqual op) throws NoIndexException {
+
+            String propertyName = op.getProperty().getValue();
+
+            checkIndexed(propertyName);
+
+            getUnionNode(op).setFinish(propertyName,
                     op.getLiteral().getValue(), true);
         }
 
@@ -378,8 +406,11 @@ public class QueryProcessor {
          * .persistence.query.tree.Equal)
          */
         @Override
-        public void visit(Equal op) {
+        public void visit(Equal op) throws NoIndexException {
             String fieldName = op.getProperty().getValue();
+
+            checkIndexed(fieldName);
+
             Literal<?> literal = op.getLiteral();
             SliceNode node = getUnionNode(op);
 
@@ -411,9 +442,13 @@ public class QueryProcessor {
          * .persistence.query.tree.GreaterThan)
          */
         @Override
-        public void visit(GreaterThan op) {
-            getUnionNode(op).setStart(op.getProperty().getValue(),
-                    op.getLiteral().getValue(), false);
+        public void visit(GreaterThan op) throws NoIndexException {
+            String propertyName = op.getProperty().getValue();
+
+            checkIndexed(propertyName);
+
+            getUnionNode(op).setStart(propertyName, op.getLiteral().getValue(),
+                    false);
         }
 
         /*
@@ -424,9 +459,13 @@ public class QueryProcessor {
          * .persistence.query.tree.GreaterThanEqual)
          */
         @Override
-        public void visit(GreaterThanEqual op) {
-            getUnionNode(op).setStart(op.getProperty().getValue(),
-                    op.getLiteral().getValue(), true);
+        public void visit(GreaterThanEqual op) throws NoIndexException {
+            String propertyName = op.getProperty().getValue();
+
+            checkIndexed(propertyName);
+
+            getUnionNode(op).setStart(propertyName, op.getLiteral().getValue(),
+                    true);
         }
 
         /**
@@ -496,6 +535,13 @@ public class QueryProcessor {
                 str = suffix;
             }
             return str;
+        }
+
+        private void checkIndexed(String propertyName) throws NoIndexException {
+            
+            if (!schema.isPropertyIndexed(entityType, propertyName) && collectionInfo != null && !collectionInfo.isSubkeyProperty(propertyName)) {
+                throw new NoIndexException(entityType, propertyName);
+            }
         }
 
     }
@@ -570,10 +616,10 @@ public class QueryProcessor {
             /**
              * No cursors to return
              */
-            if(cursors.size() == 0){
+            if (cursors.size() == 0) {
                 return null;
             }
-            
+
             StringBuffer buff = new StringBuffer();
 
             for (Entry<Integer, ByteBuffer> entry : cursors.entrySet()) {

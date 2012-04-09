@@ -13,32 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.persistence.query.tree;
+package org.usergrid.rest.applications.users;
 
-import org.antlr.runtime.Token;
-import org.usergrid.persistence.exceptions.NoIndexException;
+import static org.usergrid.utils.MapUtils.hashMap;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.ws.rs.core.MediaType;
+
+import org.codehaus.jackson.JsonNode;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.applications.utils.UserRepo;
+import org.usergrid.utils.UUIDUtils;
 
 /**
  * @author tnine
- * 
  */
-public class LessThanEqual extends EqualityOperand{
+public class ActivityResourceTest extends AbstractRestTest {
+    private static Logger log = LoggerFactory
+            .getLogger(ActivityResourceTest.class);
 
-  /**
-   * @param property
-   * @param literal
-   */
-  public LessThanEqual(Token t) {
-    super(t);
-  }
-  
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence.query.tree.QueryVisitor)
-   */
-  @Override
-  public void visit(QueryVisitor visitor) throws NoIndexException {
-    visitor.visit(this);
-  }
+    public ActivityResourceTest() throws Exception {
+
+    }
 
 }
