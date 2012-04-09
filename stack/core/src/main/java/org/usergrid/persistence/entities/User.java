@@ -42,6 +42,11 @@ public class User extends TypedEntity {
 	public static final String ENTITY_TYPE = "user";
 
 	public static final String CONNECTION_FOLLOW = "follow";
+	
+	public static final String PROP_UUID = "uuid";
+	
+	public static final String PROP_EMAIL = "email";
+	
 
 	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = true, aliasProperty = true, unique = true, basic = true)
 	protected String username;
