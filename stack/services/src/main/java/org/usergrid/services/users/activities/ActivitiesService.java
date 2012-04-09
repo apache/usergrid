@@ -26,6 +26,7 @@ import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.entities.Activity;
+import org.usergrid.persistence.entities.Activity.ActivityObject;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServicePayload;
@@ -53,12 +54,35 @@ public class ActivitiesService extends GenericCollectionService {
 
         ServicePayload payload = context.getPayload();
 
-        @SuppressWarnings("unchecked")
-        Map<String, String> actor = (Map<String, String>) payload
-                .getProperty(Activity.PROP_ACTOR);
-
         Entity user = em.get(context.getOwner());
 
+        
+        Object actor =  payload.getProperty(Activity.PROP_ACTOR);
+        
+        if(actor instanceof Map){
+            handleDynamicPayload((Map<String, String>)actor, user, payload);
+        }else if (actor instanceof ActivityObject){
+            handleDynamicPayload((ActivityObject)actor, user, payload);
+        } else if(actor == null ){
+            handleDynamicPayload((ActivityObject)actor, user, payload);
+        }
+
+       
+
+        ServiceResults results = super.postCollection(context);
+
+        distribute(context.getOwner(), results.getEntity());
+        return results;
+    }
+    
+    /**
+     * Invoked when our actor is a map
+     * @param actor
+     * @param user
+     * @param payload
+     */
+    private void handleDynamicPayload(Map<String, String> actor, Entity user, ServicePayload payload){
+       
         // create a new actor object
         if (actor == null) {
             actor = new HashMap<String, String>();
@@ -74,11 +98,34 @@ public class ActivitiesService extends GenericCollectionService {
                 actor.put(User.PROP_EMAIL, user.getProperty(User.PROP_EMAIL).toString());
             }
         }
+    }
+    
+    /**
+     * Invoked to set values when our actor is an activity object
+     * @param actor
+     * @param user
+     * @param payload
+     */
+    private void handleDynamicPayload(ActivityObject actor, Entity user, ServicePayload payload){
+       
+        // create a new actor object
+        if (actor == null) {
+            actor = new ActivityObject();
+            payload.setProperty(Activity.PROP_ACTOR, actor);
+        }
 
-        ServiceResults results = super.postCollection(context);
+        if (user != null) {
+            if (actor.getId() == null && user.getUuid() != null) {
+                actor.setUuid(user.getUuid());
+                //TODO TN should this also populate id?
+            }
 
-        distribute(context.getOwner(), results.getEntity());
-        return results;
+            if (actor.getDynamicProperties().get(User.PROP_EMAIL) == null && user.getProperty(User.PROP_EMAIL) != null) {
+                actor.getDynamicProperties().put(User.PROP_EMAIL, user.getProperty(User.PROP_EMAIL).toString());
+            }
+        }
+
+      
     }
 
     @Override
