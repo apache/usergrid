@@ -195,6 +195,8 @@ public class ManagementResource extends AbstractContextResource {
 							"user",
 							management.getAdminUserOrganizationData(user
 									.getUuid()));
+      // increment counters for admin login
+      management.countAdminUserAction(user,"login");
 
 			return Response.status(SC_OK).type(jsonMediaType(callback))
 					.entity(wrapWithCallback(access_info, callback)).build();

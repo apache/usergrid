@@ -17,7 +17,10 @@ package org.usergrid.persistence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,11 +28,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import org.usergrid.persistence.entities.Event;
+import org.usergrid.persistence.entities.Group;
 import org.usergrid.utils.JsonUtils;
 
 public class CounterTest extends AbstractPersistenceTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(CounterTest.class);
+
+  long ts = System.currentTimeMillis() - (24 * 60 * 60 * 1000);
 
 	public CounterTest() {
 		super();
@@ -45,14 +51,14 @@ public class CounterTest extends AbstractPersistenceTest {
 		EntityManager em = emf.getEntityManager(applicationId);
 		assertNotNull(em);
 
-		long ts = System.currentTimeMillis() - (24 * 60 * 60 * 1000);
+
 		UUID user1 = UUID.randomUUID();
 		UUID user2 = UUID.randomUUID();
 		// UUID groupId = UUID.randomUUID();
 
 		Event event = null;
 
-		for (int i = 0; i < 1000; i++) {
+		for (int i = 0; i < 100; i++) {
 			event = new Event();
 			event.setTimestamp(ts + (i * 60 * 1000));
 			event.addCounter("visits", 1);
@@ -113,9 +119,70 @@ public class CounterTest extends AbstractPersistenceTest {
 		logger.info(JsonUtils.mapToJsonString(counts));
 
 		assertEquals(new Long(10), counts.get("clicks"));
-		assertEquals(new Long(2000), counts.get("visits"));
-		assertEquals(new Long(2010),
+		assertEquals(new Long(200), counts.get("visits"));
+		assertEquals(new Long(210),
 				counts.get("application.collection.events"));
 	}
 
+  @Test
+  public void testCommunityCounters() throws Exception {
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+
+    Group organizationEntity = new Group();
+    organizationEntity.setPath("tst-counter");
+    organizationEntity.setProperty("name","test counter");
+    organizationEntity = em.create(organizationEntity);
+
+
+    UUID applicationId = emf.createApplication("testEntityCounters");
+
+    Map<String,Object> properties = new LinkedHashMap<String,Object>();
+    properties.put("name", "testEntityCounters");
+    Entity applicationEntity = em.create(applicationId, "application_info",
+            properties);
+
+    em.createConnection(new SimpleEntityRef("group", organizationEntity.getUuid()),
+            "owns", new SimpleEntityRef("application_info", applicationId));
+
+
+
+    Event event = new Event();
+    event.setTimestamp(System.currentTimeMillis());
+    event.addCounter("admin.logins", 1);
+    event.setGroup(organizationEntity.getUuid());
+
+    // TODO look at row syntax of event counters being sent
+    em.create(event);
+    /*
+    event = new Event();
+    event.setTimestamp(System.currentTimeMillis());
+    event.addCounter("admin.logins", 1);
+    em.create(event);
+   */
+    Map<String, Long> counts = em.getApplicationCounters();
+    logger.info(JsonUtils.mapToJsonString(counts));
+    assertNotNull(counts.get("admin.logins"));
+    assertEquals(1,counts.get("admin.logins").longValue());
+    // Q's:
+    // how to "count" a login to a specific application?
+    // when org is provided, why is it returning 8? Is it 4 with one 'event'?
+
+    Results r = em.getAggregateCounters(null,null, null, "admin.logins",
+            CounterResolution.ALL, ts, System.currentTimeMillis(),
+            false);
+    logger.info(JsonUtils.mapToJsonString(r.getCounters()));
+    assertEquals(1, r.getCounters().get(0).getValues().get(0).getValue());
+    //counts = em.getEntityCounters(organizationEntity.getUuid());
+    //logger.info(JsonUtils.mapToJsonString(counts));
+    Query query = new Query();
+    query.addCounterFilter("admin.logins:*:*:*");
+    query.setStartTime(ts);
+    query.setFinishTime(System.currentTimeMillis());
+    query.setResolution(CounterResolution.SIX_HOUR);
+    //query.setPad(true);
+    r = em.getAggregateCounters(query);
+    logger.info(JsonUtils.mapToJsonString(r.getCounters()));
+    assertEquals(1, r.getCounters().get(0).getValues().get(0).getValue());
+
+  }
 }

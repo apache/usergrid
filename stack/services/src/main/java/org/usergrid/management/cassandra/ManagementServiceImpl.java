@@ -85,6 +85,7 @@ import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.entities.Application;
+import org.usergrid.persistence.entities.Event;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
@@ -1868,7 +1869,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 	}
 
-	@Override
+  @Override
 	public void sendAdminUserEmail(UserInfo user, String subject, String html)
 			throws Exception {
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
@@ -2161,4 +2162,10 @@ public class ManagementServiceImpl implements ManagementService {
 		return null;
 	}
 
+  @Override
+  public void countAdminUserAction(UserInfo user, String action) throws Exception {
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    em.incrementAggregateCounters(user.getUuid(),null,null,"admin_logins",1);
+
+  }
 }
