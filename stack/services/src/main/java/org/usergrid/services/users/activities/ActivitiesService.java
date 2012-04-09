@@ -75,6 +75,12 @@ public class ActivitiesService extends GenericCollectionService {
         return results;
     }
     
+    /**
+     * Invoked when our actor is a map
+     * @param actor
+     * @param user
+     * @param payload
+     */
     private void handleDynamicPayload(Map<String, String> actor, Entity user, ServicePayload payload){
        
         // create a new actor object
@@ -94,6 +100,12 @@ public class ActivitiesService extends GenericCollectionService {
         }
     }
     
+    /**
+     * Invoked to set values when our actor is an activity object
+     * @param actor
+     * @param user
+     * @param payload
+     */
     private void handleDynamicPayload(ActivityObject actor, Entity user, ServicePayload payload){
        
         // create a new actor object
