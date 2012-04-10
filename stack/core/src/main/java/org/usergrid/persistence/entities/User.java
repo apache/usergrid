@@ -56,6 +56,9 @@ public class User extends TypedEntity {
 	protected Boolean activated;
 
 	@EntityProperty(indexed = false)
+	protected Boolean confirmed;
+
+	@EntityProperty(indexed = false)
 	protected Boolean disabled;
 
 	@EntityProperty(indexed = true)
@@ -154,6 +157,19 @@ public class User extends TypedEntity {
 
 	public void setActivated(Boolean activated) {
 		this.activated = activated;
+	}
+
+	public boolean confirmed() {
+		return (confirmed != null) && confirmed;
+	}
+
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	public Boolean getConfirmed() {
+		return confirmed;
+	}
+
+	public void setConfirmed(Boolean confirmed) {
+		this.confirmed = confirmed;
 	}
 
 	public boolean disabled() {

@@ -133,16 +133,23 @@ public class ManagementServiceImpl implements ManagementService {
 	public static String EMAIL_ADMIN_PASSWORD_RESET = "usergrid.management.email.admin-password-reset";
 
 	public static String EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION = "usergrid.management.email.sysadmin-organization-activation";
-	public static String EMAIL_ORGANIZATION_ACTIVATION = "usergrid.management.email.organization-activation";
+	
+	public static String EMAIL_ORGANIZATION_CONFIRMATION = "usergrid.management.email.organization-confirmation";
+	public static String EMAIL_ORGANIZATION_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.organization-confirmed";
 	public static String EMAIL_ORGANIZATION_ACTIVATED = "usergrid.management.email.organization-activated";
 
 	public static String EMAIL_SYSADMIN_ADMIN_ACTIVATION = "usergrid.management.email.sysadmin-admin-activation";
-	public static String EMAIL_ADMIN_ACTIVATION = "usergrid.management.email.admin-activation";
+	
+	public static String EMAIL_ADMIN_CONFIRMATION = "usergrid.management.email.admin-confirmation";
+	public static String EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.admin-confirmed";
 	public static String EMAIL_ADMIN_ACTIVATED = "usergrid.management.email.admin-activated";
+	
 	public static String EMAIL_ADMIN_INVITED = "usergrid.management.email.admin-invited";
 
 	public static String EMAIL_ADMIN_USER_ACTIVATION = "usergrid.management.email.admin-user-activation";
-	public static String EMAIL_USER_ACTIVATION = "usergrid.management.email.user-activation";
+	
+	public static String EMAIL_USER_CONFIRMATION = "usergrid.management.email.user-confirmation";
+	public static String EMAIL_USER_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.user-confirmed";
 	public static String EMAIL_USER_ACTIVATED = "usergrid.management.email.user-activated";
 
 	public static String EMAIL_USER_PASSWORD_RESET = "usergrid.management.email.user-password-reset";
@@ -1667,6 +1674,27 @@ public class ManagementServiceImpl implements ManagementService {
 	}
 
 	@Override
+	public void confirmAdminUser(UUID userId) throws Exception {
+		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+		em.setProperty(new SimpleEntityRef(User.ENTITY_TYPE, userId),
+				"confirmed", true);
+	}
+
+	@Override
+	public void unconfirmAdminUser(UUID userId) throws Exception {
+		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+		em.setProperty(new SimpleEntityRef(User.ENTITY_TYPE, userId),
+				"confirmed", false);
+	}
+
+	@Override
+	public boolean isAdminUserConfirmed(UUID userId) throws Exception {
+		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+		return Boolean.TRUE.equals(em.getProperty(new SimpleEntityRef(
+				User.ENTITY_TYPE, userId), "confirmed"));
+	}
+
+	@Override
 	public void enableAdminUser(UUID userId) throws Exception {
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		em.setProperty(new SimpleEntityRef(User.ENTITY_TYPE, userId),
@@ -1786,7 +1814,7 @@ public class ManagementServiceImpl implements ManagementService {
 								hashMap("organization_name",
 										organization.getName()).map(
 										"activation_url", activation_url),
-								EMAIL_ORGANIZATION_ACTIVATION));
+								EMAIL_ORGANIZATION_CONFIRMATION));
 			}
 		} catch (Exception e) {
 			logger.error(
@@ -1845,7 +1873,7 @@ public class ManagementServiceImpl implements ManagementService {
 					emailMsg(
 							hashMap("user_email", user.getEmail()).map(
 									"activation_url", activation_url),
-							EMAIL_ADMIN_ACTIVATION));
+							EMAIL_ADMIN_CONFIRMATION));
 		}
 
 	}
@@ -2027,7 +2055,7 @@ public class ManagementServiceImpl implements ManagementService {
 				user,
 				"User Account Confirmation: " + user.getEmail(),
 				emailMsg(hashMap("activation_url", activation_url),
-						EMAIL_USER_ACTIVATION));
+						EMAIL_USER_CONFIRMATION));
 	}
 
 	@Override

@@ -118,18 +118,18 @@ public class OrganizationTest {
 	public void testEmailStrings() {
 
 		testProperty(ManagementServiceImpl.EMAIL_ADMIN_ACTIVATED, false);
-		testProperty(ManagementServiceImpl.EMAIL_ADMIN_ACTIVATION, true);
+		testProperty(ManagementServiceImpl.EMAIL_ADMIN_CONFIRMATION, true);
 		testProperty(ManagementServiceImpl.EMAIL_ADMIN_PASSWORD_RESET, true);
 		testProperty(ManagementServiceImpl.EMAIL_ADMIN_USER_ACTIVATION, true);
 		testProperty(ManagementServiceImpl.EMAIL_ORGANIZATION_ACTIVATED, true);
-		testProperty(ManagementServiceImpl.EMAIL_ORGANIZATION_ACTIVATION, true);
+		testProperty(ManagementServiceImpl.EMAIL_ORGANIZATION_CONFIRMATION, true);
 		testProperty(ManagementServiceImpl.EMAIL_SYSADMIN_ADMIN_ACTIVATION,
 				true);
 		testProperty(
 				ManagementServiceImpl.EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION,
 				true);
 		testProperty(ManagementServiceImpl.EMAIL_USER_ACTIVATED, false);
-		testProperty(ManagementServiceImpl.EMAIL_USER_ACTIVATION, true);
+		testProperty(ManagementServiceImpl.EMAIL_USER_CONFIRMATION, true);
 		testProperty(ManagementServiceImpl.EMAIL_USER_PASSWORD_RESET, true);
 		testProperty(ManagementServiceImpl.EMAIL_USER_PIN_REQUEST, true);
 

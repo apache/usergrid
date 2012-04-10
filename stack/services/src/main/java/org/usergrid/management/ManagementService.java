@@ -326,4 +326,10 @@ public interface ManagementService {
 	public void sendAdminUserInvitedEmail(UserInfo user,
 			OrganizationInfo organization) throws Exception;
 
+	public void confirmAdminUser(UUID userId) throws Exception;
+
+	public void unconfirmAdminUser(UUID userId) throws Exception;
+
+	public boolean isAdminUserConfirmed(UUID userId) throws Exception;
+
 }
