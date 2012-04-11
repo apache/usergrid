@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest;
 
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.usergrid.utils.MapUtils.hashMap;
 
@@ -36,6 +36,7 @@ import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.filter.DelegatingFilterProxy;
+import org.usergrid.java.client.Client;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.persistence.Identifier;
@@ -72,6 +73,9 @@ public abstract class AbstractRestTest extends JerseyTest {
     private ManagementService managementService;
 
     static ClientConfig clientConfig = new DefaultClientConfig();
+
+    protected static Client client;
+
     static {
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING,
                 Boolean.TRUE);
@@ -125,8 +129,9 @@ public abstract class AbstractRestTest extends JerseyTest {
                 .queryParam("username", "test@usergrid.com")
                 .queryParam("password", "test")
                 .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-        String mgmToken = node.get("access_token").getTextValue();
 
+        String mgmToken = node.get("access_token").getTextValue();
+        //
         Map<String, String> payload = hashMap("email", "ed@anuff.com")
                 .map("username", "edanuff").map("name", "Ed Anuff")
                 .map("password", "sesame").map("pin", "1234");
@@ -136,7 +141,18 @@ public abstract class AbstractRestTest extends JerseyTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(JsonNode.class, payload);
+
+        //now create a client that logs in ed
+        client = new Client("test-app").withApiUrl(getBaseURI().toString());
+        org.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser("ed@anuff.com", "sesame");
+
+        assertTrue(response != null && response.getError() == null);
+
+
+        // client.setApiUrl(apiUrl);
+
         usersSetup = true;
+
     }
 
     @Override
@@ -178,6 +194,7 @@ public abstract class AbstractRestTest extends JerseyTest {
                 Identifier.from("ed@anuff.com"));
         this.access_token = managementService.getAccessTokenForAppUser(
                 appInfo.getId(), user.getUuid());
+        // client.setApiUrl(apiUrl)
 
     }
 
@@ -195,5 +212,15 @@ public abstract class AbstractRestTest extends JerseyTest {
         String mgmToken = node.get("access_token").getTextValue();
         return mgmToken;
 
+    }
+    
+    /**
+     * Get the entity from the entity array in the response 
+     * @param response
+     * @param index
+     * @return
+     */
+    protected JsonNode getEntity(JsonNode response, int index){
+        return response.get("entities").get(index);
     }
 }
