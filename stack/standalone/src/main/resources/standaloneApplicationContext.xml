@@ -150,4 +150,8 @@
 		id="lockManager" class="org.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl"> 
 		<constructor-arg ref="${zookeeper.hosts}" /> <constructor-arg ref="${zookeeper.sessionTimeout}" 
 		/> <constructor-arg ref="${zookeeper.maxAttempts}" /> </bean> -->
+    <bean id="usergridSystemMonitor" class="org.usergrid.system.UsergridSystemMonitor">
+        <constructor-arg value="${usergrid.version.build}"/>
+        <constructor-arg ref="cassandraCluster"/>
+    </bean>
 </beans>

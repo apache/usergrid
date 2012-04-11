@@ -36,6 +36,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import com.sun.jersey.api.spring.Autowire;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.*;
 import com.yammer.metrics.core.Timer;
@@ -50,12 +51,14 @@ import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.rest.applications.ApplicationResource;
 import org.usergrid.rest.exceptions.NoOpException;
 
 import com.sun.jersey.api.json.JSONWithPadding;
+import org.usergrid.system.UsergridSystemMonitor;
 
 /**
  * 
@@ -83,6 +86,9 @@ public class RootResource extends AbstractContextResource implements MetricProce
 			.getLogger(RootResource.class);
 
 	long started = System.currentTimeMillis();
+
+  @Autowired
+  private UsergridSystemMonitor usergridSystemMonitor;
 
 	public RootResource() {
 	}
@@ -143,7 +149,8 @@ public class RootResource extends AbstractContextResource implements MetricProce
 		ObjectNode node = JsonNodeFactory.instance.objectNode();
 		node.put("started", started);
 		node.put("uptime", System.currentTimeMillis() - started);
-    node.put("version", "0.1");
+    node.put("version", usergridSystemMonitor.getBuildNumber());
+    node.put("cassandraAvailable", usergridSystemMonitor.getIsCassandraAlive());
     dumpMetrics(node);
 		response.setProperty("status", node);
 		return new JSONWithPadding(response, callback);
