@@ -3,7 +3,7 @@ package org.usergrid.java.client.entities;
 import static org.usergrid.java.client.utils.JsonUtils.getStringProperty;
 import static org.usergrid.java.client.utils.JsonUtils.getUUIDProperty;
 import static org.usergrid.java.client.utils.JsonUtils.setStringProperty;
-import static org.usergrid.java.client.utils.JsonUtils.setUUIDProperty;
+import static org.usergrid.java.client.utils.JsonUtils.*;
 import static org.usergrid.java.client.utils.JsonUtils.toJsonString;
 import static org.usergrid.java.client.utils.MapUtils.newMapWithoutKeys;
 
@@ -79,6 +79,53 @@ public class Entity {
 			properties.put(name, value);
 		}
 	}
+	
+	/**
+	 * Set the property
+	 * @param name
+	 * @param value
+	 */
+	public void setProperty(String name, String value){
+	    setStringProperty(properties, name, value);
+	}
+	
+	/**
+     * Set the property
+     * @param name
+     * @param value
+     */
+    public void setProperty(String name, boolean value){
+        setBooleanProperty(properties, name, value);
+    }
+    
+    /**
+     * Set the property
+     * @param name
+     * @param value
+     */
+    public void setProperty(String name, long value){
+        setLongProperty(properties, name, value);
+    }
+    
+
+    /**
+     * Set the property
+     * @param name
+     * @param value
+     */
+    public void setProperty(String name, int value){
+       setProperty(name, (long)value);
+    }
+    
+    /**
+     * Set the property
+     * @param name
+     * @param value
+     */
+    public void setProperty(String name, float value){
+        setFloatProperty(properties, name, value);
+    }
+    
 
 	@Override
 	public String toString() {

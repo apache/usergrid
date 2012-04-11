@@ -52,6 +52,14 @@ public class JsonUtils {
 		}
 	}
 
+	public static void setFloatProperty(Map<String, JsonNode> properties, String name, Float value){
+	    if(value == null){
+	        properties.remove(name);
+	    }else{
+	        properties.put(name, JsonNodeFactory.instance.numberNode(value));
+	    }
+	}
+	
 	public static Boolean getBooleanProperty(Map<String, JsonNode> properties,
 			String name) {
 		JsonNode value = properties.get(name);

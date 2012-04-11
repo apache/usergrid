@@ -370,6 +370,9 @@ public class Activity extends Entity {
 
 		public ActivityObject() {
 		}
+		
+		public ActivityObject(String json){
+		}
 
 		@JsonSerialize(include = Inclusion.NON_NULL)
 		public ActivityObject[] getAttachments() {
