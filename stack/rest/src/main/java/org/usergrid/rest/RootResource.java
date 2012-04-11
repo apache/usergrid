@@ -143,6 +143,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 		ObjectNode node = JsonNodeFactory.instance.objectNode();
 		node.put("started", started);
 		node.put("uptime", System.currentTimeMillis() - started);
+    node.put("version", "0.1");
     dumpMetrics(node);
 		response.setProperty("status", node);
 		return new JSONWithPadding(response, callback);
