@@ -318,6 +318,7 @@ public class Client extends org.usergrid.java.client.Client {
 	 * Creates and posts an activity to a group. Executes asynchronously in
 	 * background and the callbacks are called in the UI thread.
 	 * 
+	 * @param groupId
 	 * @param verb
 	 * @param title
 	 * @param content
@@ -329,7 +330,7 @@ public class Client extends org.usergrid.java.client.Client {
 	 * @param objectContent
 	 * @param callback
 	 */
-	public void postGroupActivityAsync(final String verb, final String title,
+	public void postGroupActivityAsync(final String groupId, final String verb, final String title,
 			final String content, final String category, final User user,
 			final Entity object, final String objectType,
 			final String objectName, final String objectContent,
@@ -337,7 +338,7 @@ public class Client extends org.usergrid.java.client.Client {
 		(new ClientAsyncTask<ApiResponse>(callback) {
 			@Override
 			public ApiResponse doTask() {
-				return postGroupActivity(verb, title, content, category, user,
+				return postGroupActivity(groupId, verb, title, content, category, user,
 						object, objectType, objectName, objectContent);
 			}
 		}).execute();
