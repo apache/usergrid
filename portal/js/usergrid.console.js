@@ -1004,14 +1004,31 @@ function usergrid_console_app() {
 
         if (bValid) {
             var data = form.serializeObject();
-            client.createUser(current_application_id, data, requestUsers, function() {
+            client.createUser(current_application_id, data, 
+              function() {
+                requestUsers();
                 closeErrorMessage = function() {
                   $('#users-messages').hide();
                 };
                 var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
-                $('#users-messages').text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.')).prepend(closebutton).addClass('alert-error').show();
+                $('#users-messages')
+                  .text("User created successfully.")
+                  .prepend(closebutton)
+                  .addClass('alert-warning')
+                  .show();
+              },
+              function() {
+                closeErrorMessage = function() {
+                  $('#users-messages').hide();
+                };
+                var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+                $('#users-messages')
+                  .text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'))
+                  .prepend(closebutton)
+                  .addClass('alert-error')
+                  .show();
                 // alert("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'));
-            });
+              });
 
             $(this).modal('hide');
         }
@@ -1067,7 +1084,20 @@ function usergrid_console_app() {
 
         if (bValid) {
             var data = form.serializeObject();
-            client.createGroup(current_application_id, data, requestGroups, function() {
+            client.createGroup(current_application_id, data,
+              function() {
+                requestGroups();
+                closeErrorMessage = function() {
+                  $('#groups-messages').hide();
+                };
+                var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+                $('#groups-messages')
+                  .text("Group created successfully.")
+                  .prepend(closebutton)
+                  .addClass('alert-warning')
+                  .show();
+              },
+              function() {
                 closeErrorMessage = function() {
                   $('#groups-messages').hide();
                 };
@@ -1632,7 +1662,11 @@ function usergrid_console_app() {
 
 
     function completeSave(){
-        $(".messages").text("Information Saved.").show();
+        closeMessage = function() {
+          $('.messages').hide();
+        };
+        var closebutton = '<a href="#" onclick="closeMessage();" class="close">&times;</a>'
+        $(".messages").text("Information Saved.").prepend(closebutton).show();
     }
 
     function redrawUserPanel() {
