@@ -292,13 +292,6 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 	(function($) {
 		// This code block *WILL NOT* load before the document is complete
 
-		usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.header.html");
-		usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.contents.html");
-		usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.metadata.html");
-		usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.collections.html");
-		usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.json.html");
-		usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.detail.html");
-
 		$.widget("ui.usergrid_collections_entity_list_item", entity_list_item);
 		$.widget("ui.usergrid_collections_entity_detail", entity_detail);
 
