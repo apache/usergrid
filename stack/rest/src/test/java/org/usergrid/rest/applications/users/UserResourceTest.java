@@ -15,20 +15,21 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.usergrid.rest.applications.utils.TestUtils.getIdFromSearchResults;
-import static org.usergrid.utils.MapUtils.hashMap;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
+import org.usergrid.java.client.Client.Query;
+import org.usergrid.java.client.entities.Activity;
+import org.usergrid.java.client.entities.Activity.ActivityObject;
+import org.usergrid.java.client.entities.Entity;
 import org.usergrid.java.client.response.ApiResponse;
 import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.rest.applications.utils.UserRepo;
@@ -42,31 +43,34 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  */
 public class UserResourceTest extends AbstractRestTest {
 
+    
+    
     @Test
     public void test_PUT_password_fail() {
-       ApiResponse response =  client.changePassword("edanuff", "foo", "bar");
-       
-       assertEquals("auth_invalid_username_or_password", response.getError());
+        ApiResponse response = client.changePassword("edanuff", "foo", "bar");
+
+        assertEquals("auth_invalid_username_or_password", response.getError());
     }
 
     @Test
     public void test_PUT_password_ok() {
-         
-        ApiResponse response = client.changePassword("edanuff", "sesame", "sesame1");
-        
+
+        ApiResponse response = client.changePassword("edanuff", "sesame",
+                "sesame1");
+
         assertNull(response.getError());
-         
+
     }
 
     @Test
     public void test_GET_user_ok() {
-        
+
         // TODO figure out what is being overridden? why 400?
         JsonNode node = resource().path("/test-app/users")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        
+
         String uuid = node.get("entities").get(0).get("uuid").getTextValue();
 
         node = resource().path("/test-app/users/" + uuid)
@@ -184,29 +188,29 @@ public class UserResourceTest extends AbstractRestTest {
         UserRepo.INSTANCE.load(resource(), access_token);
         UUID userId = UserRepo.INSTANCE.getByUserName("user1");
 
-        Map<String, Object> rootPayload = new HashMap<String, Object>();
-        rootPayload.put("email", "rod@rodsimpson.com");
-        rootPayload.put("verb", "POST");
-        rootPayload.put("content", "Look! more new content");
+        Activity activity = new Activity();
+        activity.setProperty("email", "rod@rodsimpson.com");
+        activity.setProperty("verb", "POST");
+        activity.setProperty("content", "Look! more new content");
 
-        JsonNode putResponse = resource()
-                .path(String.format("/test-app/users/%s/activities", userId))
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, rootPayload);
+        ApiResponse response = client.postUserActivity(userId.toString(), activity);
 
-        UUID activityId = getNewActivityId(putResponse);
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
+        
+        Entity entity = response.getEntities().get(0);
+
+        UUID activityId = entity.getUuid();
 
         assertNotNull(activityId);
 
-        JsonNode actor = getActor(putResponse);
+        JsonNode actor = getActor(entity);
 
         UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
 
-        assertEquals(UserRepo.INSTANCE.getByUserName("user1"), actorId);
+        assertEquals(userId, actorId);
 
-        assertEquals("user1@apigee.com", actor.get("email").asText());
+        assertEquals("user1@apigee.com", actor.get("email")
+                .asText());
     }
 
     /**
@@ -218,34 +222,38 @@ public class UserResourceTest extends AbstractRestTest {
         UserRepo.INSTANCE.load(resource(), access_token);
         UUID userId = UserRepo.INSTANCE.getByUserName("user1");
 
-        Map<String, Object> rootPayload = new HashMap<String, Object>();
-        rootPayload.put("email", "rod@rodsimpson.com");
-        rootPayload.put("verb", "POST");
-        rootPayload.put("content", "Look! more new content");
+        Activity activity = new Activity();
+        activity.setProperty("email", "rod@rodsimpson.com");
+        activity.setProperty("verb", "POST");
+        activity.setProperty("content", "Look! more new content");
 
         // same as above, but with actor partially filled out
-        Map<String, String> actorPayload = hashMap("displayName", "Dino");
 
-        rootPayload.put("actor", actorPayload);
+        ActivityObject actorPost = new ActivityObject();
+        actorPost.setDisplayName("Dino");
 
-        JsonNode putResponse = resource()
-                .path(String.format("/test-app/users/%s/activities", userId))
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, rootPayload);
+        activity.setActor(actorPost);
 
-        UUID activityId = getNewActivityId(putResponse);
+        ApiResponse response = client.postUserActivity(userId.toString(),
+                activity);
+        
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
+        
+
+        Entity entity = response.getEntities().get(0);
+
+        UUID activityId = entity.getUuid();
 
         assertNotNull(activityId);
 
-        JsonNode actor = getActor(putResponse);
+        JsonNode actor = getActor(entity);
 
         UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
 
-        assertEquals(UserRepo.INSTANCE.getByUserName("user1"), actorId);
+        assertEquals(userId, actorId);
 
-        assertEquals("user1@apigee.com", actor.get("email").asText());
+        assertEquals("user1@apigee.com", actor.get("email")
+                .asText());
 
     }
 
@@ -257,33 +265,37 @@ public class UserResourceTest extends AbstractRestTest {
         UserRepo.INSTANCE.load(resource(), access_token);
         UUID userId = UserRepo.INSTANCE.getByUserName("user1");
 
-        Map<String, Object> rootPayload = new HashMap<String, Object>();
-        rootPayload.put("email", "rod@rodsimpson.com");
-        rootPayload.put("verb", "POST");
-        rootPayload.put("content", "Look! more new content");
-
         UUID testUUID = UUIDUtils.newTimeUUID();
         String testEmail = "foo@bar.com";
 
         // same as above, but with actor partially filled out
-        Map<String, String> actorPayload = hashMap("displayName", "Dino");
-        actorPayload.put("uuid", testUUID.toString());
-        actorPayload.put("email", testEmail);
+        Activity activity = new Activity();
+        activity.setProperty("email", "rod@rodsimpson.com");
+        activity.setProperty("verb", "POST");
+        activity.setProperty("content", "Look! more new content");
 
-        rootPayload.put("actor", actorPayload);
+        // same as above, but with actor partially filled out
 
-        JsonNode putResponse = resource()
-                .path(String.format("/test-app/users/%s/activities", userId))
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, rootPayload);
+        ActivityObject actorPost = new ActivityObject();
+        actorPost.setDisplayName("Dino");
+        actorPost.setUuid(testUUID);
+        actorPost.setDynamicProperty("email", testEmail);
 
-        UUID activityId = getNewActivityId(putResponse);
+        activity.setActor(actorPost);
+
+        ApiResponse response = client.postUserActivity(userId.toString(),
+                activity);
+        
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
+        
+
+        Entity entity = response.getEntities().get(0);
+
+        UUID activityId = entity.getUuid();
 
         assertNotNull(activityId);
 
-        JsonNode actor = getActor(putResponse);
+        JsonNode actor = getActor(entity);
 
         UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
 
@@ -302,55 +314,43 @@ public class UserResourceTest extends AbstractRestTest {
         UserRepo.INSTANCE.load(resource(), access_token);
         UUID userId = UserRepo.INSTANCE.getByUserName("user1");
 
-        Map<String, Object> rootPayload = new HashMap<String, Object>();
-        rootPayload.put("email", "rod@rodsimpson.com");
-        rootPayload.put("verb", "POST");
-        rootPayload.put("content", "activity 1");
+        Activity activity = new Activity();
+        activity.setProperty("email", "rod@rodsimpson.com");
+        activity.setProperty("verb", "POST");
+        activity.setProperty("content", "activity 1");
 
-        JsonNode putResponse = resource()
-                .path(String.format("/test-app/users/%s/activities", userId))
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, rootPayload);
-
-        UUID firstActivityId = getNewActivityId(putResponse);
-
-        rootPayload = new HashMap<String, Object>();
-        rootPayload.put("email", "rod@rodsimpson.com");
-        rootPayload.put("verb", "POST");
-        rootPayload.put("content", "activity 2");
-
-        putResponse = resource()
-                .path(String.format("/test-app/users/%s/activities", userId))
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, rootPayload);
-
-        UUID secondActivityId = getNewActivityId(putResponse);
-
-        JsonNode getResponse = resource()
-                .path(String.format("/test-app/users/%s/activities", userId))
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        ApiResponse response = client.postUserActivity(userId.toString(),
+                activity);
         
-        
-        JsonNode entity = getEntity(getResponse, 0);
-        
-        assertEquals(secondActivityId, UUIDUtils.tryGetUUID(entity.get("uuid").asText()));
-        
-        entity = getEntity(getResponse, 1);
-        
-        assertEquals(firstActivityId, UUIDUtils.tryGetUUID(entity.get("uuid").asText()));
-        
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
-    }
+        Entity entity = response.getFirstEntity();
 
-    public UUID getNewActivityId(JsonNode putResponse) {
-        return UUIDUtils.tryGetUUID(putResponse.get("entities").get(0)
-                .get("uuid").asText());
+        UUID firstActivityId = entity.getUuid();
+
+        activity = new Activity();
+        activity.setProperty("email", "rod@rodsimpson.com");
+        activity.setProperty("verb", "POST");
+        activity.setProperty("content", "activity 2");
+
+        response = client.postUserActivity(userId.toString(), activity);
+        
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
+
+        entity = response.getFirstEntity();
+
+        UUID secondActivityId = entity.getUuid();
+
+        Query query = client.queryActivity();
+
+        entity = query.getResponse().getEntities().get(0);
+
+        assertEquals(secondActivityId, entity.getUuid());
+
+        entity = query.getResponse().getEntities().get(1);
+
+        assertEquals(firstActivityId, entity.getUuid());
+
     }
 
     /**
@@ -358,10 +358,8 @@ public class UserResourceTest extends AbstractRestTest {
      * @param putResponse
      * @return
      */
-    public JsonNode getActor(JsonNode putResponse) {
-        return getEntity(putResponse, 0).get("actor");
+    public JsonNode getActor(Entity entity) {
+        return entity.getProperties().get("actor");
     }
-    
-
 
 }

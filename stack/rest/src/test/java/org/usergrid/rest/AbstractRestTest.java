@@ -132,6 +132,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
         String mgmToken = node.get("access_token").getTextValue();
         //
+        
         Map<String, String> payload = hashMap("email", "ed@anuff.com")
                 .map("username", "edanuff").map("name", "Ed Anuff")
                 .map("password", "sesame").map("pin", "1234");
@@ -142,16 +143,21 @@ public abstract class AbstractRestTest extends JerseyTest {
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(JsonNode.class, payload);
 
+       
+
+        // client.setApiUrl(apiUrl);
+        loginClient();
+        
+        usersSetup = true;
+
+    }
+    
+    protected void loginClient(){
         //now create a client that logs in ed
         client = new Client("test-app").withApiUrl(getBaseURI().toString());
         org.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser("ed@anuff.com", "sesame");
 
         assertTrue(response != null && response.getError() == null);
-
-
-        // client.setApiUrl(apiUrl);
-
-        usersSetup = true;
 
     }
 
