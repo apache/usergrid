@@ -124,6 +124,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
         if (usersSetup)
             return;
+     
         JsonNode node = resource().path("/management/token")
                 .queryParam("grant_type", "password")
                 .queryParam("username", "test@usergrid.com")
@@ -132,7 +133,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
         String mgmToken = node.get("access_token").getTextValue();
         //
-        
+
         Map<String, String> payload = hashMap("email", "ed@anuff.com")
                 .map("username", "edanuff").map("name", "Ed Anuff")
                 .map("password", "sesame").map("pin", "1234");
@@ -143,19 +144,18 @@ public abstract class AbstractRestTest extends JerseyTest {
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(JsonNode.class, payload);
 
-       
-
         // client.setApiUrl(apiUrl);
-        loginClient();
-        
+       
         usersSetup = true;
 
     }
+
     
-    protected void loginClient(){
-        //now create a client that logs in ed
+    public void loginClient() {
+        // now create a client that logs in ed
         client = new Client("test-app").withApiUrl(getBaseURI().toString());
-        org.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser("ed@anuff.com", "sesame");
+        org.usergrid.java.client.response.ApiResponse response = client
+                .authorizeAppUser("ed@anuff.com", "sesame");
 
         assertTrue(response != null && response.getError() == null);
 
@@ -198,9 +198,11 @@ public abstract class AbstractRestTest extends JerseyTest {
         ApplicationInfo appInfo = managementService.getApplication("test-app");
         User user = managementService.getAppUserByIdentifier(appInfo.getId(),
                 Identifier.from("ed@anuff.com"));
-        this.access_token = managementService.getAccessTokenForAppUser(
+        access_token = managementService.getAccessTokenForAppUser(
                 appInfo.getId(), user.getUuid());
         // client.setApiUrl(apiUrl)
+        
+        loginClient();
 
     }
 
@@ -219,14 +221,15 @@ public abstract class AbstractRestTest extends JerseyTest {
         return mgmToken;
 
     }
-    
+
     /**
-     * Get the entity from the entity array in the response 
+     * Get the entity from the entity array in the response
+     * 
      * @param response
      * @param index
      * @return
      */
-    protected JsonNode getEntity(JsonNode response, int index){
+    protected JsonNode getEntity(JsonNode response, int index) {
         return response.get("entities").get(index);
     }
 }

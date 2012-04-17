@@ -55,10 +55,19 @@ public class UserResourceTest extends AbstractRestTest {
     @Test
     public void test_PUT_password_ok() {
 
-        ApiResponse response = client.changePassword("edanuff", "sesame",
-                "sesame1");
+        ApiResponse response = client.changePassword("edanuff", "sesame", "sesame1");
 
         assertNull(response.getError());
+        
+        response =  client.authorizeAppUser("ed@anuff.com", "sesame1");
+        
+        assertNull(response.getError());
+        
+        //if this was successful, we need to re-set the password for other tests
+        response = client.changePassword("edanuff", "sesame1", "sesame");
+        
+        assertNull(response.getError());
+        
 
     }
 
