@@ -1,9 +1,19 @@
 <tr class="zebraRows users-row">
-  <td class="checkboxo"><input class="userListItem" type="checkbox" name="${name}" id="${id}" value="${uuid}" /></td>
-  <td class="gravatar50-td"><img src="${picture}" class="gravatar50"/></td>
-  <td>
-    {{if path}}<a href="" onclick="usergrid.console.pageOpenUserProfile('${uuid}'); return false;">{{/if}}
-    <strong>${username}:</strong> ${name}
-    {{if path}}</a>{{/if}}
+
+  <td class="checkboxo">
+    <input class="userListItem" type="checkbox" name="${name}" id="${id}" value="${uuid}" />
   </td>
+  
+  <td class="gravatar50-td">
+    <img src="${picture}" class="gravatar50"/>
+  </td>
+  
+  <td>
+    {{if uuid}}
+      <a href="" onclick="usergrid.console.pageOpenUserProfile('${uuid}'); return false;"><strong>${username}:</strong> ${name}</a>
+    {{else}}
+      <strong>${username}:</strong> ${name}</a>
+    {{/if}}
+  </td>
+
 </tr>
