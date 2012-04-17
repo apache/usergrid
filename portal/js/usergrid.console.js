@@ -1422,52 +1422,38 @@ function usergrid_console_app() {
     }
     window.usergrid.console.pageSelectUsers = pageSelectUsers;
 
-    usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.list.html");
+    usergrid.console.ui.loadTemplate("usergrid.ui.users.table_rows.html");
 
     var usersResults = null;
+
     function displayUsers(response) {
-        console.log(response);
-        usersResults = usergrid.console.ui.displayEntityListResponse({query: users_query}, {
-            "listItemTemplate" : "usergrid.ui.panels.user.list.html",
-            "getListItemTemplateOptions" : function(entity, path) {
-                var name = entity.uuid + " : " + entity.type;
-                var username = entity.username;
-                if (entity.username) {
-                    name = entity.username;
-                }
-                if (entity.name) {
-                    name = name + " : " + entity.name;
-                }           
-                var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
-                var uri = (entity.metadata || { }).uri;
-                var id = 'userListItem';
-                var picture = entity.picture;
-                if (picture) { picture = picture.replace('http://www.gravatar.com/','https://secure.gravatar.com/'); }
-                return {
-                    entity : entity,
-                    picture : picture,
-                    name : name,
-                    id: id,
-                    path : path,
-                    username : username,
-                    fblink : entity.fblink,
-                    collections : collections,
-                    uri : uri
-                };
-            },
-            "onRender" : function() {
-                //$("#users-by-alphabetical").show();
-            },
-            "onNoEntities" : function() {
-                if (userLetter != "*") return "No users with usernames starting with " +  userLetter;
-                return null;
-            },
-            "output" : "#users-response-table",
-            "nextPrevDiv" : "#users-next-prev",
-            "prevButton" : "#button-users-prev",
-            "nextButton" : "#button-users-next",
-            "noEntitiesMsg" : "No users found"
-        }, response);
+      var data = response.entities;
+      var output = $('#users-table');
+      output.empty();
+      
+      if (data.length < 1) {
+        output.html("<div class=\"user-panel-section-message\">No users found.</div>");
+      } else {
+        for (i = 0; i < data.length; i++) {
+          var this_data = data[i];
+          if (!this_data.picture) {
+            picture = "http://www.gravatar.com/avatar/?=50x50"
+          }
+          $.tmpl('usergrid.ui.users.table_rows.html', this_data).appendTo('#users-table');
+        }
+      }
+
+      if (users_query.hasNext) {
+        $(document).on('click', '#users-next', users_query.getNext);
+        $('#users-pagination').show();
+        $('#users-next').show();
+      }
+      
+      if (users_query.hasPrevious) {
+        $(document).on('click', '#users-previous', users_query.getPrevious);
+        $('#users-pagination').show();
+        $('#users-previous').show();
+      }
     }
 
     function showUsersForLetter(c) {
@@ -1497,16 +1483,16 @@ function usergrid_console_app() {
     usergrid.console.searchUsers = searchUsers;
 
     function selectAllUsers(){
-        $('[id=userListItem]').attr('checked', true);
-	$('#deselectAllUsers').show();
-	$('#selectAllUsers').hide();
+      $('[class=userListItem]').attr('checked', true);
+      $('#deselectAllUsers').show();
+      $('#selectAllUsers').hide();
     }
     window.usergrid.console.selectAllUsers = selectAllUsers;
 
     function deselectAllUsers(){
-        $('[id=userListItem]').attr('checked', false);
-	$('#selectAllUsers').show();
-	$('#deselectAllUsers').hide();
+      $('[class=userListItem]').attr('checked', false);
+      $('#selectAllUsers').show();
+      $('#deselectAllUsers').hide();
     }
     window.usergrid.console.deselectAllUsers = deselectAllUsers;
 
@@ -2417,7 +2403,8 @@ function usergrid_console_app() {
      * 
      ******************************************************************/
 
-    usergrid.console.ui.loadTemplate("usergrid.ui.panels.activities.list.html");
+    usergrid.console.ui.loadTemplate('usergrid.ui.activities.table_rows.html');
+
     function pageSelectActivities(uuid) {
         requestActivities();
        // selectFirstTabButton('#activities-panel-tab-bar');
@@ -2439,46 +2426,30 @@ function usergrid_console_app() {
             }
         } 
         client.applicationId = current_application_id;
+        $('#activities-response-table').empty().html("<tr>Searching for activities</tr>");
         activities_query = client.queryActivities(displayActivities, query);
         return false;
     }
     usergrid.console.requestActivities = requestActivities;
 
     function displayActivities(response) {
-        Activities = {};
-        if (response.data) {
-            activities = response.data;
+      var data = response.entities;
+      var output = $('#activities-response-table');
+      output.empty();
+      if (data.length < 1) {
+        output.html("<div class=\"user-panel-section-message\">No activities found.</div>");
+      } else {
+        for (i = 0; i < data.length; i++) {
+          var this_data = data[i];
+          this_data.actor.gravatar = get_gravatar(this_data.actor.email, 20);
+          $.tmpl('usergrid.ui.activities.table_rows.html', this_data).appendTo('#activities-response-table');
         }
-        activitiesResults = usergrid.console.ui.displayEntityListResponse({query: activities_query}, {
-            "listItemTemplate" : "usergrid.ui.panels.activities.list.html",
-            "getListItemTemplateOptions" : function(entity, path) {
-                var id = 'activitiesListItem';
-                var created = dateToString(entity.created);
-                var uri = entity.uri;
-                if(entity && entity.actor && entity.actor.email)
-                    entity.actor.gravatar = get_gravatar(entity.actor.email,20);
-                return {
-                    entity : entity,
-                    created : created,
-                    id: id,
-                    uri : uri
-                };
-            },
-            "onRender" : function() {
-                //$("#users-by-alphabetical").show();
-            },
-            "onNoEntities" : function() {
-                if (activitiesLetter != "*") return "No activities found";
-                return null;
-            },
-            "output" : "#activities-response-table",
-            "nextPrevDiv" : "#activities-next-prev",
-            "prevButton" : "#button-activities-prev",
-            "nextButton" : "#button-activities-next",
-            "noEntitiesMsg" : "No activities found"
-        }, response);
+      }
+      if (response.next) {
+        $('#activities-pagination').show();
+      }
     }
-
+    
     function searchActivities(){
         var search = $('#search-activities').val();
         var searchType = ($('#search-activities-type').val())?$('#search-activities-type').val():activitiesSortBy;

@@ -623,9 +623,14 @@ a:active {
     }
 }
 
-#users-next-prev {
-	font-size: 12px;
-	padding-bottom: 32px;
+#users-pagination {
+  #users-previous {
+    display: none;
+  }
+
+  #users-next {
+    display: none;
+  }
 }
 
 .user-profile-header {
@@ -1016,29 +1021,50 @@ a:active {
     margin: 15px;
 }
 
-/*------------------activities------------------*/
-.activities-table {
-  .created{
-    width: 70px;
-  }
-    
-  .actor {
-    width: 70px;   
-  }
-    
-  .verb {
-    width: 50px;    
+/*----------------- Activities ------------------*/
+
+#activities-pagination {
+  display: none;
+}
+
+.gravatar20 {
+  padding: 7px 0 0 0 !important;
+  margin: 0px;
+}
+
+.gravatar50-td {
+  padding: 0px !important;
+  width: 50px;
+}
+
+.gravatar50 {
+  padding: 0px !important;
+  width: 50px;
+}
+
+.checkboxo {
+  background-color: #666;
+  width: 10px;
+}
+
+.users-row {
+  td {
+    line-height: 9px !important;
   }
 }
 
 /*------------------ Home Page ------------------*/
+
 .zebraRows{
-    border-top: 1px solid #CCCCCC;
     padding: 10px;
     background: white;
     &:nth-child(2n){
         background: #EEE;
     }
+
+  td {
+    padding: 10px;
+  }
 }
 
 #organization-applications{

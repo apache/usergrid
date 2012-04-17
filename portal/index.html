@@ -454,15 +454,14 @@
                                     </div>
                                 </h3>
                                 <div class="console-section-contents listContent">
-                                    <div id="users-response-area">
-                                        <div id="users-response-table">
-                                            <pre class="query-response-json">Searching for Users...</pre>
-                                        </div>
-                                        <ul class="pager" id="users-next-prev">
-                                            <li class="previous"><a href="#" id="button-users-prev">&larr; Previous</a></li>
-                                            <li class="next"><a href="#" id="button-users-next">Next &rarr;</a></li>
-                                        </ul>
-                                    </div>
+                                    <table id="users-table" class="table zebraRows">
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                    <ul id="users-pagination" class="pager">
+                                      <li id="users-previous" class="previous"><a href="#">&larr; Previous</a></li>
+                                      <li id="users-next" class="next"><a href="#">Next &rarr;</a></li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -808,14 +807,15 @@
                                             <option value="content">Content</option>
                                             <option value="actor">Actor</option>
                                         </select>
-                                        <!--<a class="" href="#" onclick="usergrid.console.selectAllActivities();"></i> Select All </a>
-                                        <a class="" data-toggle="modal" href="#dialog-form-new-activitiy"></i> Add</a>
-                                        <!--<a href="" onclick="usergrid.console.deleteActivities(); return false;"></i> Delete </a>-->
                                     </div>
                                 </h3>
                                 <div class="console-section-contents listContent">
-                                    <div id="activities-response-table">
-                                        <pre class="query-response-json">Searching for Activities...</pre>
+                                    <table id="activities-response-table" class="table zebraRows">
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                    <div id="activities-pagination">
+                                      Hola, culeros!
                                     </div>
                                 </div>
                             </div>
