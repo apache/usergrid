@@ -443,7 +443,7 @@
 		<dependency>
 			<groupId>com.sun.jersey.jersey-test-framework</groupId>
 			<artifactId>jersey-test-framework-grizzly2</artifactId>
-			<version>1.9-ea04</version>
+			<version>1.9.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

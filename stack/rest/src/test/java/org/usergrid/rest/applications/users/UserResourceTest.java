@@ -25,6 +25,7 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.java.client.Client.Query;
 import org.usergrid.java.client.entities.Activity;
@@ -45,52 +46,7 @@ public class UserResourceTest extends AbstractRestTest {
 
     
     
-    @Test
-    public void test_PUT_password_fail() {
-        ApiResponse response = client.changePassword("edanuff", "foo", "bar");
-
-        assertEquals("auth_invalid_username_or_password", response.getError());
-    }
-
-    @Test
-    public void test_PUT_password_ok() {
-
-        ApiResponse response = client.changePassword("edanuff", "sesame", "sesame1");
-
-        assertNull(response.getError());
-        
-        response =  client.authorizeAppUser("ed@anuff.com", "sesame1");
-        
-        assertNull(response.getError());
-        
-        //if this was successful, we need to re-set the password for other tests
-        response = client.changePassword("edanuff", "sesame1", "sesame");
-        
-        assertNull(response.getError());
-        
-
-    }
-
-    @Test
-    public void test_GET_user_ok() {
-
-        // TODO figure out what is being overridden? why 400?
-        JsonNode node = resource().path("/test-app/users")
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-
-        String uuid = node.get("entities").get(0).get("uuid").getTextValue();
-
-        node = resource().path("/test-app/users/" + uuid)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        logNode(node);
-        assertEquals("ed@anuff.com", node.get("entities").get(0).get("email")
-                .getTextValue());
-    }
-
+    
     @Test
     public void usernameQuery() {
 
@@ -292,8 +248,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         activity.setActor(actorPost);
 
-        ApiResponse response = client.postUserActivity(userId.toString(),
-                activity);
+        ApiResponse response = client.postUserActivity(userId.toString(),activity);
         
         assertNull("Error was: " + response.getErrorDescription(), response.getError());
         
@@ -362,6 +317,7 @@ public class UserResourceTest extends AbstractRestTest {
 
     }
 
+    
     /**
      * 
      * @param putResponse
@@ -369,6 +325,55 @@ public class UserResourceTest extends AbstractRestTest {
      */
     public JsonNode getActor(Entity entity) {
         return entity.getProperties().get("actor");
+    }
+    
+
+    @Test
+    public void test_PUT_password_fail() {
+        ApiResponse response = client.changePassword("edanuff", "foo", "bar");
+
+        assertEquals("auth_invalid_username_or_password", response.getError());
+    }
+
+ 
+
+    @Test
+    public void test_GET_user_ok() throws InterruptedException {
+
+         // TODO figure out what is being overridden? why 400?
+        JsonNode node = resource().path("/test-app/users")
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+        String uuid = node.get("entities").get(0).get("uuid").getTextValue();
+
+        node = resource().path("/test-app/users/" + uuid)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        logNode(node);
+        assertEquals("ed@anuff.com", node.get("entities").get(0).get("email")
+                .getTextValue());
+    }
+    
+    @Test
+    public void test_PUT_password_ok() {
+
+        ApiResponse response = client.changePassword("edanuff", "sesame", "sesame1");
+
+        assertNull(response.getError());
+        
+        response =  client.authorizeAppUser("ed@anuff.com", "sesame1");
+        
+        assertNull(response.getError());
+        
+        //if this was successful, we need to re-set the password for other tests
+        response = client.changePassword("edanuff", "sesame1", "sesame");
+        
+        assertNull(response.getError());
+        
+
     }
 
 }

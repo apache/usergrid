@@ -47,6 +47,7 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.spi.spring.container.servlet.SpringServlet;
+import com.sun.jersey.test.framework.AppDescriptor;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerException;
@@ -76,47 +77,44 @@ public abstract class AbstractRestTest extends JerseyTest {
 
     protected static Client client;
 
+    protected static final AppDescriptor descriptor;
+
     static {
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING,
                 Boolean.TRUE);
+
+        descriptor = new WebAppDescriptor.Builder("org.usergrid.rest")
+                .contextParam("contextConfigLocation",
+                        "classpath:testApplicationContext.xml")
+                .servletClass(SpringServlet.class)
+                .contextListenerClass(ContextLoaderListener.class)
+                .requestListenerClass(RequestContextListener.class)
+                .initParam("com.sun.jersey.config.property.packages",
+                        "org.usergrid.rest")
+                .initParam("com.sun.jersey.api.json.POJOMappingFeature", "true")
+                .initParam(
+                        "com.sun.jersey.spi.container.ContainerRequestFilters",
+                        "org.usergrid.rest.filters.MeteringFilter,org.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter,org.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter")
+                .initParam(
+                        "com.sun.jersey.spi.container.ContainerResponseFilters",
+                        "org.usergrid.rest.security.CrossOriginRequestFilter,org.usergrid.rest.filters.MeteringFilter")
+                .initParam(
+                        "com.sun.jersey.spi.container.ResourceFilters",
+                        "org.usergrid.rest.security.SecuredResourceFilterFactory,com.sun.jersey.api.container.filter.RolesAllowedResourceFilterFactory")
+                .initParam("com.sun.jersey.config.feature.DisableWADL", "true")
+                .initParam(
+                        "com.sun.jersey.config.property.JSPTemplatesBasePath",
+                        "/WEB-INF/jsp")
+                .initParam(
+                        "com.sun.jersey.config.property.WebPageContentRegex",
+                        "/(((images|css|js|jsp|WEB-INF/jsp)/.*)|(favicon\\.ico))")
+                .addFilter(DelegatingFilterProxy.class, "shiroFilter",
+                        MapUtils.hashMap("targetFilterLifecycle", "true"))
+                .clientConfig(clientConfig).build();
     }
 
     public AbstractRestTest() throws TestContainerException {
-        super(
-                new WebAppDescriptor.Builder("org.usergrid.rest")
-                        .contextParam("contextConfigLocation",
-                                "classpath:testApplicationContext.xml")
-                        .servletClass(SpringServlet.class)
-                        .contextListenerClass(ContextLoaderListener.class)
-                        .requestListenerClass(RequestContextListener.class)
-                        .initParam("com.sun.jersey.config.property.packages",
-                                "org.usergrid.rest")
-                        .initParam(
-                                "com.sun.jersey.api.json.POJOMappingFeature",
-                                "true")
-                        .initParam(
-                                "com.sun.jersey.spi.container.ContainerRequestFilters",
-                                "org.usergrid.rest.filters.MeteringFilter,org.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter,org.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter")
-                        .initParam(
-                                "com.sun.jersey.spi.container.ContainerResponseFilters",
-                                "org.usergrid.rest.security.CrossOriginRequestFilter,org.usergrid.rest.filters.MeteringFilter")
-                        .initParam(
-                                "com.sun.jersey.spi.container.ResourceFilters",
-                                "org.usergrid.rest.security.SecuredResourceFilterFactory,com.sun.jersey.api.container.filter.RolesAllowedResourceFilterFactory")
-                        .initParam("com.sun.jersey.config.feature.DisableWADL",
-                                "true")
-                        .initParam(
-                                "com.sun.jersey.config.property.JSPTemplatesBasePath",
-                                "/WEB-INF/jsp")
-                        .initParam(
-                                "com.sun.jersey.config.property.WebPageContentRegex",
-                                "/(((images|css|js|jsp|WEB-INF/jsp)/.*)|(favicon\\.ico))")
-                        .addFilter(
-                                DelegatingFilterProxy.class,
-                                "shiroFilter",
-                                MapUtils.hashMap("targetFilterLifecycle",
-                                        "true")).clientConfig(clientConfig)
-                        .build());
+        super(descriptor);
         setupUsers();
     }
 
@@ -124,7 +122,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
         if (usersSetup)
             return;
-     
+
         JsonNode node = resource().path("/management/token")
                 .queryParam("grant_type", "password")
                 .queryParam("username", "test@usergrid.com")
@@ -145,17 +143,16 @@ public abstract class AbstractRestTest extends JerseyTest {
                 .post(JsonNode.class, payload);
 
         // client.setApiUrl(apiUrl);
-       
+
         usersSetup = true;
 
     }
 
-    
     public void loginClient() {
         // now create a client that logs in ed
         client = new Client("test-app").withApiUrl(getBaseURI().toString());
-        org.usergrid.java.client.response.ApiResponse response = client
-                .authorizeAppUser("ed@anuff.com", "sesame");
+
+        org.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser("ed@anuff.com", "sesame");
 
         assertTrue(response != null && response.getError() == null);
 
@@ -193,15 +190,18 @@ public abstract class AbstractRestTest extends JerseyTest {
 
         WebApplicationContext context = ContextLoader
                 .getCurrentWebApplicationContext();
+
         managementService = (ManagementService) context
                 .getBean("managementService");
+
         ApplicationInfo appInfo = managementService.getApplication("test-app");
+
         User user = managementService.getAppUserByIdentifier(appInfo.getId(),
                 Identifier.from("ed@anuff.com"));
+
         access_token = managementService.getAccessTokenForAppUser(
                 appInfo.getId(), user.getUuid());
-        // client.setApiUrl(apiUrl)
-        
+
         loginClient();
 
     }

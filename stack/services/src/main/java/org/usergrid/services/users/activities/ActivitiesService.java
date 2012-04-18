@@ -47,12 +47,7 @@ public class ActivitiesService extends GenericCollectionService {
     public ServiceResults postCollection(ServiceContext context)
             throws Exception {
 
-        // TODO Todd Nine. context.getPayload(), add the default actor with both
-        // id and
-        // email. Prefix the id with "usergrid". Both can be null so be null
-        // safe
-
-        ServicePayload payload = context.getPayload();
+       ServicePayload payload = context.getPayload();
 
         Entity user = em.get(context.getOwner());
 
