@@ -1,0 +1,15 @@
+<tr class="zebraRows users-row">
+
+  <td class="checkboxo">
+    <input class="groupListItem" type="checkbox" name="${name}" id="${id}" value="${uuid}" />
+  </td>
+  
+  <td>
+    {{if uuid}}
+      <a href="" onclick="usergrid.console.pageOpenGroupProfile('${uuid}'); return false;"><strong>${path}:</strong> ${title}</a>
+    {{else}}
+      <strong>${path}:</strong> ${title}</a>
+    {{/if}}
+  </td>
+
+</tr>

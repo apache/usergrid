@@ -634,22 +634,32 @@
                                         <a id="delete-groups-link" href="#"> Delete </a>
                                     </div>
                                 </h3>
+
                                 <div class="console-section-contents listContent">
-                                    <div id="groups-response-area">
-                                        <div id="groups-response-table">
-                                            <pre class="query-response-json">Searching for Groups...</pre>
-                                        </div>
-                                        <ul class="pager" id="groups-next-prev">
-                                            <li class="previous"><a href="#" id="button-groups-prev">&larr; Previous</a></li>
-                                            <li class="next"><a href="#" id="button-groups-next">Next &rarr;</a></li>
-                                        </ul>
-                                    </div>
-                                    <!--
-                                    <ul id="groups-by-alphabetical" class="alphabeticalFilter">
-                                        <li><a href="#">{0}</a></li>
+                                    <table id="groups-table" class="table zebraRows">
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                    <ul id="groups-pagination" class="pager">
+                                      <li id="groups-previous" class="previous"><a href="#">&larr; Previous</a></li>
+                                      <li id="groups-next" class="next"><a href="#">Next &rarr;</a></li>
                                     </ul>
-                                    -->
                                 </div>
+
+                                <!-- <div class="console-section-contents listContent"> -->
+                                <!--     <div id="groups-response-area"> -->
+                                <!--         <div id="groups-response-table"> -->
+                                <!--             <pre class="query-response-json">Searching for Groups...</pre> -->
+                                <!--         </div> -->
+                                <!--         <ul class="pager" id="groups-next-prev"> -->
+                                <!--             <li class="previous"><a href="#" id="button-groups-prev">&larr; Previous</a></li> -->
+                                <!--             <li class="next"><a href="#" id="button-groups-next">Next &rarr;</a></li> -->
+                                <!--         </ul> -->
+                                <!--     </div> -->
+                                <!--     <ul id="groups-by-alphabetical" class="alphabeticalFilter"> -->
+                                <!--         <li><a href="#">{0}</a></li> -->
+                                <!--     </ul> -->
+                                <!-- </div> -->
                             </div>
                         </div>
                         <form id="dialog-form-new-group" class="modal hide fade">

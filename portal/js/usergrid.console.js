@@ -1535,7 +1535,7 @@ function usergrid_console_app() {
     function deleteUsers(e) {
         e.preventDefault();
 
-        var items = $("#users-response-table input[id^=userListItem]:checked");
+        var items = $("#users-table input[class^=userListItem]:checked");
         if(!items.length){
             alert("Please, first select the items you want to delete");
             return;
@@ -1801,50 +1801,79 @@ function usergrid_console_app() {
     }
     window.usergrid.console.pageSelectGroups = pageSelectGroups;
 
-    usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.list.html");
+    usergrid.console.ui.loadTemplate("usergrid.ui.groups.table_rows.html");
 
     var groupsResults = null;
+
     function displayGroups(response) {
-        groupsResults = usergrid.console.ui.displayEntityListResponse({query: groups_query}, {
-            "listItemTemplate" : "usergrid.ui.panels.group.list.html",
-            "getListItemTemplateOptions" : function(entity, path) {
-                var name = entity.uuid + " : " + entity.type;
-                if (entity.path) {
-                    name = entity.path;
-                }
-                if (entity.name) {
-                    name = name + " : " + entity.name;
-                }
-                var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
-                var uri = (entity.metadata || { }).uri;
-                var id = 'groupListItem'; 
-                var title = entity.title;
-                return {
-                    entity : entity,
-                    picture : entity.picture,
-                    name : name,
-                    id: id,
-                    title: title,
-                    path : path,
-                    fblink : entity.fblink,
-                    collections : collections,
-                    uri : uri
-                };
-            },
-            "onRender" : function() {
-                //$("#groups-by-alphabetical").show();
-            },
-            "onNoEntities" : function() {
-                if (groupLetter != "*") return "No groups with paths starting with " +  groupLetter;
-                return null;
-            },
-            "output" : "#groups-response-table",
-            "nextPrevDiv" : "#groups-next-prev",
-            "prevButton" : "#button-groups-prev",
-            "nextButton" : "#button-groups-next",
-            "noEntitiesMsg" : "No groups found"
-        }, response);
+      console.log(response);
+      var data = response.entities;
+      var output = $('#groups-table');
+      output.empty();
+      
+      if (data.length < 1) {
+        output.html("<div class=\"group-panel-section-message\">No groups found.</div>");
+      } else {
+        for (i = 0; i < data.length; i++) {
+          var this_data = data[i];
+          $.tmpl('usergrid.ui.groups.table_rows.html', this_data).appendTo('#groups-table');
+        }
+      }
+
+      if (groups_query.hasNext) {
+        $(document).on('click', '#groups-next', groups_query.getNext);
+        $('#groups-pagination').show();
+        $('#groups-next').show();
+      }
+      
+      if (groups_query.hasPrevious) {
+        $(document).on('click', '#groups-previous', groups_query.getPrevious);
+        $('#groups-pagination').show();
+        $('#groups-previous').show();
+      }
     }
+
+    // function displayGroups(response) {
+    //     groupsResults = usergrid.console.ui.displayEntityListResponse({query: groups_query}, {
+    //         "listItemTemplate" : "usergrid.ui.panels.group.list.html",
+    //         "getListItemTemplateOptions" : function(entity, path) {
+    //             var name = entity.uuid + " : " + entity.type;
+    //             if (entity.path) {
+    //                 name = entity.path;
+    //             }
+    //             if (entity.name) {
+    //                 name = name + " : " + entity.name;
+    //             }
+    //             var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
+    //             var uri = (entity.metadata || { }).uri;
+    //             var id = 'groupListItem'; 
+    //             var title = entity.title;
+    //             return {
+    //                 entity : entity,
+    //                 picture : entity.picture,
+    //                 name : name,
+    //                 id: id,
+    //                 title: title,
+    //                 path : path,
+    //                 fblink : entity.fblink,
+    //                 collections : collections,
+    //                 uri : uri
+    //             };
+    //         },
+    //         "onRender" : function() {
+    //             //$("#groups-by-alphabetical").show();
+    //         },
+    //         "onNoEntities" : function() {
+    //             if (groupLetter != "*") return "No groups with paths starting with " +  groupLetter;
+    //             return null;
+    //         },
+    //         "output" : "#groups-response-table",
+    //         "nextPrevDiv" : "#groups-next-prev",
+    //         "prevButton" : "#button-groups-prev",
+    //         "nextButton" : "#button-groups-next",
+    //         "noEntitiesMsg" : "No groups found"
+    //     }, response);
+    // }
 
     function showGroupsForLetter(c) {
         groupLetter = c;
@@ -1874,16 +1903,16 @@ function usergrid_console_app() {
     usergrid.console.searchGroups = searchGroups;
 
     function selectAllGroups(){
-        $('[id=groupListItem]').attr('checked', true);
-	$('#deselectAllGroups').show();
-	$('#selectAllGroups').hide();
+      $('[class=groupListItem]').attr('checked', true);
+	    $('#deselectAllGroups').show();
+	    $('#selectAllGroups').hide();
     }
     window.usergrid.console.selectAllGroups = selectAllGroups;
 
     function deselectAllGroups(){
-        $('[id=groupListItem]').attr('checked', false);
-	$('#selectAllGroups').show();
-	$('#deselectAllGroups').hide();
+      $('[class=groupListItem]').attr('checked', false);
+      $('#selectAllGroups').show();
+      $('#deselectAllGroups').hide();
     }
     window.usergrid.console.deselectAllGroups = deselectAllGroups;
 
@@ -1907,7 +1936,7 @@ function usergrid_console_app() {
     function deleteGroups(e) {
         e.preventDefault();
 
-        var items = $("#groups-response-table input[id^=groupListItem]:checked");
+        var items = $("#groups-table input[class^=groupListItem]:checked");
         if(!items.length){
             alert("Please, first select the items you want to delete");
             return;
