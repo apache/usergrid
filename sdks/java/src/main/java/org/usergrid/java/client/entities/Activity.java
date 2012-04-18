@@ -128,10 +128,11 @@ public class Activity extends Entity {
     protected Set<String> connections;
 
     public Activity() {
-        // id = UUIDUtils.newTimeUUID();
+        setType("activity");
     }
 
     public Activity(UUID id) {
+        this();
         setUuid(id);
     }
 
@@ -144,7 +145,7 @@ public class Activity extends Entity {
         activity.setCategory(category);
         activity.setContent(content);
         activity.setTitle(title);
-
+        
         ActivityObject actor = new ActivityObject();
         actor.setObjectType("person");
         
