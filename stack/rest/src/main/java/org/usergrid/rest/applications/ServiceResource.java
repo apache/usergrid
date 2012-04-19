@@ -121,6 +121,7 @@ public class ServiceResource extends AbstractContextResource {
 			throws Exception {
 
 		MultivaluedMap<String, String> params = ps.getMatrixParameters();
+		
 		if (params != null) {
 			Query query = Query.fromQueryParams(params);
 			if (query != null) {
