@@ -1415,7 +1415,6 @@ function usergrid_console_app() {
     var userLetter = "*";
     var userSortBy = "username";
     function pageSelectUsers(uuid) {
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.list.html");
         requestUsers();
         selectFirstTabButton('#users-panel-tab-bar');
         showPanelList('users');
@@ -1618,11 +1617,7 @@ function usergrid_console_app() {
     }
 
     function redrawUserPanel() {
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.profile.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.memberships.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.activities.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.graph.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.permissions.html");
+        
         $("#user-panel-profile").html("");
         $("#user-panel-memberships").html("");
         $("#user-panel-activities").html("");
@@ -1806,7 +1801,6 @@ function usergrid_console_app() {
     var groupLetter = "*";
     var groupSortBy = "path";
     function pageSelectGroups(uuid) {
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.list.html");
         requestGroups();
         selectFirstTabButton('#groups-panel-tab-bar');
         showPanelList('groups');
@@ -1949,11 +1943,7 @@ function usergrid_console_app() {
     }
     window.usergrid.console.pageOpenGroupProfile = pageOpenGroupProfile;
 
-    function pageSelectGroupMemberships(groupId) {
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.details.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.memberships.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.activities.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.permissions.html");
+    function pageSelectGroupMemberships(groupId) {        
         Pages.SelectPanel('group');
         requestGroup(groupId);
         selectTabButton("#button-group-memberships");
@@ -2108,7 +2098,6 @@ function usergrid_console_app() {
 
 
     function pageSelectRoles(uuid) {
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.roles.list.html");
         requestRoles();
         selectFirstTabButton('#roles-panel-tab-bar');
         showPanelList('roles');
@@ -2224,7 +2213,6 @@ function usergrid_console_app() {
 
     var permissions = {};
     function displayPermissions(response) {
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.permissions.html");
         var section = $("#role-permissions");
         section.empty();
 
@@ -2263,7 +2251,6 @@ function usergrid_console_app() {
 
     var rolesUsersResults = ''
     function displayRolesUsers(response) {
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.users.html");
         $("#role-users").html('');
         data = {};
         data.roleId = current_role_id;
@@ -2414,7 +2401,6 @@ function usergrid_console_app() {
      ******************************************************************/
 
     function pageSelectActivities(uuid) {
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.activities.list.html");
         requestActivities();
        // selectFirstTabButton('#activities-panel-tab-bar');
         showPanelList('activities');
@@ -2804,13 +2790,6 @@ function usergrid_console_app() {
 
 
     function pageSelectCollections(uuid) {
-        usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.header.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.contents.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.metadata.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.collections.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.json.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.detail.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.collections.list.html");
         requestCollections();
     }
     window.usergrid.console.pageSelectCollections = pageSelectCollections;
@@ -3474,4 +3453,31 @@ function usergrid_console_app() {
     }
     usergrid.console.loginOk = loginOk;
     client.onAutoLogin = loginOk;
+
+    //load the templates only after the rest of the page is
+    $(window).bind("load", function() {
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.list.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.list.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.activities.list.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.users.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.roles.list.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.permissions.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.profile.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.memberships.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.activities.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.graph.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.permissions.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.header.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.contents.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.metadata.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.collections.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.json.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.detail.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.collections.list.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.details.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.memberships.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.activities.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.permissions.html");
+    });
+    
 }
