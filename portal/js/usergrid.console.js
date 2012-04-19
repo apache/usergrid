@@ -588,7 +588,7 @@ function usergrid_console_app() {
 
         var items = $("#query-response-table input[id^=queryResultItem]:checked");
         if(!items.length){
-            alert("Please, first select the items you want to delete");
+            oopsModal("Please, first select the entities you want to delete.");
             return;
         }
 
@@ -853,6 +853,12 @@ function usergrid_console_app() {
      *
      ******************************************************************/
 
+    function oopsModal(header,message) {
+      $('#oopsModal h4').text(header);
+      $('#oopsModal p').text(message);
+      $('#oopsModal').modal('show');
+    }
+
     function resetModal(){
         this.reset();
         var form = $(this);
@@ -998,14 +1004,31 @@ function usergrid_console_app() {
 
         if (bValid) {
             var data = form.serializeObject();
-            client.createUser(current_application_id, data, requestUsers, function() {
+            client.createUser(current_application_id, data, 
+              function() {
+                requestUsers();
                 closeErrorMessage = function() {
                   $('#users-messages').hide();
                 };
                 var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
-                $('#users-messages').text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.')).prepend(closebutton).addClass('alert-error').show();
+                $('#users-messages')
+                  .text("User created successfully.")
+                  .prepend(closebutton)
+                  .addClass('alert-warning')
+                  .show();
+              },
+              function() {
+                closeErrorMessage = function() {
+                  $('#users-messages').hide();
+                };
+                var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+                $('#users-messages')
+                  .text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'))
+                  .prepend(closebutton)
+                  .addClass('alert-error')
+                  .show();
                 // alert("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'));
-            });
+              });
 
             $(this).modal('hide');
         }
@@ -1061,7 +1084,20 @@ function usergrid_console_app() {
 
         if (bValid) {
             var data = form.serializeObject();
-            client.createGroup(current_application_id, data, requestGroups, function() {
+            client.createGroup(current_application_id, data,
+              function() {
+                requestGroups();
+                closeErrorMessage = function() {
+                  $('#groups-messages').hide();
+                };
+                var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+                $('#groups-messages')
+                  .text("Group created successfully.")
+                  .prepend(closebutton)
+                  .addClass('alert-warning')
+                  .show();
+              },
+              function() {
                 closeErrorMessage = function() {
                   $('#groups-messages').hide();
                 };
@@ -1160,7 +1196,8 @@ function usergrid_console_app() {
     function deleteUsersFromRoles(username) {
         var items = $("#users-permissions-response-table input[id^=userRoleItem]:checked");
         if(!items.length){
-            alert("Please, first select the items you want to delete");
+            oopsModal("Error","Please, first select the roles you want to delete for this user.")
+            // alert("Please, first select the items you want to delete deleteUsersFromRoles");
             return;
         }
 
@@ -1179,7 +1216,8 @@ function usergrid_console_app() {
     function deleteRoleFromUser(roleId, rolename) {
         var items = $("#role-users input[id^=userRoleItem]:checked");
         if(!items.length){
-            alert("Please, first select the items you want to delete");
+            oopsModal("Error","Please, first select the users you want to delete from this role.")
+            // alert("Please, first select the items you want to delete deleteRoleFromUser");
             return;
         }
 
@@ -1197,7 +1235,8 @@ function usergrid_console_app() {
     function removeUserFromGroup(username) {
         var items = $("#user-panel-memberships input[id^=userGroupItem]:checked");
         if(!items.length){
-            alert("Please, first select the items you want to delete");
+            oopsModal("Error","Please, first select the groups you want to delete for this user.")
+            // alert("Please, first select the items you want to delete removeUserFromGroup");
             return;
         }
 
@@ -1215,7 +1254,8 @@ function usergrid_console_app() {
     function removeGroupFromUser(groupId) {
         var items = $("#group-panel-memberships input[id^=userGroupItem]:checked");
         if(!items.length){
-            alert("Please, first select the items you want to delete");
+            oopsModal("Error","Please, first select the users you want to from this group.")
+            // alert("Please, first select the items you want to delete removeGroupFromUser");
             return;
         }
 
@@ -1549,7 +1589,8 @@ function usergrid_console_app() {
 
         var items = $("#users-response-table input[id^=userListItem]:checked");
         if(!items.length){
-            alert("Please, first select the items you want to delete");
+            oopsModal("Error", "Please, first select the users you want to delete.");
+            // alert("Please, first select the items you want to delete deleteUsers");
             return;
         }
 
@@ -1613,7 +1654,11 @@ function usergrid_console_app() {
 
 
     function completeSave(){
-        $(".messages").text("Information Saved.").show();
+        closeMessage = function() {
+          $('.messages').hide();
+        };
+        var closebutton = '<a href="#" onclick="closeMessage();" class="close">&times;</a>'
+        $(".messages").text("Information Saved.").prepend(closebutton).show();
     }
 
     function redrawUserPanel() {
@@ -1914,7 +1959,8 @@ function usergrid_console_app() {
 
         var items = $("#groups-response-table input[id^=groupListItem]:checked");
         if(!items.length){
-            alert("Please, first select the items you want to delete");
+            oopsModal("Error","Please, first select the groups you want to delete.")
+            // alert("Please, first select the items you want to delete deleteGroups");
             return;
         }
 
@@ -2161,7 +2207,8 @@ function usergrid_console_app() {
 
         var items = $("#roles-response-table input[id^=roleListItem]:checked");
         if(!items.length){
-            alert("Please, first select the items you want to delete");
+            oopsModal("Error","Please, first select the roles you want to delete.")
+            // alert("Please, first select the items you want to delete deleteRoles");
             return;
         }
 
