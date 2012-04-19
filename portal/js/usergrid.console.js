@@ -761,13 +761,17 @@ function usergrid_console_app() {
         var activities = response.entities;
         for (var i in activities) {
           var activity = activities[i];
+
+          // Next part is a hack. The API should return the email and title cleanly.
+
           var title_tmp = $("<span/>", {html: activity.title});
-
           activity.actor.email  = title_tmp.find('a').attr('mailto');
-          activity.actor.gravatar = get_gravatar(activity.actor.email, 20);
-
           title_tmp.find('a').remove();
           activity.title = title_tmp.text();
+
+          // hack ends here
+
+          activity.actor.gravatar = get_gravatar(activity.actor.email, 20);
           
           $.tmpl('usergrid.ui.feed.table_rows.html', activity).appendTo(sectionActivities);
         }
@@ -1439,7 +1443,7 @@ function usergrid_console_app() {
       output.empty();
       
       if (data.length < 1) {
-        output.html("<div class=\"user-panel-section-message\">No users found.</div>");
+        output.replaceWith('<div class="user-panel-section-message hideable">No users found.</div>');
       } else {
         for (i = 0; i < data.length; i++) {
           var this_data = data[i];
@@ -1818,7 +1822,7 @@ function usergrid_console_app() {
       output.empty();
       
       if (data.length < 1) {
-        output.html("<div class=\"group-panel-section-message\">No groups found.</div>");
+        output.replaceWith('<div class="group-panel-section-message hideable">No groups found.</div>');
       } else {
         for (i = 0; i < data.length; i++) {
           var this_data = data[i];
@@ -2112,12 +2116,14 @@ function usergrid_console_app() {
     }
 
     function displayRoles(response) {
+      roles = {};
+      roles = response.data;
       var data = response.entities;
       var output = $('#roles-table');
       output.empty();
       
       if (data.length < 1) {
-        output.html("<div class=\"group-panel-section-message\">No roles found.</div>");
+        output.html('<div class="group-panel-section-message hideable">No roles found.</div>');
       } else {
         for (i = 0; i < data.length; i++) {
           var this_data = data[i];
@@ -2416,10 +2422,10 @@ function usergrid_console_app() {
 
     function displayActivities(response) {
       var data = response.entities;
-      var output = $('#activities-response-table');
+      var output = $('#activities-table');
       output.empty();
       if (data.length < 1) {
-        output.html("<div class=\"user-panel-section-message\">No activities found.</div>");
+        output.replaceWith('<div class="user-panel-section-message hideable">No activities found.</div>');
       } else {
         for (i = 0; i < data.length; i++) {
           var this_data = data[i];
@@ -2780,7 +2786,7 @@ function usergrid_console_app() {
       output.empty();
       
       if ($.isEmptyObject(data)) {
-        output.html('<div class="collection-panel-section-message">No collections found.</div>');
+        output.replaceWith('<div class="collection-panel-section-message hideable">No collections found.</div>');
       } else {
         for (var i in data) {
           var this_data = data[i];
