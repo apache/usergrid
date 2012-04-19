@@ -10,19 +10,15 @@
 <div class="console-section-contents listContent">
     {{if data.users}}
     {{each data.users}}
-    <div class="query-result-row entity_list_item">
-        <table class="query-result-table">
-            <tr class="query-result-header">
-                <td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="userRoleItem" value="${uuid}" /></td>
-                <td class="query-result-td-picture"><img src="{{if picture}}${picture}{{else}}images/user_profile.png{{/if}}" class="query-result-user-picture" /></td>
-                <td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
-                    {{if path}}<a href="" onclick="usergrid.console.pageOpenUserProfile('${uuid}'); return false;">{{/if}}
-                    ${name}
-                    {{if path}}</a>{{/if}}
-                </td>
-            </tr>
-        </table>
-    </div>
+      <tr class="query-result-header">
+          <td class=""><input type="checkbox" name="${name}" id="userRoleItem" value="${uuid}" /></td>
+          <td class=""><img src="{{if picture}}${picture}{{else}}images/user_profile.png{{/if}}" class="query-result-user-picture" /></td>
+          <td class=""><div class="query-result-header-name query-result-picture-vert-offset">
+              {{if path}}<a href="" onclick="usergrid.console.pageOpenUserProfile('${uuid}'); return false;">{{/if}}
+              ${name} qué carajos
+              {{if path}}</a>{{/if}}
+          </td>
+      </tr>
     {{/each}}
     {{else}}
     <div class="group-panel-section-message">No Users have this Role</div>

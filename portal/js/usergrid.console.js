@@ -622,13 +622,15 @@ function usergrid_console_app() {
 
 	window.usergrid.console.pageSelectHome = pageSelectHome;
 
+  usergrid.console.ui.loadTemplate("usergrid.ui.applications.table_rows.html");
+
     function displayApplications(response) {
         var t = "";
         var m2 = "";
         applications = {};
         applications_by_id = {};
-        var appMenu = $("#applications-menu ul");
-        var appList = $("#organization-applications");
+        var appMenu = $('#applications-menu ul');
+        var appList = $('table#organization-applications-table');
         appMenu.empty();
         appList.empty();
 
@@ -637,7 +639,6 @@ function usergrid_console_app() {
             var count = 0;
             var applicationNames = keys(applications).sort();
             var data = [];
-            var appListTmpl = $('<div><div class="application-row"><a href="#"><span class="application-row-name">${name}</span> <span class="application-row-uuid">(${uuid})</span></a></div></div>');
             var appMenuTmpl = $('<div><li><a href="#">${name}</a></li></div>');
 
             for (var i in applicationNames) {
@@ -648,7 +649,7 @@ function usergrid_console_app() {
                 applications_by_id[uuid] = name;
             }
             if (count) {
-                appListTmpl.tmpl(data).appendTo(appList);
+                $.tmpl('usergrid.ui.applications.table_rows.html', data).appendTo(appList);
                 appMenuTmpl.tmpl(data).appendTo(appMenu);
                 appMenu.find("a").click(function selectApp(e) {
                     var link = $(this);
@@ -675,7 +676,7 @@ function usergrid_console_app() {
     }
 
     function requestApplications() {
-        var sectionApps = $("#organization-applications");
+        var sectionApps = $("#organization-applications-table");
         sectionApps.empty().html('<div class="alert alert-info">Loading...</div>');
         client.requestApplications(displayApplications, function() {
             sectionApps.html('<div class="alert">Unable to retrieve application list.</div>');
@@ -694,43 +695,46 @@ function usergrid_console_app() {
         }
     }
 
+
+  usergrid.console.ui.loadTemplate("usergrid.ui.admins.table_rows.html");
+
     function displayAdmins(response) {
-        var sectionAdmins = $("#organization-admins");
-        sectionAdmins.empty();
-        if (response.data) {
-            var admins = {};
-            admins = response.data;
-            var i = 0;
-            admins = admins.sort();
-            for (i in admins) {
-                var admin = admins[i];
-                var div = $('<div/>',{
-                    id: 'admin-row-' + i,
-                    class:'admin-row'
-                });
-                var link = $('<a/>',{
-                    href: "mailto:" + admin.email
-                    //,click: function(){usergrid.console.pageSelectAdmin(admin.uuid); return false;}
-                });
-                var span = $('<span/>',{
-                    class: 'application-admin-name',
-                    html: admin.name + " &lt;" + admin.email + "&gt;"
-                });
-                var img = $('<img/>',{
-                    class: 'smallgravatar',
-                    src:get_gravatar(admin.email, 20)
-                });
-                link.append(img).append(span);
-                div.append(link);
-                sectionAdmins.append(div);
-            }
+      var sectionAdmins = $("#organization-admins-table");
+      sectionAdmins.empty();
+      if (response.data) {
+        var admins = {};
+        admins = response.data;
+        admins = admins.sort();
+        for (var i in admins) {
+          var admin = admins[i];
+          admin.gravatar = get_gravatar(admin.email, 20);
+          $.tmpl('usergrid.ui.admins.table_rows.html', admin).appendTo(sectionAdmins);
+          // var div = $('<div/>',{
+          //     id: 'admin-row-' + i,
+          //     class:'admin-row'
+          // });
+          // var link = $('<a/>',{
+          //     href: "mailto:" + admin.email
+          //     //,click: function(){usergrid.console.pageSelectAdmin(admin.uuid); return false;}
+          // });
+          // var span = $('<span/>',{
+          //     class: 'application-admin-name',
+          //     html: admin.name + " &lt;" + admin.email + "&gt;"
+          // });
+          // var img = $('<img/>',{
+          //     class: 'smallgravatar',
+          // });
+          // link.append(img).append(span);
+          // div.append(link);
+          // sectionAdmins.append(div);
         }
-        if(sectionAdmins.is(":empty"))
-            sectionAdmins.html('<h2>No organization administrators.</h2>');
+      }
+      if(sectionAdmins.is(":empty"))
+          sectionAdmins.html('<h2>No organization administrators.</h2>');
     }
 
     function requestAdmins() {
-        var sectionAdmins =$("#organization-admins");
+        var sectionAdmins =$("#organization-admins-table");
         sectionAdmins.empty().html('<div class="alert alert-info">Loading...</div>');
         client.requestAdmins(displayAdmins, function() {
             sectionAdmins.html('<div class="alert">Unable to retrieve admin list</div>');
@@ -746,27 +750,30 @@ function usergrid_console_app() {
         var size = size || 50;
         return 'https://secure.gravatar.com/avatar/' + MD5(email) + '?d=identicon&s=' + size;
     }
+
+  usergrid.console.ui.loadTemplate("usergrid.ui.feed.table_rows.html");
     function displayAdminFeed(response) {
-        var sectionActivities = $("#organization-activities");
-        sectionActivities.empty();
-        if (response.entities && (response.entities.length > 0)) {
-            var activities = response.entities;
-            for (var i in activities) {
-                var activity = activities[i];
-                var title = $("<span/>",{html: activity.title});
-                var personLink = $(title).find("a");
-                var mail = personLink.attr("mailto");
-                var img = $('<img/>',{src:get_gravatar(mail, 20), class:"smallgravatar"});
-                personLink.attr("href","mailto:" + mail).prepend(img);
-                var time = $('<span/>',{
-                    class:'time',
-                    text: dateToString(activity.created)});
-                var row = $('<div/>', {class: 'organization-activity-row'});
-                row.append(time).append(title).appendTo(sectionActivities);
-            }
+
+      var sectionActivities = $("#organization-feed-table");
+      sectionActivities.empty();
+
+      if (response.entities && (response.entities.length > 0)) {
+        var activities = response.entities;
+        for (var i in activities) {
+          var activity = activities[i];
+          var title_tmp = $("<span/>", {html: activity.title});
+
+          activity.actor.email  = title_tmp.find('a').attr('mailto');
+          activity.actor.gravatar = get_gravatar(activity.actor.email, 20);
+
+          title_tmp.find('a').remove();
+          activity.title = title_tmp.text();
+          
+          $.tmpl('usergrid.ui.feed.table_rows.html', activity).appendTo(sectionActivities);
         }
-        if(sectionActivities.is(":empty"))
-            sectionActivities.html('<div class="alert">No activities.</div>');
+      }
+      if (sectionActivities.is(":empty"))
+        sectionActivities.html('<div class="alert">No activities.</div>');
     }
 
     function requestAdminFeed() {
@@ -1806,7 +1813,6 @@ function usergrid_console_app() {
     var groupsResults = null;
 
     function displayGroups(response) {
-      console.log(response);
       var data = response.entities;
       var output = $('#groups-table');
       output.empty();
@@ -1832,48 +1838,6 @@ function usergrid_console_app() {
         $('#groups-previous').show();
       }
     }
-
-    // function displayGroups(response) {
-    //     groupsResults = usergrid.console.ui.displayEntityListResponse({query: groups_query}, {
-    //         "listItemTemplate" : "usergrid.ui.panels.group.list.html",
-    //         "getListItemTemplateOptions" : function(entity, path) {
-    //             var name = entity.uuid + " : " + entity.type;
-    //             if (entity.path) {
-    //                 name = entity.path;
-    //             }
-    //             if (entity.name) {
-    //                 name = name + " : " + entity.name;
-    //             }
-    //             var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
-    //             var uri = (entity.metadata || { }).uri;
-    //             var id = 'groupListItem'; 
-    //             var title = entity.title;
-    //             return {
-    //                 entity : entity,
-    //                 picture : entity.picture,
-    //                 name : name,
-    //                 id: id,
-    //                 title: title,
-    //                 path : path,
-    //                 fblink : entity.fblink,
-    //                 collections : collections,
-    //                 uri : uri
-    //             };
-    //         },
-    //         "onRender" : function() {
-    //             //$("#groups-by-alphabetical").show();
-    //         },
-    //         "onNoEntities" : function() {
-    //             if (groupLetter != "*") return "No groups with paths starting with " +  groupLetter;
-    //             return null;
-    //         },
-    //         "output" : "#groups-response-table",
-    //         "nextPrevDiv" : "#groups-next-prev",
-    //         "prevButton" : "#button-groups-prev",
-    //         "nextButton" : "#button-groups-next",
-    //         "noEntitiesMsg" : "No groups found"
-    //     }, response);
-    // }
 
     function showGroupsForLetter(c) {
         groupLetter = c;
@@ -2125,7 +2089,7 @@ function usergrid_console_app() {
      * 
      ******************************************************************/
 
-    usergrid.console.ui.loadTemplate("usergrid.ui.panels.roles.list.html");
+    usergrid.console.ui.loadTemplate("usergrid.ui.roles.table_rows.html");
 
     function pageSelectRoles(uuid) {
         requestRoles();
@@ -2147,42 +2111,31 @@ function usergrid_console_app() {
         return false;
     }
 
-
     function displayRoles(response) {
-        roles = {};
-        if (response.data) {
-            roles = response.data;
+      var data = response.entities;
+      var output = $('#roles-table');
+      output.empty();
+      
+      if (data.length < 1) {
+        output.html("<div class=\"group-panel-section-message\">No roles found.</div>");
+      } else {
+        for (i = 0; i < data.length; i++) {
+          var this_data = data[i];
+          $.tmpl('usergrid.ui.roles.table_rows.html', this_data).appendTo('#roles-table');
         }
-        rolesResults = usergrid.console.ui.displayEntityListResponse({query: roles_query}, {
-            "listItemTemplate" : "usergrid.ui.panels.roles.list.html",
-            "getListItemTemplateOptions" : function(entity, path) {
-                var name = entity.name;
-                var title = entity.title;
-                var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
-                var uri = (entity.metadata || { }).uri;
-                var id = 'roleListItem';
-                return {
-                    entity : entity,                    
-                    name : name,
-                    title: title,
-                    id: id,
-                    collections : collections,
-                    uri : uri
-                };
-            },
-            "onRender" : function() {
-                //$("#users-by-alphabetical").show();
-            },
-            "onNoEntities" : function() {
-                if (userLetter != "*") return "No roles found";
-                return null;
-            },
-            "output" : "#roles-response-table",
-            "nextPrevDiv" : "#roles-next-prev",
-            "prevButton" : "#button-roles-prev",
-            "nextButton" : "#button-roles-next",
-            "noEntitiesMsg" : "No roles found"
-        }, response);
+      }
+
+      // if (roles_query.hasNext) {
+      //   $(document).on('click', '#roles-next', roles_query.getNext);
+      //   $('#roles-pagination').show();
+      //   $('#roles-next').show();
+      // }
+      // 
+      // if (roles_query.hasPrevious) {
+      //   $(document).on('click', '#roles-previous', roles_query.getPrevious);
+      //   $('#roles-pagination').show();
+      //   $('#roles-previous').show();
+      // }
     }
 
     $("#delete-roles-link").click(deleteRoles);
@@ -2295,16 +2248,16 @@ function usergrid_console_app() {
     }
 
     function selectAllRolesUsers(){
-        $('[id=userRoleItem]').attr('checked', true);
-	$('#deselectAllRolesUsers').show();
-	$('#selectAllRolesUsers').hide();
+      $('[id=userRoleItem]').attr('checked', true);
+      $('#deselectAllRolesUsers').show();
+      $('#selectAllRolesUsers').hide();
     }
     window.usergrid.console.selectAllRolesUsers = selectAllRolesUsers;
 
     function deselectAllRolesUsers(){
-        $('[id=userRoleItem]').attr('checked', false);
-	$('#selectAllRolesUsers').show();
-	$('#deselectAllRolesUsers').hide();
+      $('[id=userRoleItem]').attr('checked', false);
+    	$('#selectAllRolesUsers').show();
+      $('#deselectAllRolesUsers').hide();
     }
     window.usergrid.console.deselectAllRolesUsers = deselectAllRolesUsers;
 
@@ -2806,17 +2759,12 @@ function usergrid_console_app() {
      * 
      ******************************************************************/
 
-    usergrid.console.ui.loadTemplate("usergrid.ui.panels.collections.list.html");
+    usergrid.console.ui.loadTemplate("usergrid.ui.collections.table_rows.html");
 
     function pageSelectCollections(uuid) {
         requestCollections();
     }
     window.usergrid.console.pageSelectCollections = pageSelectCollections;
-
-    var collectionsResults = null;
-    var collections_query = null;
-    var collectionsLetter = '*';
-    var collectionsSortBy = 'title';
 
     function requestCollections() {
         var section =$("#application-collections");
@@ -2827,52 +2775,30 @@ function usergrid_console_app() {
     }
     
     function displayCollections(response) {
-        roles = {};
-
-        if (response.data) {
-            roles = response.data;
+      var data = response.entities[0].metadata.collections;
+      var output = $('#collections-table');
+      output.empty();
+      
+      if ($.isEmptyObject(data)) {
+        output.html('<div class="collection-panel-section-message">No collections found.</div>');
+      } else {
+        for (var i in data) {
+          var this_data = data[i];
+          $.tmpl('usergrid.ui.collections.table_rows.html', this_data).appendTo('#collections-table');
         }
+      }
 
-        if (response.entities && response.entities[0] && response.entities[0].metadata && response.entities[0].metadata.collections) {
-            applicationData.Collections = response.entities[0].metadata.collections;
-            updateApplicationDashboard();
-            updateQueryAutocompleteCollections();
-        }
-
-        collectionsResults = usergrid.console.ui.displayEntityListResponse({query: roles_query}, {
-            "listItemTemplate" : "usergrid.ui.panels.collections.list.html",
-            "getListItemTemplateOptions" : function(entity, path) {
-                var name = entity.name;
-                var title = entity.title;
-                var collections = !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections);
-                var uri = (entity.metadata || { }).uri;
-                var id = 'collectionListItem';
-                var type = entity.type;
-                var count = entity.count;
-
-                return {
-                    entity : entity,
-                    name : name,
-                    title: title,
-                    id: id,
-                    type: type,
-                    count: count,
-                    collections : collections,
-                    uri : uri
-                };
-            },
-            "onRender" : function() {},
-            "onNoEntities" : function() {
-                if (userLetter != "*") return "No collections found";
-                return null;
-            },
-            "output" : "#collections-response-table",
-            "nextPrevDiv" : "#collections-next-prev",
-            "prevButton" : "#button-collections-prev",
-            "nextButton" : "#button-collections-next",
-            "noEntitiesMsg" : "No collections found"
-        }, response);
-
+      // if (collections_query.hasNext) {
+      //   $(document).on('click', '#collections-next', collections_query.getNext);
+      //   $('#collections-pagination').show();
+      //   $('#collections-next').show();
+      // }
+      // 
+      // if (collections_query.hasPrevious) {
+      //   $(document).on('click', '#collections-previous', colletions_query.getPrevious);
+      //   $('#collections-pagination').show();
+      //   $('#collections-previous').show();
+      // }
     }
 
      /*******************************************************************
