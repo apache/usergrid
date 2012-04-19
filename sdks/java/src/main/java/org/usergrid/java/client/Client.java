@@ -837,14 +837,48 @@ public class Client {
      * @return
      */
     public ApiResponse createGroup(String groupPath, String groupTitle) {
+     return createGroup(groupPath, groupTitle, null);  
+    }
+    
+    /**
+     * Create a group with a path, title and name
+     * @param groupPath
+     * @param groupTitle
+     * @param groupName
+     * @return
+     */
+    public ApiResponse createGroup(String groupPath, String groupTitle, String groupName){
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("type", "group");
         data.put("path", groupPath);
+        
         if (groupTitle != null) {
             data.put("title", groupTitle);
         }
+        
+        if(groupName != null){
+            data.put("name", groupName);
+        }
+        
         return apiRequest(HttpMethod.POST, null, data, applicationId, "groups");
     }
+    
+    /**
+     * Perform a query of the users collection using the provided query command.
+     * For example: "name contains 'ed'".
+     * 
+     * @param ql
+     * @return
+     */
+    public Query queryGroups(String ql) {
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("ql", ql);
+        Query q = queryEntitiesRequest(HttpMethod.GET, params, null,
+                applicationId, "groups");
+        return q;
+    }
+
+    
 
     /**
      * Connect two entities together.
