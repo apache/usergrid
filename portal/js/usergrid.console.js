@@ -2430,7 +2430,7 @@ function usergrid_console_app() {
         for (i = 0; i < data.length; i++) {
           var this_data = data[i];
           this_data.actor.gravatar = get_gravatar(this_data.actor.email, 20);
-          $.tmpl('usergrid.ui.activities.table_rows.html', this_data).appendTo('#activities-response-table');
+          $.tmpl('usergrid.ui.activities.table_rows.html', this_data).appendTo('#activities-table');
         }
       }
       if (response.next) {
