@@ -31,6 +31,7 @@ import org.usergrid.java.client.Client.Query;
 import org.usergrid.java.client.entities.Activity;
 import org.usergrid.java.client.entities.Activity.ActivityObject;
 import org.usergrid.java.client.entities.Entity;
+import org.usergrid.java.client.entities.User;
 import org.usergrid.java.client.response.ApiResponse;
 import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.rest.applications.utils.UserRepo;
@@ -44,9 +45,6 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  */
 public class UserResourceTest extends AbstractRestTest {
 
-    
-    
-    
     @Test
     public void usernameQuery() {
 
@@ -158,10 +156,12 @@ public class UserResourceTest extends AbstractRestTest {
         activity.setProperty("verb", "POST");
         activity.setProperty("content", "Look! more new content");
 
-        ApiResponse response = client.postUserActivity(userId.toString(), activity);
+        ApiResponse response = client.postUserActivity(userId.toString(),
+                activity);
 
-        assertNull("Error was: " + response.getErrorDescription(), response.getError());
-        
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
+
         Entity entity = response.getEntities().get(0);
 
         UUID activityId = entity.getUuid();
@@ -174,8 +174,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         assertEquals(userId, actorId);
 
-        assertEquals("user1@apigee.com", actor.get("email")
-                .asText());
+        assertEquals("user1@apigee.com", actor.get("email").asText());
     }
 
     /**
@@ -201,9 +200,9 @@ public class UserResourceTest extends AbstractRestTest {
 
         ApiResponse response = client.postUserActivity(userId.toString(),
                 activity);
-        
-        assertNull("Error was: " + response.getErrorDescription(), response.getError());
-        
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
 
         Entity entity = response.getEntities().get(0);
 
@@ -217,8 +216,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         assertEquals(userId, actorId);
 
-        assertEquals("user1@apigee.com", actor.get("email")
-                .asText());
+        assertEquals("user1@apigee.com", actor.get("email").asText());
 
     }
 
@@ -248,10 +246,11 @@ public class UserResourceTest extends AbstractRestTest {
 
         activity.setActor(actorPost);
 
-        ApiResponse response = client.postUserActivity(userId.toString(),activity);
-        
-        assertNull("Error was: " + response.getErrorDescription(), response.getError());
-        
+        ApiResponse response = client.postUserActivity(userId.toString(),
+                activity);
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
 
         Entity entity = response.getEntities().get(0);
 
@@ -285,8 +284,9 @@ public class UserResourceTest extends AbstractRestTest {
 
         ApiResponse response = client.postUserActivity(userId.toString(),
                 activity);
-        
-        assertNull("Error was: " + response.getErrorDescription(), response.getError());
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
 
         Entity entity = response.getFirstEntity();
 
@@ -298,8 +298,9 @@ public class UserResourceTest extends AbstractRestTest {
         activity.setProperty("content", "activity 2");
 
         response = client.postUserActivity(userId.toString(), activity);
-        
-        assertNull("Error was: " + response.getErrorDescription(), response.getError());
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
 
         entity = response.getFirstEntity();
 
@@ -317,7 +318,29 @@ public class UserResourceTest extends AbstractRestTest {
 
     }
 
-    
+    @Test
+    public void clientNameQuery() {
+
+        UUID id = UUIDUtils.newTimeUUID();
+
+        String username = "username" + id;
+        String name = "name" + id;
+
+        ApiResponse response = client.createUser(username, name, id + "@usergrid.org", "password");
+        
+        
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
+
+        UUID createdId = response.getEntities().get(0).getUuid(); 
+                
+        Query results = client.queryUsers(String.format("name = '%s'", name));
+        User user = results.getResponse().getEntities(User.class).get(0);
+        
+        assertEquals(createdId, user.getUuid());
+    }
+
     /**
      * 
      * @param putResponse
@@ -326,7 +349,6 @@ public class UserResourceTest extends AbstractRestTest {
     public JsonNode getActor(Entity entity) {
         return entity.getProperties().get("actor");
     }
-    
 
     @Test
     public void test_PUT_password_fail() {
@@ -335,12 +357,10 @@ public class UserResourceTest extends AbstractRestTest {
         assertEquals("auth_invalid_username_or_password", response.getError());
     }
 
- 
-
     @Test
     public void test_GET_user_ok() throws InterruptedException {
 
-         // TODO figure out what is being overridden? why 400?
+        // TODO figure out what is being overridden? why 400?
         JsonNode node = resource().path("/test-app/users")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
@@ -356,23 +376,24 @@ public class UserResourceTest extends AbstractRestTest {
         assertEquals("ed@anuff.com", node.get("entities").get(0).get("email")
                 .getTextValue());
     }
-    
+
     @Test
     public void test_PUT_password_ok() {
 
-        ApiResponse response = client.changePassword("edanuff", "sesame", "sesame1");
+        ApiResponse response = client.changePassword("edanuff", "sesame",
+                "sesame1");
 
         assertNull(response.getError());
-        
-        response =  client.authorizeAppUser("ed@anuff.com", "sesame1");
-        
+
+        response = client.authorizeAppUser("ed@anuff.com", "sesame1");
+
         assertNull(response.getError());
-        
-        //if this was successful, we need to re-set the password for other tests
+
+        // if this was successful, we need to re-set the password for other
+        // tests
         response = client.changePassword("edanuff", "sesame1", "sesame");
-        
+
         assertNull(response.getError());
-        
 
     }
 

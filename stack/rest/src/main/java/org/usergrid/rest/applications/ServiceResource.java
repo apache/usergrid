@@ -137,6 +137,8 @@ public class ServiceResource extends AbstractContextResource {
 
 		MultivaluedMap<String, String> params = ui.getQueryParameters();
 		if (params != null) {
+		    //TODO TN query parameters are not being correctly decoded here.  The URL encoded strings
+		    //aren't getting decoded properly
 			Query query = Query.fromQueryParams(params);
 			if (query != null) {
 				parameters = addParameter(parameters, query);
