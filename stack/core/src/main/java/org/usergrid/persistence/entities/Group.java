@@ -43,7 +43,7 @@ public class Group extends TypedEntity {
 	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = true, aliasProperty = true, pathBasedName = true, mutable = true, unique = true, basic = true)
 	protected String path;
 
-	@EntityProperty(basic = true)
+	@EntityProperty(indexed=true, basic = true)
 	protected String title;
 
 	@EntityDictionary(keyType = java.lang.String.class)

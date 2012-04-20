@@ -105,11 +105,11 @@ public class Application extends TypedEntity {
 	protected List<UUID> folders;
 
 	@EntityCollection(type = "group", propertiesIndexed = { "created",
-			"modified", "path" }, indexingDynamicProperties = true)
+			"modified", "path", "name", "title" }, indexingDynamicProperties = true)
 	protected List<UUID> groups;
 
 	@EntityCollection(type = "user", propertiesIndexed = { "created",
-			"modified", "username", "email" }, dictionariesIndexed = { "aliases" }, indexingDynamicProperties = true)
+			"modified", "username", "email", "firstname", "middlename", "lastname" }, dictionariesIndexed = { "aliases" }, indexingDynamicProperties = true)
 	protected List<UUID> users;
 
 	@EntityCollection(type = "device", propertiesIndexed = {}, indexingDynamicProperties = false)

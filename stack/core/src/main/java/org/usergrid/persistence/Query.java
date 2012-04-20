@@ -31,6 +31,8 @@ import static org.usergrid.utils.ListUtils.isEmpty;
 import static org.usergrid.utils.MapUtils.toMapList;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -240,6 +242,7 @@ public class Query {
         categories = params.get("category");
 
         l = params.get("counter");
+        
         if (!isEmpty(l)) {
             counterFilters = CounterFilterPredicate.fromList(l);
         }
@@ -259,7 +262,8 @@ public class Query {
         }
 
         if (ql != null) {
-            q = Query.fromQL(ql);
+                q = Query.fromQL(decode(ql));
+           
         }
 
         l = params.get("filter");
@@ -267,7 +271,7 @@ public class Query {
         if (!isEmpty(l)) {
             q = newQueryIfNull(q);
             for (String s : l) {
-                q.addFilter(s);
+                q.addFilter(decode(s));
             }
         }
 
@@ -275,7 +279,7 @@ public class Query {
         if (!isEmpty(l)) {
             q = newQueryIfNull(q);
             for (String s : l) {
-                q.addSort(s);
+                q.addSort(decode(s));
             }
         }
 
@@ -1807,5 +1811,20 @@ public class Query {
             return r.get(0);
         }
         return null;
+    }
+    
+    /**
+     * Decode string
+     * @param input
+     * @return
+     */
+    private static String decode(String input){
+        try {
+            return URLDecoder.decode(input, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            //shouldn't happen, but just in case
+            throw new RuntimeException(e);
+            
+        }
     }
 }
