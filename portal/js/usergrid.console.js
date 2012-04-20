@@ -1553,7 +1553,11 @@ function usergrid_console_app() {
         var query = {"ql" : "order by " + userSortBy}; //default to built in search
         if (typeof search == 'string') {
             if (search.length > 0) {
-                query = {"ql" : searchType + "='" + search + "*'"};
+                if (searchType == 'name') {
+                    query = {"ql" : searchType + " contains '" + search + "'"};
+                } else {
+                    query = {"ql" : searchType + "='" + search + "*'"};
+                }
             }
         } else if (userLetter != "*") {
             query = {"ql" : searchType + "='" + userLetter + "*'"};
@@ -1917,7 +1921,6 @@ function usergrid_console_app() {
         var searchType = ($('#search-group-type').val())?$('#search-group-type').val():groupSortBy;
         //make sure the input is valid:
         if (searchType == 'name') {searchType = 'name';}
-        else if (searchType == 'title') {searchType = 'title';}
         else if (searchType == 'path') {searchType = 'path';}
         requestGroups(search, searchType);
     }
@@ -1942,7 +1945,11 @@ function usergrid_console_app() {
         var query = {"ql" : "order by " + groupSortBy};
         if (typeof search == 'string') {
             if (search.length > 0) {
-                query = {"ql" : searchType + "='" + search + "*'"};
+                if (searchType == 'name') {
+                   query = {"ql" : searchType + " contains '" + search + "'"};
+                } else {
+                    query = {"ql" : searchType + "='" + search + "*'"};
+                }
             }
         } else if (groupLetter != "*") {
             query = {"ql" : searchType + "='" + groupLetter + "*'"};
