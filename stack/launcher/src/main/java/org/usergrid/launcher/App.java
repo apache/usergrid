@@ -116,7 +116,7 @@ public class App {
 	public Set<String> getUrlSetFromPreferences() {
 		Set<String> urls = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 		// urls.add("http://api.usergrid.com/console");
-		urls.add("http://usergrid.github.com/console");
+		urls.add("http://apigee.github.com/usergrid-portal");
 		ObjectMapper mapper = new ObjectMapper();
 		String json = null;
 		try {
