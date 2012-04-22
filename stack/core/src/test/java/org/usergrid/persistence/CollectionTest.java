@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.usergrid.utils.MapUtils.hashMap;
@@ -26,7 +27,9 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.utils.JsonUtils;
+import org.usergrid.utils.UUIDUtils;
 
 public class CollectionTest extends AbstractPersistenceTest {
 
@@ -72,30 +75,104 @@ public class CollectionTest extends AbstractPersistenceTest {
 
         em.addToCollection(user, "activities", activity);
 
-        // T.N. This isn't used anywhere. Removing for this release
-        // Results r = em.getCollection(user, "activities", null, null, 10,
-        // Results.Level.LINKED_PROPERTIES, false);
-        // logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
-        // assertEquals(1, r.size());
-        //
-        // properties = new LinkedHashMap<String, Object>();
-        // properties.put("foo", "bar");
-        // em.updateProperties(new SimpleCollectionRef(user, "activities",
-        // activity), properties);
-        //
-        // r = em.getCollection(user, "activities", null, null, 10,
-        // Results.Level.LINKED_PROPERTIES, false);
-        // logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
-        // assertEquals(1, r.size());
-        //
-        // em.removeFromCollection(user, "activities", activity);
-        //
-        // r = em.getCollection(user, "activities", null, null, 10,
-        // Results.Level.LINKED_PROPERTIES, false);
-        // logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
-        // assertEquals(0, r.size());
+    }
+
+    @Test
+    public void userFirstNameSearch() throws Exception {
+        UUID applicationId = createApplication("testFirstName");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        String firstName = "firstName" + UUIDUtils.newTimeUUID();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
+        properties.put("firstname", firstName);
+
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
+
+        // EntityRef
+        Query query = new Query();
+        query.addEqualityFilter("firstname", firstName);
+
+        Results r = em.searchCollection(em.getApplicationRef(), "users", query);
+
+        assertTrue(r.size() > 0);
+
+        Entity returned = r.getEntities().get(0);
+
+        assertEquals(user.getUuid(), returned.getUuid());
 
     }
+    
+    @Test
+    public void userMiddleNameSearch() throws Exception {
+        UUID applicationId = createApplication("testMiddleName");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        String middleName = "middleName" + UUIDUtils.newTimeUUID();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
+        properties.put("middlename", middleName);
+
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
+
+        // EntityRef
+        Query query = new Query();
+        query.addEqualityFilter("middlename", middleName);
+
+        Results r = em.searchCollection(em.getApplicationRef(), "users", query);
+
+        assertTrue(r.size() > 0);
+
+        Entity returned = r.getEntities().get(0);
+
+        assertEquals(user.getUuid(), returned.getUuid());
+
+    }
+    
+    @Test
+    public void userLastNameSearch() throws Exception {
+        UUID applicationId = createApplication("testLastName");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        String lastName = "lastName" + UUIDUtils.newTimeUUID();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
+        properties.put("lastname", lastName);
+
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
+
+        // EntityRef
+        Query query = new Query();
+        query.addEqualityFilter("lastname", lastName);
+
+        Results r = em.searchCollection(em.getApplicationRef(), "users", query);
+
+        assertTrue(r.size() > 0);
+
+        Entity returned = r.getEntities().get(0);
+
+        assertEquals(user.getUuid(), returned.getUuid());
+
+    }
+
 
     @Test
     public void testGroups() throws Exception {
@@ -127,29 +204,10 @@ public class CollectionTest extends AbstractPersistenceTest {
         em.addToCollection(group, "users", user1);
         em.addToCollection(group, "users", user2);
 
-        // T.N. This isn't used anywhere. Removing for this release
-        // Results r = em.getCollection(group, "users", null, null, 10,
-        // Results.Level.LINKED_PROPERTIES, false);
-        // logger.info("Users in group: "
-        // + JsonUtils.mapToFormattedJsonString(r.getEntities()));
-        // assertEquals(2, r.size());
-
-        // T.N. This isn't used anywhere. Removing for this release
-        // r = em.getCollection(user1, "groups", null, null, 10,
-        // Results.Level.LINKED_PROPERTIES, false);
-        // logger.info("User in groups: "
-        // + JsonUtils.mapToFormattedJsonString(r.getEntities()));
-        // assertEquals(1, r.size());
-
         properties = new LinkedHashMap<String, Object>();
         properties.put("nickname", "ed");
         em.updateProperties(new SimpleCollectionRef(group, "users", user1),
                 properties);
-        // T.N. This isn't used anywhere. Removing for this release
-        // r = em.getCollection(group, "users", null, null, 10,
-        // Results.Level.LINKED_PROPERTIES, false);
-        // logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
-        // assertEquals(2, r.size());
 
         Results r = em.searchCollection(group, "users",
                 new Query().addEqualityFilter("member.nickname", "ed")
@@ -159,18 +217,69 @@ public class CollectionTest extends AbstractPersistenceTest {
 
         em.removeFromCollection(user1, "groups", group);
 
-        // T.N. This isn't used anywhere. Removing for this release
-        // r = em.getCollection(group, "users", null, null, 10,
-        // Results.Level.LINKED_PROPERTIES, false);
-        // logger.info("Users in group: "
-        // + JsonUtils.mapToFormattedJsonString(r.getEntities()));
-        // assertEquals(1, r.size());
-        //
-        // r = em.getCollection(user1, "groups", null, null, 10,
-        // Results.Level.LINKED_PROPERTIES, false);
-        // logger.info("User in groups: "
-        // + JsonUtils.mapToFormattedJsonString(r.getEntities()));
-        // assertEquals(0, r.size());
+    }
+    
+    @Test
+    public void groupNameSearch() throws Exception {
+        UUID applicationId = createApplication("groupNameSearch");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        String groupName = "groupName" + UUIDUtils.newTimeUUID();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("title", "testTitle");
+        properties.put("path", "testPath");
+        properties.put("name", groupName);
+
+        Entity group = em.create("group", properties);
+        assertNotNull(group);
+
+        // EntityRef
+        Query query = new Query();
+        query.addEqualityFilter("name", groupName);
+
+        Results r = em.searchCollection(em.getApplicationRef(), "groups", query);
+
+        assertTrue(r.size() > 0);
+
+        Entity returned = r.getEntities().get(0);
+
+        assertEquals(group.getUuid(), returned.getUuid());
+
+    }
+    
+    @Test
+    public void groupTitleSearch() throws Exception {
+        UUID applicationId = createApplication("groupTitleSearch");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        String titleName = "groupName" + UUIDUtils.newTimeUUID();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("title",  titleName);
+        properties.put("path", "testPath");
+        properties.put("name", "testName");
+
+        Entity group = em.create("group", properties);
+        assertNotNull(group);
+
+        // EntityRef
+        Query query = new Query();
+        query.addEqualityFilter("title", titleName);
+
+        Results r = em.searchCollection(em.getApplicationRef(), "groups", query);
+
+        assertTrue(r.size() > 0);
+
+        Entity returned = r.getEntities().get(0);
+
+        assertEquals(group.getUuid(), returned.getUuid());
 
     }
 

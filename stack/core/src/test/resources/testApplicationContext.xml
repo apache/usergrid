@@ -126,5 +126,9 @@
         <property name="counterType" value="n"/>
     </bean>
 
+    <bean id="usergridSystemMonitor" class="org.usergrid.system.UsergridSystemMonitor">
+        <constructor-arg value="${usergrid.version.build}"/>
+        <constructor-arg ref="cassandraCluster"/>
+    </bean>
 
 </beans>
