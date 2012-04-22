@@ -46,6 +46,8 @@ public class Activity extends TypedEntity {
 
 	public static final String ENTITY_TYPE = "activity";
 
+	public static final String PROP_ACTOR = "actor";
+	
 	public static final String VERB_ADD = "add";
 	public static final String VERB_CANCEL = "cancel";
 	public static final String VERB_CHECKIN = "checkin";

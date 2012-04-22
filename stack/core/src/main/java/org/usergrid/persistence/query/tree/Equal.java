@@ -16,6 +16,7 @@
 package org.usergrid.persistence.query.tree;
 
 import org.antlr.runtime.Token;
+import org.usergrid.persistence.exceptions.NoIndexException;
 
 /**
  * @author tnine
@@ -41,7 +42,7 @@ public class Equal extends EqualityOperand {
      * .query.tree.QueryVisitor)
      */
     @Override
-    public void visit(QueryVisitor visitor) {
+    public void visit(QueryVisitor visitor) throws NoIndexException {
         visitor.visit(this);
     }
 

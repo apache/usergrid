@@ -104,9 +104,9 @@
     </bean>
 
     <bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
-        <constructor-arg value="3"/>
+        <constructor-arg value="1"/>
         <property name="batchSubmitter" ref="batchSubmitter"/>
-        <property name="batchSize" value="1"/>
+        <property name="batchSize" value="0"/>
     </bean>
 
     <bean id="batchSubmitter" class="com.usergrid.count.CassandraSubmitter">
@@ -123,8 +123,12 @@
 
     <bean id="counterUtils" class="org.usergrid.persistence.cassandra.CounterUtils">
         <property name="batcher" ref="simpleBatcher"/>
-        <property name="counterType" value="o"/>
+        <property name="counterType" value="n"/>
     </bean>
 
+    <bean id="usergridSystemMonitor" class="org.usergrid.system.UsergridSystemMonitor">
+        <constructor-arg value="${usergrid.version.build}"/>
+        <constructor-arg ref="cassandraCluster"/>
+    </bean>
 
 </beans>

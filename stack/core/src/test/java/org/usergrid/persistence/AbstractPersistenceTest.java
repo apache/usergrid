@@ -42,16 +42,16 @@ public abstract class AbstractPersistenceTest {
 	private static final Logger logger = LoggerFactory
 			.getLogger(AbstractPersistenceTest.class);
 
-	static PersistenceTestHelper helper;
+	protected static PersistenceTestHelper helper;
 
 	public AbstractPersistenceTest() {
 		emf = helper.getEntityManagerFactory();
 		qmf = helper.getMessageManagerFactory();
 	}
 
-	EntityManagerFactory emf;
+	protected EntityManagerFactory emf;
 
-	QueueManagerFactory qmf;
+	protected QueueManagerFactory qmf;
 
 	/* @BeforeClass (groups="datastore") */
 	@BeforeClass

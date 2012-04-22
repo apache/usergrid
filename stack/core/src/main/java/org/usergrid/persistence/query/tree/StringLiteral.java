@@ -34,10 +34,10 @@ public class StringLiteral extends Literal<String> {
      */
     public StringLiteral(Token t) {
         super(t);
-        value = t.getText();
-        value = value.substring(1, value.length() - 1);
+        String newValue = t.getText();
+        newValue = newValue.substring(1, newValue.length() - 1);
 
-        parseValue(value);
+        parseValue(newValue);
     }
 
     public StringLiteral(String value) {
@@ -48,11 +48,12 @@ public class StringLiteral extends Literal<String> {
 
     /**
      * Parse the value and set the optional end value
+     * 
      * @param value
      */
     private void parseValue(String value) {
-       
-        this.value = value;
+
+        this.value = value.trim().toLowerCase();
 
         if ("*".equals(value)) {
             this.value = null;
@@ -64,13 +65,13 @@ public class StringLiteral extends Literal<String> {
             this.value = removeEnd(value.toString(), "*");
 
             finishValue = this.value + "\uFFFF";
-           
+
         }
-        //set the end value to the same as the start value
-        else{
+        // set the end value to the same as the start value
+        else {
             finishValue = value;
         }
-        
+
     }
 
     /**

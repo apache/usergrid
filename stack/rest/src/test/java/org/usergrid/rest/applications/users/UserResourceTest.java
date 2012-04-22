@@ -15,75 +15,386 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
-import org.codehaus.jackson.JsonNode;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.usergrid.rest.AbstractRestTest;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.usergrid.rest.applications.utils.TestUtils.getIdFromSearchResults;
+
+import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
-import java.util.Map;
+import org.codehaus.jackson.JsonNode;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.usergrid.java.client.Client.Query;
+import org.usergrid.java.client.entities.Activity;
+import org.usergrid.java.client.entities.Activity.ActivityObject;
+import org.usergrid.java.client.entities.Entity;
+import org.usergrid.java.client.entities.User;
+import org.usergrid.java.client.response.ApiResponse;
+import org.usergrid.rest.AbstractRestTest;
+import org.usergrid.rest.applications.utils.UserRepo;
+import org.usergrid.utils.UUIDUtils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.usergrid.utils.MapUtils.hashMap;
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 /**
  * @author zznate
+ * @author tnine
  */
 public class UserResourceTest extends AbstractRestTest {
-  private static Logger log = LoggerFactory.getLogger(UserResourceTest.class);
 
-  private static boolean userInited = false;
+    @Test
+    public void usernameQuery() {
 
-  public UserResourceTest() throws Exception {
+        UserRepo.INSTANCE.load(resource(), access_token);
 
-  }
+        String ql = "username = 'user*'";
 
-  @Test(expected = UniformInterfaceException.class)
-  public void test_PUT_password_fail() {
-    Map<String, String> payload = hashMap("password", "sesame1").map("oldpassword", "sesame");
-
-    JsonNode node = resource().path("/test-app/users/ed@anuff.com/password")
-            .queryParam("access_token", access_token)
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .put(JsonNode.class, payload);
-  }
-
-  @Test
-  public void test_PUT_password_ok() {
-    Map<String, String> payload = hashMap("newpassword", "sesame1").map("oldpassword", "sesame");
-
-    JsonNode node = resource().path("/test-app/users/ed@anuff.com/password")
-            .queryParam("access_token", access_token)
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .put(JsonNode.class, payload);
-    logNode(node);
-  }
-
-  @Test
-  public void test_GET_user_ok() {
-    // TODO figure out what is being overridden? why 400?
-    JsonNode node = resource().path("/test-app/users")
-            .queryParam("access_token", access_token)
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .get(JsonNode.class);
-    String uuid = node.get("entities").get(0).get("uuid").getTextValue();
-
-    node = resource().path("/test-app/users/"+ uuid)
+        JsonNode node = resource().path("/test-app/users").queryParam("ql", ql)
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .get(JsonNode.class);
-    logNode(node);
-    assertEquals("ed@anuff.com",node.get("entities").get(0).get("email").getTextValue());
-  }
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+        assertEquals(UserRepo.INSTANCE.getByUserName("user1"),
+                getIdFromSearchResults(node, 0));
+        assertEquals(UserRepo.INSTANCE.getByUserName("user2"),
+                getIdFromSearchResults(node, 1));
+        assertEquals(UserRepo.INSTANCE.getByUserName("user3"),
+                getIdFromSearchResults(node, 2));
+
+    }
+
+    @Test
+    public void nameQuery() {
+
+        UserRepo.INSTANCE.load(resource(), access_token);
+
+        String ql = "name = 'John*'";
+
+        JsonNode node = resource().path("/test-app/users").queryParam("ql", ql)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+        assertEquals(UserRepo.INSTANCE.getByUserName("user2"),
+                getIdFromSearchResults(node, 0));
+        assertEquals(UserRepo.INSTANCE.getByUserName("user3"),
+                getIdFromSearchResults(node, 1));
+
+    }
+
+    @Test
+    public void nameFullTextQuery() {
+
+        UserRepo.INSTANCE.load(resource(), access_token);
+
+        String ql = "name contains 'Smith' order by name ";
+
+        JsonNode node = resource().path("/test-app/users").queryParam("ql", ql)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+        assertEquals(UserRepo.INSTANCE.getByUserName("user1"),
+                getIdFromSearchResults(node, 0));
+        assertEquals(UserRepo.INSTANCE.getByUserName("user2"),
+                getIdFromSearchResults(node, 1));
+        assertEquals(UserRepo.INSTANCE.getByUserName("user3"),
+                getIdFromSearchResults(node, 2));
+
+    }
+
+    /**
+     * Tests that when a full text index is run on a field that isn't full text
+     * indexed an error is thrown
+     */
+    @Test(expected = UniformInterfaceException.class)
+    public void fullTextQueryNotFullTextIndexed() {
+
+        UserRepo.INSTANCE.load(resource(), access_token);
+
+        String ql = "username contains 'user' ";
+
+        resource().path("/test-app/users").queryParam("ql", ql)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+    }
+
+    /**
+     * Tests that when a full text index is run on a field that isn't full text
+     * indexed an error is thrown
+     */
+    @Test(expected = UniformInterfaceException.class)
+    public void fullQueryNotIndexed() {
+
+        UserRepo.INSTANCE.load(resource(), access_token);
+
+        String ql = "picture = 'foo' ";
+
+        resource().path("/test-app/users").queryParam("ql", ql)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+    }
+
+    /**
+     * Test that when activity is pushed with not actor, it's set to the user
+     * who created it
+     */
+    @Test
+    public void emtpyActorActivity() {
+        UserRepo.INSTANCE.load(resource(), access_token);
+        UUID userId = UserRepo.INSTANCE.getByUserName("user1");
+
+        Activity activity = new Activity();
+        activity.setProperty("email", "rod@rodsimpson.com");
+        activity.setProperty("verb", "POST");
+        activity.setProperty("content", "Look! more new content");
+
+        ApiResponse response = client.postUserActivity(userId.toString(),
+                activity);
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
+
+        Entity entity = response.getEntities().get(0);
+
+        UUID activityId = entity.getUuid();
+
+        assertNotNull(activityId);
+
+        JsonNode actor = getActor(entity);
+
+        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
+
+        assertEquals(userId, actorId);
+
+        assertEquals("user1@apigee.com", actor.get("email").asText());
+    }
+
+    /**
+     * Insert the uuid and email if they're empty in the request
+     */
+    @Test
+    public void noUUIDorEmail() {
+
+        UserRepo.INSTANCE.load(resource(), access_token);
+        UUID userId = UserRepo.INSTANCE.getByUserName("user1");
+
+        Activity activity = new Activity();
+        activity.setProperty("email", "rod@rodsimpson.com");
+        activity.setProperty("verb", "POST");
+        activity.setProperty("content", "Look! more new content");
+
+        // same as above, but with actor partially filled out
+
+        ActivityObject actorPost = new ActivityObject();
+        actorPost.setDisplayName("Dino");
+
+        activity.setActor(actorPost);
+
+        ApiResponse response = client.postUserActivity(userId.toString(),
+                activity);
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
+
+        Entity entity = response.getEntities().get(0);
+
+        UUID activityId = entity.getUuid();
+
+        assertNotNull(activityId);
+
+        JsonNode actor = getActor(entity);
+
+        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
+
+        assertEquals(userId, actorId);
+
+        assertEquals("user1@apigee.com", actor.get("email").asText());
+
+    }
+
+    /**
+     * Don't touch the UUID when it's already set in the JSON
+     */
+    @Test
+    public void ignoreUUIDandEmail() {
+        UserRepo.INSTANCE.load(resource(), access_token);
+        UUID userId = UserRepo.INSTANCE.getByUserName("user1");
+
+        UUID testUUID = UUIDUtils.newTimeUUID();
+        String testEmail = "foo@bar.com";
+
+        // same as above, but with actor partially filled out
+        Activity activity = new Activity();
+        activity.setProperty("email", "rod@rodsimpson.com");
+        activity.setProperty("verb", "POST");
+        activity.setProperty("content", "Look! more new content");
+
+        // same as above, but with actor partially filled out
+
+        ActivityObject actorPost = new ActivityObject();
+        actorPost.setDisplayName("Dino");
+        actorPost.setUuid(testUUID);
+        actorPost.setDynamicProperty("email", testEmail);
+
+        activity.setActor(actorPost);
+
+        ApiResponse response = client.postUserActivity(userId.toString(),
+                activity);
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
+
+        Entity entity = response.getEntities().get(0);
+
+        UUID activityId = entity.getUuid();
+
+        assertNotNull(activityId);
+
+        JsonNode actor = getActor(entity);
+
+        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
+
+        assertEquals(testUUID, actorId);
+
+        assertEquals(testEmail, actor.get("email").asText());
+
+    }
+
+    /**
+     * Test that when activity is pushed with not actor, it's set to the user
+     * who created it
+     */
+    @Test
+    public void userActivitiesDefaultOrder() {
+        UserRepo.INSTANCE.load(resource(), access_token);
+        UUID userId = UserRepo.INSTANCE.getByUserName("user1");
+
+        Activity activity = new Activity();
+        activity.setProperty("email", "rod@rodsimpson.com");
+        activity.setProperty("verb", "POST");
+        activity.setProperty("content", "activity 1");
+
+        ApiResponse response = client.postUserActivity(userId.toString(),
+                activity);
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
+
+        Entity entity = response.getFirstEntity();
+
+        UUID firstActivityId = entity.getUuid();
+
+        activity = new Activity();
+        activity.setProperty("email", "rod@rodsimpson.com");
+        activity.setProperty("verb", "POST");
+        activity.setProperty("content", "activity 2");
+
+        response = client.postUserActivity(userId.toString(), activity);
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
+
+        entity = response.getFirstEntity();
+
+        UUID secondActivityId = entity.getUuid();
+
+        Query query = client.queryActivity();
+
+        entity = query.getResponse().getEntities().get(0);
+
+        assertEquals(secondActivityId, entity.getUuid());
+
+        entity = query.getResponse().getEntities().get(1);
+
+        assertEquals(firstActivityId, entity.getUuid());
+
+    }
+
+    @Test
+    public void clientNameQuery() {
+
+        UUID id = UUIDUtils.newTimeUUID();
+
+        String username = "username" + id;
+        String name = "name" + id;
+
+        ApiResponse response = client.createUser(username, name, id + "@usergrid.org", "password");
+        
+        
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
+
+        UUID createdId = response.getEntities().get(0).getUuid(); 
+                
+        Query results = client.queryUsers(String.format("name = '%s'", name));
+        User user = results.getResponse().getEntities(User.class).get(0);
+        
+        assertEquals(createdId, user.getUuid());
+    }
+
+    /**
+     * 
+     * @param putResponse
+     * @return
+     */
+    public JsonNode getActor(Entity entity) {
+        return entity.getProperties().get("actor");
+    }
+
+    @Test
+    public void test_PUT_password_fail() {
+        ApiResponse response = client.changePassword("edanuff", "foo", "bar");
+
+        assertEquals("auth_invalid_username_or_password", response.getError());
+    }
+
+    @Test
+    public void test_GET_user_ok() throws InterruptedException {
+
+        // TODO figure out what is being overridden? why 400?
+        JsonNode node = resource().path("/test-app/users")
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+        String uuid = node.get("entities").get(0).get("uuid").getTextValue();
+
+        node = resource().path("/test-app/users/" + uuid)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        logNode(node);
+        assertEquals("ed@anuff.com", node.get("entities").get(0).get("email")
+                .getTextValue());
+    }
+
+    @Test
+    public void test_PUT_password_ok() {
+
+        ApiResponse response = client.changePassword("edanuff", "sesame",
+                "sesame1");
+
+        assertNull(response.getError());
+
+        response = client.authorizeAppUser("ed@anuff.com", "sesame1");
+
+        assertNull(response.getError());
+
+        // if this was successful, we need to re-set the password for other
+        // tests
+        response = client.changePassword("edanuff", "sesame1", "sesame");
+
+        assertNull(response.getError());
+
+    }
 
 }

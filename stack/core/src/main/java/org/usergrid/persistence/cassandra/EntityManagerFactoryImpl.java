@@ -350,4 +350,8 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
 		this.applicationContext = applicationContext;
 	}
 
+  public void setCounterUtils(CounterUtils counterUtils) {
+    this.counterUtils = counterUtils;
+  }
+
 }

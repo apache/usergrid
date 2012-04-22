@@ -17,6 +17,7 @@ package org.usergrid.persistence.query.tree;
 
 import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.Token;
+import org.usergrid.persistence.exceptions.PersistenceException;
 
 /**
  * @author tnine
@@ -41,7 +42,7 @@ public class AndOperand extends BooleanOperand {
      * .query.tree.QueryVisitor)
      */
     @Override
-    public void visit(QueryVisitor visitor) {
+    public void visit(QueryVisitor visitor) throws PersistenceException {
         visitor.visit(this);
     }
 

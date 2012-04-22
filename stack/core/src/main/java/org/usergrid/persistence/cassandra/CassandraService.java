@@ -17,7 +17,6 @@ package org.usergrid.persistence.cassandra;
 
 import static me.prettyprint.cassandra.service.FailoverPolicy.ON_FAIL_TRY_ALL_AVAILABLE;
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
-import static me.prettyprint.hector.api.factory.HFactory.createDefaultConsistencyLevelPolicy;
 import static me.prettyprint.hector.api.factory.HFactory.createMultigetSliceQuery;
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static me.prettyprint.hector.api.factory.HFactory.createRangeSlicesQuery;
@@ -56,6 +55,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import me.prettyprint.cassandra.connection.HConnectionManager;
+import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
@@ -64,9 +64,7 @@ import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.cassandra.service.CassandraHostConfigurator;
 import me.prettyprint.cassandra.service.ThriftKsDef;
-import me.prettyprint.hector.api.Cluster;
-import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.Serializer;
+import me.prettyprint.hector.api.*;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -125,6 +123,8 @@ public class CassandraService {
 	Properties properties;
 	LockManager lockManager;
 
+  ConsistencyLevelPolicy consistencyLevelPolicy;
+
 	private Keyspace systemKeyspace;
 
 	public static final StringSerializer se = new StringSerializer();
@@ -148,12 +148,15 @@ public class CassandraService {
 
 	public void init() throws Exception {
 		HFactory.getOrCreateCluster(cluster.getName(), chc);
-
+    if ( consistencyLevelPolicy == null ) {
+      consistencyLevelPolicy = new ConfigurableConsistencyLevel();
+      ((ConfigurableConsistencyLevel)consistencyLevelPolicy).setDefaultReadConsistencyLevel(HConsistencyLevel.ONE);
+    }
 		Map<String, String> accessMap = new HashMap<String, String>();
 		accessMap.put("username", properties.getProperty("cassandra.username"));
 		accessMap.put("password", properties.getProperty("cassandra.password"));
 		systemKeyspace = HFactory.createKeyspace(SYSTEM_KEYSPACE, cluster,
-				createDefaultConsistencyLevelPolicy(),
+				consistencyLevelPolicy,
 				ON_FAIL_TRY_ALL_AVAILABLE, accessMap);
 	}
 
@@ -196,7 +199,15 @@ public class CassandraService {
 		this.lockManager = lockManager;
 	}
 
-	/**
+  public ConsistencyLevelPolicy getConsistencyLevelPolicy() {
+    return consistencyLevelPolicy;
+  }
+
+  public void setConsistencyLevelPolicy(ConsistencyLevelPolicy consistencyLevelPolicy) {
+    this.consistencyLevelPolicy = consistencyLevelPolicy;
+  }
+
+  /**
 	 * @param applicationId
 	 * @return keyspace for application UUID
 	 */
@@ -223,11 +234,11 @@ public class CassandraService {
 		Keyspace ko = null;
 		if (USE_VIRTUAL_KEYSPACES && (prefix != null)) {
 			ko = createVirtualKeyspace(keyspace, prefix, ue, cluster,
-					createDefaultConsistencyLevelPolicy(),
+					consistencyLevelPolicy,
 					ON_FAIL_TRY_ALL_AVAILABLE, accessMap);
 		} else {
 			ko = HFactory.createKeyspace(keyspace, cluster,
-					createDefaultConsistencyLevelPolicy(),
+					consistencyLevelPolicy,
 					ON_FAIL_TRY_ALL_AVAILABLE, accessMap);
 		}
 		return ko;

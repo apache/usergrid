@@ -332,4 +332,6 @@ public interface ManagementService {
 
 	public boolean isAdminUserConfirmed(UUID userId) throws Exception;
 
+	public void countAdminUserAction(UserInfo user, String action) throws Exception;
+
 }
