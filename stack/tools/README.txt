@@ -16,3 +16,7 @@ java -jar usergrid-tools-0.0.1-SNAPSHOT.jar Cli -remote
 
 java -jar usergrid-tools-0.0.1-SNAPSHOT.jar Cli -remote -host=http://server:9001
 
+Invocation using maven:
+mvn exec:java -Dexec.mainClass="org.usergrid.tools.Command" -Dexec.args="Cli -remote -host=server:9001"
+
+
