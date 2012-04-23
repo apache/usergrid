@@ -317,14 +317,7 @@ public class Export extends ExportingToolBase {
 		}
 	}
 
-	private JsonGenerator getJsonGenerator(File outFile) throws IOException {
-		PrintWriter out = new PrintWriter(outFile, "UTF-8");
-		JsonGenerator jg = jsonFactory.createJsonGenerator(out);
-		jg.setPrettyPrinter(new DefaultPrettyPrinter());
-		jg.setCodec(new ObjectMapper());
-		return jg;
 
-	}
 
 	public void streamOutput(File file, List<Entity> entities) throws Exception {
 		JsonFactory jsonFactory = new JsonFactory();

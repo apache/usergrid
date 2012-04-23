@@ -4,10 +4,15 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.impl.DefaultPrettyPrinter;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 
 /**
@@ -23,6 +28,8 @@ public abstract class ExportingToolBase extends ToolBase {
  	protected static final String OUTPUT_DIR = "outputDir";
 
   protected String baseOutputDirName = "export";
+
+  JsonFactory jsonFactory = new JsonFactory();
 
   @Override
  	@SuppressWarnings("static-access")
@@ -140,6 +147,13 @@ public abstract class ExportingToolBase extends ToolBase {
     return outputFileName;
   }
 
+  protected JsonGenerator getJsonGenerator(File outFile) throws IOException {
+ 		PrintWriter out = new PrintWriter(outFile, "UTF-8");
+ 		JsonGenerator jg = jsonFactory.createJsonGenerator(out);
+ 		jg.setPrettyPrinter(new DefaultPrettyPrinter());
+ 		jg.setCodec(new ObjectMapper());
+ 		return jg;
 
+ 	}
 
 }
