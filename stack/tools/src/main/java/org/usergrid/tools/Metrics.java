@@ -10,6 +10,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
+import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.tools.bean.AppScore;
@@ -22,6 +23,8 @@ import java.io.IOException;
 import java.util.*;
 
 /**
+ * Tools class which dumps metrics for tracking Usergrid developer adoption
+ * and high-level application usage
  * @author zznate
  */
 public class Metrics extends ExportingToolBase {
@@ -37,7 +40,7 @@ public class Metrics extends ExportingToolBase {
 
     outputDir = createOutputParentDir();
 
-    logger.info("Export directory: " + outputDir.getAbsolutePath());
+    logger.info("Export directory: {}",outputDir.getAbsolutePath());
 
     BiMap<UUID, String> organizations = managementService
     				.getOrganizations();
@@ -48,6 +51,9 @@ public class Metrics extends ExportingToolBase {
       System.out.println("Org Name: " + organization.getValue());
       OrgScore orgScore = new OrgScore(organization.getKey(), organization.getValue());
 
+      List<UserInfo> adminUsers = managementService.getAdminUsersForOrganization(orgScore.getId());
+      orgScore.setAdminCount(adminUsers.size());
+      // TODO orgScore.setAdminLoginCount
       /*
       if (organization.equals(properties
               .getProperty("usergrid.test-account.organization"))) {
@@ -69,6 +75,8 @@ public class Metrics extends ExportingToolBase {
         Map<String,Long> counters = em.getApplicationCounters();
         //application.collection.users
         appScore.setUserCount(counters.get("application.collection.users"));
+        orgScore.addToUserCount(appScore.getUserCount());
+
         appScore.setRequestCount(counters.get("application.requests"));
         System.out.println(applications.get(uuid) + " has counters: " + em.getApplicationCounters());
 

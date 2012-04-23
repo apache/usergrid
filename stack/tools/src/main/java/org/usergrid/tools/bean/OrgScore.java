@@ -34,8 +34,8 @@ public class OrgScore {
     return userCount;
   }
 
-  public void setUserCount(long userCount) {
-    this.userCount = userCount;
+  public void addToUserCount(long userCount) {
+    this.userCount += userCount;
   }
 
   public long getAdminCount() {
