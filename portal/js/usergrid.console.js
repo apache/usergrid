@@ -927,6 +927,13 @@ function usergrid_console_app() {
        return o;
     };
 
+    function alertDialog(message, button){
+        var form = $("#alertDialog");
+        $('#alert-message').html(message);
+        $('#alert-message-button').val(button);
+        form.modal("show");
+    }
+    
     function formClearErrors(form){
         form.find(".ui-state-error").removeClass("ui-state-error");
         form.find(".error").removeClass("error");
@@ -1578,12 +1585,6 @@ function usergrid_console_app() {
             form.modal("hide");
         }).submit(callback);
 
-        form.modal("show");
-    }
-
-    function alertDialog(message){
-        var form = $("#alertDialog");
-        $('#alert-message').html(message);
         form.modal("show");
     }
 
@@ -2393,7 +2394,7 @@ function usergrid_console_app() {
         if (ops) {
             client.addApplicationRolePermission(current_application_id, roleName, permission, requestRole, requestRole);
         } else {
-           alertDialog('Please select a verb');
+           alertDialog('Please select a verb', 'ok');
         }
     }
     window.usergrid.console.addRolePermission = addRolePermission;
@@ -2443,7 +2444,7 @@ function usergrid_console_app() {
                     alert("Unable to add permission: " + client.getLastErrorMessage('An internal error occured'));
                 });
         } else {
-           alertDialog('Please select a verb');
+           alertDialog('Please select a verb', 'ok');
         }
     }
     window.usergrid.console.addUserPermission = addUserPermission;
@@ -3236,15 +3237,13 @@ function usergrid_console_app() {
         var new_pass2 = $("#update-account-password-repeat").val();
         if (old_pass && new_pass) {
             if (new_pass != new_pass2) {
-                $.jAlert(client.getLastErrorMessage("New passwords don't match"), 'error', function(result) {
-                     requestAccountSettings();
-                 });
+                alertDialog(client.getLastErrorMessage("New passwords don't match"), 'ok');
+                requestAccountSettings();
                 return;
             }
             if (!(passwordRegex.test(new_pass))) {
-                $.jAlert(client.getLastErrorMessage(passwordAllowedCharsMessage), 'error', function(result) {
-                     requestAccountSettings();
-                 });
+                alertDialog(client.getLastErrorMessage(passwordAllowedCharsMessage), 'ok');
+                requestAccountSettings();
                 return;
             }
             userData.newpassword = new_pass;
@@ -3260,9 +3259,8 @@ function usergrid_console_app() {
                 requestAccountSettings();
             },
             function(response) {
-                $.jAlert(client.getLastErrorMessage("Unable to update account settings"), 'error', function(result) {
-                    requestAccountSettings();
-                });
+                alertDialog(client.getLastErrorMessage("Unable to update account settings"), 'ok');
+                requestAccountSettings();
             }
         );
         return false;
