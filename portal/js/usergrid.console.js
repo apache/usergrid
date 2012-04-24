@@ -2242,26 +2242,26 @@ function usergrid_console_app() {
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.users.html");
     var rolesUsersResults = ''
     function displayRolesUsers(response) {
-        $("#role-users").html('');
-        data = {};
-        data.roleId = current_role_id;
-        data.rolename = current_role_name;
-        if (response.entities) {
-            data.users = response.entities;
-        }
-        $.tmpl("usergrid.ui.panels.role.users.html", {"data" : data}, {}).appendTo("#role-users");
-        updateUsersForRolesAutocomplete();
+      $("#role-users").html('');
+      data = {};
+      data.roleId = current_role_id;
+      data.rolename = current_role_name;
+      if (response.entities) {
+        data.users = response.entities;
+      }
+      $.tmpl("usergrid.ui.panels.role.users.html", {"data" : data}, {}).appendTo("#role-users");
+      updateUsersForRolesAutocomplete();
     }
 
     function selectAllRolesUsers(){
-      $('[id=userRoleItem]').attr('checked', true);
+      $('[class=userRoleItem]').attr('checked', true);
       $('#deselectAllRolesUsers').show();
       $('#selectAllRolesUsers').hide();
     }
     window.usergrid.console.selectAllRolesUsers = selectAllRolesUsers;
 
     function deselectAllRolesUsers(){
-      $('[id=userRoleItem]').attr('checked', false);
+      $('[class=userRoleItem]').attr('checked', false);
     	$('#selectAllRolesUsers').show();
       $('#deselectAllRolesUsers').hide();
     }
