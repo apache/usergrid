@@ -3486,8 +3486,7 @@ function usergrid_console_app() {
     });
     
 
-    //$("#console-panel-nav-bar").usergrid_console_navbar({crumbs : [{title : "Hello"}, {title : "Goodbye"}], tabs : [{title : "Hello"}, {title : "Goodbye"}]});
-
+    
 
     if (OFFLINE) {
         Pages.ShowPage(OFFLINE_PAGE)
