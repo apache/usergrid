@@ -13,24 +13,19 @@
         </div>
     </h3>
     <div class="console-section-contents listContent">
-      {{if memberships}}
-      {{each memberships}}
       <div class="query-result-row entity_list_item">
-        <table class="query-result-table">
-          <tr class="query-result-header">
-            <td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="userGroupItem" value="${$value.uuid}" /></td>
-            <td class="query-result-td-header-name">
-	      <div class="query-result-header-name query-result-picture-vert-offset">
-                <a href="#" onclick="usergrid.console.pageOpenGroupProfile('${$value.uuid}'); return false;">
-                  <span class="user-group-row-title">${$value.path}</span>
-                  <span class="user-group-row-name">(${$value.path})</span>
-                </a>
-	      </div>
+        {{if memberships}}
+        <table class="table">
+          {{each memberships}}
+          <tr class="zebraRows">
+            <td class="checkboxo"><input type="checkbox" name="${name}" id="userGroupItem" value="${$value.uuid}" /></td>
+            <td>
+              <a href="#" onclick="usergrid.console.pageOpenGroupProfile('${$value.uuid}'); return false;">${$value.path}</a>
             </td>
           </tr>
+          {{/each}}
         </table>
       </div>
-      {{/each}}
       {{else}}
       <div class="user-panel-section-message">No Group Memberships</div>
       {{/if}}

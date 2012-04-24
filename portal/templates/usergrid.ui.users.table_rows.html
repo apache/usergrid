@@ -10,9 +10,9 @@
   
   <td class="user-details">
     {{if uuid}}
-      <a href="" onclick="usergrid.console.pageOpenUserProfile('${uuid}'); return false;"><strong>${username}:</strong> ${name}</a>
+      <a href="" onclick="usergrid.console.pageOpenUserProfile('${uuid}'); return false;">${username}: ${name}</a>
     {{else}}
-      <strong>${username}:</strong> ${name}</a>
+      ${username}: ${name}</a>
     {{/if}}
   </td>
 
