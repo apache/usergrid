@@ -154,7 +154,6 @@ function usergrid_console_app() {
     }
 
     function setNavApplicationText() {
-        //$('select#applicationSelect').selectmenu("value", current_application_id);
         if(!current_application_name)
             current_application_name = "Select an Application";
 	    $('#selectedApp2').text(" - " + current_application_name);
@@ -3475,8 +3474,6 @@ function usergrid_console_app() {
         showPeriod: true,
         showLeadingZero: false
     });
-    
-    //$('select#resolutionSelect').selectmenu();
     
     $('#button-analytics-generate').click(function() {
         requestApplicationCounters();
