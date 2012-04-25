@@ -1169,20 +1169,20 @@ function usergrid_console_app() {
     }
 
     function deleteUsersFromRoles(username) {
-        var items = $("#users-permissions-response-table input[id^=userRoleItem]:checked");
-        if(!items.length){
-            alert("Please, first select the items you want to delete");
-            return;
-        }
+      var items = $("input[class^=userRoleItem]:checked");
+      if(!items.length){
+        alert("Please, first select the items you want to delete");
+        return;
+      }
 
-        confirmDelete(function(){
-            items.each(function() {
-                var roleId = $(this).attr("value");
-                client.removeUserFromRole(current_application_id, username, roleId, function() {pageSelectUserPermissions (username);}, function() {
-                    alert("Unable to remove user from role: " + client.getLastErrorMessage('An internal error occured'));
-                });
-            });
+      confirmDelete(function(){
+        items.each(function() {
+          var roleId = $(this).attr("value");
+          client.removeUserFromRole(current_application_id, username, roleId, function() {pageSelectUserPermissions (username);}, function() {
+            alert("Unable to remove user from role: " + client.getLastErrorMessage('An internal error occured'));
+          });
         });
+      });
     }
     window.usergrid.console.deleteUsersFromRoles = deleteUsersFromRoles;
 

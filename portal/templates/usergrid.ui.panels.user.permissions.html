@@ -14,26 +14,24 @@
 	<div class="console-section-contents">
 		<div class="user-panel-section">
 			<div class="user-roles-title">Roles </div>
-            {{if roles}}
-                {{if roles.length > 0}}
-                {{each roles}}
-                <div class="query-result-row entity_list_item" id="users-roles-response-table">
-                    <table class="query-result-table">
-                        <tr class="query-result-header">
-                            <td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="userRoleItem" value="${name}" /></td>
-                            <td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
-                                {{if path}}<a href="" onclick="usergrid.console.pageOpenRole('${name}'); return false;">{{/if}}
-                                <span class="user-role-row-title">${title}</span>
-                                <span class="user-role-row-name">(${name})</span>
-                                {{if path}}</a>{{/if}}
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                {{/each}}
-                {{/if}}
+      {{if roles}}
+        {{if roles.length > 0}}
+          <table class="table table-bordered users-permissions-response-table">
+            {{each roles}}
+            <tr class="zebraRows">
+              <td class="checkboxo"><input type="checkbox" name="${name}" class="userRoleItem" value="${name}" /></td>
+              <td>
+                {{if path}}<a href="" onclick="usergrid.console.pageOpenRole('${name}'); return false;">{{/if}}
+                ${title}
+                (${name})
+                {{if path}}</a>{{/if}}
+              </td>
+            </tr>
+          {{/each}}
+          </table>
+        {{/if}}
 			{{else}}
-			<div class="user-panel-section-message">No Roles</div>
+        <div class="user-panel-section-message">No Roles</div>
 			{{/if}}
             <br/>
             <div class="user-roles-title">Permissions </div>

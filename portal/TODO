@@ -4,7 +4,3 @@ Activities pagination. (waiting to be able to test).
 Pagination is wrong all over. Queries ALWAYS "haveNext" and "havePrevious".
 Groups do not have pagination.
 
-Tables that are still missing:
-  Users => user => Groups
-  Groups => group => Users
-  Roles => role => Users
