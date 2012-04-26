@@ -1,6 +1,6 @@
 package org.usergrid.android.client.callbacks;
 
-import org.usergrid.android.client.entities.Device;
+import org.usergrid.java.client.entities.Device;
 
 public interface DeviceRegistrationCallback extends ClientCallback<Device> {
 

@@ -2,7 +2,8 @@ package org.usergrid.android.client.callbacks;
 
 import java.util.Map;
 
-import org.usergrid.android.client.entities.Group;
+import org.usergrid.java.client.entities.Group;
+
 
 public interface GroupsRetrievedCallback extends
 		ClientCallback<Map<String, Group>> {
