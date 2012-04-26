@@ -1020,7 +1020,8 @@ function usergrid_console_app() {
                 $('#users-messages')
                   .text("User created successfully.")
                   .prepend(closebutton)
-                  .addClass('alert-warning')
+                  .removeClass()
+                  .addClass('alert alert-warning')
                   .show();
               },
               function() {
@@ -1031,9 +1032,9 @@ function usergrid_console_app() {
                 $('#users-messages')
                   .text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'))
                   .prepend(closebutton)
-                  .addClass('alert-error')
+                  .removeClass()
+                  .addClass('alert alert-error')
                   .show();
-                // alert("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'));
               });
 
             $(this).modal('hide');
@@ -1053,9 +1054,33 @@ function usergrid_console_app() {
 
         if (bValid) {
             var data = form.serializeObject();
-            client.createRole(current_application_id, data, requestRoles, function() {
-                alert("Unable to create role: " + client.getLastErrorMessage(data.name));
+            client.createRole(current_application_id, data, 
+            function() {
+              requestRoles();
+              closeErrorMessage = function() {
+                $('#roles-messages').hide();
+              };
+              var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+              $('#roles-messages')
+                .text("Role created successfully.")
+                .prepend(closebutton)
+                .removeClass()
+                .addClass('alert alert-warning')
+                .show();
+            },
+            function() {
+              closeErrorMessage = function() {
+                $('#roles-messages').hide();
+              };
+              var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+              $('#roles-messages')
+                .text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'))
+                .prepend(closebutton)
+                .removeClass()
+                .addClass('alert alert-error')
+                .show();
             });
+
             $(this).modal('hide');
         }
     }
@@ -1070,9 +1095,33 @@ function usergrid_console_app() {
 
         if (bValid) {
             var data = form.serializeObject();
-            client.createCollection(current_application_id, data, requestCollections, function() {
-                alert("Unable to create collection: " + client.getLastErrorMessage(data.name));
+            client.createCollection(current_application_id, data,  
+            function() {
+              requestCollections();
+              closeErrorMessage = function() {
+                $('#collections-messages').hide();
+              };
+              var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+              $('#collections-messages')
+                .text("Collection created successfully.")
+                .prepend(closebutton)
+                .removeClass()
+                .addClass('alert alert-warning')
+                .show();
+            },
+            function() {
+              closeErrorMessage = function() {
+                $('#collections-messages').hide();
+              };
+              var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+              $('#collections-messages')
+                .text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'))
+                .prepend(closebutton)
+                .removeClass()
+                .addClass('alert alert-error')
+                .show();
             });
+
             $(this).modal('hide');
         }
     }
@@ -1100,7 +1149,8 @@ function usergrid_console_app() {
                 $('#groups-messages')
                   .text("Group created successfully.")
                   .prepend(closebutton)
-                  .addClass('alert-warning')
+                  .removeClass()
+                  .addClass('alert alert-warning')
                   .show();
               },
               function() {
