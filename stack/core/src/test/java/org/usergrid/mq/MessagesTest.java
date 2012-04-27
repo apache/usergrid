@@ -42,7 +42,7 @@ public class MessagesTest extends AbstractPersistenceTest {
 	public void testMessages() throws Exception {
 		logger.info("MessagesTest.testMessages");
 
-		UUID applicationId = createApplication("testMessages");
+		UUID applicationId = createApplication("testOrganization","testMessages");
 		assertNotNull(applicationId);
 
 		EntityManager em = getEntityManagerFactory().getEntityManager(
@@ -116,7 +116,7 @@ public class MessagesTest extends AbstractPersistenceTest {
 	@Test
 	public void testSubscriberSearch() throws Exception {
 
-		UUID applicationId = createApplication("testSubscriberSearch");
+		UUID applicationId = createApplication("testOrganization","testSubscriberSearch");
 		assertNotNull(applicationId);
 
 		EntityManager em = getEntityManagerFactory().getEntityManager(
@@ -180,7 +180,7 @@ public class MessagesTest extends AbstractPersistenceTest {
 	@Test
 	public void testConsumer() throws Exception {
 
-		UUID applicationId = createApplication("testConsumer");
+		UUID applicationId = createApplication("testOrganization","testConsumer");
 		assertNotNull(applicationId);
 
 		EntityManager em = getEntityManagerFactory().getEntityManager(

@@ -53,7 +53,7 @@ public class EntityDictionaryTest extends AbstractPersistenceTest {
 
 		logger.info("EntityDictionaryTest.testApplicationDictionaries");
 
-		UUID applicationId = createApplication("testApplicationDictionaries");
+		UUID applicationId = createApplication("testOrganization","testApplicationDictionaries");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);
@@ -72,7 +72,7 @@ public class EntityDictionaryTest extends AbstractPersistenceTest {
 
 		logger.info("EntityDictionaryTest.testUserDictionaries");
 
-		UUID applicationId = createApplication("testUserDictionaries");
+		UUID applicationId = createApplication("testOrganization","testUserDictionaries");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);

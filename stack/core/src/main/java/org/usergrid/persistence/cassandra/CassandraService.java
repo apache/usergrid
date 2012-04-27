@@ -107,6 +107,7 @@ public class CassandraService {
 	public static final int RETRY_COUNT = 5;
 
 	public static final String DEFAULT_APPLICATION = "default-app";
+  public static final String DEFAULT_ORGANIZATION = "usergrid";
 	public static final String MANAGEMENT_APPLICATION = "management";
 
 	public static final UUID MANAGEMENT_APPLICATION_ID = new UUID(0, 1);

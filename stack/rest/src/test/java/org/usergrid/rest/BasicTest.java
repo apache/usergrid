@@ -122,7 +122,7 @@ public class BasicTest extends AbstractRestTest {
 
 		// test login user with correct password
 
-		node = resource().path("/test-app/token")
+		node = resource().path("/test-organization/test-app/token")
 				.queryParam("grant_type", "password")
 				.queryParam("username", "ed@anuff.com")
 				.queryParam("password", "sesame")
@@ -137,7 +137,7 @@ public class BasicTest extends AbstractRestTest {
 
 		err_thrown = false;
 		try {
-			node = resource().path("/test-app/users")
+			node = resource().path("/test-organization/test-app/users")
 					.queryParam("access_token", user_access_token)
 					.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 		} catch (UniformInterfaceException e) {
@@ -150,7 +150,7 @@ public class BasicTest extends AbstractRestTest {
 
 		// test get app user with sufficient permissions
 
-		node = resource().path("/test-app/users/edanuff")
+		node = resource().path("/test-organization/test-app/users/edanuff")
 				.queryParam("access_token", user_access_token)
 				.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 		logNode(node);
@@ -161,7 +161,7 @@ public class BasicTest extends AbstractRestTest {
 
 		err_thrown = false;
 		try {
-			node = resource().path("/test-app/users")
+			node = resource().path("/test-organization/test-app/users")
 					.queryParam("access_token", "blahblahblah")
 					.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 		} catch (UniformInterfaceException e) {
@@ -176,7 +176,7 @@ public class BasicTest extends AbstractRestTest {
 
 		err_thrown = false;
 		try {
-			node = resource().path("/test-app/users")
+			node = resource().path("/test-organization/test-app/users")
 					.accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
 		} catch (UniformInterfaceException e) {
 			assertEquals("Should receive a 401 Unauthorized", 401, e
@@ -187,7 +187,7 @@ public class BasicTest extends AbstractRestTest {
 
 		// test login app user with pin
 
-		node = resource().path("/test-app/token")
+		node = resource().path("/test-organization/test-app/token")
 				.queryParam("grant_type", "pin")
 				.queryParam("username", "ed@anuff.com")
 				.queryParam("pin", "1234").accept(MediaType.APPLICATION_JSON)
@@ -202,12 +202,12 @@ public class BasicTest extends AbstractRestTest {
 
 		MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
 		formData.add("pin", "5678");
-		node = resource().path("/test-app/users/ed@anuff.com/setpin")
+		node = resource().path("/test-organization/test-app/users/ed@anuff.com/setpin")
 				.queryParam("access_token", user_access_token)
 				.type("application/x-www-form-urlencoded")
 				.post(JsonNode.class, formData);
 
-		node = resource().path("/test-app/token")
+		node = resource().path("/test-organization/test-app/token")
 				.queryParam("grant_type", "pin")
 				.queryParam("username", "ed@anuff.com")
 				.queryParam("pin", "5678").accept(MediaType.APPLICATION_JSON)
@@ -220,7 +220,7 @@ public class BasicTest extends AbstractRestTest {
 
 		// test user test extension resource
 
-		node = resource().path("/test-app/users/ed@anuff.com/test").get(
+		node = resource().path("/test-organization/test-app/users/ed@anuff.com/test").get(
 				JsonNode.class);
 		logNode(node);
 
@@ -230,7 +230,7 @@ public class BasicTest extends AbstractRestTest {
 				.map("username", "ed.anuff").map("name", "Ed Anuff")
 				.map("password", "sesame").map("pin", "1234");
 
-		node = resource().path("/test-app/users")
+		node = resource().path("/test-organization/test-app/users")
 				.accept(MediaType.APPLICATION_JSON)
 				.type(MediaType.APPLICATION_JSON_TYPE)
 				.post(JsonNode.class, payload);
@@ -244,7 +244,7 @@ public class BasicTest extends AbstractRestTest {
 
 		payload = hashMap("foo", "bar");
 
-		node = resource().path("/test-app/devices/" + UUID.randomUUID())
+		node = resource().path("/test-organization/test-app/devices/" + UUID.randomUUID())
 				.accept(MediaType.APPLICATION_JSON)
 				.type(MediaType.APPLICATION_JSON_TYPE)
 				.put(JsonNode.class, payload);
@@ -257,7 +257,7 @@ public class BasicTest extends AbstractRestTest {
 
 		err_thrown = false;
 		try {
-			node = resource().path("/test-app/items")
+			node = resource().path("/test-organization/test-app/items")
 					.accept(MediaType.APPLICATION_JSON)
 					.type(MediaType.APPLICATION_JSON_TYPE)
 					.post(JsonNode.class, payload);

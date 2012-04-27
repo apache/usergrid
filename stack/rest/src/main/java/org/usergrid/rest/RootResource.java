@@ -58,6 +58,7 @@ import org.usergrid.rest.applications.ApplicationResource;
 import org.usergrid.rest.exceptions.NoOpException;
 
 import com.sun.jersey.api.json.JSONWithPadding;
+import org.usergrid.rest.utils.PathingUtils;
 import org.usergrid.system.UsergridSystemMonitor;
 
 /**
@@ -99,7 +100,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws URISyntaxException {
 
-		System.out.println("RootResource.getAllApplications");
+		logger.info("RootResource.getAllApplications");
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("get applications");
@@ -178,11 +179,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
         }
       node.put(entry.getKey(),meterNode);
-
-
     }
-
-
   }
 
 
@@ -228,8 +225,9 @@ public class RootResource extends AbstractContextResource implements MetricProce
 		if ("options".equalsIgnoreCase(request.getMethod())) {
 			throw new NoOpException();
 		}
+
     // TODO update applicationName for this call 'org/applicationName
-		UUID applicationId = emf.lookupApplication(applicationName);
+		UUID applicationId = emf.lookupApplication(PathingUtils.assembleAppName(organizationName, applicationName));
 		if (applicationId == null) {
 			return null;
 		}
@@ -264,13 +262,6 @@ public class RootResource extends AbstractContextResource implements MetricProce
     node.put("count", histogram.count());
     writeSummarizable(histogram, node);
     writeSampling(histogram, node);
-    /*
-    if (context.showFullSamples) {
-        node.put("values", histogram.getSnapshot().getValues());
-    }
-    */
-
-
   }
 
   @Override
@@ -278,34 +269,27 @@ public class RootResource extends AbstractContextResource implements MetricProce
     final ObjectNode node = context.objectNode;
     node.put("type", "counter");
     node.put("count", counter.count());
-
   }
 
   @Override
   public void processGauge(MetricName name, Gauge<?> gauge, MetricContext context) throws Exception {
     final ObjectNode node = context.objectNode;
-
-
     node.put("type", "gauge");
-    //node.put("value", evaluateGauge(gauge));
     node.put("vale","[disabled]");
   }
 
   @Override
   public void processMeter(MetricName name, Metered meter, MetricContext context) throws Exception {
     final ObjectNode node = context.objectNode;
-
     node.put("type", "meter");
     node.put("event_type", meter.eventType());
     writeMeteredFields(meter, node);
-
 
   }
 
   @Override
   public void processTimer(MetricName name, Timer timer, MetricContext context) throws Exception {
     final ObjectNode node = context.objectNode;
-
 
     node.put("type", "timer");
     //json.writeFieldName("duration");
@@ -314,43 +298,36 @@ public class RootResource extends AbstractContextResource implements MetricProce
     writeSummarizable(timer, durationNode);
     writeSampling(timer, durationNode);
     node.put("duration",durationNode);
-    /*
-                  if (context.showFullSamples) {
-                      json.writeObjectField("values", timer.getSnapshot().getValues());
-                  }
-*/
+    writeMeteredFields(timer, node);
 
+  }
 
-                  writeMeteredFields(timer, node);
+  private static Object evaluateGauge(Gauge<?> gauge) {
+    try {
+      return gauge.value();
+    } catch (RuntimeException e) {
+      logger.warn("Error evaluating gauge", e);
+      return "error reading gauge: " + e.getMessage();
+    }
+  }
 
-      }
+  private static void writeSummarizable(Summarizable metric, ObjectNode mNode) throws IOException {
+    mNode.put("min", metric.min());
+    mNode.put("max", metric.max());
+    mNode.put("mean", metric.mean());
+    mNode.put("std_dev", metric.stdDev());
+  }
 
-      private static Object evaluateGauge(Gauge<?> gauge) {
-          try {
-              return gauge.value();
-          } catch (RuntimeException e) {
-              logger.warn("Error evaluating gauge", e);
-              return "error reading gauge: " + e.getMessage();
-          }
-      }
+  private static void writeSampling(Sampling metric, ObjectNode mNode) throws IOException {
 
-      private static void writeSummarizable(Summarizable metric, ObjectNode mNode) throws IOException {
-          mNode.put("min", metric.min());
-          mNode.put("max", metric.max());
-          mNode.put("mean", metric.mean());
-          mNode.put("std_dev", metric.stdDev());
-      }
-
-      private static void writeSampling(Sampling metric, ObjectNode mNode) throws IOException {
-
-          final Snapshot snapshot = metric.getSnapshot();
-          mNode.put("median", snapshot.getMedian());
-          mNode.put("p75", snapshot.get75thPercentile());
-          mNode.put("p95", snapshot.get95thPercentile());
-          mNode.put("p98", snapshot.get98thPercentile());
-          mNode.put("p99", snapshot.get99thPercentile());
-          mNode.put("p999", snapshot.get999thPercentile());
-      }
+    final Snapshot snapshot = metric.getSnapshot();
+    mNode.put("median", snapshot.getMedian());
+    mNode.put("p75", snapshot.get75thPercentile());
+    mNode.put("p95", snapshot.get95thPercentile());
+    mNode.put("p98", snapshot.get98thPercentile());
+    mNode.put("p99", snapshot.get99thPercentile());
+    mNode.put("p999", snapshot.get999thPercentile());
+  }
 
   private static void writeMeteredFields(Metered metered, ObjectNode node) throws IOException {
     ObjectNode mNode = JsonNodeFactory.instance.objectNode();

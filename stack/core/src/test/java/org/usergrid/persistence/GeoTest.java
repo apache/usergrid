@@ -44,7 +44,7 @@ public class GeoTest extends AbstractPersistenceTest {
 	public void testGeo() throws Exception {
 		logger.info("GeoTest.testGeo");
 
-		UUID applicationId = createApplication("testGeo");
+		UUID applicationId = createApplication("testOrganization","testGeo");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);

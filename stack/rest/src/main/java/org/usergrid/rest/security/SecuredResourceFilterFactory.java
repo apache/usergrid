@@ -43,6 +43,7 @@ import org.usergrid.rest.security.annotations.RequireAdminUserAccess;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.usergrid.rest.security.annotations.RequireSystemAccess;
+import org.usergrid.rest.utils.PathingUtils;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.services.ServiceManagerFactory;
 
@@ -136,7 +137,7 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
 
 		@Override
 		public ContainerRequest filter(ContainerRequest request) {
-			logger.info("Filtering " + request.getRequestUri().toString());
+			logger.info("Filtering {}",request.getRequestUri().toString());
 
 			if (request.getMethod().equalsIgnoreCase("OPTIONS")) {
 				logger.info("Skipping option request");
@@ -145,7 +146,7 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
 
 			MultivaluedMap<java.lang.String, java.lang.String> params = uriInfo
 					.getPathParameters();
-			logger.info("Params: " + params.keySet());
+			logger.info("Params: {}", params.keySet());
 
 			authorize(request);
 			return request;
@@ -163,7 +164,10 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
 			if (isNotEmpty(applicationIdStr)) {
 				application = Identifier.from(applicationIdStr);
 			} else {
-				String applicationName = pathParams.getFirst("applicationName");
+				String applicationName = PathingUtils.assembleAppName(uriInfo.getPathParameters());
+        if ( logger.isDebugEnabled() ) {
+          logger.debug("Pulled applicationName {}", applicationName);
+        }
 				application = Identifier.fromName(applicationName);
 			}
 

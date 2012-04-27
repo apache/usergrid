@@ -43,7 +43,7 @@ public class EntityManagerTest extends AbstractPersistenceTest {
 	public void testEntityManager() throws Exception {
 		logger.info("EntityManagerTest.testEntityManagerTest");
 
-		UUID applicationId = createApplication("testEntityManagerTest");
+		UUID applicationId = createApplication("testOrganization","testEntityManagerTest");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);
@@ -106,7 +106,7 @@ public class EntityManagerTest extends AbstractPersistenceTest {
 	public void testCreateAndGet() throws Exception {
 		logger.info("EntityDaoTest.testCreateAndGet");
 
-		UUID applicationId = createApplication("testCreateAndGet");
+		UUID applicationId = createApplication("testOrganization","testCreateAndGet");
 
 		EntityManager em = emf.getEntityManager(applicationId);
 
@@ -184,7 +184,7 @@ public class EntityManagerTest extends AbstractPersistenceTest {
 	public void testDictionaries() throws Exception {
 		logger.info("EntityDaoTest.testDictionaries");
 
-		UUID applicationId = createApplication("testDictionaries");
+		UUID applicationId = createApplication("testOrganization","testDictionaries");
 
 		EntityManager em = emf.getEntityManager(applicationId);
 
@@ -227,7 +227,7 @@ public class EntityManagerTest extends AbstractPersistenceTest {
 	public void testProperties() throws Exception {
 		logger.info("EntityDaoTest.testProperties");
 
-		UUID applicationId = createApplication("testProperties");
+		UUID applicationId = createApplication("testOrganization","testProperties");
 
 		EntityManager em = emf.getEntityManager(applicationId);
 
@@ -267,7 +267,7 @@ public class EntityManagerTest extends AbstractPersistenceTest {
 	public void testCreateAndDelete() throws Exception {
 		logger.info("EntityDaoTest.testCreateAndDelete");
 
-		UUID applicationId = createApplication("testCreateAndDelete");
+		UUID applicationId = createApplication("testOrganization","testCreateAndDelete");
 
 		EntityManager em = emf.getEntityManager(applicationId);
 
@@ -290,7 +290,7 @@ public class EntityManagerTest extends AbstractPersistenceTest {
 	public void testJson() throws Exception {
 		logger.info("EntityDaoTest.testProperties");
 
-		UUID applicationId = createApplication("testJson");
+		UUID applicationId = createApplication("testOrganization","testJson");
 
 		EntityManager em = emf.getEntityManager(applicationId);
 
@@ -329,7 +329,7 @@ public class EntityManagerTest extends AbstractPersistenceTest {
     organizationEntity.setProperty("name","testCounterOrg");
     organizationEntity = em.create(organizationEntity);
 
-    UUID applicationId = emf.createApplication("testEntityCounters");
+    UUID applicationId = emf.createApplication("testCounterOrg","testEntityCounters");
 
     Map<String,Object> properties = new LinkedHashMap<String,Object>();
     properties.put("name", "testEntityCounters");

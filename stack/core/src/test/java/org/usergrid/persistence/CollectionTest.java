@@ -39,7 +39,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     @SuppressWarnings("serial")
     @Test
     public void testCollection() throws Exception {
-        UUID applicationId = createApplication("testCollection");
+        UUID applicationId = createApplication("testOrganization","testCollection");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -79,7 +79,7 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     @Test
     public void userFirstNameSearch() throws Exception {
-        UUID applicationId = createApplication("testFirstName");
+        UUID applicationId = createApplication("testOrganization","testFirstName");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -111,7 +111,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     
     @Test
     public void userMiddleNameSearch() throws Exception {
-        UUID applicationId = createApplication("testMiddleName");
+        UUID applicationId = createApplication("testOrganization","testMiddleName");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -143,7 +143,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     
     @Test
     public void userLastNameSearch() throws Exception {
-        UUID applicationId = createApplication("testLastName");
+        UUID applicationId = createApplication("testOrganization","testLastName");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -176,7 +176,7 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     @Test
     public void testGroups() throws Exception {
-        UUID applicationId = createApplication("testGroups");
+        UUID applicationId = createApplication("testOrganization","testGroups");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -221,7 +221,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     
     @Test
     public void groupNameSearch() throws Exception {
-        UUID applicationId = createApplication("groupNameSearch");
+        UUID applicationId = createApplication("testOrganization","groupNameSearch");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -253,7 +253,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     
     @Test
     public void groupTitleSearch() throws Exception {
-        UUID applicationId = createApplication("groupTitleSearch");
+        UUID applicationId = createApplication("testOrganization","groupTitleSearch");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -286,7 +286,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     @Test
     public void testSubkeys() throws Exception {
 
-        UUID applicationId = createApplication("testSubkeys");
+        UUID applicationId = createApplication("testOrganization","testSubkeys");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);

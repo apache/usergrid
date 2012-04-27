@@ -36,7 +36,7 @@ public class UsersServiceTest extends AbstractServiceTest {
 	public void testPermissions() throws Exception {
 		logger.info("PermissionsTest.testPermissions");
 
-		UUID applicationId = createApplication("testPermissions");
+		UUID applicationId = createApplication("testOrganization","testPermissions");
 		assertNotNull(applicationId);
 
 		ServiceManager sm = smf.getServiceManager(applicationId);

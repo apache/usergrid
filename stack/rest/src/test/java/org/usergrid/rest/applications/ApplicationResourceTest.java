@@ -35,7 +35,7 @@ public class ApplicationResourceTest extends AbstractRestTest {
   public void test_GET_credentials_ok() {
     String mgmtToken = mgmtToken();
 
-    JsonNode node = resource().path("/test-app/credentials")
+    JsonNode node = resource().path("/test-organization/test-app/credentials")
             .queryParam("access_token", mgmtToken)
             .accept(MediaType.APPLICATION_JSON)
             .type(MediaType.APPLICATION_JSON_TYPE)
