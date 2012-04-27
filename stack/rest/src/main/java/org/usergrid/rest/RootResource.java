@@ -219,15 +219,16 @@ public class RootResource extends AbstractContextResource implements MetricProce
 		return getApplicationById(applicationId);
 	}
 
-	@Path("{applicationName}")
+	@Path("{organizationName}/{applicationName}")
 	public ApplicationResource getApplicationByName(
-			@PathParam("applicationName") String applicationName)
+          @PathParam("organizationName") String organizationName,
+          @PathParam("applicationName") String applicationName)
 			throws Exception {
 
 		if ("options".equalsIgnoreCase(request.getMethod())) {
 			throw new NoOpException();
 		}
-
+    // TODO update applicationName for this call 'org/applicationName
 		UUID applicationId = emf.lookupApplication(applicationName);
 		if (applicationId == null) {
 			return null;
@@ -240,18 +241,20 @@ public class RootResource extends AbstractContextResource implements MetricProce
 		return getSubResource(ApplicationResource.class).init(applicationId);
 	}
 
-	@Path("applications/{applicationName}")
+	@Path("applications/{organizationName}/{applicationName}")
 	public ApplicationResource getApplicationByName2(
-			@PathParam("applicationName") String applicationName)
+          @PathParam("organizationName") String organizationName,
+          @PathParam("applicationName") String applicationName)
 			throws Exception {
-		return getApplicationByName(applicationName);
+		return getApplicationByName(organizationName, applicationName);
 	}
 
-	@Path("apps/{applicationName}")
+	@Path("apps/{organizationName}/{applicationName}")
 	public ApplicationResource getApplicationByName3(
+      @PathParam("organizationName") String organizationName,
 			@PathParam("applicationName") String applicationName)
 			throws Exception {
-		return getApplicationByName(applicationName);
+		return getApplicationByName(organizationName, applicationName);
 	}
 
   @Override
