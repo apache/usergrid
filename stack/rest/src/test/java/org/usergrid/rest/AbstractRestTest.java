@@ -136,7 +136,7 @@ public abstract class AbstractRestTest extends JerseyTest {
                 .map("username", "edanuff").map("name", "Ed Anuff")
                 .map("password", "sesame").map("pin", "1234");
 
-        node = resource().path("/test-app/users")
+        node = resource().path("/test-organization/test-app/users")
                 .queryParam("access_token", mgmToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
@@ -150,7 +150,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
     public void loginClient() {
         // now create a client that logs in ed
-        client = new Client("test-app").withApiUrl(getBaseURI().toString());
+        client = new Client("test-organization/test-app").withApiUrl(getBaseURI().toString());
 
         org.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser("ed@anuff.com", "sesame");
 
@@ -194,7 +194,7 @@ public abstract class AbstractRestTest extends JerseyTest {
         managementService = (ManagementService) context
                 .getBean("managementService");
 
-        ApplicationInfo appInfo = managementService.getApplication("test-app");
+        ApplicationInfo appInfo = managementService.getApplication("test-organization/test-app");
 
         User user = managementService.getAppUserByIdentifier(appInfo.getId(),
                 Identifier.from("ed@anuff.com"));

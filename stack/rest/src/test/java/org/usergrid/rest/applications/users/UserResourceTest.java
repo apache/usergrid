@@ -52,7 +52,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "username = 'user*'";
 
-        JsonNode node = resource().path("/test-app/users").queryParam("ql", ql)
+        JsonNode node = resource().path("/test-organization/test-app/users").queryParam("ql", ql)
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
@@ -73,7 +73,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "name = 'John*'";
 
-        JsonNode node = resource().path("/test-app/users").queryParam("ql", ql)
+        JsonNode node = resource().path("/test-organization/test-app/users").queryParam("ql", ql)
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
@@ -92,7 +92,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "name contains 'Smith' order by name ";
 
-        JsonNode node = resource().path("/test-app/users").queryParam("ql", ql)
+        JsonNode node = resource().path("/test-organization/test-app/users").queryParam("ql", ql)
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
@@ -117,7 +117,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "username contains 'user' ";
 
-        resource().path("/test-app/users").queryParam("ql", ql)
+        resource().path("/test-organization/test-app/users").queryParam("ql", ql)
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
@@ -135,7 +135,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "picture = 'foo' ";
 
-        resource().path("/test-app/users").queryParam("ql", ql)
+        resource().path("/test-organization/test-app/users").queryParam("ql", ql)
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
@@ -361,14 +361,14 @@ public class UserResourceTest extends AbstractRestTest {
     public void test_GET_user_ok() throws InterruptedException {
 
         // TODO figure out what is being overridden? why 400?
-        JsonNode node = resource().path("/test-app/users")
+        JsonNode node = resource().path("/test-organization/test-app/users")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
         String uuid = node.get("entities").get(0).get("uuid").getTextValue();
 
-        node = resource().path("/test-app/users/" + uuid)
+        node = resource().path("/test-organization/test-app/users/" + uuid)
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);

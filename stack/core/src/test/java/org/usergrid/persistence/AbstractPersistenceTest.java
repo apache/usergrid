@@ -90,11 +90,11 @@ public abstract class AbstractPersistenceTest {
 
 	UUID dId = null;
 
-	public UUID createApplication(String name) throws Exception {
+	public UUID createApplication(String organizationName, String applicationName) throws Exception {
 		if (USE_DEFAULT_APPLICATION) {
 			return CassandraService.DEFAULT_APPLICATION_ID;
 		}
-		return emf.createApplication(name);
+		return emf.createApplication(organizationName, applicationName);
 	}
 
 	public void dump(Object obj) {

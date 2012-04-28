@@ -52,8 +52,9 @@ public class ManagementServiceTest {
                 "ed@anuff.com", "test", false, false, false);
     organization = managementService.createOrganization(
                 "ed-organization", adminUser);
+    // TODO update to organizationName/applicationName
     applicationId = managementService.createApplication(
-        				organization.getUuid(), "ed-application");
+        				organization.getUuid(), "ed-organization/ed-application");
   }
 
   @AfterClass

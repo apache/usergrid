@@ -40,7 +40,7 @@ public class EntityConnectionsTest extends AbstractPersistenceTest {
 	public void testEntityConnections() throws Exception {
 		logger.info("\n\nEntityConnectionsTest.testEntityConnections\n");
 
-		UUID applicationId = createApplication("testEntityConnections");
+		UUID applicationId = createApplication("testOrganization","testEntityConnections");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);

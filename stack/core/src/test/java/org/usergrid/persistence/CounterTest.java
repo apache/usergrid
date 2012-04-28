@@ -45,7 +45,7 @@ public class CounterTest extends AbstractPersistenceTest {
 	public void testCounters() throws Exception {
 		logger.info("CounterTest.testCounters");
 
-		UUID applicationId = createApplication("testCounters");
+		UUID applicationId = createApplication("testOrganization","testCounters");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);
@@ -130,14 +130,14 @@ public class CounterTest extends AbstractPersistenceTest {
 
     Group organizationEntity = new Group();
     organizationEntity.setPath("tst-counter");
-    organizationEntity.setProperty("name","test counter");
+    organizationEntity.setProperty("name","testCounter");
     organizationEntity = em.create(organizationEntity);
 
 
-    UUID applicationId = emf.createApplication("testEntityCounters");
+    UUID applicationId = emf.createApplication("testCounter","testEntityCounters");
 
     Map<String,Object> properties = new LinkedHashMap<String,Object>();
-    properties.put("name", "testEntityCounters");
+    properties.put("name", "testCounter/testEntityCounters");
     Entity applicationEntity = em.create(applicationId, "application_info",
             properties);
 
