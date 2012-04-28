@@ -57,6 +57,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
 import org.slf4j.Logger;
@@ -109,6 +110,7 @@ import org.usergrid.utils.JsonUtils;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import org.usergrid.utils.PasswordUtils;
 
 public class ManagementServiceImpl implements ManagementService {
 
@@ -2096,9 +2098,14 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 
 		EntityManager em = emf.getEntityManager(applicationId);
-		if (checkPassword(password,
-				(CredentialsInfo) em.getDictionaryElementValue(user,
-						DICTIONARY_CREDENTIALS, "password"))) {
+
+    CredentialsInfo credentialsInfo = (CredentialsInfo) em.getDictionaryElementValue(user,
+            DICTIONARY_CREDENTIALS, "password");
+    // pre-hash for legacy system imports
+    if (StringUtils.equals(user.getHashtype(), User.HASHTYPE_MD5)) {
+      password = credentialsInfo.encrypt(User.HASHTYPE_MD5, "", password);
+    }
+    if (checkPassword(password, credentialsInfo)) {
 			if (!user.activated()) {
 				throw new UnactivatedAdminUserException();
 			}
