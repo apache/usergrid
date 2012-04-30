@@ -57,6 +57,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
 import org.slf4j.Logger;
@@ -109,6 +110,7 @@ import org.usergrid.utils.JsonUtils;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import org.usergrid.utils.PasswordUtils;
 
 public class ManagementServiceImpl implements ManagementService {
 
@@ -252,8 +254,9 @@ public class ManagementServiceImpl implements ManagementService {
 
 			OrganizationInfo organization = createOrganization(
 					test_organization_name, user);
+      // TODO change to organizationName/applicationName
 			UUID appId = createApplication(organization.getUuid(),
-					test_app_name);
+					organization.getName() + "/" + test_app_name);
 
 			postOrganizationActivity(organization.getUuid(), user, "create",
 					new SimpleEntityRef(APPLICATION_INFO, appId),
@@ -488,11 +491,15 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public UUID importApplication(UUID organizationId, Application application)
 			throws Exception {
-		UUID applicationId = emf.importApplication(application.getUuid(),
-				application.getName(), application.getProperties());
+    // TODO organizationName
+    OrganizationInfo organization = getOrganizationByUuid(organizationId);
+		UUID applicationId = emf.importApplication(organization.getName(),
+            application.getUuid(),
+            application.getName(),
+            application.getProperties());
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-		properties.put("name", application.getName());
+		properties.put("name", buildAppName(application.getName(), organization));
 		Entity app = em.create(applicationId, APPLICATION_INFO, null);
 
 		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
@@ -506,7 +513,19 @@ public class ManagementServiceImpl implements ManagementService {
 		return applicationId;
 	}
 
-	@Override
+  /**
+   * Test if the applicationName contains a '/' character, prepend with orgName if it does
+   * not, assume it is complete (and that organization is uneeded) if so.
+   * @param applicationName
+   * @param organization
+   * @return
+   */
+  private String buildAppName(String applicationName, OrganizationInfo organization) {
+    return applicationName.contains("/") ? applicationName :
+            organization.getName() + "/" + applicationName;
+  }
+
+  @Override
 	public BiMap<UUID, String> getOrganizations() throws Exception {
 
 		BiMap<UUID, String> organizations = HashBiMap.create();
@@ -1290,10 +1309,12 @@ public class ManagementServiceImpl implements ManagementService {
 			properties = new HashMap<String, Object>();
 		}
 
-		UUID applicationId = emf.createApplication(applicationName, properties);
+    OrganizationInfo organizationInfo = getOrganizationByUuid(organizationId);
+
+		UUID applicationId = emf.createApplication(organizationInfo.getName(), applicationName, properties);
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-		properties.put("name", applicationName);
+		properties.put("name", buildAppName(applicationName, organizationInfo));
 		Entity applicationEntity = em.create(applicationId, APPLICATION_INFO,
 				properties);
 
@@ -2105,9 +2126,14 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 
 		EntityManager em = emf.getEntityManager(applicationId);
-		if (checkPassword(password,
-				(CredentialsInfo) em.getDictionaryElementValue(user,
-						DICTIONARY_CREDENTIALS, "password"))) {
+
+    CredentialsInfo credentialsInfo = (CredentialsInfo) em.getDictionaryElementValue(user,
+            DICTIONARY_CREDENTIALS, "password");
+    // pre-hash for legacy system imports
+    if (StringUtils.equals(user.getHashtype(), User.HASHTYPE_MD5)) {
+      password = credentialsInfo.encrypt(User.HASHTYPE_MD5, "", password);
+    }
+    if (checkPassword(password, credentialsInfo)) {
 			if (!user.activated()) {
 				throw new UnactivatedAdminUserException();
 			}

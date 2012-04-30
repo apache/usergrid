@@ -70,6 +70,7 @@ public class PopulateSample extends ToolBase {
 				user);
 
 		logger.info("creating application: testEntityManagerTest");
+    // TODO update to organizationName/applicationName
 		UUID applicationId = managementService.createApplication(organization.getUuid(),
 				"sample-application");
 

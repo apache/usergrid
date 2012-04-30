@@ -33,7 +33,7 @@ public class ApplicationsServiceTest extends AbstractServiceTest {
 	public void testPermissions() throws Exception {
 		logger.info("PermissionsTest.testPermissions");
 
-		UUID applicationId = createApplication("testPermissions");
+		UUID applicationId = createApplication("testOrganization","testPermissions");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);

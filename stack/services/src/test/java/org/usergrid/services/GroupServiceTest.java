@@ -35,7 +35,7 @@ public class GroupServiceTest extends AbstractServiceTest {
 	@Test
 	public void testGroups() throws Exception {
 
-		UUID applicationId = createApplication("testGroups");
+		UUID applicationId = createApplication("testOrganization","testGroups");
 
 		ServiceManager sm = smf.getServiceManager(applicationId);
 
@@ -86,7 +86,7 @@ public class GroupServiceTest extends AbstractServiceTest {
 	public void testPermissions() throws Exception {
 		logger.info("PermissionsTest.testPermissions");
 
-		UUID applicationId = createApplication("testPermissions");
+		UUID applicationId = createApplication("testOrganization","testPermissions");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);

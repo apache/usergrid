@@ -78,18 +78,18 @@ public class EntityManagerFactoryImplTest {
 		return emf;
 	}
 
-	public UUID createApplication(String name) throws Exception {
+	public UUID createApplication(String organizationName, String applicationName) throws Exception {
 		if (USE_DEFAULT_DOMAIN) {
 			return CassandraService.DEFAULT_APPLICATION_ID;
 		}
-		return emf.createApplication(name);
+		return emf.createApplication(organizationName, applicationName);
 	}
 
 	@Test
 	public void testCreateAndGet() throws Exception {
 		logger.info("EntityDaoTest.testCreateAndGet");
 
-		UUID applicationId = createApplication("testCreateAndGet");
+		UUID applicationId = createApplication("testOrganization","testCreateAndGet");
 		logger.info("Application id " + applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);

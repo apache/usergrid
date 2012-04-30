@@ -44,7 +44,7 @@ public class IndexTest extends AbstractPersistenceTest {
 	public void testCollectionOrdering() throws Exception {
 		logger.info("testCollectionOrdering");
 
-		UUID applicationId = createApplication("testCollectionOrdering");
+		UUID applicationId = createApplication("testOrganization","testCollectionOrdering");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);
@@ -116,7 +116,7 @@ public class IndexTest extends AbstractPersistenceTest {
 	public void testCollectionFilters() throws Exception {
 		logger.info("testCollectionFilters");
 
-		UUID applicationId = createApplication("testCollectionFilters");
+		UUID applicationId = createApplication("testOrganization","testCollectionFilters");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);
@@ -241,7 +241,7 @@ public class IndexTest extends AbstractPersistenceTest {
 	public void testSecondarySorts() throws Exception {
 		logger.info("testSecondarySorts");
 
-		UUID applicationId = createApplication("testSecondarySorts");
+		UUID applicationId = createApplication("testOrganization","testSecondarySorts");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);

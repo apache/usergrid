@@ -91,11 +91,11 @@ public abstract class AbstractServiceTest {
 
 	UUID dId = null;
 
-	public UUID createApplication(String name) throws Exception {
+	public UUID createApplication(String organizationName, String applicationName) throws Exception {
 		if (USE_DEFAULT_DOMAIN) {
 			return DEFAULT_APPLICATION_ID;
 		}
-		return emf.createApplication(name);
+		return emf.createApplication(organizationName, applicationName);
 	}
 
 	public Entity doCreate(ServiceManager sm, String entityType, String name)

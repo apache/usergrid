@@ -92,7 +92,7 @@ public class ApplicationsResource extends AbstractContextResource {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("new application for organization");
-
+    // TODO change to organizationName/applicationName
 		UUID applicationId = management.createApplication(
 				organization.getUuid(), applicationName);
 
@@ -117,7 +117,7 @@ public class ApplicationsResource extends AbstractContextResource {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("new application for organization");
-
+    // TODO change to organizationName/applicationName
 		UUID applicationId = management.createApplication(
 				organization.getUuid(), applicationName);
 
@@ -146,8 +146,10 @@ public class ApplicationsResource extends AbstractContextResource {
 			@PathParam("applicationName") String applicationName)
 			throws Exception {
 
+    String appName = applicationName.contains("/") ? applicationName : organization.getName() + "/" + applicationName;
+
 		ApplicationInfo application = management
-				.getApplication(applicationName);
+				.getApplication(appName);
 
 		return getSubResource(ApplicationResource.class).init(organization,
 				application);

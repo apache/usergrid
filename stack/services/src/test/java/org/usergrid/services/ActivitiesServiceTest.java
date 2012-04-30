@@ -37,7 +37,7 @@ public class ActivitiesServiceTest extends AbstractServiceTest {
 	@Test
 	public void testActivites() throws Exception {
 
-		UUID applicationId = createApplication("test");
+		UUID applicationId = createApplication("testOrganization","test");
 
 		ServiceManager sm = smf.getServiceManager(applicationId);
 

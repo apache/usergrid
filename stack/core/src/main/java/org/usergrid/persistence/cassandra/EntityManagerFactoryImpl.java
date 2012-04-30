@@ -50,6 +50,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -59,6 +60,7 @@ import org.usergrid.persistence.DynamicEntity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.entities.Application;
+import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.usergrid.utils.UUIDUtils;
 
@@ -93,8 +95,8 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
 	/**
 	 * Must be constructed with a CassandraClientPool.
 	 * 
-	 * @param cassandraClientPool
-	 *            the cassandra client pool
+	 * @param cass
+	 *            the cassandraService instance
 	 */
 	public EntityManagerFactoryImpl(CassandraService cass,
 			CounterUtils counterUtils) {
@@ -152,8 +154,8 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
 	 * @see org.usergrid.core.Datastore#createApplication(java.lang.String)
 	 */
 	@Override
-	public UUID createApplication(String name) throws Exception {
-		return createApplication(name, null);
+	public UUID createApplication(String organization, String name) throws Exception {
+		return createApplication(organization, name, null);
 	}
 
 	/*
@@ -163,13 +165,14 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
 	 * java.util.Map)
 	 */
 	@Override
-	public UUID createApplication(String name, Map<String, Object> properties)
+	public UUID createApplication(String organizationName, String name, Map<String, Object> properties)
 			throws Exception {
 
-		name = name.toLowerCase();
+    String appName = buildAppName(organizationName, name);
+
 
 		HColumn<String, ByteBuffer> column = cass.getColumn(
-				cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID);
+            cass.getSystemKeyspace(), APPLICATIONS_CF, appName, PROPERTY_UUID);
 		if (column != null) {
 			throw new ApplicationAlreadyExistsException(name);
 			// UUID uuid = uuid(column.getValue());
@@ -179,23 +182,27 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
 		UUID applicationId = UUIDUtils.newTimeUUID();
 		logger.info("New application id " + applicationId.toString());
 
-		initializeApplication(applicationId, name, properties);
+		initializeApplication(organizationName, applicationId, appName, properties);
 
 		return applicationId;
 	}
 
-	public UUID initializeApplication(UUID applicationId, String name,
+  private String buildAppName(String organizationName, String name) {
+    return StringUtils.lowerCase(name.contains("/") ? name : organizationName + "/" + name);
+  }
+
+  public UUID initializeApplication(String organizationName, UUID applicationId, String name,
 			Map<String, Object> properties) throws Exception {
 
-		name = name.toLowerCase();
+		String appName = buildAppName(organizationName, name);
 
 		if (properties == null) {
 			properties = new TreeMap<String, Object>(CASE_INSENSITIVE_ORDER);
 		}
 
-		properties.put(PROPERTY_NAME, name);
+		properties.put(PROPERTY_NAME, appName);
 
-		getSetup().setupApplicationKeyspace(applicationId, name);
+		getSetup().setupApplicationKeyspace(applicationId, appName);
 
 		getSetup().checkKeyspaces();
 
@@ -204,9 +211,9 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
 
 		long timestamp = cass.createTimestamp();
 
-		addInsertToMutator(m, APPLICATIONS_CF, name, PROPERTY_UUID,
+		addInsertToMutator(m, APPLICATIONS_CF, appName, PROPERTY_UUID,
 				applicationId, timestamp);
-		addInsertToMutator(m, APPLICATIONS_CF, name, PROPERTY_NAME, name,
+		addInsertToMutator(m, APPLICATIONS_CF, appName, PROPERTY_NAME, appName,
 				timestamp);
 
 		batchExecute(m, RETRY_COUNT);
@@ -221,10 +228,12 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
 	}
 
 	@Override
-	public UUID importApplication(UUID applicationId, String name,
+	public UUID importApplication(String organizationName,
+                                UUID applicationId,
+                                String name,
 			Map<String, Object> properties) throws Exception {
 
-		name = name.toLowerCase();
+		name = buildAppName(organizationName, name);
 
 		HColumn<String, ByteBuffer> column = cass.getColumn(
 				cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID);
@@ -234,7 +243,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
 			// return uuid;
 		}
 
-		return initializeApplication(applicationId, name, properties);
+		return initializeApplication(organizationName, applicationId, name, properties);
 	}
 
 	@Override

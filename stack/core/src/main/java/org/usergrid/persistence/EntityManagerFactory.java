@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+import org.usergrid.persistence.entities.Group;
+
 import java.util.Map;
 import java.util.UUID;
 
@@ -55,7 +57,7 @@ public interface EntityManagerFactory {
 	 * @throws Exception
 	 *             the exception
 	 */
-	public abstract UUID createApplication(String name) throws Exception;
+	public abstract UUID createApplication(String organizationName, String name) throws Exception;
 
 	/**
 	 * Creates a Application entity. All entities except for applications must be
@@ -69,10 +71,10 @@ public interface EntityManagerFactory {
 	 * @throws Exception
 	 *             the exception
 	 */
-	public abstract UUID createApplication(String name,
+	public abstract UUID createApplication(String organizationName, String name,
 			Map<String, Object> properties) throws Exception;
 
-	public abstract UUID importApplication(UUID applicationId, String name,
+	public abstract UUID importApplication(String organization, UUID applicationId, String name,
 			Map<String, Object> properties) throws Exception;
 
 	/**
