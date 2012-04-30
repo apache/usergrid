@@ -173,6 +173,12 @@
 				<version>1.4.4</version>
 			</dependency>
 			<dependency>
+				<groupId>org.jvnet.mock-javamail</groupId>
+				<artifactId>mock-javamail</artifactId>
+				<version>1.9</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
 				<groupId>org.apache.servicemix.bundles</groupId>
 				<artifactId>org.apache.servicemix.bundles.saxon</artifactId>
 				<version>9.1.0.8_2</version>
@@ -474,9 +480,9 @@
 				<version>${snakeyaml-version}</version>
 			</dependency>
 			<dependency>
-			  <groupId>com.restfb</groupId>
-			  <artifactId>restfb</artifactId>
-			  <version>1.6.9</version>
+				<groupId>com.restfb</groupId>
+				<artifactId>restfb</artifactId>
+				<version>1.6.9</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
