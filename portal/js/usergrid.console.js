@@ -3156,8 +3156,7 @@ function usergrid_console_app() {
                 requestAccountSettings();
             },
             function(response) {
-                $.jAlert(client.getLastErrorMessage("Unable to update account settings"), 'error', function(result) {
-                    requestAccountSettings();
+                alertDialog(client.getLastErrorMessage("Unable to update account settings"));
                 });
             }
         );
