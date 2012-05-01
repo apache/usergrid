@@ -3103,17 +3103,19 @@ function usergrid_console_app() {
                 var organization = organizations[organizationName];
                 var uuid = organization.uuid;
                 t +=
-                "<div class='row' id='organization-row-" + uuid + "'>" +
-                    "<div class='organization-row-link span'>" +
+                "<tr class=\"zebraRows\">" +
+                    "<td>" +
                         "<a href='#" + uuid + "' >" +
                             "<span>" + organizationName + "</span>" +
-                            "<span> (" + uuid + ")</span>" +
                         "</a>" +
-                    "</div>" +
-                    "<div class='organization-row-buttons span pull-right'>" +
+                    "</td>" +
+                    "<td>" +
+                      "<span> (" + uuid + ")</span>" +
+                    "</td>" +
+                    "<td>" +
                         "<a onclick=\"usergrid.console.leaveOrganization('" + organizationName + "')\" href='#" + uuid + "' class='btn btn-danger' >Leave</a>" +
-                    "</div>" +
-                "</div>";
+                    "</td>" +
+                "</tr>";
             }
             $("#organizations").html(t);
             $("#organizations a").click( function(e){
