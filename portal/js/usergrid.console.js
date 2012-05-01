@@ -1448,8 +1448,11 @@ function usergrid_console_app() {
         for (i = 0; i < data.length; i++) {
           var this_data = data[i];
           if (!this_data.picture) {
-            picture = "http://www.gravatar.com/avatar/?=50x50"
+            picture = "/images/user_profile.png"
+          } else {
+            this_data.picture = this_data.picture + "?d=" + window.location.origin + "/images/user_profile.png"
           }
+
           $.tmpl('usergrid.ui.users.table_rows.html', this_data).appendTo('#users-table');
         }
       }
@@ -1696,7 +1699,7 @@ function usergrid_console_app() {
 
             user_data = {
                 entity : entity_contents,
-                picture : entity.picture,
+                picture : entity.picture + "?d=" + window.location.origin + "/images/user_profile.png",
                 name : name,
                 username : username,
                 path : entity_path,
@@ -3133,15 +3136,11 @@ function usergrid_console_app() {
         var new_pass2 = $("#update-account-password-repeat").val();
         if (old_pass && new_pass) {
             if (new_pass != new_pass2) {
-                $.jAlert(client.getLastErrorMessage("New passwords don't match"), 'error', function(result) {
-                     requestAccountSettings();
-                 });
+                alertDialog(client.getLastErrorMessage("New passwords don't match"));
                 return;
             }
             if (!(passwordRegex.test(new_pass))) {
-                $.jAlert(client.getLastErrorMessage(passwordAllowedCharsMessage), 'error', function(result) {
-                     requestAccountSettings();
-                 });
+                alertDialog(client.getLastErrorMessage(passwordAllowedCharsMessage));
                 return;
             }
             userData.newpassword = new_pass;
