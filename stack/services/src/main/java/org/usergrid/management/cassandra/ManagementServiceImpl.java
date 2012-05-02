@@ -659,6 +659,28 @@ public class ManagementServiceImpl implements ManagementService {
 		return results;
 	}
 
+  @Override
+  public UserInfo createAdminFrom(User user, String password, boolean sendEmail) throws Exception {
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
+    credentials.put("password", passwordCredentials(password));
+    credentials.put("mongo_pwd",
+            mongoPasswordCredentials(user.getUsername(), password));
+    credentials
+            .put("secret",
+                    plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
+    em.addMapToDictionary(user, DICTIONARY_CREDENTIALS, credentials);
+
+    UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
+            user.getUuid(), user.getUsername(),
+            user.getName(), user.getEmail(), user.getActivated(), user.getDisabled());
+
+    if (sendEmail && !user.getActivated()) {
+      sendAdminUserActivationEmail(userInfo);
+    }
+    return userInfo;
+  }
+
 	@Override
 	public UserInfo createAdminUser(String username, String name, String email,
 			String password, boolean activated, boolean disabled,
@@ -687,24 +709,9 @@ public class ManagementServiceImpl implements ManagementService {
 		user.setActivated(activated);
 		user.setDisabled(disabled);
 		user = em.create(user);
+    // TODO now delegate to createAdminFrom(user,sendEmail);
 
-		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
-		credentials.put("password", passwordCredentials(password));
-		credentials.put("mongo_pwd",
-				mongoPasswordCredentials(username, password));
-		credentials
-				.put("secret",
-						plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
-		em.addMapToDictionary(user, DICTIONARY_CREDENTIALS, credentials);
-
-		UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
-				user.getUuid(), username, name, email, activated, disabled);
-
-		if (sendEmail && !activated) {
-			sendAdminUserActivationEmail(userInfo);
-
-		}
-		return userInfo;
+		return createAdminFrom(user, password, sendEmail);
 	}
 
 	public UserInfo getUserInfo(UUID applicationId, Entity entity) {
