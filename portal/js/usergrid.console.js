@@ -1450,7 +1450,7 @@ function usergrid_console_app() {
           if (!this_data.picture) {
             picture = "/images/user_profile.png"
           } else {
-            this_data.picture = this_data.picture + "?d=" + window.location.origin + "/images/user_profile.png"
+            this_data.picture = this_data.picture + "?d=http://" + window.location.host + "/images/user_profile.png"
           }
 
           $.tmpl('usergrid.ui.users.table_rows.html', this_data).appendTo('#users-table');
@@ -1699,7 +1699,7 @@ function usergrid_console_app() {
 
             user_data = {
                 entity : entity_contents,
-                picture : entity.picture + "?d=" + window.location.origin + "/images/user_profile.png",
+                picture : entity.picture + "?d=http://" + window.location.host + "/images/user_profile.png",
                 name : name,
                 username : username,
                 path : entity_path,
