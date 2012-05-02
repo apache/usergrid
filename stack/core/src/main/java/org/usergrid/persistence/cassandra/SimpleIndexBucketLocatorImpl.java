@@ -43,18 +43,28 @@ public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator {
     
     private List<BigInteger> buckets = new ArrayList<BigInteger>(100);
     private List<String> bucketsString = new ArrayList<String>(100); 
-    
+    private int size;
     
     /**
-     * Basce constructor that creates a ring of 100 tokens
+     * Create a bucket locator with the specified size
+     * @param size
      */
-    public SimpleIndexBucketLocatorImpl(){
-        for(int i = 0; i < 100; i ++){
-            BigInteger integer = initialToken(100, i);
+    public SimpleIndexBucketLocatorImpl(int size){
+        for(int i = 0; i < size; i ++){
+            BigInteger integer = initialToken(size, i);
             buckets.add(integer);
             bucketsString.add(String.format("%039d", integer));
             
         }
+        
+        this.size = size;
+    }
+    
+    /**
+     * Base constructor that creates a ring of 100 tokens
+     */
+    public SimpleIndexBucketLocatorImpl(){
+        this(100);
     }
     
     /**
@@ -88,10 +98,9 @@ public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator {
        if(index < 0){
            index = (index + 1)*-1;
        }
-       
-       if(index > buckets.size() -1){
-           index = 0;
-       }
+     
+       //mod if we need to wrap
+       index = index % size;
        
        return bucketsString.get(index);
         

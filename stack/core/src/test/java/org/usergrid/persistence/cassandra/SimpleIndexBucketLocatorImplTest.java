@@ -17,7 +17,11 @@ package org.usergrid.persistence.cassandra;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -30,33 +34,140 @@ import org.usergrid.utils.UUIDUtils;
 public class SimpleIndexBucketLocatorImplTest {
 
     @Test
-    public void loadBuckets() {
+    public void oneBucket() {
 
         UUID appId = UUIDUtils.newTimeUUID();
         String entityType = "user";
         String propName = "firstName";
 
-        SimpleIndexBucketLocatorImpl locator = new SimpleIndexBucketLocatorImpl();
-        
-        List<String> buckets = locator.getBuckets(appId, entityType, propName);
-        
-        
-        
-        UUID testId1 = UUIDUtils.newTimeUUID(0l);
-        
-        UUID testId2 =  UUIDUtils.newTimeUUID(Long.MAX_VALUE/2);
-        
-        UUID testId3 = UUIDUtils.newTimeUUID(Long.MAX_VALUE);
-        
-        
-        String bucket1 = locator.getBucket(appId, entityType, testId1, propName);
-        
-        String bucket2 = locator.getBucket(appId, entityType, testId2, propName);
-        
-        String bucket3 = locator.getBucket(appId, entityType, testId3, propName);
-        
-        
+        SimpleIndexBucketLocatorImpl locator = new SimpleIndexBucketLocatorImpl(
+                1);
 
+        List<String> buckets = locator.getBuckets(appId, entityType, propName);
+
+        assertEquals(1, buckets.size());
+
+        UUID testId1 = UUIDUtils.minTimeUUID(0l);
+
+        UUID testId2 = UUIDUtils.minTimeUUID(Long.MAX_VALUE / 2);
+
+        UUID testId3 = UUIDUtils.minTimeUUID(Long.MAX_VALUE);
+
+        String bucket1 = locator
+                .getBucket(appId, entityType, testId1, propName);
+
+        String bucket2 = locator
+                .getBucket(appId, entityType, testId2, propName);
+
+        String bucket3 = locator
+                .getBucket(appId, entityType, testId3, propName);
+
+        assertEquals(bucket1, "000000000000000000000000000000000000000");
+        assertEquals(bucket2, "000000000000000000000000000000000000000");
+        assertEquals(bucket3, "000000000000000000000000000000000000000");
+
+    }
+
+    @Test
+    public void twoBuckets() {
+
+        UUID appId = UUIDUtils.newTimeUUID();
+        String entityType = "user";
+        String propName = "firstName";
+
+        SimpleIndexBucketLocatorImpl locator = new SimpleIndexBucketLocatorImpl(
+                2);
+
+        List<String> buckets = locator.getBuckets(appId, entityType, propName);
+
+        assertEquals(2, buckets.size());
+
+        UUID testId1 = UUIDUtils.minTimeUUID(0l);
+
+        UUID testId2 = UUIDUtils.maxTimeUUID(Long.MAX_VALUE / 2);
+
+        UUID testId3 = UUIDUtils.minTimeUUID(Long.MAX_VALUE);
+
+        String bucket1 = locator
+                .getBucket(appId, entityType, testId1, propName);
+
+        String bucket2 = locator
+                .getBucket(appId, entityType, testId2, propName);
+
+        String bucket3 = locator
+                .getBucket(appId, entityType, testId3, propName);
+
+        assertEquals(bucket1, "000000000000000000000000000000000000000");
+        assertEquals(bucket2, "085070591730234615865843651857942052863");
+        assertEquals(bucket3, "000000000000000000000000000000000000000");
+
+    }
+
+    @Test
+    public void evenDistribution() {
+
+        UUID appId = UUIDUtils.newTimeUUID();
+        String entityType = "user";
+        String propName = "firstName";
+
+        int bucketSize = 100;
+        float distributionPercentage = .1f; 
+        
+        // test 100 elements
+        SimpleIndexBucketLocatorImpl locator = new SimpleIndexBucketLocatorImpl(bucketSize);
+
+        List<String> buckets = locator.getBuckets(appId, entityType, propName);
+
+        assertEquals(100, buckets.size());
+
+        int testSize = 100000;
+
+        Map<String, Float> counts = new HashMap<String, Float>();
+
+        /**
+         * Loop through each new UUID and add it's hash to our map
+         */
+        for (int i = 0; i < testSize; i++) {
+            UUID id = UUIDUtils.newTimeUUID();
+
+            String bucket = locator.getBucket(appId, entityType, id, propName);
+
+            Float count = counts.get(bucket);
+            
+            if(count == null){
+                count = 0f;
+            }
+
+            counts.put(bucket, ++count);
+
+        }
+        
+        
+        /**
+         * Check each entry is within +- 5% of every subsequent entry
+         */
+        List<String> keys = new ArrayList<String>(counts.keySet());
+        int keySize = keys.size();
+        
+        assertEquals(bucketSize, keySize);
+        
+        for(int i = 0; i < keySize; i++ ){
+            
+            float sourceCount = counts.get(keys.get(i));
+            
+            for(int j = i+1; j < keySize; j++){
+                float destCount = counts.get(keys.get(j));
+                
+                //find the maximum allowed value for the assert based on the largest value in the pair
+                float maxDelta = Math.max(sourceCount, destCount) * distributionPercentage;
+                
+                assertEquals(String.format("Not within %f as percentage for keys '%s' and '%s'", distributionPercentage, keys.get(i), keys.get(j)), sourceCount, destCount, maxDelta );
+                
+            }
+            
+        }
+        
+        
     }
 
 }
