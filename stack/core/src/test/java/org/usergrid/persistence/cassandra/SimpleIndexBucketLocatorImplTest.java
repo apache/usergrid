@@ -23,9 +23,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.utils.UUIDUtils;
+
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Timer;
+import com.yammer.metrics.core.TimerContext;
+import com.yammer.metrics.reporting.ConsoleReporter;
 
 /**
  * @author tnine
@@ -33,6 +41,8 @@ import org.usergrid.utils.UUIDUtils;
  */
 public class SimpleIndexBucketLocatorImplTest {
 
+    private static final Logger logger = LoggerFactory.getLogger(SimpleIndexBucketLocatorImplTest.class);
+    
     @Test
     public void oneBucket() {
 
@@ -111,7 +121,7 @@ public class SimpleIndexBucketLocatorImplTest {
         String propName = "firstName";
 
         int bucketSize = 100;
-        float distributionPercentage = .1f; 
+        float distributionPercentage = .05f; 
         
         // test 100 elements
         SimpleIndexBucketLocatorImpl locator = new SimpleIndexBucketLocatorImpl(bucketSize);
@@ -120,17 +130,26 @@ public class SimpleIndexBucketLocatorImplTest {
 
         assertEquals(100, buckets.size());
 
-        int testSize = 100000;
+        int testSize = 10000000;
 
         Map<String, Float> counts = new HashMap<String, Float>();
 
+        
+        final Timer hashes = Metrics.newTimer(SimpleIndexBucketLocatorImplTest.class, "responses", TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
+      
+//        ConsoleReporter.enable(1, TimeUnit.SECONDS);
+        
         /**
          * Loop through each new UUID and add it's hash to our map
          */
         for (int i = 0; i < testSize; i++) {
             UUID id = UUIDUtils.newTimeUUID();
 
+            final TimerContext context = hashes.time();
+            
             String bucket = locator.getBucket(appId, entityType, id, propName);
+            
+            context.stop();
 
             Float count = counts.get(bucket);
             
@@ -141,6 +160,7 @@ public class SimpleIndexBucketLocatorImplTest {
             counts.put(bucket, ++count);
 
         }
+        
         
         
         /**
