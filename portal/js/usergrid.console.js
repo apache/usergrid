@@ -2789,6 +2789,12 @@ function usergrid_console_app() {
     }
     
     function displayCollections(response) {
+      if (response.entities && response.entities[0] && response.entities[0].metadata && response.entities[0].metadata.collections) {
+          applicationData.Collections = response.entities[0].metadata.collections;
+          updateApplicationDashboard();
+          updateQueryAutocompleteCollections();
+      }
+
       var data = response.entities[0].metadata.collections;
       var output = $('#collections-table');
       output.empty();
