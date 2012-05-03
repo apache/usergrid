@@ -1760,6 +1760,10 @@ function usergrid_console_app() {
                 entity_path = path + "/" + entity.uuid;
             }
 
+            if (!entity.picture) {
+              entity.picture = "/images/user_profile.png"
+            }
+
             user_data = {
                 entity : entity_contents,
                 picture : entity.picture + "?d=http://" + window.location.host + "/images/user_profile.png",
@@ -2839,6 +2843,12 @@ function usergrid_console_app() {
     }
     
     function displayCollections(response) {
+      if (response.entities && response.entities[0] && response.entities[0].metadata && response.entities[0].metadata.collections) {
+          applicationData.Collections = response.entities[0].metadata.collections;
+          updateApplicationDashboard();
+          updateQueryAutocompleteCollections();
+      }
+
       var data = response.entities[0].metadata.collections;
       var output = $('#collections-table');
       output.empty();
