@@ -369,21 +369,6 @@ public class ManagementServiceImpl implements ManagementService {
 		OrganizationInfo organization = null;
 
 		try {
-			if (!em.isPropertyValueUniqueForEntity("user", "username", username)) {
-				throw new DuplicateUniquePropertyExistsException("user",
-						"username", username);
-			}
-
-			if (!em.isPropertyValueUniqueForEntity("user", "email", email)) {
-				throw new DuplicateUniquePropertyExistsException("user",
-						"username", username);
-			}
-
-			if (!em.isPropertyValueUniqueForEntity("group", "path",
-					organizationName)) {
-				throw new DuplicateUniquePropertyExistsException("group",
-						"path", organizationName);
-			}
 
 			user = createAdminUser(username, name, email, password, false,
 					false, false);
@@ -409,7 +394,11 @@ public class ManagementServiceImpl implements ManagementService {
 			return null;
 		}
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-
+    if (!em.isPropertyValueUniqueForEntity("group", "path",
+            organizationName)) {
+      throw new DuplicateUniquePropertyExistsException("group",
+              "path", organizationName);
+    }
 		Group organizationEntity = new Group();
 		organizationEntity.setPath(organizationName);
 		organizationEntity = em.create(organizationEntity);
@@ -701,6 +690,18 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+
+    if (!em.isPropertyValueUniqueForEntity("user", "username", username)) {
+ 				throw new DuplicateUniquePropertyExistsException("user",
+ 						"username", username);
+ 			}
+
+ 			if (!em.isPropertyValueUniqueForEntity("user", "email", email)) {
+ 				throw new DuplicateUniquePropertyExistsException("user",
+ 						"username", username);
+ 			}
+
+
 
 		User user = new User();
 		user.setUsername(username);
