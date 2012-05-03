@@ -27,48 +27,48 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.usergrid.persistence.IndexBucketLocator;
 
 /**
- * Simple implementation that does static hashing across 100 rows.  Future implementations
- * should be "smart" and create new tokens as required as buckets become too large for an entity property 
- * within an application
+ * Simple implementation that does static hashing across 100 rows. Future
+ * implementations should be "smart" and create new tokens as required as
+ * buckets become too large for an entity property within an application
  * 
  * @author tnine
- *
+ * 
  */
 public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator {
 
-    
     public static final BigInteger MINIMUM = BigInteger.ZERO;
     public static final BigInteger MAXIMUM = new BigInteger("" + 2).pow(127);
 
-    
-    private List<BigInteger> buckets = new ArrayList<BigInteger>(100);
-    private List<String> bucketsString = new ArrayList<String>(100); 
-    private int size;
-    
+    private final List<BigInteger> buckets = new ArrayList<BigInteger>(100);
+    private final List<String> bucketsString = new ArrayList<String>(100);
+    private final int size;
+
     /**
      * Create a bucket locator with the specified size
+     * 
      * @param size
      */
-    public SimpleIndexBucketLocatorImpl(int size){
-        for(int i = 0; i < size; i ++){
+    public SimpleIndexBucketLocatorImpl(int size) {
+        for (int i = 0; i < size; i++) {
             BigInteger integer = initialToken(size, i);
             buckets.add(integer);
             bucketsString.add(String.format("%039d", integer));
-            
+
         }
-        
+
         this.size = size;
     }
-    
+
     /**
      * Base constructor that creates a ring of 100 tokens
      */
-    public SimpleIndexBucketLocatorImpl(){
+    public SimpleIndexBucketLocatorImpl() {
         this(100);
     }
-    
+
     /**
      * Get a token
+     * 
      * @param size
      * @param position
      * @return
@@ -82,35 +82,35 @@ public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator {
         return decValue;
     }
 
-  
-    
     /**
      * Get the next token in the ring for this big int.
+     * 
      * @param entityId
      * @return
      */
-    private String getClosestToken(UUID entityId){
-       BigInteger location =  new BigInteger(md5(bytes(entityId)));
-       location = location.abs();
-       
-       int index = Collections.binarySearch(buckets, location);
-       
-       if(index < 0){
-           index = (index + 1)*-1;
-       }
-     
-       //mod if we need to wrap
-       index = index % size;
-       
-       return bucketsString.get(index);
-        
+    private String getClosestToken(UUID entityId) {
+        BigInteger location = new BigInteger(md5(bytes(entityId)));
+        location = location.abs();
+
+        int index = Collections.binarySearch(buckets, location);
+
+        if (index < 0) {
+            index = (index + 1) * -1;
+        }
+
+        // mod if we need to wrap
+        index = index % size;
+
+        return bucketsString.get(index);
+
     }
 
-  
-    
-    
-    /* (non-Javadoc)
-     * @see org.usergrid.persistence.IndexBucketLocator#getBucket(java.util.UUID, java.lang.String, java.util.UUID, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.IndexBucketLocator#getBucket(java.util.UUID,
+     * java.lang.String, java.util.UUID, java.lang.String)
      */
     @Override
     public String getBucket(UUID applicationId, String entityType,
@@ -118,16 +118,17 @@ public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator {
         return getClosestToken(entityId);
     }
 
-    /* (non-Javadoc)
-     * @see org.usergrid.persistence.IndexBucketLocator#getBuckets(java.util.UUID, java.lang.String, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.IndexBucketLocator#getBuckets(java.util.UUID,
+     * java.lang.String, java.lang.String)
      */
     @Override
     public List<String> getBuckets(UUID applicationId, String entityType,
             String propertyName) {
         return bucketsString;
     }
-    
-    
-   
 
 }

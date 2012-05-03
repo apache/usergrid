@@ -130,7 +130,7 @@ public class SimpleIndexBucketLocatorImplTest {
 
         assertEquals(100, buckets.size());
 
-        int testSize = 10000000;
+        int testSize = 2000000;
 
         Map<String, Float> counts = new HashMap<String, Float>();
 
