@@ -3411,17 +3411,11 @@ function usergrid_console_app() {
 
     //load the templates only after the rest of the page is
     $(window).bind("load", function() {
-        usergrid.console.ui.loadTemplate("usergrid.ui.applications.table_rows.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.activities.table_rows.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.admins.table_rows.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.feed.table_rows.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.users.table_rows.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.groups.table_rows.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.roles.table_rows.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.collections.table_rows.html");
-
-
-		  
+        usergrid.console.ui.loadTemplate("usergrid.ui.collections.table_rows.html");		  
         usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.list.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.list.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.panels.activities.list.html");
@@ -3445,5 +3439,8 @@ function usergrid_console_app() {
         usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.activities.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.permissions.html");
     });
-    
+	 //these templates are used on the front page and should be loaded up front
+    usergrid.console.ui.loadTemplate("usergrid.ui.applications.table_rows.html");
+	 usergrid.console.ui.loadTemplate("usergrid.ui.admins.table_rows.html");
+	 usergrid.console.ui.loadTemplate("usergrid.ui.activities.table_rows.html");
 }
