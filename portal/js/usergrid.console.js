@@ -3416,11 +3416,7 @@ function usergrid_console_app() {
         usergrid.console.ui.loadTemplate("usergrid.ui.roles.table_rows.html");
 	      usergrid.console.ui.loadTemplate("usergrid.ui.activities.table_rows.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.collections.table_rows.html");		  
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.list.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.list.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.activities.list.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.users.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.roles.list.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.permissions.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.profile.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.panels.user.memberships.html");
@@ -3433,7 +3429,6 @@ function usergrid_console_app() {
         usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.collections.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.json.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.collections.entity.detail.html");
-        usergrid.console.ui.loadTemplate("usergrid.ui.panels.collections.list.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.details.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.memberships.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.panels.group.activities.html");
