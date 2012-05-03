@@ -1710,6 +1710,10 @@ function usergrid_console_app() {
                 entity_path = path + "/" + entity.uuid;
             }
 
+            if (!entity.picture) {
+              entity.picture = "/images/user_profile.png"
+            }
+
             user_data = {
                 entity : entity_contents,
                 picture : entity.picture + "?d=http://" + window.location.host + "/images/user_profile.png",
