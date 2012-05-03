@@ -7,31 +7,30 @@
 			{{if path}}</a>{{/if}}
 		</div>
 	</h3>
-	<div class="console-section-contents listContent">
     {{if activities}}
-    {{each activities}}
-      <div class="query-result-row entity_list_item">
-        <table class="query-result-table activities-table table">
-          <tr class="">
-            <!--<td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="${id}" value="${entity.uuid}" /></td>-->
-            <td class="created">
-              ${$value.created}<br />
-              <strong>${$value.content}</strong>
-            </td>
-            <td class="actor">
-              {{if $value.actor.uuid}}
-              <strong><a href="#" onclick="usergrid.console.pageOpenUserProfile('${$value.actor.uuid}'); return false;">${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}</a></strong>
-              {{else}}
-              <strong>${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}</strong>
-              {{/if}}
-            </td>
-            <td class="verb">
-              ${$value.verb}
-            </td>
-          </tr>
-        </table>
-      </div>
-    {{/each}}
+    <table class="activities-table table">
+      {{each activities}}
+      <tr class="">
+        <td>
+          <a href="#" class="toggleableSP">${dateToString($value.created)}</a>
+          <a href="#" class="toggleableSP hide">${$value.created}</a>
+        </td>
+        <td>
+          ${$value.content}
+        </td>
+        <td>
+          {{if $value.actor.uuid}}
+          <a href="#" onclick="usergrid.console.pageOpenUserProfile('${$value.actor.uuid}'); return false;">${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}</a>
+          {{else}}
+          ${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}
+          {{/if}}
+        </td>
+        <td>
+          ${$value.verb}
+        </td>
+      </tr>
+      {{/each}}
+    </table>
     {{else}}
     <div class="user-panel-section-message">No User Activities</div>
     {{/if}}

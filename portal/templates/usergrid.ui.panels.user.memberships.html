@@ -13,17 +13,17 @@
     </div>
   </h3>
   {{if memberships}}
-    <table class="table">
-      {{each memberships}}
-      <tr class="zebraRows">
-        <td class="checkboxo"><input type="checkbox" name="${name}" id="userGroupItem" value="${$value.uuid}" /></td>
-        <td>
-          <a href="#" onclick="usergrid.console.pageOpenGroupProfile('${$value.uuid}'); return false;">${$value.path}</a>
-        </td>
-      </tr>
-      {{/each}}
-    </table>
-  {{else}}
-    <div class="user-panel-section-message">No Group Memberships</div>
-  {{/if}}
+  <table class="table">
+    {{each memberships}}
+    <tr class="zebraRows">
+      <td class="checkboxo"><input type="checkbox" name="${name}" id="userGroupItem" value="${$value.uuid}" /></td>
+      <td>
+        <a href="#" onclick="usergrid.console.pageOpenGroupProfile('${$value.uuid}'); return false;">${$value.path}</a>
+      </td>
+    </tr>
+    {{/each}}
+  </table>
+{{else}}
+  <div class="user-panel-section-message">No Group Memberships</div>
+{{/if}}
 </div>

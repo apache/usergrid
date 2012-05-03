@@ -674,7 +674,7 @@ function usergrid_console_app() {
 
     function requestApplications() {
         var sectionApps = $("#organization-applications-table");
-        sectionApps.empty().html('<div class="alert alert-info">Loading...</div>');
+        sectionApps.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
         client.requestApplications(displayApplications, function() {
             sectionApps.html('<div class="alert">Unable to retrieve application list.</div>');
             disableApplicationPanelButtons();
@@ -703,24 +703,6 @@ function usergrid_console_app() {
           var admin = admins[i];
           admin.gravatar = get_gravatar(admin.email, 20);
           $.tmpl('usergrid.ui.admins.table_rows.html', admin).appendTo(sectionAdmins);
-          // var div = $('<div/>',{
-          //     id: 'admin-row-' + i,
-          //     class:'admin-row'
-          // });
-          // var link = $('<a/>',{
-          //     href: "mailto:" + admin.email
-          //     //,click: function(){usergrid.console.pageSelectAdmin(admin.uuid); return false;}
-          // });
-          // var span = $('<span/>',{
-          //     class: 'application-admin-name',
-          //     html: admin.name + " &lt;" + admin.email + "&gt;"
-          // });
-          // var img = $('<img/>',{
-          //     class: 'smallgravatar',
-          // });
-          // link.append(img).append(span);
-          // div.append(link);
-          // sectionAdmins.append(div);
         }
       }
       if(sectionAdmins.is(":empty"))
@@ -729,7 +711,7 @@ function usergrid_console_app() {
 
     function requestAdmins() {
         var sectionAdmins =$("#organization-admins-table");
-        sectionAdmins.empty().html('<div class="alert alert-info">Loading...</div>');
+        sectionAdmins.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
         client.requestAdmins(displayAdmins, function() {
             sectionAdmins.html('<div class="alert">Unable to retrieve admin list</div>');
         });
@@ -737,8 +719,7 @@ function usergrid_console_app() {
 
     function dateToString(numberDate){
         var date = new Date(numberDate);
-        //var milisecs = date.getMilliseconds()/1000; //not showing secs per ea
-        return date.toString('dd MMM yyyy - h:mm tt '); //:ss' + milisecs.toFixed(3));
+        return date.toString('dd MMM yyyy - h:mm tt ');
     }
     function get_gravatar(email, size) {
         var size = size || 50;
@@ -3127,7 +3108,7 @@ function usergrid_console_app() {
                 var organization = organizations[organizationName];
                 var uuid = organization.uuid;
                 t +=
-                "<tr class=\"zebraRows\">" +
+                "<tr class=\"zebraRows leave-org-row\">" +
                     "<td>" +
                         "<a href='#" + uuid + "' >" +
                             "<span>" + organizationName + "</span>" +
@@ -3431,6 +3412,7 @@ function usergrid_console_app() {
     //load the templates only after the rest of the page is
     $(window).bind("load", function() {
         usergrid.console.ui.loadTemplate("usergrid.ui.applications.table_rows.html");
+        usergrid.console.ui.loadTemplate("usergrid.ui.activities.table_rows.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.admins.table_rows.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.feed.table_rows.html");
         usergrid.console.ui.loadTemplate("usergrid.ui.users.table_rows.html");
