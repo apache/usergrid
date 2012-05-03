@@ -1,7 +1,7 @@
 <div class="alert messages" style="display: none;"></div>
 <div class="console-section">
 	<h3>
-		{{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
+		<img src="${picture}" class="user-profile-picture" />
 		<div class="user-profile-header-name{{if picture}} user-profile-picture-vert-offset{{/if}}">
 			{{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
 			${name}

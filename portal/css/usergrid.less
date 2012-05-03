@@ -623,9 +623,14 @@ a:active {
     }
 }
 
-#users-next-prev {
-	font-size: 12px;
-	padding-bottom: 32px;
+#users-pagination {
+  #users-previous {
+    display: none;
+  }
+
+  #users-next {
+    display: none;
+  }
 }
 
 .user-profile-header {
@@ -643,7 +648,22 @@ a:active {
 	margin-left: 50px;
 }
 
+#roles-table {
+  margin-bottom: 0px !important;
+}
 
+#roles-pagination {
+
+  display: none;
+
+  #roles-previous {
+    display: none;
+  }
+
+  #roles-next {
+    display: none;
+  }
+}
 
 .user-roles-title {
 	font-size: 18px;
@@ -1016,46 +1036,90 @@ a:active {
     margin: 15px;
 }
 
-/*------------------activities------------------*/
-.activities-table {
-  .created{
-    width: 70px;
+.group-panel-section-message{
+    margin: 15px;
+    .alert;
+}
+
+/*----------------- Activities ------------------*/
+
+#activities-pagination {
+  display: none;
+}
+
+.gravatar20 {
+  padding: 7px 0 0 10px !important;
+  margin: 0px;
+  width: 30px;
+}
+
+.gravatar50-td {
+  padding: 0px !important;
+  width: 50px;
+}
+
+.gravatar50 {
+  padding: 0px !important;
+  width: 50px;
+}
+
+td.checkboxo {
+  background-color: #666 !important;
+  width: 10px;
+  padding: 9px 3px 0 3px !important;
+}
+
+.users-row {
+  td {
+    line-height: 9px !important;
   }
-    
-  .actor {
-    width: 70px;   
+
+  td.checkboxo {
+    padding-top: 15px !important;
   }
-    
-  .verb {
-    width: 50px;    
+
+  td.user-details {
+    line-height: 25px !important;
   }
 }
 
 /*------------------ Home Page ------------------*/
-.zebraRows{
-    border-top: 1px solid #CCCCCC;
-    padding: 10px;
-    background: white;
-    &:nth-child(2n){
-        background: #EEE;
-    }
+
+.table {
+  margin-bottom: 0px !important;
 }
 
-#organization-applications{
-    padding: 0px;
-    .application-row{
-        .zebraRows;
-    }
-    .alert{
-        margin: 15px;
-    }
+.zebraRows {
+  background: white;
 
-  .application-row {
-    &:last-child {
-      border-radius: 0 0 5px 5px;
-    }
+  &:nth-child(2n){
+    background: #EEE;
+  }
+
+  &:last-child {
+	  .border-radius(5px);
+  }
+
+  td {
+    padding: 10px;
   }
 }
+
+/* #organization-applications{ */
+/*     padding: 0px; */
+/*     .application-row{ */
+/*         .zebraRows; */
+/*     } */
+/*     .alert{ */
+/*         margin: 15px; */
+/*     } */
+/*  */
+/*   .application-row { */
+/*     &:last-child { */
+/*       border-radius: 0 0 5px 5px; */
+/*     } */
+/*   } */
+/* } */
 
 #organization-admins{
     padding: 0px;
@@ -1138,6 +1202,10 @@ table .zebraRows {
 }
 
 /* --------------- Collections -------------- */
+
+.collection-column {
+  width: 100px;
+}
 
 #button-query-validate {
     margin-left: 20px;

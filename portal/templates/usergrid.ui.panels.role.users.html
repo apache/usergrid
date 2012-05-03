@@ -7,24 +7,16 @@
     <a data-toggle="modal" href="#" onclick="usergrid.console.deleteRoleFromUser('${data.rolename}', '${data.roleId}'); return false;"> Remove </a>
   </div>
 </h3>
-<div class="console-section-contents listContent">
-    {{if data.users}}
+{{if data.users}}
+  <table class="table">
     {{each data.users}}
-    <div class="query-result-row entity_list_item">
-        <table class="query-result-table">
-            <tr class="query-result-header">
-                <td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="userRoleItem" value="${uuid}" /></td>
-                <td class="query-result-td-picture"><img src="{{if picture}}${picture}{{else}}images/user_profile.png{{/if}}" class="query-result-user-picture" /></td>
-                <td class="query-result-td-header-name"><div class="query-result-header-name query-result-picture-vert-offset">
-                    {{if path}}<a href="" onclick="usergrid.console.pageOpenUserProfile('${uuid}'); return false;">{{/if}}
-                    ${name}
-                    {{if path}}</a>{{/if}}
-                </td>
-            </tr>
-        </table>
-    </div>
+      <tr class="zebraRows users-row">
+        <td class="checkboxo"><input type="checkbox" name="${name}" class="userRoleItem" value="${uuid}" /></td>
+        <td class="gravatar50"><img src="{{if picture}}${picture}{{else}}images/user_profile.png{{/if}}" /></td>
+        <td class="user-details">{{if uuid}}<a href="" onclick="usergrid.console.pageOpenUserProfile('${uuid}'); return false;">{{/if}}${name}{{if uuid}}</a>{{/if}}</td>
+      </tr>
     {{/each}}
-    {{else}}
-    <div class="group-panel-section-message">No Users have this Role</div>
-    {{/if}}
-</div>
+  </table>
+{{else}}
+  <div class="group-panel-section-message">No Users have this Role</div>
+{{/if}}

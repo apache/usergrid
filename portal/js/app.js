@@ -34,7 +34,7 @@ $(document).ready(function () {
     function toggleSection(e){
         e.preventDefault();
         var h3 = $(this).parent();
-        h3.parent().find(".console-section-contents").toggle();//slideUp();//.slideDown();
+        h3.parent().find(".hideable").toggle();
         h3.find(".openPanel").toggle();
         h3.find(".closePanel").toggle();
     }

@@ -220,9 +220,9 @@
                                     <a class="" data-toggle="modal" href="#dialog-form-new-application"></i> New Application</a>
                                 </div>
                             </h3>
-                            <div id="organization-applications" class="console-section-contents">
-                                <span class="alert">No applications created.</span>
-                            </div>
+                            <table id="organization-applications-table" class="hideable table">
+                              <tbody></tbody>
+                            </table>
                         </div>
                         <div class="console-section">
                             <h3><span class="title"> Organizations Administrators </span>
@@ -230,30 +230,42 @@
                                     <a class="" data-toggle="modal" href="#dialog-form-new-admin"></i> New Administrator</a>
                                 </div>
                             </h3>
-                            <div id="organization-admins" class="console-section-contents">
-                                <span class="alert">No administrators.</span>
-                            </div>
+                            <table id="organization-admins-table" class="hideable table">
+                              <tbody></tbody>
+                            </table>
                         </div>
                         <div class="console-section">
                             <h3><span class="title"> Organization API Credentials </span>
                                 <div class="bar">
-                                    <a class="" href="" onclick="usergrid.console.newOrganizationCredentials(); return false;"></i> Regenerate Credentials</a>
+                                    <a href="" onclick="usergrid.console.newOrganizationCredentials(); return false;"></i> Regenerate Credentials</a>
                                 </div>
                             </h3>
-                            <div class="console-section-contents">
-                                <div class="row">
-                                    <span class="span2">Client ID</span> <span id="organization-panel-key">...</span>
-                                </div>
-                                <div class="row">
-                                    <span class="span2">Client Secret</span> <span id="organization-panel-secret">...</span>
-                                </div>
-                            </div>
+                            <table class="hideable table">
+                              <tbody>
+                                <tr>
+                                  <td>
+                                    <span class="span2">Client ID</span>
+                                  </td>
+                                  <td>
+                                    <span id="organization-panel-key">...</span>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td>
+                                    <span class="span2">Client Secret</span>
+                                  </td>
+                                  <td>
+                                    <span id="organization-panel-secret">...</span>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
                         </div>
                         <div class="console-section">
                             <h3><span class="title"> Activities </span> </h3>
-                            <div id="organization-activities" class="console-section-contents">
-                                <span class="alert">No activities.</span>
-                            </div>
+                            <table id="organization-feed-table" class="hideable table">
+                              <tbody></tbody>
+                            </table>
                         </div>
                         <form id="dialog-form-new-application" class="modal hide fade" action="#">
                             <div class="modal-header">
@@ -306,8 +318,10 @@
                     </div>
                     <div id="application-panel" style="display: none">
                         <div class="console-section">
-                            <h3><span class="title"> Application Dashboard <span id="selectedApp2"></span> </span></h3>
-                            <div class="console-section-contents">
+                            <h3>
+                              <span class="title"> Application Dashboard <span id="selectedApp2"></span> </span>
+                            </h3>
+                            <div class="hideable console-section-contents">
                                 <div id="application-panel-table" class="row">
                                     <div id="application-panel-entity-graph" class="span graph"></div>
                                     <div id="application-panel-text" class="span">...</div>
@@ -342,7 +356,7 @@
                     <div class="panel-content">
                         <div class="console-section">
                             <h3><span class="title"> Personal Account </span> </h3>
-                            <div class="console-section-contents">
+                            <div class="hideable console-section-contents">
                                 <form name="update-account-form" id="update-account-form" class="form-horizontal">
                                     <fieldset>
                                         <div class="control-group">
@@ -406,8 +420,8 @@
                                 <a class="" data-toggle="modal" href="#dialog-form-new-organization"></i> Add </a>
                             </div>
                         </h3>
-                        <div class="console-section-contents" id="organizations">
-                        </div>
+                        <table class="hideable table" id="organizations">
+                        </table>
                     </div>
                 </div>
                 <form id="dialog-form-new-organization" class="modal hide fade">
@@ -457,17 +471,13 @@
                                         <a id="delete-users-link" href="#"> Delete</a>
                                     </div>
                                 </h3>
-                                <div class="console-section-contents listContent">
-                                    <div id="users-response-area">
-                                        <div id="users-response-table">
-                                            <pre class="query-response-json">Searching for Users...</pre>
-                                        </div>
-                                        <ul class="pager" id="users-next-prev">
-                                            <li class="previous"><a href="#" id="button-users-prev">&larr; Previous</a></li>
-                                            <li class="next"><a href="#" id="button-users-next">Next &rarr;</a></li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                <table id="users-table" class="hideable table">
+                                  <tbody></tbody>
+                                </table>
+                                <ul id="users-pagination" class="pager">
+                                  <li id="users-previous" class="previous"><a href="#">&larr; Previous</a></li>
+                                  <li id="users-next" class="next"><a href="#">Next &rarr;</a></li>
+                                </ul>
                             </div>
                         </div>
                         <form id="dialog-form-new-user" class="modal hide fade">
@@ -639,22 +649,13 @@
                                         <a id="delete-groups-link" href="#"> Delete </a>
                                     </div>
                                 </h3>
-                                <div class="console-section-contents listContent">
-                                    <div id="groups-response-area">
-                                        <div id="groups-response-table">
-                                            <pre class="query-response-json">Searching for Groups...</pre>
-                                        </div>
-                                        <ul class="pager" id="groups-next-prev">
-                                            <li class="previous"><a href="#" id="button-groups-prev">&larr; Previous</a></li>
-                                            <li class="next"><a href="#" id="button-groups-next">Next &rarr;</a></li>
-                                        </ul>
-                                    </div>
-                                    <!--
-                                    <ul id="groups-by-alphabetical" class="alphabeticalFilter">
-                                        <li><a href="#">{0}</a></li>
-                                    </ul>
-                                    -->
-                                </div>
+                                <table id="groups-table" class="hideable table">
+                                   <tbody></tbody>
+                                </table>
+                                <ul id="groups-pagination" class="pager">
+                                  <li id="groups-previous" class="previous"><a href="#">&larr; Previous</a></li>
+                                  <li id="groups-next" class="next"><a href="#">Next &rarr;</a></li>
+                                </ul>
                             </div>
                         </div>
                         <form id="dialog-form-new-group" class="modal hide fade">
@@ -734,11 +735,13 @@
                                             <a id="delete-roles-link" href=""> Delete </a>
                                         </div>
                                     </h3>
-                                    <div class="console-section-contents listContent">
-                                        <div id="roles-response-table">
-                                            <pre class="query-response-json">Searching for Roles...</pre>
-                                        </div>
-                                    </div>
+                                    <table id="roles-table" class="hideable table">
+                                      <tbody></tbody>
+                                    </table>
+                                    <ul id="roles-pagination" class="pager">
+                                      <li id="roles-previous" class="previous"><a href="#">&larr; Previous</a></li>
+                                      <li id="roles-next" class="next"><a href="#">Next &rarr;</a></li>
+                                    </ul>
                                 </div>
                             </div>
                             <div id="roles-panel-search" class="panel-content" style="display: none;">
@@ -817,10 +820,10 @@
                                         <!--<a href="" onclick="usergrid.console.deleteActivities(); return false;"></i> Delete </a>-->
                                     </div>
                                 </h3>
-                                <div class="console-section-contents listContent">
-                                    <div id="activities-response-table">
-                                        <pre class="query-response-json">Searching for Activities...</pre>
-                                    </div>
+                                <table id="activities-table" class="hideable table">
+                                  <tbody></tbody>
+                                </table>
+                                <div id="activities-pagination">
                                 </div>
                             </div>
                         </div>
@@ -846,7 +849,7 @@
                         <div class="panel-content">
                             <div class="console-section">
                                 <h3><span class="title"> Analytics </span></h3>
-                                <div class="console-section-contents">
+                                <div class="hideable console-section-contents">
                                     <div id="analytics-time">
                                         <form id="resolutionSelectForm" action="" class="form-horizontal">
                                             <div class="row">
@@ -896,7 +899,7 @@
                             </div>
                             <div class="console-section">
                                 <h3><span class="title"> Result Analytics </span></h3>
-                                <div class="console-section-contents">
+                                <div class="hideable console-section-contents">
                                     <div id="analytics-graph"></div>
                                     <div id="analytics-graph-area"></div>
                                 </div>
@@ -911,14 +914,24 @@
                                         <a class="" href="" onclick="usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
                                     </div>
                                 </h3>
-                                <div id="application-panel-key-table" class="console-section-contents">
-                                    <div class="row">
-                                        <span class="span3">Client ID</span> <span id="application-panel-key">...</span>
-                                    </div>
-                                    <div class="row">
-                                        <span class="span3">Client Secret</span> <span id="application-panel-secret">...</span>
-                                    </div>
-                                </div>
+                                <table id="application-panel-key-table" class="hideable table">
+                                    <tr>
+                                      <td>
+                                        <span class="span3">Client ID</span> 
+                                      </td>
+                                      <td>
+                                        <span id="application-panel-key">...</span>
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td>
+                                        <span class="span3">Client Secret</span>
+                                      </td>
+                                      <td>
+                                        <span id="application-panel-secret">...</span>
+                                      <td>
+                                    </tr>
+                                </table>
                             </div>
                             <!--
                             <div class="console-section">
@@ -933,7 +946,7 @@
                     <div id="shell-panel" style="display: none">
                         <div id="shell-content" class="console-section">
                             <h3> <span class="title"> Interactive Shell </span></h3>
-                            <div class="console-section-contents">
+                            <div class="hideable console-section-contents">
                                 <div id="shell-output">
                                     <div class="shell-output-line">Usergrid Interactive Shell (8-bit forever!)</div>
                                 </div>
@@ -953,11 +966,13 @@
                                         <a href="" onclick="usergrid.console.pageSelectQueryExplorer(); return false;">Query Explorer</a>
                                     </div>
                                 </h3>
-                                <div class="console-section-contents listContent">
-                                    <div id="collections-response-table">
-                                        <pre class="query-response-json">Searching for Collections...</pre>
-                                    </div>
-                                </div>
+                                  <table id="collections-table" class="hideable table">
+                                    <tbody></tbody>
+                                  </table>
+                                  <!-- <ul id="collections-pagination" class="pager"> -->
+                                  <!--   <li id="collections-previous" class="previous"><a href="#">&larr; Previous</a></li> -->
+                                  <!--   <li id="collections-next" class="next"><a href="#">Next &rarr;</a></li> -->
+                                  <!-- </ul> -->
                             </div>
                         </div>
                         <form id="dialog-form-new-collection" class="modal hide fade">
@@ -987,7 +1002,7 @@
                     <div id="query-panel" style="display: none">
                         <div id="query-path-area" class="console-section">
                             <h3><span class="title"> Query Collections </span></h3>
-                            <div class="console-section-contents">
+                            <div class="hideable console-section-contents">
                                 <form id="query-inputs" class="form-horizontal">
                                     <div class="control-group">
                                         <label class="control-label" for="query-path">Path: </label>
@@ -1034,7 +1049,7 @@
                                     <a id="delete-entity-link" href="" > Delete Entity</a>
                                 </div>
                             </h3>
-                            <div class="console-section-contents listContent">
+                            <div class="hideable console-section-contents listContent">
                                 <div id="query-response-table">
                                     <pre class="query-response-json">{ }</pre>
                                 </div>

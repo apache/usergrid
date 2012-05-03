@@ -230,7 +230,6 @@ usergrid.console.ui = usergrid.console.ui || { };
     }
     usergrid.console.ui.jsonSchemaToPayload = jsonSchemaToPayload;
 
-
     function displayEntityListResponse(query_results, options, response) {
     
         query_results = query_results || {};

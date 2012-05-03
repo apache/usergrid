@@ -20,7 +20,7 @@
             </td>
             <td class="actor">
               {{if $value.actor.uuid}}
-              <strong><a href="#" onclick="usergrid.console.pageOpenUserProfile('cb41cfa9-72f4-11e1-8b9e-1231381a0091'); return false;"">${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}</a></strong>
+              <strong><a href="#" onclick="usergrid.console.pageOpenUserProfile('${$value.actor.uuid}'); return false;">${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}</a></strong>
               {{else}}
               <strong>${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}</strong>
               {{/if}}
