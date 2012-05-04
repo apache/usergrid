@@ -18,8 +18,6 @@ import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
-import org.usergrid.security.AccessTokenInfo;
-import org.usergrid.security.AccessTokenType;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 
@@ -28,7 +26,7 @@ public class TokenServiceTest {
 	static Logger log = LoggerFactory.getLogger(TokenServiceTest.class);
 	static ManagementServiceImpl managementService;
 	static ManagementTestHelper helper;
-	static AccessTokenService tokenService;
+	static TokenService tokenService;
 	// app-level data generated only once
 	private static UserInfo adminUser;
 	private static OrganizationInfo organization;
@@ -65,14 +63,14 @@ public class TokenServiceTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testEmailConfirmToken() throws Exception {
-		String tokenStr = tokenService.createAccessToken(AccessTokenType.EMAIL,
+		String tokenStr = tokenService.createToken(TokenType.EMAIL,
 				"email_confirm",
 				(Map<String, Object>) cast(hashMap("email", "ed@anuff.com")
 						.map("username", "edanuff")));
 
 		log.info("token: " + tokenStr);
 
-		AccessTokenInfo tokenInfo = tokenService.getAccessTokenInfo(tokenStr);
+		TokenInfo tokenInfo = tokenService.getTokenInfo(tokenStr);
 
 		assertEquals("email_confirm", tokenInfo.getType());
 		assertEquals("ed@anuff.com", tokenInfo.getState().get("email"));
@@ -81,12 +79,12 @@ public class TokenServiceTest {
 
 	@Test
 	public void testAdminPrincipalToken() throws Exception {
-		String tokenStr = tokenService.createAccessToken(new AuthPrincipalInfo(
+		String tokenStr = tokenService.createToken(new AuthPrincipalInfo(
 				AuthPrincipalType.ADMIN_USER, adminUser.getUuid(), null), null);
 
 		log.info("token: " + tokenStr);
 
-		AccessTokenInfo tokenInfo = tokenService.getAccessTokenInfo(tokenStr);
+		TokenInfo tokenInfo = tokenService.getTokenInfo(tokenStr);
 
 		assertEquals("access", tokenInfo.getType());
 		assertEquals(adminUser.getUuid(), tokenInfo.getPrincipal().getUuid());

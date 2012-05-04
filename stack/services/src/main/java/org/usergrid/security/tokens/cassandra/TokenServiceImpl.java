@@ -5,10 +5,10 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.getColumnMap;
 import static org.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
-import static org.usergrid.security.AccessTokenType.ACCESS;
-import static org.usergrid.security.AccessTokenType.EMAIL;
-import static org.usergrid.security.AccessTokenType.OFFLINE;
-import static org.usergrid.security.AccessTokenType.REFRESH;
+import static org.usergrid.security.tokens.TokenType.ACCESS;
+import static org.usergrid.security.tokens.TokenType.EMAIL;
+import static org.usergrid.security.tokens.TokenType.OFFLINE;
+import static org.usergrid.security.tokens.TokenType.REFRESH;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.getLong;
@@ -27,15 +27,15 @@ import java.util.UUID;
 import org.mortbay.log.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.persistence.cassandra.CassandraService;
-import org.usergrid.security.AccessTokenInfo;
-import org.usergrid.security.AccessTokenType;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
-import org.usergrid.security.tokens.AccessTokenService;
+import org.usergrid.security.tokens.TokenInfo;
+import org.usergrid.security.tokens.TokenService;
+import org.usergrid.security.tokens.TokenType;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
-public class AccessTokenServiceImpl implements AccessTokenService {
+public class TokenServiceImpl implements TokenService {
 
 	private static final String TOKEN_PRINCIPAL_TYPE = "principal";
 	private static final String TOKEN_TYPE_ACCESS = "access";
@@ -59,7 +59,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
 	long maxPersistenceTokenAge = LONG_TOKEN_AGE;
 
-	Map<AccessTokenType, Long> tokenExpirations = hashMap(ACCESS,
+	Map<TokenType, Long> tokenExpirations = hashMap(ACCESS,
 			SHORT_TOKEN_AGE).map(REFRESH, LONG_TOKEN_AGE)
 			.map(EMAIL, LONG_TOKEN_AGE).map(OFFLINE, LONG_TOKEN_AGE);
 
@@ -72,7 +72,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
 	protected Properties properties;
 
-	public AccessTokenServiceImpl() {
+	public TokenServiceImpl() {
 
 	}
 
@@ -83,7 +83,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		return expires > 0 ? expires : default_expiration;
 	}
 
-	long getExpirationForTokenType(AccessTokenType tokenType) {
+	long getExpirationForTokenType(TokenType tokenType) {
 		Long l = tokenExpirations.get(tokenType);
 		if (l != null) {
 			return l;
@@ -92,7 +92,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 	}
 
 	void setExpirationFromProperties(String name) {
-		AccessTokenType tokenType = AccessTokenType.valueOf(name.toUpperCase());
+		TokenType tokenType = TokenType.valueOf(name.toUpperCase());
 		long expires = Long.parseLong(properties.getProperty(
 				"usergrid.auth.token." + name + ".expires", ""
 						+ getExpirationForTokenType(tokenType)));
@@ -127,25 +127,25 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 	}
 
 	@Override
-	public String createAccessToken(AccessTokenType tokenType, String type,
+	public String createToken(TokenType tokenType, String type,
 			Map<String, Object> state) throws Exception {
-		return createAccessToken(tokenType, type, null, state);
+		return createToken(tokenType, type, null, state);
 	}
 
 	@Override
-	public String createAccessToken(AuthPrincipalInfo principal)
+	public String createToken(AuthPrincipalInfo principal)
 			throws Exception {
-		return createAccessToken(AccessTokenType.ACCESS, null, principal, null);
+		return createToken(TokenType.ACCESS, null, principal, null);
 	}
 
 	@Override
-	public String createAccessToken(AuthPrincipalInfo principal,
+	public String createToken(AuthPrincipalInfo principal,
 			Map<String, Object> state) throws Exception {
-		return createAccessToken(AccessTokenType.ACCESS, null, principal, state);
+		return createToken(TokenType.ACCESS, null, principal, state);
 	}
 
 	@Override
-	public String createAccessToken(AccessTokenType tokenType, String type,
+	public String createToken(TokenType tokenType, String type,
 			AuthPrincipalInfo principal, Map<String, Object> state)
 			throws Exception {
 		UUID uuid = UUIDUtils.newTimeUUID();
@@ -153,29 +153,29 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		if (type == null) {
 			type = TOKEN_TYPE_ACCESS;
 		}
-		AccessTokenInfo tokenInfo = new AccessTokenInfo(uuid, type, timestamp,
+		TokenInfo tokenInfo = new TokenInfo(uuid, type, timestamp,
 				timestamp, principal, state);
-		putAccessTokenInfo(tokenInfo);
+		putTokenInfo(tokenInfo);
 		return getTokenForUUID(tokenType, uuid);
 	}
 
 	@Override
-	public AccessTokenInfo getAccessTokenInfo(String token) throws Exception {
+	public TokenInfo getTokenInfo(String token) throws Exception {
 		// TODO if tokens auto refresh, do so here
-		return getAccessTokenInfo(getUUIDForToken(token));
+		return getTokenInfo(getUUIDForToken(token));
 	}
 
 	@Override
-	public String refreshAccessToken(String token) throws Exception {
-		AccessTokenInfo tokenInfo = getAccessTokenInfo(getUUIDForToken(token));
+	public String refreshToken(String token) throws Exception {
+		TokenInfo tokenInfo = getTokenInfo(getUUIDForToken(token));
 		if (tokenInfo != null) {
-			putAccessTokenInfo(tokenInfo);
-			return getTokenForUUID(AccessTokenType.ACCESS, tokenInfo.getUuid());
+			putTokenInfo(tokenInfo);
+			return getTokenForUUID(TokenType.ACCESS, tokenInfo.getUuid());
 		}
 		return null;
 	}
 
-	public AccessTokenInfo getAccessTokenInfo(UUID uuid) throws Exception {
+	public TokenInfo getTokenInfo(UUID uuid) throws Exception {
 		if (uuid == null) {
 			return null;
 		}
@@ -206,11 +206,11 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		@SuppressWarnings("unchecked")
 		Map<String, Object> state = (Map<String, Object>) JsonUtils
 				.fromByteBuffer(columns.get(TOKEN_STATE));
-		return new AccessTokenInfo(uuid, type, created, accessed, principal,
+		return new TokenInfo(uuid, type, created, accessed, principal,
 				state);
 	}
 
-	public void putAccessTokenInfo(AccessTokenInfo tokenInfo) throws Exception {
+	public void putTokenInfo(TokenInfo tokenInfo) throws Exception {
 		Map<String, ByteBuffer> columns = new HashMap<String, ByteBuffer>();
 		columns.put(TOKEN_UUID, bytebuffer(tokenInfo.getUuid()));
 		columns.put(TOKEN_TYPE, bytebuffer(tokenInfo.getType()));
@@ -231,9 +231,9 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 	}
 
 	public UUID getUUIDForToken(String token) {
-		AccessTokenType tokenType = AccessTokenType.getFromBase64String(token);
+		TokenType tokenType = TokenType.getFromBase64String(token);
 		byte[] bytes = decodeBase64(token
-				.substring(AccessTokenType.BASE64_PREFIX_LENGTH));
+				.substring(TokenType.BASE64_PREFIX_LENGTH));
 		UUID uuid = uuid(bytes);
 		long timestamp = getTimestampInMillis(uuid);
 		if ((getExpirationForTokenType(tokenType) > 0)
@@ -257,7 +257,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		return uuid;
 	}
 
-	public String getTokenForUUID(AccessTokenType tokenType, UUID uuid) {
+	public String getTokenForUUID(TokenType tokenType, UUID uuid) {
 		int l = 36;
 		if (tokenType.getExpires()) {
 			l += 8;

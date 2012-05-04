@@ -42,7 +42,7 @@ import org.usergrid.management.ManagementService;
 import org.usergrid.management.ManagementTestHelper;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
-import org.usergrid.security.tokens.AccessTokenService;
+import org.usergrid.security.tokens.TokenService;
 
 @Component
 public class ManagementTestHelperImpl implements ManagementTestHelper {
@@ -62,7 +62,7 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
 
 	ManagementService management;
 
-	AccessTokenService tokens;
+	TokenService tokens;
 
 	Properties properties;
 
@@ -176,13 +176,13 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
 	}
 
 	@Override
-	public AccessTokenService getAccessTokenService() {
+	public TokenService getAccessTokenService() {
 		return tokens;
 	}
 
 	@Override
 	@Autowired
-	public void setAccessTokenService(AccessTokenService tokens) {
+	public void setAccessTokenService(TokenService tokens) {
 		this.tokens = tokens;
 	}
 

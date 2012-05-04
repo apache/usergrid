@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.security;
+package org.usergrid.security.tokens;
 
 import static org.usergrid.utils.CodecUtils.base64;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public enum AccessTokenType {
+public enum TokenType {
 	ACCESS("ac", true), REFRESH("re", false), OFFLINE("of", false), EMAIL("em",
 			false);
 
@@ -30,21 +30,21 @@ public enum AccessTokenType {
 	private final String prefix;
 	private final String base64Prefix;
 	private final boolean expires;
-	private static Map<String, AccessTokenType> prefixes;
-	private static Map<String, AccessTokenType> base64Prefixes;
+	private static Map<String, TokenType> prefixes;
+	private static Map<String, TokenType> base64Prefixes;
 
-	private synchronized static void register(AccessTokenType type) {
+	private synchronized static void register(TokenType type) {
 		if (prefixes == null) {
-			prefixes = new ConcurrentHashMap<String, AccessTokenType>();
+			prefixes = new ConcurrentHashMap<String, TokenType>();
 		}
 		if (base64Prefixes == null) {
-			base64Prefixes = new ConcurrentHashMap<String, AccessTokenType>();
+			base64Prefixes = new ConcurrentHashMap<String, TokenType>();
 		}
 		prefixes.put(type.getPrefix(), type);
 		base64Prefixes.put(type.getBase64Prefix(), type);
 	}
 
-	AccessTokenType(String prefix, boolean expires) {
+	TokenType(String prefix, boolean expires) {
 		this.prefix = prefix;
 		this.expires = expires;
 		base64Prefix = base64(prefix + "-");
@@ -63,7 +63,7 @@ public enum AccessTokenType {
 		return base64Prefix;
 	}
 
-	public static AccessTokenType getFromBase64String(String token) {
+	public static TokenType getFromBase64String(String token) {
 		if (token == null) {
 			return null;
 		}

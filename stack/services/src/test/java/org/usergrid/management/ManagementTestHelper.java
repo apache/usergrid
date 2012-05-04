@@ -18,7 +18,7 @@ package org.usergrid.management;
 import java.util.Properties;
 
 import org.usergrid.persistence.EntityManagerFactory;
-import org.usergrid.security.tokens.AccessTokenService;
+import org.usergrid.security.tokens.TokenService;
 
 public interface ManagementTestHelper {
 
@@ -43,8 +43,8 @@ public interface ManagementTestHelper {
 
 	public abstract void setProperties(Properties properties);
 
-	public abstract void setAccessTokenService(AccessTokenService tokens);
+	public abstract void setAccessTokenService(TokenService tokens);
 
-	public abstract AccessTokenService getAccessTokenService();
+	public abstract TokenService getAccessTokenService();
 
 }

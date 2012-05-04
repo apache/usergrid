@@ -1,9 +1,11 @@
-package org.usergrid.security;
+package org.usergrid.security.tokens;
 
 import java.util.Map;
 import java.util.UUID;
 
-public class AccessTokenInfo {
+import org.usergrid.security.AuthPrincipalInfo;
+
+public class TokenInfo {
 
 	UUID uuid;
 	String type;
@@ -12,7 +14,7 @@ public class AccessTokenInfo {
 	AuthPrincipalInfo principal;
 	Map<String, Object> state;
 
-	public AccessTokenInfo(UUID uuid, String type, long created, long accessed,
+	public TokenInfo(UUID uuid, String type, long created, long accessed,
 			AuthPrincipalInfo principal, Map<String, Object> state) {
 		this.uuid = uuid;
 		this.type = type;
