@@ -4540,6 +4540,9 @@ table#organization-admins-table tr td.gravatar20 {
   table-layout: fixed;
   margin-bottom: 0px !important;
 }
+table#organization-admins-table {
+  table-layout: auto;
+}
 .zebraRows {
   background: white;
 }
