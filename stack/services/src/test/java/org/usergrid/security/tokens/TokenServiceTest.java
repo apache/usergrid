@@ -2,6 +2,7 @@ package org.usergrid.security.tokens;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.ClassUtils.cast;
 import static org.usergrid.utils.MapUtils.hashMap;
 
@@ -72,9 +73,15 @@ public class TokenServiceTest {
 
 		TokenInfo tokenInfo = tokenService.getTokenInfo(tokenStr);
 
+		long last_access = tokenInfo.getAccessed();
+
 		assertEquals("email_confirm", tokenInfo.getType());
 		assertEquals("ed@anuff.com", tokenInfo.getState().get("email"));
 		assertEquals("edanuff", tokenInfo.getState().get("username"));
+
+		tokenInfo = tokenService.getTokenInfo(tokenStr);
+
+		assertTrue(last_access < tokenInfo.getAccessed());
 	}
 
 	@Test
@@ -86,8 +93,14 @@ public class TokenServiceTest {
 
 		TokenInfo tokenInfo = tokenService.getTokenInfo(tokenStr);
 
+		long last_access = tokenInfo.getAccessed();
+
 		assertEquals("access", tokenInfo.getType());
 		assertEquals(adminUser.getUuid(), tokenInfo.getPrincipal().getUuid());
+
+		tokenInfo = tokenService.getTokenInfo(tokenStr);
+
+		assertTrue(last_access < tokenInfo.getAccessed());
 	}
 
 }

@@ -1,5 +1,6 @@
 package org.usergrid.security.tokens.cassandra;
 
+import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
@@ -20,9 +21,13 @@ import static org.usergrid.utils.UUIDUtils.getTimestampInMillis;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+
+import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
+import me.prettyprint.cassandra.serializers.StringSerializer;
 
 import org.mortbay.log.Log;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,15 +42,38 @@ import org.usergrid.utils.UUIDUtils;
 
 public class TokenServiceImpl implements TokenService {
 
-	private static final String TOKEN_PRINCIPAL_TYPE = "principal";
-	private static final String TOKEN_TYPE_ACCESS = "access";
-	private static final String TOKEN_STATE = "state";
-	private static final String TOKEN_APPLICATION = "application";
-	private static final String TOKEN_ENTITY = "entity";
-	private static final String TOKEN_ACCESSED = "accessed";
-	private static final String TOKEN_CREATED = "created";
-	private static final String TOKEN_TYPE = "type";
 	private static final String TOKEN_UUID = "uuid";
+	private static final String TOKEN_TYPE = "type";
+	private static final String TOKEN_CREATED = "created";
+	private static final String TOKEN_ACCESSED = "accessed";
+	private static final String TOKEN_PRINCIPAL_TYPE = "principal";
+	private static final String TOKEN_ENTITY = "entity";
+	private static final String TOKEN_APPLICATION = "application";
+	private static final String TOKEN_STATE = "state";
+
+	private static final String TOKEN_TYPE_ACCESS = "access";
+
+	private static final HashSet<String> TOKEN_PROPERTIES = new HashSet<String>();
+
+	static {
+		TOKEN_PROPERTIES.add(TOKEN_UUID);
+		TOKEN_PROPERTIES.add(TOKEN_TYPE);
+		TOKEN_PROPERTIES.add(TOKEN_CREATED);
+		TOKEN_PROPERTIES.add(TOKEN_ACCESSED);
+		TOKEN_PROPERTIES.add(TOKEN_PRINCIPAL_TYPE);
+		TOKEN_PROPERTIES.add(TOKEN_ENTITY);
+		TOKEN_PROPERTIES.add(TOKEN_APPLICATION);
+		TOKEN_PROPERTIES.add(TOKEN_STATE);
+	}
+
+	private static final HashSet<String> REQUIRED_TOKEN_PROPERTIES = new HashSet<String>();
+
+	static {
+		REQUIRED_TOKEN_PROPERTIES.add(TOKEN_UUID);
+		REQUIRED_TOKEN_PROPERTIES.add(TOKEN_TYPE);
+		REQUIRED_TOKEN_PROPERTIES.add(TOKEN_CREATED);
+		REQUIRED_TOKEN_PROPERTIES.add(TOKEN_ACCESSED);
+	}
 
 	public static final String TOKEN_SECRET_SALT = "super secret token value";
 
@@ -163,7 +191,7 @@ public class TokenServiceImpl implements TokenService {
 		UUID uuid = getUUIDForToken(token);
 		if (uuid != null) {
 			cassandra.setColumn(cassandra.getSystemKeyspace(), TOKENS_CF, uuid,
-					TOKEN_ACCESSED, System.currentTimeMillis(),
+					TOKEN_ACCESSED, currentTimeMillis(),
 					(int) (maxPersistenceTokenAge / 1000));
 		}
 	}
@@ -176,7 +204,7 @@ public class TokenServiceImpl implements TokenService {
 			tokenInfo = getTokenInfo(uuid);
 			if (tokenInfo != null) {
 				cassandra.setColumn(cassandra.getSystemKeyspace(), TOKENS_CF,
-						uuid, TOKEN_ACCESSED, System.currentTimeMillis(),
+						uuid, TOKEN_ACCESSED, currentTimeMillis(),
 						(int) (maxPersistenceTokenAge / 1000));
 			}
 		}
@@ -197,10 +225,11 @@ public class TokenServiceImpl implements TokenService {
 		if (uuid == null) {
 			return null;
 		}
-		Map<String, ByteBuffer> columns = getColumnMap(cassandra.getAllColumns(
-				cassandra.getSystemKeyspace(), TOKENS_CF, uuid));
-		if (!hasKeys(columns, TOKEN_UUID, TOKEN_TYPE, TOKEN_CREATED,
-				TOKEN_ACCESSED)) {
+		Map<String, ByteBuffer> columns = getColumnMap(cassandra.getColumns(
+				cassandra.getSystemKeyspace(), TOKENS_CF, uuid,
+				TOKEN_PROPERTIES, StringSerializer.get(),
+				ByteBufferSerializer.get()));
+		if (!hasKeys(columns, REQUIRED_TOKEN_PROPERTIES)) {
 			return null;
 		}
 		String type = string(columns.get(TOKEN_TYPE));
@@ -254,7 +283,7 @@ public class TokenServiceImpl implements TokenService {
 		UUID uuid = uuid(bytes);
 		long timestamp = getTimestampInMillis(uuid);
 		if ((getExpirationForTokenType(tokenType) > 0)
-				&& (System.currentTimeMillis() > (timestamp + getExpirationForTokenType(tokenType)))) {
+				&& (currentTimeMillis() > (timestamp + getExpirationForTokenType(tokenType)))) {
 			return null;
 		}
 		int i = 16;

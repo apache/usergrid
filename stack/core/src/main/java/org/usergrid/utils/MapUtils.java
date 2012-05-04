@@ -704,4 +704,11 @@ public class MapUtils extends org.apache.commons.collections.MapUtils {
 		return true;
 	}
 
+	public static boolean hasKeys(Map<?, ?> map, Set<String> keys) {
+		if (map == null) {
+			return false;
+		}
+		return map.keySet().containsAll(keys);
+	}
+
 }
