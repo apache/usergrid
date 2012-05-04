@@ -643,10 +643,10 @@
                                         <input onkeyup="usergrid.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search" placeholder="Search"/>
                                         <select id="search-group-type" onChange="usergrid.console.searchGroups();" class="input-medium search">
                                             <option value="path">Path</option>
-                                            <option value="name">Group Name</option>
+                                            <option value="title">Group Name</option>
                                         </select>
                                         <a id="selectAllGroups" class="" href="#" onclick="usergrid.console.selectAllGroups();"> Select All </a>
-					<a id="deselectAllGroups" style="display: none;" class="" href="#" onclick="usergrid.console.deselectAllGroups();"> Deselect All </a>
+                                        <a id="deselectAllGroups" style="display: none;" class="" href="#" onclick="usergrid.console.deselectAllGroups();"> Deselect All </a>
                                         <a class="" data-toggle="modal" href="#dialog-form-new-group"> Add</a>
                                         <a id="delete-groups-link" href="#"> Delete </a>
                                     </div>
@@ -730,6 +730,7 @@
                                 <li class="active"><a id="button-roles-list" href="#">List</a></li>
                             </ul>
                             <div id="roles-panel-list" class="panel-content">
+                            <div id="roles-messages" class="alert" style="display: none;"></div>
                                 <div class="console-section">
                                     <h3><span class="title"> Roles </span>
                                         <div class="bar">
@@ -941,6 +942,7 @@
                     </div>
                     <div id="collections-panel" style="display: none">
                         <div class="panel-content">
+                        <div id="collections-messages" class="alert" style="display: none;"></div>
                             <div class="console-section">
                                 <h3><span class="title"> Collections </span>
                                     <div class="bar">
