@@ -474,9 +474,9 @@
 				<version>${snakeyaml-version}</version>
 			</dependency>
 			<dependency>
-			  <groupId>com.restfb</groupId>
-			  <artifactId>restfb</artifactId>
-			  <version>1.6.9</version>
+				<groupId>com.restfb</groupId>
+				<artifactId>restfb</artifactId>
+				<version>1.6.9</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -487,7 +487,7 @@
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>cobertura-maven-plugin</artifactId>
-					<version>2.5</version>
+					<version>2.5.1</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -495,8 +495,22 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>cobertura-maven-plugin</artifactId>
-				<version>2.5</version>
+				<configuration>
+					<formats>
+						<format>xml</format>
+						<format>html</format>
+					</formats>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>cobertura</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
+
 		</plugins>
 	</build>
 
