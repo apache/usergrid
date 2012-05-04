@@ -3970,8 +3970,11 @@ a:active {
 .query-result-portlet table {
   width: 100%;
 }
+.query-result-portlet td {
+  padding: 10px;
+}
 .query-result-portlet td > div {
-  padding: 4px 4px;
+  padding: 0px;
 }
 .query-result-user-picture {
   width: 50px;
@@ -4003,6 +4006,9 @@ a:active {
 .query-result-table-obj tr td {
   padding: 10px;
 }
+.query-result-table-obj tr td {
+  line-height: 18px !important;
+}
 .query-result-table-obj .query-result-table-obj tr {
   background: transparent;
   border-top: none;
@@ -4033,7 +4039,7 @@ a:active {
 }
 .query-result-td-header-buttons button {
   font-size: 12px;
-  margin: 0px 0px 0px 8px;
+  margin: 0px 0px 0px 0px;
 }
 .query-result-td-header-buttons a {
   font-size: 12px;
@@ -4044,8 +4050,10 @@ a:active {
   padding-left: 8px;
   font-size: 13px;
 }
-.query-result-table-name {
+.query-result-table-name,
+.query-result-table-value {
   width: 25%;
+  padding: 10px !important;
 }
 /*-------------------------------------------------*/
 .application-row-name {

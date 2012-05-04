@@ -4,11 +4,10 @@ usergrid.console.ui = usergrid.console.ui || { };
 usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 
 
-    function dateToString(numberDate){
-        var date = new Date(numberDate);
-        //var milisecs = date.getMilliseconds()/1000; //not showing secs per ea
-        return date.toString('dd MMM yyyy - h:mm tt '); //:ss' + milisecs.toFixed(3));
-    }
+function dateToString(numberDate){
+    var date = new Date(numberDate);
+    return date.toString('dd MMM yyyy - h:mm tt ');
+}
 
 (function($) {
     //This code block *WILL NOT* load before the document is complete
@@ -149,6 +148,12 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
             
             var uri = (entity.metadata || { }).uri;
             
+            if (!entity.picture) {
+              entity.picture = "/images/user_profile.png"
+            } else {
+              entity.picture = entity.picture + "?d=http://" + window.location.host + "/images/user_profile.png"
+            }
+
             return $.tmpl("usergrid.ui.collections.user.header.html", {
                 entity : entity,
                 picture : entity.picture,
@@ -190,8 +195,8 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
             var metadata = entity.metadata;
             if ($.isEmptyObject(metadata)) metadata = null;
             
-            entity_contents.created = dateToString(entity_contents.created);
-            entity_contents.modified = dateToString(entity_contents.modified); 
+            // entity_contents.created = dateToString(entity_contents.created);
+            // entity_contents.modified = dateToString(entity_contents.modified); 
 
             var details = $.tmpl("usergrid.ui.collections.user.detail.html", {
                 entity : entity_contents,
