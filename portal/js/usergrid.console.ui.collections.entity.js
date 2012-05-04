@@ -96,7 +96,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
       if (!entity.picture) {
         entity.picture = "/images/user_profile.png"
       } else {
-        entity.picture = entity.picture + "?d=http://" + window.location.host + "/images/user_profile.png"
+        entity.picture = entity.picture + "?d=http://" + window.location.host + window.location.pathname + "images/user_profile.png"
       }
         
       console.log("here i aaaamm...");
