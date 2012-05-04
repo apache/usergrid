@@ -127,6 +127,7 @@ import org.usergrid.persistence.ConnectedEntityRef;
 import org.usergrid.persistence.ConnectionRef;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.RelationManager;
 import org.usergrid.persistence.Results;
@@ -156,11 +157,12 @@ public class RelationManagerImpl implements RelationManager,
     private static final Logger logger = LoggerFactory
             .getLogger(EntityManagerImpl.class);
 
-    ApplicationContext applicationContext;
-    EntityManagerImpl em;
-    CassandraService cass;
-    UUID applicationId;
-    EntityRef headEntity;
+    private ApplicationContext applicationContext;
+    private EntityManagerImpl em;
+    private CassandraService cass;
+    private UUID applicationId;
+    private EntityRef headEntity;
+    private IndexBucketLocator indexBucketLocator;
 
     public static final StringSerializer se = new StringSerializer();
     public static final ByteBufferSerializer be = new ByteBufferSerializer();
@@ -172,18 +174,19 @@ public class RelationManagerImpl implements RelationManager,
     }
 
     public RelationManagerImpl init(EntityManagerImpl em,
-            CassandraService cass, UUID applicationId, EntityRef headEntity) {
+            CassandraService cass, UUID applicationId, EntityRef headEntity, IndexBucketLocator indexBucketLocator) {
         this.em = em;
         this.applicationId = applicationId;
         this.cass = cass;
         this.headEntity = headEntity;
+        this.indexBucketLocator = indexBucketLocator;
         return this;
     }
 
     RelationManagerImpl getRelationManager(EntityRef headEntity) {
         return applicationContext.getAutowireCapableBeanFactory()
                 .createBean(RelationManagerImpl.class)
-                .init(em, cass, applicationId, headEntity);
+                .init(em, cass, applicationId, headEntity, indexBucketLocator);
     }
 
     Entity getHeadEntity() throws Exception {
@@ -419,6 +422,10 @@ public class RelationManagerImpl implements RelationManager,
         logger.info("batchUpdateCollectionIndex");
 
         ApplicationCF indexesCf = ENTITY_INDEX;
+        
+        Entity indexedEntity = indexUpdate.getEntity();
+        
+//        String bucketId = indexBucketLocator.getBucket(applicationId, indexedEntity.getType(), indexedEntity.getUuid(), indexUpdate.getEntryName());
 
         CollectionInfo collection = getDefaultSchema().getCollection(
                 owner.getType(), collectionName);
@@ -433,8 +440,7 @@ public class RelationManagerImpl implements RelationManager,
 
             if (entry.getValue() != null) {
 
-                index_key = key(owner.getUuid(), collectionName,
-                        entry.getPath());
+                index_key = key(owner.getUuid(), collectionName,  entry.getPath());
 
                 addDeleteToMutator(indexUpdate.getBatch(), indexesCf,
                         index_key, entry.getIndexComposite(),
@@ -490,8 +496,7 @@ public class RelationManagerImpl implements RelationManager,
 
                 // byte valueCode = indexEntry.getValueCode();
 
-                index_key = key(owner.getUuid(), collectionName,
-                        indexEntry.getPath());
+                index_key = key(owner.getUuid(), collectionName, indexEntry.getPath());
 
                 // int i = 0;
 
@@ -560,6 +565,8 @@ public class RelationManagerImpl implements RelationManager,
     @Override
     public Set<String> getCollectionIndexes(String collectionName)
             throws Exception {
+        
+        //TODO TN, read all buckets here
         List<HColumn<String, String>> results = cass.getAllColumns(
                 cass.getApplicationKeyspace(applicationId),
                 ENTITY_DICTIONARIES,
@@ -582,6 +589,9 @@ public class RelationManagerImpl implements RelationManager,
         Map<EntityRef, Set<String>> results = new LinkedHashMap<EntityRef, Set<String>>();
 
         Keyspace ko = cass.getApplicationKeyspace(applicationId);
+        
+        //TODO TN get all buckets here
+        
         List<HColumn<DynamicComposite, ByteBuffer>> containers = cass
                 .getAllColumns(
                         ko,

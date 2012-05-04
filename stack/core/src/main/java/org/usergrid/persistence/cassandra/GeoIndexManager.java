@@ -194,7 +194,7 @@ public class GeoIndexManager {
 
 	public GeoIndexManager init(EntityManagerImpl em) {
 		this.em = em;
-		cass = em.cass;
+		cass = em.getCass();
 		return this;
 	}
 
@@ -263,7 +263,7 @@ public class GeoIndexManager {
 		try {
 			Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> rows = cass
 					.multiGetColumns(
-							cass.getApplicationKeyspace(em.applicationId),
+							cass.getApplicationKeyspace(em.getApplicationId()),
 							ApplicationCF.ENTITY_INDEX, keys, startResult,
 							null, count, reversed);
 
@@ -517,7 +517,7 @@ public class GeoIndexManager {
 			String collectionName, String propertyName,
 			EntityLocationRef location) {
 
-		Keyspace ko = cass.getApplicationKeyspace(em.applicationId);
+		Keyspace ko = cass.getApplicationKeyspace(em.getApplicationId());
 		Mutator<ByteBuffer> m = createMutator(ko, ByteBufferSerializer.get());
 
 		batchStoreLocationInCollectionIndex(m,
@@ -546,7 +546,7 @@ public class GeoIndexManager {
 			String collectionName, String propertyName,
 			EntityLocationRef location) {
 
-		Keyspace ko = cass.getApplicationKeyspace(em.applicationId);
+		Keyspace ko = cass.getApplicationKeyspace(em.getApplicationId());
 		Mutator<ByteBuffer> m = createMutator(ko, ByteBufferSerializer.get());
 
 		batchRemoveLocationFromCollectionIndex(m,

@@ -138,6 +138,7 @@ import org.usergrid.persistence.EntityFactory;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Identifier;
+import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Query.CounterFilterPredicate;
 import org.usergrid.persistence.Results;
@@ -179,18 +180,21 @@ public class EntityManagerImpl implements EntityManager,
 	private static final Logger logger = LoggerFactory
 			.getLogger(EntityManagerImpl.class);
 
-	ApplicationContext applicationContext;
+	private ApplicationContext applicationContext;
 
-	EntityManagerFactoryImpl emf;
+	private EntityManagerFactoryImpl emf;
 
 	@Autowired
-	QueueManagerFactoryImpl qmf;
+	private QueueManagerFactoryImpl qmf;
+	
+	@Autowired
+	private IndexBucketLocator locator;
 
-	UUID applicationId;
+	private UUID applicationId;
 
-	CassandraService cass;
+	private CassandraService cass;
 
-	CounterUtils counterUtils;
+	private CounterUtils counterUtils;
 
 	public static final StringSerializer se = new StringSerializer();
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
@@ -234,7 +238,7 @@ public class EntityManagerImpl implements EntityManager,
 	public RelationManagerImpl getRelationManager(EntityRef entityRef) {
 		return applicationContext.getAutowireCapableBeanFactory()
 				.createBean(RelationManagerImpl.class)
-				.init(this, cass, applicationId, entityRef);
+				.init(this, cass, applicationId, entityRef, locator);
 	}
 
 	/**
@@ -2961,8 +2965,24 @@ public class EntityManagerImpl implements EntityManager,
 			throws BeansException {
 		this.applicationContext = applicationContext;
 	}
+	
+	
 
-	public GeoIndexManager getGeoIndexManager() {
+	/**
+     * @return the applicationId
+     */
+    public UUID getApplicationId() {
+        return applicationId;
+    }
+
+    /**
+     * @return the cass
+     */
+    public CassandraService getCass() {
+        return cass;
+    }
+
+    public GeoIndexManager getGeoIndexManager() {
 		return applicationContext.getAutowireCapableBeanFactory()
 				.createBean(GeoIndexManager.class).init(this);
 	}

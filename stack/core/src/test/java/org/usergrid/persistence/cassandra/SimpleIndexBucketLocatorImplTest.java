@@ -120,7 +120,7 @@ public class SimpleIndexBucketLocatorImplTest {
         String entityType = "user";
         String propName = "firstName";
 
-        int bucketSize = 100;
+        int bucketSize = 20;
         float distributionPercentage = .05f; 
         
         // test 100 elements
@@ -128,7 +128,7 @@ public class SimpleIndexBucketLocatorImplTest {
 
         List<String> buckets = locator.getBuckets(appId, entityType, propName);
 
-        assertEquals(100, buckets.size());
+        assertEquals(bucketSize, buckets.size());
 
         int testSize = 2000000;
 
