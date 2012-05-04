@@ -118,6 +118,8 @@
         <property name="batcher" ref="simpleBatcher"/>
     </bean>
 
+	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.AccessTokenServiceImpl"/>
+
 	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl"/>
 
 	<bean id="serviceManagerFactory" class="org.usergrid.services.ServiceManagerFactory">

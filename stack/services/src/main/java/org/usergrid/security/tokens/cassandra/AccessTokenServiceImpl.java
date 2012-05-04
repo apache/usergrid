@@ -24,12 +24,14 @@ import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.security.AccessTokenInfo;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
-import org.usergrid.security.tokens.AccessTokenManager;
+import org.usergrid.security.tokens.AccessTokenService;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
-public class AccessTokenManagerImpl implements AccessTokenManager {
+public class AccessTokenServiceImpl implements AccessTokenService {
 
+	private static final String TOKEN_PRINCIPAL_TYPE = "principal";
+	private static final String TOKEN_TYPE_ACCESS = "access";
 	private static final String TOKEN_STATE = "state";
 	private static final String TOKEN_APPLICATION = "application";
 	private static final String TOKEN_ENTITY = "entity";
@@ -51,7 +53,7 @@ public class AccessTokenManagerImpl implements AccessTokenManager {
 
 	protected Properties properties;
 
-	public AccessTokenManagerImpl() {
+	public AccessTokenServiceImpl() {
 
 	}
 
@@ -69,6 +71,7 @@ public class AccessTokenManagerImpl implements AccessTokenManager {
 		}
 	}
 
+	@Autowired
 	public void setCassandraService(CassandraService cassandra) {
 		this.cassandra = cassandra;
 	}
@@ -81,22 +84,31 @@ public class AccessTokenManagerImpl implements AccessTokenManager {
 	@Override
 	public String createAccessToken(String type, Map<String, Object> state)
 			throws Exception {
-		UUID uuid = UUIDUtils.newTimeUUID();
-		long timestamp = getTimestampInMillis(uuid);
-		AccessTokenInfo tokenInfo = new AccessTokenInfo(uuid, type, timestamp,
-				timestamp, null, state);
-		putAccessTokenInfo(tokenInfo);
-		return getTokenForUUID(uuid);
+		return createAccessToken(type, null, state);
+	}
+
+	@Override
+	public String createAccessToken(AuthPrincipalInfo principal)
+			throws Exception {
+		return createAccessToken(null, principal, null);
 	}
 
 	@Override
 	public String createAccessToken(AuthPrincipalInfo principal,
 			Map<String, Object> state) throws Exception {
+		return createAccessToken(null, principal, state);
+	}
+
+	@Override
+	public String createAccessToken(String type, AuthPrincipalInfo principal,
+			Map<String, Object> state) throws Exception {
 		UUID uuid = UUIDUtils.newTimeUUID();
 		long timestamp = getTimestampInMillis(uuid);
-		AccessTokenInfo tokenInfo = new AccessTokenInfo(uuid, principal
-				.getType().toString().toLowerCase(), timestamp, timestamp,
-				principal, state);
+		if (type == null) {
+			type = TOKEN_TYPE_ACCESS;
+		}
+		AccessTokenInfo tokenInfo = new AccessTokenInfo(uuid, type, timestamp,
+				timestamp, principal, state);
 		putAccessTokenInfo(tokenInfo);
 		return getTokenForUUID(uuid);
 	}
@@ -109,12 +121,18 @@ public class AccessTokenManagerImpl implements AccessTokenManager {
 
 	@Override
 	public String refreshAccessToken(String token) throws Exception {
-		getAccessTokenInfo(getUUIDForToken(token));
-
+		AccessTokenInfo tokenInfo = getAccessTokenInfo(getUUIDForToken(token));
+		if (tokenInfo != null) {
+			putAccessTokenInfo(tokenInfo);
+			return getTokenForUUID(tokenInfo.getUuid());
+		}
 		return null;
 	}
 
 	public AccessTokenInfo getAccessTokenInfo(UUID uuid) throws Exception {
+		if (uuid == null) {
+			return null;
+		}
 		Map<String, ByteBuffer> columns = getColumnMap(cassandra.getAllColumns(
 				cassandra.getSystemKeyspace(), TOKENS_CF, uuid));
 		if (!hasKeys(columns, TOKEN_UUID, TOKEN_TYPE, TOKEN_CREATED,
@@ -124,8 +142,15 @@ public class AccessTokenManagerImpl implements AccessTokenManager {
 		String type = string(columns.get(TOKEN_TYPE));
 		long created = getLong(columns.get(TOKEN_CREATED));
 		long accessed = getLong(columns.get(TOKEN_ACCESSED));
-		AuthPrincipalType principalType = AuthPrincipalType.valueOf(type
-				.toUpperCase());
+		String principalTypeStr = string(columns.get(TOKEN_PRINCIPAL_TYPE));
+		AuthPrincipalType principalType = null;
+		if (principalTypeStr != null) {
+			try {
+				principalType = AuthPrincipalType.valueOf(principalTypeStr
+						.toUpperCase());
+			} catch (IllegalArgumentException e) {
+			}
+		}
 		AuthPrincipalInfo principal = null;
 		if (principalType != null) {
 			UUID entityId = uuid(columns.get(TOKEN_ENTITY));
@@ -146,11 +171,14 @@ public class AccessTokenManagerImpl implements AccessTokenManager {
 		columns.put(TOKEN_CREATED, bytebuffer(tokenInfo.getCreated()));
 		columns.put(TOKEN_ACCESSED, bytebuffer(tokenInfo.getAccessed()));
 		if (tokenInfo.getPrincipal() != null) {
+			columns.put(TOKEN_PRINCIPAL_TYPE, bytebuffer(tokenInfo
+					.getPrincipal().getType().toString().toLowerCase()));
 			columns.put(TOKEN_ENTITY, bytebuffer(tokenInfo.getPrincipal()
 					.getUuid()));
 			columns.put(TOKEN_APPLICATION, bytebuffer(tokenInfo.getPrincipal()
 					.getApplicationId()));
 		}
+		columns.put(TOKEN_STATE, JsonUtils.toByteBuffer(tokenInfo.getState()));
 		cassandra.setColumns(cassandra.getSystemKeyspace(), TOKENS_CF,
 				bytes(tokenInfo.getUuid()), columns, (int) maxTokenAge);
 	}
@@ -165,6 +193,7 @@ public class AccessTokenManagerImpl implements AccessTokenManager {
 		}
 		ByteBuffer expected = ByteBuffer.allocate(20);
 		expected.put(sha(uuid + tokenSecretSalt));
+		expected.rewind();
 		ByteBuffer signature = ByteBuffer.wrap(bytes, 16, 20);
 		if (!signature.equals(expected)) {
 			return null;
