@@ -19,6 +19,7 @@ import org.usergrid.management.UserInfo;
 import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 import org.usergrid.security.AccessTokenInfo;
+import org.usergrid.security.AccessTokenType;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 
@@ -64,9 +65,12 @@ public class TokenServiceTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testEmailConfirmToken() throws Exception {
-		String tokenStr = tokenService.createAccessToken("email_confirm",
+		String tokenStr = tokenService.createAccessToken(AccessTokenType.EMAIL,
+				"email_confirm",
 				(Map<String, Object>) cast(hashMap("email", "ed@anuff.com")
 						.map("username", "edanuff")));
+
+		log.info("token: " + tokenStr);
 
 		AccessTokenInfo tokenInfo = tokenService.getAccessTokenInfo(tokenStr);
 
@@ -79,6 +83,8 @@ public class TokenServiceTest {
 	public void testAdminPrincipalToken() throws Exception {
 		String tokenStr = tokenService.createAccessToken(new AuthPrincipalInfo(
 				AuthPrincipalType.ADMIN_USER, adminUser.getUuid(), null), null);
+
+		log.info("token: " + tokenStr);
 
 		AccessTokenInfo tokenInfo = tokenService.getAccessTokenInfo(tokenStr);
 

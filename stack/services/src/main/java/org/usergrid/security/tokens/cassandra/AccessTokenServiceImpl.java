@@ -5,12 +5,17 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.getColumnMap;
 import static org.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
+import static org.usergrid.security.AccessTokenType.ACCESS;
+import static org.usergrid.security.AccessTokenType.EMAIL;
+import static org.usergrid.security.AccessTokenType.OFFLINE;
+import static org.usergrid.security.AccessTokenType.REFRESH;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.getLong;
 import static org.usergrid.utils.ConversionUtils.string;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.MapUtils.hasKeys;
+import static org.usergrid.utils.MapUtils.hashMap;
 import static org.usergrid.utils.UUIDUtils.getTimestampInMillis;
 
 import java.nio.ByteBuffer;
@@ -19,9 +24,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
+import org.mortbay.log.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.security.AccessTokenInfo;
+import org.usergrid.security.AccessTokenType;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.AccessTokenService;
@@ -42,12 +49,24 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
 	public static final String TOKEN_SECRET_SALT = "super secret token value";
 
-	// Token is good for 24 hours
-	public static final long MAX_TOKEN_AGE = 24 * 60 * 60 * 1000;
+	// Short-lived token is good for 24 hours
+	public static final long SHORT_TOKEN_AGE = 24 * 60 * 60 * 1000;
+
+	// Long-lived token is good for 7 days
+	public static final long LONG_TOKEN_AGE = 7 * 24 * 60 * 60 * 1000;
 
 	String tokenSecretSalt = TOKEN_SECRET_SALT;
 
-	long maxTokenAge = MAX_TOKEN_AGE;
+	long maxPersistenceTokenAge = LONG_TOKEN_AGE;
+
+	Map<AccessTokenType, Long> tokenExpirations = hashMap(ACCESS,
+			SHORT_TOKEN_AGE).map(REFRESH, LONG_TOKEN_AGE)
+			.map(EMAIL, LONG_TOKEN_AGE).map(OFFLINE, LONG_TOKEN_AGE);
+
+	long maxAccessTokenAge = SHORT_TOKEN_AGE;
+	long maxRefreshTokenAge = LONG_TOKEN_AGE;
+	long maxEmailTokenAge = LONG_TOKEN_AGE;
+	long maxOfflineTokenAge = LONG_TOKEN_AGE;
 
 	protected CassandraService cassandra;
 
@@ -57,14 +76,45 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
 	}
 
+	long getExpirationProperty(String name, long default_expiration) {
+		long expires = Long.parseLong(properties.getProperty(
+				"usergrid.auth.token." + name + ".expires", ""
+						+ default_expiration));
+		return expires > 0 ? expires : default_expiration;
+	}
+
+	long getExpirationForTokenType(AccessTokenType tokenType) {
+		Long l = tokenExpirations.get(tokenType);
+		if (l != null) {
+			return l;
+		}
+		return SHORT_TOKEN_AGE;
+	}
+
+	void setExpirationFromProperties(String name) {
+		AccessTokenType tokenType = AccessTokenType.valueOf(name.toUpperCase());
+		long expires = Long.parseLong(properties.getProperty(
+				"usergrid.auth.token." + name + ".expires", ""
+						+ getExpirationForTokenType(tokenType)));
+		if (expires > 0) {
+			tokenExpirations.put(tokenType, expires);
+		}
+		Log.info(name + " token expires after "
+				+ getExpirationForTokenType(tokenType) / 1000 + " seconds");
+	}
+
 	@Autowired
 	public void setProperties(Properties properties) {
 		this.properties = properties;
 
 		if (properties != null) {
-			maxTokenAge = Long.parseLong(properties.getProperty(
-					"usergrid.auth.token_max_age", "" + MAX_TOKEN_AGE));
-			maxTokenAge = maxTokenAge > 0 ? maxTokenAge : MAX_TOKEN_AGE;
+			maxPersistenceTokenAge = getExpirationProperty("persistence",
+					maxPersistenceTokenAge);
+
+			setExpirationFromProperties("access");
+			setExpirationFromProperties("refresh");
+			setExpirationFromProperties("email");
+			setExpirationFromProperties("offline");
 
 			tokenSecretSalt = properties.getProperty(
 					"usergrid.auth.token_secret_salt", TOKEN_SECRET_SALT);
@@ -77,31 +127,27 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 	}
 
 	@Override
-	public long getMaxTokenAge() {
-		return maxTokenAge;
-	}
-
-	@Override
-	public String createAccessToken(String type, Map<String, Object> state)
-			throws Exception {
-		return createAccessToken(type, null, state);
+	public String createAccessToken(AccessTokenType tokenType, String type,
+			Map<String, Object> state) throws Exception {
+		return createAccessToken(tokenType, type, null, state);
 	}
 
 	@Override
 	public String createAccessToken(AuthPrincipalInfo principal)
 			throws Exception {
-		return createAccessToken(null, principal, null);
+		return createAccessToken(AccessTokenType.ACCESS, null, principal, null);
 	}
 
 	@Override
 	public String createAccessToken(AuthPrincipalInfo principal,
 			Map<String, Object> state) throws Exception {
-		return createAccessToken(null, principal, state);
+		return createAccessToken(AccessTokenType.ACCESS, null, principal, state);
 	}
 
 	@Override
-	public String createAccessToken(String type, AuthPrincipalInfo principal,
-			Map<String, Object> state) throws Exception {
+	public String createAccessToken(AccessTokenType tokenType, String type,
+			AuthPrincipalInfo principal, Map<String, Object> state)
+			throws Exception {
 		UUID uuid = UUIDUtils.newTimeUUID();
 		long timestamp = getTimestampInMillis(uuid);
 		if (type == null) {
@@ -110,7 +156,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		AccessTokenInfo tokenInfo = new AccessTokenInfo(uuid, type, timestamp,
 				timestamp, principal, state);
 		putAccessTokenInfo(tokenInfo);
-		return getTokenForUUID(uuid);
+		return getTokenForUUID(tokenType, uuid);
 	}
 
 	@Override
@@ -124,7 +170,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		AccessTokenInfo tokenInfo = getAccessTokenInfo(getUUIDForToken(token));
 		if (tokenInfo != null) {
 			putAccessTokenInfo(tokenInfo);
-			return getTokenForUUID(tokenInfo.getUuid());
+			return getTokenForUUID(AccessTokenType.ACCESS, tokenInfo.getUuid());
 		}
 		return null;
 	}
@@ -180,32 +226,53 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		}
 		columns.put(TOKEN_STATE, JsonUtils.toByteBuffer(tokenInfo.getState()));
 		cassandra.setColumns(cassandra.getSystemKeyspace(), TOKENS_CF,
-				bytes(tokenInfo.getUuid()), columns, (int) maxTokenAge);
+				bytes(tokenInfo.getUuid()), columns,
+				(int) maxPersistenceTokenAge);
 	}
 
 	public UUID getUUIDForToken(String token) {
-		byte[] bytes = decodeBase64(token);
+		AccessTokenType tokenType = AccessTokenType.getFromBase64String(token);
+		byte[] bytes = decodeBase64(token
+				.substring(AccessTokenType.BASE64_PREFIX_LENGTH));
 		UUID uuid = uuid(bytes);
 		long timestamp = getTimestampInMillis(uuid);
-		if ((maxTokenAge > 0)
-				&& (System.currentTimeMillis() > (timestamp + maxTokenAge))) {
+		if ((getExpirationForTokenType(tokenType) > 0)
+				&& (System.currentTimeMillis() > (timestamp + getExpirationForTokenType(tokenType)))) {
 			return null;
 		}
+		int i = 16;
+		long expires = Long.MAX_VALUE;
+		if (tokenType.getExpires()) {
+			expires = ByteBuffer.wrap(bytes, i, 8).getLong();
+			i = 24;
+		}
 		ByteBuffer expected = ByteBuffer.allocate(20);
-		expected.put(sha(uuid + tokenSecretSalt));
+		expected.put(sha(tokenType.getPrefix() + uuid + tokenSecretSalt
+				+ expires));
 		expected.rewind();
-		ByteBuffer signature = ByteBuffer.wrap(bytes, 16, 20);
+		ByteBuffer signature = ByteBuffer.wrap(bytes, i, 20);
 		if (!signature.equals(expected)) {
 			return null;
 		}
 		return uuid;
 	}
 
-	public String getTokenForUUID(UUID uuid) {
-		ByteBuffer bytes = ByteBuffer.allocate(36);
+	public String getTokenForUUID(AccessTokenType tokenType, UUID uuid) {
+		int l = 36;
+		if (tokenType.getExpires()) {
+			l += 8;
+		}
+		ByteBuffer bytes = ByteBuffer.allocate(l);
 		bytes.put(bytes(uuid));
-		bytes.put(sha(uuid + tokenSecretSalt));
-		return encodeBase64URLSafeString(bytes.array());
+		long expires = Long.MAX_VALUE;
+		if (tokenType.getExpires()) {
+			expires = UUIDUtils.getTimestampInMillis(uuid)
+					+ getExpirationForTokenType(tokenType);
+			bytes.putLong(expires);
+		}
+		bytes.put(sha(tokenType.getPrefix() + uuid + tokenSecretSalt + expires));
+		return tokenType.getBase64Prefix()
+				+ encodeBase64URLSafeString(bytes.array());
 	}
 
 }
