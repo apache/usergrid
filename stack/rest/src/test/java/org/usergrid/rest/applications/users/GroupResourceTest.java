@@ -68,7 +68,7 @@ public class GroupResourceTest extends AbstractRestTest {
         UUID id = UUIDUtils.newTimeUUID();
 
         String groupPath = "groupPath" + id;
-        String groupTitle = "groupTitle" + id;
+        String groupTitle = "groupTitle " + id;
         String groupName = "groupName" + id;
 
         ApiResponse response = client.createGroup(groupPath, groupTitle,
@@ -89,6 +89,14 @@ public class GroupResourceTest extends AbstractRestTest {
         assertEquals(newId, entityId);
 
         results = client.queryGroups(String.format("title='%s'", groupTitle));
+
+        response = results.getResponse();
+
+        entityId = response.getEntities().get(0).getUuid();
+
+        assertEquals(newId, entityId);
+        
+        results = client.queryGroups(String.format("title contains '%s'", id));
 
         response = results.getResponse();
 
