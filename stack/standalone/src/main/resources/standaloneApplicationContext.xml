@@ -141,6 +141,8 @@
 		</constructor-arg>
 	</bean>
 
+	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl"/>
+
 	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl" />
 
 	<bean id="standaloneServer" class="org.usergrid.standalone.Server"
@@ -150,6 +152,8 @@
 		id="lockManager" class="org.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl"> 
 		<constructor-arg ref="${zookeeper.hosts}" /> <constructor-arg ref="${zookeeper.sessionTimeout}" 
 		/> <constructor-arg ref="${zookeeper.maxAttempts}" /> </bean> -->
+		
+		
     <bean id="usergridSystemMonitor" class="org.usergrid.system.UsergridSystemMonitor">
         <constructor-arg value="${usergrid.version.build}"/>
         <constructor-arg ref="cassandraCluster"/>

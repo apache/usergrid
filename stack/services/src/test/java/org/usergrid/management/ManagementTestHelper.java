@@ -43,8 +43,8 @@ public interface ManagementTestHelper {
 
 	public abstract void setProperties(Properties properties);
 
-	public abstract void setAccessTokenService(TokenService tokens);
+	public abstract void setTokenService(TokenService tokens);
 
-	public abstract TokenService getAccessTokenService();
+	public abstract TokenService getTokenService();
 
 }

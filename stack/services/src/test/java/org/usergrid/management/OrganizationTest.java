@@ -122,7 +122,8 @@ public class OrganizationTest {
 		testProperty(ManagementServiceImpl.EMAIL_ADMIN_PASSWORD_RESET, true);
 		testProperty(ManagementServiceImpl.EMAIL_ADMIN_USER_ACTIVATION, true);
 		testProperty(ManagementServiceImpl.EMAIL_ORGANIZATION_ACTIVATED, true);
-		testProperty(ManagementServiceImpl.EMAIL_ORGANIZATION_CONFIRMATION, true);
+		testProperty(ManagementServiceImpl.EMAIL_ORGANIZATION_CONFIRMATION,
+				true);
 		testProperty(ManagementServiceImpl.EMAIL_SYSADMIN_ADMIN_ACTIVATION,
 				true);
 		testProperty(
@@ -146,6 +147,7 @@ public class OrganizationTest {
 			valuesMap.put("reset_url", "test-url");
 			valuesMap.put("organization_name", "test-org");
 			valuesMap.put("activation_url", "test-url");
+			valuesMap.put("confirmation_url", "test-url");
 			valuesMap.put("user_email", "test-email");
 			valuesMap.put("pin", "test-pin");
 			StrSubstitutor sub = new StrSubstitutor(valuesMap);

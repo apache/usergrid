@@ -41,7 +41,7 @@ public class TokenServiceTest {
 		helper.setup();
 		managementService = (ManagementServiceImpl) helper
 				.getManagementService();
-		tokenService = helper.getAccessTokenService();
+		tokenService = helper.getTokenService();
 		setupLocal();
 	}
 

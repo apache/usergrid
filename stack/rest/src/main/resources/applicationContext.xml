@@ -143,6 +143,8 @@
 		</constructor-arg>
 	</bean>
 
+	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl"/>
+
 	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl"/>
 	
 	<bean id="mongoServer" class="org.usergrid.mongo.MongoServer" init-method="startServer" destroy-method="stopServer"/>

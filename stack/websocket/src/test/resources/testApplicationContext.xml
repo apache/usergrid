@@ -112,21 +112,8 @@
 		</constructor-arg>
 	</bean>
 
-	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl" />
+	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl"/>
 
-	<!-- <bean id="broker" class="org.apache.activemq.xbean.BrokerFactoryBean"> 
-		<property name="config" value="classpath:test-activemq.xml" /> <property 
-		name="start" value="true" /> </bean> <bean id="jmsFactory" class="org.apache.activemq.pool.PooledConnectionFactory" 
-		destroy-method="stop"> <property name="connectionFactory"> <bean class="org.apache.activemq.ActiveMQConnectionFactory"> 
-		<property name="brokerURL"> <value>tcp://localhost:61616</value> </property> 
-		</bean> </property> </bean> <bean id="destination" class="org.apache.activemq.command.ActiveMQQueue"> 
-		<constructor-arg value="FOO.TEST" /> </bean> <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate" 
-		p:connectionFactory-ref="jmsFactory" p:defaultDestination-ref="destination" 
-		/> <bean id="messageListener" class="org.usergrid.websocket.ExampleListener" 
-		/> <bean id="jmsContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer"> 
-		<property name="connectionFactory" ref="jmsFactory" /> <property name="destination" 
-		ref="destination" /> <property name="messageListener" ref="messageListener" 
-		/> </bean> <bean id="producer" class="org.usergrid.websocket.SimpleMessageProducer" 
-		init-method="sendMessages" /> -->
+	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl" />
 
 </beans>

@@ -86,7 +86,6 @@ import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.entities.Application;
-import org.usergrid.persistence.entities.Event;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
@@ -100,6 +99,7 @@ import org.usergrid.security.shiro.credentials.OrganizationClientCredentials;
 import org.usergrid.security.shiro.principals.ApplicationPrincipal;
 import org.usergrid.security.shiro.principals.OrganizationPrincipal;
 import org.usergrid.security.shiro.utils.SubjectUtils;
+import org.usergrid.security.tokens.TokenService;
 import org.usergrid.services.ServiceAction;
 import org.usergrid.services.ServiceManager;
 import org.usergrid.services.ServiceManagerFactory;
@@ -110,7 +110,6 @@ import org.usergrid.utils.JsonUtils;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import org.usergrid.utils.PasswordUtils;
 
 public class ManagementServiceImpl implements ManagementService {
 
@@ -136,21 +135,21 @@ public class ManagementServiceImpl implements ManagementService {
 	public static String EMAIL_ADMIN_PASSWORD_RESET = "usergrid.management.email.admin-password-reset";
 
 	public static String EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION = "usergrid.management.email.sysadmin-organization-activation";
-	
+
 	public static String EMAIL_ORGANIZATION_CONFIRMATION = "usergrid.management.email.organization-confirmation";
 	public static String EMAIL_ORGANIZATION_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.organization-confirmed";
 	public static String EMAIL_ORGANIZATION_ACTIVATED = "usergrid.management.email.organization-activated";
 
 	public static String EMAIL_SYSADMIN_ADMIN_ACTIVATION = "usergrid.management.email.sysadmin-admin-activation";
-	
+
 	public static String EMAIL_ADMIN_CONFIRMATION = "usergrid.management.email.admin-confirmation";
 	public static String EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.admin-confirmed";
 	public static String EMAIL_ADMIN_ACTIVATED = "usergrid.management.email.admin-activated";
-	
+
 	public static String EMAIL_ADMIN_INVITED = "usergrid.management.email.admin-invited";
 
 	public static String EMAIL_ADMIN_USER_ACTIVATION = "usergrid.management.email.admin-user-activation";
-	
+
 	public static String EMAIL_USER_CONFIRMATION = "usergrid.management.email.user-confirmation";
 	public static String EMAIL_USER_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.user-confirmed";
 	public static String EMAIL_USER_ACTIVATED = "usergrid.management.email.user-activated";
@@ -167,6 +166,8 @@ public class ManagementServiceImpl implements ManagementService {
 	protected Properties properties;
 
 	protected LockManager lockManager;
+
+	protected TokenService tokens;
 
 	/**
 	 * Must be constructed with a CassandraClientPool.
@@ -190,6 +191,11 @@ public class ManagementServiceImpl implements ManagementService {
 					"usergrid.auth.token_max_age", "" + MAX_TOKEN_AGE));
 			maxTokenAge = maxTokenAge > 0 ? maxTokenAge : MAX_TOKEN_AGE;
 		}
+	}
+
+	@Autowired
+	public void setTokenService(TokenService tokens) {
+		this.tokens = tokens;
 	}
 
 	@Override
@@ -254,7 +260,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 			OrganizationInfo organization = createOrganization(
 					test_organization_name, user);
-      // TODO change to organizationName/applicationName
+			// TODO change to organizationName/applicationName
 			UUID appId = createApplication(organization.getUuid(),
 					organization.getName() + "/" + test_app_name);
 
@@ -491,15 +497,15 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public UUID importApplication(UUID organizationId, Application application)
 			throws Exception {
-    // TODO organizationName
-    OrganizationInfo organization = getOrganizationByUuid(organizationId);
+		// TODO organizationName
+		OrganizationInfo organization = getOrganizationByUuid(organizationId);
 		UUID applicationId = emf.importApplication(organization.getName(),
-            application.getUuid(),
-            application.getName(),
-            application.getProperties());
+				application.getUuid(), application.getName(),
+				application.getProperties());
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-		properties.put("name", buildAppName(application.getName(), organization));
+		properties.put("name",
+				buildAppName(application.getName(), organization));
 		Entity app = em.create(applicationId, APPLICATION_INFO, null);
 
 		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
@@ -513,19 +519,22 @@ public class ManagementServiceImpl implements ManagementService {
 		return applicationId;
 	}
 
-  /**
-   * Test if the applicationName contains a '/' character, prepend with orgName if it does
-   * not, assume it is complete (and that organization is uneeded) if so.
-   * @param applicationName
-   * @param organization
-   * @return
-   */
-  private String buildAppName(String applicationName, OrganizationInfo organization) {
-    return applicationName.contains("/") ? applicationName :
-            organization.getName() + "/" + applicationName;
-  }
+	/**
+	 * Test if the applicationName contains a '/' character, prepend with
+	 * orgName if it does not, assume it is complete (and that organization is
+	 * uneeded) if so.
+	 * 
+	 * @param applicationName
+	 * @param organization
+	 * @return
+	 */
+	private String buildAppName(String applicationName,
+			OrganizationInfo organization) {
+		return applicationName.contains("/") ? applicationName : organization
+				.getName() + "/" + applicationName;
+	}
 
-  @Override
+	@Override
 	public BiMap<UUID, String> getOrganizations() throws Exception {
 
 		BiMap<UUID, String> organizations = HashBiMap.create();
@@ -1309,9 +1318,10 @@ public class ManagementServiceImpl implements ManagementService {
 			properties = new HashMap<String, Object>();
 		}
 
-    OrganizationInfo organizationInfo = getOrganizationByUuid(organizationId);
+		OrganizationInfo organizationInfo = getOrganizationByUuid(organizationId);
 
-		UUID applicationId = emf.createApplication(organizationInfo.getName(), applicationName, properties);
+		UUID applicationId = emf.createApplication(organizationInfo.getName(),
+				applicationName, properties);
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		properties.put("name", buildAppName(applicationName, organizationInfo));
@@ -1918,7 +1928,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 	}
 
-  @Override
+	@Override
 	public void sendAdminUserEmail(UserInfo user, String subject, String html)
 			throws Exception {
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
@@ -2127,13 +2137,14 @@ public class ManagementServiceImpl implements ManagementService {
 
 		EntityManager em = emf.getEntityManager(applicationId);
 
-    CredentialsInfo credentialsInfo = (CredentialsInfo) em.getDictionaryElementValue(user,
-            DICTIONARY_CREDENTIALS, "password");
-    // pre-hash for legacy system imports
-    if (StringUtils.equals(user.getHashtype(), User.HASHTYPE_MD5)) {
-      password = credentialsInfo.encrypt(User.HASHTYPE_MD5, "", password);
-    }
-    if (checkPassword(password, credentialsInfo)) {
+		CredentialsInfo credentialsInfo = (CredentialsInfo) em
+				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
+						"password");
+		// pre-hash for legacy system imports
+		if (StringUtils.equals(user.getHashtype(), User.HASHTYPE_MD5)) {
+			password = credentialsInfo.encrypt(User.HASHTYPE_MD5, "", password);
+		}
+		if (checkPassword(password, credentialsInfo)) {
 			if (!user.activated()) {
 				throw new UnactivatedAdminUserException();
 			}
@@ -2216,10 +2227,12 @@ public class ManagementServiceImpl implements ManagementService {
 		return null;
 	}
 
-  @Override
-  public void countAdminUserAction(UserInfo user, String action) throws Exception {
-    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-    em.incrementAggregateCounters(user.getUuid(),null,null,"admin_logins",1);
+	@Override
+	public void countAdminUserAction(UserInfo user, String action)
+			throws Exception {
+		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+		em.incrementAggregateCounters(user.getUuid(), null, null,
+				"admin_logins", 1);
 
-  }
+	}
 }

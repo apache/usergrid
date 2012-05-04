@@ -176,13 +176,13 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
 	}
 
 	@Override
-	public TokenService getAccessTokenService() {
+	public TokenService getTokenService() {
 		return tokens;
 	}
 
 	@Override
 	@Autowired
-	public void setAccessTokenService(TokenService tokens) {
+	public void setTokenService(TokenService tokens) {
 		this.tokens = tokens;
 	}
 
