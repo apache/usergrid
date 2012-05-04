@@ -9,8 +9,7 @@ public interface TokenService {
 	public String createToken(TokenType tokenType, String type,
 			Map<String, Object> state) throws Exception;
 
-	public String createToken(AuthPrincipalInfo principal)
-			throws Exception;
+	public String createToken(AuthPrincipalInfo principal) throws Exception;
 
 	public String createToken(AuthPrincipalInfo principal,
 			Map<String, Object> state) throws Exception;
@@ -20,6 +19,8 @@ public interface TokenService {
 			throws Exception;
 
 	public TokenInfo getTokenInfo(String token) throws Exception;
+
+	public void accessTokenInfo(String token) throws Exception;
 
 	public String refreshToken(String token) throws Exception;
 

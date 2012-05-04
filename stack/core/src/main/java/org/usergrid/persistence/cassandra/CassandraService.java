@@ -851,6 +851,11 @@ public class CassandraService {
 	 */
 	public void setColumn(Keyspace ko, Object columnFamily, Object key,
 			Object columnName, Object columnValue) throws Exception {
+		this.setColumn(ko, columnFamily, key, columnName, columnValue, 0);
+	}
+
+	public void setColumn(Keyspace ko, Object columnFamily, Object key,
+			Object columnName, Object columnValue, int ttl) throws Exception {
 
 		if (db_logger.isInfoEnabled()) {
 			db_logger.info("setColumn cf=" + columnFamily + " key=" + key
@@ -871,9 +876,13 @@ public class CassandraService {
 			value_bytes = bytebuffer(columnValue);
 		}
 
+		HColumn<ByteBuffer, ByteBuffer> col = createColumn(name_bytes,
+				value_bytes, be, be);
+		if (ttl != 0) {
+			col.setTtl(ttl);
+		}
 		Mutator<ByteBuffer> m = createMutator(ko, be);
-		m.insert(bytebuffer(key), columnFamily.toString(),
-				createColumn(name_bytes, value_bytes, be, be));
+		m.insert(bytebuffer(key), columnFamily.toString(), col);
 
 	}
 

@@ -59,9 +59,9 @@ public class TokenServiceImpl implements TokenService {
 
 	long maxPersistenceTokenAge = LONG_TOKEN_AGE;
 
-	Map<TokenType, Long> tokenExpirations = hashMap(ACCESS,
-			SHORT_TOKEN_AGE).map(REFRESH, LONG_TOKEN_AGE)
-			.map(EMAIL, LONG_TOKEN_AGE).map(OFFLINE, LONG_TOKEN_AGE);
+	Map<TokenType, Long> tokenExpirations = hashMap(ACCESS, SHORT_TOKEN_AGE)
+			.map(REFRESH, LONG_TOKEN_AGE).map(EMAIL, LONG_TOKEN_AGE)
+			.map(OFFLINE, LONG_TOKEN_AGE);
 
 	long maxAccessTokenAge = SHORT_TOKEN_AGE;
 	long maxRefreshTokenAge = LONG_TOKEN_AGE;
@@ -133,8 +133,7 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public String createToken(AuthPrincipalInfo principal)
-			throws Exception {
+	public String createToken(AuthPrincipalInfo principal) throws Exception {
 		return createToken(TokenType.ACCESS, null, principal, null);
 	}
 
@@ -153,16 +152,35 @@ public class TokenServiceImpl implements TokenService {
 		if (type == null) {
 			type = TOKEN_TYPE_ACCESS;
 		}
-		TokenInfo tokenInfo = new TokenInfo(uuid, type, timestamp,
-				timestamp, principal, state);
+		TokenInfo tokenInfo = new TokenInfo(uuid, type, timestamp, timestamp,
+				principal, state);
 		putTokenInfo(tokenInfo);
 		return getTokenForUUID(tokenType, uuid);
 	}
 
 	@Override
+	public void accessTokenInfo(String token) throws Exception {
+		UUID uuid = getUUIDForToken(token);
+		if (uuid != null) {
+			cassandra.setColumn(cassandra.getSystemKeyspace(), TOKENS_CF, uuid,
+					TOKEN_ACCESSED, System.currentTimeMillis(),
+					(int) (maxPersistenceTokenAge / 1000));
+		}
+	}
+
+	@Override
 	public TokenInfo getTokenInfo(String token) throws Exception {
-		// TODO if tokens auto refresh, do so here
-		return getTokenInfo(getUUIDForToken(token));
+		TokenInfo tokenInfo = null;
+		UUID uuid = getUUIDForToken(token);
+		if (uuid != null) {
+			tokenInfo = getTokenInfo(uuid);
+			if (tokenInfo != null) {
+				cassandra.setColumn(cassandra.getSystemKeyspace(), TOKENS_CF,
+						uuid, TOKEN_ACCESSED, System.currentTimeMillis(),
+						(int) (maxPersistenceTokenAge / 1000));
+			}
+		}
+		return tokenInfo;
 	}
 
 	@Override
@@ -206,8 +224,7 @@ public class TokenServiceImpl implements TokenService {
 		@SuppressWarnings("unchecked")
 		Map<String, Object> state = (Map<String, Object>) JsonUtils
 				.fromByteBuffer(columns.get(TOKEN_STATE));
-		return new TokenInfo(uuid, type, created, accessed, principal,
-				state);
+		return new TokenInfo(uuid, type, created, accessed, principal, state);
 	}
 
 	public void putTokenInfo(TokenInfo tokenInfo) throws Exception {
@@ -227,7 +244,7 @@ public class TokenServiceImpl implements TokenService {
 		columns.put(TOKEN_STATE, JsonUtils.toByteBuffer(tokenInfo.getState()));
 		cassandra.setColumns(cassandra.getSystemKeyspace(), TOKENS_CF,
 				bytes(tokenInfo.getUuid()), columns,
-				(int) maxPersistenceTokenAge);
+				(int) (maxPersistenceTokenAge / 1000));
 	}
 
 	public UUID getUUIDForToken(String token) {
