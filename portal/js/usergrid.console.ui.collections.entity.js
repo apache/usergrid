@@ -93,9 +93,18 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 				name = name + " : " + entity.username;
 			}
 			
+      if (!entity.picture) {
+        entity.picture = "/images/user_profile.png"
+      } else {
+        entity.picture = entity.picture + "?d=http://" + window.location.host + "/images/user_profile.png"
+      }
+        
+      console.log("here i aaaamm...");
+
 			return $.tmpl("usergrid.ui.collections.entity.header.html", {
-				entity : entity,
+        entity : entity,
 				name : name,
+        picture: entity.picture,
 				path : this.options.path,
 				collections : !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections),
 				uri : (entity.metadata || { }).uri
