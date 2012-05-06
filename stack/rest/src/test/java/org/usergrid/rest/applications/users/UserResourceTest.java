@@ -15,11 +15,13 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.usergrid.rest.applications.utils.TestUtils.getIdFromSearchResults;
 
+import java.util.List;
 import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
@@ -52,8 +54,8 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "username = 'user*'";
 
-        JsonNode node = resource().path("/test-organization/test-app/users").queryParam("ql", ql)
-                .queryParam("access_token", access_token)
+        JsonNode node = resource().path("/test-organization/test-app/users")
+                .queryParam("ql", ql).queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
@@ -73,8 +75,8 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "name = 'John*'";
 
-        JsonNode node = resource().path("/test-organization/test-app/users").queryParam("ql", ql)
-                .queryParam("access_token", access_token)
+        JsonNode node = resource().path("/test-organization/test-app/users")
+                .queryParam("ql", ql).queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
@@ -92,8 +94,8 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "name contains 'Smith' order by name ";
 
-        JsonNode node = resource().path("/test-organization/test-app/users").queryParam("ql", ql)
-                .queryParam("access_token", access_token)
+        JsonNode node = resource().path("/test-organization/test-app/users")
+                .queryParam("ql", ql).queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
@@ -117,8 +119,8 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "username contains 'user' ";
 
-        resource().path("/test-organization/test-app/users").queryParam("ql", ql)
-                .queryParam("access_token", access_token)
+        resource().path("/test-organization/test-app/users")
+                .queryParam("ql", ql).queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
@@ -135,8 +137,8 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "picture = 'foo' ";
 
-        resource().path("/test-organization/test-app/users").queryParam("ql", ql)
-                .queryParam("access_token", access_token)
+        resource().path("/test-organization/test-app/users")
+                .queryParam("ql", ql).queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
@@ -318,6 +320,62 @@ public class UserResourceTest extends AbstractRestTest {
 
     }
 
+    /**
+     * Tests that when querying all users, we get the same result size when
+     * using "order by"
+     */
+    @Test
+    public void resultSizeSame() {
+        UserRepo.INSTANCE.load(resource(), access_token);
+        UUID userId1 = UserRepo.INSTANCE.getByUserName("user1");
+        UUID userId2 = UserRepo.INSTANCE.getByUserName("user2");
+        UUID userId3 = UserRepo.INSTANCE.getByUserName("user3");
+
+  
+        Query query = client.queryUsers();
+        
+        ApiResponse response = query.getResponse();
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
+
+        
+        int nonOrderedSize = response.getEntities().size();
+        
+        query = client.queryUsers("order by username");
+        
+        response = query.getResponse();
+        
+        int orderedSize = response.getEntities().size();
+        
+        assertEquals("Sizes match", nonOrderedSize, orderedSize);
+        
+        int firstEntityIndex = getEntityIndex(userId1, response);
+        
+        int secondEntityIndex = getEntityIndex(userId2, response);
+        
+        int thirdEntityIndex = getEntityIndex(userId3, response);
+        
+        assertTrue("Ordered correctly", firstEntityIndex < secondEntityIndex);
+        
+        assertTrue("Ordered correctly", secondEntityIndex < thirdEntityIndex);
+        
+
+    }
+    
+    
+    private int getEntityIndex(UUID entityId, ApiResponse response){
+        List<Entity> entities = response.getEntities();
+        
+        for(int i = 0; i <  entities.size(); i ++){
+            if(entityId.equals(entities.get(i).getUuid())){
+                return i;
+            }
+        }
+        
+        return -1;
+    }
+
     @Test
     public void clientNameQuery() {
 
@@ -326,18 +384,17 @@ public class UserResourceTest extends AbstractRestTest {
         String username = "username" + id;
         String name = "name" + id;
 
-        ApiResponse response = client.createUser(username, name, id + "@usergrid.org", "password");
-        
-        
+        ApiResponse response = client.createUser(username, name, id
+                + "@usergrid.org", "password");
 
         assertNull("Error was: " + response.getErrorDescription(),
                 response.getError());
 
-        UUID createdId = response.getEntities().get(0).getUuid(); 
-                
+        UUID createdId = response.getEntities().get(0).getUuid();
+
         Query results = client.queryUsers(String.format("name = '%s'", name));
         User user = results.getResponse().getEntities(User.class).get(0);
-        
+
         assertEquals(createdId, user.getUuid());
     }
 
