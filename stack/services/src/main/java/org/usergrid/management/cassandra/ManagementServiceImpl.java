@@ -130,34 +130,65 @@ public class ManagementServiceImpl implements ManagementService {
 
 	long maxTokenAge = MAX_TOKEN_AGE;
 
-	public static String EMAIL_MAILER = "usergrid.management.mailer";
+	public static final String PROPERTIES_MAILER_EMAIL = "usergrid.management.mailer";
 
-	public static String EMAIL_ADMIN_PASSWORD_RESET = "usergrid.management.email.admin-password-reset";
+	public static String PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET = "usergrid.management.email.admin-password-reset";
+	public static String PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION = "usergrid.management.email.sysadmin-organization-activation";
+	public static String PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION = "usergrid.management.email.organization-confirmation";
+	public static String PROPERTIES_EMAIL_ORGANIZATION_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.organization-confirmed";
+	public static String PROPERTIES_EMAIL_ORGANIZATION_ACTIVATED = "usergrid.management.email.organization-activated";
+	public static String PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION = "usergrid.management.email.sysadmin-admin-activation";
+	public static String PROPERTIES_EMAIL_ADMIN_CONFIRMATION = "usergrid.management.email.admin-confirmation";
+	public static String PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.admin-confirmed";
+	public static String PROPERTIES_EMAIL_ADMIN_ACTIVATED = "usergrid.management.email.admin-activated";
+	public static String PROPERTIES_EMAIL_ADMIN_INVITED = "usergrid.management.email.admin-invited";
+	public static String PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION = "usergrid.management.email.admin-user-activation";
+	public static String PROPERTIES_EMAIL_USER_CONFIRMATION = "usergrid.management.email.user-confirmation";
+	public static String PROPERTIES_EMAIL_USER_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.user-confirmed";
+	public static String PROPERTIES_EMAIL_USER_ACTIVATED = "usergrid.management.email.user-activated";
+	public static String PROPERTIES_EMAIL_USER_PASSWORD_RESET = "usergrid.management.email.user-password-reset";
+	public static String PROPERTIES_EMAIL_USER_PIN_REQUEST = "usergrid.management.email.user-pin";
+	public static String PROPERTIES_EMAIL_FOOTER = "usergrid.management.email.footer";
 
-	public static String EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION = "usergrid.management.email.sysadmin-organization-activation";
+	public static final String PROPERTIES_USER_ACTIVATION_URL = "usergrid.user.activation.url";
+	public static final String PROPERTIES_USER_RESETPW_URL = "usergrid.user.resetpw.url";
+	public static final String PROPERTIES_ADMIN_ACTIVATION_URL = "usergrid.admin.activation.url";
+	public static final String PROPERTIES_ORGANIZATION_ACTIVATION_URL = "usergrid.organization.activation.url";
+	public static final String PROPERTIES_ADMIN_RESETPW_URL = "usergrid.admin.resetpw.url";
 
-	public static String EMAIL_ORGANIZATION_CONFIRMATION = "usergrid.management.email.organization-confirmation";
-	public static String EMAIL_ORGANIZATION_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.organization-confirmed";
-	public static String EMAIL_ORGANIZATION_ACTIVATED = "usergrid.management.email.organization-activated";
+	public static final String PROPERTIES_SYSADMIN_APPROVE_USERS = "usergrid.sysadmin.approve.users";
+	public static final String PROPERTIES_SYSADMIN_APPROVE_ORGANIZATIONS = "usergrid.sysadmin.approve.organizations";
 
-	public static String EMAIL_SYSADMIN_ADMIN_ACTIVATION = "usergrid.management.email.sysadmin-admin-activation";
+	public static final String PROPERTIES_SYSADMIN_LOGIN_PASSWORD = "usergrid.sysadmin.login.password";
+	public static final String PROPERTIES_SYSADMIN_LOGIN_EMAIL = "usergrid.sysadmin.login.email";
+	public static final String PROPERTIES_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
+	public static final String PROPERTIES_SYSADMIN_LOGIN_ALLOWED = "usergrid.sysadmin.login.allowed";
 
-	public static String EMAIL_ADMIN_CONFIRMATION = "usergrid.management.email.admin-confirmation";
-	public static String EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.admin-confirmed";
-	public static String EMAIL_ADMIN_ACTIVATED = "usergrid.management.email.admin-activated";
+	public static final String PROPERTIES_SYSADMIN_EMAIL = "usergrid.sysadmin.email";
 
-	public static String EMAIL_ADMIN_INVITED = "usergrid.management.email.admin-invited";
+	public static final String PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD = "usergrid.test-account.admin-user.password";
+	public static final String PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL = "usergrid.test-account.admin-user.email";
+	public static final String PROPERTIES_TEST_ACCOUNT_ADMIN_USER_NAME = "usergrid.test-account.admin-user.name";
+	public static final String PROPERTIES_TEST_ACCOUNT_ADMIN_USER_USERNAME = "usergrid.test-account.admin-user.username";
+	public static final String PROPERTIES_TEST_ACCOUNT_ORGANIZATION = "usergrid.test-account.organization";
+	public static final String PROPERTIES_TEST_ACCOUNT_APP = "usergrid.test-account.app";
+	public static final String PROPERTIES_SETUP_TEST_ACCOUNT = "usergrid.setup-test-account";
 
-	public static String EMAIL_ADMIN_USER_ACTIVATION = "usergrid.management.email.admin-user-activation";
+	public static final String PROPERTIES_AUTH_TOKEN_MAX_AGE = "usergrid.auth.token_max_age";
 
-	public static String EMAIL_USER_CONFIRMATION = "usergrid.management.email.user-confirmation";
-	public static String EMAIL_USER_CONFIRMED_AWAITING_ACTIVATION = "usergrid.management.email.user-confirmed";
-	public static String EMAIL_USER_ACTIVATED = "usergrid.management.email.user-activated";
-
-	public static String EMAIL_USER_PASSWORD_RESET = "usergrid.management.email.user-password-reset";
-	public static String EMAIL_USER_PIN_REQUEST = "usergrid.management.email.user-pin";
-
-	public static String EMAIL_FOOTER = "usergrid.management.email.footer";
+	private static final String ACTIVITY_OBJECT_NAME = "objectName";
+	private static final String ACTIVITY_OBJECT_ENTITY_TYPE = "objectEntityType";
+	private static final String ACTIVITY_ACTOR_NAME = "actorName";
+	private static final String ACTIVITY_OBJECT = "object";
+	private static final String ACTIVITY_ACTOR = "actor";
+	private static final String ACTIVITY_TITLE = "title";
+	private static final String ACTIVITY_CONTENT = "content";
+	private static final String ACTIVITY_CATEGORY = "category";
+	private static final String ACTIVITY_VERB = "verb";
+	private static final String ACTIVITY_UUID = "uuid";
+	private static final String ACTIVITY_ENTITY_TYPE = "entityType";
+	private static final String ACTIVITY_OBJECT_TYPE = "objectType";
+	private static final String ACTIVITY_DISPLAY_NAME = "displayName";
 
 	protected ServiceManagerFactory smf;
 
@@ -188,7 +219,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 		if (properties != null) {
 			maxTokenAge = Long.parseLong(properties.getProperty(
-					"usergrid.auth.token_max_age", "" + MAX_TOKEN_AGE));
+					PROPERTIES_AUTH_TOKEN_MAX_AGE, "" + MAX_TOKEN_AGE));
 			maxTokenAge = maxTokenAge > 0 ? maxTokenAge : MAX_TOKEN_AGE;
 		}
 	}
@@ -239,13 +270,13 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public void setup() throws Exception {
 
-		if (parseBoolean(properties.getProperty("usergrid.setup-test-account"))) {
-			String test_app_name = getPropertyValue("usergrid.test-account.app");
-			String test_organization_name = getPropertyValue("usergrid.test-account.organization");
-			String test_admin_username = getPropertyValue("usergrid.test-account.admin-user.username");
-			String test_admin_name = getPropertyValue("usergrid.test-account.admin-user.name");
-			String test_admin_email = getPropertyValue("usergrid.test-account.admin-user.email");
-			String test_admin_password = getPropertyValue("usergrid.test-account.admin-user.password");
+		if (parseBoolean(properties.getProperty(PROPERTIES_SETUP_TEST_ACCOUNT))) {
+			String test_app_name = getPropertyValue(PROPERTIES_TEST_ACCOUNT_APP);
+			String test_organization_name = getPropertyValue(PROPERTIES_TEST_ACCOUNT_ORGANIZATION);
+			String test_admin_username = getPropertyValue(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_USERNAME);
+			String test_admin_name = getPropertyValue(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_NAME);
+			String test_admin_email = getPropertyValue(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL);
+			String test_admin_password = getPropertyValue(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD);
 
 			if (anyNull(test_app_name, test_organization_name,
 					test_admin_username, test_admin_name, test_admin_email,
@@ -273,10 +304,10 @@ public class ManagementServiceImpl implements ManagementService {
 							+ test_app_name, null);
 
 			boolean superuser_enabled = parseBoolean(properties
-					.getProperty("usergrid.sysadmin.login.allowed"));
-			String superuser_username = getPropertyValue("usergrid.sysadmin.login.name");
-			String superuser_email = getPropertyValue("usergrid.sysadmin.login.email");
-			String superuser_password = getPropertyValue("usergrid.sysadmin.login.password");
+					.getProperty(PROPERTIES_SYSADMIN_LOGIN_ALLOWED));
+			String superuser_username = getPropertyValue(PROPERTIES_SYSADMIN_LOGIN_NAME);
+			String superuser_email = getPropertyValue(PROPERTIES_SYSADMIN_LOGIN_EMAIL);
+			String superuser_password = getPropertyValue(PROPERTIES_SYSADMIN_LOGIN_PASSWORD);
 
 			if (!anyNull(superuser_username, superuser_email,
 					superuser_password)) {
@@ -310,28 +341,28 @@ public class ManagementServiceImpl implements ManagementService {
 		ServiceManager sm = smf.getServiceManager(MANAGEMENT_APPLICATION_ID);
 
 		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put("verb", verb);
-		properties.put("category", "admin");
+		properties.put(ACTIVITY_VERB, verb);
+		properties.put(ACTIVITY_CATEGORY, "admin");
 		if (content != null) {
-			properties.put("content", content);
+			properties.put(ACTIVITY_CONTENT, content);
 		}
 		if (title != null) {
-			properties.put("title", title);
+			properties.put(ACTIVITY_TITLE, title);
 		}
-		properties.put("actor", new HashMap<String, Object>() {
+		properties.put(ACTIVITY_ACTOR, new HashMap<String, Object>() {
 			{
-				put("displayName", user.getName());
-				put("objectType", "person");
-				put("entityType", "user");
-				put("uuid", user.getUuid());
+				put(ACTIVITY_DISPLAY_NAME, user.getName());
+				put(ACTIVITY_OBJECT_TYPE, "person");
+				put(ACTIVITY_ENTITY_TYPE, "user");
+				put(ACTIVITY_UUID, user.getUuid());
 			}
 		});
-		properties.put("object", new HashMap<String, Object>() {
+		properties.put(ACTIVITY_OBJECT, new HashMap<String, Object>() {
 			{
-				put("displayName", objectName);
-				put("objectType", objectType);
-				put("entityType", object.getType());
-				put("uuid", object.getUuid());
+				put(ACTIVITY_DISPLAY_NAME, objectName);
+				put(ACTIVITY_OBJECT_TYPE, objectType);
+				put(ACTIVITY_ENTITY_TYPE, object.getType());
+				put(ACTIVITY_UUID, object.getUuid());
 			}
 		});
 
@@ -644,20 +675,20 @@ public class ManagementServiceImpl implements ManagementService {
 		ServiceManager sm = smf.getServiceManager(MANAGEMENT_APPLICATION_ID);
 
 		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put("verb", verb);
-		properties.put("category", "admin");
+		properties.put(ACTIVITY_VERB, verb);
+		properties.put(ACTIVITY_CATEGORY, "admin");
 		if (content != null) {
-			properties.put("content", content);
+			properties.put(ACTIVITY_CONTENT, content);
 		}
 		if (title != null) {
-			properties.put("title", title);
+			properties.put(ACTIVITY_TITLE, title);
 		}
-		properties.put("actor", user.getUuid());
-		properties.put("actorName", user.getName());
-		properties.put("object", object.getUuid());
-		properties.put("objectEntityType", object.getType());
-		properties.put("objectType", objectType);
-		properties.put("objectName", objectName);
+		properties.put(ACTIVITY_ACTOR, user.getUuid());
+		properties.put(ACTIVITY_ACTOR_NAME, user.getName());
+		properties.put(ACTIVITY_OBJECT, object.getUuid());
+		properties.put(ACTIVITY_OBJECT_ENTITY_TYPE, object.getType());
+		properties.put(ACTIVITY_OBJECT_TYPE, objectType);
+		properties.put(ACTIVITY_OBJECT_NAME, objectName);
 
 		sm.newRequest(ServiceAction.POST,
 				parameters("users", user.getUuid(), "activities"),
@@ -1753,7 +1784,7 @@ public class ManagementServiceImpl implements ManagementService {
 	}
 
 	private String appendEmailFooter(String msg) {
-		return msg + "\n" + properties.getProperty(EMAIL_FOOTER);
+		return msg + "\n" + properties.getProperty(PROPERTIES_EMAIL_FOOTER);
 	}
 
 	@Override
@@ -1761,30 +1792,30 @@ public class ManagementServiceImpl implements ManagementService {
 			throws Exception {
 		String token = getPasswordResetTokenForAdminUser(user.getUuid());
 		String reset_url = String.format(properties
-				.getProperty("usergrid.admin.resetpw.url"), user.getUuid()
+				.getProperty(PROPERTIES_ADMIN_RESETPW_URL), user.getUuid()
 				.toString())
 				+ "?token=" + token;
 
 		sendHtmlMail(
 				properties,
 				user.getDisplayEmailAddress(),
-				getPropertyValue(EMAIL_MAILER),
+				getPropertyValue(PROPERTIES_MAILER_EMAIL),
 				"Password Reset",
 				appendEmailFooter(emailMsg(hashMap("reset_url", reset_url),
-						EMAIL_ADMIN_PASSWORD_RESET)));
+						PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET)));
 
 	}
 
 	@Override
 	public boolean newOrganizationsNeedSysAdminApproval() {
 		return parseBoolean(properties
-				.getProperty("usergrid.sysadmin.approve.organizations"));
+				.getProperty(PROPERTIES_SYSADMIN_APPROVE_ORGANIZATIONS));
 	}
 
 	@Override
 	public boolean newAdminUsersNeedSysAdminApproval() {
 		return parseBoolean(properties
-				.getProperty("usergrid.sysadmin.approve.users"));
+				.getProperty(PROPERTIES_SYSADMIN_APPROVE_USERS));
 	}
 
 	@Override
@@ -1812,7 +1843,7 @@ public class ManagementServiceImpl implements ManagementService {
 			String token = getActivationTokenForOrganization(organization
 					.getUuid());
 			String activation_url = String.format(properties
-					.getProperty("usergrid.organization.activation.url"),
+					.getProperty(PROPERTIES_ORGANIZATION_ACTIVATION_URL),
 					organization.getUuid().toString())
 					+ "?token=" + token;
 			if (newOrganizationsNeedSysAdminApproval()) {
@@ -1827,8 +1858,8 @@ public class ManagementServiceImpl implements ManagementService {
 				activation_url += "&confirm=true";
 				sendHtmlMail(
 						properties,
-						getPropertyValue("usergrid.sysadmin.email"),
-						getPropertyValue(EMAIL_MAILER),
+						getPropertyValue(PROPERTIES_SYSADMIN_EMAIL),
+						getPropertyValue(PROPERTIES_MAILER_EMAIL),
 						"Request For Organization Account Activation "
 								+ organization.getName(),
 						appendEmailFooter(emailMsg(
@@ -1837,7 +1868,7 @@ public class ManagementServiceImpl implements ManagementService {
 										"activation_url", activation_url).map(
 										"organization_owners",
 										organization_owners),
-								EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION)));
+								PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION)));
 			} else {
 				sendOrganizationEmail(
 						organization,
@@ -1846,7 +1877,7 @@ public class ManagementServiceImpl implements ManagementService {
 								hashMap("organization_name",
 										organization.getName()).map(
 										"activation_url", activation_url),
-								EMAIL_ORGANIZATION_CONFIRMATION));
+								PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION));
 			}
 		} catch (Exception e) {
 			logger.error(
@@ -1863,7 +1894,7 @@ public class ManagementServiceImpl implements ManagementService {
 				organization,
 				"Organization Account Activated: " + organization.getName(),
 				emailMsg(hashMap("organization_name", organization.getName()),
-						EMAIL_ORGANIZATION_ACTIVATED));
+						PROPERTIES_EMAIL_ORGANIZATION_ACTIVATED));
 
 	}
 
@@ -1874,7 +1905,7 @@ public class ManagementServiceImpl implements ManagementService {
 				.getUuid());
 		for (UserInfo user : users) {
 			sendHtmlMail(properties, user.getDisplayEmailAddress(),
-					getPropertyValue(EMAIL_MAILER), subject,
+					getPropertyValue(PROPERTIES_MAILER_EMAIL), subject,
 					appendEmailFooter(html));
 		}
 
@@ -1884,20 +1915,20 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAdminUserActivationEmail(UserInfo user) throws Exception {
 		String token = getActivationTokenForAdminUser(user.getUuid());
 		String activation_url = String.format(properties
-				.getProperty("usergrid.admin.activation.url"), user.getUuid()
+				.getProperty(PROPERTIES_ADMIN_ACTIVATION_URL), user.getUuid()
 				.toString())
 				+ "?token=" + token;
 		if (newAdminUsersNeedSysAdminApproval()) {
 			activation_url += "&confirm=true";
 			sendHtmlMail(
 					properties,
-					getPropertyValue("usergrid.sysadmin.email"),
-					getPropertyValue(EMAIL_MAILER),
+					getPropertyValue(PROPERTIES_SYSADMIN_EMAIL),
+					getPropertyValue(PROPERTIES_MAILER_EMAIL),
 					"Request For User Account Activation " + user.getEmail(),
 					appendEmailFooter(emailMsg(
 							hashMap("user_email", user.getEmail()).map(
 									"activation_url", activation_url),
-							EMAIL_SYSADMIN_ADMIN_ACTIVATION)));
+							PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION)));
 		} else {
 			sendAdminUserEmail(
 					user,
@@ -1905,7 +1936,7 @@ public class ManagementServiceImpl implements ManagementService {
 					emailMsg(
 							hashMap("user_email", user.getEmail()).map(
 									"activation_url", activation_url),
-							EMAIL_ADMIN_CONFIRMATION));
+							PROPERTIES_EMAIL_ADMIN_CONFIRMATION));
 		}
 
 	}
@@ -1913,7 +1944,7 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public void sendAdminUserActivatedEmail(UserInfo user) throws Exception {
 		sendAdminUserEmail(user, "User Account Activated",
-				getPropertyValue(EMAIL_ADMIN_ACTIVATED));
+				getPropertyValue(PROPERTIES_EMAIL_ADMIN_ACTIVATED));
 
 	}
 
@@ -1924,7 +1955,7 @@ public class ManagementServiceImpl implements ManagementService {
 				user,
 				"User Invited To Organization",
 				emailMsg(hashMap("organization_name", organization.getName()),
-						EMAIL_ADMIN_INVITED));
+						PROPERTIES_EMAIL_ADMIN_INVITED));
 
 	}
 
@@ -1932,7 +1963,7 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAdminUserEmail(UserInfo user, String subject, String html)
 			throws Exception {
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				getPropertyValue(EMAIL_MAILER), subject,
+				getPropertyValue(PROPERTIES_MAILER_EMAIL), subject,
 				appendEmailFooter(html));
 
 	}
@@ -2053,16 +2084,16 @@ public class ManagementServiceImpl implements ManagementService {
 		String token = getPasswordResetTokenForAppUser(applicationId,
 				user.getUuid());
 		String reset_url = String.format(
-				properties.getProperty("usergrid.user.resetpw.url"),
+				properties.getProperty(PROPERTIES_USER_RESETPW_URL),
 				applicationId.toString(), user.getUuid().toString())
 				+ "?token=" + token;
 		sendHtmlMail(
 				properties,
 				user.getDisplayEmailAddress(),
-				getPropertyValue(EMAIL_MAILER),
+				getPropertyValue(PROPERTIES_MAILER_EMAIL),
 				"Password Reset",
 				appendEmailFooter(emailMsg(hashMap("reset_url", reset_url),
-						EMAIL_USER_PASSWORD_RESET)));
+						PROPERTIES_EMAIL_USER_PASSWORD_RESET)));
 
 	}
 
@@ -2070,7 +2101,7 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAppUserActivatedEmail(UUID applicationId, User user)
 			throws Exception {
 		sendAppUserEmail(user, "User Account Activated",
-				getPropertyValue(EMAIL_USER_ACTIVATED));
+				getPropertyValue(PROPERTIES_EMAIL_USER_ACTIVATED));
 
 	}
 
@@ -2080,14 +2111,14 @@ public class ManagementServiceImpl implements ManagementService {
 		String token = getActivationTokenForAppUser(applicationId,
 				user.getUuid());
 		String activation_url = String.format(
-				properties.getProperty("usergrid.user.activation.url"),
+				properties.getProperty(PROPERTIES_USER_ACTIVATION_URL),
 				applicationId.toString(), user.getUuid().toString())
 				+ "?token=" + token;
 		sendAppUserEmail(
 				user,
 				"User Account Confirmation: " + user.getEmail(),
 				emailMsg(hashMap("activation_url", activation_url),
-						EMAIL_USER_CONFIRMATION));
+						PROPERTIES_EMAIL_USER_CONFIRMATION));
 	}
 
 	@Override
@@ -2166,7 +2197,7 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAppUserEmail(User user, String subject, String html)
 			throws Exception {
 		sendHtmlMail(properties, user.getDisplayEmailAddress(),
-				getPropertyValue(EMAIL_MAILER), subject,
+				getPropertyValue(PROPERTIES_MAILER_EMAIL), subject,
 				appendEmailFooter(html));
 
 	}
@@ -2205,10 +2236,10 @@ public class ManagementServiceImpl implements ManagementService {
 		sendHtmlMail(
 				properties,
 				user.getDisplayEmailAddress(),
-				getPropertyValue(EMAIL_MAILER),
+				getPropertyValue(PROPERTIES_MAILER_EMAIL),
 				"Your app pin",
 				appendEmailFooter(emailMsg(hashMap("pin", pin),
-						EMAIL_USER_PIN_REQUEST)));
+						PROPERTIES_EMAIL_USER_PIN_REQUEST)));
 
 	}
 
