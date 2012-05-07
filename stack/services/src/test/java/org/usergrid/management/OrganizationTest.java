@@ -21,6 +21,18 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_ADMIN_ACTIVATED;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_ADMIN_CONFIRMATION;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_ORGANIZATION_ACTIVATED;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_USER_ACTIVATED;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_USER_CONFIRMATION;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_USER_PASSWORD_RESET;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_USER_PIN_REQUEST;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +46,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 
 public class OrganizationTest {
@@ -117,22 +128,18 @@ public class OrganizationTest {
 	@Test
 	public void testEmailStrings() {
 
-		testProperty(ManagementServiceImpl.EMAIL_ADMIN_ACTIVATED, false);
-		testProperty(ManagementServiceImpl.EMAIL_ADMIN_CONFIRMATION, true);
-		testProperty(ManagementServiceImpl.EMAIL_ADMIN_PASSWORD_RESET, true);
-		testProperty(ManagementServiceImpl.EMAIL_ADMIN_USER_ACTIVATION, true);
-		testProperty(ManagementServiceImpl.EMAIL_ORGANIZATION_ACTIVATED, true);
-		testProperty(ManagementServiceImpl.EMAIL_ORGANIZATION_CONFIRMATION,
-				true);
-		testProperty(ManagementServiceImpl.EMAIL_SYSADMIN_ADMIN_ACTIVATION,
-				true);
-		testProperty(
-				ManagementServiceImpl.EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION,
-				true);
-		testProperty(ManagementServiceImpl.EMAIL_USER_ACTIVATED, false);
-		testProperty(ManagementServiceImpl.EMAIL_USER_CONFIRMATION, true);
-		testProperty(ManagementServiceImpl.EMAIL_USER_PASSWORD_RESET, true);
-		testProperty(ManagementServiceImpl.EMAIL_USER_PIN_REQUEST, true);
+		testProperty(PROPERTIES_EMAIL_ADMIN_ACTIVATED, false);
+		testProperty(PROPERTIES_EMAIL_ADMIN_CONFIRMATION, true);
+		testProperty(PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET, true);
+		testProperty(PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION, true);
+		testProperty(PROPERTIES_EMAIL_ORGANIZATION_ACTIVATED, true);
+		testProperty(PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION, true);
+		testProperty(PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION, true);
+		testProperty(PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION, true);
+		testProperty(PROPERTIES_EMAIL_USER_ACTIVATED, false);
+		testProperty(PROPERTIES_EMAIL_USER_CONFIRMATION, true);
+		testProperty(PROPERTIES_EMAIL_USER_PASSWORD_RESET, true);
+		testProperty(PROPERTIES_EMAIL_USER_PIN_REQUEST, true);
 
 	}
 
