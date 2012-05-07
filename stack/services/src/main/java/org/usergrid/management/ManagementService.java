@@ -46,10 +46,13 @@ public interface ManagementService {
 	public AccessInfo authorizeClient(String clientId, String clientSecret)
 			throws Exception;
 
-	public boolean checkActivationTokenForAdminUser(UUID userId, String token)
+	public boolean handleConfirmationTokenForAdminUser(UUID userId, String token)
 			throws Exception;
 
-	public boolean checkActivationTokenForOrganization(UUID organizationId,
+	public boolean handleActivationTokenForAdminUser(UUID userId, String token)
+			throws Exception;
+
+	public boolean handleActivationTokenForOrganization(UUID organizationId,
 			String token) throws Exception;
 
 	public boolean checkPasswordResetTokenForAdminUser(UUID userId, String token)
@@ -277,7 +280,7 @@ public interface ManagementService {
 	public void activateAppUser(UUID applicationId, UUID userId)
 			throws Exception;
 
-	public boolean checkActivationTokenForAppUser(UUID applicationId,
+	public boolean handleActivationTokenForAppUser(UUID applicationId,
 			UUID userId, String token) throws Exception;
 
 	public boolean checkPasswordResetTokenForAppUser(UUID applicationId,
@@ -332,6 +335,7 @@ public interface ManagementService {
 
 	public boolean isAdminUserConfirmed(UUID userId) throws Exception;
 
-	public void countAdminUserAction(UserInfo user, String action) throws Exception;
+	public void countAdminUserAction(UserInfo user, String action)
+			throws Exception;
 
 }

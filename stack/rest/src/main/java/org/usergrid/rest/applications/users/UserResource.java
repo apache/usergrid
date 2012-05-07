@@ -90,6 +90,7 @@ import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.applications.ServiceResource;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
+import org.usergrid.security.tokens.exceptions.TokenException;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
@@ -135,11 +136,13 @@ public class UserResource extends ServiceResource {
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("set user password");
-    String oldPassword = string(json.get("oldpassword"));
-    String newPassword = string(json.get("newpassword"));
-    if ( StringUtils.isBlank(oldPassword) || StringUtils.isBlank(newPassword) ) {
-      throw new IllegalArgumentException("oldpassword and newpassword are both required");
-    }
+		String oldPassword = string(json.get("oldpassword"));
+		String newPassword = string(json.get("newpassword"));
+		if (StringUtils.isBlank(oldPassword)
+				|| StringUtils.isBlank(newPassword)) {
+			throw new IllegalArgumentException(
+					"oldpassword and newpassword are both required");
+		}
 		if (getUser() != null) {
 
 			if (isApplicationAdmin(Identifier.fromUUID(getApplicationId()))) {
@@ -263,17 +266,20 @@ public class UserResource extends ServiceResource {
 	@GET
 	@Path("resetpw")
 	public Viewable showPasswordResetForm(@Context UriInfo ui,
-			@QueryParam("token") String token) throws Exception {
+			@QueryParam("token") String token) {
 
 		logger.info("UserResource.showPasswordResetForm");
 
 		this.token = token;
-
-		if (management.checkPasswordResetTokenForAppUser(getApplicationId(),
-				getUserUuid(), token)) {
-			return new Viewable("resetpw_set_form", this);
-		} else {
-			return new Viewable("resetpw_email_form", this);
+		try {
+			if (management.checkPasswordResetTokenForAppUser(
+					getApplicationId(), getUserUuid(), token)) {
+				return new Viewable("resetpw_set_form", this);
+			} else {
+				return new Viewable("resetpw_email_form", this);
+			}
+		} catch (Exception e) {
+			return new Viewable("error", e);
 		}
 	}
 
@@ -285,50 +291,53 @@ public class UserResource extends ServiceResource {
 			@FormParam("password1") String password1,
 			@FormParam("password2") String password2,
 			@FormParam("recaptcha_challenge_field") String challenge,
-			@FormParam("recaptcha_response_field") String uresponse)
-			throws Exception {
+			@FormParam("recaptcha_response_field") String uresponse) {
 
-		logger.info("UserResource.handlePasswordResetForm");
+		try {
+			logger.info("UserResource.handlePasswordResetForm");
 
-		this.token = token;
+			this.token = token;
 
-		if ((password1 != null) || (password2 != null)) {
-			if (management.checkPasswordResetTokenForAppUser(
-					getApplicationId(), getUserUuid(), token)) {
-				if ((password1 != null) && password1.equals(password2)) {
-					management.setAppUserPassword(getApplicationId(), getUser()
-							.getUuid(), password1);
-					return new Viewable("resetpw_set_success", this);
+			if ((password1 != null) || (password2 != null)) {
+				if (management.checkPasswordResetTokenForAppUser(
+						getApplicationId(), getUserUuid(), token)) {
+					if ((password1 != null) && password1.equals(password2)) {
+						management.setAppUserPassword(getApplicationId(),
+								getUser().getUuid(), password1);
+						return new Viewable("resetpw_set_success", this);
+					} else {
+						errorMsg = "Passwords didn't match, let's try again...";
+						return new Viewable("resetpw_set_form", this);
+					}
 				} else {
-					errorMsg = "Passwords didn't match, let's try again...";
-					return new Viewable("resetpw_set_form", this);
+					errorMsg = "Something odd happened, let's try again...";
+					return new Viewable("resetpw_email_form", this);
 				}
+			}
+
+			if (!useReCaptcha()) {
+				management.sendAppUserPasswordReminderEmail(getApplicationId(),
+						user);
+				return new Viewable("resetpw_email_success", this);
+			}
+
+			ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
+			reCaptcha.setPrivateKey(properties
+					.getProperty("usergrid.recaptcha.private"));
+
+			ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
+					httpServletRequest.getRemoteAddr(), challenge, uresponse);
+
+			if (reCaptchaResponse.isValid()) {
+				management.sendAppUserPasswordReminderEmail(getApplicationId(),
+						user);
+				return new Viewable("resetpw_email_success", this);
 			} else {
-				errorMsg = "Something odd happened, let's try again...";
+				errorMsg = "Incorrect Captcha";
 				return new Viewable("resetpw_email_form", this);
 			}
-		}
-
-		if (!useReCaptcha()) {
-			management.sendAppUserPasswordReminderEmail(getApplicationId(),
-					user);
-			return new Viewable("resetpw_email_success", this);
-		}
-
-		ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-		reCaptcha.setPrivateKey(properties
-				.getProperty("usergrid.recaptcha.private"));
-
-		ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
-				httpServletRequest.getRemoteAddr(), challenge, uresponse);
-
-		if (reCaptchaResponse.isValid()) {
-			management.sendAppUserPasswordReminderEmail(getApplicationId(),
-					user);
-			return new Viewable("resetpw_email_success", this);
-		} else {
-			errorMsg = "Incorrect Captcha";
-			return new Viewable("resetpw_email_form", this);
+		} catch (Exception e) {
+			return new Viewable("error", e);
 		}
 
 	}
@@ -367,17 +376,17 @@ public class UserResource extends ServiceResource {
 	@Path("activate")
 	public Viewable activate(@Context UriInfo ui,
 			@QueryParam("token") String token,
-			@QueryParam("confirm") boolean confirm) throws Exception {
+			@QueryParam("confirm") boolean confirm) {
 
-		if (management.checkActivationTokenForAppUser(getApplicationId(),
-				getUserUuid(), token)) {
-			management.activateAppUser(getApplicationId(), getUserUuid());
-			if (confirm) {
-				management.sendAppUserActivatedEmail(getApplicationId(), user);
-			}
+		try {
+			management.handleActivationTokenForAppUser(getApplicationId(),
+					getUserUuid(), token);
 			return new Viewable("activate", this);
+		} catch (TokenException e) {
+			return new Viewable("bad_activation_token", this);
+		} catch (Exception e) {
+			return new Viewable("error", e);
 		}
-		return null;
 	}
 
 	@GET

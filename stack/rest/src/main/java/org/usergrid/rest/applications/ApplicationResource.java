@@ -349,19 +349,22 @@ public class ApplicationResource extends ServiceResource {
 			@QueryParam("response_type") String response_type,
 			@QueryParam("client_id") String client_id,
 			@QueryParam("redirect_uri") String redirect_uri,
-			@QueryParam("scope") String scope, @QueryParam("state") String state)
-			throws Exception {
+			@QueryParam("scope") String scope, @QueryParam("state") String state) {
 
-		responseType = response_type;
-		clientId = client_id;
-		redirectUri = redirect_uri;
-		this.scope = scope;
-		this.state = state;
+		try {
+			responseType = response_type;
+			clientId = client_id;
+			redirectUri = redirect_uri;
+			this.scope = scope;
+			this.state = state;
 
-		ApplicationInfo app = management.getApplication(applicationId);
-		applicationName = app.getName();
+			ApplicationInfo app = management.getApplication(applicationId);
+			applicationName = app.getName();
 
-		return new Viewable("authorize_form", this);
+			return new Viewable("authorize_form", this);
+		} catch (Exception e) {
+			return new Viewable("error", e);
+		}
 	}
 
 	@POST
@@ -372,42 +375,47 @@ public class ApplicationResource extends ServiceResource {
 			@FormParam("redirect_uri") String redirect_uri,
 			@FormParam("scope") String scope, @FormParam("state") String state,
 			@FormParam("username") String username,
-			@FormParam("password") String password) throws Exception {
+			@FormParam("password") String password) {
 
-		responseType = response_type;
-		clientId = client_id;
-		redirectUri = redirect_uri;
-		this.scope = scope;
-		this.state = state;
-
-		User user = null;
 		try {
-			user = management.verifyAppUserPasswordCredentials(
-					services.getApplicationId(), username, password);
-		} catch (Exception e1) {
-		}
-		if ((user != null) && isNotBlank(redirect_uri)) {
-			if (!redirect_uri.contains("?")) {
-				redirect_uri += "?";
+			responseType = response_type;
+			clientId = client_id;
+			redirectUri = redirect_uri;
+			this.scope = scope;
+			this.state = state;
+
+			User user = null;
+			try {
+				user = management.verifyAppUserPasswordCredentials(
+						services.getApplicationId(), username, password);
+			} catch (Exception e1) {
+			}
+			if ((user != null) && isNotBlank(redirect_uri)) {
+				if (!redirect_uri.contains("?")) {
+					redirect_uri += "?";
+				} else {
+					redirect_uri += "&";
+				}
+				redirect_uri += "code="
+						+ management.getAccessTokenForAppUser(
+								services.getApplicationId(), user.getUuid());
+				if (isNotBlank(state)) {
+					redirect_uri += "&state="
+							+ URLEncoder.encode(state, "UTF-8");
+				}
+				throw new WebApplicationException(temporaryRedirect(
+						new URI(state)).build());
 			} else {
-				redirect_uri += "&";
+				errorMsg = "Username or password do not match";
 			}
-			redirect_uri += "code="
-					+ management.getAccessTokenForAppUser(
-							services.getApplicationId(), user.getUuid());
-			if (isNotBlank(state)) {
-				redirect_uri += "&state=" + URLEncoder.encode(state, "UTF-8");
-			}
-			throw new WebApplicationException(temporaryRedirect(new URI(state))
-					.build());
-		} else {
-			errorMsg = "Username or password do not match";
+
+			ApplicationInfo app = management.getApplication(applicationId);
+			applicationName = app.getName();
+
+			return new Viewable("authorize_form", this);
+		} catch (Exception e) {
+			return new Viewable("error", e);
 		}
-
-		ApplicationInfo app = management.getApplication(applicationId);
-		applicationName = app.getName();
-
-		return new Viewable("authorize_form", this);
 	}
 
 	String errorMsg = "";

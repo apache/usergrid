@@ -117,7 +117,7 @@ public class UsersResource extends ServiceResource {
 
 	@GET
 	@Path("resetpw")
-	public Viewable showPasswordResetForm(@Context UriInfo ui) throws Exception {
+	public Viewable showPasswordResetForm(@Context UriInfo ui) {
 		return new Viewable("resetpw_email_form", this);
 	}
 
@@ -127,35 +127,38 @@ public class UsersResource extends ServiceResource {
 	public Viewable handlePasswordResetForm(@Context UriInfo ui,
 			@FormParam("email") String email,
 			@FormParam("recaptcha_challenge_field") String challenge,
-			@FormParam("recaptcha_response_field") String uresponse)
-			throws Exception {
+			@FormParam("recaptcha_response_field") String uresponse) {
 
-		ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-		reCaptcha.setPrivateKey(properties
-				.getProperty("usergrid.recaptcha.private"));
+		try {
+			ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
+			reCaptcha.setPrivateKey(properties
+					.getProperty("usergrid.recaptcha.private"));
 
-		ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
-				httpServletRequest.getRemoteAddr(), challenge, uresponse);
+			ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
+					httpServletRequest.getRemoteAddr(), challenge, uresponse);
 
-		if (isBlank(email)) {
-			errorMsg = "No email provided, try again...";
-			return new Viewable("resetpw_email_form", this);
-		}
-
-		if (!useReCaptcha() || reCaptchaResponse.isValid()) {
-			user = management.getAppUserByIdentifier(getApplicationId(),
-					Identifier.fromEmail(email));
-			if (user != null) {
-				management.sendAppUserPasswordReminderEmail(getApplicationId(),
-						user);
-				return new Viewable("resetpw_email_success", this);
-			} else {
-				errorMsg = "We don't recognize that email, try again...";
+			if (isBlank(email)) {
+				errorMsg = "No email provided, try again...";
 				return new Viewable("resetpw_email_form", this);
 			}
-		} else {
-			errorMsg = "Incorrect Captcha, try again...";
-			return new Viewable("resetpw_email_form", this);
+
+			if (!useReCaptcha() || reCaptchaResponse.isValid()) {
+				user = management.getAppUserByIdentifier(getApplicationId(),
+						Identifier.fromEmail(email));
+				if (user != null) {
+					management.sendAppUserPasswordReminderEmail(
+							getApplicationId(), user);
+					return new Viewable("resetpw_email_success", this);
+				} else {
+					errorMsg = "We don't recognize that email, try again...";
+					return new Viewable("resetpw_email_form", this);
+				}
+			} else {
+				errorMsg = "Incorrect Captcha, try again...";
+				return new Viewable("resetpw_email_form", this);
+			}
+		} catch (Exception e) {
+			return new Viewable("resetpw_email_form", e);
 		}
 
 	}

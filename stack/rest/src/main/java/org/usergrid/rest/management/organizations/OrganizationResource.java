@@ -36,6 +36,7 @@ import org.usergrid.rest.management.organizations.applications.ApplicationsResou
 import org.usergrid.rest.management.organizations.users.UsersResource;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
+import org.usergrid.security.tokens.exceptions.TokenException;
 import org.usergrid.services.ServiceResults;
 
 import com.sun.jersey.api.json.JSONWithPadding;
@@ -100,17 +101,17 @@ public class OrganizationResource extends AbstractContextResource {
 	@Path("activate")
 	public Viewable activate(@Context UriInfo ui,
 			@QueryParam("token") String token,
-			@QueryParam("confirm") boolean confirm) throws Exception {
+			@QueryParam("confirm") boolean confirm) {
 
-		if (management.checkActivationTokenForOrganization(
-				organization.getUuid(), token)) {
-			management.activateOrganization(organization.getUuid());
-			if (confirm) {
-				management.sendOrganizationActivatedEmail(organization);
-			}
+		try {
+			management.handleActivationTokenForOrganization(
+					organization.getUuid(), token);
 			return new Viewable("activate", this);
+		} catch (TokenException e) {
+			return new Viewable("bad_activation_token", this);
+		} catch (Exception e) {
+			return new Viewable("error", e);
 		}
-		return null;
 	}
 
 	@GET

@@ -33,12 +33,12 @@ import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
-import org.usergrid.management.exceptions.BadAccessTokenException;
 import org.usergrid.management.exceptions.ManagementException;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.usergrid.security.shiro.utils.SubjectUtils;
+import org.usergrid.security.tokens.exceptions.BadTokenException;
 
 import com.sun.jersey.api.container.MappableContainerException;
 import com.sun.jersey.spi.container.ContainerRequest;
@@ -83,7 +83,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
 				try {
 					principal = AuthPrincipalInfo
 							.getFromAccessToken(accessToken);
-				} catch (BadAccessTokenException e1) {
+				} catch (BadTokenException e1) {
 					e1.printStackTrace();
 				}
 

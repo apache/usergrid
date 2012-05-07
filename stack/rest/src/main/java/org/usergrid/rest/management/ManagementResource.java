@@ -195,8 +195,8 @@ public class ManagementResource extends AbstractContextResource {
 							"user",
 							management.getAdminUserOrganizationData(user
 									.getUuid()));
-      // increment counters for admin login
-      management.countAdminUserAction(user,"login");
+			// increment counters for admin login
+			management.countAdminUserAction(user, "login");
 
 			return Response.status(SC_OK).type(jsonMediaType(callback))
 					.entity(wrapWithCallback(access_info, callback)).build();
@@ -235,8 +235,7 @@ public class ManagementResource extends AbstractContextResource {
 			@QueryParam("response_type") String response_type,
 			@QueryParam("client_id") String client_id,
 			@QueryParam("redirect_uri") String redirect_uri,
-			@QueryParam("scope") String scope, @QueryParam("state") String state)
-			throws Exception {
+			@QueryParam("scope") String scope, @QueryParam("state") String state) {
 
 		responseType = response_type;
 		clientId = client_id;
@@ -255,38 +254,44 @@ public class ManagementResource extends AbstractContextResource {
 			@FormParam("redirect_uri") String redirect_uri,
 			@FormParam("scope") String scope, @FormParam("state") String state,
 			@FormParam("username") String username,
-			@FormParam("password") String password) throws Exception {
+			@FormParam("password") String password) {
 
-		responseType = response_type;
-		clientId = client_id;
-		redirectUri = redirect_uri;
-		this.scope = scope;
-		this.state = state;
-
-		UserInfo user = null;
 		try {
-			user = management.verifyAdminUserPasswordCredentials(username,
-					password);
-		} catch (Exception e1) {
-		}
-		if ((user != null) && isNotBlank(redirect_uri)) {
-			if (!redirect_uri.contains("?")) {
-				redirect_uri += "?";
+			responseType = response_type;
+			clientId = client_id;
+			redirectUri = redirect_uri;
+			this.scope = scope;
+			this.state = state;
+
+			UserInfo user = null;
+			try {
+				user = management.verifyAdminUserPasswordCredentials(username,
+						password);
+			} catch (Exception e1) {
+			}
+			if ((user != null) && isNotBlank(redirect_uri)) {
+				if (!redirect_uri.contains("?")) {
+					redirect_uri += "?";
+				} else {
+					redirect_uri += "&";
+				}
+				redirect_uri += "code="
+						+ management.getAccessTokenForAdminUser(user.getUuid());
+				if (isNotBlank(state)) {
+					redirect_uri += "&state="
+							+ URLEncoder.encode(state, "UTF-8");
+				}
+				throw new WebApplicationException(temporaryRedirect(
+						new URI(state)).build());
 			} else {
-				redirect_uri += "&";
+				errorMsg = "Username or password do not match";
 			}
-			redirect_uri += "code="
-					+ management.getAccessTokenForAdminUser(user.getUuid());
-			if (isNotBlank(state)) {
-				redirect_uri += "&state=" + URLEncoder.encode(state, "UTF-8");
-			}
-			throw new WebApplicationException(temporaryRedirect(new URI(state))
-					.build());
-		} else {
-			errorMsg = "Username or password do not match";
+
+			return new Viewable("authorize_form", this);
+		} catch (Exception e) {
+			return new Viewable("error", e);
 		}
 
-		return new Viewable("authorize_form", this);
 	}
 
 	String errorMsg = "";

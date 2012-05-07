@@ -69,11 +69,8 @@ import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.UserInfo;
-import org.usergrid.management.exceptions.BadAccessTokenException;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
-import org.usergrid.management.exceptions.ExpiredTokenException;
 import org.usergrid.management.exceptions.IncorrectPasswordException;
-import org.usergrid.management.exceptions.InvalidAccessTokenException;
 import org.usergrid.management.exceptions.UnableToLeaveOrganizationException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
 import org.usergrid.persistence.CredentialsInfo;
@@ -100,6 +97,9 @@ import org.usergrid.security.shiro.principals.ApplicationPrincipal;
 import org.usergrid.security.shiro.principals.OrganizationPrincipal;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.security.tokens.TokenService;
+import org.usergrid.security.tokens.exceptions.BadTokenException;
+import org.usergrid.security.tokens.exceptions.ExpiredTokenException;
+import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.services.ServiceAction;
 import org.usergrid.services.ServiceManager;
 import org.usergrid.services.ServiceManagerFactory;
@@ -1109,7 +1109,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 		if ((expectedType != null) && !principal.getType().equals(expectedType)) {
 			logger.info("Token is not of expected type {}", token);
-			throw new BadAccessTokenException("Token is not of expected type "
+			throw new BadTokenException("Token is not of expected type "
 					+ token);
 		}
 
@@ -1120,7 +1120,7 @@ public class ManagementServiceImpl implements ManagementService {
 			String error_str = "Token digest is wrong size: " + digestPart
 					+ " is " + bytes.remaining() + " bytes, expected 28";
 			logger.info(error_str);
-			throw new BadAccessTokenException(error_str);
+			throw new BadTokenException(error_str);
 		}
 
 		long timestamp = bytes.getLong(); // OK
@@ -1146,7 +1146,7 @@ public class ManagementServiceImpl implements ManagementService {
 		boolean verified = digest.equals(bytes);
 
 		if (!verified) {
-			throw new InvalidAccessTokenException();
+			throw new InvalidTokenException();
 		}
 
 		return user;
@@ -1707,7 +1707,7 @@ public class ManagementServiceImpl implements ManagementService {
 	}
 
 	@Override
-	public boolean checkActivationTokenForAdminUser(UUID userId, String token)
+	public boolean handleActivationTokenForAdminUser(UUID userId, String token)
 			throws Exception {
 		EntityRef userRef = getEntityRefFromAccessToken(
 				MANAGEMENT_APPLICATION_ID, token, ADMIN_USER, 0, "activate",
@@ -1827,7 +1827,7 @@ public class ManagementServiceImpl implements ManagementService {
 	}
 
 	@Override
-	public boolean checkActivationTokenForOrganization(UUID organizationId,
+	public boolean handleActivationTokenForOrganization(UUID organizationId,
 			String token) throws Exception {
 		EntityRef organizationRef = getEntityRefFromAccessToken(
 				MANAGEMENT_APPLICATION_ID, token, ORGANIZATION, 0, "activate",
@@ -2026,7 +2026,7 @@ public class ManagementServiceImpl implements ManagementService {
 	}
 
 	@Override
-	public boolean checkActivationTokenForAppUser(UUID applicationId,
+	public boolean handleActivationTokenForAppUser(UUID applicationId,
 			UUID userId, String token) throws Exception {
 		EntityRef userRef = getEntityRefFromAccessToken(applicationId, token,
 				APPLICATION_USER, 0, "activate", true);
@@ -2265,5 +2265,12 @@ public class ManagementServiceImpl implements ManagementService {
 		em.incrementAggregateCounters(user.getUuid(), null, null,
 				"admin_logins", 1);
 
+	}
+
+	@Override
+	public boolean handleConfirmationTokenForAdminUser(UUID userId, String token)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

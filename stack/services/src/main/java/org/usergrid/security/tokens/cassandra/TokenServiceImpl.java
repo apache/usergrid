@@ -37,6 +37,9 @@ import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.TokenInfo;
 import org.usergrid.security.tokens.TokenService;
 import org.usergrid.security.tokens.TokenType;
+import org.usergrid.security.tokens.exceptions.BadTokenException;
+import org.usergrid.security.tokens.exceptions.ExpiredTokenException;
+import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
@@ -218,19 +221,19 @@ public class TokenServiceImpl implements TokenService {
 			putTokenInfo(tokenInfo);
 			return getTokenForUUID(TokenType.ACCESS, tokenInfo.getUuid());
 		}
-		return null;
+		throw new InvalidTokenException("Token not found in database");
 	}
 
 	public TokenInfo getTokenInfo(UUID uuid) throws Exception {
 		if (uuid == null) {
-			return null;
+			throw new InvalidTokenException("No token specified");
 		}
 		Map<String, ByteBuffer> columns = getColumnMap(cassandra.getColumns(
 				cassandra.getSystemKeyspace(), TOKENS_CF, uuid,
 				TOKEN_PROPERTIES, StringSerializer.get(),
 				ByteBufferSerializer.get()));
 		if (!hasKeys(columns, REQUIRED_TOKEN_PROPERTIES)) {
-			return null;
+			throw new InvalidTokenException("Token not found in database");
 		}
 		String type = string(columns.get(TOKEN_TYPE));
 		long created = getLong(columns.get(TOKEN_CREATED));
@@ -276,7 +279,8 @@ public class TokenServiceImpl implements TokenService {
 				(int) (maxPersistenceTokenAge / 1000));
 	}
 
-	public UUID getUUIDForToken(String token) {
+	public UUID getUUIDForToken(String token) throws ExpiredTokenException,
+			BadTokenException {
 		TokenType tokenType = TokenType.getFromBase64String(token);
 		byte[] bytes = decodeBase64(token
 				.substring(TokenType.BASE64_PREFIX_LENGTH));
@@ -284,7 +288,10 @@ public class TokenServiceImpl implements TokenService {
 		long timestamp = getTimestampInMillis(uuid);
 		if ((getExpirationForTokenType(tokenType) > 0)
 				&& (currentTimeMillis() > (timestamp + getExpirationForTokenType(tokenType)))) {
-			return null;
+			throw new ExpiredTokenException(
+					"Token expired "
+							+ (currentTimeMillis() - (timestamp + getExpirationForTokenType(tokenType)))
+							+ " millisecons ago.");
 		}
 		int i = 16;
 		long expires = Long.MAX_VALUE;
@@ -298,7 +305,7 @@ public class TokenServiceImpl implements TokenService {
 		expected.rewind();
 		ByteBuffer signature = ByteBuffer.wrap(bytes, i, 20);
 		if (!signature.equals(expected)) {
-			return null;
+			throw new BadTokenException("Invalid token signature");
 		}
 		return uuid;
 	}

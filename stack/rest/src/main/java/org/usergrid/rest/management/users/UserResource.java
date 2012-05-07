@@ -45,6 +45,7 @@ import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.management.users.organizations.OrganizationsResource;
 import org.usergrid.rest.security.annotations.RequireAdminUserAccess;
 import org.usergrid.security.shiro.utils.SubjectUtils;
+import org.usergrid.security.tokens.exceptions.TokenException;
 import org.usergrid.services.ServiceResults;
 
 import com.sun.jersey.api.json.JSONWithPadding;
@@ -179,16 +180,21 @@ public class UserResource extends AbstractContextResource {
 	@GET
 	@Path("resetpw")
 	public Viewable showPasswordResetForm(@Context UriInfo ui,
-			@QueryParam("token") String token) throws Exception {
+			@QueryParam("token") String token) {
 
-		this.token = token;
+		try {
+			this.token = token;
 
-		if (management.checkPasswordResetTokenForAdminUser(user.getUuid(),
-				token)) {
-			return new Viewable("resetpw_set_form", this);
-		} else {
-			return new Viewable("resetpw_email_form", this);
+			if (management.checkPasswordResetTokenForAdminUser(user.getUuid(),
+					token)) {
+				return new Viewable("resetpw_set_form", this);
+			} else {
+				return new Viewable("resetpw_email_form", this);
+			}
+		} catch (Exception e) {
+			return new Viewable("error", e);
 		}
+
 	}
 
 	@POST
@@ -199,45 +205,50 @@ public class UserResource extends AbstractContextResource {
 			@FormParam("password1") String password1,
 			@FormParam("password2") String password2,
 			@FormParam("recaptcha_challenge_field") String challenge,
-			@FormParam("recaptcha_response_field") String uresponse)
-			throws Exception {
+			@FormParam("recaptcha_response_field") String uresponse) {
 
-		this.token = token;
+		try {
+			this.token = token;
 
-		if ((password1 != null) || (password2 != null)) {
-			if (management.checkPasswordResetTokenForAdminUser(user.getUuid(),
-					token)) {
-				if ((password1 != null) && password1.equals(password2)) {
-					management.setAdminUserPassword(user.getUuid(), password1);
-					return new Viewable("resetpw_set_success", this);
+			if ((password1 != null) || (password2 != null)) {
+				if (management.checkPasswordResetTokenForAdminUser(
+						user.getUuid(), token)) {
+					if ((password1 != null) && password1.equals(password2)) {
+						management.setAdminUserPassword(user.getUuid(),
+								password1);
+						return new Viewable("resetpw_set_success", this);
+					} else {
+						errorMsg = "Passwords didn't match, let's try again...";
+						return new Viewable("resetpw_set_form", this);
+					}
 				} else {
-					errorMsg = "Passwords didn't match, let's try again...";
-					return new Viewable("resetpw_set_form", this);
+					errorMsg = "Something odd happened, let's try again...";
+					return new Viewable("resetpw_email_form", this);
 				}
+			}
+
+			if (!useReCaptcha()) {
+				management.sendAdminUserPasswordReminderEmail(user);
+				return new Viewable("resetpw_email_success", this);
+			}
+
+			ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
+			reCaptcha.setPrivateKey(properties
+					.getProperty("usergrid.recaptcha.private"));
+
+			ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
+					httpServletRequest.getRemoteAddr(), challenge, uresponse);
+
+			if (reCaptchaResponse.isValid()) {
+				management.sendAdminUserPasswordReminderEmail(user);
+				return new Viewable("resetpw_email_success", this);
 			} else {
-				errorMsg = "Something odd happened, let's try again...";
+				errorMsg = "Incorrect Captcha";
 				return new Viewable("resetpw_email_form", this);
 			}
-		}
 
-		if (!useReCaptcha()) {
-			management.sendAdminUserPasswordReminderEmail(user);
-			return new Viewable("resetpw_email_success", this);
-		}
-
-		ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-		reCaptcha.setPrivateKey(properties
-				.getProperty("usergrid.recaptcha.private"));
-
-		ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
-				httpServletRequest.getRemoteAddr(), challenge, uresponse);
-
-		if (reCaptchaResponse.isValid()) {
-			management.sendAdminUserPasswordReminderEmail(user);
-			return new Viewable("resetpw_email_success", this);
-		} else {
-			errorMsg = "Incorrect Captcha";
-			return new Viewable("resetpw_email_form", this);
+		} catch (Exception e) {
+			return new Viewable("error", e);
 		}
 
 	}
@@ -258,16 +269,16 @@ public class UserResource extends AbstractContextResource {
 	@Path("activate")
 	public Viewable activate(@Context UriInfo ui,
 			@QueryParam("token") String token,
-			@QueryParam("confirm") boolean confirm) throws Exception {
+			@QueryParam("confirm") boolean confirm) {
 
-		if (management.checkActivationTokenForAdminUser(user.getUuid(), token)) {
-			management.activateAdminUser(user.getUuid());
-			if (confirm) {
-				management.sendAdminUserActivatedEmail(user);
-			}
+		try {
+			management.handleActivationTokenForAdminUser(user.getUuid(), token);
 			return new Viewable("activate", this);
+		} catch (TokenException e) {
+			return new Viewable("bad_activation_token", this);
+		} catch (Exception e) {
+			return new Viewable("error", e);
 		}
-		return null;
 	}
 
 	@GET

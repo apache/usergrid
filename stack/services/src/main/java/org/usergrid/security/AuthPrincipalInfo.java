@@ -28,7 +28,7 @@ import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import org.usergrid.management.exceptions.BadAccessTokenException;
+import org.usergrid.security.tokens.exceptions.BadTokenException;
 
 public class AuthPrincipalInfo {
 
@@ -84,17 +84,17 @@ public class AuthPrincipalInfo {
 	}
 
 	public static AuthPrincipalInfo getFromAccessToken(String token)
-			throws BadAccessTokenException {
+			throws BadTokenException {
 		String uuidStr = stringOrSubstringBeforeFirst(token, ':');
 		if (isEmpty(uuidStr)) {
-			throw new BadAccessTokenException("Unable to get uuid from token");
+			throw new BadTokenException("Unable to get uuid from token");
 		}
 
 		UUID uuid = null;
 		try {
 			uuid = uuid(decodeBase64(uuidStr));
 		} catch (Exception e) {
-			throw new BadAccessTokenException("Unable to get entity from token");
+			throw new BadTokenException("Unable to get entity from token");
 		}
 
 		UUID applicationId = MANAGEMENT_APPLICATION_ID;
@@ -106,7 +106,7 @@ public class AuthPrincipalInfo {
 				try {
 					applicationId = uuid(decodeBase64(uuidStr));
 				} catch (Exception e) {
-					throw new BadAccessTokenException(
+					throw new BadTokenException(
 							"Unable to get application from token");
 				}
 				if (applicationId == null) {
@@ -119,7 +119,7 @@ public class AuthPrincipalInfo {
 				.getFromBase64String(stringOrSubstringAfterLast(token, ':'));
 
 		if (type == null) {
-			throw new BadAccessTokenException("Unable to get type from token");
+			throw new BadTokenException("Unable to get type from token");
 		}
 
 		return new AuthPrincipalInfo(type, uuid, applicationId);
