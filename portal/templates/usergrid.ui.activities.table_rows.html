@@ -4,12 +4,11 @@
     <img src="${actor.gravatar}"/>
   </td>
   <td>
-    {{if actor.uuid}}
-      <a href="#" onclick="usergrid.console.pageOpenUserActivities('${actor.uuid}'); return false;">${actor.displayName} (${actor.email})</a>
-    {{else}}
-      ${actor.displayName} (${actor.email})
-    {{/if}}
+    ${actor.name}
   </td>
-  <td>${content}</td>
+  <td>
+    ${uuid}
+  </td>
+  <td>{{if content}}${content}{{else}} {{/if}}</td>
   <td>${verb}</td>
 </tr>
