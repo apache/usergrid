@@ -482,7 +482,7 @@ public class CassandraService {
 			set.add(column.getName());
 		}
 		return set;
-	}
+	}	
 
 	/**
 	 * Gets the columns.
@@ -1213,71 +1213,6 @@ public class CassandraService {
 				ENTITY_ID_SETS.toString(), keyPrefix, keySuffix, keyIds,
 				timestamp);
 		batchExecute(batch, CassandraService.RETRY_COUNT);
-	}
-
-	public Mutator<ByteBuffer> batchUpdateIdSet(Mutator<ByteBuffer> batch,
-			UUID entityId, String setName, UUID elementValue,
-			boolean removeFromSet, long timestamp) throws Exception {
-
-		if (elementValue != null) {
-			if (!removeFromSet) {
-				// Set the new value
-				addInsertToMutator(batch, ENTITY_ID_SETS,
-						key(entityId, setName), elementValue,
-						ByteBuffer.allocate(0), timestamp);
-
-				addInsertToMutator(batch, ENTITY_DICTIONARIES,
-						key(entityId, DICTIONARY_ID_SETS), setName, null,
-						timestamp);
-			} else {
-				addDeleteToMutator(batch, ENTITY_ID_SETS,
-						key(entityId, setName), timestamp);
-			}
-		}
-
-		return batch;
-	}
-
-	public void deleteIdSet(UUID applicationId, UUID entityId, String setName)
-			throws Exception {
-		Keyspace ko = getApplicationKeyspace(applicationId);
-		deleteRow(ko, ENTITY_ID_SETS, key(entityId, setName));
-	}
-
-	public void addToIdSet(UUID applicationId, UUID entityId, String setName,
-			UUID elementValue) throws Exception {
-
-		if (elementValue == null) {
-			return;
-		}
-
-		long timestamp = createTimestamp();
-		Mutator<ByteBuffer> batch = createMutator(
-				getApplicationKeyspace(applicationId), be);
-
-		batch = batchUpdateIdSet(batch, entityId, setName, elementValue, false,
-				timestamp);
-
-		batchExecute(batch, CassandraService.RETRY_COUNT);
-	}
-
-	public void removeFromIdSet(UUID applicationId, UUID entityId,
-			String setName, UUID elementValue) throws Exception {
-
-		long timestamp = createTimestamp();
-		Mutator<ByteBuffer> batch = createMutator(
-				getApplicationKeyspace(applicationId), be);
-
-		batch = batchUpdateIdSet(batch, entityId, setName, elementValue, true,
-				timestamp);
-
-		batchExecute(batch, CassandraService.RETRY_COUNT);
-	}
-
-	public List<UUID> getIdSet(UUID applicationId, UUID entityId, String setName)
-			throws Exception {
-		return getIdList(getApplicationKeyspace(applicationId),
-				key(entityId, setName), null, null, 0, false);
 	}
 
 	boolean clusterUp = false;

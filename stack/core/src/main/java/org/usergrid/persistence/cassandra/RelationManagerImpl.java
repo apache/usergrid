@@ -90,6 +90,7 @@ import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -116,6 +117,10 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 
+import org.apache.cassandra.config.ConfigurationException;
+import org.apache.cassandra.db.marshal.AbstractType;
+import org.apache.cassandra.db.marshal.DynamicCompositeType;
+import org.apache.cassandra.db.marshal.TypeParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -170,16 +175,49 @@ public class RelationManagerImpl implements RelationManager,
     public static final LongSerializer le = new LongSerializer();
     private static final UUID NULL_ID = new UUID(0, 0);
 
+    private static Comparator<ByteBuffer> forwardComparator;
+    private static Comparator<ByteBuffer> reverseComparator;
+
+    static {
+        try {
+            final AbstractType dynamicComposite = TypeParser.parse(ENTITY_INDEX
+                    .getComparator());
+
+            forwardComparator = new Comparator<ByteBuffer>() {
+
+                @Override
+                public int compare(ByteBuffer o1, ByteBuffer o2) {
+                    return dynamicComposite.compare(o1, o2);
+                }
+            };
+
+            reverseComparator = new Comparator<ByteBuffer>() {
+
+                @Override
+                public int compare(ByteBuffer o1, ByteBuffer o2) {
+                    return dynamicComposite.compare(o2, o1);
+                }
+            };
+
+        } catch (ConfigurationException e) {
+            // should never happen
+            throw new RuntimeException(e);
+        }
+
+    }
+
     public RelationManagerImpl() {
     }
 
     public RelationManagerImpl init(EntityManagerImpl em,
-            CassandraService cass, UUID applicationId, EntityRef headEntity, IndexBucketLocator indexBucketLocator) {
+            CassandraService cass, UUID applicationId, EntityRef headEntity,
+            IndexBucketLocator indexBucketLocator) {
         this.em = em;
         this.applicationId = applicationId;
         this.cass = cass;
         this.headEntity = headEntity;
         this.indexBucketLocator = indexBucketLocator;
+
         return this;
     }
 
@@ -421,18 +459,17 @@ public class RelationManagerImpl implements RelationManager,
 
         logger.info("batchUpdateCollectionIndex");
 
-        ApplicationCF indexesCf = ENTITY_INDEX;
-        
         Entity indexedEntity = indexUpdate.getEntity();
-        
-//        String bucketId = indexBucketLocator.getBucket(applicationId, indexedEntity.getType(), indexedEntity.getUuid(), indexUpdate.getEntryName());
+
+        String bucketId = indexBucketLocator.getBucket(applicationId,
+                indexedEntity.getUuid(), indexedEntity.getType(),
+                indexUpdate.getEntryName());
 
         CollectionInfo collection = getDefaultSchema().getCollection(
                 owner.getType(), collectionName);
 
-        // entity_id,collection_name,prop_name
-        Object index_key = key(owner.getUuid(), collectionName,
-                indexUpdate.getEntryName());
+        // entity_id,collection_name,prop_name, bucketId
+        Object index_key = null;
 
         // entity_id,collection_name,collected_entity_id,prop_name
 
@@ -440,9 +477,10 @@ public class RelationManagerImpl implements RelationManager,
 
             if (entry.getValue() != null) {
 
-                index_key = key(owner.getUuid(), collectionName,  entry.getPath());
+                index_key = key(owner.getUuid(), collectionName,
+                        entry.getPath(), bucketId);
 
-                addDeleteToMutator(indexUpdate.getBatch(), indexesCf,
+                addDeleteToMutator(indexUpdate.getBatch(), ENTITY_INDEX,
                         index_key, entry.getIndexComposite(),
                         indexUpdate.getTimestamp());
 
@@ -467,7 +505,7 @@ public class RelationManagerImpl implements RelationManager,
                                     collectionName, subkey_key, entry.getPath());
 
                             addDeleteToMutator(indexUpdate.getBatch(),
-                                    indexesCf, index_subkey_key,
+                                    ENTITY_INDEX, index_subkey_key,
                                     entry.getIndexComposite(),
                                     indexUpdate.getTimestamp());
 
@@ -496,11 +534,12 @@ public class RelationManagerImpl implements RelationManager,
 
                 // byte valueCode = indexEntry.getValueCode();
 
-                index_key = key(owner.getUuid(), collectionName, indexEntry.getPath());
+                index_key = key(owner.getUuid(), collectionName,
+                        indexEntry.getPath(), bucketId);
 
                 // int i = 0;
 
-                addInsertToMutator(indexUpdate.getBatch(), indexesCf,
+                addInsertToMutator(indexUpdate.getBatch(), ENTITY_INDEX,
                         index_key, indexEntry.getIndexComposite(), null,
                         indexUpdate.getTimestamp());
 
@@ -525,10 +564,10 @@ public class RelationManagerImpl implements RelationManager,
                             // entity_id,collection_name,prop_name
                             Object index_subkey_key = key(owner.getUuid(),
                                     collectionName, subkey_key,
-                                    indexEntry.getPath());
+                                    indexEntry.getPath(), bucketId);
 
                             addInsertToMutator(indexUpdate.getBatch(),
-                                    indexesCf, index_subkey_key,
+                                    ENTITY_INDEX, index_subkey_key,
                                     indexEntry.getIndexComposite(), null,
                                     indexUpdate.getTimestamp());
 
@@ -565,8 +604,8 @@ public class RelationManagerImpl implements RelationManager,
     @Override
     public Set<String> getCollectionIndexes(String collectionName)
             throws Exception {
-        
-        //TODO TN, read all buckets here
+
+        // TODO TN, read all buckets here
         List<HColumn<String, String>> results = cass.getAllColumns(
                 cass.getApplicationKeyspace(applicationId),
                 ENTITY_DICTIONARIES,
@@ -589,9 +628,9 @@ public class RelationManagerImpl implements RelationManager,
         Map<EntityRef, Set<String>> results = new LinkedHashMap<EntityRef, Set<String>>();
 
         Keyspace ko = cass.getApplicationKeyspace(applicationId);
-        
-        //TODO TN get all buckets here
-        
+
+        // TODO TN get all buckets here
+
         List<HColumn<DynamicComposite, ByteBuffer>> containers = cass
                 .getAllColumns(
                         ko,
@@ -708,15 +747,21 @@ public class RelationManagerImpl implements RelationManager,
         }
 
         Map<UUID, CollectionRef> membershipRefs = new LinkedHashMap<UUID, CollectionRef>();
+
         for (UUID ownerId : ownerIds) {
+
             CollectionRef membershipRef = new SimpleCollectionRef(
                     new SimpleEntityRef(ownerType, ownerId), collectionName,
                     entity);
 
             membershipRefs.put(ownerId, membershipRef);
 
+            // get the bucket this entityId needs to be inserted into
+            String bucketId = indexBucketLocator.getBucket(applicationId,
+                    entity.getUuid(), collectionName);
+
             Object collections_key = key(ownerId,
-                    Schema.DICTIONARY_COLLECTIONS, collectionName);
+                    Schema.DICTIONARY_COLLECTIONS, collectionName, bucketId);
 
             // Insert in main collection
 
@@ -879,8 +924,12 @@ public class RelationManagerImpl implements RelationManager,
             return batch;
         }
 
-        Object collections_key = key(headEntity.getUuid(),
-                Schema.DICTIONARY_COLLECTIONS, collectionName);
+        Object collections_key = key(
+                headEntity.getUuid(),
+                Schema.DICTIONARY_COLLECTIONS,
+                collectionName,
+                indexBucketLocator.getBucket(applicationId,
+                        headEntity.getUuid(), collectionName));
 
         // Remove property indexes
 
@@ -2067,10 +2116,104 @@ public class RelationManagerImpl implements RelationManager,
         return results;
     }
 
-    public List<HColumn<ByteBuffer, ByteBuffer>> searchIndex(Object indexKey,
+    private List<HColumn<ByteBuffer, ByteBuffer>> searchIndex(Object indexKey,
             QuerySlice slice, int count) throws Exception {
 
+        Object start = getStart(slice);
+
+        Object finish = getFinish(slice);
+
+        if (slice.isReversed() && (start != null) && (finish != null)) {
+            Object temp = start;
+            start = finish;
+            finish = temp;
+        }
+
+        return cass.getColumns(cass.getApplicationKeyspace(applicationId),
+                ENTITY_INDEX, key(indexKey, slice.getPropertyName()), start,
+                finish, count, slice.isReversed());
+
+    }
+
+    /**
+     * Search the collection index using all the buckets for the given
+     * collection
+     * 
+     * @param indexKey
+     * @param slice
+     * @param count
+     * @param collectionName
+     * @return
+     * @throws Exception
+     */
+    private List<HColumn<ByteBuffer, ByteBuffer>> searchIndexBuckets(
+            Object indexKey, QuerySlice slice, int count, String collectionName)
+            throws Exception {
+
+        Object start = getStart(slice);
+
+        Object finish = getFinish(slice);
+
+        if (slice.isReversed() && (start != null) && (finish != null)) {
+            Object temp = start;
+            start = finish;
+            finish = temp;
+        }
+
+        List<String> keys = indexBucketLocator.getBuckets(applicationId,
+                collectionName);
+
+        List<Object> cassKeys = new ArrayList<Object>(keys.size());
+
+        for (String bucket : keys) {
+            cassKeys.add(key(indexKey, slice.getPropertyName(), bucket));
+        }
+
+        Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> results = cass
+                .multiGetColumns(cass.getApplicationKeyspace(applicationId),
+                        ENTITY_INDEX, cassKeys, start, finish, count,
+                        slice.isReversed());
+
+        // List<HColumn<ByteBuffer, ByteBuffer>> cols = new
+        // ArrayList<HColumn<ByteBuffer, ByteBuffer>>();
+
+        final Comparator<ByteBuffer> comparator = slice.isReversed() ? reverseComparator
+                : forwardComparator;
+
+        TreeSet<HColumn<ByteBuffer, ByteBuffer>> resultsTree = new TreeSet<HColumn<ByteBuffer, ByteBuffer>>(
+                new Comparator<HColumn<ByteBuffer, ByteBuffer>>() {
+
+                    @Override
+                    public int compare(HColumn<ByteBuffer, ByteBuffer> first,
+                            HColumn<ByteBuffer, ByteBuffer> second) {
+
+                        return comparator.compare(first.getName(),
+                                second.getName());
+                    }
+
+                });
+
+        // TODO TN, this kinda sucks, make it better
+        for (List<HColumn<ByteBuffer, ByteBuffer>> cols : results.values()) {
+
+            for (HColumn<ByteBuffer, ByteBuffer> col : cols) {
+                resultsTree.add(col);
+
+                // trim if we're over size
+                if (resultsTree.size() > count) {
+                    resultsTree.remove(resultsTree.last());
+                }
+            }
+
+        }
+
+        return new ArrayList<HColumn<ByteBuffer, ByteBuffer>>(resultsTree);
+
+    }
+
+    private Object getStart(QuerySlice slice) {
         Object start = null;
+
         if (slice.getCursor() != null) {
             start = slice.getCursor();
         } else if (slice.getStart() != null) {
@@ -2082,7 +2225,12 @@ public class RelationManagerImpl implements RelationManager,
             }
         }
 
+        return start;
+    }
+
+    private Object getFinish(QuerySlice slice) {
         Object finish = null;
+
         if (slice.getFinish() != null) {
             finish = new DynamicComposite(slice.getFinish().getCode(), slice
                     .getFinish().getValue());
@@ -2092,19 +2240,7 @@ public class RelationManagerImpl implements RelationManager,
             }
         }
 
-        if (slice.isReversed() && (start != null) && (finish != null)) {
-            Object temp = start;
-            start = finish;
-            finish = temp;
-        }
-
-        List<HColumn<ByteBuffer, ByteBuffer>> results = cass.getColumns(
-                cass.getApplicationKeyspace(applicationId), ENTITY_INDEX,
-                key(indexKey, slice.getPropertyName()), start, finish, count,
-                slice.isReversed());
-
-        return results;
-
+        return finish;
     }
 
     /**
@@ -2298,12 +2434,20 @@ public class RelationManagerImpl implements RelationManager,
     }
 
     @Override
-    public int getCollectionSize(String collectionName) throws Exception {
-        return cass.countColumns(
-                cass.getApplicationKeyspace(applicationId),
-                ENTITY_ID_SETS,
-                key(headEntity.getUuid(), DICTIONARY_COLLECTIONS,
-                        collectionName));
+    public long getCollectionSize(String collectionName) throws Exception {
+        long result = 0;
+
+        for (String bucketId : indexBucketLocator.getBuckets(applicationId,
+                collectionName)) {
+
+            result += cass.countColumns(
+                    cass.getApplicationKeyspace(applicationId),
+                    ENTITY_ID_SETS,
+                    key(headEntity.getUuid(), DICTIONARY_COLLECTIONS,
+                            collectionName, bucketId));
+        }
+
+        return result;
     }
 
     // @Override
@@ -2574,7 +2718,7 @@ public class RelationManagerImpl implements RelationManager,
 
         CollectionInfo collection = getDefaultSchema().getCollection(
                 headEntity.getType(), collectionName);
-        
+
         query.setEntityType(collection.getType());
 
         boolean reversed = query.isReversed();
@@ -2604,7 +2748,8 @@ public class RelationManagerImpl implements RelationManager,
         // results
 
         QueryProcessor qp = new QueryProcessor(query, collection);
-        SearchCollectionVisitor visitor = new SearchCollectionVisitor(query, qp, collection);
+        SearchCollectionVisitor visitor = new SearchCollectionVisitor(query,
+                qp, collection);
         qp.getFirstNode().visit(visitor);
 
         Results results = visitor.getResults();
@@ -2640,10 +2785,9 @@ public class RelationManagerImpl implements RelationManager,
         }
         logger.info("Query cursor: " + results.getCursor());
 
-        
-        //now we need to set the cursor from our tree evaluation for return
+        // now we need to set the cursor from our tree evaluation for return
         results.setCursor(qp.getCursor());
-        
+
         return results;
     }
 
@@ -2883,7 +3027,7 @@ public class RelationManagerImpl implements RelationManager,
         QueryProcessor qp = new QueryProcessor(query, null);
         SearchConnectionVisitor visitor = new SearchConnectionVisitor(query,
                 qp, connectionRef);
-        
+
         qp.getFirstNode().visit(visitor);
 
         results = visitor.getResults();
@@ -3053,11 +3197,11 @@ public class RelationManagerImpl implements RelationManager,
             // indexEntry.getPath())
             Object subKey = getCFKeyForSubkey(collection, node);
 
-            
             //
             for (QuerySlice slice : node.getAllSlices()) {
 
-                // NOTE we explicitly do not append the slice value here. This is
+                // NOTE we explicitly do not append the slice value here. This
+                // is
                 // done in the searchIndex
                 // method below
                 Object indexKey = subKey == null ? key(headEntity.getUuid(),
@@ -3069,8 +3213,8 @@ public class RelationManagerImpl implements RelationManager,
                 // change the hash value of the slice
                 queryProcessor.applyCursorAndSort(slice);
 
-                List<HColumn<ByteBuffer, ByteBuffer>> columns = searchIndex(
-                        indexKey, slice, limit);
+                List<HColumn<ByteBuffer, ByteBuffer>> columns = searchIndexBuckets(
+                        indexKey, slice, limit, collection.getName());
 
                 Results r = getIndexResults(columns, true,
                         query.getConnectionType(), collection.getType(),
@@ -3081,9 +3225,10 @@ public class RelationManagerImpl implements RelationManager,
                 }
 
                 if (r.getCursor() != null) {
-                    //TODO T.N. cursors need changed to ByteBuffers for internal efficiency.  We won't serialize
-                    //until the last join occurs
-                     queryProcessor.updateCursor(slice, r.getCursor());
+                    // TODO T.N. cursors need changed to ByteBuffers for
+                    // internal efficiency. We won't serialize
+                    // until the last join occurs
+                    queryProcessor.updateCursor(slice, r.getCursor());
                 }
 
                 if (results != null) {

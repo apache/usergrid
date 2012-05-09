@@ -19,32 +19,40 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Interface for locating different buckets for indexing entities.  These buckets are not intended
- * for user with time series indexing.  Rather this a means of partitioning index puts across multiple rows  
+ * Interface for locating different buckets for indexing entities. These buckets
+ * are not intended for user with time series indexing. Rather this a means of
+ * partitioning index puts across multiple rows
  * 
  * @author tnine
- *
+ * 
  */
 public interface IndexBucketLocator {
 
     /**
-     * Return the bucket to use for indexing this entity 
+     * Return the bucket to use for indexing this entity
      * 
      * @param applicationId
-     * @param entityType
+     *            The application id
      * @param entityId
-     * @param propertyName
+     *            The entity id to be indexed
+     * @param components
+     *            The strings and uniquely identify the path to this index. I.E
+     *            entityType and propName, collection name etc This string must
+     *            remain the same for all reads and writes
      * @return
      */
-    public String getBucket(UUID applicationId, String entityType, UUID entityId, String propertyName);
-    
-    
+    public String getBucket(UUID applicationId, UUID entityId, String... components);
+
     /**
-     * Get all buckets that exist for this application with the given entity type, and property name
+     * Get all buckets that exist for this application with the given entity
+     * type, and property name
+     * 
      * @param applicationId
-     * @param entityType
-     * @param propertyName
-     * @return
+     *            The application id
+     * @param components
+     *            The strings and uniquely identify the path to this index. I.E
+     *            entityType and propName, collection name etc
+     * @return All buckets for this application at the given component path
      */
-    public List<String> getBuckets(UUID applicationId, String entityType, String propertyName);
+    public List<String> getBuckets(UUID applicationId, String... components);
 }

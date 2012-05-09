@@ -188,7 +188,7 @@ public class EntityManagerImpl implements EntityManager,
 	private QueueManagerFactoryImpl qmf;
 	
 	@Autowired
-	private IndexBucketLocator locator;
+	private IndexBucketLocator indexBucketLocator;
 
 	private UUID applicationId;
 
@@ -238,7 +238,7 @@ public class EntityManagerImpl implements EntityManager,
 	public RelationManagerImpl getRelationManager(EntityRef entityRef) {
 		return applicationContext.getAutowireCapableBeanFactory()
 				.createBean(RelationManagerImpl.class)
-				.init(this, cass, applicationId, entityRef, locator);
+				.init(this, cass, applicationId, entityRef, indexBucketLocator);
 	}
 
 	/**
@@ -598,7 +598,7 @@ public class EntityManagerImpl implements EntityManager,
 
 		long timestamp = cass.createTimestamp();
 
-		addInsertToMutator(m, ApplicationCF.ENTITY_ALIASES, keyId, "entityId",
+		addInsertToMutator(m, ENTITY_ALIASES, keyId, "entityId",
 				entityId, timestamp);
 		addInsertToMutator(m, ENTITY_ALIASES, keyId, "entityType", entityType,
 				timestamp);
@@ -842,7 +842,9 @@ public class EntityManagerImpl implements EntityManager,
 		long timestamp = getTimestampInMicros(timestampUuid);
 
 		String eType = Schema.normalizeEntityType(entityType);
+		
 		boolean is_application = TYPE_APPLICATION.equals(eType);
+		
 		if (((applicationId == null) || applicationId
 				.equals(UUIDUtils.zeroUUID)) && !is_application) {
 			return null;
@@ -856,8 +858,8 @@ public class EntityManagerImpl implements EntityManager,
 			entityClass = (Class<A>) DynamicEntity.class;
 		}
 
-		Set<String> required = getDefaultSchema().getRequiredProperties(
-				entityType);
+		Set<String> required = getDefaultSchema().getRequiredProperties(entityType);
+		
 		if (required != null) {
 			for (String p : required) {
 				if (!PROPERTY_UUID.equals(p) && !PROPERTY_TYPE.equals(p)
@@ -887,6 +889,7 @@ public class EntityManagerImpl implements EntityManager,
 		}
 
 		UUID itemId = UUIDUtils.newTimeUUID();
+		
 		if (is_application) {
 			itemId = applicationId;
 		}
@@ -897,8 +900,9 @@ public class EntityManagerImpl implements EntityManager,
 		// Create collection name based on entity: i.e. "users"
 		String collection_name = Schema.defaultCollectionName(eType);
 		// Create collection key based collection name
-		Object collection_key = key(applicationId,
-				Schema.DICTIONARY_COLLECTIONS, collection_name);
+		String bucketId = indexBucketLocator.getBucket(applicationId, itemId, collection_name);
+		        
+		Object collection_key = key(applicationId, Schema.DICTIONARY_COLLECTIONS, collection_name, bucketId);
 
 		CollectionInfo collection = null;
 

@@ -264,7 +264,7 @@ public class GeoIndexManager {
 			Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> rows = cass
 					.multiGetColumns(
 							cass.getApplicationKeyspace(em.getApplicationId()),
-							ApplicationCF.ENTITY_INDEX, keys, startResult,
+							ENTITY_INDEX, keys, startResult,
 							null, count, reversed);
 
 			for (List<HColumn<ByteBuffer, ByteBuffer>> columns : rows.values()) {

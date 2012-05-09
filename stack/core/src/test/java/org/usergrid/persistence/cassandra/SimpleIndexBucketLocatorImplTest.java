@@ -64,13 +64,13 @@ public class SimpleIndexBucketLocatorImplTest {
         UUID testId3 = UUIDUtils.minTimeUUID(Long.MAX_VALUE);
 
         String bucket1 = locator
-                .getBucket(appId, entityType, testId1, propName);
+                .getBucket(appId, testId1, entityType, propName);
 
         String bucket2 = locator
-                .getBucket(appId, entityType, testId2, propName);
+                .getBucket(appId, testId2, entityType, propName);
 
         String bucket3 = locator
-                .getBucket(appId, entityType, testId3, propName);
+                .getBucket(appId, testId3, entityType, propName);
 
         assertEquals(bucket1, "000000000000000000000000000000000000000");
         assertEquals(bucket2, "000000000000000000000000000000000000000");
@@ -99,13 +99,13 @@ public class SimpleIndexBucketLocatorImplTest {
         UUID testId3 = UUIDUtils.minTimeUUID(Long.MAX_VALUE);
 
         String bucket1 = locator
-                .getBucket(appId, entityType, testId1, propName);
+                .getBucket(appId,  testId1, entityType, propName);
 
         String bucket2 = locator
-                .getBucket(appId, entityType, testId2, propName);
+                .getBucket(appId,  testId2, entityType, propName);
 
         String bucket3 = locator
-                .getBucket(appId, entityType, testId3, propName);
+                .getBucket(appId,  testId3, entityType, propName);
 
         assertEquals(bucket1, "000000000000000000000000000000000000000");
         assertEquals(bucket2, "085070591730234615865843651857942052863");
@@ -147,7 +147,7 @@ public class SimpleIndexBucketLocatorImplTest {
 
             final TimerContext context = hashes.time();
             
-            String bucket = locator.getBucket(appId, entityType, id, propName);
+            String bucket = locator.getBucket(appId, id, entityType, propName);
             
             context.stop();
 

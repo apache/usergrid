@@ -105,30 +105,47 @@ public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.IndexBucketLocator#getBucket(java.util.UUID,
-     * java.lang.String, java.util.UUID, java.lang.String)
+    /* (non-Javadoc)
+     * @see org.usergrid.persistence.IndexBucketLocator#getBucket(java.util.UUID, java.util.UUID, java.lang.String[])
      */
     @Override
-    public String getBucket(UUID applicationId, String entityType,
-            UUID entityId, String propertyName) {
-        return getClosestToken(entityId);
+    public String getBucket(UUID applicationId, UUID entityId,
+            String... components) {
+       return getClosestToken(entityId);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.IndexBucketLocator#getBuckets(java.util.UUID,
-     * java.lang.String, java.lang.String)
+    /* (non-Javadoc)
+     * @see org.usergrid.persistence.IndexBucketLocator#getBuckets(java.util.UUID, java.lang.String[])
      */
     @Override
-    public List<String> getBuckets(UUID applicationId, String entityType,
-            String propertyName) {
+    public List<String> getBuckets(UUID applicationId, String... components) {
         return bucketsString;
     }
+
+//    /*
+//     * (non-Javadoc)
+//     * 
+//     * @see
+//     * org.usergrid.persistence.IndexBucketLocator#getBucket(java.util.UUID,
+//     * java.lang.String, java.util.UUID, java.lang.String)
+//     */
+//    @Override
+//    public String getBucket(UUID applicationId, String entityType,
+//            UUID entityId, String propertyName) {
+//        return getClosestToken(entityId);
+//    }
+//
+//    /*
+//     * (non-Javadoc)
+//     * 
+//     * @see
+//     * org.usergrid.persistence.IndexBucketLocator#getBuckets(java.util.UUID,
+//     * java.lang.String, java.lang.String)
+//     */
+//    @Override
+//    public List<String> getBuckets(UUID applicationId, String entityType,
+//            String propertyName) {
+//        return bucketsString;
+//    }
 
 }
