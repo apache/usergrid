@@ -1512,7 +1512,7 @@ function usergrid_console_app() {
         for (i = 0; i < data.length; i++) {
           var this_data = data[i];
           if (!this_data.picture) {
-            picture = "http://" + window.location.host + window.location.pathname + "/images/user_profile.png"
+            picture = "http://" + window.location.host + window.location.pathname + "images/user_profile.png"
           } else {
             this_data.picture = this_data.picture + "?d=http://" + window.location.host + window.location.pathname + "images/user_profile.png"
           }
