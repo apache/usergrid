@@ -1502,17 +1502,6 @@ function usergrid_console_app() {
     var usersResults = null;
     function displayUsers(response) {
     
-      console.log("!!!!!!!           USERS      !!!!!!");
-      console.log("response: ");
-      console.log(response);
-      console.log("users query: ");
-      console.log(users_query);
-      console.log("previous: " + users_query.hasPrevious());
-      console.log("next: " + users_query.hasNext());
-      console.log("response cursor: " + response.cursor);
-      console.log(users_query.hasNext() != response.cursor);
-      console.log("!!!");
-
       $('#users-pagination').hide();
       $('#users-next').hide();
       $('#users-previous').hide();
@@ -1896,16 +1885,6 @@ function usergrid_console_app() {
 
     var groupsResults = null;
     function displayGroups(response) {
-      console.log("!!!!!!         GROUPS      !!!!!!!");
-      console.log("response: ");
-      console.log(response);
-      console.log("groups query: ");
-      console.log(groups_query);
-      console.log("previous: " + groups_query.hasPrevious());
-      console.log("next: " + groups_query.hasNext());
-      console.log("response cursor: " + response.cursor);
-      console.log(groups_query.hasNext() != response.cursor);
-      console.log("!!!");
 
       $('#groups-pagination').hide();
       $('#groups-next').hide();
@@ -1936,6 +1915,7 @@ function usergrid_console_app() {
         $('#groups-pagination').show();
         $('#groups-previous').show();
       }
+
     }
 
     function showGroupsForLetter(c) {
@@ -2213,17 +2193,6 @@ function usergrid_console_app() {
       $('#roles-pagination').hide();
       $('#roles-next').hide();
       $('#roles-previous').hide();
-
-      console.log("!!!!!!        ROLES      !!!!!!!");
-      console.log("response: ");
-      console.log(response);
-      console.log("roles query: ");
-      console.log(roles_query);
-      console.log("previous: " + roles_query.hasPrevious());
-      console.log("next: " + roles_query.hasNext());
-      console.log("response cursor: " + response.cursor);
-      console.log(roles_query.hasNext() != response.cursor);
-      console.log("!!!");
 
       roles = {};
       roles = response.data;
