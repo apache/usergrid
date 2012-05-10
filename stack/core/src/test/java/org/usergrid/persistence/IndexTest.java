@@ -230,10 +230,13 @@ public class IndexTest extends AbstractPersistenceTest {
 		assertEquals(1, r.size());
 
 		long created = r.getEntity().getCreated();
+		UUID entityId = r.getEntity().getUuid();
+		
 		query = Query.fromQL("created = " + created);
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
 		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
-		assertTrue(r.size() > 0);
+		assertEquals(1, r.size());
+		assertEquals(entityId, r.getEntity().getUuid());
 
 	}
 

@@ -36,7 +36,7 @@ import org.usergrid.persistence.query.tree.Equal;
 import org.usergrid.persistence.query.tree.FloatLiteral;
 import org.usergrid.persistence.query.tree.GreaterThan;
 import org.usergrid.persistence.query.tree.GreaterThanEqual;
-import org.usergrid.persistence.query.tree.IntegerLiteral;
+import org.usergrid.persistence.query.tree.LongLiteral;
 import org.usergrid.persistence.query.tree.LessThan;
 import org.usergrid.persistence.query.tree.LessThanEqual;
 import org.usergrid.persistence.query.tree.StringLiteral;
@@ -94,14 +94,14 @@ public class QueryTest {
         GreaterThan gt = (GreaterThan) and.getRight();
 
         assertEquals("d", gt.getProperty().getValue());
-        assertEquals(5, ((IntegerLiteral) gt.getLiteral()).getValue(), 0);
+        assertEquals(5, ((LongLiteral) gt.getLiteral()).getValue(), 0);
         
         
         and = (AndOperand) and.getLeft();
         LessThan lt = (LessThan) and.getRight();
 
         assertEquals("c", lt.getProperty().getValue());
-        assertEquals(7, ((IntegerLiteral) lt.getLiteral()).getValue(), 0);
+        assertEquals(7, ((LongLiteral) lt.getLiteral()).getValue(), 0);
         
         
         and = (AndOperand) and.getLeft();
@@ -115,7 +115,7 @@ public class QueryTest {
         
 
         assertEquals("a", equal.getProperty().getValue());
-        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue().intValue());
+        assertEquals(5, ((LongLiteral) equal.getLiteral()).getValue().intValue());
     }
 
     @Test
@@ -137,7 +137,7 @@ public class QueryTest {
         LessThan equal = (LessThan) query.getRootOperand();
         
         assertEquals("foo", equal.getProperty().getValue());
-        assertEquals(5, equal.getLiteral().getValue());
+        assertEquals(5l, equal.getLiteral().getValue());
     }
     
     
@@ -149,7 +149,7 @@ public class QueryTest {
         LessThanEqual equal = (LessThanEqual) query.getRootOperand();
         
         assertEquals("foo", equal.getProperty().getValue());
-        assertEquals(5, equal.getLiteral().getValue());
+        assertEquals(5l, equal.getLiteral().getValue());
     }
     
     @Test
@@ -160,7 +160,7 @@ public class QueryTest {
         GreaterThan equal = (GreaterThan) query.getRootOperand();
         
         assertEquals("foo", equal.getProperty().getValue());
-        assertEquals(5, equal.getLiteral().getValue());
+        assertEquals(5l, equal.getLiteral().getValue());
     }
     
     
@@ -172,7 +172,7 @@ public class QueryTest {
         GreaterThanEqual equal = (GreaterThanEqual) query.getRootOperand();
         
         assertEquals("foo", equal.getProperty().getValue());
-        assertEquals(5, equal.getLiteral().getValue());
+        assertEquals(5l, equal.getLiteral().getValue());
     }
 
     @Test

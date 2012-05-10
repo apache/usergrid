@@ -458,7 +458,7 @@
 		<dependency>
 			<groupId>org.usergrid</groupId>
 			<artifactId>usergrid-java-client</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.0.1</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

@@ -64,7 +64,7 @@ GTE : '>=' |  'gte';
 ID  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'.')*
     ;
 
-INT :	('-')? '0'..'9'+
+LONG :	('-')? '0'..'9'+
     ;
 
 FLOAT
@@ -127,8 +127,8 @@ property :	ID<Property>;
 booleanliteral: BOOLEAN<BooleanLiteral>;
 
 
-intliteral :
-  INT<IntegerLiteral> ;
+longliteral :
+  LONG<LongLiteral> ;
 
 uuidliteral :
   UUID<UUIDLiteral>;
@@ -142,7 +142,7 @@ floatliteral :
 //We delegate to each sub class literal so we can get each type	
 value : 
   booleanliteral
-  | intliteral
+  | longliteral
   | uuidliteral
   | stringliteral
   | floatliteral
@@ -166,7 +166,7 @@ equalityop :
 
 //geo location search
 locationop :
-  property 'within'<WithinOperand>^ (floatliteral|intliteral) 'of'! (floatliteral|intliteral) ','! (floatliteral|intliteral);
+  property 'within'<WithinOperand>^ (floatliteral|longliteral) 'of'! (floatliteral|longliteral) ','! (floatliteral|longliteral);
   
 //string search
 containsop :

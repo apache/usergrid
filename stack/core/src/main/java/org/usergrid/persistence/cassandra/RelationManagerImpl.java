@@ -90,7 +90,6 @@ import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -117,10 +116,6 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 
-import org.apache.cassandra.config.ConfigurationException;
-import org.apache.cassandra.db.marshal.AbstractType;
-import org.apache.cassandra.db.marshal.DynamicCompositeType;
-import org.apache.cassandra.db.marshal.TypeParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -175,36 +170,8 @@ public class RelationManagerImpl implements RelationManager,
     public static final LongSerializer le = new LongSerializer();
     private static final UUID NULL_ID = new UUID(0, 0);
 
-    private static Comparator<ByteBuffer> forwardComparator;
-    private static Comparator<ByteBuffer> reverseComparator;
-
-    static {
-        try {
-            final AbstractType dynamicComposite = TypeParser.parse(ENTITY_INDEX
-                    .getComparator());
-
-            forwardComparator = new Comparator<ByteBuffer>() {
-
-                @Override
-                public int compare(ByteBuffer o1, ByteBuffer o2) {
-                    return dynamicComposite.compare(o1, o2);
-                }
-            };
-
-            reverseComparator = new Comparator<ByteBuffer>() {
-
-                @Override
-                public int compare(ByteBuffer o1, ByteBuffer o2) {
-                    return dynamicComposite.compare(o2, o1);
-                }
-            };
-
-        } catch (ConfigurationException e) {
-            // should never happen
-            throw new RuntimeException(e);
-        }
-
-    }
+ 
+    
 
     public RelationManagerImpl() {
     }
@@ -2160,54 +2127,12 @@ public class RelationManagerImpl implements RelationManager,
             finish = temp;
         }
 
-        List<String> keys = indexBucketLocator.getBuckets(applicationId,
-                collectionName);
-
-        List<Object> cassKeys = new ArrayList<Object>(keys.size());
-
-        for (String bucket : keys) {
-            cassKeys.add(key(indexKey, slice.getPropertyName(), bucket));
-        }
-
-        Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> results = cass
-                .multiGetColumns(cass.getApplicationKeyspace(applicationId),
-                        ENTITY_INDEX, cassKeys, start, finish, count,
-                        slice.isReversed());
-
-        // List<HColumn<ByteBuffer, ByteBuffer>> cols = new
-        // ArrayList<HColumn<ByteBuffer, ByteBuffer>>();
-
-        final Comparator<ByteBuffer> comparator = slice.isReversed() ? reverseComparator
-                : forwardComparator;
-
-        TreeSet<HColumn<ByteBuffer, ByteBuffer>> resultsTree = new TreeSet<HColumn<ByteBuffer, ByteBuffer>>(
-                new Comparator<HColumn<ByteBuffer, ByteBuffer>>() {
-
-                    @Override
-                    public int compare(HColumn<ByteBuffer, ByteBuffer> first,
-                            HColumn<ByteBuffer, ByteBuffer> second) {
-
-                        return comparator.compare(first.getName(),
-                                second.getName());
-                    }
-
-                });
-
-        // TODO TN, this kinda sucks, make it better
-        for (List<HColumn<ByteBuffer, ByteBuffer>> cols : results.values()) {
-
-            for (HColumn<ByteBuffer, ByteBuffer> col : cols) {
-                resultsTree.add(col);
-
-                // trim if we're over size
-                if (resultsTree.size() > count) {
-                    resultsTree.remove(resultsTree.last());
-                }
-            }
-
-        }
-
-        return new ArrayList<HColumn<ByteBuffer, ByteBuffer>>(resultsTree);
+        
+        Object keyPrefix = key(indexKey, slice.getPropertyName());
+        
+        IndexBucketScanner scanner = new IndexBucketScanner(cass, indexBucketLocator, ENTITY_INDEX, applicationId,  keyPrefix, start, finish, slice.isReversed(), count, collectionName);
+        
+        return scanner.load();
 
     }
 
@@ -2419,7 +2344,7 @@ public class RelationManagerImpl implements RelationManager,
                         cass.getApplicationKeyspace(applicationId),
                         key(headEntity.getUuid(), DICTIONARY_COLLECTIONS,
                                 collectionName), startResult, null, count + 1,
-                        reversed);
+                        reversed, indexBucketLocator, applicationId, collectionName);
 
         Results results = null;
 
@@ -3375,4 +3300,6 @@ public class RelationManagerImpl implements RelationManager,
         }
 
     }
+    
+   
 }
