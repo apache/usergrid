@@ -38,6 +38,9 @@ public interface ManagementService {
 	public void activateOrganization(OrganizationInfo organization)
 			throws Exception;
 
+ public void activateOrganization(OrganizationInfo organization, boolean sendEmail)
+  			throws Exception;
+
 	public void addAdminUserToOrganization(UserInfo user,
 			OrganizationInfo organization) throws Exception;
 

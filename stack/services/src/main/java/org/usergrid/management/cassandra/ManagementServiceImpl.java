@@ -2056,8 +2056,14 @@ public class ManagementServiceImpl implements ManagementService {
 
 	}
 
+  @Override
+  public void activateOrganization(OrganizationInfo organization)
+  			throws Exception {
+    activateOrganization(organization, true);
+  }
+
 	@Override
-	public void activateOrganization(OrganizationInfo organization)
+	public void activateOrganization(OrganizationInfo organization, boolean sendEmail)
 			throws Exception {
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		em.setProperty(
@@ -2070,7 +2076,9 @@ public class ManagementServiceImpl implements ManagementService {
 				activateAdminUser(user.getUuid());
 			}
 		}
-		startOrganizationActivationFlow(organization);
+    if ( sendEmail ) {
+      startOrganizationActivationFlow(organization);
+    }
 	}
 
 	@Override

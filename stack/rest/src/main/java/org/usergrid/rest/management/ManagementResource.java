@@ -158,6 +158,7 @@ public class ManagementResource extends AbstractContextResource {
 					user = management.verifyAdminUserPasswordCredentials(
 							username, password);
 				} catch (Exception e1) {
+          logger.error("failed token check", e1);
 				}
 			} else if ("client_credentials".equals(grant_type)) {
 				try {
@@ -171,6 +172,7 @@ public class ManagementResource extends AbstractContextResource {
 								.build();
 					}
 				} catch (Exception e1) {
+          logger.error("failed authorizeClient",e1);
 				}
 			}
 
