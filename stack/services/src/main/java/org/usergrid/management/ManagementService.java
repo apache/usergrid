@@ -324,8 +324,6 @@ public interface ManagementService {
 	public PrincipalCredentialsToken getPrincipalCredentialsTokenForClientCredentials(
 			String clientId, String clientSecret) throws Exception;
 
-	public abstract long getMaxTokenAge();
-
 	public void sendAdminUserInvitedEmail(UserInfo user,
 			OrganizationInfo organization) throws Exception;
 

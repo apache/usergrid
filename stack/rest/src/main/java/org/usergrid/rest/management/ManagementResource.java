@@ -186,11 +186,12 @@ public class ManagementResource extends AbstractContextResource {
 						.build();
 			}
 
+			String token = management
+					.getAccessTokenForAdminUser(user.getUuid());
+
 			AccessInfo access_info = new AccessInfo()
-					.withExpiresIn(management.getMaxTokenAge() / 1000)
-					.withAccessToken(
-							management.getAccessTokenForAdminUser(user
-									.getUuid()))
+					.withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
+					.withAccessToken(token)
 					.withProperty(
 							"user",
 							management.getAdminUserOrganizationData(user

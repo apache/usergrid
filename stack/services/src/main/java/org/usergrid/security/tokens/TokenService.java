@@ -24,4 +24,6 @@ public interface TokenService {
 
 	public String refreshToken(String token) throws Exception;
 
+	public long getMaxTokenAge(String token);
+
 }

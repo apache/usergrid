@@ -38,6 +38,7 @@ import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.usergrid.security.shiro.utils.SubjectUtils;
+import org.usergrid.security.tokens.TokenInfo;
 import org.usergrid.security.tokens.exceptions.BadTokenException;
 
 import com.sun.jersey.api.container.MappableContainerException;
@@ -81,10 +82,12 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
 
 				AuthPrincipalInfo principal = null;
 				try {
-					principal = AuthPrincipalInfo
-							.getFromAccessToken(accessToken);
+					TokenInfo tokenInfo = tokens.getTokenInfo(accessToken);
+					principal = tokenInfo.getPrincipal();
 				} catch (BadTokenException e1) {
 					e1.printStackTrace();
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 
 				if (principal == null) {

@@ -13,6 +13,9 @@ public class TokenInfo {
 	long accessed;
 	AuthPrincipalInfo principal;
 	Map<String, Object> state;
+	
+	String token;
+	long expiration;
 
 	public TokenInfo(UUID uuid, String type, long created, long accessed,
 			AuthPrincipalInfo principal, Map<String, Object> state) {
@@ -28,7 +31,7 @@ public class TokenInfo {
 		return uuid;
 	}
 
-	public void setId(UUID uuid) {
+	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
 	}
 
@@ -70,6 +73,22 @@ public class TokenInfo {
 
 	public void setState(Map<String, Object> state) {
 		this.state = state;
+	}
+
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
+	}
+
+	public long getExpiration() {
+		return expiration;
+	}
+
+	public void setExpiration(long expiration) {
+		this.expiration = expiration;
 	}
 
 }

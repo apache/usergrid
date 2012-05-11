@@ -188,12 +188,12 @@ public class AuthResource extends AbstractContextResource {
 						.build();
 			}
 
+			String token = management.getAccessTokenForAppUser(
+					services.getApplicationId(), user.getUuid());
+
 			AccessInfo access_info = new AccessInfo()
-					.withExpiresIn(management.getMaxTokenAge() / 1000)
-					.withAccessToken(
-							management.getAccessTokenForAppUser(
-									services.getApplicationId(), user.getUuid()))
-					.withProperty("user", user);
+					.withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
+					.withAccessToken(token).withProperty("user", user);
 
 			return Response.status(SC_OK).type(jsonMediaType(callback))
 					.entity(wrapWithCallback(access_info, callback)).build();

@@ -310,6 +310,21 @@ public class TokenServiceImpl implements TokenService {
 		return uuid;
 	}
 
+	@Override
+	public long getMaxTokenAge(String token) {
+		TokenType tokenType = TokenType.getFromBase64String(token);
+		byte[] bytes = decodeBase64(token
+				.substring(TokenType.BASE64_PREFIX_LENGTH));
+		UUID uuid = uuid(bytes);
+		long timestamp = getTimestampInMillis(uuid);
+		int i = 16;
+		if (tokenType.getExpires()) {
+			long expires = ByteBuffer.wrap(bytes, i, 8).getLong();
+			return expires - timestamp;
+		}
+		return Long.MAX_VALUE;
+	}
+
 	public String getTokenForUUID(TokenType tokenType, UUID uuid) {
 		int l = 36;
 		if (tokenType.getExpires()) {

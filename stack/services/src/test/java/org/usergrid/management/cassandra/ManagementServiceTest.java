@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import static org.usergrid.security.tokens.TokenType.ACCESS;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -67,15 +68,15 @@ public class ManagementServiceTest {
 
 	@Test
 	public void testGetTokenForPrincipalAdmin() throws Exception {
-		String token = managementService.getTokenForPrincipal(
+		String token = managementService.getTokenForPrincipal(ACCESS, null,
 				MANAGEMENT_APPLICATION_ID, AuthPrincipalType.ADMIN_USER,
-				adminUser.getUuid(), null, true);
+				adminUser.getUuid());
 		// ^ same as:
 		// managementService.getAccessTokenForAdminUser(user.getUuid());
 		assertNotNull(token);
-		token = managementService.getTokenForPrincipal(
+		token = managementService.getTokenForPrincipal(ACCESS, null,
 				MANAGEMENT_APPLICATION_ID, AuthPrincipalType.APPLICATION_USER,
-				adminUser.getUuid(), null, true);
+				adminUser.getUuid());
 		// This works because ManagementService#getSecret takes the same code
 		// path
 		// on an OR for APP._USER as for ADMIN_USER
@@ -98,9 +99,9 @@ public class ManagementServiceTest {
 				.getEntityManager(applicationId).create("user", properties);
 
 		assertNotNull(user);
-		String token = managementService.getTokenForPrincipal(
+		String token = managementService.getTokenForPrincipal(ACCESS, null,
 				MANAGEMENT_APPLICATION_ID, AuthPrincipalType.APPLICATION_USER,
-				user.getUuid(), null, true);
+				user.getUuid());
 		assertNotNull(token);
 	}
 
