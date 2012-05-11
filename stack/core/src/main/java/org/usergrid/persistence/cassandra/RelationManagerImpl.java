@@ -435,6 +435,9 @@ public class RelationManagerImpl implements RelationManager,
         CollectionInfo collection = getDefaultSchema().getCollection(
                 owner.getType(), collectionName);
 
+        //the root name without the bucket
+        // entity_id,collection_name,prop_name,
+        Object index_name = null;
         // entity_id,collection_name,prop_name, bucketId
         Object index_key = null;
 
@@ -444,8 +447,9 @@ public class RelationManagerImpl implements RelationManager,
 
             if (entry.getValue() != null) {
 
-                index_key = key(owner.getUuid(), collectionName,
-                        entry.getPath(), bucketId);
+                index_name = key(owner.getUuid(), collectionName,  entry.getPath());
+                
+                index_key = key(index_name, bucketId);
 
                 addDeleteToMutator(indexUpdate.getBatch(), ENTITY_INDEX,
                         index_key, entry.getIndexComposite(),
@@ -485,7 +489,7 @@ public class RelationManagerImpl implements RelationManager,
                             indexUpdate.getEntity(), entry.getTimestampUuid(),
                             entry.getValue().toString());
                     batchRemoveLocationFromCollectionIndex(
-                            indexUpdate.getBatch(), index_key, loc);
+                            indexUpdate.getBatch(), index_name, loc);
                 }
 
             } else {
@@ -501,8 +505,9 @@ public class RelationManagerImpl implements RelationManager,
 
                 // byte valueCode = indexEntry.getValueCode();
 
-                index_key = key(owner.getUuid(), collectionName,
-                        indexEntry.getPath(), bucketId);
+                index_name = key(owner.getUuid(), collectionName,  indexEntry.getPath());
+                
+                index_key = key(index_name, bucketId);
 
                 // int i = 0;
 
@@ -548,7 +553,7 @@ public class RelationManagerImpl implements RelationManager,
                             indexEntry.getTimestampUuid(), indexEntry
                                     .getValue().toString());
                     batchStoreLocationInCollectionIndex(indexUpdate.getBatch(),
-                            index_key, loc);
+                            index_name, loc);
                 }
 
                 // i++;

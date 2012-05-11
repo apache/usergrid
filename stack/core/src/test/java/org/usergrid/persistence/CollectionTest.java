@@ -106,6 +106,35 @@ public class CollectionTest extends AbstractPersistenceTest {
         Entity returned = r.getEntities().get(0);
 
         assertEquals(user.getUuid(), returned.getUuid());
+        
+        //update the username
+        String newFirstName = "firstName" + UUIDUtils.newTimeUUID();
+        
+        user.setProperty("firstname", newFirstName);
+        
+        em.update(user);
+        
+        //search with the old username, should be no results
+        query = new Query();
+        query.addEqualityFilter("firstname", firstName);
+
+        r = em.searchCollection(em.getApplicationRef(), "users", query);
+
+        assertEquals(0, r.size());
+
+        
+        //search with the new username, should be results.
+        
+        query = new Query();
+        query.addEqualityFilter("firstname", newFirstName);
+
+        r = em.searchCollection(em.getApplicationRef(), "users", query);
+
+        assertTrue(r.size() > 0);
+
+        returned = r.getEntities().get(0);
+
+        assertEquals(user.getUuid(), returned.getUuid());
 
     }
     
