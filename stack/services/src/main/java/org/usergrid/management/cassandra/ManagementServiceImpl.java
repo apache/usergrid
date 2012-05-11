@@ -1005,10 +1005,13 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-		Entity user = em.get(userId);
-		if (checkPassword(password,
-				(CredentialsInfo) em.getDictionaryElementValue(user,
-						DICTIONARY_CREDENTIALS, "password"))) {
+		User user = em.get(userId, User.class);
+    CredentialsInfo credentialsInfo = (CredentialsInfo) em.getDictionaryElementValue(user,
+    						DICTIONARY_CREDENTIALS, "password");
+
+    password = maybeSaltPassword(password, user, credentialsInfo);
+
+    if (checkPassword(password, credentialsInfo)) {
 			return true;
 		}
 
@@ -1020,15 +1023,19 @@ public class ManagementServiceImpl implements ManagementService {
 			String password) throws Exception {
 		UserInfo userInfo = null;
 
-		Entity user = findUserEntity(MANAGEMENT_APPLICATION_ID, name);
+		User user = findUserEntity(MANAGEMENT_APPLICATION_ID, name);
 		if (user == null) {
 			return null;
 		}
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-		if (checkPassword(password,
-				(CredentialsInfo) em.getDictionaryElementValue(user,
-						DICTIONARY_CREDENTIALS, "password"))) {
+            
+    CredentialsInfo credentialsInfo = (CredentialsInfo) em.getDictionaryElementValue(user,
+       						DICTIONARY_CREDENTIALS, "password");
+
+    password = maybeSaltPassword(password, user, credentialsInfo);
+
+		if (checkPassword(password, credentialsInfo)) {
 			userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
 			if (!userInfo.isActivated()) {
 				throw new UnactivatedAdminUserException();
@@ -2391,14 +2398,12 @@ public class ManagementServiceImpl implements ManagementService {
 
 		EntityManager em = emf.getEntityManager(applicationId);
 
-		CredentialsInfo credentialsInfo = (CredentialsInfo) em
-				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
-						"password");
-		// pre-hash for legacy system imports
-		if (StringUtils.equals(user.getHashtype(), User.HASHTYPE_MD5)) {
-			password = credentialsInfo.encrypt(User.HASHTYPE_MD5, "", password);
-		}
-		if (checkPassword(password, credentialsInfo)) {
+
+    CredentialsInfo credentialsInfo = (CredentialsInfo) em.getDictionaryElementValue(user,
+            DICTIONARY_CREDENTIALS, "password");
+    // pre-hash for legacy system imports
+    password = maybeSaltPassword(password, user, credentialsInfo);
+    if (checkPassword(password, credentialsInfo)) {
 			if (!user.activated()) {
 				throw new UnactivatedAdminUserException();
 			}
@@ -2411,7 +2416,14 @@ public class ManagementServiceImpl implements ManagementService {
 		return null;
 	}
 
-	public String getPasswordResetTokenForAppUser(UUID applicationId,
+  private String maybeSaltPassword(String password, User user, CredentialsInfo credentialsInfo) {
+    if (StringUtils.equals(user.getHashtype(), User.HASHTYPE_MD5)) {
+      password = credentialsInfo.encrypt(User.HASHTYPE_MD5, "", password);
+    }
+    return password;
+  }
+
+  public String getPasswordResetTokenForAppUser(UUID applicationId,
 			UUID userId) throws Exception {
 		return getTokenForPrincipal(EMAIL, TOKEN_TYPE_PASSWORD_RESET,
 				applicationId, APPLICATION_USER, userId);

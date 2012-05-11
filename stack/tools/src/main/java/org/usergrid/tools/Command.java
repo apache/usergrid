@@ -54,6 +54,7 @@ public class Command {
 				clazz = Class.forName("org.usergrid.tools."
 						+ StringUtils.capitalize(command));
 			} catch (ClassNotFoundException e) {
+        e.printStackTrace();
 			}
 		}
 
