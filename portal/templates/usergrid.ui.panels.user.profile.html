@@ -1,8 +1,8 @@
 <div class="alert messages" style="display: none;"></div>
 <div class="console-section">
-	<h3>
+	<div class="well thingy">
 		<img src="${picture}" class="user-profile-picture" />
-		<div class="user-profile-header-name{{if picture}} user-profile-picture-vert-offset{{/if}}">
+		<div class="title">
 			{{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
 			${name}
 			{{if path}}</a>{{/if}}
@@ -10,7 +10,7 @@
         <div class="bar">
             <a href="#" onclick="usergrid.console.saveUserProfile('${username}'); return false;"> Save User </a>
         </div>
-	</h3>
+	</div>
 	<div class="console-section-contents listContent">
 		<div class="query-result-edit query-result-portlet">
 			<div class="query-result-portlet-title">Edit</div>

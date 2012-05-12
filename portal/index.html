@@ -34,6 +34,7 @@
             <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img src="images/apigee-logo.png">apigee</a></h1>
             <h2 id="ActualPage2">Usergrid Admin Portal</h2>
             <ul id="profileMenu" class="nav secondary-nav">
+                <li><a id="go-home" class=""><i class="icon-home"></i> Home</a></li>
                 <li id="organizations-menu" class="dropdown">
                     <a id="console-link" class="dropdown-toggle" data-toggle="dropdown" href="#"><span>Organizations</span> &#9660;</a>
                     <ul class="dropdown-menu">
@@ -50,12 +51,13 @@
                         <li><a href="https://groups.google.com/forum/?fromgroups#!forum/usergrid" target="_blank"> Google Group</a></li>
                     </ul>
                 </li>
-                <li id="logout-menu" class="dropdown">
-                    <a id="account-link1" class="dropdown-toggle" data-toggle="dropdown" href="#"><span id="userEmail">test</span> &#9660;</a>
-                    <ul class="dropdown-menu">
-                        <li><a id="account-link" href=""><i class="icon-user"></i> Profile</a></li>
-                        <li><a id="logout-link" href=""><i class="icon-off"></i> Sign Out</a></li>
-                    </ul>
+                <li class="dropdown">
+                  <a id="account-link1" class="dropdown-toggle" data-toggle="dropdown" href="#"><span
+                  id="userEmail">test</span> &#9660;</a>
+                  <ul class="dropdown-menu">
+                      <li><a id="account-link" href=""><i class="icon-user"></i> Profile</a></li>
+                      <li><a id="logout-link" href=""><i class="icon-off"></i> Sign Out</a></li>
+                  </ul>
                 </li>
             </ul>
         </div>
@@ -70,7 +72,7 @@
                         <strong>ERROR</strong>: Your details were incorrect.<br/>
                     </div>
                     <div class="console-section">
-                        <h3><span class="title">Login</span></h3>
+                        <div class="well thingy"><span class="title">Login</span></div>
                         <form name="login-form" id="login-form" class="form-horizontal">
                             <div class="control-group">
                                 <label class="control-label" for="login-email">Email:</label>
@@ -120,7 +122,7 @@
                 <div id="signup-area" class="span6 offset1">
                     <div id="signup-message" class="alert alert-error"></div>
                     <div class="console-section">
-                        <h3><span class="title">Register</span> </h3>
+                        <div class="well thingy"><span class="title">Register</span> </div>
                         <form name="signup-form" id="signup-form" onsubmit="return false;" class="form-horizontal">
                             <div class="control-group">
                                 <label class="control-label" for="signup-organization-name">Organization Account</label>
@@ -174,18 +176,13 @@
         <div id="console-page" class="">
             <div >
                 <div id="sidebar-menu">
-                    <ul id="system-panel-buttons" class="nav nav-list">
-                        <li><a class="btn" href="#organization"><i class="icon-home"></i> Home</a></li>
-                        <li><a class="btn" href="#console"><i class="icon-list-alt"></i> Console</a></li>
+                    <ul id="application-panel-buttons" class="nav nav-list">
                         <li id="applications-menu" class="dropdown">
-                            <a class="dropdown-toggle btn" href="#"><i class="icon-th-list"></i> Applications &#9660;</a>
+                            <div class="dropdown-toggle nav-header" id="selectedApp" href="#"></div>
                             <ul class="dropdown-menu">
                                 <li><a href="#">loading apps...</a></li>
                             </ul>
                         </li>
-                    </ul>
-                    <ul id="application-panel-buttons" class="nav nav-list">
-                        <li id="selectedApp" class="nav-header">Select an Application</li>
                         <li id="application-panel-button-dashboard"><a href="#application"><i class="icon-th"></i> Dashboard</a></li>
                         <li><a href="#users"><i class="icon-user"></i> Users</a></li>
                         <li><a href="#groups"><i class="icon-user"></i> Groups</a></li>
@@ -194,6 +191,7 @@
                         <li><a href="#collections" id="application-panel-button-collections"><i class="icon-book"></i> Collections</a></li>
                         <li><a href="#analytics"><i class="icon-signal"></i> Analytics</a></li>
                         <li><a href="#shell"><i class="icon-warning-sign"></i> Shell</a></li>
+                        <li><a class="" href="#console"><i class="icon-list-alt"></i> Console</a></li>
                         <li><a href="#settings"><i class="icon-cog"></i> Settings</a></li>
                         <li><a href="http://apigee.com/docs/usergrid" target="_blank"><i class="icon-question-sign"></i> Help</a></li>
                     </ul>
@@ -216,31 +214,39 @@
                         <div id="console-panel-nav-bar"></div>
                         <div id="home-messages" class="alert" style="display: none;"></div>
                         <div class="console-section">
-                            <h3><span class="title"> Applications </span>
+                            <div class="well thingy"><span class="title"> Applications </span>
                                 <div class="bar">
                                     <a class="" data-toggle="modal" href="#dialog-form-new-application"></i> New Application</a>
                                 </div>
-                            </h3>
+                            </div>
                             <table id="organization-applications-table" class="hideable table">
                               <tbody></tbody>
                             </table>
                         </div>
                         <div class="console-section">
-                            <h3><span class="title"> Organizations Administrators </span>
+                            <div class="well thingy">
+                              <span class="title"> Activities </span>
+                            </div>
+                            <table id="organization-feed-table" class="hideable table">
+                              <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="console-section">
+                            <div class="well thingy"><span class="title"> Organizations Administrators </span>
                                 <div class="bar">
                                     <a class="" data-toggle="modal" href="#dialog-form-new-admin"></i> New Administrator</a>
                                 </div>
-                            </h3>
+                            </div>
                             <table id="organization-admins-table" class="hideable table">
                               <tbody></tbody>
                             </table>
                         </div>
                         <div class="console-section">
-                            <h3><span class="title"> Organization API Credentials </span>
+                            <div class="well thingy"><span class="title"> Organization API Credentials </span>
                                 <div class="bar">
                                     <a href="" onclick="usergrid.console.newOrganizationCredentials(); return false;"></i> Regenerate Credentials</a>
                                 </div>
-                            </h3>
+                            </div>
                             <table class="hideable table">
                               <tbody>
                                 <tr>
@@ -260,14 +266,6 @@
                                   </td>
                                 </tr>
                               </tbody>
-                            </table>
-                        </div>
-                        <div class="console-section">
-                            <h3>
-                              <span class="title"> Activities </span>
-                            </h3>
-                            <table id="organization-feed-table" class="hideable table">
-                              <tbody></tbody>
                             </table>
                         </div>
                         <form id="dialog-form-new-application" class="modal hide fade" action="#">
@@ -321,10 +319,10 @@
                     </div>
                     <div id="application-panel" style="display: none">
                         <div class="console-section">
-                            <h3>
+                            <div class="well thingy">
                               <span class="title"> Application Dashboard <span id="selectedApp2"></span> </span>
-                            </h3>
-                            <div class="hideable console-section-contents">
+                            </div>
+                            <div class="console-section-contents">
                                 <div id="application-panel-table" class="row">
                                     <div id="application-panel-entity-graph" class="span graph"></div>
                                     <div id="application-panel-text" class="span">...</div>
@@ -358,8 +356,8 @@
                 <div id="account-panels">
                     <div class="panel-content">
                         <div class="console-section">
-                            <h3><span class="title"> Personal Account </span> </h3>
-                            <div class="hideable console-section-contents">
+                            <div class="well thingy"><span class="title"> Personal Account </span> </div>
+                            <div class="console-section-contents">
                                 <form name="update-account-form" id="update-account-form" class="form-horizontal">
                                     <fieldset>
                                         <div class="control-group">
@@ -418,12 +416,12 @@
                 </div>
                 <div class="panel-content">
                     <div class="console-section">
-                        <h3><span class="title"> Organizations </span>
+                        <div class="well thingy"><span class="title"> Organizations </span>
                             <div class="bar">
                                 <a class="" data-toggle="modal" href="#dialog-form-new-organization"></i> Add </a>
                             </div>
-                        </h3>
-                        <table class="hideable table" id="organizations">
+                        </div>
+                        <table class="table" id="organizations">
                         </table>
                     </div>
                 </div>
@@ -459,7 +457,7 @@
                         <div id="users-panel-list" class="panel-content">
                         <div id="users-messages" class="alert" style="display: none;"></div>
                             <div class="console-section">
-                                <h3><span class="title"> Users </span>
+                                <div class="well thingy"><span class="title"> Users </span>
                                     <div class="bar">
                                         <input onkeyup="usergrid.console.searchUsers();" type="text" name="search-user-username" id="search-user-username" class="input-small search" placeholder="Search"/>
                                         <select id="search-user-type" onChange="usergrid.console.searchUsers();" class="input-medium search">
@@ -473,8 +471,8 @@
                                         <a class="" data-toggle="modal" href="#dialog-form-new-user"> Add</a>
                                         <a id="delete-users-link" href="#"> Delete</a>
                                     </div>
-                                </h3>
-                                <table id="users-table" class="hideable table">
+                                </div>
+                                <table id="users-table" class="table">
                                   <tbody></tbody>
                                 </table>
                                 <ul id="users-pagination" class="pager">
@@ -639,7 +637,7 @@
                         <div id="groups-panel-list" class="panel-content">
                         <div id="groups-messages" class="alert" style="display: none;"></div>
                             <div class="console-section">
-                                <h3><span class="title"> Groups </span>
+                                <div class="well thingy"><span class="title"> Groups </span>
                                     <div class="bar">
                                         <input onkeyup="usergrid.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search" placeholder="Search"/>
                                         <select id="search-group-type" onChange="usergrid.console.searchGroups();" class="input-medium search">
@@ -651,8 +649,8 @@
                                         <a class="" data-toggle="modal" href="#dialog-form-new-group"> Add</a>
                                         <a id="delete-groups-link" href="#"> Delete </a>
                                     </div>
-                                </h3>
-                                <table id="groups-table" class="hideable table">
+                                </div>
+                                <table id="groups-table" class="table">
                                    <tbody></tbody>
                                 </table>
                                 <ul id="groups-pagination" class="pager">
@@ -733,13 +731,13 @@
                             <div id="roles-panel-list" class="panel-content">
                             <div id="roles-messages" class="alert" style="display: none;"></div>
                                 <div class="console-section">
-                                    <h3><span class="title"> Roles </span>
+                                    <div class="well thingy"><span class="title"> Roles </span>
                                         <div class="bar">
                                             <a data-toggle="modal" href="#dialog-form-new-role"> Add </a>
                                             <a id="delete-roles-link" href=""> Delete </a>
                                         </div>
-                                    </h3>
-                                    <table id="roles-table" class="hideable table">
+                                    </div>
+                                    <table id="roles-table" class="table">
                                       <tbody></tbody>
                                     </table>
                                     <ul id="roles-pagination" class="pager">
@@ -750,7 +748,7 @@
                             </div>
                             <div id="roles-panel-search" class="panel-content" style="display: none;">
                                 <div class="console-section">
-                                    <h3><span class="title"> Role Settings </span></h3>
+                                    <div class="well thingy"><span class="title"> Role Settings </span></div>
                                     <div class="console-section-contents">
                                         <div id="roles-settings">
                                             <h2>No Permissions.</h2>
@@ -797,7 +795,7 @@
                            </ul>
                            <div id="role-panel-settings" class="panel-content">
                                <div class="console-section">
-                                  <h3> <span id="role-section-title" class="title">Role</span> </h3>
+                                  <div class="well thingy"> <span id="role-section-title" class="title">Role</span> </div>
                                  <div class="console-section-contents">
                                     <div id="role-permissions">
                                         <h2>...</h2>
@@ -812,7 +810,7 @@
                     <div id="activities-panel" style="display: none">
                         <div id="activities-panel-list" class="panel-content">
                             <div class="console-section">
-                                <h3><span class="title"> Activities </span>
+                                <div class="well thingy"><span class="title"> Activities </span>
                                     <div class="bar">
                                         <input onkeyup="usergrid.console.searchActivities();" type="text" name="search-activities" id="search-activities" class="input-small search" placeholder="Search"/>
                                         <select id="search-activities-type" onChange="usergrid.console.searchActivities();" class="input-medium search">
@@ -820,8 +818,8 @@
                                             <option value="actor">Actor</option>
                                         </select>
                                     </div>
-                                </h3>
-                                <table id="activities-table" class="hideable table">
+                                </div>
+                                <table id="activities-table" class="table">
                                   <tbody></tbody>
                                 </table>
                                 <div id="activities-pagination">
@@ -832,8 +830,8 @@
                     <div id="analytics-panel" style="display: none">
                         <div class="panel-content">
                             <div class="console-section">
-                                <h3><span class="title"> Analytics </span></h3>
-                                <div class="hideable console-section-contents">
+                                <div class="well thingy"><span class="title"> Analytics </span></div>
+                                <div class="console-section-contents">
                                     <div id="analytics-time">
                                         <form id="resolutionSelectForm" action="" class="form-horizontal">
                                             <div class="row">
@@ -882,8 +880,8 @@
                                 </div>
                             </div>
                             <div class="console-section">
-                                <h3><span class="title"> Result Analytics </span></h3>
-                                <div class="hideable console-section-contents">
+                                <div class="well thingy"><span class="title"> Result Analytics </span></div>
+                                <div class="console-section-contents">
                                     <div id="analytics-graph"></div>
                                     <div id="analytics-graph-area"></div>
                                 </div>
@@ -893,12 +891,12 @@
                     <div id="settings-panel" style="display: none">
                         <div class="panel-content">
                             <div class="console-section">
-                                <h3><span class="title"> Application API Credentials </span>
+                                <div class="well thingy"><span class="title"> Application API Credentials </span>
                                     <div class="bar">
                                         <a class="" href="" onclick="usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
                                     </div>
-                                </h3>
-                                <table id="application-panel-key-table" class="hideable table">
+                                </div>
+                                <table id="application-panel-key-table" class="table">
                                     <tr>
                                       <td>
                                         <span class="span3">Client ID</span> 
@@ -929,8 +927,8 @@
                     </div>
                     <div id="shell-panel" style="display: none">
                         <div id="shell-content" class="console-section">
-                            <h3> <span class="title"> Interactive Shell </span></h3>
-                            <div class="hideable console-section-contents">
+                            <div class="well thingy"> <span class="title"> Interactive Shell </span></div>
+                            <div class="console-section-contents">
                                 <div id="shell-output">
                                     <div class="shell-output-line">Usergrid Interactive Shell (8-bit forever!)</div>
                                 </div>
@@ -945,13 +943,13 @@
                         <div class="panel-content">
                         <div id="collections-messages" class="alert" style="display: none;"></div>
                             <div class="console-section">
-                                <h3><span class="title"> Collections </span>
+                                <div class="well thingy"><span class="title"> Collections </span>
                                     <div class="bar">
                                         <a class="" data-toggle="modal" href="#dialog-form-new-collection"></i> Add </a>
                                         <a href="" onclick="usergrid.console.pageSelectQueryExplorer(); return false;">Query Explorer</a>
                                     </div>
-                                </h3>
-                                  <table id="collections-table" class="hideable table">
+                                </div>
+                                  <table id="collections-table" class="table">
                                     <tbody></tbody>
                                   </table>
                                   <!-- <ul id="collections-pagination" class="pager"> -->
@@ -986,8 +984,8 @@
                     </div>
                     <div id="query-panel" style="display: none">
                         <div id="query-path-area" class="console-section">
-                            <h3><span class="title"> Query Collections </span></h3>
-                            <div class="hideable console-section-contents">
+                            <div class="well thingy"><span class="title"> Query Collections </span></div>
+                            <div class="console-section-contents">
                                 <form id="query-inputs" class="form-horizontal">
                                     <div class="control-group">
                                         <label class="control-label" for="query-path">Path: </label>
@@ -1028,13 +1026,13 @@
                             </div>
                         </div>
                         <div id="query-response-area" class="console-section">
-                            <h3 id="query-received-header">
+                            <div class="well thingy" id="query-received-header">
                                 <span class="title"> Received </span>
                                 <div class="bar">
                                     <a id="delete-entity-link" href="" > Delete Entity</a>
                                 </div>
-                            </h3>
-                            <div class="hideable console-section-contents listContent">
+                            </div>
+                            <div class="console-section-contents listContent">
                                 <div id="query-response-table">
                                     <pre class="query-response-json">{ }</pre>
                                 </div>

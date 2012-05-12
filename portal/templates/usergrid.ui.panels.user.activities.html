@@ -1,12 +1,12 @@
 <div class="console-section">
-	<h3>
+	<div class="well thingy">
 		{{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
-		<div class="user-profile-header-name{{if picture}} user-profile-picture-vert-offset{{/if}}">
+		<div class="title">
 			{{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
 			${name}
 			{{if path}}</a>{{/if}}
 		</div>
-	</h3>
+	</div>
     {{if activities}}
     <table class="activities-table table">
       {{each activities}}

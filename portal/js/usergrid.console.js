@@ -620,6 +620,8 @@ function usergrid_console_app() {
     }
 
 	window.usergrid.console.pageSelectHome = pageSelectHome;
+  
+  $(document).on('click','#go-home', pageSelectHome);
 
     function displayApplications(response) {
         var t = "";
@@ -1506,9 +1508,9 @@ function usergrid_console_app() {
       output.empty();
       
       if (data.length < 1) {
-        output.replaceWith('<div id="users-table" class="user-panel-section-message hideable">No users found.</div>');
+        output.replaceWith('<div id="users-table" class="user-panel-section-message">No users found.</div>');
       } else {
-        output.replaceWith('<table id="users-table" class="hideable table"><tbody></tbody></table>');
+        output.replaceWith('<table id="users-table" class="table"><tbody></tbody></table>');
         for (i = 0; i < data.length; i++) {
           var this_data = data[i];
           if (!this_data.picture) {
@@ -1885,9 +1887,9 @@ function usergrid_console_app() {
       output.empty();
       
       if (data.length < 1) {
-        output.replaceWith('<div id="groups-table" class="group-panel-section-message hideable">No groups found.</div>');
+        output.replaceWith('<div id="groups-table" class="group-panel-section-message">No groups found.</div>');
       } else {
-        output.replaceWith('<table id="groups-table" class="hideable table"><tbody></tbody></table>');
+        output.replaceWith('<table id="groups-table" class="table"><tbody></tbody></table>');
         for (i = 0; i < data.length; i++) {
           var this_data = data[i];
           $.tmpl('usergrid.ui.groups.table_rows.html', this_data).appendTo('#groups-table');
@@ -2185,7 +2187,7 @@ function usergrid_console_app() {
       output.empty();
       
       if (data.length < 1) {
-        output.html('<div class="group-panel-section-message hideable">No roles found.</div>');
+        output.html('<div class="group-panel-section-message">No roles found.</div>');
       } else {
         for (i = 0; i < data.length; i++) {
           var this_data = data[i];
@@ -2483,9 +2485,9 @@ function usergrid_console_app() {
       var output = $('#activities-table');
       output.empty();
       if (data.length < 1) {
-          output.replaceWith('<div id="activities-table" class="user-panel-section-message hideable">No activities found.</div>');
+          output.replaceWith('<div id="activities-table" class="user-panel-section-message">No activities found.</div>');
       } else {
-          output.replaceWith('<table id="activities-table" class="hideable table"><tbody></tbody></table>');
+          output.replaceWith('<table id="activities-table" class="table"><tbody></tbody></table>');
         for (i = 0; i < data.length; i++) {
           var this_data = data[i];
           this_data.actor.gravatar = get_gravatar(this_data.actor.email, 20);
@@ -2560,7 +2562,7 @@ function usergrid_console_app() {
         client.requestApplicationCounters(current_application_id, start_timestamp, end_timestamp, resolution, counter_names, function(response) {
             application_counters = response.counters;
             if (!application_counters) {
-                $("#analytics-graph").html("No counter data");
+                $("#analytics-graph").html("<div class=\"alert\">No counter data</div>");
                 return;
             }
             var data = new google.visualization.DataTable();
@@ -2850,9 +2852,9 @@ function usergrid_console_app() {
       output.empty();
       
       if ($.isEmptyObject(data)) {
-          output.replaceWith('<div id="collections-table" class="collection-panel-section-message hideable">No collections found.</div>');
+          output.replaceWith('<div id="collections-table" class="collection-panel-section-message">No collections found.</div>');
       } else {
-          output.replaceWith('<table id="collections-table" class="hideable table"><tbody></tbody></table>');
+          output.replaceWith('<table id="collections-table" class="table"><tbody></tbody></table>');
         for (var i in data) {
           var this_data = data[i];
           $.tmpl('usergrid.ui.collections.table_rows.html', this_data).appendTo('#collections-table');

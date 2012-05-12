@@ -22,10 +22,10 @@ $(document).ready(function () {
 	}
 
     function makePanelCollapsable(){
-        var triangle = $("<span class='openPanel'>&#9660;</span >");
-        var triangleOpen =  $("<span class='closePanel'>&#9654;</span >");
+        var triangle = $("<span class='openPanel'></span >");
+        var triangleOpen =  $("<span class='closePanel'></span >");
 
-        var titles = $("#console-panels h3 .title");
+        var titles = $("#console-panels .title");
         triangle.appendTo(titles);
         triangleOpen.appendTo(titles).hide();
         titles.click(toggleSection);
@@ -35,19 +35,17 @@ $(document).ready(function () {
         e.preventDefault();
         var h3 = $(this).parent();
         h3.parent().find(".hideable").toggle();
-        h3.find(".openPanel").toggle();
-        h3.find(".closePanel").toggle();
     }
 
     function makeResultCollapsable(){
-        var triangle = $("<a class='openPanel'>&#9660;</a>").click( function(e){
+        var triangle = $("<a class='openPanel'></a>").click( function(e){
             e.preventDefault();
             var link = $(this);
             link.parent().parent().find(".console-section-contents").slideUp();
             link.parent().find(".closePanel").show();
             link.hide();
         });
-        var triangleOpen =  $("<a class='closePanel'>&#9654;</a>").click( function(e){
+        var triangleOpen =  $("<a class='closePanel'></a>").click( function(e){
             e.preventDefault();
             var link = $(this);
             link.parent().parent().find(".console-section-contents").slideDown();

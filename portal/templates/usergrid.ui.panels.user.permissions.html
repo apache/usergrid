@@ -1,7 +1,7 @@
 <div class="console-section">
-	<h3>
+	<div class="well thingy">
 		{{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
-		<div class="user-profile-header-name{{if picture}} user-profile-picture-vert-offset{{/if}}">
+		<div class="title">
 			{{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
 			${name}
 			{{if path}}</a>{{/if}}
@@ -10,7 +10,7 @@
             <a data-toggle="modal" href="#dialog-form-add-user-to-role"> Add </a>
             <a data-toggle="modal" href="#" onclick="usergrid.console.deleteUsersFromRoles('${username}'); return false;"> Remove </a>
         </div>
-	</h3>
+	</div>
 	<div class="console-section-contents">
 		<div class="user-panel-section">
 			<div class="user-roles-title">Roles </div>

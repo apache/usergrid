@@ -23,6 +23,30 @@ html{
   border-right: 1px solid @border;
 }
 
+.thingy {
+  margin-bottom: 0px !important;
+  padding: 15px !important;
+  background-color: #e0e0e0 !important;
+  border-radius: 0px;
+
+  .title {
+    float: left;
+    font-size: 19px;
+    cursor: pointer;
+  }
+
+  .bar a {
+    padding-left: 10px !important;
+    float: right;
+    color: #007cdc;
+  }
+}
+
+#selectedApp {
+  font-size: 16px;
+  cursor: pointer;
+}
+
 #fullContainer{
 	position:relative; /* needed for footer positioning*/
 	margin:0 auto; /* center, not in IE5 */
@@ -645,6 +669,9 @@ a:active {
 
 .user-profile-picture {
 	float: left;
+  position: relative;
+  left: -15px;
+  top: -15px;
 }
 
 .user-profile-picture-vert-offset {
@@ -1068,7 +1095,7 @@ a:active {
 
 td.checkboxo {
   background-color: #666 !important;
-  width: 17px;
+  width: 19px;
   padding: 9px 3px 0 3px !important;
 }
 
@@ -1099,6 +1126,13 @@ table#organization-admins-table {
 .table {
   table-layout: fixed;
   margin-bottom: 0px !important;
+}
+
+table#roles-table {
+  table-layout: auto;
+  td.checkboxo {
+    padding: 0px;
+  }
 }
 
 table#organization-admins-table {

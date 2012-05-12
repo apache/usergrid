@@ -1,18 +1,26 @@
 <div class="console-section">
-	<h3>
-        {{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+	<div class="well thingy">
+        {{if path}}<span class="title" href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
         ${name}
-        {{if path}}</a>{{/if}}
-	</h3>
-	<div class="console-section-contents">
-		<div class="group-panel-section">
-			{{if activities}}
-			{{each activities}}
-			<div>${$index + 1}: <em>${$value.actor.displayName} (${$value.actor.email}) - ${$value.verb}: ${$value.content}</em></div>
-			{{/each}}
-			{{else}}
-			<div class="group-panel-section-message">No Group Activities</div>
-			{{/if}}
-		</div>
+        {{if path}}</span>{{/if}}
 	</div>
+  {{if activities}}
+  {{each activities}}
+  <table>
+    <tr>
+      <td>
+        ${$index + 1}: ${$value.actor.displayName} (${$value.actor.email})
+      </td>
+      <td>
+        ${$value.content}
+      </td>
+      <td>
+        ${$value.verb}:
+      </td>
+    </tr>
+  </table>
+  {{/each}}
+  {{else}}
+  <div class="group-panel-section-message">No Group Activities</div>
+  {{/if}}
 </div>

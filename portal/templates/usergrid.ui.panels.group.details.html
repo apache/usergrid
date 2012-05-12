@@ -1,14 +1,14 @@
 <div class="alert messages" style="display: none;"></div>
 <div id="group-messages" class="alert" style="display: none;"></div>
 <div class="console-section">
-	<h3>
-        {{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+	<div class="well thingy">
+        {{if path}}<span class="title" href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
         ${name}
-        {{if path}}</a>{{/if}}
+        {{if path}}</span>{{/if}}
         <div class="bar">
             <a href="#" onclick="usergrid.console.saveGroupProfile('${uuid}'); return false;"> Save Group </a>
         </div>
-	</h3>
+	</div>
 	<div class="console-section-contents listContent">
 		<div class="query-result-edit query-result-portlet">
 			<div class="query-result-portlet-title">Edit</div>

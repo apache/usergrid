@@ -1,8 +1,8 @@
 <div class="console-section">
-  <h3>
-    {{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+  <div class="well thingy">
+    {{if path}}<span class="title" href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
     ${name}
-    {{if path}}</a>{{/if}}
+    {{if path}}</span>{{/if}}
     <div class="bar">
       <a id="selectAllGroupMemberships" class="" href="#" onclick="usergrid.console.selectAllGroupMemberships();"> Select All </a>
       <a id="deselectAllGroupMemberships" style="display: none;" class="" href="#" onclick="usergrid.console.deselectAllGroupMemberships();"> Deselect All </a>
@@ -10,7 +10,7 @@
       <a data-toggle="modal" href="#" onclick="usergrid.console.removeGroupFromUser('${uuid}'); return false;"> Remove </a>
       <input type="hidden" value="${uuid}" id="search-user-groupid" name="search-user-groupid" >
     </div>
-  </h3>
+  </div>
   {{if memberships}}
     <table class="table">
       {{each memberships}}
