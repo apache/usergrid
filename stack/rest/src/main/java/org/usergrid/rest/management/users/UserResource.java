@@ -268,14 +268,29 @@ public class UserResource extends AbstractContextResource {
 	@GET
 	@Path("activate")
 	public Viewable activate(@Context UriInfo ui,
-			@QueryParam("token") String token,
-			@QueryParam("confirm") boolean confirm) {
+			@QueryParam("token") String token) {
 
 		try {
 			management.handleActivationTokenForAdminUser(user.getUuid(), token);
 			return new Viewable("activate", this);
 		} catch (TokenException e) {
 			return new Viewable("bad_activation_token", this);
+		} catch (Exception e) {
+			return new Viewable("error", e);
+		}
+	}
+
+	@GET
+	@Path("confirm")
+	public Viewable confirm(@Context UriInfo ui,
+			@QueryParam("token") String token) {
+
+		try {
+			management.handleConfirmationTokenForAdminUser(user.getUuid(),
+					token);
+			return new Viewable("confirm", this);
+		} catch (TokenException e) {
+			return new Viewable("bad_confirmation_token", this);
 		} catch (Exception e) {
 			return new Viewable("error", e);
 		}

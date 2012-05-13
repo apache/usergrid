@@ -97,6 +97,9 @@ public interface ManagementService {
 
 	public String getActivationTokenForAdminUser(UUID userId) throws Exception;
 
+	public String getConfirmationTokenForAdminUser(UUID userId)
+			throws Exception;
+
 	public String getActivationTokenForOrganization(UUID organizationId)
 			throws Exception;
 
@@ -220,6 +223,8 @@ public interface ManagementService {
 
 	public boolean newAdminUsersNeedSysAdminApproval();
 
+	public boolean newAdminUsersRequireConfirmation();
+
 	public String newClientSecretForApplication(UUID applicationId)
 			throws Exception;
 
@@ -281,6 +286,9 @@ public interface ManagementService {
 			throws Exception;
 
 	public boolean handleActivationTokenForAppUser(UUID applicationId,
+			UUID userId, String token) throws Exception;
+
+	public boolean handleConfirmationTokenForAppUser(UUID applicationId,
 			UUID userId, String token) throws Exception;
 
 	public boolean checkPasswordResetTokenForAppUser(UUID applicationId,

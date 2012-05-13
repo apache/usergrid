@@ -6,10 +6,10 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.getColumnMap;
 import static org.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
-import static org.usergrid.security.tokens.TokenType.ACCESS;
-import static org.usergrid.security.tokens.TokenType.EMAIL;
-import static org.usergrid.security.tokens.TokenType.OFFLINE;
-import static org.usergrid.security.tokens.TokenType.REFRESH;
+import static org.usergrid.security.tokens.TokenCategory.ACCESS;
+import static org.usergrid.security.tokens.TokenCategory.EMAIL;
+import static org.usergrid.security.tokens.TokenCategory.OFFLINE;
+import static org.usergrid.security.tokens.TokenCategory.REFRESH;
 import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.getLong;
@@ -36,7 +36,7 @@ import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.TokenInfo;
 import org.usergrid.security.tokens.TokenService;
-import org.usergrid.security.tokens.TokenType;
+import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.security.tokens.exceptions.BadTokenException;
 import org.usergrid.security.tokens.exceptions.ExpiredTokenException;
 import org.usergrid.security.tokens.exceptions.InvalidTokenException;
@@ -90,9 +90,9 @@ public class TokenServiceImpl implements TokenService {
 
 	long maxPersistenceTokenAge = LONG_TOKEN_AGE;
 
-	Map<TokenType, Long> tokenExpirations = hashMap(ACCESS, SHORT_TOKEN_AGE)
-			.map(REFRESH, LONG_TOKEN_AGE).map(EMAIL, LONG_TOKEN_AGE)
-			.map(OFFLINE, LONG_TOKEN_AGE);
+	Map<TokenCategory, Long> tokenExpirations = hashMap(ACCESS,
+			SHORT_TOKEN_AGE).map(REFRESH, LONG_TOKEN_AGE)
+			.map(EMAIL, LONG_TOKEN_AGE).map(OFFLINE, LONG_TOKEN_AGE);
 
 	long maxAccessTokenAge = SHORT_TOKEN_AGE;
 	long maxRefreshTokenAge = LONG_TOKEN_AGE;
@@ -114,8 +114,8 @@ public class TokenServiceImpl implements TokenService {
 		return expires > 0 ? expires : default_expiration;
 	}
 
-	long getExpirationForTokenType(TokenType tokenType) {
-		Long l = tokenExpirations.get(tokenType);
+	long getExpirationForTokenType(TokenCategory tokenCategory) {
+		Long l = tokenExpirations.get(tokenCategory);
 		if (l != null) {
 			return l;
 		}
@@ -123,15 +123,16 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	void setExpirationFromProperties(String name) {
-		TokenType tokenType = TokenType.valueOf(name.toUpperCase());
+		TokenCategory tokenCategory = TokenCategory.valueOf(name
+				.toUpperCase());
 		long expires = Long.parseLong(properties.getProperty(
 				"usergrid.auth.token." + name + ".expires", ""
-						+ getExpirationForTokenType(tokenType)));
+						+ getExpirationForTokenType(tokenCategory)));
 		if (expires > 0) {
-			tokenExpirations.put(tokenType, expires);
+			tokenExpirations.put(tokenCategory, expires);
 		}
 		Log.info(name + " token expires after "
-				+ getExpirationForTokenType(tokenType) / 1000 + " seconds");
+				+ getExpirationForTokenType(tokenCategory) / 1000 + " seconds");
 	}
 
 	@Autowired
@@ -158,24 +159,24 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public String createToken(TokenType tokenType, String type,
+	public String createToken(TokenCategory tokenCategory, String type,
 			Map<String, Object> state) throws Exception {
-		return createToken(tokenType, type, null, state);
+		return createToken(tokenCategory, type, null, state);
 	}
 
 	@Override
 	public String createToken(AuthPrincipalInfo principal) throws Exception {
-		return createToken(TokenType.ACCESS, null, principal, null);
+		return createToken(TokenCategory.ACCESS, null, principal, null);
 	}
 
 	@Override
 	public String createToken(AuthPrincipalInfo principal,
 			Map<String, Object> state) throws Exception {
-		return createToken(TokenType.ACCESS, null, principal, state);
+		return createToken(TokenCategory.ACCESS, null, principal, state);
 	}
 
 	@Override
-	public String createToken(TokenType tokenType, String type,
+	public String createToken(TokenCategory tokenCategory, String type,
 			AuthPrincipalInfo principal, Map<String, Object> state)
 			throws Exception {
 		UUID uuid = UUIDUtils.newTimeUUID();
@@ -186,7 +187,7 @@ public class TokenServiceImpl implements TokenService {
 		TokenInfo tokenInfo = new TokenInfo(uuid, type, timestamp, timestamp,
 				principal, state);
 		putTokenInfo(tokenInfo);
-		return getTokenForUUID(tokenType, uuid);
+		return getTokenForUUID(tokenCategory, uuid);
 	}
 
 	@Override
@@ -219,7 +220,7 @@ public class TokenServiceImpl implements TokenService {
 		TokenInfo tokenInfo = getTokenInfo(getUUIDForToken(token));
 		if (tokenInfo != null) {
 			putTokenInfo(tokenInfo);
-			return getTokenForUUID(TokenType.ACCESS, tokenInfo.getUuid());
+			return getTokenForUUID(TokenCategory.ACCESS, tokenInfo.getUuid());
 		}
 		throw new InvalidTokenException("Token not found in database");
 	}
@@ -281,26 +282,27 @@ public class TokenServiceImpl implements TokenService {
 
 	public UUID getUUIDForToken(String token) throws ExpiredTokenException,
 			BadTokenException {
-		TokenType tokenType = TokenType.getFromBase64String(token);
+		TokenCategory tokenCategory = TokenCategory
+				.getFromBase64String(token);
 		byte[] bytes = decodeBase64(token
-				.substring(TokenType.BASE64_PREFIX_LENGTH));
+				.substring(TokenCategory.BASE64_PREFIX_LENGTH));
 		UUID uuid = uuid(bytes);
 		long timestamp = getTimestampInMillis(uuid);
-		if ((getExpirationForTokenType(tokenType) > 0)
-				&& (currentTimeMillis() > (timestamp + getExpirationForTokenType(tokenType)))) {
+		if ((getExpirationForTokenType(tokenCategory) > 0)
+				&& (currentTimeMillis() > (timestamp + getExpirationForTokenType(tokenCategory)))) {
 			throw new ExpiredTokenException(
 					"Token expired "
-							+ (currentTimeMillis() - (timestamp + getExpirationForTokenType(tokenType)))
+							+ (currentTimeMillis() - (timestamp + getExpirationForTokenType(tokenCategory)))
 							+ " millisecons ago.");
 		}
 		int i = 16;
 		long expires = Long.MAX_VALUE;
-		if (tokenType.getExpires()) {
+		if (tokenCategory.getExpires()) {
 			expires = ByteBuffer.wrap(bytes, i, 8).getLong();
 			i = 24;
 		}
 		ByteBuffer expected = ByteBuffer.allocate(20);
-		expected.put(sha(tokenType.getPrefix() + uuid + tokenSecretSalt
+		expected.put(sha(tokenCategory.getPrefix() + uuid + tokenSecretSalt
 				+ expires));
 		expected.rewind();
 		ByteBuffer signature = ByteBuffer.wrap(bytes, i, 20);
@@ -312,34 +314,36 @@ public class TokenServiceImpl implements TokenService {
 
 	@Override
 	public long getMaxTokenAge(String token) {
-		TokenType tokenType = TokenType.getFromBase64String(token);
+		TokenCategory tokenCategory = TokenCategory
+				.getFromBase64String(token);
 		byte[] bytes = decodeBase64(token
-				.substring(TokenType.BASE64_PREFIX_LENGTH));
+				.substring(TokenCategory.BASE64_PREFIX_LENGTH));
 		UUID uuid = uuid(bytes);
 		long timestamp = getTimestampInMillis(uuid);
 		int i = 16;
-		if (tokenType.getExpires()) {
+		if (tokenCategory.getExpires()) {
 			long expires = ByteBuffer.wrap(bytes, i, 8).getLong();
 			return expires - timestamp;
 		}
 		return Long.MAX_VALUE;
 	}
 
-	public String getTokenForUUID(TokenType tokenType, UUID uuid) {
+	public String getTokenForUUID(TokenCategory tokenCategory, UUID uuid) {
 		int l = 36;
-		if (tokenType.getExpires()) {
+		if (tokenCategory.getExpires()) {
 			l += 8;
 		}
 		ByteBuffer bytes = ByteBuffer.allocate(l);
 		bytes.put(bytes(uuid));
 		long expires = Long.MAX_VALUE;
-		if (tokenType.getExpires()) {
+		if (tokenCategory.getExpires()) {
 			expires = UUIDUtils.getTimestampInMillis(uuid)
-					+ getExpirationForTokenType(tokenType);
+					+ getExpirationForTokenType(tokenCategory);
 			bytes.putLong(expires);
 		}
-		bytes.put(sha(tokenType.getPrefix() + uuid + tokenSecretSalt + expires));
-		return tokenType.getBase64Prefix()
+		bytes.put(sha(tokenCategory.getPrefix() + uuid + tokenSecretSalt
+				+ expires));
+		return tokenCategory.getBase64Prefix()
 				+ encodeBase64URLSafeString(bytes.array());
 	}
 

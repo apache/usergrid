@@ -56,8 +56,12 @@ public class AuthPrincipalInfo {
 
 	@Override
 	public String toString() {
-		return "AuthPrincipalInfo [type=" + type + ", uuid=" + uuid
-				+ ", applicationId=" + applicationId + "]";
+		return "AuthPrincipalInfo [type="
+				+ type
+				+ ", uuid="
+				+ uuid
+				+ (applicationId != null ? ", applicationId=" + applicationId
+						: "") + "]";
 	}
 
 }

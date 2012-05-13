@@ -375,8 +375,7 @@ public class UserResource extends ServiceResource {
 	@GET
 	@Path("activate")
 	public Viewable activate(@Context UriInfo ui,
-			@QueryParam("token") String token,
-			@QueryParam("confirm") boolean confirm) {
+			@QueryParam("token") String token) {
 
 		try {
 			management.handleActivationTokenForAppUser(getApplicationId(),
@@ -384,6 +383,22 @@ public class UserResource extends ServiceResource {
 			return new Viewable("activate", this);
 		} catch (TokenException e) {
 			return new Viewable("bad_activation_token", this);
+		} catch (Exception e) {
+			return new Viewable("error", e);
+		}
+	}
+
+	@GET
+	@Path("confirm")
+	public Viewable confirm(@Context UriInfo ui,
+			@QueryParam("token") String token) {
+
+		try {
+			management.handleConfirmationTokenForAppUser(getApplicationId(),
+					getUserUuid(), token);
+			return new Viewable("activate", this);
+		} catch (TokenException e) {
+			return new Viewable("bad_confirmation_token", this);
 		} catch (Exception e) {
 			return new Viewable("error", e);
 		}

@@ -6,7 +6,7 @@ import org.usergrid.security.AuthPrincipalInfo;
 
 public interface TokenService {
 
-	public String createToken(TokenType tokenType, String type,
+	public String createToken(TokenCategory tokenType, String type,
 			Map<String, Object> state) throws Exception;
 
 	public String createToken(AuthPrincipalInfo principal) throws Exception;
@@ -14,7 +14,7 @@ public interface TokenService {
 	public String createToken(AuthPrincipalInfo principal,
 			Map<String, Object> state) throws Exception;
 
-	public String createToken(TokenType tokenType, String type,
+	public String createToken(TokenCategory tokenCategory, String type,
 			AuthPrincipalInfo principal, Map<String, Object> state)
 			throws Exception;
 

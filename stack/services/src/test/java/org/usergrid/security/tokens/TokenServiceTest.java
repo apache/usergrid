@@ -64,7 +64,7 @@ public class TokenServiceTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testEmailConfirmToken() throws Exception {
-		String tokenStr = tokenService.createToken(TokenType.EMAIL,
+		String tokenStr = tokenService.createToken(TokenCategory.EMAIL,
 				"email_confirm",
 				(Map<String, Object>) cast(hashMap("email", "ed@anuff.com")
 						.map("username", "edanuff")));

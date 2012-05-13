@@ -5,7 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-import static org.usergrid.security.tokens.TokenType.ACCESS;
+import static org.usergrid.security.tokens.TokenCategory.ACCESS;
 
 import java.util.LinkedHashMap;
 import java.util.List;

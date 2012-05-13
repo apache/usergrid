@@ -20,7 +20,7 @@ import static org.usergrid.utils.CodecUtils.base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public enum TokenType {
+public enum TokenCategory {
 	ACCESS("ac", true), REFRESH("re", false), OFFLINE("of", false), EMAIL("em",
 			false);
 
@@ -30,21 +30,21 @@ public enum TokenType {
 	private final String prefix;
 	private final String base64Prefix;
 	private final boolean expires;
-	private static Map<String, TokenType> prefixes;
-	private static Map<String, TokenType> base64Prefixes;
+	private static Map<String, TokenCategory> prefixes;
+	private static Map<String, TokenCategory> base64Prefixes;
 
-	private synchronized static void register(TokenType type) {
+	private synchronized static void register(TokenCategory type) {
 		if (prefixes == null) {
-			prefixes = new ConcurrentHashMap<String, TokenType>();
+			prefixes = new ConcurrentHashMap<String, TokenCategory>();
 		}
 		if (base64Prefixes == null) {
-			base64Prefixes = new ConcurrentHashMap<String, TokenType>();
+			base64Prefixes = new ConcurrentHashMap<String, TokenCategory>();
 		}
 		prefixes.put(type.getPrefix(), type);
 		base64Prefixes.put(type.getBase64Prefix(), type);
 	}
 
-	TokenType(String prefix, boolean expires) {
+	TokenCategory(String prefix, boolean expires) {
 		this.prefix = prefix;
 		this.expires = expires;
 		base64Prefix = base64(prefix + "-");
@@ -63,7 +63,7 @@ public enum TokenType {
 		return base64Prefix;
 	}
 
-	public static TokenType getFromBase64String(String token) {
+	public static TokenCategory getFromBase64String(String token) {
 		if (token == null) {
 			return null;
 		}
