@@ -1,18 +1,13 @@
 package org.usergrid.management.cassandra;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-import static org.usergrid.security.tokens.TokenCategory.ACCESS;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import javax.mail.Message;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -25,6 +20,7 @@ import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.security.AuthPrincipalType;
+import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.utils.JsonUtils;
 
 /**
@@ -55,9 +51,8 @@ public class ManagementServiceTest {
 				"ed@anuff.com", "test", false, false, false);
 		organization = managementService.createOrganization("ed-organization",
 				adminUser);
-		// TODO update to organizationName/applicationName
 		applicationId = managementService.createApplication(
-				organization.getUuid(), "ed-organization/ed-application");
+				organization.getUuid(), "ed-application");
 	}
 
 	@AfterClass
@@ -68,15 +63,15 @@ public class ManagementServiceTest {
 
 	@Test
 	public void testGetTokenForPrincipalAdmin() throws Exception {
-		String token = managementService.getTokenForPrincipal(ACCESS, null,
-				MANAGEMENT_APPLICATION_ID, AuthPrincipalType.ADMIN_USER,
-				adminUser.getUuid());
+		String token = managementService.getTokenForPrincipal(
+				TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
+				AuthPrincipalType.ADMIN_USER, adminUser.getUuid());
 		// ^ same as:
 		// managementService.getAccessTokenForAdminUser(user.getUuid());
 		assertNotNull(token);
-		token = managementService.getTokenForPrincipal(ACCESS, null,
-				MANAGEMENT_APPLICATION_ID, AuthPrincipalType.APPLICATION_USER,
-				adminUser.getUuid());
+		token = managementService.getTokenForPrincipal(TokenCategory.ACCESS,
+				null, MANAGEMENT_APPLICATION_ID,
+				AuthPrincipalType.APPLICATION_USER, adminUser.getUuid());
 		// This works because ManagementService#getSecret takes the same code
 		// path
 		// on an OR for APP._USER as for ADMIN_USER
@@ -99,9 +94,9 @@ public class ManagementServiceTest {
 				.getEntityManager(applicationId).create("user", properties);
 
 		assertNotNull(user);
-		String token = managementService.getTokenForPrincipal(ACCESS, null,
-				MANAGEMENT_APPLICATION_ID, AuthPrincipalType.APPLICATION_USER,
-				user.getUuid());
+		String token = managementService.getTokenForPrincipal(
+				TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
+				AuthPrincipalType.APPLICATION_USER, user.getUuid());
 		assertNotNull(token);
 	}
 
@@ -118,18 +113,4 @@ public class ManagementServiceTest {
 		assertNotNull(counts.get("admin_logins"));
 		assertEquals(1, counts.get("admin_logins").intValue());
 	}
-
-	@Test
-	public void testSendEmail() throws Exception {
-		managementService.sendAdminUserActivatedEmail(adminUser);
-		List<Message> inbox = org.jvnet.mock_javamail.Mailbox
-				.get("ed@anuff.com");
-
-		assertFalse(inbox.isEmpty());
-
-		Message message = inbox.get(0);
-		assertEquals("User Account Activated", message.getSubject());
-
-	}
-
 }

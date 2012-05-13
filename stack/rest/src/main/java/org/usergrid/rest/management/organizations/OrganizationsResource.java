@@ -119,9 +119,6 @@ public class OrganizationsResource extends AbstractContextResource {
 			return null;
 		}
 
-		management.sendOrganizationActivationEmail(organizationOwner
-				.getOrganization());
-
 		response.setData(organizationOwner);
 		response.setSuccess();
 

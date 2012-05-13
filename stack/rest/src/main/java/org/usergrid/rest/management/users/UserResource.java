@@ -228,7 +228,7 @@ public class UserResource extends AbstractContextResource {
 			}
 
 			if (!useReCaptcha()) {
-				management.sendAdminUserPasswordReminderEmail(user);
+				management.startAdminUserPasswordResetFlow(user);
 				return new Viewable("resetpw_email_success", this);
 			}
 
@@ -240,7 +240,7 @@ public class UserResource extends AbstractContextResource {
 					httpServletRequest.getRemoteAddr(), challenge, uresponse);
 
 			if (reCaptchaResponse.isValid()) {
-				management.sendAdminUserPasswordReminderEmail(user);
+				management.startAdminUserPasswordResetFlow(user);
 				return new Viewable("resetpw_email_success", this);
 			} else {
 				errorMsg = "Incorrect Captcha";
@@ -306,7 +306,7 @@ public class UserResource extends AbstractContextResource {
 
 		ApiResponse response = new ApiResponse(ui);
 
-		management.sendAdminUserActivationEmail(user);
+		management.startAdminUserActivationFlow(user);
 
 		response.setAction("reactivate user");
 		return new JSONWithPadding(response, callback);

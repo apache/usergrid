@@ -46,7 +46,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
+import org.usergrid.security.AuthPrincipalInfo;
 
 public class OrganizationTest {
 
@@ -111,7 +113,7 @@ public class OrganizationTest {
 				"test");
 		assertTrue(verified);
 
-		management.activateOrganization(user.getUuid());
+		management.activateOrganization(organization2);
 
 		UserInfo u = management.verifyAdminUserPasswordCredentials(user
 				.getUuid().toString(), "test");
@@ -120,8 +122,10 @@ public class OrganizationTest {
 		String token = management.getAccessTokenForAdminUser(user.getUuid());
 		assertNotNull(token);
 
-		UUID userId = management.getAdminUserIdFromAccessToken(token);
-		assertEquals(user.getUuid(), userId);
+		AuthPrincipalInfo principal = ((ManagementServiceImpl) management)
+				.getPrincipalFromAccessToken(token, null, null);
+		assertNotNull(principal);
+		assertEquals(user.getUuid(), principal.getUuid());
 
 	}
 

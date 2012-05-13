@@ -146,7 +146,7 @@ public class UsersResource extends ServiceResource {
 				user = management.getAppUserByIdentifier(getApplicationId(),
 						Identifier.fromEmail(email));
 				if (user != null) {
-					management.sendAppUserPasswordReminderEmail(
+					management.startAppUserPasswordResetFlow(
 							getApplicationId(), user);
 					return new Viewable("resetpw_email_success", this);
 				} else {
@@ -229,7 +229,7 @@ public class UsersResource extends ServiceResource {
 			}
 
 			if (!activated) {
-				management.sendAppUserActivationEmail(getApplicationId(),
+				management.startAppUserActivationFlow(getApplicationId(),
 						getUser());
 			}
 		}

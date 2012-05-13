@@ -35,10 +35,11 @@ public interface ManagementService {
 
 	public void activateAdminUser(UUID userId) throws Exception;
 
-	public void activateOrganization(UUID organizationId) throws Exception;
-
-	public void addAdminUserToOrganization(UUID userId, UUID organizationId)
+	public void activateOrganization(OrganizationInfo organization)
 			throws Exception;
+
+	public void addAdminUserToOrganization(UserInfo user,
+			OrganizationInfo organization) throws Exception;
 
 	public UUID addApplicationToOrganization(UUID organizationId,
 			UUID applicationId) throws Exception;
@@ -121,8 +122,6 @@ public interface ManagementService {
 
 	public Entity getAdminUserEntityFromAccessToken(String token)
 			throws Exception;
-
-	public UUID getAdminUserIdFromAccessToken(String token) throws Exception;
 
 	public UserInfo getAdminUserInfoFromAccessToken(String token)
 			throws Exception;
@@ -243,20 +242,14 @@ public interface ManagementService {
 	public void removeOrganizationApplication(UUID organizationId,
 			UUID applicationId) throws Exception;
 
-	public void sendAdminUserActivatedEmail(UserInfo user) throws Exception;
-
-	public void sendAdminUserActivationEmail(UserInfo user) throws Exception;
+	public void startAdminUserActivationFlow(UserInfo user) throws Exception;
 
 	public void sendAdminUserEmail(UserInfo user, String subject, String html)
 			throws Exception;
 
-	public void sendAdminUserPasswordReminderEmail(UserInfo user)
-			throws Exception;
+	public void startAdminUserPasswordResetFlow(UserInfo user) throws Exception;
 
-	public void sendOrganizationActivatedEmail(OrganizationInfo organization)
-			throws Exception;
-
-	public void sendOrganizationActivationEmail(OrganizationInfo organization)
+	public void startOrganizationActivationFlow(OrganizationInfo organization)
 			throws Exception;
 
 	public void sendOrganizationEmail(OrganizationInfo organization,
@@ -300,13 +293,10 @@ public interface ManagementService {
 	public User getAppUserByIdentifier(UUID applicationId, Identifier identifier)
 			throws Exception;
 
-	public void sendAppUserPasswordReminderEmail(UUID applicationId, User user)
+	public void startAppUserPasswordResetFlow(UUID applicationId, User user)
 			throws Exception;
 
-	public void sendAppUserActivatedEmail(UUID applicationId, User user)
-			throws Exception;
-
-	public void sendAppUserActivationEmail(UUID applicationId, User user)
+	public void startAppUserActivationFlow(UUID applicationId, User user)
 			throws Exception;
 
 	public void setAppUserPassword(UUID applicationId, UUID userId,
@@ -331,9 +321,6 @@ public interface ManagementService {
 
 	public PrincipalCredentialsToken getPrincipalCredentialsTokenForClientCredentials(
 			String clientId, String clientSecret) throws Exception;
-
-	public void sendAdminUserInvitedEmail(UserInfo user,
-			OrganizationInfo organization) throws Exception;
 
 	public void confirmAdminUser(UUID userId) throws Exception;
 

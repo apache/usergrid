@@ -316,7 +316,7 @@ public class UserResource extends ServiceResource {
 			}
 
 			if (!useReCaptcha()) {
-				management.sendAppUserPasswordReminderEmail(getApplicationId(),
+				management.startAppUserPasswordResetFlow(getApplicationId(),
 						user);
 				return new Viewable("resetpw_email_success", this);
 			}
@@ -329,7 +329,7 @@ public class UserResource extends ServiceResource {
 					httpServletRequest.getRemoteAddr(), challenge, uresponse);
 
 			if (reCaptchaResponse.isValid()) {
-				management.sendAppUserPasswordReminderEmail(getApplicationId(),
+				management.startAppUserPasswordResetFlow(getApplicationId(),
 						user);
 				return new Viewable("resetpw_email_success", this);
 			} else {
@@ -414,7 +414,7 @@ public class UserResource extends ServiceResource {
 
 		ApiResponse response = new ApiResponse(ui);
 
-		management.sendAppUserActivationEmail(getApplicationId(), user);
+		management.startAppUserActivationFlow(getApplicationId(), user);
 
 		response.setAction("reactivate user");
 		return new JSONWithPadding(response, callback);

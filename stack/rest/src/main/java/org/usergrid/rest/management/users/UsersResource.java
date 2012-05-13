@@ -107,7 +107,6 @@ public class UsersResource extends AbstractContextResource {
 				password, false, false, false);
 		Map<String, Object> result = new LinkedHashMap<String, Object>();
 		if (user != null) {
-			management.sendAdminUserActivationEmail(user);
 			result.put("user", user);
 			response.setData(result);
 			response.setSuccess();
@@ -165,7 +164,7 @@ public class UsersResource extends AbstractContextResource {
 			if (!useReCaptcha() || reCaptchaResponse.isValid()) {
 				user = management.getAdminUserByEmail(email);
 				if (user != null) {
-					management.sendAdminUserPasswordReminderEmail(user);
+					management.startAdminUserPasswordResetFlow(user);
 					return new Viewable("resetpw_email_success", this);
 				} else {
 					errorMsg = "We don't recognize that email, try again...";

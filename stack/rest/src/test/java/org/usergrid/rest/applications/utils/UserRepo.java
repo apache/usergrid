@@ -54,7 +54,7 @@ public enum UserRepo {
      */
     private UUID createUser(Map<String, String> payload, WebResource resource, String access_token) {
 
-        JsonNode response = resource.path("/test-organization/test-app/users")
+        JsonNode response = resource.path("/test-app/users")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)

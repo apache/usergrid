@@ -125,7 +125,7 @@ public class OrganizationResource extends AbstractContextResource {
 
 		ApiResponse response = new ApiResponse(ui);
 
-		management.sendOrganizationActivationEmail(organization);
+		management.startOrganizationActivationFlow(organization);
 
 		response.setAction("reactivate organization");
 		return new JSONWithPadding(response, callback);
