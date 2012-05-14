@@ -114,7 +114,7 @@ public class OrganizationsResource extends AbstractContextResource {
 
 		OrganizationOwnerInfo organizationOwner = management
 				.createOwnerAndOrganization(organizationName, username, name,
-						email, password, false, false, false);
+						email, password, false, false, true);
 		if (organizationOwner == null) {
 			return null;
 		}

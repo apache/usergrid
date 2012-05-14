@@ -90,7 +90,7 @@ public class OrganizationsResource extends AbstractContextResource {
 
 		String organizationName = (String) json.get("organization");
 		OrganizationInfo organization = management.createOrganization(
-				organizationName, user);
+				organizationName, user, true);
 		response.setData(organization);
 
 		management.activateOrganization(organization);
@@ -115,7 +115,7 @@ public class OrganizationsResource extends AbstractContextResource {
 		}
 
 		OrganizationInfo organization = management.createOrganization(
-				organizationName, user);
+				organizationName, user, true);
 		response.setData(organization);
 
 		management.activateOrganization(organization);

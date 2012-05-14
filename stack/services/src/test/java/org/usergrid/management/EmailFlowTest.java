@@ -110,6 +110,10 @@ public class EmailFlowTest {
 
 		assertFalse(inbox.isEmpty());
 
+		MockImapClient client = new MockImapClient("mockserver.com",
+				"test-user-1", "somepassword");
+		client.processMail();
+
 		Message account_confirmation_message = inbox.get(0);
 		assertEquals("User Account Confirmation: test-user-1@mockserver.com",
 				account_confirmation_message.getSubject());
@@ -124,8 +128,8 @@ public class EmailFlowTest {
 		assertEquals("User Account Activated",
 				account_activation_message.getSubject());
 
-		MockImapClient client = new MockImapClient("mockserver.com",
-				"test-user-1", "somepassword");
+		client = new MockImapClient("mockserver.com", "test-user-1",
+				"somepassword");
 		client.processMail();
 
 	}

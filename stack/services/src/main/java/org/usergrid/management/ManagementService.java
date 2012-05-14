@@ -63,7 +63,8 @@ public interface ManagementService {
 			String password, boolean activated, boolean disabled,
 			boolean sendEmail) throws Exception;
 
-  public UserInfo createAdminFrom(User user, String password, boolean sendEmail) throws Exception;
+	public UserInfo createAdminFrom(User user, String password,
+			boolean sendEmail) throws Exception;
 
 	public UUID createApplication(UUID organizationId, String applicationName)
 			throws Exception;
@@ -72,7 +73,7 @@ public interface ManagementService {
 			Map<String, Object> properties) throws Exception;
 
 	public OrganizationInfo createOrganization(String organizationName,
-			UserInfo user) throws Exception;
+			UserInfo user, boolean sendEmail) throws Exception;
 
 	public OrganizationOwnerInfo createOwnerAndOrganization(
 			String organizationName, String username, String name,

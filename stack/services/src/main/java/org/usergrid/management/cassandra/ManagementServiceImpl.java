@@ -280,7 +280,7 @@ public class ManagementServiceImpl implements ManagementService {
 					true, false, false);
 
 			OrganizationInfo organization = createOrganization(
-					test_organization_name, user);
+					test_organization_name, user, false);
 			// TODO change to organizationName/applicationName
 			UUID appId = createApplication(organization.getUuid(),
 					organization.getName() + "/" + test_app_name);
@@ -397,19 +397,15 @@ public class ManagementServiceImpl implements ManagementService {
 		lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "users",
 				"username", "email");
 
-		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-
 		UserInfo user = null;
 		OrganizationInfo organization = null;
 
 		try {
 
-			user = createAdminUser(username, name, email, password, false,
-					false, false);
+			user = createAdminUser(username, name, email, password, activated,
+					disabled, sendEmail);
 
-			organization = createOrganization(organizationName, user);
-
-			startOrganizationActivationFlow(organization);
+			organization = createOrganization(organizationName, user, sendEmail);
 
 		} finally {
 			lockManager.unlockProperty(MANAGEMENT_APPLICATION_ID, "groups",
@@ -424,17 +420,17 @@ public class ManagementServiceImpl implements ManagementService {
 
 	@Override
 	public OrganizationInfo createOrganization(String organizationName,
-			UserInfo user) throws Exception {
+			UserInfo user, boolean sendEmail) throws Exception {
 
 		if ((organizationName == null) || (user == null)) {
 			return null;
 		}
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-    if (!em.isPropertyValueUniqueForEntity("group", "path",
-            organizationName)) {
-      throw new DuplicateUniquePropertyExistsException("group",
-              "path", organizationName);
-    }
+		if (!em.isPropertyValueUniqueForEntity("group", "path",
+				organizationName)) {
+			throw new DuplicateUniquePropertyExistsException("group", "path",
+					organizationName);
+		}
 		Group organizationEntity = new Group();
 		organizationEntity.setPath(organizationName);
 		organizationEntity = em.create(organizationEntity);
@@ -457,6 +453,11 @@ public class ManagementServiceImpl implements ManagementService {
 						+ " (" + user.getEmail()
 						+ ")</a> created a new organization account named "
 						+ organizationName, null);
+
+		if (sendEmail) {
+			startOrganizationActivationFlow(organization);
+		}
+
 		return organization;
 	}
 
@@ -685,27 +686,28 @@ public class ManagementServiceImpl implements ManagementService {
 		return results;
 	}
 
-  @Override
-  public UserInfo createAdminFrom(User user, String password, boolean sendEmail) throws Exception {
-    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-    Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
-    credentials.put("password", passwordCredentials(password));
-    credentials.put("mongo_pwd",
-            mongoPasswordCredentials(user.getUsername(), password));
-    credentials
-            .put("secret",
-                    plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
-    em.addMapToDictionary(user, DICTIONARY_CREDENTIALS, credentials);
+	@Override
+	public UserInfo createAdminFrom(User user, String password,
+			boolean sendEmail) throws Exception {
+		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
+		credentials.put("password", passwordCredentials(password));
+		credentials.put("mongo_pwd",
+				mongoPasswordCredentials(user.getUsername(), password));
+		credentials
+				.put("secret",
+						plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
+		em.addMapToDictionary(user, DICTIONARY_CREDENTIALS, credentials);
 
-    UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
-            user.getUuid(), user.getUsername(),
-            user.getName(), user.getEmail(), user.getActivated(), user.getDisabled());
+		UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
+				user.getUuid(), user.getUsername(), user.getName(),
+				user.getEmail(), user.getActivated(), user.getDisabled());
 
-    if (sendEmail && !user.getActivated()) {
-      sendAdminUserActivationEmail(userInfo);
-    }
-    return userInfo;
-  }
+		if (sendEmail && !user.getActivated()) {
+			this.startAdminUserActivationFlow(userInfo);
+		}
+		return userInfo;
+	}
 
 	@Override
 	public UserInfo createAdminUser(String username, String name, String email,
@@ -728,17 +730,15 @@ public class ManagementServiceImpl implements ManagementService {
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
-    if (!em.isPropertyValueUniqueForEntity("user", "username", username)) {
- 				throw new DuplicateUniquePropertyExistsException("user",
- 						"username", username);
- 			}
+		if (!em.isPropertyValueUniqueForEntity("user", "username", username)) {
+			throw new DuplicateUniquePropertyExistsException("user",
+					"username", username);
+		}
 
- 			if (!em.isPropertyValueUniqueForEntity("user", "email", email)) {
- 				throw new DuplicateUniquePropertyExistsException("user",
- 						"username", username);
- 			}
-
-
+		if (!em.isPropertyValueUniqueForEntity("user", "email", email)) {
+			throw new DuplicateUniquePropertyExistsException("user",
+					"username", username);
+		}
 
 		User user = new User();
 		user.setUsername(username);
@@ -748,7 +748,7 @@ public class ManagementServiceImpl implements ManagementService {
 		user.setConfirmed(false);
 		user.setDisabled(disabled);
 		user = em.create(user);
-    // TODO now delegate to createAdminFrom(user,sendEmail);
+		// TODO now delegate to createAdminFrom(user,sendEmail);
 
 		return createAdminFrom(user, password, sendEmail);
 	}
