@@ -38,12 +38,14 @@ import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES
 import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
 import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.lang.StringUtils;
@@ -84,7 +86,8 @@ public class EmailFlowTest {
 	}
 
 	@Test
-	public void testCreateOrganization() throws Exception {
+	public void testCreateOrganizationAndAdminWithConfirmationOnly()
+			throws Exception {
 
 		properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
 				"false");
@@ -108,10 +111,7 @@ public class EmailFlowTest {
 		assertEquals("User Account Confirmation: test-user-1@mockserver.com",
 				account_confirmation_message.getSubject());
 
-		account_confirmation_message.getContent();
-		String body = ((MimeMultipart) account_confirmation_message
-				.getContent()).getBodyPart(0).getContent().toString();
-		String token = StringUtils.substringAfterLast(body, "token=");
+		String token = getTokenFromMessage(account_confirmation_message);
 		logger.info(token);
 
 		assertTrue(management.handleConfirmationTokenForAdminUser(
@@ -125,6 +125,59 @@ public class EmailFlowTest {
 				"test-user-1", "somepassword");
 		client.processMail();
 
+	}
+
+	@Test
+	public void testCreateOrganizationAndAdminWithConfirmationAndActivation()
+			throws Exception {
+
+		properties
+				.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "true");
+		properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
+				"false");
+		properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
+				"true");
+
+		OrganizationOwnerInfo org_owner = management
+				.createOwnerAndOrganization("test-org-2", "test-user-2",
+						"Test User", "test-user-2@mockserver.com",
+						"testpassword", false, false, true);
+		assertNotNull(org_owner);
+
+		List<Message> inbox = org.jvnet.mock_javamail.Mailbox
+				.get("test-user-2@mockserver.com");
+
+		assertFalse(inbox.isEmpty());
+
+		Message account_confirmation_message = inbox.get(0);
+		assertEquals("User Account Confirmation: test-user-2@mockserver.com",
+				account_confirmation_message.getSubject());
+
+		String token = getTokenFromMessage(account_confirmation_message);
+		logger.info(token);
+
+		assertTrue(management.handleConfirmationTokenForAdminUser(
+				org_owner.owner.getUuid(), token));
+
+		Message account_activation_message = inbox.get(2);
+		assertEquals("User Account Activated",
+				account_activation_message.getSubject());
+
+		MockImapClient client = new MockImapClient("mockserver.com",
+				"test-user-2", "somepassword");
+		client.processMail();
+
+	}
+
+	public String getTokenFromMessage(Message msg) throws IOException,
+			MessagingException {
+		String body = ((MimeMultipart) msg.getContent()).getBodyPart(0)
+				.getContent().toString();
+		String token = StringUtils.substringAfterLast(body, "token=");
+		// TODO better token extraction
+		// this is going to get the wrong string if the first part is not
+		// text/plain and the url isn't the last character in the email
+		return token;
 	}
 
 	@Test

@@ -79,6 +79,9 @@ public class Application extends TypedEntity {
 	@EntityProperty(name = "registration_requires_admin_approval", indexed = false)
 	protected Boolean registrationRequiresAdminApproval;
 
+	@EntityProperty(name = "notify_admin_of_new_users", indexed = false)
+	protected Boolean notifyAdminOfNewUsers;
+
 	@EntityDictionary(keyType = java.lang.String.class, valueType = OAuthProvider.class)
 	protected Map<String, OAuthProvider> oauthproviders;
 
@@ -109,7 +112,8 @@ public class Application extends TypedEntity {
 	protected List<UUID> groups;
 
 	@EntityCollection(type = "user", propertiesIndexed = { "created",
-			"modified", "username", "email", "firstname", "middlename", "lastname" }, dictionariesIndexed = { "aliases" }, indexingDynamicProperties = true)
+			"modified", "username", "email", "firstname", "middlename",
+			"lastname" }, dictionariesIndexed = { "aliases" }, indexingDynamicProperties = true)
 	protected List<UUID> users;
 
 	@EntityCollection(type = "device", propertiesIndexed = {}, indexingDynamicProperties = false)
@@ -224,6 +228,21 @@ public class Application extends TypedEntity {
 	public void setRegistrationRequiresAdminApproval(
 			Boolean registrationRequiresAdminApproval) {
 		this.registrationRequiresAdminApproval = registrationRequiresAdminApproval;
+	}
+
+	public boolean notifyAdminOfNewUsers() {
+		return (notifyAdminOfNewUsers != null) && notifyAdminOfNewUsers;
+	}
+
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	@JsonProperty("notify_admin_of_new_users")
+	public Boolean getNotifyAdminOfNewUsers() {
+		return notifyAdminOfNewUsers;
+	}
+
+	@JsonProperty("notify_admin_of_new_users")
+	public void setNotifyAdminOfNewUsers(Boolean notifyAdminOfNewUsers) {
+		this.notifyAdminOfNewUsers = notifyAdminOfNewUsers;
 	}
 
 	@JsonSerialize(include = Inclusion.NON_NULL)
