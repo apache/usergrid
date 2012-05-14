@@ -162,7 +162,7 @@ public class UsersResource extends AbstractContextResource {
 					httpServletRequest.getRemoteAddr(), challenge, uresponse);
 
 			if (!useReCaptcha() || reCaptchaResponse.isValid()) {
-				user = management.getAdminUserByEmail(email);
+				user = management.findAdminUser(email);
 				if (user != null) {
 					management.startAdminUserPasswordResetFlow(user);
 					return new Viewable("resetpw_email_success", this);

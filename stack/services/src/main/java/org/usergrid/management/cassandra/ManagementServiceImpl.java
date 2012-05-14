@@ -925,21 +925,6 @@ public class ManagementServiceImpl implements ManagementService {
 
 		try {
 			Entity entity = getUserEntityByIdentifier(applicationId,
-					Identifier.fromName(identifier));
-			if (entity != null) {
-				user = (User) entity.toTypedEntity();
-				logger.info("Found user {} as a username", identifier);
-			}
-		} catch (Exception e) {
-			logger.error("Unable to get user " + identifier
-					+ " as a username, trying email");
-		}
-		if (user != null) {
-			return user;
-		}
-
-		try {
-			Entity entity = getUserEntityByIdentifier(applicationId,
 					Identifier.fromEmail(identifier));
 			if (entity != null) {
 				user = (User) entity.toTypedEntity();
@@ -947,7 +932,22 @@ public class ManagementServiceImpl implements ManagementService {
 			}
 		} catch (Exception e) {
 			logger.error("Unable to get user " + identifier
-					+ " as an email address, failed...");
+					+ " as an email address, trying username");
+		}
+		if (user != null) {
+			return user;
+		}
+
+		try {
+			Entity entity = getUserEntityByIdentifier(applicationId,
+					Identifier.fromName(identifier));
+			if (entity != null) {
+				user = (User) entity.toTypedEntity();
+				logger.info("Found user {} as a username", identifier);
+			}
+		} catch (Exception e) {
+			logger.error("Unable to get user " + identifier
+					+ " as a username, failed...");
 		}
 		if (user != null) {
 			return user;
