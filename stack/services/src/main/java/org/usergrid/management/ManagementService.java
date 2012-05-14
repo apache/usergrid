@@ -135,14 +135,13 @@ public interface ManagementService {
 	public List<UserInfo> getAdminUsersForOrganization(UUID organizationId)
 			throws Exception;
 
-	public ApplicationInfo getApplication(String applicationName)
+	public ApplicationInfo getApplicationInfo(String applicationName)
 			throws Exception;
 
-	public ApplicationInfo getApplication(UUID applicationId) throws Exception;
+	public ApplicationInfo getApplicationInfo(UUID applicationId)
+			throws Exception;
 
-	public ApplicationInfo getApplication(Identifier id) throws Exception;
-
-	public Entity getApplicationEntityById(UUID applicationId) throws Exception;
+	public ApplicationInfo getApplicationInfo(Identifier id) throws Exception;
 
 	public ApplicationInfo getApplicationInfoFromAccessToken(String token)
 			throws Exception;
@@ -329,6 +328,12 @@ public interface ManagementService {
 	public boolean isAdminUserConfirmed(UUID userId) throws Exception;
 
 	public void countAdminUserAction(UserInfo user, String action)
+			throws Exception;
+
+	public boolean newAppUsersNeedAdminApproval(UUID applicationId)
+			throws Exception;
+
+	public boolean newAppUsersRequireConfirmation(UUID applicationId)
 			throws Exception;
 
 }

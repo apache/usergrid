@@ -358,7 +358,7 @@ public class ApplicationResource extends ServiceResource {
 			this.scope = scope;
 			this.state = state;
 
-			ApplicationInfo app = management.getApplication(applicationId);
+			ApplicationInfo app = management.getApplicationInfo(applicationId);
 			applicationName = app.getName();
 
 			return new Viewable("authorize_form", this);
@@ -409,7 +409,7 @@ public class ApplicationResource extends ServiceResource {
 				errorMsg = "Username or password do not match";
 			}
 
-			ApplicationInfo app = management.getApplication(applicationId);
+			ApplicationInfo app = management.getApplicationInfo(applicationId);
 			applicationName = app.getName();
 
 			return new Viewable("authorize_form", this);
