@@ -678,7 +678,7 @@ function usergrid_console_app() {
         var sectionApps = $("#organization-applications-table");
         sectionApps.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
         client.requestApplications(displayApplications, function() {
-            sectionApps.html('<div class="alert">Unable to retrieve application list.</div>');
+            sectionApps.html('<div class="alert user-panel-section">Unable to retrieve application list.</div>');
             disableApplicationPanelButtons();
         });
     }
@@ -715,7 +715,7 @@ function usergrid_console_app() {
         var sectionAdmins =$("#organization-admins-table");
         sectionAdmins.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
         client.requestAdmins(displayAdmins, function() {
-            sectionAdmins.html('<div class="alert">Unable to retrieve admin list</div>');
+            sectionAdmins.html('<div class="alert user-panel-section">Unable to retrieve admin list</div>');
         });
     }
 
