@@ -1077,7 +1077,7 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 
 		if ((expected_token_type != null)
-				&& !expected_token_type.equals(tokenInfo.getToken())) {
+				&& !expected_token_type.equals(tokenInfo.getType())) {
 			return null;
 		}
 
@@ -1911,7 +1911,7 @@ public class ManagementServiceImpl implements ManagementService {
 	}
 
 	public void sendAdminUserConfirmationEmail(UserInfo user) throws Exception {
-		String token = getActivationTokenForAdminUser(user.getUuid());
+		String token = getConfirmationTokenForAdminUser(user.getUuid());
 		String confirmation_url = String.format(properties
 				.getProperty(PROPERTIES_ADMIN_CONFIRMATION_URL), user.getUuid()
 				.toString())
@@ -2183,7 +2183,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 	public void sendAdminRequestAppUserActivationEmail(UUID applicationId,
 			User user) throws Exception {
-		String token = getActivationTokenForAdminUser(user.getUuid());
+		String token = getActivationTokenForAppUser(applicationId,
+				user.getUuid());
 		String activation_url = String.format(
 				properties.getProperty(PROPERTIES_USER_ACTIVATION_URL),
 				applicationId.toString(), user.getUuid().toString())
