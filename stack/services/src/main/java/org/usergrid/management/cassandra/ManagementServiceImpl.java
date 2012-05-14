@@ -1118,7 +1118,7 @@ public class ManagementServiceImpl implements ManagementService {
 		EntityManager em = emf
 				.getEntityManager(principal.getApplicationId() != null ? principal
 						.getApplicationId() : MANAGEMENT_APPLICATION_ID);
-		Entity entity = em.get(principal.getApplicationId());
+		Entity entity = em.get(principal.getUuid());
 		return entity;
 	}
 
