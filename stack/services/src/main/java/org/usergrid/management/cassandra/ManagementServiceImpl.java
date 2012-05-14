@@ -60,12 +60,15 @@ import static org.usergrid.utils.MapUtils.hashMap;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
+
+import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
@@ -90,6 +93,7 @@ import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Identifier;
+import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.SimpleEntityRef;
@@ -110,6 +114,7 @@ import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.security.tokens.TokenInfo;
 import org.usergrid.security.tokens.TokenService;
+import org.usergrid.security.tokens.exceptions.BadTokenException;
 import org.usergrid.services.ServiceAction;
 import org.usergrid.services.ServiceManager;
 import org.usergrid.services.ServiceManagerFactory;
@@ -120,6 +125,11 @@ import org.usergrid.utils.JsonUtils;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.json.JSONConfiguration;
 
 public class ManagementServiceImpl implements ManagementService {
 
@@ -2195,8 +2205,7 @@ public class ManagementServiceImpl implements ManagementService {
 			sendAdminRequestAppUserActivationEmail(applicationId, user);
 		} else {
 			sendAppUserActivatedEmail(applicationId, user);
-				sendAdminNewAppUserActivatedNotificationEmail(applicationId,
-						user);
+			sendAdminNewAppUserActivatedNotificationEmail(applicationId, user);
 		}
 	}
 
@@ -2215,8 +2224,8 @@ public class ManagementServiceImpl implements ManagementService {
 			} else {
 				activateAppUser(applicationId, principal.getUuid());
 				sendAppUserActivatedEmail(applicationId, user);
-					sendAdminNewAppUserActivatedNotificationEmail(
-							applicationId, user);
+				sendAdminNewAppUserActivatedNotificationEmail(applicationId,
+						user);
 			}
 			return true;
 		}
@@ -2233,8 +2242,7 @@ public class ManagementServiceImpl implements ManagementService {
 			EntityManager em = emf.getEntityManager(applicationId);
 			User user = em.get(userId, User.class);
 			sendAppUserActivatedEmail(applicationId, user);
-				sendAdminNewAppUserActivatedNotificationEmail(applicationId,
-						user);
+			sendAdminNewAppUserActivatedNotificationEmail(applicationId, user);
 			return true;
 		}
 		return false;
@@ -2277,13 +2285,14 @@ public class ManagementServiceImpl implements ManagementService {
 	public void sendAdminNewAppUserActivatedNotificationEmail(
 			UUID applicationId, User user) throws Exception {
 		if (notifyAdminOfNewAppUsers(applicationId)) {
-		OrganizationInfo organization = this
-				.getOrganizationForApplication(applicationId);
-		this.sendOrganizationEmail(
-				organization,
-				"New User Account Activated " + user.getEmail(),
-				emailMsg(hashMap("organization_name", organization.getName()),
-						PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION));
+			OrganizationInfo organization = this
+					.getOrganizationForApplication(applicationId);
+			this.sendOrganizationEmail(
+					organization,
+					"New User Account Activated " + user.getEmail(),
+					emailMsg(
+							hashMap("organization_name", organization.getName()),
+							PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION));
 		}
 	}
 
@@ -2466,6 +2475,82 @@ public class ManagementServiceImpl implements ManagementService {
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		em.incrementAggregateCounters(user.getUuid(), null, null,
 				"admin_logins", 1);
+
+	}
+
+	@Override
+	public User getOrCreateUserForFacebookAccessToken(UUID applicationId,
+			String fb_access_token) throws Exception {
+
+		ClientConfig clientConfig = new DefaultClientConfig();
+		clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING,
+				Boolean.TRUE);
+		Client client = Client.create(clientConfig);
+		WebResource web_resource = client
+				.resource("https://graph.facebook.com/me");
+		@SuppressWarnings("unchecked")
+		Map<String, Object> fb_user = web_resource
+				.queryParam("access_token", fb_access_token)
+				.accept(MediaType.APPLICATION_JSON).get(Map.class);
+		String fb_user_id = (String) fb_user.get("id");
+		String fb_user_name = (String) fb_user.get("name");
+		String fb_user_username = (String) fb_user.get("username");
+		String fb_user_email = (String) fb_user.get("email");
+
+		System.out.println(JsonUtils.mapToFormattedJsonString(fb_user));
+
+		if (applicationId == null) {
+			return null;
+		}
+
+		User user = null;
+
+		if ((fb_user != null) && !anyNull(fb_user_id, fb_user_name)) {
+			EntityManager em = emf.getEntityManager(applicationId);
+			Results r = em.searchCollection(em.getApplicationRef(), "users",
+					Query.findForProperty("facebook.id", fb_user_id));
+
+			if (r.size() > 1) {
+				logger.error("Multiple users for FB ID: " + fb_user_id);
+				throw new BadTokenException(
+						"multiple users with same Facebook ID");
+			}
+
+			if (r.size() < 1) {
+				Map<String, Object> properties = new LinkedHashMap<String, Object>();
+
+				properties.put("facebook", fb_user);
+				properties.put("username",
+						fb_user_username != null ? fb_user_username : "fb_"
+								+ fb_user_id);
+				properties.put("name", fb_user_name);
+				if (fb_user_email != null) {
+					properties.put("email", fb_user_email);
+				}
+				properties.put("picture", "http://graph.facebook.com/"
+						+ fb_user_id + "/picture");
+				properties.put("activated", true);
+
+				user = em.create("user", User.class, properties);
+			} else {
+				user = (User) r.getEntity().toTypedEntity();
+				Map<String, Object> properties = new LinkedHashMap<String, Object>();
+
+				properties.put("facebook", fb_user);
+				properties.put("picture", "http://graph.facebook.com/"
+						+ fb_user_id + "/picture");
+				em.updateProperties(user, properties);
+
+				user.setProperty("facebook", fb_user);
+				user.setProperty("picture", "http://graph.facebook.com/"
+						+ fb_user_id + "/picture");
+			}
+		} else {
+			throw new BadTokenException(
+					"Unable to confirm Facebook access token");
+		}
+
+		return user;
 
 	}
 }

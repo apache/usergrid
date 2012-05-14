@@ -336,4 +336,7 @@ public interface ManagementService {
 	public boolean newAppUsersRequireConfirmation(UUID applicationId)
 			throws Exception;
 
+	public User getOrCreateUserForFacebookAccessToken(UUID applicationId,
+			String fb_access_token) throws Exception;
+
 }

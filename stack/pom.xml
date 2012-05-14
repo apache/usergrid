@@ -104,7 +104,6 @@
 				<groupId>com.sun.jersey</groupId>
 				<artifactId>jersey-client</artifactId>
 				<version>${jersey-version}</version>
-				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>com.sun.jersey</groupId>
@@ -478,11 +477,6 @@
 				<groupId>org.yaml</groupId>
 				<artifactId>snakeyaml</artifactId>
 				<version>${snakeyaml-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.restfb</groupId>
-				<artifactId>restfb</artifactId>
-				<version>1.6.9</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
