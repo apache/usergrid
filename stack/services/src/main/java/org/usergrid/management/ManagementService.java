@@ -63,6 +63,8 @@ public interface ManagementService {
 			String password, boolean activated, boolean disabled,
 			boolean sendEmail) throws Exception;
 
+  public UserInfo createAdminFrom(User user, String password, boolean sendEmail) throws Exception;
+
 	public UUID createApplication(UUID organizationId, String applicationName)
 			throws Exception;
 

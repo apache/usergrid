@@ -403,21 +403,6 @@ public class ManagementServiceImpl implements ManagementService {
 		OrganizationInfo organization = null;
 
 		try {
-			if (!em.isPropertyValueUniqueForEntity("user", "username", username)) {
-				throw new DuplicateUniquePropertyExistsException("user",
-						"username", username);
-			}
-
-			if (!em.isPropertyValueUniqueForEntity("user", "email", email)) {
-				throw new DuplicateUniquePropertyExistsException("user",
-						"username", username);
-			}
-
-			if (!em.isPropertyValueUniqueForEntity("group", "path",
-					organizationName)) {
-				throw new DuplicateUniquePropertyExistsException("group",
-						"path", organizationName);
-			}
 
 			user = createAdminUser(username, name, email, password, false,
 					false, false);
@@ -445,7 +430,11 @@ public class ManagementServiceImpl implements ManagementService {
 			return null;
 		}
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-
+    if (!em.isPropertyValueUniqueForEntity("group", "path",
+            organizationName)) {
+      throw new DuplicateUniquePropertyExistsException("group",
+              "path", organizationName);
+    }
 		Group organizationEntity = new Group();
 		organizationEntity.setPath(organizationName);
 		organizationEntity = em.create(organizationEntity);
@@ -696,6 +685,28 @@ public class ManagementServiceImpl implements ManagementService {
 		return results;
 	}
 
+  @Override
+  public UserInfo createAdminFrom(User user, String password, boolean sendEmail) throws Exception {
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
+    credentials.put("password", passwordCredentials(password));
+    credentials.put("mongo_pwd",
+            mongoPasswordCredentials(user.getUsername(), password));
+    credentials
+            .put("secret",
+                    plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
+    em.addMapToDictionary(user, DICTIONARY_CREDENTIALS, credentials);
+
+    UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
+            user.getUuid(), user.getUsername(),
+            user.getName(), user.getEmail(), user.getActivated(), user.getDisabled());
+
+    if (sendEmail && !user.getActivated()) {
+      sendAdminUserActivationEmail(userInfo);
+    }
+    return userInfo;
+  }
+
 	@Override
 	public UserInfo createAdminUser(String username, String name, String email,
 			String password, boolean activated, boolean disabled,
@@ -717,6 +728,18 @@ public class ManagementServiceImpl implements ManagementService {
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
+    if (!em.isPropertyValueUniqueForEntity("user", "username", username)) {
+ 				throw new DuplicateUniquePropertyExistsException("user",
+ 						"username", username);
+ 			}
+
+ 			if (!em.isPropertyValueUniqueForEntity("user", "email", email)) {
+ 				throw new DuplicateUniquePropertyExistsException("user",
+ 						"username", username);
+ 			}
+
+
+
 		User user = new User();
 		user.setUsername(username);
 		user.setName(name);
@@ -725,22 +748,9 @@ public class ManagementServiceImpl implements ManagementService {
 		user.setConfirmed(false);
 		user.setDisabled(disabled);
 		user = em.create(user);
+    // TODO now delegate to createAdminFrom(user,sendEmail);
 
-		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
-		credentials.put("password", passwordCredentials(password));
-		credentials.put("mongo_pwd",
-				mongoPasswordCredentials(username, password));
-		credentials
-				.put("secret",
-						plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
-		em.addMapToDictionary(user, DICTIONARY_CREDENTIALS, credentials);
-
-		UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
-				user.getUuid(), username, name, email, activated, disabled);
-
-		startAdminUserActivationFlow(userInfo);
-
-		return userInfo;
+		return createAdminFrom(user, password, sendEmail);
 	}
 
 	public UserInfo getUserInfo(UUID applicationId, Entity entity) {
