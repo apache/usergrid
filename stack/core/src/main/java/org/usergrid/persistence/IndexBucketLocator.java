@@ -28,20 +28,39 @@ import java.util.UUID;
  */
 public interface IndexBucketLocator {
 
+    public enum IndexType {
+        COLLECTION("collection"), CONNECTION("connection");
+
+        private final String type;
+
+        private IndexType(String type) {
+            this.type = type;
+        }
+
+    }
+
     /**
      * Return the bucket to use for indexing this entity
      * 
      * @param applicationId
      *            The application id
+     * 
+     * @param type
+     *            The type of the index. This way indexing on the same property
+     *            value for different types of indexes does not cause collisions
+     *            on partitioning and lookups
+     * 
      * @param entityId
      *            The entity id to be indexed
+     * 
      * @param components
      *            The strings and uniquely identify the path to this index. I.E
      *            entityType and propName, collection name etc This string must
      *            remain the same for all reads and writes
      * @return
      */
-    public String getBucket(UUID applicationId, UUID entityId, String... components);
+    public String getBucket(UUID applicationId, IndexType type, UUID entityId,
+            String... components);
 
     /**
      * Get all buckets that exist for this application with the given entity
@@ -49,10 +68,14 @@ public interface IndexBucketLocator {
      * 
      * @param applicationId
      *            The application id
+     * 
+     * @param type
+     *            The type of index
      * @param components
      *            The strings and uniquely identify the path to this index. I.E
      *            entityType and propName, collection name etc
      * @return All buckets for this application at the given component path
      */
-    public List<String> getBuckets(UUID applicationId, String... components);
+    public List<String> getBuckets(UUID applicationId, IndexType type,
+            String... components);
 }

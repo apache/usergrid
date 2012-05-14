@@ -139,6 +139,7 @@ import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.IndexBucketLocator;
+import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Query.CounterFilterPredicate;
 import org.usergrid.persistence.Results;
@@ -900,7 +901,7 @@ public class EntityManagerImpl implements EntityManager,
 		// Create collection name based on entity: i.e. "users"
 		String collection_name = Schema.defaultCollectionName(eType);
 		// Create collection key based collection name
-		String bucketId = indexBucketLocator.getBucket(applicationId, itemId, collection_name);
+		String bucketId = indexBucketLocator.getBucket(applicationId, IndexType.COLLECTION, itemId, collection_name);
 		        
 		Object collection_key = key(applicationId, Schema.DICTIONARY_COLLECTIONS, collection_name, bucketId);
 

@@ -87,6 +87,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.locking.LockManager;
 import org.usergrid.persistence.IndexBucketLocator;
+import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.utils.JsonUtils;
 
 public class CassandraService {
@@ -1140,7 +1141,7 @@ public class CassandraService {
         }
 
         IndexBucketScanner scanner = new IndexBucketScanner(this, locator,
-                ENTITY_ID_SETS, applicationId, key, start, finish, reversed,
+                ENTITY_ID_SETS, applicationId, IndexType.COLLECTION, key, start, finish, reversed,
                 count, collectionName);
 
         List<HColumn<ByteBuffer, ByteBuffer>> results = scanner.load();

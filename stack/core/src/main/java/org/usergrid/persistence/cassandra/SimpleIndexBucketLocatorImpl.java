@@ -23,13 +23,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.usergrid.persistence.IndexBucketLocator;
 
 /**
  * Simple implementation that does static hashing across 100 rows. Future
- * implementations should be "smart" and create new tokens as required as
- * buckets become too large for an entity property within an application
+ * implementations should be smarter and create new tokens as required when
+ * buckets become too large for an entity property within an application for the given index type.
  * 
  * @author tnine
  * 
@@ -105,47 +104,32 @@ public class SimpleIndexBucketLocatorImpl implements IndexBucketLocator {
 
     }
 
-    /* (non-Javadoc)
-     * @see org.usergrid.persistence.IndexBucketLocator#getBucket(java.util.UUID, java.util.UUID, java.lang.String[])
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.IndexBucketLocator#getBucket(java.util.UUID,
+     * org.usergrid.persistence.IndexBucketLocator.IndexType, java.util.UUID,
+     * java.lang.String[])
      */
     @Override
-    public String getBucket(UUID applicationId, UUID entityId,
+    public String getBucket(UUID applicationId, IndexType type, UUID entityId,
             String... components) {
-       return getClosestToken(entityId);
+        return getClosestToken(entityId);
     }
 
-    /* (non-Javadoc)
-     * @see org.usergrid.persistence.IndexBucketLocator#getBuckets(java.util.UUID, java.lang.String[])
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.IndexBucketLocator#getBuckets(java.util.UUID,
+     * org.usergrid.persistence.IndexBucketLocator.IndexType,
+     * java.lang.String[])
      */
     @Override
-    public List<String> getBuckets(UUID applicationId, String... components) {
+    public List<String> getBuckets(UUID applicationId, IndexType type,
+            String... components) {
         return bucketsString;
     }
-
-//    /*
-//     * (non-Javadoc)
-//     * 
-//     * @see
-//     * org.usergrid.persistence.IndexBucketLocator#getBucket(java.util.UUID,
-//     * java.lang.String, java.util.UUID, java.lang.String)
-//     */
-//    @Override
-//    public String getBucket(UUID applicationId, String entityType,
-//            UUID entityId, String propertyName) {
-//        return getClosestToken(entityId);
-//    }
-//
-//    /*
-//     * (non-Javadoc)
-//     * 
-//     * @see
-//     * org.usergrid.persistence.IndexBucketLocator#getBuckets(java.util.UUID,
-//     * java.lang.String, java.lang.String)
-//     */
-//    @Override
-//    public List<String> getBuckets(UUID applicationId, String entityType,
-//            String propertyName) {
-//        return bucketsString;
-//    }
 
 }

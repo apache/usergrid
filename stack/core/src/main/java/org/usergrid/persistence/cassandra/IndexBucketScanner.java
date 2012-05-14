@@ -32,6 +32,7 @@ import org.apache.cassandra.config.ConfigurationException;
 import org.apache.cassandra.db.marshal.AbstractType;
 import org.apache.cassandra.db.marshal.TypeParser;
 import org.usergrid.persistence.IndexBucketLocator;
+import org.usergrid.persistence.IndexBucketLocator.IndexType;
 
 /**
  * A simple class to make working with index buckets easier. Scans all buckets
@@ -54,11 +55,12 @@ public class IndexBucketScanner {
     private final boolean reversed;
     private final int count;
     private final String[] indexPath;
+    private final IndexType indexType;
     
     
     
 
-    public IndexBucketScanner(CassandraService cass, IndexBucketLocator locator, ApplicationCF columnFamily, UUID applicationId, Object keyPrefix, Object start, Object finish, boolean reversed, int count, String... indexPath){
+    public IndexBucketScanner(CassandraService cass, IndexBucketLocator locator, ApplicationCF columnFamily, UUID applicationId, IndexType indexType, Object keyPrefix, Object start, Object finish, boolean reversed, int count, String... indexPath){
         this.cass = cass;
         this.indexBucketLocator = locator;
         this.applicationId = applicationId;
@@ -69,7 +71,8 @@ public class IndexBucketScanner {
         this.reversed = reversed;
         this.count = count;
         this.indexPath = indexPath;
-
+        this.indexType = indexType;
+        
     }
 
     
@@ -88,7 +91,7 @@ public class IndexBucketScanner {
             throws Exception {
 
 
-        List<String> keys = indexBucketLocator.getBuckets(applicationId,
+        List<String> keys = indexBucketLocator.getBuckets(applicationId, indexType,
                 indexPath);
 
         List<Object> cassKeys = new ArrayList<Object>(keys.size());
