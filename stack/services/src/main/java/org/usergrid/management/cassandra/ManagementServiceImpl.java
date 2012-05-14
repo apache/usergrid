@@ -174,8 +174,6 @@ public class ManagementServiceImpl implements ManagementService {
 	public static final String PROPERTIES_TEST_ACCOUNT_APP = "usergrid.test-account.app";
 	public static final String PROPERTIES_SETUP_TEST_ACCOUNT = "usergrid.setup-test-account";
 
-	public static final String PROPERTIES_AUTH_TOKEN_MAX_AGE = "usergrid.auth.token_max_age";
-
 	private static final String ACTIVITY_OBJECT_NAME = "objectName";
 	private static final String ACTIVITY_OBJECT_ENTITY_TYPE = "objectEntityType";
 	private static final String ACTIVITY_ACTOR_NAME = "actorName";

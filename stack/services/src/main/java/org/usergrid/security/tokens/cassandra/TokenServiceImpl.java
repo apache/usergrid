@@ -34,9 +34,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
+import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.security.tokens.TokenInfo;
 import org.usergrid.security.tokens.TokenService;
-import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.security.tokens.exceptions.BadTokenException;
 import org.usergrid.security.tokens.exceptions.ExpiredTokenException;
 import org.usergrid.security.tokens.exceptions.InvalidTokenException;
@@ -44,6 +44,10 @@ import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
 public class TokenServiceImpl implements TokenService {
+
+	public static final String PROPERTIES_AUTH_TOKEN_SECRET_SALT = "usergrid.auth.token_secret_salt";
+	public static final String PROPERTIES_AUTH_TOKEN_EXPIRES_FROM_LAST_USE = "usergrid.auth.token_expires_from_last_use";
+	public static final String PROPERTIES_AUTH_TOKEN_REFRESH_REUSES_ID = "usergrid.auth.token_refresh_reuses_id";
 
 	private static final String TOKEN_UUID = "uuid";
 	private static final String TOKEN_TYPE = "type";
@@ -90,9 +94,9 @@ public class TokenServiceImpl implements TokenService {
 
 	long maxPersistenceTokenAge = LONG_TOKEN_AGE;
 
-	Map<TokenCategory, Long> tokenExpirations = hashMap(ACCESS,
-			SHORT_TOKEN_AGE).map(REFRESH, LONG_TOKEN_AGE)
-			.map(EMAIL, LONG_TOKEN_AGE).map(OFFLINE, LONG_TOKEN_AGE);
+	Map<TokenCategory, Long> tokenExpirations = hashMap(ACCESS, SHORT_TOKEN_AGE)
+			.map(REFRESH, LONG_TOKEN_AGE).map(EMAIL, LONG_TOKEN_AGE)
+			.map(OFFLINE, LONG_TOKEN_AGE);
 
 	long maxAccessTokenAge = SHORT_TOKEN_AGE;
 	long maxRefreshTokenAge = LONG_TOKEN_AGE;
@@ -123,8 +127,7 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	void setExpirationFromProperties(String name) {
-		TokenCategory tokenCategory = TokenCategory.valueOf(name
-				.toUpperCase());
+		TokenCategory tokenCategory = TokenCategory.valueOf(name.toUpperCase());
 		long expires = Long.parseLong(properties.getProperty(
 				"usergrid.auth.token." + name + ".expires", ""
 						+ getExpirationForTokenType(tokenCategory)));
@@ -149,7 +152,7 @@ public class TokenServiceImpl implements TokenService {
 			setExpirationFromProperties("offline");
 
 			tokenSecretSalt = properties.getProperty(
-					"usergrid.auth.token_secret_salt", TOKEN_SECRET_SALT);
+					PROPERTIES_AUTH_TOKEN_SECRET_SALT, TOKEN_SECRET_SALT);
 		}
 	}
 
@@ -282,8 +285,7 @@ public class TokenServiceImpl implements TokenService {
 
 	public UUID getUUIDForToken(String token) throws ExpiredTokenException,
 			BadTokenException {
-		TokenCategory tokenCategory = TokenCategory
-				.getFromBase64String(token);
+		TokenCategory tokenCategory = TokenCategory.getFromBase64String(token);
 		byte[] bytes = decodeBase64(token
 				.substring(TokenCategory.BASE64_PREFIX_LENGTH));
 		UUID uuid = uuid(bytes);
@@ -314,8 +316,7 @@ public class TokenServiceImpl implements TokenService {
 
 	@Override
 	public long getMaxTokenAge(String token) {
-		TokenCategory tokenCategory = TokenCategory
-				.getFromBase64String(token);
+		TokenCategory tokenCategory = TokenCategory.getFromBase64String(token);
 		byte[] bytes = decodeBase64(token
 				.substring(TokenCategory.BASE64_PREFIX_LENGTH));
 		UUID uuid = uuid(bytes);
