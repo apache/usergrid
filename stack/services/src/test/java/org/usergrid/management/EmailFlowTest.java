@@ -37,6 +37,7 @@ import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES
 import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_USER_PIN_REQUEST;
 import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
 import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_SYSADMIN_EMAIL;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -95,6 +96,8 @@ public class EmailFlowTest {
 				"false");
 		properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
 				"true");
+		properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
+				"sysadmin-1@mockserver.com");
 
 		OrganizationOwnerInfo org_owner = management
 				.createOwnerAndOrganization("test-org-1", "test-user-1",
@@ -137,6 +140,8 @@ public class EmailFlowTest {
 				"false");
 		properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
 				"true");
+		properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
+				"sysadmin-2@mockserver.com");
 
 		OrganizationOwnerInfo org_owner = management
 				.createOwnerAndOrganization("test-org-2", "test-user-2",
@@ -144,12 +149,12 @@ public class EmailFlowTest {
 						"testpassword", false, false, true);
 		assertNotNull(org_owner);
 
-		List<Message> inbox = org.jvnet.mock_javamail.Mailbox
+		List<Message> user_inbox = org.jvnet.mock_javamail.Mailbox
 				.get("test-user-2@mockserver.com");
 
-		assertFalse(inbox.isEmpty());
+		assertFalse(user_inbox.isEmpty());
 
-		Message account_confirmation_message = inbox.get(0);
+		Message account_confirmation_message = user_inbox.get(0);
 		assertEquals("User Account Confirmation: test-user-2@mockserver.com",
 				account_confirmation_message.getSubject());
 
@@ -159,9 +164,28 @@ public class EmailFlowTest {
 		assertTrue(management.handleConfirmationTokenForAdminUser(
 				org_owner.owner.getUuid(), token));
 
-		Message account_activation_message = inbox.get(2);
-		assertEquals("User Account Activated",
+		Message account_confirmed_message = user_inbox.get(2);
+		assertEquals("User Account Confirmed",
+				account_confirmed_message.getSubject());
+
+		List<Message> sysadmin_inbox = org.jvnet.mock_javamail.Mailbox
+				.get("sysadmin-2@mockserver.com");
+		assertFalse(sysadmin_inbox.isEmpty());
+
+		Message account_activation_message = sysadmin_inbox.get(0);
+		assertEquals(
+				"Request For Admin User Account Activation test-user-2@mockserver.com",
 				account_activation_message.getSubject());
+
+		token = getTokenFromMessage(account_activation_message);
+		logger.info(token);
+
+		assertTrue(management.handleActivationTokenForAdminUser(
+				org_owner.owner.getUuid(), token));
+
+		Message account_activated_message = user_inbox.get(3);
+		assertEquals("User Account Activated",
+				account_activated_message.getSubject());
 
 		MockImapClient client = new MockImapClient("mockserver.com",
 				"test-user-2", "somepassword");
