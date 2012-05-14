@@ -30,6 +30,18 @@ import static org.usergrid.persistence.Schema.PROPERTY_PATH;
 import static org.usergrid.persistence.Schema.PROPERTY_SECRET;
 import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import static org.usergrid.persistence.entities.Activity.PROPERTY_ACTOR;
+import static org.usergrid.persistence.entities.Activity.PROPERTY_ACTOR_NAME;
+import static org.usergrid.persistence.entities.Activity.PROPERTY_CATEGORY;
+import static org.usergrid.persistence.entities.Activity.PROPERTY_CONTENT;
+import static org.usergrid.persistence.entities.Activity.PROPERTY_DISPLAY_NAME;
+import static org.usergrid.persistence.entities.Activity.PROPERTY_ENTITY_TYPE;
+import static org.usergrid.persistence.entities.Activity.PROPERTY_OBJECT;
+import static org.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_ENTITY_TYPE;
+import static org.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_NAME;
+import static org.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_TYPE;
+import static org.usergrid.persistence.entities.Activity.PROPERTY_TITLE;
+import static org.usergrid.persistence.entities.Activity.PROPERTY_VERB;
 import static org.usergrid.security.AuthPrincipalType.ADMIN_USER;
 import static org.usergrid.security.AuthPrincipalType.APPLICATION_USER;
 import static org.usergrid.security.AuthPrincipalType.ORGANIZATION;
@@ -174,20 +186,6 @@ public class ManagementServiceImpl implements ManagementService {
 	public static final String PROPERTIES_TEST_ACCOUNT_APP = "usergrid.test-account.app";
 	public static final String PROPERTIES_SETUP_TEST_ACCOUNT = "usergrid.setup-test-account";
 
-	private static final String ACTIVITY_OBJECT_NAME = "objectName";
-	private static final String ACTIVITY_OBJECT_ENTITY_TYPE = "objectEntityType";
-	private static final String ACTIVITY_ACTOR_NAME = "actorName";
-	private static final String ACTIVITY_OBJECT = "object";
-	private static final String ACTIVITY_ACTOR = "actor";
-	private static final String ACTIVITY_TITLE = "title";
-	private static final String ACTIVITY_CONTENT = "content";
-	private static final String ACTIVITY_CATEGORY = "category";
-	private static final String ACTIVITY_VERB = "verb";
-	private static final String ACTIVITY_UUID = "uuid";
-	private static final String ACTIVITY_ENTITY_TYPE = "entityType";
-	private static final String ACTIVITY_OBJECT_TYPE = "objectType";
-	private static final String ACTIVITY_DISPLAY_NAME = "displayName";
-
 	protected ServiceManagerFactory smf;
 
 	protected EntityManagerFactory emf;
@@ -318,28 +316,28 @@ public class ManagementServiceImpl implements ManagementService {
 		ServiceManager sm = smf.getServiceManager(MANAGEMENT_APPLICATION_ID);
 
 		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put(ACTIVITY_VERB, verb);
-		properties.put(ACTIVITY_CATEGORY, "admin");
+		properties.put(PROPERTY_VERB, verb);
+		properties.put(PROPERTY_CATEGORY, "admin");
 		if (content != null) {
-			properties.put(ACTIVITY_CONTENT, content);
+			properties.put(PROPERTY_CONTENT, content);
 		}
 		if (title != null) {
-			properties.put(ACTIVITY_TITLE, title);
+			properties.put(PROPERTY_TITLE, title);
 		}
-		properties.put(ACTIVITY_ACTOR, new HashMap<String, Object>() {
+		properties.put(PROPERTY_ACTOR, new HashMap<String, Object>() {
 			{
-				put(ACTIVITY_DISPLAY_NAME, user.getName());
-				put(ACTIVITY_OBJECT_TYPE, "person");
-				put(ACTIVITY_ENTITY_TYPE, "user");
-				put(ACTIVITY_UUID, user.getUuid());
+				put(PROPERTY_DISPLAY_NAME, user.getName());
+				put(PROPERTY_OBJECT_TYPE, "person");
+				put(PROPERTY_ENTITY_TYPE, "user");
+				put(PROPERTY_UUID, user.getUuid());
 			}
 		});
-		properties.put(ACTIVITY_OBJECT, new HashMap<String, Object>() {
+		properties.put(PROPERTY_OBJECT, new HashMap<String, Object>() {
 			{
-				put(ACTIVITY_DISPLAY_NAME, objectName);
-				put(ACTIVITY_OBJECT_TYPE, objectType);
-				put(ACTIVITY_ENTITY_TYPE, object.getType());
-				put(ACTIVITY_UUID, object.getUuid());
+				put(PROPERTY_DISPLAY_NAME, objectName);
+				put(PROPERTY_OBJECT_TYPE, objectType);
+				put(PROPERTY_ENTITY_TYPE, object.getType());
+				put(PROPERTY_UUID, object.getUuid());
 			}
 		});
 
@@ -652,20 +650,20 @@ public class ManagementServiceImpl implements ManagementService {
 		ServiceManager sm = smf.getServiceManager(MANAGEMENT_APPLICATION_ID);
 
 		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put(ACTIVITY_VERB, verb);
-		properties.put(ACTIVITY_CATEGORY, "admin");
+		properties.put(PROPERTY_VERB, verb);
+		properties.put(PROPERTY_CATEGORY, "admin");
 		if (content != null) {
-			properties.put(ACTIVITY_CONTENT, content);
+			properties.put(PROPERTY_CONTENT, content);
 		}
 		if (title != null) {
-			properties.put(ACTIVITY_TITLE, title);
+			properties.put(PROPERTY_TITLE, title);
 		}
-		properties.put(ACTIVITY_ACTOR, user.getUuid());
-		properties.put(ACTIVITY_ACTOR_NAME, user.getName());
-		properties.put(ACTIVITY_OBJECT, object.getUuid());
-		properties.put(ACTIVITY_OBJECT_ENTITY_TYPE, object.getType());
-		properties.put(ACTIVITY_OBJECT_TYPE, objectType);
-		properties.put(ACTIVITY_OBJECT_NAME, objectName);
+		properties.put(PROPERTY_ACTOR, user.getUuid());
+		properties.put(PROPERTY_ACTOR_NAME, user.getName());
+		properties.put(PROPERTY_OBJECT, object.getUuid());
+		properties.put(PROPERTY_OBJECT_ENTITY_TYPE, object.getType());
+		properties.put(PROPERTY_OBJECT_TYPE, objectType);
+		properties.put(PROPERTY_OBJECT_NAME, objectName);
 
 		sm.newRequest(ServiceAction.POST,
 				parameters("users", user.getUuid(), "activities"),

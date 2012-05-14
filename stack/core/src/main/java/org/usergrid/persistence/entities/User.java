@@ -42,15 +42,14 @@ public class User extends TypedEntity {
 	public static final String ENTITY_TYPE = "user";
 
 	public static final String CONNECTION_FOLLOW = "follow";
-	
-	public static final String PROP_UUID = "uuid";
-	
-	public static final String PROP_EMAIL = "email";
 
-  public static final String PROP_HASHTYPE = "hashtype";
+	public static final String PROPERTY_UUID = "uuid";
 
-  public static final String HASHTYPE_MD5 = "md5";
-	
+	public static final String PROPERTY_EMAIL = "email";
+
+	public static final String PROPERTY_HASHTYPE = "hashtype";
+
+	public static final String HASHTYPE_MD5 = "md5";
 
 	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = true, aliasProperty = true, unique = true, basic = true)
 	protected String username;
@@ -58,7 +57,7 @@ public class User extends TypedEntity {
 	@EntityProperty(indexed = true, unique = true, basic = true)
 	protected String email;
 
-	@EntityProperty(indexed = true, fulltextIndexed=true)
+	@EntityProperty(indexed = true, fulltextIndexed = true)
 	protected String name;
 
 	@EntityProperty(indexed = false)
@@ -82,8 +81,8 @@ public class User extends TypedEntity {
 	@EntityProperty(indexed = false)
 	protected String picture;
 
-  @EntityProperty(indexed = false)
-  protected String hashtype;
+	@EntityProperty(indexed = false)
+	protected String hashtype;
 
 	@EntityDictionary(keyType = java.lang.String.class)
 	protected Set<String> connections;
@@ -233,16 +232,16 @@ public class User extends TypedEntity {
 		this.picture = picture;
 	}
 
-  @JsonSerialize(include = Inclusion.NON_NULL)
-  public String getHashtype() {
-    return hashtype;
-  }
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	public String getHashtype() {
+		return hashtype;
+	}
 
-  public void setHashtype(String hashtype) {
-    this.hashtype = hashtype;
-  }
+	public void setHashtype(String hashtype) {
+		this.hashtype = hashtype;
+	}
 
-  @JsonSerialize(include = Inclusion.NON_NULL)
+	@JsonSerialize(include = Inclusion.NON_NULL)
 	public List<UUID> getGroups() {
 		return groups;
 	}

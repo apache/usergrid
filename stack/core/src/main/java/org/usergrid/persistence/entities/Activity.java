@@ -46,8 +46,20 @@ public class Activity extends TypedEntity {
 
 	public static final String ENTITY_TYPE = "activity";
 
-	public static final String PROP_ACTOR = "actor";
-	
+	public static final String PROPERTY_OBJECT_NAME = "objectName";
+	public static final String PROPERTY_OBJECT_ENTITY_TYPE = "objectEntityType";
+	public static final String PROPERTY_ACTOR_NAME = "actorName";
+	public static final String PROPERTY_OBJECT = "object";
+	public static final String PROPERTY_ACTOR = "actor";
+	public static final String PROPERTY_TITLE = "title";
+	public static final String PROPERTY_CONTENT = "content";
+	public static final String PROPERTY_CATEGORY = "category";
+	public static final String PROPERTY_VERB = "verb";
+	public static final String PROPERTY_UUID = "uuid";
+	public static final String PROPERTY_ENTITY_TYPE = "entityType";
+	public static final String PROPERTY_OBJECT_TYPE = "objectType";
+	public static final String PROPERTY_DISPLAY_NAME = "displayName";
+
 	public static final String VERB_ADD = "add";
 	public static final String VERB_CANCEL = "cancel";
 	public static final String VERB_CHECKIN = "checkin";
