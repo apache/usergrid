@@ -160,6 +160,7 @@ public class AuthResource extends AbstractContextResource {
 					}
 					properties.put("picture", "http://graph.facebook.com/"
 							+ fb_user.getId() + "/picture");
+					properties.put("activated", true);
 					user = em.create("user", User.class, properties);
 				} else {
 					user = (User) r.getEntity().toTypedEntity();

@@ -1834,9 +1834,7 @@ public class ManagementServiceImpl implements ManagementService {
 										organization.getName()).map(
 										"activation_url", activation_url),
 								PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION));
-				if (this.notifySysAdminOfNewOrganizations()) {
-					sendSysAdminNewOrganizationActivatedNotificationEmail(organization);
-				}
+				sendSysAdminNewOrganizationActivatedNotificationEmail(organization);
 			}
 		} catch (Exception e) {
 			logger.error(
@@ -1855,9 +1853,7 @@ public class ManagementServiceImpl implements ManagementService {
 			OrganizationInfo organization = this
 					.getOrganizationByUuid(organizationId);
 			sendOrganizationActivatedEmail(organization);
-			if (this.notifySysAdminOfNewOrganizations()) {
-				sendSysAdminNewOrganizationActivatedNotificationEmail(organization);
-			}
+			sendSysAdminNewOrganizationActivatedNotificationEmail(organization);
 			return true;
 		}
 		return false;
@@ -1875,23 +1871,26 @@ public class ManagementServiceImpl implements ManagementService {
 
 	public void sendSysAdminNewOrganizationActivatedNotificationEmail(
 			OrganizationInfo organization) throws Exception {
-		List<UserInfo> users = getAdminUsersForOrganization(organization
-				.getUuid());
-		String organization_owners = null;
-		for (UserInfo user : users) {
-			organization_owners = (organization_owners == null) ? user
-					.getHTMLDisplayEmailAddress() : organization_owners + ", "
-					+ user.getHTMLDisplayEmailAddress();
+		if (notifySysAdminOfNewOrganizations()) {
+			List<UserInfo> users = getAdminUsersForOrganization(organization
+					.getUuid());
+			String organization_owners = null;
+			for (UserInfo user : users) {
+				organization_owners = (organization_owners == null) ? user
+						.getHTMLDisplayEmailAddress() : organization_owners
+						+ ", " + user.getHTMLDisplayEmailAddress();
+			}
+			sendHtmlMail(
+					properties,
+					getPropertyValue(PROPERTIES_SYSADMIN_EMAIL),
+					getPropertyValue(PROPERTIES_MAILER_EMAIL),
+					"Organization Account Activated " + organization.getName(),
+					appendEmailFooter(emailMsg(
+							hashMap("organization_name", organization.getName())
+									.map("organization_owners",
+											organization_owners),
+							PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATED)));
 		}
-		sendHtmlMail(
-				properties,
-				getPropertyValue(PROPERTIES_SYSADMIN_EMAIL),
-				getPropertyValue(PROPERTIES_MAILER_EMAIL),
-				"Organization Account Activated " + organization.getName(),
-				appendEmailFooter(emailMsg(
-						hashMap("organization_name", organization.getName())
-								.map("organization_owners", organization_owners),
-						PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATED)));
 
 	}
 
@@ -1916,9 +1915,7 @@ public class ManagementServiceImpl implements ManagementService {
 			sendSysAdminRequestAdminActivationEmail(user);
 		} else {
 			sendAdminUserActivatedEmail(user);
-			if (notifySysAdminOfNewAdminUsers()) {
-				sendSysAdminNewAdminActivatedNotificationEmail(user);
-			}
+			sendSysAdminNewAdminActivatedNotificationEmail(user);
 		}
 	}
 
@@ -1936,9 +1933,7 @@ public class ManagementServiceImpl implements ManagementService {
 			} else {
 				activateAdminUser(principal.getUuid());
 				sendAdminUserActivatedEmail(user);
-				if (notifySysAdminOfNewAdminUsers()) {
-					sendSysAdminNewAdminActivatedNotificationEmail(user);
-				}
+				sendSysAdminNewAdminActivatedNotificationEmail(user);
 			}
 			return true;
 		}
@@ -1954,9 +1949,7 @@ public class ManagementServiceImpl implements ManagementService {
 			activateAdminUser(principal.getUuid());
 			UserInfo user = getAdminUserByUuid(principal.getUuid());
 			sendAdminUserActivatedEmail(user);
-			if (notifySysAdminOfNewAdminUsers()) {
-				sendSysAdminNewAdminActivatedNotificationEmail(user);
-			}
+			sendSysAdminNewAdminActivatedNotificationEmail(user);
 			return true;
 		}
 		return false;
@@ -1998,14 +1991,16 @@ public class ManagementServiceImpl implements ManagementService {
 
 	public void sendSysAdminNewAdminActivatedNotificationEmail(UserInfo user)
 			throws Exception {
-		sendHtmlMail(
-				properties,
-				getPropertyValue(PROPERTIES_SYSADMIN_EMAIL),
-				getPropertyValue(PROPERTIES_MAILER_EMAIL),
-				"Admin User Account Activated " + user.getEmail(),
-				appendEmailFooter(emailMsg(
-						hashMap("user_email", user.getEmail()),
-						PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATED)));
+		if (notifySysAdminOfNewAdminUsers()) {
+			sendHtmlMail(
+					properties,
+					getPropertyValue(PROPERTIES_SYSADMIN_EMAIL),
+					getPropertyValue(PROPERTIES_MAILER_EMAIL),
+					"Admin User Account Activated " + user.getEmail(),
+					appendEmailFooter(emailMsg(
+							hashMap("user_email", user.getEmail()),
+							PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATED)));
+		}
 	}
 
 	public void sendAdminUserConfirmedAwaitingActivationEmail(UserInfo user)
@@ -2200,10 +2195,8 @@ public class ManagementServiceImpl implements ManagementService {
 			sendAdminRequestAppUserActivationEmail(applicationId, user);
 		} else {
 			sendAppUserActivatedEmail(applicationId, user);
-			if (notifyAdminOfNewAppUsers(applicationId)) {
 				sendAdminNewAppUserActivatedNotificationEmail(applicationId,
 						user);
-			}
 		}
 	}
 
@@ -2222,10 +2215,8 @@ public class ManagementServiceImpl implements ManagementService {
 			} else {
 				activateAppUser(applicationId, principal.getUuid());
 				sendAppUserActivatedEmail(applicationId, user);
-				if (notifyAdminOfNewAppUsers(applicationId)) {
 					sendAdminNewAppUserActivatedNotificationEmail(
 							applicationId, user);
-				}
 			}
 			return true;
 		}
@@ -2242,10 +2233,8 @@ public class ManagementServiceImpl implements ManagementService {
 			EntityManager em = emf.getEntityManager(applicationId);
 			User user = em.get(userId, User.class);
 			sendAppUserActivatedEmail(applicationId, user);
-			if (notifyAdminOfNewAppUsers(applicationId)) {
 				sendAdminNewAppUserActivatedNotificationEmail(applicationId,
 						user);
-			}
 			return true;
 		}
 		return false;
@@ -2287,6 +2276,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 	public void sendAdminNewAppUserActivatedNotificationEmail(
 			UUID applicationId, User user) throws Exception {
+		if (notifyAdminOfNewAppUsers(applicationId)) {
 		OrganizationInfo organization = this
 				.getOrganizationForApplication(applicationId);
 		this.sendOrganizationEmail(
@@ -2294,6 +2284,7 @@ public class ManagementServiceImpl implements ManagementService {
 				"New User Account Activated " + user.getEmail(),
 				emailMsg(hashMap("organization_name", organization.getName()),
 						PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION));
+		}
 	}
 
 	public void sendAppUserConfirmedAwaitingActivationEmail(UUID applicationId,
