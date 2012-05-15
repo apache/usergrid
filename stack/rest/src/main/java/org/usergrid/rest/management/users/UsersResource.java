@@ -104,10 +104,9 @@ public class UsersResource extends AbstractContextResource {
 		response.setAction("create user");
 
 		UserInfo user = management.createAdminUser(username, name, email,
-				password, false, false, false);
+				password, false, false, true);
 		Map<String, Object> result = new LinkedHashMap<String, Object>();
 		if (user != null) {
-			management.sendAdminUserActivationEmail(user);
 			result.put("user", user);
 			response.setData(result);
 			response.setSuccess();
@@ -137,7 +136,7 @@ public class UsersResource extends AbstractContextResource {
 
 	@GET
 	@Path("resetpw")
-	public Viewable showPasswordResetForm(@Context UriInfo ui) throws Exception {
+	public Viewable showPasswordResetForm(@Context UriInfo ui) {
 		return new Viewable("resetpw_email_form", this);
 	}
 
@@ -147,33 +146,36 @@ public class UsersResource extends AbstractContextResource {
 	public Viewable handlePasswordResetForm(@Context UriInfo ui,
 			@FormParam("email") String email,
 			@FormParam("recaptcha_challenge_field") String challenge,
-			@FormParam("recaptcha_response_field") String uresponse)
-			throws Exception {
+			@FormParam("recaptcha_response_field") String uresponse) {
 
-		if (isBlank(email)) {
-			errorMsg = "No email provided, try again...";
-			return new Viewable("resetpw_email_form", this);
-		}
-
-		ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-		reCaptcha.setPrivateKey(properties
-				.getProperty("usergrid.recaptcha.private"));
-
-		ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
-				httpServletRequest.getRemoteAddr(), challenge, uresponse);
-
-		if (!useReCaptcha() || reCaptchaResponse.isValid()) {
-			user = management.getAdminUserByEmail(email);
-			if (user != null) {
-				management.sendAdminUserPasswordReminderEmail(user);
-				return new Viewable("resetpw_email_success", this);
-			} else {
-				errorMsg = "We don't recognize that email, try again...";
+		try {
+			if (isBlank(email)) {
+				errorMsg = "No email provided, try again...";
 				return new Viewable("resetpw_email_form", this);
 			}
-		} else {
-			errorMsg = "Incorrect Captcha, try again...";
-			return new Viewable("resetpw_email_form", this);
+
+			ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
+			reCaptcha.setPrivateKey(properties
+					.getProperty("usergrid.recaptcha.private"));
+
+			ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
+					httpServletRequest.getRemoteAddr(), challenge, uresponse);
+
+			if (!useReCaptcha() || reCaptchaResponse.isValid()) {
+				user = management.findAdminUser(email);
+				if (user != null) {
+					management.startAdminUserPasswordResetFlow(user);
+					return new Viewable("resetpw_email_success", this);
+				} else {
+					errorMsg = "We don't recognize that email, try again...";
+					return new Viewable("resetpw_email_form", this);
+				}
+			} else {
+				errorMsg = "Incorrect Captcha, try again...";
+				return new Viewable("resetpw_email_form", this);
+			}
+		} catch (Exception e) {
+			return new Viewable("error", e);
 		}
 
 	}

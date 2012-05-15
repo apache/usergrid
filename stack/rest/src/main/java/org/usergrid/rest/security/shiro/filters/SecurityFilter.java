@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.management.ManagementService;
 import org.usergrid.persistence.EntityManagerFactory;
+import org.usergrid.security.tokens.TokenService;
 import org.usergrid.services.ServiceManagerFactory;
 
 import com.sun.jersey.api.core.HttpContext;
@@ -46,6 +47,7 @@ public abstract class SecurityFilter implements ContainerRequestFilter {
 	ServiceManagerFactory smf;
 	Properties properties;
 	ManagementService management;
+	TokenService tokens;
 
 	@Context
 	UriInfo uriInfo;
@@ -78,6 +80,15 @@ public abstract class SecurityFilter implements ContainerRequestFilter {
 	@Autowired
 	public void setProperties(Properties properties) {
 		this.properties = properties;
+	}
+
+	public TokenService getTokenService() {
+		return tokens;
+	}
+
+	@Autowired
+	public void setTokenService(TokenService tokens) {
+		this.tokens = tokens;
 	}
 
 	public ManagementService getManagementService() {

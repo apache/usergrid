@@ -64,7 +64,11 @@ import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.cassandra.service.CassandraHostConfigurator;
 import me.prettyprint.cassandra.service.ThriftKsDef;
-import me.prettyprint.hector.api.*;
+import me.prettyprint.hector.api.Cluster;
+import me.prettyprint.hector.api.ConsistencyLevelPolicy;
+import me.prettyprint.hector.api.HConsistencyLevel;
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -98,6 +102,7 @@ public class CassandraService {
 
 	public static final String APPLICATIONS_CF = "Applications";
 	public static final String PROPERTIES_CF = "Properties";
+	public static final String TOKENS_CF = "Tokens";
 
 	public static final int DEFAULT_COUNT = 1000;
 	public static final int ALL_COUNT = 100000;
@@ -107,7 +112,7 @@ public class CassandraService {
 	public static final int RETRY_COUNT = 5;
 
 	public static final String DEFAULT_APPLICATION = "default-app";
-  public static final String DEFAULT_ORGANIZATION = "usergrid";
+	public static final String DEFAULT_ORGANIZATION = "usergrid";
 	public static final String MANAGEMENT_APPLICATION = "management";
 
 	public static final UUID MANAGEMENT_APPLICATION_ID = new UUID(0, 1);
@@ -124,7 +129,7 @@ public class CassandraService {
 	Properties properties;
 	LockManager lockManager;
 
-  ConsistencyLevelPolicy consistencyLevelPolicy;
+	ConsistencyLevelPolicy consistencyLevelPolicy;
 
 	private Keyspace systemKeyspace;
 
@@ -149,16 +154,16 @@ public class CassandraService {
 
 	public void init() throws Exception {
 		HFactory.getOrCreateCluster(cluster.getName(), chc);
-    if ( consistencyLevelPolicy == null ) {
-      consistencyLevelPolicy = new ConfigurableConsistencyLevel();
-      ((ConfigurableConsistencyLevel)consistencyLevelPolicy).setDefaultReadConsistencyLevel(HConsistencyLevel.ONE);
-    }
+		if (consistencyLevelPolicy == null) {
+			consistencyLevelPolicy = new ConfigurableConsistencyLevel();
+			((ConfigurableConsistencyLevel) consistencyLevelPolicy)
+					.setDefaultReadConsistencyLevel(HConsistencyLevel.ONE);
+		}
 		Map<String, String> accessMap = new HashMap<String, String>();
 		accessMap.put("username", properties.getProperty("cassandra.username"));
 		accessMap.put("password", properties.getProperty("cassandra.password"));
 		systemKeyspace = HFactory.createKeyspace(SYSTEM_KEYSPACE, cluster,
-				consistencyLevelPolicy,
-				ON_FAIL_TRY_ALL_AVAILABLE, accessMap);
+				consistencyLevelPolicy, ON_FAIL_TRY_ALL_AVAILABLE, accessMap);
 	}
 
 	public Cluster getCluster() {
@@ -200,15 +205,16 @@ public class CassandraService {
 		this.lockManager = lockManager;
 	}
 
-  public ConsistencyLevelPolicy getConsistencyLevelPolicy() {
-    return consistencyLevelPolicy;
-  }
+	public ConsistencyLevelPolicy getConsistencyLevelPolicy() {
+		return consistencyLevelPolicy;
+	}
 
-  public void setConsistencyLevelPolicy(ConsistencyLevelPolicy consistencyLevelPolicy) {
-    this.consistencyLevelPolicy = consistencyLevelPolicy;
-  }
+	public void setConsistencyLevelPolicy(
+			ConsistencyLevelPolicy consistencyLevelPolicy) {
+		this.consistencyLevelPolicy = consistencyLevelPolicy;
+	}
 
-  /**
+	/**
 	 * @param applicationId
 	 * @return keyspace for application UUID
 	 */
@@ -235,12 +241,12 @@ public class CassandraService {
 		Keyspace ko = null;
 		if (USE_VIRTUAL_KEYSPACES && (prefix != null)) {
 			ko = createVirtualKeyspace(keyspace, prefix, ue, cluster,
-					consistencyLevelPolicy,
-					ON_FAIL_TRY_ALL_AVAILABLE, accessMap);
+					consistencyLevelPolicy, ON_FAIL_TRY_ALL_AVAILABLE,
+					accessMap);
 		} else {
 			ko = HFactory.createKeyspace(keyspace, cluster,
-					consistencyLevelPolicy,
-					ON_FAIL_TRY_ALL_AVAILABLE, accessMap);
+					consistencyLevelPolicy, ON_FAIL_TRY_ALL_AVAILABLE,
+					accessMap);
 		}
 		return ko;
 	}
@@ -845,6 +851,11 @@ public class CassandraService {
 	 */
 	public void setColumn(Keyspace ko, Object columnFamily, Object key,
 			Object columnName, Object columnValue) throws Exception {
+		this.setColumn(ko, columnFamily, key, columnName, columnValue, 0);
+	}
+
+	public void setColumn(Keyspace ko, Object columnFamily, Object key,
+			Object columnName, Object columnValue, int ttl) throws Exception {
 
 		if (db_logger.isInfoEnabled()) {
 			db_logger.info("setColumn cf=" + columnFamily + " key=" + key
@@ -865,9 +876,13 @@ public class CassandraService {
 			value_bytes = bytebuffer(columnValue);
 		}
 
+		HColumn<ByteBuffer, ByteBuffer> col = createColumn(name_bytes,
+				value_bytes, be, be);
+		if (ttl != 0) {
+			col.setTtl(ttl);
+		}
 		Mutator<ByteBuffer> m = createMutator(ko, be);
-		m.insert(bytebuffer(key), columnFamily.toString(),
-				createColumn(name_bytes, value_bytes, be, be));
+		m.insert(bytebuffer(key), columnFamily.toString(), col);
 
 	}
 
@@ -887,10 +902,15 @@ public class CassandraService {
 	 */
 	public void setColumns(Keyspace ko, Object columnFamily, byte[] key,
 			Map<?, ?> map) throws Exception {
+		this.setColumns(ko, columnFamily, key, map, 0);
+	}
+
+	public void setColumns(Keyspace ko, Object columnFamily, byte[] key,
+			Map<?, ?> map, int ttl) throws Exception {
 
 		if (db_logger.isInfoEnabled()) {
 			db_logger.info("setColumns cf=" + columnFamily + " key=" + key
-					+ " map=" + map);
+					+ " map=" + map + (ttl != 0 ? " ttl=" + ttl : ""));
 		}
 
 		Mutator<ByteBuffer> m = createMutator(ko, be);
@@ -915,6 +935,11 @@ public class CassandraService {
 					value_bytes = bytebuffer(value);
 				}
 
+				HColumn<ByteBuffer, ByteBuffer> col = createColumn(name_bytes,
+						value_bytes, timestamp, be, be);
+				if (ttl != 0) {
+					col.setTtl(ttl);
+				}
 				m.addInsertion(
 						bytebuffer(key),
 						columnFamily.toString(),

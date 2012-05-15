@@ -116,6 +116,9 @@ public class ConversionUtils {
 	 * @return
 	 */
 	public static byte[] bytes(UUID uuid) {
+		if (uuid == null) {
+			return null;
+		}
 		long msb = uuid.getMostSignificantBits();
 		long lsb = uuid.getLeastSignificantBits();
 		byte[] buffer = new byte[16];
@@ -131,6 +134,9 @@ public class ConversionUtils {
 	}
 
 	public static ByteBuffer bytebuffer(UUID uuid) {
+		if (uuid == null) {
+			return null;
+		}
 		return ByteBuffer.wrap(bytes(uuid));
 	}
 

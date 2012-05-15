@@ -109,6 +109,8 @@
 		</constructor-arg>
 	</bean>
 
+	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl"/>
+
 	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl"/>
 	
 </beans>

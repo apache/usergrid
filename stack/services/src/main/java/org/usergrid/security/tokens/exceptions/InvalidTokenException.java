@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.management.exceptions;
+package org.usergrid.security.tokens.exceptions;
 
-public class BadAccessTokenException extends ManagementException {
+public class InvalidTokenException extends TokenException {
 
 	private static final long serialVersionUID = 1L;
 
-	public BadAccessTokenException() {
+	public InvalidTokenException() {
 		super();
 	}
 
-	public BadAccessTokenException(String arg0, Throwable arg1) {
+	public InvalidTokenException(String arg0, Throwable arg1) {
 		super(arg0, arg1);
 	}
 
-	public BadAccessTokenException(String arg0) {
+	public InvalidTokenException(String arg0) {
 		super(arg0);
 	}
 
-	public BadAccessTokenException(Throwable arg0) {
+	public InvalidTokenException(Throwable arg0) {
 		super(arg0);
 	}
 

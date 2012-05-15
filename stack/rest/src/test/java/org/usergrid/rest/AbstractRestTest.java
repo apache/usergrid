@@ -194,7 +194,7 @@ public abstract class AbstractRestTest extends JerseyTest {
         managementService = (ManagementService) context
                 .getBean("managementService");
 
-        ApplicationInfo appInfo = managementService.getApplication("test-organization/test-app");
+        ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
 
         User user = managementService.getAppUserByIdentifier(appInfo.getId(),
                 Identifier.from("ed@anuff.com"));

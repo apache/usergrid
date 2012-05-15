@@ -90,11 +90,10 @@ public class OrganizationsResource extends AbstractContextResource {
 
 		String organizationName = (String) json.get("organization");
 		OrganizationInfo organization = management.createOrganization(
-				organizationName, user);
+				organizationName, user, true);
 		response.setData(organization);
 
-		management.activateOrganization(organization.getUuid());
-		management.sendOrganizationActivationEmail(organization);
+		management.activateOrganization(organization);
 
 		return new JSONWithPadding(response, callback);
 	}
@@ -116,11 +115,10 @@ public class OrganizationsResource extends AbstractContextResource {
 		}
 
 		OrganizationInfo organization = management.createOrganization(
-				organizationName, user);
+				organizationName, user, true);
 		response.setData(organization);
 
-		management.activateOrganization(organization.getUuid());
-		management.sendOrganizationActivationEmail(organization);
+		management.activateOrganization(organization);
 
 		return new JSONWithPadding(response, callback);
 	}
@@ -139,8 +137,7 @@ public class OrganizationsResource extends AbstractContextResource {
 
 		OrganizationInfo organization = management
 				.getOrganizationByName(organizationName);
-		management.addAdminUserToOrganization(user.getUuid(),
-				organization.getUuid());
+		management.addAdminUserToOrganization(user, organization);
 		response.setData(organization);
 		return new JSONWithPadding(response, callback);
 	}
@@ -159,8 +156,7 @@ public class OrganizationsResource extends AbstractContextResource {
 
 		OrganizationInfo organization = management.getOrganizationByUuid(UUID
 				.fromString(organizationIdStr));
-		management.addAdminUserToOrganization(user.getUuid(),
-				organization.getUuid());
+		management.addAdminUserToOrganization(user, organization);
 		response.setData(organization);
 		return new JSONWithPadding(response, callback);
 	}

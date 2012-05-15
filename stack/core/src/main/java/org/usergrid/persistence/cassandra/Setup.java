@@ -17,7 +17,18 @@ package org.usergrid.persistence.cassandra;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.getCfDefs;
-import static org.usergrid.persistence.cassandra.CassandraService.*;
+import static org.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
+import static org.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION;
+import static org.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION_ID;
+import static org.usergrid.persistence.cassandra.CassandraService.DEFAULT_ORGANIZATION;
+import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION;
+import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import static org.usergrid.persistence.cassandra.CassandraService.PROPERTIES_CF;
+import static org.usergrid.persistence.cassandra.CassandraService.STATIC_APPLICATION_KEYSPACE;
+import static org.usergrid.persistence.cassandra.CassandraService.SYSTEM_KEYSPACE;
+import static org.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
+import static org.usergrid.persistence.cassandra.CassandraService.USE_VIRTUAL_KEYSPACES;
+import static org.usergrid.persistence.cassandra.CassandraService.keyspaceForApplication;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,11 +79,13 @@ public class Setup {
 
 		setupStaticKeyspace();
 
-		((EntityManagerFactoryImpl) emf).initializeApplication(DEFAULT_ORGANIZATION,
-				DEFAULT_APPLICATION_ID, DEFAULT_APPLICATION, null);
+		((EntityManagerFactoryImpl) emf).initializeApplication(
+				DEFAULT_ORGANIZATION, DEFAULT_APPLICATION_ID,
+				DEFAULT_APPLICATION, null);
 
-		((EntityManagerFactoryImpl) emf).initializeApplication(DEFAULT_ORGANIZATION,
-				MANAGEMENT_APPLICATION_ID, MANAGEMENT_APPLICATION, null);
+		((EntityManagerFactoryImpl) emf).initializeApplication(
+				DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION_ID,
+				MANAGEMENT_APPLICATION, null);
 	}
 
 	/**
@@ -90,6 +103,8 @@ public class Setup {
 				APPLICATIONS_CF, ComparatorType.BYTESTYPE));
 		cf_defs.add(createColumnFamilyDefinition(SYSTEM_KEYSPACE,
 				PROPERTIES_CF, ComparatorType.BYTESTYPE));
+		cf_defs.add(createColumnFamilyDefinition(SYSTEM_KEYSPACE, TOKENS_CF,
+				ComparatorType.BYTESTYPE));
 
 		cass.createKeyspace(SYSTEM_KEYSPACE, cf_defs);
 

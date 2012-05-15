@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.management.ManagementService;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.EntityManagerFactory;
+import org.usergrid.security.tokens.TokenService;
 import org.usergrid.services.ServiceManagerFactory;
 
 import com.sun.jersey.api.core.HttpContext;
@@ -79,6 +80,9 @@ public abstract class AbstractContextResource {
 
 	@Autowired
 	protected QueueManagerFactory qmf;
+
+	@Autowired
+	protected TokenService tokens;
 
 	public AbstractContextResource() {
 	}

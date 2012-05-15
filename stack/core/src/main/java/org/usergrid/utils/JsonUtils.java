@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
@@ -40,6 +38,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig.Feature;
 import org.codehaus.jackson.schema.JsonSchema;
 import org.codehaus.jackson.smile.SmileFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author edanuff
@@ -47,7 +47,8 @@ import org.codehaus.jackson.smile.SmileFactory;
  */
 public class JsonUtils {
 
-	private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(JsonUtils.class);
 
 	static ObjectMapper mapper = new ObjectMapper();
 
@@ -119,6 +120,9 @@ public class JsonUtils {
 	}
 
 	public static ByteBuffer toByteBuffer(Object obj) {
+		if (obj == null) {
+			return null;
+		}
 		ObjectMapper mapper = new ObjectMapper(smile);
 		byte[] bytes = null;
 		try {

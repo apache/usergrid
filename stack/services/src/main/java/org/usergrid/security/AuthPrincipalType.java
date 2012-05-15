@@ -15,10 +15,7 @@
  ******************************************************************************/
 package org.usergrid.security;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.usergrid.utils.CodecUtils.base64;
-import static org.usergrid.utils.StringUtils.stringOrSubstringAfterLast;
-import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -102,18 +99,6 @@ public enum AuthPrincipalType {
 			return prefixes.get(key.substring(0, 2));
 		}
 		return null;
-	}
-
-	public static AuthPrincipalType getFromAccessToken(String token) {
-		String uuidStr = stringOrSubstringBeforeFirst(token, ':');
-		if (isEmpty(uuidStr)) {
-			return null;
-		}
-		String password = stringOrSubstringAfterLast(token, ':');
-		if (isEmpty(password)) {
-			return null;
-		}
-		return getFromBase64String(password);
 	}
 
 }
