@@ -24,11 +24,14 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
 import java.util.*;
 import java.util.Map.Entry;
 
+import me.prettyprint.cassandra.utils.TimeUUIDUtils;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.User;
+import org.usergrid.utils.UUIDUtils;
 
 public class EntityManagerTest extends AbstractPersistenceTest {
 
@@ -271,8 +274,10 @@ public class EntityManagerTest extends AbstractPersistenceTest {
 
 		EntityManager em = emf.getEntityManager(applicationId);
 
+		String name = "test.thing"+UUIDUtils.newTimeUUID();
+		
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("name", "test.thing.1");
+		properties.put("name", name);
 		properties.put("foo", "bar");
 
 		logger.info("Starting entity create");
@@ -282,9 +287,69 @@ public class EntityManagerTest extends AbstractPersistenceTest {
 		logger.info("Starting entity delete");
 		em.delete(thing);
 		logger.info("Entity deleted");
+		
+		//now search by username, no results should be returned
+		
+		Results r = em.searchCollection(em.getApplicationRef(), "thing",
+                new Query().addEqualityFilter("name", name));
+		
+		assertEquals(0, r.size());
+		
+		
 
 	}
 
+	@Test
+    public void testCreateAndDeleteUser() throws Exception {
+        logger.info("EntityDaoTest.testCreateAndDeleteUser");
+
+        UUID applicationId = createApplication("testOrganization","testCreateAndDeleteUser");
+
+        EntityManager em = emf.getEntityManager(applicationId);
+
+        String name = "test.thing"+UUIDUtils.newTimeUUID();
+        
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", name);
+        properties.put("foo", "bar");
+
+        logger.info("Starting entity create");
+        Entity user = em.create("user", properties);
+        logger.info("Entity created");
+
+        logger.info("Starting entity delete");
+        em.delete(user);
+        logger.info("Entity deleted");
+        
+        //now search by username, no results should be returned
+        
+        Results r = em.searchCollection(em.getApplicationRef(), "users",
+                new Query().addEqualityFilter("username", name));
+        
+        assertEquals(0, r.size());
+        
+        //now re-create a new user with the same username
+        
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("username", name);
+        properties.put("foo", "bar");
+
+        
+        logger.info("Starting entity create");
+        user = em.create("user", properties);
+        logger.info("Entity created");
+        
+        
+        r = em.searchCollection(em.getApplicationRef(), "users",
+                new Query().addEqualityFilter("username", name));
+        
+        assertEquals(1, r.size());
+        
+        assertEquals(user.getUuid(), r.getEntity().getUuid());
+        
+
+    }
+	
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testJson() throws Exception {
