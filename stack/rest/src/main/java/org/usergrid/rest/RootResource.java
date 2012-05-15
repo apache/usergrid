@@ -58,6 +58,7 @@ import org.usergrid.rest.applications.ApplicationResource;
 import org.usergrid.rest.exceptions.NoOpException;
 
 import com.sun.jersey.api.json.JSONWithPadding;
+import org.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.usergrid.rest.utils.PathingUtils;
 import org.usergrid.system.UsergridSystemMonitor;
 
@@ -94,6 +95,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 	public RootResource() {
 	}
 
+  @RequireSystemAccess
 	@GET
 	@Path("applications")
 	public JSONWithPadding getAllApplications(@Context UriInfo ui,
@@ -118,6 +120,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 		return new JSONWithPadding(response, callback);
 	}
 
+  @RequireSystemAccess
 	@GET
 	@Path("apps")
 	public JSONWithPadding getAllApplications2(@Context UriInfo ui,
