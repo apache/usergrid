@@ -1852,7 +1852,7 @@ public class ManagementServiceImpl implements ManagementService {
 						emailMsg(
 								hashMap("organization_name",
 										organization.getName()).map(
-										"activation_url", activation_url),
+										"confirmation_url", activation_url),
 								PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION));
 				sendSysAdminNewOrganizationActivatedNotificationEmail(organization);
 			}
