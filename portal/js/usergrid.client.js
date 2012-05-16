@@ -985,10 +985,10 @@ usergrid.Client = function(options) {
     this.getGroup = getGroup;
 
     function queryEntities(root_collection, a) {
-        var ns = self.applicationId;
+        var ns = self.currentOrganization.uuid + "/" +self.applicationId;
         if (countByType("string", a) > 0) {
             ns = getByType("string", 0, a);
-            if (!ns) ns = self.applicationId;
+            if (!ns) ns = self.currentOrganization.uuid + "/" +self.applicationId;
         }
         var success = getByType("function", 0, a);
         var failure = getByType("function", 1, a);
@@ -1008,7 +1008,7 @@ usergrid.Client = function(options) {
     this.queryUsers = queryUsers;
 
     function queryEntityCollection(root_collection, entity_collection, a) {
-        var ns = self.applicationId;
+        var ns = self.currentOrganization.uuid + "/" +self.applicationId;
         var id = a[0];
         if (countByType("string", a) >= 2) {
             ns = getByType("string", 0, a);
