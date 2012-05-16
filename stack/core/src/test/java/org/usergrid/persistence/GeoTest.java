@@ -60,7 +60,7 @@ public class GeoTest extends AbstractPersistenceTest {
 		EntityLocationRef loc = new EntityLocationRef(user, 37.776753,
 				-122.407846);
 		GeoIndexManager geo = ((EntityManagerImpl) em).getGeoIndexManager();
-		geo.storeLocationInCollectionIndex(em.getApplicationRef(), "users",
+		geo.storeLocationInCollectionIndex(em.getApplicationRef(), "users", user.getUuid(),
 				"location.coordinates", loc);
 
 		Point center = new Point(37.774277, -122.404744);

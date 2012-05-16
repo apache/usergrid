@@ -29,12 +29,16 @@ import java.util.UUID;
 public interface IndexBucketLocator {
 
     public enum IndexType {
-        COLLECTION("collection"), CONNECTION("connection");
+        COLLECTION("collection"), CONNECTION("connection"), GEO("geo");
 
         private final String type;
 
         private IndexType(String type) {
             this.type = type;
+        }
+        
+        public String getType(){
+            return type;
         }
 
     }

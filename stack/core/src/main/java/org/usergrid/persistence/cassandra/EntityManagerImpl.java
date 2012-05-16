@@ -2992,4 +2992,11 @@ public class EntityManagerImpl implements EntityManager,
 				.createBean(GeoIndexManager.class).init(this);
 	}
 
+    /**
+     * @return the indexBucketLocator
+     */
+    public IndexBucketLocator getIndexBucketLocator() {
+        return indexBucketLocator;
+    }
+
 }

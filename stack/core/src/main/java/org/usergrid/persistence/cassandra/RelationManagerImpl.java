@@ -490,7 +490,7 @@ public class RelationManagerImpl implements RelationManager,
                             indexUpdate.getEntity(), entry.getTimestampUuid(),
                             entry.getValue().toString());
                     batchRemoveLocationFromCollectionIndex(
-                            indexUpdate.getBatch(), index_name, loc);
+                            indexUpdate.getBatch(), indexBucketLocator, applicationId, index_name, loc);
                 }
 
             } else {
@@ -553,8 +553,8 @@ public class RelationManagerImpl implements RelationManager,
                             indexUpdate.getEntity(),
                             indexEntry.getTimestampUuid(), indexEntry
                                     .getValue().toString());
-                    batchStoreLocationInCollectionIndex(indexUpdate.getBatch(),
-                            index_name, loc);
+                    batchStoreLocationInCollectionIndex(indexUpdate.getBatch(), indexBucketLocator, applicationId, 
+                            index_name, indexedEntity.getUuid(), loc);
                 }
 
                 // i++;
@@ -1149,7 +1149,7 @@ public class RelationManagerImpl implements RelationManager,
                             indexUpdate.getEntity(), entry.getTimestampUuid(),
                             entry.getValue().toString());
                     batchDeleteLocationInConnectionsIndex(
-                            indexUpdate.getBatch(), index_keys,
+                            indexUpdate.getBatch(), indexBucketLocator, applicationId, index_keys,
                             entry.getPath(), loc);
                 }
 
@@ -1173,7 +1173,7 @@ public class RelationManagerImpl implements RelationManager,
                             indexEntry.getTimestampUuid(), indexEntry
                                     .getValue().toString());
                     batchStoreLocationInConnectionsIndex(
-                            indexUpdate.getBatch(), index_keys,
+                            indexUpdate.getBatch(), indexBucketLocator, applicationId, index_keys,
                             indexEntry.getPath(), loc);
                 }
             }
