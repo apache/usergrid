@@ -13,25 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.management.exceptions;
+package org.usergrid.security.tokens.exceptions;
 
-public class ExpiredTokenException extends BadAccessTokenException {
+import org.usergrid.management.exceptions.ManagementException;
+
+public class TokenException extends ManagementException {
 
 	private static final long serialVersionUID = 1L;
 
-	public ExpiredTokenException() {
+	public TokenException() {
 		super();
 	}
 
-	public ExpiredTokenException(String arg0, Throwable arg1) {
+	public TokenException(String arg0, Throwable arg1) {
 		super(arg0, arg1);
 	}
 
-	public ExpiredTokenException(String arg0) {
+	public TokenException(String arg0) {
 		super(arg0);
 	}
 
-	public ExpiredTokenException(Throwable arg0) {
+	public TokenException(Throwable arg0) {
 		super(arg0);
 	}
 

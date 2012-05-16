@@ -24,9 +24,9 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import org.apache.shiro.authc.AuthenticationException;
-import org.usergrid.management.exceptions.BadAccessTokenException;
-import org.usergrid.management.exceptions.ExpiredTokenException;
 import org.usergrid.rest.ApiResponse;
+import org.usergrid.security.tokens.exceptions.BadTokenException;
+import org.usergrid.security.tokens.exceptions.ExpiredTokenException;
 
 @Provider
 public class ShiroAuthenticationExceptionMapper implements
@@ -46,7 +46,7 @@ public class ShiroAuthenticationExceptionMapper implements
 		ApiResponse response = new ApiResponse();
 		if (e instanceof ExpiredTokenException) {
 			type = EXPIRED_ACCESS_TOKEN_ERROR.getType();
-		} else if (e instanceof BadAccessTokenException) {
+		} else if (e instanceof BadTokenException) {
 			type = BAD_ACCESS_TOKEN_ERROR.getType();
 		}
 		response.withError(type, message, e);

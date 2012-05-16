@@ -15,13 +15,13 @@
  ******************************************************************************/
 package org.usergrid.rest.exceptions;
 
-import org.usergrid.management.exceptions.BadAccessTokenException;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
-import org.usergrid.management.exceptions.ExpiredTokenException;
 import org.usergrid.management.exceptions.IncorrectPasswordException;
-import org.usergrid.management.exceptions.InvalidAccessTokenException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
 import org.usergrid.management.exceptions.UnactivatedOrganizationException;
+import org.usergrid.security.tokens.exceptions.BadTokenException;
+import org.usergrid.security.tokens.exceptions.ExpiredTokenException;
+import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 
 public enum AuthErrorInfo {
 
@@ -89,13 +89,13 @@ public enum AuthErrorInfo {
 			return EXPIRED_ACCESS_TOKEN_ERROR;
 		} else if (e instanceof IncorrectPasswordException) {
 			return INVALID_USERNAME_OR_PASSWORD_ERROR;
-		} else if (e instanceof InvalidAccessTokenException) {
+		} else if (e instanceof InvalidTokenException) {
 			return BAD_ACCESS_TOKEN_ERROR;
 		} else if (e instanceof UnactivatedOrganizationException) {
 			return UNACTIVATED_ORGANIZATION;
 		} else if (e instanceof UnactivatedAdminUserException) {
 			return UNACTIVATED_ADMIN;
-		} else if (e instanceof BadAccessTokenException) {
+		} else if (e instanceof BadTokenException) {
 			return BAD_ACCESS_TOKEN_ERROR;
 		}
 		return null;

@@ -42,6 +42,7 @@ import org.usergrid.management.ManagementService;
 import org.usergrid.management.ManagementTestHelper;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
+import org.usergrid.security.tokens.TokenService;
 
 @Component
 public class ManagementTestHelperImpl implements ManagementTestHelper {
@@ -60,6 +61,8 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
 	javax.persistence.EntityManagerFactory jpaEmf;
 
 	ManagementService management;
+
+	TokenService tokens;
 
 	Properties properties;
 
@@ -170,6 +173,17 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
 	@Autowired
 	public void setProperties(Properties properties) {
 		this.properties = properties;
+	}
+
+	@Override
+	public TokenService getTokenService() {
+		return tokens;
+	}
+
+	@Override
+	@Autowired
+	public void setTokenService(TokenService tokens) {
+		this.tokens = tokens;
 	}
 
 	public boolean isForceQuit() {

@@ -35,10 +35,11 @@ public interface ManagementService {
 
 	public void activateAdminUser(UUID userId) throws Exception;
 
-	public void activateOrganization(UUID organizationId) throws Exception;
-
-	public void addAdminUserToOrganization(UUID userId, UUID organizationId)
+	public void activateOrganization(OrganizationInfo organization)
 			throws Exception;
+
+	public void addAdminUserToOrganization(UserInfo user,
+			OrganizationInfo organization) throws Exception;
 
 	public UUID addApplicationToOrganization(UUID organizationId,
 			UUID applicationId) throws Exception;
@@ -46,10 +47,13 @@ public interface ManagementService {
 	public AccessInfo authorizeClient(String clientId, String clientSecret)
 			throws Exception;
 
-	public boolean checkActivationTokenForAdminUser(UUID userId, String token)
+	public boolean handleConfirmationTokenForAdminUser(UUID userId, String token)
 			throws Exception;
 
-	public boolean checkActivationTokenForOrganization(UUID organizationId,
+	public boolean handleActivationTokenForAdminUser(UUID userId, String token)
+			throws Exception;
+
+	public boolean handleActivationTokenForOrganization(UUID organizationId,
 			String token) throws Exception;
 
 	public boolean checkPasswordResetTokenForAdminUser(UUID userId, String token)
@@ -59,6 +63,9 @@ public interface ManagementService {
 			String password, boolean activated, boolean disabled,
 			boolean sendEmail) throws Exception;
 
+	public UserInfo createAdminFrom(User user, String password,
+			boolean sendEmail) throws Exception;
+
 	public UUID createApplication(UUID organizationId, String applicationName)
 			throws Exception;
 
@@ -66,7 +73,7 @@ public interface ManagementService {
 			Map<String, Object> properties) throws Exception;
 
 	public OrganizationInfo createOrganization(String organizationName,
-			UserInfo user) throws Exception;
+			UserInfo user, boolean sendEmail) throws Exception;
 
 	public OrganizationOwnerInfo createOwnerAndOrganization(
 			String organizationName, String username, String name,
@@ -94,6 +101,9 @@ public interface ManagementService {
 
 	public String getActivationTokenForAdminUser(UUID userId) throws Exception;
 
+	public String getConfirmationTokenForAdminUser(UUID userId)
+			throws Exception;
+
 	public String getActivationTokenForOrganization(UUID organizationId)
 			throws Exception;
 
@@ -116,8 +126,6 @@ public interface ManagementService {
 	public Entity getAdminUserEntityFromAccessToken(String token)
 			throws Exception;
 
-	public UUID getAdminUserIdFromAccessToken(String token) throws Exception;
-
 	public UserInfo getAdminUserInfoFromAccessToken(String token)
 			throws Exception;
 
@@ -130,14 +138,13 @@ public interface ManagementService {
 	public List<UserInfo> getAdminUsersForOrganization(UUID organizationId)
 			throws Exception;
 
-	public ApplicationInfo getApplication(String applicationName)
+	public ApplicationInfo getApplicationInfo(String applicationName)
 			throws Exception;
 
-	public ApplicationInfo getApplication(UUID applicationId) throws Exception;
+	public ApplicationInfo getApplicationInfo(UUID applicationId)
+			throws Exception;
 
-	public ApplicationInfo getApplication(Identifier id) throws Exception;
-
-	public Entity getApplicationEntityById(UUID applicationId) throws Exception;
+	public ApplicationInfo getApplicationInfo(Identifier id) throws Exception;
 
 	public ApplicationInfo getApplicationInfoFromAccessToken(String token)
 			throws Exception;
@@ -217,6 +224,8 @@ public interface ManagementService {
 
 	public boolean newAdminUsersNeedSysAdminApproval();
 
+	public boolean newAdminUsersRequireConfirmation();
+
 	public String newClientSecretForApplication(UUID applicationId)
 			throws Exception;
 
@@ -235,20 +244,14 @@ public interface ManagementService {
 	public void removeOrganizationApplication(UUID organizationId,
 			UUID applicationId) throws Exception;
 
-	public void sendAdminUserActivatedEmail(UserInfo user) throws Exception;
-
-	public void sendAdminUserActivationEmail(UserInfo user) throws Exception;
+	public void startAdminUserActivationFlow(UserInfo user) throws Exception;
 
 	public void sendAdminUserEmail(UserInfo user, String subject, String html)
 			throws Exception;
 
-	public void sendAdminUserPasswordReminderEmail(UserInfo user)
-			throws Exception;
+	public void startAdminUserPasswordResetFlow(UserInfo user) throws Exception;
 
-	public void sendOrganizationActivatedEmail(OrganizationInfo organization)
-			throws Exception;
-
-	public void sendOrganizationActivationEmail(OrganizationInfo organization)
+	public void startOrganizationActivationFlow(OrganizationInfo organization)
 			throws Exception;
 
 	public void sendOrganizationEmail(OrganizationInfo organization,
@@ -277,7 +280,10 @@ public interface ManagementService {
 	public void activateAppUser(UUID applicationId, UUID userId)
 			throws Exception;
 
-	public boolean checkActivationTokenForAppUser(UUID applicationId,
+	public boolean handleActivationTokenForAppUser(UUID applicationId,
+			UUID userId, String token) throws Exception;
+
+	public boolean handleConfirmationTokenForAppUser(UUID applicationId,
 			UUID userId, String token) throws Exception;
 
 	public boolean checkPasswordResetTokenForAppUser(UUID applicationId,
@@ -289,13 +295,10 @@ public interface ManagementService {
 	public User getAppUserByIdentifier(UUID applicationId, Identifier identifier)
 			throws Exception;
 
-	public void sendAppUserPasswordReminderEmail(UUID applicationId, User user)
+	public void startAppUserPasswordResetFlow(UUID applicationId, User user)
 			throws Exception;
 
-	public void sendAppUserActivatedEmail(UUID applicationId, User user)
-			throws Exception;
-
-	public void sendAppUserActivationEmail(UUID applicationId, User user)
+	public void startAppUserActivationFlow(UUID applicationId, User user)
 			throws Exception;
 
 	public void setAppUserPassword(UUID applicationId, UUID userId,
@@ -321,11 +324,22 @@ public interface ManagementService {
 	public PrincipalCredentialsToken getPrincipalCredentialsTokenForClientCredentials(
 			String clientId, String clientSecret) throws Exception;
 
-	public abstract long getMaxTokenAge();
+	public void confirmAdminUser(UUID userId) throws Exception;
 
-	public void sendAdminUserInvitedEmail(UserInfo user,
-			OrganizationInfo organization) throws Exception;
+	public void unconfirmAdminUser(UUID userId) throws Exception;
 
-  public void countAdminUserAction(UserInfo user, String action) throws Exception;
+	public boolean isAdminUserConfirmed(UUID userId) throws Exception;
+
+	public void countAdminUserAction(UserInfo user, String action)
+			throws Exception;
+
+	public boolean newAppUsersNeedAdminApproval(UUID applicationId)
+			throws Exception;
+
+	public boolean newAppUsersRequireConfirmation(UUID applicationId)
+			throws Exception;
+
+	public User getOrCreateUserForFacebookAccessToken(UUID applicationId,
+			String fb_access_token) throws Exception;
 
 }

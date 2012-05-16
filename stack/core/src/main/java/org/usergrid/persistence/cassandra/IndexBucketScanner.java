@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.usergrid.persistence.cassandra;
 
-import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 
 import java.nio.ByteBuffer;

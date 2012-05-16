@@ -241,7 +241,7 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
 				ApplicationInfo application = null;
 				try {
 					application = management
-							.getApplication(getApplicationIdentifier());
+							.getApplicationInfo(getApplicationIdentifier());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

@@ -57,7 +57,7 @@
 					<execution>
 						<configuration>
 							<outputDirectory>src/main/java</outputDirectory>
-							
+
 						</configuration>
 						<goals>
 							<goal>antlr</goal>
@@ -332,6 +332,11 @@
 		<dependency>
 			<groupId>com.sun.mail</groupId>
 			<artifactId>javax.mail</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jvnet.mock-javamail</groupId>
+			<artifactId>mock-javamail</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>

@@ -323,7 +323,7 @@ public class TestResource extends AbstractContextResource {
 
 	@GET
 	@Path("page")
-	public Viewable page(@Context UriInfo ui) throws Exception {
+	public Viewable page(@Context UriInfo ui) {
 
 		return new Viewable("test", this);
 	}

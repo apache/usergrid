@@ -424,10 +424,6 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			  <groupId>com.restfb</groupId>
-			  <artifactId>restfb</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>commons-beanutils</groupId>
 			<artifactId>commons-beanutils</artifactId>
 			<type>jar</type>
