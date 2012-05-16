@@ -36,6 +36,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import com.google.common.collect.BiMap;
 import com.sun.jersey.api.spring.Autowire;
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.*;
@@ -200,14 +201,18 @@ public class RootResource extends AbstractContextResource implements MetricProce
 			return null;
 		}
 
-		if (applicationId.equals(MANAGEMENT_APPLICATION_ID)) {
-			throw new UnauthorizedException();
-		}
-
-		return getSubResource(ApplicationResource.class).init(applicationId);
+    return appResourceFor(applicationId);
 	}
 
-	@Path("applications/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+  private ApplicationResource appResourceFor(UUID applicationId) throws Exception {
+    if (applicationId.equals(MANAGEMENT_APPLICATION_ID)) {
+      throw new UnauthorizedException();
+    }
+
+    return getSubResource(ApplicationResource.class).init(applicationId);
+  }
+
+  @Path("applications/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
 	public ApplicationResource getApplicationById2(
 			@PathParam("applicationId") String applicationId) throws Exception {
 		return getApplicationById(applicationId);
@@ -218,6 +223,24 @@ public class RootResource extends AbstractContextResource implements MetricProce
 			@PathParam("applicationId") String applicationId) throws Exception {
 		return getApplicationById(applicationId);
 	}
+
+  @Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+  public ApplicationResource getApplicationByUuids(@PathParam("organizationId") String organizationIdStr,
+                                                   @PathParam("applicationId") String applicationIdStr)
+
+    throws Exception {
+
+    UUID applicationId = UUID.fromString(applicationIdStr);
+    UUID organizationId = UUID.fromString(organizationIdStr);
+    if (applicationId == null || organizationId == null ) {
+      return null;
+    }
+    BiMap<UUID,String> apps = management.getApplicationsForOrganization(organizationId);
+    if ( apps.get(applicationId) == null ) {
+      return null;
+    }
+    return appResourceFor(applicationId);
+  }
 
 	@Path("{organizationName}/{applicationName}")
 	public ApplicationResource getApplicationByName(
@@ -235,11 +258,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 			return null;
 		}
 
-		if (applicationId.equals(MANAGEMENT_APPLICATION_ID)) {
-			throw new UnauthorizedException();
-		}
-
-		return getSubResource(ApplicationResource.class).init(applicationId);
+		return appResourceFor(applicationId);
 	}
 
 	@Path("applications/{organizationName}/{applicationName}")

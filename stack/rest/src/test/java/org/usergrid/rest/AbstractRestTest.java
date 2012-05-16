@@ -71,7 +71,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
     protected static String access_token;
 
-    private ManagementService managementService;
+    protected ManagementService managementService;
 
     static ClientConfig clientConfig = new DefaultClientConfig();
 

@@ -35,6 +35,9 @@ import org.usergrid.java.client.entities.Activity.ActivityObject;
 import org.usergrid.java.client.entities.Entity;
 import org.usergrid.java.client.entities.User;
 import org.usergrid.java.client.response.ApiResponse;
+import org.usergrid.management.ApplicationInfo;
+import org.usergrid.management.OrganizationInfo;
+import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.rest.applications.utils.UserRepo;
 import org.usergrid.utils.UUIDUtils;
@@ -84,6 +87,23 @@ public class UserResourceTest extends AbstractRestTest {
                 getIdFromSearchResults(node, 0));
         assertEquals(UserRepo.INSTANCE.getByUserName("user3"),
                 getIdFromSearchResults(node, 1));
+
+    }
+
+    @Test
+    public void nameQueryByUUIDs() throws Exception {
+      UserRepo.INSTANCE.load(resource(), access_token);
+
+      String ql = "name = 'John*'";
+
+      ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
+      OrganizationInfo orgInfo = managementService.getOrganizationByName("test-organization");
+
+      JsonNode node = resource().path("/" + orgInfo.getUuid() +
+              "/" + appInfo.getId() + "/users")
+              .queryParam("ql", ql).queryParam("access_token", access_token)
+              .accept(MediaType.APPLICATION_JSON)
+              .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
     }
 
@@ -399,8 +419,7 @@ public class UserResourceTest extends AbstractRestTest {
     }
 
     /**
-     * 
-     * @param putResponse
+     *
      * @return
      */
     public JsonNode getActor(Entity entity) {
