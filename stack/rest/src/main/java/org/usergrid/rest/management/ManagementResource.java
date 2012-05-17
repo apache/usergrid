@@ -132,7 +132,7 @@ public class ManagementResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("") String callback)
 			throws Exception {
 
-		logger.info("ManagementResource.getAccessToken");
+		logger.info("ManagementResource.getAccessToken with username: {}", username);
 
 		UserInfo user = null;
 
@@ -157,6 +157,8 @@ public class ManagementResource extends AbstractContextResource {
 				try {
 					user = management.verifyAdminUserPasswordCredentials(
 							username, password);
+          if ( user != null )
+            logger.info("found user from verify: {}", user.getUuid());
 				} catch (Exception e1) {
           logger.error("failed token check", e1);
 				}
@@ -211,7 +213,10 @@ public class ManagementResource extends AbstractContextResource {
 			return Response.status(res.getResponseStatus())
 					.type(jsonMediaType(callback))
 					.entity(wrapWithCallback(res.getBody(), callback)).build();
-		}
+		} catch (Exception ex) {
+      logger.error("General exception on auth ", ex);
+      return null;
+    }
 	}
 
 	@POST

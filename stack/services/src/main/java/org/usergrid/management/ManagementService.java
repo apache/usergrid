@@ -69,6 +69,11 @@ public interface ManagementService {
 	public UserInfo createAdminFrom(User user, String password,
 			boolean sendEmail) throws Exception;
 
+  public UserInfo createAdminFromPrexistingPassword(User user,
+                                                      String precypheredPassword,
+                                                      boolean sendEmail)
+            throws Exception;
+
 	public UUID createApplication(UUID organizationId, String applicationName)
 			throws Exception;
 

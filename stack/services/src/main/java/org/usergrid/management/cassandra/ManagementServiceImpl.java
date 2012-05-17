@@ -686,6 +686,45 @@ public class ManagementServiceImpl implements ManagementService {
 		return results;
 	}
 
+  private UserInfo doCreateAdmin(User user, boolean sendEmail,
+                                 Map<String, CredentialsInfo> credentials) throws Exception {
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    credentials
+            .put("secret",
+                    plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
+    em.addMapToDictionary(user, DICTIONARY_CREDENTIALS, credentials);
+
+    UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
+            user.getUuid(), user.getUsername(), user.getName(),
+            user.getEmail(), user.getActivated(), user.getDisabled());
+
+    if (sendEmail && !user.getActivated()) {
+      this.startAdminUserActivationFlow(userInfo);
+    }
+    return userInfo;
+  }
+
+  @Override
+  public UserInfo createAdminFromPrexistingPassword(User user,
+                                                    String precypheredPassword,
+                                                    boolean sendEmail)
+          throws Exception {
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
+
+    CredentialsInfo ci = new CredentialsInfo();
+    ci.setRecoverable(false);
+    ci.setCipher("sha-1");
+    ci.setSecret(precypheredPassword);
+    ci.setRecoverable(false);
+    ci.setEncrypted(true);
+
+    credentials.put("password", ci);
+    credentials.put("mongo_pwd",
+            mongoPasswordCredentials(user.getUsername(), precypheredPassword));
+    return doCreateAdmin(user, sendEmail, credentials);
+  }
+
 	@Override
 	public UserInfo createAdminFrom(User user, String password,
 			boolean sendEmail) throws Exception {
@@ -694,19 +733,8 @@ public class ManagementServiceImpl implements ManagementService {
 		credentials.put("password", passwordCredentials(password));
 		credentials.put("mongo_pwd",
 				mongoPasswordCredentials(user.getUsername(), password));
-		credentials
-				.put("secret",
-						plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
-		em.addMapToDictionary(user, DICTIONARY_CREDENTIALS, credentials);
 
-		UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
-				user.getUuid(), user.getUsername(), user.getName(),
-				user.getEmail(), user.getActivated(), user.getDisabled());
-
-		if (sendEmail && !user.getActivated()) {
-			this.startAdminUserActivationFlow(userInfo);
-		}
-		return userInfo;
+		return doCreateAdmin(user, sendEmail, credentials);
 	}
 
 	@Override
@@ -999,7 +1027,6 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public boolean verifyAdminUserPassword(UUID userId, String password)
 			throws Exception {
-
 		if ((userId == null) || (password == null)) {
 			return false;
 		}
@@ -1014,7 +1041,7 @@ public class ManagementServiceImpl implements ManagementService {
     if (checkPassword(password, credentialsInfo)) {
 			return true;
 		}
-
+    logger.info("password compare fail for uuid {}",userId);
 		return false;
 	}
 
@@ -1032,7 +1059,6 @@ public class ManagementServiceImpl implements ManagementService {
             
     CredentialsInfo credentialsInfo = (CredentialsInfo) em.getDictionaryElementValue(user,
        						DICTIONARY_CREDENTIALS, "password");
-
     password = maybeSaltPassword(password, user, credentialsInfo);
 
 		if (checkPassword(password, credentialsInfo)) {
@@ -1045,7 +1071,7 @@ public class ManagementServiceImpl implements ManagementService {
 			}
 			return userInfo;
 		}
-
+    logger.info("password compare fail for {}",name);
 		return null;
 
 	}
@@ -2418,6 +2444,7 @@ public class ManagementServiceImpl implements ManagementService {
 
   private String maybeSaltPassword(String password, User user, CredentialsInfo credentialsInfo) {
     if (StringUtils.equals(user.getHashtype(), User.HASHTYPE_MD5)) {
+      logger.info("hashType detected, applying pre phase");
       password = credentialsInfo.encrypt(User.HASHTYPE_MD5, "", password);
     }
     return password;
