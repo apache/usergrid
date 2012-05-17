@@ -1504,6 +1504,11 @@ function usergrid_console_app() {
 
     var usersResults = null;
     function displayUsers(response) {
+    
+      $('#users-pagination').hide();
+      $('#users-next').hide();
+      $('#users-previous').hide();
+
       var data = response.entities;
       var output = $('#users-table');
       output.empty();
@@ -1524,13 +1529,13 @@ function usergrid_console_app() {
         }
       }
 
-      if (users_query.hasNext) {
+      if (users_query.hasNext() != response.cursor && users_query.hasNext()) {
         $(document).on('click', '#users-next', users_query.getNext);
         $('#users-pagination').show();
         $('#users-next').show();
       }
       
-      if (users_query.hasPrevious) {
+      if (users_query.hasPrevious()) {
         $(document).on('click', '#users-previous', users_query.getPrevious);
         $('#users-pagination').show();
         $('#users-previous').show();
@@ -1883,6 +1888,11 @@ function usergrid_console_app() {
 
     var groupsResults = null;
     function displayGroups(response) {
+
+      $('#groups-pagination').hide();
+      $('#groups-next').hide();
+      $('#groups-previous').hide();
+
       var data = response.entities;
       var output = $('#groups-table');
       output.empty();
@@ -1897,17 +1907,18 @@ function usergrid_console_app() {
         }
       }
 
-      if (groups_query.hasNext) {
+      if (groups_query.hasNext() != response.cursor && groups_query.hasNext()) {
         $(document).on('click', '#groups-next', groups_query.getNext);
         $('#groups-pagination').show();
         $('#groups-next').show();
       }
       
-      if (groups_query.hasPrevious) {
+      if (groups_query.hasPrevious()) {
         $(document).on('click', '#groups-previous', groups_query.getPrevious);
         $('#groups-pagination').show();
         $('#groups-previous').show();
       }
+
     }
 
     function showGroupsForLetter(c) {
@@ -2181,6 +2192,11 @@ function usergrid_console_app() {
 
 
     function displayRoles(response) {
+
+      $('#roles-pagination').hide();
+      $('#roles-next').hide();
+      $('#roles-previous').hide();
+
       roles = {};
       roles = response.data;
       var data = response.entities;
@@ -2196,17 +2212,17 @@ function usergrid_console_app() {
         }
       }
 
-      // if (roles_query.hasNext) {
-      //   $(document).on('click', '#roles-next', roles_query.getNext);
-      //   $('#roles-pagination').show();
-      //   $('#roles-next').show();
-      // }
-      // 
-      // if (roles_query.hasPrevious) {
-      //   $(document).on('click', '#roles-previous', roles_query.getPrevious);
-      //   $('#roles-pagination').show();
-      //   $('#roles-previous').show();
-      // }
+      if (roles_query.hasNext() != response.cursor && roles_query.hasNext() != null) {
+        $(document).on('click', '#roles-next', roles_query.getNext);
+        $('#roles-pagination').show();
+        $('#roles-next').show();
+      }
+
+      if (roles_query.hasPrevious()) {
+        $(document).on('click', '#roles-previous', roles_query.getPrevious);
+        $('#roles-pagination').show();
+        $('#roles-previous').show();
+      }
     }
 
     $("#delete-roles-link").click(deleteRoles);
@@ -2483,6 +2499,7 @@ function usergrid_console_app() {
 
     function displayActivities(response) {
       var data = response.entities;
+      console.log(response);
       var output = $('#activities-table');
       output.empty();
       if (data.length < 1) {
@@ -2491,7 +2508,7 @@ function usergrid_console_app() {
           output.replaceWith('<table id="activities-table" class="table"><tbody></tbody></table>');
         for (i = 0; i < data.length; i++) {
           var this_data = data[i];
-          this_data.actor.gravatar = get_gravatar(this_data.actor.email, 20);
+          // this_data.actor.gravatar = get_gravatar(this_data.actor.email, 20);
           $.tmpl('usergrid.ui.activities.table_rows.html', this_data).appendTo('#activities-table');
         }
       }

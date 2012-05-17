@@ -4123,6 +4123,9 @@ a:active {
   line-height: 20px;
   padding: 5px 10px;
 }
+#users-pagination {
+  display: none;
+}
 #users-pagination #users-previous {
   display: none;
 }

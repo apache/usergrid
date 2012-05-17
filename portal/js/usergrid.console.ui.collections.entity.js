@@ -98,8 +98,6 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
       } else {
         entity.picture = entity.picture + "?d=http://" + window.location.host + window.location.pathname + "images/user_profile.png"
       }
-        
-      console.log("here i aaaamm...");
 
 			return $.tmpl("usergrid.ui.collections.entity.header.html", {
         entity : entity,
