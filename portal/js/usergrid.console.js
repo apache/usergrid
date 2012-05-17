@@ -127,7 +127,7 @@ function usergrid_console_app() {
         //https://apigee.com/console/usergrid?embedded=true&auth=%5B%7B%22type%22%3A%22custom_token%22%2C%22name%22%3A%22Authorization%22%2C%22value%22%3A%22Bearer%20kOo1fUuEEeG0HSIAChxOIg%3AYWQ6AAABNdGCPEab2KpgikKH_X3QMvQA_oeELnAJ-A%22%2C%22style%22%3A%22header%22%7D%2C%7B%22type%22%3A%22custom_token%22%2C%22name%22%3A%22app_id%22%2C%22value%22%3A%2294f945da-599c-11e1-ac46-22000a1c5a67%22%2C%22style%22%3A%22template%22%7D%5D
         //var string='[{"type":"custom_token","name":"Authorization","value":"Bearer '+bearerToken+'","style":"header"},{"type":"custom_token","name":"app_id","value":"'+current_application_id+'","style":"template"}]';
         //var bearerTokenString = encodeURIComponent(string);
-        var url = 'https://apigee.com/console/usergrid?embedded=true&auth='+bearerTokenString;
+        var url = 'https://apigee.com/console/usergrid?v=2&embedded=true&auth='+bearerTokenString;
         return url;
     }
     usergrid.console.getAccessTokenURL = getAccessTokenURL;
