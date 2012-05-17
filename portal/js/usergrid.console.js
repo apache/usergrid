@@ -700,7 +700,7 @@ function usergrid_console_app(Pages) {
         }
       }
       if(sectionAdmins.is(":empty"))
-          sectionAdmins.html('<h2>No organization administrators.</h2>');
+          sectionAdmins.html('<div class="alert">No organization administrators.</div>');
     }
 
     function requestAdmins() {
@@ -1869,11 +1869,10 @@ function usergrid_console_app(Pages) {
     }
     
     function requestUser(userId) {
-        $("#user-profile-area").html(
-        "<h2>Loading...</h2>");
+        $("#user-profile-area").html('<div class="alert alert-info">Loading...</div>');
         client.getUser(current_application_id, userId, handleUserResponse,
         function() {
-            $("#user-profile-area").html("<h2>Unable to retrieve user profile.</h2>");
+            $("#user-profile-area").html('<div class="alert">Unable to retrieve user profile.</div>');
         });
     }
   
@@ -2158,11 +2157,10 @@ function usergrid_console_app(Pages) {
     }
 
     function requestGroup(groupId) {
-        $("#group-details-area").html(
-        "<h2>Loading...</h2>");
+        $("#group-details-area").html('<div class="alert alert-info">Loading...</div>');
         client.getGroup(current_application_id, groupId, handleGroupResponse,
         function() {
-            $("#group-details-area").html("<h2>Unable to retrieve group details.</h2>");
+            $("#group-details-area").html('<div class="alert">Unable to retrieve group details.</div>');
         });
     }
   
@@ -2318,7 +2316,7 @@ function usergrid_console_app(Pages) {
             $.tmpl("usergrid.ui.panels.role.permissions.html", {"role" : current_role_name, "permissions" : permissions}, {}).appendTo("#role-permissions");
             updatePermissionAutocompleteCollections();
         } else {
-            section.html("<h2>No permission information retrieved.</h2>");
+            section.html('<div class="alert">No permission information retrieved.</div>');
         }
     }
 
@@ -2357,25 +2355,25 @@ function usergrid_console_app(Pages) {
             displayRoles(response);
             $("#role-section-title").html(roles[current_role_name] + " Role");
             $("#role-permissions").html(
-            "<h2>Loading " + roles[current_role_name] + " permissions...</h2>");
+            '<div class="alert">Loading ' + roles[current_role_name] + ' permissions...</div>');
             client.requestApplicationRolePermissions(current_application_id, current_role_name, function(response) {
                 displayPermissions(response);
             },
             function() {
-                $("#application-roles").html("<h2>Unable to retrieve " + roles[current_role_name] + " role permissions.</h2>");
+                $("#application-roles").html('<div class="alert">Unable to retrieve ' + roles[current_role_name] + ' role permissions.</div>');
             });
             client.requestApplicationRoleUsers(current_application_id, current_role_id,
                 function(response) {
                     displayRolesUsers(response);
                 },
                 function() {
-                    $("#application-roles").html("<h2>Unable to retrieve " + roles[current_role_name] + " role permissions.</h2>");
+                    $("#application-roles").html('<div class="alert">Unable to retrieve ' + roles[current_role_name] + ' role permissions.</div>');
                 }
             );
 
         },
         function() {
-            $("#application-roles").html("<h2>Unable to retrieve roles list.</h2>");
+            $("#application-roles").html('<div class="alert">Unable to retrieve roles list.</div>');
         });
     }
 
@@ -2855,9 +2853,9 @@ function usergrid_console_app(Pages) {
 
     function requestCollections() {
         var section =$("#application-collections");
-        section.empty().html("<h2>Loading...</h2>");
+        section.empty().html('<div class="alert alert-info">Loading...</div>');
         client.requestCollections(current_application_id, displayCollections, function() {
-            section.html("<h2>Unable to retrieve collections list.</h2>");
+            section.html('<div class="alert">Unable to retrieve collections list.</div>');
         });
     }
     
@@ -3305,21 +3303,18 @@ function usergrid_console_app(Pages) {
                 $("#organizations").html(t);                
             }
             else {
-                $("#organizations").html(
-                "<h2>No organizations created.</h2>"); 
+                $("#organizations").html('<div class="alert">No organizations created.</div>'); 
             }
         } else {
-            $("#organizations").html(
-            "<h2>No organizations created.</h2>");
-            
+            $("#organizations").html('<div class="alert">No organizations created.</div>');
         }
        
     }
        
     function requestOrganizations() {
-        $("#organizations").html("<h2>Loading...</h2>");
+        $("#organizations").html('<div class="alert alert-info">Loading...</div>');
         client.requestOrganizations(displayOrganizations, function() {
-            $("#organizations").html("<h2>Unable to retrieve organizations list.</h2>");
+            $("#organizations").html('<div class="alert">Unable to retrieve organizations list.</div>');
         });
     }
 
