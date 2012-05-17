@@ -74,8 +74,8 @@ public class GeoIndexManager {
      * hashing. Every level divides the region by 1/16. Our original "box" is 90
      * degrees by 45 degrees. We therefore have 90 * (1/16)^(r-1) and 45 *
      * (1/16)^(r-1) for our size where r is the largest bucket resolution. This
-     * gives us a size of 90 deg => 0.00008583068848 deg = 80 m and 45 deg =>
-     * 0.0000429153444 deg = 40 m
+     * gives us a size of 90 deg => 0.0000000209547 deg = .2cm and 45 deg =>
+     * 0.00000001047735 deg = .1 cm
      */
     private static final int MAX_RESOLUTION = 9;
 
