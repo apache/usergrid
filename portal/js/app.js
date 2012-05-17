@@ -12,7 +12,6 @@ $(document).ready(function () {
 		usergrid_console_app(Pages);
 		InitMenu();
         StatusBar.Init('#statusbar-placeholder');
-		
         toggleableSections();
 
 	    if (getQueryParams().goto_signup) {
