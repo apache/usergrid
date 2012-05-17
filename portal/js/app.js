@@ -13,7 +13,7 @@ $(document).ready(function () {
 		InitMenu();
         StatusBar.Init('#statusbar-placeholder');
 		    usergrid.console.loginOk();
-        makePanelCollapsable();
+        toggleableSections();
 
 	    if (getQueryParams().goto_signup) {
 		    Pages.ShowPage("signup");
@@ -21,40 +21,11 @@ $(document).ready(function () {
 
 	}
 
-    function makePanelCollapsable(){
-        var triangle = $("<span class='openPanel'></span >");
-        var triangleOpen =  $("<span class='closePanel'></span >");
-
-        var titles = $("#console-panels .title");
-        triangle.appendTo(titles);
-        triangleOpen.appendTo(titles).hide();
-        titles.click(toggleSection);
-    }
-
-    function toggleSection(e){
-        e.preventDefault();
-        var h3 = $(this).parent();
-        h3.parent().find(".hideable").toggle();
-    }
-
-    function makeResultCollapsable(){
-        var triangle = $("<a class='openPanel'></a>").click( function(e){
-            e.preventDefault();
-            var link = $(this);
-            link.parent().parent().find(".console-section-contents").slideUp();
-            link.parent().find(".closePanel").show();
-            link.hide();
-        });
-        var triangleOpen =  $("<a class='closePanel'></a>").click( function(e){
-            e.preventDefault();
-            var link = $(this);
-            link.parent().parent().find(".console-section-contents").slideDown();
-            link.parent().find(".openPanel").show();
-            link.hide();
-        });
-        triangle.prependTo(".query-result-portlet-title");
-        triangleOpen.prependTo(".query-result-portlet-title").hide();
-    }
+  function toggleableSections() {
+    $(document).on('click', '.title', function() {
+      $(this).parent().parent().find('.hideable').toggle();
+    })
+  }
 
 
 	function InitMenu() {

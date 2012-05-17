@@ -154,10 +154,11 @@ function usergrid_console_app() {
     }
 
     function setNavApplicationText() {
-        if(!current_application_name)
-            current_application_name = "Select an Application";
-	    $('#selectedApp2').text(" - " + current_application_name);
+      if(!current_application_name) {
+        current_application_name = "Select an Application";
+      }
 	    $('#selectedApp').text(current_application_name);
+      $('.thingy span.title span.app_title').text(" - " + current_application_name);
     }
 
     function createAlphabetLinks(containerSelector, callback) {
@@ -2212,7 +2213,7 @@ function usergrid_console_app() {
     function deleteRoles(e) {
         e.preventDefault();
 
-        var items = $("#roles-response-table input[id^=roleListItem]:checked");
+        var items = $("#roles-table input[class^=roleListItem]:checked");
         if(!items.length){
             oopsModal("Error","Please, first select the roles you want to delete.")
             return;

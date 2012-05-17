@@ -3558,6 +3558,9 @@ html {
   font-size: 19px;
   cursor: pointer;
 }
+.thingy .app_title {
+  padding-right: 20px;
+}
 .thingy .bar a {
   padding-left: 10px !important;
   float: right;
@@ -3895,11 +3898,6 @@ a:active {
   display: block;
   height: 0;
   visibility: hidden;
-}
-.openPanel,
-.closePanel {
-  display: inline-block;
-  width: 25px;
 }
 #application-panel .boxContent {
   background-color: #f2f5f7;
