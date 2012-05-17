@@ -317,16 +317,6 @@ function usergrid_console_app() {
                 var entity = response.entities[0];
                 query_entities_by_id[entity.uuid] = entity;
 
-                if (entity.created) {
-                  entity.created = dateToString(entity.created);
-                }
-                if (entity.modified) {
-                  entity.modified = dateToString(entity.modified);
-                }
-                if (entity.published) {
-                  entity.published = dateToString(entity.published);
-                }
-
                 var entity_path = (entity.metadata || {}).path;
                 if ($.isEmptyObject(entity_path)) {
                     entity_path = path + "/" + entity.uuid;
@@ -724,6 +714,12 @@ function usergrid_console_app() {
         var date = new Date(numberDate);
         return date.toString('dd MMM yyyy - h:mm tt ');
     }
+
+    $(document).on('click', '.toggleableSP', function() {
+      $(this).parent().find('.toggleableSP').toggle();
+      return false
+    });
+
     function get_gravatar(email, size) {
         var size = size || 50;
         return 'https://secure.gravatar.com/avatar/' + MD5(email) + '?d=identicon&s=' + size;
@@ -1753,9 +1749,6 @@ function usergrid_console_app() {
             var entity_contents = $.extend( false, { }, entity);
             delete entity_contents['metadata'];
             
-            entity_contents.created = dateToString(entity_contents.created);
-            entity_contents.modified = dateToString(entity_contents.modified);
-
             var metadata = entity.metadata;
             if ($.isEmptyObject(metadata)) metadata = null;
             
@@ -1791,10 +1784,6 @@ function usergrid_console_app() {
             client.queryUserActivities(current_application_id, entity.uuid, function(response) {
                 if (user_data && response.entities && (response.entities.length > 0)) {
                     user_data.activities = response.entities;
-
-                    for (var a in user_data.activities ) { 
-                      user_data.activities[a].created = dateToString(user_data.activities[a].created)
-                    }
 
                     redrawUserPanel();
                     $('span[id^=activities-date-field]').each( function() {
@@ -2114,9 +2103,6 @@ function usergrid_console_app() {
             if ($.isEmptyObject(entity_path)) {
                 entity_path = path + "/" + entity.uuid;
             }
-
-            entity_contents.created = dateToString(entity_contents.created);
-            entity_contents.modified = dateToString(entity_contents.modified);
 
             group_data = {
                 entity : entity_contents,
@@ -2499,7 +2485,6 @@ function usergrid_console_app() {
 
     function displayActivities(response) {
       var data = response.entities;
-      console.log(response);
       var output = $('#activities-table');
       output.empty();
       if (data.length < 1) {

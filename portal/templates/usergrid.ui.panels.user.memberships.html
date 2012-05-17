@@ -7,8 +7,8 @@
       {{if path}}</a>{{/if}}
     </div>
     <div class="bar">
-      <a class="" data-toggle="modal" href="#dialog-form-add-group-to-user">add to a group</a>
-      <a data-toggle="modal" href="#" onclick="usergrid.console.removeuserfromgroup('${username}'); return false;"> remove </a>
+      <a class="" data-toggle="modal" href="#dialog-form-add-group-to-user">Add to a Group</a>
+      <a data-toggle="modal" href="#" onclick="usergrid.console.removeuserfromgroup('${username}'); return false;"> Remove </a>
       <input type="hidden" value="${username}" id="search-group-userid" name="search-group-userid">
     </div>
   </div>
@@ -24,6 +24,6 @@
     {{/each}}
   </table>
 {{else}}
-  <div class="user-panel-section-message">no group memberships</div>
+  <div class="user-panel-section-message">No Group Memberships</div>
 {{/if}}
 </div>

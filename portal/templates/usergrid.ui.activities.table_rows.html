@@ -1,13 +1,13 @@
 <tr class="zebraRows">
-  <td>${dateToString(created)}</td>
+  <td>
+    <a href="#" class="toggleableSP">${dateToString(created)}</a>
+    <a href="#" class="toggleableSP hide">${created}</a>
+  </td>
   <td class="gravatar20">
     <img src="${actor.gravatar}"/>
   </td>
   <td>
     ${actor.name}
-  </td>
-  <td>
-    ${uuid}
   </td>
   <td>{{if content}}${content}{{else}} {{/if}}</td>
   <td>${verb}</td>
