@@ -56,7 +56,7 @@ public class GrammarTreeTest {
 
         assertEquals("a", equal.getProperty().getValue());
 
-        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+        assertEquals(5, ((LongLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
     }
@@ -84,7 +84,7 @@ public class GrammarTreeTest {
 
         assertEquals("a", equal.getProperty().getValue());
 
-        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+        assertEquals(5, ((LongLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
         // TODO Todd fix this.
@@ -104,7 +104,7 @@ public class GrammarTreeTest {
 
         assertEquals("a", equal.getProperty().getValue());
 
-        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+        assertEquals(5, ((LongLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
     }
@@ -132,7 +132,7 @@ public class GrammarTreeTest {
 
         assertEquals("a", equal.getProperty().getValue());
 
-        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+        assertEquals(5, ((LongLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
         queryString = "select * where a lte 5";
@@ -150,7 +150,7 @@ public class GrammarTreeTest {
 
         assertEquals("a", equal.getProperty().getValue());
 
-        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+        assertEquals(5, ((LongLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
     }
@@ -178,7 +178,7 @@ public class GrammarTreeTest {
 
         assertEquals("a", equal.getProperty().getValue());
 
-        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+        assertEquals(5, ((LongLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
         queryString = "select * where a gt 5";
@@ -196,7 +196,7 @@ public class GrammarTreeTest {
 
         assertEquals("a", equal.getProperty().getValue());
 
-        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+        assertEquals(5, ((LongLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
     }
@@ -224,7 +224,7 @@ public class GrammarTreeTest {
 
         assertEquals("a", equal.getProperty().getValue());
 
-        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+        assertEquals(5, ((LongLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
         queryString = "select * where a gte 5";
@@ -242,7 +242,7 @@ public class GrammarTreeTest {
 
         assertEquals("a", equal.getProperty().getValue());
 
-        assertEquals(5, ((IntegerLiteral) equal.getLiteral()).getValue()
+        assertEquals(5, ((LongLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
     }
@@ -272,13 +272,13 @@ public class GrammarTreeTest {
 
         assertEquals("a", equal.getProperty().getValue());
 
-        assertEquals(1, ((IntegerLiteral) equal.getLiteral()).getValue()
+        assertEquals(1, ((LongLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
         GreaterThan greater = (GreaterThan) and.getRight();
 
         assertEquals("b", greater.getProperty().getValue());
-        assertEquals(2, ((IntegerLiteral) greater.getLiteral()).getValue()
+        assertEquals(2, ((LongLiteral) greater.getLiteral()).getValue()
                 .intValue());
 
     }
@@ -308,13 +308,13 @@ public class GrammarTreeTest {
 
         assertEquals("a", equal.getProperty().getValue());
 
-        assertEquals(1, ((IntegerLiteral) equal.getLiteral()).getValue()
+        assertEquals(1, ((LongLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
         GreaterThan greater = (GreaterThan) and.getRight();
 
         assertEquals("b", greater.getProperty().getValue());
-        assertEquals(2, ((IntegerLiteral) greater.getLiteral()).getValue()
+        assertEquals(2, ((LongLiteral) greater.getLiteral()).getValue()
                 .intValue());
 
     }
@@ -344,7 +344,7 @@ public class GrammarTreeTest {
 
         assertEquals("a", equal.getProperty().getValue());
 
-        assertEquals(1, ((IntegerLiteral) equal.getLiteral()).getValue()
+        assertEquals(1, ((LongLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
     }
@@ -374,7 +374,7 @@ public class GrammarTreeTest {
 
         assertEquals("a", equal.getProperty().getValue());
 
-        assertEquals(1, ((IntegerLiteral) equal.getLiteral()).getValue()
+        assertEquals(1, ((LongLiteral) equal.getLiteral()).getValue()
                 .intValue());
 
     }

@@ -161,5 +161,9 @@
         <constructor-arg value="${usergrid.version.build}"/>
         <constructor-arg ref="cassandraCluster"/>
     </bean>
+    
+    <bean id="indexBucketLocator" class="org.usergrid.persistence.cassandra.SimpleIndexBucketLocatorImpl">
+    	<constructor-arg value="${usergrid.index.defaultbucketsize}"/>
+    </bean>
 
 </beans>

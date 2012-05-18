@@ -23,6 +23,10 @@
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>2.7</version>
 			</plugin>
+			<plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+            </plugin>
 		</plugins>
 	</reporting>
 	<build>

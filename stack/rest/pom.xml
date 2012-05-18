@@ -135,6 +135,10 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+            </plugin>
 			<!-- <plugin> <groupId>org.codehaus.enunciate</groupId> <artifactId>maven-enunciate-plugin</artifactId> 
 				<version>1.23-RC1</version> <executions> <execution> <goals> <goal>docs</goal> 
 				</goals> <configuration> <docsDir> ${project.build.directory}/docs </docsDir> 
@@ -449,7 +453,7 @@
 		<dependency>
 			<groupId>org.usergrid</groupId>
 			<artifactId>usergrid-java-client</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.0.1</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

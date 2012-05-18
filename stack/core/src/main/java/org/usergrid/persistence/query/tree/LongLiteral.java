@@ -24,23 +24,23 @@ import org.antlr.runtime.Token;
  * @author tnine
  *
  */
-public class IntegerLiteral extends Literal<Integer> implements NumericLiteral{
+public class LongLiteral extends Literal<Long> implements NumericLiteral{
 
-  private int value;
+  private long value;
   
   /**
    * @param t
    */
-  public IntegerLiteral(Token t) {
+  public LongLiteral(Token t) {
     super(t);
-    this.value = Integer.valueOf(t.getText());
+    this.value = Long.valueOf(t.getText());
   }
   
   /**
    * 
    * @param value
    */
-  public IntegerLiteral(int value){
+  public LongLiteral(int value){
     super(new ClassicToken(0, String.valueOf(value)));
     this.value = value;
   }
@@ -49,7 +49,7 @@ public class IntegerLiteral extends Literal<Integer> implements NumericLiteral{
    * 
    * @return
    */
-  public Integer getValue(){
+  public Long getValue(){
     return this.value;
   }
 

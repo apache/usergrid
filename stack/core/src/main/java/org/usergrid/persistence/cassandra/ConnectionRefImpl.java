@@ -579,14 +579,16 @@ public class ConnectionRefImpl implements ConnectionRef {
 		if ((pairedConnections == null) || (pairedConnections.length == 0)) {
 			return true;
 		}
+		
 		for (ConnectedEntityRef pairedConnection : pairedConnections) {
-			if ((pairedConnection != null)
-					&& (pairedConnection.getUuid() != null)
-					&& !pairedConnection.getUuid().equals(NULL_ID)) {
-				return false;
+			if (pairedConnection == null
+					|| pairedConnection.getUuid() == null
+					|| pairedConnection.getUuid().equals(NULL_ID)) {
+				return true;
 			}
 		}
-		return true;
+		
+		return false;
 	}
 
 	public static ConnectedEntityRef[] getConnections(

@@ -15,9 +15,9 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.LinkedHashMap;
@@ -27,7 +27,6 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.entities.User;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
@@ -104,6 +103,35 @@ public class CollectionTest extends AbstractPersistenceTest {
         assertTrue(r.size() > 0);
 
         Entity returned = r.getEntities().get(0);
+
+        assertEquals(user.getUuid(), returned.getUuid());
+        
+        //update the username
+        String newFirstName = "firstName" + UUIDUtils.newTimeUUID();
+        
+        user.setProperty("firstname", newFirstName);
+        
+        em.update(user);
+        
+        //search with the old username, should be no results
+        query = new Query();
+        query.addEqualityFilter("firstname", firstName);
+
+        r = em.searchCollection(em.getApplicationRef(), "users", query);
+
+        assertEquals(0, r.size());
+
+        
+        //search with the new username, should be results.
+        
+        query = new Query();
+        query.addEqualityFilter("firstname", newFirstName);
+
+        r = em.searchCollection(em.getApplicationRef(), "users", query);
+
+        assertTrue(r.size() > 0);
+
+        returned = r.getEntities().get(0);
 
         assertEquals(user.getUuid(), returned.getUuid());
 
