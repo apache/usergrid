@@ -321,7 +321,7 @@
                     <div id="application-panel" style="display: none">
                         <div class="console-section">
                             <div class="well thingy">
-                              <span class="title"> Application Dashboard <span id="selectedApp2"></span> </span>
+                              <span class="title"> Application Dashboard <span class="app_title"></span> </span>
                             </div>
                             <div class="console-section-contents">
                                 <div id="application-panel-table" class="row">
@@ -458,7 +458,7 @@
                         <div id="users-panel-list" class="panel-content">
                         <div id="users-messages" class="alert" style="display: none;"></div>
                             <div class="console-section">
-                                <div class="well thingy"><span class="title"> Users </span>
+                                <div class="well thingy"><span class="title"> Users <span class="app_title"></span></span>
                                     <div class="bar">
                                         <input onkeyup="usergrid.console.searchUsers();" type="text" name="search-user-username" id="search-user-username" class="input-small search" placeholder="Search"/>
                                         <select id="search-user-type" onChange="usergrid.console.searchUsers();" class="input-medium search">
@@ -638,7 +638,7 @@
                         <div id="groups-panel-list" class="panel-content">
                         <div id="groups-messages" class="alert" style="display: none;"></div>
                             <div class="console-section">
-                                <div class="well thingy"><span class="title"> Groups </span>
+                                <div class="well thingy"><span class="title"> Groups <span class="app_title"></span> </span>
                                     <div class="bar">
                                         <input onkeyup="usergrid.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search" placeholder="Search"/>
                                         <select id="search-group-type" onChange="usergrid.console.searchGroups();" class="input-medium search">
@@ -732,7 +732,7 @@
                             <div id="roles-panel-list" class="panel-content">
                             <div id="roles-messages" class="alert" style="display: none;"></div>
                                 <div class="console-section">
-                                    <div class="well thingy"><span class="title"> Roles </span>
+                                    <div class="well thingy"><span class="title"> Roles <span class="app_title"></span></span>
                                         <div class="bar">
                                             <a data-toggle="modal" href="#dialog-form-new-role"> Add </a>
                                             <a id="delete-roles-link" href=""> Delete </a>
@@ -749,7 +749,7 @@
                             </div>
                             <div id="roles-panel-search" class="panel-content" style="display: none;">
                                 <div class="console-section">
-                                    <div class="well thingy"><span class="title"> Role Settings </span></div>
+                                    <div class="well thingy"><span class="title"> Role Settings <span class="app_title"></span></span></div>
                                     <div class="console-section-contents">
                                         <div id="roles-settings">
                                             <h2>No Permissions.</h2>
@@ -811,7 +811,7 @@
                     <div id="activities-panel" style="display: none">
                         <div id="activities-panel-list" class="panel-content">
                             <div class="console-section">
-                                <div class="well thingy"><span class="title"> Activities </span>
+                                <div class="well thingy"><span class="title"> Activities <span class="app_title"></span></span>
                                     <div class="bar">
                                         <input onkeyup="usergrid.console.searchActivities();" type="text" name="search-activities" id="search-activities" class="input-small search" placeholder="Search"/>
                                         <select id="search-activities-type" onChange="usergrid.console.searchActivities();" class="input-medium search">
@@ -831,7 +831,7 @@
                     <div id="analytics-panel" style="display: none">
                         <div class="panel-content">
                             <div class="console-section">
-                                <div class="well thingy"><span class="title"> Analytics </span></div>
+                                <div class="well thingy"><span class="title"> Analytics <span class="app_title"></span></span></div>
                                 <div class="console-section-contents">
                                     <div id="analytics-time">
                                         <form id="resolutionSelectForm" action="" class="form-horizontal">
@@ -881,7 +881,7 @@
                                 </div>
                             </div>
                             <div class="console-section">
-                                <div class="well thingy"><span class="title"> Result Analytics </span></div>
+                                <div class="well thingy"><span class="title"> Result Analytics <span class="app_title"></span></span></div>
                                 <div class="console-section-contents">
                                     <div id="analytics-graph"></div>
                                     <div id="analytics-graph-area"></div>
@@ -892,7 +892,7 @@
                     <div id="settings-panel" style="display: none">
                         <div class="panel-content">
                             <div class="console-section">
-                                <div class="well thingy"><span class="title"> Application API Credentials </span>
+                                <div class="well thingy"><span class="title"> Application API Credentials <span class="app_title"></span></span>
                                     <div class="bar">
                                         <a class="" href="" onclick="usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
                                     </div>
@@ -944,7 +944,7 @@
                         <div class="panel-content">
                         <div id="collections-messages" class="alert" style="display: none;"></div>
                             <div class="console-section">
-                                <div class="well thingy"><span class="title"> Collections </span>
+                                <div class="well thingy"><span class="title"> Collections <span class="app_title"></span></span>
                                     <div class="bar">
                                         <a class="" data-toggle="modal" href="#dialog-form-new-collection"></i> Add </a>
                                         <a href="" onclick="usergrid.console.pageSelectQueryExplorer(); return false;">Query Explorer</a>
@@ -985,7 +985,7 @@
                     </div>
                     <div id="query-panel" style="display: none">
                         <div id="query-path-area" class="console-section">
-                            <div class="well thingy"><span class="title"> Query Collections </span></div>
+                            <div class="well thingy"><span class="title"> Query Collections <span class="app_title"></span></span></div>
                             <div class="console-section-contents">
                                 <form id="query-inputs" class="form-horizontal">
                                     <div class="control-group">
@@ -1028,7 +1028,7 @@
                         </div>
                         <div id="query-response-area" class="console-section">
                             <div class="well thingy" id="query-received-header">
-                                <span class="title"> Received </span>
+                                <span class="title"> Received <span class="app_title"></span></span>
                                 <div class="bar">
                                     <a id="delete-entity-link" href="" > Delete Entity</a>
                                 </div>

@@ -195,9 +195,6 @@ function dateToString(numberDate){
             var metadata = entity.metadata;
             if ($.isEmptyObject(metadata)) metadata = null;
             
-            // entity_contents.created = dateToString(entity_contents.created);
-            // entity_contents.modified = dateToString(entity_contents.modified); 
-
             var details = $.tmpl("usergrid.ui.collections.user.detail.html", {
                 entity : entity_contents,
                 picture : entity.picture,

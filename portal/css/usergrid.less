@@ -35,6 +35,10 @@ html{
     cursor: pointer;
   }
 
+  .app_title {
+    padding-right: 20px;
+  }
+
   .bar a {
     padding-left: 10px !important;
     float: right;
@@ -381,11 +385,6 @@ a:active {
 	}
 }
 
-.openPanel, .closePanel{
-    display:inline-block;
-    width: 25px;
-    //float: left;
-}
 //---------------- Panels ---------------------------------------------------------------------
 
 #application-panel{
@@ -652,6 +651,8 @@ a:active {
 }
 
 #users-pagination {
+  display: none;
+
   #users-previous {
     display: none;
   }
@@ -1097,7 +1098,7 @@ a:active {
 td.checkboxo {
   background-color: #666 !important;
   width: 19px;
-  padding: 9px 3px 0 3px !important;
+  padding: 9px 0 0 3px !important;
 }
 
 table#organization-admins-table {

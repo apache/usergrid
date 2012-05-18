@@ -127,7 +127,7 @@ function usergrid_console_app() {
         //https://apigee.com/console/usergrid?embedded=true&auth=%5B%7B%22type%22%3A%22custom_token%22%2C%22name%22%3A%22Authorization%22%2C%22value%22%3A%22Bearer%20kOo1fUuEEeG0HSIAChxOIg%3AYWQ6AAABNdGCPEab2KpgikKH_X3QMvQA_oeELnAJ-A%22%2C%22style%22%3A%22header%22%7D%2C%7B%22type%22%3A%22custom_token%22%2C%22name%22%3A%22app_id%22%2C%22value%22%3A%2294f945da-599c-11e1-ac46-22000a1c5a67%22%2C%22style%22%3A%22template%22%7D%5D
         //var string='[{"type":"custom_token","name":"Authorization","value":"Bearer '+bearerToken+'","style":"header"},{"type":"custom_token","name":"app_id","value":"'+current_application_id+'","style":"template"}]';
         //var bearerTokenString = encodeURIComponent(string);
-        var url = 'https://apigee.com/console/usergrid?embedded=true&auth='+bearerTokenString;
+        var url = 'https://apigee.com/console/usergrid?v=2&embedded=true&auth='+bearerTokenString;
         return url;
     }
     usergrid.console.getAccessTokenURL = getAccessTokenURL;
@@ -154,10 +154,11 @@ function usergrid_console_app() {
     }
 
     function setNavApplicationText() {
-        if(!current_application_name)
-            current_application_name = "Select an Application";
-	    $('#selectedApp2').text(" - " + current_application_name);
+      if(!current_application_name) {
+        current_application_name = "Select an Application";
+      }
 	    $('#selectedApp').text(current_application_name);
+      $('.thingy span.title span.app_title').text(" - " + current_application_name);
     }
 
     function createAlphabetLinks(containerSelector, callback) {
@@ -315,16 +316,6 @@ function usergrid_console_app() {
 
                 var entity = response.entities[0];
                 query_entities_by_id[entity.uuid] = entity;
-
-                if (entity.created) {
-                  entity.created = dateToString(entity.created);
-                }
-                if (entity.modified) {
-                  entity.modified = dateToString(entity.modified);
-                }
-                if (entity.published) {
-                  entity.published = dateToString(entity.published);
-                }
 
                 var entity_path = (entity.metadata || {}).path;
                 if ($.isEmptyObject(entity_path)) {
@@ -723,6 +714,12 @@ function usergrid_console_app() {
         var date = new Date(numberDate);
         return date.toString('dd MMM yyyy - h:mm tt ');
     }
+
+    $(document).on('click', '.toggleableSP', function() {
+      $(this).parent().find('.toggleableSP').toggle();
+      return false
+    });
+
     function get_gravatar(email, size) {
         var size = size || 50;
         return 'https://secure.gravatar.com/avatar/' + MD5(email) + '?d=identicon&s=' + size;
@@ -1503,6 +1500,11 @@ function usergrid_console_app() {
 
     var usersResults = null;
     function displayUsers(response) {
+    
+      $('#users-pagination').hide();
+      $('#users-next').hide();
+      $('#users-previous').hide();
+
       var data = response.entities;
       var output = $('#users-table');
       output.empty();
@@ -1523,13 +1525,13 @@ function usergrid_console_app() {
         }
       }
 
-      if (users_query.hasNext) {
+      if (users_query.hasNext() != response.cursor && users_query.hasNext()) {
         $(document).on('click', '#users-next', users_query.getNext);
         $('#users-pagination').show();
         $('#users-next').show();
       }
       
-      if (users_query.hasPrevious) {
+      if (users_query.hasPrevious()) {
         $(document).on('click', '#users-previous', users_query.getPrevious);
         $('#users-pagination').show();
         $('#users-previous').show();
@@ -1747,9 +1749,6 @@ function usergrid_console_app() {
             var entity_contents = $.extend( false, { }, entity);
             delete entity_contents['metadata'];
             
-            entity_contents.created = dateToString(entity_contents.created);
-            entity_contents.modified = dateToString(entity_contents.modified);
-
             var metadata = entity.metadata;
             if ($.isEmptyObject(metadata)) metadata = null;
             
@@ -1785,10 +1784,6 @@ function usergrid_console_app() {
             client.queryUserActivities(current_application_id, entity.uuid, function(response) {
                 if (user_data && response.entities && (response.entities.length > 0)) {
                     user_data.activities = response.entities;
-
-                    for (var a in user_data.activities ) { 
-                      user_data.activities[a].created = dateToString(user_data.activities[a].created)
-                    }
 
                     redrawUserPanel();
                     $('span[id^=activities-date-field]').each( function() {
@@ -1882,6 +1877,11 @@ function usergrid_console_app() {
 
     var groupsResults = null;
     function displayGroups(response) {
+
+      $('#groups-pagination').hide();
+      $('#groups-next').hide();
+      $('#groups-previous').hide();
+
       var data = response.entities;
       var output = $('#groups-table');
       output.empty();
@@ -1896,17 +1896,18 @@ function usergrid_console_app() {
         }
       }
 
-      if (groups_query.hasNext) {
+      if (groups_query.hasNext() != response.cursor && groups_query.hasNext()) {
         $(document).on('click', '#groups-next', groups_query.getNext);
         $('#groups-pagination').show();
         $('#groups-next').show();
       }
       
-      if (groups_query.hasPrevious) {
+      if (groups_query.hasPrevious()) {
         $(document).on('click', '#groups-previous', groups_query.getPrevious);
         $('#groups-pagination').show();
         $('#groups-previous').show();
       }
+
     }
 
     function showGroupsForLetter(c) {
@@ -2103,9 +2104,6 @@ function usergrid_console_app() {
                 entity_path = path + "/" + entity.uuid;
             }
 
-            entity_contents.created = dateToString(entity_contents.created);
-            entity_contents.modified = dateToString(entity_contents.modified);
-
             group_data = {
                 entity : entity_contents,
                 picture : entity.picture,
@@ -2180,6 +2178,11 @@ function usergrid_console_app() {
 
 
     function displayRoles(response) {
+
+      $('#roles-pagination').hide();
+      $('#roles-next').hide();
+      $('#roles-previous').hide();
+
       roles = {};
       roles = response.data;
       var data = response.entities;
@@ -2195,24 +2198,24 @@ function usergrid_console_app() {
         }
       }
 
-      // if (roles_query.hasNext) {
-      //   $(document).on('click', '#roles-next', roles_query.getNext);
-      //   $('#roles-pagination').show();
-      //   $('#roles-next').show();
-      // }
-      // 
-      // if (roles_query.hasPrevious) {
-      //   $(document).on('click', '#roles-previous', roles_query.getPrevious);
-      //   $('#roles-pagination').show();
-      //   $('#roles-previous').show();
-      // }
+      if (roles_query.hasNext() != response.cursor && roles_query.hasNext() != null) {
+        $(document).on('click', '#roles-next', roles_query.getNext);
+        $('#roles-pagination').show();
+        $('#roles-next').show();
+      }
+
+      if (roles_query.hasPrevious()) {
+        $(document).on('click', '#roles-previous', roles_query.getPrevious);
+        $('#roles-pagination').show();
+        $('#roles-previous').show();
+      }
     }
 
     $("#delete-roles-link").click(deleteRoles);
     function deleteRoles(e) {
         e.preventDefault();
 
-        var items = $("#roles-response-table input[id^=roleListItem]:checked");
+        var items = $("#roles-table input[class^=roleListItem]:checked");
         if(!items.length){
             oopsModal("Error","Please, first select the roles you want to delete.")
             return;
@@ -2490,7 +2493,7 @@ function usergrid_console_app() {
           output.replaceWith('<table id="activities-table" class="table"><tbody></tbody></table>');
         for (i = 0; i < data.length; i++) {
           var this_data = data[i];
-          this_data.actor.gravatar = get_gravatar(this_data.actor.email, 20);
+          // this_data.actor.gravatar = get_gravatar(this_data.actor.email, 20);
           $.tmpl('usergrid.ui.activities.table_rows.html', this_data).appendTo('#activities-table');
         }
       }

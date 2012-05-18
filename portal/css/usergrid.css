@@ -3558,6 +3558,9 @@ html {
   font-size: 19px;
   cursor: pointer;
 }
+.thingy .app_title {
+  padding-right: 20px;
+}
 .thingy .bar a {
   padding-left: 10px !important;
   float: right;
@@ -3897,11 +3900,6 @@ a:active {
   height: 0;
   visibility: hidden;
 }
-.openPanel,
-.closePanel {
-  display: inline-block;
-  width: 25px;
-}
 #application-panel .boxContent {
   background-color: #f2f5f7;
   -webkit-border-radius: 0 0 5px 5px;
@@ -4125,6 +4123,9 @@ a:active {
   color: white;
   line-height: 20px;
   padding: 5px 10px;
+}
+#users-pagination {
+  display: none;
 }
 #users-pagination #users-previous {
   display: none;
@@ -4545,7 +4546,7 @@ a:active {
 td.checkboxo {
   background-color: #666 !important;
   width: 19px;
-  padding: 9px 3px 0 3px !important;
+  padding: 9px 0 0 3px !important;
 }
 table#organization-admins-table tr td.gravatar20 {
   width: 30px !important;

@@ -98,8 +98,6 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
       } else {
         entity.picture = entity.picture + "?d=http://" + window.location.host + window.location.pathname + "images/user_profile.png"
       }
-        
-      console.log("here i aaaamm...");
 
 			return $.tmpl("usergrid.ui.collections.entity.header.html", {
         entity : entity,
@@ -136,12 +134,6 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 			entity_contents = $.extend( false, entity_contents, {'sets': sets});
 			var collections = entity_contents['metadata']['collections'];
 			entity_contents = $.extend( false, entity_contents, {'collections': collections});
-
-      entity_contents.created = dateToString(entity_contents.created);
-      entity_contents.modified = dateToString(entity_contents.modified);
-      if (entity_contents.published) {
-        entity_contents.published = dateToString(entity_contents.published);
-      }
 
 			delete entity_contents['metadata'];
 			return $.tmpl("usergrid.ui.collections.entity.contents.html", {
