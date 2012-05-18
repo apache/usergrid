@@ -138,6 +138,8 @@ import org.usergrid.persistence.EntityFactory;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Identifier;
+import org.usergrid.persistence.IndexBucketLocator;
+import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Query.CounterFilterPredicate;
 import org.usergrid.persistence.Results;
@@ -179,18 +181,21 @@ public class EntityManagerImpl implements EntityManager,
 	private static final Logger logger = LoggerFactory
 			.getLogger(EntityManagerImpl.class);
 
-	ApplicationContext applicationContext;
+	private ApplicationContext applicationContext;
 
-	EntityManagerFactoryImpl emf;
+	private EntityManagerFactoryImpl emf;
 
 	@Autowired
-	QueueManagerFactoryImpl qmf;
+	private QueueManagerFactoryImpl qmf;
+	
+	@Autowired
+	private IndexBucketLocator indexBucketLocator;
 
-	UUID applicationId;
+	private UUID applicationId;
 
-	CassandraService cass;
+	private CassandraService cass;
 
-	CounterUtils counterUtils;
+	private CounterUtils counterUtils;
 
 	public static final StringSerializer se = new StringSerializer();
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
@@ -234,7 +239,7 @@ public class EntityManagerImpl implements EntityManager,
 	public RelationManagerImpl getRelationManager(EntityRef entityRef) {
 		return applicationContext.getAutowireCapableBeanFactory()
 				.createBean(RelationManagerImpl.class)
-				.init(this, cass, applicationId, entityRef);
+				.init(this, cass, applicationId, entityRef, indexBucketLocator);
 	}
 
 	/**
@@ -594,7 +599,7 @@ public class EntityManagerImpl implements EntityManager,
 
 		long timestamp = cass.createTimestamp();
 
-		addInsertToMutator(m, ApplicationCF.ENTITY_ALIASES, keyId, "entityId",
+		addInsertToMutator(m, ENTITY_ALIASES, keyId, "entityId",
 				entityId, timestamp);
 		addInsertToMutator(m, ENTITY_ALIASES, keyId, "entityType", entityType,
 				timestamp);
@@ -838,7 +843,9 @@ public class EntityManagerImpl implements EntityManager,
 		long timestamp = getTimestampInMicros(timestampUuid);
 
 		String eType = Schema.normalizeEntityType(entityType);
+		
 		boolean is_application = TYPE_APPLICATION.equals(eType);
+		
 		if (((applicationId == null) || applicationId
 				.equals(UUIDUtils.zeroUUID)) && !is_application) {
 			return null;
@@ -852,8 +859,8 @@ public class EntityManagerImpl implements EntityManager,
 			entityClass = (Class<A>) DynamicEntity.class;
 		}
 
-		Set<String> required = getDefaultSchema().getRequiredProperties(
-				entityType);
+		Set<String> required = getDefaultSchema().getRequiredProperties(entityType);
+		
 		if (required != null) {
 			for (String p : required) {
 				if (!PROPERTY_UUID.equals(p) && !PROPERTY_TYPE.equals(p)
@@ -883,6 +890,7 @@ public class EntityManagerImpl implements EntityManager,
 		}
 
 		UUID itemId = UUIDUtils.newTimeUUID();
+		
 		if (is_application) {
 			itemId = applicationId;
 		}
@@ -893,8 +901,9 @@ public class EntityManagerImpl implements EntityManager,
 		// Create collection name based on entity: i.e. "users"
 		String collection_name = Schema.defaultCollectionName(eType);
 		// Create collection key based collection name
-		Object collection_key = key(applicationId,
-				Schema.DICTIONARY_COLLECTIONS, collection_name);
+		String bucketId = indexBucketLocator.getBucket(applicationId, IndexType.COLLECTION, itemId, collection_name);
+		        
+		Object collection_key = key(applicationId, Schema.DICTIONARY_COLLECTIONS, collection_name, bucketId);
 
 		CollectionInfo collection = null;
 
@@ -2961,10 +2970,33 @@ public class EntityManagerImpl implements EntityManager,
 			throws BeansException {
 		this.applicationContext = applicationContext;
 	}
+	
+	
 
-	public GeoIndexManager getGeoIndexManager() {
+	/**
+     * @return the applicationId
+     */
+    public UUID getApplicationId() {
+        return applicationId;
+    }
+
+    /**
+     * @return the cass
+     */
+    public CassandraService getCass() {
+        return cass;
+    }
+
+    public GeoIndexManager getGeoIndexManager() {
 		return applicationContext.getAutowireCapableBeanFactory()
 				.createBean(GeoIndexManager.class).init(this);
 	}
+
+    /**
+     * @return the indexBucketLocator
+     */
+    public IndexBucketLocator getIndexBucketLocator() {
+        return indexBucketLocator;
+    }
 
 }

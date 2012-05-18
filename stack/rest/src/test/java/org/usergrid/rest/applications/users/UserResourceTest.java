@@ -351,48 +351,44 @@ public class UserResourceTest extends AbstractRestTest {
         UUID userId2 = UserRepo.INSTANCE.getByUserName("user2");
         UUID userId3 = UserRepo.INSTANCE.getByUserName("user3");
 
-  
         Query query = client.queryUsers();
-        
+
         ApiResponse response = query.getResponse();
 
         assertNull("Error was: " + response.getErrorDescription(),
                 response.getError());
 
-        
         int nonOrderedSize = response.getEntities().size();
-        
+
         query = client.queryUsers("order by username");
-        
+
         response = query.getResponse();
-        
+
         int orderedSize = response.getEntities().size();
-        
+
         assertEquals("Sizes match", nonOrderedSize, orderedSize);
-        
+
         int firstEntityIndex = getEntityIndex(userId1, response);
-        
+
         int secondEntityIndex = getEntityIndex(userId2, response);
-        
+
         int thirdEntityIndex = getEntityIndex(userId3, response);
-        
+
         assertTrue("Ordered correctly", firstEntityIndex < secondEntityIndex);
-        
+
         assertTrue("Ordered correctly", secondEntityIndex < thirdEntityIndex);
-        
 
     }
-    
-    
-    private int getEntityIndex(UUID entityId, ApiResponse response){
+
+    private int getEntityIndex(UUID entityId, ApiResponse response) {
         List<Entity> entities = response.getEntities();
-        
-        for(int i = 0; i <  entities.size(); i ++){
-            if(entityId.equals(entities.get(i).getUuid())){
+
+        for (int i = 0; i < entities.size(); i++) {
+            if (entityId.equals(entities.get(i).getUuid())) {
                 return i;
             }
         }
-        
+
         return -1;
     }
 
@@ -416,6 +412,50 @@ public class UserResourceTest extends AbstractRestTest {
         User user = results.getResponse().getEntities(User.class).get(0);
 
         assertEquals(createdId, user.getUuid());
+    }
+
+    @Test
+    public void deleteUser() {
+
+        UUID id = UUIDUtils.newTimeUUID();
+
+        String username = "username" + id;
+        String name = "name" + id;
+
+        ApiResponse response = client.createUser(username, name, id
+                + "@usergrid.org", "password");
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
+
+        UUID createdId = response.getEntities().get(0).getUuid();
+
+        JsonNode node = resource()
+                .path("/test-organization/test-app/users/" + createdId)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).delete(JsonNode.class);
+
+        assertNull(node.get("errors"));
+
+        Query results = client.queryUsers(String
+                .format("username = '%s'", name));
+        assertEquals(0, results.getResponse().getEntities(User.class).size());
+        
+        //now create that same user again, it should work
+        response = client.createUser(username, name, id
+                + "@usergrid.org", "password");
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
+
+        createdId = response.getEntities().get(0).getUuid();
+        
+        assertNotNull(createdId);
+        
+      
+        
+        
     }
 
     /**

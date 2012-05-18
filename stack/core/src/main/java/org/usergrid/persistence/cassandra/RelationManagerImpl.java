@@ -127,9 +127,11 @@ import org.usergrid.persistence.ConnectedEntityRef;
 import org.usergrid.persistence.ConnectionRef;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.RelationManager;
 import org.usergrid.persistence.Results;
+import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.RoleRef;
 import org.usergrid.persistence.Schema;
@@ -156,11 +158,12 @@ public class RelationManagerImpl implements RelationManager,
     private static final Logger logger = LoggerFactory
             .getLogger(EntityManagerImpl.class);
 
-    ApplicationContext applicationContext;
-    EntityManagerImpl em;
-    CassandraService cass;
-    UUID applicationId;
-    EntityRef headEntity;
+    private ApplicationContext applicationContext;
+    private EntityManagerImpl em;
+    private CassandraService cass;
+    private UUID applicationId;
+    private EntityRef headEntity;
+    private IndexBucketLocator indexBucketLocator;
 
     public static final StringSerializer se = new StringSerializer();
     public static final ByteBufferSerializer be = new ByteBufferSerializer();
@@ -168,22 +171,28 @@ public class RelationManagerImpl implements RelationManager,
     public static final LongSerializer le = new LongSerializer();
     private static final UUID NULL_ID = new UUID(0, 0);
 
+ 
+    
+
     public RelationManagerImpl() {
     }
 
     public RelationManagerImpl init(EntityManagerImpl em,
-            CassandraService cass, UUID applicationId, EntityRef headEntity) {
+            CassandraService cass, UUID applicationId, EntityRef headEntity,
+            IndexBucketLocator indexBucketLocator) {
         this.em = em;
         this.applicationId = applicationId;
         this.cass = cass;
         this.headEntity = headEntity;
+        this.indexBucketLocator = indexBucketLocator;
+
         return this;
     }
 
     RelationManagerImpl getRelationManager(EntityRef headEntity) {
         return applicationContext.getAutowireCapableBeanFactory()
                 .createBean(RelationManagerImpl.class)
-                .init(em, cass, applicationId, headEntity);
+                .init(em, cass, applicationId, headEntity, indexBucketLocator);
     }
 
     Entity getHeadEntity() throws Exception {
@@ -418,14 +427,20 @@ public class RelationManagerImpl implements RelationManager,
 
         logger.info("batchUpdateCollectionIndex");
 
-        ApplicationCF indexesCf = ENTITY_INDEX;
+        Entity indexedEntity = indexUpdate.getEntity();
+
+        String bucketId = indexBucketLocator.getBucket(applicationId, IndexType.COLLECTION,
+                indexedEntity.getUuid(), indexedEntity.getType(),
+                indexUpdate.getEntryName());
 
         CollectionInfo collection = getDefaultSchema().getCollection(
                 owner.getType(), collectionName);
 
-        // entity_id,collection_name,prop_name
-        Object index_key = key(owner.getUuid(), collectionName,
-                indexUpdate.getEntryName());
+        //the root name without the bucket
+        // entity_id,collection_name,prop_name,
+        Object index_name = null;
+        // entity_id,collection_name,prop_name, bucketId
+        Object index_key = null;
 
         // entity_id,collection_name,collected_entity_id,prop_name
 
@@ -433,10 +448,11 @@ public class RelationManagerImpl implements RelationManager,
 
             if (entry.getValue() != null) {
 
-                index_key = key(owner.getUuid(), collectionName,
-                        entry.getPath());
+                index_name = key(owner.getUuid(), collectionName,  entry.getPath());
+                
+                index_key = key(index_name, bucketId);
 
-                addDeleteToMutator(indexUpdate.getBatch(), indexesCf,
+                addDeleteToMutator(indexUpdate.getBatch(), ENTITY_INDEX,
                         index_key, entry.getIndexComposite(),
                         indexUpdate.getTimestamp());
 
@@ -461,7 +477,7 @@ public class RelationManagerImpl implements RelationManager,
                                     collectionName, subkey_key, entry.getPath());
 
                             addDeleteToMutator(indexUpdate.getBatch(),
-                                    indexesCf, index_subkey_key,
+                                    ENTITY_INDEX, index_subkey_key,
                                     entry.getIndexComposite(),
                                     indexUpdate.getTimestamp());
 
@@ -474,7 +490,7 @@ public class RelationManagerImpl implements RelationManager,
                             indexUpdate.getEntity(), entry.getTimestampUuid(),
                             entry.getValue().toString());
                     batchRemoveLocationFromCollectionIndex(
-                            indexUpdate.getBatch(), index_key, loc);
+                            indexUpdate.getBatch(), indexBucketLocator, applicationId, index_name, loc);
                 }
 
             } else {
@@ -490,12 +506,13 @@ public class RelationManagerImpl implements RelationManager,
 
                 // byte valueCode = indexEntry.getValueCode();
 
-                index_key = key(owner.getUuid(), collectionName,
-                        indexEntry.getPath());
+                index_name = key(owner.getUuid(), collectionName,  indexEntry.getPath());
+                
+                index_key = key(index_name, bucketId);
 
                 // int i = 0;
 
-                addInsertToMutator(indexUpdate.getBatch(), indexesCf,
+                addInsertToMutator(indexUpdate.getBatch(), ENTITY_INDEX,
                         index_key, indexEntry.getIndexComposite(), null,
                         indexUpdate.getTimestamp());
 
@@ -520,10 +537,10 @@ public class RelationManagerImpl implements RelationManager,
                             // entity_id,collection_name,prop_name
                             Object index_subkey_key = key(owner.getUuid(),
                                     collectionName, subkey_key,
-                                    indexEntry.getPath());
+                                    indexEntry.getPath(), bucketId);
 
                             addInsertToMutator(indexUpdate.getBatch(),
-                                    indexesCf, index_subkey_key,
+                                    ENTITY_INDEX, index_subkey_key,
                                     indexEntry.getIndexComposite(), null,
                                     indexUpdate.getTimestamp());
 
@@ -536,8 +553,8 @@ public class RelationManagerImpl implements RelationManager,
                             indexUpdate.getEntity(),
                             indexEntry.getTimestampUuid(), indexEntry
                                     .getValue().toString());
-                    batchStoreLocationInCollectionIndex(indexUpdate.getBatch(),
-                            index_key, loc);
+                    batchStoreLocationInCollectionIndex(indexUpdate.getBatch(), indexBucketLocator, applicationId, 
+                            index_name, indexedEntity.getUuid(), loc);
                 }
 
                 // i++;
@@ -560,6 +577,8 @@ public class RelationManagerImpl implements RelationManager,
     @Override
     public Set<String> getCollectionIndexes(String collectionName)
             throws Exception {
+
+        // TODO TN, read all buckets here
         List<HColumn<String, String>> results = cass.getAllColumns(
                 cass.getApplicationKeyspace(applicationId),
                 ENTITY_DICTIONARIES,
@@ -582,6 +601,9 @@ public class RelationManagerImpl implements RelationManager,
         Map<EntityRef, Set<String>> results = new LinkedHashMap<EntityRef, Set<String>>();
 
         Keyspace ko = cass.getApplicationKeyspace(applicationId);
+
+        // TODO TN get all buckets here
+
         List<HColumn<DynamicComposite, ByteBuffer>> containers = cass
                 .getAllColumns(
                         ko,
@@ -698,15 +720,21 @@ public class RelationManagerImpl implements RelationManager,
         }
 
         Map<UUID, CollectionRef> membershipRefs = new LinkedHashMap<UUID, CollectionRef>();
+
         for (UUID ownerId : ownerIds) {
+
             CollectionRef membershipRef = new SimpleCollectionRef(
                     new SimpleEntityRef(ownerType, ownerId), collectionName,
                     entity);
 
             membershipRefs.put(ownerId, membershipRef);
 
+            // get the bucket this entityId needs to be inserted into
+            String bucketId = indexBucketLocator.getBucket(applicationId, IndexType.COLLECTION,
+                    entity.getUuid(), collectionName);
+
             Object collections_key = key(ownerId,
-                    Schema.DICTIONARY_COLLECTIONS, collectionName);
+                    Schema.DICTIONARY_COLLECTIONS, collectionName, bucketId);
 
             // Insert in main collection
 
@@ -869,8 +897,12 @@ public class RelationManagerImpl implements RelationManager,
             return batch;
         }
 
-        Object collections_key = key(headEntity.getUuid(),
-                Schema.DICTIONARY_COLLECTIONS, collectionName);
+        Object collections_key = key(
+                headEntity.getUuid(),
+                Schema.DICTIONARY_COLLECTIONS,
+                collectionName,
+                indexBucketLocator.getBucket(applicationId, IndexType.COLLECTION,
+                        headEntity.getUuid(), collectionName));
 
         // Remove property indexes
 
@@ -972,23 +1004,22 @@ public class RelationManagerImpl implements RelationManager,
             ConnectionRefImpl connection, UUID[] index_keys) throws Exception {
 
         // entity_id,prop_name
-        Object property_index_key = key(index_keys[ConnectionRefImpl.ALL],
-                INDEX_CONNECTIONS, entry.getPath());
+        Object property_index_key = key(index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(), indexBucketLocator.getBucket(applicationId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL], entry.getPath()));
 
         // entity_id,entity_type,prop_name
         Object entity_type_prop_index_key = key(
                 index_keys[ConnectionRefImpl.BY_ENTITY_TYPE],
-                INDEX_CONNECTIONS, entry.getPath());
+                INDEX_CONNECTIONS, entry.getPath(), indexBucketLocator.getBucket(applicationId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], entry.getPath()));
 
         // entity_id,connection_type,prop_name
         Object connection_type_prop_index_key = key(
                 index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE],
-                INDEX_CONNECTIONS, entry.getPath());
+                INDEX_CONNECTIONS, entry.getPath(), indexBucketLocator.getBucket(applicationId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], entry.getPath()));
 
         // entity_id,connection_type,entity_type,prop_name
         Object connection_type_and_entity_type_prop_index_key = key(
                 index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE],
-                INDEX_CONNECTIONS, entry.getPath());
+                INDEX_CONNECTIONS, entry.getPath(), indexBucketLocator.getBucket(applicationId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], entry.getPath()));
 
         // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
         addDeleteToMutator(indexUpdate.getBatch(), ENTITY_INDEX,
@@ -1026,23 +1057,23 @@ public class RelationManagerImpl implements RelationManager,
             ConnectionRefImpl connection, UUID[] index_keys) {
 
         // entity_id,prop_name
-        Object property_index_key = key(index_keys[ConnectionRefImpl.ALL],
-                INDEX_CONNECTIONS, entry.getPath());
+        Object property_index_key = key(index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(), indexBucketLocator.getBucket(applicationId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL], entry.getPath()));
 
         // entity_id,entity_type,prop_name
         Object entity_type_prop_index_key = key(
                 index_keys[ConnectionRefImpl.BY_ENTITY_TYPE],
-                INDEX_CONNECTIONS, entry.getPath());
+                INDEX_CONNECTIONS, entry.getPath(), indexBucketLocator.getBucket(applicationId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], entry.getPath()));
 
         // entity_id,connection_type,prop_name
         Object connection_type_prop_index_key = key(
                 index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE],
-                INDEX_CONNECTIONS, entry.getPath());
+                INDEX_CONNECTIONS, entry.getPath(), indexBucketLocator.getBucket(applicationId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], entry.getPath()));
 
         // entity_id,connection_type,entity_type,prop_name
         Object connection_type_and_entity_type_prop_index_key = key(
                 index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE],
-                INDEX_CONNECTIONS, entry.getPath());
+                INDEX_CONNECTIONS, entry.getPath(), indexBucketLocator.getBucket(applicationId, IndexType.CONNECTION, index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], entry.getPath()));
+
 
         // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
         addInsertToMutator(indexUpdate.getBatch(), ENTITY_INDEX,
@@ -1118,7 +1149,7 @@ public class RelationManagerImpl implements RelationManager,
                             indexUpdate.getEntity(), entry.getTimestampUuid(),
                             entry.getValue().toString());
                     batchDeleteLocationInConnectionsIndex(
-                            indexUpdate.getBatch(), index_keys,
+                            indexUpdate.getBatch(), indexBucketLocator, applicationId, index_keys,
                             entry.getPath(), loc);
                 }
 
@@ -1142,7 +1173,7 @@ public class RelationManagerImpl implements RelationManager,
                             indexEntry.getTimestampUuid(), indexEntry
                                     .getValue().toString());
                     batchStoreLocationInConnectionsIndex(
-                            indexUpdate.getBatch(), index_keys,
+                            indexUpdate.getBatch(), indexBucketLocator, applicationId, index_keys,
                             indexEntry.getPath(), loc);
                 }
             }
@@ -2056,11 +2087,73 @@ public class RelationManagerImpl implements RelationManager,
 
         return results;
     }
+    
+    
 
-    public List<HColumn<ByteBuffer, ByteBuffer>> searchIndex(Object indexKey,
+    private List<HColumn<ByteBuffer, ByteBuffer>> searchIndex(Object indexKey,
             QuerySlice slice, int count) throws Exception {
 
+        Object start = getStart(slice);
+
+        Object finish = getFinish(slice);
+
+        if (slice.isReversed() && (start != null) && (finish != null)) {
+            Object temp = start;
+            start = finish;
+            finish = temp;
+        }
+
+        
+        Object keyPrefix = key(indexKey, slice.getPropertyName());
+        
+        IndexBucketScanner scanner = new IndexBucketScanner(cass, indexBucketLocator, ENTITY_INDEX, applicationId, IndexType.CONNECTION,  keyPrefix, start, finish, slice.isReversed(), count, slice.getPropertyName());
+        
+        return scanner.load();
+//        
+//
+//        return cass.getColumns(cass.getApplicationKeyspace(applicationId),
+//                ENTITY_INDEX, key(indexKey, slice.getPropertyName()), start,
+//                finish, count, slice.isReversed());
+
+    }
+
+    /**
+     * Search the collection index using all the buckets for the given
+     * collection
+     * 
+     * @param indexKey
+     * @param slice
+     * @param count
+     * @param collectionName
+     * @return
+     * @throws Exception
+     */
+    private List<HColumn<ByteBuffer, ByteBuffer>> searchIndexBuckets(
+            Object indexKey, QuerySlice slice, int count, String collectionName)
+            throws Exception {
+
+        Object start = getStart(slice);
+
+        Object finish = getFinish(slice);
+
+        if (slice.isReversed() && (start != null) && (finish != null)) {
+            Object temp = start;
+            start = finish;
+            finish = temp;
+        }
+
+        
+        Object keyPrefix = key(indexKey, slice.getPropertyName());
+        
+        IndexBucketScanner scanner = new IndexBucketScanner(cass, indexBucketLocator, ENTITY_INDEX, applicationId, IndexType.COLLECTION,  keyPrefix, start, finish, slice.isReversed(), count, collectionName);
+        
+        return scanner.load();
+
+    }
+
+    private Object getStart(QuerySlice slice) {
         Object start = null;
+
         if (slice.getCursor() != null) {
             start = slice.getCursor();
         } else if (slice.getStart() != null) {
@@ -2072,7 +2165,12 @@ public class RelationManagerImpl implements RelationManager,
             }
         }
 
+        return start;
+    }
+
+    private Object getFinish(QuerySlice slice) {
         Object finish = null;
+
         if (slice.getFinish() != null) {
             finish = new DynamicComposite(slice.getFinish().getCode(), slice
                     .getFinish().getValue());
@@ -2082,19 +2180,7 @@ public class RelationManagerImpl implements RelationManager,
             }
         }
 
-        if (slice.isReversed() && (start != null) && (finish != null)) {
-            Object temp = start;
-            start = finish;
-            finish = temp;
-        }
-
-        List<HColumn<ByteBuffer, ByteBuffer>> results = cass.getColumns(
-                cass.getApplicationKeyspace(applicationId), ENTITY_INDEX,
-                key(indexKey, slice.getPropertyName()), start, finish, count,
-                slice.isReversed());
-
-        return results;
-
+        return finish;
     }
 
     /**
@@ -2273,7 +2359,7 @@ public class RelationManagerImpl implements RelationManager,
                         cass.getApplicationKeyspace(applicationId),
                         key(headEntity.getUuid(), DICTIONARY_COLLECTIONS,
                                 collectionName), startResult, null, count + 1,
-                        reversed);
+                        reversed, indexBucketLocator, applicationId, collectionName);
 
         Results results = null;
 
@@ -2288,12 +2374,20 @@ public class RelationManagerImpl implements RelationManager,
     }
 
     @Override
-    public int getCollectionSize(String collectionName) throws Exception {
-        return cass.countColumns(
-                cass.getApplicationKeyspace(applicationId),
-                ENTITY_ID_SETS,
-                key(headEntity.getUuid(), DICTIONARY_COLLECTIONS,
-                        collectionName));
+    public long getCollectionSize(String collectionName) throws Exception {
+        long result = 0;
+
+        for (String bucketId : indexBucketLocator.getBuckets(applicationId, IndexType.COLLECTION,
+                collectionName)) {
+
+            result += cass.countColumns(
+                    cass.getApplicationKeyspace(applicationId),
+                    ENTITY_ID_SETS,
+                    key(headEntity.getUuid(), DICTIONARY_COLLECTIONS,
+                            collectionName, bucketId));
+        }
+
+        return result;
     }
 
     // @Override
@@ -2564,7 +2658,7 @@ public class RelationManagerImpl implements RelationManager,
 
         CollectionInfo collection = getDefaultSchema().getCollection(
                 headEntity.getType(), collectionName);
-        
+
         query.setEntityType(collection.getType());
 
         boolean reversed = query.isReversed();
@@ -2594,7 +2688,8 @@ public class RelationManagerImpl implements RelationManager,
         // results
 
         QueryProcessor qp = new QueryProcessor(query, collection);
-        SearchCollectionVisitor visitor = new SearchCollectionVisitor(query, qp, collection);
+        SearchCollectionVisitor visitor = new SearchCollectionVisitor(query,
+                qp, collection);
         qp.getFirstNode().visit(visitor);
 
         Results results = visitor.getResults();
@@ -2630,10 +2725,9 @@ public class RelationManagerImpl implements RelationManager,
         }
         logger.info("Query cursor: " + results.getCursor());
 
-        
-        //now we need to set the cursor from our tree evaluation for return
+        // now we need to set the cursor from our tree evaluation for return
         results.setCursor(qp.getCursor());
-        
+
         return results;
     }
 
@@ -2873,7 +2967,7 @@ public class RelationManagerImpl implements RelationManager,
         QueryProcessor qp = new QueryProcessor(query, null);
         SearchConnectionVisitor visitor = new SearchConnectionVisitor(query,
                 qp, connectionRef);
-        
+
         qp.getFirstNode().visit(visitor);
 
         results = visitor.getResults();
@@ -3043,11 +3137,11 @@ public class RelationManagerImpl implements RelationManager,
             // indexEntry.getPath())
             Object subKey = getCFKeyForSubkey(collection, node);
 
-            
             //
             for (QuerySlice slice : node.getAllSlices()) {
 
-                // NOTE we explicitly do not append the slice value here. This is
+                // NOTE we explicitly do not append the slice value here. This
+                // is
                 // done in the searchIndex
                 // method below
                 Object indexKey = subKey == null ? key(headEntity.getUuid(),
@@ -3059,8 +3153,8 @@ public class RelationManagerImpl implements RelationManager,
                 // change the hash value of the slice
                 queryProcessor.applyCursorAndSort(slice);
 
-                List<HColumn<ByteBuffer, ByteBuffer>> columns = searchIndex(
-                        indexKey, slice, limit);
+                List<HColumn<ByteBuffer, ByteBuffer>> columns = searchIndexBuckets(
+                        indexKey, slice, limit, collection.getName());
 
                 Results r = getIndexResults(columns, true,
                         query.getConnectionType(), collection.getType(),
@@ -3071,9 +3165,10 @@ public class RelationManagerImpl implements RelationManager,
                 }
 
                 if (r.getCursor() != null) {
-                    //TODO T.N. cursors need changed to ByteBuffers for internal efficiency.  We won't serialize
-                    //until the last join occurs
-                     queryProcessor.updateCursor(slice, r.getCursor());
+                    // TODO T.N. cursors need changed to ByteBuffers for
+                    // internal efficiency. We won't serialize
+                    // until the last join occurs
+                    queryProcessor.updateCursor(slice, r.getCursor());
                 }
 
                 if (results != null) {
@@ -3220,4 +3315,6 @@ public class RelationManagerImpl implements RelationManager,
         }
 
     }
+    
+   
 }

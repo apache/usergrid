@@ -31,7 +31,7 @@ public class LiteralFactory {
    */
   public static final Literal<?> getLiteral(Object value){
     if(value instanceof Integer){
-      return new IntegerLiteral((Integer)value);
+      return new LongLiteral((Integer)value);
     }
     
     if(value instanceof String){
