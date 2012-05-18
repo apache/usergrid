@@ -36,7 +36,19 @@ usergrid.Client = function(options) {
     var FORCE_PUBLIC_API = false;
 
     // Public API
-    var PUBLIC_API_URL = "https://api.usergrid.com";
+    //var PUBLIC_API_URL = "https://api.usergrid.com";
+    var PUBLIC_API_URL = "http://ug-qa-cluster.elasticbeanstalk.com";
+
+    //base tld
+    TLD = "apigee.com";
+    LOCAL_TLD = "usergrid.local";
+    GHPAGES_TLD = "apigee.github.com";
+    
+    //Apigee SSO url
+    var APIGEE_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
+
+    //Apigee SSO Callback
+    var SSO_CALLBACK = "https://apigee.com/usergrid";
 
     // Local API of standalone server
     var LOCAL_STANDALONE_API_URL = "http://localhost:8080";
@@ -59,6 +71,17 @@ usergrid.Client = function(options) {
     if (query_params.api_url) {
         this.apiUrl = query_params.api_url;
     }
+
+    this.callback = SSO_CALLBACK;
+    if (query_params.callback) {
+        this.callback = query_params.api_url;
+    }
+
+    this.apigee_sso_url = APIGEE_SSO_URL;
+    if (query_params.apigee_sso_url) {
+        this.apigee_sso_url = query_params.apigee_sso_url;
+    }
+
 
     if (options.apiUrl) {
         this.apiUrl = options.apiUrl;
@@ -407,9 +430,11 @@ usergrid.Client = function(options) {
                             else if (error == "expired_token") {
                                 force_logout = true;
                             }
+                            else if (error == "auth_bad_access_token") {
+                                force_logout = true;
+                            }
                             else if (error == "web_application") {
-                                //TBD::should we do something here?                                
-                                                           
+                                //TBD::should we do something here?
                             }
                         }
                         response = response || {};
@@ -913,16 +938,31 @@ usergrid.Client = function(options) {
 
     this.onLogout = null;
     function logout() {
-        self.loggedInUser = null;
-        self.accessToken = null;
-        localStorage.removeItem('usergrid_user');
-        localStorage.removeItem('usergrid_access_token');
-        if (self.onLogout) {
+        clearLoginCredentials();
+        if (window.location.host != TLD &&
+            window.location.host != GHPAGES_TLD &&
+            window.location.host != LOCAL_TLD &&
+            self.onLogout) {
             self.onLogout();
+        } else {
+            sendToLoginPage();
         }
     }
     this.logout = logout;
 
+    function clearLoginCredentials(){
+        self.loggedInUser = null;
+        self.accessToken = null;
+        localStorage.removeItem('usergrid_user');
+        localStorage.removeItem('usergrid_access_token');
+    }
+    this.clearLoginCredentials = clearLoginCredentials;
+
+    function sendToLoginPage() {
+        window.location = self.apigee_sso_url + '?' + self.callback;
+    }
+    this.sendToLoginPage = sendToLoginPage;
+    
     function loggedIn() {
         return self.loggedInUser && self.accessToken;
     }
@@ -1334,11 +1374,12 @@ usergrid.Client = function(options) {
     this.Query = Query;
 
     function handleAutoLogin(email, token) {
-        logout();
         loginWithAccessToken(email, token,
         function(response) {
             console.log("Auto-logged in");
-            if (self.onAutoLogin) self.onAutoLogin();
+            if (self.onAutoLogin) {
+                self.onAutoLogin();
+            }
         },
         function() {
             logout();
@@ -1346,16 +1387,20 @@ usergrid.Client = function(options) {
     }
 
     if (this.apiUrl != localStorage.getItem('usergrid_api_url')) {
-        logout();
         localStorage.setItem('usergrid_api_url', this.apiUrl);
     }
 
-    this.onAutoLogin = null;
+    existingUser = localStorage.getObject('usergrid_user');
+    existingAccessToken = localStorage.getObject('usergrid_access_token');
+
+    //this.onAutoLogin = null;
     if (query_params.access_token && query_params.admin_email) {
         handleAutoLogin(query_params.admin_email, query_params.access_token);
         return;
-    }
-    else if (options.accessToken && options.adminEmail) {
+    } else if (existingAccessToken && existingUser.admin_email) {
+        handleAutoLogin(existingUser.admin_email, existingAccessToken);
+        return;
+    } else if (options.accessToken && options.adminEmail) {
         handleAutoLogin(options.adminEmail, options.accessToken);
         return;
     }
