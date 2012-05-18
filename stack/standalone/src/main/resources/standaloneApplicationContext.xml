@@ -145,6 +145,8 @@
 
 	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl" />
 
+	<bean id="mongoServer" class="org.usergrid.mongo.MongoServer" init-method="startServer" destroy-method="stopServer"/>
+	
 	<bean id="standaloneServer" class="org.usergrid.standalone.Server"
 		factory-method="getInstance" init-method="springInit" />
 
