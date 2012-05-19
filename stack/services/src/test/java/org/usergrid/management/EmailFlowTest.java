@@ -121,8 +121,10 @@ public class EmailFlowTest {
 		String token = getTokenFromMessage(account_confirmation_message);
 		logger.info(token);
 
-		assertTrue(management.handleConfirmationTokenForAdminUser(
-				org_owner.owner.getUuid(), token));
+		assertEquals(
+				ActivationState.ACTIVATED,
+				management.handleConfirmationTokenForAdminUser(
+						org_owner.owner.getUuid(), token));
 
 		Message account_activation_message = inbox.get(2);
 		assertEquals("User Account Activated",
@@ -165,8 +167,10 @@ public class EmailFlowTest {
 		String token = getTokenFromMessage(account_confirmation_message);
 		logger.info(token);
 
-		assertTrue(management.handleConfirmationTokenForAdminUser(
-				org_owner.owner.getUuid(), token));
+		assertEquals(
+				ActivationState.CONFIRMED_AWAITING_ACTIVATION,
+				management.handleConfirmationTokenForAdminUser(
+						org_owner.owner.getUuid(), token));
 
 		Message account_confirmed_message = user_inbox.get(2);
 		assertEquals("User Account Confirmed",
@@ -184,8 +188,10 @@ public class EmailFlowTest {
 		token = getTokenFromMessage(account_activation_message);
 		logger.info(token);
 
-		assertTrue(management.handleActivationTokenForAdminUser(
-				org_owner.owner.getUuid(), token));
+		assertEquals(
+				ActivationState.ACTIVATED,
+				management.handleActivationTokenForAdminUser(
+						org_owner.owner.getUuid(), token));
 
 		Message account_activated_message = user_inbox.get(3);
 		assertEquals("User Account Activated",

@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.usergrid.management.ActivationState;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
@@ -286,9 +287,12 @@ public class UserResource extends AbstractContextResource {
 			@QueryParam("token") String token) {
 
 		try {
-			management.handleConfirmationTokenForAdminUser(user.getUuid(),
-					token);
-			return new Viewable("confirm", this);
+			ActivationState state = management
+					.handleConfirmationTokenForAdminUser(user.getUuid(), token);
+			if (state == ActivationState.CONFIRMED_AWAITING_ACTIVATION) {
+				return new Viewable("confirm", this);
+			}
+			return new Viewable("activate", this);
 		} catch (TokenException e) {
 			return new Viewable("bad_confirmation_token", this);
 		} catch (Exception e) {

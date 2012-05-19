@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.usergrid.management.ActivationState;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
@@ -100,12 +101,31 @@ public class OrganizationResource extends AbstractContextResource {
 	@GET
 	@Path("activate")
 	public Viewable activate(@Context UriInfo ui,
-			@QueryParam("token") String token,
-			@QueryParam("confirm") boolean confirm) {
+			@QueryParam("token") String token) {
 
 		try {
 			management.handleActivationTokenForOrganization(
 					organization.getUuid(), token);
+			return new Viewable("activate", this);
+		} catch (TokenException e) {
+			return new Viewable("bad_activation_token", this);
+		} catch (Exception e) {
+			return new Viewable("error", e);
+		}
+	}
+
+	@GET
+	@Path("confirm")
+	public Viewable confirm(@Context UriInfo ui,
+			@QueryParam("token") String token) {
+
+		try {
+			ActivationState state = management
+					.handleActivationTokenForOrganization(
+							organization.getUuid(), token);
+			if (state == ActivationState.CONFIRMED_AWAITING_ACTIVATION) {
+				return new Viewable("confirm", this);
+			}
 			return new Viewable("activate", this);
 		} catch (TokenException e) {
 			return new Viewable("bad_activation_token", this);

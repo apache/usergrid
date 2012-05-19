@@ -78,6 +78,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.locking.LockManager;
+import org.usergrid.management.ActivationState;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationInfo;
@@ -686,49 +687,49 @@ public class ManagementServiceImpl implements ManagementService {
 		return results;
 	}
 
-  private UserInfo doCreateAdmin(User user, boolean sendEmail,
-                                 Map<String, CredentialsInfo> credentials) throws Exception {
-    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-    credentials
-            .put("secret",
-                    plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
-    em.addMapToDictionary(user, DICTIONARY_CREDENTIALS, credentials);
+	private UserInfo doCreateAdmin(User user, boolean sendEmail,
+			Map<String, CredentialsInfo> credentials) throws Exception {
+		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+		credentials
+				.put("secret",
+						plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
+		em.addMapToDictionary(user, DICTIONARY_CREDENTIALS, credentials);
 
-    UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
-            user.getUuid(), user.getUsername(), user.getName(),
-            user.getEmail(), user.getActivated(), user.getDisabled());
+		UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
+				user.getUuid(), user.getUsername(), user.getName(),
+				user.getEmail(), user.getActivated(), user.getDisabled());
 
-    if (sendEmail && !user.getActivated()) {
-      this.startAdminUserActivationFlow(userInfo);
-    }
-    return userInfo;
-  }
+		if (sendEmail && !user.getActivated()) {
+			this.startAdminUserActivationFlow(userInfo);
+		}
+		return userInfo;
+	}
 
-  @Override
-  public UserInfo createAdminFromPrexistingPassword(User user,
-                                                    String precypheredPassword,
-                                                    boolean sendEmail)
-          throws Exception {
-    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-    Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
+	@Override
+	public UserInfo createAdminFromPrexistingPassword(User user,
+			String precypheredPassword, boolean sendEmail) throws Exception {
+		emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
 
-    CredentialsInfo ci = new CredentialsInfo();
-    ci.setRecoverable(false);
-    ci.setCipher("sha-1");
-    ci.setSecret(precypheredPassword);
-    ci.setRecoverable(false);
-    ci.setEncrypted(true);
+		CredentialsInfo ci = new CredentialsInfo();
+		ci.setRecoverable(false);
+		ci.setCipher("sha-1");
+		ci.setSecret(precypheredPassword);
+		ci.setRecoverable(false);
+		ci.setEncrypted(true);
 
-    credentials.put("password", ci);
-    credentials.put("mongo_pwd",
-            mongoPasswordCredentials(user.getUsername(), precypheredPassword));
-    return doCreateAdmin(user, sendEmail, credentials);
-  }
+		credentials.put("password", ci);
+		credentials.put(
+				"mongo_pwd",
+				mongoPasswordCredentials(user.getUsername(),
+						precypheredPassword));
+		return doCreateAdmin(user, sendEmail, credentials);
+	}
 
 	@Override
 	public UserInfo createAdminFrom(User user, String password,
 			boolean sendEmail) throws Exception {
-		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+		emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
 		credentials.put("password", passwordCredentials(password));
 		credentials.put("mongo_pwd",
@@ -1033,15 +1034,16 @@ public class ManagementServiceImpl implements ManagementService {
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		User user = em.get(userId, User.class);
-    CredentialsInfo credentialsInfo = (CredentialsInfo) em.getDictionaryElementValue(user,
-    						DICTIONARY_CREDENTIALS, "password");
+		CredentialsInfo credentialsInfo = (CredentialsInfo) em
+				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
+						"password");
 
-    password = maybeSaltPassword(password, user, credentialsInfo);
+		password = maybeSaltPassword(password, user, credentialsInfo);
 
-    if (checkPassword(password, credentialsInfo)) {
+		if (checkPassword(password, credentialsInfo)) {
 			return true;
 		}
-    logger.info("password compare fail for uuid {}",userId);
+		logger.info("password compare fail for uuid {}", userId);
 		return false;
 	}
 
@@ -1056,10 +1058,11 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-            
-    CredentialsInfo credentialsInfo = (CredentialsInfo) em.getDictionaryElementValue(user,
-       						DICTIONARY_CREDENTIALS, "password");
-    password = maybeSaltPassword(password, user, credentialsInfo);
+
+		CredentialsInfo credentialsInfo = (CredentialsInfo) em
+				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
+						"password");
+		password = maybeSaltPassword(password, user, credentialsInfo);
 
 		if (checkPassword(password, credentialsInfo)) {
 			userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
@@ -1071,7 +1074,7 @@ public class ManagementServiceImpl implements ManagementService {
 			}
 			return userInfo;
 		}
-    logger.info("password compare fail for {}",name);
+		logger.info("password compare fail for {}", name);
 		return null;
 
 	}
@@ -1898,8 +1901,8 @@ public class ManagementServiceImpl implements ManagementService {
 	}
 
 	@Override
-	public boolean handleActivationTokenForOrganization(UUID organizationId,
-			String token) throws Exception {
+	public ActivationState handleActivationTokenForOrganization(
+			UUID organizationId, String token) throws Exception {
 		AuthPrincipalInfo principal = getPrincipalFromAccessToken(token,
 				TOKEN_TYPE_ACTIVATION, ORGANIZATION);
 		if ((principal != null) && organizationId.equals(principal.getUuid())) {
@@ -1907,9 +1910,9 @@ public class ManagementServiceImpl implements ManagementService {
 					.getOrganizationByUuid(organizationId);
 			sendOrganizationActivatedEmail(organization);
 			sendSysAdminNewOrganizationActivatedNotificationEmail(organization);
-			return true;
+			return ActivationState.ACTIVATED;
 		}
-		return false;
+		return ActivationState.UNKNOWN;
 	}
 
 	public void sendOrganizationActivatedEmail(OrganizationInfo organization)
@@ -1973,8 +1976,8 @@ public class ManagementServiceImpl implements ManagementService {
 	}
 
 	@Override
-	public boolean handleConfirmationTokenForAdminUser(UUID userId, String token)
-			throws Exception {
+	public ActivationState handleConfirmationTokenForAdminUser(UUID userId,
+			String token) throws Exception {
 		AuthPrincipalInfo principal = getPrincipalFromAccessToken(token,
 				TOKEN_TYPE_CONFIRM, ADMIN_USER);
 		if ((principal != null) && userId.equals(principal.getUuid())) {
@@ -1983,19 +1986,20 @@ public class ManagementServiceImpl implements ManagementService {
 			if (newAdminUsersNeedSysAdminApproval()) {
 				sendAdminUserConfirmedAwaitingActivationEmail(user);
 				sendSysAdminRequestAdminActivationEmail(user);
+				return ActivationState.CONFIRMED_AWAITING_ACTIVATION;
 			} else {
 				activateAdminUser(principal.getUuid());
 				sendAdminUserActivatedEmail(user);
 				sendSysAdminNewAdminActivatedNotificationEmail(user);
+				return ActivationState.ACTIVATED;
 			}
-			return true;
 		}
-		return false;
+		return ActivationState.UNKNOWN;
 	}
 
 	@Override
-	public boolean handleActivationTokenForAdminUser(UUID userId, String token)
-			throws Exception {
+	public ActivationState handleActivationTokenForAdminUser(UUID userId,
+			String token) throws Exception {
 		AuthPrincipalInfo principal = getPrincipalFromAccessToken(token,
 				TOKEN_TYPE_ACTIVATION, ADMIN_USER);
 		if ((principal != null) && userId.equals(principal.getUuid())) {
@@ -2003,9 +2007,9 @@ public class ManagementServiceImpl implements ManagementService {
 			UserInfo user = getAdminUserByUuid(principal.getUuid());
 			sendAdminUserActivatedEmail(user);
 			sendSysAdminNewAdminActivatedNotificationEmail(user);
-			return true;
+			return ActivationState.ACTIVATED;
 		}
-		return false;
+		return ActivationState.UNKNOWN;
 	}
 
 	public void sendAdminUserConfirmationEmail(UserInfo user) throws Exception {
@@ -2089,15 +2093,15 @@ public class ManagementServiceImpl implements ManagementService {
 
 	}
 
-  @Override
-  public void activateOrganization(OrganizationInfo organization)
-  			throws Exception {
-    activateOrganization(organization, true);
-  }
+	@Override
+	public void activateOrganization(OrganizationInfo organization)
+			throws Exception {
+		activateOrganization(organization, true);
+	}
 
 	@Override
-	public void activateOrganization(OrganizationInfo organization, boolean sendEmail)
-			throws Exception {
+	public void activateOrganization(OrganizationInfo organization,
+			boolean sendEmail) throws Exception {
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		em.setProperty(
 				new SimpleEntityRef(Group.ENTITY_TYPE, organization.getUuid()),
@@ -2109,9 +2113,9 @@ public class ManagementServiceImpl implements ManagementService {
 				activateAdminUser(user.getUuid());
 			}
 		}
-    if ( sendEmail ) {
-      startOrganizationActivationFlow(organization);
-    }
+		if (sendEmail) {
+			startOrganizationActivationFlow(organization);
+		}
 	}
 
 	@Override
@@ -2261,8 +2265,8 @@ public class ManagementServiceImpl implements ManagementService {
 	}
 
 	@Override
-	public boolean handleConfirmationTokenForAppUser(UUID applicationId,
-			UUID userId, String token) throws Exception {
+	public ActivationState handleConfirmationTokenForAppUser(
+			UUID applicationId, UUID userId, String token) throws Exception {
 		AuthPrincipalInfo principal = getPrincipalFromAccessToken(token,
 				TOKEN_TYPE_CONFIRM, APPLICATION_USER);
 		if ((principal != null) && userId.equals(principal.getUuid())) {
@@ -2272,19 +2276,20 @@ public class ManagementServiceImpl implements ManagementService {
 			if (newAppUsersNeedAdminApproval(applicationId)) {
 				sendAppUserConfirmedAwaitingActivationEmail(applicationId, user);
 				sendAdminRequestAppUserActivationEmail(applicationId, user);
+				return ActivationState.CONFIRMED_AWAITING_ACTIVATION;
 			} else {
 				activateAppUser(applicationId, principal.getUuid());
 				sendAppUserActivatedEmail(applicationId, user);
 				sendAdminNewAppUserActivatedNotificationEmail(applicationId,
 						user);
+				return ActivationState.ACTIVATED;
 			}
-			return true;
 		}
-		return false;
+		return ActivationState.UNKNOWN;
 	}
 
 	@Override
-	public boolean handleActivationTokenForAppUser(UUID applicationId,
+	public ActivationState handleActivationTokenForAppUser(UUID applicationId,
 			UUID userId, String token) throws Exception {
 		AuthPrincipalInfo principal = getPrincipalFromAccessToken(token,
 				TOKEN_TYPE_ACTIVATION, APPLICATION_USER);
@@ -2294,9 +2299,9 @@ public class ManagementServiceImpl implements ManagementService {
 			User user = em.get(userId, User.class);
 			sendAppUserActivatedEmail(applicationId, user);
 			sendAdminNewAppUserActivatedNotificationEmail(applicationId, user);
-			return true;
+			return ActivationState.ACTIVATED;
 		}
-		return false;
+		return ActivationState.UNKNOWN;
 	}
 
 	public void sendAppUserConfirmationEmail(UUID applicationId, User user)
@@ -2424,12 +2429,12 @@ public class ManagementServiceImpl implements ManagementService {
 
 		EntityManager em = emf.getEntityManager(applicationId);
 
-
-    CredentialsInfo credentialsInfo = (CredentialsInfo) em.getDictionaryElementValue(user,
-            DICTIONARY_CREDENTIALS, "password");
-    // pre-hash for legacy system imports
-    password = maybeSaltPassword(password, user, credentialsInfo);
-    if (checkPassword(password, credentialsInfo)) {
+		CredentialsInfo credentialsInfo = (CredentialsInfo) em
+				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
+						"password");
+		// pre-hash for legacy system imports
+		password = maybeSaltPassword(password, user, credentialsInfo);
+		if (checkPassword(password, credentialsInfo)) {
 			if (!user.activated()) {
 				throw new UnactivatedAdminUserException();
 			}
@@ -2442,15 +2447,16 @@ public class ManagementServiceImpl implements ManagementService {
 		return null;
 	}
 
-  private String maybeSaltPassword(String password, User user, CredentialsInfo credentialsInfo) {
-    if (StringUtils.equals(user.getHashtype(), User.HASHTYPE_MD5)) {
-      logger.info("hashType detected, applying pre phase");
-      password = credentialsInfo.encrypt(User.HASHTYPE_MD5, "", password);
-    }
-    return password;
-  }
+	private String maybeSaltPassword(String password, User user,
+			CredentialsInfo credentialsInfo) {
+		if (StringUtils.equals(user.getHashtype(), User.HASHTYPE_MD5)) {
+			logger.info("hashType detected, applying pre phase");
+			password = credentialsInfo.encrypt(User.HASHTYPE_MD5, "", password);
+		}
+		return password;
+	}
 
-  public String getPasswordResetTokenForAppUser(UUID applicationId,
+	public String getPasswordResetTokenForAppUser(UUID applicationId,
 			UUID userId) throws Exception {
 		return getTokenForPrincipal(EMAIL, TOKEN_TYPE_PASSWORD_RESET,
 				applicationId, APPLICATION_USER, userId);

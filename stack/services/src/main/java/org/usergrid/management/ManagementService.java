@@ -38,8 +38,8 @@ public interface ManagementService {
 	public void activateOrganization(OrganizationInfo organization)
 			throws Exception;
 
- public void activateOrganization(OrganizationInfo organization, boolean sendEmail)
-  			throws Exception;
+	public void activateOrganization(OrganizationInfo organization,
+			boolean sendEmail) throws Exception;
 
 	public void addAdminUserToOrganization(UserInfo user,
 			OrganizationInfo organization) throws Exception;
@@ -50,14 +50,14 @@ public interface ManagementService {
 	public AccessInfo authorizeClient(String clientId, String clientSecret)
 			throws Exception;
 
-	public boolean handleConfirmationTokenForAdminUser(UUID userId, String token)
-			throws Exception;
-
-	public boolean handleActivationTokenForAdminUser(UUID userId, String token)
-			throws Exception;
-
-	public boolean handleActivationTokenForOrganization(UUID organizationId,
+	public ActivationState handleConfirmationTokenForAdminUser(UUID userId,
 			String token) throws Exception;
+
+	public ActivationState handleActivationTokenForAdminUser(UUID userId,
+			String token) throws Exception;
+
+	public ActivationState handleActivationTokenForOrganization(
+			UUID organizationId, String token) throws Exception;
 
 	public boolean checkPasswordResetTokenForAdminUser(UUID userId, String token)
 			throws Exception;
@@ -69,10 +69,8 @@ public interface ManagementService {
 	public UserInfo createAdminFrom(User user, String password,
 			boolean sendEmail) throws Exception;
 
-  public UserInfo createAdminFromPrexistingPassword(User user,
-                                                      String precypheredPassword,
-                                                      boolean sendEmail)
-            throws Exception;
+	public UserInfo createAdminFromPrexistingPassword(User user,
+			String precypheredPassword, boolean sendEmail) throws Exception;
 
 	public UUID createApplication(UUID organizationId, String applicationName)
 			throws Exception;
@@ -288,11 +286,11 @@ public interface ManagementService {
 	public void activateAppUser(UUID applicationId, UUID userId)
 			throws Exception;
 
-	public boolean handleActivationTokenForAppUser(UUID applicationId,
+	public ActivationState handleActivationTokenForAppUser(UUID applicationId,
 			UUID userId, String token) throws Exception;
 
-	public boolean handleConfirmationTokenForAppUser(UUID applicationId,
-			UUID userId, String token) throws Exception;
+	public ActivationState handleConfirmationTokenForAppUser(
+			UUID applicationId, UUID userId, String token) throws Exception;
 
 	public boolean checkPasswordResetTokenForAppUser(UUID applicationId,
 			UUID userId, String token) throws Exception;

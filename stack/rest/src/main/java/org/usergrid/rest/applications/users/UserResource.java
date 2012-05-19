@@ -83,6 +83,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.usergrid.management.ActivationState;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
@@ -394,8 +395,12 @@ public class UserResource extends ServiceResource {
 			@QueryParam("token") String token) {
 
 		try {
-			management.handleConfirmationTokenForAppUser(getApplicationId(),
-					getUserUuid(), token);
+			ActivationState state = management
+					.handleConfirmationTokenForAppUser(getApplicationId(),
+							getUserUuid(), token);
+			if (state == ActivationState.CONFIRMED_AWAITING_ACTIVATION) {
+				return new Viewable("confirm", this);
+			}
 			return new Viewable("activate", this);
 		} catch (TokenException e) {
 			return new Viewable("bad_confirmation_token", this);
