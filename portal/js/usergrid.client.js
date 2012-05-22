@@ -41,7 +41,8 @@ usergrid.Client = function(options) {
 
     //base tld
     TLD = "apigee.com";
-    LOCAL_TLD = "usergrid.local";
+    LOCAL_TLD1 = "usergrid.local";
+    LOCAL_TLD2 = "localhost:8080";
     GHPAGES_TLD = "apigee.github.com";
     
     //Apigee SSO url
@@ -941,7 +942,8 @@ usergrid.Client = function(options) {
         clearLoginCredentials();
         if (window.location.host != TLD &&
             window.location.host != GHPAGES_TLD &&
-            window.location.host != LOCAL_TLD &&
+            window.location.host != LOCAL_TLD1 &&
+            window.location.host != LOCAL_TLD2 &&
             self.onLogout) {
             self.onLogout();
         } else {
@@ -1394,8 +1396,8 @@ usergrid.Client = function(options) {
     existingAccessToken = localStorage.getObject('usergrid_access_token');
 
     //this.onAutoLogin = null;
-    if (query_params.access_token && query_params.admin_email) {
-        handleAutoLogin(query_params.admin_email, query_params.access_token);
+    if (!existingUser && !existingAccessToken) {
+        logout();
         return;
     } else if (existingAccessToken && existingUser.admin_email) {
         handleAutoLogin(existingUser.admin_email, existingAccessToken);
