@@ -481,6 +481,18 @@
 		</dependencies>
 	</dependencyManagement>
 
+	<build>
+		<plugins>
+		<plugin>
+			    <groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-compiler-plugin</artifactId>
+			    <configuration>
+			        <source>1.6</source>
+			        <target>1.6</target>
+			    </configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 	<profiles>
 		<!-- Jenkins by default defines a property BUILD_NUMBER which is used to 
@@ -527,7 +539,7 @@
 				<artifactId>cobertura-maven-plugin</artifactId>
 				<version>2.5</version>
 			</plugin>
-
+			
 		</plugins>
 	</reporting>
 
