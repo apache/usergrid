@@ -75,7 +75,7 @@ usergrid.Client = function(options) {
 
     this.callback = SSO_CALLBACK;
     if (query_params.callback) {
-        this.callback = query_params.api_url;
+        this.callback = query_params.callback;
     }
 
     this.apigee_sso_url = APIGEE_SSO_URL;
