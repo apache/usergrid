@@ -672,7 +672,7 @@ usergrid.Client = function(options) {
     // GET: /<application-id>
     //
     function requestCollections(applicationId, success, failure) {
-        apiGetRequest("/" + applicationId, null, success, failure);
+        apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId, null, success, failure);
     }
     this.requestCollections = requestCollections;
 
@@ -690,7 +690,7 @@ usergrid.Client = function(options) {
                 collections: collections
             }
         };
-        apiRequest("PUT", "/" + applicationId, null, JSON.stringify(metadata), success, failure);
+        apiRequest("PUT", "/" + self.currentOrganization.uuid + "/" + applicationId, null, JSON.stringify(metadata), success, failure);
     }
     this.createCollection = createCollection;
 
@@ -700,7 +700,7 @@ usergrid.Client = function(options) {
     // GET: /<application-id>/auth/keys
     //
     function requestApplicationCredentials(applicationId, success, failure) {
-        apiGetRequest("/" + applicationId + "/credentials", null, success, failure);
+        apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/credentials", null, success, failure);
     }
     this.requestApplicationCredentials = requestApplicationCredentials;
 
@@ -710,7 +710,7 @@ usergrid.Client = function(options) {
     // POST: /<application-id>/auth/keys
     //
     function regenerateApplicationCredentials(applicationId, success, failure) {
-        apiRequest("POST", "/" + applicationId + "/credentials", null, null, success, failure);
+        apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/credentials", null, null, success, failure);
     }
     this.regenerateApplicationCredentials = regenerateApplicationCredentials;
 
@@ -720,7 +720,7 @@ usergrid.Client = function(options) {
     // GET: /<application-id>/rolenames
     //
     function requestApplicationRoles(applicationId, success, failure) {
-        apiGetRequest("/" + applicationId + "/rolenames", null, success, failure);
+        apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/rolenames", null, success, failure);
     }
     this.requestApplicationRoles = requestApplicationRoles;
 
@@ -730,38 +730,38 @@ usergrid.Client = function(options) {
     // GET: /<application-id>/rolenames/<rolename>
     //
     function requestApplicationRolePermissions(applicationId, roleName, success, failure) {
-        apiGetRequest("/" + applicationId + "/rolenames/" + roleName, null, success, failure);
+        apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/rolenames/" + roleName, null, success, failure);
     }
     this.requestApplicationRolePermissions = requestApplicationRolePermissions;
 
     function requestApplicationRoleUsers(applicationId, roleId, success, failure) {
-        apiGetRequest("/" + applicationId + "/roles/" + roleId + "/users/", null, success, failure);
+        apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/roles/" + roleId + "/users/", null, success, failure);
     }
     this.requestApplicationRoleUsers = requestApplicationRoleUsers;
 
     function addApplicationRolePermission(applicationId, roleName, permission, success, failure) {
-        apiRequest("POST", "/" + applicationId + "/rolenames/" + roleName, null, JSON.stringify({
+        apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/rolenames/" + roleName, null, JSON.stringify({
             permission : permission
         }), success, failure);
     }
     this.addApplicationRolePermission = addApplicationRolePermission;
 
     function deleteApplicationRolePermission(applicationId, roleName, permission, success, failure) {
-        apiRequest("DELETE", "/" + applicationId + "/rolenames/" + roleName, {
+        apiRequest("DELETE", "/" + self.currentOrganization.uuid + "/" + applicationId + "/rolenames/" + roleName, {
             permission : permission
         }, null, success, failure);
     }
     this.deleteApplicationRolePermission = deleteApplicationRolePermission;
 
     function addApplicationUserPermission(applicationId, userName, permission, success, failure) {
-        apiRequest("POST", "/" + applicationId + "/users/" + userName + "/permissions", null, JSON.stringify({
+        apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/users/" + userName + "/permissions", null, JSON.stringify({
             permission : permission
         }), success, failure);
     }
     this.addApplicationUserPermission = addApplicationUserPermission;
 
     function deleteApplicationUserPermission(applicationId, userName, permission, success, failure) {
-        apiRequest("DELETE", "/" + applicationId + "/users/" + userName + "/permissions", {
+        apiRequest("DELETE", "/" + self.currentOrganization.uuid + "/" + applicationId + "/users/" + userName + "/permissions", {
             permission : permission
         }, null, success, failure);
     }
@@ -773,7 +773,7 @@ usergrid.Client = function(options) {
     // GET: /<application-id>/counters
     //
     function requestApplicationCounterNames(applicationId, success, failure) {
-        apiGetRequest("/" + applicationId + "/counters", null, success, failure);
+        apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/counters", null, success, failure);
     }
     this.requestApplicationCounterNames = requestApplicationCounterNames;
 
@@ -789,7 +789,7 @@ usergrid.Client = function(options) {
         if (resolution) params.resolution = resolution;
         if (counter) params.counter = counter;
         params.pad = true;
-        apiGetRequest("/" + applicationId + "/counters", params, success, failure);
+        apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/counters", params, success, failure);
     }
     this.requestApplicationCounters = requestApplicationCounters;
 
@@ -883,7 +883,7 @@ usergrid.Client = function(options) {
             password: '',
             invite: true
         };
-        apiRequest("POST", "/"+ applicationId + "/token", formdata, null,
+        apiRequest("POST", "/" + self.currentOrganization.uuid + "/"+ applicationId + "/token", formdata, null,
         function(response) {
             if (response && response.access_token && response.user) {
                 self.loggedInUser = response.user;
@@ -1027,10 +1027,10 @@ usergrid.Client = function(options) {
     this.getGroup = getGroup;
 
     function queryEntities(root_collection, a) {
-        var ns = self.applicationId;
+        var ns = self.currentOrganization.uuid + "/" +self.applicationId;
         if (countByType("string", a) > 0) {
             ns = getByType("string", 0, a);
-            if (!ns) ns = self.applicationId;
+            if (!ns) ns = self.currentOrganization.uuid + "/" +self.applicationId;
         }
         var success = getByType("function", 0, a);
         var failure = getByType("function", 1, a);
@@ -1050,7 +1050,7 @@ usergrid.Client = function(options) {
     this.queryUsers = queryUsers;
 
     function queryEntityCollection(root_collection, entity_collection, a) {
-        var ns = self.applicationId;
+        var ns = self.currentOrganization.uuid + "/" +self.applicationId;
         var id = a[0];
         if (countByType("string", a) >= 2) {
             ns = getByType("string", 0, a);
@@ -1070,7 +1070,7 @@ usergrid.Client = function(options) {
     }
 
     function deleteEntity(applicationId, entityId, path, success, failure) {        
-        apiRequest("DELETE", "/" + applicationId + "/" + path + "/" + entityId, null, null, success, failure);
+        apiRequest("DELETE", "/" + self.currentOrganization.uuid + "/" + applicationId + "/" + path + "/" + entityId, null, null, success, failure);
     }
     this.deleteEntity = deleteEntity;
     
@@ -1085,7 +1085,7 @@ usergrid.Client = function(options) {
     this.queryUserActivities = queryUserActivities;
 
     function queryUserRoles(applicationId, entityId, success, failure) {
-        apiGetRequest("/" + applicationId + "/users/" + entityId + "/roles", null, success, failure);
+        apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/users/" + entityId + "/roles", null, success, failure);
     }
     this.queryUserRoles = queryUserRoles;
 
@@ -1106,14 +1106,14 @@ usergrid.Client = function(options) {
 
     function requestUserList(applicationId, searchString, success, failure) {
         if (searchString != "*") searchString = searchString + '*';        
-        apiRequest("GET", "/" + applicationId + "/users", null, JSON.stringify({
+        apiRequest("GET", "/" + self.currentOrganization.uuid + "/" + applicationId + "/users", null, JSON.stringify({
             username: searchString
         }), success, failure);
     }
     this.requestUserList = requestUserList;
 
     function requestUsers(applicationId, success, failure) {
-        apiGetRequest("/" + applicationId + "/users", null, success, failure);
+        apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/users", null, success, failure);
     }
     this.requestUsers = requestUsers;
 
@@ -1124,12 +1124,12 @@ usergrid.Client = function(options) {
     // data: {username,name,email,password}
     //
     function createUser(applicationId, data, success, failure) {
-        apiRequest("POST", "/" + applicationId + "/users", null, JSON.stringify(data), success, failure);
+        apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/users", null, JSON.stringify(data), success, failure);
     }
     this.createUser = createUser;
 
     function deleteUser(applicationId, userId, success, failure) {        
-        apiRequest("DELETE", "/" + applicationId + "/users/" + userId, null, null, success, failure);
+        apiRequest("DELETE", "/" + self.currentOrganization.uuid + "/" + applicationId + "/users/" + userId, null, null, success, failure);
     }
     this.deleteUser = deleteUser;
 
@@ -1137,7 +1137,7 @@ usergrid.Client = function(options) {
         if (path.lastIndexOf("/", 0) !== 0) {
             path = "/" + path;
         }
-        path = "/" + applicationId + path + "/indexes";
+        path = "/" + self.currentOrganization.uuid + "/" + applicationId + path + "/indexes";
         apiGetRequest(path, null, success, failure);
     }
     this.requestCollectionIndexes = requestCollectionIndexes;
@@ -1173,22 +1173,22 @@ usergrid.Client = function(options) {
     this.queryGroupActivities = queryGroupActivities;
 
     function requestGroups(applicationId, success, failure) {
-        apiGetRequest("/" + applicationId + "/groups", null, success, failure);
+        apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/groups", null, success, failure);
     }
     this.requestGroups = requestGroups;
 
     function requestGroupRoles(applicationId, entityId, success, failure) {
-        apiGetRequest("/" + applicationId + "/groups/" + entityId + "/rolenames", null, success, failure);
+        apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/groups/" + entityId + "/rolenames", null, success, failure);
     }
     this.requestGroupRoles = requestGroupRoles;
 
     function saveUserProfile(applicationId, userid, payload, success,failure){
-        apiRequest("PUT", "/" + applicationId + "/users/" + userid, null, JSON.stringify(payload) , success, failure);
+        apiRequest("PUT", "/" + self.currentOrganization.uuid + "/" + applicationId + "/users/" + userid, null, JSON.stringify(payload) , success, failure);
     }
     this.saveUserProfile = saveUserProfile;
 
     function saveGroupProfile(applicationId, groupid, payload, success,failure){
-        apiRequest("PUT", "/" + applicationId + "/groups/" + groupid, null, JSON.stringify(payload) , success, failure);
+        apiRequest("PUT", "/" + self.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupid, null, JSON.stringify(payload) , success, failure);
     }
     this.saveGroupProfile = saveGroupProfile;
 
@@ -1198,17 +1198,17 @@ usergrid.Client = function(options) {
     // data: {path, title}
     //
     function createGroup(applicationId, data, success, failure) {
-        apiRequest("POST", "/" + applicationId + "/groups", null, JSON.stringify(data), success, failure);
+        apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/groups", null, JSON.stringify(data), success, failure);
     }
     this.createGroup = createGroup;
 
     function deleteGroup(applicationId, groupId, success, failure) {        
-        apiRequest("DELETE", "/" + applicationId + "/groups/" + groupId, null, null, success, failure);
+        apiRequest("DELETE", "/" + self.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId, null, null, success, failure);
     }
     this.deleteGroup = deleteGroup;
 
     function addUserToGroup(applicationId, groupId, username, success, failure) {        
-        apiRequest("POST", "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, "{ }", success, failure);
+        apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, "{ }", success, failure);
     }
     this.addUserToGroup = addUserToGroup;
 
@@ -1216,7 +1216,7 @@ usergrid.Client = function(options) {
         if (!self.loggedInUser) {
             failure();
         }
-        apiRequest("DELETE",  "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, null, success, failure);
+        apiRequest("DELETE",  "/" + self.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, null, success, failure);
     }
     this.removeUserFromGroup = removeUserFromGroup;
 
@@ -1231,12 +1231,12 @@ usergrid.Client = function(options) {
     // data: {name,title}
     //
     function createRole(applicationId, data, success, failure) {
-        apiRequest("POST", "/" + applicationId + "/rolenames", null, JSON.stringify(data), success, failure);
+        apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/rolenames", null, JSON.stringify(data), success, failure);
     }
     this.createRole = createRole;
 
     function addUserToRole(applicationId, roleId, username, success, failure) {
-        apiRequest("POST", "/" + applicationId + "/roles/" + roleId + "/users/" + username, null, "{ }", success, failure);
+        apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/roles/" + roleId + "/users/" + username, null, "{ }", success, failure);
     }
     this.addUserToRole = addUserToRole;
 
@@ -1244,12 +1244,12 @@ usergrid.Client = function(options) {
         if (!self.loggedInUser) {
             failure();
         }
-        apiRequest("DELETE",  "/" + applicationId + "/users/" + username + "/roles/" + roleId, null, null, success, failure);
+        apiRequest("DELETE",  "/" + self.currentOrganization.uuid + "/" + applicationId + "/users/" + username + "/roles/" + roleId, null, null, success, failure);
     }
     this.removeUserFromRole = removeUserFromRole;
 
     function requestRoles(applicationId, success, failure) {
-        apiGetRequest("/" + applicationId + "/rolenames", null, success, failure);
+        apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/rolenames", null, success, failure);
     }
     this.requestRoles = requestRoles;
 
