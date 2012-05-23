@@ -1287,7 +1287,7 @@ function usergrid_console_app(Pages) {
     window.usergrid.console.deleteRoleFromUser = deleteRoleFromUser;
 
     function removeUserFromGroup(username) {
-        var items = $("#user-panel-memberships input[id^=userGroupItem]:checked");
+        var items = $("#user-panel-memberships input[class^=userGroupItem]:checked");
         if(!items.length){
             alertModal("Error","Please, first select the groups you want to delete for this user.")
             return;
@@ -1710,30 +1710,24 @@ function usergrid_console_app(Pages) {
         $("#user-panel-activities").html("");
         $("#user-panel-graph").html("");
         $("#user-panel-permissions").html("");
-        if (user_data) {
-            var options = {
-                makeObjectTable : usergrid.console.ui.makeObjectTable,
-                tableOpts : usergrid.console.ui.standardTableOpts,
-                metadataTableOpts : usergrid.console.ui.metadataTableOpts
-            };
 
-            var details = $.tmpl("usergrid.ui.panels.user.profile.html", user_data, options);
+        if (user_data) {
+
+            var details = $.tmpl("usergrid.ui.panels.user.profile.html", user_data);
 
             var formDiv = details.find(".query-result-form");
             $(formDiv).buildForm(usergrid.console.ui.jsonSchemaToDForm(usergrid.console.ui.collections.vcard_schema, user_data.entity));
 
             details.appendTo("#user-panel-profile");
 
-            details.find(".button").button();
-
-            $.tmpl("usergrid.ui.panels.user.memberships.html", user_data, options).appendTo("#user-panel-memberships");
+            $.tmpl("usergrid.ui.panels.user.memberships.html", user_data).appendTo("#user-panel-memberships");
             updateGroupsAutocomplete();
             
-            $.tmpl("usergrid.ui.panels.user.activities.html", user_data, options).appendTo("#user-panel-activities");
+            $.tmpl("usergrid.ui.panels.user.activities.html", user_data).appendTo("#user-panel-activities");
             
-            $.tmpl("usergrid.ui.panels.user.graph.html", user_data, options).appendTo("#user-panel-graph");
+            $.tmpl("usergrid.ui.panels.user.graph.html", user_data).appendTo("#user-panel-graph");
             
-            $.tmpl("usergrid.ui.panels.user.permissions.html", user_data, options).appendTo("#user-panel-permissions");
+            $.tmpl("usergrid.ui.panels.user.permissions.html", user_data).appendTo("#user-panel-permissions");
             updateRolesAutocomplete();
             updateQueryAutocompleteCollectionsUsers();
         }

@@ -3553,6 +3553,12 @@ html {
   background-color: #e0e0e0 !important;
   border-radius: 0px;
 }
+.thingy .gravatar50 {
+  position: relative;
+  float: left;
+  margin-top: -15px;
+  right: 15px;
+}
 .thingy .title {
   float: left;
   font-size: 19px;
@@ -4086,7 +4092,6 @@ a:active {
  *
  *******************************************************************/
 #user-panel h3 {
-  height: 30px;
   overflow: hidden;
 }
 #user-panel h3 img {
@@ -4162,6 +4167,7 @@ a:active {
   display: none;
 }
 .user-roles-title {
+  clear: both;
   font-size: 18px;
   font-weight: bold;
   border-bottom: 1px solid #AED0EA;
