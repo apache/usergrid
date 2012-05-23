@@ -2029,13 +2029,8 @@ function usergrid_console_app(Pages) {
         $("#group-panel-activities").html("");
         $("#group-panel-permissions").html("");
         if (group_data) {
-            var options = {
-                makeObjectTable : usergrid.console.ui.makeObjectTable,
-                tableOpts : usergrid.console.ui.standardTableOpts,
-                metadataTableOpts : usergrid.console.ui.metadataTableOpts
-            };
 
-            var details = $.tmpl("usergrid.ui.panels.group.details.html", group_data, options);
+            var details = $.tmpl("usergrid.ui.panels.group.details.html", group_data);
 
             var formDiv = details.find(".query-result-form");
             $(formDiv).buildForm(usergrid.console.ui.jsonSchemaToDForm(usergrid.console.ui.collections.group_schema, group_data.entity));
@@ -2044,14 +2039,17 @@ function usergrid_console_app(Pages) {
 
             details.find(".button").button();
 
-            $.tmpl("usergrid.ui.panels.group.memberships.html", group_data, options).appendTo("#group-panel-memberships");
+            $.tmpl("usergrid.ui.panels.group.memberships.html", group_data).appendTo("#group-panel-memberships");
             updateUsersAutocomplete();
             
-            $.tmpl("usergrid.ui.panels.group.activities.html", group_data, options).appendTo("#group-panel-activities");
+            $.tmpl("usergrid.ui.panels.group.activities.html", group_data).appendTo("#group-panel-activities");
 
-            $.tmpl("usergrid.ui.panels.group.graph.html", group_data, options).appendTo("#group-panel-graph");
+            $.tmpl("usergrid.ui.panels.group.graph.html", group_data).appendTo("#group-panel-graph");
 
-            $.tmpl("usergrid.ui.panels.group.permissions.html", group_data, options).appendTo("#group-panel-permissions");
+            if (group_data.roles && group_data.roles.length == 0) {
+              delete group_data.roles
+            }
+            $.tmpl("usergrid.ui.panels.group.permissions.html", group_data).appendTo("#group-panel-permissions");
         }
     }
 

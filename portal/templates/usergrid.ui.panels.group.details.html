@@ -9,32 +9,87 @@
             <a href="#" onclick="usergrid.console.saveGroupProfile('${uuid}'); return false;"> Save Group </a>
         </div>
 	</div>
-	<div class="console-section-contents">
-		<div class="query-result-edit query-result-portlet">
-			<div class="query-result-portlet-title">Edit</div>
-			<div class="query-result-form"></div>
-		</div>
-		{{if collections}}
-		<div class="query-result-collections query-result-portlet">
-			<div class="query-result-portlet-title">Collections</div>
-			{{html $item.makeObjectTable(collections, $item.tableOpts, "all_collections") }}
-		</div>
-		{{/if}}
-		<div class="query-result-contents query-result-portlet">
-			<div class="query-result-portlet-title">Contents</div>
-			{{html $item.makeObjectTable(entity, $item.tableOpts)}}
-		</div>
-		{{if metadata}}
-		<div class="query-result-metadata query-result-portlet">
-			<div class="query-result-portlet-title">Metadata</div>
-			{{html $item.makeObjectTable(metadata, $item.metadataTableOpts) }}
-		</div>
-		{{/if}}
-		<div class="query-result-json query-result-portlet" style="display: none">
-			<div class="query-result-portlet-title">JSON</div>
-			<div class="query-result-json-border">
-				<pre class="query-result-json-inner">${JSON.stringify(entity, null, "  ")}</pre>
-			</div>
-		</div>
+  <h3>Edit</h3>
+  <div class="query-result-form"></div>
+  <div class="content-container">
+    <h3>Contents</h3>
+    <table class="table">
+      <tbody>
+        <tr class="zebraRows">
+          <td>UUID</td>
+          <td>${entity.uuid}</td>
+        </tr>
+        <tr class="zebraRows">
+          <td>Type</td>
+          <td>${entity.type}</td>
+        </tr>
+        <tr class="zebraRows">
+          <td>
+            Created
+          </td>
+          <td>
+            <a href="#" class="toggleableSP">${dateToString(entity.created)}</a>
+            <a href="#" class="toggleableSP hide">${entity.created}</a>
+          </td>
+        </tr>
+        <tr class="zebraRows">
+          <td>
+            Modified
+          </td>
+          <td>
+            <a href="#" class="toggleableSP">${dateToString(entity.modified)}</a>
+            <a href="#" class="toggleableSP hide">${entity.modified}</a>
+          </td>
+        </tr>
+        <tr class="zebraRows">
+          <td>Title</td>
+          <td>${entity.title}</td>
+        </tr>
+        <tr class="zebraRows">
+          <td>Path</td>
+          <td>${name}</td>
+        </tr>
+        <tr class="zebraRows">
+          <td>Sets</td>
+          <td>
+            <table class="table table-striped">
+              <tbody>
+              {{each metadata.sets}}
+              <tr>
+                <td>
+                  ${$index}
+                </td>
+                <td>
+                  <a href="#" onclick="usergrid.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
+                </td>
+              </tr>
+              {{/each}}
+              <tbody>
+            </table>
+          </td>
+        </tr>
+        <tr class="zebraRows">
+          <td>Collections</td>
+          <td>
+            <table class="table table-striped">
+              <tbody>
+              {{each metadata.collections}}
+              <tr>
+                <td>
+                  ${$index}
+                </td>
+                <td>
+                  <a href="#" onclick="usergrid.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
+                </td>
+              </tr>
+              {{/each}}
+              <tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>JSON</h3>
+    <pre class="query-result-json-inner">${JSON.stringify(entity, null, "  ")}</pre>
 	</div>
 </div>
