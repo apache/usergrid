@@ -961,7 +961,7 @@ usergrid.Client = function(options) {
     this.clearLoginCredentials = clearLoginCredentials;
 
     function sendToLoginPage() {
-        window.location = self.apigee_sso_url + '?' + self.callback;
+        window.location = self.apigee_sso_url + '?callback=' + self.callback;
     }
     this.sendToLoginPage = sendToLoginPage;
     
