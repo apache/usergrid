@@ -1910,6 +1910,9 @@ public class ManagementServiceImpl implements ManagementService {
 					.getOrganizationByUuid(organizationId);
 			sendOrganizationActivatedEmail(organization);
 			sendSysAdminNewOrganizationActivatedNotificationEmail(organization);
+			
+			activateOrganization(organization, false);
+			
 			return ActivationState.ACTIVATED;
 		}
 		return ActivationState.UNKNOWN;
