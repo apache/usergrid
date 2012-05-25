@@ -761,6 +761,8 @@ function usergrid_console_app(Pages) {
         });
     }
 
+    window.usergrid.console.requestAdminFeed = requestAdminFeed;
+
     var organization_keys = { };
     
     function requestOrganizationCredentials() {

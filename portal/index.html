@@ -231,6 +231,9 @@
                         <div class="console-section">
                             <div class="well thingy">
                               <span class="title"> Activities </span>
+                              <div class="bar">
+                                <a class="" onclick="usergrid.console.requestAdminFeed(); return false;">Update Activities</a>
+                              </div>
                             </div>
                             <table id="organization-feed-table" class="hideable table">
                               <tbody></tbody>
@@ -822,6 +825,7 @@
                                             <option value="content">Content</option>
                                             <option value="actor">Actor</option>
                                         </select>
+                                        <a class="" onclick="usergrid.console.requestActivities(); return false;">Update Activities</a>
                                     </div>
                                 </div>
                                 <table id="activities-table" class="table">
