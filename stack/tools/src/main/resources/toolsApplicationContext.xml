@@ -152,4 +152,8 @@
 			<ref bean="entityManagerFactory" />
 		</constructor-arg>
 	</bean>
+	
+	 <bean id="indexBucketLocator" class="org.usergrid.persistence.cassandra.SimpleIndexBucketLocatorImpl">
+    	<constructor-arg value="${usergrid.index.defaultbucketsize}"/>
+   	 </bean>
 </beans>
