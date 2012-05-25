@@ -2716,20 +2716,22 @@ function usergrid_console_app(Pages) {
     
     function echoInputToShell(s) {
         if (!s) s = "&nbsp;";
-        var html = "<div class=\"shell-output-line\"><span class=\"shell-prompt\">&gt; </span><span class=\"shell-output-line-content\">" + s + "</span></div>";
-        $('#shell-output').append(html);
+        var html = '<div class="shell-output-line"><span class="shell-prompt">&gt; </span><span class="shell-output-line-content">' + s + '</span></div>';
         scrollToInput();
     }
     
     function printLnToShell(s) {
         if (!s) s = "&nbsp;";
-        var html = "<div class=\"shell-output-line\"><div class=\"shell-output-line-content\">" + s + "</div></div>";
+        var html = '<div class="shell-output-line"><div class="shell-output-line-content">' + s + '</div></div>';
         $('#shell-output').append(html);
+        $('#shell-output').append(' ');
         scrollToInput();
     }
 
     function displayShellResponse(response) {
         printLnToShell(JSON.stringify(response, null, "  "));
+        $('#shell-output').append('<hr />');
+        prettyPrint();
     }
 
     function handleShellCommand(s) {
@@ -2763,8 +2765,7 @@ function usergrid_console_app(Pages) {
             client.apiRequest("DELETE", "/" + current_application_id + path, null, null, displayShellResponse, null);
         }
         else if ((s == "clear") || (s == "cls"))  {
-            $('#shell-output').html("<div class=\"shell-output-line\">Usergrid Interactive Shell</div>");
-            echoInputToShell(s);
+            $('#shell-output').html(" ");
         }
         else if (s == "help") {
             printLnToShell("/&lt;path&gt; - API get request");
@@ -2772,16 +2773,16 @@ function usergrid_console_app(Pages) {
             printLnToShell("put /&lt;path&gt; {&lt;json&gt;} - API put request");
             printLnToShell("post /&lt;path&gt; {&lt;json&gt;} - API post request");
             printLnToShell("delete /&lt;path&gt; - API delete request");
-            printLnToShell("cls - clear screen");
-            printLnToShell("clear - clear screen");
+            printLnToShell("cls, clear - clear the screen");
             printLnToShell("help - show this help");
         }
         else if (s == "") {
             printLnToShell("ok");
         }
         else {
-            printLnToShell("syntax error");
+            printLnToShell('<strong>syntax error!</strong><hr />');
         }
+        prettyPrint();
     }
     
     $('#shell-input').keydown(function(event) {
