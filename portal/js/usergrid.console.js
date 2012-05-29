@@ -579,7 +579,7 @@ function usergrid_console_app(Pages) {
 
         var items = $("#query-response-table input[id^=queryResultItem]:checked");
         if(!items.length){
-            oopsModal("Please, first select the entities you want to delete.");
+            alertModal("Please, first select the entities you want to delete.");
             return;
         }
 
@@ -589,7 +589,7 @@ function usergrid_console_app(Pages) {
                 var path = $(this).attr("name");
                 client.deleteEntity(current_application_id, entityId, path, doQueryGet,
                 function() {
-                    alertDialog("Unable to delete entity: " + client.getLastErrorMessage(entityId), 'ok');
+                    alertModal("Unable to delete entity", client.getLastErrorMessage(entityId));
                 });
             });
         });
@@ -839,10 +839,10 @@ function usergrid_console_app(Pages) {
      *
      ******************************************************************/
 
-    function oopsModal(header,message) {
-      $('#oopsModal h4').text(header);
-      $('#oopsModal p').text(message);
-      $('#oopsModal').modal('show');
+    function alertModal(header,message) {
+      $('#alertModal h4').text(header);
+      $('#alertModal p').text(message);
+      $('#alertModal').modal('show');
     }
 
     function resetModal(){
@@ -913,13 +913,6 @@ function usergrid_console_app(Pages) {
        return o;
     };
 
-    function alertDialog(message, button){
-        var form = $("#alertDialog");
-        $('#alert-message').html(message);
-        $('#alert-message-button').val(button);
-        form.modal("show");
-    }
-    
     function formClearErrors(form){
         form.find(".ui-state-error").removeClass("ui-state-error");
         form.find(".error").removeClass("error");
@@ -955,7 +948,7 @@ function usergrid_console_app(Pages) {
         if (bValid) {
             var data = form.serializeObject();
             client.createAdmin(data, requestAdmins, function () {
-                alertDialog("Unable to create admin: " + client.getLastErrorMessage(data.email), 'ok');
+                alertModal("Unable to create admin", client.getLastErrorMessage(data.email));
             });
             $(this).modal('hide');
         }
@@ -972,7 +965,7 @@ function usergrid_console_app(Pages) {
         if (bValid) {
             var data = form.serializeObject();
             client.createOrganization(data,requestOrganizations, function() {
-                alertDialog("Unable to create organization: " + client.getLastErrorMessage(data.name), 'ok');
+                alertModal("Unable to create organization", client.getLastErrorMessage(data.name));
             });
             $(this).modal('hide');
         }
@@ -1164,7 +1157,7 @@ function usergrid_console_app(Pages) {
             client.addUserToGroup(current_application_id, group, userId,
                 function() {requestUser(userId);},
                 function() {
-                    alertDialog("Unable to add group to user: " + client.getLastErrorMessage('An internal error occured.'), 'ok');
+                    alertModal("Unable to add group to user", client.getLastErrorMessage('An internal error occured.'));
                 }
             );
 
@@ -1184,7 +1177,7 @@ function usergrid_console_app(Pages) {
             client.addUserToGroup(current_application_id, groupId, username,
                 function() {requestGroup(groupId);},
                 function() {
-                    alertDialog("Unable to add user to group: " + client.getLastErrorMessage('An internal error occured.'), 'ok');
+                    alertModal("Unable to add user to group", client.getLastErrorMessage('An internal error occured.'));
                 }
             );
             $(this).modal('hide');
@@ -1205,7 +1198,7 @@ function usergrid_console_app(Pages) {
             client.addUserToRole(current_application_id, current_role_id, username,
                  function() {pageSelectRoleUsers(current_role_id, current_role_name);},
                 function() {
-                    alertDialog("Unable to add user to role: " + client.getLastErrorMessage('An internal error occured.'), 'ok');
+                    alertModal("Unable to add user to role", client.getLastErrorMessage('An internal error occured.'));
                 }
             );
             $(this).modal('hide');
@@ -1229,7 +1222,7 @@ function usergrid_console_app(Pages) {
             client.addUserToRole(current_application_id, roleId, username,
                  function() {pageSelectUserPermissions(username);},
                 function() {
-                    alertDialog("Unable to add user to role: " + client.getLastErrorMessage('An internal error occured.'), 'ok');
+                    alertModal("Unable to add user to role", client.getLastErrorMessage('An internal error occured.'));
                 }
             );
             $(this).modal('hide');
@@ -1239,7 +1232,7 @@ function usergrid_console_app(Pages) {
     function deleteUsersFromRoles(username) {
       var items = $("input[class^=userRoleItem]:checked");
       if(!items.length){
-        oopsModal("Error","Please, first select the roles you want to delete for this user.");
+        alertModal("Error","Please, first select the roles you want to delete for this user.");
         return;
       }
 
@@ -1247,7 +1240,7 @@ function usergrid_console_app(Pages) {
         items.each(function() {
           var roleId = $(this).attr("value");
           client.removeUserFromRole(current_application_id, username, roleId, function() {pageSelectUserPermissions (username);}, function() {
-            oopsModal("Unable to remove user from role: " + client.getLastErrorMessage('An internal error occured'));
+            alertModal("Error","Unable to remove user from role: " + client.getLastErrorMessage('An internal error occured'));
           });
         });
       });
@@ -1258,7 +1251,7 @@ function usergrid_console_app(Pages) {
     function deleteRoleFromUser(roleId, rolename) {
         var items = $("#role-users input[id^=userRoleItem]:checked");
         if(!items.length){
-            oopsModal("Error","Please, first select the users you want to delete from this role.")
+            alertModal("Error","Please, first select the users you want to delete from this role.")
             return;
         }
 
@@ -1266,7 +1259,7 @@ function usergrid_console_app(Pages) {
             items.each(function() {
                 var username = $(this).attr("value");
                 client.removeUserFromRole(current_application_id, username, roleId, function() {pageSelectRoleUsers (roleId, rolename);}, function() {
-                    alertDialog("Unable to remove user from role: " + client.getLastErrorMessage('An internal error occured'), 'ok');
+                    alertModal("Unable to remove user from role", client.getLastErrorMessage('An internal error occured'));
                 });
             });
         });
@@ -1276,7 +1269,7 @@ function usergrid_console_app(Pages) {
     function removeUserFromGroup(username) {
         var items = $("#user-panel-memberships input[id^=userGroupItem]:checked");
         if(!items.length){
-            oopsModal("Error","Please, first select the groups you want to delete for this user.")
+            alertModal("Error","Please, first select the groups you want to delete for this user.")
             return;
         }
 
@@ -1284,7 +1277,7 @@ function usergrid_console_app(Pages) {
             items.each(function() {
                 var groupId = $(this).attr("value");
                 client.removeUserFromGroup(current_application_id, groupId, username, function() {pageSelectUserGroups (username);}, function() {
-                    alertDialog("Unable to remove user from role: " + client.getLastErrorMessage('An internal error occured'),'ok');
+                    alertModal("Unable to remove user from role", client.getLastErrorMessage('An internal error occured'));
                 });
             });
         });
@@ -1294,7 +1287,7 @@ function usergrid_console_app(Pages) {
     function removeGroupFromUser(groupId) {
         var items = $("#group-panel-memberships input[id^=userGroupItem]:checked");
         if(!items.length){
-            oopsModal("Error","Please, first select the users you want to from this group.")
+            alertModal("Error","Please, first select the users you want to from this group.")
             return;
         }
 
@@ -1302,7 +1295,7 @@ function usergrid_console_app(Pages) {
             items.each(function() {
                 var username = $(this).attr("value");
                 client.removeUserFromGroup(current_application_id, groupId, username, function() {pageSelectGroupMemberships(groupId);}, function() {
-                    alertDialog("Unable to remove user from role: " + client.getLastErrorMessage('An internal error occured'), 'ok');
+                    alertModal("Unable to remove user from role", client.getLastErrorMessage('An internal error occured'));
                 });
             });
         });
@@ -1620,7 +1613,7 @@ function usergrid_console_app(Pages) {
 
         var items = $("#users-table input[class^=userListItem]:checked");
         if(!items.length){
-            oopsModal("Error", "Please, first select the users you want to delete.");
+            alertModal("Error", "Please, first select the users you want to delete.");
             return;
         }
 
@@ -1628,7 +1621,7 @@ function usergrid_console_app(Pages) {
             items.each(function() {
                 var userId = $(this).attr("value");
                 client.deleteUser(current_application_id, userId, requestUsers, function() {
-                    alertDialog("Unable to delete user: " + client.getLastErrorMessage(userId), 'ok');
+                    alertModal("Unable to delete user", client.getLastErrorMessage(userId));
                 });
             });
         });
@@ -1676,7 +1669,7 @@ function usergrid_console_app(Pages) {
         var payload = usergrid.console.ui.jsonSchemaToPayload(usergrid.console.ui.collections.vcard_schema);
         client.saveUserProfile(current_application_id, uuid, payload, completeSave,
         function() {
-				alertDialog("Unable to update User: " + client.getLastErrorMessage('An internal error occured.'), 'ok');
+				alertModal("Unable to update User", client.getLastErrorMessage('An internal error occured.'));
         });
     }
     window.usergrid.console.saveUserProfile = saveUserProfile;
@@ -1979,7 +1972,7 @@ function usergrid_console_app(Pages) {
 
         var items = $("#groups-table input[class^=groupListItem]:checked");
         if(!items.length){
-            oopsModal("Error","Please, first select the groups you want to delete.")
+            alertModal("Error","Please, first select the groups you want to delete.")
             return;
         }
 
@@ -1988,7 +1981,7 @@ function usergrid_console_app(Pages) {
                 var groupId = $(this).attr("value");
                 client.deleteGroup(current_application_id, groupId, requestGroups,
                 function() {
-                    alertDialog("Unable to delete group: " + client.getLastErrorMessage(groupId), ok);
+                    alertModal("Unable to delete group", client.getLastErrorMessage(groupId));
                 });
             });
         });
@@ -2220,7 +2213,7 @@ function usergrid_console_app(Pages) {
 
         var items = $("#roles-table input[class^=roleListItem]:checked");
         if(!items.length){
-            oopsModal("Error","Please, first select the roles you want to delete.")
+            alertModal("Error","Please, first select the roles you want to delete.")
             return;
         }
 
@@ -2229,7 +2222,7 @@ function usergrid_console_app(Pages) {
                 var roleId = $(this).attr("value");
                 client.deleteEntity(current_application_id, roleId, 'role', requestRoles,
                 function() {
-                    alertDialog("Unable to delete role: " + client.getLastErrorMessage(roleId), 'ok');
+                    alertModal("Unable to delete role", client.getLastErrorMessage(roleId));
                 });
             });
         });
@@ -2398,7 +2391,7 @@ function usergrid_console_app(Pages) {
         if (ops) {
             client.addApplicationRolePermission(current_application_id, roleName, permission, requestRole, requestRole);
         } else {
-           alertDialog('Please select a verb', 'ok');
+           alertModal('Please select a verb', ' ');
         }
     }
     window.usergrid.console.addRolePermission = addRolePermission;
@@ -2411,7 +2404,7 @@ function usergrid_console_app(Pages) {
                     pageSelectUserPermissions (userName);
                 },
                 function() {
-                    alertDialog("Unable to delete permission: " + client.getLastErrorMessage('An internal error occured'), 'ok');
+                    alertModal("Unable to delete permission", client.getLastErrorMessage('An internal error occured'));
                 });
         });
     }
@@ -2445,10 +2438,10 @@ function usergrid_console_app(Pages) {
                     pageSelectUserPermissions (userName);
                 },
                 function() {
-                    alertDialog("Unable to add permission: " + client.getLastErrorMessage('An internal error occured'),'ok');
+                    alertModal("Unable to add permission", client.getLastErrorMessage('An internal error occured'));
                 });
         } else {
-           alertDialog('Please select a verb', 'ok');
+           alertModal('Please select a verb', '');
         }
     }
     window.usergrid.console.addUserPermission = addUserPermission;
@@ -3213,12 +3206,12 @@ function usergrid_console_app(Pages) {
         var new_pass2 = $("#update-account-password-repeat").val();
         if (old_pass && new_pass) {
             if (new_pass != new_pass2) {
-                alertDialog(client.getLastErrorMessage("New passwords don't match"), 'ok');
+                alertModal("Error", client.getLastErrorMessage("New passwords don't match"));
                 requestAccountSettings();
                 return;
             }
             if (!(passwordRegex.test(new_pass))) {
-                alertDialog(client.getLastErrorMessage(passwordAllowedCharsMessage), 'ok');
+                alertModal("Error", client.getLastErrorMessage(passwordAllowedCharsMessage));
                 requestAccountSettings();
                 return;
             }
@@ -3235,7 +3228,7 @@ function usergrid_console_app(Pages) {
                 requestAccountSettings();
             },
             function(response) {
-                alertDialog(client.getLastErrorMessage("Unable to update account settings"), 'ok');
+                alertModal("Error", client.getLastErrorMessage("Unable to update account settings"));
                 requestAccountSettings();
             }
         );
@@ -3312,7 +3305,7 @@ function usergrid_console_app(Pages) {
         if (confirm('Are you sure you want to leave this Organization?')) {
             client.leaveOrganization(name,requestOrganizations,
             function() {
-                alertDialog("Unable to leave organization: " + client.getLastErrorMessage('There was an error processing your request'), 'ok');
+                alertModal("Unable to leave organization", client.getLastErrorMessage('There was an error processing your request'));
             });
         }
     }
