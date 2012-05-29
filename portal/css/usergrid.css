@@ -4392,6 +4392,9 @@ a:active {
   padding: 4px 35px 4px 14px;
 }
 /*----------- Roles ----------------*/
+#role-permissions-form button {
+  float: right;
+}
 #role-permissions .well {
   padding: 10px;
 }
