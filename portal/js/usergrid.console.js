@@ -845,6 +845,26 @@ function usergrid_console_app(Pages) {
       $('#alertModal').modal('show');
     }
 
+    function confirmAction(header, message, callback){
+
+      var form = $('#confirmAction');
+
+      form.find('h4').text(header);
+      form.find('p').text(message);
+
+      form.unbind('submit');
+      
+      form.submit(function(){
+        form.modal("hide");
+        callback();
+
+        return false;
+      });
+
+      form.modal('show');
+
+    }
+
     function resetModal(){
         this.reset();
         var form = $(this);
@@ -1596,8 +1616,9 @@ function usergrid_console_app(Pages) {
 
     function confirmDelete(callback){
         var form = $("#confirmDialog");
-        if(form.submit)
+        if (form.submit) {
             form.unbind('submit');
+        }
 
         form.submit(function(e){
             e.preventDefault();
@@ -3171,19 +3192,19 @@ function usergrid_console_app(Pages) {
                 var organization = organizations[organizationName];
                 var uuid = organization.uuid;
                 t +=
-                "<tr class=\"zebraRows leave-org-row\">" +
-                    "<td>" +
-                        "<a href='#" + uuid + "' >" +
-                            "<span>" + organizationName + "</span>" +
-                        "</a>" +
-                    "</td>" +
-                    "<td>" +
-                      "<span> (" + uuid + ")</span>" +
-                    "</td>" +
-                    "<td>" +
-                        "<a onclick=\"usergrid.console.leaveOrganization('" + organizationName + "')\" href='#" + uuid + "' class='btn btn-danger' >Leave</a>" +
-                    "</td>" +
-                "</tr>";
+                '<tr class="zebraRows leave-org-row">' +
+                    '<td>' +
+                        '<a href="#' + uuid + '">' +
+                            '<span>' + organizationName + '</span>' +
+                        '</a>' +
+                    '</td>' +
+                    '<td>' +
+                      '<span>' + uuid + '</span>' +
+                    '</td>' +
+                    '<td>' +
+                        "<a onclick=\"usergrid.console.leaveOrganization('" + uuid + "')\"" + ' ' + "href=\"#" + uuid + "\" class=\"btn btn-danger\">Leave</a>" +
+                    '</td>' +
+                '</tr>';
             }
             $("#organizations").html(t);
             $("#organizations a").click( function(e){
@@ -3194,6 +3215,8 @@ function usergrid_console_app(Pages) {
         } else {
         }
     }
+
+    usergrid.console.displayAccountSettings = displayAccountSettings;
 
     $("#button-update-account").click(function() {
         var userData = {
@@ -3300,16 +3323,24 @@ function usergrid_console_app(Pages) {
         });
     }
 
+    usergrid.console.requestOrganizations = requestOrganizations;
 
-   function leaveOrganization(name) {
-        if (confirm('Are you sure you want to leave this Organization?')) {
-            client.leaveOrganization(name,requestOrganizations,
-            function() {
-                alertModal("Unable to leave organization", client.getLastErrorMessage('There was an error processing your request'));
-            });
+    function leaveOrganization(name) {
+
+      confirmAction(
+        "Are you sure you want to leave this Organization?",
+        "You will lose all access to it.",
+        function() { client.leaveOrganization(name, requestAccountSettings, function() {
+          alertModal("Unable to leave organization", client.getLastErrorMessage('There was an error processing your request'));
+        })
         }
+      );
+
+      return false;
     }
-    window.usergrid.console.leaveOrganization = leaveOrganization;
+
+    usergrid.console.leaveOrganization = leaveOrganization;
+
     
     /*******************************************************************
      * 

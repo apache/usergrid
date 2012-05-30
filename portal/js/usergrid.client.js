@@ -610,11 +610,11 @@ usergrid.Client = function(options) {
     this.createOrganization = createOrganization;
     
     
-    function leaveOrganization(organizationName, success, failure) {
+    function leaveOrganization(organizationUUID, success, failure) {
         if (!self.loggedInUser) {
             failure();
         }
-        apiRequest("DELETE", "/management/users/" + self.loggedInUser.username + "/organizations/" + organizationName, null, null, success, failure);
+        apiRequest("DELETE", "/management/users/" + self.loggedInUser.uuid + "/organizations/" + organizationUUID, null, null, success, failure);
     }
     this.leaveOrganization = leaveOrganization;
     
