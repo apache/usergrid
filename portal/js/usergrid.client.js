@@ -51,6 +51,10 @@ usergrid.Client = function(options) {
     //Apigee SSO Callback
     var SSO_CALLBACK = "https://apigee.com/usergrid";
 
+    //Apigee SSO Logout page
+    var SSO_LOGOUT_PAGE = 'https://accounts.apigee.com/accounts/sign_out';
+    self.sso_logout_page = SSO_LOGOUT_PAGE;
+
     // Local API of standalone server
     var LOCAL_STANDALONE_API_URL = "http://localhost:8080";
 
@@ -983,7 +987,7 @@ usergrid.Client = function(options) {
     function logout() {
         clearLoginCredentials();
         if ( useSSO() ){
-            sendToSSOLoginPage();
+            sendToSSOLogoutPage();
         } else {
             self.onLogout();
         }
@@ -997,6 +1001,11 @@ usergrid.Client = function(options) {
         localStorage.removeItem('usergrid_access_token');
     }
     this.clearLoginCredentials = clearLoginCredentials;
+
+    function sendToSSOLogoutPage() {
+        window.location = self.sso_logout_page;
+    }
+    this.sendToSSOLogoutPage = sendToSSOLogoutPage;
 
     function sendToSSOLoginPage() {
         var callback =  self.callback;
