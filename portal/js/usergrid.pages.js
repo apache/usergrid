@@ -4,12 +4,12 @@
  * Time: 02:23 PM
  */
 
-var Pages = function(){
+function UsergridPages(){
 	var self = {
 		pages: {},
-		panels: {}
+		panels: {},
+        resetPasswordUrl: ''
 	}
-	var client = new usergrid.Client();
 
 	self.ShowPage = function(pageName){
 		$("#pages > div").hide();
@@ -93,7 +93,7 @@ var Pages = function(){
 	function LoadPage(page){
 
 		if(page.name=='forgot-password')
-			$("#forgot-password-page iframe").attr("src", client.resetPasswordUrl);
+			$("#forgot-password-page iframe").attr("src", self.resetPasswordUrl);
         else if(page.name=='console-frame')
       		$("#console-frame-page iframe").attr("src", "consoleFrame.html");
 		else{
@@ -110,6 +110,5 @@ var Pages = function(){
 	}
 
 	return self;
-}();
-
+}
 

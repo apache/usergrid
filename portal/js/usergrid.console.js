@@ -1,4 +1,4 @@
-function usergrid_console_app() {
+function usergrid_console_app(Pages) {
     //This code block *WILL NOT* load before the document is complete
     window.usergrid = window.usergrid || {};
     usergrid.console = usergrid.console || {};
@@ -41,6 +41,7 @@ function usergrid_console_app() {
     var indexes = [];
     var backgroundGraphColor = '#ffffff';
     var client = new usergrid.Client();
+    Pages.resetPasswordUrl = client.resetPasswordUrl;
     client.onLogout = function() {
 	    Pages.ShowPage("login");
     };
@@ -3503,4 +3504,6 @@ function usergrid_console_app() {
     usergrid.console.ui.loadTemplate("usergrid.ui.applications.table_rows.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.admins.table_rows.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.feed.table_rows.html");
+
+    
 }

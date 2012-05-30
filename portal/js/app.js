@@ -5,11 +5,11 @@
  */
 
 $(document).ready(function () {
-
+    var Pages = new UsergridPages();
 	Init();
-
+    
 	function Init() {
-		usergrid_console_app();
+		usergrid_console_app(Pages);
 		InitMenu();
         StatusBar.Init('#statusbar-placeholder');
 		    usergrid.console.loginOk();

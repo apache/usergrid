@@ -36,14 +36,14 @@ usergrid.Client = function(options) {
     var FORCE_PUBLIC_API = false;
 
     // Public API
-    //var PUBLIC_API_URL = "https://api.usergrid.com";
-    var PUBLIC_API_URL = "http://ug-qa-cluster.elasticbeanstalk.com";
+    var PUBLIC_API_URL = "https://api.usergrid.com";
 
     //base tld
-    TLD = "apigee.com";
-    LOCAL_TLD1 = "usergrid.local";
-    LOCAL_TLD2 = "localhost:8080";
+    APIGEE_TLD = "apigee.com";
     GHPAGES_TLD = "apigee.github.com";
+
+    //flag to overide use SSO if needed set to ?use_sso=no
+    USE_SSO = 'no';
     
     //Apigee SSO url
     var APIGEE_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
@@ -67,20 +67,29 @@ usergrid.Client = function(options) {
     // if we've loaded from filesystem or local web server
     if (!FORCE_PUBLIC_API && (document.domain.substring(0,9) == "localhost")) {
         this.apiUrl = LOCAL_API_URL;
+        self.apiUrl = LOCAL_API_URL;
     }
 
     if (query_params.api_url) {
         this.apiUrl = query_params.api_url;
+        self.apiUrl = query_params.api_url;
+    }
+
+    this.use_sso = USE_SSO;
+    if (query_params.use_sso) {
+        self.use_sso = query_params.use_sso;
     }
 
     this.callback = SSO_CALLBACK;
     if (query_params.callback) {
         this.callback = query_params.callback;
+        self.callback = query_params.callback;
     }
 
     this.apigee_sso_url = APIGEE_SSO_URL;
     if (query_params.apigee_sso_url) {
         this.apigee_sso_url = query_params.apigee_sso_url;
+        self.apigee_sso_url = query_params.apigee_sso_url;
     }
 
 
@@ -937,17 +946,46 @@ usergrid.Client = function(options) {
     }
     this.getAccessToken = getAccessToken;
 
+
+    function handleAutoLogin(email, token) {
+        loginWithAccessToken(email, token,
+        function(response) {
+            console.log("Auto-logged in");
+            if (self.onAutoLogin) {
+                self.onAutoLogin();
+            }
+        },
+        function() {
+            logout();
+        });
+    }
+
+    if (this.apiUrl != localStorage.getItem('usergrid_api_url')) {
+        localStorage.setItem('usergrid_api_url', this.apiUrl);
+    }
+
+    function useSSO(){
+        if (apigeeUser() || self.use_sso=='yes'){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function apigeeUser(){
+        if (window.location.host == APIGEE_TLD || window.location.host == GHPAGES_TLD ) {
+            return true;
+        }
+        return false;
+    }
+
     this.onLogout = null;
     function logout() {
         clearLoginCredentials();
-        if (window.location.host != TLD &&
-            window.location.host != GHPAGES_TLD &&
-            window.location.host != LOCAL_TLD1 &&
-            window.location.host != LOCAL_TLD2 &&
-            self.onLogout) {
-            self.onLogout();
+        if ( useSSO() ){
+            sendToSSOLoginPage();
         } else {
-            sendToLoginPage();
+            self.onLogout();
         }
     }
     this.logout = logout;
@@ -960,15 +998,34 @@ usergrid.Client = function(options) {
     }
     this.clearLoginCredentials = clearLoginCredentials;
 
-    function sendToLoginPage() {
+    function sendToSSOLoginPage() {
         window.location = self.apigee_sso_url + '?callback=' + self.callback;
+        throw "stop!";//stops further execution of code
     }
-    this.sendToLoginPage = sendToLoginPage;
+    this.sendToSSOLoginPage = sendToSSOLoginPage;
     
     function loggedIn() {
         return self.loggedInUser && self.accessToken;
     }
     this.loggedIn = loggedIn;
+
+    existingUser = localStorage.getObject('usergrid_user');
+    existingAccessToken = localStorage.getObject('usergrid_access_token');
+
+    //check to see if the user has a valid token
+    if (!existingUser && !existingAccessToken) {
+        //test to see if the Portal is running on Apigee, if so, send to SSO, if not, fall through to login screen
+        if ( useSSO() ){
+            sendToSSOLoginPage();
+        }
+    } else if (existingAccessToken && existingUser.admin_email) {
+        handleAutoLogin(existingUser.admin_email, existingAccessToken);
+        return;
+    }
+
+    self.loggedInUser = localStorage.getObject('usergrid_user');
+    self.accessToken = localStorage.getObject('usergrid_access_token');
+    setCurrentOrganization();
 
     function signup(organization, username, name, email, password, success, failure) {
         var formdata = {
@@ -1374,44 +1431,6 @@ usergrid.Client = function(options) {
         this.delete_ = delete_;
     }
     this.Query = Query;
-
-    function handleAutoLogin(email, token) {
-        loginWithAccessToken(email, token,
-        function(response) {
-            console.log("Auto-logged in");
-            if (self.onAutoLogin) {
-                self.onAutoLogin();
-            }
-        },
-        function() {
-            logout();
-        });
-    }
-
-    if (this.apiUrl != localStorage.getItem('usergrid_api_url')) {
-        localStorage.setItem('usergrid_api_url', this.apiUrl);
-    }
-
-    existingUser = localStorage.getObject('usergrid_user');
-    existingAccessToken = localStorage.getObject('usergrid_access_token');
-
-    //this.onAutoLogin = null;
-    if (!existingUser && !existingAccessToken) {
-        logout();
-        return;
-    } else if (existingAccessToken && existingUser.admin_email) {
-        handleAutoLogin(existingUser.admin_email, existingAccessToken);
-        return;
-    } else if (options.accessToken && options.adminEmail) {
-        handleAutoLogin(options.adminEmail, options.accessToken);
-        return;
-    }
-
-    self.loggedInUser = localStorage.getObject('usergrid_user');
-    self.accessToken = localStorage.getObject('usergrid_access_token');
-    setCurrentOrganization();
-
-
 
 	function setCurrentOrganization(orgName) {
         self.currentOrganization = null;

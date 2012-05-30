@@ -22,6 +22,16 @@ if (query_params.access_token && query_params.admin_email && query_params.uuid) 
     var user = {uuid:query_params.uuid, admin_email:query_params.admin_email}
     localStorage.setObject('usergrid_user', user);
     //then send the user to the parent
-    window.location = window.location.protocol+'//'+window.location.host + window.location.pathname;
+    var new_target = window.location.host + window.location.pathname;
+    var separatorMark = '?';
+    if (query_params.api_url) {
+        new_target = new_target + separatorMark + 'api_url=' + query_params.api_url;
+        separatorMark = '&';
+    }
+    if (query_params.use_sso) {
+        new_target = new_target + separatorMark + 'use_sso=' + query_params.use_sso;
+        separatorMark = '&';
+    }
+    window.location = window.location.protocol+'//'+new_target;
     throw "stop!";
 }
