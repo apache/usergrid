@@ -3060,9 +3060,13 @@ function usergrid_console_app(Pages) {
     }
 
     function logout() {
+        if (client.useSSO()) {
+            Pages.clearPage();
+        } else {
+            Pages.ShowPage("login");
+        }        
         client.logout();
         initOrganizationVars();
-        Pages.ShowPage("login");
         return false;
     }
     usergrid.console.logout = logout;
@@ -3463,16 +3467,22 @@ function usergrid_console_app(Pages) {
       return;
     }
 
+    function showLoginForNonSSO(){
+        if (!client.loggedIn() && !client.useSSO()) {
+           Pages.ShowPage('login');
+        }
+    }
+    usergrid.console.showLoginForNonSSO = showLoginForNonSSO;
+
     function loginOk(){
         clearLoginError();
-        clearLoginForm();
-        if (client.loggedIn())
+        clearLoginForm();        
+        if (client.loggedIn()) {
             Pages.ShowPage('console');
+        }
     }
     usergrid.console.loginOk = loginOk;
     client.onAutoLogin = loginOk;
-
-    
 
     //load the templates only after the rest of the page is
     $(window).bind("load", function() {

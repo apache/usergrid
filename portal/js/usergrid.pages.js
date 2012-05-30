@@ -11,7 +11,12 @@ function UsergridPages(){
         resetPasswordUrl: ''
 	}
 
+    self.clearPage = function(){
+       $("#pages > div").hide();
+    }
+
 	self.ShowPage = function(pageName){
+        console.log('showing ' +pageName);
 		$("#pages > div").hide();
 		var page = self.pages[pageName];
 		page.box.show();

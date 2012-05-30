@@ -975,6 +975,7 @@ usergrid.Client = function(options) {
             return false;
         }
     }
+    this.useSSO = useSSO;
 
     function apigeeUser(){
         if (window.location.host == APIGEE_TLD || window.location.host == GHPAGES_TLD ) {
@@ -1003,11 +1004,21 @@ usergrid.Client = function(options) {
     this.clearLoginCredentials = clearLoginCredentials;
 
     function sendToSSOLogoutPage() {
-        window.location = self.sso_logout_page;
+        var newLoc= self.sso_logout_page + '?callback=' + getSSOCallback();
+        window.location = newLoc;
+        return false;
     }
     this.sendToSSOLogoutPage = sendToSSOLogoutPage;
 
     function sendToSSOLoginPage() {
+        var newLoc = self.apigee_sso_url + '?callback=' + getSSOCallback();
+        window.location = newLoc;
+        throw "stop!";
+        return false;
+    }
+    this.sendToSSOLoginPage = sendToSSOLoginPage;
+
+    function getSSOCallback() {
         var callback =  self.callback;
         var separatorMark = '?';
         if (self.use_sso) {
@@ -1018,12 +1029,14 @@ usergrid.Client = function(options) {
             callback = callback + separatorMark +'api_url=' + self.apiUrl;
             separatorMark = '&';
         }
-        var sso_login = self.apigee_sso_url + '?callback=' + encodeURIComponent(callback);
-        window.location = sso_login;
-        throw "stop!";//stops further execution of code
+        if (self.callback != SSO_CALLBACK) {
+            callback = callback + separatorMark +'callback=' + self.callback;
+            separatorMark = '&';
+        }
+        return encodeURIComponent(callback);
     }
-    this.sendToSSOLoginPage = sendToSSOLoginPage;
-    
+    this.getSSOCallback = getSSOCallback;
+
     function loggedIn() {
         return self.loggedInUser && self.accessToken;
     }
@@ -1032,14 +1045,16 @@ usergrid.Client = function(options) {
     existingUser = localStorage.getObject('usergrid_user');
     existingAccessToken = localStorage.getObject('usergrid_access_token');
 
+    
     //check to see if the user has a valid token
     if (!existingUser && !existingAccessToken) {
         //test to see if the Portal is running on Apigee, if so, send to SSO, if not, fall through to login screen
         if ( useSSO() ){
+            Pages.clearPage();
             sendToSSOLoginPage();
-        }
-    } else if (existingAccessToken && existingUser.admin_email) {
-        handleAutoLogin(existingUser.admin_email, existingAccessToken);
+        } 
+    } else if (existingAccessToken && existingUser.email) {
+        handleAutoLogin(existingUser.email, existingAccessToken);
         return;
     }
 

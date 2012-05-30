@@ -3,21 +3,23 @@
  * Date: 31/01/12
  * Time: 03:01 PM
  */
-
+var Pages = new UsergridPages();
 $(document).ready(function () {
-    var Pages = new UsergridPages();
+    
 	Init();
     
 	function Init() {
 		usergrid_console_app(Pages);
 		InitMenu();
         StatusBar.Init('#statusbar-placeholder');
-		    usergrid.console.loginOk();
+		
         toggleableSections();
 
 	    if (getQueryParams().goto_signup) {
 		    Pages.ShowPage("signup");
-	    }
+	    } else {
+            usergrid.console.showLoginForNonSSO();
+        }
 
 	}
 
@@ -37,7 +39,7 @@ $(document).ready(function () {
         var privateMenu =$("#privateMenu");
 
 		Pages.AddPage({name:'login', menu:publicMenu});
-		Pages.ShowPage('login');
+		//Pages.ShowPage('login');
 
         Pages.AddPage({name:'signup', menu:publicMenu});		
         Pages.AddPage({name:'forgot-password', menu:publicMenu});
@@ -49,8 +51,9 @@ $(document).ready(function () {
 
 	function InitConsole() {
 		//Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
+		Pages.AddPanel('fred', null, null, null, null);
 		Pages.AddPanel('organization', null, null, null, null);
-    Pages.AddPanel('console', null, null, initConsoleFrame,null );
+        Pages.AddPanel('console', null, null, initConsoleFrame,null );
 		Pages.AddPanel('application', null, null, null, usergrid.console.pageSelectApplication);
 		Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
 		Pages.AddPanel('users', null, null, null, usergrid.console.pageSelectUsers);
@@ -62,7 +65,7 @@ $(document).ready(function () {
 		Pages.AddPanel('analytics', null, null, null, usergrid.console.pageSelectAnalytics);
 		Pages.AddPanel('settings', null, null, null, usergrid.console.pageSelectSettings);
 		Pages.AddPanel('shell', null, null, null, usergrid.console.pageSelectShell);
-    Pages.AddPanel('account', "#account-link", null, null, usergrid.console.requestAccountSettings);
+        Pages.AddPanel('account', "#account-link", null, null, usergrid.console.requestAccountSettings);
 		//$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
 	}
 	
