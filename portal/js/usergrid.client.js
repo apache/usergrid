@@ -999,7 +999,18 @@ usergrid.Client = function(options) {
     this.clearLoginCredentials = clearLoginCredentials;
 
     function sendToSSOLoginPage() {
-        window.location = self.apigee_sso_url + '?callback=' + self.callback;
+        var callback =  self.callback;
+        var separatorMark = '?';
+        if (self.use_sso) {
+            callback = callback + separatorMark + 'use_sso=' + self.use_sso;
+            separatorMark = '&';
+        }
+        if (self.apiUrl != PUBLIC_API_URL) {
+            callback = callback + separatorMark +'api_url=' + self.apiUrl;
+            separatorMark = '&';
+        }
+        var sso_login = self.apigee_sso_url + '?callback=' + encodeURIComponent(callback);
+        window.location = sso_login;
         throw "stop!";//stops further execution of code
     }
     this.sendToSSOLoginPage = sendToSSOLoginPage;
