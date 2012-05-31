@@ -53,7 +53,7 @@ $(document).ready(function () {
 		//Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
 		Pages.AddPanel('fred', null, null, null, null);
 		Pages.AddPanel('organization', null, null, null, null);
-        Pages.AddPanel('console', null, null, initConsoleFrame,null );
+        Pages.AddPanel('console', null, null, null ,null );
 		Pages.AddPanel('application', null, null, null, usergrid.console.pageSelectApplication);
 		Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
 		Pages.AddPanel('users', null, null, null, usergrid.console.pageSelectUsers);
@@ -80,31 +80,6 @@ $(document).ready(function () {
         while (e = r.exec(q))
            query_params[d(e[1])] = d(e[2]);
         return query_params;
-    }
-
-    function initConsoleFrame(){
-        /*
-       // var bearerToken = usergrid.console.getAccessToken();
-        var bearerToken = localStorage.getObject('usergrid_access_token');
-        var bearerTokenJson = JSON.stringify(
-            {
-            "type":"custom_token",
-            "name":"Authorization",
-            "value":"Bearer " + bearerToken,
-            "style":"header"
-            },
-            {
-            "type":"custom_token",
-            "name":"app_id",
-            "value":"8a197065-58c5-11e1-bfb7-22000a1c5a67",
-            "style":"template"
-            });
-        //var string='[{"type":"custom_token","name":"Authorization","value":"Bearer '+bearerToken+'","style":"header"},{"type":"custom_token","name":"app_id","value":"8a197065-58c5-11e1-bfb7-22000a1c5a67","style":"template"}]';
-        var bearerTokenString = encodeURIComponent(bearerTokenJson);
-        //var bearerTokenString = encodeURIComponent("[{'type':'custom_token','access_token':'"+bearerToken+"'}]");
-        var url = 'https://apigee.com/console/usergrid?embedded=true&auth='+bearerTokenString;
-        $("#console-panel iframe").attr("src", url);
-        */
     }
     
 });
