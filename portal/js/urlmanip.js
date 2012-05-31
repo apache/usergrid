@@ -32,10 +32,6 @@ if (query_params.access_token && query_params.admin_email && query_params.uuid) 
         new_target = new_target + separatorMark + 'use_sso=' + query_params.use_sso;
         separatorMark = '&';
     }
-    if (query_params.callback) {
-        new_target = new_target + separatorMark + 'callback=' + query_params.callback;
-        separatorMark = '&';
-    }
     window.location = window.location.protocol+'//'+new_target;
     throw "stop!";
 }

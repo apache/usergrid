@@ -48,9 +48,6 @@ usergrid.Client = function(options) {
     //Apigee SSO url
     var APIGEE_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
 
-    //Apigee SSO Callback
-    var SSO_CALLBACK = "https://apigee.com/usergrid";
-
     //Apigee SSO Logout page
     var SSO_LOGOUT_PAGE = 'https://accounts.apigee.com/accounts/sign_out';
     self.sso_logout_page = SSO_LOGOUT_PAGE;
@@ -82,12 +79,6 @@ usergrid.Client = function(options) {
     this.use_sso = USE_SSO;
     if (query_params.use_sso) {
         self.use_sso = query_params.use_sso;
-    }
-
-    this.callback = SSO_CALLBACK;
-    if (query_params.callback) {
-        this.callback = query_params.callback;
-        self.callback = query_params.callback;
     }
 
     this.apigee_sso_url = APIGEE_SSO_URL;
@@ -1019,7 +1010,7 @@ usergrid.Client = function(options) {
     this.sendToSSOLoginPage = sendToSSOLoginPage;
 
     function getSSOCallback() {
-        var callback =  self.callback;
+        var callback = window.location.protocol+'//'+ window.location.host + window.location.pathname;
         var separatorMark = '?';
         if (self.use_sso) {
             callback = callback + separatorMark + 'use_sso=' + self.use_sso;
@@ -1027,10 +1018,6 @@ usergrid.Client = function(options) {
         }
         if (self.apiUrl != PUBLIC_API_URL) {
             callback = callback + separatorMark +'api_url=' + self.apiUrl;
-            separatorMark = '&';
-        }
-        if (self.callback != SSO_CALLBACK) {
-            callback = callback + separatorMark +'callback=' + self.callback;
             separatorMark = '&';
         }
         return encodeURIComponent(callback);
