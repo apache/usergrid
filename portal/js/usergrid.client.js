@@ -1057,10 +1057,10 @@ usergrid.Client = function(options) {
     this.signup = signup;
 
     function getEntity(collection, a) {
-        var ns = self.applicationId;
+        var ns = self.currentOrganization.uuid + "/" +self.applicationId;
         var id = a[0];
         if (countByType("string", a) >= 2) {
-            ns = getByType("string", 0, a);
+            ns = self.currentOrganization.uuid + "/" + getByType("string", 0, a);
             id = getByType("string", 1, a);
         }
         var success = getByType("function", 0, a);
