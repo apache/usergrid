@@ -1029,26 +1029,6 @@ usergrid.Client = function(options) {
     }
     this.loggedIn = loggedIn;
 
-    existingUser = localStorage.getObject('usergrid_user');
-    existingAccessToken = localStorage.getObject('usergrid_access_token');
-
-    
-    //check to see if the user has a valid token
-    if (!existingUser && !existingAccessToken) {
-        //test to see if the Portal is running on Apigee, if so, send to SSO, if not, fall through to login screen
-        if ( useSSO() ){
-            Pages.clearPage();
-            sendToSSOLoginPage();
-        } 
-    } else if (existingAccessToken && existingUser.email) {
-        handleAutoLogin(existingUser.email, existingAccessToken);
-        return;
-    }
-
-    self.loggedInUser = localStorage.getObject('usergrid_user');
-    self.accessToken = localStorage.getObject('usergrid_access_token');
-    setCurrentOrganization();
-
     function signup(organization, username, name, email, password, success, failure) {
         var formdata = {
             organization: organization,
@@ -1474,6 +1454,25 @@ usergrid.Client = function(options) {
 	}
     this.setCurrentOrganization = setCurrentOrganization;
 
+    existingUser = localStorage.getObject('usergrid_user');
+    existingAccessToken = localStorage.getObject('usergrid_access_token');
+
+
+    //check to see if the user has a valid token
+    if (!existingUser && !existingAccessToken) {
+        //test to see if the Portal is running on Apigee, if so, send to SSO, if not, fall through to login screen
+        if ( useSSO() ){
+            Pages.clearPage();
+            sendToSSOLoginPage();
+        }
+    } else if (existingAccessToken && existingUser.email) {
+        handleAutoLogin(existingUser.email, existingAccessToken);
+        return;
+    }
+
+    self.loggedInUser = localStorage.getObject('usergrid_user');
+    self.accessToken = localStorage.getObject('usergrid_access_token');
+    setCurrentOrganization();
 
 };
 
