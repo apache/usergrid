@@ -21,6 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.prefs.Preferences;
@@ -239,6 +240,10 @@ public class App {
 
 	public String getAccessToken() {
 		return server.getAccessTokenForAdminUser(adminUserEmail);
+	}
+	
+	public UUID getAdminUUID(){
+	    return server.getAdminUUID(adminUserEmail);
 	}
 
 	public boolean serverIsStarted() {

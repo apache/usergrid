@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 import javax.servlet.Servlet;
 import javax.servlet.jsp.JspFactory;
@@ -518,5 +519,15 @@ public class Server implements ApplicationContextAware {
 		}
 		return null;
 	}
+	
+	public UUID getAdminUUID(String email) {
+        try {
+            UserInfo user = management.getAdminUserByEmail(email);
+            return user.getUuid();
+        } catch (Exception e) {
+            logger.error("Unable to get user: " + email);
+        }
+        return null;
+    }
 
 }
