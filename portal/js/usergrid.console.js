@@ -2739,6 +2739,8 @@ $('#selectAllGroupMemberships').show();
     }
 
     function handleShellCommand(s) {
+        var orgName = client.currentOrganization.uuid;
+
         if (s) {
             history.push(s);
             history_i - history.length - 1;
@@ -2746,27 +2748,27 @@ $('#selectAllGroupMemberships').show();
         if (s.startsWith("/")) {
             var path = client.encodePathString(s);
             printLnToShell(path);
-            client.apiGetRequest("/" + current_application_id + path, null, displayShellResponse, null);
+            client.apiGetRequest("/" + orgName + "/" + current_application_id + path, null, displayShellResponse, null);
         }
         else if (s.startsWith("get /")) {
             var path = client.encodePathString(s.substring(4));
             printLnToShell(path);
-            client.apiGetRequest("/" + current_application_id + path, null, displayShellResponse, null);
+            client.apiGetRequest("/" + orgName + "/" + current_application_id + path, null, displayShellResponse, null);
         }
         else if (s.startsWith("put /")) {
             var params = client.encodePathString(s.substring(4), true);
             printLnToShell(params.path);
-            client.apiRequest("PUT", "/" + current_application_id + params.path, null, JSON.stringify(params.payload), displayShellResponse, null);
+            client.apiRequest("PUT", "/" + orgName + "/" + current_application_id + params.path, null, JSON.stringify(params.payload), displayShellResponse, null);
         }
         else if (s.startsWith("post /")) {
             var params = client.encodePathString(s.substring(5), true);
             printLnToShell(params.path);
-            client.apiRequest("POST", "/" + current_application_id + params.path, null, JSON.stringify(params.payload), displayShellResponse, null);
+            client.apiRequest("POST", "/" + orgName + "/" + current_application_id + params.path, null, JSON.stringify(params.payload), displayShellResponse, null);
         }
         else if (s.startsWith("delete /")) {
             var path = client.encodePathString(s.substring(7));
             printLnToShell(path);
-            client.apiRequest("DELETE", "/" + current_application_id + path, null, null, displayShellResponse, null);
+            client.apiRequest("DELETE", "/" + orgName + "/" + current_application_id + path, null, null, displayShellResponse, null);
         }
         else if ((s == "clear") || (s == "cls"))  {
             $('#shell-output').html(" ");
