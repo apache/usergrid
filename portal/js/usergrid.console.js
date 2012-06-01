@@ -774,8 +774,8 @@ $(document).on('click','#go-home', pageSelectHome);
           organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
       },
       function() {
-          $("#organization-panel-key").html("Unable to load...");
-          $("#organization-panel-secret").html("Unable to load...");
+          $("#organization-panel-key").html('<div class="alert">Unable to load...</div>');
+          $("#organization-panel-secret").html('<div class="alert">Unable to load...</div>');
       });
   }
 
@@ -788,8 +788,8 @@ $(document).on('click','#go-home', pageSelectHome);
           organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
       },
       function() {
-          $("#organization-panel-key").html("Unable to load...");
-          $("#organization-panel-secret").html("Unable to load...");
+          $("#organization-panel-key").html('<div class="alert">Unable to load...</div>');
+          $("#organization-panel-secret").html('<div class="alert">Unable to load...</div>');
       });
   }
   window.usergrid.console.newOrganizationCredentials = newOrganizationCredentials;
@@ -2648,7 +2648,7 @@ $('#selectAllGroupMemberships').show();
             //$("#analytics-graph-table").visualize({type: 'line', width: '950px', height: '500px'});
         },
         function() {
-            $("#analytics-graph").html("Unable to load...");
+            $("#analytics-graph").html('<div class="alert">Unable to load...</div>');
         });
     }
 
@@ -2667,30 +2667,30 @@ $('#selectAllGroupMemberships').show();
     var application_keys = {};
 
     function requestApplicationCredentials() {
-        $("#application-panel-key").html("Loading...");
-        $("#application-panel-secret").html("Loading...");
+        $("#application-panel-key").html('<div class="alert alert-info">Loading...</div>');
+        $("#application-panel-secret").html('<div class="alert alert-info">Loading...</div>');
         client.requestApplicationCredentials(current_application_id, function(response) {
             $("#application-panel-key").html(response.credentials.client_id);
             $("#application-panel-secret").html(response.credentials.client_secret);
             application_keys[current_application_id] = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
         },
         function() {
-            $("#application-panel-key").html("Unable to load...");
-            $("#application-panel-secret").html("Unable to load...");
+            $("#application-panel-key").html('<div class="alert">Unable to load...</div>');
+            $("#application-panel-secret").html('<div class="alert">Unable to load...</div>');
         });
     }
 
     function newApplicationCredentials() {
-        $("#application-panel-key").html("Loading...");
-        $("#application-panel-secret").html("Loading...");
+        $("#application-panel-key").html('<div class="alert alert-info">Loading...</div>');
+        $("#application-panel-secret").html('<div class="alert alert-info">Loading...</div>');
         client.regenerateApplicationCredentials(current_application_id, function(response) {
             $("#application-panel-key").html(response.credentials.client_id);
             $("#application-panel-secret").html(response.credentials.client_secret);
             application_keys[current_application_id] = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
         },
         function() {
-            $("#application-panel-key").html("Unable to load...");
-            $("#application-panel-secret").html("Unable to load...");
+            $("#application-panel-key").html('<div class="alert">Unable to load...</div>');
+            $("#application-panel-secret").html('<div class="alert">Unable to load...</div>');
         });
     }
     window.usergrid.console.newApplicationCredentials = newApplicationCredentials;
