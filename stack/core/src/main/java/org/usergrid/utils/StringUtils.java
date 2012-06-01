@@ -17,6 +17,8 @@ package org.usergrid.utils;
 
 import static org.usergrid.utils.ConversionUtils.string;
 
+import java.util.Arrays;
+
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,6 +178,21 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
 	 */
 	public static String toString(Object obj) {
 		return string(obj);
+	}
+
+	public static String toStringFormat(Object obj, String format) {
+		if (obj != null) {
+			if (format != null) {
+				if (obj.getClass().isArray()) {
+					return String.format(format,
+							Arrays.toString((Object[]) obj));
+				}
+				return String.format(format, string(obj));
+			} else {
+				return string(obj);
+			}
+		}
+		return "";
 	}
 
 	/**

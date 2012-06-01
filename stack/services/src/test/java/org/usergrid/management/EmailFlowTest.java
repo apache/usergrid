@@ -126,7 +126,7 @@ public class EmailFlowTest {
 				management.handleConfirmationTokenForAdminUser(
 						org_owner.owner.getUuid(), token));
 
-		Message account_activation_message = inbox.get(2);
+		Message account_activation_message = inbox.get(1);
 		assertEquals("User Account Activated",
 				account_activation_message.getSubject());
 
@@ -172,7 +172,7 @@ public class EmailFlowTest {
 				management.handleConfirmationTokenForAdminUser(
 						org_owner.owner.getUuid(), token));
 
-		Message account_confirmed_message = user_inbox.get(2);
+		Message account_confirmed_message = user_inbox.get(1);
 		assertEquals("User Account Confirmed",
 				account_confirmed_message.getSubject());
 
@@ -193,7 +193,7 @@ public class EmailFlowTest {
 				management.handleActivationTokenForAdminUser(
 						org_owner.owner.getUuid(), token));
 
-		Message account_activated_message = user_inbox.get(3);
+		Message account_activated_message = user_inbox.get(2);
 		assertEquals("User Account Activated",
 				account_activated_message.getSubject());
 

@@ -79,7 +79,8 @@ public interface ManagementService {
 			Map<String, Object> properties) throws Exception;
 
 	public OrganizationInfo createOrganization(String organizationName,
-			UserInfo user, boolean sendEmail) throws Exception;
+			UserInfo user, boolean activated, boolean sendEmail)
+			throws Exception;
 
 	public OrganizationOwnerInfo createOwnerAndOrganization(
 			String organizationName, String username, String name,

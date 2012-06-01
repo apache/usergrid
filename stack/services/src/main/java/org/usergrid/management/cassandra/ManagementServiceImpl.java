@@ -281,7 +281,7 @@ public class ManagementServiceImpl implements ManagementService {
 					true, false, false);
 
 			OrganizationInfo organization = createOrganization(
-					test_organization_name, user, false);
+					test_organization_name, user, true, false);
 			// TODO change to organizationName/applicationName
 			UUID appId = createApplication(organization.getUuid(),
 					organization.getName() + "/" + test_app_name);
@@ -406,7 +406,8 @@ public class ManagementServiceImpl implements ManagementService {
 			user = createAdminUser(username, name, email, password, activated,
 					disabled, sendEmail);
 
-			organization = createOrganization(organizationName, user, sendEmail);
+			organization = createOrganization(organizationName, user, true,
+					false);
 
 		} finally {
 			lockManager.unlockProperty(MANAGEMENT_APPLICATION_ID, "groups",
@@ -421,7 +422,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 	@Override
 	public OrganizationInfo createOrganization(String organizationName,
-			UserInfo user, boolean sendEmail) throws Exception {
+			UserInfo user, boolean activated, boolean sendEmail)
+			throws Exception {
 
 		if ((organizationName == null) || (user == null)) {
 			return null;
@@ -1910,9 +1912,9 @@ public class ManagementServiceImpl implements ManagementService {
 					.getOrganizationByUuid(organizationId);
 			sendOrganizationActivatedEmail(organization);
 			sendSysAdminNewOrganizationActivatedNotificationEmail(organization);
-			
+
 			activateOrganization(organization, false);
-			
+
 			return ActivationState.ACTIVATED;
 		}
 		return ActivationState.UNKNOWN;
