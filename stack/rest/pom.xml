@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.usergrid</groupId>
 		<artifactId>usergrid</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.0.1-SNAPSHOT-EXPORT</version>
 	</parent>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
