@@ -766,8 +766,8 @@ $(document).on('click','#go-home', pageSelectHome);
   var organization_keys = { };
   
   function requestOrganizationCredentials() {
-      $("#organization-panel-key").html("Loading...");
-      $("#organization-panel-secret").html("Loading...");
+      $("#organization-panel-key").html('<div class="alert alert-info">Loading...</div>');
+      $("#organization-panel-secret").html('<div class="alert alert-info">Loading...</div>');
       client.requestOrganizationCredentials(function(response) {
           $("#organization-panel-key").html(response.credentials.client_id);
           $("#organization-panel-secret").html(response.credentials.client_secret);
@@ -780,8 +780,8 @@ $(document).on('click','#go-home', pageSelectHome);
   }
 
   function newOrganizationCredentials() {
-      $("#organization-panel-key").html("Loading...");
-      $("#organization-panel-secret").html("Loading...");
+      $("#organization-panel-key").html('<div class="alert alert-info">Loading...</div>');
+      $("#organization-panel-secret").html('<div class="alert alert-info">Loading...</div>');
       client.regenerateOrganizationCredentials(function(response) {
           $("#organization-panel-key").html(response.credentials.client_id);
           $("#organization-panel-secret").html(response.credentials.client_secret);
@@ -2533,7 +2533,7 @@ $('#selectAllGroupMemberships').show();
     var application_counters_names = [];
 
     function requestApplicationCounterNames() {
-        $("#analytics-counter-names").html("Loading...");
+        $("#analytics-counter-names").html('<div class="alert alert-info">Loading...</div>');
         client.requestApplicationCounterNames(current_application_id, function(response) {
             application_counters_names = response.data;
             var html = usergrid.console.ui.makeTableFromList(application_counters_names, 1, {
@@ -2549,7 +2549,7 @@ $('#selectAllGroupMemberships').show();
             requestApplicationCounters();
         },
         function() {
-            $("#analytics-counter-names").html("Unable to load...");
+            $("#analytics-counter-names").html('<div class="alert">Unable to load...</div>');
         });
     }
 
@@ -2565,14 +2565,14 @@ $('#selectAllGroupMemberships').show();
         for (var i in counters_checked) {
             counter_names.push(counters_checked[i].value);
         }
-        $("#analytics-graph").html("Loading...");
-        start_timestamp = $("#start-date").datepicker("getDate").at($('#start-time').timepicker("getTime")).getTime();
+        $("#analytics-graph").html('<div class="alert alert-info">Loading...</div>');
+        start_timestamp = $('#start-date').datepicker("getDate").at($('#start-time').timepicker("getTime")).getTime();
         end_timestamp = $("#end-date").datepicker("getDate").at($('#end-time').timepicker("getTime")).getTime();
         resolution = $('select#resolutionSelect').val();
         client.requestApplicationCounters(current_application_id, start_timestamp, end_timestamp, resolution, counter_names, function(response) {
             application_counters = response.counters;
             if (!application_counters) {
-                $("#analytics-graph").html("<div class=\"alert\">No counter data</div>");
+                $('#analytics-graph').html('<div class="alert">No counter data.</div>');
                 return;
             }
             var data = new google.visualization.DataTable();
