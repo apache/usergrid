@@ -251,7 +251,7 @@ public class ManagementResource extends AbstractContextResource {
 		this.scope = scope;
 		this.state = state;
 
-		return new Viewable("authorize_form", this);
+		return handleViewable("authorize_form", this);
 	}
 
 	@POST
@@ -295,9 +295,9 @@ public class ManagementResource extends AbstractContextResource {
 				errorMsg = "Username or password do not match";
 			}
 
-			return new Viewable("authorize_form", this);
+			return handleViewable("authorize_form", this);
 		} catch (Exception e) {
-			return new Viewable("error", e);
+			return handleViewable("error", e);
 		}
 
 	}

@@ -361,9 +361,9 @@ public class ApplicationResource extends ServiceResource {
 			ApplicationInfo app = management.getApplicationInfo(applicationId);
 			applicationName = app.getName();
 
-			return new Viewable("authorize_form", this);
+			return handleViewable("authorize_form", this);
 		} catch (Exception e) {
-			return new Viewable("error", e);
+			return handleViewable("error", e);
 		}
 	}
 
@@ -412,9 +412,9 @@ public class ApplicationResource extends ServiceResource {
 			ApplicationInfo app = management.getApplicationInfo(applicationId);
 			applicationName = app.getName();
 
-			return new Viewable("authorize_form", this);
+			return handleViewable("authorize_form", this);
 		} catch (Exception e) {
-			return new Viewable("error", e);
+			return handleViewable("error", e);
 		}
 	}
 

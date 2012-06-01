@@ -275,12 +275,12 @@ public class UserResource extends ServiceResource {
 		try {
 			if (management.checkPasswordResetTokenForAppUser(
 					getApplicationId(), getUserUuid(), token)) {
-				return new Viewable("resetpw_set_form", this);
+				return handleViewable("resetpw_set_form", this);
 			} else {
-				return new Viewable("resetpw_email_form", this);
+				return handleViewable("resetpw_email_form", this);
 			}
 		} catch (Exception e) {
-			return new Viewable("error", e);
+			return handleViewable("error", e);
 		}
 	}
 
@@ -305,21 +305,21 @@ public class UserResource extends ServiceResource {
 					if ((password1 != null) && password1.equals(password2)) {
 						management.setAppUserPassword(getApplicationId(),
 								getUser().getUuid(), password1);
-						return new Viewable("resetpw_set_success", this);
+						return handleViewable("resetpw_set_success", this);
 					} else {
 						errorMsg = "Passwords didn't match, let's try again...";
-						return new Viewable("resetpw_set_form", this);
+						return handleViewable("resetpw_set_form", this);
 					}
 				} else {
 					errorMsg = "Something odd happened, let's try again...";
-					return new Viewable("resetpw_email_form", this);
+					return handleViewable("resetpw_email_form", this);
 				}
 			}
 
 			if (!useReCaptcha()) {
 				management.startAppUserPasswordResetFlow(getApplicationId(),
 						user);
-				return new Viewable("resetpw_email_success", this);
+				return handleViewable("resetpw_email_success", this);
 			}
 
 			ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
@@ -332,13 +332,13 @@ public class UserResource extends ServiceResource {
 			if (reCaptchaResponse.isValid()) {
 				management.startAppUserPasswordResetFlow(getApplicationId(),
 						user);
-				return new Viewable("resetpw_email_success", this);
+				return handleViewable("resetpw_email_success", this);
 			} else {
 				errorMsg = "Incorrect Captcha";
-				return new Viewable("resetpw_email_form", this);
+				return handleViewable("resetpw_email_form", this);
 			}
 		} catch (Exception e) {
-			return new Viewable("error", e);
+			return handleViewable("error", e);
 		}
 
 	}
@@ -381,11 +381,11 @@ public class UserResource extends ServiceResource {
 		try {
 			management.handleActivationTokenForAppUser(getApplicationId(),
 					getUserUuid(), token);
-			return new Viewable("activate", this);
+			return handleViewable("activate", this);
 		} catch (TokenException e) {
-			return new Viewable("bad_activation_token", this);
+			return handleViewable("bad_activation_token", this);
 		} catch (Exception e) {
-			return new Viewable("error", e);
+			return handleViewable("error", e);
 		}
 	}
 
@@ -399,13 +399,13 @@ public class UserResource extends ServiceResource {
 					.handleConfirmationTokenForAppUser(getApplicationId(),
 							getUserUuid(), token);
 			if (state == ActivationState.CONFIRMED_AWAITING_ACTIVATION) {
-				return new Viewable("confirm", this);
+				return handleViewable("confirm", this);
 			}
-			return new Viewable("activate", this);
+			return handleViewable("activate", this);
 		} catch (TokenException e) {
-			return new Viewable("bad_confirmation_token", this);
+			return handleViewable("bad_confirmation_token", this);
 		} catch (Exception e) {
-			return new Viewable("error", e);
+			return handleViewable("error", e);
 		}
 	}
 
