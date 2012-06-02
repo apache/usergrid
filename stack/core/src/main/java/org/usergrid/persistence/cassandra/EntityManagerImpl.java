@@ -1445,7 +1445,7 @@ public class EntityManagerImpl implements EntityManager,
 		entity = validate(entity);
 
 		Map<Object, Object> dictionary = new LinkedHashMap<Object, Object>();
-		Object placeholder = new Object();
+//		Object placeholder = new Object();
 
 		ApplicationCF dictionaryCf = null;
 
@@ -1474,15 +1474,15 @@ public class EntityManagerImpl implements EntityManager,
 			} else {
 				name = CompositeUtils.deserialize(result.getName());
 			}
-			Object value = placeholder;
+			Object value = null;
 			if (entityHasDictionary && coTypeIsBasic) {
 				value = object(setCoType, result.getValue());
 			} else if (result.getValue().remaining() > 0) {
 				value = Schema.deserializePropertyValueFromJsonBinary(result
 						.getValue().slice(), setCoType);
-				if (value == null) {
-					value = placeholder;
-				}
+//				if (value == null) {
+//					value = placeholder;
+//				}
 			}
 			if (name != null) {
 				dictionary.put(name, value);
