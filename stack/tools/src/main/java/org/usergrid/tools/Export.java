@@ -242,12 +242,6 @@ public class Export extends ExportingToolBase {
             
             
             for (Entry<Object, Object> entry: dict.entrySet()) {
-                
-                //TODO T.N.  This is a bit of hack, we need a better way to detect empty values
-                if(entry.getValue() == null){
-                    continue;
-                }
-                
                 jg.writeFieldName(entry.getKey().toString());  
                 jg.writeObject(entry.getValue());
             }
