@@ -15,8 +15,6 @@
  ******************************************************************************/
 package org.usergrid.tools;
 
-import static org.junit.Assert.assertNotNull;
-
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
@@ -32,16 +30,12 @@ import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.OrganizationInfo;
-import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.persistence.ConnectionRef;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
-import org.usergrid.persistence.entities.Activity;
-import org.usergrid.persistence.entities.User;
 import org.usergrid.utils.JsonUtils;
-import org.usergrid.utils.UUIDUtils;
 
 import com.google.common.collect.BiMap;
 

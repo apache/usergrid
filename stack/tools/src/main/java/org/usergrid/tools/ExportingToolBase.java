@@ -1,5 +1,9 @@
 package org.usergrid.tools;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -10,10 +14,6 @@ import org.codehaus.jackson.impl.DefaultPrettyPrinter;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 
 /**
  * @author zznate
