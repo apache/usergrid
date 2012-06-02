@@ -57,7 +57,8 @@ public class Export extends ExportingToolBase {
 
         setVerbose(line);
 
-        ExportDataCreator dataCreator = new ExportDataCreator(emf, managementService);
+        ExportDataCreator dataCreator = new ExportDataCreator(emf,
+                managementService);
         dataCreator.createTestData();
 
         prepareBaseOutputFileName(line);
@@ -81,7 +82,6 @@ public class Export extends ExportingToolBase {
             exportApplicationsForOrg(organization);
         }
     }
-
 
     private void exportApplicationsForOrg(Entry<UUID, String> organization)
             throws Exception {
@@ -144,6 +144,7 @@ public class Export extends ExportingToolBase {
 
                         saveCollectionMembers(collectionsJg, em,
                                 application.getValue(), entity);
+
                     }
                 }
             }
@@ -204,13 +205,51 @@ public class Export extends ExportingToolBase {
             jg.writeEndArray();
         }
 
-        // Write collections
-        if ((collections != null) && !collections.isEmpty()) {
-            saveConnections(entity, em, jg);
-        }
+        // Write connections
+        saveConnections(entity, em, jg);
+        
+        // Write dictionaries
+        saveDictionaries(entity, em, jg);
+        
 
         // End the object if it was Started
         jg.writeEndObject();
+    }
+    /**
+     * Persists the connection for this entity.
+     */
+    private void saveDictionaries(Entity entity, EntityManager em,
+            JsonGenerator jg) throws Exception {
+        
+        jg.writeFieldName("dictionaries");
+        jg.writeStartObject();
+
+        Set<String> dictionaries = em.getDictionaries(entity);
+        for (String dictionary : dictionaries) {
+
+            Map<Object, Object> dict = em.getDictionaryAsMap(entity, dictionary);
+            
+            //nothing to do 
+            if(dict.isEmpty()){
+                continue;
+            }
+            
+            
+            jg.writeFieldName(dictionary);
+            
+           
+            jg.writeStartObject();
+            
+            
+            for (Entry<Object, Object> entry: dict.entrySet()) {
+                jg.writeFieldName(entry.getKey().toString());  
+                jg.writeObject(entry.getValue());
+            }
+
+            jg.writeEndObject();
+        }
+        jg.writeEndObject();
+
     }
 
     /**
