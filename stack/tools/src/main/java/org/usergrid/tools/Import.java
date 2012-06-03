@@ -313,7 +313,31 @@ public class Import extends ToolBase {
 								entryRef);
 					}
 				}
-			} else {
+			} 
+			else if (collectionName.equals("dictionaries")) {
+
+                jp.nextToken(); // START_OBJECT
+                while (jp.nextToken() != JsonToken.END_OBJECT) {
+                    String dictionaryName = jp.getCurrentName();
+
+                    jp.nextToken(); // START_OBJECT
+                    while (jp.nextToken() != JsonToken.END_OBJECT) {
+                        String entryId = jp.getText();
+                        //TODO deserialize entry, which could be a large json object. 
+                        
+                        
+//                        String 
+//                        
+//                        System.out.println(entityOwnerId + " " + connectionType
+//                                + " " + entryId);
+//                        // Store in DB
+//                        em.createConnection(ownerEntityRef, connectionType,
+//                                entryRef);
+                    }
+                }
+            } 
+			
+			else {
 				// Regular collections
 
 				jp.nextToken(); // START_ARRAY
