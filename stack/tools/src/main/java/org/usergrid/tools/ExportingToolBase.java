@@ -127,6 +127,8 @@ public abstract class ExportingToolBase extends ToolBase {
      *         collection
      */
     protected String prepareOutputFileName(String type, String name) {
+        
+        name = name.replace('/', '-');
         // Add application and timestamp
         StringBuilder str = new StringBuilder();
         // str.append(baseOutputFileName);
@@ -146,14 +148,6 @@ public abstract class ExportingToolBase extends ToolBase {
     }
 
     protected JsonGenerator getJsonGenerator(File outFile) throws IOException {
-
-        File parent = outFile.getParentFile();
-
-        //if there is a parent, we need to check if it it exists.  If it doesn't create it recursively.  If we're unable to do this, throw an exception
-        if (parent != null && !parent.exists() && !parent.mkdirs()) {
-            throw new IOException("Unable to create directory " + parent);
-        }
-
         PrintWriter out = new PrintWriter(outFile, "UTF-8");
         JsonGenerator jg = jsonFactory.createJsonGenerator(out);
         jg.setPrettyPrinter(new DefaultPrettyPrinter());
