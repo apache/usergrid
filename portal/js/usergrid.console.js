@@ -659,7 +659,7 @@ $(document).on('click','#go-home', pageSelectHome);
       }
 
       if(appList.is(":empty")){
-          appList.html('<div class="alert">No applications created.</div>');
+          appList.html('<div class="alert user-panel-section">No applications created.</div>');
           appMenu.html('<li>--No Apps--</li>');
           disableApplicationPanelButtons();
       }
