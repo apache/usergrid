@@ -373,16 +373,25 @@ public class Import extends ToolBase {
      *            a collection file name
      * @return the application name for this collections file name
      */
+    /**
+     * Extract a application name from a collectionsFileName in the way:
+     * collections.<a_name_space_name>.TIMESTAMP.json
+     * 
+     * @param collectionFileName
+     *            a collection file name
+     * @return the application name for this collections file name
+     */
     private String getApplicationFromColllection(String collectionFileName) {
         int firstDot = collectionFileName.indexOf(".");
         int secondDot = collectionFileName.indexOf(".", firstDot + 1);
 
         // The application will be in the subString between the dots.
 
-        String orgApp = collectionFileName.substring(firstDot + 1, secondDot);
-
-        return orgApp.replaceFirst("-", "/");
+        String appName = collectionFileName.substring(firstDot + 1, secondDot);
+        
+        return appName.replace(PATH_REPLACEMENT, "/");
     }
+
 
     /**
      * Open up the import directory based on <code>importDir</code>
@@ -401,5 +410,6 @@ public class Import extends ToolBase {
         logger.info("Status. Exists: " + importDir.exists() + " - Readable: "
                 + importDir.canRead());
     }
+
 
 }
