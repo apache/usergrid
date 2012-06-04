@@ -56,6 +56,11 @@ public abstract class ToolBase {
 	private static final Logger logger = LoggerFactory
 			.getLogger(ToolBase.class);
 
+	/**
+     * 
+     */
+    protected static final String PATH_REPLACEMENT = "USERGIRD-PATH-BACKSLASH";
+
 	EmbeddedServerHelper embedded = null;
 
 	EntityManagerFactory emf;

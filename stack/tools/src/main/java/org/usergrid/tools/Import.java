@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.apache.commons.cli.CommandLine;
@@ -39,329 +40,376 @@ import org.usergrid.management.OrganizationInfo;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.entities.Application;
+import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 
 public class Import extends ToolBase {
 
-	private static final Logger logger = LoggerFactory.getLogger(Import.class);
+    private static final Logger logger = LoggerFactory.getLogger(Import.class);
 
-	/** Input directory where the .json export files are */
-	static final String INPUT_DIR = "inputDir";
+    /** Input directory where the .json export files are */
+    static final String INPUT_DIR = "inputDir";
 
-	static File importDir;
+    static File importDir;
 
-	static final String DEFAULT_INPUT_DIR = "export";
+    static final String DEFAULT_INPUT_DIR = "export";
 
-	JsonFactory jsonFactory = new JsonFactory();
+    JsonFactory jsonFactory = new JsonFactory();
 
-	@Override
-	@SuppressWarnings("static-access")
-	public Options createOptions() {
+    @Override
+    @SuppressWarnings("static-access")
+    public Options createOptions() {
 
-		Option hostOption = OptionBuilder.withArgName("host").hasArg()
-				.withDescription("Cassandra host").create("host");
+        Option hostOption = OptionBuilder.withArgName("host").hasArg()
+                .withDescription("Cassandra host").create("host");
 
-		Option remoteOption = OptionBuilder.withDescription(
-				"Use remote Cassandra instance").create("remote");
+        Option remoteOption = OptionBuilder.withDescription(
+                "Use remote Cassandra instance").create("remote");
 
-		Option inputDir = OptionBuilder.hasArg()
-				.withDescription("input directory -inputDir").create(INPUT_DIR);
+        Option inputDir = OptionBuilder.hasArg()
+                .withDescription("input directory -inputDir").create(INPUT_DIR);
 
-		Option verbose = OptionBuilder
-				.withDescription(
-						"Print on the console an echo of the content written to the file")
-				.create(VERBOSE);
+        Option verbose = OptionBuilder
+                .withDescription(
+                        "Print on the console an echo of the content written to the file")
+                .create(VERBOSE);
 
-		Options options = new Options();
-		options.addOption(hostOption);
-		options.addOption(remoteOption);
-		options.addOption(inputDir);
-		options.addOption(verbose);
+        Options options = new Options();
+        options.addOption(hostOption);
+        options.addOption(remoteOption);
+        options.addOption(inputDir);
+        options.addOption(verbose);
 
-		return options;
-	}
+        return options;
+    }
 
-	@Override
-	public void runTool(CommandLine line) throws Exception {
-		startSpring();
+    @Override
+    public void runTool(CommandLine line) throws Exception {
+        startSpring();
 
-		setVerbose(line);
+        setVerbose(line);
 
-		openImportDirectory(line);
+        openImportDirectory(line);
 
-		importOrganizations();
+        importOrganizations();
 
-		importApplications();
+        importApplications();
 
-		importCollections();
-	}
+        importCollections();
+    }
 
-	/**
-	 * Import applications
-	 */
-	private void importApplications() throws Exception {
-		String[] nanemspaceFileNames = importDir.list(new PrefixFileFilter(
-				"application."));
-		logger.info("Applications to read: " + nanemspaceFileNames.length);
+    /**
+     * Import applications
+     */
+    private void importApplications() throws Exception {
+        String[] nanemspaceFileNames = importDir.list(new PrefixFileFilter(
+                "application."));
+        logger.info("Applications to read: " + nanemspaceFileNames.length);
 
-		for (String applicationName : nanemspaceFileNames) {
-			try {
-				importApplication(applicationName);
-			} catch (Exception e) {
-				logger.warn("Unable to import application: " + applicationName,
-						e);
-			}
-		}
-	}
+        for (String applicationName : nanemspaceFileNames) {
+            try {
+                importApplication(applicationName);
+            } catch (Exception e) {
+                logger.warn("Unable to import application: " + applicationName,
+                        e);
+            }
+        }
+    }
 
-	/**
-	 * Imports a application
-	 * 
-	 * @param applicationName
-	 *            file name where the application was exported.
-	 */
-	private void importApplication(String applicationName) throws Exception {
-		// Open up application file.
-		File applicationFile = new File(importDir, applicationName);
-		logger.info("Loading application file: "
-				+ applicationFile.getAbsolutePath());
-		JsonParser jp = getJsonParserForFile(applicationFile);
+    /**
+     * Imports a application
+     * 
+     * @param applicationName
+     *            file name where the application was exported.
+     */
+    private void importApplication(String applicationName) throws Exception {
+        // Open up application file.
+        File applicationFile = new File(importDir, applicationName);
+        logger.info("Loading application file: "
+                + applicationFile.getAbsolutePath());
+        JsonParser jp = getJsonParserForFile(applicationFile);
 
-		JsonToken token = jp.nextToken();
-		validateStartArray(token);
+        JsonToken token = jp.nextToken();
+        validateStartArray(token);
 
-		// Move to next object (the application).
-		// The application object is the first object followed by all the
-		// objects in this application.
-		token = jp.nextValue();
+        // Move to next object (the application).
+        // The application object is the first object followed by all the
+        // objects in this application.
+        token = jp.nextValue();
 
-		Application application = jp.readValueAs(Application.class);
-		@SuppressWarnings("unchecked")
-		String organizationId = ((Map<String, String>) application
-				.getMetadata("organization")).get("key");
-		managementService.importApplication(UUID.fromString(organizationId),
-				application);
-		echo(application);
+        Application application = jp.readValueAs(Application.class);
+        @SuppressWarnings("unchecked")
+        String organizationId = ((Map<String, String>) application
+                .getMetadata("organization")).get("key");
+        managementService.importApplication(UUID.fromString(organizationId),
+                application);
+        echo(application);
 
-		EntityManager em = emf.getEntityManager(application.getUuid());
+        EntityManager em = emf.getEntityManager(application.getUuid());
 
-		while (jp.nextValue() != JsonToken.END_ARRAY) {
-			@SuppressWarnings("unchecked")
-			Map<String, Object> entityProps = jp.readValueAs(HashMap.class);
-			// Import/create the entity
-			UUID uuid = getId(entityProps);
-			String type = getType(entityProps);
-			try {
-				em.create(uuid, type, entityProps);
-			} catch (Exception e) {
-				logger.error("Unable to create entity " + uuid + " of type "
-						+ type
-						+ ", skipping but this may indicate a bad import...", e);
-			}
-			echo(entityProps);
-		}
+        // we now need to remove all roles, they'll be imported again below
 
-		logger.info("----- End of application:" + application.getName());
-		jp.close();
-	}
+        for (Entry<String, String> entry : em.getRoles().entrySet()) {
+            em.deleteRole(entry.getKey());
+        }
 
-	private String getType(Map<String, Object> entityProps) {
-		return (String) entityProps.get(PROPERTY_TYPE);
-	}
+        while (jp.nextValue() != JsonToken.END_ARRAY) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> entityProps = jp.readValueAs(HashMap.class);
+            // Import/create the entity
+            UUID uuid = getId(entityProps);
+            String type = getType(entityProps);
 
-	private UUID getId(Map<String, Object> entityProps) {
-		return UUID.fromString((String) entityProps.get(PROPERTY_UUID));
-	}
+            try {
+                em.create(uuid, type, entityProps);
+            } catch (DuplicateUniquePropertyExistsException de) {
+                logger.error(
+                        "Unable to create entity.  It appears to be a duplicate",
+                        de);
+            }
 
-	private void validateStartArray(JsonToken token) {
-		if (token != JsonToken.START_ARRAY) {
-			throw new RuntimeException("Token should be START ARRAY but it is:"
-					+ token.asString());
-		}
+            catch (Exception e) {
+                logger.error("Unable to create entity " + uuid + " of type "
+                        + type
+                        + ", skipping but this may indicate a bad import...", e);
+            }
+            echo(entityProps);
+        }
 
-	}
+        logger.info("----- End of application:" + application.getName());
+        jp.close();
+    }
 
-	/**
-	 * Import organizations
-	 * 
-	 */
-	private void importOrganizations() throws Exception {
+    private String getType(Map<String, Object> entityProps) {
+        return (String) entityProps.get(PROPERTY_TYPE);
+    }
 
-		String[] organizationFileNames = importDir.list(new PrefixFileFilter(
-				"organization."));
-		logger.info("Organizations to read: " + organizationFileNames.length);
+    private UUID getId(Map<String, Object> entityProps) {
+        return UUID.fromString((String) entityProps.get(PROPERTY_UUID));
+    }
 
-		for (String organizationFileName : organizationFileNames) {
+    private void validateStartArray(JsonToken token) {
+        if (token != JsonToken.START_ARRAY) {
+            throw new RuntimeException("Token should be START ARRAY but it is:"
+                    + token.asString());
+        }
 
-			try {
-				importOrganization(organizationFileName);
-			} catch (Exception e) {
-				logger.warn("Unable to import organization:"
-						+ organizationFileName, e);
-			}
-		}
-	}
+    }
 
-	/**
-	 * Import an organization.
-	 * 
-	 * @param organizationFileName
-	 *            file where the organization was exported
-	 */
-	private void importOrganization(String organizationFileName)
-			throws Exception {
-		OrganizationInfo acc = null;
+    /**
+     * Import organizations
+     * 
+     */
+    private void importOrganizations() throws Exception {
 
-		// Open up organization dir.
-		File organizationFile = new File(importDir, organizationFileName);
-		logger.info("Loading organization file: "
-				+ organizationFile.getAbsolutePath());
-		JsonParser jp = getJsonParserForFile(organizationFile);
+        String[] organizationFileNames = importDir.list(new PrefixFileFilter(
+                "organization."));
+        logger.info("Organizations to read: " + organizationFileNames.length);
 
-		// Get the organization object and the only one in the file.
-		acc = jp.readValueAs(OrganizationInfo.class);
+        for (String organizationFileName : organizationFileNames) {
 
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		// properties.put("email", acc.getEmail());
-		// properties.put("password", "password".getBytes("UTF-8"));
+            try {
+                importOrganization(organizationFileName);
+            } catch (Exception e) {
+                logger.warn("Unable to import organization:"
+                        + organizationFileName, e);
+            }
+        }
+    }
 
-		echo(acc);
-		managementService.importOrganization(acc.getUuid(), acc, properties);
-		jp.close();
-	}
+    /**
+     * Import an organization.
+     * 
+     * @param organizationFileName
+     *            file where the organization was exported
+     */
+    private void importOrganization(String organizationFileName)
+            throws Exception {
+        OrganizationInfo acc = null;
 
-	private JsonParser getJsonParserForFile(File organizationFile)
-			throws Exception {
-		JsonParser jp = jsonFactory.createJsonParser(organizationFile);
-		jp.setCodec(new ObjectMapper());
-		return jp;
-	}
+        // Open up organization dir.
+        File organizationFile = new File(importDir, organizationFileName);
+        logger.info("Loading organization file: "
+                + organizationFile.getAbsolutePath());
+        JsonParser jp = getJsonParserForFile(organizationFile);
 
-	/**
-	 * Import collections. Collections files are named:
-	 * collections.<application_name>.Timestamp.json
-	 */
-	private void importCollections() throws Exception {
-		String[] collectionsFileNames = importDir.list(new PrefixFileFilter(
-				"collections."));
-		logger.info("Collections to read: " + collectionsFileNames.length);
+        // Get the organization object and the only one in the file.
+        acc = jp.readValueAs(OrganizationInfo.class);
 
-		for (String collectionName : collectionsFileNames) {
-			try {
-				importCollection(collectionName);
-			} catch (Exception e) {
-				logger.warn("Unable to import collection: " + collectionName, e);
-			}
-		}
-	}
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        // properties.put("email", acc.getEmail());
+        // properties.put("password", "password".getBytes("UTF-8"));
 
-	private void importCollection(String collectionFileName) throws Exception {
-		// Retrieve the namepsace for this collection. It's part of the name
-		String applicationName = getApplicationFromColllection(collectionFileName);
-		File collectionFile = new File(importDir, collectionFileName);
-		logger.info("Loading collections file: "
-				+ collectionFile.getAbsolutePath());
-		logger.info("  for application: " + applicationName);
-		EntityManager em = emf.getEntityManager(emf
-				.lookupApplication(applicationName));
+        echo(acc);
+        managementService.importOrganization(acc.getUuid(), acc, properties);
+        jp.close();
+    }
 
-		JsonParser jp = getJsonParserForFile(collectionFile);
+    private JsonParser getJsonParserForFile(File organizationFile)
+            throws Exception {
+        JsonParser jp = jsonFactory.createJsonParser(organizationFile);
+        jp.setCodec(new ObjectMapper());
+        return jp;
+    }
 
-		jp.nextToken(); // START_OBJECT this is the outter hashmap
+    /**
+     * Import collections. Collections files are named:
+     * collections.<application_name>.Timestamp.json
+     */
+    private void importCollections() throws Exception {
+        String[] collectionsFileNames = importDir.list(new PrefixFileFilter(
+                "collections."));
+        logger.info("Collections to read: " + collectionsFileNames.length);
 
-		while (jp.nextToken() != JsonToken.END_OBJECT) {
-			importEntitysStuff(jp, em);
-		}
+        for (String collectionName : collectionsFileNames) {
+            try {
+                importCollection(collectionName);
+            } catch (Exception e) {
+                logger.warn("Unable to import collection: " + collectionName, e);
+            }
+        }
+    }
 
-		logger.info("----- End of collections -----");
-		jp.close();
-	}
+    private void importCollection(String collectionFileName) throws Exception {
+        // Retrieve the namepsace for this collection. It's part of the name
+        String applicationName = getApplicationFromColllection(collectionFileName);
+        File collectionFile = new File(importDir, collectionFileName);
 
-	/**
-	 * Imports the entity's connecting references (collections and connections)
-	 * 
-	 * @param jp
-	 *            JsonPrser pointing to the beginning of the object.
-	 * @param em
-	 */
-	private void importEntitysStuff(JsonParser jp, EntityManager em)
-			throws Exception {
-		// The entity that owns the collections
-		String entityOwnerId = jp.getCurrentName();
-		EntityRef ownerEntityRef = em.getRef(UUID.fromString(entityOwnerId));
+        logger.info("Loading collections file: "
+                + collectionFile.getAbsolutePath());
 
-		jp.nextToken(); // start object
+        JsonParser jp = getJsonParserForFile(collectionFile);
 
-		// Go inside the value after getting the owner entity id.
-		while (jp.nextToken() != JsonToken.END_OBJECT) {
-			String collectionName = jp.getCurrentName();
+        jp.nextToken(); // START_OBJECT this is the outter hashmap
 
-			if (collectionName.equals("connections")) {
+        EntityManager em = emf.getEntityManager(emf
+                .lookupApplication(applicationName));
 
-				jp.nextToken(); // START_OBJECT
-				while (jp.nextToken() != JsonToken.END_OBJECT) {
-					String connectionType = jp.getCurrentName();
+        while (jp.nextToken() != JsonToken.END_OBJECT) {
+            importEntitysStuff(jp, em);
+        }
 
-					jp.nextToken(); // START_ARRAY
-					while (jp.nextToken() != JsonToken.END_ARRAY) {
-						String entryId = jp.getText();
-						EntityRef entryRef = em
-								.getRef(UUID.fromString(entryId));
-						System.out.println(entityOwnerId + " " + connectionType
-								+ " " + entryId);
-						// Store in DB
-						em.createConnection(ownerEntityRef, connectionType,
-								entryRef);
-					}
-				}
-			} else {
-				// Regular collections
+        logger.info("----- End of collections -----");
+        jp.close();
+    }
 
-				jp.nextToken(); // START_ARRAY
-				while (jp.nextToken() != JsonToken.END_ARRAY) {
-					String entryId = jp.getText();
-					EntityRef entryRef = em.getRef(UUID.fromString(entryId));
+    /**
+     * Imports the entity's connecting references (collections and connections)
+     * 
+     * @param jp
+     *            JsonPrser pointing to the beginning of the object.
+     * @param em
+     */
+    private void importEntitysStuff(JsonParser jp, EntityManager em)
+            throws Exception {
+        // The entity that owns the collections
+        String entityOwnerId = jp.getCurrentName();
+        EntityRef ownerEntityRef = em.getRef(UUID.fromString(entityOwnerId));
 
-					// store it
-					em.addToCollection(ownerEntityRef, collectionName, entryRef);
-				}
-			}
-		}
+        jp.nextToken(); // start object
 
-	}
+        // Go inside the value after getting the owner entity id.
+        while (jp.nextToken() != JsonToken.END_OBJECT) {
+            String collectionName = jp.getCurrentName();
 
-	/**
-	 * Extract a application name from a collectionsFileName in the way:
-	 * collections.<a_name_space_name>.TIMESTAMP.json
-	 * 
-	 * @param collectionFileName
-	 *            a collection file name
-	 * @return the application name for this collections file name
-	 */
-	private String getApplicationFromColllection(String collectionFileName) {
-		int firstDot = collectionFileName.indexOf(".");
-		int secondDot = collectionFileName.indexOf(".", firstDot + 1);
+            if (collectionName.equals("connections")) {
 
-		// The application will be in the subString between the dots.
+                jp.nextToken(); // START_OBJECT
+                while (jp.nextToken() != JsonToken.END_OBJECT) {
+                    String connectionType = jp.getCurrentName();
 
-		return collectionFileName.substring(firstDot + 1, secondDot);
-	}
+                    jp.nextToken(); // START_ARRAY
+                    while (jp.nextToken() != JsonToken.END_ARRAY) {
+                        String entryId = jp.getText();
+                        EntityRef entryRef = em
+                                .getRef(UUID.fromString(entryId));
+                        System.out.println(entityOwnerId + " " + connectionType
+                                + " " + entryId);
+                        // Store in DB
+                        em.createConnection(ownerEntityRef, connectionType,
+                                entryRef);
+                    }
+                }
+            } else if (collectionName.equals("dictionaries")) {
 
-	/**
-	 * Open up the import directory based on <code>importDir</code>
-	 */
-	private void openImportDirectory(CommandLine line) {
+                jp.nextToken(); // START_OBJECT
+                while (jp.nextToken() != JsonToken.END_OBJECT) {
 
-		boolean hasInputDir = line.hasOption(INPUT_DIR);
+                 
+                        String dictionaryName = jp.getCurrentName();
 
-		if (hasInputDir) {
-			importDir = new File(line.getOptionValue(INPUT_DIR));
-		} else {
-			importDir = new File(DEFAULT_INPUT_DIR);
-		}
+                        jp.nextToken();
 
-		logger.info("Importing from:" + importDir.getAbsolutePath());
-		logger.info("Status. Exists: " + importDir.exists() + " - Readable: "
-				+ importDir.canRead());
-	}
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> dictionary = jp
+                                .readValueAs(HashMap.class);
+
+                        em.addMapToDictionary(ownerEntityRef, dictionaryName,
+                                dictionary);
+                    
+                }
+            }
+
+            else {
+                // Regular collections
+
+                jp.nextToken(); // START_ARRAY
+                while (jp.nextToken() != JsonToken.END_ARRAY) {
+                    String entryId = jp.getText();
+                    EntityRef entryRef = em.getRef(UUID.fromString(entryId));
+
+                    // store it
+                    em.addToCollection(ownerEntityRef, collectionName, entryRef);
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Extract a application name from a collectionsFileName in the way:
+     * collections.<a_name_space_name>.TIMESTAMP.json
+     * 
+     * @param collectionFileName
+     *            a collection file name
+     * @return the application name for this collections file name
+     */
+    /**
+     * Extract a application name from a collectionsFileName in the way:
+     * collections.<a_name_space_name>.TIMESTAMP.json
+     * 
+     * @param collectionFileName
+     *            a collection file name
+     * @return the application name for this collections file name
+     */
+    private String getApplicationFromColllection(String collectionFileName) {
+        int firstDot = collectionFileName.indexOf(".");
+        int secondDot = collectionFileName.indexOf(".", firstDot + 1);
+
+        // The application will be in the subString between the dots.
+
+        String appName = collectionFileName.substring(firstDot + 1, secondDot);
+        
+        return appName.replace(PATH_REPLACEMENT, "/");
+    }
+
+
+    /**
+     * Open up the import directory based on <code>importDir</code>
+     */
+    private void openImportDirectory(CommandLine line) {
+
+        boolean hasInputDir = line.hasOption(INPUT_DIR);
+
+        if (hasInputDir) {
+            importDir = new File(line.getOptionValue(INPUT_DIR));
+        } else {
+            importDir = new File(DEFAULT_INPUT_DIR);
+        }
+
+        logger.info("Importing from:" + importDir.getAbsolutePath());
+        logger.info("Status. Exists: " + importDir.exists() + " - Readable: "
+                + importDir.canRead());
+    }
+
 
 }

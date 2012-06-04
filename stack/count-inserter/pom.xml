@@ -40,7 +40,7 @@
         <dependency>
             <groupId>org.usergrid</groupId>
             <artifactId>usergrid-count-common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>me.prettyprint</groupId>
