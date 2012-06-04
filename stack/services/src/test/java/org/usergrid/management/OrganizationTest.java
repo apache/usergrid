@@ -66,7 +66,7 @@ public class OrganizationTest {
 		assertNotNull(user);
 
 		OrganizationInfo organization = management.createOrganization(
-				"ed-organization", user, true);
+				"ed-organization", user, false, true);
 		assertNotNull(organization);
 
 		Map<UUID, String> userOrganizations = management

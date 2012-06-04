@@ -35,11 +35,16 @@ import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.mutation.Mutator;
 
 import org.codehaus.jackson.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
 
 import com.fasterxml.uuid.UUIDComparator;
 
 public class IndexUpdate {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(IndexUpdate.class);
 
 	public static final byte VALUE_CODE_BYTES = 0;
 	public static final byte VALUE_CODE_UTF8 = 1;
@@ -152,6 +157,7 @@ public class IndexUpdate {
 	}
 
 	public void addIndex(String index) {
+		logger.info("Indexing " + index);
 		indexesSet.add(index);
 	}
 

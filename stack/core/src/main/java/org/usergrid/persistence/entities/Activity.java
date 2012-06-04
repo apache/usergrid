@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.usergrid.persistence.entities;
 
+import static org.usergrid.utils.StringUtils.toStringFormat;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
@@ -110,7 +112,7 @@ public class Activity extends TypedEntity {
 	public static final String OBJECT_TYPE_SERVICE = "service";
 	public static final String OBJECT_TYPE_VIDEO = "video";
 
-	@EntityProperty(required = true, mutable = false)
+	@EntityProperty(required = true, mutable = false, indexed = true)
 	ActivityObject actor;
 
 	@EntityProperty(indexed = true, fulltextIndexed = true, required = false, mutable = false)
@@ -125,7 +127,7 @@ public class Activity extends TypedEntity {
 	// false)
 	// String actorName;
 
-	@EntityProperty(fulltextIndexed = false, required = false, mutable = false)
+	@EntityProperty(fulltextIndexed = false, required = false, mutable = false, indexed = true)
 	String category;
 
 	@EntityProperty(fulltextIndexed = false, required = true, mutable = false)
@@ -571,17 +573,26 @@ public class Activity extends TypedEntity {
 
 		@Override
 		public String toString() {
-			return "ActivityObject [attachments="
-					+ Arrays.toString(attachments) + ", author=" + author
-					+ ", content=" + content + ", displayName=" + displayName
-					+ ", downstreamDuplicates="
-					+ Arrays.toString(downstreamDuplicates) + ", id=" + id
-					+ ", image=" + image + ", objectType=" + objectType
-					+ ", published=" + published + ", summary=" + summary
-					+ ", updated=" + updated + ", upstreamDuplicates="
-					+ upstreamDuplicates + ", url=" + url + ", uuid=" + uuid
-					+ ", entityType=" + entityType + ", dynamic_properties="
-					+ dynamic_properties + "]";
+			return "ActivityObject ["
+					+ toStringFormat(attachments, "attachments=%s, ")
+					+ toStringFormat(author, "author=%s, ")
+					+ toStringFormat(content, "content=%s, ")
+					+ toStringFormat(displayName, "displayName=%s, ")
+					+ toStringFormat(downstreamDuplicates,
+							"downstreamDuplicates=%s, ")
+					+ toStringFormat(id, "id=%s, ")
+					+ toStringFormat(image, "image=%s, ")
+					+ toStringFormat(objectType, "objectType=%s, ")
+					+ toStringFormat(published, "published=%s, ")
+					+ toStringFormat(summary, "summary=%s, ")
+					+ toStringFormat(updated, "updated=%s, ")
+					+ toStringFormat(upstreamDuplicates,
+							"upstreamDuplicates=%s, ")
+					+ toStringFormat(url, "url=%s, ")
+					+ toStringFormat(uuid, "uuid=%s, ")
+					+ toStringFormat(entityType, "entityType=%s, ")
+					+ toStringFormat(dynamic_properties,
+							"dynamic_properties=%s") + "]";
 		}
 
 	}

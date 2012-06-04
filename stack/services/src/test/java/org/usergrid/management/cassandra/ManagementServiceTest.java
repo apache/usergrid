@@ -50,7 +50,7 @@ public class ManagementServiceTest {
 		adminUser = managementService.createAdminUser("edanuff", "Ed Anuff",
 				"ed@anuff.com", "test", false, false, false);
 		organization = managementService.createOrganization("ed-organization",
-				adminUser, false);
+				adminUser, true, false);
 		applicationId = managementService.createApplication(
 				organization.getUuid(), "ed-application");
 	}
