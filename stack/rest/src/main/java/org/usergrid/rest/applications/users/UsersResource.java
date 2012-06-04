@@ -118,7 +118,7 @@ public class UsersResource extends ServiceResource {
 	@GET
 	@Path("resetpw")
 	public Viewable showPasswordResetForm(@Context UriInfo ui) {
-		return new Viewable("resetpw_email_form", this);
+		return handleViewable("resetpw_email_form", this);
 	}
 
 	@POST
@@ -139,7 +139,7 @@ public class UsersResource extends ServiceResource {
 
 			if (isBlank(email)) {
 				errorMsg = "No email provided, try again...";
-				return new Viewable("resetpw_email_form", this);
+				return handleViewable("resetpw_email_form", this);
 			}
 
 			if (!useReCaptcha() || reCaptchaResponse.isValid()) {
@@ -148,17 +148,17 @@ public class UsersResource extends ServiceResource {
 				if (user != null) {
 					management.startAppUserPasswordResetFlow(
 							getApplicationId(), user);
-					return new Viewable("resetpw_email_success", this);
+					return handleViewable("resetpw_email_success", this);
 				} else {
 					errorMsg = "We don't recognize that email, try again...";
-					return new Viewable("resetpw_email_form", this);
+					return handleViewable("resetpw_email_form", this);
 				}
 			} else {
 				errorMsg = "Incorrect Captcha, try again...";
-				return new Viewable("resetpw_email_form", this);
+				return handleViewable("resetpw_email_form", this);
 			}
 		} catch (Exception e) {
-			return new Viewable("resetpw_email_form", e);
+			return handleViewable("resetpw_email_form", e);
 		}
 
 	}
