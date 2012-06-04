@@ -556,8 +556,16 @@ public class ManagementServiceImpl implements ManagementService {
 		Results results = em.getCollection(em.getApplicationRef(), "groups",
 				null, 10000, Level.ALL_PROPERTIES, false);
 		for (Entity entity : results.getEntities()) {
+		    
+		    //TODO T.N. temporary hack to deal with duplicate orgs.  Revert this commit after migration
+		    String path = (String) entity.getProperty("path");
+		    
+		    if(organizations.containsValue(path)){
+		        path += "DUPLICATE";
+		    }
+		    
 			organizations.put(entity.getUuid(),
-					(String) entity.getProperty("path"));
+					path);
 		}
 		return organizations;
 	}

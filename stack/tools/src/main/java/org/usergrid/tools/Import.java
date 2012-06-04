@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.apache.commons.cli.CommandLine;
@@ -39,6 +40,7 @@ import org.usergrid.management.OrganizationInfo;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.entities.Application;
+import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 
 public class Import extends ToolBase {
 
@@ -141,18 +143,31 @@ public class Import extends ToolBase {
 		managementService.importApplication(UUID.fromString(organizationId),
 				application);
 		echo(application);
+		
 
 		EntityManager em = emf.getEntityManager(application.getUuid());
+		
+
+        //we now need to remove all roles, they'll be imported again below
+        
+		for(Entry<String, String> entry: em.getRoles().entrySet()){
+		    em.deleteRole(entry.getKey());
+		}
 
 		while (jp.nextValue() != JsonToken.END_ARRAY) {
 			@SuppressWarnings("unchecked")
-			Map<String, Object> entityProps = jp.readValueAs(HashMap.class);
+ 			Map<String, Object> entityProps = jp.readValueAs(HashMap.class);
 			// Import/create the entity
 			UUID uuid = getId(entityProps);
 			String type = getType(entityProps);
+					
 			try {
 				em.create(uuid, type, entityProps);
-			} catch (Exception e) {
+			}catch(DuplicateUniquePropertyExistsException de){
+			    logger.error("Unable to create entity.  It appears to be a duplicate", de);
+			}
+			
+			catch (Exception e) {
 				logger.error("Unable to create entity " + uuid + " of type "
 						+ type
 						+ ", skipping but this may indicate a bad import...", e);
@@ -313,7 +328,21 @@ public class Import extends ToolBase {
 								entryRef);
 					}
 				}
-			} else {
+			} 
+			else if (collectionName.equals("dictionaries")) {
+
+                jp.nextToken(); // START_OBJECT
+                while (jp.nextToken() != JsonToken.END_OBJECT) {
+                    String dictionaryName = jp.getCurrentName();
+
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> dictionary = jp.readValueAs(HashMap.class);
+                    
+                    em.addMapToDictionary(ownerEntityRef, dictionaryName, dictionary);
+                }
+            } 
+			
+			else {
 				// Regular collections
 
 				jp.nextToken(); // START_ARRAY
