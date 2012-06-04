@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class ExportingToolBase extends ToolBase {
 
+    
     protected Logger logger = LoggerFactory.getLogger(ExportingToolBase.class);
 
     protected static File outputDir;
@@ -128,7 +129,7 @@ public abstract class ExportingToolBase extends ToolBase {
      */
     protected String prepareOutputFileName(String type, String name) {
         
-        name = name.replace('/', '-');
+        name = name.replace("/", PATH_REPLACEMENT);
         // Add application and timestamp
         StringBuilder str = new StringBuilder();
         // str.append(baseOutputFileName);

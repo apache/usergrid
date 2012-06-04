@@ -372,7 +372,9 @@ public class Import extends ToolBase {
 
 		// The application will be in the subString between the dots.
 
-		return collectionFileName.substring(firstDot + 1, secondDot);
+		String appName = collectionFileName.substring(firstDot + 1, secondDot);
+		
+		return appName.replace(PATH_REPLACEMENT, "/");
 	}
 
 	/**
