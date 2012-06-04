@@ -24,7 +24,7 @@
 	</properties>
 	<groupId>org.usergrid</groupId>
 	<artifactId>usergrid</artifactId>
-	<version>0.0.1-SNAPSHOT-EXPORT</version>
+	<version>0.0.1-SNAPSHOT</version>
 	<name>${bundle.symbolicName} [${bundle.namespace}]</name>
 	<description>Usergrid Project</description>
 	<packaging>pom</packaging>
