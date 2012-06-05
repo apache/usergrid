@@ -392,7 +392,7 @@ function usergrid_console_app(Pages) {
   function doQuerySend(method, data) {
       var qpath = $("#query-path").val();
       var ql = $("#query-ql").val();
-      query = new client.Query(current_application_id, qpath, ql, {},
+      query = new client.Query(client.currentOrganization.uuid + "/" + current_application_id, qpath, ql, {},
       function(data) {
           displayQueryResponse(data);
           var msg = "Web service completed successfully";
@@ -2491,6 +2491,7 @@ $('#selectAllGroupMemberships').show();
     usergrid.console.requestActivities = requestActivities;
 
     function displayActivities(response) {
+
       var data = response.entities;
       var output = $('#activities-table');
       output.empty();
