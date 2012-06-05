@@ -325,7 +325,7 @@ public class TestResource extends AbstractContextResource {
 	@Path("page")
 	public Viewable page(@Context UriInfo ui) {
 
-		return new Viewable("test", this);
+		return handleViewable("test", this);
 	}
 
 	public String getFoo() {

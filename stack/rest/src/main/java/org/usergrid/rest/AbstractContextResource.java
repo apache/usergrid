@@ -16,14 +16,19 @@
 package org.usergrid.rest;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.removeEnd;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
@@ -39,6 +44,7 @@ import org.usergrid.services.ServiceManagerFactory;
 
 import com.sun.jersey.api.core.HttpContext;
 import com.sun.jersey.api.core.ResourceContext;
+import com.sun.jersey.api.view.Viewable;
 import com.sun.jersey.spi.CloseableService;
 
 public abstract class AbstractContextResource {
@@ -130,4 +136,29 @@ public abstract class AbstractContextResource {
 		return c.createRecaptchaHtml(null, null);
 	}
 
+	public void sendRedirect(String location) {
+		URI uri = null;
+		try {
+			uri = new URI(location);
+		} catch (URISyntaxException e) {
+		}
+		if (uri != null) {
+			throw new WebApplicationException(Response.temporaryRedirect(uri)
+					.build());
+		}
+	}
+
+	public Viewable handleViewable(String template, Object model) {
+		String template_property = "usergrid.view"
+				+ removeEnd(this.getClass().getName().toLowerCase(), "resource")
+						.substring(
+								AbstractContextResource.class.getPackage()
+										.getName().length()) + "."
+				+ template.toLowerCase();
+		String redirect_url = properties.getProperty(template_property);
+		if (isNotBlank(redirect_url)) {
+			sendRedirect(redirect_url);
+		}
+		return new Viewable(template, model);
+	}
 }

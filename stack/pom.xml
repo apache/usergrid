@@ -584,10 +584,7 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
-		<repository>
-			<id>JBoss repository</id>
-			<url>http://repository.jboss.com/maven2/</url>
-		</repository>
+
 		<repository>
 			<id>javageomodel-repo</id>
 			<name>GeocellJava Repository</name>
