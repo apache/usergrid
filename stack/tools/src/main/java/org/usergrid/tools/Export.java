@@ -51,9 +51,9 @@ public class Export extends ExportingToolBase {
 
         setVerbose(line);
 
-        ExportDataCreator dataCreator = new ExportDataCreator(emf,
-                managementService);
-        dataCreator.createTestData();
+//        ExportDataCreator dataCreator = new ExportDataCreator(emf,
+//                managementService);
+//        dataCreator.createTestData();
 
         prepareBaseOutputFileName(line);
         outputDir = createOutputParentDir();
