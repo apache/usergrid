@@ -1,26 +1,44 @@
-/**
- * User: David S
- * Date: 31/01/12
- * Time: 03:01 PM
- */
 var Pages = new UsergridPages();
 $(document).ready(function () {
     
 	Init();
     
 	function Init() {
+    
+    prepareLocalStorage();
+    usergrid.Client.Init();
+    usergrid.Client.setAutoLogin();
+
 		usergrid_console_app(Pages);
 		InitMenu();
-        StatusBar.Init('#statusbar-placeholder');
-        toggleableSections();
+    StatusBar.Init('#statusbar-placeholder');
+    toggleableSections();
 
-	    if (getQueryParams().goto_signup) {
-		    Pages.ShowPage("signup");
-	    } else {
-            usergrid.console.showLoginForNonSSO();
-        }
+    if (getQueryParams().goto_signup) {
+      Pages.ShowPage("signup");
+    } else {
+      usergrid.console.showLoginForNonSSO();
+    }
 
 	}
+
+  function prepareLocalStorage() {
+    if (!Storage.prototype.setObject) {
+      Storage.prototype.setObject = function(key, value) {
+        this.setItem(key, JSON.stringify(value));
+      };
+    }
+
+    if (!Storage.prototype.getObject) {
+      Storage.prototype.getObject = function(key) {
+        try {
+          return this.getItem(key) && JSON.parse(this.getItem(key));
+        } catch(err) {
+        }
+        return null;
+      };
+    }
+  }
 
   function toggleableSections() {
     $(document).on('click', '.title', function() {
@@ -31,19 +49,17 @@ $(document).ready(function () {
 	function InitMenu() {
 		$('.navbar .dropdown-toggle').dropdown();
 		$('#sidebar-menu .dropdown-toggle').dropdown();
-        $("#logout-link").click(usergrid.console.logout);
+    $("#logout-link").click(usergrid.console.logout);
 
-        var publicMenu = $("#publicMenu");
-        var privateMenu =$("#privateMenu");
+    var publicMenu = $("#publicMenu");
+    var privateMenu =$("#privateMenu");
 
 		Pages.AddPage({name:'login', menu:publicMenu});
 		//Pages.ShowPage('login');
-
-        Pages.AddPage({name:'signup', menu:publicMenu});		
-        Pages.AddPage({name:'forgot-password', menu:publicMenu});
-        Pages.AddPage({name:'post-signup', menu:publicMenu});
-
-        Pages.AddPage({name:'console', menu:privateMenu, initFunction:InitConsole, showFunction:usergrid.console.pageSelectHome});
+    Pages.AddPage({name:'signup', menu:publicMenu});		
+    Pages.AddPage({name:'forgot-password', menu:publicMenu});
+    Pages.AddPage({name:'post-signup', menu:publicMenu});
+    Pages.AddPage({name:'console', menu:privateMenu, initFunction:InitConsole, showFunction:usergrid.console.pageSelectHome});
    
 	}
 
@@ -67,17 +83,19 @@ $(document).ready(function () {
 		//$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
 	}
 	
-    function getQueryParams() {
-        var query_params = {};
-        var e,
-            a = /\+/g,
-            r = /([^&=]+)=?([^&]*)/g,
-            d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
-            q = window.location.search.substring(1);
+  function getQueryParams() {
+    var query_params = {};
+    var e,
+        a = /\+/g,
+        r = /([^&=]+)=?([^&]*)/g,
+        d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
+        q = window.location.search.substring(1);
 
-        while (e = r.exec(q))
-           query_params[d(e[1])] = d(e[2]);
-        return query_params;
+    while (e = r.exec(q)) {
+      query_params[d(e[1])] = d(e[2]);
     }
+
+    return query_params;
+  }
     
 });

@@ -40,7 +40,7 @@ function usergrid_console_app(Pages) {
 
   var indexes = [];
   var backgroundGraphColor = '#ffffff';
-  var client = new usergrid.Client();
+  var client = usergrid.Client;
   Pages.resetPasswordUrl = client.resetPasswordUrl;
   client.onLogout = function() {
     Pages.ShowPage("login");
