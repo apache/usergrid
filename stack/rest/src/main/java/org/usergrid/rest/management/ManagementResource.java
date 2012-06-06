@@ -132,7 +132,8 @@ public class ManagementResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("") String callback)
 			throws Exception {
 
-		logger.info("ManagementResource.getAccessToken with username: {}", username);
+		logger.info("ManagementResource.getAccessToken with username: {}",
+				username);
 
 		UserInfo user = null;
 
@@ -157,10 +158,12 @@ public class ManagementResource extends AbstractContextResource {
 				try {
 					user = management.verifyAdminUserPasswordCredentials(
 							username, password);
-          if ( user != null )
-            logger.info("found user from verify: {}", user.getUuid());
+					if (user != null) {
+						logger.info("found user from verify: {}",
+								user.getUuid());
+					}
 				} catch (Exception e1) {
-          logger.error("failed token check", e1);
+					logger.error("failed token check", e1);
 				}
 			} else if ("client_credentials".equals(grant_type)) {
 				try {
@@ -174,7 +177,7 @@ public class ManagementResource extends AbstractContextResource {
 								.build();
 					}
 				} catch (Exception e1) {
-          logger.error("failed authorizeClient",e1);
+					logger.error("failed authorizeClient", e1);
 				}
 			}
 
@@ -214,9 +217,9 @@ public class ManagementResource extends AbstractContextResource {
 					.type(jsonMediaType(callback))
 					.entity(wrapWithCallback(res.getBody(), callback)).build();
 		} catch (Exception ex) {
-      logger.error("General exception on auth ", ex);
-      return null;
-    }
+			logger.error("General exception on auth ", ex);
+			return null;
+		}
 	}
 
 	@POST
@@ -296,6 +299,8 @@ public class ManagementResource extends AbstractContextResource {
 			}
 
 			return handleViewable("authorize_form", this);
+		} catch (WebApplicationException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
