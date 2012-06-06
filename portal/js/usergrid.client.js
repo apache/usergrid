@@ -969,7 +969,7 @@ usergrid.Client = function(options) {
     this.useSSO = useSSO;
 
     function apigeeUser(){
-        if (window.location.host == APIGEE_TLD || window.location.host == GHPAGES_TLD ) {
+        if (window.location.host == APIGEE_TLD ) {
             return true;
         }
         return false;
