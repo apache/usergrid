@@ -40,7 +40,6 @@ usergrid.Client = function(options) {
 
     //base tld
     APIGEE_TLD = "apigee.com";
-    GHPAGES_TLD = "apigee.github.com";
 
     //flag to overide use SSO if needed set to ?use_sso=no
     USE_SSO = 'no';
