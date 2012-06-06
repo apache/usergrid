@@ -296,7 +296,10 @@ public class UserResource extends AbstractContextResource {
 		} catch (TokenException e) {
 			return handleViewable("bad_confirmation_token", this);
 		} catch (Exception e) {
-			return handleViewable("error", e);
+			//return new Viewable("/org/usergrid/rest/management/users/UserResource/error", e);
+			return new Viewable("error", e);
+			//return new Viewable("error", e, this.getClass());
+			//return handleViewable("error", e);
 		}
 	}
 

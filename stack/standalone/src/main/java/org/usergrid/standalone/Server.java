@@ -221,8 +221,16 @@ public class Server implements ApplicationContextAware {
 		JspFactory.setDefaultFactory(factory);
 
 		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.error_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/TestResource/error.jsp");
+
+		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.test_jsp",
 				"/WEB-INF/jsp/org/usergrid/rest/TestResource/test.jsp");
+
+		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.users.UsersResource.error_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/management/users/UsersResource/error.jsp");
 
 		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.users.UsersResource.resetpw_005femail_005fform_jsp",
@@ -235,6 +243,14 @@ public class Server implements ApplicationContextAware {
 		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.users.UserResource.activate_jsp",
 				"/WEB-INF/jsp/org/usergrid/rest/management/users/UserResource/activate.jsp");
+
+		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.users.UserResource.confirm_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/management/users/UserResource/confirm.jsp");
+
+		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.users.UserResource.error_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/management/users/UserResource/error.jsp");
 
 		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.users.UserResource.resetpw_005femail_005fform_jsp",
@@ -257,6 +273,26 @@ public class Server implements ApplicationContextAware {
 				"/WEB-INF/jsp/org/usergrid/rest/management/organizations/OrganizationResource/activate.jsp");
 
 		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.organizations.OrganizationResource.confirm_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/management/organizations/OrganizationResource/confirm.jsp");
+
+		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.organizations.OrganizationResource.error_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/management/organizations/OrganizationResource/error.jsp");
+
+		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.ManagementResource.authorize_005fform_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/management/ManagementResource/authorize_form.jsp");
+
+		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.ManagementResource.error_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/management/ManagementResource/error.jsp");
+
+		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UsersResource.error_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/applications/users/UsersResource/error.jsp");
+
+		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UsersResource.resetpw_005femail_005fform_jsp",
 				"/WEB-INF/jsp/org/usergrid/rest/applications/users/UsersResource/resetpw_email_form.jsp");
 
@@ -267,6 +303,14 @@ public class Server implements ApplicationContextAware {
 		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UserResource.activate_jsp",
 				"/WEB-INF/jsp/org/usergrid/rest/applications/users/UserResource/activate.jsp");
+
+		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UserResource.confirm_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/applications/users/UserResource/confirm.jsp");
+
+		mapServlet(
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UserResource.error_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/applications/users/UserResource/error.jsp");
 
 		mapServlet(
 				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.users.UserResource.resetpw_005femail_005fform_jsp",
@@ -289,8 +333,8 @@ public class Server implements ApplicationContextAware {
 				"/WEB-INF/jsp/org/usergrid/rest/applications/ApplicationResource/authorize_form.jsp");
 
 		mapServlet(
-				"jsp.WEB_002dINF.jsp.org.usergrid.rest.management.ManagementResource.authorize_005fform_jsp",
-				"/WEB-INF/jsp/org/usergrid/rest/management/ManagementResource/authorize_form.jsp");
+				"jsp.WEB_002dINF.jsp.org.usergrid.rest.applications.ApplicationResource.error_jsp",
+				"/WEB-INF/jsp/org/usergrid/rest/applications/ApplicationResource/error.jsp");
 
 	}
 
@@ -519,15 +563,15 @@ public class Server implements ApplicationContextAware {
 		}
 		return null;
 	}
-	
+
 	public UUID getAdminUUID(String email) {
-        try {
-            UserInfo user = management.getAdminUserByEmail(email);
-            return user.getUuid();
-        } catch (Exception e) {
-            logger.error("Unable to get user: " + email);
-        }
-        return null;
-    }
+		try {
+			UserInfo user = management.getAdminUserByEmail(email);
+			return user.getUuid();
+		} catch (Exception e) {
+			logger.error("Unable to get user: " + email);
+		}
+		return null;
+	}
 
 }
