@@ -3553,6 +3553,12 @@ html {
   background-color: #e0e0e0 !important;
   border-radius: 0px;
 }
+.thingy .gravatar50 {
+  position: relative;
+  float: left;
+  margin-top: -15px;
+  right: 15px;
+}
 .thingy .title {
   float: left;
   font-size: 19px;
@@ -3569,6 +3575,9 @@ html {
 #selectedApp {
   font-size: 16px;
   cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 #fullContainer {
   position: relative;
@@ -4083,7 +4092,6 @@ a:active {
  *
  *******************************************************************/
 #user-panel h3 {
-  height: 30px;
   overflow: hidden;
 }
 #user-panel h3 img {
@@ -4159,6 +4167,7 @@ a:active {
   display: none;
 }
 .user-roles-title {
+  clear: both;
   font-size: 18px;
   font-weight: bold;
   border-bottom: 1px solid #AED0EA;
@@ -4363,7 +4372,8 @@ a:active {
   margin-left: 4.5em;
 }
 .shell-output-line-content {
-  margin: 0px;
+  margin: 0;
+  padding-left: 20px;
   white-space: pre;
   font-size: 14px;
   line-height: 14px;
@@ -4388,6 +4398,9 @@ a:active {
   padding: 4px 35px 4px 14px;
 }
 /*----------- Roles ----------------*/
+#role-permissions-form button {
+  float: right;
+}
 #role-permissions .well {
   padding: 10px;
 }

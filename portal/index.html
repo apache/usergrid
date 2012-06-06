@@ -202,7 +202,7 @@
                     </ul>
                 </div>
 
-              <form id="oopsModal" class="modal hide fade">
+              <form id="alertModal" class="modal hide fade">
                   <div class="modal-header">
                       <a class="close" data-dismiss="modal">&times</a>
                       <h4></h4>
@@ -211,7 +211,7 @@
                       <p></p>
                   </div>
                   <div class="modal-footer">
-                      <input type="reset" class="btn" value="OK" data-dismiss="modal"/>
+                      <input type="reset" class="btn btn-usergrid" value="OK" data-dismiss="modal"/>
                   </div>
               </form>
                 <div id="console-panels" class="container-fluid">
@@ -231,13 +231,16 @@
                         <div class="console-section">
                             <div class="well thingy">
                               <span class="title"> Activities </span>
+                              <div class="bar">
+                                <a class="" onclick="usergrid.console.requestAdminFeed(); return false;">Update Activities</a>
+                              </div>
                             </div>
                             <table id="organization-feed-table" class="hideable table">
                               <tbody></tbody>
                             </table>
                         </div>
                         <div class="console-section">
-                            <div class="well thingy"><span class="title"> Organizations Administrators </span>
+                            <div class="well thingy"><span class="title"> Organization's Administrators </span>
                                 <div class="bar">
                                     <a class="" data-toggle="modal" href="#dialog-form-new-admin"></i> New Administrator</a>
                                 </div>
@@ -822,6 +825,7 @@
                                             <option value="content">Content</option>
                                             <option value="actor">Actor</option>
                                         </select>
+                                        <a class="" onclick="usergrid.console.requestActivities(); return false;">Update Activities</a>
                                     </div>
                                 </div>
                                 <table id="activities-table" class="table">
@@ -934,11 +938,12 @@
                         <div id="shell-content" class="console-section">
                             <div class="well thingy"> <span class="title"> Interactive Shell </span></div>
                             <div class="console-section-contents">
-                                <div id="shell-output">
-                                    <div class="shell-output-line">Usergrid Interactive Shell (8-bit forever!)</div>
-                                </div>
+                                <pre id="shell-output" class="prettyprint lang-js">
+                                <h4>        Usergrid Shell</h4>
+                                <p>   Type "help" to view a list of the available commands.</p><hr />
+                                </pre>
                                 <div id="shell-input-div">
-                                    <span>&gt;</span>
+                                    <span>&nbsp;&gt&gt; </span>
                                     <textarea id="shell-input" rows="2"></textarea>
                                 </div>
                             </div>
@@ -1037,7 +1042,7 @@
                                     <a id="delete-entity-link" href="" > Delete Entity</a>
                                 </div>
                             </div>
-                            <div class="console-section-contents listContent">
+                            <div class="console-section-contents">
                                 <div id="query-response-table">
                                     <pre class="query-response-json">{ }</pre>
                                 </div>
@@ -1053,6 +1058,21 @@
         </div>
         <div class="clear"></div>
     </div>
+
+    <form id="confirmAction" class="modal hide fade">
+        <div class="modal-header">
+            <a class="close" data-dismiss="modal">&times</a>
+            <h4></h4>
+        </div>
+        <div class="modal-body">
+            <p></p>
+        </div>
+        <div class="modal-footer">
+            <input type="submit" class="btn btn-danger" value="Yes, continue"/>
+            <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+        </div>
+    </form>
+
     <form id="confirmDialog" class="modal hide fade">
         <div class="modal-header">
             <a class="close" data-dismiss="modal">&times</a>
@@ -1064,18 +1084,6 @@
         <div class="modal-footer">
             <input type="submit" class="btn btn-danger" value="Yes, delete"/>
             <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
-        </div>
-    </form>
-    <form id="alertDialog" class="modal hide fade">
-        <div class="modal-header">
-            <a class="close" data-dismiss="modal">&times</a>
-            <h4><span id="alert-message">Invalid Action</span></h4>
-        </div>
-        <div class="modal-body">
-            <p></p>
-        </div>
-        <div class="modal-footer">
-            <input id="alert-message-button" type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
         </div>
     </form>
     <div class="clear"></div>
@@ -1116,6 +1124,7 @@ var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga
 <link rel="stylesheet" type="text/css" href="css/custom-theme/jquery-ui-1.8.9.custom.css"/>
 <link rel="stylesheet" type="text/css" href="css/jquery-ui-timepicker.css"/>
 <link rel="stylesheet" type="text/css" href="css/jquery.ui.statusbar.css"/>
+<link rel="stylesheet" type="text/css" href="css/prettify.css"/>
 
 <script src="js/json2.jsonlint.min.js" type="text/javascript"></script>
 <script src="js/MD5.min.js" type="text/javascript"></script>
@@ -1132,5 +1141,9 @@ var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga
 <script src="js/usergrid.pages.js" type="text/javascript"></script>
 <script src="js/app.js" type="text/javascript"></script>
 <script src="js/usergrid.status.js" type="text/javascript"></script>
+<script src="js/prettify.js" type="text/javascript"></script>
+<script type="text/javascript" charset="utf-8">
+  prettyPrint();
+</script>
 
 </html>

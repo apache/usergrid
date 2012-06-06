@@ -1,34 +1,33 @@
-/**
- * User: David S
- * Date: 31/01/12
- * Time: 02:23 PM
- */
-
 function UsergridPages(){
 	var self = {
 		pages: {},
 		panels: {},
-        resetPasswordUrl: ''
+    resetPasswordUrl: ''
 	}
 
-    self.clearPage = function(){
-       $("#pages > div").hide();
-    }
+  self.clearPage = function(){
+    $("#pages > div").hide();
+  }
 
 	self.ShowPage = function(pageName){
-        console.log('showing ' +pageName);
+    console.log('showing ' +pageName);
 		$("#pages > div").hide();
 		var page = self.pages[pageName];
 		page.box.show();
 		$(".navbar li.active").removeClass('active');
 		$(".navbar .navbar-inner").hide();
-        if(page.link.parent().parent().hasClass("dropdown-menu"))
-            page.link.parent().parent().parent().addClass('active');
-        else
-    		page.link.parent().addClass('active');
-        page.menu.show();
-		if(page.showFunction)
+
+    if(page.link.parent().parent().hasClass("dropdown-menu")) {
+        page.link.parent().parent().parent().addClass('active');
+    } else {
+      page.link.parent().addClass('active');
+      page.menu.show();
+    }
+
+    if(page.showFunction) {
 			page.showFunction();
+    }
+
 		return;
 	}
 
@@ -116,4 +115,3 @@ function UsergridPages(){
 
 	return self;
 }
-
