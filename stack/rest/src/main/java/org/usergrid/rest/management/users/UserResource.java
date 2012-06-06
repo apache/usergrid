@@ -28,6 +28,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -192,6 +193,8 @@ public class UserResource extends AbstractContextResource {
 			} else {
 				return handleViewable("resetpw_email_form", this);
 			}
+		} catch (WebApplicationException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
@@ -248,6 +251,8 @@ public class UserResource extends AbstractContextResource {
 				return handleViewable("resetpw_email_form", this);
 			}
 
+		} catch (WebApplicationException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
@@ -276,6 +281,8 @@ public class UserResource extends AbstractContextResource {
 			return handleViewable("activate", this);
 		} catch (TokenException e) {
 			return handleViewable("bad_activation_token", this);
+		} catch (WebApplicationException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
@@ -295,11 +302,10 @@ public class UserResource extends AbstractContextResource {
 			return handleViewable("activate", this);
 		} catch (TokenException e) {
 			return handleViewable("bad_confirmation_token", this);
+		} catch (WebApplicationException e) {
+			throw e;
 		} catch (Exception e) {
-			//return new Viewable("/org/usergrid/rest/management/users/UserResource/error", e);
 			return new Viewable("error", e);
-			//return new Viewable("error", e, this.getClass());
-			//return handleViewable("error", e);
 		}
 	}
 

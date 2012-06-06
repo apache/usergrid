@@ -362,6 +362,8 @@ public class ApplicationResource extends ServiceResource {
 			applicationName = app.getName();
 
 			return handleViewable("authorize_form", this);
+		} catch (WebApplicationException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
@@ -413,6 +415,8 @@ public class ApplicationResource extends ServiceResource {
 			applicationName = app.getName();
 
 			return handleViewable("authorize_form", this);
+		} catch (WebApplicationException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}

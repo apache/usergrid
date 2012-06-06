@@ -15,10 +15,13 @@
  ******************************************************************************/
 package org.usergrid.rest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.usergrid.utils.MapUtils.hashMap;
 
+import java.net.URLClassLoader;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 
@@ -110,9 +113,31 @@ public abstract class AbstractRestTest extends JerseyTest {
 				.initParam(
 						"com.sun.jersey.config.property.WebPageContentRegex",
 						"/(((images|css|js|jsp|WEB-INF/jsp)/.*)|(favicon\\.ico))")
+				.initParam("com.sun.jersey.config.feature.Trace", "true")
 				.addFilter(DelegatingFilterProxy.class, "shiroFilter",
 						MapUtils.hashMap("targetFilterLifecycle", "true"))
 				.clientConfig(clientConfig).build();
+
+		dumpClasspath(AbstractRestTest.class.getClassLoader());
+	}
+
+	public static void main(String... args) {
+	}
+
+	public static void dumpClasspath(ClassLoader loader) {
+		System.out.println("Classloader " + loader + ":");
+
+		if (loader instanceof URLClassLoader) {
+			URLClassLoader ucl = (URLClassLoader) loader;
+			System.out.println("\t" + Arrays.toString(ucl.getURLs()));
+		} else {
+			System.out
+					.println("\t(cannot display components as not a URLClassLoader)");
+		}
+
+		if (loader.getParent() != null) {
+			dumpClasspath(loader.getParent());
+		}
 	}
 
 	public AbstractRestTest() throws TestContainerException {
@@ -122,8 +147,9 @@ public abstract class AbstractRestTest extends JerseyTest {
 
 	protected void setupUsers() {
 
-		if (usersSetup)
+		if (usersSetup) {
 			return;
+		}
 
 		JsonNode node = resource().path("/management/token")
 				.queryParam("grant_type", "password")
@@ -169,6 +195,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
 	@BeforeClass
 	public static void setup() throws Exception {
+		Class.forName("jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.error_jsp");
 		logger.info("setup");
 		assertNull(embedded);
 		embedded = new EmbeddedServerHelper();

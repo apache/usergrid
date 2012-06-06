@@ -21,6 +21,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ public class RegistrationTest extends AbstractRestTest {
 	private static final Logger logger = LoggerFactory
 			.getLogger(RegistrationTest.class);
 
+	@Ignore
 	@Test
 	public void postCreateOrgAndAdmin() throws Exception {
 
