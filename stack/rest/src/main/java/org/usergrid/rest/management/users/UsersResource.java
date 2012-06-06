@@ -31,7 +31,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -46,6 +45,7 @@ import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.exceptions.AuthErrorInfo;
+import org.usergrid.rest.exceptions.RedirectionException;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
@@ -175,7 +175,7 @@ public class UsersResource extends AbstractContextResource {
 				errorMsg = "Incorrect Captcha, try again...";
 				return handleViewable("resetpw_email_form", this);
 			}
-		} catch (WebApplicationException e) {
+		} catch (RedirectionException e) {
 			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
