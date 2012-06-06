@@ -138,13 +138,22 @@ public class Import extends ToolBase {
 
         Application application = jp.readValueAs(Application.class);
         @SuppressWarnings("unchecked")
-        String organizationId = ((Map<String, String>) application
-                .getMetadata("organization")).get("key");
-        managementService.importApplication(UUID.fromString(organizationId),
+        String orgName = ((Map<String, String>) application
+                .getMetadata("organization")).get("value");
+        
+        OrganizationInfo info = managementService.getOrganizationByName(orgName);
+        
+        if(info == null){
+            logger.error("Unable to import application '{}' for organisation with name '{}'", application.getName(), orgName);
+            return;
+        }
+        
+        
+        UUID appId = managementService.importApplication(info.getUuid(),
                 application);
         echo(application);
 
-        EntityManager em = emf.getEntityManager(application.getUuid());
+        EntityManager em = emf.getEntityManager(appId);
 
         // we now need to remove all roles, they'll be imported again below
 
@@ -240,7 +249,17 @@ public class Import extends ToolBase {
         // properties.put("password", "password".getBytes("UTF-8"));
 
         echo(acc);
-        managementService.importOrganization(acc.getUuid(), acc, properties);
+        
+        //check if the org exists, if it does, what do we do
+        
+        OrganizationInfo orgInfo = managementService.getOrganizationByName(acc.getName());
+        
+        //only import if the org doesn't exist
+        if(orgInfo == null){
+            managementService.importOrganization(acc.getUuid(), acc, properties);
+        }
+        
+        
         jp.close();
     }
 
@@ -272,6 +291,14 @@ public class Import extends ToolBase {
     private void importCollection(String collectionFileName) throws Exception {
         // Retrieve the namepsace for this collection. It's part of the name
         String applicationName = getApplicationFromColllection(collectionFileName);
+        
+        UUID appId =  emf.lookupApplication(applicationName);
+        
+        if(appId == null){
+            logger.error("Unable to find application with name {}.  Skipping collections", appId);
+            return;
+        }
+        
         File collectionFile = new File(importDir, collectionFileName);
 
         logger.info("Loading collections file: "
@@ -281,8 +308,10 @@ public class Import extends ToolBase {
 
         jp.nextToken(); // START_OBJECT this is the outter hashmap
 
-        EntityManager em = emf.getEntityManager(emf
-                .lookupApplication(applicationName));
+        
+       
+        
+        EntityManager em = emf.getEntityManager(appId);
 
         while (jp.nextToken() != JsonToken.END_OBJECT) {
             importEntitysStuff(jp, em);
