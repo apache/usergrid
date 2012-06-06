@@ -294,6 +294,54 @@ public class Import extends ToolBase {
         
         UUID appId =  emf.lookupApplication(applicationName);
         
+        //no org in path, this is a pre public beta so we need to create the new path
+        if(appId == null && !applicationName.contains("/")){
+            String fileName = collectionFileName.replace("collections", "application");
+            
+            File applicationFile = new File(importDir, fileName);
+            
+            if(!applicationFile.exists()){
+                logger.error("Could not load application file {} to search for org information", applicationFile.getAbsolutePath());
+                return;
+            }
+            
+            
+            logger.info("Loading application file: "
+                    + applicationFile.getAbsolutePath());
+            
+            JsonParser jp = getJsonParserForFile(applicationFile);
+
+            JsonToken token = jp.nextToken();
+            validateStartArray(token);
+
+            // Move to next object (the application).
+            // The application object is the first object followed by all the
+            // objects in this application.
+            token = jp.nextValue();
+
+            Application application = jp.readValueAs(Application.class);
+            
+            jp.close();
+            
+            @SuppressWarnings("unchecked")
+            String orgName = ((Map<String, String>) application
+                    .getMetadata("organization")).get("value");
+            
+            OrganizationInfo info = managementService.getOrganizationByName(orgName);
+            
+            if(info == null){
+                logger.error("Could not find org with name {}", orgName);
+                return;
+            }
+            
+            applicationName = orgName + "/" + applicationName;
+            
+            appId =  emf.lookupApplication(applicationName);
+            
+        }
+        
+        
+        
         if(appId == null){
             logger.error("Unable to find application with name {}.  Skipping collections", appId);
             return;
