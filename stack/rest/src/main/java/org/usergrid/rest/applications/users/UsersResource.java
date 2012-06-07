@@ -51,6 +51,7 @@ import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.applications.ServiceResource;
+import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 
 import com.sun.jersey.api.json.JSONWithPadding;
@@ -157,6 +158,8 @@ public class UsersResource extends ServiceResource {
 				errorMsg = "Incorrect Captcha, try again...";
 				return handleViewable("resetpw_email_form", this);
 			}
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("resetpw_email_form", e);
 		}

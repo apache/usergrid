@@ -43,6 +43,7 @@ import org.usergrid.management.ActivationState;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
+import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.management.users.organizations.OrganizationsResource;
 import org.usergrid.rest.security.annotations.RequireAdminUserAccess;
 import org.usergrid.security.shiro.utils.SubjectUtils;
@@ -192,6 +193,8 @@ public class UserResource extends AbstractContextResource {
 			} else {
 				return handleViewable("resetpw_email_form", this);
 			}
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
@@ -248,6 +251,8 @@ public class UserResource extends AbstractContextResource {
 				return handleViewable("resetpw_email_form", this);
 			}
 
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
@@ -276,6 +281,8 @@ public class UserResource extends AbstractContextResource {
 			return handleViewable("activate", this);
 		} catch (TokenException e) {
 			return handleViewable("bad_activation_token", this);
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
@@ -295,8 +302,10 @@ public class UserResource extends AbstractContextResource {
 			return handleViewable("activate", this);
 		} catch (TokenException e) {
 			return handleViewable("bad_confirmation_token", this);
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
-			return handleViewable("error", e);
+			return new Viewable("error", e);
 		}
 	}
 

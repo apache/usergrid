@@ -19,7 +19,6 @@ import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.Response.temporaryRedirect;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.security.shiro.utils.SubjectUtils.isApplicationAdmin;
 import static org.usergrid.services.ServiceParameter.addParameter;
@@ -27,7 +26,6 @@ import static org.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
-import java.net.URI;
 import java.net.URLEncoder;
 import java.util.UUID;
 
@@ -40,7 +38,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
@@ -66,6 +63,7 @@ import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.applications.events.EventsResource;
 import org.usergrid.rest.applications.queues.QueueResource;
 import org.usergrid.rest.applications.users.UsersResource;
+import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
@@ -362,6 +360,8 @@ public class ApplicationResource extends ServiceResource {
 			applicationName = app.getName();
 
 			return handleViewable("authorize_form", this);
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
@@ -403,8 +403,7 @@ public class ApplicationResource extends ServiceResource {
 					redirect_uri += "&state="
 							+ URLEncoder.encode(state, "UTF-8");
 				}
-				throw new WebApplicationException(temporaryRedirect(
-						new URI(state)).build());
+				throw new RedirectionException(state);
 			} else {
 				errorMsg = "Username or password do not match";
 			}
@@ -413,6 +412,8 @@ public class ApplicationResource extends ServiceResource {
 			applicationName = app.getName();
 
 			return handleViewable("authorize_form", this);
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}

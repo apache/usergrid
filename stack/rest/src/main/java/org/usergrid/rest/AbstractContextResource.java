@@ -18,17 +18,13 @@ package org.usergrid.rest;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.removeEnd;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
@@ -39,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.management.ManagementService;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.EntityManagerFactory;
+import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.security.tokens.TokenService;
 import org.usergrid.services.ServiceManagerFactory;
 
@@ -137,14 +134,8 @@ public abstract class AbstractContextResource {
 	}
 
 	public void sendRedirect(String location) {
-		URI uri = null;
-		try {
-			uri = new URI(location);
-		} catch (URISyntaxException e) {
-		}
-		if (uri != null) {
-			throw new WebApplicationException(Response.temporaryRedirect(uri)
-					.build());
+		if (isNotBlank(location)) {
+			throw new RedirectionException(location);
 		}
 	}
 
@@ -159,6 +150,7 @@ public abstract class AbstractContextResource {
 		if (isNotBlank(redirect_url)) {
 			sendRedirect(redirect_url);
 		}
-		return new Viewable(template, model);
+		System.out.println(this.getClass());
+		return new Viewable(template, model, this.getClass());
 	}
 }

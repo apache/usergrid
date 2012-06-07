@@ -33,6 +33,7 @@ import org.usergrid.management.ActivationState;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
+import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.management.organizations.applications.ApplicationsResource;
 import org.usergrid.rest.management.organizations.users.UsersResource;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
@@ -109,6 +110,8 @@ public class OrganizationResource extends AbstractContextResource {
 			return handleViewable("activate", this);
 		} catch (TokenException e) {
 			return handleViewable("bad_activation_token", this);
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
@@ -129,6 +132,8 @@ public class OrganizationResource extends AbstractContextResource {
 			return handleViewable("activate", this);
 		} catch (TokenException e) {
 			return handleViewable("bad_activation_token", this);
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}

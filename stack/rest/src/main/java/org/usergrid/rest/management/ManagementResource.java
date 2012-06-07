@@ -19,13 +19,11 @@ import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.Response.temporaryRedirect;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
-import java.net.URI;
 import java.net.URLEncoder;
 
 import javax.ws.rs.Consumes;
@@ -37,7 +35,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -55,6 +52,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
+import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.management.organizations.OrganizationsResource;
 import org.usergrid.rest.management.users.UsersResource;
 import org.usergrid.security.oauth.AccessInfo;
@@ -132,7 +130,8 @@ public class ManagementResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("") String callback)
 			throws Exception {
 
-		logger.info("ManagementResource.getAccessToken with username: {}", username);
+		logger.info("ManagementResource.getAccessToken with username: {}",
+				username);
 
 		UserInfo user = null;
 
@@ -157,10 +156,12 @@ public class ManagementResource extends AbstractContextResource {
 				try {
 					user = management.verifyAdminUserPasswordCredentials(
 							username, password);
-          if ( user != null )
-            logger.info("found user from verify: {}", user.getUuid());
+					if (user != null) {
+						logger.info("found user from verify: {}",
+								user.getUuid());
+					}
 				} catch (Exception e1) {
-          logger.error("failed token check", e1);
+					logger.error("failed token check", e1);
 				}
 			} else if ("client_credentials".equals(grant_type)) {
 				try {
@@ -174,7 +175,7 @@ public class ManagementResource extends AbstractContextResource {
 								.build();
 					}
 				} catch (Exception e1) {
-          logger.error("failed authorizeClient",e1);
+					logger.error("failed authorizeClient", e1);
 				}
 			}
 
@@ -214,9 +215,9 @@ public class ManagementResource extends AbstractContextResource {
 					.type(jsonMediaType(callback))
 					.entity(wrapWithCallback(res.getBody(), callback)).build();
 		} catch (Exception ex) {
-      logger.error("General exception on auth ", ex);
-      return null;
-    }
+			logger.error("General exception on auth ", ex);
+			return null;
+		}
 	}
 
 	@POST
@@ -289,13 +290,14 @@ public class ManagementResource extends AbstractContextResource {
 					redirect_uri += "&state="
 							+ URLEncoder.encode(state, "UTF-8");
 				}
-				throw new WebApplicationException(temporaryRedirect(
-						new URI(state)).build());
+				throw new RedirectionException(state);
 			} else {
 				errorMsg = "Username or password do not match";
 			}
 
 			return handleViewable("authorize_form", this);
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}

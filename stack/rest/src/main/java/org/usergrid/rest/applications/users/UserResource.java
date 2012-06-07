@@ -90,6 +90,7 @@ import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.applications.ServiceResource;
+import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.security.tokens.exceptions.TokenException;
 
@@ -279,6 +280,8 @@ public class UserResource extends ServiceResource {
 			} else {
 				return handleViewable("resetpw_email_form", this);
 			}
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
@@ -337,6 +340,8 @@ public class UserResource extends ServiceResource {
 				errorMsg = "Incorrect Captcha";
 				return handleViewable("resetpw_email_form", this);
 			}
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
@@ -384,6 +389,8 @@ public class UserResource extends ServiceResource {
 			return handleViewable("activate", this);
 		} catch (TokenException e) {
 			return handleViewable("bad_activation_token", this);
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
@@ -404,6 +411,8 @@ public class UserResource extends ServiceResource {
 			return handleViewable("activate", this);
 		} catch (TokenException e) {
 			return handleViewable("bad_confirmation_token", this);
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}

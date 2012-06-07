@@ -94,12 +94,18 @@
 		/> -->
 	<bean name="lockManager" class="org.usergrid.locking.zookeeper.NoOpLockManagerImpl" />
 
+    <bean name="consistencyLevelPolicy" class="me.prettyprint.cassandra.model.ConfigurableConsistencyLevel">
+        <property name="defaultReadConsistencyLevel" value="ONE"/>
+        <property name="defaultWriteConsistencyLevel" value="QUORUM"/>
+    </bean>
+
 	<bean id="cassandraService" class="org.usergrid.persistence.cassandra.CassandraService"
 		init-method="init">
 		<constructor-arg ref="properties" />
 		<constructor-arg ref="cassandraCluster" />
 		<constructor-arg ref="cassandraHostConfigurator" />
 		<constructor-arg ref="lockManager" />
+        <property name="consistencyLevelPolicy" ref="consistencyLevelPolicy"/>
 	</bean>
     <bean id="entityManagerFactory"
    		class="org.usergrid.persistence.cassandra.EntityManagerFactoryImpl">

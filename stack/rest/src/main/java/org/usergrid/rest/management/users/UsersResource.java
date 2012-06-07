@@ -45,6 +45,7 @@ import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.exceptions.AuthErrorInfo;
+import org.usergrid.rest.exceptions.RedirectionException;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
@@ -174,6 +175,8 @@ public class UsersResource extends AbstractContextResource {
 				errorMsg = "Incorrect Captcha, try again...";
 				return handleViewable("resetpw_email_form", this);
 			}
+		} catch (RedirectionException e) {
+			throw e;
 		} catch (Exception e) {
 			return handleViewable("error", e);
 		}
