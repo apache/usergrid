@@ -332,7 +332,9 @@ public class Export extends ExportingToolBase {
             List<UserInfo> users = managementService
                     .getAdminUsersForOrganization(organizationName.getKey());
 
-            exportOrg.setAdmins(users);
+            for(UserInfo user: users){
+                exportOrg.addAdmin(user.getUsername());
+            }
 
             // One file per Organization.
             saveOrganizationInFile(exportOrg);
