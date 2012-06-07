@@ -137,7 +137,7 @@ public class OrganizationsResource extends AbstractContextResource {
 
 		OrganizationInfo organization = management
 				.getOrganizationByName(organizationName);
-		management.addAdminUserToOrganization(user, organization);
+		management.addAdminUserToOrganization(user, organization, true);
 		response.setData(organization);
 		return new JSONWithPadding(response, callback);
 	}
@@ -156,7 +156,7 @@ public class OrganizationsResource extends AbstractContextResource {
 
 		OrganizationInfo organization = management.getOrganizationByUuid(UUID
 				.fromString(organizationIdStr));
-		management.addAdminUserToOrganization(user, organization);
+		management.addAdminUserToOrganization(user, organization, true);
 		response.setData(organization);
 		return new JSONWithPadding(response, callback);
 	}

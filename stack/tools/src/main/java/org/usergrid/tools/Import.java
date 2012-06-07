@@ -259,12 +259,11 @@ public class Import extends ToolBase {
         echo(acc);
         
         //check if the org exists, if it does, what do we do
-        Entity org = managementService.getOrganizationEntityByName(acc.getName());
+        OrganizationInfo org = managementService.getOrganizationByName(acc.getName());
         
         //only import if the org doesn't exist
         if(org == null){
-            managementService.importOrganization(acc.getUuid(), acc, properties);   
-            org = managementService.getOrganizationEntityByName(acc.getName());
+            org =  managementService.importOrganization(acc.getUuid(), acc, properties);   
         }
         
         
@@ -274,9 +273,7 @@ public class Import extends ToolBase {
            UserInfo existing =  managementService.getAdminUserByUsername(exportedUser);
            
            if(existing != null){
-               EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-               em.addToCollection(org, "users", new SimpleEntityRef(
-                       User.ENTITY_TYPE, existing.getUuid()));
+               managementService.addAdminUserToOrganization(existing, org, false);
 
            }
         }

@@ -134,7 +134,7 @@ public class UsersResource extends AbstractContextResource {
 			return null;
 		}
 
-		management.addAdminUserToOrganization(user, organization);
+		management.addAdminUserToOrganization(user, organization, true);
 
 		Map<String, Object> result = new LinkedHashMap<String, Object>();
 		result.put("user", user);
@@ -180,7 +180,7 @@ public class UsersResource extends AbstractContextResource {
 		if (user == null) {
 			return null;
 		}
-		management.addAdminUserToOrganization(user, organization);
+		management.addAdminUserToOrganization(user, organization, true);
 
 		Map<String, Object> result = new LinkedHashMap<String, Object>();
 		result.put("user", user);
@@ -205,7 +205,7 @@ public class UsersResource extends AbstractContextResource {
 		if (user == null) {
 			return null;
 		}
-		management.addAdminUserToOrganization(user, organization);
+		management.addAdminUserToOrganization(user, organization, true);
 
 		Map<String, Object> result = new LinkedHashMap<String, Object>();
 		result.put("user", user);
@@ -230,7 +230,7 @@ public class UsersResource extends AbstractContextResource {
 		if (user == null) {
 			return null;
 		}
-		management.addAdminUserToOrganization(user, organization);
+		management.addAdminUserToOrganization(user, organization, true);
 
 		Map<String, Object> result = new LinkedHashMap<String, Object>();
 		result.put("user", user);

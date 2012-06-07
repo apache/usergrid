@@ -42,7 +42,7 @@ public interface ManagementService {
 			boolean sendEmail) throws Exception;
 
 	public void addAdminUserToOrganization(UserInfo user,
-			OrganizationInfo organization) throws Exception;
+			OrganizationInfo organization, boolean email) throws Exception;
 
 	public UUID addApplicationToOrganization(UUID organizationId,
 			UUID applicationId) throws Exception;
