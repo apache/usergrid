@@ -37,10 +37,12 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.OrganizationInfo;
+import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
+import org.usergrid.tools.bean.ExportOrg;
 
 public class Import extends ToolBase {
 
@@ -124,6 +126,7 @@ public class Import extends ToolBase {
     private void importApplication(String applicationName) throws Exception {
         // Open up application file.
         File applicationFile = new File(importDir, applicationName);
+        
         logger.info("Loading application file: "
                 + applicationFile.getAbsolutePath());
         JsonParser jp = getJsonParserForFile(applicationFile);
@@ -137,6 +140,7 @@ public class Import extends ToolBase {
         token = jp.nextValue();
 
         Application application = jp.readValueAs(Application.class);
+       
         @SuppressWarnings("unchecked")
         String orgName = ((Map<String, String>) application
                 .getMetadata("organization")).get("value");
@@ -233,7 +237,7 @@ public class Import extends ToolBase {
      */
     private void importOrganization(String organizationFileName)
             throws Exception {
-        OrganizationInfo acc = null;
+        ExportOrg acc = null;
 
         // Open up organization dir.
         File organizationFile = new File(importDir, organizationFileName);
@@ -242,7 +246,7 @@ public class Import extends ToolBase {
         JsonParser jp = getJsonParserForFile(organizationFile);
 
         // Get the organization object and the only one in the file.
-        acc = jp.readValueAs(OrganizationInfo.class);
+        acc = jp.readValueAs(ExportOrg.class);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         // properties.put("email", acc.getEmail());
@@ -256,8 +260,20 @@ public class Import extends ToolBase {
         
         //only import if the org doesn't exist
         if(orgInfo == null){
-            managementService.importOrganization(acc.getUuid(), acc, properties);
+            orgInfo = managementService.importOrganization(acc.getUuid(), acc, properties);   
         }
+        
+        
+        //now go through and add each admin from the original org to the newly imported
+        
+        for(String exportedUser: acc.getAdmins()){
+           UserInfo existing =  managementService.getAdminUserByUsername(exportedUser);
+           
+           if(existing != null){
+               managementService.addAdminUserToOrganization(existing, orgInfo);
+           }
+        }
+        
         
         
         jp.close();
