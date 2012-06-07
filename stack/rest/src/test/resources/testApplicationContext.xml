@@ -96,7 +96,7 @@
 
     <bean name="consistencyLevelPolicy" class="me.prettyprint.cassandra.model.ConfigurableConsistencyLevel">
         <property name="defaultReadConsistencyLevel" value="ONE"/>
-        <property name="defaultWriteConsistencyLevel" value="LOCAL_QUORUM"/>
+        <property name="defaultWriteConsistencyLevel" value="QUORUM"/>
     </bean>
 
 	<bean id="cassandraService" class="org.usergrid.persistence.cassandra.CassandraService"
