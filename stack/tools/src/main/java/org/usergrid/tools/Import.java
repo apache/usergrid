@@ -17,6 +17,7 @@ package org.usergrid.tools;
 
 import static org.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.usergrid.persistence.Schema.PROPERTY_UUID;
+import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 import java.io.File;
 import java.util.HashMap;
@@ -38,9 +39,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
+import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.entities.Application;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.usergrid.tools.bean.ExportOrg;
 
@@ -255,12 +259,12 @@ public class Import extends ToolBase {
         echo(acc);
         
         //check if the org exists, if it does, what do we do
-        
-        OrganizationInfo orgInfo = managementService.getOrganizationByName(acc.getName());
+        Entity org = managementService.getOrganizationEntityByName(acc.getName());
         
         //only import if the org doesn't exist
-        if(orgInfo == null){
-            orgInfo = managementService.importOrganization(acc.getUuid(), acc, properties);   
+        if(org == null){
+            managementService.importOrganization(acc.getUuid(), acc, properties);   
+            org = managementService.getOrganizationEntityByName(acc.getName());
         }
         
         
@@ -270,7 +274,10 @@ public class Import extends ToolBase {
            UserInfo existing =  managementService.getAdminUserByUsername(exportedUser);
            
            if(existing != null){
-               managementService.addAdminUserToOrganization(existing, orgInfo);
+               EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+               em.addToCollection(org, "users", new SimpleEntityRef(
+                       User.ENTITY_TYPE, existing.getUuid()));
+
            }
         }
         
