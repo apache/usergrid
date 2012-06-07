@@ -955,8 +955,14 @@ public class EntityManagerImpl implements EntityManager,
 		properties.put(PROPERTY_UUID, itemId);
 		properties.put(PROPERTY_TYPE,
 				Schema.normalizeEntityType(entityType, false));
-		properties.put(PROPERTY_CREATED, timestamp / 1000);
-		properties.put(PROPERTY_MODIFIED, timestamp / 1000);
+		
+		if(properties.get(PROPERTY_CREATED) == null){
+		    properties.put(PROPERTY_CREATED, timestamp / 1000);
+		}
+		
+		if(properties.get(PROPERTY_MODIFIED) == null){
+		    properties.put(PROPERTY_MODIFIED, timestamp / 1000);
+		}
 
 		// special case timestamp and published properties
 		// and dictionary their timestamp values if not set
