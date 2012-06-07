@@ -522,7 +522,7 @@ public class ManagementServiceImpl implements ManagementService {
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		properties.put("name",
 				buildAppName(application.getName(), organization));
-		Entity app = em.create(applicationId, APPLICATION_INFO, null);
+		Entity app = em.create(applicationId, APPLICATION_INFO, application.getProperties());
 
 		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
 		credentials
