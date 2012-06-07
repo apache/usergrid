@@ -1305,7 +1305,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 	@Override
 	public void addAdminUserToOrganization(UserInfo user,
-			OrganizationInfo organization) throws Exception {
+			OrganizationInfo organization, boolean email) throws Exception {
 
 		if ((user == null) || (organization == null)) {
 			return;
@@ -1313,9 +1313,12 @@ public class ManagementServiceImpl implements ManagementService {
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		em.addToCollection(
-				new SimpleEntityRef(Group.ENTITY_TYPE, user.getUuid()),
+				new SimpleEntityRef(Group.ENTITY_TYPE, organization.getUuid()),
 				"users", new SimpleEntityRef(User.ENTITY_TYPE, user.getUuid()));
-		sendAdminUserInvitedEmail(user, organization);
+		
+		if(email){
+		    sendAdminUserInvitedEmail(user, organization);
+		}
 	}
 
 	@Override

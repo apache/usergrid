@@ -30,11 +30,13 @@ import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.OrganizationInfo;
+import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.ConnectionRef;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
+import org.usergrid.tools.bean.ExportOrg;
 import org.usergrid.utils.JsonUtils;
 
 import com.google.common.collect.BiMap;
@@ -51,9 +53,9 @@ public class Export extends ExportingToolBase {
 
         setVerbose(line);
 
-        ExportDataCreator dataCreator = new ExportDataCreator(emf,
-                managementService);
-        dataCreator.createTestData();
+        // ExportDataCreator dataCreator = new ExportDataCreator(emf,
+        // managementService);
+        // dataCreator.createTestData();
 
         prepareBaseOutputFileName(line);
         outputDir = createOutputParentDir();
@@ -201,42 +203,40 @@ public class Export extends ExportingToolBase {
 
         // Write connections
         saveConnections(entity, em, jg);
-        
+
         // Write dictionaries
         saveDictionaries(entity, em, jg);
-        
 
         // End the object if it was Started
         jg.writeEndObject();
     }
+
     /**
      * Persists the connection for this entity.
      */
     private void saveDictionaries(Entity entity, EntityManager em,
             JsonGenerator jg) throws Exception {
-        
+
         jg.writeFieldName("dictionaries");
         jg.writeStartObject();
 
         Set<String> dictionaries = em.getDictionaries(entity);
         for (String dictionary : dictionaries) {
 
-            Map<Object, Object> dict = em.getDictionaryAsMap(entity, dictionary);
-            
-            //nothing to do 
-            if(dict.isEmpty()){
+            Map<Object, Object> dict = em
+                    .getDictionaryAsMap(entity, dictionary);
+
+            // nothing to do
+            if (dict.isEmpty()) {
                 continue;
             }
-            
-            
+
             jg.writeFieldName(dictionary);
-            
-           
+
             jg.writeStartObject();
-            
-            
-            for (Entry<Object, Object> entry: dict.entrySet()) {
-                jg.writeFieldName(entry.getKey().toString());  
+
+            for (Entry<Object, Object> entry : dict.entrySet()) {
+                jg.writeFieldName(entry.getKey().toString());
                 jg.writeObject(entry.getValue());
             }
 
@@ -327,8 +327,17 @@ public class Export extends ExportingToolBase {
                     .getOrganizationByUuid(organizationName.getKey());
             logger.info("Exporting Organization: " + acc.getName());
 
+            ExportOrg exportOrg = new ExportOrg(acc);
+
+            List<UserInfo> users = managementService
+                    .getAdminUsersForOrganization(organizationName.getKey());
+
+            for(UserInfo user: users){
+                exportOrg.addAdmin(user.getUsername());
+            }
+
             // One file per Organization.
-            saveOrganizationInFile(acc);
+            saveOrganizationInFile(exportOrg);
         }
 
     }
@@ -339,8 +348,9 @@ public class Export extends ExportingToolBase {
      * @param acc
      *            OrganizationInfo
      */
-    private void saveOrganizationInFile(OrganizationInfo acc) {
+    private void saveOrganizationInFile(ExportOrg acc) {
         try {
+
             File outFile = createOutputFile("organization", acc.getName());
             JsonGenerator jg = getJsonGenerator(outFile);
             jg.writeObject(acc);

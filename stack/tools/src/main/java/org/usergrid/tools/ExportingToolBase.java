@@ -31,6 +31,8 @@ public abstract class ExportingToolBase extends ToolBase {
     protected String baseOutputDirName = "export";
 
     JsonFactory jsonFactory = new JsonFactory();
+    
+    protected long startTime = System.currentTimeMillis();
 
     @Override
     @SuppressWarnings("static-access")
@@ -137,7 +139,7 @@ public abstract class ExportingToolBase extends ToolBase {
         str.append(".");
         str.append(name);
         str.append(".");
-        str.append(System.currentTimeMillis());
+        str.append(startTime);
         str.append(".json");
 
         String outputFileName = str.toString();

@@ -17,6 +17,7 @@ package org.usergrid.tools;
 
 import static org.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.usergrid.persistence.Schema.PROPERTY_UUID;
+import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 import java.io.File;
 import java.util.HashMap;
@@ -37,10 +38,15 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.OrganizationInfo;
+import org.usergrid.management.UserInfo;
+import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.entities.Application;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
+import org.usergrid.tools.bean.ExportOrg;
 
 public class Import extends ToolBase {
 
@@ -124,6 +130,7 @@ public class Import extends ToolBase {
     private void importApplication(String applicationName) throws Exception {
         // Open up application file.
         File applicationFile = new File(importDir, applicationName);
+        
         logger.info("Loading application file: "
                 + applicationFile.getAbsolutePath());
         JsonParser jp = getJsonParserForFile(applicationFile);
@@ -137,14 +144,24 @@ public class Import extends ToolBase {
         token = jp.nextValue();
 
         Application application = jp.readValueAs(Application.class);
+       
         @SuppressWarnings("unchecked")
-        String organizationId = ((Map<String, String>) application
-                .getMetadata("organization")).get("key");
-        managementService.importApplication(UUID.fromString(organizationId),
+        String orgName = ((Map<String, String>) application
+                .getMetadata("organization")).get("value");
+        
+        OrganizationInfo info = managementService.getOrganizationByName(orgName);
+        
+        if(info == null){
+            logger.error("Unable to import application '{}' for organisation with name '{}'", application.getName(), orgName);
+            return;
+        }
+        
+        
+        UUID appId = managementService.importApplication(info.getUuid(),
                 application);
         echo(application);
 
-        EntityManager em = emf.getEntityManager(application.getUuid());
+        EntityManager em = emf.getEntityManager(appId);
 
         // we now need to remove all roles, they'll be imported again below
 
@@ -224,7 +241,7 @@ public class Import extends ToolBase {
      */
     private void importOrganization(String organizationFileName)
             throws Exception {
-        OrganizationInfo acc = null;
+        ExportOrg acc = null;
 
         // Open up organization dir.
         File organizationFile = new File(importDir, organizationFileName);
@@ -233,14 +250,36 @@ public class Import extends ToolBase {
         JsonParser jp = getJsonParserForFile(organizationFile);
 
         // Get the organization object and the only one in the file.
-        acc = jp.readValueAs(OrganizationInfo.class);
+        acc = jp.readValueAs(ExportOrg.class);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         // properties.put("email", acc.getEmail());
         // properties.put("password", "password".getBytes("UTF-8"));
 
         echo(acc);
-        managementService.importOrganization(acc.getUuid(), acc, properties);
+        
+        //check if the org exists, if it does, what do we do
+        OrganizationInfo org = managementService.getOrganizationByName(acc.getName());
+        
+        //only import if the org doesn't exist
+        if(org == null){
+            org =  managementService.importOrganization(acc.getUuid(), acc, properties);   
+        }
+        
+        
+        //now go through and add each admin from the original org to the newly imported
+        
+        for(String exportedUser: acc.getAdmins()){
+           UserInfo existing =  managementService.getAdminUserByUsername(exportedUser);
+           
+           if(existing != null){
+               managementService.addAdminUserToOrganization(existing, org, false);
+
+           }
+        }
+        
+        
+        
         jp.close();
     }
 
@@ -272,6 +311,62 @@ public class Import extends ToolBase {
     private void importCollection(String collectionFileName) throws Exception {
         // Retrieve the namepsace for this collection. It's part of the name
         String applicationName = getApplicationFromColllection(collectionFileName);
+        
+        UUID appId =  emf.lookupApplication(applicationName);
+        
+        //no org in path, this is a pre public beta so we need to create the new path
+        if(appId == null && !applicationName.contains("/")){
+            String fileName = collectionFileName.replace("collections", "application");
+            
+            File applicationFile = new File(importDir, fileName);
+            
+            if(!applicationFile.exists()){
+                logger.error("Could not load application file {} to search for org information", applicationFile.getAbsolutePath());
+                return;
+            }
+            
+            
+            logger.info("Loading application file: "
+                    + applicationFile.getAbsolutePath());
+            
+            JsonParser jp = getJsonParserForFile(applicationFile);
+
+            JsonToken token = jp.nextToken();
+            validateStartArray(token);
+
+            // Move to next object (the application).
+            // The application object is the first object followed by all the
+            // objects in this application.
+            token = jp.nextValue();
+
+            Application application = jp.readValueAs(Application.class);
+            
+            jp.close();
+            
+            @SuppressWarnings("unchecked")
+            String orgName = ((Map<String, String>) application
+                    .getMetadata("organization")).get("value");
+            
+            OrganizationInfo info = managementService.getOrganizationByName(orgName);
+            
+            if(info == null){
+                logger.error("Could not find org with name {}", orgName);
+                return;
+            }
+            
+            applicationName = orgName + "/" + applicationName;
+            
+            appId =  emf.lookupApplication(applicationName);
+            
+        }
+        
+        
+        
+        if(appId == null){
+            logger.error("Unable to find application with name {}.  Skipping collections", appId);
+            return;
+        }
+        
         File collectionFile = new File(importDir, collectionFileName);
 
         logger.info("Loading collections file: "
@@ -281,8 +376,10 @@ public class Import extends ToolBase {
 
         jp.nextToken(); // START_OBJECT this is the outter hashmap
 
-        EntityManager em = emf.getEntityManager(emf
-                .lookupApplication(applicationName));
+        
+       
+        
+        EntityManager em = emf.getEntityManager(appId);
 
         while (jp.nextToken() != JsonToken.END_OBJECT) {
             importEntitysStuff(jp, em);
