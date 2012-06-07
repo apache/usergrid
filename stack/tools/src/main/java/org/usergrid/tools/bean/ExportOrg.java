@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.tools.bean;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.usergrid.management.OrganizationInfo;
@@ -26,25 +27,35 @@ import org.usergrid.management.UserInfo;
  */
 public class ExportOrg extends OrganizationInfo {
 
-    private List<UserInfo> admins;
+    private List<String> adminUserNames;
+    
+    public ExportOrg() {  
+        adminUserNames = new ArrayList<String>();
+    }
     
     public ExportOrg(OrganizationInfo info){
         setName(info.getName());
         setUuid(info.getUuid());
+        adminUserNames = new ArrayList<String>();
     }
 
     /**
      * @return the admins
      */
-    public List<UserInfo> getAdmins() {
-        return admins;
+    public List<String> getAdmins() {
+        return adminUserNames;
     }
 
     /**
      * @param admins the admins to set
      */
-    public void setAdmins(List<UserInfo> admins) {
-        this.admins = admins;
+    public void setAdmins(List<String> admins) {
+        this.adminUserNames = admins;
+    }
+    
+    
+    public void addAdmin(String username){
+        adminUserNames.add(username);
     }
     
     
