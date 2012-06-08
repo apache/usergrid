@@ -982,7 +982,7 @@ usergrid.Client = (function() {
     function getSSOCallback() {
         var callback = window.location.protocol+'//'+ window.location.host + window.location.pathname;
         var separatorMark = '?';
-        if (self.use_sso) {
+        if (self.use_sso == 'yes') {
             callback = callback + separatorMark + 'use_sso=' + self.use_sso;
             separatorMark = '&';
         }
