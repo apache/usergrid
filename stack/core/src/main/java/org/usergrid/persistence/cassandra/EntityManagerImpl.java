@@ -75,6 +75,7 @@ import static org.usergrid.utils.InflectionUtils.pluralize;
 import static org.usergrid.utils.InflectionUtils.singularize;
 import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.usergrid.utils.UUIDUtils.getTimestampInMillis;
+import static org.usergrid.utils.UUIDUtils.isTimeBased;
 import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
 import java.nio.ByteBuffer;
@@ -183,11 +184,9 @@ public class EntityManagerImpl implements EntityManager,
 
 	private ApplicationContext applicationContext;
 
-	private EntityManagerFactoryImpl emf;
-
 	@Autowired
 	private QueueManagerFactoryImpl qmf;
-	
+
 	@Autowired
 	private IndexBucketLocator indexBucketLocator;
 
@@ -207,7 +206,6 @@ public class EntityManagerImpl implements EntityManager,
 
 	public EntityManagerImpl init(EntityManagerFactoryImpl emf,
 			CassandraService cass, CounterUtils counterUtils, UUID applicationId) {
-		this.emf = emf;
 		this.cass = cass;
 		this.counterUtils = counterUtils;
 		this.applicationId = applicationId;
@@ -534,15 +532,12 @@ public class EntityManagerImpl implements EntityManager,
 		String propertyPath = "/" + defaultCollectionName(entityType) + "/@"
 				+ propertyName;
 		cass.getLockManager().lock(applicationId, propertyPath);
-		
-		 
-        Query query = new Query();
-        query.setEntityType(entityType);
-        query.addEqualityFilter(propertyName, propertyValue);
-        query.setLimit(1000);
-        query.setResultsLevel(IDS);
-       
-        
+
+		Query query = new Query();
+		query.setEntityType(entityType);
+		query.addEqualityFilter(propertyName, propertyValue);
+		query.setLimit(1000);
+		query.setResultsLevel(IDS);
 
 		Results r = getRelationManager(ref(applicationId)).searchCollection(
 				pluralize(entityType), query);
@@ -599,8 +594,8 @@ public class EntityManagerImpl implements EntityManager,
 
 		long timestamp = cass.createTimestamp();
 
-		addInsertToMutator(m, ENTITY_ALIASES, keyId, "entityId",
-				entityId, timestamp);
+		addInsertToMutator(m, ENTITY_ALIASES, keyId, "entityId", entityId,
+				timestamp);
 		addInsertToMutator(m, ENTITY_ALIASES, keyId, "entityType", entityType,
 				timestamp);
 		addInsertToMutator(m, ENTITY_ALIASES, keyId, "aliasType", aliasType,
@@ -840,27 +835,45 @@ public class EntityManagerImpl implements EntityManager,
 			Map<String, Object> properties, UUID importId, UUID timestampUuid)
 			throws Exception {
 
-		long timestamp = getTimestampInMicros(timestampUuid);
-
 		String eType = Schema.normalizeEntityType(entityType);
-		
+
 		boolean is_application = TYPE_APPLICATION.equals(eType);
-		
+
 		if (((applicationId == null) || applicationId
 				.equals(UUIDUtils.zeroUUID)) && !is_application) {
 			return null;
+		}
+
+		long timestamp = getTimestampInMicros(timestampUuid);
+
+		UUID itemId = UUIDUtils.newTimeUUID();
+
+		if (is_application) {
+			itemId = applicationId;
+		}
+		if (importId != null) {
+			itemId = importId;
 		}
 
 		if (properties == null) {
 			properties = new TreeMap<String, Object>(CASE_INSENSITIVE_ORDER);
 		}
 
+		if (importId != null) {
+			if (isTimeBased(importId)) {
+				timestamp = UUIDUtils.getTimestampInMicros(importId);
+			} else if (properties.get(PROPERTY_CREATED) != null) {
+				timestamp = getLong(properties.get(PROPERTY_CREATED)) * 1000;
+			}
+		}
+
 		if (entityClass == null) {
 			entityClass = (Class<A>) DynamicEntity.class;
 		}
 
-		Set<String> required = getDefaultSchema().getRequiredProperties(entityType);
-		
+		Set<String> required = getDefaultSchema().getRequiredProperties(
+				entityType);
+
 		if (required != null) {
 			for (String p : required) {
 				if (!PROPERTY_UUID.equals(p) && !PROPERTY_TYPE.equals(p)
@@ -889,21 +902,14 @@ public class EntityManagerImpl implements EntityManager,
 			}
 		}
 
-		UUID itemId = UUIDUtils.newTimeUUID();
-		
-		if (is_application) {
-			itemId = applicationId;
-		}
-		if (importId != null) {
-			itemId = importId;
-		}
-
 		// Create collection name based on entity: i.e. "users"
 		String collection_name = Schema.defaultCollectionName(eType);
 		// Create collection key based collection name
-		String bucketId = indexBucketLocator.getBucket(applicationId, IndexType.COLLECTION, itemId, collection_name);
-		        
-		Object collection_key = key(applicationId, Schema.DICTIONARY_COLLECTIONS, collection_name, bucketId);
+		String bucketId = indexBucketLocator.getBucket(applicationId,
+				IndexType.COLLECTION, itemId, collection_name);
+
+		Object collection_key = key(applicationId,
+				Schema.DICTIONARY_COLLECTIONS, collection_name, bucketId);
 
 		CollectionInfo collection = null;
 
@@ -955,8 +961,20 @@ public class EntityManagerImpl implements EntityManager,
 		properties.put(PROPERTY_UUID, itemId);
 		properties.put(PROPERTY_TYPE,
 				Schema.normalizeEntityType(entityType, false));
-		properties.put(PROPERTY_CREATED, timestamp / 1000);
-		properties.put(PROPERTY_MODIFIED, timestamp / 1000);
+
+		if (importId != null) {
+			if (properties.get(PROPERTY_CREATED) == null) {
+				properties.put(PROPERTY_CREATED, timestamp / 1000);
+			}
+
+			if (properties.get(PROPERTY_MODIFIED) == null) {
+				properties.put(PROPERTY_MODIFIED, timestamp / 1000);
+			}
+		} else {
+			properties.put(PROPERTY_CREATED, timestamp / 1000);
+			properties.put(PROPERTY_MODIFIED, timestamp / 1000);
+
+		}
 
 		// special case timestamp and published properties
 		// and dictionary their timestamp values if not set
@@ -965,7 +983,7 @@ public class EntityManagerImpl implements EntityManager,
 		if (properties.containsKey(PROPERTY_TIMESTAMP)) {
 			long ts = getLong(properties.get(PROPERTY_TIMESTAMP));
 			if (ts <= 0) {
-				properties.put(PROPERTY_TIMESTAMP, timestamp);
+				properties.put(PROPERTY_TIMESTAMP, timestamp / 1000);
 			}
 		}
 
@@ -981,7 +999,7 @@ public class EntityManagerImpl implements EntityManager,
 				}
 			}
 			Message message = storeEventAsMessage(m, event, timestamp);
-			incrementEntityCollection("events");
+			incrementEntityCollection("events", timestamp);
 
 			entity.setUuid(message.getUuid());
 			return entity;
@@ -1027,23 +1045,30 @@ public class EntityManagerImpl implements EntityManager,
 		}
 
 		if (!is_application) {
-			incrementEntityCollection(collection_name);
+			incrementEntityCollection(collection_name, timestamp);
 		}
 
 		return entity;
 	}
 
 	public void incrementEntityCollection(String collection_name) {
+		long cassandraTimestamp = cass.createTimestamp();
+		incrementEntityCollection(collection_name, cassandraTimestamp);
+	}
+
+	public void incrementEntityCollection(String collection_name,
+			long cassandraTimestamp) {
 		try {
 			incrementAggregateCounters(null, null, null,
-					"application.collection." + collection_name, 1L);
+					"application.collection." + collection_name, 1L,
+					cassandraTimestamp);
 		} catch (Exception e) {
 			logger.error("Unable to increment counter application.collection."
 					+ collection_name, e);
 		}
 		try {
 			incrementAggregateCounters(null, null, null,
-					"application.entities", 1L);
+					"application.entities", 1L, cassandraTimestamp);
 		} catch (Exception e) {
 			logger.error("Unable to increment counter application.entities", e);
 		}
@@ -1674,13 +1699,13 @@ public class EntityManagerImpl implements EntityManager,
 			return this.getAlias(null, "user", identifier.getName());
 		}
 		if (identifier.isEmail()) {
-		    
-		    Query query = new Query();
-		    query.setEntityType("user");
-		    query.addEqualityFilter("email", identifier.getEmail());
-		    query.setLimit(1);
-		    query.setResultsLevel(REFS);
-		    
+
+			Query query = new Query();
+			query.setEntityType("user");
+			query.addEqualityFilter("email", identifier.getEmail());
+			query.setLimit(1);
+			query.setResultsLevel(REFS);
+
 			Results r = getRelationManager(ref(applicationId))
 					.searchCollection("users", query);
 			if (r != null) {
@@ -2170,7 +2195,8 @@ public class EntityManagerImpl implements EntityManager,
 	public void addMapToDictionary(EntityRef entityRef, String dictionaryName,
 			Map<?, ?> elementValues) throws Exception {
 
-		if ((elementValues == null) || elementValues.isEmpty()) {
+		if ((elementValues == null) || elementValues.isEmpty()
+				|| entityRef == null) {
 			return;
 		}
 
@@ -2587,14 +2613,22 @@ public class EntityManagerImpl implements EntityManager,
 	@Override
 	public void incrementAggregateCounters(UUID userId, UUID groupId,
 			String category, String counterName, long value) {
-		long timestamp = cass.createTimestamp();
-    Mutator<ByteBuffer> m = createMutator(
-          				cass.getApplicationKeyspace(applicationId), be);
+		long cassandraTimestamp = cass.createTimestamp();
+		incrementAggregateCounters(userId, groupId, category, counterName,
+				value, cassandraTimestamp);
+	}
 
-    counterUtils.batchIncrementAggregateCounters(m, applicationId, userId,
-            groupId, null, category, counterName, value, timestamp);
+	public void incrementAggregateCounters(UUID userId, UUID groupId,
+			String category, String counterName, long value,
+			long cassandraTimestamp) {
+		Mutator<ByteBuffer> m = createMutator(
+				cass.getApplicationKeyspace(applicationId), be);
 
-    batchExecute(m, CassandraService.RETRY_COUNT);
+		counterUtils.batchIncrementAggregateCounters(m, applicationId, userId,
+				groupId, null, category, counterName, value,
+				cassandraTimestamp / 1000, cassandraTimestamp);
+
+		batchExecute(m, CassandraService.RETRY_COUNT);
 
 	}
 
@@ -2602,12 +2636,12 @@ public class EntityManagerImpl implements EntityManager,
 	public void incrementAggregateCounters(UUID userId, UUID groupId,
 			String category, Map<String, Long> counters) {
 		long timestamp = cass.createTimestamp();
-    Mutator<ByteBuffer> m = createMutator(
-          				cass.getApplicationKeyspace(applicationId), be);
-    counterUtils.batchIncrementAggregateCounters(m, applicationId, userId,
-            groupId, null, category, counters, timestamp);
+		Mutator<ByteBuffer> m = createMutator(
+				cass.getApplicationKeyspace(applicationId), be);
+		counterUtils.batchIncrementAggregateCounters(m, applicationId, userId,
+				groupId, null, category, counters, timestamp);
 
-    batchExecute(m, CassandraService.RETRY_COUNT);
+		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
 	@Override
@@ -2622,60 +2656,60 @@ public class EntityManagerImpl implements EntityManager,
 	@Override
 	public void incrementApplicationCounters(Map<String, Long> counts) {
 		long timestamp = cass.createTimestamp();
-    Mutator<ByteBuffer> m = createMutator(
-                  cass.getApplicationKeyspace(applicationId), be);
+		Mutator<ByteBuffer> m = createMutator(
+				cass.getApplicationKeyspace(applicationId), be);
 
-    counterUtils.batchIncrementEntityCounters(m, applicationId, counts,
-            timestamp, applicationId);
+		counterUtils.batchIncrementEntityCounters(m, applicationId, counts,
+				timestamp, applicationId);
 
-    batchExecute(m, CassandraService.RETRY_COUNT);
+		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
 	@Override
 	public void incrementApplicationCounter(String name, long value) {
 		long timestamp = cass.createTimestamp();
-    Mutator<ByteBuffer> m = createMutator(
-                  cass.getApplicationKeyspace(applicationId), be);
+		Mutator<ByteBuffer> m = createMutator(
+				cass.getApplicationKeyspace(applicationId), be);
 
-    counterUtils.batchIncrementEntityCounter(m, applicationId, name, value,
-            timestamp, applicationId);
+		counterUtils.batchIncrementEntityCounter(m, applicationId, name, value,
+				timestamp, applicationId);
 
-    batchExecute(m, CassandraService.RETRY_COUNT);
+		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
 	@Override
 	public void incrementEntitiesCounters(Map<UUID, Map<String, Long>> counts) {
 		long timestamp = cass.createTimestamp();
-    Mutator<ByteBuffer> m = createMutator(
-                  cass.getApplicationKeyspace(applicationId), be);
-    counterUtils.batchIncrementEntityCounters(m, counts, timestamp,
-            applicationId);
+		Mutator<ByteBuffer> m = createMutator(
+				cass.getApplicationKeyspace(applicationId), be);
+		counterUtils.batchIncrementEntityCounters(m, counts, timestamp,
+				applicationId);
 
-    batchExecute(m, CassandraService.RETRY_COUNT);
+		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
 	@Override
 	public void incrementEntityCounters(UUID entityId, Map<String, Long> counts) {
 		long timestamp = cass.createTimestamp();
-    Mutator<ByteBuffer> m = createMutator(
-                  cass.getApplicationKeyspace(applicationId), be);
+		Mutator<ByteBuffer> m = createMutator(
+				cass.getApplicationKeyspace(applicationId), be);
 
-    counterUtils.batchIncrementEntityCounters(m, entityId, counts,
-            timestamp, applicationId);
+		counterUtils.batchIncrementEntityCounters(m, entityId, counts,
+				timestamp, applicationId);
 
-    batchExecute(m, CassandraService.RETRY_COUNT);
+		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
 	@Override
 	public void incrementEntityCounter(UUID entityId, String name, long value) {
 		long timestamp = cass.createTimestamp();
-    Mutator<ByteBuffer> m = createMutator(
-                  cass.getApplicationKeyspace(applicationId), be);
+		Mutator<ByteBuffer> m = createMutator(
+				cass.getApplicationKeyspace(applicationId), be);
 
-    counterUtils.batchIncrementEntityCounter(m, entityId, name, value,
-            timestamp, applicationId);
+		counterUtils.batchIncrementEntityCounter(m, entityId, name, value,
+				timestamp, applicationId);
 
-    batchExecute(m, CassandraService.RETRY_COUNT);
+		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
 	@Override
@@ -2704,13 +2738,13 @@ public class EntityManagerImpl implements EntityManager,
 				startResult, count, resultsLevel, reversed);
 	}
 
-//	@Override
-//	public Results getCollection(EntityRef entityRef, String collectionName,
-//			Map<String, Object> subkeyProperties, UUID startResult, int count,
-//			Level resultsLevel, boolean reversed) throws Exception {
-//		return getRelationManager(entityRef).getCollection(collectionName,
-//				subkeyProperties, startResult, count, resultsLevel, reversed);
-//	}
+	// @Override
+	// public Results getCollection(EntityRef entityRef, String collectionName,
+	// Map<String, Object> subkeyProperties, UUID startResult, int count,
+	// Level resultsLevel, boolean reversed) throws Exception {
+	// return getRelationManager(entityRef).getCollection(collectionName,
+	// subkeyProperties, startResult, count, resultsLevel, reversed);
+	// }
 
 	@Override
 	public Results getCollection(UUID entityId, String collectionName,
@@ -2866,26 +2900,26 @@ public class EntityManagerImpl implements EntityManager,
 		return getRelationManager(ref(entityId)).getConnections(query);
 	}
 
-//	T.N. This isn't used anywhere.  Removing for this release
-//	@Override
-//	public Results searchConnectedEntitiesForProperty(
-//			EntityRef connectingEntity, String connectionType,
-//			String connectedEntityType, String propertyName,
-//			Object searchStartValue, Object searchFinishValue,
-//			UUID startResult, int count, boolean reversed, Level resultsLevel)
-//			throws Exception {
-//		return getRelationManager(connectingEntity)
-//				.searchConnectedEntitiesForProperty(connectionType,
-//						connectedEntityType, propertyName, searchStartValue,
-//						searchFinishValue, startResult, count, reversed,
-//						resultsLevel);
-//	}
+	// T.N. This isn't used anywhere. Removing for this release
+	// @Override
+	// public Results searchConnectedEntitiesForProperty(
+	// EntityRef connectingEntity, String connectionType,
+	// String connectedEntityType, String propertyName,
+	// Object searchStartValue, Object searchFinishValue,
+	// UUID startResult, int count, boolean reversed, Level resultsLevel)
+	// throws Exception {
+	// return getRelationManager(connectingEntity)
+	// .searchConnectedEntitiesForProperty(connectionType,
+	// connectedEntityType, propertyName, searchStartValue,
+	// searchFinishValue, startResult, count, reversed,
+	// resultsLevel);
+	// }
 
 	@Override
 	public Results searchConnectedEntities(EntityRef connectingEntity,
-			Query query) throws Exception { 
-	    
-	    //TODO Todd Ed the query type and connection type needs set here.
+			Query query) throws Exception {
+
+		// TODO Todd Ed the query type and connection type needs set here.
 		return getRelationManager(connectingEntity).searchConnectedEntities(
 				query);
 	}
@@ -2966,33 +3000,31 @@ public class EntityManagerImpl implements EntityManager,
 			throws BeansException {
 		this.applicationContext = applicationContext;
 	}
-	
-	
 
 	/**
-     * @return the applicationId
-     */
-    public UUID getApplicationId() {
-        return applicationId;
-    }
+	 * @return the applicationId
+	 */
+	public UUID getApplicationId() {
+		return applicationId;
+	}
 
-    /**
-     * @return the cass
-     */
-    public CassandraService getCass() {
-        return cass;
-    }
+	/**
+	 * @return the cass
+	 */
+	public CassandraService getCass() {
+		return cass;
+	}
 
-    public GeoIndexManager getGeoIndexManager() {
+	public GeoIndexManager getGeoIndexManager() {
 		return applicationContext.getAutowireCapableBeanFactory()
 				.createBean(GeoIndexManager.class).init(this);
 	}
 
-    /**
-     * @return the indexBucketLocator
-     */
-    public IndexBucketLocator getIndexBucketLocator() {
-        return indexBucketLocator;
-    }
+	/**
+	 * @return the indexBucketLocator
+	 */
+	public IndexBucketLocator getIndexBucketLocator() {
+		return indexBucketLocator;
+	}
 
 }
