@@ -202,6 +202,36 @@ public class Import extends ToolBase {
             }
         }
         
+        
+        //load all counts and stats
+        @SuppressWarnings("unchecked")
+        Map<String, Object> stats = (Map<String, Object>) application.getMetadata("counters");
+        
+        for(Entry<String, Object> stat: stats.entrySet()){
+            String entryName = stat.getKey();
+            long amount = Long.parseLong(stat.getValue().toString());
+           
+            //zero any existing counters since we're going to need to reset them to the import values
+            Map<String, Long> counters = em.getApplicationCounters();
+            //remove any existing counter value if required
+            if(counters != null && counters.get(entryName) != null){
+                long existing = counters.get(entryName);
+            
+                em.incrementApplicationCounter(entryName, existing*-1);
+            }
+            
+            //anything that deals with collections or entities, we set to 0 since they'll be incremented during import
+            if(entryName.startsWith("application.collection") || entryName.equals("application.entities")){
+                em.incrementApplicationCounter(entryName, 1);
+                em.incrementApplicationCounter(entryName, -1);
+            }else{                
+                em.incrementApplicationCounter(entryName, amount);
+            }
+           
+        }
+        
+        
+        
 
         while (jp.nextValue() != JsonToken.END_ARRAY) {
             @SuppressWarnings("unchecked")
@@ -229,6 +259,7 @@ public class Import extends ToolBase {
         logger.info("----- End of application:" + application.getName());
         jp.close();
     }
+
 
     private String getType(Map<String, Object> entityProps) {
         return (String) entityProps.get(PROPERTY_TYPE);
