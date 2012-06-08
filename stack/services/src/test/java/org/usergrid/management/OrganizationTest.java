@@ -110,6 +110,13 @@ public class OrganizationTest {
 		assertNotNull(principal);
 		assertEquals(user.getUuid(), principal.getUuid());
 
+		UserInfo new_user = management.createAdminUser("test-user-1",
+				"Test User", "test-user-1@mockserver.com", "testpassword",
+				true, true, false);
+		assertNotNull(new_user);
+
+		management.addAdminUserToOrganization(new_user, organization2, false);
+
 	}
 
 }

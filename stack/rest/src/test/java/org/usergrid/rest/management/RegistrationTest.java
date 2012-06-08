@@ -18,6 +18,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
@@ -26,6 +27,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.rest.AbstractRestTest;
+
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class RegistrationTest extends AbstractRestTest {
 
@@ -105,6 +108,45 @@ public class RegistrationTest extends AbstractRestTest {
 		assertNotNull(node);
 		logNode(node);
 		return node;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public JsonNode postAddAdminToOrg(String organizationName, String email,
+			String password, String token) {
+		JsonNode node = null;
+
+		MultivaluedMap formData = new MultivaluedMapImpl();
+		formData.add("email", email);
+		formData.add("password", password);
+
+		node = resource()
+				.path("/management/organizations/" + organizationName
+						+ "/users").queryParam("access_token", token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_FORM_URLENCODED)
+				.post(JsonNode.class, formData);
+
+		assertNotNull(node);
+		logNode(node);
+		return node;
+	}
+
+	@Test
+	public void postAddToOrganization() throws Exception {
+
+		properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
+				"false");
+		properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
+				"false");
+		properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
+				"false");
+		properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
+				"sysadmin-1@mockserver.com");
+
+		String t = mgmtToken();
+		postAddAdminToOrg("test-organization", "test-admin@mockserver.com",
+				"password", t);
+
 	}
 
 }
