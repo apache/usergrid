@@ -22,8 +22,10 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
 import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.cli.CommandLine;
@@ -43,9 +45,7 @@ import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
-import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.entities.Application;
-import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.usergrid.tools.bean.ExportOrg;
@@ -236,7 +236,13 @@ public class Import extends ToolBase {
            
         }
         
+        //explicity import all collections
+        @SuppressWarnings("unchecked")
+        List<String> collections = (List<String>) application.getMetadata("collections");
         
+        for(String collectionName: collections){
+            em.createApplicationCollection(collectionName);
+        }
         
 
         while (jp.nextValue() != JsonToken.END_ARRAY) {
@@ -252,13 +258,14 @@ public class Import extends ToolBase {
                 logger.error(
                         "Unable to create entity.  It appears to be a duplicate",
                         de);
+                continue;
             }
-
-            catch (Exception e) {
-                logger.error("Unable to create entity " + uuid + " of type "
-                        + type
-                        + ", skipping but this may indicate a bad import...", e);
+            
+            if(em.get(uuid) == null){
+                logger.error("Holy hell, we wrote an entity and it's missing.  Entity Id was {} and type is {}", uuid, type);
+                System.exit(1);
             }
+            
             echo(entityProps);
         }
 
