@@ -928,9 +928,10 @@ usergrid.Client = (function() {
             logout();
         });
     }
+    self.handleAutoLogin = handleAutoLogin;
 
     function useSSO(){
-        if (apigeeUser() || self.use_sso=='yes'){
+        if (apigeeUser() || (self.use_sso=='true' || self.use_sso=='yes')){
             return true;
         } else {
             return false;
@@ -982,7 +983,7 @@ usergrid.Client = (function() {
     function getSSOCallback() {
         var callback = window.location.protocol+'//'+ window.location.host + window.location.pathname;
         var separatorMark = '?';
-        if (self.use_sso == 'yes') {
+        if (self.use_sso == 'true' || self.use_sso == 'yes') {
             callback = callback + separatorMark + 'use_sso=' + self.use_sso;
             separatorMark = '&';
         }
@@ -1435,7 +1436,7 @@ usergrid.Client = (function() {
           sendToSSOLoginPage();
       }
     } else if (existingAccessToken && existingUser.email) {
-      handleAutoLogin(existingUser.email, existingAccessToken);
+      self.handleAutoLogin(existingUser.email, existingAccessToken);
       return;
     }
 
