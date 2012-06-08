@@ -103,6 +103,15 @@ public class Import extends ToolBase {
         importApplications();
 
         importCollections();
+        
+        //forces the counters to flush
+        logger.info("Sleeping 35 seconds for batcher");
+        
+        Thread.sleep(35000);
+        
+        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        
+        em.incrementApplicationCounter("import.counter.batcher", 1);
     }
 
     /**
