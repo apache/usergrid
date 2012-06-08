@@ -230,14 +230,14 @@
 			<artifactId>usergrid-mongo-emulator</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.usergrid</groupId>
 			<artifactId>usergrid-rest</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<classifier>compiled-jsp</classifier>
 			<scope>test</scope>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>

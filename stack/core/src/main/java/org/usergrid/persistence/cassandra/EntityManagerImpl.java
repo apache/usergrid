@@ -2176,7 +2176,7 @@ public class EntityManagerImpl implements EntityManager,
 	public void addMapToDictionary(EntityRef entityRef, String dictionaryName,
 			Map<?, ?> elementValues) throws Exception {
 
-		if ((elementValues == null) || elementValues.isEmpty()) {
+		if ((elementValues == null) || elementValues.isEmpty() || entityRef == null) {
 			return;
 		}
 

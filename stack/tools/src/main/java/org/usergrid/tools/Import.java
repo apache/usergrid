@@ -157,6 +157,7 @@ public class Import extends ToolBase {
         }
         
         
+        
         UUID appId = managementService.importApplication(info.getUuid(),
                 application);
         
@@ -174,18 +175,19 @@ public class Import extends ToolBase {
         @SuppressWarnings("unchecked")
         Map<String, Object> dictionaries = (Map<String, Object>) application.getMetadata("dictionaries");
         
-        EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-        
-        Entity appEntity = rootEm.get(appId);
-        
-        
-        for(Entry<String, Object> dictionary: dictionaries.entrySet()){
-            @SuppressWarnings("unchecked")
-            Map<Object, Object> value = (Map<Object, Object>) dictionary.getValue();
+        if(dictionaries != null){
+            EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
             
-            em.addMapToDictionary(appEntity, dictionary.getKey(), value);
+            Entity appEntity = rootEm.get(appId);
+            
+            
+            for(Entry<String, Object> dictionary: dictionaries.entrySet()){
+                @SuppressWarnings("unchecked")
+                Map<Object, Object> value = (Map<Object, Object>) dictionary.getValue();
+                
+                em.addMapToDictionary(appEntity, dictionary.getKey(), value);
+            }
         }
-        
         
 
         while (jp.nextValue() != JsonToken.END_ARRAY) {
