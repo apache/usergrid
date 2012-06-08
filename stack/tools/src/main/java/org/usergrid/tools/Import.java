@@ -217,14 +217,14 @@ public class Import extends ToolBase {
             String entryName = stat.getKey();
             long amount = Long.parseLong(stat.getValue().toString());
            
-            //zero any existing counters since we're going to need to reset them to the import values
-            Map<String, Long> counters = em.getApplicationCounters();
-            //remove any existing counter value if required
-            if(counters != null && counters.get(entryName) != null){
-                long existing = counters.get(entryName);
-            
-                em.incrementApplicationCounter(entryName, existing*-1);
-            }
+//            //zero any existing counters since we're going to need to reset them to the import values
+//            Map<String, Long> counters = em.getApplicationCounters();
+//            //remove any existing counter value if required
+//            if(counters != null && counters.get(entryName) != null){
+//                long existing = counters.get(entryName);
+//            
+//                em.incrementApplicationCounter(entryName, existing*-1);
+//            }
             
             //anything that deals with collections or entities, we set to 0 since they'll be incremented during import
             if(entryName.startsWith("application.collection") || entryName.equals("application.entities")){
