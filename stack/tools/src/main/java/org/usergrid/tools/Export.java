@@ -120,8 +120,17 @@ public class Export extends ExportingToolBase {
 
             // Write application
             Entity nsEntity = em.get(application.getKey());
+            
+            
+            //load app counters
+           
+            Map<String, Long> entityCounters = em.getApplicationCounters();
+            
             nsEntity.setMetadata("organization", organization);
             nsEntity.setMetadata("dictionaries", dictionaries);
+            //counters for collections
+            nsEntity.setMetadata("counters", entityCounters);
+            
             jg.writeStartArray();
             jg.writeObject(nsEntity);
 
@@ -130,6 +139,8 @@ public class Export extends ExportingToolBase {
                     "collections", application.getValue()));
             collectionsJg.writeStartObject();
 
+            
+           
             Map<String, Object> metadata = em
                     .getApplicationCollectionMetadata();
             echo(JsonUtils.mapToFormattedJsonString(metadata));
