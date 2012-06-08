@@ -835,8 +835,6 @@ public class EntityManagerImpl implements EntityManager,
 			Map<String, Object> properties, UUID importId, UUID timestampUuid)
 			throws Exception {
 
-		long timestamp = getTimestampInMicros(timestampUuid);
-
 		String eType = Schema.normalizeEntityType(entityType);
 
 		boolean is_application = TYPE_APPLICATION.equals(eType);
@@ -846,8 +844,27 @@ public class EntityManagerImpl implements EntityManager,
 			return null;
 		}
 
+		long timestamp = getTimestampInMicros(timestampUuid);
+
+		UUID itemId = UUIDUtils.newTimeUUID();
+
+		if (is_application) {
+			itemId = applicationId;
+		}
+		if (importId != null) {
+			itemId = importId;
+		}
+
 		if (properties == null) {
 			properties = new TreeMap<String, Object>(CASE_INSENSITIVE_ORDER);
+		}
+
+		if (importId != null) {
+			if (isTimeBased(importId)) {
+				timestamp = UUIDUtils.getTimestampInMicros(importId);
+			} else if (properties.get(PROPERTY_CREATED) != null) {
+				timestamp = getLong(properties.get(PROPERTY_CREATED)) * 1000;
+			}
 		}
 
 		if (entityClass == null) {
@@ -883,15 +900,6 @@ public class EntityManagerImpl implements EntityManager,
 					}
 				}
 			}
-		}
-
-		UUID itemId = UUIDUtils.newTimeUUID();
-
-		if (is_application) {
-			itemId = applicationId;
-		}
-		if (importId != null) {
-			itemId = importId;
 		}
 
 		// Create collection name based on entity: i.e. "users"
@@ -955,19 +963,17 @@ public class EntityManagerImpl implements EntityManager,
 				Schema.normalizeEntityType(entityType, false));
 
 		if (importId != null) {
-			if (isTimeBased(importId)) {
-				timestamp = UUIDUtils.getTimestampInMicros(importId);
-			} else if (properties.get(PROPERTY_CREATED) != null) {
-				timestamp = getLong(properties.get(PROPERTY_CREATED)) * 1000;
+			if (properties.get(PROPERTY_CREATED) == null) {
+				properties.put(PROPERTY_CREATED, timestamp / 1000);
 			}
-		}
 
-		if (properties.get(PROPERTY_CREATED) == null) {
+			if (properties.get(PROPERTY_MODIFIED) == null) {
+				properties.put(PROPERTY_MODIFIED, timestamp / 1000);
+			}
+		} else {
 			properties.put(PROPERTY_CREATED, timestamp / 1000);
-		}
-
-		if (properties.get(PROPERTY_MODIFIED) == null) {
 			properties.put(PROPERTY_MODIFIED, timestamp / 1000);
+
 		}
 
 		// special case timestamp and published properties
