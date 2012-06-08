@@ -37,6 +37,7 @@ import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.Entity;
@@ -45,6 +46,7 @@ import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.entities.User;
+import org.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.usergrid.tools.bean.ExportOrg;
 
@@ -158,9 +160,20 @@ public class Import extends ToolBase {
         
         
         
-        UUID appId = managementService.importApplication(info.getUuid(),
-                application);
+        UUID appId = null;
         
+        try{
+            appId = managementService.importApplication(info.getUuid(), application);
+            
+        }catch(ApplicationAlreadyExistsException aaee){
+            ApplicationInfo appInfo =  managementService.getApplicationInfo(orgName+"/"+application.getName());
+            
+            if(appInfo != null){
+                appId = appInfo.getId();
+            }
+            
+        }
+               
         echo(application);
 
         EntityManager em = emf.getEntityManager(appId);
