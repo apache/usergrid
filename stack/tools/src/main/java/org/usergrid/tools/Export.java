@@ -17,6 +17,7 @@ package org.usergrid.tools;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -36,6 +37,7 @@ import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
+import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.tools.bean.ExportOrg;
 import org.usergrid.utils.JsonUtils;
 
@@ -94,11 +96,32 @@ public class Export extends ExportingToolBase {
             JsonGenerator jg = getJsonGenerator(createOutputFile("application",
                     application.getValue()));
 
+            // load the dictionary
+            EntityManager rootEm = emf
+                    .getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
+
+            Entity appEntity = rootEm.get(application.getKey());
+
+            Map<String, Object> dictionaries = new HashMap<String, Object>();
+
+            for (String dictionary : rootEm.getDictionaries(appEntity)) {
+                Map<Object, Object> dict = rootEm.getDictionaryAsMap(appEntity,
+                        dictionary);
+
+                // nothing to do
+                if (dict.isEmpty()) {
+                    continue;
+                }
+
+                dictionaries.put(dictionary, dict);
+            }
+
             EntityManager em = emf.getEntityManager(application.getKey());
 
             // Write application
             Entity nsEntity = em.get(application.getKey());
             nsEntity.setMetadata("organization", organization);
+            nsEntity.setMetadata("dictionaries", dictionaries);
             jg.writeStartArray();
             jg.writeObject(nsEntity);
 
@@ -332,7 +355,7 @@ public class Export extends ExportingToolBase {
             List<UserInfo> users = managementService
                     .getAdminUsersForOrganization(organizationName.getKey());
 
-            for(UserInfo user: users){
+            for (UserInfo user : users) {
                 exportOrg.addAdmin(user.getUsername());
             }
 
