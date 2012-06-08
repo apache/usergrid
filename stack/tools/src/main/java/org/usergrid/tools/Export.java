@@ -118,9 +118,10 @@ public class Export extends ExportingToolBase {
 
             EntityManager em = emf.getEntityManager(application.getKey());
 
-            // Write application
+            // Get application
             Entity nsEntity = em.get(application.getKey());
             
+            Set<String> collections =  em.getApplicationCollections();
             
             //load app counters
            
@@ -130,6 +131,7 @@ public class Export extends ExportingToolBase {
             nsEntity.setMetadata("dictionaries", dictionaries);
             //counters for collections
             nsEntity.setMetadata("counters", entityCounters);
+            nsEntity.setMetadata("collections", collections);
             
             jg.writeStartArray();
             jg.writeObject(nsEntity);
