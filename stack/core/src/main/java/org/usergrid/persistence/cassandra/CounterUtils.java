@@ -15,11 +15,32 @@
  ******************************************************************************/
 package org.usergrid.persistence.cassandra;
 
-import com.usergrid.count.Batcher;
-import com.usergrid.count.common.Count;
-import me.prettyprint.cassandra.serializers.*;
+import static me.prettyprint.hector.api.factory.HFactory.createColumn;
+import static me.prettyprint.hector.api.factory.HFactory.createCounterColumn;
+import static org.usergrid.persistence.Schema.DICTIONARY_COUNTERS;
+import static org.usergrid.persistence.cassandra.ApplicationCF.APPLICATION_AGGREGATE_COUNTERS;
+import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
+import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
+import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
+import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.usergrid.utils.ConversionUtils.bytebuffer;
+
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
+
+import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
+import me.prettyprint.cassandra.serializers.LongSerializer;
+import me.prettyprint.cassandra.serializers.PrefixedSerializer;
+import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.beans.HCounterColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
+
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,55 +48,49 @@ import org.usergrid.mq.Message;
 import org.usergrid.mq.cassandra.QueuesCF;
 import org.usergrid.persistence.CounterResolution;
 import org.usergrid.persistence.entities.Event;
-import org.usergrid.utils.ConversionUtils;
 
-import java.nio.ByteBuffer;
-import java.util.*;
-import java.util.Map.Entry;
-
-import static me.prettyprint.hector.api.factory.HFactory.createColumn;
-import static me.prettyprint.hector.api.factory.HFactory.createCounterColumn;
-import static org.usergrid.persistence.Schema.DICTIONARY_COUNTERS;
-import static org.usergrid.persistence.Schema.PROPERTY_EMAIL;
-import static org.usergrid.persistence.cassandra.ApplicationCF.*;
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
-import static org.usergrid.utils.ConversionUtils.bytebuffer;
+import com.usergrid.count.Batcher;
+import com.usergrid.count.common.Count;
 
 public class CounterUtils {
 
-	public static final Logger logger = LoggerFactory.getLogger(CounterUtils.class);
+	public static final Logger logger = LoggerFactory
+			.getLogger(CounterUtils.class);
 
 	public static final LongSerializer le = new LongSerializer();
 	public static final StringSerializer se = new StringSerializer();
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
 	public static final UUIDSerializer ue = new UUIDSerializer();
 
-  private String counterType = "o";
+	private String counterType = "o";
 
-    private Batcher batcher;
+	private Batcher batcher;
 
-    public void setBatcher(Batcher batcher) {
-        this.batcher = batcher;
-    }
+	public void setBatcher(Batcher batcher) {
+		this.batcher = batcher;
+	}
 
-  /**
-   * Set the type to 'new' ("n"), 'parallel' ("p"), 'old' ("o" - the default)
-   * If not one of the above, do nothing
-   * @param counterType
-   */
-  public void setCounterType(String counterType) {
-    if ( counterType == null ) return;
-    if ( "n".equals(counterType) || "p".equals(counterType) || "o".equals(counterType) ) {
-      this.counterType = counterType;
-    }
-  }
+	/**
+	 * Set the type to 'new' ("n"), 'parallel' ("p"), 'old' ("o" - the default)
+	 * If not one of the above, do nothing
+	 * 
+	 * @param counterType
+	 */
+	public void setCounterType(String counterType) {
+		if (counterType == null) {
+			return;
+		}
+		if ("n".equals(counterType) || "p".equals(counterType)
+				|| "o".equals(counterType)) {
+			this.counterType = counterType;
+		}
+	}
 
-  public boolean getIsCounterBatched() {
-    return "n".equals(counterType);
-  }
+	public boolean getIsCounterBatched() {
+		return "n".equals(counterType);
+	}
 
-    public static class AggregateCounterSelection {
+	public static class AggregateCounterSelection {
 		String name;
 		UUID userId;
 		UUID groupId;
@@ -184,15 +199,16 @@ public class CounterUtils {
 				cassandraTimestamp);
 	}
 
-	private void batchIncrementAggregateCounters(Mutator<ByteBuffer> m,
+	public void batchIncrementAggregateCounters(Mutator<ByteBuffer> m,
 			UUID applicationId, UUID userId, UUID groupId, UUID queueId,
 			String category, String name, long value, long counterTimestamp,
 			long cassandraTimestamp) {
 		for (CounterResolution resolution : CounterResolution.values()) {
-      logger.debug("BIAC for resolution {}", resolution);
+			logger.debug("BIAC for resolution {}", resolution);
 			batchIncrementAggregateCounters(m, userId, groupId, queueId,
-              category, resolution, name, value, counterTimestamp, applicationId);
-      logger.debug("DONE BIAC for resolution {}", resolution);
+					category, resolution, name, value, counterTimestamp,
+					applicationId);
+			logger.debug("DONE BIAC for resolution {}", resolution);
 		}
 		batchIncrementEntityCounter(m, applicationId, name, value,
 				cassandraTimestamp, applicationId);
@@ -225,8 +241,8 @@ public class CounterUtils {
 					getAggregateCounterRow(name, null, null, null, null,
 							resolution), resolution.round(counterTimestamp),
 					value, applicationId);
-      String currentRow = null;
-      HashSet<String> rowSet = new HashSet<String>(16);
+			String currentRow = null;
+			HashSet<String> rowSet = new HashSet<String>(16);
 			for (int i = 0; i < 16; i++) {
 
 				boolean include_user = (i & 0x01) != 0;
@@ -244,48 +260,46 @@ public class CounterUtils {
 						non_null++;
 					}
 				}
-        currentRow = getAggregateCounterRow(name, (UUID) parameters[0],
-        									(UUID) parameters[1], (UUID) parameters[2],
-        									(String) parameters[3], resolution);
+				currentRow = getAggregateCounterRow(name, (UUID) parameters[0],
+						(UUID) parameters[1], (UUID) parameters[2],
+						(String) parameters[3], resolution);
 
 				if (non_null > 0 && !rowSet.contains(currentRow)) {
-          rowSet.add(currentRow);
-					handleAggregateCounterRow(
-                  m,
-                  currentRow,
-                  resolution.round(counterTimestamp), value, applicationId);
+					rowSet.add(currentRow);
+					handleAggregateCounterRow(m, currentRow,
+							resolution.round(counterTimestamp), value,
+							applicationId);
 				}
 
 			}
 		}
 	}
 
-	private void handleAggregateCounterRow(Mutator<ByteBuffer> m,
-			String key, long column, long value, UUID applicationId) {
-    if (logger.isDebugEnabled()) {
-      logger.info("HACR: aggregateRow for app {} with key {} column {} and value {}",
-              new Object[]{applicationId, key, column, value});
-    }
-    if ( "o".equals(counterType) || "p".equals(counterType)) {
-      if (m != null) {
-        HCounterColumn<Long> c = createCounterColumn(column, value, le);
-        m.addCounter(bytebuffer(key),
-                APPLICATION_AGGREGATE_COUNTERS.toString(), c);
-      }
-    }
-    if ( "n".equals(counterType) || "p".equals(counterType)) {
-        // create and add Count
-        PrefixedSerializer ps = new PrefixedSerializer(applicationId, UUIDSerializer.get(),
-                StringSerializer.get());
-        batcher.add(new Count(APPLICATION_AGGREGATE_COUNTERS.toString(), ps.toByteBuffer(key),
-                column,
-                value));
-    }
+	private void handleAggregateCounterRow(Mutator<ByteBuffer> m, String key,
+			long column, long value, UUID applicationId) {
+		if (logger.isDebugEnabled()) {
+			logger.info(
+					"HACR: aggregateRow for app {} with key {} column {} and value {}",
+					new Object[] { applicationId, key, column, value });
+		}
+		if ("o".equals(counterType) || "p".equals(counterType)) {
+			if (m != null) {
+				HCounterColumn<Long> c = createCounterColumn(column, value, le);
+				m.addCounter(bytebuffer(key),
+						APPLICATION_AGGREGATE_COUNTERS.toString(), c);
+			}
+		}
+		if ("n".equals(counterType) || "p".equals(counterType)) {
+			// create and add Count
+			PrefixedSerializer ps = new PrefixedSerializer(applicationId,
+					UUIDSerializer.get(), StringSerializer.get());
+			batcher.add(new Count(APPLICATION_AGGREGATE_COUNTERS.toString(), ps
+					.toByteBuffer(key), column, value));
+		}
 	}
 
-	public AggregateCounterSelection getAggregateCounterSelection(
-			String name, UUID userId, UUID groupId, UUID queueId,
-			String category) {
+	public AggregateCounterSelection getAggregateCounterSelection(String name,
+			UUID userId, UUID groupId, UUID queueId, String category) {
 		return new AggregateCounterSelection(name, userId, groupId, queueId,
 				category);
 	}
@@ -310,24 +324,23 @@ public class CounterUtils {
 	public Mutator<ByteBuffer> batchIncrementEntityCounter(
 			Mutator<ByteBuffer> m, UUID entityId, String name, Long value,
 			long timestamp, UUID applicationId) {
-    if ( logger.isDebugEnabled() ) {
-      logger.debug("BIEC: Incrementing property {} of entity {} by value {}",
-              new Object[]{name, entityId, value});
-    }
-    addInsertToMutator(m, ENTITY_DICTIONARIES,
-    				key(entityId, DICTIONARY_COUNTERS), name, null, timestamp);
-		if ( "o".equals(counterType) || "p".equals(counterType)) {
-      HCounterColumn<String> c = createCounterColumn(name, value);
-            m.addCounter(bytebuffer(entityId), ENTITY_COUNTERS.toString(), c);
-    }
-    if ( "n".equals(counterType) || "p".equals(counterType)) {
-      PrefixedSerializer ps = new PrefixedSerializer(applicationId, UUIDSerializer.get(),
-                            UUIDSerializer.get());
-        batcher.add(new Count(ENTITY_COUNTERS.toString(),
-                ps.toByteBuffer(entityId),
-                name,
-                value));
-    }
+		if (logger.isDebugEnabled()) {
+			logger.debug(
+					"BIEC: Incrementing property {} of entity {} by value {}",
+					new Object[] { name, entityId, value });
+		}
+		addInsertToMutator(m, ENTITY_DICTIONARIES,
+				key(entityId, DICTIONARY_COUNTERS), name, null, timestamp);
+		if ("o".equals(counterType) || "p".equals(counterType)) {
+			HCounterColumn<String> c = createCounterColumn(name, value);
+			m.addCounter(bytebuffer(entityId), ENTITY_COUNTERS.toString(), c);
+		}
+		if ("n".equals(counterType) || "p".equals(counterType)) {
+			PrefixedSerializer ps = new PrefixedSerializer(applicationId,
+					UUIDSerializer.get(), UUIDSerializer.get());
+			batcher.add(new Count(ENTITY_COUNTERS.toString(), ps
+					.toByteBuffer(entityId), name, value));
+		}
 		return m;
 	}
 
@@ -354,27 +367,26 @@ public class CounterUtils {
 	public Mutator<ByteBuffer> batchIncrementQueueCounter(
 			Mutator<ByteBuffer> m, UUID queueId, String name, long value,
 			long timestamp, UUID applicationId) {
-    if ( logger.isDebugEnabled()) {
-      logger.debug("BIQC: Incrementing property {} of queue {} by value {}",
-              new Object[]{name, queueId, value});
-    }
-    m.addInsertion(
-        				bytebuffer(key(queueId, DICTIONARY_COUNTERS).toString()),
-        				QueuesCF.QUEUE_DICTIONARIES.toString(),
-        				createColumn(name, ByteBuffer.allocate(0), timestamp, se, be));
-    if ( "o".equals(counterType) || "p".equals(counterType)) {
-      HCounterColumn<String> c = createCounterColumn(name, value);
-      ByteBuffer keybytes = bytebuffer(queueId);
-      m.addCounter(keybytes, QueuesCF.COUNTERS.toString(), c);
-    }
-    if ( "n".equals(counterType) || "p".equals(counterType)) {
-        PrefixedSerializer ps = new PrefixedSerializer(applicationId, UUIDSerializer.get(),
-                                  UUIDSerializer.get());
-        batcher.add(new Count(QueuesCF.COUNTERS.toString(),
-                ps.toByteBuffer(queueId),
-                name,
-                value));
-    }
+		if (logger.isDebugEnabled()) {
+			logger.debug(
+					"BIQC: Incrementing property {} of queue {} by value {}",
+					new Object[] { name, queueId, value });
+		}
+		m.addInsertion(
+				bytebuffer(key(queueId, DICTIONARY_COUNTERS).toString()),
+				QueuesCF.QUEUE_DICTIONARIES.toString(),
+				createColumn(name, ByteBuffer.allocate(0), timestamp, se, be));
+		if ("o".equals(counterType) || "p".equals(counterType)) {
+			HCounterColumn<String> c = createCounterColumn(name, value);
+			ByteBuffer keybytes = bytebuffer(queueId);
+			m.addCounter(keybytes, QueuesCF.COUNTERS.toString(), c);
+		}
+		if ("n".equals(counterType) || "p".equals(counterType)) {
+			PrefixedSerializer ps = new PrefixedSerializer(applicationId,
+					UUIDSerializer.get(), UUIDSerializer.get());
+			batcher.add(new Count(QueuesCF.COUNTERS.toString(), ps
+					.toByteBuffer(queueId), name, value));
+		}
 		return m;
 	}
 
