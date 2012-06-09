@@ -229,10 +229,7 @@ public class Import extends ToolBase {
 //            }
             
             //anything that deals with collections or entities, we set to 0 since they'll be incremented during import
-            if(entryName.startsWith("application.collection") || entryName.equals("application.entities")){
-                em.incrementApplicationCounter(entryName, 1);
-                em.incrementApplicationCounter(entryName, -1);
-            }else{                
+            if(!entryName.startsWith("application.collection") && !entryName.equals("application.entities")){
                 em.incrementApplicationCounter(entryName, amount);
             }
            
