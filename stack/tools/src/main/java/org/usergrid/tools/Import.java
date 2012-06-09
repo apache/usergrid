@@ -45,10 +45,12 @@ import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.usergrid.tools.bean.ExportOrg;
+import org.usergrid.utils.JsonUtils;
 
 public class Import extends ToolBase {
 
@@ -265,6 +267,8 @@ public class Import extends ToolBase {
                 logger.error("Holy hell, we wrote an entity and it's missing.  Entity Id was {} and type is {}", uuid, type);
                 System.exit(1);
             }
+            
+            logger.info("Counts {}", JsonUtils.mapToFormattedJsonString(em.getApplicationCounters()));
             
             echo(entityProps);
         }
