@@ -23,11 +23,9 @@ usergrid.Client = (function() {
 
       if (!FORCE_PUBLIC_API && (document.domain.substring(0,9) == "localhost")) {
           self.apiUrl = LOCAL_API_URL;
-          self.apiUrl = LOCAL_API_URL;
       }
 
       if (query_params.api_url) {
-          self.apiUrl = query_params.api_url;
           self.apiUrl = query_params.api_url;
       }
 
@@ -39,9 +37,12 @@ usergrid.Client = (function() {
       self.apigee_sso_url = APIGEE_SSO_URL;
       if (query_params.apigee_sso_url) {
           self.apigee_sso_url = query_params.apigee_sso_url;
-          self.apigee_sso_url = query_params.apigee_sso_url;
       }
 
+      self.apigee_sso_profile_url = APIGEE_SSO_PROFILE_URL;
+      if (query_params.apigee_sso_profile_url) {
+          self.apigee_sso_profile_url = query_params.apigee_sso_profile_url;
+      }
 
       if (options.apiUrl) {
           self.apiUrl = options.apiUrl;
@@ -71,6 +72,9 @@ usergrid.Client = (function() {
     
     //Apigee SSO url
     var APIGEE_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
+
+    //Apigee SSO profile url
+    var APIGEE_SSO_PROFILE_URL = "https://accounts.apigee.com/accounts/my_account";
 
     //Apigee SSO Logout page
     var SSO_LOGOUT_PAGE = 'https://accounts.apigee.com/accounts/sign_out';
@@ -979,6 +983,14 @@ usergrid.Client = (function() {
         return false;
     }
     self.sendToSSOLoginPage = sendToSSOLoginPage;
+
+    function sendToSSOProfilePage() {
+        var newLoc = self.apigee_sso_profile_url + '?callback=' + getSSOCallback();
+        window.location = newLoc;
+        throw "stop!";
+        return false;
+    }
+    self.sendToSSOProfilePage = sendToSSOProfilePage;
 
     function getSSOCallback() {
         var callback = window.location.protocol+'//'+ window.location.host + window.location.pathname;

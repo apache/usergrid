@@ -3252,15 +3252,19 @@ $('#selectAllGroupMemberships').show();
     });
 
     function requestAccountSettings() {
-        $("#update-account-id").val(client.loggedInUser.uuid);
-        $("#update-account-name").val("");
-        $("#update-account-email").val("");
-        $("#old-account-password").val("");
-        $("#update-account-password").val("");
-        $("#update-account-password-repeat").val("");
-        client.requestAdminUser(displayAccountSettings,
-        function() {
-        });
+        if (client.useSSO()) {
+            client.sendToSSOProfilePage();
+        } else {
+            $("#update-account-id").val(client.loggedInUser.uuid);
+            $("#update-account-name").val("");
+            $("#update-account-email").val("");
+            $("#old-account-password").val("");
+            $("#update-account-password").val("");
+            $("#update-account-password-repeat").val("");
+            client.requestAdminUser(displayAccountSettings,
+                function() {
+            });
+        }
     }
     usergrid.console.requestAccountSettings = requestAccountSettings;
 

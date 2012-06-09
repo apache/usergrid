@@ -67,7 +67,7 @@ $(document).ready(function () {
 		//Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
 		Pages.AddPanel('fred', null, null, null, null);
 		Pages.AddPanel('organization', null, null, null, null);
-    Pages.AddPanel('console', null, null, null ,null );
+		Pages.AddPanel('console', null, null, null ,null );
 		Pages.AddPanel('application', null, null, null, usergrid.console.pageSelectApplication);
 		Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
 		Pages.AddPanel('users', null, null, null, usergrid.console.pageSelectUsers);
@@ -79,7 +79,7 @@ $(document).ready(function () {
 		Pages.AddPanel('analytics', null, null, null, usergrid.console.pageSelectAnalytics);
 		Pages.AddPanel('settings', null, null, null, usergrid.console.pageSelectSettings);
 		Pages.AddPanel('shell', null, null, null, usergrid.console.pageSelectShell);
-    Pages.AddPanel('account', "#account-link", null, null, usergrid.console.requestAccountSettings);
+		Pages.AddPanel('account', "#account-link", null, null, usergrid.console.requestAccountSettings);
 		//$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
 	}
 	
