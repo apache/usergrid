@@ -212,20 +212,20 @@ public class Import extends ToolBase {
         
         
         //load all counts and stats
-        @SuppressWarnings("unchecked")
-        Map<String, Object> stats = (Map<String, Object>) application.getMetadata("counters");
-        
-        for(Entry<String, Object> stat: stats.entrySet()){
-            String entryName = stat.getKey();
-            long amount = Long.parseLong(stat.getValue().toString());
-          
-            
-            //anything that deals with collections or entities, we set to 0 since they'll be incremented during import
-            if(!entryName.startsWith("application.collection") && !entryName.equals("application.entities")){
-                em.incrementApplicationCounter(entryName, amount);
-            }
-           
-        }
+//        @SuppressWarnings("unchecked")
+//        Map<String, Object> stats = (Map<String, Object>) application.getMetadata("counters");
+//        
+//        for(Entry<String, Object> stat: stats.entrySet()){
+//            String entryName = stat.getKey();
+//            long amount = Long.parseLong(stat.getValue().toString());
+//          
+//            
+//            //anything that deals with collections or entities, we set to 0 since they'll be incremented during import
+//            if(!entryName.startsWith("application.collection") && !entryName.equals("application.entities")){
+//                em.incrementApplicationCounter(entryName, amount);
+//            }
+//           
+//        }
         
         //explicity import all collections
         @SuppressWarnings("unchecked")
