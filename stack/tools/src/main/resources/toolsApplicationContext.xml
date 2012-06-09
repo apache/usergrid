@@ -123,7 +123,7 @@
 	<bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
 		<constructor-arg value="3" />
 		<property name="batchSubmitter" ref="batchSubmitter" />
-		<property name="batchSize" value="1" />
+		<property name="batchSize" value="0" />
 	</bean>
 
 	<bean id="batchSubmitter" class="com.usergrid.count.CassandraSubmitter">
@@ -139,7 +139,7 @@
 
 	<bean id="counterUtils" class="org.usergrid.persistence.cassandra.CounterUtils">
 		<property name="batcher" ref="simpleBatcher" />
-		<property name="counterType" value="n" /> <!-- use new couter architecture. p: parallel, o: old -->
+		<property name="counterType" value="o" /> <!-- use new couter architecture. p: parallel, o: old -->
 	</bean>
 
 

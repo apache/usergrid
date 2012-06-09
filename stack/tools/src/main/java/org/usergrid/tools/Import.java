@@ -501,9 +501,7 @@ public class Import extends ToolBase {
                         String entryId = jp.getText();
                         EntityRef entryRef = em
                                 .getRef(UUID.fromString(entryId));
-                        System.out.println(entityOwnerId + " " + connectionType
-                                + " " + entryId);
-                        // Store in DB
+                         // Store in DB
                         em.createConnection(ownerEntityRef, connectionType,
                                 entryRef);
                     }
