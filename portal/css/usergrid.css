@@ -4150,6 +4150,8 @@ a:active {
   position: relative;
   left: -15px;
   top: -15px;
+  width: 50px;
+  height: 50px;
 }
 .user-profile-picture-vert-offset {
   margin-left: 50px;
