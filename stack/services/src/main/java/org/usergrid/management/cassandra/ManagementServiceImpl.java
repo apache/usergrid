@@ -181,6 +181,7 @@ public class ManagementServiceImpl implements ManagementService {
 	public static final String PROPERTIES_ADMIN_RESETPW_URL = "usergrid.admin.resetpw.url";
 
 	public static final String PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION = "usergrid.management.admin_users_require_confirmation";
+	public static final String PROPERTIES_ORGANIZATIONS_REQUIRE_CONFIRMATION = "usergrid.management.organizations_require_confirmation";
 
 	public static final String PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS = "usergrid.management.admin_users_require_activation";
 	public static final String PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS = "usergrid.management.organizations_require_activation";
@@ -522,7 +523,8 @@ public class ManagementServiceImpl implements ManagementService {
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		properties.put("name",
 				buildAppName(application.getName(), organization));
-		Entity app = em.create(applicationId, APPLICATION_INFO, application.getProperties());
+		Entity app = em.create(applicationId, APPLICATION_INFO,
+				application.getProperties());
 
 		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
 		credentials
@@ -558,16 +560,16 @@ public class ManagementServiceImpl implements ManagementService {
 		Results results = em.getCollection(em.getApplicationRef(), "groups",
 				null, 10000, Level.ALL_PROPERTIES, false);
 		for (Entity entity : results.getEntities()) {
-		    
-		    //TODO T.N. temporary hack to deal with duplicate orgs.  Revert this commit after migration
-		    String path = (String) entity.getProperty("path");
-		    
-		    if(organizations.containsValue(path)){
-		        path += "DUPLICATE";
-		    }
-		    
-			organizations.put(entity.getUuid(),
-					path);
+
+			// TODO T.N. temporary hack to deal with duplicate orgs. Revert this
+			// commit after migration
+			String path = (String) entity.getProperty("path");
+
+			if (organizations.containsValue(path)) {
+				path += "DUPLICATE";
+			}
+
+			organizations.put(entity.getUuid(), path);
 		}
 		return organizations;
 	}
@@ -717,7 +719,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 	@Override
 	public UserInfo createAdminFromPrexistingPassword(User user,
-			String precypheredPassword, String hashType, boolean sendEmail) throws Exception {
+			String precypheredPassword, String hashType, boolean sendEmail)
+			throws Exception {
 		emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
 
@@ -1071,7 +1074,7 @@ public class ManagementServiceImpl implements ManagementService {
 		CredentialsInfo credentialsInfo = (CredentialsInfo) em
 				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
 						"password");
-	
+
 		if (checkPassword(password, credentialsInfo)) {
 			userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
 			if (!userInfo.isActivated()) {
@@ -1313,9 +1316,9 @@ public class ManagementServiceImpl implements ManagementService {
 		em.addToCollection(
 				new SimpleEntityRef(Group.ENTITY_TYPE, organization.getUuid()),
 				"users", new SimpleEntityRef(User.ENTITY_TYPE, user.getUuid()));
-		
-		if(email){
-		    sendAdminUserInvitedEmail(user, organization);
+
+		if (email) {
+			sendAdminUserInvitedEmail(user, organization);
 		}
 	}
 
@@ -1836,6 +1839,11 @@ public class ManagementServiceImpl implements ManagementService {
 				.getProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION));
 	}
 
+	public boolean newOrganizationsRequireConfirmation() {
+		return parseBoolean(properties
+				.getProperty(PROPERTIES_ORGANIZATIONS_REQUIRE_CONFIRMATION));
+	}
+
 	public boolean notifySysAdminOfNewAdminUsers() {
 		return parseBoolean(properties
 				.getProperty(PROPERTIES_NOTIFY_SYSADMIN_OF_NEW_ADMIN_USERS));
@@ -1892,7 +1900,7 @@ public class ManagementServiceImpl implements ManagementService {
 								hashMap("organization_name",
 										organization.getName()),
 								PROPERTIES_EMAIL_ORGANIZATION_CONFIRMED_AWAITING_ACTIVATION));
-			} else {
+			} else if (newOrganizationsRequireConfirmation() ){
 				sendOrganizationEmail(
 						organization,
 						"Organization Account Confirmation",
@@ -1902,6 +1910,9 @@ public class ManagementServiceImpl implements ManagementService {
 										"confirmation_url", activation_url),
 								PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION));
 				sendSysAdminNewOrganizationActivatedNotificationEmail(organization);
+			} else {
+				activateOrganization(organization, false);
+				sendSysAdminNewOrganizationActivatedNotificationEmail(organization);				
 			}
 		} catch (Exception e) {
 			logger.error(
@@ -2446,7 +2457,7 @@ public class ManagementServiceImpl implements ManagementService {
 		CredentialsInfo credentialsInfo = (CredentialsInfo) em
 				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
 						"password");
-		
+
 		if (checkPassword(password, credentialsInfo)) {
 			if (!user.activated()) {
 				throw new UnactivatedAdminUserException();
@@ -2459,8 +2470,6 @@ public class ManagementServiceImpl implements ManagementService {
 
 		return null;
 	}
-
-	
 
 	public String getPasswordResetTokenForAppUser(UUID applicationId,
 			UUID userId) throws Exception {
