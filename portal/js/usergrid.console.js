@@ -52,7 +52,7 @@ function usergrid_console_app(Pages) {
 
   String.prototype.endsWith = function(s) {
     return this.length >= s.length
-    && this.substr(this.length - s.length) == s;
+      && this.substr(this.length - s.length) == s;
   };
 
   function initOrganizationVars() {
@@ -90,13 +90,14 @@ function usergrid_console_app(Pages) {
   function showPanel(page) {
     var p = $(page);
     $("#console-panels").children().each(function() {
-      if ($(this).attr("id") == p.attr("id")) {
+        if ($(this).attr("id") == p.attr("id")) {
         $(this).show();
-      } else {
+        } else {
         $(this).hide();
-      }
-    });
+        }
+        });
   }
+
   function initConsoleFrame(){
     $("#console-panel iframe").attr("src", url);
   }
@@ -105,22 +106,22 @@ function usergrid_console_app(Pages) {
     var bearerToken = localStorage.getObject('usergrid_access_token');
     var app_id = current_application_id;
     if (typeof current_application_id != 'string') {
-        app_id = '';
+      app_id = '';
     }
     var bearerTokenJson = JSON.stringify(
-      [{
+        [{
         "type":"custom_token",
         "name":"Authorization",
         "value":"Bearer " + bearerToken,
         "style":"header"
-      },
-      {
+        },
+        {
         "type":"custom_token",
         "name":"app_id",
         "value":app_id,
         "style":"template"
-      }]
-    );
+        }]
+        );
     var fred = encodeURIComponent(bearerToken);
     var bearerTokenString = encodeURIComponent(bearerTokenJson);
     var url = 'https://apigee.com/console/usergrid?v=2&embedded=true&auth=' + bearerTokenString;
@@ -131,13 +132,13 @@ function usergrid_console_app(Pages) {
   function showPanelContent(panelDiv, contentDiv) {
     var cdiv = $(contentDiv);
     $(panelDiv).children(".panel-content").each(function() {
-      var el = $(this);
-      if (el.attr("id") == cdiv.attr("id")) {
+        var el = $(this);
+        if (el.attr("id") == cdiv.attr("id")) {
         el.show();
-      } else {
+        } else {
         el.hide();
-      }
-    });
+        }
+        });
   }
 
   function selectTabButton(link) {
@@ -241,26 +242,26 @@ function usergrid_console_app(Pages) {
 
   $.fn.loadEntityCollectionsListWidget = function() {
     this.each(function() {
-      var entityType = $(this).dataset('entity-type');
-      var entityUIPlugin = "usergrid_collections_" + entityType
-      + "_list_item";
-      if (!$(this)[entityUIPlugin]) {
+        var entityType = $(this).dataset('entity-type');
+        var entityUIPlugin = "usergrid_collections_" + entityType
+        + "_list_item";
+        if (!$(this)[entityUIPlugin]) {
         entityUIPlugin = "usergrid_collections_entity_list_item";
-      }
-      $(this)[entityUIPlugin]();
-    });
+        }
+        $(this)[entityUIPlugin]();
+        });
   };
 
   $.fn.loadEntityCollectionsDetailWidget = function() {
     this.each(function() {
-      var entityType = $(this).dataset('entity-type');
-      var entityUIPlugin = "usergrid_collections_" + entityType
-      + "_detail";
-      if (!$(this)[entityUIPlugin]) {
+        var entityType = $(this).dataset('entity-type');
+        var entityUIPlugin = "usergrid_collections_" + entityType
+        + "_detail";
+        if (!$(this)[entityUIPlugin]) {
         entityUIPlugin = "usergrid_collections_entity_detail";
-      }
-      $(this)[entityUIPlugin]();
-    });
+        }
+        $(this)[entityUIPlugin]();
+        });
   };
 
   function getQueryResultEntity(id) {
@@ -295,12 +296,12 @@ function usergrid_console_app(Pages) {
           }
 
           t += "<div class=\"query-result-row entity_list_item\" id=\"query-result-row-"
-          + i
-          + "\" data-entity-type=\""
-          + entity.type
-          + "\" data-entity-id=\"" + entity.uuid + "\" data-collection-path=\""
-          + entity_path
-          + "\"></div>";
+            + i
+            + "\" data-entity-type=\""
+            + entity.type
+            + "\" data-entity-id=\"" + entity.uuid + "\" data-collection-path=\""
+            + entity_path
+            + "\"></div>";
         }
 
         $("#query-response-table").html(t);
@@ -311,14 +312,14 @@ function usergrid_console_app(Pages) {
 
         var entity_path = (entity.metadata || {}).path;
         if ($.isEmptyObject(entity_path)) {
-            entity_path = path + "/" + entity.uuid;
+          entity_path = path + "/" + entity.uuid;
         }
 
         t = '<div class="query-result-row entity_detail" id="query-result-detail" data-entity-type="'
-        + entity.type
-        + '" data-entity-id="' + entity.uuid + '" data-collection-path="'
-        + entity_path
-        + '"></div>';
+          + entity.type
+          + '" data-entity-id="' + entity.uuid + '" data-collection-path="'
+          + entity_path
+          + '"></div>';
 
         $('#query-response-table').html(t);
         $('#query-result-detail').loadEntityCollectionsDetailWidget();
@@ -342,20 +343,20 @@ function usergrid_console_app(Pages) {
         $('#query-next-prev').hide();
       }
 
-      } else if (response.entities && (response.entities.length == 0) && !response.data) {
-        $('#query-response-table').html('<div id="query-response-message">No entities in collection at path ' + $('#query-path').val() + '</div>');
-          $('#query-next-prev').hide();
+    } else if (response.entities && (response.entities.length == 0) && !response.data) {
+      $('#query-response-table').html('<div id="query-response-message">No entities in collection at path ' + $('#query-path').val() + '</div>');
+      $('#query-next-prev').hide();
 
       // This is a hack, will be fixed in API
-      } else if (response.error && (
-      (response.error.exception == "org.usergrid.services.exceptions.ServiceResourceNotFoundException: Service resource not found") ||
-      (response.error.exception == "java.lang.IllegalArgumentException: Not a valid entity value type or null: null"))) {
-        $('#query-response-table').html("<div id=\"query-response-message\">No entities returned for query</div>");
-        $('#query-next-prev').hide();
-      } else {
-        $('#query-response-table').html('<pre class="query-response-json">' + JSON.stringify(response, null, "  ") + '</pre>');
-        $('#query-next-prev').hide();
-      }
+    } else if (response.error && (
+          (response.error.exception == "org.usergrid.services.exceptions.ServiceResourceNotFoundException: Service resource not found") ||
+          (response.error.exception == "java.lang.IllegalArgumentException: Not a valid entity value type or null: null"))) {
+      $('#query-response-table').html("<div id=\"query-response-message\">No entities returned for query</div>");
+      $('#query-next-prev').hide();
+    } else {
+      $('#query-response-table').html('<pre class="query-response-json">' + JSON.stringify(response, null, "  ") + '</pre>');
+      $('#query-next-prev').hide();
+    }
   }
 
   function doQueryPrevious() {
@@ -374,18 +375,18 @@ function usergrid_console_app(Pages) {
     var qpath = $('#query-path').val();
     var ql = $("#query-ql").val();
     query = new client.Query(client.currentOrganization.uuid + "/" + current_application_id, qpath, ql, {},
-    function(data) {
-      displayQueryResponse(data);
-      var msg = "Web service completed successfully";
-      if ((data || {}).duration) {
-          msg += " in " + data.duration + "ms at " + new Date(data.timestamp);
-      }
-      showQueryStatus(msg);
-    },
-    function(data) {
-      showQueryStatus("Web service failed: " + data.textStatus, "error");
-    }
-    );
+        function(data) {
+        displayQueryResponse(data);
+        var msg = "Web service completed successfully";
+        if ((data || {}).duration) {
+        msg += " in " + data.duration + "ms at " + new Date(data.timestamp);
+        }
+        showQueryStatus(msg);
+        },
+        function(data) {
+        showQueryStatus("Web service failed: " + data.textStatus, "error");
+        }
+        );
     query.send(method, data);
   }
 
@@ -491,7 +492,7 @@ function usergrid_console_app(Pages) {
 
   $('#query-source').keypress(function(event) {
     if (event.keyCode == 13) {
-      validateQuerySource();
+    validateQuerySource();
     }
   });
 
@@ -501,7 +502,7 @@ function usergrid_console_app(Pages) {
       if (result) {
         showQueryStatus('JSON is valid!');
         $('#query-source').val(
-        JSON.stringify(result, null, "  "));
+            JSON.stringify(result, null, "  "));
         return result;
       }
     } catch(e) {
@@ -517,19 +518,20 @@ function usergrid_console_app(Pages) {
   });
 
   $('#button-clear-path').click(function(event) {
-    $('#query-path').val("");
-    return false;
-  });
+      $('#query-path').val("");
+      return false;
+      });
 
   $('#button-clear-ql').click(function(event) {
-    $('#query-ql').val("");
-    return false;
-  });
+      $('#query-ql').val("");
+      return false;
+      });
 
   window.usergrid.console.doChildClick = function(event) {
     var path = new String($('#query-path').val());
-    if (!path.endsWith("/"))
-    path += "/";
+    if (!path.endsWith("/")) {
+      path += "/";
+    }
     path += event.target.innerText;
     $('#query-path').val(path);
   };
@@ -546,7 +548,7 @@ function usergrid_console_app(Pages) {
     indexes = null;
     doBuildIndexMenu();
     client.requestCollectionIndexes(current_application_id, qpath,
-    function(response) {
+      function(response) {
       if (response && response.data) {
         indexes = response.data;
       }
@@ -560,8 +562,8 @@ function usergrid_console_app(Pages) {
 
     var items = $('#query-response-table input[id^=queryResultItem]:checked');
     if(!items.length){
-        alertModal("Please, first select the entities you want to delete.");
-        return;
+      alertModal("Please, first select the entities you want to delete.");
+      return;
     }
 
     confirmDelete(function(){
@@ -569,7 +571,7 @@ function usergrid_console_app(Pages) {
         var entityId = $(this).attr('value');
         var path = $(this).attr('name');
         client.deleteEntity(current_application_id, entityId, path, doQueryGet,
-        function() {
+          function() {
           alertModal("Unable to delete entity", client.getLastErrorMessage(entityId));
         });
       });
@@ -706,6 +708,7 @@ function usergrid_console_app(Pages) {
     var size = size || 50;
     return 'https://secure.gravatar.com/avatar/' + MD5(email) + '?d=identicon&s=' + size;
   }
+
   function displayAdminFeed(response) {
 
     var sectionActivities = $('#organization-feed-table');
@@ -765,11 +768,12 @@ function usergrid_console_app(Pages) {
       $('#organization-panel-key').html(response.credentials.client_id);
       $('#organization-panel-secret').html(response.credentials.client_secret);
       organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
-    },
-    function() {
-      $('#organization-panel-key').html('<div class="alert">Unable to load...</div>');
-      $('#organization-panel-secret').html('<div class="alert">Unable to load...</div>');
-    });
+      },
+      function() {
+        $('#organization-panel-key').html('<div class="alert">Unable to load...</div>');
+        $('#organization-panel-secret').html('<div class="alert">Unable to load...</div>');
+      }
+    );
   }
   window.usergrid.console.newOrganizationCredentials = newOrganizationCredentials;
 
@@ -785,7 +789,7 @@ function usergrid_console_app(Pages) {
     if (o.val().length > max || o.val().length < min) {
       o.addClass('ui-state-error');
       updateTips("Length of " + n + " must be between " + min
-      + " and " + max + ".");
+          + " and " + max + ".");
       return false;
     } else {
       return true;
@@ -908,12 +912,12 @@ function usergrid_console_app(Pages) {
 
     $.each(a, function() {
       if (o[this.name]) {
-        if (!o[this.name].push) {
-          o[this.name] = [o[this.name]];
-        }
-        o[this.name].push(this.value || '');
+      if (!o[this.name].push) {
+      o[this.name] = [o[this.name]];
+      }
+      o[this.name].push(this.value || '');
       } else {
-        o[this.name] = this.value || '';
+      o[this.name] = this.value || '';
       }
     });
 
@@ -937,11 +941,11 @@ function usergrid_console_app(Pages) {
 
     if (bValid) {
       client.createApplication(form.serializeObject(), requestApplications, function() {
-          closeErrorMessage = function() {
-            $('#home-messages').hide();
-          };
-          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
-          $('#home-messages').text("Unable to create application: " + client.getLastErrorMessage(name)).prepend(closebutton).addClass('alert-error').show();
+        closeErrorMessage = function() {
+          $('#home-messages').hide();
+        };
+        var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+        $('#home-messages').text("Unable to create application: " + client.getLastErrorMessage(name)).prepend(closebutton).addClass('alert-error').show();
       });
       $(this).modal('hide');
     }
@@ -957,7 +961,7 @@ function usergrid_console_app(Pages) {
     if (bValid) {
       var data = form.serializeObject();
       client.createAdmin(data, requestAdmins, function () {
-          alertModal("Unable to create admin", client.getLastErrorMessage(data.email));
+        alertModal("Unable to create admin", client.getLastErrorMessage(data.email));
       });
       $(this).modal('hide');
     }
@@ -970,12 +974,12 @@ function usergrid_console_app(Pages) {
     var new_organization_name = $('#new-organization-name');
 
     var bValid = checkLength2(new_organization_name, 4, 80)
-        && checkRegexp2(new_organization_name, organizatioNameRegex, organizationNameAllowedCharsMessage);
+      && checkRegexp2(new_organization_name, organizatioNameRegex, organizationNameAllowedCharsMessage);
 
     if (bValid) {
       var data = form.serializeObject();
       client.createOrganization(data,requestOrganizations, function() {
-          alertModal("Unable to create organization", client.getLastErrorMessage(data.name));
+        alertModal("Unable to create organization", client.getLastErrorMessage(data.name));
       });
       $(this).modal('hide');
     }
@@ -1021,12 +1025,13 @@ function usergrid_console_app(Pages) {
           };
           var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
           $('#users-messages')
-            .text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'))
-            .prepend(closebutton)
-            .removeClass()
-            .addClass('alert alert-error')
-            .show();
-        });
+          .text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'))
+          .prepend(closebutton)
+          .removeClass()
+          .addClass('alert alert-error')
+          .show();
+        }
+      );
 
       $(this).modal('hide');
     }
@@ -1040,38 +1045,39 @@ function usergrid_console_app(Pages) {
     var new_role_title = $('#new-role-title');
 
     var bValid = checkLength2(new_role_name, 1, 80)
-        && checkRegexp2(new_role_name, usernameRegex, usernameAllowedCharsMessage)
-        && checkLength2(new_role_title, 1, 80)
-        && checkRegexp2(new_role_title,titleRegex, titleAllowedCharsMessage);
+      && checkRegexp2(new_role_name, usernameRegex, usernameAllowedCharsMessage)
+      && checkLength2(new_role_title, 1, 80)
+      && checkRegexp2(new_role_title,titleRegex, titleAllowedCharsMessage);
 
     if (bValid) {
       var data = form.serializeObject();
       client.createRole(current_application_id, data,
-      function() {
-        requestRoles();
-        closeErrorMessage = function() {
-          $('#roles-messages').hide();
-        };
-        var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
-        $('#roles-messages')
-          .text("Role created successfully.")
-          .prepend(closebutton)
-          .removeClass()
-          .addClass('alert alert-warning')
-          .show();
-      },
-      function() {
-        closeErrorMessage = function() {
-          $('#roles-messages').hide();
-        };
-        var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
-        $('#roles-messages')
-          .text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'))
-          .prepend(closebutton)
-          .removeClass()
-          .addClass('alert alert-error')
-          .show();
-      });
+        function() {
+          requestRoles();
+          closeErrorMessage = function() {
+            $('#roles-messages').hide();
+          };
+          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+          $('#roles-messages')
+            .text("Role created successfully.")
+            .prepend(closebutton)
+            .removeClass()
+            .addClass('alert alert-warning')
+            .show();
+          },
+          function() {
+            closeErrorMessage = function() {
+            $('#roles-messages').hide();
+          };
+          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+          $('#roles-messages')
+            .text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'))
+            .prepend(closebutton)
+            .removeClass()
+            .addClass('alert alert-error')
+            .show();
+        }
+      );
 
       $(this).modal('hide');
     }
@@ -1084,36 +1090,37 @@ function usergrid_console_app(Pages) {
     var new_collection_name = $('#new-collection-name');
 
     var bValid = checkLength2(new_collection_name, 4, 80)
-        && checkRegexp2(new_collection_name, alphaNumRegex, alphaNumAllowedCharsMessage);
+      && checkRegexp2(new_collection_name, alphaNumRegex, alphaNumAllowedCharsMessage);
 
     if (bValid) {
       var data = form.serializeObject();
       client.createCollection(current_application_id, data,
-      function() {
-        requestCollections();
-        closeErrorMessage = function() {
-          $('#collections-messages').hide();
-        };
-        var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
-        $('#collections-messages')
-          .text("Collection created successfully.")
-          .prepend(closebutton)
-          .removeClass()
-          .addClass('alert alert-warning')
-          .show();
-      },
-      function() {
-        closeErrorMessage = function() {
-          $('#collections-messages').hide();
-        };
-        var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
-        $('#collections-messages')
-          .text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'))
-          .prepend(closebutton)
-          .removeClass()
-          .addClass('alert alert-error')
-          .show();
-      });
+        function() {
+          requestCollections();
+          closeErrorMessage = function() {
+            $('#collections-messages').hide();
+          };
+          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+          $('#collections-messages')
+            .text("Collection created successfully.")
+            .prepend(closebutton)
+            .removeClass()
+            .addClass('alert alert-warning')
+            .show();
+        },
+        function() {
+          closeErrorMessage = function() {
+            $('#collections-messages').hide();
+          };
+          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+          $('#collections-messages')
+            .text("Unable to create user: " + client.getLastErrorMessage('An internal error occured.'))
+            .prepend(closebutton)
+            .removeClass()
+            .addClass('alert alert-error')
+            .show();
+        }
+      );
 
       $(this).modal('hide');
     }
@@ -1137,15 +1144,15 @@ function usergrid_console_app(Pages) {
         function() {
           requestGroups();
           closeErrorMessage = function() {
-            $('#groups-messages').hide();
-          };
-          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
-          $('#groups-messages')
-            .text("Group created successfully.")
-            .prepend(closebutton)
-            .removeClass()
-            .addClass('alert alert-warning')
-            .show();
+          $('#groups-messages').hide();
+        };
+        var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+        $('#groups-messages')
+          .text("Group created successfully.")
+          .prepend(closebutton)
+          .removeClass()
+          .addClass('alert alert-warning')
+          .show();
         },
         function() {
           closeErrorMessage = function() {
@@ -1208,7 +1215,7 @@ function usergrid_console_app(Pages) {
     var bValid = checkLength2(roleIdField, 1, 80)
       && checkRegexp2(roleIdField, usernameRegex, usernameAllowedCharsMessage)
 
-    var username = $('#search-roles-user-name-input').val();
+      var username = $('#search-roles-user-name-input').val();
     if (bValid) {
       client.addUserToRole(current_application_id, current_role_id, username,
         function() {pageSelectRoleUsers(current_role_id, current_role_name);},
@@ -1229,7 +1236,7 @@ function usergrid_console_app(Pages) {
     var bValid = checkLength2(roleIdField, 1, 80)
       && checkRegexp2(roleIdField, pathRegex, roleAllowedCharsMessage)
 
-    var username = $('#role-form-username').val();
+      var username = $('#role-form-username').val();
     var roleId = $('#search-role-name-input').val();
     // role may have a preceding or trailing slash, remove it
     roleId = roleId.replace('/','');
@@ -1253,13 +1260,13 @@ function usergrid_console_app(Pages) {
     }
 
     confirmDelete(function(){
-      items.each(function() {
-        var roleId = $(this).attr("value");
-        client.removeUserFromRole(current_application_id, username, roleId, function() {pageSelectUserPermissions (username);}, function() {
-          alertModal("Error","Unable to remove user from role: " + client.getLastErrorMessage('An internal error occured'));
+        items.each(function() {
+          var roleId = $(this).attr("value");
+          client.removeUserFromRole(current_application_id, username, roleId, function() {pageSelectUserPermissions (username);}, function() {
+            alertModal("Error","Unable to remove user from role: " + client.getLastErrorMessage('An internal error occured'));
+            });
+          });
         });
-      });
-    });
   }
   window.usergrid.console.deleteUsersFromRoles = deleteUsersFromRoles;
 
@@ -1267,17 +1274,17 @@ function usergrid_console_app(Pages) {
     var items = $('#role-users input[class^=userRoleItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the users you want to delete from this role.")
-      return;
+        return;
     }
 
     confirmDelete(function(){
-      items.each(function() {
-        var username = $(this).attr("value");
-        client.removeUserFromRole(current_application_id, username, roleId, function() {pageSelectRoleUsers (roleId, rolename);}, function() {
-          alertModal("Unable to remove user from role", client.getLastErrorMessage("An internal error occured"));
+        items.each(function() {
+          var username = $(this).attr("value");
+          client.removeUserFromRole(current_application_id, username, roleId, function() {pageSelectRoleUsers (roleId, rolename);}, function() {
+            alertModal("Unable to remove user from role", client.getLastErrorMessage("An internal error occured"));
+            });
+          });
         });
-      });
-    });
   }
   window.usergrid.console.deleteRoleFromUser = deleteRoleFromUser;
 
@@ -1285,17 +1292,17 @@ function usergrid_console_app(Pages) {
     var items = $('#user-panel-memberships input[class^=userGroupItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the groups you want to delete for this user.")
-      return;
+        return;
     }
 
     confirmDelete(function(){
-      items.each(function() {
-        var groupId = $(this).attr("value");
-        client.removeUserFromGroup(current_application_id, groupId, username, function() {pageSelectUserGroups (username);}, function() {
-          alertModal("Unable to remove user from role", client.getLastErrorMessage("An internal error occured"));
+        items.each(function() {
+          var groupId = $(this).attr("value");
+          client.removeUserFromGroup(current_application_id, groupId, username, function() {pageSelectUserGroups (username);}, function() {
+            alertModal("Unable to remove user from role", client.getLastErrorMessage("An internal error occured"));
+            });
+          });
         });
-      });
-    });
   }
   window.usergrid.console.removeUserFromGroup = removeUserFromGroup;
 
@@ -1307,13 +1314,13 @@ function usergrid_console_app(Pages) {
     }
 
     confirmDelete(function(){
-      items.each(function() {
-        var username = $(this).attr("value");
-        client.removeUserFromGroup(current_application_id, groupId, username, function() {pageSelectGroupMemberships(groupId);}, function() {
-          alertModal("Unable to remove user from role", client.getLastErrorMessage("An internal error occured"));
+        items.each(function() {
+          var username = $(this).attr("value");
+          client.removeUserFromGroup(current_application_id, groupId, username, function() {pageSelectGroupMemberships(groupId);}, function() {
+            alertModal("Unable to remove user from role", client.getLastErrorMessage("An internal error occured"));
+            });
+          });
         });
-      });
-    });
   }
   window.usergrid.console.removeGroupFromUser = removeGroupFromUser;
 
@@ -1370,11 +1377,12 @@ function usergrid_console_app(Pages) {
     data.addRows(rows);
 
     new google.visualization.PieChart(
-    document.getElementById('application-panel-entity-graph')).
-    draw(data, {
-      is3D: true,
-      backgroundColor: backgroundGraphColor
-    });
+      document.getElementById('application-panel-entity-graph')).
+      draw(data, {
+        is3D: true,
+        backgroundColor: backgroundGraphColor
+      }
+    );
 
     $('#application-panel #application-panel-text').html(t);
   }
@@ -1390,119 +1398,120 @@ function usergrid_console_app(Pages) {
     var counter_names = ["application.entities", "application.request.download", "application.request.time", "application.request.upload"];
 
     client.requestApplicationCounters(current_application_id, start_timestamp, end_timestamp, resolution, counter_names, function(response) {
-      var usage_counters = response.counters;
+        var usage_counters = response.counters;
 
-      if (!usage_counters) {
+        if (!usage_counters) {
+          $("#application-entities-timeline").html("");
+          $("#application-cpu-time").html("");
+          $("#application-data-uploaded").html("");
+          $("#application-data-downloaded").html("");
+          return;
+        }
+
+        var graph_width = 400;
+        var graph_height = 100;
+        var data = new google.visualization.DataTable();
+        data.addColumn('date', 'Time');
+        data.addColumn('number', 'Entities');
+        data.addRows(15);
+
+        for (var i in usage_counters[0].values) {
+        data.setCell(parseInt(i), 0, new Date(usage_counters[0].values[i].timestamp));
+        data.setCell(parseInt(i), 1, usage_counters[0].values[i].value);
+        }
+
+        new google.visualization.LineChart(document.getElementById('application-entities-timeline')).draw(data, {
+          title: "Entities",
+          titlePosition: "in",
+          titleTextStyle: {color: 'black', fontName: 'Arial', fontSize: 18},
+          width: graph_width,
+          height: graph_height,
+          backgroundColor: backgroundGraphColor,
+          legend: "none",
+          hAxis: {textStyle: {color:"transparent", fontSize: 1}},
+          vAxis: {textStyle: {color:"transparent", fontSize: 1}}
+        });
+
+        data = new google.visualization.DataTable();
+        data.addColumn('date', 'Time');
+        data.addColumn('number', 'CPU');
+        data.addRows(15);
+
+        for (var i in usage_counters[2].values) {
+          data.setCell(parseInt(i), 0, new Date(usage_counters[2].values[i].timestamp));
+          data.setCell(parseInt(i), 1, usage_counters[2].values[i].value);
+        }
+
+        new google.visualization.LineChart(document.getElementById('application-cpu-time')).draw(data, {
+          title: "CPU Time Used",
+          titlePosition: "in",
+          titleTextStyle: {color: 'black', fontName: 'Arial', fontSize: 18},
+          width: graph_width,
+          height: graph_height,
+          backgroundColor: backgroundGraphColor,
+          legend: "none",
+          hAxis: {textStyle: {color:"transparent", fontSize: 1}},
+          vAxis: {textStyle: {color:"transparent", fontSize: 1}}
+        });
+
+        data = new google.visualization.DataTable();
+        data.addColumn('date', 'Time');
+        data.addColumn('number', 'Uploaded');
+        data.addRows(15);
+
+        for (var i in usage_counters[3].values) {
+          data.setCell(parseInt(i), 0, new Date(usage_counters[3].values[i].timestamp));
+          data.setCell(parseInt(i), 1, usage_counters[3].values[i].value);
+        }
+
+        new google.visualization.LineChart(document.getElementById('application-data-uploaded')).draw(data, {
+          title: "Bytes Uploaded",
+          titlePosition: "in",
+          titleTextStyle: {color: 'black', fontName: 'Arial', fontSize: 18},
+          width: graph_width,
+          height: graph_height,
+          backgroundColor: backgroundGraphColor,
+          legend: "none",
+          hAxis: {textStyle: {color:"transparent", fontSize: 1}},
+          vAxis: {textStyle: {color:"transparent", fontSize: 1}}
+        });
+
+        data = new google.visualization.DataTable();
+        data.addColumn('date', 'Time');
+        data.addColumn('number', 'Downloaded');
+        data.addRows(15);
+
+        for (var i in usage_counters[1].values) {
+          data.setCell(parseInt(i), 0, new Date(usage_counters[1].values[i].timestamp));
+          data.setCell(parseInt(i), 1, usage_counters[1].values[i].value);
+        }
+
+        new google.visualization.LineChart(document.getElementById('application-data-downloaded')).draw(data, {
+          title: "Bytes Downloaded",
+          titlePosition: "in",
+          titleTextStyle: {color: 'black', fontName: 'Arial', fontSize: 18},
+          width: graph_width,
+          height: graph_height,
+          backgroundColor: backgroundGraphColor,
+          legend: "none",
+          hAxis: {textStyle: {color:"transparent", fontSize: 1}},
+          vAxis: {textStyle: {color:"transparent", fontSize: 1}}
+        });
+      },
+      function() {
         $("#application-entities-timeline").html("");
         $("#application-cpu-time").html("");
         $("#application-data-uploaded").html("");
         $("#application-data-downloaded").html("");
-        return;
       }
-
-      var graph_width = 400;
-      var graph_height = 100;
-      var data = new google.visualization.DataTable();
-      data.addColumn('date', 'Time');
-      data.addColumn('number', 'Entities');
-      data.addRows(15);
-
-      for (var i in usage_counters[0].values) {
-        data.setCell(parseInt(i), 0, new Date(usage_counters[0].values[i].timestamp));
-        data.setCell(parseInt(i), 1, usage_counters[0].values[i].value);
-      }
-
-      new google.visualization.LineChart(document.getElementById('application-entities-timeline')).draw(data, {
-        title: "Entities",
-        titlePosition: "in",
-        titleTextStyle: {color: 'black', fontName: 'Arial', fontSize: 18},
-        width: graph_width,
-        height: graph_height,
-        backgroundColor: backgroundGraphColor,
-        legend: "none",
-        hAxis: {textStyle: {color:"transparent", fontSize: 1}},
-        vAxis: {textStyle: {color:"transparent", fontSize: 1}}
-      });
-
-      data = new google.visualization.DataTable();
-      data.addColumn('date', 'Time');
-      data.addColumn('number', 'CPU');
-      data.addRows(15);
-
-      for (var i in usage_counters[2].values) {
-        data.setCell(parseInt(i), 0, new Date(usage_counters[2].values[i].timestamp));
-        data.setCell(parseInt(i), 1, usage_counters[2].values[i].value);
-      }
-
-      new google.visualization.LineChart(document.getElementById('application-cpu-time')).draw(data, {
-        title: "CPU Time Used",
-        titlePosition: "in",
-        titleTextStyle: {color: 'black', fontName: 'Arial', fontSize: 18},
-        width: graph_width,
-        height: graph_height,
-        backgroundColor: backgroundGraphColor,
-        legend: "none",
-        hAxis: {textStyle: {color:"transparent", fontSize: 1}},
-        vAxis: {textStyle: {color:"transparent", fontSize: 1}}
-      });
-
-      data = new google.visualization.DataTable();
-      data.addColumn('date', 'Time');
-      data.addColumn('number', 'Uploaded');
-      data.addRows(15);
-
-      for (var i in usage_counters[3].values) {
-        data.setCell(parseInt(i), 0, new Date(usage_counters[3].values[i].timestamp));
-        data.setCell(parseInt(i), 1, usage_counters[3].values[i].value);
-      }
-
-      new google.visualization.LineChart(document.getElementById('application-data-uploaded')).draw(data, {
-        title: "Bytes Uploaded",
-        titlePosition: "in",
-        titleTextStyle: {color: 'black', fontName: 'Arial', fontSize: 18},
-        width: graph_width,
-        height: graph_height,
-        backgroundColor: backgroundGraphColor,
-        legend: "none",
-        hAxis: {textStyle: {color:"transparent", fontSize: 1}},
-        vAxis: {textStyle: {color:"transparent", fontSize: 1}}
-      });
-
-      data = new google.visualization.DataTable();
-      data.addColumn('date', 'Time');
-      data.addColumn('number', 'Downloaded');
-      data.addRows(15);
-
-      for (var i in usage_counters[1].values) {
-          data.setCell(parseInt(i), 0, new Date(usage_counters[1].values[i].timestamp));
-          data.setCell(parseInt(i), 1, usage_counters[1].values[i].value);
-      }
-
-      new google.visualization.LineChart(document.getElementById('application-data-downloaded')).draw(data, {
-        title: "Bytes Downloaded",
-        titlePosition: "in",
-        titleTextStyle: {color: 'black', fontName: 'Arial', fontSize: 18},
-        width: graph_width,
-        height: graph_height,
-        backgroundColor: backgroundGraphColor,
-        legend: "none",
-        hAxis: {textStyle: {color:"transparent", fontSize: 1}},
-        vAxis: {textStyle: {color:"transparent", fontSize: 1}}
-      });
-    },
-    function() {
-      $("#application-entities-timeline").html("");
-      $("#application-cpu-time").html("");
-      $("#application-data-uploaded").html("");
-      $("#application-data-downloaded").html("");
-    });
+    );
   }
 
-  /*******************************************************************
-   *
-   * Users
-   *
-   ******************************************************************/
+/*******************************************************************
+ *
+ * Users
+ *
+ ******************************************************************/
 
   var userLetter = "*";
   var userSortBy = "username";
@@ -1571,12 +1580,13 @@ function usergrid_console_app(Pages) {
   usergrid.console.showUsersForSearch = showUsersForSearch;
 
   function searchUsers(){
-      var search = $('#search-user-username').val();
-      var searchType = ($('#search-user-type').val())?$('#search-user-type').val():userSortBy;
-      //make sure the input is valid:
-      if (searchType == 'name') {searchType = 'name';}
-      else if (searchType == 'username') {searchType = 'username';}
-      requestUsers(search, searchType);
+    var search = $('#search-user-username').val();
+    var searchType = ($('#search-user-type').val())?$('#search-user-type').val():userSortBy;
+    //make sure the input is valid:
+    if (searchType == 'name') {
+      searchType = 'name';
+    } else if (searchType == 'username') {searchType = 'username';}
+    requestUsers(search, searchType);
   }
   usergrid.console.searchUsers = searchUsers;
 
@@ -1690,9 +1700,10 @@ function usergrid_console_app(Pages) {
   function saveUserProfile(uuid){
     var payload = usergrid.console.ui.jsonSchemaToPayload(usergrid.console.ui.collections.vcard_schema);
     client.saveUserProfile(current_application_id, uuid, payload, completeSave,
-    function() {
-    alertModal("Unable to update User", client.getLastErrorMessage("An internal error occured."));
-    });
+      function() {
+        alertModal("Unable to update User", client.getLastErrorMessage("An internal error occured."));
+      }
+    );
   }
   window.usergrid.console.saveUserProfile = saveUserProfile;
 
@@ -1741,15 +1752,14 @@ function usergrid_console_app(Pages) {
       var path = response.path || "";
       path = "" + path.match(/[^?]*/);
       var username = entity.username;
-      var name = entity.uuid + " : "
-              + entity.type;
+      var name = entity.uuid + " : " + entity.type;
 
       if (entity.username) {
-          name = entity.username;
+        name = entity.username;
       }
 
       if (entity.name) {
-          name = name + " : " + entity.name;
+        name = name + " : " + entity.name;
       }
 
       var collections = $.extend({ }, (entity.metadata || { }).collections, (entity.metadata || { }).connections);
@@ -1767,7 +1777,7 @@ function usergrid_console_app(Pages) {
 
       var entity_path = (entity.metadata || {}).path;
       if ($.isEmptyObject(entity_path)) {
-          entity_path = path + "/" + entity.uuid;
+        entity_path = path + "/" + entity.uuid;
       }
 
       if (!entity.picture) {
@@ -1819,7 +1829,7 @@ function usergrid_console_app(Pages) {
         var permissions = {};
         if (user_data && response.data && (response.data.length > 0)) {
 
-           if (response.data) {
+          if (response.data) {
             var perms = response.data;
             var count = 0;
 
@@ -1836,7 +1846,7 @@ function usergrid_console_app(Pages) {
               }
 
               ops_part.replace("*", "get,post,put,delete")
-              var ops = ops_part.split(',');
+                var ops = ops_part.split(',');
               permissions[perm] = {ops : {}, path : path_part, perm : perm};
 
               for (var j in ops) {
@@ -1850,7 +1860,7 @@ function usergrid_console_app(Pages) {
 
             user_data.permissions = permissions;
             redrawUserPanel();
-           }
+          }
         }
       })
 
@@ -1873,9 +1883,10 @@ function usergrid_console_app(Pages) {
   function requestUser(userId) {
     $('#user-profile-area').html('<div class="alert alert-info">Loading...</div>');
     client.getUser(current_application_id, userId, handleUserResponse,
-    function() {
-      $('#user-profile-area').html('<div class="alert">Unable to retrieve user profile.</div>');
-    });
+      function() {
+        $('#user-profile-area').html('<div class="alert">Unable to retrieve user profile.</div>');
+      }
+    );
   }
 
   /*******************************************************************
@@ -1993,13 +2004,14 @@ function usergrid_console_app(Pages) {
   usergrid.console.requestGroups = requestGroups;
 
   $('#delete-groups-link').click(deleteGroups);
+
   function deleteGroups(e) {
     e.preventDefault();
 
     var items = $('#groups-table input[class^=groupListItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the groups you want to delete.")
-      return;
+        return;
     }
 
     confirmDelete(function(){
@@ -2065,13 +2077,14 @@ function usergrid_console_app(Pages) {
   function saveGroupProfile(uuid){
     var payload = usergrid.console.ui.jsonSchemaToPayload(usergrid.console.ui.collections.group_schema);
     client.saveUserProfile(current_application_id, uuid, payload, completeSave,
-    function() {
-      closeErrorMessage = function() {
-        $('#group-messages').hide();
-      };
-      var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
-      $('#group-messages').text("Unable to update Group: " + client.getLastErrorMessage('An internal error occured.')).prepend(closebutton).addClass('alert-error').show();
-    });
+      function() {
+        closeErrorMessage = function() {
+          $('#group-messages').hide();
+        };
+        var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+        $('#group-messages').text("Unable to update Group: " + client.getLastErrorMessage('An internal error occured.')).prepend(closebutton).addClass('alert-error').show();
+      }
+    );
   }
 
   window.usergrid.console.saveGroupProfile = saveGroupProfile;
@@ -2098,15 +2111,14 @@ function usergrid_console_app(Pages) {
       var path = response.path || "";
       path = "" + path.match(/[^?]*/);
       var uuid = entity.uuid;
-      var name = entity.uuid + " : "
-              + entity.type;
+      var name = entity.uuid + " : " + entity.type;
 
       if (entity.path) {
-          name = entity.path;
+        name = entity.path;
       }
 
       if (entity.name) {
-          name = name + " : " + entity.name;
+        name = name + " : " + entity.name;
       }
 
       var collections = $.extend({ }, (entity.metadata || { }).collections, (entity.metadata || { }).connections);
@@ -2179,10 +2191,10 @@ function usergrid_console_app(Pages) {
    ******************************************************************/
 
   function pageSelectRoles(uuid) {
-      requestRoles();
-      selectFirstTabButton('#roles-panel-tab-bar');
-      showPanelList('roles');
-      $('#role-panel-users').hide();
+    requestRoles();
+    selectFirstTabButton('#roles-panel-tab-bar');
+    showPanelList('roles');
+    $('#role-panel-users').hide();
   }
   window.usergrid.console.pageSelectRoles = pageSelectRoles;
 
@@ -2239,7 +2251,7 @@ function usergrid_console_app(Pages) {
     var items = $('#roles-table input[class^=roleListItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the roles you want to delete.")
-      return;
+        return;
     }
 
     confirmDelete(function(){
@@ -2306,7 +2318,7 @@ function usergrid_console_app(Pages) {
           path_part = parts[1];
         }
         ops_part.replace("*", "get,post,put,delete")
-        var ops = ops_part.split(',');
+          var ops = ops_part.split(',');
         permissions[perm] = {ops : {}, path : path_part, perm : perm};
         for (var j in ops) {
           permissions[perm].ops[ops[j]] = true;
@@ -2323,17 +2335,17 @@ function usergrid_console_app(Pages) {
   }
 
   var rolesUsersResults = ''
-  function displayRolesUsers(response) {
-    $('#role-users').html('');
-    data = {};
-    data.roleId = current_role_id;
-    data.rolename = current_role_name;
-    if (response.entities) {
-      data.users = response.entities;
+    function displayRolesUsers(response) {
+      $('#role-users').html('');
+      data = {};
+      data.roleId = current_role_id;
+      data.rolename = current_role_name;
+      if (response.entities) {
+        data.users = response.entities;
+      }
+      $.tmpl('usergrid.ui.panels.role.users.html', {"data" : data}, {}).appendTo('#role-users');
+      updateUsersForRolesAutocomplete();
     }
-    $.tmpl('usergrid.ui.panels.role.users.html', {"data" : data}, {}).appendTo('#role-users');
-    updateUsersForRolesAutocomplete();
-  }
 
   function selectAllRolesUsers(){
     $('[class=userRoleItem]').attr('checked', true);
@@ -2353,28 +2365,31 @@ function usergrid_console_app(Pages) {
     $('#role-section-title').html("");
     $('#role-permissions').html("");
     $('#role-users').html("");
-    client.requestApplicationRoles(current_application_id, function(response) {
-      displayRoles(response);
-      $('#role-section-title').html(roles[current_role_name] + " Role");
-      $('#role-permissions').html('<div class="alert alert-info">Loading ' + roles[current_role_name] + ' permissions...</div>');
-      client.requestApplicationRolePermissions(current_application_id, current_role_name, function(response) {
-        displayPermissions(response);
-      },
-      function() {
-        $('#application-roles').html('<div class="alert">Unable to retrieve ' + roles[current_role_name] + ' role permissions.</div>');
-      });
-      client.requestApplicationRoleUsers(current_application_id, current_role_id,
-        function(response) {
-          displayRolesUsers(response);
+    client.requestApplicationRoles(current_application_id,
+      function(response) {
+        displayRoles(response);
+        $('#role-section-title').html(roles[current_role_name] + " Role");
+        $('#role-permissions').html('<div class="alert alert-info">Loading ' + roles[current_role_name] + ' permissions...</div>');
+        client.requestApplicationRolePermissions(current_application_id, current_role_name, function(response) {
+          displayPermissions(response);
         },
         function() {
           $('#application-roles').html('<div class="alert">Unable to retrieve ' + roles[current_role_name] + ' role permissions.</div>');
-        }
-      );
-    },
-    function() {
-      $('#application-roles').html('<div class="alert">Unable to retrieve roles list.</div>');
-    });
+        });
+
+        client.requestApplicationRoleUsers(current_application_id, current_role_id,
+          function(response) {
+            displayRolesUsers(response);
+          },
+          function() {
+            $('#application-roles').html('<div class="alert">Unable to retrieve ' + roles[current_role_name] + ' role permissions.</div>');
+          }
+        );
+      },
+      function() {
+        $('#application-roles').html('<div class="alert">Unable to retrieve roles list.</div>');
+      }
+    );
   }
 
   function deleteRolePermission(roleName, permission) {
@@ -2424,7 +2439,8 @@ function usergrid_console_app(Pages) {
         },
         function() {
           alertModal("Unable to delete permission", client.getLastErrorMessage("An internal error occured"));
-        });
+        }
+      );
     });
   }
   window.usergrid.console.deleteUserPermission = deleteUserPermission;
@@ -2466,11 +2482,11 @@ function usergrid_console_app(Pages) {
   }
   window.usergrid.console.addUserPermission = addUserPermission;
 
-    /*******************************************************************
-     *
-     * Activities
-     *
-     ******************************************************************/
+  /*******************************************************************
+   *
+   * Activities
+   *
+   ******************************************************************/
 
   function pageSelectActivities(uuid) {
     requestActivities();
@@ -2518,27 +2534,27 @@ function usergrid_console_app(Pages) {
   }
 
   function searchActivities(){
-      var search = $('#search-activities').val();
-      var searchType = ($('#search-activities-type').val())?$('#search-activities-type').val():activitiesSortBy;
+    var search = $('#search-activities').val();
+    var searchType = ($('#search-activities-type').val())?$('#search-activities-type').val():activitiesSortBy;
 
-      if (searchType == 'actor') {
-        searchType = 'actor.displayName';
-      } else if (searchType == 'content') {
-        searchType = 'content';
-      }
+    if (searchType == 'actor') {
+      searchType = 'actor.displayName';
+    } else if (searchType == 'content') {
+      searchType = 'content';
+    }
 
-      requestActivities(search, searchType);
+    requestActivities(search, searchType);
   }
   usergrid.console.searchActivities = searchActivities;
 
-    /*******************************************************************
-     *
-     * Analytics
-     *
-     ******************************************************************/
+  /*******************************************************************
+   *
+   * Analytics
+   *
+   ******************************************************************/
 
   function pageSelectAnalytics(uuid) {
-      requestApplicationCounterNames();
+    requestApplicationCounterNames();
   }
   window.usergrid.console.pageSelectAnalytics = pageSelectAnalytics;
 
@@ -2548,21 +2564,22 @@ function usergrid_console_app(Pages) {
     $('#analytics-counter-names').html('<div class="alert alert-info">Loading...</div>');
     client.requestApplicationCounterNames(current_application_id, function(response) {
       application_counters_names = response.data;
-      var html = usergrid.console.ui.makeTableFromList(application_counters_names, 1, {
-        tableId : "analytics-counter-names-table",
-        getListItem : function(i, col, row) {
-          var counter_name = application_counters_names[i];
-          var checked = !counter_name.startsWith("application.");
-          return '<div class="analytics-counter"><input class="analytics-counter-checkbox" type="checkbox" name="counter" ' +
+        var html = usergrid.console.ui.makeTableFromList(application_counters_names, 1, {
+          tableId : "analytics-counter-names-table",
+          getListItem : function(i, col, row) {
+            var counter_name = application_counters_names[i];
+            var checked = !counter_name.startsWith("application.");
+            return '<div class="analytics-counter"><input class="analytics-counter-checkbox" type="checkbox" name="counter" ' +
             'value="' + counter_name + '"' + (checked ? ' checked="true"' : '') + ' />' + counter_name + '</div>';
-        }
-      });
-      $('#analytics-counter-names').html(html);
-      requestApplicationCounters();
-    },
-    function() {
-      $('#analytics-counter-names').html('<div class="alert">Unable to load...</div>');
-    });
+          }
+        });
+        $('#analytics-counter-names').html(html);
+        requestApplicationCounters();
+      },
+      function() {
+        $('#analytics-counter-names').html('<div class="alert">Unable to load...</div>');
+      }
+    );
   }
 
   var application_counters = [];
@@ -2602,16 +2619,16 @@ function usergrid_console_app(Pages) {
 
       var column_count = 0;
       for (var i in application_counters) {
-        var count = application_counters[i];
-        if (show_application_counters || !count.name.startsWith("application.")) {
-          data.addColumn('number', count.name);
-          column_count++;
-        }
+      var count = application_counters[i];
+      if (show_application_counters || !count.name.startsWith("application.")) {
+        data.addColumn('number', count.name);
+        column_count++;
+      }
       }
 
       if (!column_count) {
-          $('#analytics-graph').html("No counter data");
-          return;
+        $('#analytics-graph').html("No counter data");
+        return;
       }
 
       var html = '<table id="analytics-graph-table"><thead><tr><td></td>';
@@ -2621,18 +2638,15 @@ function usergrid_console_app(Pages) {
           var timestamp = application_counters[0].values[j].timestamp;
           if ((timestamp <= 1) || (resolution == "all")) {
             timestamp = "All";
-          }
-          else if ((resolution == "day") || (resolution == "week") || (resolution == "month")) {
+          } else if ((resolution == "day") || (resolution == "week") || (resolution == "month")) {
             timestamp = (new Date(timestamp)).toString("M/d");
-          }
-          else {
+          } else {
             timestamp = (new Date(timestamp)).toString("M/d h:mmtt");
           }
           html += "<th>" + timestamp + "</th>";
           if (resolution == "all") {
             data.setValue(parseInt(j), 0, "All");
-          }
-          else {
+          } else {
             data.setValue(parseInt(j), 0, new Date(application_counters[0].values[j].timestamp));
           }
         }
@@ -2667,11 +2681,11 @@ function usergrid_console_app(Pages) {
     });
   }
 
-   /*******************************************************************
-     *
-     * Settings
-     *
-     ******************************************************************/
+  /*******************************************************************
+   *
+   * Settings
+   *
+   ******************************************************************/
 
   function pageSelectSettings(uuid) {
     requestApplicationCredentials();
@@ -2684,37 +2698,41 @@ function usergrid_console_app(Pages) {
   function requestApplicationCredentials() {
     $('#application-panel-key').html('<div class="alert alert-info">Loading...</div>');
     $('#application-panel-secret').html('<div class="alert alert-info">Loading...</div>');
-    client.requestApplicationCredentials(current_application_id, function(response) {
-      $('#application-panel-key').html(response.credentials.client_id);
-      $('#application-panel-secret').html(response.credentials.client_secret);
-      application_keys[current_application_id] = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
-    },
-    function() {
-      $('#application-panel-key').html('<div class="alert">Unable to load...</div>');
-      $('#application-panel-secret').html('<div class="alert">Unable to load...</div>');
-    });
+    client.requestApplicationCredentials(current_application_id, 
+      function(response) {
+        $('#application-panel-key').html(response.credentials.client_id);
+        $('#application-panel-secret').html(response.credentials.client_secret);
+        application_keys[current_application_id] = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
+      },
+      function() {
+        $('#application-panel-key').html('<div class="alert">Unable to load...</div>');
+        $('#application-panel-secret').html('<div class="alert">Unable to load...</div>');
+      }
+    );
   }
 
   function newApplicationCredentials() {
     $('#application-panel-key').html('<div class="alert alert-info">Loading...</div>');
     $('#application-panel-secret').html('<div class="alert alert-info">Loading...</div>');
-    client.regenerateApplicationCredentials(current_application_id, function(response) {
-      $('#application-panel-key').html(response.credentials.client_id);
-      $('#application-panel-secret').html(response.credentials.client_secret);
-      application_keys[current_application_id] = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
-    },
-    function() {
-      $('#application-panel-key').html('<div class="alert">Unable to load...</div>');
-      $('#application-panel-secret').html('<div class="alert">Unable to load...</div>');
-    });
+    client.regenerateApplicationCredentials(current_application_id, 
+      function(response) {
+        $('#application-panel-key').html(response.credentials.client_id);
+        $('#application-panel-secret').html(response.credentials.client_secret);
+        application_keys[current_application_id] = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
+      },
+      function() {
+        $('#application-panel-key').html('<div class="alert">Unable to load...</div>');
+        $('#application-panel-secret').html('<div class="alert">Unable to load...</div>');
+      }
+    );
   }
   window.usergrid.console.newApplicationCredentials = newApplicationCredentials;
 
-    /*******************************************************************
-     *
-     * Shell
-     *
-     ******************************************************************/
+  /*******************************************************************
+   *
+   * Shell
+   *
+   ******************************************************************/
 
   function pageSelectShell(uuid) {
     requestApplicationCredentials();
@@ -2757,44 +2775,44 @@ function usergrid_console_app(Pages) {
     var orgName = client.currentOrganization.uuid;
 
     if (s) {
-        history.push(s);
-        history_i - history.length - 1;
+      history.push(s);
+      history_i - history.length - 1;
     }
 
     if (s.startsWith("/")) {
-        var path = client.encodePathString(s);
-        printLnToShell(path);
-        client.apiGetRequest("/" + orgName + "/" + current_application_id + path, null, displayShellResponse, null);
+      var path = client.encodePathString(s);
+      printLnToShell(path);
+      client.apiGetRequest("/" + orgName + "/" + current_application_id + path, null, displayShellResponse, null);
     } else if (s.startsWith("get /")) {
-        var path = client.encodePathString(s.substring(4));
-        printLnToShell(path);
-        client.apiGetRequest("/" + orgName + "/" + current_application_id + path, null, displayShellResponse, null);
+      var path = client.encodePathString(s.substring(4));
+      printLnToShell(path);
+      client.apiGetRequest("/" + orgName + "/" + current_application_id + path, null, displayShellResponse, null);
     } else if (s.startsWith("put /")) {
-        var params = client.encodePathString(s.substring(4), true);
-        printLnToShell(params.path);
-        client.apiRequest("PUT", "/" + orgName + "/" + current_application_id + params.path, null, JSON.stringify(params.payload), displayShellResponse, null);
+      var params = client.encodePathString(s.substring(4), true);
+      printLnToShell(params.path);
+      client.apiRequest("PUT", "/" + orgName + "/" + current_application_id + params.path, null, JSON.stringify(params.payload), displayShellResponse, null);
     } else if (s.startsWith("post /")) {
-        var params = client.encodePathString(s.substring(5), true);
-        printLnToShell(params.path);
-        client.apiRequest("POST", "/" + orgName + "/" + current_application_id + params.path, null, JSON.stringify(params.payload), displayShellResponse, null);
+      var params = client.encodePathString(s.substring(5), true);
+      printLnToShell(params.path);
+      client.apiRequest("POST", "/" + orgName + "/" + current_application_id + params.path, null, JSON.stringify(params.payload), displayShellResponse, null);
     } else if (s.startsWith("delete /")) {
-        var path = client.encodePathString(s.substring(7));
-        printLnToShell(path);
-        client.apiRequest("DELETE", "/" + orgName + "/" + current_application_id + path, null, null, displayShellResponse, null);
+      var path = client.encodePathString(s.substring(7));
+      printLnToShell(path);
+      client.apiRequest("DELETE", "/" + orgName + "/" + current_application_id + path, null, null, displayShellResponse, null);
     } else if ((s == "clear") || (s == "cls"))  {
-        $('#shell-output').html(" ");
+      $('#shell-output').html(" ");
     } else if (s == "help") {
-        printLnToShell("/&lt;path&gt; - API get request");
-        printLnToShell("get /&lt;path&gt; - API get request");
-        printLnToShell("put /&lt;path&gt; {&lt;json&gt;} - API put request");
-        printLnToShell("post /&lt;path&gt; {&lt;json&gt;} - API post request");
-        printLnToShell("delete /&lt;path&gt; - API delete request");
-        printLnToShell("cls, clear - clear the screen");
-        printLnToShell("help - show this help");
+      printLnToShell("/&lt;path&gt; - API get request");
+      printLnToShell("get /&lt;path&gt; - API get request");
+      printLnToShell("put /&lt;path&gt; {&lt;json&gt;} - API put request");
+      printLnToShell("post /&lt;path&gt; {&lt;json&gt;} - API post request");
+      printLnToShell("delete /&lt;path&gt; - API delete request");
+      printLnToShell("cls, clear - clear the screen");
+      printLnToShell("help - show this help");
     } else if (s == "") {
-        printLnToShell("ok");
+      printLnToShell("ok");
     } else {
-        printLnToShell('<strong>syntax error!</strong><hr />');
+      printLnToShell('<strong>syntax error!</strong><hr />');
     }
     prettyPrint();
   }
@@ -2803,25 +2821,25 @@ function usergrid_console_app(Pages) {
     var shell_input = $('#shell-input');
 
     if (!event.shiftKey && (event.keyCode == '13')) {
-      event.preventDefault();
-      var s = $('#shell-input').val().trim();
-      echoInputToShell(s);
-      shell_input.val("");
-      handleShellCommand(s);
+    event.preventDefault();
+    var s = $('#shell-input').val().trim();
+    echoInputToShell(s);
+    shell_input.val("");
+    handleShellCommand(s);
 
     } else if (event.keyCode == '38') {
-      event.preventDefault();
-      history_i--;
+    event.preventDefault();
+    history_i--;
 
-      if (history_i < 0) {
-        history_i = Math.max(history.length - 1, 0);
-      }
+    if (history_i < 0) {
+    history_i = Math.max(history.length - 1, 0);
+    }
 
-      if (history.length > 0) {
-        shell_input.val(history[history_i]);
-      } else {
-        shell_input.val("");
-      }
+    if (history.length > 0) {
+    shell_input.val(history[history_i]);
+    } else {
+      shell_input.val("");
+    }
 
     } else if (event.keyCode == '40') {
       event.preventDefault();
@@ -2844,11 +2862,11 @@ function usergrid_console_app(Pages) {
     shell_input.css('height', shell_input.attr('scrollHeight'));
   });
 
-    /*******************************************************************
-     *
-     * Collections
-     *
-     ******************************************************************/
+  /*******************************************************************
+   *
+   * Collections
+   *
+   ******************************************************************/
 
 
   function pageSelectCollections(uuid) {
@@ -2898,11 +2916,11 @@ function usergrid_console_app(Pages) {
     // }
   }
 
-     /*******************************************************************
-     *
-     * Autocomplete
-     *
-     ******************************************************************/
+  /*******************************************************************
+   *
+   * Autocomplete
+   *
+   ******************************************************************/
 
   function updateUsersAutocomplete(){
     client.requestUsers(current_application_id, updateUsersAutocompleteCallback, null);
@@ -2932,12 +2950,12 @@ function usergrid_console_app(Pages) {
   function updateUsersForRolesAutocompleteCallback(response) {
     users = {};
     if (response.entities) {
-        users = response.entities;
+      users = response.entities;
     }
     var pathInput = $('#search-roles-user-name-input');
     var list = [];
     for (var i in users)
-        list.push(users[i].username);
+      list.push(users[i].username);
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
   }
@@ -2972,7 +2990,7 @@ function usergrid_console_app(Pages) {
     }
 
     pathInput.typeahead({source:list});
-  }
+   }
 
   function updateQueryAutocompleteCollectionsUsers(){
     var pathInput = $("#user-permission-path-entry-input");
@@ -2991,7 +3009,7 @@ function usergrid_console_app(Pages) {
     var list = [];
 
     for (var i in applicationData.Collections){
-        list.push('/' + applicationData.Collections[i].name + '/');
+      list.push('/' + applicationData.Collections[i].name + '/');
     }
 
     pathInput.typeahead({source:list});
@@ -3034,20 +3052,20 @@ function usergrid_console_app(Pages) {
   }
 
   function displayLoginError() {
-      $('#login-area .box').effect('shake', {times: 2},100);
-      $('#login-message').show();
+    $('#login-area .box').effect('shake', {times: 2},100);
+    $('#login-message').show();
   }
 
   function clearLoginError() {
-      $('#login-message').hide();
+    $('#login-message').hide();
   }
 
   function setupMenu() {
     var userNameBox = $('#userEmail');
     if (client && client.loggedInUser)
-        userNameBox.html(client.loggedInUser.email);
+      userNameBox.html(client.loggedInUser.email);
     else
-        userNameBox.html("No Logged In User");
+      userNameBox.html("No Logged In User");
     setupOrganizationsMenu();
   }
 
@@ -3064,7 +3082,7 @@ function usergrid_console_app(Pages) {
     var orgTmpl = $('<li><a href="#">${name}</a></li>');
     var data = [];
     for (var name in organizations) {
-        data.push({uuid:organizations[name].uuid, name:name});
+      data.push({uuid:organizations[name].uuid, name:name});
     }
     orgMenu.empty();
     orgTmpl.tmpl(data).appendTo(orgMenu);
@@ -3111,11 +3129,11 @@ function usergrid_console_app(Pages) {
   });
 
 
-    /*******************************************************************
-     *
-     * Signup
-     *
-     ******************************************************************/
+  /*******************************************************************
+   *
+   * Signup
+   *
+   ******************************************************************/
 
   $('#signup-cancel').click(function() {
     Pages.ShowPage('login');
@@ -3189,11 +3207,11 @@ function usergrid_console_app(Pages) {
     return false;
   });
 
-    /*******************************************************************
-     *
-     * Account Settings
-     *
-     ******************************************************************/
+  /*******************************************************************
+   *
+   * Account Settings
+   *
+   ******************************************************************/
 
   function displayAccountSettings(response) {
     if (response.data) {
@@ -3209,25 +3227,25 @@ function usergrid_console_app(Pages) {
         var organization = organizations[organizationName];
         var uuid = organization.uuid;
         t +=
-        '<tr class="zebraRows leave-org-row">' +
+          '<tr class="zebraRows leave-org-row">' +
           '<td>' +
-            '<a href="#' + uuid + '">' +
-              '<span>' + organizationName + '</span>' +
-            '</a>' +
+          '<a href="#' + uuid + '">' +
+          '<span>' + organizationName + '</span>' +
+          '</a>' +
           '</td>' +
           '<td>' +
-            '<span>' + uuid + '</span>' +
+          '<span>' + uuid + '</span>' +
           '</td>' +
           '<td>' +
-            "<a onclick=\"usergrid.console.leaveOrganization('" + uuid + "')\"" + ' ' + "href=\"#" + uuid + "\" class=\"btn btn-danger\">Leave</a>" +
+          "<a onclick=\"usergrid.console.leaveOrganization('" + uuid + "')\"" + ' ' + "href=\"#" + uuid + "\" class=\"btn btn-danger\">Leave</a>" +
           '</td>' +
-        '</tr>';
+          '</tr>';
       }
       $('#organizations').html(t);
       $('#organizations a').click( function(e){
-       e.preventDefault();
-       var uuid = $(this).attr('href').substring(1);
-      });
+          e.preventDefault();
+          var uuid = $(this).attr('href').substring(1);
+          });
     } else {
     }
   }
@@ -3248,6 +3266,7 @@ function usergrid_console_app(Pages) {
         requestAccountSettings();
         return;
       }
+
       if (!(passwordRegex.test(new_pass))) {
         alertModal("Error", client.getLastErrorMessage(passwordAllowedCharsMessage));
         requestAccountSettings();
@@ -3256,9 +3275,10 @@ function usergrid_console_app(Pages) {
       userData.newpassword = new_pass;
       userData.oldpassword = old_pass;
     }
+
     client.updateAdminUser(userData,
       function(response) {
-        $('#account-update-modal').modal('show');
+      $('#account-update-modal').modal('show');
         if ((old_pass && new_pass) && (old_pass != new_pass)) {
           logout();
           return;
@@ -3284,8 +3304,9 @@ function usergrid_console_app(Pages) {
       $('#update-account-password').val("");
       $('#update-account-password-repeat').val("");
       client.requestAdminUser(displayAccountSettings,
-        function() {
-      });
+          function() {
+          }
+      );
     }
   }
   usergrid.console.requestAccountSettings = requestAccountSettings;
@@ -3303,13 +3324,13 @@ function usergrid_console_app(Pages) {
         var organization = organizationNames[i];
         var uuid = organizations[organization];
         t += "<div class=\"organization-row\" id=\"organization-row-"
-        + uuid
-        + "\"><a href=\"#\" onclick=\"usergrid.console.pageSelectOrganization('"
-        + uuid
-        + "'); return false;\"><span class=\"organization-row-name\">"
-        + organization
-        + "</span> <span class=\"organization-row-uuid\">("
-        + uuid + ")</span>" + "</a></div>";
+          + uuid
+          + "\"><a href=\"#\" onclick=\"usergrid.console.pageSelectOrganization('"
+          + uuid
+          + "'); return false;\"><span class=\"organization-row-name\">"
+          + organization
+          + "</span> <span class=\"organization-row-uuid\">("
+          + uuid + ")</span>" + "</a></div>";
         count++;
         orgainzations_by_id[uuid] = organization;
       }
@@ -3324,10 +3345,10 @@ function usergrid_console_app(Pages) {
   }
 
   function requestOrganizations() {
-      $('#organizations').html('<div class="alert alert-info">Loading...</div>');
-      client.requestOrganizations(displayOrganizations, function() {
-          $('#organizations').html('<div class="alert">Unable to retrieve organizations list.</div>');
-      });
+    $('#organizations').html('<div class="alert alert-info">Loading...</div>');
+    client.requestOrganizations(displayOrganizations, function() {
+      $('#organizations').html('<div class="alert">Unable to retrieve organizations list.</div>');
+    });
   }
   usergrid.console.requestOrganizations = requestOrganizations;
 
@@ -3346,11 +3367,11 @@ function usergrid_console_app(Pages) {
   usergrid.console.leaveOrganization = leaveOrganization;
 
 
-    /*******************************************************************
-     *
-     * Startup
-     *
-     ******************************************************************/
+  /*******************************************************************
+   *
+   * Startup
+   *
+   ******************************************************************/
 
   function showPanelList(type){
     $('#' + type + '-panel-search').hide();
@@ -3359,9 +3380,9 @@ function usergrid_console_app(Pages) {
   }
 
   $('#button-users-list').click(function() {
-    showPanelList('users');
-    return false;
-  });
+      showPanelList('users');
+      return false;
+      });
 
   $('#user-panel-tab-bar a').click(function() {
     selectTabButton(this);
@@ -3412,14 +3433,12 @@ function usergrid_console_app(Pages) {
     if ($(this).attr('id') == "button-role-list") {
       Pages.SelectPanel('roles');
       showPanelList('roles');
-    }
-    else if ($(this).attr('id') == "button-role-settings") {
+    } else if ($(this).attr('id') == "button-role-settings") {
       selectTabButton('#button-role-settings');
       $('#roles-panel-list').hide();
       $('#role-panel-users').hide();
       $('#role-panel-settings').show();
-    }
-    else if ($(this).attr('id') == "button-role-users") {
+    } else if ($(this).attr('id') == "button-role-users") {
       selectTabButton('#button-role-users');
       $('#roles-panel-list').hide();
       $('#role-panel-settings').hide();
@@ -3439,7 +3458,7 @@ function usergrid_console_app(Pages) {
   doBuildIndexMenu();
 
   function enableApplicationPanelButtons() {
-      $('#application-panel-buttons').show();
+    $('#application-panel-buttons').show();
   }
 
   function disableApplicationPanelButtons() {

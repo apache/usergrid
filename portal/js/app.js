@@ -1,8 +1,8 @@
 var Pages = new UsergridPages();
 $(document).ready(function () {
-    
+  
 	Init();
-    
+  
 	function Init() {
     
     prepareLocalStorage();
@@ -49,10 +49,10 @@ $(document).ready(function () {
 	function InitMenu() {
 		$('.navbar .dropdown-toggle').dropdown();
 		$('#sidebar-menu .dropdown-toggle').dropdown();
-    $("#logout-link").click(usergrid.console.logout);
+    $('#logout-link').click(usergrid.console.logout);
 
-    var publicMenu = $("#publicMenu");
-    var privateMenu =$("#privateMenu");
+    var publicMenu = $('#publicMenu');
+    var privateMenu =$('#privateMenu');
 
 		Pages.AddPage({name:'login', menu:publicMenu});
 		//Pages.ShowPage('login');
@@ -60,7 +60,7 @@ $(document).ready(function () {
     Pages.AddPage({name:'forgot-password', menu:publicMenu});
     Pages.AddPage({name:'post-signup', menu:publicMenu});
     Pages.AddPage({name:'console', menu:privateMenu, initFunction:InitConsole, showFunction:usergrid.console.pageSelectHome});
-   
+    
 	}
 
 	function InitConsole() {
@@ -86,10 +86,10 @@ $(document).ready(function () {
   function getQueryParams() {
     var query_params = {};
     var e,
-        a = /\+/g,
-        r = /([^&=]+)=?([^&]*)/g,
-        d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
-        q = window.location.search.substring(1);
+    a = /\+/g,
+    r = /([^&=]+)=?([^&]*)/g,
+    d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
+    q = window.location.search.substring(1);
 
     while (e = r.exec(q)) {
       query_params[d(e[1])] = d(e[2]);
@@ -97,5 +97,5 @@ $(document).ready(function () {
 
     return query_params;
   }
-    
+  
 });
