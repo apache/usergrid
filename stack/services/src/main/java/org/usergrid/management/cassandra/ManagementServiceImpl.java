@@ -182,6 +182,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 	public static final String PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION = "usergrid.management.admin_users_require_confirmation";
 	public static final String PROPERTIES_ORGANIZATIONS_REQUIRE_CONFIRMATION = "usergrid.management.organizations_require_confirmation";
+	public static final String PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION = "usergrid.management.notify_admin_of_activation";
 
 	public static final String PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS = "usergrid.management.admin_users_require_activation";
 	public static final String PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS = "usergrid.management.organizations_require_activation";
@@ -1854,6 +1855,11 @@ public class ManagementServiceImpl implements ManagementService {
 				.getProperty(PROPERTIES_NOTIFY_SYSADMIN_OF_NEW_ORGANIZATIONS));
 	}
 
+	public boolean notifyAdminOfActivation() {
+		return parseBoolean(properties
+				.getProperty(PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION));
+	}
+
 	@Override
 	public String getActivationTokenForOrganization(UUID organizationId)
 			throws Exception {
@@ -2095,8 +2101,10 @@ public class ManagementServiceImpl implements ManagementService {
 	}
 
 	public void sendAdminUserActivatedEmail(UserInfo user) throws Exception {
+		if (notifyAdminOfActivation()) {
 		sendAdminUserEmail(user, "User Account Activated",
 				getPropertyValue(PROPERTIES_EMAIL_ADMIN_ACTIVATED));
+		}
 	}
 
 	public void sendAdminUserInvitedEmail(UserInfo user,
