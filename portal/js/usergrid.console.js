@@ -2695,7 +2695,7 @@ function usergrid_console_app(Pages) {
   function requestApplicationCredentials() {
     $('#application-panel-key').html('<div class="alert alert-info">Loading...</div>');
     $('#application-panel-secret').html('<div class="alert alert-info">Loading...</div>');
-    client.requestApplicationCredentials(current_application_id, 
+    client.requestApplicationCredentials(current_application_id,
       function(response) {
         $('#application-panel-key').html(response.credentials.client_id);
         $('#application-panel-secret').html(response.credentials.client_secret);
@@ -2711,7 +2711,7 @@ function usergrid_console_app(Pages) {
   function newApplicationCredentials() {
     $('#application-panel-key').html('<div class="alert alert-info">Loading...</div>');
     $('#application-panel-secret').html('<div class="alert alert-info">Loading...</div>');
-    client.regenerateApplicationCredentials(current_application_id, 
+    client.regenerateApplicationCredentials(current_application_id,
       function(response) {
         $('#application-panel-key').html(response.credentials.client_id);
         $('#application-panel-secret').html(response.credentials.client_secret);

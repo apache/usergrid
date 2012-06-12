@@ -5,7 +5,7 @@ var usergrid = usergrid || {};
 
 /**
  * Creates a new Usergrid Client.
- * @class Represents a Usergrid client. 
+ * @class Represents a Usergrid client.
  * @param {string} applicationId The id of the application (optional)
  */
 usergrid.Client = (function() {
@@ -13,7 +13,7 @@ usergrid.Client = (function() {
   /** @property applicationId */
 
   var self = {};
-  
+
   self.Init = function(options) {
     var options = options || {};
 
@@ -50,7 +50,7 @@ usergrid.Client = (function() {
 
     /** @property resetPasswordUrl */
     self.resetPasswordUrl = self.apiUrl + "/management/users/resetpw";
-    
+
     if (self.apiUrl != localStorage.getItem('usergrid_api_url')) {
       localStorage.setItem('usergrid_api_url', self.apiUrl);
     }
@@ -69,7 +69,7 @@ usergrid.Client = (function() {
 
   //flag to overide use SSO if needed set to ?use_sso=no
   USE_SSO = 'no';
-  
+
   //Apigee SSO url
   var APIGEE_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
 
@@ -88,7 +88,7 @@ usergrid.Client = (function() {
 
   // Local API
   var LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
-  
+
   var uuidValueRegex = /\"([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})\"/gm;
 
   /**
@@ -191,7 +191,7 @@ usergrid.Client = (function() {
         if (i > bracket_start) {
           var segment = path.substring(bracket_start, i);
           segments.push(JSON.parse(segment));
-        } 
+        }
         continue;
       } else if (c == '/') {
         i++;
@@ -206,7 +206,7 @@ usergrid.Client = (function() {
         if (i > segment_start) {
           var segment = path.substring(segment_start, i);
           segments.push(segment);
-        } 
+        }
         continue;
       } else if (c == ' ') {
         i++;
@@ -219,7 +219,7 @@ usergrid.Client = (function() {
           var json = path.substring(payload_start, i).trim();
           console.log(json);
           payload = JSON.parse(json);
-        } 
+        }
         break;
       }
       i++;
@@ -241,7 +241,7 @@ usergrid.Client = (function() {
         }
         newPath += encodeParams(segment);
       }
-    } 
+    }
     if (returnParams) {
       return {path : newPath, params: null, payload: payload};
     }
@@ -273,7 +273,7 @@ usergrid.Client = (function() {
       }
       if (error.exception) {
         console.log(error.exception);
-      } 
+      }
     }
   }
 
@@ -289,7 +289,7 @@ usergrid.Client = (function() {
 
   /**
    * Gets the error message of the last client error
-   * 
+   *
    * @public
    * @function
    * @param {String} defaultMsg the default error message
@@ -321,7 +321,7 @@ usergrid.Client = (function() {
         data = encodedPath.payload;
       }
     }
-    
+
     var xhr = new XMLHttpRequest();
     var url = self.apiUrl + path;
 
@@ -438,7 +438,7 @@ usergrid.Client = (function() {
    * <p>Using hand-rolled XHR makes it easier to debug peculiarities of browser CORS implementations
    * Tested on FF, Chrome, Safari, Webkit, Mobile Webkit</p>
    * @see <a href="http://www.w3.org/TR/cors/">W3 CORS</a>
-   * 
+   *
    * @public
    * @function
    * @param {String} method
@@ -469,7 +469,7 @@ usergrid.Client = (function() {
   }
   /**
    * API Get request
-   * 
+   *
    * @public
    * @function
    * @param {String} path
@@ -506,7 +506,7 @@ usergrid.Client = (function() {
   }
   /**
    * <p>Get applications for organization</p>
-   * 
+   *
    * @public
    * @function
    * @param {Function} success function called with response: <pre>
@@ -568,8 +568,8 @@ usergrid.Client = (function() {
     apiRequest("POST", "/management/users/" + self.loggedInUser.uuid + "/organizations", null, JSON.stringify(data), success, failure);
   }
   self.createOrganization = createOrganization;
-  
-  
+
+
   function leaveOrganization(organizationUUID, success, failure) {
     if (!self.loggedInUser) {
       failure();
@@ -577,19 +577,19 @@ usergrid.Client = (function() {
     apiRequest("DELETE", "/management/users/" + self.loggedInUser.uuid + "/organizations/" + organizationUUID, null, null, success, failure);
   }
   self.leaveOrganization = leaveOrganization;
-  
-  
-  
+
+
+
   //
   // Get admin users for organization
   //
   // GET: /management/organizations
   //
-  function requestOrganizations(success, failure) {        
+  function requestOrganizations(success, failure) {
     apiGetRequest("/management/users/" + self.loggedInUser.uuid + "/organizations", null, success, failure);
   }
   self.requestOrganizations = requestOrganizations;
-  
+
   //
   // Get access keys for organization
   //
@@ -1093,11 +1093,11 @@ usergrid.Client = (function() {
     return q;
   }
 
-  function deleteEntity(applicationId, entityId, path, success, failure) {        
+  function deleteEntity(applicationId, entityId, path, success, failure) {
     apiRequest("DELETE", "/" + self.currentOrganization.uuid + "/" + applicationId + "/" + path + "/" + entityId, null, null, success, failure);
   }
   self.deleteEntity = deleteEntity;
-  
+
   function queryUserMemberships(a) {
     return queryEntityCollection("users", "groups", arguments);
   }
@@ -1129,7 +1129,7 @@ usergrid.Client = (function() {
   self.queryUserFollowers = queryUserFollowers;
 
   function requestUserList(applicationId, searchString, success, failure) {
-    if (searchString != "*") searchString = searchString + '*';        
+    if (searchString != "*") searchString = searchString + '*';
     apiRequest("GET", "/" + self.currentOrganization.uuid + "/" + applicationId + "/users", null, JSON.stringify({
       username: searchString
     }), success, failure);
@@ -1152,7 +1152,7 @@ usergrid.Client = (function() {
   }
   self.createUser = createUser;
 
-  function deleteUser(applicationId, userId, success, failure) {        
+  function deleteUser(applicationId, userId, success, failure) {
     apiRequest("DELETE", "/" + self.currentOrganization.uuid + "/" + applicationId + "/users/" + userId, null, null, success, failure);
   }
   self.deleteUser = deleteUser;
@@ -1226,12 +1226,12 @@ usergrid.Client = (function() {
   }
   self.createGroup = createGroup;
 
-  function deleteGroup(applicationId, groupId, success, failure) {        
+  function deleteGroup(applicationId, groupId, success, failure) {
     apiRequest("DELETE", "/" + self.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId, null, null, success, failure);
   }
   self.deleteGroup = deleteGroup;
 
-  function addUserToGroup(applicationId, groupId, username, success, failure) {        
+  function addUserToGroup(applicationId, groupId, username, success, failure) {
     apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, "{ }", success, failure);
   }
   self.addUserToGroup = addUserToGroup;
@@ -1279,7 +1279,7 @@ usergrid.Client = (function() {
 
   /**
      Creates a new Query.
-     @class Represents a Query. 
+     @class Represents a Query.
   */
   function Query(applicationId, path, ql, options, success, failure) {
 
@@ -1442,4 +1442,3 @@ usergrid.Client = (function() {
 
   return self
 })();
-
