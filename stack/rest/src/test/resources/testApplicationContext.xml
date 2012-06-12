@@ -126,9 +126,7 @@
            <property name="batchSize" value="0"/>
        </bean>
 
-       <bean id="batchSubmitter" class="com.usergrid.count.CassandraSubmitter">
-           <constructor-arg ref="cassandraCounterStore"/>
-       </bean>
+       <bean id="batchSubmitter" class="com.usergrid.count.Slf4JBatchSubmitter"/>
 
        <bean id="cassandraCounterStore" class="com.usergrid.count.CassandraCounterStore">
            <constructor-arg>
