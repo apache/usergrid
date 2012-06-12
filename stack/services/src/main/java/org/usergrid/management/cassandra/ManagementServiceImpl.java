@@ -717,7 +717,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 	@Override
 	public UserInfo createAdminFromPrexistingPassword(User user,
-			String precypheredPassword, boolean sendEmail) throws Exception {
+			String precypheredPassword, String hashType, boolean sendEmail) throws Exception {
 		emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
 
@@ -727,6 +727,7 @@ public class ManagementServiceImpl implements ManagementService {
 		ci.setSecret(precypheredPassword);
 		ci.setRecoverable(false);
 		ci.setEncrypted(true);
+		ci.setHashType(hashType);
 
 		credentials.put("password", ci);
 		credentials.put(
@@ -1048,8 +1049,6 @@ public class ManagementServiceImpl implements ManagementService {
 				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
 						"password");
 
-		password = maybeSaltPassword(password, user, credentialsInfo);
-
 		if (checkPassword(password, credentialsInfo)) {
 			return true;
 		}
@@ -1072,8 +1071,7 @@ public class ManagementServiceImpl implements ManagementService {
 		CredentialsInfo credentialsInfo = (CredentialsInfo) em
 				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
 						"password");
-		password = maybeSaltPassword(password, user, credentialsInfo);
-
+	
 		if (checkPassword(password, credentialsInfo)) {
 			userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
 			if (!userInfo.isActivated()) {
@@ -2448,8 +2446,7 @@ public class ManagementServiceImpl implements ManagementService {
 		CredentialsInfo credentialsInfo = (CredentialsInfo) em
 				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
 						"password");
-		// pre-hash for legacy system imports
-		password = maybeSaltPassword(password, user, credentialsInfo);
+		
 		if (checkPassword(password, credentialsInfo)) {
 			if (!user.activated()) {
 				throw new UnactivatedAdminUserException();
@@ -2463,14 +2460,7 @@ public class ManagementServiceImpl implements ManagementService {
 		return null;
 	}
 
-	private String maybeSaltPassword(String password, User user,
-			CredentialsInfo credentialsInfo) {
-		if (StringUtils.equals(user.getHashtype(), User.HASHTYPE_MD5)) {
-			logger.info("hashType detected, applying pre phase");
-			password = credentialsInfo.encrypt(User.HASHTYPE_MD5, "", password);
-		}
-		return password;
-	}
+	
 
 	public String getPasswordResetTokenForAppUser(UUID applicationId,
 			UUID userId) throws Exception {

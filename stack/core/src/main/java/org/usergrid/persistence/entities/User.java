@@ -81,9 +81,6 @@ public class User extends TypedEntity {
 	@EntityProperty(indexed = false)
 	protected String picture;
 
-	@EntityProperty(indexed = false)
-	protected String hashtype;
-
 	@EntityDictionary(keyType = java.lang.String.class)
 	protected Set<String> connections;
 
@@ -230,15 +227,6 @@ public class User extends TypedEntity {
 
 	public void setPicture(String picture) {
 		this.picture = picture;
-	}
-
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public String getHashtype() {
-		return hashtype;
-	}
-
-	public void setHashtype(String hashtype) {
-		this.hashtype = hashtype;
 	}
 
 	@JsonSerialize(include = Inclusion.NON_NULL)
