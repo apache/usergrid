@@ -53,8 +53,7 @@
               </ul>
             </li>
             <li class="dropdown">
-              <a id="account-link1" class="dropdown-toggle" data-toggle="dropdown" href="#"><span
-                                                                                               id="userEmail">test</span> &#9660;</a>
+              <a id="account-link1" class="dropdown-toggle" data-toggle="dropdown" href="#"><span id="userEmail">test</span> &#9660;</a>
               <ul class="dropdown-menu">
                 <li><a id="account-link" href=""><i class="icon-user"></i> Profile</a></li>
                 <li><a id="logout-link" href=""><i class="icon-off"></i> Sign Out</a></li>
@@ -471,11 +470,9 @@
                         <select id="search-user-type" onChange="usergrid.console.searchUsers();" class="input-medium search">
                           <option value="username">Username</option>
                           <option value="name">Full Name</option>
-                          <!--<option value="firstName">First Name</option>
-                              <option value="lastName">Last Name</option>-->
                         </select>
                         <a id="selectAllUsers" class="" href="#" onclick="usergrid.console.selectAllUsers();"> Select All </a>
-					              <a id="deselectAllUsers" style="display: none;" class="" href="#" onclick="usergrid.console.deselectAllUsers();"> Deselect All </a>
+                        <a id="deselectAllUsers" style="display: none;" class="" href="#" onclick="usergrid.console.deselectAllUsers();"> Deselect All </a>
                         <a class="" data-toggle="modal" href="#dialog-form-new-user"> Add</a>
                         <a id="delete-users-link" href="#"> Delete</a>
                       </div>
@@ -771,7 +768,6 @@
                   </div>
                   <div class="modal-body">
                     <p class="validateTips">All form fields are required.</p>
-
                     <fieldset>
                       <div class="control-group">
                         <label for="new-role-title">Display Name</label>
@@ -1012,12 +1008,12 @@
                         <div class="controls">
                           <div class="input-append">
                             <textarea id="query-source" class="span6 pull-left"></textarea> <span id="button-clear-query-source" class="add-on">&#215;</span>
-						                <a class="btn" id="button-query-validate" href="#">Validate Json</a>
+                            <a class="btn" id="button-query-validate" href="#">Validate Json</a>
                           </div>
                         </div>
                       </div>
-				              <div id="statusbar-placeholder"></div>
-			              </form>
+                      <div id="statusbar-placeholder"></div>
+                    </form>
                     <div class="form-actions btn-toolbar">
                       <a class="btn" id="button-query-back">&#9664; Back</a>
                       <a class="btn" id="button-query-get">Get</a>

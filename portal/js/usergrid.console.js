@@ -90,12 +90,12 @@ function usergrid_console_app(Pages) {
   function showPanel(page) {
     var p = $(page);
     $("#console-panels").children().each(function() {
-        if ($(this).attr("id") == p.attr("id")) {
+      if ($(this).attr("id") == p.attr("id")) {
         $(this).show();
-        } else {
+      } else {
         $(this).hide();
-        }
-        });
+      }
+    });
   }
 
   function initConsoleFrame(){
@@ -109,19 +109,18 @@ function usergrid_console_app(Pages) {
       app_id = '';
     }
     var bearerTokenJson = JSON.stringify(
-        [{
+      [{
         "type":"custom_token",
         "name":"Authorization",
         "value":"Bearer " + bearerToken,
         "style":"header"
-        },
-        {
+      }, {
         "type":"custom_token",
         "name":"app_id",
         "value":app_id,
         "style":"template"
-        }]
-        );
+      }]
+    );
     var fred = encodeURIComponent(bearerToken);
     var bearerTokenString = encodeURIComponent(bearerTokenJson);
     var url = 'https://apigee.com/console/usergrid?v=2&embedded=true&auth=' + bearerTokenString;
@@ -132,13 +131,13 @@ function usergrid_console_app(Pages) {
   function showPanelContent(panelDiv, contentDiv) {
     var cdiv = $(contentDiv);
     $(panelDiv).children(".panel-content").each(function() {
-        var el = $(this);
-        if (el.attr("id") == cdiv.attr("id")) {
+      var el = $(this);
+      if (el.attr("id") == cdiv.attr("id")) {
         el.show();
-        } else {
+      } else {
         el.hide();
-        }
-        });
+      }
+    });
   }
 
   function selectTabButton(link) {
@@ -242,26 +241,24 @@ function usergrid_console_app(Pages) {
 
   $.fn.loadEntityCollectionsListWidget = function() {
     this.each(function() {
-        var entityType = $(this).dataset('entity-type');
-        var entityUIPlugin = "usergrid_collections_" + entityType
-        + "_list_item";
-        if (!$(this)[entityUIPlugin]) {
+      var entityType = $(this).dataset('entity-type');
+      var entityUIPlugin = "usergrid_collections_" + entityType + "_list_item";
+      if (!$(this)[entityUIPlugin]) {
         entityUIPlugin = "usergrid_collections_entity_list_item";
-        }
-        $(this)[entityUIPlugin]();
-        });
+      }
+      $(this)[entityUIPlugin]();
+    });
   };
 
   $.fn.loadEntityCollectionsDetailWidget = function() {
     this.each(function() {
-        var entityType = $(this).dataset('entity-type');
-        var entityUIPlugin = "usergrid_collections_" + entityType
-        + "_detail";
-        if (!$(this)[entityUIPlugin]) {
+      var entityType = $(this).dataset('entity-type');
+      var entityUIPlugin = "usergrid_collections_" + entityType + "_detail";
+      if (!$(this)[entityUIPlugin]) {
         entityUIPlugin = "usergrid_collections_entity_detail";
-        }
-        $(this)[entityUIPlugin]();
-        });
+      }
+      $(this)[entityUIPlugin]();
+    });
   };
 
   function getQueryResultEntity(id) {
@@ -349,8 +346,8 @@ function usergrid_console_app(Pages) {
 
       // This is a hack, will be fixed in API
     } else if (response.error && (
-          (response.error.exception == "org.usergrid.services.exceptions.ServiceResourceNotFoundException: Service resource not found") ||
-          (response.error.exception == "java.lang.IllegalArgumentException: Not a valid entity value type or null: null"))) {
+      (response.error.exception == "org.usergrid.services.exceptions.ServiceResourceNotFoundException: Service resource not found") ||
+        (response.error.exception == "java.lang.IllegalArgumentException: Not a valid entity value type or null: null"))) {
       $('#query-response-table').html("<div id=\"query-response-message\">No entities returned for query</div>");
       $('#query-next-prev').hide();
     } else {
@@ -375,18 +372,18 @@ function usergrid_console_app(Pages) {
     var qpath = $('#query-path').val();
     var ql = $("#query-ql").val();
     query = new client.Query(client.currentOrganization.uuid + "/" + current_application_id, qpath, ql, {},
-        function(data) {
+      function(data) {
         displayQueryResponse(data);
         var msg = "Web service completed successfully";
         if ((data || {}).duration) {
-        msg += " in " + data.duration + "ms at " + new Date(data.timestamp);
+          msg += " in " + data.duration + "ms at " + new Date(data.timestamp);
         }
         showQueryStatus(msg);
-        },
-        function(data) {
+      },
+      function(data) {
         showQueryStatus("Web service failed: " + data.textStatus, "error");
-        }
-        );
+      }
+    );
     query.send(method, data);
   }
 
@@ -518,14 +515,14 @@ function usergrid_console_app(Pages) {
   });
 
   $('#button-clear-path').click(function(event) {
-      $('#query-path').val("");
-      return false;
-      });
+    $('#query-path').val("");
+    return false;
+  });
 
   $('#button-clear-ql').click(function(event) {
-      $('#query-ql').val("");
-      return false;
-      });
+    $('#query-ql').val("");
+    return false;
+  });
 
   window.usergrid.console.doChildClick = function(event) {
     var path = new String($('#query-path').val());
@@ -912,12 +909,12 @@ function usergrid_console_app(Pages) {
 
     $.each(a, function() {
       if (o[this.name]) {
-      if (!o[this.name].push) {
-      o[this.name] = [o[this.name]];
-      }
-      o[this.name].push(this.value || '');
+        if (!o[this.name].push) {
+          o[this.name] = [o[this.name]];
+        }
+        o[this.name].push(this.value || '');
       } else {
-      o[this.name] = this.value || '';
+        o[this.name] = this.value || '';
       }
     });
 
@@ -1308,19 +1305,19 @@ function usergrid_console_app(Pages) {
 
   function removeGroupFromUser(groupId) {
     var items = $('#group-panel-memberships input[id^=userGroupItem]:checked');
-    if(!items.length){
+    if (!items.length) {
       alertModal("Error", "Please, first select the users you want to from this group.");
       return;
     }
 
     confirmDelete(function(){
-        items.each(function() {
-          var username = $(this).attr("value");
-          client.removeUserFromGroup(current_application_id, groupId, username, function() {pageSelectGroupMemberships(groupId);}, function() {
-            alertModal("Unable to remove user from role", client.getLastErrorMessage("An internal error occured"));
-            });
-          });
+      items.each(function() {
+        var username = $(this).attr("value");
+        client.removeUserFromGroup(current_application_id, groupId, username, function() {pageSelectGroupMemberships(groupId);}, function() {
+          alertModal("Unable to remove user from role", client.getLastErrorMessage("An internal error occured"));
         });
+      });
+    });
   }
   window.usergrid.console.removeGroupFromUser = removeGroupFromUser;
 
@@ -2009,7 +2006,7 @@ function usergrid_console_app(Pages) {
     e.preventDefault();
 
     var items = $('#groups-table input[class^=groupListItem]:checked');
-    if(!items.length){
+    if (!items.length) {
       alertModal("Error", "Please, first select the groups you want to delete.")
         return;
     }
@@ -2821,27 +2818,30 @@ function usergrid_console_app(Pages) {
     var shell_input = $('#shell-input');
 
     if (!event.shiftKey && (event.keyCode == '13')) {
-    event.preventDefault();
-    var s = $('#shell-input').val().trim();
-    echoInputToShell(s);
-    shell_input.val("");
-    handleShellCommand(s);
+
+      event.preventDefault();
+      var s = $('#shell-input').val().trim();
+      echoInputToShell(s);
+      shell_input.val("");
+      handleShellCommand(s);
 
     } else if (event.keyCode == '38') {
-    event.preventDefault();
-    history_i--;
 
-    if (history_i < 0) {
-    history_i = Math.max(history.length - 1, 0);
-    }
+      event.preventDefault();
+      history_i--;
 
-    if (history.length > 0) {
-    shell_input.val(history[history_i]);
-    } else {
-      shell_input.val("");
-    }
+      if (history_i < 0) {
+        history_i = Math.max(history.length - 1, 0);
+      }
+
+      if (history.length > 0) {
+        shell_input.val(history[history_i]);
+      } else {
+        shell_input.val("");
+      }
 
     } else if (event.keyCode == '40') {
+
       event.preventDefault();
       history_i++;
 
@@ -2954,8 +2954,9 @@ function usergrid_console_app(Pages) {
     }
     var pathInput = $('#search-roles-user-name-input');
     var list = [];
-    for (var i in users)
+    for (var i in users) {
       list.push(users[i].username);
+    }
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
   }
@@ -3008,7 +3009,7 @@ function usergrid_console_app(Pages) {
     var pathInput = $('#query-path');
     var list = [];
 
-    for (var i in applicationData.Collections){
+    for (var i in applicationData.Collections) {
       list.push('/' + applicationData.Collections[i].name + '/');
     }
 
@@ -3241,11 +3242,12 @@ function usergrid_console_app(Pages) {
           '</td>' +
           '</tr>';
       }
+
       $('#organizations').html(t);
       $('#organizations a').click( function(e){
-          e.preventDefault();
-          var uuid = $(this).attr('href').substring(1);
-          });
+        e.preventDefault();
+        var uuid = $(this).attr('href').substring(1);
+      });
     } else {
     }
   }
@@ -3380,9 +3382,9 @@ function usergrid_console_app(Pages) {
   }
 
   $('#button-users-list').click(function() {
-      showPanelList('users');
-      return false;
-      });
+    showPanelList('users');
+    return false;
+  });
 
   $('#user-panel-tab-bar a').click(function() {
     selectTabButton(this);
