@@ -640,7 +640,7 @@ function usergrid_console_app(Pages) {
     if(appList.is(":empty")){
       appList.html('<div class="alert user-panel-section">No applications created.</div>');
       appMenu.html('<li>--No Apps--</li>');
-      disableApplicationPanelButtons();
+      hideOnNoOrganizations();
     }
   }
 
@@ -649,7 +649,6 @@ function usergrid_console_app(Pages) {
     sectionApps.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
     client.requestApplications(displayApplications, function() {
       sectionApps.html('<div class="alert user-panel-section">Unable to retrieve application list.</div>');
-      disableApplicationPanelButtons();
     });
   }
 
@@ -3098,7 +3097,6 @@ function usergrid_console_app(Pages) {
     var link = $(this);
     var orgName = link.text();
     client.setCurrentOrganization(orgName);
-    disableApplicationPanelButtons();
     Pages.ShowPage('console');
   }
 
@@ -3465,6 +3463,15 @@ function usergrid_console_app(Pages) {
 
   function disableApplicationPanelButtons() {
     $('#application-panel-buttons').hide();
+  }
+
+  function hideOnNoOrganizations() {
+    $('#sidebar-menu #selectedApp').text('No Apps');
+    hideme = ["users", "groups", "roles", "activities", "collections", "analytics", "settings"]
+    for (var i in hideme) {
+      $('#sidebar-menu selectedApp').text("No apps created");
+      $('#sidebar-menu a[href="#' + hideme[i] + '"]').hide();
+    }
   }
 
   $('#system-panel-button-home').addClass('ui-selected');

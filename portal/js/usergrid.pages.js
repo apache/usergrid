@@ -10,7 +10,7 @@ function UsergridPages(){
   }
 
   self.ShowPage = function(pageName){
-    console.log('showing ' +pageName);
+    console.log('showing ' + pageName);
     $("#pages > div").hide();
     var page = self.pages[pageName];
     page.box.show();
@@ -48,23 +48,26 @@ function UsergridPages(){
     self.pages[page.name] = page;
   }
 
-  self.AddPanel = function(panelName, linkSelector,boxSelector,initFunction,showFunction)       {
-    if(!linkSelector)
+  self.AddPanel = function(panelName, linkSelector,boxSelector,initFunction,showFunction) {
+    if (!linkSelector) {
       linkSelector = "#sidebar-menu a[href='#" + panelName + "']";
+    }
 
-    if(!boxSelector)
+    if (!boxSelector) {
       boxSelector = "#" + panelName + '-panel';
+    }
 
     var panel = {
       name: panelName,
       link: $(linkSelector),
-      box:$(boxSelector),
-      initFunction:initFunction,
-      showFunction:showFunction
+      box: $(boxSelector),
+      initFunction: initFunction,
+      showFunction: showFunction
     }
 
-    if(panel.initFunction)
+    if (panel.initFunction) {
       panel.initFunction();
+    }
 
     panel.link.click(function(e) {
       e.preventDefault();
@@ -80,7 +83,7 @@ function UsergridPages(){
     $("#sidebar-menu li.active").removeClass('active');
     panel.link.parent().addClass('active');
 
-    if(panel.showFunction){
+    if (panel.showFunction) {
       panel.showFunction();
     }
 
@@ -96,18 +99,18 @@ function UsergridPages(){
 
   function LoadPage(page){
 
-    if(page.name=='forgot-password')
+    if (page.name=='forgot-password') {
       $("#forgot-password-page iframe").attr("src", self.resetPasswordUrl);
-    else if(page.name=='console-frame')
+    } else if(page.name=='console-frame') {
       $("#console-frame-page iframe").attr("src", "consoleFrame.html");
-    else{
-      if(window.location.pathname.indexOf('app') > 0){
+    } else {
+      if (window.location.pathname.indexOf('app') > 0) {
         $.ajaxSetup ({cache: false});
         page.box.load(page.name + '.html',page.initFunction);
         $.ajaxSetup ({cache: true});
-      }
-      else if(page.initFunction)
+      } else if(page.initFunction) {
         page.initFunction();
+      }
     }
 
     return;
