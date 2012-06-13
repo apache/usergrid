@@ -640,7 +640,7 @@ function usergrid_console_app(Pages) {
     if(appList.is(":empty")){
       appList.html('<div class="alert user-panel-section">No applications created.</div>');
       appMenu.html('<li>--No Apps--</li>');
-      hideOnNoOrganizations();
+      forceNewApp();
     }
   }
 
@@ -857,6 +857,7 @@ function usergrid_console_app(Pages) {
 
   $('form.modal').on('hidden',resetModal).on('shown',focusModal).submit(submitModal);
   $('#dialog-form-new-application').submit(submitApplication);
+  $('#dialog-form-force-new-application').submit(submitApplication);
   $('#dialog-form-new-admin').submit(submitNewAdmin);
   $('#dialog-form-new-organization').submit(submitNewOrg);
   $('#dialog-form-new-user').submit(submitNewUser);
@@ -930,7 +931,7 @@ function usergrid_console_app(Pages) {
     var form = $(this);
     formClearErrors(form);
 
-    var new_application_name = $('#new-application-name');
+    var new_application_name = $(this).find('.new-application-name');
 
     var bValid = checkLength2(new_application_name, 4, 80)
       && checkRegexp2(new_application_name, usernameRegex, usernameAllowedCharsMessage);
@@ -3465,13 +3466,8 @@ function usergrid_console_app(Pages) {
     $('#application-panel-buttons').hide();
   }
 
-  function hideOnNoOrganizations() {
-    $('#sidebar-menu #selectedApp').text('No Apps');
-    hideme = ["users", "groups", "roles", "activities", "collections", "analytics", "settings"]
-    for (var i in hideme) {
-      $('#sidebar-menu selectedApp').text("No apps created");
-      $('#sidebar-menu a[href="#' + hideme[i] + '"]').hide();
-    }
+  function forceNewApp() {
+    $('#dialog-form-force-new-application').modal();
   }
 
   $('#system-panel-button-home').addClass('ui-selected');
