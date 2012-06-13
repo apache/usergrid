@@ -1,14 +1,14 @@
 <div class="alert messages" style="display: none;"></div>
 <div id="group-messages" class="alert" style="display: none;"></div>
 <div class="console-section">
-	<div class="well thingy">
-        {{if path}}<span class="title" href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
-        ${name}
-        {{if path}}</span>{{/if}}
-        <div class="bar">
-            <a href="#" onclick="usergrid.console.saveGroupProfile('${uuid}'); return false;"> Save Group </a>
-        </div>
-	</div>
+  <div class="well thingy">
+    {{if path}}<span class="title" href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+      ${name}
+    {{if path}}</span>{{/if}}
+    <div class="bar">
+      <a href="#" onclick="usergrid.console.saveGroupProfile('${uuid}'); return false;"> Save Group </a>
+    </div>
+  </div>
   <h3>Edit</h3>
   <div class="query-result-form"></div>
   <div class="content-container">
@@ -54,16 +54,16 @@
           <td>
             <table class="table table-striped">
               <tbody>
-              {{each metadata.sets}}
-              <tr>
-                <td>
-                  ${$index}
-                </td>
-                <td>
-                  <a href="#" onclick="usergrid.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
-                </td>
-              </tr>
-              {{/each}}
+                {{each metadata.sets}}
+                <tr>
+                  <td>
+                    ${$index}
+                  </td>
+                  <td>
+                    <a href="#" onclick="usergrid.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
+                  </td>
+                </tr>
+                {{/each}}
               <tbody>
             </table>
           </td>
@@ -73,16 +73,16 @@
           <td>
             <table class="table table-striped">
               <tbody>
-              {{each metadata.collections}}
-              <tr>
-                <td>
-                  ${$index}
-                </td>
-                <td>
-                  <a href="#" onclick="usergrid.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
-                </td>
-              </tr>
-              {{/each}}
+                {{each metadata.collections}}
+                <tr>
+                  <td>
+                    ${$index}
+                  </td>
+                  <td>
+                    <a href="#" onclick="usergrid.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
+                  </td>
+                </tr>
+                {{/each}}
               <tbody>
             </table>
           </td>
@@ -91,5 +91,5 @@
     </table>
     <h3>JSON</h3>
     <pre class="query-result-json-inner">${JSON.stringify(entity, null, "  ")}</pre>
-	</div>
+  </div>
 </div>
