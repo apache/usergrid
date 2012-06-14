@@ -719,9 +719,8 @@ public class ManagementServiceImpl implements ManagementService {
 	}
 
 	@Override
-	public UserInfo createAdminFromPrexistingPassword(User user,
-			String precypheredPassword, String hashType, boolean sendEmail)
-			throws Exception {
+	public UserInfo createAdminFromPrexistingPassword(User user, String precypheredPassword, String hashType, boolean sendEmail) throws Exception {
+
 		emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
 
@@ -1075,7 +1074,6 @@ public class ManagementServiceImpl implements ManagementService {
 		CredentialsInfo credentialsInfo = (CredentialsInfo) em
 				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
 						"password");
-
 		if (checkPassword(password, credentialsInfo)) {
 			userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
 			if (!userInfo.isActivated()) {
@@ -2465,7 +2463,6 @@ public class ManagementServiceImpl implements ManagementService {
 		CredentialsInfo credentialsInfo = (CredentialsInfo) em
 				.getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
 						"password");
-
 		if (checkPassword(password, credentialsInfo)) {
 			if (!user.activated()) {
 				throw new UnactivatedAdminUserException();
@@ -2478,6 +2475,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 		return null;
 	}
+
 
 	public String getPasswordResetTokenForAppUser(UUID applicationId,
 			UUID userId) throws Exception {
