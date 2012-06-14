@@ -58,6 +58,7 @@ public class Client {
 
     private String apiUrl = PUBLIC_API_URL;
 
+    private String organizationId;
     private String applicationId;
     private String clientId;
     private String clientSecret;
@@ -83,8 +84,9 @@ public class Client {
      * @param applicationId
      *            the application id or name
      */
-    public Client(String applicationId) {
+    public Client(String organizationId, String applicationId) {
         init();
+        this.organizationId = organizationId;
         this.applicationId = applicationId;
     }
 
@@ -116,6 +118,33 @@ public class Client {
         this.apiUrl = apiUrl;
         return this;
     }
+    
+    
+    /**
+     * the organizationId to set
+     * @param organizationId
+     * @return
+     */
+    public Client withOrganizationId(String organizationId){
+        this.organizationId = organizationId;
+        return this;
+    }
+    
+    
+
+    /**
+     * @return the organizationId
+     */
+    public String getOrganizationId() {
+        return organizationId;
+    }
+
+    /**
+     * @param organizationId the organizationId to set
+     */
+    public void setOrganizationId(String organizationId) {
+        this.organizationId = organizationId;
+    }
 
     /**
      * @return the application id or name
@@ -131,6 +160,7 @@ public class Client {
     public void setApplicationId(String applicationId) {
         this.applicationId = applicationId;
     }
+   
 
     /**
      * @param applicationId
@@ -352,7 +382,7 @@ public class Client {
         formData.put("username", email);
         formData.put("password", password);
         ApiResponse response = apiRequest(HttpMethod.POST, formData, null,
-                applicationId, "token");
+                organizationId, applicationId, "token");
         if (response == null) {
             return response;
         }
@@ -383,7 +413,7 @@ public class Client {
         data.put("newpassword", newPassword);
         data.put("oldpassword", oldPassword);
 
-        return apiRequest(HttpMethod.POST, null, data, applicationId, "users",
+        return apiRequest(HttpMethod.POST, null, data, organizationId,  applicationId, "users",
                 username, "password");
 
     }
@@ -406,7 +436,7 @@ public class Client {
         formData.put("username", email);
         formData.put("pin", pin);
         ApiResponse response = apiRequest(HttpMethod.POST, formData, null,
-                applicationId, "token");
+                organizationId,  applicationId, "token");
         if (response == null) {
             return response;
         }
@@ -438,7 +468,7 @@ public class Client {
         Map<String, Object> formData = new HashMap<String, Object>();
         formData.put("fb_access_token", fb_access_token);
         ApiResponse response = apiRequest(HttpMethod.POST, formData, null,
-                applicationId, "auth", "facebook");
+                organizationId,  applicationId, "auth", "facebook");
         if (response == null) {
             return response;
         }
@@ -474,7 +504,7 @@ public class Client {
         formData.put("client_id", clientId);
         formData.put("client_secret", clientSecret);
         ApiResponse response = apiRequest(HttpMethod.POST, formData, null,
-                applicationId, "token");
+                organizationId, applicationId, "token");
         if (response == null) {
             return response;
         }
@@ -504,7 +534,7 @@ public class Client {
         }
         properties.put("refreshed", System.currentTimeMillis());
         ApiResponse response = apiRequest(HttpMethod.PUT, null, properties,
-                applicationId, "devices", deviceId.toString());
+                organizationId, applicationId, "devices", deviceId.toString());
         return response.getFirstEntity(Device.class);
     }
 
@@ -520,7 +550,7 @@ public class Client {
             throw new IllegalArgumentException("Missing entity type");
         }
         ApiResponse response = apiRequest(HttpMethod.POST, null, entity,
-                applicationId, entity.getType());
+                organizationId, applicationId, entity.getType());
         return response;
     }
 
@@ -537,7 +567,7 @@ public class Client {
             throw new IllegalArgumentException("Missing entity type");
         }
         ApiResponse response = apiRequest(HttpMethod.POST, null, properties,
-                applicationId, properties.get("type").toString());
+                organizationId, applicationId, properties.get("type").toString());
         return response;
     }
 
@@ -579,7 +609,7 @@ public class Client {
      */
     public Map<String, Group> getGroupsForUser(String userId) {
         ApiResponse response = apiRequest(HttpMethod.GET, null, null,
-                applicationId, "users", userId, "groups");
+                organizationId, applicationId, "users", userId, "groups");
         Map<String, Group> groupMap = new HashMap<String, Group>();
         if (response != null) {
             List<Group> groups = response.getEntities(Group.class);
@@ -610,7 +640,7 @@ public class Client {
      * @return
      */
     public ApiResponse postUserActivity(String userId, Activity activity) {
-        return apiRequest(HttpMethod.POST, null, activity, applicationId, "users",
+        return apiRequest(HttpMethod.POST, null, activity,  organizationId, applicationId, "users",
                 userId, "activities");
     }
 
@@ -644,7 +674,7 @@ public class Client {
      * @return
      */
     public ApiResponse postGroupActivity(String groupId, Activity activity) {
-        return apiRequest(HttpMethod.POST, null, activity, applicationId, "groups",
+        return apiRequest(HttpMethod.POST, null, activity, organizationId, applicationId, "groups",
                 groupId, "activities");
     }
 
@@ -725,7 +755,7 @@ public class Client {
      */
     public Query queryActivityFeedForGroup(String groupId) {
         Query q = queryEntitiesRequest(HttpMethod.GET, null, null,
-                applicationId, "groups", groupId, "feed");
+                organizationId,  applicationId, "groups", groupId, "feed");
         return q;
     }
 
@@ -753,7 +783,7 @@ public class Client {
      */
     public Query queryUsers() {
         Query q = queryEntitiesRequest(HttpMethod.GET, null, null,
-                applicationId, "users");
+                organizationId,  applicationId, "users");
         return q;
     }
 
@@ -812,7 +842,7 @@ public class Client {
      * @return
      */
     public ApiResponse addUserToGroup(String userId, String groupId) {
-        return apiRequest(HttpMethod.POST, null, null, applicationId, "groups",
+        return apiRequest(HttpMethod.POST, null, null, organizationId,  applicationId, "groups",
                 groupId, "users", userId);
     }
 
@@ -860,7 +890,7 @@ public class Client {
             data.put("name", groupName);
         }
         
-        return apiRequest(HttpMethod.POST, null, data, applicationId, "groups");
+        return apiRequest(HttpMethod.POST, null, data,  organizationId, applicationId, "groups");
     }
     
     /**
@@ -892,7 +922,7 @@ public class Client {
     public ApiResponse connectEntities(String connectingEntityType,
             String connectingEntityId, String connectionType,
             String connectedEntityId) {
-        return apiRequest(HttpMethod.POST, null, null, applicationId,
+        return apiRequest(HttpMethod.POST, null, null,  organizationId, applicationId,
                 connectingEntityType, connectingEntityId, connectionType,
                 connectedEntityId);
     }
@@ -909,7 +939,7 @@ public class Client {
     public ApiResponse disconnectEntities(String connectingEntityType,
             String connectingEntityId, String connectionType,
             String connectedEntityId) {
-        return apiRequest(HttpMethod.DELETE, null, null, applicationId,
+        return apiRequest(HttpMethod.DELETE, null, null,  organizationId, applicationId,
                 connectingEntityType, connectingEntityId, connectionType,
                 connectedEntityId);
     }
@@ -928,7 +958,7 @@ public class Client {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("ql", ql);
         Query q = queryEntitiesRequest(HttpMethod.GET, params, null,
-                applicationId, connectingEntityType, connectingEntityId,
+                organizationId, applicationId, connectingEntityType, connectingEntityId,
                 connectionType);
         return q;
     }
@@ -1049,13 +1079,13 @@ public class Client {
     }
 
     public ApiResponse postMessage(String path, Map<String, Object> message) {
-        return apiRequest(HttpMethod.POST, null, message, applicationId,
+        return apiRequest(HttpMethod.POST, null, message, organizationId,  applicationId,
                 "queues", normalizeQueuePath(path));
     }
 
     public ApiResponse postMessage(String path,
             List<Map<String, Object>> messages) {
-        return apiRequest(HttpMethod.POST, null, messages, applicationId,
+        return apiRequest(HttpMethod.POST, null, messages,  organizationId, applicationId,
                 "queues", normalizeQueuePath(path));
     }
 
@@ -1122,20 +1152,20 @@ public class Client {
         if (sync != null) {
             params.put("synchronized", sync);
         }
-        return apiRequest(HttpMethod.GET, params, null, applicationId,
+        return apiRequest(HttpMethod.GET, params, null,  organizationId, applicationId,
                 "queues", normalizeQueuePath(path));
     }
 
     public ApiResponse addSubscriber(String publisherQueue,
             String subscriberQueue) {
-        return apiRequest(HttpMethod.POST, null, null, applicationId, "queues",
+        return apiRequest(HttpMethod.POST, null, null, organizationId,  applicationId, "queues",
                 normalizeQueuePath(publisherQueue), "subscribers",
                 normalizeQueuePath(subscriberQueue));
     }
 
     public ApiResponse removeSubscriber(String publisherQueue,
             String subscriberQueue) {
-        return apiRequest(HttpMethod.DELETE, null, null, applicationId,
+        return apiRequest(HttpMethod.DELETE, null, null, organizationId,  applicationId,
                 "queues", normalizeQueuePath(publisherQueue), "subscribers",
                 normalizeQueuePath(subscriberQueue));
     }
