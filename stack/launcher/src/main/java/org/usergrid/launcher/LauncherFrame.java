@@ -195,9 +195,14 @@ public class LauncherFrame extends JFrame {
 				if (app.serverIsStarted() && (status == Status.GREEN)) {
 					storeAdminUrls();
 					storeAdminEmail();
+          String adminUri = null;
 					try {
+            adminUri = getAdminURI().toString();
 						Desktop.getDesktop().browse(getAdminURI());
 					} catch (Exception e) {
+            System.out.println("There was a problem opening default browser for this system: ");
+            e.printStackTrace();
+            System.out.println("You can access the URI directly here: " + adminUri);
 					}
 				} else {
 					JOptionPane
