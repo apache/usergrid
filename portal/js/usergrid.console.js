@@ -2366,13 +2366,13 @@ function usergrid_console_app(Pages) {
     client.requestApplicationRoles(current_application_id,
       function(response) {
         displayRoles(response);
-        $('#role-section-title').html(roles[current_role_name] + " Role");
-        $('#role-permissions').html('<div class="alert alert-info">Loading ' + roles[current_role_name] + ' permissions...</div>');
+        $('#role-section-title').html(current_role_name + " Role");
+        $('#role-permissions').html('<div class="alert alert-info">Loading ' + current_role_name + ' permissions...</div>');
         client.requestApplicationRolePermissions(current_application_id, current_role_name, function(response) {
           displayPermissions(response);
         },
         function() {
-          $('#application-roles').html('<div class="alert">Unable to retrieve ' + roles[current_role_name] + ' role permissions.</div>');
+          $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>');
         });
 
         client.requestApplicationRoleUsers(current_application_id, current_role_id,
@@ -2380,7 +2380,7 @@ function usergrid_console_app(Pages) {
             displayRolesUsers(response);
           },
           function() {
-            $('#application-roles').html('<div class="alert">Unable to retrieve ' + roles[current_role_name] + ' role permissions.</div>');
+            $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>');
           }
         );
       },
@@ -3089,6 +3089,7 @@ function usergrid_console_app(Pages) {
     orgMenu.empty();
     orgTmpl.tmpl(data).appendTo(orgMenu);
     orgMenu.find('a').click(selectOrganization);
+    displayCurrentOrg();
   }
 
   function selectOrganization(e) {
@@ -3381,6 +3382,10 @@ function usergrid_console_app(Pages) {
   }
   usergrid.console.leaveOrganization = leaveOrganization;
 
+  function displayCurrentOrg() {
+    $('#organizations-table').html('<tr class="zebraRows"><td>' + client.currentOrganization.name + '</td><td class="monospace">' + client.currentOrganization.uuid + '</td></tr>');
+  }
+  usergrid.console.displayCurrentOrg = displayCurrentOrg;
 
   /*******************************************************************
    *
