@@ -3572,6 +3572,9 @@ html {
   float: right;
   color: #007cdc;
 }
+.monospace {
+  font-family: monospace !important;
+}
 #selectedApp {
   font-size: 16px;
   cursor: pointer;
