@@ -29,6 +29,7 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -38,20 +39,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.swing.BorderFactory;
-import javax.swing.ComboBoxEditor;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JTextField;
-import javax.swing.JToolBar;
-import javax.swing.Timer;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -198,12 +186,19 @@ public class LauncherFrame extends JFrame {
           String adminUri = null;
 					try {
             adminUri = getAdminURI().toString();
-						Desktop.getDesktop().browse(getAdminURI());
-					} catch (Exception e) {
-            System.out.println("There was a problem opening default browser for this system: ");
-            e.printStackTrace();
-            System.out.println("You can access the URI directly here: " + adminUri);
-					}
+            Desktop.getDesktop().browse(getAdminURI());
+          } catch (IOException e) {
+            JOptionPane.showMessageDialog(null,
+                    new JTextArea("Error opening URL in browser."
+                            + " Please open the following URL in a browser manually:\n" + adminUri),
+                    "Warning", JOptionPane.WARNING_MESSAGE);
+          } catch (Exception ex) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    new JTextArea("Error opening URL in browser."
+                            + "Please open the following URL in a browser manually:" + adminUri),
+                    "Warning", JOptionPane.WARNING_MESSAGE);
+          }
 				} else {
 					JOptionPane
 							.showMessageDialog(
