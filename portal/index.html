@@ -388,7 +388,7 @@
                               <div class="control-group">
                                 <label id="update-account-id-label" class="control-label" for="update-account-id">UUID</label>
                                 <div class="controls">
-                                  <input type="text" name="update-account-username" id="update-account-id" class="span4 uneditable-input" value="loading..." size="20"/>
+				  <span id="update-account-id" class="monospace"></span>
                                 </div>
                               </div>
                               <div class="control-group">
@@ -409,25 +409,36 @@
                                   <input type="text" name="update-account-email" id="update-account-email" class="span4" value="" size="20"/>
                                 </div>
                               </div>
+			      <div class="control-group">
+				<label class="control-label" for="update-account-picture-img">Picture </label>
+				<div class="controls">
+				  <img id="update-account-picture-img" src="" class="" width="50" />
+				</div>
+			      </div>
+			      <div class="control-group">
+				<label class="control-label" for="update-account-picture">Picture URL</label>
+				<div class="controls">
+				  <input type="text" name="update-account-picturs" id="update-account-picture" class="span4" value="" size="20"/>
+				</div>
+			      </div>
+                              <span class="help-block">Leave blank any of the following to keep the current password unchanged</span>
+			      <br />
                               <div class="control-group">
                                 <label class="control-label" for="old-account-password">Old Password</label>
                                 <div class="controls">
                                   <input type="password" name="old-account-password" id="old-account-password" class="span4" value="" size="20"/>
-                                  <span class="help-block">Leave blank to keep current password unchanged</span>
                                 </div>
                               </div>
                               <div class="control-group">
                                 <label class="control-label" for="update-account-password">New Password</label>
                                 <div class="controls">
                                   <input type="password" name="update-account-password" id="update-account-password" class="span4" value="" size="20"/>
-                                  <span class="help-block">Leave blank to keep current password unchanged</span>
                                 </div>
                               </div>
                               <div class="control-group">
                                 <label class="control-label" for="update-account-password-repeat">Confirm New Password</label>
                                 <div class="controls">
                                   <input type="password" name="update-account-password-repeat" id="update-account-password-repeat" class="span4" value="" size="20"/>
-                                  <span class="help-block">Leave blank to keep current password unchanged</span>
                                 </div>
                               </div>
                             </fieldset>

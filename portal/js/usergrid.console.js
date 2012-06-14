@@ -1720,6 +1720,7 @@ function usergrid_console_app(Pages) {
     $('#user-panel-permissions').html("");
 
     if (user_data) {
+      console.log(user_data);
       var details = $.tmpl('usergrid.ui.panels.user.profile.html', user_data);
       var formDiv = details.find('.query-result-form');
       $(formDiv).buildForm(usergrid.console.ui.jsonSchemaToDForm(usergrid.console.ui.collections.vcard_schema, user_data.entity));
@@ -3215,9 +3216,15 @@ function usergrid_console_app(Pages) {
 
   function displayAccountSettings(response) {
     if (response.data) {
-      $("#update-account-username").val(response.data.username);
-      $("#update-account-name").val(response.data.name);
-      $("#update-account-email").val(response.data.email);
+      console.log(response)
+      response.data.gravatar = get_gravatar(response.data.email, 50);
+
+      $('#update-account-username').val(response.data.username);
+      $('#update-account-name').val(response.data.name);
+      $('#update-account-email').val(response.data.email);
+      $('#update-account-picture-img').attr('src', response.data.gravatar);
+      $('#update-account-picture').val(response.data.gravatar);
+      $('#update-account-bday').attr('src', response.data.gravatar);
 
       var t = "";
       var organizations = response.data.organizations;
@@ -3234,7 +3241,7 @@ function usergrid_console_app(Pages) {
           '</a>' +
           '</td>' +
           '<td>' +
-          '<span>' + uuid + '</span>' +
+          '<span class="monospace">' + uuid + '</span>' +
           '</td>' +
           '<td>' +
           "<a onclick=\"usergrid.console.leaveOrganization('" + uuid + "')\"" + ' ' + "href=\"#" + uuid + "\" class=\"btn btn-danger\">Leave</a>" +
@@ -3298,7 +3305,7 @@ function usergrid_console_app(Pages) {
     if (client.useSSO()) {
       client.sendToSSOProfilePage();
     } else {
-      $('#update-account-id').val(client.loggedInUser.uuid);
+      $('#update-account-id').text(client.loggedInUser.uuid);
       $('#update-account-name').val("");
       $('#update-account-email').val("");
       $('#old-account-password').val("");
