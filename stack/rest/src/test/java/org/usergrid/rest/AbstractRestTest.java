@@ -178,7 +178,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
 	public void loginClient() {
 		// now create a client that logs in ed
-		client = new Client("test-organization/test-app")
+		client = new Client("test-organization", "test-app")
 				.withApiUrl(getBaseURI().toString());
 
 		org.usergrid.java.client.response.ApiResponse response = client
@@ -195,7 +195,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
 	@BeforeClass
 	public static void setup() throws Exception {
-		Class.forName("jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.error_jsp");
+//		Class.forName("jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.error_jsp");
 		logger.info("setup");
 		assertNull(embedded);
 		embedded = new EmbeddedServerHelper();

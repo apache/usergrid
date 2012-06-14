@@ -17,6 +17,8 @@ package org.usergrid.rest.applications;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
+import org.usergrid.management.ApplicationInfo;
+import org.usergrid.management.OrganizationInfo;
 import org.usergrid.rest.AbstractRestTest;
 
 import javax.ws.rs.core.MediaType;
@@ -27,21 +29,63 @@ import static org.usergrid.utils.MapUtils.hashMap;
 
 /**
  * Invokes methods on ApplicationResource
+ * 
  * @author zznate
  */
 public class ApplicationResourceTest extends AbstractRestTest {
 
-  @Test
-  public void test_GET_credentials_ok() {
-    String mgmtToken = mgmtToken();
+    @Test
+    public void test_GET_credentials_ok() {
+        String mgmtToken = mgmtToken();
 
-    JsonNode node = resource().path("/test-organization/test-app/credentials")
-            .queryParam("access_token", mgmtToken)
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .get(JsonNode.class);
-    assertEquals("ok", node.get("status").getTextValue());
-    logNode(node);
-  }
+        JsonNode node = resource()
+                .path("/test-organization/test-app/credentials")
+                .queryParam("access_token", mgmtToken)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        assertEquals("ok", node.get("status").getTextValue());
+        logNode(node);
+    }
 
+    @Test
+    public void applicationWithOrgCredentials() throws Exception {
+
+        OrganizationInfo orgInfo = managementService
+                .getOrganizationByName("test-organization");
+      
+        String clientId = managementService.getClientIdForOrganization(orgInfo
+                .getUuid());
+        String clientSecret = managementService
+                .getClientSecretForOrganization(orgInfo.getUuid());
+
+        JsonNode node = resource().path("/test-organization/test-app/users")
+                .queryParam("client_id", clientId)
+                .queryParam("client_secret", clientSecret)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        
+        
+        assertEquals("ok", node.get("status").getTextValue());
+
+    }
+    
+    @Test
+    public void applicationWithAppCredentials() throws Exception {
+
+        ApplicationInfo appInfo = managementService
+                .getApplicationInfo("test-organization/test-app");
+      
+        String clientId = managementService.getClientIdForApplication(appInfo.getId());
+        String clientSecret = managementService.getClientSecretForApplication(appInfo.getId());
+
+        JsonNode node = resource().path("/test-organization/test-app/users")
+                .queryParam("client_id", clientId)
+                .queryParam("client_secret", clientSecret)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        
+        
+        assertEquals("ok", node.get("status").getTextValue());
+
+    }
 }
