@@ -3572,6 +3572,9 @@ html {
   float: right;
   color: #007cdc;
 }
+.monospace {
+  font-family: monospace !important;
+}
 #selectedApp {
   font-size: 16px;
   cursor: pointer;
@@ -4686,6 +4689,7 @@ table#organization-admins-table {
   padding: 10px;
 }
 #organizations {
+  table-layout: auto !important;
   padding: 0px;
 }
 #organizations .alert {
@@ -4709,7 +4713,7 @@ table#organization-admins-table {
 #organizations a {
   padding: 3px 10px;
 }
-/*---------- -------------------------------*/
+/*-----------------------------------------*/
 .smallgravatar {
   position: relative;
   top: 2px;
@@ -4735,4 +4739,9 @@ table .zebraRows:nth-child(2n) {
 /* ---------------- Account Panel ------------ */
 .leave-org-row td {
   line-height: 25px !important;
+}
+#update-account-form .control-group,
+#update-account-form .help-block {
+  padding-left: 40px;
+  padding-right: 40px;
 }

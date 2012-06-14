@@ -53,6 +53,10 @@ html{
   }
 }
 
+.monospace {
+  font-family: monospace !important;
+}
+
 #selectedApp {
   font-size: 16px;
   cursor: pointer;
@@ -1240,6 +1244,7 @@ table#organization-admins-table {
 }
 
 #organizations{
+  table-layout: auto !important;
   padding: 0px;
   .alert{
     display: inline-block;
@@ -1252,7 +1257,7 @@ table#organization-admins-table {
     padding: 3px 10px;
   }
 }
-/*---------- -------------------------------*/
+/*-----------------------------------------*/
 
 .smallgravatar{
   position: relative;
@@ -1286,5 +1291,12 @@ table .zebraRows {
 .leave-org-row {
   td {
     line-height: 25px !important;
+  }
+}
+
+#update-account-form {
+  .control-group, .help-block {
+    padding-left: 40px;
+    padding-right: 40px;
   }
 }

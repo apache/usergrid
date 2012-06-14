@@ -1720,6 +1720,7 @@ function usergrid_console_app(Pages) {
     $('#user-panel-permissions').html("");
 
     if (user_data) {
+      console.log(user_data);
       var details = $.tmpl('usergrid.ui.panels.user.profile.html', user_data);
       var formDiv = details.find('.query-result-form');
       $(formDiv).buildForm(usergrid.console.ui.jsonSchemaToDForm(usergrid.console.ui.collections.vcard_schema, user_data.entity));
@@ -2365,13 +2366,13 @@ function usergrid_console_app(Pages) {
     client.requestApplicationRoles(current_application_id,
       function(response) {
         displayRoles(response);
-        $('#role-section-title').html(roles[current_role_name] + " Role");
-        $('#role-permissions').html('<div class="alert alert-info">Loading ' + roles[current_role_name] + ' permissions...</div>');
+        $('#role-section-title').html(current_role_name + " Role");
+        $('#role-permissions').html('<div class="alert alert-info">Loading ' + current_role_name + ' permissions...</div>');
         client.requestApplicationRolePermissions(current_application_id, current_role_name, function(response) {
           displayPermissions(response);
         },
         function() {
-          $('#application-roles').html('<div class="alert">Unable to retrieve ' + roles[current_role_name] + ' role permissions.</div>');
+          $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>');
         });
 
         client.requestApplicationRoleUsers(current_application_id, current_role_id,
@@ -2379,7 +2380,7 @@ function usergrid_console_app(Pages) {
             displayRolesUsers(response);
           },
           function() {
-            $('#application-roles').html('<div class="alert">Unable to retrieve ' + roles[current_role_name] + ' role permissions.</div>');
+            $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>');
           }
         );
       },
@@ -3088,6 +3089,7 @@ function usergrid_console_app(Pages) {
     orgMenu.empty();
     orgTmpl.tmpl(data).appendTo(orgMenu);
     orgMenu.find('a').click(selectOrganization);
+    displayCurrentOrg();
   }
 
   function selectOrganization(e) {
@@ -3215,9 +3217,15 @@ function usergrid_console_app(Pages) {
 
   function displayAccountSettings(response) {
     if (response.data) {
-      $("#update-account-username").val(response.data.username);
-      $("#update-account-name").val(response.data.name);
-      $("#update-account-email").val(response.data.email);
+      console.log(response)
+      response.data.gravatar = get_gravatar(response.data.email, 50);
+
+      $('#update-account-username').val(response.data.username);
+      $('#update-account-name').val(response.data.name);
+      $('#update-account-email').val(response.data.email);
+      $('#update-account-picture-img').attr('src', response.data.gravatar);
+      $('#update-account-picture').val(response.data.gravatar);
+      $('#update-account-bday').attr('src', response.data.gravatar);
 
       var t = "";
       var organizations = response.data.organizations;
@@ -3234,7 +3242,7 @@ function usergrid_console_app(Pages) {
           '</a>' +
           '</td>' +
           '<td>' +
-          '<span>' + uuid + '</span>' +
+          '<span class="monospace">' + uuid + '</span>' +
           '</td>' +
           '<td>' +
           "<a onclick=\"usergrid.console.leaveOrganization('" + uuid + "')\"" + ' ' + "href=\"#" + uuid + "\" class=\"btn btn-danger\">Leave</a>" +
@@ -3298,7 +3306,7 @@ function usergrid_console_app(Pages) {
     if (client.useSSO()) {
       client.sendToSSOProfilePage();
     } else {
-      $('#update-account-id').val(client.loggedInUser.uuid);
+      $('#update-account-id').text(client.loggedInUser.uuid);
       $('#update-account-name').val("");
       $('#update-account-email').val("");
       $('#old-account-password').val("");
@@ -3374,6 +3382,10 @@ function usergrid_console_app(Pages) {
   }
   usergrid.console.leaveOrganization = leaveOrganization;
 
+  function displayCurrentOrg() {
+    $('#organizations-table').html('<tr class="zebraRows"><td>' + client.currentOrganization.name + '</td><td class="monospace">' + client.currentOrganization.uuid + '</td></tr>');
+  }
+  usergrid.console.displayCurrentOrg = displayCurrentOrg;
 
   /*******************************************************************
    *

@@ -57,6 +57,18 @@ function dateToString(numberDate){
         "optional":true,
         "title" : "Telephone"
       },
+      "picture":{
+        "type":"string",
+        "format":"image",
+        "optional":true,
+        "title" : "Picture URL"
+      },
+      "bday":{
+        "type":"string",
+        "format":"date",
+        "optional":true,
+        "title" : "Birthday"
+      },
       "adr":{
         "type":"object",
         "properties":{
@@ -90,18 +102,6 @@ function dateToString(numberDate){
         },
         "optional":true,
         "title" : "Address"
-      },
-      "picture":{
-        "type":"string",
-        "format":"image",
-        "optional":true,
-        "title" : "Picture URL"
-      },
-      "bday":{
-        "type":"string",
-        "format":"date",
-        "optional":true,
-        "title" : "Birthday"
       }
     }
   };
