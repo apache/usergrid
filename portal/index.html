@@ -109,14 +109,11 @@
         <div id="post-signup-page" class="container-fluid">
           <div class="row">
             <div id="login-area" class="span6 offset1">
-              <div class="console-section">
-                <h3>
-                  <span class="title">We're holding a seat for you!</span>
-                  <br /><br />
-                  <span class="title">Thanks for signing up for a spot on our private beta. We will send you an email as soon as we're ready for you!</span>
-                  <br /><br />
-                  <span class="title">In the mean time, you can stay up to date with Usergrid on our <a href="https://groups.google.com/forum/?fromgroups#!forum/usergrid">Google Group</a>.</span>
-                </h3>
+              <div class="console-section well thingy">
+                <span class="title">We're holding a seat for you!</span>
+                <br /><br />
+                <p>Thanks for signing up for a spot on our private beta. We will send you an email as soon as we're ready for you!</p>
+                <p>In the mean time, you can stay up to date with Usergrid on our <a href="https://groups.google.com/forum/?fromgroups#!forum/usergrid">Google Group</a>.</p>
               </div>
             </div>
           </div>
@@ -275,6 +272,27 @@
                     </tbody>
                   </table>
                 </div>
+		<form id="dialog-form-force-new-application" class="modal hide fade" action="#">
+                  <div class="modal-header">
+                    <h4>No applications for this organizations</h4>
+                  </div>
+                  <div class="modal-body">
+                    <p class="validateTips">All organizations require at least one application. Please create one.</p>
+                    <fieldset>
+                      <div class="control-group">
+                        <label for="new-application-name">Name</label>
+                        <div class="controls">
+                          <input type="text" name="name" id="" value="" class="input-xlarge new-application-name"/>
+                          <p class="help-block">Length of name must be between 4 and 80</p>
+                        </div>
+                      </div>
+                    </fieldset>
+                  </div>
+                  <div class="modal-footer">
+                    <input type="submit" class="btn btn-usergrid" value="Create"/>
+                    <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                  </div>
+                </form>
                 <form id="dialog-form-new-application" class="modal hide fade" action="#">
                   <div class="modal-header">
                     <a class="close" data-dismiss="modal">&times</a>
@@ -286,7 +304,7 @@
                       <div class="control-group">
                         <label for="new-application-name">Name</label>
                         <div class="controls">
-                          <input type="text" name="name" id="new-application-name" value="" class="input-xlarge"/>
+                          <input type="text" name="name" id="" value="" class="input-xlarge new-application-name"/>
                           <p class="help-block">Length of name must be between 4 and 80</p>
                         </div>
                       </div>
