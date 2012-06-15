@@ -105,14 +105,19 @@ public class CredExport extends ToolBase {
         System.out.println(String.format("Org Id: %s", org.getUuid()));
 
         System.out.println(String.format("Org Name: %s", org.getName()));
+        
+        System.out.println(String.format("Org Client Id: %s",
+                managementService.getClientIdForOrganization(org.getUuid())));
+        System.out.println(String.format("Org Client Secret: %s",
+                managementService.getClientSecretForOrganization(org.getUuid())));
 
         System.out.println(String.format("App Id: %s", app.getId()));
 
         System.out.println(String.format("App Name: %s", app.getName()));
 
-        System.out.println(String.format("Client Id: %s",
+        System.out.println(String.format("App Client Id: %s",
                 managementService.getClientIdForApplication(app.getId())));
-        System.out.println(String.format("Client Secret: %s",
+        System.out.println(String.format("App Client Secret: %s",
                 managementService.getClientSecretForApplication(app.getId())));
 
     }

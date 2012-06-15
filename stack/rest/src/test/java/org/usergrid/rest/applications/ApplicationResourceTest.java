@@ -15,17 +15,16 @@
  ******************************************************************************/
 package org.usergrid.rest.applications;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import javax.ws.rs.core.MediaType;
+
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.rest.AbstractRestTest;
-
-import javax.ws.rs.core.MediaType;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.usergrid.utils.MapUtils.hashMap;
 
 /**
  * Invokes methods on ApplicationResource
@@ -34,18 +33,6 @@ import static org.usergrid.utils.MapUtils.hashMap;
  */
 public class ApplicationResourceTest extends AbstractRestTest {
 
-    @Test
-    public void test_GET_credentials_ok() {
-        String mgmtToken = mgmtToken();
-
-        JsonNode node = resource()
-                .path("/test-organization/test-app/credentials")
-                .queryParam("access_token", mgmtToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        assertEquals("ok", node.get("status").getTextValue());
-        logNode(node);
-    }
 
     @Test
     public void applicationWithOrgCredentials() throws Exception {
@@ -65,7 +52,7 @@ public class ApplicationResourceTest extends AbstractRestTest {
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         
         
-        assertEquals("ok", node.get("status").getTextValue());
+        assertNotNull(node.get("entities"));
 
     }
     
@@ -81,11 +68,25 @@ public class ApplicationResourceTest extends AbstractRestTest {
         JsonNode node = resource().path("/test-organization/test-app/users")
                 .queryParam("client_id", clientId)
                 .queryParam("client_secret", clientSecret)
-                .accept(MediaType.APPLICATION_JSON)
+                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         
         
-        assertEquals("ok", node.get("status").getTextValue());
+        assertNotNull(node.get("entities"));
 
+    }
+    
+
+    @Test
+    public void test_GET_credentials_ok() {
+        String mgmtToken = mgmtToken();
+
+        JsonNode node = resource()
+                .path("/test-organization/test-app/credentials")
+                .queryParam("access_token", mgmtToken)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        assertEquals("ok", node.get("status").getTextValue());
+        logNode(node);
     }
 }
