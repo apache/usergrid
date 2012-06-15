@@ -369,4 +369,91 @@ public class CollectionTest extends AbstractPersistenceTest {
         assertEquals(2, r.size());
 
     }
+    
+    @Test
+    public void emptyQuery() throws Exception {
+        UUID applicationId = createApplication("testOrganization","testEmptyQuery");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        String firstName = "firstName" + UUIDUtils.newTimeUUID();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
+        properties.put("firstname", firstName);
+
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
+        
+        
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "djacobs");
+        properties.put("email", "djacobs@gmail.com");
+
+        Entity user2 = em.create("user", properties);
+        assertNotNull(user2);
+        
+        // EntityRef
+        Query query = new Query();
+
+        Results r = em.searchCollection(em.getApplicationRef(), "users", query);
+
+        assertEquals(2, r.size());
+
+        Entity returned = r.getEntities().get(0);
+
+        assertEquals(user.getUuid(), returned.getUuid());
+        
+        returned = r.getEntities().get(1);
+        
+        assertEquals(user2.getUuid(), returned.getUuid());
+
+    }
+    
+    @Test
+    public void emptyQueryReverse() throws Exception {
+        UUID applicationId = createApplication("testOrganization","testEmptyQueryReverse");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        String firstName = "firstName" + UUIDUtils.newTimeUUID();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
+        properties.put("firstname", firstName);
+
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
+        
+        
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "djacobs");
+        properties.put("email", "djacobs@gmail.com");
+
+        Entity user2 = em.create("user", properties);
+        assertNotNull(user2);
+        
+        // EntityRef
+        Query query = new Query();
+        query.setReversed(true);
+
+        Results r = em.searchCollection(em.getApplicationRef(), "users", query);
+
+        assertEquals(2, r.size());
+
+        Entity returned = r.getEntities().get(0);
+
+        assertEquals(user2.getUuid(), returned.getUuid());
+        
+        returned = r.getEntities().get(1);
+        
+        assertEquals(user.getUuid(), returned.getUuid());
+
+    }
 }
