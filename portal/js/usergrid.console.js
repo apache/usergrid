@@ -104,9 +104,13 @@ function usergrid_console_app(Pages) {
 
   function getAccessTokenURL(){
     var bearerToken = localStorage.getObject('usergrid_access_token');
-    var app_id = current_application_id;
-    if (typeof current_application_id != 'string') {
-      app_id = '';
+    var app_name = current_application_name;
+    if (typeof current_application_name != 'string') {
+      app_name = '';
+    }
+    var org_name = client.currentOrganization.name;
+    if (typeof org_name != 'string') {
+      org_name = '';
     }
     var bearerTokenJson = JSON.stringify(
       [{
@@ -116,8 +120,13 @@ function usergrid_console_app(Pages) {
         "style":"header"
       }, {
         "type":"custom_token",
-        "name":"app_id",
-        "value":app_id,
+        "name":"app_name",
+        "value":app_name,
+        "style":"template"
+      }, {
+        "type":"custom_token",
+        "name":"org_name",
+        "value":org_name,
         "style":"template"
       }]
     );
