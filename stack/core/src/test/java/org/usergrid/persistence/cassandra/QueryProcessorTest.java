@@ -24,6 +24,7 @@ import java.math.BigInteger;
 import java.util.Iterator;
 
 import org.antlr.runtime.ANTLRStringStream;
+import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenRewriteStream;
 import org.junit.Test;
 import org.usergrid.persistence.Query;
@@ -195,7 +196,7 @@ public class QueryProcessorTest {
         assertEquals("foo", slice.getFinish().getValue());
         assertTrue(slice.getFinish().isInclusive());
     }
-    
+
     @Test
     public void containsLower() throws Exception {
         String queryString = "select * where a contains 'FOO'";
@@ -223,8 +224,7 @@ public class QueryProcessorTest {
         assertEquals("foo", slice.getFinish().getValue());
         assertTrue(slice.getFinish().isInclusive());
     }
-    
-    
+
     @Test
     public void containsRange() throws Exception, PersistenceException {
         String queryString = "select * where a contains 'foo*'";
@@ -253,7 +253,6 @@ public class QueryProcessorTest {
         assertTrue(slice.getFinish().isInclusive());
     }
 
-
     @Test
     public void within() throws Exception {
         String queryString = "select * where a within .5 of 157.00, 0.00";
@@ -278,8 +277,17 @@ public class QueryProcessorTest {
 
     @Test
     public void andEquality() throws Exception {
-        String queryString = "select * where a = 1 and b = 2 and c = 3";
+        assertAndQuery("select * where a = 1 and b = 2 and c = 3");
+        assertAndQuery("select * where a = 1 AND b = 2 and c = 3");
+        assertAndQuery("select * where a = 1 AnD b = 2 and c = 3");
+        assertAndQuery("select * where a = 1 ANd b = 2 and c = 3");
+        assertAndQuery("select * where a = 1 anD b = 2 and c = 3");
+        assertAndQuery("select * where a = 1 ANd b = 2 and c = 3");
+        assertAndQuery("select * where a = 1 && b = 2 && c = 3");
+    }
 
+
+    private void assertAndQuery(String queryString) throws Exception {
         ANTLRStringStream in = new ANTLRStringStream(queryString);
         QueryFilterLexer lexer = new QueryFilterLexer(in);
         TokenRewriteStream tokens = new TokenRewriteStream(lexer);
@@ -316,13 +324,20 @@ public class QueryProcessorTest {
         assertTrue(slice.getStart().isInclusive());
         assertEquals(BigInteger.valueOf(1), slice.getFinish().getValue());
         assertTrue(slice.getFinish().isInclusive());
-
     }
 
     @Test
     public void orEquality() throws Exception {
-        String queryString = "select * where a = 1 or b = 2";
+        assertOrQuery("select * where a = 1 or b = 2");
+        assertOrQuery("select * where a = 1 OR b = 2");
+        assertOrQuery("select * where a = 1 oR b = 2");
+        assertOrQuery("select * where a = 1 Or b = 2");
+        assertOrQuery("select * where a = 1 || b = 2");
+    }
+    
+   
 
+    private void assertOrQuery(String queryString) throws Exception {
         ANTLRStringStream in = new ANTLRStringStream(queryString);
         QueryFilterLexer lexer = new QueryFilterLexer(in);
         TokenRewriteStream tokens = new TokenRewriteStream(lexer);
@@ -526,7 +541,7 @@ public class QueryProcessorTest {
         AndNode rootNode = (AndNode) processor.getFirstNode();
 
         SliceNode sliceNode = (SliceNode) rootNode.getLeft();
-        
+
         Iterator<QuerySlice> slices = sliceNode.getAllSlices().iterator();
 
         QuerySlice slice = slices.next();
@@ -536,12 +551,12 @@ public class QueryProcessorTest {
         assertFalse(slice.getStart().isInclusive());
 
         assertNull(slice.getFinish());
-        
+
         NotNode notNode = (NotNode) rootNode.getRight();
-        
-        //now get the child of the not node
+
+        // now get the child of the not node
         sliceNode = (SliceNode) notNode.getChild();
-        
+
         slices = sliceNode.getAllSlices().iterator();
 
         slice = slices.next();
@@ -556,7 +571,8 @@ public class QueryProcessorTest {
 
     /**
      * Tests that when NOT is the root operand, a full scan range is performed.
-     * @throws Exception 
+     * 
+     * @throws Exception
      */
     @Test
     public void notRootOperand() throws Exception {
@@ -574,11 +590,10 @@ public class QueryProcessorTest {
         NotNode rootNode = (NotNode) processor.getFirstNode();
 
         SliceNode sliceNode = (SliceNode) rootNode.getChild();
-        
+
         Iterator<QuerySlice> slices = sliceNode.getAllSlices().iterator();
 
         QuerySlice slice = slices.next();
-        
 
         assertEquals("b", slice.getPropertyName());
         assertEquals(BigInteger.valueOf(2), slice.getStart().getValue());
