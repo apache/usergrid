@@ -1,39 +1,38 @@
 <div class="console-section">
-	<h3>
-		{{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
-		<div class="user-profile-header-name{{if picture}} user-profile-picture-vert-offset{{/if}}">
-			{{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
-			${name}
-			{{if path}}</a>{{/if}}
-		</div>
-	</h3>
-	<div class="console-section-contents listContent">
-    {{if activities}}
+  <div class="well thingy">
+    {{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
+    <div class="title">
+      {{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+        ${name}
+        {{if path}}</a>{{/if}}
+    </div>
+  </div>
+  {{if activities}}
+  <table class="activities-table table">
     {{each activities}}
-      <div class="query-result-row entity_list_item">
-        <table class="query-result-table activities-table table">
-          <tr class="">
-            <!--<td class="query-result-td-checkbox"><input type="checkbox" name="${name}" id="${id}" value="${entity.uuid}" /></td>-->
-            <td class="created">
-              ${$value.created}<br />
-              <strong>${$value.content}</strong>
-            </td>
-            <td class="actor">
-              {{if $value.actor.uuid}}
-              <strong><a href="#" onclick="usergrid.console.pageOpenUserProfile('cb41cfa9-72f4-11e1-8b9e-1231381a0091'); return false;"">${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}</a></strong>
-              {{else}}
-              <strong>${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}</strong>
-              {{/if}}
-            </td>
-            <td class="verb">
-              ${$value.verb}
-            </td>
-          </tr>
-        </table>
-      </div>
+    <tr class="">
+      <td>
+        <a href="#" class="toggleableSP">${dateToString($value.created)}</a>
+        <a href="#" class="toggleableSP hide">${$value.created}</a>
+      </td>
+      <td>
+        ${$value.content}
+      </td>
+      <td>
+        {{if $value.actor.uuid}}
+        <a href="#" onclick="usergrid.console.pageOpenUserProfile('${$value.actor.uuid}'); return false;">${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}</a>
+        {{else}}
+        ${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}
+        {{/if}}
+      </td>
+      <td>
+        ${$value.verb}
+      </td>
+    </tr>
     {{/each}}
-    {{else}}
-    <div class="user-panel-section-message">No User Activities</div>
-    {{/if}}
-	</div>
+  </table>
+  {{else}}
+  <div class="user-panel-section-message">No User Activities</div>
+  {{/if}}
+</div>
 </div>

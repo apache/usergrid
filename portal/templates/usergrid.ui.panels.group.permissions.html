@@ -1,24 +1,20 @@
 <div class="console-section">
-	<h3>
-        {{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
-        ${name}
-        {{if path}}</a>{{/if}}
-	</h3>
-	<div class="console-section-contents">
-		<div class="group-panel-section">
-			<div class="group-roles-title">Roles</div>
-			{{if roles}}
-			{{each roles}}
-			<div class="group-role-row" id="group-role-row-${$index}">
-				<a href="" onclick="usergrid.console.pageOpenRole('${$index}'); return false;">
-					<span class="group-role-row-title">${$value}</span>
-					<span class="group-role-row-name">(${$index})</span>
-				</a>
-			</div>
-			{{/each}}
-			{{else}}
-			<div class="group-panel-section-message">No Roles</div>
-			{{/if}}
-		</div>
-	</div>
+  <div class="well thingy">
+    <span class="title">${name}</span>
+  </div>
+  <div class="group-panel-section">
+    {{if roles}}
+    <div class="group-roles-title">Roles</div>
+    {{each roles}}
+    <div class="group-role-row" id="group-role-row-${$index}">
+      <a href="" onclick="usergrid.console.pageOpenRole('${$index}'); return false;">
+        <span class="group-role-row-title">${$value}</span>
+        <span class="group-role-row-name">(${$index})</span>
+      </a>
+    </div>
+    {{/each}}
+    {{else}}
+    <div class="group-panel-section-message">No Roles</div>
+    {{/if}}
+  </div>
 </div>

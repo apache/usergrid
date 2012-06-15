@@ -1,0 +1,6 @@
+This TODO is only tables-unification specific
+
+Activities pagination. (waiting to be able to test).
+Pagination is wrong all over. Queries ALWAYS "haveNext" and "havePrevious".
+Groups do not have pagination.
+
