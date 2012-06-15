@@ -84,7 +84,7 @@ public class AppNameFix extends ToolBase {
                
                //nothing to do, it's right
                if(appName.contains("/")){
-                   logger.info("Application correct: {}", appName);
+                   logger.info("Application name is correct: {}", appName);
                    continue;
                }
                
@@ -94,7 +94,7 @@ public class AppNameFix extends ToolBase {
            
                application.setName(correctAppName);
                
-               rootEm.setProperty(application, "name", correctAppName);
+               rootEm.setProperty(application, "name", correctAppName, true);
                
                Application changedApp = rootEm.get(app.getKey(), Application.class);
                
