@@ -2702,23 +2702,23 @@ public class RelationManagerImpl implements RelationManager,
 
 		// nothing to search for or sort, just grab ids
 		if (!query.hasQueryPredicates() && !query.hasSortPredicates()) {
-			Map<UUID, UUID> ids = null;
-
-			ids = cass.getIdPairList(
+			List<UUID> ids = cass.getIdList(
 					cass.getApplicationKeyspace(applicationId),
 					key(headEntity.getUuid(), DICTIONARY_COLLECTIONS,
 							collectionName), query.getStartResult(), null,
-					query.getLimit() + 1, reversed);
+							query.getLimit() + 1, reversed, indexBucketLocator, applicationId, collectionName);
+			
+			
+			
 
 			Results results = Results.fromIdList(
-					new ArrayList<UUID>(ids.keySet()), collection.getType());
+					ids, collection.getType());
 
 			if (results != null) {
 				results.setQuery(query);
 			}
 
-			return em.loadEntities(results, query.getResultsLevel(), ids,
-					query.getLimit());
+			return em.loadEntities(results, query.getResultsLevel(), query.getLimit());
 		}
 
 		// we have something to search with, visit our tree and evaluate the
