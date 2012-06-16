@@ -19,65 +19,74 @@ package org.usergrid.persistence.query.ir;
  * Intermediate represnetation of the within operator
  * 
  * @author tnine
- *
+ * 
  */
 public class WithinNode extends QueryNode {
 
-    private String propertyName;
-    private float distance;
-    private float lattitude;
-    private float longitude;
-    
-    
-    
-    /**
-     * @param propertyName
-     * @param distance
-     * @param lattitude
-     * @param longitude
-     */
-    public WithinNode(String propertyName, float distance, float lattitude,
-            float longitude) {
-        this.propertyName = propertyName;
-        this.distance = distance;
-        this.lattitude = lattitude;
-        this.longitude = longitude;
-    }
-    
-    
-    /**
-     * @return the propertyName
-     */
-    public String getPropertyName() {
-        return propertyName;
-    }
-    /**
-     * @return the distance
-     */
-    public float getDistance() {
-        return distance;
-    }
-    /**
-     * @return the lattitude
-     */
-    public float getLattitude() {
-        return lattitude;
-    }
-    /**
-     * @return the longitude
-     */
-    public float getLongitude() {
-        return longitude;
-    }
+	private String propertyName;
+	private float distance;
+	private float lattitude;
+	private float longitude;
 
+	/**
+	 * @param propertyName
+	 * @param distance
+	 * @param lattitude
+	 * @param longitude
+	 */
+	public WithinNode(String propertyName, float distance, float lattitude,
+			float longitude) {
+		this.propertyName = propertyName;
+		this.distance = distance;
+		this.lattitude = lattitude;
+		this.longitude = longitude;
+	}
 
-    /* (non-Javadoc)
-     * @see org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence.query.ir.NodeVisitor)
-     */
-    @Override
-    public void visit(NodeVisitor visitor) throws Exception {
-        visitor.visit(this);
-    }
-    
-  
+	/**
+	 * @return the propertyName
+	 */
+	public String getPropertyName() {
+		return propertyName;
+	}
+
+	/**
+	 * @return the distance
+	 */
+	public float getDistance() {
+		return distance;
+	}
+
+	/**
+	 * @return the lattitude
+	 */
+	public float getLattitude() {
+		return lattitude;
+	}
+
+	/**
+	 * @return the longitude
+	 */
+	public float getLongitude() {
+		return longitude;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence
+	 * .query.ir.NodeVisitor)
+	 */
+	@Override
+	public void visit(NodeVisitor visitor) throws Exception {
+		visitor.visit(this);
+	}
+
+	@Override
+	public String toString() {
+		return "WithinNode [propertyName=" + propertyName + ", distance="
+				+ distance + ", lattitude=" + lattitude + ", longitude="
+				+ longitude + "]";
+	}
+
 }

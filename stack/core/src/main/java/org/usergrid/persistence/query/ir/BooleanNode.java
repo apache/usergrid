@@ -43,5 +43,10 @@ public abstract class BooleanNode extends QueryNode {
         return right;
     }
 
+	@Override
+	public String toString() {
+		return "BooleanNode [left=" + left + ", right=" + right + "]";
+	}
+
    
 }
