@@ -30,7 +30,8 @@ import org.usergrid.utils.JsonUtils;
 
 public class IndexTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(CollectionTest.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(CollectionTest.class);
 
 	public static final String[] alphabet = { "Alpha", "Bravo", "Charlie",
 			"Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet",
@@ -44,7 +45,8 @@ public class IndexTest extends AbstractPersistenceTest {
 	public void testCollectionOrdering() throws Exception {
 		logger.info("testCollectionOrdering");
 
-		UUID applicationId = createApplication("testOrganization","testCollectionOrdering");
+		UUID applicationId = createApplication("testOrganization",
+				"testCollectionOrdering");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);
@@ -116,7 +118,8 @@ public class IndexTest extends AbstractPersistenceTest {
 	public void testCollectionFilters() throws Exception {
 		logger.info("testCollectionFilters");
 
-		UUID applicationId = createApplication("testOrganization","testCollectionFilters");
+		UUID applicationId = createApplication("testOrganization",
+				"testCollectionFilters");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);
@@ -231,7 +234,7 @@ public class IndexTest extends AbstractPersistenceTest {
 
 		long created = r.getEntity().getCreated();
 		UUID entityId = r.getEntity().getUuid();
-		
+
 		query = Query.fromQL("created = " + created);
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
 		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
@@ -244,7 +247,8 @@ public class IndexTest extends AbstractPersistenceTest {
 	public void testSecondarySorts() throws Exception {
 		logger.info("testSecondarySorts");
 
-		UUID applicationId = createApplication("testOrganization","testSecondarySorts");
+		UUID applicationId = createApplication("testOrganization",
+				"testSecondarySorts");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);
@@ -271,6 +275,40 @@ public class IndexTest extends AbstractPersistenceTest {
 			assertEquals(alphabet[i], entity.getProperty("name"));
 		}
 		assertEquals(3, i);
+
+	}
+
+	@Test
+	public void testKeywordsOrQuery() throws Exception {
+		logger.info("testKeywordsOrQuery");
+
+		UUID applicationId = createApplication("testOrganization",
+				"testKeywordsOrQuery");
+		assertNotNull(applicationId);
+
+		EntityManager em = emf.getEntityManager(applicationId);
+		assertNotNull(em);
+
+		Map<String, Object> properties = new LinkedHashMap<String, Object>();
+		properties.put("title", "Galactians 2");
+		properties.put("keywords", "Hot, Space Invaders, Classic");
+		em.create("game", properties);
+
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("title", "Bunnies Extreme");
+		properties.put("keywords", "Hot, New");
+		em.create("game", properties);
+
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("title", "Hot Shots");
+		properties.put("keywords", "Action, New");
+		em.create("game", properties);
+
+		Query query = Query
+				.fromQL("select * where (keywords contains 'hot' or title contains 'hot')");
+		Results r = em.searchCollection(em.getApplicationRef(), "games", query);
+		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+		assertEquals(3, r.size());
 
 	}
 }
