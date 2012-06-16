@@ -628,7 +628,7 @@ public class Client {
      */
     public Query queryActivityFeedForUser(String userId) {
         Query q = queryEntitiesRequest(HttpMethod.GET, null, null,
-                applicationId, "users", userId, "feed");
+                organizationId, applicationId, "users", userId, "feed");
         return q;
     }
 
@@ -741,7 +741,7 @@ public class Client {
      */
     public Query queryActivity() {
         Query q = queryEntitiesRequest(HttpMethod.GET, null, null,
-                applicationId, "activities");
+               organizationId, applicationId, "activities");
         return q;
     }
 
@@ -797,7 +797,7 @@ public class Client {
     public Query queryUsers(String ql) {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("ql", ql);
-        Query q = queryEntitiesRequest(HttpMethod.GET, params, null,
+        Query q = queryEntitiesRequest(HttpMethod.GET, params, null,organizationId,
                 applicationId, "users");
         return q;
     }
@@ -817,7 +817,7 @@ public class Client {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("ql",
                 this.makeLocationQL(distance, lattitude, longitude, ql));
-        Query q = queryEntitiesRequest(HttpMethod.GET, params, null,
+        Query q = queryEntitiesRequest(HttpMethod.GET, params, null, organizationId,
                 applicationId, "users");
         return q;
     }
@@ -829,7 +829,7 @@ public class Client {
      * @return
      */
     public Query queryUsersForGroup(String groupId) {
-        Query q = queryEntitiesRequest(HttpMethod.GET, null, null,
+        Query q = queryEntitiesRequest(HttpMethod.GET, null, null, organizationId,
                 applicationId, "groups", groupId, "users");
         return q;
     }
@@ -903,7 +903,7 @@ public class Client {
     public Query queryGroups(String ql) {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("ql", ql);
-        Query q = queryEntitiesRequest(HttpMethod.GET, params, null,
+        Query q = queryEntitiesRequest(HttpMethod.GET, params, null, organizationId,
                 applicationId, "groups");
         return q;
     }
@@ -988,7 +988,7 @@ public class Client {
             float longitude, String ql) {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("ql", makeLocationQL(distance, lattitude, longitude, ql));
-        Query q = queryEntitiesRequest(HttpMethod.GET, params, null,
+        Query q = queryEntitiesRequest(HttpMethod.GET, params, null, organizationId,
                 applicationId, connectingEntityType, connectingEntityId,
                 connectionType);
         return q;
