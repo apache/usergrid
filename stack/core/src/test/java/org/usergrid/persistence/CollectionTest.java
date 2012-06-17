@@ -501,7 +501,7 @@ public class CollectionTest extends AbstractPersistenceTest {
         returned = r.getEntities().get(1);
 
         assertEquals(game2.getUuid(), returned.getUuid());
-        
+
         query = new Query(
                 "select * where( keywords contains 'Random' OR keywords contains 'Game')");
 
@@ -516,7 +516,7 @@ public class CollectionTest extends AbstractPersistenceTest {
         returned = r.getEntities().get(1);
 
         assertEquals(game2.getUuid(), returned.getUuid());
-        
+
     }
 
     public void andQuery() throws Exception {
@@ -562,5 +562,76 @@ public class CollectionTest extends AbstractPersistenceTest {
         returned = r.getEntities().get(1);
 
         assertEquals(game2.getUuid(), returned.getUuid());
+    }
+
+    @Test
+    public void testKeywordsOrQuery() throws Exception {
+        logger.info("testKeywordsOrQuery");
+
+        UUID applicationId = createApplication("testOrganization",
+                "testKeywordsOrQuery");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("title", "Galactians 2");
+        properties.put("keywords", "Hot, Space Invaders, Classic");
+        em.create("game", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("title", "Bunnies Extreme");
+        properties.put("keywords", "Hot, New");
+        em.create("game", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("title", "Hot Shots");
+        properties.put("keywords", "Action, New");
+        em.create("game", properties);
+
+        Query query = Query
+                .fromQL("select * where keywords contains 'hot' or title contains 'hot'");
+        Results r = em.searchCollection(em.getApplicationRef(), "games", query);
+        logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        assertEquals(3, r.size());
+
+    }
+
+    @Test
+    public void testKeywordsAndQuery() throws Exception {
+        logger.info("testKeywordsOrQuery");
+
+        UUID applicationId = createApplication("testOrganization",
+                "testKeywordsAndQuery");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("title", "Galactians 2");
+        properties.put("keywords", "Hot, Space Invaders, Classic");
+        Entity firstGame = em.create("game", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("title", "Bunnies Extreme");
+        properties.put("keywords", "Hot, New");
+        Entity secondGame = em.create("game", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("title", "Hot Shots Extreme");
+        properties.put("keywords", "Action, New");
+        Entity thirdGame = em.create("game", properties);
+
+        Query query = Query
+                .fromQL("select * where keywords contains 'new' and title contains 'extreme'");
+        Results r = em.searchCollection(em.getApplicationRef(), "games", query);
+        logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        assertEquals(2, r.size());
+
+        assertEquals(secondGame.getUuid(), r.getEntities().get(0).getUuid());
+        assertEquals(thirdGame.getUuid(), r.getEntities().get(1).getUuid());
+
     }
 }

@@ -277,37 +277,4 @@ public class IndexTest extends AbstractPersistenceTest {
 
 	}
 
-	@Test
-	public void testKeywordsOrQuery() throws Exception {
-		logger.info("testKeywordsOrQuery");
-
-		UUID applicationId = createApplication("testOrganization",
-				"testKeywordsOrQuery");
-		assertNotNull(applicationId);
-
-		EntityManager em = emf.getEntityManager(applicationId);
-		assertNotNull(em);
-
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("title", "Galactians 2");
-		properties.put("keywords", "Hot, Space Invaders, Classic");
-		em.create("game", properties);
-
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("title", "Bunnies Extreme");
-		properties.put("keywords", "Hot, New");
-		em.create("game", properties);
-
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("title", "Hot Shots");
-		properties.put("keywords", "Action, New");
-		em.create("game", properties);
-
-		Query query = Query
-				.fromQL("select * where keywords contains 'hot' or title contains 'hot'");
-		Results r = em.searchCollection(em.getApplicationRef(), "games", query);
-		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
-		assertEquals(3, r.size());
-
-	}
 }
