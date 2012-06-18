@@ -687,7 +687,7 @@ function usergrid_console_app(Pages) {
       }
     }
     if(sectionAdmins.is(':empty')){
-      sectionAdmins.html('<div class="alert">No organization administrators.</div>');
+      sectionAdmins.html('<div class="alert user-panel-section">No organization administrators.</div>');
     }
   }
 
@@ -737,7 +737,7 @@ function usergrid_console_app(Pages) {
     }
 
     if (sectionActivities.is(":empty")) {
-      sectionActivities.html('<div class="alert">No activities.</div>');
+      sectionActivities.html('<div class="alert user-panel-section">No activities.</div>');
     }
   }
 
