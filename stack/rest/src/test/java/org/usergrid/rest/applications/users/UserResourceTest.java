@@ -92,18 +92,21 @@ public class UserResourceTest extends AbstractRestTest {
 
     @Test
     public void nameQueryByUUIDs() throws Exception {
-      UserRepo.INSTANCE.load(resource(), access_token);
+        UserRepo.INSTANCE.load(resource(), access_token);
 
-      String ql = "name = 'John*'";
+        String ql = "name = 'John*'";
 
-      ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
-      OrganizationInfo orgInfo = managementService.getOrganizationByName("test-organization");
+        ApplicationInfo appInfo = managementService
+                .getApplicationInfo("test-organization/test-app");
+        OrganizationInfo orgInfo = managementService
+                .getOrganizationByName("test-organization");
 
-      JsonNode node = resource().path("/" + orgInfo.getUuid() +
-              "/" + appInfo.getId() + "/users")
-              .queryParam("ql", ql).queryParam("access_token", access_token)
-              .accept(MediaType.APPLICATION_JSON)
-              .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        JsonNode node = resource()
+                .path("/" + orgInfo.getUuid() + "/" + appInfo.getId()
+                        + "/users").queryParam("ql", ql)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
     }
 
@@ -441,25 +444,131 @@ public class UserResourceTest extends AbstractRestTest {
         Query results = client.queryUsers(String
                 .format("username = '%s'", name));
         assertEquals(0, results.getResponse().getEntities(User.class).size());
-        
-        //now create that same user again, it should work
-        response = client.createUser(username, name, id
-                + "@usergrid.org", "password");
+
+        // now create that same user again, it should work
+        response = client.createUser(username, name, id + "@usergrid.org",
+                "password");
 
         assertNull("Error was: " + response.getErrorDescription(),
                 response.getError());
 
         createdId = response.getEntities().get(0).getUuid();
-        
+
         assertNotNull(createdId);
+
+    }
+
+    @Test
+    public void singularCollectionName() {
+        UUID id = UUIDUtils.newTimeUUID();
+
+        String username = "username1" + id;
+        String name = "name1" + id;
+        String email = "email1" + id + "@usergrid.org";
+
+        ApiResponse response = client.createUser(username, name, email,
+                "password");
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
+
+        UUID firstCreatedId = response.getEntities().get(0).getUuid();
+
+        username = "username2" + id;
+        name = "name2" + id;
+        email = "email2" + id + "@usergrid.org";
+
+        response = client.createUser(username, name, email, "password");
+
+        assertNull("Error was: " + response.getErrorDescription(),
+                response.getError());
+
+        UUID secondCreatedId = response.getEntities().get(0).getUuid();
+
+        // now create a connection of "likes" between the first user and the
+        // second using pluralized form
+
+        // plural collection name
+        String path = String.format(
+                "/test-organization/test-app/users/%s/conn1/%s",
+                firstCreatedId, secondCreatedId);
+
+        JsonNode node = resource().path(path)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+
+        
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
         
       
+
+        // singular collection name
+        path = String.format("/test-organization/test-app/user/%s/conn2/%s",
+                firstCreatedId, secondCreatedId);
+
+        node = resource().path(path).queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+
+        
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
         
         
+        
+        path  = String.format(
+                "/test-organization/test-app/users/%s/conn1",
+                firstCreatedId);
+        
+        node = resource().path(path)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
+        
+        
+        path  = String.format(
+                "/test-organization/test-app/user/%s/conn1",
+                firstCreatedId);
+        
+        node = resource().path(path)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
+        
+        
+        path  = String.format(
+                "/test-organization/test-app/users/%s/conn2",
+                firstCreatedId);
+        
+        node = resource().path(path)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
+        
+        path  = String.format(
+                "/test-organization/test-app/user/%s/conn2",
+                firstCreatedId);
+        
+        node = resource().path(path)
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
+        
+        
+        
+
     }
 
     /**
-     *
+     * 
      * @return
      */
     public JsonNode getActor(Entity entity) {
