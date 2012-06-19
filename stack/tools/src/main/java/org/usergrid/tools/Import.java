@@ -22,8 +22,10 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
 import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.cli.CommandLine;
@@ -37,16 +39,18 @@ import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
-import org.usergrid.persistence.SimpleEntityRef;
+import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.entities.Application;
-import org.usergrid.persistence.entities.User;
+import org.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.usergrid.tools.bean.ExportOrg;
+import org.usergrid.utils.JsonUtils;
 
 public class Import extends ToolBase {
 
@@ -101,6 +105,12 @@ public class Import extends ToolBase {
         importApplications();
 
         importCollections();
+        
+        //forces the counters to flush
+        logger.info("Sleeping 30 seconds for batcher");
+        
+        Thread.sleep(35000);
+        
     }
 
     /**
@@ -157,8 +167,21 @@ public class Import extends ToolBase {
         }
         
         
-        UUID appId = managementService.importApplication(info.getUuid(),
-                application);
+        
+        UUID appId = null;
+        
+        try{
+            appId = managementService.importApplication(info.getUuid(), application);
+            
+        }catch(ApplicationAlreadyExistsException aaee){
+            ApplicationInfo appInfo =  managementService.getApplicationInfo(orgName+"/"+application.getName());
+            
+            if(appInfo != null){
+                appId = appInfo.getId();
+            }
+            
+        }
+               
         echo(application);
 
         EntityManager em = emf.getEntityManager(appId);
@@ -168,6 +191,50 @@ public class Import extends ToolBase {
         for (Entry<String, String> entry : em.getRoles().entrySet()) {
             em.deleteRole(entry.getKey());
         }
+        
+        //load all the dictionaries
+        @SuppressWarnings("unchecked")
+        Map<String, Object> dictionaries = (Map<String, Object>) application.getMetadata("dictionaries");
+        
+        if(dictionaries != null){
+            EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+            
+            Entity appEntity = rootEm.get(appId);
+            
+            
+            for(Entry<String, Object> dictionary: dictionaries.entrySet()){
+                @SuppressWarnings("unchecked")
+                Map<Object, Object> value = (Map<Object, Object>) dictionary.getValue();
+                
+                em.addMapToDictionary(appEntity, dictionary.getKey(), value);
+            }
+        }
+        
+        
+        //load all counts and stats
+//        @SuppressWarnings("unchecked")
+//        Map<String, Object> stats = (Map<String, Object>) application.getMetadata("counters");
+//        
+//        for(Entry<String, Object> stat: stats.entrySet()){
+//            String entryName = stat.getKey();
+//            long amount = Long.parseLong(stat.getValue().toString());
+//          
+//            
+//            //anything that deals with collections or entities, we set to 0 since they'll be incremented during import
+//            if(!entryName.startsWith("application.collection") && !entryName.equals("application.entities")){
+//                em.incrementApplicationCounter(entryName, amount);
+//            }
+//           
+//        }
+        
+        //explicity import all collections
+        @SuppressWarnings("unchecked")
+        List<String> collections = (List<String>) application.getMetadata("collections");
+        
+        for(String collectionName: collections){
+            em.createApplicationCollection(collectionName);
+        }
+        
 
         while (jp.nextValue() != JsonToken.END_ARRAY) {
             @SuppressWarnings("unchecked")
@@ -182,19 +249,23 @@ public class Import extends ToolBase {
                 logger.error(
                         "Unable to create entity.  It appears to be a duplicate",
                         de);
+                continue;
             }
-
-            catch (Exception e) {
-                logger.error("Unable to create entity " + uuid + " of type "
-                        + type
-                        + ", skipping but this may indicate a bad import...", e);
+            
+            if(em.get(uuid) == null){
+                logger.error("Holy hell, we wrote an entity and it's missing.  Entity Id was {} and type is {}", uuid, type);
+                System.exit(1);
             }
+            
+            logger.info("Counts {}", JsonUtils.mapToFormattedJsonString(em.getApplicationCounters()));
+            
             echo(entityProps);
         }
 
         logger.info("----- End of application:" + application.getName());
         jp.close();
     }
+
 
     private String getType(Map<String, Object> entityProps) {
         return (String) entityProps.get(PROPERTY_TYPE);
@@ -419,9 +490,7 @@ public class Import extends ToolBase {
                         String entryId = jp.getText();
                         EntityRef entryRef = em
                                 .getRef(UUID.fromString(entryId));
-                        System.out.println(entityOwnerId + " " + connectionType
-                                + " " + entryId);
-                        // Store in DB
+                         // Store in DB
                         em.createConnection(ownerEntityRef, connectionType,
                                 entryRef);
                     }

@@ -70,7 +70,7 @@ public interface ManagementService {
 			boolean sendEmail) throws Exception;
 
 	public UserInfo createAdminFromPrexistingPassword(User user,
-			String precypheredPassword, boolean sendEmail) throws Exception;
+			String precypheredPassword, String hashType, boolean sendEmail) throws Exception;
 
 	public UUID createApplication(UUID organizationId, String applicationName)
 			throws Exception;

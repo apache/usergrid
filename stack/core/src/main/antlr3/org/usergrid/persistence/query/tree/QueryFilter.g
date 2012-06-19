@@ -61,6 +61,27 @@ GT  : '>' | 'gt';
 GTE : '>=' |  'gte';  
 
 
+//keywords before var ids
+BOOLEAN : (TRUE|FALSE);
+
+AND : ('A'|'a')('N'|'n')('D'|'d') | '&&';
+
+OR  : ('O'|'o')('R'|'r') | '||' ;
+
+NOT : ('N'|'n')('O'|'o')('T'|'t');
+
+ASC : ('A'|'a')('S'|'s')('C'|'c');
+
+DESC : ('D'|'d')('E'|'e')('S'|'s')('C'|'c');
+
+CONTAINS : ('C'|'c')('O'|'o')('N'|'n')('T'|'t')('A'|'a')('I'|'i')('N'|'n')('S'|'s');
+
+WITHIN : ('W'|'w')('I'|'i')('T'|'t')('H'|'h')('I'|'i')('N'|'n');
+
+OF : ('O'|'o')('F'|'f');
+
+
+//ids and values
 ID  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'.')*
     ;
 
@@ -76,19 +97,29 @@ FLOAT
 STRING
     :  '\'' ( ESC_SEQ | ~('\\'|'\'') )* '\''
     ;
+
+
     
-fragment
-BOOLEAN :	('true' |'false');
+WS : (' ' | '\t' | '\n' | '\r' | '\f')+  {$channel=HIDDEN;};
+
+
+
     
-UUID :	HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-	HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' 
-	HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' 
-	HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' 
-	HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' 
-	HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-	HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-	HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-	;
+UUID :  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' 
+  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' 
+  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' 
+  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '-' 
+  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+  HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+  ;
+
+
+fragment TRUE : ('T'|'t')('R'|'r')('U'|'u')('E'|'e');
+
+fragment FALSE : ('F'|'f')('A'|'a')('L'|'l')('S'|'s')('E'|'e');
+
 
 fragment
 EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
@@ -115,7 +146,7 @@ UNICODE_ESC
     :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
     ;
 
-WS : (' ' | '\t' | '\n' | '\r' | '\f')+  {$channel=HIDDEN;};
+
 
 
 //NE : '!=';
@@ -166,11 +197,11 @@ equalityop :
 
 //geo location search
 locationop :
-  property 'within'<WithinOperand>^ (floatliteral|longliteral) 'of'! (floatliteral|longliteral) ','! (floatliteral|longliteral);
+  property WITHIN<WithinOperand>^ (floatliteral|longliteral) OF! (floatliteral|longliteral) ','! (floatliteral|longliteral);
   
 //string search
 containsop :
-  property 'contains'<ContainsOperand>^ stringliteral;
+  property CONTAINS<ContainsOperand>^ stringliteral;
 //
 operation :
  '('! expression ')'!
@@ -182,20 +213,20 @@ operation :
 //negations of expressions
 notexp :
 //only link if we have the not
- 'not'<NotOperand>^ operation  
+ NOT<NotOperand>^ operation  
  |operation 
  ;
 
 //and expressions contain operands.  These should always be closer to the leaves of a tree, it allows
 //for faster result intersection sooner in the query execution
 andexp :
- notexp ('and'<AndOperand>^ notexp )*;
+ notexp (AND<AndOperand>^ notexp )*;
  
  
 //or expression should always be after AND expressions.  This will give us a smaller result set to union when evaluating trees
 //also a root level expression
 expression :
- andexp ('or'<OrOperand>^ andexp )*;
+ andexp (OR<OrOperand>^ andexp )*;
 
 
 
@@ -204,7 +235,7 @@ expression :
 //begin order clauses
 
 //direction for ordering
-direction  : ('asc' | 'desc');
+direction  : (ASC | DESC);
 
 //order clause
 order

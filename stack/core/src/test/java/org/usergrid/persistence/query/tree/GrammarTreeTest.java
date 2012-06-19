@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -490,6 +491,41 @@ public class GrammarTreeTest {
         Map<String, String> identifiers = query.getSelectAssignments();
 
         assertEquals("target", identifiers.get("source"));
+    }
+    
+    @Test
+    public void containsOr() throws Exception{
+        String queryString = "select * where keywords contains 'hot' or title contains 'hot'";
+        
+
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
+
+        Query query = parser.ql().query;
+        
+        OrOperand rootNode = (OrOperand) query.getRootOperand();
+        
+        assertNotNull(rootNode);
+        
+        ContainsOperand left = (ContainsOperand) rootNode.getLeft();
+        
+        assertEquals("keywords", left.getProperty().getValue());
+        
+        assertEquals("hot", left.getString().getValue());
+        assertEquals("hot", left.getString().getEndValue());
+        
+        ContainsOperand right = (ContainsOperand) rootNode.getRight();
+        
+        assertEquals("title", right.getProperty().getValue());
+        
+        assertEquals("hot", right.getString().getValue());
+        assertEquals("hot", right.getString().getEndValue());
+        
+        
+        
+        
     }
 
 }

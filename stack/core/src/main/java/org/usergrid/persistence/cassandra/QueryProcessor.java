@@ -514,7 +514,7 @@ public class QueryProcessor {
          * @param child
          */
         private void createNewSlice(Operand child) {
-            if (child instanceof EqualityOperand || child instanceof AndOperand) {
+            if (child instanceof EqualityOperand || child instanceof AndOperand || child instanceof ContainsOperand) {
                 newSliceNode();
             }
 

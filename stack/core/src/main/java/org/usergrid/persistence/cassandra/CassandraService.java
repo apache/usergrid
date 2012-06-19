@@ -1160,28 +1160,6 @@ public class CassandraService {
 
     }
 
-    public Map<UUID, UUID> getIdPairList(Keyspace ko, Object key, Object start,
-            Object finish, int count, boolean reversed) throws Exception {
-
-        if (count <= 0) {
-            count = DEFAULT_COUNT;
-        }
-        Map<UUID, UUID> ids = new LinkedHashMap<UUID, UUID>();
-        if (NULL_ID.equals(start)) {
-            start = null;
-        }
-        List<HColumn<ByteBuffer, ByteBuffer>> results = getColumns(ko,
-                ENTITY_ID_SETS, key, start, finish, count, reversed);
-
-        if (results != null) {
-            for (HColumn<ByteBuffer, ByteBuffer> result : results) {
-                ids.put(uuid(result.getName()), uuid(result.getValue()));
-            }
-        }
-
-        return ids;
-
-    }
 
     public int countColumns(Keyspace ko, Object columnFamily, Object key)
             throws Exception {

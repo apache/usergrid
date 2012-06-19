@@ -17,20 +17,20 @@ package org.usergrid.persistence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.junit.Test;
 import org.usergrid.utils.JsonUtils;
 
 public class IndexTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(CollectionTest.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(CollectionTest.class);
 
 	public static final String[] alphabet = { "Alpha", "Bravo", "Charlie",
 			"Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet",
@@ -44,7 +44,8 @@ public class IndexTest extends AbstractPersistenceTest {
 	public void testCollectionOrdering() throws Exception {
 		logger.info("testCollectionOrdering");
 
-		UUID applicationId = createApplication("testOrganization","testCollectionOrdering");
+		UUID applicationId = createApplication("testOrganization",
+				"testCollectionOrdering");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);
@@ -116,7 +117,8 @@ public class IndexTest extends AbstractPersistenceTest {
 	public void testCollectionFilters() throws Exception {
 		logger.info("testCollectionFilters");
 
-		UUID applicationId = createApplication("testOrganization","testCollectionFilters");
+		UUID applicationId = createApplication("testOrganization",
+				"testCollectionFilters");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);
@@ -231,7 +233,7 @@ public class IndexTest extends AbstractPersistenceTest {
 
 		long created = r.getEntity().getCreated();
 		UUID entityId = r.getEntity().getUuid();
-		
+
 		query = Query.fromQL("created = " + created);
 		r = em.searchCollection(em.getApplicationRef(), "items", query);
 		logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
@@ -244,7 +246,8 @@ public class IndexTest extends AbstractPersistenceTest {
 	public void testSecondarySorts() throws Exception {
 		logger.info("testSecondarySorts");
 
-		UUID applicationId = createApplication("testOrganization","testSecondarySorts");
+		UUID applicationId = createApplication("testOrganization",
+				"testSecondarySorts");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);
@@ -273,4 +276,5 @@ public class IndexTest extends AbstractPersistenceTest {
 		assertEquals(3, i);
 
 	}
+
 }

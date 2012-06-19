@@ -249,6 +249,22 @@ public interface EntityManager {
 	public void setProperty(EntityRef entityRef, String propertyName,
 			Object propertyValue) throws Exception;
 
+
+    /**
+     * You should only use this method if you are absolutely sure what you're doing.  Use setProperty without the override param in most cases.
+     * With great power comes great responsibility....
+     * 
+     * @param entityRef
+     * @param propertyName
+     * @param propertyValue
+     * @param override set to true to force this value to persist.  This will ignore all mutable attributes as well as validation. Use with care
+     * @throws Exception
+     */
+    void setProperty(EntityRef entityRef, String propertyName,
+            Object propertyValue, boolean override) throws Exception;
+
+    
+	
 	/**
 	 * Updates the properties for the specified entity.
 	 * 

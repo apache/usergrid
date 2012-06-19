@@ -38,7 +38,8 @@ public class CollectionTest extends AbstractPersistenceTest {
     @SuppressWarnings("serial")
     @Test
     public void testCollection() throws Exception {
-        UUID applicationId = createApplication("testOrganization","testCollection");
+        UUID applicationId = createApplication("testOrganization",
+                "testCollection");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -78,7 +79,8 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     @Test
     public void userFirstNameSearch() throws Exception {
-        UUID applicationId = createApplication("testOrganization","testFirstName");
+        UUID applicationId = createApplication("testOrganization",
+                "testFirstName");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -105,15 +107,15 @@ public class CollectionTest extends AbstractPersistenceTest {
         Entity returned = r.getEntities().get(0);
 
         assertEquals(user.getUuid(), returned.getUuid());
-        
-        //update the username
+
+        // update the username
         String newFirstName = "firstName" + UUIDUtils.newTimeUUID();
-        
+
         user.setProperty("firstname", newFirstName);
-        
+
         em.update(user);
-        
-        //search with the old username, should be no results
+
+        // search with the old username, should be no results
         query = new Query();
         query.addEqualityFilter("firstname", firstName);
 
@@ -121,9 +123,8 @@ public class CollectionTest extends AbstractPersistenceTest {
 
         assertEquals(0, r.size());
 
-        
-        //search with the new username, should be results.
-        
+        // search with the new username, should be results.
+
         query = new Query();
         query.addEqualityFilter("firstname", newFirstName);
 
@@ -136,10 +137,11 @@ public class CollectionTest extends AbstractPersistenceTest {
         assertEquals(user.getUuid(), returned.getUuid());
 
     }
-    
+
     @Test
     public void userMiddleNameSearch() throws Exception {
-        UUID applicationId = createApplication("testOrganization","testMiddleName");
+        UUID applicationId = createApplication("testOrganization",
+                "testMiddleName");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -168,10 +170,11 @@ public class CollectionTest extends AbstractPersistenceTest {
         assertEquals(user.getUuid(), returned.getUuid());
 
     }
-    
+
     @Test
     public void userLastNameSearch() throws Exception {
-        UUID applicationId = createApplication("testOrganization","testLastName");
+        UUID applicationId = createApplication("testOrganization",
+                "testLastName");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -201,10 +204,9 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     }
 
-
     @Test
     public void testGroups() throws Exception {
-        UUID applicationId = createApplication("testOrganization","testGroups");
+        UUID applicationId = createApplication("testOrganization", "testGroups");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -246,10 +248,11 @@ public class CollectionTest extends AbstractPersistenceTest {
         em.removeFromCollection(user1, "groups", group);
 
     }
-    
+
     @Test
     public void groupNameSearch() throws Exception {
-        UUID applicationId = createApplication("testOrganization","groupNameSearch");
+        UUID applicationId = createApplication("testOrganization",
+                "groupNameSearch");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -269,7 +272,8 @@ public class CollectionTest extends AbstractPersistenceTest {
         Query query = new Query();
         query.addEqualityFilter("name", groupName);
 
-        Results r = em.searchCollection(em.getApplicationRef(), "groups", query);
+        Results r = em
+                .searchCollection(em.getApplicationRef(), "groups", query);
 
         assertTrue(r.size() > 0);
 
@@ -278,10 +282,11 @@ public class CollectionTest extends AbstractPersistenceTest {
         assertEquals(group.getUuid(), returned.getUuid());
 
     }
-    
+
     @Test
     public void groupTitleSearch() throws Exception {
-        UUID applicationId = createApplication("testOrganization","groupTitleSearch");
+        UUID applicationId = createApplication("testOrganization",
+                "groupTitleSearch");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -290,7 +295,7 @@ public class CollectionTest extends AbstractPersistenceTest {
         String titleName = "groupName" + UUIDUtils.newTimeUUID();
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
-        properties.put("title",  titleName);
+        properties.put("title", titleName);
         properties.put("path", "testPath");
         properties.put("name", "testName");
 
@@ -301,7 +306,8 @@ public class CollectionTest extends AbstractPersistenceTest {
         Query query = new Query();
         query.addEqualityFilter("title", titleName);
 
-        Results r = em.searchCollection(em.getApplicationRef(), "groups", query);
+        Results r = em
+                .searchCollection(em.getApplicationRef(), "groups", query);
 
         assertTrue(r.size() > 0);
 
@@ -314,7 +320,8 @@ public class CollectionTest extends AbstractPersistenceTest {
     @Test
     public void testSubkeys() throws Exception {
 
-        UUID applicationId = createApplication("testOrganization","testSubkeys");
+        UUID applicationId = createApplication("testOrganization",
+                "testSubkeys");
         assertNotNull(applicationId);
 
         EntityManager em = emf.getEntityManager(applicationId);
@@ -367,6 +374,264 @@ public class CollectionTest extends AbstractPersistenceTest {
                 Query.searchForProperty("verb", "post"));
         logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
         assertEquals(2, r.size());
+
+    }
+
+    @Test
+    public void emptyQuery() throws Exception {
+        UUID applicationId = createApplication("testOrganization",
+                "testEmptyQuery");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        String firstName = "firstName" + UUIDUtils.newTimeUUID();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
+        properties.put("firstname", firstName);
+
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "djacobs");
+        properties.put("email", "djacobs@gmail.com");
+
+        Entity user2 = em.create("user", properties);
+        assertNotNull(user2);
+
+        // EntityRef
+        Query query = new Query();
+
+        Results r = em.searchCollection(em.getApplicationRef(), "users", query);
+
+        assertEquals(2, r.size());
+
+        Entity returned = r.getEntities().get(0);
+
+        assertEquals(user.getUuid(), returned.getUuid());
+
+        returned = r.getEntities().get(1);
+
+        assertEquals(user2.getUuid(), returned.getUuid());
+
+    }
+
+    @Test
+    public void emptyQueryReverse() throws Exception {
+        UUID applicationId = createApplication("testOrganization",
+                "testEmptyQueryReverse");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        String firstName = "firstName" + UUIDUtils.newTimeUUID();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
+        properties.put("firstname", firstName);
+
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "djacobs");
+        properties.put("email", "djacobs@gmail.com");
+
+        Entity user2 = em.create("user", properties);
+        assertNotNull(user2);
+
+        // EntityRef
+        Query query = new Query();
+        query.setReversed(true);
+
+        Results r = em.searchCollection(em.getApplicationRef(), "users", query);
+
+        assertEquals(2, r.size());
+
+        Entity returned = r.getEntities().get(0);
+
+        assertEquals(user2.getUuid(), returned.getUuid());
+
+        returned = r.getEntities().get(1);
+
+        assertEquals(user.getUuid(), returned.getUuid());
+
+    }
+
+    @Test
+    public void orQuery() throws Exception {
+        UUID applicationId = createApplication("testOrganization", "orQuery");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("keywords", "blah,test,game");
+        properties.put("title", "Solitaire");
+
+        Entity game1 = em.create("game", properties);
+        assertNotNull(game1);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("keywords", "random,test");
+        properties.put("title", "Hearts");
+
+        Entity game2 = em.create("game", properties);
+        assertNotNull(game2);
+
+        // EntityRef
+        Query query = new Query(
+                "select * where keywords contains 'Random' OR keywords contains 'Game'");
+
+        Results r = em.searchCollection(em.getApplicationRef(), "games", query);
+
+        assertEquals(2, r.size());
+
+        Entity returned = r.getEntities().get(0);
+
+        assertEquals(game1.getUuid(), returned.getUuid());
+
+        returned = r.getEntities().get(1);
+
+        assertEquals(game2.getUuid(), returned.getUuid());
+
+        query = new Query(
+                "select * where( keywords contains 'Random' OR keywords contains 'Game')");
+
+        r = em.searchCollection(em.getApplicationRef(), "games", query);
+
+        assertEquals(2, r.size());
+
+        returned = r.getEntities().get(0);
+
+        assertEquals(game1.getUuid(), returned.getUuid());
+
+        returned = r.getEntities().get(1);
+
+        assertEquals(game2.getUuid(), returned.getUuid());
+
+    }
+
+    public void andQuery() throws Exception {
+        UUID applicationId = createApplication("testOrganization", "andQuery");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("keywords", "blah,test,game");
+        properties.put("title", "Solitaire");
+
+        Entity game1 = em.create("game", properties);
+        assertNotNull(game1);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("keywords", "random,test");
+        properties.put("title", "Hearts");
+
+        Entity game2 = em.create("game", properties);
+        assertNotNull(game2);
+
+        // EntityRef
+        Query query = new Query(
+                "select * where keywords contains 'foo' AND keywords contains 'random'");
+
+        Results r = em.searchCollection(em.getApplicationRef(), "games", query);
+
+        assertEquals(0, r.size());
+
+        query = new Query(
+                "select * where keywords contains 'test' AND keywords contains 'test'");
+
+        r = em.searchCollection(em.getApplicationRef(), "games", query);
+
+        assertEquals(2, r.size());
+
+        Entity returned = r.getEntities().get(0);
+
+        assertEquals(game1.getUuid(), returned.getUuid());
+
+        returned = r.getEntities().get(1);
+
+        assertEquals(game2.getUuid(), returned.getUuid());
+    }
+
+    @Test
+    public void testKeywordsOrQuery() throws Exception {
+        logger.info("testKeywordsOrQuery");
+
+        UUID applicationId = createApplication("testOrganization",
+                "testKeywordsOrQuery");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("title", "Galactians 2");
+        properties.put("keywords", "Hot, Space Invaders, Classic");
+        em.create("game", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("title", "Bunnies Extreme");
+        properties.put("keywords", "Hot, New");
+        em.create("game", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("title", "Hot Shots");
+        properties.put("keywords", "Action, New");
+        em.create("game", properties);
+
+        Query query = Query
+                .fromQL("select * where keywords contains 'hot' or title contains 'hot'");
+        Results r = em.searchCollection(em.getApplicationRef(), "games", query);
+        logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        assertEquals(3, r.size());
+
+    }
+
+    @Test
+    public void testKeywordsAndQuery() throws Exception {
+        logger.info("testKeywordsOrQuery");
+
+        UUID applicationId = createApplication("testOrganization",
+                "testKeywordsAndQuery");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("title", "Galactians 2");
+        properties.put("keywords", "Hot, Space Invaders, Classic");
+        Entity firstGame = em.create("game", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("title", "Bunnies Extreme");
+        properties.put("keywords", "Hot, New");
+        Entity secondGame = em.create("game", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("title", "Hot Shots Extreme");
+        properties.put("keywords", "Action, New");
+        Entity thirdGame = em.create("game", properties);
+
+        Query query = Query
+                .fromQL("select * where keywords contains 'new' and title contains 'extreme'");
+        Results r = em.searchCollection(em.getApplicationRef(), "games", query);
+        logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        assertEquals(2, r.size());
+
+        assertEquals(secondGame.getUuid(), r.getEntities().get(0).getUuid());
+        assertEquals(thirdGame.getUuid(), r.getEntities().get(1).getUuid());
 
     }
 }

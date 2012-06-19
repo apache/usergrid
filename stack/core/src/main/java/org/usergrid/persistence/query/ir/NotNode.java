@@ -46,6 +46,11 @@ public class NotNode extends QueryNode {
         visitor.visit(this);
     }
 
+	@Override
+	public String toString() {
+		return "NotNode [child=" + child + "]";
+	}
+
     
  
 

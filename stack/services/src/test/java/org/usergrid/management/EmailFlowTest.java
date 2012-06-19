@@ -22,22 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_ADMIN_ACTIVATED;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_ADMIN_CONFIRMATION;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_ORGANIZATION_ACTIVATED;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_USER_ACTIVATED;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_USER_CONFIRMATION;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_USER_PASSWORD_RESET;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_EMAIL_USER_PIN_REQUEST;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.PROPERTIES_SYSADMIN_EMAIL;
+import static org.usergrid.management.cassandra.ManagementServiceImpl.*;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -98,6 +83,8 @@ public class EmailFlowTest {
 				"true");
 		properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
 				"sysadmin-1@mockserver.com");
+    properties.setProperty(PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION,
+         "true");
 
 		OrganizationOwnerInfo org_owner = management
 				.createOwnerAndOrganization("test-org-1", "test-user-1",

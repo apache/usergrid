@@ -2113,26 +2113,34 @@ public class EntityManagerImpl implements EntityManager,
 	public void setProperty(EntityRef entityRef, String propertyName,
 			Object propertyValue) throws Exception {
 
-		if ((propertyValue instanceof String)
-				&& ((String) propertyValue).equals("")) {
-			propertyValue = null;
-		}
-
-		DynamicEntity entity = loadPartialEntity(entityRef.getUuid());
-
-		UUID timestampUuid = newTimeUUID();
-		Mutator<ByteBuffer> batch = createMutator(
-				cass.getApplicationKeyspace(applicationId), be);
-
-		propertyValue = getDefaultSchema().validateEntityPropertyValue(
-				entity.getType(), propertyName, propertyValue);
-
-		entity.setProperty(propertyName, propertyValue);
-		batch = batchSetProperty(batch, entity, propertyName, propertyValue,
-				timestampUuid);
-		batchExecute(batch, CassandraService.RETRY_COUNT);
+		setProperty(entityRef, propertyName, propertyValue, false);
 
 	}
+	
+	@Override
+    public void setProperty(EntityRef entityRef, String propertyName,
+            Object propertyValue, boolean override) throws Exception {
+
+        if ((propertyValue instanceof String)
+                && ((String) propertyValue).equals("")) {
+            propertyValue = null;
+        }
+
+        DynamicEntity entity = loadPartialEntity(entityRef.getUuid());
+
+        UUID timestampUuid = newTimeUUID();
+        Mutator<ByteBuffer> batch = createMutator(
+                cass.getApplicationKeyspace(applicationId), be);
+
+        propertyValue = getDefaultSchema().validateEntityPropertyValue(
+                entity.getType(), propertyName, propertyValue);
+
+        entity.setProperty(propertyName, propertyValue);
+        batch = batchSetProperty(batch, entity, propertyName, propertyValue,
+                override, false,timestampUuid);
+        batchExecute(batch, CassandraService.RETRY_COUNT);
+
+    }
 
 	@Override
 	public void updateProperties(EntityRef entityRef,
