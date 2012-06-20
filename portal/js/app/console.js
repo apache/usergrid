@@ -3107,12 +3107,12 @@ function usergrid_console_app(Pages) {
   }
 
   function logout() {
+    client.clearSession();
     if (client.useSSO()) {
       Pages.clearPage();
     } else {
       Pages.ShowPage("login");
     }
-    client.logout();
     initOrganizationVars();
     return false;
   }
