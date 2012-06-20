@@ -90,12 +90,6 @@ usergrid.Client = (function() {
 
   var uuidValueRegex = /\"([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})\"/gm;
 
-  function isUUID(uuid) {
-    if (!uuid) {return false}
-    return uuidValueRegex.test(uuid);
-  }
-  self.isUUID = isUUID;
-
   function indexOfFirstType(type, args) {
     for (var i = 0; i < args.length; i++) {
       if (!args[i]) return - 1;
