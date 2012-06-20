@@ -21,6 +21,7 @@
 		<snakeyaml-version>1.8</snakeyaml-version>
 		<usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
 		<usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
+                <metrics-version>2.1.2</metrics-version>
 	</properties>
 	<groupId>org.usergrid</groupId>
 	<artifactId>usergrid</artifactId>
@@ -478,6 +479,21 @@
 				<artifactId>snakeyaml</artifactId>
 				<version>${snakeyaml-version}</version>
 			</dependency>
+        <dependency>
+            <groupId>com.yammer.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+            <version>${metrics-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yammer.metrics</groupId>
+            <artifactId>metrics-spring</artifactId>
+            <version>${metrics-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yammer.metrics</groupId>
+            <artifactId>metrics-annotation</artifactId>
+            <version>${metrics-version}</version>
+        </dependency>
 		</dependencies>
 	</dependencyManagement>
 
