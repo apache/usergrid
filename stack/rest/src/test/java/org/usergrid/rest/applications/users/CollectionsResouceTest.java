@@ -33,11 +33,6 @@ public class CollectionsResouceTest extends AbstractRestTest {
     } catch (UniformInterfaceException e) {
       assertEquals("Should receive a 400 Not Found", 400, e
               .getResponse().getStatus());
-
-
     }
-    //logNode(node);
-    //assertEquals("required_property_not_found",node.get("error").getTextValue()); //
-    //assertTrue(node.get("exception").getTextValue().contains("RequiredPropertyNotFoundException")); // when should we leave this out
   }
 }
