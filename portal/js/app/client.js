@@ -48,7 +48,6 @@ usergrid.Client = (function() {
       self.apiUrl = options.apiUrl;
     }
 
-    /** @property resetPasswordUrl */
     self.resetPasswordUrl = self.apiUrl + "/management/users/resetpw";
 
     if (self.apiUrl != localStorage.getItem('usergrid_api_url')) {
@@ -91,18 +90,11 @@ usergrid.Client = (function() {
 
   var uuidValueRegex = /\"([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})\"/gm;
 
-  /**
-   * Tests if the string is a uuid
-   * @public
-   * @function
-   * @param {string} uuid The string to test
-   * @returns {Boolean} true if string is uuid
-   */
-
-  self.isUUID = function (uuid) {
-    if (!uuid) return false;
+  function isUUID(uuid) {
+    if (!uuid) {return false}
     return uuidValueRegex.test(uuid);
   }
+  self.isUUID = isUUID;
 
   function indexOfFirstType(type, args) {
     for (var i = 0; i < args.length; i++) {
@@ -249,18 +241,6 @@ usergrid.Client = (function() {
   }
   self.encodePathString = encodePathString;
 
-  /**
-   * @property {Object} error The last client error
-   * <pre>
-   * {
-   *   type : "an_error_type",
-   *   message : "An error message",
-   *   detail : "An detailed error description",
-   *   exception : "A Java exception"
-   * }
-   * </pre>
-   */
-
   self.error = null;
 
   function setLastError(error) {
@@ -287,22 +267,12 @@ usergrid.Client = (function() {
     }
     return errorMsg;
   }
-
-  /**
-   * Gets the error message of the last client error
-   *
-   * @public
-   * @function
-   * @param {String} defaultMsg the default error message
-   * @returns {String} error message
-   */
   self.getLastErrorMessage = getLastErrorMessage;
 
-  /** @property loggedInUser */
   self.loggedInUser = null;
-  /** @property accessToken */
+
   self.accessToken = null;
-  /** @property currentOrganization */
+
   self.currentOrganization = null;
   var response = {};
 
@@ -311,6 +281,7 @@ usergrid.Client = (function() {
 
   var onIE = navigator.userAgent.indexOf("MSIE") >= 0;
 
+  /* The base for all API calls. HANDLE WITH CAUTION! */
   function apiRequest2(method, path, data, success, error) {
 
     var ajaxOptions = {
@@ -326,6 +297,7 @@ usergrid.Client = (function() {
       ajaxOptions.contentType = "application/x-www-form-urlencoded";
     }
 
+    /* This hack is necesary for IE9. IE is too strict when it comes to cross-domain. */
     if (onIE) {
       ajaxOptions.dataType = "jsonp";
       if (self.accessToken) { ajaxOptions.data['access_token'] = self.accessToken }
@@ -338,6 +310,7 @@ usergrid.Client = (function() {
     $.ajax(ajaxOptions);
   }
 
+  /* OLD VERSION of "the base for all API calls" HANDLE WITH CAUTION! to be deprecated. */
   function apiRequest(method, path, params, data, success, failure) {
     method = method.toUpperCase();
 
@@ -463,113 +436,21 @@ usergrid.Client = (function() {
 
     xhr.send(data);
   }
-  /**
-   * <p>API Request using Cross Origin Resource Sharing</p>
-   * <p>Using hand-rolled XHR makes it easier to debug peculiarities of browser CORS implementations
-   * Tested on FF, Chrome, Safari, Webkit, Mobile Webkit</p>
-   * @see <a href="http://www.w3.org/TR/cors/">W3 CORS</a>
-   *
-   * @public
-   * @function
-   * @param {String} method
-   * @param {String} path
-   * @param {Object} params
-   * @param {String} data
-   * @param {Function} success function called with response: <pre>
-   * {
-   *   data : {
-   *     "..." : "...",
-   *   }
-   * }
-   * @param {Function} failure function called with response: <pre>
-   * {
-   *   error: {
-   *     type : "an_error_type",
-   *     message : "An error message",
-   *     detail : "An detailed error description",
-   *     exception : "A Java exception"
-   *   }
-   * }
-   * </pre>
-   */
   self.apiRequest = apiRequest;
-
-  // function apiGetRequest(path, params, success, failure) {
-  //   apiRequest("GET", path, params, null, success, failure);
-  // }
 
   function apiGetRequest(path, data, success, failure) {
     apiRequest2("GET", path, data, success, failure);
   }
-
-  /**
-   * API Get request
-   *
-   * @public
-   * @function
-   * @param {String} path
-   * @param {Object} params
-   * @param {Function} success function called with response: <pre>
-   * {
-   *   data : {
-   *     "..." : "...",
-   *   }
-   * }
-   * @param {Function} failure function called with response: <pre>
-   * {
-   *   error: {
-   *     type : "an_error_type",
-   *     message : "An error message",
-   *     detail : "An detailed error description",
-   *     exception : "A Java exception"
-   *   }
-   * }
-   * </pre>
-   */
   self.apiGetRequest = apiGetRequest;
 
-  //
-  // Get applications for organization
-  //
-  // GET: /management/organizations/<organization-name>/applications
-  //
   function requestApplications(success, failure) {
     if (!self.currentOrganization) {
       failure();
     }
     apiGetRequest("/management/organizations/" + self.currentOrganization.uuid + "/applications", null, success, failure);
   }
-  /**
-   * <p>Get applications for organization</p>
-   *
-   * @public
-   * @function
-   * @param {Function} success function called with response: <pre>
-   * {
-   *   data : {
-   *     "application-1" : "00000000-0000-0000-0000-000000000001",
-   *     "application-2" : "00000000-0000-0000-0000-000000000002",
-   *   }
-   * }
-   * @param {Function} failure function called with response: <pre>
-   * {
-   *   error: {
-   *     type : "an_error_type",
-   *     message : "An error message",
-   *     detail : "An detailed error description",
-   *     exception : "A Java exception"
-   *   }JSON.stringify(
-   * }
-   * </pre>
-   */
   self.requestApplications = requestApplications;
 
-  //
-  // Add application to organization
-  //
-  // POST: /management/organizations/<organization-name>/applications
-  // data: {name}
-  //
   function createApplication(data, success, failure) {
     if (!self.currentOrganization) {
       failure();
@@ -577,11 +458,7 @@ usergrid.Client = (function() {
     apiRequest("POST", "/management/organizations/" + self.currentOrganization.uuid + "/applications", null, JSON.stringify(data), success, failure);
   }
   self.createApplication = createApplication;
-  //
-  // Get admin users for organization
-  //
-  // GET: /management/organizations/<organization-name>/users
-  //
+
   function requestAdmins(success, failure) {
     if (!self.currentOrganization) {
       failure();
@@ -590,12 +467,6 @@ usergrid.Client = (function() {
   }
   self.requestAdmins = requestAdmins;
 
-  //
-  // Create new organization for admin user
-  //
-  // POST: /management/users/<user-id>/organizations
-  // data: {organization}
-  //
   function createOrganization(data, success, failure) {
     if (!self.loggedInUser) {
       failure();
@@ -603,7 +474,6 @@ usergrid.Client = (function() {
     apiRequest("POST", "/management/users/" + self.loggedInUser.uuid + "/organizations", null, JSON.stringify(data), success, failure);
   }
   self.createOrganization = createOrganization;
-
 
   function leaveOrganization(organizationUUID, success, failure) {
     if (!self.loggedInUser) {
@@ -613,23 +483,11 @@ usergrid.Client = (function() {
   }
   self.leaveOrganization = leaveOrganization;
 
-
-
-  //
-  // Get admin users for organization
-  //
-  // GET: /management/organizations
-  //
   function requestOrganizations(success, failure) {
     apiGetRequest("/management/users/" + self.loggedInUser.uuid + "/organizations", null, success, failure);
   }
   self.requestOrganizations = requestOrganizations;
 
-  //
-  // Get access keys for organization
-  //
-  // GET: /management/organizations/<organization-name>/keys
-  //
   function requestOrganizationCredentials(success, failure) {
     if (!self.currentOrganization) {
       failure();
@@ -638,11 +496,6 @@ usergrid.Client = (function() {
   }
   self.requestOrganizationCredentials = requestOrganizationCredentials;
 
-  //
-  // Generate new access keys for organization
-  //
-  // POST: /management/organizations/<organization-name>/keys
-  //
   function regenerateOrganizationCredentials(success, failure) {
     if (!self.currentOrganization) {
       failure();
@@ -651,12 +504,6 @@ usergrid.Client = (function() {
   }
   self.regenerateOrganizationCredentials = regenerateOrganizationCredentials;
 
-  //
-  // Create new admin user for organization
-  //
-  // POST: /management/organizations/<organization-name>/users
-  // data: {email, password}
-  //
   function createAdmin(data, success, failure) {
     if (!self.currentOrganization) {
       failure();
@@ -665,22 +512,11 @@ usergrid.Client = (function() {
   }
   self.createAdmin = createAdmin;
 
-  //
-  // Get collections for application
-  //
-  // GET: /<application-id>
-  //
   function requestCollections(applicationId, success, failure) {
     apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId, null, success, failure);
   }
   self.requestCollections = requestCollections;
 
-  //
-  // Create collection for application
-  //
-  // POST: /<application-id>
-  // data:{name}
-  //
   function createCollection(applicationId, data, success, failure) {
     var collections = {};
     collections[data.name] = {};
@@ -693,41 +529,21 @@ usergrid.Client = (function() {
   }
   self.createCollection = createCollection;
 
-  //
-  // Get application keys
-  //
-  // GET: /<application-id>/auth/keys
-  //
   function requestApplicationCredentials(applicationId, success, failure) {
     apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/credentials", null, success, failure);
   }
   self.requestApplicationCredentials = requestApplicationCredentials;
 
-  //
-  // Get new application keys
-  //
-  // POST: /<application-id>/auth/keys
-  //
   function regenerateApplicationCredentials(applicationId, success, failure) {
     apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/credentials", null, null, success, failure);
   }
   self.regenerateApplicationCredentials = regenerateApplicationCredentials;
 
-  //
-  // Get application roles
-  //
-  // GET: /<application-id>/rolenames
-  //
   function requestApplicationRoles(applicationId, success, failure) {
     apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/rolenames", null, success, failure);
   }
   self.requestApplicationRoles = requestApplicationRoles;
 
-  //
-  // Get application role permissions
-  //
-  // GET: /<application-id>/rolenames/<rolename>
-  //
   function requestApplicationRolePermissions(applicationId, roleName, success, failure) {
     apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/rolenames/" + roleName, null, success, failure);
   }
@@ -766,21 +582,11 @@ usergrid.Client = (function() {
   }
   self.deleteApplicationUserPermission = deleteApplicationUserPermission;
 
-  //
-  // Get application counters
-  //
-  // GET: /<application-id>/counters
-  //
   function requestApplicationCounterNames(applicationId, success, failure) {
     apiGetRequest("/" + self.currentOrganization.uuid + "/" + applicationId + "/counters", null, success, failure);
   }
   self.requestApplicationCounterNames = requestApplicationCounterNames;
 
-  //
-  // Get application counters
-  //
-  // GET: /<application-id>/counters
-  //
   function requestApplicationCounters(applicationId, start_time, end_time, resolution, counter, success, failure) {
     var params = {};
     if (start_time) params.start_time = start_time;
@@ -792,11 +598,6 @@ usergrid.Client = (function() {
   }
   self.requestApplicationCounters = requestApplicationCounters;
 
-  //
-  // Get admin user
-  //
-  // GET: /management/users/<user-id>
-  //
   function requestAdminUser(success, failure) {
     if (!self.loggedInUser) {
       failure();
@@ -805,11 +606,6 @@ usergrid.Client = (function() {
   }
   self.requestAdminUser = requestAdminUser;
 
-  //
-  // Get admin user
-  //
-  // GET: /management/users/<user-id>
-  //
   function updateAdminUser(properties, success, failure) {
     if (!self.loggedInUser) {
       failure();
@@ -818,11 +614,6 @@ usergrid.Client = (function() {
   }
   self.updateAdminUser = updateAdminUser;
 
-  //
-  // Get admin feed
-  //
-  // GET: /management/users/<user-id>/feed
-  //
   function requestAdminFeed(success, failure) {
     if (!self.loggedInUser) {
       failure();
@@ -831,17 +622,8 @@ usergrid.Client = (function() {
   }
   self.requestAdminFeed = requestAdminFeed;
 
-  //
-  // Perform user login, get session token
-  //
-  // POST: /management/users
-  //
   function loginAdmin(email, password, successCallback, errorCallback) {
-    self.loggedInUser = null;
-    self.accessToken = null;
-    self.currentOrganization = null;
-    localStorage.removeItem('usergrid_user');
-    localStorage.removeItem('usergrid_access_token');
+    clearSession();
     var formdata = {
       grant_type: "password",
       username: email,
@@ -868,11 +650,7 @@ usergrid.Client = (function() {
   self.loginAdmin = loginAdmin;
 
   function loginAppUser(applicationId, email, password, success, failure) {
-    self.loggedInUser = null;
-    self.accessToken = null;
-    self.currentOrganization = null;
-    localStorage.removeItem('usergrid_user');
-    localStorage.removeItem('usergrid_access_token');
+    clearSession();
     var formdata = {
       username: email,
       password: '',
@@ -939,6 +717,7 @@ usergrid.Client = (function() {
   function clearSession() {
     self.loggedInUser = null;
     self.accessToken = null;
+    self.currentOrganization = null;
     localStorage.removeItem('usergrid_user');
     localStorage.removeItem('usergrid_access_token');
     if (useSSO()){
@@ -1137,12 +916,6 @@ usergrid.Client = (function() {
   }
   self.requestUsers = requestUsers;
 
-  //
-  // Create new application user for organization
-  //
-  // POST: /<application-id/users
-  // data: {username,name,email,password}
-  //
   function createUser(applicationId, data, success, failure) {
     apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/users", null, JSON.stringify(data), success, failure);
   }
@@ -1212,11 +985,6 @@ usergrid.Client = (function() {
   }
   self.saveGroupProfile = saveGroupProfile;
 
-  //
-  // Create new group    //
-  // POST: /<application-id/users
-  // data: {path, title}
-  //
   function createGroup(applicationId, data, success, failure) {
     apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/groups", null, JSON.stringify(data), success, failure);
   }
@@ -1245,11 +1013,6 @@ usergrid.Client = (function() {
   }
   self.entitySearch = entitySearch;
 
-  //
-  // Create new role    //
-  // POST: /<application-id/users
-  // data: {name,title}
-  //
   function createRole(applicationId, data, success, failure) {
     apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/rolenames", null, JSON.stringify(data), success, failure);
   }
@@ -1273,10 +1036,6 @@ usergrid.Client = (function() {
   }
   self.requestRoles = requestRoles;
 
-  /**
-     Creates a new Query.
-     @class Represents a Query.
-  */
   function Query(applicationId, path, ql, options, success, failure) {
 
     if (path.lastIndexOf("/", 0) !== 0) {
