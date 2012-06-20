@@ -132,5 +132,9 @@
    <bean id="indexBucketLocator" class="org.usergrid.persistence.cassandra.SimpleIndexBucketLocatorImpl">
     	<constructor-arg value="${usergrid.index.defaultbucketsize}"/>
     </bean>
+   <bean id="applicationCreator" class="org.usergrid.management.cassandra.ApplicationCreatorImpl">
+        <constructor-arg ref="entityManagerFactory"/>
+        <constructor-arg ref="managementService"/>
+   </bean>
 
 </beans>

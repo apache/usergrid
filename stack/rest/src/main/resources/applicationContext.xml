@@ -166,4 +166,9 @@
     	<constructor-arg value="${usergrid.index.defaultbucketsize}"/>
     </bean>
 
+    <bean id="applicationCreator" class="org.usergrid.management.cassandra.ApplicationCreatorImpl">
+        <constructor-arg ref="managementService"/>
+        <constructor-arg ref="entityManagerFactory"/>
+    </bean>
+
 </beans>

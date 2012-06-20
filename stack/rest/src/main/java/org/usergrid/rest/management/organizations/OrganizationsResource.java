@@ -30,10 +30,13 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import com.sun.jersey.api.spring.Autowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.usergrid.management.ApplicationCreator;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.rest.AbstractContextResource;
@@ -50,6 +53,9 @@ public class OrganizationsResource extends AbstractContextResource {
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(OrganizationsResource.class);
+
+  @Autowired
+  private ApplicationCreator applicationCreator;
 
 	public OrganizationsResource() {
 	}
@@ -115,9 +121,12 @@ public class OrganizationsResource extends AbstractContextResource {
 		OrganizationOwnerInfo organizationOwner = management
 				.createOwnerAndOrganization(organizationName, username, name,
 						email, password, false, false, true);
+
 		if (organizationOwner == null) {
 			return null;
 		}
+
+    applicationCreator.createSampleFor(organizationOwner.getOrganization());
 
 		response.setData(organizationOwner);
 		response.setSuccess();
