@@ -4,45 +4,39 @@ window.console.log = window.console.log || function() {};
 // fix end here
 
 var Pages = new UsergridPages();
+var query_params = getQueryParams();
+
 $(document).ready(function () {
 
-  Init();
+  initCore();
+  initUI();
+  startApp();
 
-  function Init() {
-
+  function initCore() {
+    parseParams();
     prepareLocalStorage();
     usergrid.Client.Init();
-    usergrid.Client.setAutoLogin();
-
+  }
+  
+  function initUI() {
     usergrid_console_app(Pages);
     InitMenu();
     StatusBar.Init('#statusbar-placeholder');
     toggleableSections();
+  }
 
-    if (getQueryParams().goto_signup) {
+  function startApp() {
+    usergrid.Client.autoLogin(
+      usergrid.console.loginOk,
+      function() {Pages.ShowPage("login")}
+    );
+
+    if (query_params.goto_signup) {
       Pages.ShowPage("signup");
     } else {
       usergrid.console.showLoginForNonSSO();
     }
 
-  }
-
-  function prepareLocalStorage() {
-    if (!Storage.prototype.setObject) {
-      Storage.prototype.setObject = function(key, value) {
-        this.setItem(key, JSON.stringify(value));
-      };
-    }
-
-    if (!Storage.prototype.getObject) {
-      Storage.prototype.getObject = function(key) {
-        try {
-          return this.getItem(key) && JSON.parse(this.getItem(key));
-        } catch(err) {
-        }
-        return null;
-      };
-    }
   }
 
   function toggleableSections() {
@@ -86,21 +80,6 @@ $(document).ready(function () {
     Pages.AddPanel('shell', null, null, null, usergrid.console.pageSelectShell);
     Pages.AddPanel('account', "#account-link", null, null, usergrid.console.requestAccountSettings);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
-  }
-
-  function getQueryParams() {
-    var query_params = {};
-    var e,
-    a = /\+/g,
-    r = /([^&=]+)=?([^&]*)/g,
-    d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
-    q = window.location.search.substring(1);
-
-    while (e = r.exec(q)) {
-      query_params[d(e[1])] = d(e[2]);
-    }
-
-    return query_params;
   }
 
 });

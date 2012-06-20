@@ -217,7 +217,7 @@ usergrid.Client = (function() {
         }
         if (i > payload_start) {
           var json = path.substring(payload_start, i).trim();
-          console.log(json);
+          // console.log(json);
           payload = JSON.parse(json);
         }
         break;
@@ -260,6 +260,7 @@ usergrid.Client = (function() {
    * }
    * </pre>
    */
+
   self.error = null;
 
   function setLastError(error) {
@@ -308,6 +309,35 @@ usergrid.Client = (function() {
   self.activeRequests = 0;
   self.onActiveRequest = null;
 
+  var onIE = navigator.userAgent.indexOf("MSIE") >= 0;
+
+  function apiRequest2(method, path, data, success, error) {
+
+    var ajaxOptions = {
+      type: method.toUpperCase(),
+      url: self.apiUrl + path,
+      success: success,
+      error: error,
+      data: data || {},
+      contentType: "application/json; charset=utf-8"
+    }
+
+    if (method.toUpperCase() == "POST") {
+      ajaxOptions.contentType = "application/x-www-form-urlencoded";
+    }
+
+    if (onIE) {
+      ajaxOptions.dataType = "jsonp";
+      if (self.accessToken) { ajaxOptions.data['access_token'] = self.accessToken }
+    } else {
+      ajaxOptions.beforeSend = function(xhr) {
+	if (self.accessToken) { xhr.setRequestHeader("Authorization", "Bearer " + self.accessToken) }
+      }
+    }
+
+    $.ajax(ajaxOptions);
+  }
+
   function apiRequest(method, path, params, data, success, failure) {
     method = method.toUpperCase();
 
@@ -344,7 +374,7 @@ usergrid.Client = (function() {
       url += "?" + encodeParams(params);
     }
 
-    console.log(url);
+    // console.log(url);
     xhr.open(method, url, true);
     xhr.setRequestHeader("Content-Type", content_type);
     if (authorizationHeader) {
@@ -464,9 +494,14 @@ usergrid.Client = (function() {
    */
   self.apiRequest = apiRequest;
 
-  function apiGetRequest(path, params, success, failure) {
-    apiRequest("GET", path, params, null, success, failure);
+  // function apiGetRequest(path, params, success, failure) {
+  //   apiRequest("GET", path, params, null, success, failure);
+  // }
+
+  function apiGetRequest(path, data, success, failure) {
+    apiRequest2("GET", path, data, success, failure);
   }
+
   /**
    * API Get request
    *
@@ -801,7 +836,7 @@ usergrid.Client = (function() {
   //
   // POST: /management/users
   //
-  function loginAdmin(email, password, success, failure) {
+  function loginAdmin(email, password, successCallback, errorCallback) {
     self.loggedInUser = null;
     self.accessToken = null;
     self.currentOrganization = null;
@@ -812,27 +847,23 @@ usergrid.Client = (function() {
       username: email,
       password: password
     };
-    apiRequest("POST", "/management/token", formdata, null,
-               function(response) {
-                 if (response && response.access_token && response.user) {
-                   self.loggedInUser = response.user;
-                   self.accessToken = response.access_token;
-                   setCurrentOrganization();
-                   localStorage.setObject('usergrid_user', self.loggedInUser);
-                   localStorage.setObject('usergrid_access_token', self.accessToken);
-                   if (success) {
-                     success();
-                   }
-                 } else if (failure) {
-                   failure();
-                 }
-               },
-               function(XMLHttpRequest, textStatus, errorThrown) {
-                 if (failure) {
-                   failure();
-                 }
-               }
-              );
+    apiRequest2("POST", "/management/token", formdata,
+		function(data, textStatus, xhr) {
+                  if (!data || !data.access_token || !data.user) {
+		    errorCallback();
+		    return
+		  }
+		  self.loggedInUser = data.user;
+                  self.accessToken = data.access_token;
+                  setCurrentOrganization();
+                  localStorage.setObject('usergrid_user', self.loggedInUser);
+		  localStorage.setItem('usergrid_access_token', self.accessToken);
+		  if (successCallback) {
+                    successCallback(data, textStatus, xhr);
+                  }
+		},
+		errorCallback
+               );
   }
   self.loginAdmin = loginAdmin;
 
@@ -847,14 +878,14 @@ usergrid.Client = (function() {
       password: '',
       invite: true
     };
-    apiRequest("POST", "/" + self.currentOrganization.uuid + "/"+ applicationId + "/token", formdata, null,
+    apiRequest("POST", "/" + self.currentOrganization.uuid + "/" + applicationId + "/token", formdata, null,
                function(response) {
                  if (response && response.access_token && response.user) {
                    self.loggedInUser = response.user;
                    self.accessToken = response.access_token;
                    setCurrentOrganization();
                    localStorage.setObject('usergrid_user', self.loggedInUser);
-                   localStorage.setObject('usergrid_access_token', self.accessToken);
+                   localStorage.setItem('usergrid_access_token', self.accessToken);
                    if (success) {
                      success();
                    }
@@ -862,7 +893,7 @@ usergrid.Client = (function() {
                    failure();
                  }
                },
-               function(XMLHttpRequest, textStatus, errorThrown) {
+               function(response, textStatus, xhr) {
                  if (failure) {
                    failure();
                  }
@@ -871,28 +902,23 @@ usergrid.Client = (function() {
   }
   self.loginAppUser = loginAppUser;
 
-  function loginWithAccessToken(email, accessToken, success, failure) {
-    self.accessToken = accessToken;
-    apiRequest("GET", "/management/users/" + email, null, null,
-               function(response) {
-                 if (response && response.data) {
-                   self.loggedInUser = response.data;
-                   setCurrentOrganization();
-                   localStorage.setObject('usergrid_user', self.loggedInUser);
-                   localStorage.setObject('usergrid_access_token', self.accessToken);
-                   if (success) {
-                     success();
-                   }
-                 } else if (failure) {
-                   failure();
-                 }
-               },
-               function(XMLHttpRequest, textStatus, errorThrown) {
-                 if (failure) {
-                   failure();
-                 }
-               }
-              );
+  function loginWithAccessToken(successCallback, errorCallback) {
+    apiRequest2("GET", "/management/users/" + self.loggedInUser.email, null,
+		function(data, status, xhr) {
+                  if (!data || !data.data) {
+		    errorCallback();
+		    return
+		  }
+                  self.loggedInUser = data.data;
+                  setCurrentOrganization();
+                  localStorage.setObject('usergrid_user', self.loggedInUser);
+                  localStorage.setItem('usergrid_access_token', self.accessToken);
+                  if (successCallback) {
+                    successCallback(data);
+                  }
+		},
+                errorCallback
+	       );
   }
   self.loginWithAccessToken = loginWithAccessToken;
 
@@ -901,55 +927,25 @@ usergrid.Client = (function() {
   }
   self.getAccessToken = getAccessToken;
 
-
-  function handleAutoLogin(email, token) {
-    loginWithAccessToken(email, token,
-                         function(response) {
-                           console.log("Auto-logged in");
-                           if (self.onAutoLogin) {
-                             self.onAutoLogin();
-                           }
-                         },
-                         function() {
-                           logout();
-                         });
-  }
-  self.handleAutoLogin = handleAutoLogin;
-
   function useSSO(){
-    if (apigeeUser() || (self.use_sso=='true' || self.use_sso=='yes')){
-      return true;
-    } else {
-      return false;
-    }
+    return apigeeUser() || self.use_sso=='true' || self.use_sso=='yes'
   }
   self.useSSO = useSSO;
 
   function apigeeUser(){
-    if (window.location.host == APIGEE_TLD ) {
-      return true;
-    }
-    return false;
+    return window.location.host == APIGEE_TLD
   }
 
-  self.onLogout = null;
-  function logout() {
-    clearLoginCredentials();
-    if ( useSSO() ){
-      sendToSSOLogoutPage();
-    } else {
-      self.onLogout();
-    }
-  }
-  self.logout = logout;
-
-  function clearLoginCredentials(){
+  function clearSession() {
     self.loggedInUser = null;
     self.accessToken = null;
     localStorage.removeItem('usergrid_user');
     localStorage.removeItem('usergrid_access_token');
+    if (useSSO()){
+      sendToSSOLogoutPage();
+    }
   }
-  self.clearLoginCredentials = clearLoginCredentials;
+  self.clearSession = clearSession;
 
   function sendToSSOLogoutPage() {
     var newLoc= self.sso_logout_page + '?callback=' + getSSOCallback();
@@ -1419,26 +1415,32 @@ usergrid.Client = (function() {
   }
   self.setCurrentOrganization = setCurrentOrganization;
 
-  self.setAutoLogin = function() {
-    existingUser = localStorage.getObject('usergrid_user');
-    existingAccessToken = localStorage.getObject('usergrid_access_token');
+  function autoLogin(successCallback, errorCallback) {
+    self.loggedInUser = localStorage.getObject('usergrid_user');
+    self.accessToken = localStorage.usergrid_access_token;
 
     //check to see if the user has a valid token
-    if (!existingUser && !existingAccessToken) {
+    if (!self.loggedInUser && !self.accessToken) {
       //test to see if the Portal is running on Apigee, if so, send to SSO, if not, fall through to login screen
       if ( useSSO() ){
         Pages.clearPage();
         sendToSSOLoginPage();
       }
-    } else if (existingAccessToken && existingUser.email) {
-      self.handleAutoLogin(existingUser.email, existingAccessToken);
+    } else if (self.accessToken && self.loggedInUser.email) {
+      loginWithAccessToken(successCallback, function() {
+	clearSession();
+	errorCallback();
+      });
       return;
+    } else {
+      errorCallback()
     }
 
     self.loggedInUser = localStorage.getObject('usergrid_user');
-    self.accessToken = localStorage.getObject('usergrid_access_token');
+    self.accessToken = localStorage.usergrid_access_token;
     setCurrentOrganization();
   }
-
+  self.autoLogin = autoLogin;
+  
   return self
 })();

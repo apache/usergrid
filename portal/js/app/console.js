@@ -42,9 +42,6 @@ function usergrid_console_app(Pages) {
   var backgroundGraphColor = '#ffffff';
   var client = usergrid.Client;
   Pages.resetPasswordUrl = client.resetPasswordUrl;
-  client.onLogout = function() {
-    Pages.ShowPage("login");
-  };
 
   String.prototype.startsWith = function(s) {
     return this.lastIndexOf(s, 0) === 0;
@@ -3057,18 +3054,9 @@ function usergrid_console_app(Pages) {
 
   $('#login-organization').focus();
 
-  function clearLoginForm() {
-    $('#login-email').val("");
-    $('#login-password').val("");
-  }
-
   function displayLoginError() {
     $('#login-area .box').effect('shake', {times: 2},100);
     $('#login-message').show();
-  }
-
-  function clearLoginError() {
-    $('#login-message').hide();
   }
 
   function setupMenu() {
@@ -3115,11 +3103,7 @@ function usergrid_console_app(Pages) {
   function login() {
     var email = $('#login-email').val();
     var password = $('#login-password').val();
-    client.loginAdmin(email, password,loginOk,
-      function() {
-        displayLoginError();
-      }
-    );
+    client.loginAdmin(email, password, loginOk, displayLoginError);
   }
 
   function logout() {
@@ -3540,14 +3524,12 @@ function usergrid_console_app(Pages) {
   usergrid.console.showLoginForNonSSO = showLoginForNonSSO;
 
   function loginOk(){
-    clearLoginError();
-    clearLoginForm();
-    if (client.loggedIn()) {
-      Pages.ShowPage('console');
-    }
+    $('#login-message').hide();
+    $('#login-email').val("");
+    $('#login-password').val("");
+    Pages.ShowPage('console');
   }
   usergrid.console.loginOk = loginOk;
-  client.onAutoLogin = loginOk;
 
   //load the templates only after the rest of the page is
   $(window).bind("load", function() {

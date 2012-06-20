@@ -10,7 +10,7 @@ function UsergridPages(){
   }
 
   self.ShowPage = function(pageName){
-    console.log('showing ' + pageName);
+    // console.log('showing ' + pageName);
     $("#pages > div").hide();
     var page = self.pages[pageName];
     page.box.show();
