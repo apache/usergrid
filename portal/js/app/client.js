@@ -88,8 +88,6 @@ usergrid.Client = (function() {
   // Local API
   var LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
 
-  var uuidValueRegex = /\"([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})\"/gm;
-
   function indexOfFirstType(type, args) {
     for (var i = 0; i < args.length; i++) {
       if (!args[i]) return - 1;
