@@ -1,16 +1,16 @@
-/**
-   @application Holds global Usergrid JS functionality.
-*/
+/*
+ * This file contains the all API calls.
+ *
+ * No behavioural code should be included here (as of now, there is some though... refactoring)
+ * Session management is included here. It'll be separated in a near future
+ *
+ */
+
 var usergrid = usergrid || {};
 
-/**
- * Creates a new Usergrid Client.
- * @class Represents a Usergrid client.
- * @param {string} applicationId The id of the application (optional)
- */
 usergrid.Client = (function() {
-  //This code block *WILL* load before the document is complete
-  /** @property applicationId */
+
+  /* This code block *WILL* load before the document is complete */
 
   var self = {};
 
@@ -56,36 +56,28 @@ usergrid.Client = (function() {
 
   }
 
-  // Always use public API
+  /* Always use public API */
   var FORCE_PUBLIC_API = false;
 
-  // Public API
   var PUBLIC_API_URL = "https://api.usergrid.com";
   self.apiUrl = PUBLIC_API_URL;
 
-  //base tld
   APIGEE_TLD = "apigee.com";
 
-  //flag to overide use SSO if needed set to ?use_sso=no
+  /* flag to overide use SSO if needed set to ?use_sso=no */
   USE_SSO = 'no';
 
-  //Apigee SSO url
   var APIGEE_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
 
-  //Apigee SSO profile url
   var APIGEE_SSO_PROFILE_URL = "https://accounts.apigee.com/accounts/my_account";
 
-  //Apigee SSO Logout page
   var SSO_LOGOUT_PAGE = 'https://accounts.apigee.com/accounts/sign_out';
   self.sso_logout_page = SSO_LOGOUT_PAGE;
 
-  // Local API of standalone server
   var LOCAL_STANDALONE_API_URL = "http://localhost:8080";
 
-  // Local API of Tomcat server in Eclipse
   var LOCAL_TOMCAT_API_URL = "http://localhost:8080/ROOT";
 
-  // Local API
   var LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
 
   function indexOfFirstType(type, args) {
@@ -1147,7 +1139,7 @@ usergrid.Client = (function() {
 
   function setCurrentOrganization(orgName) {
     self.currentOrganization = null;
-    if (!self.loggedInUser || !self.loggedInUser.organizations)
+    if (self.loggedInUser && self.loggedInUser.organizations)
       return;
 
     if (orgName) {
