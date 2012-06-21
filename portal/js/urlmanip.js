@@ -1,15 +1,33 @@
+// <<<<<<< HEAD
 
-function getQueryParams() {
-  var query_params = {};
-  var e,
-  a = /\+/g,
-  r = /([^&=]+)=?([^&]*)/g,
-  d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
-  q = window.location.search.substring(1);
+// function getQueryParams() {
+//   var query_params = {};
+//   var e,
+//   a = /\+/g,
+//   r = /([^&=]+)=?([^&]*)/g,
+//   d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
+//   q = window.location.search.substring(1);
 
-  while (e = r.exec(q)) {
-    query_params[d(e[1])] = d(e[2]);
-  }
+//   while (e = r.exec(q)) {
+//     query_params[d(e[1])] = d(e[2]);
+//   }
+// =======
+var query_params = (function()
+{
+    var result = {};
+    if (window.location.search)
+    {
+        // split up the query string and store in an associative array
+        var params = window.location.search.slice(1).split("&");
+        for (var i = 0; i < params.length; i++)
+        {
+            var tmp = params[i].split("=");
+            result[tmp[0]] = unescape(tmp[1]);
+        }
+    }
+    return result;
+}());
+// >>>>>>> 6202f6698bfc67c82d82b5aaebab3a4130b8c2c6
 
   return query_params;
 }
