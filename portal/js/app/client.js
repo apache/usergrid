@@ -8,7 +8,7 @@
 
 var usergrid = usergrid || {};
 
-usergrid.Client = (function() {
+usergrid.client = (function() {
 
   /* This code block *WILL* load before the document is complete */
 

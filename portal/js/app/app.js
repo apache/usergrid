@@ -15,7 +15,7 @@ $(document).ready(function () {
   function initCore() {
     parseParams();
     prepareLocalStorage();
-    usergrid.Client.Init();
+    usergrid.client.Init();
   }
   
   function initUI() {
@@ -26,10 +26,10 @@ $(document).ready(function () {
   }
 
   function startApp() {
-    usergrid.Client.autoLogin(
+    usergrid.client.autoLogin(
       function() {
 	usergrid.console.loginOk();
-	usergrid.Client.setCurrentOrganization();
+	usergrid.client.setCurrentOrganization();
       },
       function() {Pages.ShowPage("login")}
     );

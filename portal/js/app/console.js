@@ -40,7 +40,7 @@ function usergrid_console_app(Pages) {
 
   var indexes = [];
   var backgroundGraphColor = '#ffffff';
-  var client = usergrid.Client;
+  var client = usergrid.client;
   Pages.resetPasswordUrl = client.resetPasswordUrl;
 
   String.prototype.startsWith = function(s) {
