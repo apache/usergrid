@@ -37,6 +37,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
+import org.usergrid.management.exceptions.ManagementException;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.security.annotations.RequireAdminUserAccess;
@@ -111,7 +112,7 @@ public class OrganizationsResource extends AbstractContextResource {
 		response.setAction("new organization for user");
 
 		if (organizationName == null) {
-			return null;
+			throw new ManagementException("Could not find organization for name: " + organizationName);
 		}
 
 		OrganizationInfo organization = management.createOrganization(
