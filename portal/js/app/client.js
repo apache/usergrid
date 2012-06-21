@@ -10,10 +10,33 @@ usergrid.client = (function() {
 
   /* This code block *WILL* load before the document is complete */
 
-  var self = {};
   var session = usergrid.session;
 
-  self.Init = function(options) {
+  /* Always use public API */
+  var FORCE_PUBLIC_API = false;
+
+  var PUBLIC_API_URL = "https://api.usergrid.com";
+  self.apiUrl = PUBLIC_API_URL;
+
+  APIGEE_TLD = "apigee.com";
+
+  /* flag to overide use SSO if needed set to ?use_sso=no */
+  USE_SSO = 'no';
+
+  var APIGEE_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
+
+  var APIGEE_SSO_PROFILE_URL = "https://accounts.apigee.com/accounts/my_account";
+
+  var SSO_LOGOUT_PAGE = 'https://accounts.apigee.com/accounts/sign_out';
+  self.sso_logout_page = SSO_LOGOUT_PAGE;
+
+  var LOCAL_STANDALONE_API_URL = "http://localhost:8080";
+
+  var LOCAL_TOMCAT_API_URL = "http://localhost:8080/ROOT";
+
+  var LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
+
+  function Init(options) {
     var options = options || {};
 
     self.applicationId = options.applicationId || null;
@@ -54,31 +77,7 @@ usergrid.client = (function() {
     }
 
   }
-
-  /* Always use public API */
-  var FORCE_PUBLIC_API = false;
-
-  var PUBLIC_API_URL = "https://api.usergrid.com";
-  self.apiUrl = PUBLIC_API_URL;
-
-  APIGEE_TLD = "apigee.com";
-
-  /* flag to overide use SSO if needed set to ?use_sso=no */
-  USE_SSO = 'no';
-
-  var APIGEE_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
-
-  var APIGEE_SSO_PROFILE_URL = "https://accounts.apigee.com/accounts/my_account";
-
-  var SSO_LOGOUT_PAGE = 'https://accounts.apigee.com/accounts/sign_out';
-  self.sso_logout_page = SSO_LOGOUT_PAGE;
-
-  var LOCAL_STANDALONE_API_URL = "http://localhost:8080";
-
-  var LOCAL_TOMCAT_API_URL = "http://localhost:8080/ROOT";
-
-  var LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
-
+  
   function indexOfFirstType(type, args) {
     for (var i = 0; i < args.length; i++) {
       if (!args[i]) return - 1;
@@ -222,7 +221,6 @@ usergrid.client = (function() {
     }
     return newPath;
   }
-  self.encodePathString = encodePathString;
 
   self.error = null;
 
@@ -250,7 +248,6 @@ usergrid.client = (function() {
     }
     return errorMsg;
   }
-  self.getLastErrorMessage = getLastErrorMessage;
 
   var response = {};
 
@@ -414,12 +411,10 @@ usergrid.client = (function() {
 
     xhr.send(data);
   }
-  self.apiRequest = apiRequest;
-
+  
   function apiGetRequest(path, data, success, failure) {
     apiRequest2("GET", path, data, success, failure);
   }
-  self.apiGetRequest = apiGetRequest;
 
   function requestApplications(success, failure) {
     if (!session.currentOrganization) {
@@ -427,7 +422,6 @@ usergrid.client = (function() {
     }
     apiGetRequest("/management/organizations/" + session.currentOrganization.uuid + "/applications", null, success, failure);
   }
-  self.requestApplications = requestApplications;
 
   function createApplication(data, success, failure) {
     if (!session.currentOrganization) {
@@ -435,7 +429,6 @@ usergrid.client = (function() {
     }
     apiRequest("POST", "/management/organizations/" + session.currentOrganization.uuid + "/applications", null, JSON.stringify(data), success, failure);
   }
-  self.createApplication = createApplication;
 
   function requestAdmins(success, failure) {
     if (!session.currentOrganization) {
@@ -443,7 +436,6 @@ usergrid.client = (function() {
     }
     apiGetRequest("/management/organizations/" + session.currentOrganization.uuid + "/users", null, success, failure);
   }
-  self.requestAdmins = requestAdmins;
 
   function createOrganization(data, success, failure) {
     if (!session.loggedInUser) {
@@ -451,7 +443,6 @@ usergrid.client = (function() {
     }
     apiRequest("POST", "/management/users/" + session.loggedInUser.uuid + "/organizations", null, JSON.stringify(data), success, failure);
   }
-  self.createOrganization = createOrganization;
 
   function leaveOrganization(organizationUUID, success, failure) {
     if (!session.loggedInUser) {
@@ -459,12 +450,10 @@ usergrid.client = (function() {
     }
     apiRequest("DELETE", "/management/users/" + session.loggedInUser.uuid + "/organizations/" + organizationUUID, null, null, success, failure);
   }
-  self.leaveOrganization = leaveOrganization;
 
   function requestOrganizations(success, failure) {
     apiGetRequest("/management/users/" + session.loggedInUser.uuid + "/organizations", null, success, failure);
   }
-  self.requestOrganizations = requestOrganizations;
 
   function requestOrganizationCredentials(success, failure) {
     if (!session.currentOrganization) {
@@ -472,7 +461,6 @@ usergrid.client = (function() {
     }
     apiGetRequest("/management/organizations/" + session.currentOrganization.uuid + "/credentials", null, success, failure);
   }
-  self.requestOrganizationCredentials = requestOrganizationCredentials;
 
   function regenerateOrganizationCredentials(success, failure) {
     if (!session.currentOrganization) {
@@ -480,7 +468,6 @@ usergrid.client = (function() {
     }
     apiRequest("POST", "/management/organizations/" + session.currentOrganization.uuid + "/credentials", null, null, success, failure);
   }
-  self.regenerateOrganizationCredentials = regenerateOrganizationCredentials;
 
   function createAdmin(data, success, failure) {
     if (!session.currentOrganization) {
@@ -488,12 +475,10 @@ usergrid.client = (function() {
     }
     apiRequest("POST", "/management/organizations/" + session.currentOrganization.uuid + "/users", null, JSON.stringify(data), success, failure);
   }
-  self.createAdmin = createAdmin;
 
   function requestCollections(applicationId, success, failure) {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId, null, success, failure);
   }
-  self.requestCollections = requestCollections;
 
   function createCollection(applicationId, data, success, failure) {
     var collections = {};
@@ -505,65 +490,54 @@ usergrid.client = (function() {
     };
     apiRequest("PUT", "/" + session.currentOrganization.uuid + "/" + applicationId, null, JSON.stringify(metadata), success, failure);
   }
-  self.createCollection = createCollection;
 
   function requestApplicationCredentials(applicationId, success, failure) {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/credentials", null, success, failure);
   }
-  self.requestApplicationCredentials = requestApplicationCredentials;
 
   function regenerateApplicationCredentials(applicationId, success, failure) {
     apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/credentials", null, null, success, failure);
   }
-  self.regenerateApplicationCredentials = regenerateApplicationCredentials;
 
   function requestApplicationRoles(applicationId, success, failure) {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/rolenames", null, success, failure);
   }
-  self.requestApplicationRoles = requestApplicationRoles;
 
   function requestApplicationRolePermissions(applicationId, roleName, success, failure) {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/rolenames/" + roleName, null, success, failure);
   }
-  self.requestApplicationRolePermissions = requestApplicationRolePermissions;
 
   function requestApplicationRoleUsers(applicationId, roleId, success, failure) {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/roles/" + roleId + "/users/", null, success, failure);
   }
-  self.requestApplicationRoleUsers = requestApplicationRoleUsers;
 
   function addApplicationRolePermission(applicationId, roleName, permission, success, failure) {
     apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/rolenames/" + roleName, null, JSON.stringify({
       permission : permission
     }), success, failure);
   }
-  self.addApplicationRolePermission = addApplicationRolePermission;
 
   function deleteApplicationRolePermission(applicationId, roleName, permission, success, failure) {
     apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/rolenames/" + roleName, {
       permission : permission
     }, null, success, failure);
   }
-  self.deleteApplicationRolePermission = deleteApplicationRolePermission;
 
   function addApplicationUserPermission(applicationId, userName, permission, success, failure) {
     apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + userName + "/permissions", null, JSON.stringify({
       permission : permission
     }), success, failure);
   }
-  self.addApplicationUserPermission = addApplicationUserPermission;
 
   function deleteApplicationUserPermission(applicationId, userName, permission, success, failure) {
     apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + userName + "/permissions", {
       permission : permission
     }, null, success, failure);
   }
-  self.deleteApplicationUserPermission = deleteApplicationUserPermission;
 
   function requestApplicationCounterNames(applicationId, success, failure) {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/counters", null, success, failure);
   }
-  self.requestApplicationCounterNames = requestApplicationCounterNames;
 
   function requestApplicationCounters(applicationId, start_time, end_time, resolution, counter, success, failure) {
     var params = {};
@@ -574,7 +548,6 @@ usergrid.client = (function() {
     params.pad = true;
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/counters", params, success, failure);
   }
-  self.requestApplicationCounters = requestApplicationCounters;
 
   function requestAdminUser(success, failure) {
     if (!session.loggedInUser) {
@@ -582,7 +555,6 @@ usergrid.client = (function() {
     }
     apiGetRequest("/management/users/" + session.loggedInUser.uuid, null, success, failure);
   }
-  self.requestAdminUser = requestAdminUser;
 
   function updateAdminUser(properties, success, failure) {
     if (!session.loggedInUser) {
@@ -590,7 +562,6 @@ usergrid.client = (function() {
     }
     apiRequest("PUT", "/management/users/" + session.loggedInUser.uuid, null, JSON.stringify(properties), success, failure);
   }
-  self.updateAdminUser = updateAdminUser;
 
   function requestAdminFeed(success, failure) {
     if (!session.loggedInUser) {
@@ -598,7 +569,6 @@ usergrid.client = (function() {
     }
     apiGetRequest("/management/users/" + session.loggedInUser.uuid + "/feed", null, success, failure);
   }
-  self.requestAdminFeed = requestAdminFeed;
 
   function loginAdmin(email, password, successCallback, errorCallback) {
     clearSession();
@@ -625,7 +595,6 @@ usergrid.client = (function() {
 		errorCallback
                );
   }
-  self.loginAdmin = loginAdmin;
 
   function loginAppUser(applicationId, email, password, success, failure) {
     clearSession();
@@ -656,7 +625,6 @@ usergrid.client = (function() {
                }
               );
   }
-  self.loginAppUser = loginAppUser;
 
   function loginWithAccessToken(successCallback, errorCallback) {
     apiRequest2("GET", "/management/users/" + session.loggedInUser.email, null,
@@ -676,17 +644,14 @@ usergrid.client = (function() {
                 errorCallback
 	       );
   }
-  self.loginWithAccessToken = loginWithAccessToken;
 
   function getAccessToken(){
     return session.accessToken;
   }
-  self.getAccessToken = getAccessToken;
 
   function useSSO(){
     return apigeeUser() || self.use_sso=='true' || self.use_sso=='yes'
   }
-  self.useSSO = useSSO;
 
   function apigeeUser(){
     return window.location.host == APIGEE_TLD
@@ -702,14 +667,12 @@ usergrid.client = (function() {
       sendToSSOLogoutPage();
     }
   }
-  self.clearSession = clearSession;
 
   function sendToSSOLogoutPage() {
     var newLoc= self.sso_logout_page + '?callback=' + getSSOCallback();
     window.location = newLoc;
     return false;
   }
-  self.sendToSSOLogoutPage = sendToSSOLogoutPage;
 
   function sendToSSOLoginPage() {
     var newLoc = self.apigee_sso_url + '?callback=' + getSSOCallback();
@@ -717,7 +680,6 @@ usergrid.client = (function() {
     throw "stop!";
     return false;
   }
-  self.sendToSSOLoginPage = sendToSSOLoginPage;
 
   function sendToSSOProfilePage() {
     var newLoc = self.apigee_sso_profile_url + '?callback=' + getSSOCallback();
@@ -725,7 +687,6 @@ usergrid.client = (function() {
     throw "stop!";
     return false;
   }
-  self.sendToSSOProfilePage = sendToSSOProfilePage;
 
   function getSSOCallback() {
     var callback = window.location.protocol+'//'+ window.location.host + window.location.pathname;
@@ -740,12 +701,10 @@ usergrid.client = (function() {
     }
     return encodeURIComponent(callback);
   }
-  self.getSSOCallback = getSSOCallback;
 
   function loggedIn() {
     return session.loggedInUser && session.accessToken;
   }
-  self.loggedIn = loggedIn;
 
   function signup(organization, username, name, email, password, success, failure) {
     var formdata = {
@@ -772,7 +731,6 @@ usergrid.client = (function() {
                }
               );
   }
-  self.signup = signup;
 
   function getEntity(collection, a) {
     var ns = session.currentOrganization.uuid + "/" + self.applicationId;
@@ -791,17 +749,14 @@ usergrid.client = (function() {
     var path = "/" + ns + "/" + collection + "/" + id;
     apiGetRequest(path, params, success, failure);
   }
-  self.getEntity = getEntity;
 
   function getUser(a) {
     return getEntity("users", arguments);
   }
-  self.getUser = getUser;
 
   function getGroup(a) {
     return getEntity("groups", arguments);
   }
-  self.getGroup = getGroup;
 
   function queryEntities(root_collection, a) {
     var ns = session.currentOrganization.uuid + "/" + self.applicationId;
@@ -820,12 +775,10 @@ usergrid.client = (function() {
     q.send("GET", null);
     return q;
   }
-  self.queryEntities = queryEntities
 
   function queryUsers(a) {
     return queryEntities("users", arguments);
   }
-  self.queryUsers = queryUsers;
 
   function queryEntityCollection(root_collection, entity_collection, a) {
     var ns = session.currentOrganization.uuid + "/" + self.applicationId;
@@ -846,42 +799,34 @@ usergrid.client = (function() {
     q.send("GET", null);
     return q;
   }
-  self.queryEntityCollection = queryEntityCollection;
 
   function deleteEntity(applicationId, entityId, path, success, failure) {
     apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/" + path + "/" + entityId, null, null, success, failure);
   }
-  self.deleteEntity = deleteEntity;
 
   function queryUserMemberships(a) {
     return queryEntityCollection("users", "groups", arguments);
   }
-  self.queryUserMemberships = queryUserMemberships;
 
   function queryUserActivities(a) {
     return queryEntityCollection("users", "activities", arguments);
   }
-  self.queryUserActivities = queryUserActivities;
 
   function queryUserRoles(applicationId, entityId, success, failure) {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + entityId + "/roles", null, success, failure);
   }
-  self.queryUserRoles = queryUserRoles;
 
   function queryUserPermissions(a) {
     return queryEntityCollection("users", "permissions", arguments);
   }
-  self.queryUserPermissions = queryUserPermissions;
 
   function queryUserFollowing(a) {
     return queryEntityCollection("users", "following", arguments);
   }
-  self.queryUserFollowing = queryUserFollowing;
 
   function queryUserFollowers(a) {
     return queryEntityCollection("users", "followers", arguments);
   }
-  self.queryUserFollowers = queryUserFollowers;
 
   function requestUserList(applicationId, searchString, success, failure) {
     if (searchString != "*") searchString = searchString + '*';
@@ -889,22 +834,18 @@ usergrid.client = (function() {
       username: searchString
     }), success, failure);
   }
-  self.requestUserList = requestUserList;
 
   function requestUsers(applicationId, success, failure) {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/users", null, success, failure);
   }
-  self.requestUsers = requestUsers;
 
   function createUser(applicationId, data, success, failure) {
     apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users", null, JSON.stringify(data), success, failure);
   }
-  self.createUser = createUser;
 
   function deleteUser(applicationId, userId, success, failure) {
     apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + userId, null, null, success, failure);
   }
-  self.deleteUser = deleteUser;
 
   function requestCollectionIndexes(applicationId, path, success, failure) {
     if (path.lastIndexOf("/", 0) !== 0) {
@@ -913,72 +854,58 @@ usergrid.client = (function() {
     path = "/" + session.currentOrganization.uuid + "/" + applicationId + path + "/indexes";
     apiGetRequest(path, null, success, failure);
   }
-  self.requestCollectionIndexes = requestCollectionIndexes;
 
   function queryGroups(a) {
     return queryEntities("groups", arguments);
   }
-  self.queryGroups = queryGroups;
 
   function queryRoles(a) {
     return queryEntities("roles", arguments);
   }
-  self.queryRoles = queryRoles;
 
   function queryActivities(a) {
     return queryEntities("activities", arguments);
   }
-  self.queryActivities = queryActivities;
 
   function queryCollections(a) {
     return queryEntities("/", arguments);
   }
-  self.queryCollections = queryCollections;
 
   function queryGroupMemberships(a) {
     return queryEntityCollection("groups", "users", arguments);
   }
-  self.queryGroupMemberships = queryGroupMemberships;
 
   function queryGroupActivities(a) {
     return queryEntityCollection("groups", "activities", arguments);
   }
-  self.queryGroupActivities = queryGroupActivities;
 
   function requestGroups(applicationId, success, failure) {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/groups", null, success, failure);
   }
-  self.requestGroups = requestGroups;
 
   function requestGroupRoles(applicationId, entityId, success, failure) {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + entityId + "/rolenames", null, success, failure);
   }
-  self.requestGroupRoles = requestGroupRoles;
 
   function saveUserProfile(applicationId, userid, payload, success,failure){
     apiRequest("PUT", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + userid, null, JSON.stringify(payload) , success, failure);
   }
-  self.saveUserProfile = saveUserProfile;
 
   function saveGroupProfile(applicationId, groupid, payload, success,failure){
     apiRequest("PUT", "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupid, null, JSON.stringify(payload) , success, failure);
   }
-  self.saveGroupProfile = saveGroupProfile;
 
   function createGroup(applicationId, data, success, failure) {
     apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups", null, JSON.stringify(data), success, failure);
   }
-  self.createGroup = createGroup;
 
   function deleteGroup(applicationId, groupId, success, failure) {
     apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId, null, null, success, failure);
   }
-  self.deleteGroup = deleteGroup;
 
   function addUserToGroup(applicationId, groupId, username, success, failure) {
     apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, "{ }", success, failure);
   }
-  self.addUserToGroup = addUserToGroup;
 
   function removeUserFromGroup(applicationId, groupId, username, success, failure) {
     if (!session.loggedInUser) {
@@ -986,21 +913,18 @@ usergrid.client = (function() {
     }
     apiRequest("DELETE",  "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, null, success, failure);
   }
-  self.removeUserFromGroup = removeUserFromGroup;
 
   function entitySearch(applicationId, searchType, searchString, success, failure) {
                 return queryEntities(searchType, arguments);
   }
-  self.entitySearch = entitySearch;
 
   function createRole(applicationId, data, success, failure) {
     apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/rolenames", null, JSON.stringify(data), success, failure);
   }
-  self.createRole = createRole;
 
   function addUserToRole(applicationId, roleId, username, success, failure) {
     apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/roles/" + roleId + "/users/" + username, null, "{ }", success, failure);
-  }  self.addUserToRole = addUserToRole;
+  }
 
   function removeUserFromRole(applicationId, username, roleId, success, failure) {
     if (!session.loggedInUser) {
@@ -1008,12 +932,10 @@ usergrid.client = (function() {
     }
     apiRequest("DELETE",  "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + username + "/roles/" + roleId, null, null, success, failure);
   }
-  self.removeUserFromRole = removeUserFromRole;
 
   function requestRoles(applicationId, success, failure) {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/rolenames", null, success, failure);
   }
-  self.requestRoles = requestRoles;
 
   function Query(applicationId, path, ql, options, success, failure) {
 
@@ -1130,7 +1052,6 @@ usergrid.client = (function() {
     }
     this.delete_ = delete_;
   }
-  self.Query = Query;
 
   function setCurrentOrganization(orgName) {
     session.currentOrganization = null;
@@ -1154,7 +1075,6 @@ usergrid.client = (function() {
 
     localStorage.currentOrganizationName = session.currentOrganization.name;
   }
-  self.setCurrentOrganization = setCurrentOrganization;
 
   function autoLogin(successCallback, errorCallback) {
     session.loggedInUser = localStorage.getObject('usergrid_user');
@@ -1185,7 +1105,93 @@ usergrid.client = (function() {
     }
 
   }
-  self.autoLogin = autoLogin;
   
+  /* These are the functions we want to be public. Almost all, really. */
+  self = {
+    Init: Init,
+    encodePathString: encodePathString,
+    getLastErrorMessage: getLastErrorMessage,
+    apiRequest2: apiRequest2,
+    apiRequest: apiRequest,
+    apiGetRequest: apiGetRequest,
+    requestApplications: requestApplications,
+    createApplication: createApplication,
+    requestAdmins: requestAdmins,
+    createOrganization: createOrganization,
+    leaveOrganization: leaveOrganization,
+    requestOrganizations: requestOrganizations,
+    requestOrganizationCredentials: requestOrganizationCredentials,
+    regenerateOrganizationCredentials: regenerateOrganizationCredentials,
+    createAdmin: createAdmin,
+    requestCollections: requestCollections,
+    createCollection: createCollection,
+    requestApplicationCredentials: requestApplicationCredentials,
+    regenerateApplicationCredentials: regenerateApplicationCredentials,
+    requestApplicationRoles: requestApplicationRoles,
+    requestApplicationRolePermissions: requestApplicationRolePermissions,
+    requestApplicationRoleUsers: requestApplicationRoleUsers,
+    addApplicationRolePermission: addApplicationRolePermission,
+    deleteApplicationRolePermission: deleteApplicationRolePermission,
+    addApplicationUserPermission: addApplicationUserPermission,
+    deleteApplicationUserPermission: deleteApplicationUserPermission,
+    requestApplicationCounterNames: requestApplicationCounterNames,
+    requestApplicationCounters: requestApplicationCounters,
+    requestAdminUser: requestAdminUser,
+    updateAdminUser: updateAdminUser,
+    requestAdminFeed: requestAdminFeed,
+    loginAdmin: loginAdmin,
+    loginAppUser: loginAppUser,
+    loginWithAccessToken: loginWithAccessToken,
+    getAccessToken: getAccessToken,
+    useSSO: useSSO,
+    clearSession: clearSession,
+    sendToSSOLogoutPage: sendToSSOLogoutPage,
+    sendToSSOLoginPage: sendToSSOLoginPage,
+    sendToSSOProfilePage: sendToSSOProfilePage,
+    getSSOCallback: getSSOCallback,
+    loggedIn: loggedIn,
+    signup: signup,
+    getEntity: getEntity,
+    getUser: getUser,
+    getGroup: getGroup,
+    queryEntities: queryEntities,
+    queryUsers: queryUsers,
+    queryEntityCollection: queryEntityCollection,
+    deleteEntity: deleteEntity,
+    queryUserMemberships: queryUserMemberships,
+    queryUserActivities: queryUserActivities,
+    queryUserRoles: queryUserRoles,
+    queryUserPermissions: queryUserPermissions,
+    queryUserFollowing: queryUserFollowing,
+    queryUserFollowers: queryUserFollowers,
+    requestUserList: requestUserList,
+    requestUsers: requestUsers,
+    createUser: createUser,
+    deleteUser: deleteUser,
+    requestCollectionIndexes: requestCollectionIndexes,
+    queryGroups: queryGroups,
+    queryRoles: queryRoles,
+    queryActivities: queryActivities,
+    queryCollections: queryCollections,
+    queryGroupMemberships: queryGroupMemberships,
+    queryGroupActivities: queryGroupActivities,
+    requestGroups: requestGroups,
+    requestGroupRoles: requestGroupRoles,
+    saveUserProfile: saveUserProfile,
+    saveGroupProfile: saveGroupProfile,
+    createGroup: createGroup,
+    deleteGroup: deleteGroup,
+    addUserToGroup: addUserToGroup,
+    removeUserFromGroup: removeUserFromGroup,
+    entitySearch: entitySearch,
+    createRole: createRole,
+    addUserToRole: addUserToRole,
+    removeUserFromRole: removeUserFromRole,
+    requestRoles: requestRoles,
+    Query: Query,
+    setCurrentOrganization: setCurrentOrganization,
+    autoLogin: autoLogin
+  }
+
   return self
 })();
