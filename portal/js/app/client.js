@@ -1139,8 +1139,9 @@ usergrid.Client = (function() {
 
   function setCurrentOrganization(orgName) {
     self.currentOrganization = null;
-    if (self.loggedInUser && self.loggedInUser.organizations)
+    if (!self.loggedInUser || !self.loggedInUser.organizations) {
       return;
+    }
 
     if (orgName) {
       self.currentOrganization = self.loggedInUser.organizations[orgName];
@@ -1150,8 +1151,10 @@ usergrid.Client = (function() {
 
     if (!self.currentOrganization) {
       var firstOrg = null;
-      for (firstOrg in self.loggedInUser.organizations) break;
-      if (firstOrg) self.currentOrganization = self.loggedInUser.organizations[firstOrg];
+      for (firstOrg in self.loggedInUser.organizations) {break;}
+      if (firstOrg) {
+	self.currentOrganization = self.loggedInUser.organizations[firstOrg];
+      }
     }
 
     localStorage.currentOrganizationName = self.currentOrganization.name;
@@ -1169,19 +1172,23 @@ usergrid.Client = (function() {
         Pages.clearPage();
         sendToSSOLoginPage();
       }
-    } else if (self.accessToken && self.loggedInUser.email) {
-      loginWithAccessToken(successCallback, function() {
-	clearSession();
-	errorCallback();
-      });
+    } else if (self.accessToken && self.loggedInUser) {
+      loginWithAccessToken(
+	function() {
+	  self.loggedInUser = localStorage.getObject('usergrid_user');
+	  self.accessToken = localStorage.usergrid_access_token;
+	  successCallback();
+	},
+	function() {
+	  clearSession();
+	  errorCallback();
+	}
+      );
       return;
     } else {
       errorCallback()
     }
 
-    self.loggedInUser = localStorage.getObject('usergrid_user');
-    self.accessToken = localStorage.usergrid_access_token;
-    setCurrentOrganization();
   }
   self.autoLogin = autoLogin;
   

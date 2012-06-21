@@ -1,4 +1,4 @@
-function UsergridPages(){
+function UsergridPages() {
   var self = {
     pages: {},
     panels: {},

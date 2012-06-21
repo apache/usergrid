@@ -27,7 +27,10 @@ $(document).ready(function () {
 
   function startApp() {
     usergrid.Client.autoLogin(
-      usergrid.console.loginOk,
+      function() {
+	usergrid.console.loginOk();
+	usergrid.Client.setCurrentOrganization();
+      },
       function() {Pages.ShowPage("login")}
     );
 
