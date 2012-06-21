@@ -35,6 +35,7 @@ usergrid.session = (function() {
     loggedInUser: null,
     accessToken: null,
     currentOrganization: null,
+    currentApplicationId: null,
 
     loggedIn: loggedIn,
     readIt: readIt,

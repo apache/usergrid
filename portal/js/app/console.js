@@ -79,8 +79,7 @@ function usergrid_console_app(Pages) {
   client.onActiveRequest = function(activeRequests) {
     if (activeRequests <= 0) {
       $("#api-activity").delay(1000).hide(1);
-    }
-    else {
+    } else {
       $("#api-activity").show();
     }
   };
@@ -1623,7 +1622,7 @@ function usergrid_console_app(Pages) {
     } else if (userLetter != "*") {
       query = {"ql" : searchType + "='" + userLetter + "*'"};
     }
-    client.applicationId = current_application_id;
+    session.applicationId = current_application_id;
     users_query = client.queryUsers(displayUsers, query);
     return false;
   }
@@ -2002,7 +2001,7 @@ function usergrid_console_app(Pages) {
     } else if (groupLetter != "*") {
       query = {"ql" : searchType + "='" + groupLetter + "*'"};
     }
-    client.applicationId = current_application_id;
+    session.currentApplicationId = current_application_id;
     groups_query = client.queryGroups(displayGroups, query);
     return false;
   }
@@ -2208,7 +2207,7 @@ function usergrid_console_app(Pages) {
   var roleLetter = '*';
   var roleSortBy = 'title';
   function requestRoles() {
-    client.applicationId = current_application_id;
+    session.currentApplicationId = current_application_id;
     var query = {"ql" : "order by " + roleSortBy};
     if (roleLetter != "*") query = {"ql" : roleSortBy + "='" + groupLetter + "*'"};
     roles_query = client.queryRoles(displayRoles, null);
@@ -2512,7 +2511,7 @@ function usergrid_console_app(Pages) {
         query = {"ql" : searchType + "='" + search + "*'"};
       }
     }
-    client.applicationId = current_application_id;
+    session.currentApplicationId = current_application_id;
     $('#activities-response-table').empty().html("<tr>Searching for activities</tr>");
     activities_query = client.queryActivities(displayActivities, query);
     return false;

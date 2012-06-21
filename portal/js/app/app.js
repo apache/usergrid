@@ -26,7 +26,7 @@ $(document).ready(function () {
   }
 
   function startApp() {
-    usergrid.session.autoLogin(
+    usergrid.client.autoLogin(
       function() {
 	usergrid.console.loginOk();
 	usergrid.client.setCurrentOrganization();
