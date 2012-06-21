@@ -17,10 +17,10 @@ usergrid.client = (function() {
 
   var PUBLIC_API_URL = "https://api.usergrid.com";
 
-  APIGEE_TLD = "apigee.com";
+  var APIGEE_TLD = "apigee.com";
 
   /* flag to overide use SSO if needed set to ?use_sso=no */
-  USE_SSO = 'no';
+  var USE_SSO = 'no';
 
   var APIGEE_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
 
@@ -33,6 +33,10 @@ usergrid.client = (function() {
   var LOCAL_TOMCAT_API_URL = "http://localhost:8080/ROOT";
 
   var LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
+
+  var response = {};
+
+  var onIE = navigator.userAgent.indexOf("MSIE") >= 0;
 
   function Init(options) {
     var options = options || {};
@@ -75,7 +79,7 @@ usergrid.client = (function() {
     }
 
   }
-  
+
   function indexOfFirstType(type, args) {
     for (var i = 0; i < args.length; i++) {
       if (!args[i]) return - 1;
@@ -245,10 +249,6 @@ usergrid.client = (function() {
   }
 
   /* */
-  
-  var response = {};
-
-  var onIE = navigator.userAgent.indexOf("MSIE") >= 0;
 
   /* The base for all API calls. HANDLE WITH CAUTION! */
   function apiRequest2(method, path, data, success, error) {
@@ -405,7 +405,7 @@ usergrid.client = (function() {
 
     xhr.send(data);
   }
-  
+
   function apiGetRequest(path, data, success, failure) {
     apiRequest2("GET", path, data, success, failure);
   }
