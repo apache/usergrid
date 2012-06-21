@@ -2,6 +2,7 @@ function usergrid_console_app(Pages) {
   //This code block *WILL NOT* load before the document is complete
   window.usergrid = window.usergrid || {};
   usergrid.console = usergrid.console || {};
+  session = usergrid.session;
 
   var OFFLINE = false;
   var OFFLINE_PAGE = "#query-page";
@@ -105,7 +106,7 @@ function usergrid_console_app(Pages) {
     if (typeof current_application_name != 'string') {
       app_name = '';
     }
-    var org_name = client.currentOrganization.name;
+    var org_name = session.currentOrganization.name;
     if (typeof org_name != 'string') {
       org_name = '';
     }
@@ -377,7 +378,7 @@ function usergrid_console_app(Pages) {
   function doQuerySend(method, data) {
     var qpath = $('#query-path').val();
     var ql = $("#query-ql").val();
-    query = new client.Query(client.currentOrganization.uuid + "/" + current_application_id, qpath, ql, {},
+    query = new client.Query(session.currentOrganization.uuid + "/" + current_application_id, qpath, ql, {},
       function(data) {
         displayQueryResponse(data);
         var msg = "Web service completed successfully";
@@ -663,9 +664,9 @@ function usergrid_console_app(Pages) {
       pageSelect(localStorage.currentApplicationId);
     else {
       var firstApp = null;
-      for (firstApp in client.currentOrganization.applications) break;
+      for (firstApp in session.currentOrganization.applications) break;
       if(firstApp) {
-        pageSelect(client.currentOrganization.applications[firstApp]);
+        pageSelect(session.currentOrganization.applications[firstApp]);
       }
     }
   }
@@ -2776,7 +2777,7 @@ function usergrid_console_app(Pages) {
   }
 
   function handleShellCommand(s) {
-    var orgName = client.currentOrganization.uuid;
+    var orgName = session.currentOrganization.uuid;
 
     if (s) {
       history.push(s);
@@ -3061,22 +3062,22 @@ function usergrid_console_app(Pages) {
 
   function setupMenu() {
     var userNameBox = $('#userEmail');
-    if (client && client.loggedInUser)
-      userNameBox.html(client.loggedInUser.email);
+    if (session && session.loggedInUser)
+      userNameBox.html(session.loggedInUser.email);
     else
       userNameBox.html("No Logged In User");
     setupOrganizationsMenu();
   }
 
   function setupOrganizationsMenu() {
-    if (!client || !client.loggedInUser || !client.loggedInUser.organizations) {
+    if (!session || !session.loggedInUser || !session.loggedInUser.organizations) {
       return;
     }
-    var orgName = client.currentOrganization.name;
+    var orgName = session.currentOrganization.name;
     $('#organizations-menu > a span').text(orgName);
     $('#selectedOrg').text(orgName);
 
-    var organizations = client.loggedInUser.organizations;
+    var organizations = session.loggedInUser.organizations;
     var orgMenu = $('#organizations-menu ul');
     var orgTmpl = $('<li><a href="#">${name}</a></li>');
     var data = [];
@@ -3299,7 +3300,7 @@ function usergrid_console_app(Pages) {
     if (client.useSSO()) {
       client.sendToSSOProfilePage();
     } else {
-      $('#update-account-id').text(client.loggedInUser.uuid);
+      $('#update-account-id').text(session.loggedInUser.uuid);
       $('#update-account-name').val("");
       $('#update-account-email').val("");
       $('#old-account-password').val("");
@@ -3376,7 +3377,7 @@ function usergrid_console_app(Pages) {
   usergrid.console.leaveOrganization = leaveOrganization;
 
   function displayCurrentOrg() {
-    $('#organizations-table').html('<tr class="zebraRows"><td>' + client.currentOrganization.name + '</td><td class="monospace">' + client.currentOrganization.uuid + '</td></tr>');
+    $('#organizations-table').html('<tr class="zebraRows"><td>' + session.currentOrganization.name + '</td><td class="monospace">' + session.currentOrganization.uuid + '</td></tr>');
   }
   usergrid.console.displayCurrentOrg = displayCurrentOrg;
 
