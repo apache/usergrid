@@ -51,6 +51,17 @@ public class ApplicationCreatorTest {
 
     Set<String> rolePerms = emf.getEntityManager(appInfo.getId()).getRolePermissions("guest");
     assertNotNull(rolePerms);
-    assertTrue(rolePerms.contains("get,post:/**"));
+    assertTrue(rolePerms.contains("get,post,put,delete:/**"));
+  }
+
+  @Test
+  public void testCreateSampleApplicationAltName() throws Exception {
+    OrganizationOwnerInfo orgOwner = managementService.createOwnerAndOrganization("appcreatortestcustom",
+            "nate-appcreatortestcustom", "Nate", "nate+appcreatortestcustom@apigee.com", "password", true, false, false);
+    ApplicationCreatorImpl customCreator = new ApplicationCreatorImpl(emf, managementService);
+    customCreator.setSampleAppName("messagee");
+    ApplicationInfo appInfo = customCreator.createSampleFor(orgOwner.getOrganization());
+    assertNotNull(appInfo);
+    assertEquals("appcreatortestcustom/messagee",appInfo.getName());
   }
 }
