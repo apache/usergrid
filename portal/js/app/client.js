@@ -16,7 +16,6 @@ usergrid.client = (function() {
   var FORCE_PUBLIC_API = false;
 
   var PUBLIC_API_URL = "https://api.usergrid.com";
-  self.apiUrl = PUBLIC_API_URL;
 
   APIGEE_TLD = "apigee.com";
 
@@ -28,7 +27,6 @@ usergrid.client = (function() {
   var APIGEE_SSO_PROFILE_URL = "https://accounts.apigee.com/accounts/my_account";
 
   var SSO_LOGOUT_PAGE = 'https://accounts.apigee.com/accounts/sign_out';
-  self.sso_logout_page = SSO_LOGOUT_PAGE;
 
   var LOCAL_STANDALONE_API_URL = "http://localhost:8080";
 
@@ -222,7 +220,7 @@ usergrid.client = (function() {
     return newPath;
   }
 
-  self.error = null;
+  /* TODO: These next two functions "*LastError*" MUST be deprecated */
 
   function setLastError(error) {
     if (error) {
@@ -240,19 +238,15 @@ usergrid.client = (function() {
   }
 
   function getLastErrorMessage(defaultMsg) {
-    var errorMsg = defaultMsg;
-    if (self.error) {
-      if (self.error.error_description) {
-        errorMsg = self.error.error_description;
-      }
+    if (self.error && self.error.error_description) {
+      return self.error.error_description;
     }
-    return errorMsg;
+    return defaultMsg;
   }
 
+  /* */
+  
   var response = {};
-
-  self.activeRequests = 0;
-  self.onActiveRequest = null;
 
   var onIE = navigator.userAgent.indexOf("MSIE") >= 0;
 
@@ -571,7 +565,7 @@ usergrid.client = (function() {
   }
 
   function loginAdmin(email, password, successCallback, errorCallback) {
-    clearSession();
+    session.clearIt();
     var formdata = {
       grant_type: "password",
       username: email,
@@ -597,7 +591,7 @@ usergrid.client = (function() {
   }
 
   function loginAppUser(applicationId, email, password, success, failure) {
-    clearSession();
+    session.clearIt();
     var formdata = {
       username: email,
       password: '',
@@ -626,7 +620,7 @@ usergrid.client = (function() {
               );
   }
 
-  function loginWithAccessToken(successCallback, errorCallback) {
+  function renewToken(successCallback, errorCallback) {
     apiRequest2("GET", "/management/users/" + session.loggedInUser.email, null,
 		function(data, status, xhr) {
                   if (!data || !data.data) {
@@ -645,27 +639,12 @@ usergrid.client = (function() {
 	       );
   }
 
-  function getAccessToken(){
-    return session.accessToken;
-  }
-
   function useSSO(){
     return apigeeUser() || self.use_sso=='true' || self.use_sso=='yes'
   }
 
   function apigeeUser(){
     return window.location.host == APIGEE_TLD
-  }
-
-  function clearSession() {
-    session.loggedInUser = null;
-    session.accessToken = null;
-    session.currentOrganization = null;
-    localStorage.removeItem('usergrid_user');
-    localStorage.removeItem('usergrid_access_token');
-    if (useSSO()){
-      sendToSSOLogoutPage();
-    }
   }
 
   function sendToSSOLogoutPage() {
@@ -700,10 +679,6 @@ usergrid.client = (function() {
       separatorMark = '&';
     }
     return encodeURIComponent(callback);
-  }
-
-  function loggedIn() {
-    return session.loggedInUser && session.accessToken;
   }
 
   function signup(organization, username, name, email, password, success, failure) {
@@ -1077,25 +1052,22 @@ usergrid.client = (function() {
   }
 
   function autoLogin(successCallback, errorCallback) {
-    session.loggedInUser = localStorage.getObject('usergrid_user');
-    session.accessToken = localStorage.usergrid_access_token;
-
-    //check to see if the user has a valid token
-    if (!session.loggedInUser && !session.accessToken) {
-      //test to see if the Portal is running on Apigee, if so, send to SSO, if not, fall through to login screen
+    session.readIt();
+    // check to see if the user has a valid token
+    if (!session.loggedIn()) {
+      // test to see if the Portal is running on Apigee, if so, send to SSO, if not, fall through to login screen
       if ( useSSO() ){
         Pages.clearPage();
         sendToSSOLoginPage();
       }
-    } else if (session.accessToken && session.loggedInUser) {
-      loginWithAccessToken(
+    } else if (session.loggedIn()) {
+      renewToken(
 	function() {
-	  session.loggedInUser = localStorage.getObject('usergrid_user');
-	  session.accessToken = localStorage.usergrid_access_token;
+	  session.readIt();
 	  successCallback();
 	},
 	function() {
-	  clearSession();
+	  session.clearIt();
 	  errorCallback();
 	}
       );
@@ -1105,10 +1077,16 @@ usergrid.client = (function() {
     }
 
   }
-  
+
   /* These are the functions we want to be public. Almost all, really. */
+
   self = {
     Init: Init,
+    apiUrl: PUBLIC_API_URL,
+    sso_logout_page: SSO_LOGOUT_PAGE,
+    error: null,
+    activeRequests: 0,
+    onActiveRequest: null,
     encodePathString: encodePathString,
     getLastErrorMessage: getLastErrorMessage,
     apiRequest2: apiRequest2,
@@ -1141,15 +1119,11 @@ usergrid.client = (function() {
     requestAdminFeed: requestAdminFeed,
     loginAdmin: loginAdmin,
     loginAppUser: loginAppUser,
-    loginWithAccessToken: loginWithAccessToken,
-    getAccessToken: getAccessToken,
     useSSO: useSSO,
-    clearSession: clearSession,
     sendToSSOLogoutPage: sendToSSOLogoutPage,
     sendToSSOLoginPage: sendToSSOLoginPage,
     sendToSSOProfilePage: sendToSSOProfilePage,
     getSSOCallback: getSSOCallback,
-    loggedIn: loggedIn,
     signup: signup,
     getEntity: getEntity,
     getUser: getUser,

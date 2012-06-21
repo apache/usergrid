@@ -3108,7 +3108,7 @@ function usergrid_console_app(Pages) {
   }
 
   function logout() {
-    client.clearSession();
+    session.clearIt();
     if (client.useSSO()) {
       Pages.clearPage();
     } else {
@@ -3518,7 +3518,7 @@ function usergrid_console_app(Pages) {
   }
 
   function showLoginForNonSSO(){
-    if (!client.loggedIn() && !client.useSSO()) {
+    if (!session.loggedIn() && !client.useSSO()) {
       Pages.ShowPage('login');
     }
   }
