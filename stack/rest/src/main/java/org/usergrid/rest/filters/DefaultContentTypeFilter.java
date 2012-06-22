@@ -15,17 +15,12 @@
  ******************************************************************************/
 package org.usergrid.rest.filters;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 
-import scala.util.parsing.json.JSONType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.sun.jersey.core.header.InBoundHeaders;
-import com.sun.jersey.core.header.MediaTypes;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 
@@ -35,27 +30,39 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
  */
 public class DefaultContentTypeFilter implements ContainerRequestFilter {
 
-    //non whitespace/non white space [possible whitespace][possible comma] ;
-    private static final Pattern REPLACE_TYPES = Pattern.compile("(\\S+/\\S+\\s*,?)+;?.*");
+	public static final Logger logger = LoggerFactory
+			.getLogger(DefaultContentTypeFilter.class);
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * com.sun.jersey.spi.container.ContainerRequestFilter#filter(com.sun.jersey
-     * .spi.container.ContainerRequest)
-     */
-    @Override
-    public ContainerRequest filter(ContainerRequest request) {
+	public static final String JSON_TYPE = "application/json; charset=utf-8";
 
-        String value = request.getHeaderValue(HttpHeaders.ACCEPT);
-       
-        if(value != null && !value.contains(MediaType.APPLICATION_JSON)){   
-            request.getRequestHeaders().putSingle(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
-        }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.sun.jersey.spi.container.ContainerRequestFilter#filter(com.sun.jersey
+	 * .spi.container.ContainerRequest)
+	 */
+	@Override
+	public ContainerRequest filter(ContainerRequest request) {
 
-       
+		String accept_header = request.getHeaderValue(HttpHeaders.ACCEPT);
+		String content_type = request.getHeaderValue(HttpHeaders.CONTENT_TYPE);
+		logger.info("Accept: " + accept_header);
+		logger.info("Content-type: " + content_type);
 
-        return request;
-    }
+		if (accept_header == null || accept_header.contains("*/*")) {
+			request.getRequestHeaders().putSingle(HttpHeaders.ACCEPT,
+					MediaType.APPLICATION_JSON);
+			request.getRequestHeaders().putSingle(HttpHeaders.CONTENT_TYPE,
+					JSON_TYPE);
+		}
+
+		if (content_type == null || content_type.contains("*/*")
+				|| content_type.contains("text/plain")) {
+			request.getRequestHeaders().putSingle(HttpHeaders.CONTENT_TYPE,
+					JSON_TYPE);
+		}
+
+		return request;
+	}
 }
