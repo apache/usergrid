@@ -69,7 +69,6 @@ public class ContentTypeResourceTest extends AbstractRestTest {
         post.setEntity(new StringEntity(json));
         post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer "+ access_token);
         post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
-        post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
         
         
 
@@ -101,7 +100,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
         HttpPost post = new HttpPost("/test-organization/test-app/games");
         post.setEntity(new StringEntity(json));
         post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer "+ access_token);
-        post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
+        post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
         
         
 
@@ -134,7 +133,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
         HttpPost post = new HttpPost("/test-organization/test-app/games");
         post.setEntity(new StringEntity(json));
         post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer "+ access_token);
-        post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML);
+        post.setHeader(HttpHeaders.ACCEPT, MediaType.TEXT_HTML);
          
         
 
@@ -155,7 +154,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
      * @throws Exception 
      */
     @Test
-    public void missingBoth() throws Exception {
+    public void missingAccept() throws Exception {
         Map<String, String> data = hashMap("name", "Solitaire");
 
         String json = JsonUtils.mapToFormattedJsonString(data);
@@ -175,7 +174,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
 
         printResponse(rsp);
 
-        assertEquals(200, rsp.getStatusLine().getStatusCode());
+        assertEquals(400, rsp.getStatusLine().getStatusCode());
 
     }
     

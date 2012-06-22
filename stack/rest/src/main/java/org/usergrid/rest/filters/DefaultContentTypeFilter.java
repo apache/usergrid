@@ -49,20 +49,9 @@ public class DefaultContentTypeFilter implements ContainerRequestFilter {
     public ContainerRequest filter(ContainerRequest request) {
 
         String value = request.getHeaderValue(HttpHeaders.ACCEPT);
-        String contentType = request.getHeaderValue(HttpHeaders.CONTENT_TYPE);
-
-        if(contentType != null && !contentType.contains(MediaType.APPLICATION_JSON)){   
-          
-            Matcher matcher = REPLACE_TYPES.matcher(contentType);
-            
-            if(matcher.matches()){
-                contentType =  MediaType.APPLICATION_JSON + matcher.replaceAll("");
-            }
-            
-            MultivaluedMap<String, String> headers = request.getRequestHeaders();
-            
-            headers.putSingle(HttpHeaders.CONTENT_TYPE, contentType);
-            
+       
+        if(value != null && !value.contains(MediaType.APPLICATION_JSON)){   
+            request.getRequestHeaders().putSingle(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
         }
 
        
