@@ -13,8 +13,8 @@ $(document).ready(function () {
   startApp();
 
   function initCore() {
-    prepareLocalStorage();
     parseParams();
+    prepareLocalStorage();
     usergrid.client.Init();
   }
   

@@ -16,31 +16,42 @@ usergrid.session = (function() {
   }
 
   function readIt() {
-    self.loggedInUser = localStorage.getObject('usergrid_user');
-    self.accessToken = localStorage.usergrid_access_token;
+    self.currentOrganization = localStorage.getObject('currentOrganization');
+    self.currentApplicationId = localStorage.getItem('currentApplicationId');
+    self.loggedInUser = localStorage.getObject('usergridUser');
+    self.accessToken = localStorage.getItem('accessToken');
   }
 
   function clearIt() {
     self.loggedInUser = null;
     self.accessToken = null;
-    self.currentOrganization = null;
-    localStorage.removeItem('usergrid_user');
-    localStorage.removeItem('usergrid_access_token');
+    self.currentOrganizationName = null;
+    localStorage.removeItem('usergridUser');
+    localStorage.removeItem('accessToken');
     if (usergrid.client.useSSO()){
       sendToSSOLogoutPage();
     }
   }
 
+  function saveIt() {
+    localStorage.setObject('currentOrganization', self.currentOrganization);
+    localStorage.setItem('currentApplicationId', self.currentApplicationId);
+    localStorage.setObject('usergridUser', self.loggedInUser);
+    localStorage.setItem('accessToken', self.accessToken);
+  }
+
   var self = {
-    loggedInUser: null,
-    accessToken: null,
-    currentOrganization: null,
-    currentApplicationId: null,
+    loggedInUser: {},
+    accessToken: "",
+    currentOrganization: {},
+    currentApplicationId: "",
 
     loggedIn: loggedIn,
     readIt: readIt,
-    clearIt: clearIt
+    clearIt: clearIt,
+    saveIt: saveIt
   }
 
   return self
+
 })();

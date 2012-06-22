@@ -272,7 +272,7 @@ usergrid.client = (function() {
       if (session.accessToken) { ajaxOptions.data['access_token'] = session.accessToken }
     } else {
       ajaxOptions.beforeSend = function(xhr) {
-	if (session.accessToken) { xhr.setRequestHeader("Authorization", "Bearer " + session.accessToken) }
+        if (session.accessToken) { xhr.setRequestHeader("Authorization", "Bearer " + session.accessToken) }
       }
     }
 
@@ -572,21 +572,21 @@ usergrid.client = (function() {
       password: password
     };
     apiRequest2("POST", "/management/token", formdata,
-		function(data, textStatus, xhr) {
+                function(data, textStatus, xhr) {
                   if (!data || !data.access_token || !data.user) {
-		    errorCallback();
-		    return
-		  }
-		  session.loggedInUser = data.user;
+                    errorCallback();
+                    return
+                  }
+                  session.loggedInUser = data.user;
                   session.accessToken = data.access_token;
                   setCurrentOrganization();
-                  localStorage.setObject('usergrid_user', session.loggedInUser);
-		  localStorage.setItem('usergrid_access_token', session.accessToken);
-		  if (successCallback) {
+                  localStorage.setObject('usergridUser', session.loggedInUser);
+                  localStorage.setItem('accessToken', session.accessToken);
+                  if (successCallback) {
                     successCallback(data, textStatus, xhr);
                   }
-		},
-		errorCallback
+                },
+                errorCallback
                );
   }
 
@@ -603,8 +603,8 @@ usergrid.client = (function() {
                    session.loggedInUser = response.user;
                    session.accessToken = response.access_token;
                    setCurrentOrganization();
-                   localStorage.setObject('usergrid_user', session.loggedInUser);
-                   localStorage.setItem('usergrid_access_token', session.accessToken);
+                   localStorage.setObject('usergridUser', session.loggedInUser);
+                   localStorage.setItem('accessToken', session.accessToken);
                    if (success) {
                      success();
                    }
@@ -622,21 +622,21 @@ usergrid.client = (function() {
 
   function renewToken(successCallback, errorCallback) {
     apiRequest2("GET", "/management/users/" + session.loggedInUser.email, null,
-		function(data, status, xhr) {
+                function(data, status, xhr) {
                   if (!data || !data.data) {
-		    errorCallback();
-		    return
-		  }
+                    errorCallback();
+                    return
+                  }
                   session.loggedInUser = data.data;
                   setCurrentOrganization();
-                  localStorage.setObject('usergrid_user', session.loggedInUser);
-                  localStorage.setItem('usergrid_access_token', session.accessToken);
+                  localStorage.setObject('usergridUser', session.loggedInUser);
+                  localStorage.setItem('accessToken', session.accessToken);
                   if (successCallback) {
                     successCallback(data);
                   }
-		},
+                },
                 errorCallback
-	       );
+               );
   }
 
   function useSSO(){
@@ -1037,18 +1037,19 @@ usergrid.client = (function() {
     if (orgName) {
       session.currentOrganization = session.loggedInUser.organizations[orgName];
     } else {
-      session.currentOrganization = session.loggedInUser.organizations[localStorage.currentOrganizationName];
+      session.currentOrganization = session.loggedInUser.organizations[localStorage.getObject('currentOrganization')];
     }
 
     if (!session.currentOrganization) {
       var firstOrg = null;
       for (firstOrg in session.loggedInUser.organizations) {break;}
       if (firstOrg) {
-	session.currentOrganization = session.loggedInUser.organizations[firstOrg];
+        session.currentOrganization = session.loggedInUser.organizations[firstOrg];
       }
     }
 
-    localStorage.currentOrganizationName = session.currentOrganization.name;
+    localStorage.currentOrganization = session.currentOrganization;
+    session.saveIt();
   }
 
   function autoLogin(successCallback, errorCallback) {
@@ -1062,14 +1063,14 @@ usergrid.client = (function() {
       }
     } else if (session.loggedIn()) {
       renewToken(
-	function() {
-	  session.readIt();
-	  successCallback();
-	},
-	function() {
-	  session.clearIt();
-	  errorCallback();
-	}
+        function() {
+          session.readIt();
+          successCallback();
+        },
+        function() {
+          session.clearIt();
+          errorCallback();
+        }
       );
       return;
     } else {

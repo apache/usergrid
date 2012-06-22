@@ -100,7 +100,7 @@ function usergrid_console_app(Pages) {
   }
 
   function getAccessTokenURL(){
-    var bearerToken = localStorage.getObject('usergrid_access_token');
+    var bearerToken = localStorage.getObject('accessToken');
     var app_name = current_application_name;
     if (typeof current_application_name != 'string') {
       app_name = '';
@@ -1355,6 +1355,7 @@ function usergrid_console_app(Pages) {
     pageSelect();
     requestApplicationCredentials();
     requestApplicationUsage();
+    session.saveIt();
   }
   window.usergrid.console.pageSelectApplication = pageSelectApplication;
 
