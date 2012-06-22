@@ -15,10 +15,10 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.usergrid.rest.applications.utils.TestUtils.getIdFromSearchResults;
 
 import java.util.List;
@@ -27,7 +27,6 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.java.client.Client.Query;
 import org.usergrid.java.client.entities.Activity;
@@ -37,7 +36,6 @@ import org.usergrid.java.client.entities.User;
 import org.usergrid.java.client.response.ApiResponse;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
-import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.rest.applications.utils.UserRepo;
 import org.usergrid.utils.UUIDUtils;
