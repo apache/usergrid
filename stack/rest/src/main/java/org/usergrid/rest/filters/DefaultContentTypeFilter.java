@@ -18,7 +18,14 @@ package org.usergrid.rest.filters;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+
+import scala.util.parsing.json.JSONType;
+
 import com.sun.jersey.core.header.InBoundHeaders;
+import com.sun.jersey.core.header.MediaTypes;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 
@@ -28,7 +35,8 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
  */
 public class DefaultContentTypeFilter implements ContainerRequestFilter {
 
-    Pattern CONTENT_TYPES = Pattern.compile(".*/.*");
+    //non whitespace/non white space [possible whitespace][possible comma] ;
+    private static final Pattern REPLACE_TYPES = Pattern.compile("(\\S+/\\S+\\s*,?)+;?.*");
 
     /*
      * (non-Javadoc)
@@ -40,19 +48,24 @@ public class DefaultContentTypeFilter implements ContainerRequestFilter {
     @Override
     public ContainerRequest filter(ContainerRequest request) {
 
-        String value = request.getHeaderValue("accept");
+        String value = request.getHeaderValue(HttpHeaders.ACCEPT);
+        String contentType = request.getHeaderValue(HttpHeaders.CONTENT_TYPE);
 
-        // we have no set content type for the accept, prepend application/json
-        // to the request
-        if (value == null) {
-            value = "application/json";
+        if(contentType != null && !contentType.contains(MediaType.APPLICATION_JSON)){   
+          
+            Matcher matcher = REPLACE_TYPES.matcher(contentType);
+            
+            if(matcher.matches()){
+                contentType =  MediaType.APPLICATION_JSON + matcher.replaceAll("");
+            }
+            
+            MultivaluedMap<String, String> headers = request.getRequestHeaders();
+            
+            headers.putSingle(HttpHeaders.CONTENT_TYPE, contentType);
+            
         }
 
-        else if (!CONTENT_TYPES.matcher(value).matches()) {
-            value = "application/json" + value;
-        }
-
-        request.getRequestHeaders().putSingle("accept", value);
+       
 
         return request;
     }
