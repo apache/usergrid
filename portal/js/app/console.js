@@ -30,7 +30,7 @@ function usergrid_console_app(Pages) {
   var applications = {};
   var applications_by_id = {};
 
-  var current_application_id = {};
+  var current_application_id = "";
   var current_application_name = {};
   var applicationData = {};
 
@@ -57,8 +57,8 @@ function usergrid_console_app(Pages) {
     applications = {};
     applications_by_id = {};
 
-    current_application_id = {};
-    current_application_name = {};
+    current_application_id = "";
+    current_application_name = "";
 
     query_entities = null;
     query_entities_by_id = null;
@@ -659,8 +659,8 @@ function usergrid_console_app(Pages) {
   }
 
   function selectFirstApp() {
-    if(localStorage.currentApplicationId && applications_by_id[localStorage.currentApplicationId])
-      pageSelect(localStorage.currentApplicationId);
+    if(session.currentApplicationId && applications_by_id[session.currentApplicationId])
+      pageSelect(session.currentApplicationId);
     else {
       var firstApp = null;
       for (firstApp in session.currentOrganization.applications) break;
@@ -1336,7 +1336,7 @@ function usergrid_console_app(Pages) {
     if (uuid) {
       current_application_id = uuid;
       current_application_name = applications_by_id[uuid];
-      localStorage.currentApplicationId = current_application_id;
+      session.currentApplicationId = current_application_id;
     }
     setNavApplicationText();
     requestCollections();

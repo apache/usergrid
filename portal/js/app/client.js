@@ -13,7 +13,7 @@ usergrid.client = (function() {
   var session = usergrid.session;
 
   /* Always use public API */
-  var FORCE_PUBLIC_API = false;
+  var FORCE_PUBLIC_API = true;
 
   var PUBLIC_API_URL = "https://api.usergrid.com";
 
@@ -41,7 +41,7 @@ usergrid.client = (function() {
   function Init(options) {
     var options = options || {};
 
-    self.applicationId = options.applicationId || null;
+    session.applicationId = options.applicationId || null;
     self.clientId = options.clientId || null;
     self.clientSecret = options.clientSecret || null;
 
@@ -675,7 +675,7 @@ usergrid.client = (function() {
       separatorMark = '&';
     }
     if (self.apiUrl != PUBLIC_API_URL) {
-      callback = callback + separatorMark +'api_url=' + self.apiUrl;
+      callback = callback + separatorMark + 'api_url=' + self.apiUrl;
       separatorMark = '&';
     }
     return encodeURIComponent(callback);
@@ -708,7 +708,7 @@ usergrid.client = (function() {
   }
 
   function getEntity(collection, a) {
-    var ns = session.currentOrganization.uuid + "/" + self.applicationId;
+    var ns = session.currentOrganization.uuid + "/" + session.currentApplicationId;
     var id = a[0];
     if (countByType("string", a) >= 2) {
       ns = session.currentOrganization.uuid + "/" + getByType("string", 0, a);
@@ -734,10 +734,10 @@ usergrid.client = (function() {
   }
 
   function queryEntities(root_collection, a) {
-    var ns = session.currentOrganization.uuid + "/" + self.applicationId;
+    var ns = session.currentOrganization.uuid + "/" + session.currentApplicationId;
     if (countByType("string", a) > 0) {
       ns = session.currentOrganization.uuid + getByType("string", 0, a);
-      if (!ns) ns = session.currentOrganization.uuid + "/" + self.applicationId;
+      if (!ns) ns = session.currentOrganization.uuid + "/" + session.currentApplicationId;
     }
     var success = getByType("function", 0, a);
     var failure = getByType("function", 1, a);
@@ -756,7 +756,7 @@ usergrid.client = (function() {
   }
 
   function queryEntityCollection(root_collection, entity_collection, a) {
-    var ns = session.currentOrganization.uuid + "/" + self.applicationId;
+    var ns = session.currentOrganization.uuid + "/" + session.currentApplicationId;
     var id = a[0];
     if (countByType("string", a) >= 2) {
       ns = session.currentOrganization.uuid + "/" + getByType("string", 0, a);

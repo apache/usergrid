@@ -33,7 +33,7 @@ function prepareLocalStorage() {
 //if all of our vars are in the query string, grab them and save them
 function parseParams() {
   if (query_params.access_token && query_params.admin_email && query_params.uuid) {
-    localStorage.setObject('usergrid_access_token', query_params.access_token);
+    localStorage.setItem('usergrid_access_token', query_params.access_token);
     var user = {uuid:query_params.uuid, email:query_params.admin_email}
     localStorage.setObject('usergrid_user', user);
     //then send the user to the parent
