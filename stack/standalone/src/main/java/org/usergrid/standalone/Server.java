@@ -16,6 +16,7 @@
 package org.usergrid.standalone;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -54,6 +55,7 @@ import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
 import org.usergrid.persistence.cassandra.Setup;
 import org.usergrid.rest.SwaggerServlet;
+import org.usergrid.rest.filters.ContentTypeFilter;
 import org.usergrid.services.ServiceManagerFactory;
 import org.usergrid.standalone.cassandra.EmbeddedServerHelper;
 
@@ -177,10 +179,13 @@ public class Server implements ApplicationContextAware {
 
 		Map<String, String> initParameters = new HashMap<String, String>();
 		initParameters.put("targetFilterLifecycle", "true");
+		handler.addFilter(new ContentTypeFilter(), "contentTypeFilter", Collections.EMPTY_MAP);
+		
 		handler.addFilter(new DelegatingFilterProxy(), "shiroFilter",
 				initParameters);
 
 		handler.addFilter(new SwaggerServlet(), "swagger", null);
+		
 
 		// handler.addFilter(new SpringServlet(), "spring", null);
 
