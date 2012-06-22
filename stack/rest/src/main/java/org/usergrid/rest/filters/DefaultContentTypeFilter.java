@@ -36,7 +36,7 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
 public class DefaultContentTypeFilter implements ContainerRequestFilter {
 
     //non whitespace/non white space [possible whitespace][possible comma] ;
-    private static final Pattern REPLACE_TYPES = Pattern.compile("(\\S+/\\S+\\s*,?)+;?.*");
+//    private static final Pattern REPLACE_TYPES = Pattern.compile("(\\S+/\\S+\\s*,?)+;?.*");
 
     /*
      * (non-Javadoc)
@@ -48,10 +48,16 @@ public class DefaultContentTypeFilter implements ContainerRequestFilter {
     @Override
     public ContainerRequest filter(ContainerRequest request) {
 
-        String value = request.getHeaderValue(HttpHeaders.ACCEPT);
+        String accept = request.getHeaderValue(HttpHeaders.ACCEPT);
        
-        if(value != null && !value.contains(MediaType.APPLICATION_JSON)){   
+        if(accept != null && !accept.contains(MediaType.APPLICATION_JSON)){   
             request.getRequestHeaders().putSingle(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+        }
+        
+        String contentType = request.getHeaderValue(HttpHeaders.CONTENT_TYPE);
+        
+        if(contentType != null && !contentType.contains(MediaType.APPLICATION_JSON)){   
+            request.getRequestHeaders().putSingle(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
         }
 
        

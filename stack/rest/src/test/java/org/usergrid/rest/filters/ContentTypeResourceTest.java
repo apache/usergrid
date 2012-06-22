@@ -69,6 +69,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
         post.setEntity(new StringEntity(json));
         post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer "+ access_token);
         post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+        post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
         
         
 
@@ -81,7 +82,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
     }
     
     /**
-     * Creates a simple entity of type game. Does not set the accept header. The
+     * Creates a simple entity of type game. Does not set the accept or content type headers to match the json body. The
      * type should be set to json to match the body
      * @throws  
      * @throws Exception 
@@ -100,7 +101,8 @@ public class ContentTypeResourceTest extends AbstractRestTest {
         HttpPost post = new HttpPost("/test-organization/test-app/games");
         post.setEntity(new StringEntity(json));
         post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer "+ access_token);
-        post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+        post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_FORM_URLENCODED);
+        post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED);
         
         
 
@@ -134,6 +136,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
         post.setEntity(new StringEntity(json));
         post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer "+ access_token);
         post.setHeader(HttpHeaders.ACCEPT, MediaType.TEXT_HTML);
+        post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML);
          
         
 
@@ -167,7 +170,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
         HttpPost post = new HttpPost("/test-organization/test-app/games");
         post.setEntity(new StringEntity(json));
         post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer "+ access_token);
-         
+        
         
 
         HttpResponse rsp = client.execute(host, post);
