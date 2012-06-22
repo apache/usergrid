@@ -99,7 +99,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 				.initParam("com.sun.jersey.api.json.POJOMappingFeature", "true")
 				.initParam(
 						"com.sun.jersey.spi.container.ContainerRequestFilters",
-						"org.usergrid.rest.filters.DefaultContentTypeFilter ,org.usergrid.rest.filters.MeteringFilter,org.usergrid.rest.filters.JSONPCallbackFilter,org.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter,org.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter,org.usergrid.rest.security.shiro.filters.ClientCredentialsSecurityFilter")
+						"org.usergrid.rest.filters.MeteringFilter,org.usergrid.rest.filters.DefaultContentTypeFilter,org.usergrid.rest.filters.JSONPCallbackFilter,org.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter,org.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter,org.usergrid.rest.security.shiro.filters.ClientCredentialsSecurityFilter")
 				.initParam(
 						"com.sun.jersey.spi.container.ContainerResponseFilters",
 						"org.usergrid.rest.security.CrossOriginRequestFilter,org.usergrid.rest.filters.MeteringFilter")
@@ -195,7 +195,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
 	@BeforeClass
 	public static void setup() throws Exception {
-//		Class.forName("jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.error_jsp");
+		// Class.forName("jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.error_jsp");
 		logger.info("setup");
 		assertNull(embedded);
 		embedded = new EmbeddedServerHelper();
