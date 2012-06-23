@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.ConnectionRef;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Identifier;
@@ -299,7 +300,7 @@ public class AbstractConnectionsService extends AbstractService {
 		}
 		entity = importEntity(context, entity);
 
-		em.createConnection(context.getOwner(), context.getCollectionName(),
+		createConnection(context.getOwner(), context.getCollectionName(),
 				entity);
 
 		return new ServiceResults(null, context, Type.CONNECTION,
@@ -339,7 +340,7 @@ public class AbstractConnectionsService extends AbstractService {
 			}
 			entity = importEntity(context, entity);
 
-			em.createConnection(context.getOwner(), query.getConnectionType(),
+			createConnection(context.getOwner(), query.getConnectionType(),
 					entity);
 
 			return new ServiceResults(null, context, Type.CONNECTION,
@@ -366,7 +367,7 @@ public class AbstractConnectionsService extends AbstractService {
 		}
 		entity = importEntity(context, entity);
 
-		em.deleteConnection(em.connectionRef(context.getOwner(),
+		deleteConnection(em.connectionRef(context.getOwner(),
 				context.getCollectionName(), entity));
 
 		return new ServiceResults(null, context, Type.CONNECTION,
@@ -400,7 +401,7 @@ public class AbstractConnectionsService extends AbstractService {
 			}
 			entity = importEntity(context, entity);
 
-			em.deleteConnection(em.connectionRef(context.getOwner(),
+			deleteConnection(em.connectionRef(context.getOwner(),
 					query.getConnectionType(), entity));
 
 			return new ServiceResults(null, context, Type.CONNECTION,
@@ -427,6 +428,17 @@ public class AbstractConnectionsService extends AbstractService {
 			}
 		}
 		return null;
+	}
+
+	public ConnectionRef createConnection(EntityRef connectingEntity,
+			String connectionType, EntityRef connectedEntityRef)
+			throws Exception {
+		return em.createConnection(connectingEntity, connectionType,
+				connectedEntityRef);
+	}
+
+	public void deleteConnection(ConnectionRef connectionRef) throws Exception {
+		em.deleteConnection(connectionRef);
 	}
 
 }
