@@ -20,6 +20,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Ignore;
@@ -148,5 +149,34 @@ public class RegistrationTest extends AbstractRestTest {
 				"password", t);
 
 	}
+
+  @Test
+ 	public void putAddToOrganizationFail() throws Exception {
+
+ 		properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
+ 				"false");
+ 		properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
+ 				"false");
+ 		properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
+ 				"false");
+ 		properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
+ 				"sysadmin-1@mockserver.com");
+
+    String t = mgmtToken();
+    JsonNode node = null;
+
+    MultivaluedMap formData = new MultivaluedMapImpl();
+    formData.add("foo", "bar");
+    try {
+      node = resource()
+              .path("/management/organizations/test-organization/users/test-admin-null@mockserver.com").queryParam("access_token", t)
+              .accept(MediaType.APPLICATION_JSON)
+              .type(MediaType.APPLICATION_FORM_URLENCODED)
+              .put(JsonNode.class, formData);
+    } catch (UniformInterfaceException e) {
+          assertEquals("Should receive a 400 Not Found", 400, e
+                  .getResponse().getStatus());
+    }
+  }
 
 }

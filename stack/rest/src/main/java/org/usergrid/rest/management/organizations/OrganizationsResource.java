@@ -39,6 +39,7 @@ import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationCreator;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
+import org.usergrid.management.exceptions.ManagementException;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 
@@ -67,7 +68,7 @@ public class OrganizationsResource extends AbstractContextResource {
 		OrganizationInfo organization = management.getOrganizationByUuid(UUID
 				.fromString(organizationIdStr));
 		if (organization == null) {
-			return null;
+			throw new ManagementException("Could not find organization for ID: " + organizationIdStr);
 		}
 		return getSubResource(OrganizationResource.class).init(organization);
 	}
@@ -79,7 +80,7 @@ public class OrganizationsResource extends AbstractContextResource {
 		OrganizationInfo organization = management
 				.getOrganizationByName(organizationName);
 		if (organization == null) {
-			return null;
+      throw new ManagementException("Could not find organization for name: " + organizationName);
 		}
 		return getSubResource(OrganizationResource.class).init(organization);
 	}
