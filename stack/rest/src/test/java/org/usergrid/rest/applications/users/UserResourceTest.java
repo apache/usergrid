@@ -31,6 +31,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.java.client.Client.Query;
 import org.usergrid.java.client.entities.Activity;
 import org.usergrid.java.client.entities.Activity.ActivityObject;
@@ -50,6 +52,8 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  * @author tnine
  */
 public class UserResourceTest extends AbstractRestTest {
+
+	private static Logger log = LoggerFactory.getLogger(UserResourceTest.class);
 
 	@Test
 	public void usernameQuery() {
@@ -564,6 +568,39 @@ public class UserResourceTest extends AbstractRestTest {
 	}
 
 	@Test
+	public void test_POST_batch() {
+	
+		log.info("UserResourceTest.test_POST_batch");
+	
+		JsonNode node = null;
+	
+		List<Map<String, Object>> batch = new ArrayList<Map<String, Object>>();
+	
+		Map<String, Object> properties = new LinkedHashMap<String, Object>();
+		properties.put("username", "test_user_1");
+		properties.put("email", "user1@test.com");
+		batch.add(properties);
+	
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("username", "test_user_2");
+		batch.add(properties);
+	
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("username", "test_user_3");
+		batch.add(properties);
+	
+		node = resource().path("/test-organization/test-app/users/")
+				.queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE)
+				.post(JsonNode.class, batch);
+	
+		assertNotNull(node);
+		logNode(node);
+	
+	}
+
+	@Test
 	public void test_PUT_password_fail() {
 		ApiResponse response = client.changePassword("edanuff", "foo", "bar");
 
@@ -607,36 +644,6 @@ public class UserResourceTest extends AbstractRestTest {
 		response = client.changePassword("edanuff", "sesame1", "sesame");
 
 		assertNull(response.getError());
-
-	}
-
-	@Test
-	public void test_POST_batch() {
-
-		JsonNode node = null;
-
-		List<Map<String, Object>> batch = new ArrayList<Map<String, Object>>();
-
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "test_user_1");
-		properties.put("email", "user1@test.com");
-		batch.add(properties);
-
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "test_user_2");
-		batch.add(properties);
-
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "test_user_3");
-		batch.add(properties);
-
-		node = resource().path("/test-organization/test-app/users/")
-				.accept(MediaType.APPLICATION_JSON)
-				.type(MediaType.APPLICATION_JSON_TYPE)
-				.post(JsonNode.class, batch);
-
-		assertNotNull(node);
-		logNode(node);
 
 	}
 
