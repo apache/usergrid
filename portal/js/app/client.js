@@ -224,7 +224,7 @@ usergrid.client = (function() {
     return newPath;
   }
 
-  /* TODO: These next two functions "*LastError*" MUST be deprecated */
+  /* TODO: These next two functions "*LastError*" MUST be deprecated eventually */
 
   function setLastError(error) {
     if (error) {
@@ -574,7 +574,7 @@ usergrid.client = (function() {
     };
     apiRequest2("POST", "/management/token", formdata,
                 function(data, textStatus, xhr) {
-                  if (!data) {
+                  if (!data || !data.access_token || !data.user) {
                     errorCallback();
                     return
                   }

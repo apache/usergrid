@@ -170,7 +170,7 @@ function usergrid_console_app(Pages) {
     if(!current_application_name) {
       current_application_name = "Select an Application";
     }
-    $('#selectedApp').text(current_application_name);
+    $('#selectedApp').text(current_application_name.split("/")[1]);
     $('.thingy span.title span.app_title').text(" - " + current_application_name);
   }
 
@@ -629,7 +629,7 @@ function usergrid_console_app(Pages) {
       for (var i in applicationNames) {
         var name = applicationNames[i];
         var uuid = applications[name];
-        data.push({uuid:uuid, name:name});
+        data.push({uuid:uuid, name:name.split("/")[1]});
         count++;
         applications_by_id[uuid] = name;
       }
@@ -3070,11 +3070,12 @@ function usergrid_console_app(Pages) {
 
   function setupMenu() {
     var userNameBox = $('#userEmail');
-    if (session && session.loggedInUser)
+    if (session && session.loggedInUser){
       userNameBox.html(session.loggedInUser.email);
-    else
+    } else {
       userNameBox.html("No Logged In User");
-    setupOrganizationsMenu();
+      setupOrganizationsMenu();
+    }
   }
 
   function setupOrganizationsMenu() {
