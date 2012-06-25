@@ -259,7 +259,8 @@ usergrid.client = (function() {
       success: success,
       error: error,
       data: data || {},
-      contentType: "application/json; charset=utf-8"
+      contentType: "application/json; charset=utf-8",
+      dataType: "json"
     }
 
     if (method.toUpperCase() == "POST") {
@@ -573,15 +574,14 @@ usergrid.client = (function() {
     };
     apiRequest2("POST", "/management/token", formdata,
                 function(data, textStatus, xhr) {
-                  if (!data || !data.access_token || !data.user) {
+                  if (!data) {
                     errorCallback();
                     return
                   }
                   session.loggedInUser = data.user;
                   session.accessToken = data.access_token;
-                  setCurrentOrganization();
-                  localStorage.setObject('usergridUser', session.loggedInUser);
-                  localStorage.setItem('accessToken', session.accessToken);
+		  setCurrentOrganization();
+                  session.saveIt();
                   if (successCallback) {
                     successCallback(data, textStatus, xhr);
                   }
@@ -628,9 +628,9 @@ usergrid.client = (function() {
                     return
                   }
                   session.loggedInUser = data.data;
-                  setCurrentOrganization();
-                  localStorage.setObject('usergridUser', session.loggedInUser);
-                  localStorage.setItem('accessToken', session.accessToken);
+		  setCurrentOrganization();
+		  session.saveIt();
+
                   if (successCallback) {
                     successCallback(data);
                   }
@@ -1081,7 +1081,7 @@ usergrid.client = (function() {
 
   /* These are the functions we want to be public. Almost all, really. */
 
-  self = {
+  var self = {
     Init: Init,
     apiUrl: PUBLIC_API_URL,
     sso_logout_page: SSO_LOGOUT_PAGE,
