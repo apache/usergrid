@@ -3072,9 +3072,9 @@ function usergrid_console_app(Pages) {
     var userNameBox = $('#userEmail');
     if (session && session.loggedInUser){
       userNameBox.html(session.loggedInUser.email);
+      setupOrganizationsMenu();
     } else {
       userNameBox.html("No Logged In User");
-      setupOrganizationsMenu();
     }
   }
 
