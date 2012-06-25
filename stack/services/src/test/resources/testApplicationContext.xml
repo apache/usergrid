@@ -56,7 +56,7 @@
 		<property name="realm" ref="realm" />
 	</bean>
 
-	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor" />
 
 	<bean
 		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
@@ -85,56 +85,64 @@
 		/> -->
 	<bean name="lockManager" class="org.usergrid.locking.zookeeper.NoOpLockManagerImpl" />
 
-	<bean id="cassandraService"
-		class="org.usergrid.persistence.cassandra.CassandraService" init-method="init">
+	<bean id="cassandraService" class="org.usergrid.persistence.cassandra.CassandraService"
+		init-method="init">
 		<constructor-arg ref="properties" />
 		<constructor-arg ref="cassandraCluster" />
 		<constructor-arg ref="cassandraHostConfigurator" />
 		<constructor-arg ref="lockManager" />
 	</bean>
 
-    <bean id="entityManagerFactory"
-          class="org.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
-        <constructor-arg ref="cassandraService" />
-        <constructor-arg ref="counterUtils"/>
+	<bean id="entityManagerFactory"
+		class="org.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
+		<constructor-arg ref="cassandraService" />
+		<constructor-arg ref="counterUtils" />
 
-    </bean>
+	</bean>
 
-    <bean id="queueManagerFactory"
-          class="org.usergrid.mq.cassandra.QueueManagerFactoryImpl">
-        <constructor-arg ref="cassandraService" />
-        <constructor-arg ref="counterUtils"/>
-    </bean>
+	<bean id="queueManagerFactory" class="org.usergrid.mq.cassandra.QueueManagerFactoryImpl">
+		<constructor-arg ref="cassandraService" />
+		<constructor-arg ref="counterUtils" />
+	</bean>
 
-    <bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
-        <constructor-arg value="3"/>
-        <property name="batchSubmitter" ref="batchSubmitter"/>
-    </bean>
+	<bean id="taskExecutor"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		<property name="corePoolSize" value="5" />
+		<property name="maxPoolSize" value="10" />
+		<property name="queueCapacity" value="25" />
+	</bean>
 
-    <bean id="batchSubmitter" class="com.usergrid.count.Slf4JBatchSubmitter">
-    </bean>
+	<bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
+		<constructor-arg value="3" />
+		<property name="batchSubmitter" ref="batchSubmitter" />
+	</bean>
 
-    <bean id="counterUtils" class="org.usergrid.persistence.cassandra.CounterUtils">
-        <property name="batcher" ref="simpleBatcher"/>
-    </bean>
+	<bean id="batchSubmitter" class="com.usergrid.count.Slf4JBatchSubmitter">
+	</bean>
 
-	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl"/>
+	<bean id="counterUtils" class="org.usergrid.persistence.cassandra.CounterUtils">
+		<property name="batcher" ref="simpleBatcher" />
+	</bean>
 
-	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl"/>
+	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl" />
+
+	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl" />
 
 	<bean id="serviceManagerFactory" class="org.usergrid.services.ServiceManagerFactory">
 		<constructor-arg>
 			<ref bean="entityManagerFactory" />
 		</constructor-arg>
 	</bean>
-	
-	    
-   <bean id="indexBucketLocator" class="org.usergrid.persistence.cassandra.SimpleIndexBucketLocatorImpl">
-    	<constructor-arg value="${usergrid.index.defaultbucketsize}"/>
-    </bean>
-   <bean id="applicationCreator" class="org.usergrid.management.cassandra.ApplicationCreatorImpl">
-        <constructor-arg ref="entityManagerFactory"/>
-        <constructor-arg ref="managementService"/>
-   </bean>
+
+
+	<bean id="indexBucketLocator"
+		class="org.usergrid.persistence.cassandra.SimpleIndexBucketLocatorImpl">
+		<constructor-arg value="${usergrid.index.defaultbucketsize}" />
+	</bean>
+	<bean id="applicationCreator"
+		class="org.usergrid.management.cassandra.ApplicationCreatorImpl">
+		<constructor-arg ref="entityManagerFactory" />
+		<constructor-arg ref="managementService" />
+	</bean>
 
 </beans>
