@@ -171,7 +171,7 @@ function usergrid_console_app(Pages) {
       current_application_name = "Select an Application";
     }
     $('#selectedApp').text(current_application_name.split("/")[1]);
-    $('.thingy span.title span.app_title').text(" - " + current_application_name);
+    $('.thingy span.title span.app_title').text(" - " + current_application_name.split("/")[1]);
   }
 
   function createAlphabetLinks(containerSelector, callback) {
