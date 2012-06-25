@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION_ID;
 import static org.usergrid.services.ServiceParameter.parameters;
+import static org.usergrid.services.ServicePayload.batchPayload;
 import static org.usergrid.services.ServicePayload.payload;
 import static org.usergrid.utils.InflectionUtils.pluralize;
 
@@ -91,7 +92,8 @@ public abstract class AbstractServiceTest {
 
 	UUID dId = null;
 
-	public UUID createApplication(String organizationName, String applicationName) throws Exception {
+	public UUID createApplication(String organizationName,
+			String applicationName) throws Exception {
 		if (USE_DEFAULT_DOMAIN) {
 			return DEFAULT_APPLICATION_ID;
 		}
@@ -114,6 +116,20 @@ public abstract class AbstractServiceTest {
 				payload(properties));
 		logger.info("Request: " + action + " " + request.toString());
 		dumpProperties(properties);
+		ServiceResults results = request.execute();
+		assertNotNull(results);
+		assertEquals(expectedCount, results.getEntities().size());
+		dumpResults(results);
+		return results;
+	}
+
+	public ServiceResults testBatchRequest(ServiceManager sm,
+			ServiceAction action, int expectedCount,
+			List<Map<String, Object>> batch, Object... params) throws Exception {
+		ServiceRequest request = sm.newRequest(action, parameters(params),
+				batchPayload(batch));
+		logger.info("Request: " + action + " " + request.toString());
+		dump("Batch", batch);
 		ServiceResults results = request.execute();
 		assertNotNull(results);
 		assertEquals(expectedCount, results.getEntities().size());

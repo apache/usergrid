@@ -21,13 +21,18 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.rest.applications.utils.TestUtils.getIdFromSearchResults;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.java.client.Client.Query;
 import org.usergrid.java.client.entities.Activity;
 import org.usergrid.java.client.entities.Activity.ActivityObject;
@@ -48,576 +53,598 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  */
 public class UserResourceTest extends AbstractRestTest {
 
-    @Test
-    public void usernameQuery() {
+	private static Logger log = LoggerFactory.getLogger(UserResourceTest.class);
 
-        UserRepo.INSTANCE.load(resource(), access_token);
+	@Test
+	public void usernameQuery() {
 
-        String ql = "username = 'user*'";
+		UserRepo.INSTANCE.load(resource(), access_token);
 
-        JsonNode node = resource().path("/test-organization/test-app/users")
-                .queryParam("ql", ql).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+		String ql = "username = 'user*'";
 
-        assertEquals(UserRepo.INSTANCE.getByUserName("user1"),
-                getIdFromSearchResults(node, 0));
-        assertEquals(UserRepo.INSTANCE.getByUserName("user2"),
-                getIdFromSearchResults(node, 1));
-        assertEquals(UserRepo.INSTANCE.getByUserName("user3"),
-                getIdFromSearchResults(node, 2));
+		JsonNode node = resource().path("/test-organization/test-app/users")
+				.queryParam("ql", ql).queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-    }
+		assertEquals(UserRepo.INSTANCE.getByUserName("user1"),
+				getIdFromSearchResults(node, 0));
+		assertEquals(UserRepo.INSTANCE.getByUserName("user2"),
+				getIdFromSearchResults(node, 1));
+		assertEquals(UserRepo.INSTANCE.getByUserName("user3"),
+				getIdFromSearchResults(node, 2));
 
-    @Test
-    public void nameQuery() {
+	}
 
-        UserRepo.INSTANCE.load(resource(), access_token);
+	@Test
+	public void nameQuery() {
 
-        String ql = "name = 'John*'";
+		UserRepo.INSTANCE.load(resource(), access_token);
 
-        JsonNode node = resource().path("/test-organization/test-app/users")
-                .queryParam("ql", ql).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+		String ql = "name = 'John*'";
 
-        assertEquals(UserRepo.INSTANCE.getByUserName("user2"),
-                getIdFromSearchResults(node, 0));
-        assertEquals(UserRepo.INSTANCE.getByUserName("user3"),
-                getIdFromSearchResults(node, 1));
+		JsonNode node = resource().path("/test-organization/test-app/users")
+				.queryParam("ql", ql).queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-    }
+		assertEquals(UserRepo.INSTANCE.getByUserName("user2"),
+				getIdFromSearchResults(node, 0));
+		assertEquals(UserRepo.INSTANCE.getByUserName("user3"),
+				getIdFromSearchResults(node, 1));
 
-    @Test
-    public void nameQueryByUUIDs() throws Exception {
-        UserRepo.INSTANCE.load(resource(), access_token);
+	}
 
-        String ql = "name = 'John*'";
+	@Test
+	public void nameQueryByUUIDs() throws Exception {
+		UserRepo.INSTANCE.load(resource(), access_token);
 
-        ApplicationInfo appInfo = managementService
-                .getApplicationInfo("test-organization/test-app");
-        OrganizationInfo orgInfo = managementService
-                .getOrganizationByName("test-organization");
+		String ql = "name = 'John*'";
 
-        JsonNode node = resource()
-                .path("/" + orgInfo.getUuid() + "/" + appInfo.getId()
-                        + "/users").queryParam("ql", ql)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+		ApplicationInfo appInfo = managementService
+				.getApplicationInfo("test-organization/test-app");
+		OrganizationInfo orgInfo = managementService
+				.getOrganizationByName("test-organization");
 
-    }
+		resource()
+				.path("/" + orgInfo.getUuid() + "/" + appInfo.getId()
+						+ "/users").queryParam("ql", ql)
+				.queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-    @Test
-    public void nameFullTextQuery() {
+	}
 
-        UserRepo.INSTANCE.load(resource(), access_token);
+	@Test
+	public void nameFullTextQuery() {
 
-        String ql = "name contains 'Smith' order by name ";
+		UserRepo.INSTANCE.load(resource(), access_token);
 
-        JsonNode node = resource().path("/test-organization/test-app/users")
-                .queryParam("ql", ql).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+		String ql = "name contains 'Smith' order by name ";
 
-        assertEquals(UserRepo.INSTANCE.getByUserName("user1"),
-                getIdFromSearchResults(node, 0));
-        assertEquals(UserRepo.INSTANCE.getByUserName("user2"),
-                getIdFromSearchResults(node, 1));
-        assertEquals(UserRepo.INSTANCE.getByUserName("user3"),
-                getIdFromSearchResults(node, 2));
+		JsonNode node = resource().path("/test-organization/test-app/users")
+				.queryParam("ql", ql).queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-    }
+		assertEquals(UserRepo.INSTANCE.getByUserName("user1"),
+				getIdFromSearchResults(node, 0));
+		assertEquals(UserRepo.INSTANCE.getByUserName("user2"),
+				getIdFromSearchResults(node, 1));
+		assertEquals(UserRepo.INSTANCE.getByUserName("user3"),
+				getIdFromSearchResults(node, 2));
 
-    /**
-     * Tests that when a full text index is run on a field that isn't full text
-     * indexed an error is thrown
-     */
-    @Test(expected = UniformInterfaceException.class)
-    public void fullTextQueryNotFullTextIndexed() {
+	}
 
-        UserRepo.INSTANCE.load(resource(), access_token);
+	/**
+	 * Tests that when a full text index is run on a field that isn't full text
+	 * indexed an error is thrown
+	 */
+	@Test(expected = UniformInterfaceException.class)
+	public void fullTextQueryNotFullTextIndexed() {
 
-        String ql = "username contains 'user' ";
+		UserRepo.INSTANCE.load(resource(), access_token);
 
-        resource().path("/test-organization/test-app/users")
-                .queryParam("ql", ql).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+		String ql = "username contains 'user' ";
 
-    }
+		resource().path("/test-organization/test-app/users")
+				.queryParam("ql", ql).queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-    /**
-     * Tests that when a full text index is run on a field that isn't full text
-     * indexed an error is thrown
-     */
-    @Test(expected = UniformInterfaceException.class)
-    public void fullQueryNotIndexed() {
+	}
 
-        UserRepo.INSTANCE.load(resource(), access_token);
+	/**
+	 * Tests that when a full text index is run on a field that isn't full text
+	 * indexed an error is thrown
+	 */
+	@Test(expected = UniformInterfaceException.class)
+	public void fullQueryNotIndexed() {
 
-        String ql = "picture = 'foo' ";
+		UserRepo.INSTANCE.load(resource(), access_token);
 
-        resource().path("/test-organization/test-app/users")
-                .queryParam("ql", ql).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+		String ql = "picture = 'foo' ";
 
-    }
+		resource().path("/test-organization/test-app/users")
+				.queryParam("ql", ql).queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-    /**
-     * Test that when activity is pushed with not actor, it's set to the user
-     * who created it
-     */
-    @Test
-    public void emtpyActorActivity() {
-        UserRepo.INSTANCE.load(resource(), access_token);
-        UUID userId = UserRepo.INSTANCE.getByUserName("user1");
+	}
 
-        Activity activity = new Activity();
-        activity.setProperty("email", "rod@rodsimpson.com");
-        activity.setProperty("verb", "POST");
-        activity.setProperty("content", "Look! more new content");
+	/**
+	 * Test that when activity is pushed with not actor, it's set to the user
+	 * who created it
+	 */
+	@Test
+	public void emtpyActorActivity() {
+		UserRepo.INSTANCE.load(resource(), access_token);
+		UUID userId = UserRepo.INSTANCE.getByUserName("user1");
 
-        ApiResponse response = client.postUserActivity(userId.toString(),
-                activity);
+		Activity activity = new Activity();
+		activity.setProperty("email", "rod@rodsimpson.com");
+		activity.setProperty("verb", "POST");
+		activity.setProperty("content", "Look! more new content");
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+		ApiResponse response = client.postUserActivity(userId.toString(),
+				activity);
 
-        Entity entity = response.getEntities().get(0);
+		assertNull("Error was: " + response.getErrorDescription(),
+				response.getError());
 
-        UUID activityId = entity.getUuid();
+		Entity entity = response.getEntities().get(0);
 
-        assertNotNull(activityId);
+		UUID activityId = entity.getUuid();
 
-        JsonNode actor = getActor(entity);
+		assertNotNull(activityId);
 
-        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
+		JsonNode actor = getActor(entity);
 
-        assertEquals(userId, actorId);
+		UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
 
-        assertEquals("user1@apigee.com", actor.get("email").asText());
-    }
+		assertEquals(userId, actorId);
 
-    /**
-     * Insert the uuid and email if they're empty in the request
-     */
-    @Test
-    public void noUUIDorEmail() {
+		assertEquals("user1@apigee.com", actor.get("email").asText());
+	}
 
-        UserRepo.INSTANCE.load(resource(), access_token);
-        UUID userId = UserRepo.INSTANCE.getByUserName("user1");
+	/**
+	 * Insert the uuid and email if they're empty in the request
+	 */
+	@Test
+	public void noUUIDorEmail() {
 
-        Activity activity = new Activity();
-        activity.setProperty("email", "rod@rodsimpson.com");
-        activity.setProperty("verb", "POST");
-        activity.setProperty("content", "Look! more new content");
+		UserRepo.INSTANCE.load(resource(), access_token);
+		UUID userId = UserRepo.INSTANCE.getByUserName("user1");
 
-        // same as above, but with actor partially filled out
+		Activity activity = new Activity();
+		activity.setProperty("email", "rod@rodsimpson.com");
+		activity.setProperty("verb", "POST");
+		activity.setProperty("content", "Look! more new content");
 
-        ActivityObject actorPost = new ActivityObject();
-        actorPost.setDisplayName("Dino");
+		// same as above, but with actor partially filled out
 
-        activity.setActor(actorPost);
+		ActivityObject actorPost = new ActivityObject();
+		actorPost.setDisplayName("Dino");
 
-        ApiResponse response = client.postUserActivity(userId.toString(),
-                activity);
+		activity.setActor(actorPost);
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+		ApiResponse response = client.postUserActivity(userId.toString(),
+				activity);
 
-        Entity entity = response.getEntities().get(0);
+		assertNull("Error was: " + response.getErrorDescription(),
+				response.getError());
 
-        UUID activityId = entity.getUuid();
+		Entity entity = response.getEntities().get(0);
 
-        assertNotNull(activityId);
+		UUID activityId = entity.getUuid();
 
-        JsonNode actor = getActor(entity);
+		assertNotNull(activityId);
 
-        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
+		JsonNode actor = getActor(entity);
 
-        assertEquals(userId, actorId);
+		UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
 
-        assertEquals("user1@apigee.com", actor.get("email").asText());
+		assertEquals(userId, actorId);
 
-    }
+		assertEquals("user1@apigee.com", actor.get("email").asText());
 
-    /**
-     * Don't touch the UUID when it's already set in the JSON
-     */
-    @Test
-    public void ignoreUUIDandEmail() {
-        UserRepo.INSTANCE.load(resource(), access_token);
-        UUID userId = UserRepo.INSTANCE.getByUserName("user1");
+	}
 
-        UUID testUUID = UUIDUtils.newTimeUUID();
-        String testEmail = "foo@bar.com";
+	/**
+	 * Don't touch the UUID when it's already set in the JSON
+	 */
+	@Test
+	public void ignoreUUIDandEmail() {
+		UserRepo.INSTANCE.load(resource(), access_token);
+		UUID userId = UserRepo.INSTANCE.getByUserName("user1");
 
-        // same as above, but with actor partially filled out
-        Activity activity = new Activity();
-        activity.setProperty("email", "rod@rodsimpson.com");
-        activity.setProperty("verb", "POST");
-        activity.setProperty("content", "Look! more new content");
+		UUID testUUID = UUIDUtils.newTimeUUID();
+		String testEmail = "foo@bar.com";
 
-        // same as above, but with actor partially filled out
+		// same as above, but with actor partially filled out
+		Activity activity = new Activity();
+		activity.setProperty("email", "rod@rodsimpson.com");
+		activity.setProperty("verb", "POST");
+		activity.setProperty("content", "Look! more new content");
 
-        ActivityObject actorPost = new ActivityObject();
-        actorPost.setDisplayName("Dino");
-        actorPost.setUuid(testUUID);
-        actorPost.setDynamicProperty("email", testEmail);
+		// same as above, but with actor partially filled out
 
-        activity.setActor(actorPost);
+		ActivityObject actorPost = new ActivityObject();
+		actorPost.setDisplayName("Dino");
+		actorPost.setUuid(testUUID);
+		actorPost.setDynamicProperty("email", testEmail);
 
-        ApiResponse response = client.postUserActivity(userId.toString(),
-                activity);
+		activity.setActor(actorPost);
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+		ApiResponse response = client.postUserActivity(userId.toString(),
+				activity);
 
-        Entity entity = response.getEntities().get(0);
+		assertNull("Error was: " + response.getErrorDescription(),
+				response.getError());
 
-        UUID activityId = entity.getUuid();
+		Entity entity = response.getEntities().get(0);
 
-        assertNotNull(activityId);
+		UUID activityId = entity.getUuid();
 
-        JsonNode actor = getActor(entity);
+		assertNotNull(activityId);
 
-        UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
+		JsonNode actor = getActor(entity);
 
-        assertEquals(testUUID, actorId);
+		UUID actorId = UUIDUtils.tryGetUUID(actor.get("uuid").getTextValue());
 
-        assertEquals(testEmail, actor.get("email").asText());
+		assertEquals(testUUID, actorId);
 
-    }
+		assertEquals(testEmail, actor.get("email").asText());
 
-    /**
-     * Test that when activity is pushed with not actor, it's set to the user
-     * who created it
-     */
-    @Test
-    public void userActivitiesDefaultOrder() {
-        UserRepo.INSTANCE.load(resource(), access_token);
-        UUID userId = UserRepo.INSTANCE.getByUserName("user1");
+	}
 
-        Activity activity = new Activity();
-        activity.setProperty("email", "rod@rodsimpson.com");
-        activity.setProperty("verb", "POST");
-        activity.setProperty("content", "activity 1");
+	/**
+	 * Test that when activity is pushed with not actor, it's set to the user
+	 * who created it
+	 */
+	@Test
+	public void userActivitiesDefaultOrder() {
+		UserRepo.INSTANCE.load(resource(), access_token);
+		UUID userId = UserRepo.INSTANCE.getByUserName("user1");
 
-        ApiResponse response = client.postUserActivity(userId.toString(),
-                activity);
+		Activity activity = new Activity();
+		activity.setProperty("email", "rod@rodsimpson.com");
+		activity.setProperty("verb", "POST");
+		activity.setProperty("content", "activity 1");
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+		ApiResponse response = client.postUserActivity(userId.toString(),
+				activity);
 
-        Entity entity = response.getFirstEntity();
+		assertNull("Error was: " + response.getErrorDescription(),
+				response.getError());
 
-        UUID firstActivityId = entity.getUuid();
+		Entity entity = response.getFirstEntity();
 
-        activity = new Activity();
-        activity.setProperty("email", "rod@rodsimpson.com");
-        activity.setProperty("verb", "POST");
-        activity.setProperty("content", "activity 2");
+		UUID firstActivityId = entity.getUuid();
 
-        response = client.postUserActivity(userId.toString(), activity);
+		activity = new Activity();
+		activity.setProperty("email", "rod@rodsimpson.com");
+		activity.setProperty("verb", "POST");
+		activity.setProperty("content", "activity 2");
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+		response = client.postUserActivity(userId.toString(), activity);
 
-        entity = response.getFirstEntity();
+		assertNull("Error was: " + response.getErrorDescription(),
+				response.getError());
 
-        UUID secondActivityId = entity.getUuid();
+		entity = response.getFirstEntity();
 
-        Query query = client.queryActivity();
+		UUID secondActivityId = entity.getUuid();
 
-        entity = query.getResponse().getEntities().get(0);
+		Query query = client.queryActivity();
 
-        assertEquals(secondActivityId, entity.getUuid());
+		entity = query.getResponse().getEntities().get(0);
 
-        entity = query.getResponse().getEntities().get(1);
+		assertEquals(secondActivityId, entity.getUuid());
 
-        assertEquals(firstActivityId, entity.getUuid());
+		entity = query.getResponse().getEntities().get(1);
 
-    }
+		assertEquals(firstActivityId, entity.getUuid());
 
-    /**
-     * Tests that when querying all users, we get the same result size when
-     * using "order by"
-     */
-    @Test
-    public void resultSizeSame() {
-        UserRepo.INSTANCE.load(resource(), access_token);
-        UUID userId1 = UserRepo.INSTANCE.getByUserName("user1");
-        UUID userId2 = UserRepo.INSTANCE.getByUserName("user2");
-        UUID userId3 = UserRepo.INSTANCE.getByUserName("user3");
+	}
 
-        Query query = client.queryUsers();
+	/**
+	 * Tests that when querying all users, we get the same result size when
+	 * using "order by"
+	 */
+	@Test
+	public void resultSizeSame() {
+		UserRepo.INSTANCE.load(resource(), access_token);
+		UUID userId1 = UserRepo.INSTANCE.getByUserName("user1");
+		UUID userId2 = UserRepo.INSTANCE.getByUserName("user2");
+		UUID userId3 = UserRepo.INSTANCE.getByUserName("user3");
 
-        ApiResponse response = query.getResponse();
+		Query query = client.queryUsers();
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+		ApiResponse response = query.getResponse();
 
-        int nonOrderedSize = response.getEntities().size();
+		assertNull("Error was: " + response.getErrorDescription(),
+				response.getError());
 
-        query = client.queryUsers("order by username");
+		int nonOrderedSize = response.getEntities().size();
 
-        response = query.getResponse();
+		query = client.queryUsers("order by username");
 
-        int orderedSize = response.getEntities().size();
+		response = query.getResponse();
 
-        assertEquals("Sizes match", nonOrderedSize, orderedSize);
+		int orderedSize = response.getEntities().size();
 
-        int firstEntityIndex = getEntityIndex(userId1, response);
+		assertEquals("Sizes match", nonOrderedSize, orderedSize);
 
-        int secondEntityIndex = getEntityIndex(userId2, response);
+		int firstEntityIndex = getEntityIndex(userId1, response);
 
-        int thirdEntityIndex = getEntityIndex(userId3, response);
+		int secondEntityIndex = getEntityIndex(userId2, response);
 
-        assertTrue("Ordered correctly", firstEntityIndex < secondEntityIndex);
+		int thirdEntityIndex = getEntityIndex(userId3, response);
 
-        assertTrue("Ordered correctly", secondEntityIndex < thirdEntityIndex);
+		assertTrue("Ordered correctly", firstEntityIndex < secondEntityIndex);
 
-    }
+		assertTrue("Ordered correctly", secondEntityIndex < thirdEntityIndex);
 
-    private int getEntityIndex(UUID entityId, ApiResponse response) {
-        List<Entity> entities = response.getEntities();
+	}
 
-        for (int i = 0; i < entities.size(); i++) {
-            if (entityId.equals(entities.get(i).getUuid())) {
-                return i;
-            }
-        }
+	private int getEntityIndex(UUID entityId, ApiResponse response) {
+		List<Entity> entities = response.getEntities();
 
-        return -1;
-    }
+		for (int i = 0; i < entities.size(); i++) {
+			if (entityId.equals(entities.get(i).getUuid())) {
+				return i;
+			}
+		}
 
-    @Test
-    public void clientNameQuery() {
+		return -1;
+	}
 
-        UUID id = UUIDUtils.newTimeUUID();
+	@Test
+	public void clientNameQuery() {
 
-        String username = "username" + id;
-        String name = "name" + id;
+		UUID id = UUIDUtils.newTimeUUID();
 
-        ApiResponse response = client.createUser(username, name, id
-                + "@usergrid.org", "password");
+		String username = "username" + id;
+		String name = "name" + id;
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+		ApiResponse response = client.createUser(username, name, id
+				+ "@usergrid.org", "password");
 
-        UUID createdId = response.getEntities().get(0).getUuid();
+		assertNull("Error was: " + response.getErrorDescription(),
+				response.getError());
 
-        Query results = client.queryUsers(String.format("name = '%s'", name));
-        User user = results.getResponse().getEntities(User.class).get(0);
+		UUID createdId = response.getEntities().get(0).getUuid();
 
-        assertEquals(createdId, user.getUuid());
-    }
+		Query results = client.queryUsers(String.format("name = '%s'", name));
+		User user = results.getResponse().getEntities(User.class).get(0);
 
-    @Test
-    public void deleteUser() {
+		assertEquals(createdId, user.getUuid());
+	}
 
-        UUID id = UUIDUtils.newTimeUUID();
+	@Test
+	public void deleteUser() {
 
-        String username = "username" + id;
-        String name = "name" + id;
+		UUID id = UUIDUtils.newTimeUUID();
 
-        ApiResponse response = client.createUser(username, name, id
-                + "@usergrid.org", "password");
+		String username = "username" + id;
+		String name = "name" + id;
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+		ApiResponse response = client.createUser(username, name, id
+				+ "@usergrid.org", "password");
 
-        UUID createdId = response.getEntities().get(0).getUuid();
+		assertNull("Error was: " + response.getErrorDescription(),
+				response.getError());
 
-        JsonNode node = resource()
-                .path("/test-organization/test-app/users/" + createdId)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).delete(JsonNode.class);
+		UUID createdId = response.getEntities().get(0).getUuid();
 
-        assertNull(node.get("errors"));
+		JsonNode node = resource()
+				.path("/test-organization/test-app/users/" + createdId)
+				.queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).delete(JsonNode.class);
 
-        Query results = client.queryUsers(String
-                .format("username = '%s'", name));
-        assertEquals(0, results.getResponse().getEntities(User.class).size());
+		assertNull(node.get("errors"));
 
-        // now create that same user again, it should work
-        response = client.createUser(username, name, id + "@usergrid.org",
-                "password");
+		Query results = client.queryUsers(String
+				.format("username = '%s'", name));
+		assertEquals(0, results.getResponse().getEntities(User.class).size());
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+		// now create that same user again, it should work
+		response = client.createUser(username, name, id + "@usergrid.org",
+				"password");
 
-        createdId = response.getEntities().get(0).getUuid();
+		assertNull("Error was: " + response.getErrorDescription(),
+				response.getError());
 
-        assertNotNull(createdId);
+		createdId = response.getEntities().get(0).getUuid();
 
-    }
+		assertNotNull(createdId);
 
-    @Test
-    public void singularCollectionName() {
-        UUID id = UUIDUtils.newTimeUUID();
+	}
 
-        String username = "username1" + id;
-        String name = "name1" + id;
-        String email = "email1" + id + "@usergrid.org";
+	@Test
+	public void singularCollectionName() {
+		UUID id = UUIDUtils.newTimeUUID();
 
-        ApiResponse response = client.createUser(username, name, email,
-                "password");
+		String username = "username1" + id;
+		String name = "name1" + id;
+		String email = "email1" + id + "@usergrid.org";
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+		ApiResponse response = client.createUser(username, name, email,
+				"password");
 
-        UUID firstCreatedId = response.getEntities().get(0).getUuid();
+		assertNull("Error was: " + response.getErrorDescription(),
+				response.getError());
 
-        username = "username2" + id;
-        name = "name2" + id;
-        email = "email2" + id + "@usergrid.org";
+		UUID firstCreatedId = response.getEntities().get(0).getUuid();
 
-        response = client.createUser(username, name, email, "password");
+		username = "username2" + id;
+		name = "name2" + id;
+		email = "email2" + id + "@usergrid.org";
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+		response = client.createUser(username, name, email, "password");
 
-        UUID secondCreatedId = response.getEntities().get(0).getUuid();
+		assertNull("Error was: " + response.getErrorDescription(),
+				response.getError());
 
-        // now create a connection of "likes" between the first user and the
-        // second using pluralized form
+		UUID secondCreatedId = response.getEntities().get(0).getUuid();
 
-        // plural collection name
-        String path = String.format(
-                "/test-organization/test-app/users/%s/conn1/%s",
-                firstCreatedId, secondCreatedId);
+		// now create a connection of "likes" between the first user and the
+		// second using pluralized form
 
-        JsonNode node = resource().path(path)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+		// plural collection name
+		String path = String.format(
+				"/test-organization/test-app/users/%s/conn1/%s",
+				firstCreatedId, secondCreatedId);
 
-        
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
-        
-      
+		JsonNode node = resource().path(path)
+				.queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
 
-        // singular collection name
-        path = String.format("/test-organization/test-app/user/%s/conn2/%s",
-                firstCreatedId, secondCreatedId);
+		assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
+				.asText());
 
-        node = resource().path(path).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+		// singular collection name
+		path = String.format("/test-organization/test-app/user/%s/conn2/%s",
+				firstCreatedId, secondCreatedId);
 
-        
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
-        
-        
-        
-        path  = String.format(
-                "/test-organization/test-app/users/%s/conn1",
-                firstCreatedId);
-        
-        node = resource().path(path)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
-        
-        
-        path  = String.format(
-                "/test-organization/test-app/user/%s/conn1",
-                firstCreatedId);
-        
-        node = resource().path(path)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
-        
-        
-        path  = String.format(
-                "/test-organization/test-app/users/%s/conn2",
-                firstCreatedId);
-        
-        node = resource().path(path)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
-        
-        path  = String.format(
-                "/test-organization/test-app/user/%s/conn2",
-                firstCreatedId);
-        
-        node = resource().path(path)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
-        
-        
-        
+		node = resource().path(path).queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
 
-    }
+		assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
+				.asText());
 
-    /**
-     * 
-     * @return
-     */
-    public JsonNode getActor(Entity entity) {
-        return entity.getProperties().get("actor");
-    }
+		path = String.format("/test-organization/test-app/users/%s/conn1",
+				firstCreatedId);
 
-    @Test
-    public void test_PUT_password_fail() {
-        ApiResponse response = client.changePassword("edanuff", "foo", "bar");
+		node = resource().path(path).queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        assertEquals("auth_invalid_username_or_password", response.getError());
-    }
+		assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
+				.asText());
 
-    @Test
-    public void test_GET_user_ok() throws InterruptedException {
+		path = String.format("/test-organization/test-app/user/%s/conn1",
+				firstCreatedId);
 
-        // TODO figure out what is being overridden? why 400?
-        JsonNode node = resource().path("/test-organization/test-app/users")
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+		node = resource().path(path).queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        String uuid = node.get("entities").get(0).get("uuid").getTextValue();
+		assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
+				.asText());
 
-        node = resource().path("/test-organization/test-app/users/" + uuid)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        logNode(node);
-        assertEquals("ed@anuff.com", node.get("entities").get(0).get("email")
-                .getTextValue());
-    }
+		path = String.format("/test-organization/test-app/users/%s/conn2",
+				firstCreatedId);
 
-    @Test
-    public void test_PUT_password_ok() {
+		node = resource().path(path).queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        ApiResponse response = client.changePassword("edanuff", "sesame",
-                "sesame1");
+		assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
+				.asText());
 
-        assertNull(response.getError());
+		path = String.format("/test-organization/test-app/user/%s/conn2",
+				firstCreatedId);
 
-        response = client.authorizeAppUser("ed@anuff.com", "sesame1");
+		node = resource().path(path).queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        assertNull(response.getError());
+		assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
+				.asText());
 
-        // if this was successful, we need to re-set the password for other
-        // tests
-        response = client.changePassword("edanuff", "sesame1", "sesame");
+	}
 
-        assertNull(response.getError());
+	/**
+	 * 
+	 * @return
+	 */
+	public JsonNode getActor(Entity entity) {
+		return entity.getProperties().get("actor");
+	}
 
-    }
+	@Test
+	public void test_POST_batch() {
+	
+		log.info("UserResourceTest.test_POST_batch");
+	
+		JsonNode node = null;
+	
+		List<Map<String, Object>> batch = new ArrayList<Map<String, Object>>();
+	
+		Map<String, Object> properties = new LinkedHashMap<String, Object>();
+		properties.put("username", "test_user_1");
+		properties.put("email", "user1@test.com");
+		batch.add(properties);
+	
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("username", "test_user_2");
+		batch.add(properties);
+	
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("username", "test_user_3");
+		batch.add(properties);
+	
+		node = resource().path("/test-organization/test-app/users/")
+				.queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE)
+				.post(JsonNode.class, batch);
+	
+		assertNotNull(node);
+		logNode(node);
+	
+	}
+
+	@Test
+	public void test_PUT_password_fail() {
+		ApiResponse response = client.changePassword("edanuff", "foo", "bar");
+
+		assertEquals("auth_invalid_username_or_password", response.getError());
+	}
+
+	@Test
+	public void test_GET_user_ok() throws InterruptedException {
+
+		// TODO figure out what is being overridden? why 400?
+		JsonNode node = resource().path("/test-organization/test-app/users")
+				.queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+		String uuid = node.get("entities").get(0).get("uuid").getTextValue();
+
+		node = resource().path("/test-organization/test-app/users/" + uuid)
+				.queryParam("access_token", access_token)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+		logNode(node);
+		assertEquals("ed@anuff.com", node.get("entities").get(0).get("email")
+				.getTextValue());
+	}
+
+	@Test
+	public void test_PUT_password_ok() {
+
+		ApiResponse response = client.changePassword("edanuff", "sesame",
+				"sesame1");
+
+		assertNull(response.getError());
+
+		response = client.authorizeAppUser("ed@anuff.com", "sesame1");
+
+		assertNull(response.getError());
+
+		// if this was successful, we need to re-set the password for other
+		// tests
+		response = client.changePassword("edanuff", "sesame1", "sesame");
+
+		assertNull(response.getError());
+
+	}
 
 }

@@ -17,7 +17,9 @@ package org.usergrid.services;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,7 +38,8 @@ public class ServiceInvocationTest extends AbstractServiceTest {
 	public void testServices() throws Exception {
 		logger.info("testServices");
 
-		UUID applicationId = createApplication("testOrganization","test");
+		UUID applicationId = createApplication("testOrganization",
+				"testServices");
 
 		ServiceManager sm = smf.getServiceManager(applicationId);
 
@@ -131,6 +134,36 @@ public class ServiceInvocationTest extends AbstractServiceTest {
 		properties = new LinkedHashMap<String, Object>();
 		properties.put("visits", 5);
 		testRequest(sm, ServiceAction.PUT, 1, properties, "devices", uuid);
+
+	}
+
+	@Test
+	public void testBatchCreate() throws Exception {
+		logger.info("testBatchCreate");
+
+		UUID applicationId = createApplication("testOrganization",
+				"testBatchCreate");
+
+		ServiceManager sm = smf.getServiceManager(applicationId);
+
+		List<Map<String, Object>> batch = new ArrayList<Map<String, Object>>();
+
+		Map<String, Object> properties = new LinkedHashMap<String, Object>();
+		properties.put("username", "test_user_1");
+		properties.put("email", "user1@test.com");
+		batch.add(properties);
+
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("username", "test_user_2");
+		batch.add(properties);
+
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("username", "test_user_3");
+		batch.add(properties);
+
+		Entity user = testBatchRequest(sm, ServiceAction.POST, 3, batch,
+				"users").getEntity();
+		assertNotNull(user);
 
 	}
 

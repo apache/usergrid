@@ -319,10 +319,18 @@ public class AbstractCollectionService extends AbstractService {
 					item = em.createItemInCollection(context.getOwner(),
 							context.getCollectionName(), getEntityType(), p);
 				} catch (Exception e) {
-					logger.info("Entity " + i + " created in collection "
-							+ context.getCollectionName() + " with UUID "
-							+ item.getUuid());
+					logger.error(
+							"Entity " + i
+									+ " unable to be created in collection "
+									+ context.getCollectionName(), e);
+
+					i++;
+					continue;
 				}
+
+				logger.info("Entity " + i + " created in collection "
+						+ context.getCollectionName() + " with UUID "
+						+ item.getUuid());
 
 				item = importEntity(context, item);
 				entities.add(item);
