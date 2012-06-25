@@ -236,14 +236,6 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.usergrid</groupId>
-			<artifactId>usergrid-rest</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<classifier>compiled-jsp</classifier>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
 			<scope>test</scope>
@@ -491,7 +483,7 @@
 		<dependency>
 			<groupId>org.usergrid</groupId>
 			<artifactId>usergrid-java-client</artifactId>
-			<version>0.0.1</version>
+			<version>0.0.3-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
