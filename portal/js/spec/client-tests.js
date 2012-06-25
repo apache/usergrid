@@ -18,7 +18,7 @@ function defaultSuccess(data, status, xhr) {
 function defaultError(xhr, status, error) {
   start();
   console.log('boo!');
-  throw new Error("aorsientaroiesn");
+  throw new Error("error!");
 }
 
 function initCore() {
@@ -37,18 +37,23 @@ function selectFirstApplication() {
   };
 }
 
-asyncTest("logging-in with credentials", function() {
+QUnit.config.reorder = false;
+
+asyncTest("logging-in with loginAdmin(credentials)", function() {
   expect(1);
   usergrid.client.loginAdmin("fjendle@apigee.com",
   			     "mafalda1",
   			     defaultSuccess,
-                             function() {console.log('boo1')}
+                             defaultError
   			    );
 });
 
-asyncTest("logging-in with token", function() {
+asyncTest("logging-in autoLogin", function() {
   expect(1);
-  usergrid.client.autoLogin(defaultSuccess, defaultError);
+  usergrid.client.autoLogin(
+    defaultSuccess,
+    defaultError
+  );
 });
 
 asyncTest("getting applications", function() {
@@ -58,7 +63,8 @@ asyncTest("getting applications", function() {
       selectFirstApplication();
       defaultSuccess();
     },
-    defaultError);
+    defaultError
+  );
 });
 
 asyncTest("getting users list (999)", function() {

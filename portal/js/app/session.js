@@ -23,14 +23,14 @@ usergrid.session = (function() {
   }
 
   function clearIt() {
+    self.accessToken = null;
     self.loggedInUser = null;
     self.currentOrganizationName = null;
-    localStorage.removeItem('usergridUser');
-    self.accessToken = null;
-    localStorage.removeItem('accessToken');
-    self.currentOrganization = null;
-    localStorage.removeItem('currentOrganization');
     self.currentApplicationId = null;
+    self.currentOrganization = null;
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('usergridUser');
+    localStorage.removeItem('currentOrganization');
     localStorage.removeItem('currentApplicationId');
 
     if (usergrid.client.useSSO()){
