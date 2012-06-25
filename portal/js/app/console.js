@@ -2,8 +2,9 @@ function usergrid_console_app(Pages) {
   //This code block *WILL NOT* load before the document is complete
   window.usergrid = window.usergrid || {};
   usergrid.console = usergrid.console || {};
-  session = usergrid.session;
-
+  session = usergrid.session || {};
+  client = usergrid.client || {};
+  
   var OFFLINE = false;
   var OFFLINE_PAGE = "#query-page";
 
@@ -76,9 +77,18 @@ function usergrid_console_app(Pages) {
     return a;
   }
 
+  $('#api-activity').ajaxStart( function() {
+    $(this).show();
+    console.log('riiiiing!!');
+  });
+
+  $('#api-activity').ajaxComplete( function() {
+    $(this).hide();
+  });
+
   client.onActiveRequest = function(activeRequests) {
     if (activeRequests <= 0) {
-      $("#api-activity").delay(1000).hide(1);
+      $("#api-activity").hide();
     } else {
       $("#api-activity").show();
     }
@@ -663,10 +673,8 @@ function usergrid_console_app(Pages) {
       pageSelect(session.currentApplicationId);
     else {
       var firstApp = null;
-      for (firstApp in session.currentOrganization.applications) break;
-      if(firstApp) {
-        pageSelect(session.currentOrganization.applications[firstApp]);
-      }
+      for (firstApp in session.currentOrganization.applications) {break};
+      if (firstApp) {pageSelect(session.currentOrganization.applications[firstApp]);}
     }
   }
 
