@@ -574,7 +574,7 @@ usergrid.client = (function() {
     };
     apiRequest2("POST", "/management/token", formdata,
                 function(data, textStatus, xhr) {
-                  if (!data || !data.access_token || !data.user) {
+                  if (!data) {
                     errorCallback();
                     return
                   }
