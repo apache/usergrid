@@ -24,10 +24,15 @@ usergrid.session = (function() {
 
   function clearIt() {
     self.loggedInUser = null;
-    self.accessToken = null;
     self.currentOrganizationName = null;
     localStorage.removeItem('usergridUser');
+    self.accessToken = null;
     localStorage.removeItem('accessToken');
+    self.currentOrganization = null;
+    localStorage.removeItem('currentOrganization');
+    self.currentApplicationId = null;
+    localStorage.removeItem('currentApplicationId');
+
     if (usergrid.client.useSSO()){
       sendToSSOLogoutPage();
     }
