@@ -2688,6 +2688,7 @@ public class RelationManagerImpl implements RelationManager,
 			EntityRef dstEntityRef, String dstRelationName) throws Exception {
 
 		headEntity = em.validate(headEntity);
+		dstEntityRef = em.validate(dstEntityRef);
 
 		CollectionInfo srcCollection = getDefaultSchema().getCollection(
 				headEntity.getType(), srcRelationName);
