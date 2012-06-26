@@ -45,6 +45,7 @@ import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
+import org.usergrid.rest.filters.ContentTypeFilter;
 import org.usergrid.utils.MapUtils;
 
 import com.sun.jersey.api.client.config.ClientConfig;
@@ -114,8 +115,12 @@ public abstract class AbstractRestTest extends JerseyTest {
 						"com.sun.jersey.config.property.WebPageContentRegex",
 						"/(((images|css|js|jsp|WEB-INF/jsp)/.*)|(favicon\\.ico))")
 				.initParam("com.sun.jersey.config.feature.Trace", "true")
+				.addFilter(ContentTypeFilter.class, "contentFilter")
+               
+				
 				.addFilter(DelegatingFilterProxy.class, "shiroFilter",
 						MapUtils.hashMap("targetFilterLifecycle", "true"))
+			    
 				.clientConfig(clientConfig).build();
 
 		dumpClasspath(AbstractRestTest.class.getClassLoader());
@@ -195,7 +200,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
 	@BeforeClass
 	public static void setup() throws Exception {
-//		Class.forName("jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.error_jsp");
+		// Class.forName("jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.error_jsp");
 		logger.info("setup");
 		assertNull(embedded);
 		embedded = new EmbeddedServerHelper();

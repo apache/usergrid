@@ -16,6 +16,7 @@
 package org.usergrid.rest.applications.users;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,6 +55,16 @@ public class ActivityResourceTest extends AbstractRestTest {
         client.createGroup(GROUP);
 
         groupCreated = true;
+    }
+
+    @Test
+    public void postNullActivityToGroup() {
+      String activityTitle = "testTitle" + UUIDUtils.newTimeUUID();
+      String activityDesc = "testActivity" + UUIDUtils.newTimeUUID();
+
+      ApiResponse response = client.postGroupActivity(GROUP, null);
+      assertEquals("required_property_not_found",response.getError()); //
+      assertTrue(response.getException().contains("RequiredPropertyNotFoundException")); // when should we leave this out
     }
 
     @Test

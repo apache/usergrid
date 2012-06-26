@@ -42,7 +42,18 @@ public class JSONPCallbackFilter implements ContainerRequestFilter {
 
 	@Override
 	public ContainerRequest filter(ContainerRequest request) {
-		String callback = httpServletRequest.getParameter("callback");
+		String callback = null;
+		try {
+			callback = httpServletRequest.getParameter("callback");
+		} catch (IllegalStateException e) {
+		}
+		if (callback == null) {
+			try {
+				callback = request.getQueryParameters().getFirst("callback");
+			} catch (IllegalStateException e) {
+			}
+
+		}
 		if (isNotBlank(callback)) {
 			request.getRequestHeaders().putSingle("Accept",
 					"application/javascript");

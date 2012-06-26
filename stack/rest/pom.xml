@@ -110,6 +110,11 @@
 							<classesDirectory>${project.build.directory}/jsp-source</classesDirectory>
 						</configuration>
 					</execution>
+			         <execution>
+			           <goals>
+			             <goal>test-jar</goal>
+			           </goals>
+			         </execution>
 				</executions>
 			</plugin>
 			<plugin>
@@ -139,14 +144,14 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
             </plugin>
-			<!-- <plugin> <groupId>org.codehaus.enunciate</groupId> <artifactId>maven-enunciate-plugin</artifactId> 
-				<version>1.23-RC1</version> <executions> <execution> <goals> <goal>docs</goal> 
-				</goals> <configuration> <docsDir> ${project.build.directory}/docs </docsDir> 
+			<!-- <plugin> <groupId>org.codehaus.enunciate</groupId> <artifactId>maven-enunciate-plugin</artifactId>
+				<version>1.23-RC1</version> <executions> <execution> <goals> <goal>docs</goal>
+				</goals> <configuration> <docsDir> ${project.build.directory}/docs </docsDir>
 				</configuration> </execution> </executions> </plugin> -->
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
+				<!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
@@ -233,6 +238,7 @@
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -384,10 +390,17 @@
 			<groupId>org.apache.amber</groupId>
 			<artifactId>oauth2-resourceserver</artifactId>
 		</dependency>
-        <dependency>
+		<dependency>
             <groupId>com.yammer.metrics</groupId>
             <artifactId>metrics-core</artifactId>
-            <version>2.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yammer.metrics</groupId>
+            <artifactId>metrics-spring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.yammer.metrics</groupId>
+            <artifactId>metrics-annotation</artifactId>
         </dependency>
         <dependency>
 			<groupId>junit</groupId>
