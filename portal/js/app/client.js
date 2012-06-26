@@ -997,7 +997,9 @@ usergrid.client = (function() {
                    }
                    if (success) {
                      success(data, queryClient);
-                   }
+                   } else if (data.error) {
+		     failure(data, queryClient);
+		   }
                  },
                  function(data) {
                    if (failure) {
