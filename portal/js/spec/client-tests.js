@@ -41,11 +41,12 @@ QUnit.config.reorder = false;
 
 asyncTest("logging-in with loginAdmin(credentials)", function() {
   expect(1);
-  usergrid.client.loginAdmin("fjendle@apigee.com",
-  			     "mafalda1",
-  			     defaultSuccess,
-                             defaultError
-  			    );
+  usergrid.client.loginAdmin(
+    "fjendle@apigee.com",
+    "mafalda1",
+    defaultSuccess,
+    defaultError
+  );
 });
 
 asyncTest("logging-in autoLogin", function() {
@@ -67,7 +68,19 @@ asyncTest("getting applications", function() {
   );
 });
 
-asyncTest("getting users list (999)", function() {
+asyncTest("getting users with requestUsers", function() {
   expect(1);
-  usergrid.client.requestUsers(usergrid.session.currentApplicationId, defaultSuccess, defaultError);
+  usergrid.client.requestUsers(
+    usergrid.session.currentApplicationId,
+    defaultSuccess,
+    defaultError
+  );
+});
+
+asyncTest("getting users with queryUsers", function() {
+  expect(1);
+  usergrid.client.queryUsers(
+    defaultSuccess,
+    defaultError
+  );
 });

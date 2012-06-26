@@ -79,7 +79,6 @@ function usergrid_console_app(Pages) {
 
   $('#api-activity').ajaxStart( function() {
     $(this).show();
-    console.log('riiiiing!!');
   });
 
   $('#api-activity').ajaxComplete( function() {

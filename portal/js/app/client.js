@@ -981,7 +981,7 @@ usergrid.client = (function() {
       prev_cursor = null;
       next_cursor = null;
       start_cursor = null;
-      apiRequest(method, path, params, data,
+      apiRequest2(method, path, data,
                  function(data) {
                    if (data.entities && data.entities.length > 0) {
                      start_cursor = data.entities[0].uuid;
