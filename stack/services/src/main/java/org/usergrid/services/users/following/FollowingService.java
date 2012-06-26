@@ -2,11 +2,16 @@ package org.usergrid.services.users.following;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.TaskExecutor;
 import org.usergrid.persistence.ConnectionRef;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.services.AbstractConnectionsService;
 
 public class FollowingService extends AbstractConnectionsService {
+
+	@Autowired
+	private TaskExecutor taskExecutor;
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(FollowingService.class);
@@ -25,9 +30,20 @@ public class FollowingService extends AbstractConnectionsService {
 		em.deleteConnection(connectionRef);
 	}
 
-	public void copyActivityFeed(EntityRef connectingEntity,
-			EntityRef connectedEntityRef) {
-		logger.info("Copying activities...");
+	public void copyActivityFeed(final EntityRef connectingEntity,
+			final EntityRef connectedEntityRef) throws Exception {
+		logger.info("Copying activities to feed...");
+		taskExecutor.execute(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					em.copyRelationships(connectingEntity, "activities",
+							connectedEntityRef, "feed");
+				} catch (Exception e) {
+					logger.error("Error while copying activities into feed", e);
+				}
+			}
+		});
 	}
 
 }

@@ -2116,31 +2116,31 @@ public class EntityManagerImpl implements EntityManager,
 		setProperty(entityRef, propertyName, propertyValue, false);
 
 	}
-	
+
 	@Override
-    public void setProperty(EntityRef entityRef, String propertyName,
-            Object propertyValue, boolean override) throws Exception {
+	public void setProperty(EntityRef entityRef, String propertyName,
+			Object propertyValue, boolean override) throws Exception {
 
-        if ((propertyValue instanceof String)
-                && ((String) propertyValue).equals("")) {
-            propertyValue = null;
-        }
+		if ((propertyValue instanceof String)
+				&& ((String) propertyValue).equals("")) {
+			propertyValue = null;
+		}
 
-        DynamicEntity entity = loadPartialEntity(entityRef.getUuid());
+		DynamicEntity entity = loadPartialEntity(entityRef.getUuid());
 
-        UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = createMutator(
-                cass.getApplicationKeyspace(applicationId), be);
+		UUID timestampUuid = newTimeUUID();
+		Mutator<ByteBuffer> batch = createMutator(
+				cass.getApplicationKeyspace(applicationId), be);
 
-        propertyValue = getDefaultSchema().validateEntityPropertyValue(
-                entity.getType(), propertyName, propertyValue);
+		propertyValue = getDefaultSchema().validateEntityPropertyValue(
+				entity.getType(), propertyName, propertyValue);
 
-        entity.setProperty(propertyName, propertyValue);
-        batch = batchSetProperty(batch, entity, propertyName, propertyValue,
-                override, false,timestampUuid);
-        batchExecute(batch, CassandraService.RETRY_COUNT);
+		entity.setProperty(propertyName, propertyValue);
+		batch = batchSetProperty(batch, entity, propertyName, propertyValue,
+				override, false, timestampUuid);
+		batchExecute(batch, CassandraService.RETRY_COUNT);
 
-    }
+	}
 
 	@Override
 	public void updateProperties(EntityRef entityRef,
@@ -2788,6 +2788,14 @@ public class EntityManagerImpl implements EntityManager,
 			String collectionName, EntityRef itemRef) throws Exception {
 		getRelationManager(entityRef).removeFromCollection(collectionName,
 				itemRef);
+	}
+
+	@Override
+	public void copyRelationships(EntityRef srcEntityRef,
+			String srcRelationName, EntityRef dstEntityRef,
+			String dstRelationName) throws Exception {
+		getRelationManager(srcEntityRef).copyRelationships(srcRelationName,
+				dstEntityRef, srcRelationName);
 	}
 
 	@Override
