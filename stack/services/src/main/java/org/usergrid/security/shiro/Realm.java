@@ -58,6 +58,7 @@ import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.entities.User;
+import org.usergrid.security.shiro.credentials.AccessTokenCredentials;
 import org.usergrid.security.shiro.credentials.AdminUserAccessToken;
 import org.usergrid.security.shiro.credentials.AdminUserPassword;
 import org.usergrid.security.shiro.credentials.ApplicationAccessToken;
@@ -71,6 +72,8 @@ import org.usergrid.security.shiro.principals.ApplicationPrincipal;
 import org.usergrid.security.shiro.principals.ApplicationUserPrincipal;
 import org.usergrid.security.shiro.principals.OrganizationPrincipal;
 import org.usergrid.security.shiro.principals.PrincipalIdentifier;
+import org.usergrid.security.tokens.TokenInfo;
+import org.usergrid.security.tokens.TokenService;
 
 import com.google.common.collect.HashBiMap;
 
@@ -87,6 +90,7 @@ public class Realm extends AuthorizingRealm {
 	EntityManagerFactory emf;
 	Properties properties;
 	ManagementService management;
+	TokenService tokens;
 
 	@Value("${usergrid.system.login.name:admin}")
 	String systemUser;
@@ -147,6 +151,11 @@ public class Realm extends AuthorizingRealm {
 	@Autowired
 	public void setManagementService(ManagementService management) {
 		this.management = management;
+	}
+
+	@Autowired
+	public void setTokenService(TokenService tokens) {
+		this.tokens = tokens;
 	}
 
 	@Override
@@ -351,6 +360,19 @@ public class Realm extends AuthorizingRealm {
 
 				UUID applicationId = ((ApplicationUserPrincipal) principal)
 						.getApplicationId();
+
+				AccessTokenCredentials tokenCredentials = ((ApplicationUserPrincipal) principal)
+						.getAccessTokenCredentials();
+				TokenInfo token = null;
+				if (tokenCredentials != null) {
+					try {
+						token = tokens
+								.getTokenInfo(tokenCredentials.getToken());
+					} catch (Exception e) {
+						logger.error("Unable to retrieve token info", e);
+					}
+					logger.info("Token: " + token);
+				}
 
 				grant(info, principal,
 						getPermissionFromPath(applicationId, "access"));
