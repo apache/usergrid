@@ -99,7 +99,13 @@
 		<constructor-arg ref="cassandraCluster" />
 		<constructor-arg ref="cassandraHostConfigurator" />
 		<constructor-arg ref="lockManager" />
+		<property name="consistencyLevelPolicy" ref="consistencyLevelPolicy"/>
 	</bean>
+	
+	 <bean name="consistencyLevelPolicy" class="me.prettyprint.cassandra.model.ConfigurableConsistencyLevel">
+        <property name="defaultReadConsistencyLevel" value="${cassandra.readcl}"/>
+        <property name="defaultWriteConsistencyLevel" value="${cassandra.writecl}"/>
+    </bean>
 
     <!-- Modify to take CounterUtils as instance-->
 	<bean id="entityManagerFactory"
