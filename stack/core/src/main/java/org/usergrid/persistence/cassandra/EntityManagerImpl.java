@@ -95,6 +95,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.yammer.metrics.annotation.Metered;
 import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
@@ -830,6 +831,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@SuppressWarnings("unchecked")
+  @Metered(group = "core", name = "EntityManager_batchCreate")
 	public <A extends Entity> A batchCreate(Mutator<ByteBuffer> m,
 			String entityType, Class<A> entityClass,
 			Map<String, Object> properties, UUID importId, UUID timestampUuid)
