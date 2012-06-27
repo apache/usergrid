@@ -37,8 +37,8 @@ public class FollowingService extends AbstractConnectionsService {
 			@Override
 			public void run() {
 				try {
-					em.copyRelationships(connectingEntity, "activities",
-							connectedEntityRef, "feed");
+					em.copyRelationships(connectedEntityRef, "activities",
+							connectingEntity, "feed");
 				} catch (Exception e) {
 					logger.error("Error while copying activities into feed", e);
 				}
