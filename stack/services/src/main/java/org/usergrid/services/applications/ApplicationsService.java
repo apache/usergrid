@@ -40,302 +40,310 @@ import org.usergrid.services.ServiceResults.Type;
 
 public class ApplicationsService extends AbstractService {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(ApplicationsService.class);
-
-	public ApplicationsService() {
-		super();
-		logger.info("/applications");
-		declareEntityDictionary("rolenames");
-		declareEntityDictionary("counters");
-		declareEntityCommand("hello");
-		declareEntityCommand("resetroles");
-	}
+    private static final Logger logger = LoggerFactory
+            .getLogger(ApplicationsService.class);
 
-	@Override
-	public ServiceResults invoke(ServiceContext context) throws Exception {
+    public ApplicationsService() {
+        super();
+        logger.info("/applications");
+        declareEntityDictionary("rolenames");
+        declareEntityDictionary("counters");
+        declareEntityCommand("hello");
+        declareEntityCommand("resetroles");
+    }
 
-		ServiceResults results = null;
+    @Override
+    public ServiceResults invoke(ServiceContext context) throws Exception {
 
-		String metadataType = checkForServiceMetadata(context);
-		if (metadataType != null) {
-			return handleServiceMetadata(context, metadataType);
-		}
+        ServiceResults results = null;
 
-		String entityDictionary = checkForEntityDictionaries(context);
-		String entityCommand = checkForEntityCommands(context);
+        String metadataType = checkForServiceMetadata(context);
+        if (metadataType != null) {
+            return handleServiceMetadata(context, metadataType);
+        }
 
-		results = invokeItemWithId(context, sm.getApplicationId());
-		context.dequeueParameter();
+        String entityDictionary = checkForEntityDictionaries(context);
+        String entityCommand = checkForEntityCommands(context);
 
-		results = handleEntityDictionary(context, results, entityDictionary);
-		results = handleEntityCommand(context, results, entityCommand);
+        results = invokeItemWithId(context, sm.getApplicationId());
+        context.dequeueParameter();
 
-		return results;
-	}
+        results = handleEntityDictionary(context, results, entityDictionary);
+        results = handleEntityCommand(context, results, entityCommand);
 
-	@Override
-	public ServiceResults getItemById(ServiceContext context, UUID id)
-			throws Exception {
-		return getApplicationEntity(context);
-	}
+        return results;
+    }
 
-	@Override
-	public ServiceResults putItemById(ServiceContext context, UUID id)
-			throws Exception {
-		return updateApplicationEntity(context, context.getPayload());
-	}
+    @Override
+    public ServiceResults getItemById(ServiceContext context, UUID id)
+            throws Exception {
+        return getApplicationEntity(context);
+    }
 
-	@Override
-	public ServiceResults getEntityDictionary(ServiceContext context,
-			List<EntityRef> refs, String dictionary) throws Exception {
+    @Override
+    public ServiceResults putItemById(ServiceContext context, UUID id)
+            throws Exception {
+        return updateApplicationEntity(context, context.getPayload());
+    }
 
-		if ("rolenames".equalsIgnoreCase(dictionary)) {
-			checkPermissionsForPath(context, "/rolenames");
+    @Override
+    public ServiceResults getEntityDictionary(ServiceContext context,
+            List<EntityRef> refs, String dictionary) throws Exception {
 
-			if (context.parameterCount() == 0) {
+        if ("rolenames".equalsIgnoreCase(dictionary)) {
+            checkPermissionsForPath(context, "/rolenames");
 
-				return getApplicationRoles();
+            if (context.parameterCount() == 0) {
 
-			} else if (context.parameterCount() == 1) {
+                return getApplicationRoles();
 
-				String roleName = context.getParameters().get(0).getName();
-				if (isBlank(roleName)) {
-					return null;
-				}
+            } else if (context.parameterCount() == 1) {
 
-				return getApplicationRolePermissions(roleName);
-			}
+                String roleName = context.getParameters().get(0).getName();
+                if (isBlank(roleName)) {
+                    return null;
+                }
 
-		} else if ("counters".equals(dictionary)) {
-			checkPermissionsForPath(context, "/counters");
+                return getApplicationRolePermissions(roleName);
+            }
 
-			if (context.parameterCount() == 0) {
-				return getApplicationCounterNames();
-			} else if (context.parameterCount() > 0) {
-				if (context.getParameters().get(0) instanceof QueryParameter) {
-					return getApplicationCounters(((QueryParameter) context
-							.getParameters().get(0)).getQuery());
-				}
-			}
-		}
+        } else if ("counters".equals(dictionary)) {
+            checkPermissionsForPath(context, "/counters");
 
-		return super.getEntityDictionary(context, refs, dictionary);
-	}
+            if (context.parameterCount() == 0) {
+                return getApplicationCounterNames();
+            } else if (context.parameterCount() > 0) {
+                if (context.getParameters().get(0) instanceof QueryParameter) {
+                    return getApplicationCounters(((QueryParameter) context
+                            .getParameters().get(0)).getQuery());
+                }
+            }
+        }
 
-	@Override
-	public ServiceResults postEntityDictionary(ServiceContext context,
-			List<EntityRef> refs, String dictionary, ServicePayload payload)
-			throws Exception {
+        return super.getEntityDictionary(context, refs, dictionary);
+    }
 
-		if ("rolenames".equalsIgnoreCase(dictionary)) {
-			checkPermissionsForPath(context, "/rolenames");
+    @Override
+    public ServiceResults postEntityDictionary(ServiceContext context,
+            List<EntityRef> refs, String dictionary, ServicePayload payload)
+            throws Exception {
 
-			if (context.parameterCount() == 0) {
+        if ("rolenames".equalsIgnoreCase(dictionary)) {
+            checkPermissionsForPath(context, "/rolenames");
 
-				String name = payload.getStringProperty("name");
-				if (isBlank(name)) {
-					return null;
-				}
+            if (context.parameterCount() == 0) {
 
-				String title = payload.getStringProperty("title");
-				if (isBlank(title)) {
-					title = name;
-				}
+                String name = payload.getStringProperty("name");
 
-				return newApplicationRole(name, title);
+                if (isBlank(name)) {
+                    return null;
+                }
 
-			} else if (context.parameterCount() == 1) {
+                String title = payload.getStringProperty("title");
 
-				String roleName = context.getParameters().get(0).getName();
-				if (isBlank(roleName)) {
-					return null;
-				}
+                if (isBlank(title)) {
+                    title = name;
+                }
 
-				String permission = payload.getStringProperty("permission");
-				if (isBlank(permission)) {
-					return null;
-				}
+                Long inactivity = payload.getLongProperty("inactivity");
 
-				return grantApplicationRolePermission(roleName, permission);
-			}
+                if (inactivity == null) {
+                    inactivity = 0l;
+                }
 
-		}
+                return newApplicationRole(name, title, inactivity);
 
-		return super.postEntityDictionary(context, refs, dictionary, payload);
-	}
+            } else if (context.parameterCount() == 1) {
 
-	@Override
-	public ServiceResults deleteEntityDictionary(ServiceContext context,
-			List<EntityRef> refs, String dictionary) throws Exception {
+                String roleName = context.getParameters().get(0).getName();
+                if (isBlank(roleName)) {
+                    return null;
+                }
 
-		if ("rolenames".equalsIgnoreCase(dictionary)) {
-			checkPermissionsForPath(context, "/rolenames");
+                String permission = payload.getStringProperty("permission");
+                if (isBlank(permission)) {
+                    return null;
+                }
 
-			if (context.parameterCount() == 1) {
-
-				String roleName = context.getParameters().get(0).getName();
-				if (isBlank(roleName)) {
-					return null;
-				}
-
-				return deleteApplicationRole(roleName);
-
-			} else if (context.parameterCount() > 1) {
-
-				String roleName = context.getParameters().get(0).getName();
-				if (isBlank(roleName)) {
-					return null;
-				}
-
-				Query q = context.getParameters().get(1).getQuery();
-				if (q == null) {
-					return null;
-				}
-
-				List<String> permissions = q.getPermissions();
-				if (permissions == null) {
-					return null;
-				}
-
-				for (String permission : permissions) {
-					revokeApplicationRolePermission(roleName, permission);
-				}
-
-				return getApplicationRolePermissions(roleName);
-
-			}
-		}
-
-		return super.deleteEntityDictionary(context, refs, dictionary);
-	}
-
-	public ServiceResults getApplicationEntity(ServiceContext context)
-			throws Exception {
-
-		checkPermissionsForPath(context, "/");
-
-		Entity entity = em.get(em.getApplicationRef());
-		Results r = Results.fromEntity(entity);
-
-		Map<String, Object> collections = em.getApplicationCollectionMetadata();
-		// Set<String> collections = em.getApplicationCollections();
-		if (collections.size() > 0) {
-			r.setMetadata(em.getApplicationRef().getUuid(), "collections",
-					collections);
-		}
-
-		return genericServiceResults(r);
-	}
-
-	public ServiceResults updateApplicationEntity(ServiceContext context,
-			ServicePayload payload) throws Exception {
-
-		checkPermissionsForPath(context, "/");
-
-		Map<String, Object> properties = payload.getProperties();
-		Object m = properties.get("metadata");
-		if (m instanceof Map) {
-			@SuppressWarnings("unchecked")
-			Map<String, Object> metadata = (Map<String, Object>) m;
-			Object c = metadata.get("collections");
-			if (c instanceof Map) {
-				@SuppressWarnings("unchecked")
-				Map<String, Object> collections = (Map<String, Object>) c;
-				for (String collection : collections.keySet()) {
-					em.createApplicationCollection(collection);
-					logger.info("Created collection " + collection
-							+ " for application " + sm.getApplicationId());
-				}
-			}
-		}
-
-		Entity entity = em.get(em.getApplicationRef());
-		em.updateProperties(entity, properties);
-		entity.addProperties(properties);
-		Results r = Results.fromEntity(entity);
-
-		Set<String> collections = em.getApplicationCollections();
-		if (collections.size() > 0) {
-			r.setMetadata(em.getApplicationRef().getUuid(), "collections",
-					collections);
-		}
-
-		return genericServiceResults(r);
-	}
-
-	public ServiceResults getApplicationRoles() throws Exception {
-		Map<String, String> roles = em.getRoles();
-		ServiceResults results = genericServiceResults().withData(roles);
-		return results;
-	}
-
-	public ServiceResults newApplicationRole(String roleName, String roleTitle)
-			throws Exception {
-		em.createRole(roleName, roleTitle);
-		return getApplicationRoles();
-	}
-
-	public ServiceResults deleteApplicationRole(String roleName)
-			throws Exception {
-		em.deleteRole(roleName);
-		return getApplicationRoles();
-	}
-
-	public ServiceResults getApplicationRolePermissions(String roleName)
-			throws Exception {
-		Set<String> permissions = em.getRolePermissions(roleName);
-		ServiceResults results = genericServiceResults().withData(permissions);
-		return results;
-	}
-
-	public ServiceResults grantApplicationRolePermission(String roleName,
-			String permission) throws Exception {
-		em.grantRolePermission(roleName, permission);
-		return getApplicationRolePermissions(roleName);
-	}
-
-	public ServiceResults revokeApplicationRolePermission(String roleName,
-			String permission) throws Exception {
-		em.revokeRolePermission(roleName, permission);
-		return getApplicationRolePermissions(roleName);
-	}
-
-	public ServiceResults getApplicationCounterNames() throws Exception {
-		Set<String> counters = em.getCounterNames();
-		ServiceResults results = genericServiceResults().withData(counters);
-		return results;
-	}
-
-	public ServiceResults getApplicationCounters(Query query) throws Exception {
-		Results counters = em.getAggregateCounters(query);
-		ServiceResults results = simpleServiceResults(Type.COUNTERS);
-		if (counters != null) {
-			results.withCounters(counters.getCounters());
-		}
-		return results;
-	}
-
-	@Override
-	public ServiceResults getEntityCommand(ServiceContext context,
-			List<EntityRef> refs, String command) throws Exception {
-		if ("hello".equalsIgnoreCase(command)) {
-			ServiceResults results = genericServiceResults().withData(
-					hashMap("say", "Hello!"));
-			return results;
-		}
-		return super.getEntityCommand(context, refs, command);
-	}
-
-	@Override
-	public ServiceResults postEntityCommand(ServiceContext context,
-			List<EntityRef> refs, String command, ServicePayload payload)
-			throws Exception {
-		if ("resetroles".equalsIgnoreCase(command)) {
-			em.resetRoles();
-			return getApplicationRoles();
-		}
-		return super.postEntityCommand(context, refs, command, payload);
-	}
+                return grantApplicationRolePermission(roleName, permission);
+            }
+
+        }
+
+        return super.postEntityDictionary(context, refs, dictionary, payload);
+    }
+
+    @Override
+    public ServiceResults deleteEntityDictionary(ServiceContext context,
+            List<EntityRef> refs, String dictionary) throws Exception {
+
+        if ("rolenames".equalsIgnoreCase(dictionary)) {
+            checkPermissionsForPath(context, "/rolenames");
+
+            if (context.parameterCount() == 1) {
+
+                String roleName = context.getParameters().get(0).getName();
+                if (isBlank(roleName)) {
+                    return null;
+                }
+
+                return deleteApplicationRole(roleName);
+
+            } else if (context.parameterCount() > 1) {
+
+                String roleName = context.getParameters().get(0).getName();
+                if (isBlank(roleName)) {
+                    return null;
+                }
+
+                Query q = context.getParameters().get(1).getQuery();
+                if (q == null) {
+                    return null;
+                }
+
+                List<String> permissions = q.getPermissions();
+                if (permissions == null) {
+                    return null;
+                }
+
+                for (String permission : permissions) {
+                    revokeApplicationRolePermission(roleName, permission);
+                }
+
+                return getApplicationRolePermissions(roleName);
+
+            }
+        }
+
+        return super.deleteEntityDictionary(context, refs, dictionary);
+    }
+
+    public ServiceResults getApplicationEntity(ServiceContext context)
+            throws Exception {
+
+        checkPermissionsForPath(context, "/");
+
+        Entity entity = em.get(em.getApplicationRef());
+        Results r = Results.fromEntity(entity);
+
+        Map<String, Object> collections = em.getApplicationCollectionMetadata();
+        // Set<String> collections = em.getApplicationCollections();
+        if (collections.size() > 0) {
+            r.setMetadata(em.getApplicationRef().getUuid(), "collections",
+                    collections);
+        }
+
+        return genericServiceResults(r);
+    }
+
+    public ServiceResults updateApplicationEntity(ServiceContext context,
+            ServicePayload payload) throws Exception {
+
+        checkPermissionsForPath(context, "/");
+
+        Map<String, Object> properties = payload.getProperties();
+        Object m = properties.get("metadata");
+        if (m instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> metadata = (Map<String, Object>) m;
+            Object c = metadata.get("collections");
+            if (c instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> collections = (Map<String, Object>) c;
+                for (String collection : collections.keySet()) {
+                    em.createApplicationCollection(collection);
+                    logger.info("Created collection " + collection
+                            + " for application " + sm.getApplicationId());
+                }
+            }
+        }
+
+        Entity entity = em.get(em.getApplicationRef());
+        em.updateProperties(entity, properties);
+        entity.addProperties(properties);
+        Results r = Results.fromEntity(entity);
+
+        Set<String> collections = em.getApplicationCollections();
+        if (collections.size() > 0) {
+            r.setMetadata(em.getApplicationRef().getUuid(), "collections",
+                    collections);
+        }
+
+        return genericServiceResults(r);
+    }
+
+    public ServiceResults getApplicationRoles() throws Exception {
+        Map<String, String> roles = em.getRoles();
+        ServiceResults results = genericServiceResults().withData(roles);
+        return results;
+    }
+
+    public ServiceResults newApplicationRole(String roleName, String roleTitle,
+            long inactivity) throws Exception {
+        em.createRole(roleName, roleTitle, inactivity);
+        return getApplicationRoles();
+    }
+
+    public ServiceResults deleteApplicationRole(String roleName)
+            throws Exception {
+        em.deleteRole(roleName);
+        return getApplicationRoles();
+    }
+
+    public ServiceResults getApplicationRolePermissions(String roleName)
+            throws Exception {
+        Set<String> permissions = em.getRolePermissions(roleName);
+        ServiceResults results = genericServiceResults().withData(permissions);
+        return results;
+    }
+
+    public ServiceResults grantApplicationRolePermission(String roleName,
+            String permission) throws Exception {
+        em.grantRolePermission(roleName, permission);
+        return getApplicationRolePermissions(roleName);
+    }
+
+    public ServiceResults revokeApplicationRolePermission(String roleName,
+            String permission) throws Exception {
+        em.revokeRolePermission(roleName, permission);
+        return getApplicationRolePermissions(roleName);
+    }
+
+    public ServiceResults getApplicationCounterNames() throws Exception {
+        Set<String> counters = em.getCounterNames();
+        ServiceResults results = genericServiceResults().withData(counters);
+        return results;
+    }
+
+    public ServiceResults getApplicationCounters(Query query) throws Exception {
+        Results counters = em.getAggregateCounters(query);
+        ServiceResults results = simpleServiceResults(Type.COUNTERS);
+        if (counters != null) {
+            results.withCounters(counters.getCounters());
+        }
+        return results;
+    }
+
+    @Override
+    public ServiceResults getEntityCommand(ServiceContext context,
+            List<EntityRef> refs, String command) throws Exception {
+        if ("hello".equalsIgnoreCase(command)) {
+            ServiceResults results = genericServiceResults().withData(
+                    hashMap("say", "Hello!"));
+            return results;
+        }
+        return super.getEntityCommand(context, refs, command);
+    }
+
+    @Override
+    public ServiceResults postEntityCommand(ServiceContext context,
+            List<EntityRef> refs, String command, ServicePayload payload)
+            throws Exception {
+        if ("resetroles".equalsIgnoreCase(command)) {
+            em.resetRoles();
+            return getApplicationRoles();
+        }
+        return super.postEntityCommand(context, refs, command, payload);
+    }
 
 }

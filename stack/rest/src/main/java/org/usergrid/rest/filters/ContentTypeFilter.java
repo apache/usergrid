@@ -35,7 +35,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 /**
- * Filter for setting default accept and Content-Type as application/json when undefined by client
+ * Filter for setting default accept and Content-Type as application/json when
+ * undefined by client
  * 
  * @author tnine
  * 
@@ -69,7 +70,7 @@ public class ContentTypeFilter implements Filter {
         }
 
         HttpServletRequest origRequest = (HttpServletRequest) request;
-        
+
         HeaderWrapperRequest newRequest = new HeaderWrapperRequest(origRequest);
 
         String accept = origRequest.getHeader(HttpHeaders.ACCEPT);
@@ -100,7 +101,7 @@ public class ContentTypeFilter implements Filter {
 
     private class HeaderWrapperRequest extends HttpServletRequestWrapper {
 
-        private Map<String, String> newHeaders = new HashMap<String, String>();
+        private final Map<String, String> newHeaders = new HashMap<String, String>();
 
         /**
          * @param request
@@ -137,45 +138,48 @@ public class ContentTypeFilter implements Filter {
             return super.getHeader(name);
         }
 
-        /* (non-Javadoc)
-         * @see javax.servlet.http.HttpServletRequestWrapper#getHeaders(java.lang.String)
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * javax.servlet.http.HttpServletRequestWrapper#getHeaders(java.lang
+         * .String)
          */
         @Override
         public Enumeration getHeaders(String name) {
             Set<String> headers = new LinkedHashSet<String>();
-            
-          
-           
+
             String overridden = newHeaders.get(name);
-            
-            if(overridden != null){
+
+            if (overridden != null) {
                 headers.add(overridden);
-            }else{
-                for( Enumeration e = super.getHeaders(name) ; e.hasMoreElements() ;){
+            } else {
+                for (Enumeration e = super.getHeaders(name); e
+                        .hasMoreElements();) {
                     headers.add(e.nextElement().toString());
                 }
             }
-            
+
             return Collections.enumeration(headers);
         }
 
-        /* (non-Javadoc)
+        /*
+         * (non-Javadoc)
+         * 
          * @see javax.servlet.http.HttpServletRequestWrapper#getHeaderNames()
          */
         @Override
         public Enumeration getHeaderNames() {
             Set<String> headers = new LinkedHashSet<String>();
-            
-            for( Enumeration e = super.getHeaderNames() ; e.hasMoreElements() ;){
+
+            for (Enumeration e = super.getHeaderNames(); e.hasMoreElements();) {
                 headers.add(e.nextElement().toString());
             }
-                 
+
             headers.addAll(newHeaders.keySet());
-            
+
             return Collections.enumeration(headers);
         }
-
-      
 
         // NOTE, for full override we need to implement the other getHeader*
         // methods. We won't use it, so I'm not implementing it here
