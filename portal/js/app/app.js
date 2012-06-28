@@ -20,7 +20,7 @@ $(document).ready(function () {
   
   function initUI() {
     usergrid_console_app(Pages);
-    InitMenu();
+    initMenu();
     StatusBar.Init('#statusbar-placeholder');
     toggleableSections();
   }
@@ -42,13 +42,7 @@ $(document).ready(function () {
 
   }
 
-  function toggleableSections() {
-    $(document).on('click', '.title', function() {
-      $(this).parent().parent().find('.hideable').toggle();
-    })
-  }
-
-  function InitMenu() {
+  function initMenu() {
     $('.navbar .dropdown-toggle').dropdown();
     $('#sidebar-menu .dropdown-toggle').dropdown();
     $('#logout-link').click(usergrid.console.logout);
@@ -61,11 +55,11 @@ $(document).ready(function () {
     Pages.AddPage({name:'signup', menu:publicMenu});
     Pages.AddPage({name:'forgot-password', menu:publicMenu});
     Pages.AddPage({name:'post-signup', menu:publicMenu});
-    Pages.AddPage({name:'console', menu:privateMenu, initFunction:InitConsole, showFunction:usergrid.console.pageSelectHome});
+    Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction:usergrid.console.pageSelectHome});
 
   }
 
-  function InitConsole() {
+  function initConsole() {
     //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
     Pages.AddPanel('fred', null, null, null, null);
     Pages.AddPanel('organization', null, null, null, null);

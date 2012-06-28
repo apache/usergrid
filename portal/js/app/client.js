@@ -36,8 +36,6 @@ usergrid.client = (function() {
 
   var response = {};
 
-  var onIE = navigator.userAgent.indexOf("MSIE") >= 0;
-
   function Init(options) {
     var options = options || {};
 
@@ -79,176 +77,6 @@ usergrid.client = (function() {
     }
 
   }
-
-  function indexOfFirstType(type, args) {
-    for (var i = 0; i < args.length; i++) {
-      if (!args[i]) return - 1;
-      if (typeof args[i] == type) return i;
-    }
-    return - 1;
-  }
-
-  function getByType(type, i, args) {
-    var j = indexOfFirstType(type, args);
-    if (j < 0) return null;
-    var k = 0;
-    while ((j < args.length) && (k <= i)) {
-      if (type == "object") {
-        if (args[j].constructor != Object) return null;
-      } else if (typeof args[j] != type) return null;
-      if (k == i) return args[j];
-      j++;
-      k++;
-    }
-    return null;
-  }
-
-  function countByType(type, args) {
-    var c = 0;
-    var j = indexOfFirstType(type, args);
-    if (j < 0) return c;
-    while (j < args.length) {
-      if (type == "object") {
-        if (args[j].constructor != Object) return c;
-      } else if (typeof args[j] != type) return c;
-      j++;
-      c++;
-    }
-    return null;
-  }
-
-  function encodeParams(params) {
-    tail = [];
-    if (params instanceof Array) {
-      for (i in params) {
-        var item = params[i];
-        if ((item instanceof Array) && (item.length > 1)) {
-          tail.push(item[0] + "=" + encodeURIComponent(item[1]));
-        }
-      }
-    } else {
-      for (var key in params) {
-        if (params.hasOwnProperty(key)) {
-          var value = params[key];
-          if (value instanceof Array) {
-            for (i in value) {
-              var item = value[i];
-              tail.push(key + "=" + encodeURIComponent(item));
-            }
-          } else {
-            tail.push(key + "=" + encodeURIComponent(value));
-          }
-        }
-      }
-    }
-    return tail.join("&");
-  }
-
-  function encodePathString(path, returnParams) {
-
-    var i = 0;
-    var segments = new Array();
-    var payload = null;
-    while (i < path.length) {
-      var c = path.charAt(i);
-      if (c == '{') {
-        var bracket_start = i;
-        i++;
-        var bracket_count = 1;
-        while ((i < path.length) && (bracket_count > 0)) {
-          c = path.charAt(i);
-          if (c == '{') {
-            bracket_count++;
-          } else if (c == '}') {
-            bracket_count--;
-          }
-          i++;
-        }
-        if (i > bracket_start) {
-          var segment = path.substring(bracket_start, i);
-          segments.push(JSON.parse(segment));
-        }
-        continue;
-      } else if (c == '/') {
-        i++;
-        var segment_start = i;
-        while (i < path.length) {
-          c = path.charAt(i);
-          if ((c == ' ') || (c == '/') || (c == '{')) {
-            break;
-          }
-          i++;
-        }
-        if (i > segment_start) {
-          var segment = path.substring(segment_start, i);
-          segments.push(segment);
-        }
-        continue;
-      } else if (c == ' ') {
-        i++;
-        var payload_start = i;
-        while (i < path.length) {
-          c = path.charAt(i);
-          i++;
-        }
-        if (i > payload_start) {
-          var json = path.substring(payload_start, i).trim();
-          // console.log(json);
-          payload = JSON.parse(json);
-        }
-        break;
-      }
-      i++;
-    }
-
-    var newPath = "";
-    for (i = 0; i < segments.length; i++) {
-      var segment = segments[i];
-      if (typeof segment === "string") {
-        newPath += "/" + segment;
-      } else {
-        if (i == (segments.length - 1)) {
-          if (returnParams) {
-            return {path : newPath, params: segment, payload: payload};
-          }
-          newPath += "?";
-        } else {
-          newPath += ";";
-        }
-        newPath += encodeParams(segment);
-      }
-    }
-    if (returnParams) {
-      return {path : newPath, params: null, payload: payload};
-    }
-    return newPath;
-  }
-
-  /* TODO: These next two functions "*LastError*" MUST be deprecated eventually */
-
-  function setLastError(error) {
-    if (error) {
-      self.error = error;
-      if (error.error) {
-        console.log(error.error);
-      }
-      if (error.error_description) {
-        console.log(error.error_description);
-      }
-      if (error.exception) {
-        console.log(error.exception);
-      }
-    }
-  }
-
-  function getLastErrorMessage(defaultMsg) {
-    if (self.error && self.error.error_description) {
-      return self.error.error_description;
-    }
-    return defaultMsg;
-  }
-
-  /* */
 
   /* The base for all API calls. HANDLE WITH CAUTION! */
   function apiRequest(method, path, data, success, error) {
@@ -950,6 +778,34 @@ usergrid.client = (function() {
 
   }
 
+
+  /* TODO: These next two functions "*LastError*" MUST be deprecated eventually */
+
+  function setLastError(error) {
+  if (error) {
+    self.error = error;
+    if (error.error) {
+      console.log(error.error);
+    }
+    if (error.error_description) {
+      console.log(error.error_description);
+    }
+    if (error.exception) {
+      console.log(error.exception);
+    }
+  }
+}
+  
+  function getLastErrorMessage(defaultMsg) {
+  if (self.error && self.error.error_description) {
+    return self.error.error_description;
+  }
+  return defaultMsg;
+}
+
+  /* */
+
+  
   /* These are the functions we want to be public. Almost all, really. */
 
   var self = {

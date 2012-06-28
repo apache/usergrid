@@ -710,11 +710,6 @@ function usergrid_console_app(Pages) {
     });
   }
 
-  function dateToString(numberDate){
-    var date = new Date(numberDate);
-    return date.toString('dd MMM yyyy - h:mm tt ');
-  }
-
   $(document).on('click', '.toggleableSP', function() {
     $(this).parent().find('.toggleableSP').toggle();
     return false
@@ -1525,12 +1520,13 @@ function usergrid_console_app(Pages) {
       }
     );
   }
+  window.usergrid.console.requestApplicationUsage = requestApplicationUsage;
 
-/*******************************************************************
- *
- * Users
- *
- ******************************************************************/
+  /*******************************************************************
+   *
+   * Users
+   *
+   ******************************************************************/
 
   var userLetter = "*";
   var userSortBy = "username";
@@ -2800,23 +2796,23 @@ function usergrid_console_app(Pages) {
     }
 
     if (s.startsWith("/")) {
-      var path = client.encodePathString(s);
+      var path = encodePathString(s);
       printLnToShell(path);
       client.apiGetRequest("/" + orgName + "/" + current_application_id + path, null, displayShellResponse, null);
     } else if (s.startsWith("get /")) {
-      var path = client.encodePathString(s.substring(4));
+      var path = encodePathString(s.substring(4));
       printLnToShell(path);
       client.apiGetRequest("/" + orgName + "/" + current_application_id + path, null, displayShellResponse, null);
     } else if (s.startsWith("put /")) {
-      var params = client.encodePathString(s.substring(4), true);
+      var params = encodePathString(s.substring(4), true);
       printLnToShell(params.path);
       client.apiRequest("PUT", "/" + orgName + "/" + current_application_id + params.path, null, JSON.stringify(params.payload), displayShellResponse, null);
     } else if (s.startsWith("post /")) {
-      var params = client.encodePathString(s.substring(5), true);
+      var params = encodePathString(s.substring(5), true);
       printLnToShell(params.path);
       client.apiRequest("POST", "/" + orgName + "/" + current_application_id + params.path, null, JSON.stringify(params.payload), displayShellResponse, null);
     } else if (s.startsWith("delete /")) {
-      var path = client.encodePathString(s.substring(7));
+      var path = encodePathString(s.substring(7));
       printLnToShell(path);
       client.apiRequest("DELETE", "/" + orgName + "/" + current_application_id + path, null, null, displayShellResponse, null);
     } else if ((s == "clear") || (s == "cls"))  {

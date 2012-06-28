@@ -3,12 +3,6 @@ usergrid.console = usergrid.console || {};
 usergrid.console.ui = usergrid.console.ui || { };
 usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 
-
-function dateToString(numberDate){
-  var date = new Date(numberDate);
-  return date.toString('dd MMM yyyy - h:mm tt ');
-}
-
 (function($) {
   //This code block *WILL NOT* load before the document is complete
 
