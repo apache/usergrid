@@ -11,15 +11,18 @@ public class TokenInfo {
 	String type;
 	long created;
 	long accessed;
+	long inactive;
 	AuthPrincipalInfo principal;
 	Map<String, Object> state;
 
 	public TokenInfo(UUID uuid, String type, long created, long accessed,
-			AuthPrincipalInfo principal, Map<String, Object> state) {
+			long inactive, AuthPrincipalInfo principal,
+			Map<String, Object> state) {
 		this.uuid = uuid;
 		this.type = type;
 		this.created = created;
 		this.accessed = accessed;
+		this.inactive = inactive;
 		this.principal = principal;
 		this.state = state;
 	}
@@ -54,6 +57,14 @@ public class TokenInfo {
 
 	public void setAccessed(long accessed) {
 		this.accessed = accessed;
+	}
+
+	public long getInactive() {
+		return inactive;
+	}
+
+	public void setInactive(long inactive) {
+		this.inactive = inactive;
 	}
 
 	public AuthPrincipalInfo getPrincipal() {
