@@ -251,7 +251,7 @@ usergrid.client = (function() {
   /* */
 
   /* The base for all API calls. HANDLE WITH CAUTION! */
-  function apiRequest2(method, path, data, success, error) {
+  function apiRequest(method, path, data, success, error) {
 
     var ajaxOptions = {
       type: method.toUpperCase(),
@@ -276,135 +276,8 @@ usergrid.client = (function() {
     $.ajax(ajaxOptions);
   }
 
-  /* OLD VERSION of "the base for all API calls" HANDLE WITH CAUTION! to be deprecated. */
-  function apiRequest(method, path, params, data, success, failure) {
-    method = method.toUpperCase();
-
-    var encodedPath = encodePathString(path, true);
-    if (encodedPath) {
-      path = encodedPath.path;
-      if (encodedPath.params) {
-        params = encodedPath.params;
-      }
-      if (encodedPath.payload) {
-        data = encodedPath.payload;
-      }
-    }
-
-    var xhr = new XMLHttpRequest();
-    var url = self.apiUrl + path;
-
-    params = params || {};
-
-    if ((method == "GET") || (method == "DELETE")) {
-      params['_'] = new Date().getTime();
-    }
-
-    var authorizationHeader = null;
-    if (session.accessToken) {
-      authorizationHeader = "Bearer " + session.accessToken;
-    }
-
-    var content_type = "application/json; charset=utf-8";
-    if ((method == 'POST') && !data) {
-      data = encodeParams(params);
-      content_type = "application/x-www-form-urlencoded";
-    } else {
-      url += "?" + encodeParams(params);
-    }
-
-    // console.log(url);
-    xhr.open(method, url, true);
-    xhr.setRequestHeader("Content-Type", content_type);
-    if (authorizationHeader) {
-      xhr.setRequestHeader("Authorization", authorizationHeader);
-      xhr.withCredentials = true;
-    } else if (self.clientId && self.clientSecret) {
-      params["client_id"] = self.clientId;
-      params["client_secret"] = self.clientSecret;
-    }
-
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState == 2) {
-        self.activeRequests++;
-        if (self.onActiveRequest) {
-          try {
-            self.onActiveRequest(self.activeRequests);
-          } catch(err) {
-          }
-        }
-      } else if (xhr.readyState == 4) {
-        self.activeRequests--;
-        if (self.onActiveRequest) {
-          try {
-            self.onActiveRequest(self.activeRequests);
-          } catch(err) {
-          }
-        }
-        clearTimeout(timeout);
-        response = null;
-        try {
-          response = JSON.parse(xhr.responseText);
-        } catch(err) {
-        }
-
-        if (!response || (xhr.status != 200)) {
-          var force_logout = false;
-          try {
-            if (response && response.error) {
-              var error = response.error;
-              //var error = response.error_description;
-              setLastError(response);
-              if (error == "auth_expired_session_token") {
-                force_logout = true;
-              } else if (error == "auth_missing_credentials") {
-                force_logout = true;
-              } else if (error == "auth_invalid") {
-                force_logout = true;
-              } else if (error == "unauthorized") {
-                force_logout = true;
-              } else if (error == "expired_token") {
-                force_logout = true;
-              } else if (error == "auth_bad_access_token") {
-                force_logout = true;
-              } else if (error == "web_application") {
-                //TBD::should we do something here?
-              }
-            }
-            response = response || {};
-            response.responseText = xhr.responseText;
-            response.statusText = xhr.statusText;
-          } catch(err) {
-          }
-
-          if (force_logout) {
-            logout();
-            return;
-          }
-
-          if (failure) {
-            failure(response);
-          }
-          return;
-        }
-        try {
-          success(response);
-        } catch (e) {
-          alert('There was an error:' + e);
-        }
-      }
-    };
-
-    var timeout = setTimeout(function() {
-      xhr.abort();
-    },
-    10000);
-
-    xhr.send(data);
-  }
-
   function apiGetRequest(path, data, success, failure) {
-    apiRequest2("GET", path, data, success, failure);
+    apiRequest("GET", path, data, success, failure);
   }
 
   function requestApplications(success, failure) {
@@ -418,7 +291,7 @@ usergrid.client = (function() {
     if (!session.currentOrganization) {
       failure();
     }
-    apiRequest("POST", "/management/organizations/" + session.currentOrganization.uuid + "/applications", null, JSON.stringify(data), success, failure);
+    apiRequest("POST", "/management/organizations/" + session.currentOrganization.uuid + "/applications", JSON.stringify(data), success, failure);
   }
 
   function requestAdmins(success, failure) {
@@ -432,14 +305,14 @@ usergrid.client = (function() {
     if (!session.loggedInUser) {
       failure();
     }
-    apiRequest("POST", "/management/users/" + session.loggedInUser.uuid + "/organizations", null, JSON.stringify(data), success, failure);
+    apiRequest("POST", "/management/users/" + session.loggedInUser.uuid + "/organizations", JSON.stringify(data), success, failure);
   }
 
   function leaveOrganization(organizationUUID, success, failure) {
     if (!session.loggedInUser) {
       failure();
     }
-    apiRequest("DELETE", "/management/users/" + session.loggedInUser.uuid + "/organizations/" + organizationUUID, null, null, success, failure);
+    apiRequest("DELETE", "/management/users/" + session.loggedInUser.uuid + "/organizations/" + organizationUUID, null, success, failure);
   }
 
   function requestOrganizations(success, failure) {
@@ -457,14 +330,14 @@ usergrid.client = (function() {
     if (!session.currentOrganization) {
       failure();
     }
-    apiRequest("POST", "/management/organizations/" + session.currentOrganization.uuid + "/credentials", null, null, success, failure);
+    apiRequest("POST", "/management/organizations/" + session.currentOrganization.uuid + "/credentials", null, success, failure);
   }
 
   function createAdmin(data, success, failure) {
     if (!session.currentOrganization) {
       failure();
     }
-    apiRequest("POST", "/management/organizations/" + session.currentOrganization.uuid + "/users", null, JSON.stringify(data), success, failure);
+    apiRequest("POST", "/management/organizations/" + session.currentOrganization.uuid + "/users", JSON.stringify(data), success, failure);
   }
 
   function requestCollections(applicationId, success, failure) {
@@ -479,7 +352,7 @@ usergrid.client = (function() {
         collections: collections
       }
     };
-    apiRequest("PUT", "/" + session.currentOrganization.uuid + "/" + applicationId, null, JSON.stringify(metadata), success, failure);
+    apiRequest("PUT", "/" + session.currentOrganization.uuid + "/" + applicationId, JSON.stringify(metadata), success, failure);
   }
 
   function requestApplicationCredentials(applicationId, success, failure) {
@@ -487,7 +360,7 @@ usergrid.client = (function() {
   }
 
   function regenerateApplicationCredentials(applicationId, success, failure) {
-    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/credentials", null, null, success, failure);
+    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/credentials",  null, success, failure);
   }
 
   function requestApplicationRoles(applicationId, success, failure) {
@@ -503,7 +376,7 @@ usergrid.client = (function() {
   }
 
   function addApplicationRolePermission(applicationId, roleName, permission, success, failure) {
-    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/rolenames/" + roleName, null, JSON.stringify({
+    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/rolenames/" + roleName, JSON.stringify({
       permission : permission
     }), success, failure);
   }
@@ -511,11 +384,11 @@ usergrid.client = (function() {
   function deleteApplicationRolePermission(applicationId, roleName, permission, success, failure) {
     apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/rolenames/" + roleName, {
       permission : permission
-    }, null, success, failure);
+    }, success, failure);
   }
 
   function addApplicationUserPermission(applicationId, userName, permission, success, failure) {
-    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + userName + "/permissions", null, JSON.stringify({
+    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + userName + "/permissions", JSON.stringify({
       permission : permission
     }), success, failure);
   }
@@ -523,7 +396,7 @@ usergrid.client = (function() {
   function deleteApplicationUserPermission(applicationId, userName, permission, success, failure) {
     apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + userName + "/permissions", {
       permission : permission
-    }, null, success, failure);
+    }, success, failure);
   }
 
   function requestApplicationCounterNames(applicationId, success, failure) {
@@ -551,7 +424,7 @@ usergrid.client = (function() {
     if (!session.loggedInUser) {
       failure();
     }
-    apiRequest("PUT", "/management/users/" + session.loggedInUser.uuid, null, JSON.stringify(properties), success, failure);
+    apiRequest("PUT", "/management/users/" + session.loggedInUser.uuid, JSON.stringify(properties), success, failure);
   }
 
   function requestAdminFeed(success, failure) {
@@ -568,22 +441,22 @@ usergrid.client = (function() {
       username: email,
       password: password
     };
-    apiRequest2("GET", "/management/token", formdata,
-                function(data, textStatus, xhr) {
-                  if (!data) {
-                    errorCallback();
-                    return
-                  }
-                  session.loggedInUser = data.user;
-                  session.accessToken = data.access_token;
-		  setCurrentOrganization();
-                  session.saveIt();
-                  if (successCallback) {
-                    successCallback(data, textStatus, xhr);
-                  }
-                },
-                errorCallback
-               );
+    apiRequest("GET", "/management/token", formdata,
+               function(data, textStatus, xhr) {
+                 if (!data) {
+                   errorCallback();
+                   return
+                 }
+                 session.loggedInUser = data.user;
+                 session.accessToken = data.access_token;
+		 setCurrentOrganization();
+                 session.saveIt();
+                 if (successCallback) {
+                   successCallback(data, textStatus, xhr);
+                 }
+               },
+               errorCallback
+              );
   }
 
   function loginAppUser(applicationId, email, password, success, failure) {
@@ -593,7 +466,7 @@ usergrid.client = (function() {
       password: '',
       invite: true
     };
-    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/token", formdata, null,
+    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/token", formdata,
                function(response) {
                  if (response && response.access_token && response.user) {
                    session.loggedInUser = response.user;
@@ -617,7 +490,7 @@ usergrid.client = (function() {
   }
 
   function renewToken(successCallback, errorCallback) {
-    apiRequest2("GET", "/management/users/" + session.loggedInUser.email, null,
+    apiRequest("GET", "/management/users/" + session.loggedInUser.email, null,
                 function(data, status, xhr) {
                   if (!data || !data.data) {
                     errorCallback();
@@ -685,7 +558,7 @@ usergrid.client = (function() {
       email: email,
       password: password
     };
-    apiRequest("POST", "/management/organizations", formdata, null,
+    apiRequest("POST", "/management/organizations", formdata,
                function(response) {
                  if (response && response.data) {
                    if (success) {
@@ -772,7 +645,7 @@ usergrid.client = (function() {
   }
 
   function deleteEntity(applicationId, entityId, path, success, failure) {
-    apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/" + path + "/" + entityId, null, null, success, failure);
+    apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/" + path + "/" + entityId,  null, success, failure);
   }
 
   function queryUserMemberships(a) {
@@ -811,11 +684,11 @@ usergrid.client = (function() {
   }
 
   function createUser(applicationId, data, success, failure) {
-    apiRequest2("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users?", JSON.stringify(data), success, failure);
+    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users?", JSON.stringify(data), success, failure);
   }
 
   function deleteUser(applicationId, userId, success, failure) {
-    apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + userId, null, null, success, failure);
+    apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + userId, null, success, failure);
   }
 
   function requestCollectionIndexes(applicationId, path, success, failure) {
@@ -859,30 +732,30 @@ usergrid.client = (function() {
   }
 
   function saveUserProfile(applicationId, userid, payload, success,failure){
-    apiRequest("PUT", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + userid, null, JSON.stringify(payload) , success, failure);
+    apiRequest("PUT", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + userid, JSON.stringify(payload) , success, failure);
   }
 
   function saveGroupProfile(applicationId, groupid, payload, success,failure){
-    apiRequest("PUT", "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupid, null, JSON.stringify(payload) , success, failure);
+    apiRequest("PUT", "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupid, JSON.stringify(payload) , success, failure);
   }
 
   function createGroup(applicationId, data, success, failure) {
-    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups", null, JSON.stringify(data), success, failure);
+    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups", JSON.stringify(data), success, failure);
   }
 
   function deleteGroup(applicationId, groupId, success, failure) {
-    apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId, null, null, success, failure);
+    apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId, null, success, failure);
   }
 
   function addUserToGroup(applicationId, groupId, username, success, failure) {
-    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, "{ }", success, failure);
+    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId + "/users/" + username, "{ }", success, failure);
   }
 
   function removeUserFromGroup(applicationId, groupId, username, success, failure) {
     if (!session.loggedInUser) {
       failure();
     }
-    apiRequest("DELETE",  "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, null, success, failure);
+    apiRequest("DELETE",  "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId + "/users/" + username, null, success, failure);
   }
 
   function entitySearch(applicationId, searchType, searchString, success, failure) {
@@ -890,18 +763,18 @@ usergrid.client = (function() {
   }
 
   function createRole(applicationId, data, success, failure) {
-    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/rolenames", null, JSON.stringify(data), success, failure);
+    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/rolenames", JSON.stringify(data), success, failure);
   }
 
   function addUserToRole(applicationId, roleId, username, success, failure) {
-    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/roles/" + roleId + "/users/" + username, null, "{ }", success, failure);
+    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/roles/" + roleId + "/users/" + username, "{ }", success, failure);
   }
 
   function removeUserFromRole(applicationId, username, roleId, success, failure) {
     if (!session.loggedInUser) {
       failure();
     }
-    apiRequest("DELETE",  "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + username + "/roles/" + roleId, null, null, success, failure);
+    apiRequest("DELETE",  "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + username + "/roles/" + roleId, null, success, failure);
   }
 
   function requestRoles(applicationId, success, failure) {
@@ -977,7 +850,7 @@ usergrid.client = (function() {
       prev_cursor = null;
       next_cursor = null;
       start_cursor = null;
-      apiRequest2(method, path, data,
+      apiRequest(method, path, data,
                  function(data) {
                    if (data.entities && data.entities.length > 0) {
                      start_cursor = data.entities[0].uuid;
@@ -1088,7 +961,7 @@ usergrid.client = (function() {
     onActiveRequest: null,
     encodePathString: encodePathString,
     getLastErrorMessage: getLastErrorMessage,
-    apiRequest2: apiRequest2,
+    // apiRequest2: apiRequest2,
     apiRequest: apiRequest,
     apiGetRequest: apiGetRequest,
     requestApplications: requestApplications,
