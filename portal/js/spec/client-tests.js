@@ -84,3 +84,20 @@ asyncTest("getting users with queryUsers", function() {
     defaultError
   );
 });
+
+d = new Date;
+d = MD5(d.toString()).substring(0,7);
+asyncTest("creating user", function() {
+  expect(1);
+  usergrid.client.createUser(
+    usergrid.session.currentApplicationId,
+    {
+      email: d + "@oarsy8.xom",
+      name: d,
+      password: "osautl4b",
+      username: d
+    },
+    defaultSuccess,
+    defaultError
+  )
+});

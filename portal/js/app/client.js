@@ -263,10 +263,6 @@ usergrid.client = (function() {
       dataType: "json"
     }
 
-    if (method.toUpperCase() == "POST") {
-      ajaxOptions.contentType = "application/x-www-form-urlencoded";
-    }
-
     /* This hack is necesary for IE9. IE is too strict when it comes to cross-domain. */
     if (onIE) {
       ajaxOptions.dataType = "jsonp";
@@ -572,7 +568,7 @@ usergrid.client = (function() {
       username: email,
       password: password
     };
-    apiRequest2("POST", "/management/token", formdata,
+    apiRequest2("GET", "/management/token", formdata,
                 function(data, textStatus, xhr) {
                   if (!data) {
                     errorCallback();
@@ -815,7 +811,7 @@ usergrid.client = (function() {
   }
 
   function createUser(applicationId, data, success, failure) {
-    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users", null, JSON.stringify(data), success, failure);
+    apiRequest2("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users?", JSON.stringify(data), success, failure);
   }
 
   function deleteUser(applicationId, userId, success, failure) {
