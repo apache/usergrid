@@ -4,7 +4,7 @@ function usergrid_console_app(Pages) {
   usergrid.console = usergrid.console || {};
   session = usergrid.session || {};
   client = usergrid.client || {};
-  
+
   var OFFLINE = false;
   var OFFLINE_PAGE = "#query-page";
 
@@ -12,8 +12,6 @@ function usergrid_console_app(Pages) {
 
   var emailRegex = new RegExp("^(([0-9a-zA-Z]+[_\+.-]?)+@[0-9a-zA-Z]+[0-9,a-z,A-Z,.,-]*(.){1}[a-zA-Z]{2,4})+$");
   var emailAllowedCharsMessage = 'eg. example@apigee.com';
-
-  // var passwordRegex = new RegExp("^([0-9a-zA-Z@#\$%^&?\!\<\>\;\:\.\|\,\'\"\~\*\-\_\=\+\[\]\(\)\{\}\\\/])+$");
 
   var passwordRegex = new RegExp("^([0-9a-zA-Z@#$%^&!?<>;:.,'\"~*-=+_\[\\](){}/\\ |])+$");
   var passwordAllowedCharsMessage = 'Password field only allows: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . < > / ? !';
@@ -1206,6 +1204,7 @@ function usergrid_console_app(Pages) {
       $(this).modal('hide');
     }
   }
+
   function submitAddUserToGroup() {
     var form = $(this);
     formClearErrors(form);
@@ -2356,7 +2355,7 @@ function usergrid_console_app(Pages) {
   }
 
   var rolesUsersResults = ''
-    function displayRolesUsers(response) {
+  function displayRolesUsers(response) {
       $('#role-users').html('');
       data = {};
       data.roleId = current_role_id;
@@ -2892,7 +2891,6 @@ function usergrid_console_app(Pages) {
    *
    ******************************************************************/
 
-
   function pageSelectCollections(uuid) {
     requestCollections();
   }
@@ -3140,7 +3138,6 @@ function usergrid_console_app(Pages) {
     login();
     return false;
   });
-
 
   /*******************************************************************
    *
