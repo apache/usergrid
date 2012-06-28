@@ -10,23 +10,32 @@ function usergrid_console_app(Pages) {
 
   var self = this;
 
-  var emailRegex = new RegExp("^([ 0-9 a-z A-Z ]+([ \_ \. \- \+ ]?[ 0-9 a-z A-Z ]+)*@[ 0-9 a-z A-Z ] + [ 0-9, a-z, A-Z, \., \- ]*(.){1}[ a-z A-Z ]{2,4})+$");
+  var emailRegex = new RegExp("^(([0-9a-zA-Z]+[_\+.-]?)+@[0-9a-zA-Z]+[0-9,a-z,A-Z,.,-]*(.){1}[a-zA-Z]{2,4})+$");
   var emailAllowedCharsMessage = 'eg. example@apigee.com';
-  var passwordRegex = new RegExp("^([ 0-9 a-z A-Z @ # $ % ^ & ? ! < > ; : . | , ' \" ~ * - _ = + \[ \] \( \) \{ \} \\ / ])+$");
+
+  // var passwordRegex = new RegExp("^([0-9a-zA-Z@#\$%^&?\!\<\>\;\:\.\|\,\'\"\~\*\-\_\=\+\[\]\(\)\{\}\\\/])+$");
+
+  var passwordRegex = new RegExp("^([0-9a-zA-Z@#$%^&!?<>;:.,'\"~*-=+_\[\\](){}/\\ |])+$");
   var passwordAllowedCharsMessage = 'Password field only allows: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . < > / ? !';
-  var usernameRegex = new RegExp("^([ 0-9 a-z A-Z \. \- ])+$");
+
+  var usernameRegex = new RegExp("^([0-9a-zA-Z\.\-])+$");
   var usernameAllowedCharsMessage = 'Username field only allows : A-Z, a-z, 0-9, dot, and dash';
-  var organizatioNameRegex = new RegExp ("^([ 0-9 a-z A-Z \. \- ])+$");
+
+  var organizatioNameRegex = new RegExp ("^([0-9a-zA-Z.-])+$");
   var organizationNameAllowedCharsMessage = 'Organization name field only allows : A-Z, a-z, 0-9, dot, and dash';
-  var nameRegex = new RegExp("^([ 0-9 a-z A-Z \@ \# \$ \% \^ \& \? \! \; \: \. \| \, \' \" \~ \* \- \_ \= \+ \[ \] \( \) \{ \} \\ \/ ])+$");
+
+  var nameRegex = new RegExp("^([0-9a-zA-Z@#$%^&!?;:.,'\"~*-=+_\[\\](){}/\\ |])+$");
   var nameAllowedCharsMessage = 'Name field only allows: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . / ? !';
-  var titleRegex = new RegExp("^([ 0-9 a-z A-Z \. \- \! \? \/ ])+$");
+
+  var titleRegex = new RegExp("^([0-9a-zA-Z.!-?/])+$");
   var titleAllowedCharsMessage = 'Title field only allows : space, A-Z, a-z, 0-9, dot, dash, /, !, and ?';
-  var alphaNumRegex = new RegExp("^([ 0-9 a-z A-Z ])+$");
+
+  var alphaNumRegex = new RegExp("^([0-9a-zA-Z])+$");
   var alphaNumAllowedCharsMessage = 'Collection name only allows : a-z 0-9';
-  var pathRegex = new RegExp("^([ 0-9 a-z \. \- \/ ])+$");
+
+  var pathRegex = new RegExp("^([0-9a-z.-/])+$");
   var pathAllowedCharsMessage = 'Path only allows : /, a-z, 0-9, dot, and dash';
-  var roleAllowedCharsMessage = 'Path only allows : /, a-z, 0-9, dot, and dash';
+  var roleAllowedCharsMessage = 'Role only allows : /, a-z, 0-9, dot, and dash';
 
   var applications = {};
   var applications_by_id = {};
