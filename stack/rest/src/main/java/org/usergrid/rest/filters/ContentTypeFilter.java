@@ -16,6 +16,7 @@
 package org.usergrid.rest.filters;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -36,7 +37,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
-import org.springframework.mock.web.DelegatingServletInputStream;
+import org.springframework.util.Assert;
 
 /**
  * Filter for setting default accept and Content-Type as application/json when
@@ -46,8 +47,6 @@ import org.springframework.mock.web.DelegatingServletInputStream;
  * 
  */
 public class ContentTypeFilter implements Filter {
-
-    private static final String WILDCARD = "*/*";
 
     /*
      * (non-Javadoc)
@@ -228,6 +227,51 @@ public class ContentTypeFilter implements Filter {
 
         // NOTE, for full override we need to implement the other getHeader
         // methods. We won't use it, so I'm not implementing it here
+    }
+
+    /**
+     * Delegating implementation of {@link javax.servlet.ServletInputStream}.
+     * 
+     * <p>
+     * Used by {@link MockHttpServletRequest}; typically not directly used for
+     * testing application controllers.
+     * 
+     * @author Juergen Hoeller
+     * @since 1.0.2
+     * @see MockHttpServletRequest
+     */
+    private static class DelegatingServletInputStream extends
+            ServletInputStream {
+
+        private final InputStream sourceStream;
+
+        /**
+         * Create a DelegatingServletInputStream for the given source stream.
+         * 
+         * @param sourceStream
+         *            the source stream (never <code>null</code>)
+         */
+        public DelegatingServletInputStream(InputStream sourceStream) {
+            Assert.notNull(sourceStream, "Source InputStream must not be null");
+            this.sourceStream = sourceStream;
+        }
+
+        /**
+         * Return the underlying source stream (never <code>null</code>).
+         */
+        public final InputStream getSourceStream() {
+            return this.sourceStream;
+        }
+
+        public int read() throws IOException {
+            return this.sourceStream.read();
+        }
+
+        public void close() throws IOException {
+            super.close();
+            this.sourceStream.close();
+        }
+
     }
 
 }
