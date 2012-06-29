@@ -16,6 +16,7 @@
 package org.usergrid.rest.filters;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -36,7 +37,8 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
-import org.springframework.mock.web.DelegatingServletInputStream;
+import org.jboss.netty.handler.codec.http.HttpMethod;
+import org.springframework.util.Assert;
 
 /**
  * Filter for setting default accept and Content-Type as application/json when
@@ -46,8 +48,6 @@ import org.springframework.mock.web.DelegatingServletInputStream;
  * 
  */
 public class ContentTypeFilter implements Filter {
-
-    private static final String WILDCARD = "*/*";
 
     /*
      * (non-Javadoc)
@@ -77,20 +77,6 @@ public class ContentTypeFilter implements Filter {
 
         HeaderWrapperRequest newRequest = new HeaderWrapperRequest(origRequest);
         newRequest.adapt();
-        //
-        // String accept = origRequest.getHeader(HttpHeaders.ACCEPT);
-        // String contentType = origRequest.getHeader(HttpHeaders.CONTENT_TYPE);
-        //
-        // if (accept == null || accept.contains(WILDCARD)) {
-        // newRequest
-        // .setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
-        // }
-        //
-        // if (contentType == null || contentType.contains(WILDCARD)
-        // || contentType.contains(MediaType.TEXT_PLAIN)) {
-        // newRequest.setHeader(HttpHeaders.CONTENT_TYPE,
-        // MediaType.APPLICATION_JSON);
-        // }
 
         chain.doFilter(newRequest, response);
     }
@@ -107,8 +93,7 @@ public class ContentTypeFilter implements Filter {
     private class HeaderWrapperRequest extends HttpServletRequestWrapper {
         private PushbackInputStream inputStream = null;
         private ServletInputStream servletInputStream = null;
-        // private boolean alwaysJson;
-
+        private HttpServletRequest origRequest = null;
         private Map<String, String> newHeaders = new HashMap<String, String>();
 
         /**
@@ -118,6 +103,7 @@ public class ContentTypeFilter implements Filter {
         public HeaderWrapperRequest(HttpServletRequest request)
                 throws IOException {
             super(request);
+            origRequest = request;
             inputStream = new PushbackInputStream(request.getInputStream());
             servletInputStream = new DelegatingServletInputStream(inputStream);
         }
@@ -129,10 +115,17 @@ public class ContentTypeFilter implements Filter {
         private void adapt() throws IOException {
             int initial = inputStream.read();
 
-            // nothing to read, short circuit
+            String method = origRequest.getMethod();
+
+            // nothing to read, check if it's a put or a post. If so set the
+            // content type to json to create an empty json request
             if (initial == -1) {
-                setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
-                setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
+                if (HttpMethod.POST.equals(method)
+                        || HttpMethod.PUT.equals(method)) {
+                    setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+                    setHeader(HttpHeaders.CONTENT_TYPE,
+                            MediaType.APPLICATION_JSON);
+                }
                 return;
             }
 
@@ -228,6 +221,51 @@ public class ContentTypeFilter implements Filter {
 
         // NOTE, for full override we need to implement the other getHeader
         // methods. We won't use it, so I'm not implementing it here
+    }
+
+    /**
+     * Delegating implementation of {@link javax.servlet.ServletInputStream}.
+     * 
+     * <p>
+     * Used by {@link MockHttpServletRequest}; typically not directly used for
+     * testing application controllers.
+     * 
+     * @author Juergen Hoeller
+     * @since 1.0.2
+     * @see MockHttpServletRequest
+     */
+    private static class DelegatingServletInputStream extends
+            ServletInputStream {
+
+        private final InputStream sourceStream;
+
+        /**
+         * Create a DelegatingServletInputStream for the given source stream.
+         * 
+         * @param sourceStream
+         *            the source stream (never <code>null</code>)
+         */
+        public DelegatingServletInputStream(InputStream sourceStream) {
+            Assert.notNull(sourceStream, "Source InputStream must not be null");
+            this.sourceStream = sourceStream;
+        }
+
+        /**
+         * Return the underlying source stream (never <code>null</code>).
+         */
+        public final InputStream getSourceStream() {
+            return this.sourceStream;
+        }
+
+        public int read() throws IOException {
+            return this.sourceStream.read();
+        }
+
+        public void close() throws IOException {
+            super.close();
+            this.sourceStream.close();
+        }
+
     }
 
 }
