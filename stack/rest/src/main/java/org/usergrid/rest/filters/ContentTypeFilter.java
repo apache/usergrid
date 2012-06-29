@@ -34,10 +34,11 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
-import org.jboss.netty.handler.codec.http.HttpMethod;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.util.Assert;
 
 /**
