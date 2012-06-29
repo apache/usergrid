@@ -1412,13 +1412,15 @@ function usergrid_console_app(Pages) {
     var counter_names = ["application.entities", "application.request.download", "application.request.time", "application.request.upload"];
 
     client.requestApplicationCounters(current_application_id, start_timestamp, end_timestamp, resolution, counter_names, function(response) {
+      console.log(response);
         var usage_counters = response.counters;
 
         if (!usage_counters) {
-          $("#application-entities-timeline").html("");
-          $("#application-cpu-time").html("");
-          $("#application-data-uploaded").html("");
-          $("#application-data-downloaded").html("");
+	  console.log("no usage counters!");
+          $('#application-entities-timeline').html("");
+          $('#application-cpu-time').html("");
+          $('#application-data-uploaded').html("");
+          $('#application-data-downloaded').html("");
           return;
         }
 
@@ -1513,10 +1515,11 @@ function usergrid_console_app(Pages) {
         });
       },
       function() {
-        $("#application-entities-timeline").html("");
-        $("#application-cpu-time").html("");
-        $("#application-data-uploaded").html("");
-        $("#application-data-downloaded").html("");
+	console.log("what?!");
+        $('#application-entities-timeline').html("");
+        $('#application-cpu-time').html("");
+        $('#application-data-uploaded').html("");
+        $('#application-data-downloaded').html("");
       }
     );
   }

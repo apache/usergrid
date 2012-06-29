@@ -238,6 +238,7 @@ usergrid.client = (function() {
     if (resolution) params.resolution = resolution;
     if (counter) params.counter = counter;
     params.pad = true;
+    console.log(params);
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/counters", params, success, failure);
   }
 
@@ -336,11 +337,11 @@ usergrid.client = (function() {
                );
   }
 
-  function useSSO(){
+  function useSSO() {
     return apigeeUser() || self.use_sso=='true' || self.use_sso=='yes'
   }
 
-  function apigeeUser(){
+  function apigeeUser() {
     return window.location.host == APIGEE_TLD
   }
 
@@ -559,11 +560,11 @@ usergrid.client = (function() {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + entityId + "/rolenames", null, success, failure);
   }
 
-  function saveUserProfile(applicationId, userid, payload, success,failure){
+  function saveUserProfile(applicationId, userid, payload, success,failure) {
     apiRequest("PUT", "/" + session.currentOrganization.uuid + "/" + applicationId + "/users/" + userid, JSON.stringify(payload) , success, failure);
   }
 
-  function saveGroupProfile(applicationId, groupid, payload, success,failure){
+  function saveGroupProfile(applicationId, groupid, payload, success,failure) {
     apiRequest("PUT", "/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupid, JSON.stringify(payload) , success, failure);
   }
 

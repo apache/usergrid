@@ -218,3 +218,11 @@ function toggleableSections() {
     $(this).parent().parent().find('.hideable').toggle();
   })
 }
+
+function selectFirstElement(object) {
+  var first = null;
+  for (first in object) {
+    break
+  }
+  return first
+}

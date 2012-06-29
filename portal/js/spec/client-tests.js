@@ -87,6 +87,7 @@ asyncTest("getting users with queryUsers", function() {
 
 d = new Date;
 d = MD5(d.toString()).substring(0,7);
+
 asyncTest("creating user", function() {
   expect(1);
   usergrid.client.createUser(
@@ -101,3 +102,14 @@ asyncTest("creating user", function() {
     defaultError
   )
 });
+
+// asyncTest("deleting a user", function() {
+//   expect(1);
+//   usergrid.client.deleteUser(
+//     usergrid.session.currentApplicationId,
+//     null, /* select one */
+//     defaultSuccess,
+//     defaultError
+//   )
+// });
+
