@@ -33,7 +33,7 @@
 	<!--  filter for setting default accept and Content-Type as application/json when undefined by client -->
 	<filter>
 		<filter-name>contentTypeFilter</filter-name>
-		<filter-class>org.usergrid.rest.filters</filter-class>
+		<filter-class>org.usergrid.rest.filters.ContentTypeFilter</filter-class>
 	</filter>
 	<filter-mapping>
 		<filter-name>contentTypeFilter</filter-name>

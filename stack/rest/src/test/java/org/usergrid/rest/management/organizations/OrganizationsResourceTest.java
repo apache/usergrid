@@ -59,7 +59,7 @@ public class OrganizationsResourceTest extends AbstractRestTest {
 
     Set<String> rolePerms = emf.getEntityManager(applicationInfo.getId()).getRolePermissions("guest");
     assertNotNull(rolePerms);
-    assertTrue(rolePerms.contains("get,post:/**"));
+    assertTrue(rolePerms.contains("get,post,put,delete:/**"));
     logNode(node);
   }
 
