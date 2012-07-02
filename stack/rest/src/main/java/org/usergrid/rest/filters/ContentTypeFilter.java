@@ -15,8 +15,10 @@
  ******************************************************************************/
 package org.usergrid.rest.filters;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PushbackInputStream;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -49,213 +51,242 @@ import org.springframework.util.Assert;
  */
 public class ContentTypeFilter implements Filter {
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
-	 */
-	@Override
-	public void init(FilterConfig filterConfig) throws ServletException {
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
+     */
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest,
-	 * javax.servlet.ServletResponse, javax.servlet.FilterChain)
-	 */
-	@Override
-	public void doFilter(ServletRequest request, ServletResponse response,
-			FilterChain chain) throws IOException, ServletException {
+    /*
+     * (non-Javadoc)
+     * 
+     * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest,
+     * javax.servlet.ServletResponse, javax.servlet.FilterChain)
+     */
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response,
+            FilterChain chain) throws IOException, ServletException {
 
-		if (!(request instanceof HttpServletRequest)) {
-			chain.doFilter(request, response);
-			return;
-		}
+        if (!(request instanceof HttpServletRequest)) {
+            chain.doFilter(request, response);
+            return;
+        }
 
-		HttpServletRequest origRequest = (HttpServletRequest) request;
+        HttpServletRequest origRequest = (HttpServletRequest) request;
 
-		HeaderWrapperRequest newRequest = new HeaderWrapperRequest(origRequest);
-		newRequest.adapt();
+        HeaderWrapperRequest newRequest = new HeaderWrapperRequest(origRequest);
+        newRequest.adapt();
 
-		chain.doFilter(newRequest, response);
-	}
+        chain.doFilter(newRequest, response);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see javax.servlet.Filter#destroy()
-	 */
-	@Override
-	public void destroy() {
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see javax.servlet.Filter#destroy()
+     */
+    @Override
+    public void destroy() {
+    }
 
-	private class HeaderWrapperRequest extends HttpServletRequestWrapper {
-		private PushbackInputStream inputStream = null;
-		private ServletInputStream servletInputStream = null;
-		private HttpServletRequest origRequest = null;
-		private final Map<String, String> newHeaders = new HashMap<String, String>();
+    private class HeaderWrapperRequest extends HttpServletRequestWrapper {
+        private PushbackInputStream inputStream = null;
+        private ServletInputStream servletInputStream = null;
+        private HttpServletRequest origRequest = null;
+        private BufferedReader reader = null;
 
-		/**
-		 * @param request
-		 * @throws IOException
-		 */
-		public HeaderWrapperRequest(HttpServletRequest request)
-				throws IOException {
-			super(request);
-			origRequest = request;
-			inputStream = new PushbackInputStream(request.getInputStream());
-			servletInputStream = new DelegatingServletInputStream(inputStream);
-		}
+        private Map<String, String> newHeaders = new HashMap<String, String>();
 
-		/**
-		 * @throws IOException
-		 * 
-		 */
-		private void adapt() throws IOException {
-			int initial = inputStream.read();
+        /**
+         * @param request
+         * @throws IOException
+         */
+        public HeaderWrapperRequest(HttpServletRequest request)
+                throws IOException {
+            super(request);
+            origRequest = request;
+            inputStream = new PushbackInputStream(request.getInputStream());
+            servletInputStream = new DelegatingServletInputStream(inputStream);
+        }
 
-			String method = origRequest.getMethod();
+        /**
+         * @throws IOException
+         * 
+         */
+        private void adapt() throws IOException {
+            int initial = inputStream.read();
 
-			// nothing to read, check if it's a put or a post. If so set the
-			// content type to json to create an empty json request
-			if (initial == -1) {
-				if (HttpMethod.POST.equals(method)
-						|| HttpMethod.PUT.equals(method)) {
-					setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
-					setHeader(HttpHeaders.CONTENT_TYPE,
-							MediaType.APPLICATION_JSON);
-				}
-				return;
-			}
+            String method = origRequest.getMethod();
 
-			char firstChar = (char) initial;
+            // nothing to read, check if it's a put or a post. If so set the
+            // content type to json to create an empty json request
+            if (initial == -1) {
+                if (HttpMethod.POST.equals(method)
+                        || HttpMethod.PUT.equals(method)) {
+                    setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+                    setHeader(HttpHeaders.CONTENT_TYPE,
+                            MediaType.APPLICATION_JSON);
+                }
+                return;
+            }
 
-			// its json, make it so
-			if (firstChar == '{' || firstChar == '[') {
-				setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
-				setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
-			}
+            char firstChar = (char) initial;
 
-			inputStream.unread(initial);
-		}
+            // its json, make it so
+            if (firstChar == '{' || firstChar == '[') {
+                setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+                setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
+            }
 
-		/**
-		 * @throws IOException
-		 * 
-		 */
-		public void setHeader(String name, String value) {
-			newHeaders.put(name, value);
-		}
+            inputStream.unread(initial);
+        }
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * javax.servlet.http.HttpServletRequestWrapper#getHeader(java.lang.
-		 * String)
-		 */
-		@Override
-		public String getHeader(String name) {
-			String header = newHeaders.get(name);
+        /**
+         * @throws IOException
+         * 
+         */
+        public void setHeader(String name, String value) {
+            newHeaders.put(name, value);
+        }
 
-			if (header != null) {
-				return header;
-			}
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * javax.servlet.http.HttpServletRequestWrapper#getHeader(java.lang.
+         * String)
+         */
+        @Override
+        public String getHeader(String name) {
+            String header = newHeaders.get(name);
 
-			return super.getHeader(name);
-		}
+            if (header != null) {
+                return header;
+            }
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * javax.servlet.http.HttpServletRequestWrapper#getHeaders(java.lang
-		 * .String)
-		 */
-		@Override
-		public Enumeration getHeaders(String name) {
-			Set<String> headers = new LinkedHashSet<String>();
+            return super.getHeader(name);
+        }
 
-			String overridden = newHeaders.get(name);
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * javax.servlet.http.HttpServletRequestWrapper#getHeaders(java.lang
+         * .String)
+         */
+        @Override
+        public Enumeration getHeaders(String name) {
+            Set<String> headers = new LinkedHashSet<String>();
 
-			if (overridden != null) {
-				headers.add(overridden);
-			} else {
-				for (Enumeration e = super.getHeaders(name); e
-						.hasMoreElements();) {
-					headers.add(e.nextElement().toString());
-				}
-			}
+            String overridden = newHeaders.get(name);
 
-			return Collections.enumeration(headers);
-		}
+            if (overridden != null) {
+                headers.add(overridden);
+            } else {
+                for (Enumeration e = super.getHeaders(name); e
+                        .hasMoreElements();) {
+                    headers.add(e.nextElement().toString());
+                }
+            }
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see javax.servlet.http.HttpServletRequestWrapper#getHeaderNames()
-		 */
-		@Override
-		public Enumeration getHeaderNames() {
-			Set<String> headers = new LinkedHashSet<String>();
+            return Collections.enumeration(headers);
+        }
 
-			for (Enumeration e = super.getHeaderNames(); e.hasMoreElements();) {
-				headers.add(e.nextElement().toString());
-			}
+        /*
+         * (non-Javadoc)
+         * 
+         * @see javax.servlet.http.HttpServletRequestWrapper#getHeaderNames()
+         */
+        @Override
+        public Enumeration getHeaderNames() {
+            Set<String> headers = new LinkedHashSet<String>();
 
-			headers.addAll(newHeaders.keySet());
+            for (Enumeration e = super.getHeaderNames(); e.hasMoreElements();) {
+                headers.add(e.nextElement().toString());
+            }
 
-			return Collections.enumeration(headers);
-		}
+            headers.addAll(newHeaders.keySet());
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see javax.servlet.ServletRequestWrapper#getInputStream()
-		 */
-		@Override
-		public ServletInputStream getInputStream() throws IOException {
-			return servletInputStream;
-		}
+            return Collections.enumeration(headers);
+        }
 
-		// NOTE, for full override we need to implement the other getHeader
-		// methods. We won't use it, so I'm not implementing it here
-	}
+        /*
+         * (non-Javadoc)
+         * 
+         * @see javax.servlet.ServletRequestWrapper#getInputStream()
+         */
+        @Override
+        public ServletInputStream getInputStream() throws IOException {
+            return servletInputStream;
+        }
 
-	/**
-	 * Delegating implementation of {@link javax.servlet.ServletInputStream}.
-	 * 
-	 * @author Juergen Hoeller
-	 * @since 1.0.2
-	 */
-	private static class DelegatingServletInputStream extends
-			ServletInputStream {
+        /*
+         * (non-Javadoc)
+         * 
+         * @see javax.servlet.ServletRequestWrapper#getReader()
+         */
+        @Override
+        public BufferedReader getReader() throws IOException {
+            if (reader != null) {
+                return reader;
+            }
 
-		private final InputStream sourceStream;
+            reader = new BufferedReader(new InputStreamReader(
+                    servletInputStream));
 
-		/**
-		 * Create a DelegatingServletInputStream for the given source stream.
-		 * 
-		 * @param sourceStream
-		 *            the source stream (never <code>null</code>)
-		 */
-		public DelegatingServletInputStream(InputStream sourceStream) {
-			Assert.notNull(sourceStream, "Source InputStream must not be null");
-			this.sourceStream = sourceStream;
-		}
+            return reader;
+        }
 
-		@Override
-		public int read() throws IOException {
-			return this.sourceStream.read();
-		}
+        // NOTE, for full override we need to implement the other getHeader
+        // methods. We won't use it, so I'm not implementing it here
+    }
 
-		@Override
-		public void close() throws IOException {
-			super.close();
-			this.sourceStream.close();
-		}
+    /**
+     * Delegating implementation of {@link javax.servlet.ServletInputStream}.
+     * 
+     * <p>
+     * Used by {@link MockHttpServletRequest}; typically not directly used for
+     * testing application controllers.
+     * 
+     * @author Juergen Hoeller
+     * @since 1.0.2
+     * @see MockHttpServletRequest
+     */
+    private static class DelegatingServletInputStream extends
+            ServletInputStream {
 
-	}
+        private final InputStream sourceStream;
+
+        /**
+         * Create a DelegatingServletInputStream for the given source stream.
+         * 
+         * @param sourceStream
+         *            the source stream (never <code>null</code>)
+         */
+        public DelegatingServletInputStream(InputStream sourceStream) {
+            Assert.notNull(sourceStream, "Source InputStream must not be null");
+            this.sourceStream = sourceStream;
+        }
+
+        /**
+         * Return the underlying source stream (never <code>null</code>).
+         */
+        public final InputStream getSourceStream() {
+            return this.sourceStream;
+        }
+
+        public int read() throws IOException {
+            return this.sourceStream.read();
+        }
+
+        public void close() throws IOException {
+            super.close();
+            this.sourceStream.close();
+        }
+
+    }
 
 }
