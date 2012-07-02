@@ -250,7 +250,6 @@ public class ContentTypeFilter implements Filter {
      * 
      * @author Juergen Hoeller, Todd Nine
      * @since 1.0.2
-     * @see MockHttpServletRequest
      */
     private static class DelegatingServletInputStream extends
             ServletInputStream {
