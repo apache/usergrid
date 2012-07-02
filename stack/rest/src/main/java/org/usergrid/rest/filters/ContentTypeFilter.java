@@ -247,11 +247,8 @@ public class ContentTypeFilter implements Filter {
     /**
      * Delegating implementation of {@link javax.servlet.ServletInputStream}.
      * 
-     * <p>
-     * Used by {@link MockHttpServletRequest}; typically not directly used for
-     * testing application controllers.
      * 
-     * @author Juergen Hoeller
+     * @author Juergen Hoeller, Todd Nine
      * @since 1.0.2
      * @see MockHttpServletRequest
      */
