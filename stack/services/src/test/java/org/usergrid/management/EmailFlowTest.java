@@ -42,6 +42,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
+import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.cassandra.CassandraService;
+import org.usergrid.persistence.entities.User;
 
 public class EmailFlowTest {
 
@@ -200,6 +203,25 @@ public class EmailFlowTest {
 		// text/plain and the url isn't the last character in the email
 		return token;
 	}
+
+  @Test
+  public void skipAllEmailConfiguration() throws Exception {
+    properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
+            "false");
+    properties.setProperty(PROPERTIES_ORGANIZATIONS_REQUIRE_CONFIRMATION,
+            "false");
+    properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
+    properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
+            "false");
+    OrganizationOwnerInfo ooi = management.createOwnerAndOrganization("org-skipallemailtest",
+            "user-skipallemailtest","name-skipallemailtest",
+            "nate+skipallemailtest@apigee.com","password");
+    EntityManager em = helper.getEntityManagerFactory().getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
+    User user = em.get(ooi.getOwner().getUuid(), User.class);
+    assertTrue(user.activated());
+    assertFalse(user.disabled());
+    assertTrue(user.confirmed());
+  }
 
 	@Test
 	public void testEmailStrings() {

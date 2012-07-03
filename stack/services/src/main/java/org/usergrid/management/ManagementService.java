@@ -82,6 +82,10 @@ public interface ManagementService {
 			UserInfo user, boolean activated, boolean sendEmail)
 			throws Exception;
 
+  public OrganizationOwnerInfo createOwnerAndOrganization(
+ 			String organizationName, String username, String name,
+ 			String email, String password) throws Exception;
+
 	public OrganizationOwnerInfo createOwnerAndOrganization(
 			String organizationName, String username, String name,
 			String email, String password, boolean activated, boolean disabled,
