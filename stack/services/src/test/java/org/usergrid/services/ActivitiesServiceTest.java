@@ -132,6 +132,20 @@ public class ActivitiesServiceTest extends AbstractServiceTest {
 				"feed",
 				Query.fromQL("select * where verb='post' and content contains 'cookie'"));
 
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("username", "finn");
+		properties.put("email", "finn@ooo.com");
+
+		Entity userD = testRequest(sm, ServiceAction.POST, 1, properties,
+				"users").getEntity();
+		assertNotNull(userD);
+
+		testRequest(sm, ServiceAction.POST, 1, null, "users", userD.getUuid(),
+				"connections", "following", userA.getUuid());
+
+		testRequest(sm, ServiceAction.GET, 4, null, "users", userD.getUuid(),
+				"feed");
+
 	}
 
 }

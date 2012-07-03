@@ -249,22 +249,22 @@ public interface EntityManager {
 	public void setProperty(EntityRef entityRef, String propertyName,
 			Object propertyValue) throws Exception;
 
+	/**
+	 * You should only use this method if you are absolutely sure what you're
+	 * doing. Use setProperty without the override param in most cases. With
+	 * great power comes great responsibility....
+	 * 
+	 * @param entityRef
+	 * @param propertyName
+	 * @param propertyValue
+	 * @param override
+	 *            set to true to force this value to persist. This will ignore
+	 *            all mutable attributes as well as validation. Use with care
+	 * @throws Exception
+	 */
+	void setProperty(EntityRef entityRef, String propertyName,
+			Object propertyValue, boolean override) throws Exception;
 
-    /**
-     * You should only use this method if you are absolutely sure what you're doing.  Use setProperty without the override param in most cases.
-     * With great power comes great responsibility....
-     * 
-     * @param entityRef
-     * @param propertyName
-     * @param propertyValue
-     * @param override set to true to force this value to persist.  This will ignore all mutable attributes as well as validation. Use with care
-     * @throws Exception
-     */
-    void setProperty(EntityRef entityRef, String propertyName,
-            Object propertyValue, boolean override) throws Exception;
-
-    
-	
 	/**
 	 * Updates the properties for the specified entity.
 	 * 
@@ -405,28 +405,28 @@ public interface EntityManager {
 			UUID startResult, int count, Results.Level resultsLevel,
 			boolean reversed) throws Exception;
 
-//	T.N. Unused.  Removing for this release
-//	/**
-//	 * Gets a list of entities in the specified collection belonging to the
-//	 * specified entity.
-//	 * 
-//	 * @param entity
-//	 *            an entity reference
-//	 * @param collectionName
-//	 *            the collection name.
-//	 * @param subkeyProperties
-//	 *            the subkey properties
-//	 * @param startResult
-//	 *            the start result
-//	 * @param count
-//	 *            the count
-//	 * @return a list of entities in the specified collection.
-//	 * @throws Exception
-//	 *             the exception
-//	 */
-//	public Results getCollection(EntityRef entityRef, String collectionName,
-//			Map<String, Object> subkeyProperties, UUID startResult, int count,
-//			Results.Level resultsLevel, boolean reversed) throws Exception;
+	// T.N. Unused. Removing for this release
+	// /**
+	// * Gets a list of entities in the specified collection belonging to the
+	// * specified entity.
+	// *
+	// * @param entity
+	// * an entity reference
+	// * @param collectionName
+	// * the collection name.
+	// * @param subkeyProperties
+	// * the subkey properties
+	// * @param startResult
+	// * the start result
+	// * @param count
+	// * the count
+	// * @return a list of entities in the specified collection.
+	// * @throws Exception
+	// * the exception
+	// */
+	// public Results getCollection(EntityRef entityRef, String collectionName,
+	// Map<String, Object> subkeyProperties, UUID startResult, int count,
+	// Results.Level resultsLevel, boolean reversed) throws Exception;
 
 	public Results getCollection(UUID entityId, String collectionName,
 			Query query, Results.Level resultsLevel) throws Exception;
@@ -475,6 +475,10 @@ public interface EntityManager {
 
 	public Set<String> getCollectionIndexes(EntityRef entity,
 			String collectionName) throws Exception;
+
+	public void copyRelationships(EntityRef srcEntityRef,
+			String srcRelationName, EntityRef dstEntityRef,
+			String dstRelationName) throws Exception;
 
 	/**
 	 * Connect the specified entity to another entity with the specified
@@ -612,39 +616,39 @@ public interface EntityManager {
 	public List<ConnectedEntityRef> getConnections(UUID entityId, Query query)
 			throws Exception;
 
-//	T.N. This isn't used anywhere.  Removing for this release
-//	/**
-//	 * Gets the entities connected to the specified entity that match the
-//	 * requested property values and optionally the connection type and/or
-//	 * entity type.
-//	 * 
-//	 * @param entity
-//	 *            an entity reference
-//	 * @param connectionType
-//	 *            type of connection or null.
-//	 * @param connectedEntityType
-//	 *            type of entity or null.
-//	 * @param propertyName
-//	 *            a property name in the connected entity.
-//	 * @param searchStartValue
-//	 *            starting value in a range to match.
-//	 * @param searchFinishValue
-//	 *            ending value in a range to match or null for exact match of
-//	 *            searchStartValue.
-//	 * @param startResult
-//	 *            the start result
-//	 * @param count
-//	 *            the count
-//	 * @return a list of connected entities.
-//	 * @throws Exception
-//	 *             the exception
-//	 */
-//	public Results searchConnectedEntitiesForProperty(
-//			EntityRef connectingEntity, String connectionType,
-//			String connectedEntityType, String propertyName,
-//			Object searchStartValue, Object searchFinishValue,
-//			UUID startResult, int count, boolean reversed,
-//			Results.Level resultsLevel) throws Exception;
+	// T.N. This isn't used anywhere. Removing for this release
+	// /**
+	// * Gets the entities connected to the specified entity that match the
+	// * requested property values and optionally the connection type and/or
+	// * entity type.
+	// *
+	// * @param entity
+	// * an entity reference
+	// * @param connectionType
+	// * type of connection or null.
+	// * @param connectedEntityType
+	// * type of entity or null.
+	// * @param propertyName
+	// * a property name in the connected entity.
+	// * @param searchStartValue
+	// * starting value in a range to match.
+	// * @param searchFinishValue
+	// * ending value in a range to match or null for exact match of
+	// * searchStartValue.
+	// * @param startResult
+	// * the start result
+	// * @param count
+	// * the count
+	// * @return a list of connected entities.
+	// * @throws Exception
+	// * the exception
+	// */
+	// public Results searchConnectedEntitiesForProperty(
+	// EntityRef connectingEntity, String connectionType,
+	// String connectedEntityType, String propertyName,
+	// Object searchStartValue, Object searchFinishValue,
+	// UUID startResult, int count, boolean reversed,
+	// Results.Level resultsLevel) throws Exception;
 
 	public Results searchConnectedEntities(EntityRef connectingEntity,
 			Query query) throws Exception;
