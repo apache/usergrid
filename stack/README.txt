@@ -25,18 +25,10 @@ Maven (http://maven.apache.org/)
 
 Building
 
-Download and install Maven using the instructions on the Apache Maven website,
-then, from the command line, go to the usergrid directory and type the
+From the command line, go to the usergrid directory and type the
 following:
 
-mvn install
-
-This will cause Maven to download and install all the necessary dependencies.
-This also runs a small set of tests after compilation, however these tests do
-start up an instance of Cassandra. To run the build without all the tests
-being fired, use the following:
-
-mvn install -DskipTests=true
+mvn clean install -DskipTests=true
 
 If you don't want to do a full build, you can download a pre-built version
 of the launcher app from:
