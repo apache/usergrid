@@ -61,6 +61,20 @@ http://localhost:8080/status
 You can also run it as a webapp in Tomcat, by deploying the ROOT.war
 file generated in the usergrid/rest project,
 
+Using the Admin Portal
+
+By default, the Usergrid admin portal (https://github.com/apigee/usergrid-
+portal) points to our production servers at api.usergrid.com. However, by
+specifying an api_url argument in the query string, you can have it point to
+your local instance instead. For example, you could reuse the version of the
+admin portal we host on github and have that point to your local cluster by
+opening the following URL in your browser:
+
+http://apigee.github.com/usergrid-portal/?api_url=http://localhost:8080
+
+The same trick would work if you used a local copy of the portal code served
+from your own machine or servers.
+
 Licenses
 
 Usergrid is licensed under the Apache License, Version 2.
