@@ -38,21 +38,28 @@ being fired, use the following:
 
 mvn install -DskipTests=true
 
+If you don't want to do a full build, you can download a pre-built version
+of the launcher app from:
+
+https://usergrid.ci.cloudbees.com/job/Usergrid%20Nightly/lastSuccessfulBuild/org.usergrid$usergrid-launcher/artifact/org.usergrid/usergrid-launcher/0.0.1-SNAPSHOT/usergrid-launcher-0.0.1-SNAPSHOT.jar
+
 Running
 
 Usergrid-core contains the persistence layer and shared utilities for powering
 the Usergrid service. The services layer is contained in usergrid-services and
 exposes a higher-level API that's used by the usergrid-rest web services tier.
 
-You can run Usergrid as either a webapp in tomcat, by deploying the ROOT.war
-file generated in the usergrid/rest project, or from the command-line from the
-jar in the usergrid/standalone project, or as a double-clickable app with the
-usergrid/launcher project.
+You can run Usergrid from the command-line from the
+jar in the usergrid/standalone project:
 
-If you don't want to do a full build, you can download a pre-built version
-of the launcher app from:
+java -jar standalone/target/usergrid-standalone-0.0.1-SNAPSHOT.jar
 
-https://usergrid.ci.cloudbees.com/job/Usergrid%20Nightly/lastSuccessfulBuild/org.usergrid$usergrid-launcher/artifact/org.usergrid/usergrid-launcher/0.0.1-SNAPSHOT/usergrid-launcher-0.0.1-SNAPSHOT.jar
+After startup, your instance will be available on localhost, port 8080.
+To check it’s running properly, you can try loading our status page:
+http://localhost:8080/status
+
+You can also run it as a webapp in Tomcat, by deploying the ROOT.war
+file generated in the usergrid/rest project,
 
 Licenses
 
