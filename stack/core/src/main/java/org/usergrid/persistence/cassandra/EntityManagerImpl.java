@@ -2474,6 +2474,8 @@ public class EntityManagerImpl implements EntityManager,
         roleName = roleName.toLowerCase();
         removeFromDictionary(getApplicationRef(), DICTIONARY_ROLENAMES,
                 roleName);
+        removeFromDictionary(getApplicationRef(), DICTIONARY_ROLETIMES,
+                roleName);
         delete(roleRef(roleName));
     }
 
