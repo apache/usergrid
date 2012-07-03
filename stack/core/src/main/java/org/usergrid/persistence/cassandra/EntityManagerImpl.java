@@ -2795,7 +2795,7 @@ public class EntityManagerImpl implements EntityManager,
 			String srcRelationName, EntityRef dstEntityRef,
 			String dstRelationName) throws Exception {
 		getRelationManager(srcEntityRef).copyRelationships(srcRelationName,
-				dstEntityRef, srcRelationName);
+				dstEntityRef, dstRelationName);
 	}
 
 	@Override

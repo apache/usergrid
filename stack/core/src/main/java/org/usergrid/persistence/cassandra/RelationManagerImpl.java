@@ -2694,7 +2694,7 @@ public class RelationManagerImpl implements RelationManager,
 				headEntity.getType(), srcRelationName);
 
 		CollectionInfo dstCollection = getDefaultSchema().getCollection(
-				dstEntityRef.getType(), srcRelationName);
+				dstEntityRef.getType(), dstRelationName);
 
 		Results results = null;
 		do {
