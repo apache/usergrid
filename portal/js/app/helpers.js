@@ -186,7 +186,21 @@ function prepareLocalStorage() {
 
 // if all of our vars are in the query string, grab them and save them
 function parseParams() {
+  var query_params = {};
+  if (window.location.search) {
+    // split up the query string and store in an associative array
+    var params = window.location.search.slice(1).split("&");
+    for (var i = 0; i < params.length; i++) {
+      var tmp = params[i].split("=");
+      query_params[tmp[0]] = unescape(tmp[1]);
+    }
+  }
+
   if (query_params.access_token && query_params.admin_email && query_params.uuid) {
+    localStorage.setObject('accessToken', query_params.access_token);
+    var user = {uuid:query_params.uuid, admin_email:query_params.admin_email}
+    var user = {uuid:query_params.uuid, email:query_params.admin_email}
+    localStorage.setObject('usergridUser', user);
 
     //then send the user to the parent
     var new_target = window.location.host + window.location.pathname;

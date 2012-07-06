@@ -34,7 +34,7 @@ usergrid.session = (function() {
     localStorage.removeItem('currentApplicationId');
 
     if (usergrid.client.useSSO()){
-      sendToSSOLogoutPage();
+      usergrid.client.sendToSSOLogoutPage();
     }
   }
 
