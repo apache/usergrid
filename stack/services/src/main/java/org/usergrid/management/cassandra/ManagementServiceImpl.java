@@ -390,6 +390,20 @@ public class ManagementServiceImpl implements ManagementService {
 				parameters("users", user.getUuid(), "feed")).execute();
 	}
 
+  @Override
+ 	public OrganizationOwnerInfo createOwnerAndOrganization(
+ 			String organizationName, String username, String name,
+ 			String email, String password) throws Exception {
+
+    boolean activated = !newAdminUsersNeedSysAdminApproval() && !newOrganizationsNeedSysAdminApproval();
+    boolean disabled = newAdminUsersRequireConfirmation();
+    // if we are active and enabled, skip the send email step
+    boolean sendEmail = !activated && !disabled;
+    return createOwnerAndOrganization(organizationName, username, name, email,
+            password, activated, disabled, sendEmail);
+
+  }
+
 	@Override
 	public OrganizationOwnerInfo createOwnerAndOrganization(
 			String organizationName, String username, String name,
@@ -788,10 +802,9 @@ public class ManagementServiceImpl implements ManagementService {
 		user.setName(name);
 		user.setEmail(email);
 		user.setActivated(activated);
-		user.setConfirmed(false);
-		user.setDisabled(disabled);
+    user.setConfirmed(!newAdminUsersRequireConfirmation()); // only hardcoded param now checked against config
+    user.setDisabled(disabled);
 		user = em.create(user);
-		// TODO now delegate to createAdminFrom(user,sendEmail);
 
 		return createAdminFrom(user, password, sendEmail);
 	}

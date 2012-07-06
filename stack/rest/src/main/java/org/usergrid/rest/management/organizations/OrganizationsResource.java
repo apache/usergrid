@@ -30,7 +30,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import com.sun.jersey.api.spring.Autowire;
+import com.google.common.base.Preconditions;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,15 +114,17 @@ public class OrganizationsResource extends AbstractContextResource {
 			@FormParam("password") String password,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
+    Preconditions.checkArgument(StringUtils.isNotBlank(organizationName),
+            "The organization parameter was missing");
 
-		logger.info("New organization: " + organizationName);
+    logger.info("New organization: " + organizationName);
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("new organization");
 
 		OrganizationOwnerInfo organizationOwner = management
 				.createOwnerAndOrganization(organizationName, username, name,
-						email, password, false, false, true);
+						email, password);
 
 		if (organizationOwner == null) {
 			return null;
