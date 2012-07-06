@@ -342,6 +342,11 @@ public class ServiceContext {
 		String name = null;
 		if (ServiceParameter.firstParameterIsName(parameters)) {
 			name = parameters.get(0).toString();
+			if ("connections".equals(name) && (parameters.size() > 1)
+					&& parameters.get(1).isName()) {
+				parameters = dequeueCopy(parameters);
+				name = parameters.get(0).toString();
+			}
 			next_service = normalizeServicePattern(service.getServiceType()
 					+ "/*/" + name);
 			parameters = dequeueCopy(parameters);

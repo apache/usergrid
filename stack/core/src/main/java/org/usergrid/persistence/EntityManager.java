@@ -477,6 +477,10 @@ public interface EntityManager {
     public Set<String> getCollectionIndexes(EntityRef entity,
             String collectionName) throws Exception;
 
+	public void copyRelationships(EntityRef srcEntityRef,
+			String srcRelationName, EntityRef dstEntityRef,
+			String dstRelationName) throws Exception;
+
     /**
      * Connect the specified entity to another entity with the specified
      * connection type. Connections are directional relationships that can be

@@ -2814,6 +2814,14 @@ public class EntityManagerImpl implements EntityManager,
     }
 
     @Override
+	public void copyRelationships(EntityRef srcEntityRef,
+			String srcRelationName, EntityRef dstEntityRef,
+			String dstRelationName) throws Exception {
+		getRelationManager(srcEntityRef).copyRelationships(srcRelationName,
+				dstEntityRef, dstRelationName);
+	}
+
+	@Override
     public Results searchCollection(EntityRef entityRef, String collectionName,
             Query query) throws Exception {
         return getRelationManager(entityRef).searchCollection(collectionName,
