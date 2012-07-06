@@ -197,7 +197,7 @@ function parseParams() {
   }
 
   if (query_params.access_token && query_params.admin_email && query_params.uuid) {
-    localStorage.setObject('accessToken', query_params.access_token);
+    localStorage.setItem('accessToken', query_params.access_token);
     var user = {uuid:query_params.uuid, admin_email:query_params.admin_email}
     var user = {uuid:query_params.uuid, email:query_params.admin_email}
     localStorage.setObject('usergridUser', user);

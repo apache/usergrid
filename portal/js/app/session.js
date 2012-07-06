@@ -20,11 +20,6 @@ usergrid.session = (function() {
     self.currentApplicationId = localStorage.getItem('currentApplicationId');
     self.loggedInUser = localStorage.getObject('usergridUser');
     self.accessToken = localStorage.getItem('accessToken');
-
-    function removeQuotes(string){
-        return string.replace(/"/g,"");
-    }
-    self.accessToken = removeQuotes(self.accessToken);
   }
 
   function clearIt() {
