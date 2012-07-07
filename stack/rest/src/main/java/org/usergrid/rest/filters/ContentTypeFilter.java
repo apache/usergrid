@@ -98,7 +98,7 @@ public class ContentTypeFilter implements Filter {
         private HttpServletRequest origRequest = null;
         private BufferedReader reader = null;
 
-        private Map<String, String> newHeaders = new HashMap<String, String>();
+        private final Map<String, String> newHeaders = new HashMap<String, String>();
 
         /**
          * @param request
