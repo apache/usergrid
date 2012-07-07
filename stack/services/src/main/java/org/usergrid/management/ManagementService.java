@@ -353,4 +353,7 @@ public interface ManagementService {
 	public User getOrCreateUserForFacebookAccessToken(UUID applicationId,
 			String fb_access_token) throws Exception;
 
+	public User getOrCreateUserForFoursquareAccessToken(UUID applicationId,
+			String fq_access_token) throws Exception;
+
 }
