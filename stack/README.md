@@ -14,9 +14,9 @@ Note: The easiest way to run Usergrid is to download our latest nightly, pre-bui
     
 Then start Usergrid with:
 
-    java -jar usergrid-launcher-0.0.1-SNAPSHOT.jar
+    cd launcher; java -jar target/usergrid-launcher-*.jar
 
-Usergrid is now running at `http://localhost:8080/`.
+It should pop up an admin window. Press play to spin up Usergrid; it’ll run locally on `http://localhost:8080/`.
 
 You can use our admin UI on it by visiting [http://apigee.github.com/usergrid-portal/?api_url=http://localhost:8080](http://apigee.github.com/usergrid-portal/?api_url=http://localhost:8080)
 
@@ -40,7 +40,7 @@ Usergrid-core contains the persistence layer and shared utilities for powering t
 You can run Usergrid from the command-line from the
 jar in the usergrid/standalone project:
 
-    java -jar standalone/target/usergrid-standalone-0.0.1-SNAPSHOT.jar
+    cd launcher; java -jar target/usergrid-launcher-*.jar
 
 After startup, your instance will be available on localhost, port 8080.
 To check it’s running properly, you can try loading our status page:
