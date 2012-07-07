@@ -82,6 +82,10 @@ public interface ManagementService {
 			UserInfo user, boolean activated, boolean sendEmail)
 			throws Exception;
 
+  public OrganizationOwnerInfo createOwnerAndOrganization(
+ 			String organizationName, String username, String name,
+ 			String email, String password) throws Exception;
+
 	public OrganizationOwnerInfo createOwnerAndOrganization(
 			String organizationName, String username, String name,
 			String email, String password, boolean activated, boolean disabled,
@@ -348,5 +352,8 @@ public interface ManagementService {
 
 	public User getOrCreateUserForFacebookAccessToken(UUID applicationId,
 			String fb_access_token) throws Exception;
+
+	public User getOrCreateUserForFoursquareAccessToken(UUID applicationId,
+			String fq_access_token) throws Exception;
 
 }

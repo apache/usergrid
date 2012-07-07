@@ -146,4 +146,80 @@ public class AuthResource extends AbstractContextResource {
 		}
 	}
 
+	@POST
+	@Path("foursquare")
+	@Consumes(APPLICATION_FORM_URLENCODED)
+	public Response authFQPost(@Context UriInfo ui,
+			@FormParam("fq_access_token") String fq_access_token,
+			@QueryParam("callback") @DefaultValue("") String callback)
+			throws Exception {
+
+		logger.info("AuthResource.authFQPost");
+
+		return authFQ(ui, fq_access_token, callback);
+	}
+
+	@GET
+	@Path("foursquare")
+	public Response authFQ(@Context UriInfo ui,
+			@QueryParam("fq_access_token") String fq_access_token,
+			@QueryParam("callback") @DefaultValue("") String callback)
+			throws Exception {
+
+		logger.info("AuthResource.authFQ");
+
+		try {
+			if (StringUtils.isEmpty(fq_access_token)) {
+				logger.error("Missing FQ Access token");
+				OAuthResponse response = OAuthResponse
+						.errorResponse(SC_BAD_REQUEST)
+						.setError(OAuthError.TokenResponse.INVALID_REQUEST)
+						.setErrorDescription("missing access token")
+						.buildJSONMessage();
+				return Response
+						.status(response.getResponseStatus())
+						.type(jsonMediaType(callback))
+						.entity(wrapJSONPResponse(callback, response.getBody()))
+						.build();
+			}
+
+			User user = management.getOrCreateUserForFoursquareAccessToken(
+					services.getEntityManager().getApplicationRef().getUuid(),
+					fq_access_token);
+
+			if (user == null) {
+				logger.error("Unable to find or create user");
+				OAuthResponse response = OAuthResponse
+						.errorResponse(SC_BAD_REQUEST)
+						.setError(OAuthError.TokenResponse.INVALID_REQUEST)
+						.setErrorDescription("invalid user").buildJSONMessage();
+				return Response
+						.status(response.getResponseStatus())
+						.type(jsonMediaType(callback))
+						.entity(wrapJSONPResponse(callback, response.getBody()))
+						.build();
+			}
+
+			String token = management.getAccessTokenForAppUser(
+					services.getApplicationId(), user.getUuid());
+
+			AccessInfo access_info = new AccessInfo()
+					.withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
+					.withAccessToken(token).withProperty("user", user);
+
+			return Response.status(SC_OK).type(jsonMediaType(callback))
+					.entity(wrapWithCallback(access_info, callback)).build();
+		} catch (Exception e) {
+			logger.error("FQ Auth Error", e);
+			OAuthResponse response = OAuthResponse
+					.errorResponse(SC_BAD_REQUEST)
+					.setError(OAuthError.TokenResponse.INVALID_REQUEST)
+					.buildJSONMessage();
+			return Response.status(response.getResponseStatus())
+					.type(jsonMediaType(callback))
+					.entity(wrapJSONPResponse(callback, response.getBody()))
+					.build();
+		}
+	}
+
 }

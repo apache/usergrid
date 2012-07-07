@@ -390,6 +390,20 @@ public class ManagementServiceImpl implements ManagementService {
 				parameters("users", user.getUuid(), "feed")).execute();
 	}
 
+  @Override
+ 	public OrganizationOwnerInfo createOwnerAndOrganization(
+ 			String organizationName, String username, String name,
+ 			String email, String password) throws Exception {
+
+    boolean activated = !newAdminUsersNeedSysAdminApproval() && !newOrganizationsNeedSysAdminApproval();
+    boolean disabled = newAdminUsersRequireConfirmation();
+    // if we are active and enabled, skip the send email step
+    boolean sendEmail = !activated && !disabled;
+    return createOwnerAndOrganization(organizationName, username, name, email,
+            password, activated, disabled, sendEmail);
+
+  }
+
 	@Override
 	public OrganizationOwnerInfo createOwnerAndOrganization(
 			String organizationName, String username, String name,
@@ -788,10 +802,9 @@ public class ManagementServiceImpl implements ManagementService {
 		user.setName(name);
 		user.setEmail(email);
 		user.setActivated(activated);
-		user.setConfirmed(false);
-		user.setDisabled(disabled);
+    user.setConfirmed(!newAdminUsersRequireConfirmation()); // only hardcoded param now checked against config
+    user.setDisabled(disabled);
 		user = em.create(user);
-		// TODO now delegate to createAdminFrom(user,sendEmail);
 
 		return createAdminFrom(user, password, sendEmail);
 	}
@@ -2632,6 +2645,114 @@ public class ManagementServiceImpl implements ManagementService {
 		} else {
 			throw new BadTokenException(
 					"Unable to confirm Facebook access token");
+		}
+
+		return user;
+
+	}
+
+	@Override
+	public User getOrCreateUserForFoursquareAccessToken(UUID applicationId,
+			String fq_access_token) throws Exception {
+
+		ClientConfig clientConfig = new DefaultClientConfig();
+		clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING,
+				Boolean.TRUE);
+		Client client = Client.create(clientConfig);
+		WebResource web_resource = client
+				.resource("https://api.foursquare.com/v2/users/self");
+		@SuppressWarnings("unchecked")
+		Map<String, Object> body = web_resource
+				.queryParam("oauth_token", fq_access_token)
+				.queryParam("v", "20120623")
+				.accept(MediaType.APPLICATION_JSON).get(Map.class);
+
+		Map<String, Object>	fq_user = (Map) ((Map) body.get("response")).get("user");
+
+		String fq_user_id = (String) fq_user.get("id");
+		String fq_user_username = (String) fq_user.get("id");
+		String fq_user_email = (String) ((Map) fq_user.get("contact")).get("email");
+		String fq_user_picture = (String) ((Map) fq_user.get("photo")).get("suffix");
+		String fq_user_name = new String("");
+
+		// Grab the last check-in so we can store that as the user location
+		Map<String, Object> fq_location = (Map) ((Map)
+										 			((Map)
+										 				( (ArrayList)
+										 					( (Map) fq_user.get("checkins")
+															).get("items")
+										 				).get(0)
+										 			).get("venue")
+										 		).get("location");
+
+		Map<String, Double> location = new LinkedHashMap<String, Double>();
+		location.put("latitude",  (Double) fq_location.get("lat"));
+		location.put("longitude", (Double) fq_location.get("lng"));
+
+		System.out.println(JsonUtils.mapToFormattedJsonString(location));
+		
+		// Only the first name is guaranteed to be here
+		try {
+			fq_user_name = (String) fq_user.get("firstName")
+								  + " " + (String) fq_user.get("lastName");
+		} catch (NullPointerException e) {
+			fq_user_name = (String) fq_user.get("firstName");
+		}
+
+		//System.out.println(JsonUtils.mapToFormattedJsonString(fq_user));
+
+		if (applicationId == null) {
+			return null;
+		}
+
+		User user = null;
+
+		if ((fq_user != null) && !anyNull(fq_user_id, fq_user_name)) {
+			EntityManager em = emf.getEntityManager(applicationId);
+			Results r = em.searchCollection(em.getApplicationRef(), "users",
+					Query.findForProperty("foursquare.id", fq_user_id));
+
+			if (r.size() > 1) {
+				logger.error("Multiple users for FQ ID: " + fq_user_id);
+				throw new BadTokenException(
+						"multiple users with same Foursquare ID");
+			}
+
+			if (r.size() < 1) {
+				Map<String, Object> properties = new LinkedHashMap<String, Object>();
+
+				properties.put("foursquare", fq_user);
+				properties.put("username",
+						fq_user_username != null ? fq_user_username : "fq_"
+								+ fq_user_id);
+				properties.put("name", fq_user_name);
+				if (fq_user_email != null) {
+					properties.put("email", fq_user_email);
+				}
+				properties.put("picture", "https://is0.4sqi.net/userpix_thumbs"
+						+ fq_user_picture);
+				properties.put("activated", true);
+				properties.put("location", location);
+
+				user = em.create("user", User.class, properties);
+			} else {
+				user = (User) r.getEntity().toTypedEntity();
+				Map<String, Object> properties = new LinkedHashMap<String, Object>();
+
+				properties.put("foursquare", fq_user);
+				properties.put("picture", "https://is0.4sqi.net/userpix_thumbs"
+						+ fq_user_picture);
+				properties.put("location", location);
+				em.updateProperties(user, properties);
+
+				user.setProperty("foursquare", fq_user);
+				user.setProperty("picture", "https://is0.4sqi.net/userpix_thumbs"
+						+ fq_user_picture);
+				user.setProperty("location", location);
+			}
+		} else {
+			throw new BadTokenException(
+					"Unable to confirm Foursquare access token");
 		}
 
 		return user;
