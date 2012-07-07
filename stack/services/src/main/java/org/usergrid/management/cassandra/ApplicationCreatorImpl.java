@@ -1,5 +1,6 @@
 package org.usergrid.management.cassandra;
 
+import com.google.common.base.Preconditions;
 import org.usergrid.management.ApplicationCreator;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
@@ -38,6 +39,8 @@ public class ApplicationCreatorImpl implements ApplicationCreator {
 
   @Override
   public ApplicationInfo createSampleFor(OrganizationInfo organizationInfo) throws ApplicationCreationException {
+    Preconditions.checkArgument(organizationInfo != null, "OrganizationInfo was null");
+    Preconditions.checkArgument(organizationInfo.getUuid() != null, "OrganizationInfo had no UUID");
     UUID appId = null;
     try {
       appId = managementService.createApplication(organizationInfo.getUuid(), sampleAppName);
