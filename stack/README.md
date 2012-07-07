@@ -57,6 +57,12 @@ your local instance instead. For example, you could reuse the version of the adm
 
 The same trick would work if you used a local copy of the portal code served from your own machine or servers.
 
+## Contributing
+
+We welcome all contributions! If you want to submit code, please submit a pull request to [apigee/usergrid-stack](https://github.com/apigee/usergrid-stack/), using a [topic branch](http://git-scm.com/book/en/Git-Branching-Branching-Workflows).
+
+We’d prefer if your commit messages referenced the issue at hand (if applicable). We don’t have particular guidelines for commit messages but we appreciate branch names that observe the following format: `issue#-singleworddescription` (i.e. `325-twitter`) or just a single word if no issue exists on the topic. Thanks!
+
 ## Licenses
 
 Usergrid is licensed under the Apache License, Version 2.
