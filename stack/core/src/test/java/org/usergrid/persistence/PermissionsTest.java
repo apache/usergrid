@@ -17,7 +17,9 @@ package org.usergrid.persistence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -26,118 +28,169 @@ import java.util.UUID;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.entities.Role;
 
 public class PermissionsTest extends AbstractPersistenceTest {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(PermissionsTest.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(PermissionsTest.class);
 
-	public PermissionsTest() {
-		super();
-	}
+    public PermissionsTest() {
+        super();
+    }
 
-	@Test
-	public void testPermissions() throws Exception {
-		logger.info("PermissionsTest.testPermissions");
+    @Test
+    public void testPermissionTimeout() throws Exception {
+        UUID applicationId = createApplication("permissionsTest",
+                "testPermissionTimeout");
 
-		UUID applicationId = createApplication("testOrganization","testPermissions");
-		assertNotNull(applicationId);
+        assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
-		assertNotNull(em);
+        EntityManager em = emf.getEntityManager(applicationId);
 
-		// em.createRole("admin", null);
-		em.createRole("manager", null);
-		em.createRole("member", null);
+        String name1 = "rolename1";
+        String title1 = "roletitle1";
+        long inactivity1 = 10000;
 
-		Map<String, String> roles = em.getRoles();
-		assertEquals("proper number of roles not set", 5, roles.size());
-		dump("roles", roles);
+        String name2 = "rolename2";
+        String title2 = "roletitle2";
+        long inactivity2 = 20000;
 
-		em.deleteRole("member");
+        em.createRole(name1, title1, inactivity1);
+        em.createRole(name2, title2, inactivity2);
 
-		roles = em.getRoles();
-		assertEquals("proper number of roles not set", 4, roles.size());
-		dump("roles", roles);
+        String fakeRole = "fakerole";
 
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("username", "edanuff");
-		properties.put("email", "ed@anuff.com");
+        Set<String> names = new HashSet<String>();
+        names.add(name1);
+        names.add(name2);
+        names.add(fakeRole);
 
-		Entity user = em.create("user", properties);
-		assertNotNull(user);
+        Map<String, Role> results = em.getRolesWithTitles(names);
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("path", "mmmeow");
+        Role existing = results.get(name1);
 
-		Entity group = em.create("group", properties);
-		assertNotNull(user);
+        assertNotNull(existing);
+        assertEquals(name1, existing.getName());
+        assertEquals(title1, existing.getTitle());
+        assertEquals(inactivity1, existing.getInactivity().longValue());
 
-		em.addToCollection(group, "users", user);
+        existing = results.get(name2);
 
-		em.createGroupRole(group.getUuid(), "admin");
-		em.createGroupRole(group.getUuid(), "author");
+        assertNotNull(existing);
+        assertEquals(name2, existing.getName());
+        assertEquals(title2, existing.getTitle());
+        assertEquals(inactivity2, existing.getInactivity().longValue());
 
-		roles = em.getGroupRoles(group.getUuid());
-		assertEquals("proper number of group roles not set", 2, roles.size());
-		dump("group roles", roles);
+        existing = results.get(fakeRole);
 
-		em.deleteGroupRole(group.getUuid(), "author");
+        assertNull(existing);
 
-		roles = em.getGroupRoles(group.getUuid());
-		assertEquals("proper number of group roles not set", 1, roles.size());
-		dump("group roles", roles);
+    }
 
-		em.addUserToGroupRole(user.getUuid(), group.getUuid(), "admin");
+    @Test
+    public void testPermissions() throws Exception {
+        logger.info("PermissionsTest.testPermissions");
 
-		Results r = em.getUsersInGroupRole(group.getUuid(), "admin",
-				Results.Level.ALL_PROPERTIES);
-		assertEquals("proper number of users in group role not set", 1,
-				r.size());
-		dump("entities", r.getEntities());
+        UUID applicationId = createApplication("testOrganization",
+                "testPermissions");
+        assertNotNull(applicationId);
 
-		em.grantRolePermission("admin", "users:access:*");
-		em.grantRolePermission("admin", "groups:access:*");
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
 
-		Set<String> permissions = em.getRolePermissions("admin");
-		assertEquals("proper number of role permissions not set", 2,
-				permissions.size());
-		dump("permissions", permissions);
+        // em.createRole("admin", null);
+        em.createRole("manager", null, 0);
+        em.createRole("member", null, 100000);
 
-		em.revokeRolePermission("admin", "groups:access:*");
+        Map<String, String> roles = em.getRoles();
+        assertEquals("proper number of roles not set", 5, roles.size());
+        dump("roles", roles);
 
-		permissions = em.getRolePermissions("admin");
-		assertEquals("proper number of role permissions not set", 1,
-				permissions.size());
-		dump("permissions", permissions);
+        em.deleteRole("member");
 
-		em.grantGroupRolePermission(group.getUuid(), "admin", "users:access:*");
-		em.grantGroupRolePermission(group.getUuid(), "admin", "groups:access:*");
+        roles = em.getRoles();
+        assertEquals("proper number of roles not set", 4, roles.size());
+        dump("roles", roles);
 
-		permissions = em.getGroupRolePermissions(group.getUuid(), "admin");
-		assertEquals("proper number of group role permissions not set", 2,
-				permissions.size());
-		dump("group permissions", permissions);
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
 
-		em.revokeGroupRolePermission(group.getUuid(), "admin",
-				"groups:access:*");
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
 
-		permissions = em.getGroupRolePermissions(group.getUuid(), "admin");
-		assertEquals("proper number of group role permissions not set", 1,
-				permissions.size());
-		dump("group permissions", permissions);
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("path", "mmmeow");
 
-		roles = em.getRoles();
-		assertEquals("proper number of roles not set", 4, roles.size());
-		dump("roles", roles);
+        Entity group = em.create("group", properties);
+        assertNotNull(user);
 
-		em.grantUserPermission(user.getUuid(), "users:access:*");
-		em.grantUserPermission(user.getUuid(), "groups:access:*");
+        em.addToCollection(group, "users", user);
 
-		permissions = em.getUserPermissions(user.getUuid());
-		assertEquals("proper number of user permissions not set", 2,
-				permissions.size());
-		dump("user permissions", permissions);
+        em.createGroupRole(group.getUuid(), "admin", 0);
+        em.createGroupRole(group.getUuid(), "author", 100000);
 
-	}
+        roles = em.getGroupRoles(group.getUuid());
+        assertEquals("proper number of group roles not set", 2, roles.size());
+        dump("group roles", roles);
+
+        em.deleteGroupRole(group.getUuid(), "author");
+
+        roles = em.getGroupRoles(group.getUuid());
+        assertEquals("proper number of group roles not set", 1, roles.size());
+        dump("group roles", roles);
+
+        em.addUserToGroupRole(user.getUuid(), group.getUuid(), "admin");
+
+        Results r = em.getUsersInGroupRole(group.getUuid(), "admin",
+                Results.Level.ALL_PROPERTIES);
+        assertEquals("proper number of users in group role not set", 1,
+                r.size());
+        dump("entities", r.getEntities());
+
+        em.grantRolePermission("admin", "users:access:*");
+        em.grantRolePermission("admin", "groups:access:*");
+
+        Set<String> permissions = em.getRolePermissions("admin");
+        assertEquals("proper number of role permissions not set", 2,
+                permissions.size());
+        dump("permissions", permissions);
+
+        em.revokeRolePermission("admin", "groups:access:*");
+
+        permissions = em.getRolePermissions("admin");
+        assertEquals("proper number of role permissions not set", 1,
+                permissions.size());
+        dump("permissions", permissions);
+
+        em.grantGroupRolePermission(group.getUuid(), "admin", "users:access:*");
+        em.grantGroupRolePermission(group.getUuid(), "admin", "groups:access:*");
+
+        permissions = em.getGroupRolePermissions(group.getUuid(), "admin");
+        assertEquals("proper number of group role permissions not set", 2,
+                permissions.size());
+        dump("group permissions", permissions);
+
+        em.revokeGroupRolePermission(group.getUuid(), "admin",
+                "groups:access:*");
+
+        permissions = em.getGroupRolePermissions(group.getUuid(), "admin");
+        assertEquals("proper number of group role permissions not set", 1,
+                permissions.size());
+        dump("group permissions", permissions);
+
+        roles = em.getRoles();
+        assertEquals("proper number of roles not set", 4, roles.size());
+        dump("roles", roles);
+
+        em.grantUserPermission(user.getUuid(), "users:access:*");
+        em.grantUserPermission(user.getUuid(), "groups:access:*");
+
+        permissions = em.getUserPermissions(user.getUuid());
+        assertEquals("proper number of user permissions not set", 2,
+                permissions.size());
+        dump("user permissions", permissions);
+
+    }
 }
