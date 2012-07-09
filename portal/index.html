@@ -176,7 +176,7 @@
           <iframe class="container"></iframe>
         </div>
         <div id="console-page" class="">
-          <div >
+          <div>
             <div id="sidebar-menu">
               <ul id="application-panel-buttons" class="nav nav-list">
                 <li id="applications-menu" class="dropdown">
@@ -198,19 +198,6 @@
                 <li><a href="http://apigee.com/docs/usergrid" target="_blank"><i class="icon-question-sign"></i> Help</a></li>
               </ul>
             </div>
-
-            <form id="alertModal" class="modal hide fade">
-              <div class="modal-header">
-                <a class="close" data-dismiss="modal">&times</a>
-                <h4></h4>
-              </div>
-              <div class="modal-body">
-                <p></p>
-              </div>
-              <div class="modal-footer">
-                <input type="reset" class="btn btn-usergrid" value="OK" data-dismiss="modal"/>
-              </div>
-            </form>
             <div id="console-panels" class="container-fluid">
               <div id="organization-panel" style="display: none">
                 <div id="console-panel-nav-bar"></div>
@@ -493,7 +480,6 @@
                 </div>
               </div>
               <div id="users-panel" style="display: none">
-
                 <ul id="users-panel-tab-bar" class="nav nav-tabs">
                   <li class="active"><a id="button-users-list" href="#">List</a></li>
                 </ul>
@@ -565,51 +551,51 @@
                     <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
                   </div>
                 </form>
+		<form id="dialog-form-add-user-to-role" class="modal hide fade">
+                  <div class="modal-header">
+                    <a class="close" data-dismiss="modal">&times</a>
+                    <h4>Add this user to a Role</h4>
+                  </div>
+                  <div class="modal-body">
+                    <p class="validateTips">Search for the role you want to add to this user.</p>
+                    <fieldset>
+                      <div class="control-group">
+			<label for="search-role-name-input">Role</label>
+			<div class="controls">
+                          <input type="text" name="search-role-name-input" id="search-role-name-input" class="input-xlarge"/>
+                          <p class="help-block hide"></p>
+			</div>
+                      </div>
+                    </fieldset>
+                  </div>
+                  <div class="modal-footer">
+                    <input type="submit" class="btn btn-usergrid" value="Add"/>
+                    <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                  </div>
+		</form>
+		<form id="dialog-form-add-role-to-user" class="modal hide fade">
+                  <div class="modal-header">
+                    <a class="close" data-dismiss="modal">&times</a>
+                    <h4>Add a user to this Role</h4>
+                  </div>
+                  <div class="modal-body">
+                    <p class="validateTips">Search for the user you want to add to this role.</p>
+                    <fieldset>
+                      <div class="control-group">
+			<label for="search-roles-user-name-input">User</label>
+			<div class="controls">
+                          <input type="text" name="search-roles-user-name-input" id="search-roles-user-name-input" class="input-xlarge"/>
+                          <p class="help-block hide"></p>
+			</div>
+                      </div>
+                    </fieldset>
+                  </div>
+                  <div class="modal-footer">
+                    <input type="submit" class="btn btn-usergrid" value="Add"/>
+                    <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                  </div>
+		</form>
               </div>
-              <form id="dialog-form-add-user-to-role" class="modal hide fade">
-                <div class="modal-header">
-                  <a class="close" data-dismiss="modal">&times</a>
-                  <h4>Add this user to a Role</h4>
-                </div>
-                <div class="modal-body">
-                  <p class="validateTips">Search for the role you want to add to this user.</p>
-                  <fieldset>
-                    <div class="control-group">
-                      <label for="search-role-name-input">Role</label>
-                      <div class="controls">
-                        <input type="text" name="search-role-name-input" id="search-role-name-input" class="input-xlarge"/>
-                        <p class="help-block hide"></p>
-                      </div>
-                    </div>
-                  </fieldset>
-                </div>
-                <div class="modal-footer">
-                  <input type="submit" class="btn btn-usergrid" value="Add"/>
-                  <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
-                </div>
-              </form>
-              <form id="dialog-form-add-role-to-user" class="modal hide fade">
-                <div class="modal-header">
-                  <a class="close" data-dismiss="modal">&times</a>
-                  <h4>Add a user to this Role</h4>
-                </div>
-                <div class="modal-body">
-                  <p class="validateTips">Search for the user you want to add to this role.</p>
-                  <fieldset>
-                    <div class="control-group">
-                      <label for="search-roles-user-name-input">User</label>
-                      <div class="controls">
-                        <input type="text" name="search-roles-user-name-input" id="search-roles-user-name-input" class="input-xlarge"/>
-                        <p class="help-block hide"></p>
-                      </div>
-                    </div>
-                  </fieldset>
-                </div>
-                <div class="modal-footer">
-                  <input type="submit" class="btn btn-usergrid" value="Add"/>
-                  <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
-                </div>
-              </form>
               <div id="user-panel" style="display: none">
                 <ul id="user-panel-tab-bar" class="nav nav-tabs">
                   <li><a id="button-user-list" href="#">List</a></li>
@@ -1082,7 +1068,6 @@
         </div>
         <div class="clear"></div>
       </div>
-
       <form id="confirmAction" class="modal hide fade">
         <div class="modal-header">
           <a class="close" data-dismiss="modal">&times</a>
@@ -1096,7 +1081,6 @@
           <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
         </div>
       </form>
-
       <form id="confirmDialog" class="modal hide fade">
         <div class="modal-header">
           <a class="close" data-dismiss="modal">&times</a>
@@ -1108,6 +1092,18 @@
         <div class="modal-footer">
           <input type="submit" class="btn btn-danger" value="Yes, delete"/>
           <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+        </div>
+      </form>
+      <form id="alertModal" class="modal hide fade">
+        <div class="modal-header">
+          <a class="close" data-dismiss="modal">&times</a>
+          <h4></h4>
+        </div>
+        <div class="modal-body">
+          <p></p>
+        </div>
+        <div class="modal-footer">
+          <input type="reset" class="btn btn-usergrid" value="OK" data-dismiss="modal"/>
         </div>
       </form>
       <div class="clear"></div>

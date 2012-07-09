@@ -759,30 +759,30 @@ function usergrid_console_app(Pages) {
   var organization_keys = { };
 
   function requestOrganizationCredentials() {
-    $('#organization-panel-key').html('<div class="alert alert-info">Loading...</div>');
-    $('#organization-panel-secret').html('<div class="alert alert-info">Loading...</div>');
+    $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
+    $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
     client.requestOrganizationCredentials(function(response) {
       $('#organization-panel-key').html(response.credentials.client_id);
       $('#organization-panel-secret').html(response.credentials.client_secret);
       organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
     },
     function() {
-      $('#organization-panel-key').html('<div class="alert">Unable to load...</div>');
-      $('#organization-panel-secret').html('<div class="alert">Unable to load...</div>');
+      $('#organization-panel-key').html('<div class="alert marginless">Unable to load...</div>');
+      $('#organization-panel-secret').html('<div class="alert marginless">Unable to load...</div>');
     });
   }
 
   function newOrganizationCredentials() {
-    $('#organization-panel-key').html('<div class="alert alert-info">Loading...</div>');
-    $('#organization-panel-secret').html('<div class="alert alert-info">Loading...</div>');
+    $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
+    $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
     client.regenerateOrganizationCredentials(function(response) {
       $('#organization-panel-key').html(response.credentials.client_id);
       $('#organization-panel-secret').html(response.credentials.client_secret);
       organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
       },
       function() {
-        $('#organization-panel-key').html('<div class="alert">Unable to load...</div>');
-        $('#organization-panel-secret').html('<div class="alert">Unable to load...</div>');
+        $('#organization-panel-key').html('<div class="alert marginless">Unable to load...</div>');
+        $('#organization-panel-secret').html('<div class="alert marginless">Unable to load...</div>');
       }
     );
   }
@@ -1249,7 +1249,7 @@ function usergrid_console_app(Pages) {
     var bValid = checkLength2(roleIdField, 1, 80)
       && checkRegexp2(roleIdField, pathRegex, roleAllowedCharsMessage)
 
-      var username = $('#role-form-username').val();
+    var username = $('#role-form-username').val();
     var roleId = $('#search-role-name-input').val();
     // role may have a preceding or trailing slash, remove it
     roleId = roleId.replace('/','');
@@ -2086,6 +2086,7 @@ function usergrid_console_app(Pages) {
       $.tmpl('usergrid.ui.panels.group.graph.html', group_data).appendTo('#group-panel-graph');
 
       if (group_data.roles && group_data.roles.length == 0) {
+	console.log(group_data);
         delete group_data.roles
       }
 
@@ -2615,7 +2616,7 @@ function usergrid_console_app(Pages) {
       counter_names.push(counters_checked[i].value);
     }
 
-    $('#analytics-graph').html('<div class="alert alert-info">Loading...</div>');
+    $('#analytics-graph').html('<div class="alert alert-info marginless">Loading...</div>');
     start_timestamp = $('#start-date').datepicker('getDate').at($('#start-time').timepicker('getTime')).getTime();
     end_timestamp = $('#end-date').datepicker('getDate').at($('#end-time').timepicker('getTime')).getTime();
     resolution = $('select#resolutionSelect').val();
@@ -2623,7 +2624,7 @@ function usergrid_console_app(Pages) {
       application_counters = response.counters;
 
       if (!application_counters) {
-        $('#analytics-graph').html('<div class="alert">No counter data.</div>');
+        $('#analytics-graph').html('<div class="alert marginless">No counter data.</div>');
         return;
       }
 
