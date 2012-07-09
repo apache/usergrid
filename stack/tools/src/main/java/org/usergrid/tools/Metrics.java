@@ -96,7 +96,7 @@ public class Metrics extends ExportingToolBase {
           System.out.println("name: " + acs.getName());
           List<AggregateCounter> ac = acs.getValues();
           for ( AggregateCounter a : ac ) {
-            System.out.println("col: " + a.getTimestamp() + " val: " + a.getValue());
+            System.out.println("col: " + new Date(a.getTimestamp()) + " val: " + a.getValue());
           }
         }
       }
