@@ -556,8 +556,20 @@ usergrid.client = (function() {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/groups", null, success, failure);
   }
 
-  function requestGroupRoles(applicationId, entityId, success, failure) {
-    apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + entityId + "/rolenames", null, success, failure);
+  function requestGroupRoles(applicationId, groupId, success, failure) {
+    apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/groups/" + groupId + "/roles", null, success, failure);
+  }
+
+  function requestRoleGroups(applicationId, roleId, success, failure) {
+    apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/roles/" + roleId + "/groups", null, success, failure);
+  }
+
+  function addGroupToRole(applicationId, roleId, groupId, success, failure) {
+    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/roles/" + roleId + "/groups/" + groupId, "{ }", success, failure);
+  }
+
+  function removeGroupFromRole(applicationId, roleId, groupId, success, failure) {
+    apiRequest("DELETE",  "/" + session.currentOrganization.uuid + "/" + applicationId + "/roles/" + roleId + "/groups/" + groupId, null, success, failure);
   }
 
   function saveUserProfile(applicationId, userid, payload, success,failure) {
@@ -796,7 +808,7 @@ usergrid.client = (function() {
     }
   }
 }
-  
+
   function getLastErrorMessage(defaultMsg) {
   if (self.error && self.error.error_description) {
     return self.error.error_description;
@@ -806,7 +818,7 @@ usergrid.client = (function() {
 
   /* */
 
-  
+
   /* These are the functions we want to be public. Almost all, really. */
 
   var self = {
@@ -818,7 +830,6 @@ usergrid.client = (function() {
     onActiveRequest: null,
     encodePathString: encodePathString,
     getLastErrorMessage: getLastErrorMessage,
-    // apiRequest2: apiRequest2,
     apiRequest: apiRequest,
     apiGetRequest: apiGetRequest,
     requestApplications: requestApplications,
@@ -880,6 +891,9 @@ usergrid.client = (function() {
     queryGroupActivities: queryGroupActivities,
     requestGroups: requestGroups,
     requestGroupRoles: requestGroupRoles,
+    requestRoleGroups: requestRoleGroups,
+    addGroupToRole: addGroupToRole,
+    removeGroupFromRole: removeGroupFromRole,
     saveUserProfile: saveUserProfile,
     saveGroupProfile: saveGroupProfile,
     createGroup: createGroup,
