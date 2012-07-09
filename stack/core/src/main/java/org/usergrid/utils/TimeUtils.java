@@ -15,6 +15,9 @@
  ******************************************************************************/
 package org.usergrid.utils;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
+
 public class TimeUtils {
 
 	public static long millisToMinutes(long millis) {
@@ -48,5 +51,46 @@ public class TimeUtils {
 	public static long weeksToMillis(long weeks) {
 		return weeks * 7 * 24 * 60 * 60 * 100;
 	}
+
+  public static long millisFromDuration(String durationStr) {
+    long total = 0;
+    MultiplierToken mt;
+    long dur;
+    for (String val : Splitter.on(',')
+           .trimResults()
+           .omitEmptyStrings()
+           .split(durationStr)) {
+      dur = Long.parseLong(CharMatcher.DIGIT.retainFrom(val));
+      mt = MultiplierToken.from(val.charAt(val.length() - 1));
+      total += (mt.multiplier * dur);
+    }
+    return total;
+  }
+
+  private enum MultiplierToken {
+    SEC_TOKEN('s',1000L),
+    MIN_TOKEN('m',60000L),
+    HOUR_TOKEN('h',3600000L),
+    DAY_TOKEN('d',86400000L);
+
+    final char token;
+    final long multiplier;
+
+    MultiplierToken(char token, long multiplier) {
+      this.token = token;
+      this.multiplier = multiplier;
+    }
+
+    static MultiplierToken from(char c) {
+      switch(c) {
+        case 's': return SEC_TOKEN;
+        case 'm': return MIN_TOKEN;
+        case 'h': return HOUR_TOKEN;
+        case 'd': return DAY_TOKEN;
+      }
+      throw new IllegalArgumentException("Duration token was not on of [s,m,h,d] but was " + c);
+    }
+  }
+
 
 }
