@@ -34,86 +34,108 @@ import org.usergrid.persistence.annotations.EntityProperty;
 @XmlRootElement
 public class Role extends TypedEntity {
 
-	public static final String ENTITY_TYPE = "role";
+    public static final String ENTITY_TYPE = "role";
 
-	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = false, aliasProperty = true, mutable = false, unique = true)
-	protected String name;
+    @EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = false, aliasProperty = true, mutable = false, unique = true)
+    protected String name;
 
-	@EntityProperty(mutable = true)
-	protected String roleName;
+    @EntityProperty(mutable = true)
+    protected String roleName;
 
-	@EntityProperty(mutable = true)
-	protected String title;
+    @EntityProperty(mutable = true)
+    protected String title;
 
-	@EntityDictionary(keyType = java.lang.String.class)
-	protected Set<String> permissions;
+    @EntityProperty(mutable = true)
+    protected Long inactivity;
 
-	@EntityCollection(type = "user", linkedCollection = "roles")
-	protected List<UUID> users;
+    @EntityDictionary(keyType = java.lang.String.class)
+    protected Set<String> permissions;
 
-	@EntityCollection(type = "group", linkedCollection = "roles")
-	protected List<UUID> groups;
+    @EntityCollection(type = "user", linkedCollection = "roles")
+    protected List<UUID> users;
 
-	public Role() {
-		// id = UUIDUtils.newTimeUUID();
-	}
+    @EntityCollection(type = "group", linkedCollection = "roles")
+    protected List<UUID> groups;
 
-	public Role(UUID id) {
-		this.uuid = id;
-	}
+    public Role() {
+        // id = UUIDUtils.newTimeUUID();
+    }
 
-	@Override
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public String getName() {
-		return name;
-	}
+    public Role(String roleName) {
+        this.roleName = roleName;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public Role(UUID id) {
+        this.uuid = id;
+    }
 
-	public String getRoleName() {
-		return roleName;
-	}
+    @Override
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public String getName() {
+        return name;
+    }
 
-	public void setRoleName(String roleName) {
-		this.roleName = roleName;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public String getTitle() {
-		return title;
-	}
+    public String getRoleName() {
+        return roleName;
+    }
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
 
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public List<UUID> getUsers() {
-		return users;
-	}
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public String getTitle() {
+        return title;
+    }
 
-	public void setUsers(List<UUID> users) {
-		this.users = users;
-	}
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public Set<String> getPermissions() {
-		return permissions;
-	}
+    /**
+     * @return the inactivity
+     */
+    public Long getInactivity() {
+        return inactivity;
+    }
 
-	public void setPermissions(Set<String> permissions) {
-		this.permissions = permissions;
-	}
+    /**
+     * @param inactivity
+     *            the inactivity to set
+     */
+    public void setInactivity(Long inactivity) {
+        this.inactivity = inactivity;
+    }
 
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public List<UUID> getGroups() {
-		return groups;
-	}
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getUsers() {
+        return users;
+    }
 
-	public void setGroups(List<UUID> groups) {
-		this.groups = groups;
-	}
+    public void setUsers(List<UUID> users) {
+        this.users = users;
+    }
+
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public Set<String> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(Set<String> permissions) {
+        this.permissions = permissions;
+    }
+
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<UUID> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(List<UUID> groups) {
+        this.groups = groups;
+    }
 
 }
