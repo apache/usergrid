@@ -51,6 +51,13 @@ import org.springframework.util.Assert;
  */
 public class ContentTypeFilter implements Filter {
 
+    /**
+     * All accepted media types in the application should be present here. If
+     * the request contains the type, it will not set the value
+     */
+    private static final String[] ACCEPTED_TYPES = {
+            MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED };
+
     /*
      * (non-Javadoc)
      * 
@@ -117,6 +124,18 @@ public class ContentTypeFilter implements Filter {
          * 
          */
         private void adapt() throws IOException {
+
+            String contentType = origRequest.getContentType();
+
+            // nothing to do, our type is something we understand
+            if (contentType != null) {
+                for (String accepted : ACCEPTED_TYPES) {
+                    if (contentType.contains(accepted)) {
+                        return;
+                    }
+                }
+            }
+
             int initial = inputStream.read();
 
             String method = origRequest.getMethod();
@@ -177,6 +196,7 @@ public class ContentTypeFilter implements Filter {
          * javax.servlet.http.HttpServletRequestWrapper#getHeaders(java.lang
          * .String)
          */
+        @SuppressWarnings("rawtypes")
         @Override
         public Enumeration getHeaders(String name) {
             Set<String> headers = new LinkedHashSet<String>();
@@ -200,6 +220,7 @@ public class ContentTypeFilter implements Filter {
          * 
          * @see javax.servlet.http.HttpServletRequestWrapper#getHeaderNames()
          */
+        @SuppressWarnings("rawtypes")
         @Override
         public Enumeration getHeaderNames() {
             Set<String> headers = new LinkedHashSet<String>();
