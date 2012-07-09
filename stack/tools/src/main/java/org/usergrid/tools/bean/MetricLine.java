@@ -42,4 +42,19 @@ public class MetricLine {
     return printJson();
   }
 
+  public MetricSort getMetricSort() {
+    return metricSort;
+  }
+
+  public long getCount() {
+    return count;
+  }
+
+  public String getOrgName() {
+    return orgName;
+  }
+
+  public String getAppName() {
+    return appName;
+  }
 }

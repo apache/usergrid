@@ -11,8 +11,7 @@ import org.apache.commons.cli.Options;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.usergrid.management.UserInfo;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.*;
 import org.usergrid.tools.bean.AppScore;
 import org.usergrid.tools.bean.MetricLine;
 import org.usergrid.tools.bean.MetricSort;
@@ -73,15 +72,33 @@ public class Metrics extends ExportingToolBase {
         AppScore appScore = new AppScore(orgScore, uuid, applications.get(uuid));
         EntityManager em = emf.getEntityManager(uuid);
         Map<String,Long> counters = em.getApplicationCounters();
+        System.out.println(counters);
         //application.collection.users
-        appScore.setUserCount(counters.get("application.collection.users"));
+        appScore.setUserCount(counters.get("application.collection.users") != null ? counters.get("application.collection.users") : 0);
         orgScore.addToUserCount(appScore.getUserCount());
 
-        appScore.setRequestCount(counters.get("application.requests"));
+        appScore.setRequestCount(counters.get("application.requests") != null ? counters.get("application.requests") : 0);
         System.out.println(applications.get(uuid) + " has counters: " + em.getApplicationCounters());
 
         appScores.put(orgScore,appScore);
 
+        Query query = new Query();
+        //query.addCounterFilter("application.requests:*:*:*");
+        query.addCounterFilter("application.requests:*:*:*");
+            //query.addCounterFilter("admin.logins:*:*:*");
+            //query.setStartTime(ts);
+            //query.setFinishTime(System.currentTimeMillis());
+        query.setResolution(CounterResolution.MINUTE);
+            //query.setPad(true);
+        Results r = em.getAggregateCounters(query);
+        List<AggregateCounterSet> qc = r.getCounters();
+        for (AggregateCounterSet acs : qc) {
+          System.out.println("name: " + acs.getName());
+          List<AggregateCounter> ac = acs.getValues();
+          for ( AggregateCounter a : ac ) {
+            System.out.println("col: " + a.getTimestamp() + " val: " + a.getValue());
+          }
+        }
       }
       // get users count for application :em.getApplicationCounters(); getEntityCounters(uuid entityId)
       // - keep user count for organization
@@ -90,7 +107,7 @@ public class Metrics extends ExportingToolBase {
 
     }
     //System.out.println("AppScores multimap: " + appScores);
-    JsonGenerator jg = getJsonGenerator(outputDir);
+    JsonGenerator jg = getJsonGenerator("metrics.json");
     // begin output of various sorts
     // TODO convert to ouput printing types
     jsonLineWriter(jg, MetricSort.APP_REQ_COUNT, appScores);
@@ -191,13 +208,15 @@ public class Metrics extends ExportingToolBase {
   private void jsonLineWriter(JsonGenerator jg, MetricSort metricSort, ListMultimap<OrgScore,AppScore> scoreMaps) {
     try {
       jg.writeStartObject();
-      jg.writeString(MetricSort.APP_REQ_COUNT.toString());
+      jg.writeFieldName(metricSort.name());
       jg.writeStartArray();
-      for (MetricLine ml : sortDelegator(scoreMaps, MetricSort.APP_REQ_COUNT)) {
+
+      for (MetricLine ml : sortDelegator(scoreMaps, metricSort)) {
         jg.writeObject(ml);
       }
       jg.writeEndArray();
       jg.writeEndObject();
+      //jg.writeEndObject();
     } catch (IOException e) {
       e.printStackTrace();
     }

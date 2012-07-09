@@ -63,7 +63,7 @@ public class TimeUtils {
    *
    * Durations can be compound statements in any order as long as they are
    * separated by a ',' (comma). Eg. "1d,14h,3s" to get the millisecond
-   * equivalent of one day, fourteen hours and 3 seconds. 
+   * equivalent of one day, fourteen hours and 3 seconds.
    *
    * @param durationStr
    * @return the number of milliseconds representing the duration
