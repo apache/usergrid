@@ -52,6 +52,22 @@ public class TimeUtils {
 		return weeks * 7 * 24 * 60 * 60 * 100;
 	}
 
+  /**
+   * Jira-style duration parser. Supported duration strings are:
+   * <ul>
+   *   <li>'s': seconds</li>
+   *   <li>'m': minutes</li>
+   *   <li>'h': hours</li>
+   *   <li>'d': days</li>
+   * </ul>
+   *
+   * Durations can be compound statements in any order as long as they are
+   * separated by a ',' (comma). Eg. "1d,14h,3s" to get the millisecond
+   * equivalent of one day, fourteen hours and 3 seconds. 
+   *
+   * @param durationStr
+   * @return the number of milliseconds representing the duration
+   */
   public static long millisFromDuration(String durationStr) {
     long total = 0;
     MultiplierToken mt;
