@@ -78,7 +78,7 @@ usergrid.client = (function() {
 
   }
 
-  /* The base for all API calls. HANDLE WITH CAUTION! */
+  // The base for all API calls. HANDLE WITH CAUTION!
   function apiRequest(method, path, data, success, error) {
 
     var ajaxOptions = {
@@ -91,7 +91,7 @@ usergrid.client = (function() {
       dataType: "json"
     }
 
-    /* This hack is necesary for IE9. IE is too strict when it comes to cross-domain. */
+    // This hack is necesary for IE9. IE is too strict when it comes to cross-domain.
     if (onIE) {
       ajaxOptions.dataType = "jsonp";
       if (session.accessToken) { ajaxOptions.data['access_token'] = session.accessToken }
@@ -679,7 +679,7 @@ usergrid.client = (function() {
       prev_cursor = null;
       next_cursor = null;
       start_cursor = null;
-      apiRequest(method, path, data,
+      apiRequest(method, path, params,
                  function(data) {
                    if (data.entities && data.entities.length > 0) {
                      start_cursor = data.entities[0].uuid;
