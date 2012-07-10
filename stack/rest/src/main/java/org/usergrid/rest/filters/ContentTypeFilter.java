@@ -52,10 +52,9 @@ import org.springframework.util.Assert;
 public class ContentTypeFilter implements Filter {
 
     /**
-     * All accepted media types in the application should be present here. If
-     * the request contains the type, it will not set the value
+     * Types that we shouldn't allow to be modified
      */
-    private static final String[] ACCEPTED_TYPES = {
+    private static final String[] IMMUTABLE_TYPES = {
             MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED };
 
     /*
@@ -124,18 +123,6 @@ public class ContentTypeFilter implements Filter {
          * 
          */
         private void adapt() throws IOException {
-
-            String contentType = origRequest.getContentType();
-
-            // nothing to do, our type is something we understand
-            if (contentType != null) {
-                for (String accepted : ACCEPTED_TYPES) {
-                    if (contentType.contains(accepted)) {
-                        return;
-                    }
-                }
-            }
-
             int initial = inputStream.read();
 
             String method = origRequest.getMethod();
@@ -143,12 +130,30 @@ public class ContentTypeFilter implements Filter {
             // nothing to read, check if it's a put or a post. If so set the
             // content type to json to create an empty json request
             if (initial == -1) {
+
+                String contentType = origRequest.getContentType();
+
+                // check if we need to reset content type
+
+                if (contentType != null) {
+                    for (String immutable : IMMUTABLE_TYPES) {
+                        // it's not a type we want to change since we have no
+                        // body to inspect. Ignore
+                        if (contentType.contains(immutable)) {
+                            return;
+                        }
+                    }
+                }
+
+                // if we get here, it's not a type we understand. If it's a POST
+                // or a PUT, set the body to json type
                 if (HttpMethod.POST.equals(method)
                         || HttpMethod.PUT.equals(method)) {
                     setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
                     setHeader(HttpHeaders.CONTENT_TYPE,
                             MediaType.APPLICATION_JSON);
                 }
+
                 return;
             }
 
@@ -291,6 +296,7 @@ public class ContentTypeFilter implements Filter {
         /**
          * Return the underlying source stream (never <code>null</code>).
          */
+        @SuppressWarnings("unused")
         public final InputStream getSourceStream() {
             return this.sourceStream;
         }
