@@ -46,6 +46,7 @@ $(document).ready(function () {
     $('.navbar .dropdown-toggle').dropdown();
     $('#sidebar-menu .dropdown-toggle').dropdown();
     $('#logout-link').click(usergrid.console.logout);
+    $('#hideBanner').click(Pages.hideBanner);
 
     var publicMenu = $('#publicMenu');
     var privateMenu =$('#privateMenu');

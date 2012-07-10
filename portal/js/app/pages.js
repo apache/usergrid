@@ -28,7 +28,17 @@ function UsergridPages() {
       page.showFunction();
     }
 
+    var showBanner = localStorage.getItem('showBanner');
+    if (showBanner != 'false') {
+        $("#banner").show();
+    }
+
     return;
+  }
+
+  self.hideBanner = function(){
+    localStorage.setItem('showBanner', 'false');
+    $("#banner").hide();
   }
 
   self.AddPage = function(page) {
