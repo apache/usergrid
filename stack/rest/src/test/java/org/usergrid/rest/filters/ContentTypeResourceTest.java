@@ -37,7 +37,9 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
 import org.apache.http.util.EntityUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.utils.JsonUtils;
@@ -144,6 +146,44 @@ public class ContentTypeResourceTest extends AbstractRestTest {
         HttpPost post = new HttpPost("/management/orgs");
         post.setEntity(entity);
         // post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + access_token);
+
+        post.setHeader(HttpHeaders.CONTENT_TYPE,
+                MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpResponse rsp = client.execute(host, post);
+
+        printResponse(rsp);
+
+        // should be an error, no content type was set
+        assertEquals(200, rsp.getStatusLine().getStatusCode());
+
+    }
+
+    /**
+     * Tests that application/x-www-url-form-encoded works correctly
+     * 
+     * @throws
+     * @throws Exception
+     */
+    @Test
+    @Ignore("This will only pass in tomcat, and shouldn't pass in grizzly")
+    public void formEncodedUrlContentType() throws Exception {
+        BasicHttpParams params = new BasicHttpParams();
+
+        params.setParameter("organization", "formUrlContentOrg");
+        params.setParameter("username", "formUrlContentOrg");
+        params.setParameter("name", "Test User");
+        params.setParameter("email", UUIDUtils.newTimeUUID() + "@usergrid.org");
+        params.setParameter("password", "foobar");
+        params.setParameter("grant_type", "password");
+
+        DefaultHttpClient client = new DefaultHttpClient();
+
+        HttpHost host = new HttpHost(super.getBaseURI().getHost(), super
+                .getBaseURI().getPort());
+
+        HttpPost post = new HttpPost("/management/orgs");
+        post.setParams(params);
 
         post.setHeader(HttpHeaders.CONTENT_TYPE,
                 MediaType.APPLICATION_FORM_URLENCODED);
