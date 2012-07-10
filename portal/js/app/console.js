@@ -175,7 +175,7 @@ function usergrid_console_app(Pages) {
     if(!current_application_name) {
       current_application_name = "Select an Application";
     }
-    $('#selectedApp').text(current_application_name.split("/")[1]);
+    $('#selectedApp').text(current_application_name);
     $('.thingy span.title span.app_title').text(" - " + current_application_name);
   }
 
