@@ -39,6 +39,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.util.EntityUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.utils.JsonUtils;
@@ -165,6 +166,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
      * @throws Exception
      */
     @Test
+    @Ignore("This will only pass in tomcat, and shouldn't pass in grizzly")
     public void formEncodedUrlContentType() throws Exception {
         BasicHttpParams params = new BasicHttpParams();
 
