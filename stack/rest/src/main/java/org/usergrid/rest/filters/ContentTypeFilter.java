@@ -121,7 +121,7 @@ public class ContentTypeFilter implements Filter {
             // are fixed
             String path = origRequest.getPathInfo();
 
-            if (path != null && path.contains("/management/orgs")) {
+            if (path != null && path.contains("management/orgs")) {
                 return;
             }
 
