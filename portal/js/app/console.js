@@ -116,7 +116,7 @@ function usergrid_console_app(Pages) {
   }
 
   function getAccessTokenURL(){
-    var bearerToken = localStorage.getObject('accessToken');
+    var bearerToken = localStorage.getItem('accessToken');
     var app_name = current_application_name;
     if (typeof current_application_name != 'string') {
       app_name = '';
@@ -143,7 +143,6 @@ function usergrid_console_app(Pages) {
         "style":"template"
       }]
     );
-    var fred = encodeURIComponent(bearerToken);
     var bearerTokenString = encodeURIComponent(bearerTokenJson);
     var url = 'https://apigee.com/console/usergrid?v=2&embedded=true&auth=' + bearerTokenString;
     return url;
@@ -637,7 +636,7 @@ function usergrid_console_app(Pages) {
         var uuid = applications[name];
         data.push({uuid:uuid, name:name.split("/")[1]});
         count++;
-        applications_by_id[uuid] = name;
+        applications_by_id[uuid] = name.split("/")[1];
       }
 
       if (count) {
