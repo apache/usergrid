@@ -22,24 +22,34 @@ public class MetricLine {
     this.appName = appScore != null ? appScore.getAppName() : "N/A";
   }
 
-  public String printJson() {
-    ObjectMapper om = new ObjectMapper();
-    StringWriter sw = new StringWriter();
-    try {
-      om.writeValue(sw, this);
-    } catch (Exception ex) {
-      ex.printStackTrace();
-    }
-    return sw.toString();
-  }
-
-  public String printCsvLine() {
-    // TODO impl
-    return "";
-  }
-
+  @Override
   public String toString() {
-    return printJson();
+    return new StringBuilder()
+            .append(metricSort.name())
+            .append(" for org/app: ")
+            .append(orgName)
+            .append("/")
+            .append(appName)
+            .append(" is: ")
+            .append(count).toString();
+  }
+
+  /**
+   * Compares all field values for equality
+   * @param o
+   * @return
+   */
+  @Override
+  public boolean equals(Object o) {
+    if ( o instanceof MetricLine ) {
+      MetricLine oth = (MetricLine)o;
+      return oth.getMetricSort().equals(metricSort) &&
+              oth.getOrgName().equals(orgName) &&
+              oth.getAppName().equals(appName) &&
+              oth.getCount() == count;
+
+    }
+    return false;
   }
 
   public MetricSort getMetricSort() {
