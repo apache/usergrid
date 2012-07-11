@@ -40,6 +40,8 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 /**
@@ -51,6 +53,9 @@ import org.springframework.util.Assert;
  */
 public class ContentTypeFilter implements Filter {
 
+    private static final Logger logger = LoggerFactory
+            .getLogger(ContentTypeFilter.class);
+
     /*
      * (non-Javadoc)
      * 
@@ -58,6 +63,7 @@ public class ContentTypeFilter implements Filter {
      */
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+        logger.info("Starting content type filter");
     }
 
     /*
@@ -117,6 +123,18 @@ public class ContentTypeFilter implements Filter {
          * 
          */
         private void adapt() throws IOException {
+            // TODO T.N. This is a temp hack, remove this once our deployments
+            // are fixed
+            String path = origRequest.getRequestURI();
+
+            logger.debug("Content path is '{}'", path);
+
+            if (path != null && path.contains("management/orgs")) {
+                logger.debug("Short circuiting for path '{}'", path);
+
+                return;
+            }
+
             int initial = inputStream.read();
 
             String method = origRequest.getMethod();
@@ -126,10 +144,16 @@ public class ContentTypeFilter implements Filter {
             if (initial == -1) {
                 if (HttpMethod.POST.equals(method)
                         || HttpMethod.PUT.equals(method)) {
+
+                    logger.debug(
+                            "Setting content type to application/json for POST or PUT with no content at path '{}'",
+                            path);
+
                     setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
                     setHeader(HttpHeaders.CONTENT_TYPE,
                             MediaType.APPLICATION_JSON);
                 }
+
                 return;
             }
 
@@ -137,6 +161,10 @@ public class ContentTypeFilter implements Filter {
 
             // its json, make it so
             if (firstChar == '{' || firstChar == '[') {
+                logger.debug(
+                        "Setting content type to application/json for POST or PUT with json content at path '{}'",
+                        path);
+
                 setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
                 setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
             }

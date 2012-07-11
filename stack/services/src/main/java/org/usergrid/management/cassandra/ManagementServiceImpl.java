@@ -398,9 +398,9 @@ public class ManagementServiceImpl implements ManagementService {
     boolean activated = !newAdminUsersNeedSysAdminApproval() && !newOrganizationsNeedSysAdminApproval();
     boolean disabled = newAdminUsersRequireConfirmation();
     // if we are active and enabled, skip the send email step
-    boolean sendEmail = !activated && !disabled;
+
     return createOwnerAndOrganization(organizationName, username, name, email,
-            password, activated, disabled, sendEmail);
+            password, activated, disabled, true);
 
   }
 
