@@ -11,18 +11,7 @@
 	<context:component-scan base-package="org.usergrid.persistence" />
 	<context:annotation-config />
 
-	<bean id="properties"
-		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
-		<property name="singleton" value="true" />
-		<property name="ignoreResourceNotFound" value="true" />
-		<property name="locations">
-			<list>
-				<value>classpath:/usergrid-test.properties</value>
-				<value>${usergrid-custom-spring-test-properties}</value>
-			</list>
-		</property>
-	</bean>
-
+	
 	<bean id="propertyPlaceholderConfigurer"
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 		<property name="properties" ref="properties" />
@@ -31,18 +20,6 @@
 		</property>
 	</bean>
 
-	<!-- 
-	<bean id="hazelcastLifecycle"
-		class="org.usergrid.clustering.hazelcast.HazelcastLifecycleMonitor"
-		init-method="init" destroy-method="destroy" />
-
-	<bean id="hazelcast" class="com.hazelcast.core.Hazelcast"
-		factory-method="getDefaultInstance" />
-
-	<bean id="map" factory-bean="hazelcast" factory-method="getMap">
-		<constructor-arg value="mymap" />
-	</bean>
-	-->
 	
 	<bean id="cassandraUseRemote" class="java.lang.Boolean">
 		<constructor-arg value="${cassandra.use_remote}" />
