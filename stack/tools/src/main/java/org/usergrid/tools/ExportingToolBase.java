@@ -149,8 +149,12 @@ public abstract class ExportingToolBase extends ToolBase {
         return outputFileName;
     }
 
-    protected JsonGenerator getJsonGenerator(String outFile) throws IOException {
-        PrintWriter out = new PrintWriter(new File(outputDir,outFile), "UTF-8");
+  protected JsonGenerator getJsonGenerator(String outFile) throws IOException {
+      return getJsonGenerator(new File(outputDir,outFile));
+  }
+
+    protected JsonGenerator getJsonGenerator(File outFile) throws IOException {
+        PrintWriter out = new PrintWriter(outFile, "UTF-8");
         JsonGenerator jg = jsonFactory.createJsonGenerator(out);
         jg.setPrettyPrinter(new DefaultPrettyPrinter());
         jg.setCodec(new ObjectMapper());
