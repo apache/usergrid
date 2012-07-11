@@ -56,9 +56,9 @@ public class MetricQuery {
    * @return A List (potentially empty) of the AggregateCounter values found.
    * @throws Exception
    */
-  public List<AggregateCounter> execute(EntityManager entityManager) throws Exception {
+  public MetricLine execute(EntityManager entityManager) throws Exception {
     Query query = new Query();
-    query.addCounterFilter("application.requests:*:*:*"); // TODO MetricSort.queryFilter
+    query.addCounterFilter(metricSort.queryFilter()); // TODO MetricSort.queryFilter
     if ( startDate > 0)
       query.setStartTime(startDate);
     if ( endDate > 0) {
@@ -80,7 +80,7 @@ public class MetricQuery {
         counters.addAll(qc.get(0).getValues());
       }
     }
-    return counters;
+    return new MetricLine(appId, metricSort, counters);
   }
 
 

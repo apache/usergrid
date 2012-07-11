@@ -1,41 +1,60 @@
 package org.usergrid.tools.bean;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.usergrid.persistence.AggregateCounter;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @author zznate
  */
 public class MetricLine {
   private final MetricSort metricSort;
-  private final long count;
-  private final String orgName;
-  private final String appName;
+  private final UUID appId;
+  private final List<AggregateCounter> aggregateCounters;
+  private long count = 0;
 
-  public MetricLine(MetricSort metricSort, long count, OrgScore orgScore, AppScore appScore) {
+  /**
+   * Package level access - intented to be used by {@link MetricQuery} only.
+   * Sets the value of count by iterating over the {@link AggregateCounter}
+   * collection.
+   *
+   * @param appId
+   * @param metricSort
+   * @param counters
+   */
+  MetricLine(UUID appId, MetricSort metricSort, List<AggregateCounter> counters) {
+    Preconditions.checkArgument(appId != null, "appId was null");
+    Preconditions.checkArgument(counters != null, "Counters list cannot be null");
     this.metricSort = metricSort;
-    this.count = count;
-    this.orgName = orgScore.getName();
-    this.appName = appScore != null ? appScore.getAppName() : "N/A";
+    this.appId = appId;
+    this.aggregateCounters = counters;
+    if ( aggregateCounters.size() > 0 ) {
+      for ( AggregateCounter ac : aggregateCounters) {
+        count += ac.getValue();
+      }
+    }
   }
+
 
   @Override
   public String toString() {
-    return new StringBuilder()
-            .append(metricSort.name())
-            .append(" for org/app: ")
-            .append(orgName)
-            .append("/")
-            .append(appName)
-            .append(" is: ")
-            .append(count).toString();
+    return Objects.toStringHelper(this)
+            .add("appId", appId)
+            .add("metricSort",metricSort)
+            .toString();
   }
 
   /**
-   * Compares all field values for equality
+   * Compares metricSort and appId for equality
    * @param o
    * @return
    */
@@ -44,12 +63,14 @@ public class MetricLine {
     if ( o instanceof MetricLine ) {
       MetricLine oth = (MetricLine)o;
       return oth.getMetricSort().equals(metricSort) &&
-              oth.getOrgName().equals(orgName) &&
-              oth.getAppName().equals(appName) &&
-              oth.getCount() == count;
-
+              oth.getAppId().equals(appId);
     }
     return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(metricSort, appId);
   }
 
   public MetricSort getMetricSort() {
@@ -60,11 +81,16 @@ public class MetricLine {
     return count;
   }
 
-  public String getOrgName() {
-    return orgName;
+  public UUID getAppId() {
+    return appId;
   }
 
-  public String getAppName() {
-    return appName;
+  /**
+   *
+   * @return an Immutable list of our counters
+   */
+  public List<AggregateCounter> getAggregateCounters() {
+    return ImmutableList.copyOf(aggregateCounters);
   }
+
 }
