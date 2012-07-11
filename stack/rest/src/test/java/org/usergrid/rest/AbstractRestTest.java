@@ -82,7 +82,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
     static ClientConfig clientConfig = new DefaultClientConfig();
 
-    protected Client client;
+    protected static Client client;
 
     protected static final AppDescriptor descriptor;
 
