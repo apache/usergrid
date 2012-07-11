@@ -30,7 +30,9 @@ public class Metrics extends ExportingToolBase {
 
   private BiMap<UUID, String> organizations;
   private ListMultimap<UUID, ApplicationInfo> orgApps = ArrayListMultimap.create();
+  private ListMultimap<Long, UUID> totalScore = ArrayListMultimap.create();
   private Map<UUID,MetricLine> collector = new HashMap<UUID, MetricLine>();
+  private int reportThreshold = 50;
 
   @Override
   public void runTool(CommandLine line) throws Exception {
@@ -62,16 +64,29 @@ public class Metrics extends ExportingToolBase {
       organizations.put(orgInfo.getUuid(), orgInfo.getName());
     }
 
-    printReport(MetricSort.APP_REQ_COUNT);
+    Iterable<UUID> workingOrgs = applyThreshold();
+
+    printReport(MetricSort.APP_REQ_COUNT, workingOrgs);
   }
 
-  private void printReport(MetricSort metricSort) throws Exception {
+  private Iterable<UUID> applyThreshold() throws Exception {
+    Set<UUID> orgs = new HashSet<UUID>(reportThreshold);
+    for ( Long l : Ordering.natural().greatestOf(totalScore.keys(), reportThreshold) ) {
+      List<UUID> apps = totalScore.get(l);
+      for ( UUID appId : apps ) {
+        orgs.add(managementService.getOrganizationForApplication(appId).getUuid());
+      }
+    }
+    return orgs;
+  }
+
+  private void printReport(MetricSort metricSort, Iterable<UUID> workingOrgs) throws Exception {
     JsonGenerator jg = getJsonGenerator(createOutputFile("metrics", metricSort.name().toLowerCase()));
     jg.writeStartObject();
     jg.writeStringField("report", metricSort.name());
     jg.writeStringField("date", new Date().toString());
     jg.writeArrayFieldStart("orgs");
-    for ( UUID orgId : organizations.keySet() ) {
+    for ( UUID orgId : workingOrgs ) {
       jg.writeStartObject();
       jg.writeStringField("org_id", orgId.toString());
       jg.writeStringField("org_name",organizations.get(orgId));
@@ -126,6 +141,7 @@ public class Metrics extends ExportingToolBase {
     for ( AggregateCounter a : metricLine.getAggregateCounters() ) {
       logger.info("col: {} val: {}",new Date(a.getTimestamp()), a.getValue());
     }
+    totalScore.put(metricLine.getCount(), metricLine.getAppId());
     collector.put(metricLine.getAppId(), metricLine);
 
   }
