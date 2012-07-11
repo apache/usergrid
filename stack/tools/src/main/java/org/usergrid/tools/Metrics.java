@@ -7,6 +7,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
+import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.*;
@@ -28,7 +29,7 @@ import java.util.*;
 public class Metrics extends ExportingToolBase {
 
   private BiMap<UUID, String> organizations;
-  private ListMultimap<UUID, UUID> orgApps = ArrayListMultimap.create();
+  private ListMultimap<UUID, ApplicationInfo> orgApps = ArrayListMultimap.create();
   private Map<UUID,MetricLine> collector = new HashMap<UUID, MetricLine>();
 
   @Override
@@ -61,6 +62,48 @@ public class Metrics extends ExportingToolBase {
       organizations.put(orgInfo.getUuid(), orgInfo.getName());
     }
 
+    printReport(MetricSort.APP_REQ_COUNT);
+  }
+
+  private void printReport(MetricSort metricSort) throws Exception {
+    JsonGenerator jg = getJsonGenerator(createOutputFile("metrics", metricSort.name().toLowerCase()));
+    jg.writeStartObject();
+    jg.writeStringField("report", metricSort.name());
+    jg.writeStringField("date", new Date().toString());
+    jg.writeArrayFieldStart("orgs");
+    for ( UUID orgId : organizations.keySet() ) {
+      jg.writeStartObject();
+      jg.writeStringField("org_id", orgId.toString());
+      jg.writeStringField("org_name",organizations.get(orgId));
+      writeAppLines(jg, orgId);
+      jg.writeEndObject();
+    }
+    jg.writeEndArray();
+    jg.writeEndObject();
+    jg.close();
+  }
+
+  private void writeAppLines(JsonGenerator jg, UUID orgId) throws Exception {
+    jg.writeArrayFieldStart("apps");
+    for (ApplicationInfo appInfo : orgApps.get(orgId) ) {
+
+      jg.writeStartObject();
+      jg.writeStringField("app_id", appInfo.getId().toString());
+      jg.writeStringField("app_name",appInfo.getName());
+      jg.writeArrayFieldStart("counts");
+      MetricLine line = collector.get(appInfo.getId());
+      if ( line != null ) {
+        jg.writeStartObject();
+        for ( AggregateCounter ag : line.getAggregateCounters() ) {
+          jg.writeStringField(new Date(ag.getTimestamp()).toString(),Long.toString(ag.getValue()));
+        }
+        jg.writeEndObject();
+      }
+      jg.writeEndArray();
+      jg.writeEndObject();
+
+    }
+    jg.writeEndArray();
   }
 
   private void applicationsFor(UUID orgId) throws Exception {
@@ -70,7 +113,7 @@ public class Metrics extends ExportingToolBase {
     for (UUID uuid : applications.keySet() ) {
       logger.info("Checking app: {}", applications.get(uuid));
 
-      orgApps.put(orgId, uuid);
+      orgApps.put(orgId, new ApplicationInfo(uuid, applications.get(uuid)));
 
       collect(MetricQuery.getInstance(uuid,MetricSort.APP_REQ_COUNT)
               .resolution(CounterResolution.DAY)
@@ -84,21 +127,11 @@ public class Metrics extends ExportingToolBase {
       logger.info("col: {} val: {}",new Date(a.getTimestamp()), a.getValue());
     }
     collector.put(metricLine.getAppId(), metricLine);
-    // guava Table?
-    // store by app
-    // store by metricType
-  }
 
-  //TODO
-  // for each organization, for each app
-  // get request counter for specified range & granularity
+  }
   // line format: {reportQuery: application.requests, date: date, startDate : startDate, endDate: endDate, orgs : [
   // {orgId: guid, orgName: name, apps [{appId: guid, appName: name, dates: [{"[human date from ts]" : "[value]"},{...
 
-  // NEED:
-  // - add query and sortType to MetricScore
-  // - this.collect(appId,metricType,aggregateList,resolution)
-  // - output formatter
 
 
 }
