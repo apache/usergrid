@@ -901,8 +901,7 @@ public class RelationManagerImpl implements RelationManager,
         Object collections_key = key(headEntity.getUuid(),
                 Schema.DICTIONARY_COLLECTIONS, collectionName,
                 indexBucketLocator.getBucket(applicationId,
-                        IndexType.COLLECTION, headEntity.getUuid(),
-                        collectionName));
+                        IndexType.COLLECTION, entity.getUuid(), collectionName));
 
         // Remove property indexes
 
@@ -2687,43 +2686,43 @@ public class RelationManagerImpl implements RelationManager,
     }
 
     @Override
-	public void copyRelationships(String srcRelationName,
-			EntityRef dstEntityRef, String dstRelationName) throws Exception {
+    public void copyRelationships(String srcRelationName,
+            EntityRef dstEntityRef, String dstRelationName) throws Exception {
 
-		headEntity = em.validate(headEntity);
-		dstEntityRef = em.validate(dstEntityRef);
+        headEntity = em.validate(headEntity);
+        dstEntityRef = em.validate(dstEntityRef);
 
-		CollectionInfo srcCollection = getDefaultSchema().getCollection(
-				headEntity.getType(), srcRelationName);
+        CollectionInfo srcCollection = getDefaultSchema().getCollection(
+                headEntity.getType(), srcRelationName);
 
-		CollectionInfo dstCollection = getDefaultSchema().getCollection(
-				dstEntityRef.getType(), dstRelationName);
+        CollectionInfo dstCollection = getDefaultSchema().getCollection(
+                dstEntityRef.getType(), dstRelationName);
 
-		Results results = null;
-		do {
-			if (srcCollection != null) {
-				results = em.getCollection(headEntity, srcRelationName, null,
-						5000, Level.REFS, false);
-			} else {
-				results = em.getConnectedEntities(headEntity.getUuid(),
-						srcRelationName, null, Level.REFS);
-			}
+        Results results = null;
+        do {
+            if (srcCollection != null) {
+                results = em.getCollection(headEntity, srcRelationName, null,
+                        5000, Level.REFS, false);
+            } else {
+                results = em.getConnectedEntities(headEntity.getUuid(),
+                        srcRelationName, null, Level.REFS);
+            }
 
-			if ((results != null) && (results.size() > 0)) {
-				List<EntityRef> refs = results.getRefs();
-				for (EntityRef ref : refs) {
-					if (dstCollection != null) {
-						em.addToCollection(dstEntityRef, dstRelationName, ref);
-					} else {
-						em.createConnection(dstEntityRef, dstRelationName, ref);
-					}
-				}
-			}
-		} while ((results != null) && (results.hasMoreResults()));
+            if ((results != null) && (results.size() > 0)) {
+                List<EntityRef> refs = results.getRefs();
+                for (EntityRef ref : refs) {
+                    if (dstCollection != null) {
+                        em.addToCollection(dstEntityRef, dstRelationName, ref);
+                    } else {
+                        em.createConnection(dstEntityRef, dstRelationName, ref);
+                    }
+                }
+            }
+        } while ((results != null) && (results.hasMoreResults()));
 
-	}
+    }
 
-	@Override
+    @Override
     public Results searchCollection(String collectionName, Query query)
             throws Exception {
 
