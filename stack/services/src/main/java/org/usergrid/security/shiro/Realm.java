@@ -57,6 +57,7 @@ import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.SimpleEntityRef;
+import org.usergrid.persistence.entities.Role;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.shiro.credentials.AccessTokenCredentials;
 import org.usergrid.security.shiro.credentials.AdminUserAccessToken;
@@ -413,9 +414,22 @@ public class Realm extends AuthorizingRealm {
 				}
 
 				try {
-					Set<String> roles = em.getUserRoles(user.getUuid());
-					for (String role : roles) {
-						Set<String> permissions = em.getRolePermissions(role);
+					Set<String> rolenames = em.getUserRoles(user.getUuid());
+					Map<String, Role> app_roles = em
+							.getRolesWithTitles(rolenames);
+
+					for (String rolename : rolenames) {
+						if ((app_roles != null) && (token != null)) {
+							Role role = app_roles.get(rolename);
+							if ((role != null)
+									&& (role.getInactivity() > 0)
+									&& (token.getInactive() > role
+											.getInactivity())) {
+								continue;
+							}
+						}
+						Set<String> permissions = em
+								.getRolePermissions(rolename);
 						grant(info, principal, applicationId, permissions);
 					}
 				} catch (Exception e) {
