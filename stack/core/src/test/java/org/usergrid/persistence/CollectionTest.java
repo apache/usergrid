@@ -704,4 +704,5 @@ public class CollectionTest extends AbstractPersistenceTest {
         }
 
     }
+
 }
