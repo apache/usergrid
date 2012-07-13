@@ -45,6 +45,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
+import org.usergrid.management.exceptions.ManagementException;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
@@ -178,7 +179,7 @@ public class UsersResource extends AbstractContextResource {
 		UserInfo user = management.getAdminUserByUuid(UUID
 				.fromString(userIdStr));
 		if (user == null) {
-			return null;
+			throw new ManagementException("No user found for: " + userIdStr);
 		}
 		management.addAdminUserToOrganization(user, organization, true);
 
@@ -189,6 +190,31 @@ public class UsersResource extends AbstractContextResource {
 
 		return new JSONWithPadding(response, callback);
 	}
+
+  @RequireOrganizationAccess
+ 	@PUT
+ 	@Path("{email: [A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}}")
+ 	public JSONWithPadding addUserToOrganizationByEmail(@Context UriInfo ui,
+ 			@PathParam("email") String email,
+ 			@QueryParam("callback") @DefaultValue("callback") String callback)
+ 			throws Exception {
+
+ 		ApiResponse response = new ApiResponse(ui);
+ 		response.setAction("add user to organization");
+
+ 		UserInfo user = management.getAdminUserByEmail(email);
+ 		if (user == null) {
+       throw new ManagementException("Username not found: " + email);
+ 		}
+ 		management.addAdminUserToOrganization(user, organization, true);
+
+ 		Map<String, Object> result = new LinkedHashMap<String, Object>();
+ 		result.put("user", user);
+ 		response.setData(result);
+ 		response.setSuccess();
+
+ 		return new JSONWithPadding(response, callback);
+ 	}
 
 	@RequireOrganizationAccess
 	@PUT
@@ -203,7 +229,7 @@ public class UsersResource extends AbstractContextResource {
 
 		UserInfo user = management.getAdminUserByUsername(username);
 		if (user == null) {
-			return null;
+			throw new ManagementException("Username not found: " + username);
 		}
 		management.addAdminUserToOrganization(user, organization, true);
 
@@ -215,30 +241,6 @@ public class UsersResource extends AbstractContextResource {
 		return new JSONWithPadding(response, callback);
 	}
 
-	@RequireOrganizationAccess
-	@PUT
-	@Path("{email: [A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}}")
-	public JSONWithPadding addUserToOrganizationByEmail(@Context UriInfo ui,
-			@PathParam("email") String email,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
-
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("add user to organization");
-
-		UserInfo user = management.getAdminUserByEmail(email);
-		if (user == null) {
-			return null;
-		}
-		management.addAdminUserToOrganization(user, organization, true);
-
-		Map<String, Object> result = new LinkedHashMap<String, Object>();
-		result.put("user", user);
-		response.setData(result);
-		response.setSuccess();
-
-		return new JSONWithPadding(response, callback);
-	}
 
 	@RequireOrganizationAccess
 	@DELETE

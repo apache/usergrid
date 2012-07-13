@@ -37,8 +37,11 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import com.google.common.collect.BiMap;
+import com.sun.jersey.api.NotFoundException;
 import com.sun.jersey.api.spring.Autowire;
 import com.yammer.metrics.Metrics;
+import com.yammer.metrics.annotation.ExceptionMetered;
+import com.yammer.metrics.annotation.Timed;
 import com.yammer.metrics.core.*;
 import com.yammer.metrics.core.Timer;
 import com.yammer.metrics.reporting.CsvReporter;
@@ -59,6 +62,7 @@ import org.usergrid.rest.applications.ApplicationResource;
 import org.usergrid.rest.exceptions.NoOpException;
 
 import com.sun.jersey.api.json.JSONWithPadding;
+import org.usergrid.rest.exceptions.OrganizationApplicationNotFoundException;
 import org.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.usergrid.rest.utils.PathingUtils;
 import org.usergrid.system.UsergridSystemMonitor;
@@ -224,6 +228,8 @@ public class RootResource extends AbstractContextResource implements MetricProce
 		return getApplicationById(applicationId);
 	}
 
+  @Timed(name = "getApplicationByUuids_timer",group = "rest_timers")
+  @ExceptionMetered(group = "rest_exceptions", name = "getApplicationByUuids_exceptions")
   @Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
   public ApplicationResource getApplicationByUuids(@PathParam("organizationId") String organizationIdStr,
                                                    @PathParam("applicationId") String applicationIdStr)
@@ -242,6 +248,8 @@ public class RootResource extends AbstractContextResource implements MetricProce
     return appResourceFor(applicationId);
   }
 
+  @Timed(name = "getApplicationByName_timer",group = "rest_timers")
+  @ExceptionMetered(group = "rest_exceptions", name = "getApplicationByName_exceptions")
 	@Path("{organizationName}/{applicationName}")
 	public ApplicationResource getApplicationByName(
           @PathParam("organizationName") String organizationName,
@@ -252,10 +260,10 @@ public class RootResource extends AbstractContextResource implements MetricProce
 			throw new NoOpException();
 		}
 
-    // TODO update applicationName for this call 'org/applicationName
-		UUID applicationId = emf.lookupApplication(PathingUtils.assembleAppName(organizationName, applicationName));
+    String orgAppName = PathingUtils.assembleAppName(organizationName, applicationName);
+    UUID applicationId = emf.lookupApplication(orgAppName);
 		if (applicationId == null) {
-			return null;
+      throw new OrganizationApplicationNotFoundException(orgAppName, uriInfo);
 		}
 
 		return appResourceFor(applicationId);

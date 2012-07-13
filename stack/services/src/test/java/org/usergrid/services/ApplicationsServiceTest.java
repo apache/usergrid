@@ -26,33 +26,34 @@ import org.usergrid.persistence.EntityManager;
 
 public class ApplicationsServiceTest extends AbstractServiceTest {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(ApplicationsServiceTest.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(ApplicationsServiceTest.class);
 
-	@Test
-	public void testPermissions() throws Exception {
-		logger.info("PermissionsTest.testPermissions");
+    @Test
+    public void testPermissions() throws Exception {
+        logger.info("PermissionsTest.testPermissions");
 
-		UUID applicationId = createApplication("testOrganization","testPermissions");
-		assertNotNull(applicationId);
+        UUID applicationId = createApplication("testOrganization",
+                "testPermissions");
+        assertNotNull(applicationId);
 
-		EntityManager em = emf.getEntityManager(applicationId);
-		assertNotNull(em);
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
 
-		// em.createRole("admin", null);
-		em.createRole("manager", null);
-		em.createRole("member", null);
+        // em.createRole("admin", null);
+        em.createRole("manager", null, 0);
+        em.createRole("member", null, 0);
 
-		em.grantRolePermission("admin", "users:access:*");
-		em.grantRolePermission("admin", "groups:access:*");
+        em.grantRolePermission("admin", "users:access:*");
+        em.grantRolePermission("admin", "groups:access:*");
 
-		ServiceManager sm = smf.getServiceManager(applicationId);
+        ServiceManager sm = smf.getServiceManager(applicationId);
 
-		testDataRequest(sm, ServiceAction.GET, null, "rolenames");
+        testDataRequest(sm, ServiceAction.GET, null, "rolenames");
 
-		testDataRequest(sm, ServiceAction.GET, null, "roles", "admin",
-				"permissions");
+        testDataRequest(sm, ServiceAction.GET, null, "roles", "admin",
+                "permissions");
 
-	}
+    }
 
 }

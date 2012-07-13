@@ -95,8 +95,8 @@
 	<bean name="lockManager" class="org.usergrid.locking.zookeeper.NoOpLockManagerImpl" />
 
     <bean name="consistencyLevelPolicy" class="me.prettyprint.cassandra.model.ConfigurableConsistencyLevel">
-        <property name="defaultReadConsistencyLevel" value="ONE"/>
-        <property name="defaultWriteConsistencyLevel" value="QUORUM"/>
+        <property name="defaultReadConsistencyLevel" value="${cassandra.readcl}"/>
+        <property name="defaultWriteConsistencyLevel" value="${cassandra.writecl}"/>
     </bean>
 
 	<bean id="cassandraService" class="org.usergrid.persistence.cassandra.CassandraService"
@@ -126,9 +126,7 @@
            <property name="batchSize" value="0"/>
        </bean>
 
-       <bean id="batchSubmitter" class="com.usergrid.count.CassandraSubmitter">
-           <constructor-arg ref="cassandraCounterStore"/>
-       </bean>
+       <bean id="batchSubmitter" class="com.usergrid.count.Slf4JBatchSubmitter"/>
 
        <bean id="cassandraCounterStore" class="com.usergrid.count.CassandraCounterStore">
            <constructor-arg>

@@ -99,7 +99,13 @@
 		<constructor-arg ref="cassandraCluster" />
 		<constructor-arg ref="cassandraHostConfigurator" />
 		<constructor-arg ref="lockManager" />
+		<property name="consistencyLevelPolicy" ref="consistencyLevelPolicy"/>
 	</bean>
+	
+	 <bean name="consistencyLevelPolicy" class="me.prettyprint.cassandra.model.ConfigurableConsistencyLevel">
+        <property name="defaultReadConsistencyLevel" value="${cassandra.readcl}"/>
+        <property name="defaultWriteConsistencyLevel" value="${cassandra.writecl}"/>
+    </bean>
 
     <!-- Modify to take CounterUtils as instance-->
 	<bean id="entityManagerFactory"
@@ -169,6 +175,12 @@
     <bean id="applicationCreator" class="org.usergrid.management.cassandra.ApplicationCreatorImpl">
         <constructor-arg ref="managementService"/>
         <constructor-arg ref="entityManagerFactory"/>
+    </bean>
+
+    <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+      <property name="corePoolSize" value="5" />
+      <property name="maxPoolSize" value="10" />
+      <property name="queueCapacity" value="25" />
     </bean>
 
 </beans>
