@@ -112,7 +112,7 @@ usergrid.client = (function() {
     if (!session.currentOrganization) {
       failure();
     }
-    apiGetRequest("/management/organizations/" + session.currentOrganization.uuid + "/applications", null, success, failure);
+    apiRequest("GET", "/management/organizations/" + session.currentOrganization.uuid + "/applications", null, success, failure);
   }
 
   function createApplication(data, success, failure) {
@@ -126,7 +126,7 @@ usergrid.client = (function() {
     if (!session.currentOrganization) {
       failure();
     }
-    apiGetRequest("/management/organizations/" + session.currentOrganization.uuid + "/users", null, success, failure);
+    apiRequest("GET", "/management/organizations/" + session.currentOrganization.uuid + "/users", null, success, failure);
   }
 
   function createOrganization(data, success, failure) {
@@ -144,14 +144,14 @@ usergrid.client = (function() {
   }
 
   function requestOrganizations(success, failure) {
-    apiGetRequest("/management/users/" + session.loggedInUser.uuid + "/organizations", null, success, failure);
+    apiRequest("GET", "/management/users/" + session.loggedInUser.uuid + "/organizations", null, success, failure);
   }
 
   function requestOrganizationCredentials(success, failure) {
     if (!session.currentOrganization) {
       failure();
     }
-    apiGetRequest("/management/organizations/" + session.currentOrganization.uuid + "/credentials", null, success, failure);
+    apiRequest("GET", "/management/organizations/" + session.currentOrganization.uuid + "/credentials", null, success, failure);
   }
 
   function regenerateOrganizationCredentials(success, failure) {
