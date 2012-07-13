@@ -28,8 +28,8 @@ $(document).ready(function () {
   function startApp() {
     usergrid.client.autoLogin(
       function() {
-	usergrid.console.loginOk();
-	usergrid.client.setCurrentOrganization();
+        usergrid.console.loginOk();
+        usergrid.client.setCurrentOrganization();
       },
       function() {Pages.ShowPage("login")}
     );
