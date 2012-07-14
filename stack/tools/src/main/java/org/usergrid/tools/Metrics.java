@@ -12,6 +12,7 @@ import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.*;
 import org.usergrid.tools.bean.*;
+import org.usergrid.utils.TimeUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +34,7 @@ public class Metrics extends ExportingToolBase {
   private ListMultimap<Long, UUID> totalScore = ArrayListMultimap.create();
   private Map<UUID,MetricLine> collector = new HashMap<UUID, MetricLine>();
   private int reportThreshold = 50;
+  private long duration;
 
   @Override
   public void runTool(CommandLine line) throws Exception {
@@ -41,6 +43,8 @@ public class Metrics extends ExportingToolBase {
     setVerbose(line);
 
     prepareBaseOutputFileName(line);
+
+    parseDuration(line);
 
     applyOrgId(line);
 
@@ -67,6 +71,14 @@ public class Metrics extends ExportingToolBase {
     Iterable<UUID> workingOrgs = applyThreshold();
 
     printReport(MetricSort.APP_REQ_COUNT, workingOrgs);
+  }
+
+  private long parseDuration(CommandLine line) {
+    String duration = line.getOptionValue("duration");
+    if ( duration != null ) {
+      return TimeUtils.millisFromDuration(duration);
+    }
+    return TimeUtils.millisFromDuration("30d");
   }
 
   private Iterable<UUID> applyThreshold() throws Exception {
@@ -132,6 +144,8 @@ public class Metrics extends ExportingToolBase {
 
       collect(MetricQuery.getInstance(uuid,MetricSort.APP_REQ_COUNT)
               .resolution(CounterResolution.DAY)
+              .startDate(duration)
+              .endDate(System.currentTimeMillis())
               .execute(emf.getEntityManager(uuid)));
 
     }
