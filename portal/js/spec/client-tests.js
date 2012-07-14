@@ -143,12 +143,12 @@ asyncTest("getting fabianorg/roles/guest/groups", function() {
   )
 });
 
-// asyncTest("removing group1 from Guest Role", function() {
-//   expect(1);
-//   usergrid.client.removeGroupFromRole(
-//     usergrid.session.currentApplicationId, "bd397ea1-a71c-3249-8a4c-62fd53c78ce7", "b713225b-88e8-11e1-8063-1231380dea5f", defaultSuccess, defaultError
-//   )
-// });
+asyncTest("removing group1 from Guest Role", function() {
+  expect(1);
+  usergrid.client.removeGroupFromRole(
+    usergrid.session.currentApplicationId, "bd397ea1-a71c-3249-8a4c-62fd53c78ce7", "b713225b-88e8-11e1-8063-1231380dea5f", defaultSuccess, defaultError
+  )
+});
 
 // asyncTest("getting fabianorg/roles/guest/groups", function() {
 //   expect(1);

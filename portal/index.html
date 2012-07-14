@@ -629,7 +629,7 @@
                         </select>
                         <a id="selectAllGroups" class="" href="#" onclick="usergrid.console.selectAllGroups();"> Select All </a>
                         <a id="deselectAllGroups" style="display: none;" class="" href="#" onclick="usergrid.console.deselectAllGroups();"> Deselect All </a>
-                        <a class="" data-toggle="modal" href="#dialog-form-new-group"> Add</a>
+                        <a class="" data-toggle="modal" href="#dialog-form-new-group"> Add </a>
                         <a id="delete-groups-link" href="#"> Delete </a>
                       </div>
                     </div>
@@ -706,6 +706,28 @@
                     <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
                   </div>
                 </form>
+		<form id="dialog-form-add-role-to-group" class="modal hide fade">
+                  <div class="modal-header">
+                    <a class="close" data-dismiss="modal">&times</a>
+                    <h4>Add a Role to this Group</h4>
+                  </div>
+                  <div class="modal-body">
+                    <p class="validateTips">Search for the role you want to add to this group.</p>
+                    <fieldset>
+                      <div class="control-group">
+                        <label for="search-groups-role-name-input">Role</label>
+                        <div class="controls">
+                          <input type="text" name="search-groups-role-name-input" id="search-groups-role-name-input" class="input-xlarge" autocomplete="off"/>
+                          <p class="help-block hide"></p>
+                        </div>
+                      </div>
+                    </fieldset>
+                  </div>
+                  <div class="modal-footer">
+                    <input type="submit" class="btn btn-usergrid" value="Add"/>
+                    <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                  </div>
+                </form>
               </div>
               <div id="roles-panel" style="display: none">
                 <ul id="roles-panel-tab-bar" class="nav nav-tabs">
@@ -774,6 +796,7 @@
                   <li class="active"><a id="button-role-list" href="#">List</a></li>
                   <li><a id="button-role-settings" href="#">Settings</a></li>
                   <li><a id="button-role-users" href="#">Users</a></li>
+		  <li><a id="button-role-groups" href="#">Groups</a></li>
                 </ul>
                 <div id="role-panel-settings" class="panel-content">
                   <div class="console-section">
@@ -788,6 +811,44 @@
                 <div id="role-panel-users" class="panel-content">
                   <div class="console-section" id="role-users"></div>
                 </div>
+		<div id="role-panel-groups" class="panel-content">
+                  <div class="console-section">
+                    <div class="well thingy">
+                      <span class="title">Groups</span>
+		      <div class="bar">
+                        <a data-toggle="modal" href="#dialog-form-add-group-to-role"> Add </a>
+                        <a id="remove-selected-role-groups" href="#"> Remove </a>
+                        <a id="selectAllRoleGroups" class="" href="#" onclick="usergrid.console.selectAllRoleGroups();"> Select All </a>
+                        <a id="deselectAllRoleGroups" style="display: none;" class="" href="#" onclick="usergrid.console.deselectAllRoleGroups();"> Deselect All </a>
+                      </div>
+                    </div>
+                    <table id="role-groups" class="table">
+                      <tbody></tbody>
+                    </table>
+		  </div>
+                </div>
+		<form id="dialog-form-add-group-to-role" class="modal hide fade">
+                  <div class="modal-header">
+                    <a class="close" data-dismiss="modal">&times</a>
+                    <h4>Add a Group to this Role</h4>
+                  </div>
+                  <div class="modal-body">
+                    <p class="validateTips">Search for the group you want to add to this role.</p>
+                    <fieldset>
+                      <div class="control-group">
+                        <label for="search-roles-group-name-input">Group</label>
+                        <div class="controls">
+                          <input type="text" name="search-roles-group-name-input" id="search-roles-group-name-input" class="input-xlarge" autocomplete="off"/>
+                          <p class="help-block hide"></p>
+                        </div>
+                      </div>
+                    </fieldset>
+                  </div>
+                  <div class="modal-footer">
+                    <input type="submit" class="btn btn-usergrid" value="Add"/>
+                    <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                  </div>
+                </form>
 		<form id="dialog-form-add-role-to-user" class="modal hide fade">
                   <div class="modal-header">
                     <a class="close" data-dismiss="modal">&times</a>
