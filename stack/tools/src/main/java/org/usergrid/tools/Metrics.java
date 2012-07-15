@@ -5,6 +5,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang.time.DateUtils;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.usergrid.management.ApplicationInfo;
@@ -34,7 +35,8 @@ public class Metrics extends ExportingToolBase {
   private ListMultimap<Long, UUID> totalScore = ArrayListMultimap.create();
   private Map<UUID,MetricLine> collector = new HashMap<UUID, MetricLine>();
   private int reportThreshold = 50;
-  private long duration;
+  private long startDate;
+  private long endDate;
 
   @Override
   public void runTool(CommandLine line) throws Exception {
@@ -47,6 +49,8 @@ public class Metrics extends ExportingToolBase {
     parseDuration(line);
 
     applyOrgId(line);
+
+    parseDateRange(line);
 
     outputDir = createOutputParentDir();
 
@@ -73,12 +77,45 @@ public class Metrics extends ExportingToolBase {
     printReport(MetricSort.APP_REQ_COUNT, workingOrgs);
   }
 
-  private long parseDuration(CommandLine line) {
+
+
+  @Override
+  public Options createOptions() {
+    Options options = super.createOptions();
+    Option duration = OptionBuilder.hasArg()
+            .withDescription("A duration signifying the previous time until now. " +
+                    "Supported forms: h,m,d eg. '30d' would be 30 days")
+            .create("duration");
+    Option startDate = OptionBuilder.hasArg().withDescription("The start date of the report")
+            .create("startDate");
+    Option endDate = OptionBuilder.hasArg().withDescription("The end date of the report")
+                .create("endDate");
+
+    options.addOption(duration).addOption(endDate).addOption(startDate);
+
+    return options;
+  }
+
+  /**
+   * 30 days in milliseconds by default
+   * @param line
+   * @return
+   */
+  private void parseDuration(CommandLine line) {
     String duration = line.getOptionValue("duration");
     if ( duration != null ) {
-      return TimeUtils.millisFromDuration(duration);
+      startDate = TimeUtils.millisFromDuration(duration);
+      endDate = System.currentTimeMillis();
     }
-    return TimeUtils.millisFromDuration("30d");
+  }
+
+  private void parseDateRange(CommandLine line) throws Exception {
+    if ( line.hasOption("startDate")) {
+      startDate = DateUtils.parseDate(line.getOptionValue("startDate"),new String[]{"yyyyMMdd-HHmm"}).getTime();
+    }
+    if ( line.hasOption("endDate")) {
+      endDate = DateUtils.parseDate(line.getOptionValue("endDate"),new String[]{"yyyyMMdd-HHmm"}).getTime();
+    }
   }
 
   private Iterable<UUID> applyThreshold() throws Exception {
@@ -102,6 +139,11 @@ public class Metrics extends ExportingToolBase {
       jg.writeStartObject();
       jg.writeStringField("org_id", orgId.toString());
       jg.writeStringField("org_name",organizations.get(orgId));
+      jg.writeArrayFieldStart("admins");
+      for (UserInfo userInfo : managementService.getAdminUsersForOrganization(orgId) ) {
+        jg.writeString(userInfo.getEmail());
+      }
+      jg.writeEndArray();
       writeAppLines(jg, orgId);
       jg.writeEndObject();
     }
@@ -142,10 +184,10 @@ public class Metrics extends ExportingToolBase {
 
       orgApps.put(orgId, new ApplicationInfo(uuid, applications.get(uuid)));
 
-      collect(MetricQuery.getInstance(uuid,MetricSort.APP_REQ_COUNT)
+      collect(MetricQuery.getInstance(uuid, MetricSort.APP_REQ_COUNT)
               .resolution(CounterResolution.DAY)
-              .startDate(duration)
-              .endDate(System.currentTimeMillis())
+              .startDate(startDate)
+              .endDate(endDate)
               .execute(emf.getEntityManager(uuid)));
 
     }
