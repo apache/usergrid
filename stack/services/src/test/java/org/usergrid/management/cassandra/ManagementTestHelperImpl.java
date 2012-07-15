@@ -82,6 +82,7 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
 	 */
 
 	EmbeddedServerHelper embedded = null;
+	ApplicationContext ac = null;
 
 	@Override
 	public void setup() throws Exception {
@@ -97,7 +98,7 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
 		// copy("/testApplicationContext.xml", TMP);
 
 		String[] locations = { "testApplicationContext.xml" };
-		ApplicationContext ac = new ClassPathXmlApplicationContext(locations);
+		ac = new ClassPathXmlApplicationContext(locations);
 
 		AutowireCapableBeanFactory acbf = ac.getAutowireCapableBeanFactory();
 		acbf.autowireBeanProperties(this,
@@ -192,6 +193,11 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
 
 	public void setForceQuit(boolean forceQuit) {
 		this.forceQuit = forceQuit;
+	}
+
+	@Override
+	public ApplicationContext getApplicationContext() {
+		return ac;
 	}
 
 }

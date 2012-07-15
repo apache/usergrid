@@ -197,7 +197,7 @@ public class TokenServiceImpl implements TokenService {
 			type = TOKEN_TYPE_ACCESS;
 		}
 		TokenInfo tokenInfo = new TokenInfo(uuid, type, timestamp, timestamp,
-				timestamp, principal, state);
+				0, principal, state);
 		putTokenInfo(tokenInfo);
 		return getTokenForUUID(tokenCategory, uuid);
 	}
@@ -225,6 +225,7 @@ public class TokenServiceImpl implements TokenService {
 							(int) (maxPersistenceTokenAge / 1000),
 							StringSerializer.get(), LongSerializer.get());
 					batch.addInsertion(uuid, TOKENS_CF, col);
+					tokenInfo.setInactive(inactive);
 				}
 
 				batch.execute();

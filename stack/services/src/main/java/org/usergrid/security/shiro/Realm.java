@@ -431,6 +431,8 @@ public class Realm extends AuthorizingRealm {
 						Set<String> permissions = em
 								.getRolePermissions(rolename);
 						grant(info, principal, applicationId, permissions);
+						role(info, principal, "application-role:"
+								+ applicationId + ":" + rolename);
 					}
 				} catch (Exception e) {
 					logger.error("Unable to get user role permissions", e);
