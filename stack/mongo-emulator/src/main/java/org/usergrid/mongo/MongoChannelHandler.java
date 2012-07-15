@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.mongo;
 
+import static org.usergrid.utils.JsonUtils.toJsonMap;
 import static org.usergrid.utils.MapUtils.entry;
 import static org.usergrid.utils.MapUtils.map;
 
@@ -165,7 +166,7 @@ public class MongoChannelHandler extends SimpleChannelUpstreamHandler {
 				if (!currentUser.isAuthenticated()) {
 					return handleUnauthorizedQuery(ctx, e, (OpQuery) message);
 				}
-				if ("system.applications".equals(collectionName)) {
+				if ("system.namespaces".equals(collectionName)) {
 					return handleListCollections(ctx, e, (OpQuery) message,
 							q.getDatabaseName());
 				} else if ("system.users".equals(collectionName)) {
@@ -325,7 +326,7 @@ public class MongoChannelHandler extends SimpleChannelUpstreamHandler {
 				for (Entity entity : results.getEntities()) {
 					reply.addDocument(map(
 							entry("_id", entity.getUuid()),
-							entity,
+							toJsonMap(entity),
 							entry(Schema.PROPERTY_UUID, entity.getUuid()
 									.toString())));
 				}

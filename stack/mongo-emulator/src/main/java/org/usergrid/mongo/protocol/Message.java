@@ -164,4 +164,11 @@ public class Message {
 		return StringUtils.stringOrSubstringAfterFirst(fullCollectionName, '.');
 	}
 
+	@Override
+	public String toString() {
+		return "Message [messageLength=" + messageLength + ", requestID="
+				+ requestID + ", responseTo=" + responseTo + ", opCode="
+				+ opCode + "]";
+	}
+
 }
