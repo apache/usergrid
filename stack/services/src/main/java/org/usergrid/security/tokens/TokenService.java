@@ -20,8 +20,6 @@ public interface TokenService {
 
 	public TokenInfo getTokenInfo(String token) throws Exception;
 
-	public void accessTokenInfo(String token) throws Exception;
-
 	public String refreshToken(String token) throws Exception;
 
 	public long getMaxTokenAge(String token);

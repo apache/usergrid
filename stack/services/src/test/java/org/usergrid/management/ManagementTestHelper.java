@@ -17,6 +17,7 @@ package org.usergrid.management;
 
 import java.util.Properties;
 
+import org.springframework.context.ApplicationContext;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.security.tokens.TokenService;
 
@@ -46,5 +47,7 @@ public interface ManagementTestHelper {
 	public abstract void setTokenService(TokenService tokens);
 
 	public abstract TokenService getTokenService();
+
+	public abstract ApplicationContext getApplicationContext();
 
 }

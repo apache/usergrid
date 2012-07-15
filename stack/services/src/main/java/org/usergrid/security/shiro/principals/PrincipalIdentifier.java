@@ -16,8 +16,11 @@
 package org.usergrid.security.shiro.principals;
 
 import org.usergrid.management.UserInfo;
+import org.usergrid.security.shiro.credentials.AccessTokenCredentials;
 
 public abstract class PrincipalIdentifier {
+
+	AccessTokenCredentials accessTokenCredentials;
 
 	public UserInfo getUser() {
 		return null;
@@ -29,6 +32,15 @@ public abstract class PrincipalIdentifier {
 
 	public boolean isActivated() {
 		return true;
+	}
+
+	public AccessTokenCredentials getAccessTokenCredentials() {
+		return accessTokenCredentials;
+	}
+
+	public void setAccessTokenCredentials(
+			AccessTokenCredentials accessTokenCredentials) {
+		this.accessTokenCredentials = accessTokenCredentials;
 	}
 
 }
