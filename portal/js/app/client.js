@@ -1,51 +1,39 @@
 /*
- * This file contains the all API calls AND ONLY that.
+ * usergrid.client.js
  *
- * No behavioural code should be included here (as of now, there is some though... refactoring)
- * Session management is included here. It'll be separated in a near future
+ * Usage: This class makes the actual calls to the Usergrid API.
+ *
  *
  */
 
 usergrid.client = (function() {
 
-  /* This code block *WILL* load before the document is complete */
+  // This code block *WILL* load before the document is complete
 
   var session = usergrid.session;
 
-  /* Always use public API */
-  var FORCE_PUBLIC_API = true;
-
+  //API endpoint
+  var FORCE_PUBLIC_API = true; // Always use public API
   var PUBLIC_API_URL = "https://api.usergrid.com";
 
+  //SSO information - Apigee Specific
   var APIGEE_TLD = "apigee.com";
-
-  /* flag to overide use SSO if needed set to ?use_sso=no */
-  var USE_SSO = 'no';
-
+  var USE_SSO = 'no'; // flag to overide use SSO if needed set to ?use_sso=no
   var APIGEE_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
-
   var APIGEE_SSO_PROFILE_URL = "https://accounts.apigee.com/accounts/my_account";
-
   var SSO_LOGOUT_PAGE = 'https://accounts.apigee.com/accounts/sign_out';
-
+  
+  // for running Usergrid as a local server
   var LOCAL_STANDALONE_API_URL = "http://localhost:8080";
-
   var LOCAL_TOMCAT_API_URL = "http://localhost:8080/ROOT";
-
   var LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
 
-  var response = {};
+  //initialization method should be called up front
+  function Init(applicationId, clientId, clientSecret, apiUrl) {
 
-  function appPath(){
-      return session.currentOrganization.uuid + "/" + session.currentApplicationId;
-  }
-
-  function Init(options) {
-    var options = options || {};
-
-    session.applicationId = options.applicationId || null;
-    self.clientId = options.clientId || null;
-    self.clientSecret = options.clientSecret || null;
+    session.applicationId = applicationId || null;
+    self.clientId = clientId || null;
+    self.clientSecret = clientSecret || null;
 
     if (!FORCE_PUBLIC_API && (document.domain.substring(0,9) == "localhost")) {
       self.apiUrl = LOCAL_API_URL;
@@ -70,8 +58,8 @@ usergrid.client = (function() {
       self.apigee_sso_profile_url = query_params.apigee_sso_profile_url;
     }
 
-    if (options.apiUrl) {
-      self.apiUrl = options.apiUrl;
+    if (apiUrl) {
+      self.apiUrl = apiUrl;
     }
 
     self.resetPasswordUrl = self.apiUrl + "/management/users/resetpw";
@@ -82,7 +70,7 @@ usergrid.client = (function() {
 
   }
 
-  // The base for all API calls. HANDLE WITH CAUTION!
+  // The base for all API calls.
   function apiRequest(method, path, data, success, error) {
 
     var ajaxOptions = {
@@ -108,7 +96,8 @@ usergrid.client = (function() {
     $.ajax(ajaxOptions);
   }
 
-function encodeParams(params) {
+  //method to urlencode an array of parameters
+  function encodeParams(params) {
     tail = [];
     var item = [];
     if (params instanceof Array) {
@@ -436,59 +425,80 @@ function encodeParams(params) {
    *  @purpose a query object that will contain all relevant info for API call
    *  @param method REQUIRED - GET, POST, PUT, DELETE
    *  @param path REQUIRED - API resource (e.g. "users" or "users/rod", should not include http URL or org_name/app_name)
-   *  @param jsonObj NULLABLE
+   *  @param jsonObj NULLABLE - a json data object to be passed to the API
+   *  @param params NULLABLE - query parameters to be encoded and added to the API URL
    *
    */
   queryObj = (function(method, path, jsonObj, params, successCallback, failureCallback) {
-  //function queryObj(method, path, jsonObj, params, successCallback, failureCallback) {
-    //query vars
-    this.method = method;
-    this.path = path;
-    this.jsonObj = jsonObj;
-    this.params = params;
+    //query vars (are all private)
+    var method = method;
+    var path = path;
+    var jsonObj = jsonObj;
+    var params = params;
+    var successCallback = successCallback;
+    var failureCallback = failureCallback;
 
-    //callbacks
-    this.successCallback = successCallback;
-    this.failureCallback = failureCallback;
+    //paging vars (are all private)
+    var cursor = null;
+    var next = null
+    var previous = [];
 
-    //paging vars
-    this.cursor = null;
-    this.next = null
-    this.previous = [];
+    //methods for accessing query vars
+    queryObj.prototype.getMethod = function getMethod() { return method; }
+    queryObj.prototype.setMethod = function setMethod(_method) { method = _method; }
 
-    //paging functions
+    queryObj.prototype.getPath = function getPath() { return path; }
+    queryObj.prototype.setPath = function setPath(_path) { path = _path; }
+
+    queryObj.prototype.getJsonObj = function getJsonObj() { return jsonObj; }
+    queryObj.prototype.setJsonObj = function setJsonObj(_jsonObj) { jsonObj = _jsonObj; }
+
+    queryObj.prototype.getParams = function getParams() { return params; }
+    queryObj.prototype.setParams = function setParams(_params) { params = _params; }
+
+    queryObj.prototype.getSuccessCallback = function getSuccessCallback() { return successCallback; }
+    queryObj.prototype.callSuccessCallback = function setsuccessCallback(response) { successCallback(response); }
+
+    queryObj.prototype.getFailureCallback = function getFailureCallback() { return failureCallback; }
+    queryObj.prototype.setFailureCallback = function setFailureCallback(response) { failureCallback(response); }
+
+    //methods for accessing paging functions
     queryObj.prototype.resetPaging = function resetPaging() {
-      this.previous = [];
-      this.next = null;
-      this.cursor = null;
+      previous = [];
+      next = null;
+      cursor = null;
     }
 
     queryObj.prototype.hasPrevious = function hasPrevious() {
-      return (this.previous.length > 0);
+      return (previous.length > 0);
     }
 
     queryObj.prototype.getPrevious = function getPrevious() {
-      this.next=null; //clear out next so the comparison will find the next item
-      this.cursor = this.previous.pop();
+      next=null; //clear out next so the comparison will find the next item
+      cursor = previous.pop();
     }
 
     queryObj.prototype.hasNext = function hasNext(){
-      return (this.next);
+      return (next);
     }
 
     queryObj.prototype.getNext = function getNext() {
-      this.previous.push(this.cursor);
-      this.cursor = this.next;
+      previous.push(cursor);
+      cursor = next;
     }
 
     queryObj.prototype.saveCursor = function saveCursor(_cursor) {
-      this.cursor = this.next; //what was new is old again
+      cursor = next; //what was new is old again
       //if current cursor is different, grab it for next cursor
-      if (this.next != _cursor) {
-        this.next = _cursor;
+      if (next != _cursor) {
+        next = _cursor;
       } else {
-        this.next = null;
+        next = null;
       }
+    }
+
+    queryObj.prototype.getCursor = function getCursor() {
+      return cursor;
     }
   });
 
@@ -523,10 +533,10 @@ function encodeParams(params) {
   function processQuery(_queryObj, endpoint) {
     //validate parameters
     try {
-      var method = _queryObj.method.toUpperCase();
-      var path = _queryObj.path;
-      var jsonObj = _queryObj.jsonObj || {};
-      var params = _queryObj.params || {};
+      var method = _queryObj.getMethod().toUpperCase();
+      var path = _queryObj.getPath();
+      var jsonObj = _queryObj.getJsonObj() || {};
+      var params = _queryObj.getParams() || {};
 
       //method - should be GET, POST, PUT, or DELETE only
       if (method != 'GET' && method != 'POST' && method != 'PUT' && method != 'DELETE') {
@@ -545,8 +555,8 @@ function encodeParams(params) {
       }
 
       //add in the cursor if one is available
-      if (_queryObj.cursor) {
-        params.cursor = _queryObj.cursor;
+      if (_queryObj.getCursor()) {
+        params.cursor = _queryObj.getCursor();
       } else {
         delete params.cursor;
       }
@@ -586,11 +596,11 @@ function encodeParams(params) {
         //query completed succesfully, so store cursor
         _queryObj.saveCursor(response.cursor);
         //then call the original callback
-        _queryObj.successCallback(response);
+        _queryObj.callSuccessCallback(response);
       },
       function(response) {
         console.log('API call failed - ' + response.responseText);
-        _queryObj.failureCallback(response)
+        _queryObj.callFailureCallback(response)
       });
   }
 
@@ -680,7 +690,6 @@ function encodeParams(params) {
     requestCollectionIndexes: requestCollectionIndexes,
     setCurrentOrganization: setCurrentOrganization,
     autoLogin: autoLogin,
-    appPath:appPath,
     runAppQuery:runAppQuery,
     runManagementQuery:runManagementQuery,
     queryObj:queryObj

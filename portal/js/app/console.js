@@ -232,7 +232,7 @@ function usergrid_console_app(Pages) {
     data = JSON.parse(data);
 
     //make a new query object
-    queryObj = new client.queryObj(method,path, data, null, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
+    queryObj = new client.queryObj(method, path, data, null, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
     //store the query object on the stack
     pushQuery();
     //then run the query
@@ -323,7 +323,7 @@ function usergrid_console_app(Pages) {
 
     showBackButton();
 
-    getCollection(queryObj.method);
+    getCollection(queryObj.getMethod());
   }
 
   //helper function for query explorer back button
