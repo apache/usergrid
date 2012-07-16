@@ -58,4 +58,5 @@ public abstract class UserPrincipal extends PrincipalIdentifier {
 	public String toString() {
 		return user.toString();
 	}
+
 }

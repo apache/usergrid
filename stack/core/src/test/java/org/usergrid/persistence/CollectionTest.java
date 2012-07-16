@@ -20,7 +20,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.MapUtils.hashMap;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -634,4 +636,73 @@ public class CollectionTest extends AbstractPersistenceTest {
         assertEquals(thirdGame.getUuid(), r.getEntities().get(1).getUuid());
 
     }
+
+    @Test
+    public void pagingAfterDelete() throws Exception {
+
+        UUID applicationId = createApplication("testOrganization",
+                "pagingAfterDelete");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        int size = 20;
+        List<UUID> entityIds = new ArrayList<UUID>();
+
+        for (int i = 0; i < size; i++) {
+            Map<String, Object> properties = new LinkedHashMap<String, Object>();
+            properties.put("name", "object" + 1);
+            Entity created = em.create("objects", properties);
+
+            entityIds.add(created.getUuid());
+        }
+
+        Query query = new Query();
+        query.setLimit(50);
+
+        Results r = em.searchCollection(em.getApplicationRef(), "objects",
+                query);
+
+        logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+
+        assertEquals(size, r.size());
+
+        // check they're all the same before deletion
+        for (int i = 0; i < size; i++) {
+            assertEquals(entityIds.get(i), r.getEntities().get(i).getUuid());
+        }
+
+        // now delete 5 items that will span the 10 pages
+        for (int i = 5; i < 10; i++) {
+            Entity entity = r.getEntities().get(i);
+            em.delete(entity);
+            entityIds.remove(entity.getUuid());
+        }
+
+        // now query with paging
+        query = new Query();
+
+        r = em.searchCollection(em.getApplicationRef(), "objects", query);
+
+        assertEquals(10, r.size());
+
+        for (int i = 0; i < 10; i++) {
+            assertEquals(entityIds.get(i), r.getEntities().get(i).getUuid());
+        }
+
+        // try the next page, set our cursor, it should be the last 5 entities
+        query = new Query();
+        query.setCursor(r.getCursor());
+
+        r = em.searchCollection(em.getApplicationRef(), "objects", query);
+
+        assertEquals(5, r.size());
+        for (int i = 10; i < 15; i++) {
+            assertEquals(entityIds.get(i), r.getEntities().get(i - 10)
+                    .getUuid());
+        }
+
+    }
+
 }

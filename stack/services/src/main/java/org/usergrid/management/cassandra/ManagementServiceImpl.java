@@ -71,7 +71,6 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
 import org.slf4j.Logger;
@@ -390,19 +389,20 @@ public class ManagementServiceImpl implements ManagementService {
 				parameters("users", user.getUuid(), "feed")).execute();
 	}
 
-  @Override
- 	public OrganizationOwnerInfo createOwnerAndOrganization(
- 			String organizationName, String username, String name,
- 			String email, String password) throws Exception {
+	@Override
+	public OrganizationOwnerInfo createOwnerAndOrganization(
+			String organizationName, String username, String name,
+			String email, String password) throws Exception {
 
-    boolean activated = !newAdminUsersNeedSysAdminApproval() && !newOrganizationsNeedSysAdminApproval();
-    boolean disabled = newAdminUsersRequireConfirmation();
-    // if we are active and enabled, skip the send email step
+		boolean activated = !newAdminUsersNeedSysAdminApproval()
+				&& !newOrganizationsNeedSysAdminApproval();
+		boolean disabled = newAdminUsersRequireConfirmation();
+		// if we are active and enabled, skip the send email step
 
-    return createOwnerAndOrganization(organizationName, username, name, email,
-            password, activated, disabled, true);
+		return createOwnerAndOrganization(organizationName, username, name,
+				email, password, activated, disabled, true);
 
-  }
+	}
 
 	@Override
 	public OrganizationOwnerInfo createOwnerAndOrganization(
@@ -733,7 +733,9 @@ public class ManagementServiceImpl implements ManagementService {
 	}
 
 	@Override
-	public UserInfo createAdminFromPrexistingPassword(User user, String precypheredPassword, String hashType, boolean sendEmail) throws Exception {
+	public UserInfo createAdminFromPrexistingPassword(User user,
+			String precypheredPassword, String hashType, boolean sendEmail)
+			throws Exception {
 
 		emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 		Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
@@ -802,8 +804,13 @@ public class ManagementServiceImpl implements ManagementService {
 		user.setName(name);
 		user.setEmail(email);
 		user.setActivated(activated);
-    user.setConfirmed(!newAdminUsersRequireConfirmation()); // only hardcoded param now checked against config
-    user.setDisabled(disabled);
+		user.setConfirmed(!newAdminUsersRequireConfirmation()); // only
+																// hardcoded
+																// param now
+																// checked
+																// against
+																// config
+		user.setDisabled(disabled);
 		user = em.create(user);
 
 		return createAdminFrom(user, password, sendEmail);
@@ -1036,6 +1043,12 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 		em.addToDictionary(user, DICTIONARY_CREDENTIALS, "password",
 				passwordCredentials(newPassword));
+		em.addToDictionary(
+				user,
+				DICTIONARY_CREDENTIALS,
+				"mongo_pwd",
+				mongoPasswordCredentials((String) user.getProperty("username"),
+						newPassword));
 	}
 
 	@Override
@@ -1047,9 +1060,15 @@ public class ManagementServiceImpl implements ManagementService {
 		}
 
 		EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-		em.addToDictionary(new SimpleEntityRef(User.ENTITY_TYPE, userId),
-				DICTIONARY_CREDENTIALS, "password",
+		Entity user = em.get(userId);
+		em.addToDictionary(user, DICTIONARY_CREDENTIALS, "password",
 				passwordCredentials(newPassword));
+		em.addToDictionary(
+				user,
+				DICTIONARY_CREDENTIALS,
+				"mongo_pwd",
+				mongoPasswordCredentials((String) user.getProperty("username"),
+						newPassword));
 	}
 
 	@Override
@@ -1917,7 +1936,7 @@ public class ManagementServiceImpl implements ManagementService {
 								hashMap("organization_name",
 										organization.getName()),
 								PROPERTIES_EMAIL_ORGANIZATION_CONFIRMED_AWAITING_ACTIVATION));
-			} else if (newOrganizationsRequireConfirmation() ){
+			} else if (newOrganizationsRequireConfirmation()) {
 				sendOrganizationEmail(
 						organization,
 						"Organization Account Confirmation",
@@ -1929,7 +1948,7 @@ public class ManagementServiceImpl implements ManagementService {
 				sendSysAdminNewOrganizationActivatedNotificationEmail(organization);
 			} else {
 				activateOrganization(organization, false);
-				sendSysAdminNewOrganizationActivatedNotificationEmail(organization);				
+				sendSysAdminNewOrganizationActivatedNotificationEmail(organization);
 			}
 		} catch (Exception e) {
 			logger.error(
@@ -2113,8 +2132,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 	public void sendAdminUserActivatedEmail(UserInfo user) throws Exception {
 		if (notifyAdminOfActivation()) {
-		sendAdminUserEmail(user, "User Account Activated",
-				getPropertyValue(PROPERTIES_EMAIL_ADMIN_ACTIVATED));
+			sendAdminUserEmail(user, "User Account Activated",
+					getPropertyValue(PROPERTIES_EMAIL_ADMIN_ACTIVATED));
 		}
 	}
 
@@ -2489,7 +2508,6 @@ public class ManagementServiceImpl implements ManagementService {
 		return null;
 	}
 
-
 	public String getPasswordResetTokenForAppUser(UUID applicationId,
 			UUID userId) throws Exception {
 		return getTokenForPrincipal(EMAIL, TOKEN_TYPE_PASSWORD_RESET,
@@ -2651,6 +2669,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public User getOrCreateUserForFoursquareAccessToken(UUID applicationId,
 			String fq_access_token) throws Exception {
@@ -2661,45 +2680,42 @@ public class ManagementServiceImpl implements ManagementService {
 		Client client = Client.create(clientConfig);
 		WebResource web_resource = client
 				.resource("https://api.foursquare.com/v2/users/self");
-		@SuppressWarnings("unchecked")
 		Map<String, Object> body = web_resource
 				.queryParam("oauth_token", fq_access_token)
-				.queryParam("v", "20120623")
-				.accept(MediaType.APPLICATION_JSON).get(Map.class);
+				.queryParam("v", "20120623").accept(MediaType.APPLICATION_JSON)
+				.get(Map.class);
 
-		Map<String, Object>	fq_user = (Map) ((Map) body.get("response")).get("user");
+		Map<String, Object> fq_user = (Map<String, Object>) ((Map<?, ?>) body
+				.get("response")).get("user");
 
 		String fq_user_id = (String) fq_user.get("id");
 		String fq_user_username = (String) fq_user.get("id");
-		String fq_user_email = (String) ((Map) fq_user.get("contact")).get("email");
-		String fq_user_picture = (String) ((Map) fq_user.get("photo")).get("suffix");
+		String fq_user_email = (String) ((Map<?, ?>) fq_user.get("contact"))
+				.get("email");
+		String fq_user_picture = (String) ((Map<?, ?>) fq_user.get("photo"))
+				.get("suffix");
 		String fq_user_name = new String("");
 
 		// Grab the last check-in so we can store that as the user location
-		Map<String, Object> fq_location = (Map) ((Map)
-										 			((Map)
-										 				( (ArrayList)
-										 					( (Map) fq_user.get("checkins")
-															).get("items")
-										 				).get(0)
-										 			).get("venue")
-										 		).get("location");
+		Map<String, Object> fq_location = (Map<String, Object>) ((Map<?, ?>) ((Map<?, ?>) ((ArrayList<?>) ((Map<?, ?>) fq_user
+				.get("checkins")).get("items")).get(0)).get("venue"))
+				.get("location");
 
 		Map<String, Double> location = new LinkedHashMap<String, Double>();
-		location.put("latitude",  (Double) fq_location.get("lat"));
+		location.put("latitude", (Double) fq_location.get("lat"));
 		location.put("longitude", (Double) fq_location.get("lng"));
 
 		System.out.println(JsonUtils.mapToFormattedJsonString(location));
-		
+
 		// Only the first name is guaranteed to be here
 		try {
-			fq_user_name = (String) fq_user.get("firstName")
-								  + " " + (String) fq_user.get("lastName");
+			fq_user_name = (String) fq_user.get("firstName") + " "
+					+ (String) fq_user.get("lastName");
 		} catch (NullPointerException e) {
 			fq_user_name = (String) fq_user.get("firstName");
 		}
 
-		//System.out.println(JsonUtils.mapToFormattedJsonString(fq_user));
+		// System.out.println(JsonUtils.mapToFormattedJsonString(fq_user));
 
 		if (applicationId == null) {
 			return null;
@@ -2746,8 +2762,8 @@ public class ManagementServiceImpl implements ManagementService {
 				em.updateProperties(user, properties);
 
 				user.setProperty("foursquare", fq_user);
-				user.setProperty("picture", "https://is0.4sqi.net/userpix_thumbs"
-						+ fq_user_picture);
+				user.setProperty("picture",
+						"https://is0.4sqi.net/userpix_thumbs" + fq_user_picture);
 				user.setProperty("location", location);
 			}
 		} else {

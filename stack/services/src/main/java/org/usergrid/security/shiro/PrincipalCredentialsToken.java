@@ -69,8 +69,12 @@ public class PrincipalCredentialsToken implements
 			OrganizationInfo organization, String token) {
 
 		if (organization != null) {
-			return new PrincipalCredentialsToken(new OrganizationPrincipal(
-					organization), new OrganizationAccessToken(token));
+			OrganizationPrincipal principal = new OrganizationPrincipal(
+					organization);
+			OrganizationAccessToken credentials = new OrganizationAccessToken(
+					token);
+			principal.setAccessTokenCredentials(credentials);
+			return new PrincipalCredentialsToken(principal, credentials);
 		}
 		return null;
 	}
@@ -79,8 +83,12 @@ public class PrincipalCredentialsToken implements
 			ApplicationInfo application, String token) {
 
 		if (application != null) {
-			return new PrincipalCredentialsToken(new ApplicationPrincipal(
-					application), new ApplicationAccessToken(token));
+			ApplicationPrincipal principal = new ApplicationPrincipal(
+					application);
+			ApplicationAccessToken credentials = new ApplicationAccessToken(
+					token);
+			principal.setAccessTokenCredentials(credentials);
+			return new PrincipalCredentialsToken(principal, credentials);
 		}
 		return null;
 	}
@@ -99,8 +107,10 @@ public class PrincipalCredentialsToken implements
 			UserInfo user, String token) {
 
 		if (user != null) {
-			return new PrincipalCredentialsToken(new AdminUserPrincipal(user),
-					new AdminUserAccessToken(token));
+			AdminUserPrincipal principal = new AdminUserPrincipal(user);
+			AdminUserAccessToken credentials = new AdminUserAccessToken(token);
+			principal.setAccessTokenCredentials(credentials);
+			return new PrincipalCredentialsToken(principal, credentials);
 		}
 		return null;
 	}
@@ -109,9 +119,12 @@ public class PrincipalCredentialsToken implements
 			UserInfo user, String token) {
 
 		if (user != null) {
-			return new PrincipalCredentialsToken(new ApplicationUserPrincipal(
-					user.getApplicationId(), user),
-					new ApplicationUserAccessToken(token));
+			ApplicationUserPrincipal principal = new ApplicationUserPrincipal(
+					user.getApplicationId(), user);
+			ApplicationUserAccessToken credentials = new ApplicationUserAccessToken(
+					token);
+			principal.setAccessTokenCredentials(credentials);
+			return new PrincipalCredentialsToken(principal, credentials);
 		}
 		return null;
 	}
