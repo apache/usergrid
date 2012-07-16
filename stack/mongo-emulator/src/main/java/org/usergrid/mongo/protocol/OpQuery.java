@@ -95,6 +95,13 @@ public class OpQuery extends OpCrud {
 			sort_order = (BasicBSONObject) o;
 		}
 
+		if ((query_expression == null) && (query instanceof BasicBSONObject)) {
+			query_expression = (BasicBSONObject) query;
+			query_expression.removeField("$orderby");
+			query_expression.removeField("$max");
+			query_expression.removeField("$min");
+		}
+
 		if ((query_expression == null) && (sort_order == null)) {
 			return null;
 		}
