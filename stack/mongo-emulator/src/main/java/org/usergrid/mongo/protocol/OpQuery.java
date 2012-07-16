@@ -136,9 +136,36 @@ public class OpQuery extends OpCrud {
 		for (String field : exp.keySet()) {
 			if (field.startsWith("$")) {
 				if ("$or".equals(field)) {
+					// http://www.mongodb.org/display/DOCS/OR+operations+in+query+expressions
+					// or
+					// { $or : [ { a : 1 } , { b : 2 } ] }
 					OrOperand or = new OrOperand(new ClassicToken(0, "="));
 					op.addChild(or);
 					append(or, (BSONObject) exp.get(field));
+				} else if ("$not".equals(field)) {
+					// http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-Metaoperator%3A{{%24not}}
+					// not
+					// { name : { $not : /acme.*corp/i } }
+				} else if ("$ne".equals(field)) {
+					// http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%24ne
+					// not equals
+					// { x : { $ne : 3 } }
+				} else if ("$gt".equals(field)) {
+					// http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%3C%2C%3C%3D%2C%3E%2C%3E%3D
+					// greater than
+					// { "field" : { $gt: value } }
+				} else if ("$gte".equals(field)) {
+					// http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%3C%2C%3C%3D%2C%3E%2C%3E%3D
+					// greater than equals
+					// { "field" : { $gte: value } }
+				} else if ("$lt".equals(field)) {
+					// http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%3C%2C%3C%3D%2C%3E%2C%3E%3D
+					// less than
+					// { "field" : { $lt: value } }
+				} else if ("$lte".equals(field)) {
+					// http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%3C%2C%3C%3D%2C%3E%2C%3E%3D
+					// less than equals
+					// { "field" : { $lte: value } }
 				}
 			} else if (!field.equals("_id")) {
 				Equal equality = new Equal(new ClassicToken(0, "="));
