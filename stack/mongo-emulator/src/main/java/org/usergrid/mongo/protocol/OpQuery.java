@@ -140,7 +140,7 @@ public class OpQuery extends OpCrud {
 					op.addChild(or);
 					append(or, (BSONObject) exp.get(field));
 				}
-			} else if (field.equals("_id")) {
+			} else if (!field.equals("_id")) {
 				Equal equality = new Equal(new ClassicToken(0, "="));
 				equality.setProperty(field);
 				equality.setLiteral(exp.get(field));
