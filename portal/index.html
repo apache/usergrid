@@ -992,16 +992,16 @@
                     <div class="well thingy"><span class="title"> Collections <span class="app_title"></span></span>
                       <div class="bar">
                         <a class="" data-toggle="modal" href="#dialog-form-new-collection"> Add </a>
-                        <a href="" onclick="usergrid.console.pageSelectQueryExplorer(); return false;">Query Explorer</a>
+                        <a href="" onclick="usergrid.console.pageOpenQueryExplorer(); return false;">Query Explorer</a>
                       </div>
                     </div>
                     <table id="collections-table" class="table">
                       <tbody></tbody>
                     </table>
-                    <!-- <ul id="collections-pagination" class="pager"> -->
-                    <!--   <li id="collections-previous" class="previous"><a href="#">&larr; Previous</a></li> -->
-                    <!--   <li id="collections-next" class="next"><a href="#">Next &rarr;</a></li> -->
-                    <!-- </ul> -->
+                    <ul id="collections-pagination" class="pager">
+                      <li id="collections-previous" class="previous"><a href="#">&larr; Previous</a></li>
+                      <li id="collections-next" class="next"><a href="#">Next &rarr;</a></li>
+                    </ul>
                   </div>
                 </div>
                 <form id="dialog-form-new-collection" class="modal hide fade">
@@ -1082,9 +1082,9 @@
                     <div id="query-response-table">
                       <pre class="query-response-json">{ }</pre>
                     </div>
-                    <ul class="pager" id="query-next-prev">
-                      <li class="previous"><a href="#" id="button-query-prev">&larr; Previous</a></li>
-                      <li class="next"><a href="#" id="button-query-next">Next &rarr;</a></li>
+                    <ul id="query-response-pagination" class="pager">
+                      <li id="query-response-previous" class="previous"><a href="#">&larr; Previous</a></li>
+                      <li id="query-response-next" class="next"><a href="#">Next &rarr;</a></li>
                     </ul>
                   </div>
                 </div>
