@@ -76,27 +76,36 @@ public class OpQuery extends OpCrud {
 			return null;
 		}
 
-		BSONObject query_expression = null;
-		BSONObject sort_order = null;
+		BasicBSONObject query_expression = null;
+		BasicBSONObject sort_order = null;
 
 		Object o = query.get("$query");
-		if (!(o instanceof BSONObject)) {
+		if (!(o instanceof BasicBSONObject)) {
 			o = query.get("query");
 		}
-		if (o instanceof BSONObject) {
-			query_expression = (BSONObject) o;
+		if (o instanceof BasicBSONObject) {
+			query_expression = (BasicBSONObject) o;
 		}
 
 		o = query.get("$orderby");
-		if (!(o instanceof BSONObject)) {
+		if (!(o instanceof BasicBSONObject)) {
 			o = query.get("orderby");
 		}
-		if (o instanceof BSONObject) {
-			sort_order = (BSONObject) o;
+		if (o instanceof BasicBSONObject) {
+			sort_order = (BasicBSONObject) o;
 		}
 
 		if ((query_expression == null) && (sort_order == null)) {
 			return null;
+		}
+
+		if (query_expression.size() == 0) {
+			if (sort_order.size() == 0) {
+				return null;
+			}
+			if ((sort_order.size() == 1) && sort_order.containsField("_id")) {
+				return null;
+			}
 		}
 
 		Query q = new Query();
