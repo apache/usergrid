@@ -1415,7 +1415,6 @@ function usergrid_console_app(Pages) {
         var usage_counters = response.counters;
 
         if (!usage_counters) {
-	  console.log("no usage counters!");
           $('#application-entities-timeline').html("");
           $('#application-cpu-time').html("");
           $('#application-data-uploaded').html("");
@@ -1514,7 +1513,6 @@ function usergrid_console_app(Pages) {
         });
       },
       function() {
-	console.log("what?!");
         $('#application-entities-timeline').html("");
         $('#application-cpu-time').html("");
         $('#application-data-uploaded').html("");
