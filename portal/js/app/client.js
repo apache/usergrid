@@ -19,8 +19,8 @@ usergrid.client = (function() {
 
   var APIGEE_TLD = "apigee.com";
 
-  /* flag to overide use SSO if needed set to ?use_sso=no */
-  var USE_SSO = 'no';
+  /*  flag to overide use SSO if needed set to ?use_sso=false */
+  var USE_SSO = 'false';
 
   var APIGEE_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
 
