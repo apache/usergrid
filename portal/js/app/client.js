@@ -85,23 +85,13 @@ usergrid.client = (function() {
   // The base for all API calls. HANDLE WITH CAUTION!
   function apiRequest(method, path, data, success, error) {
 
-    var content_type = "application/json; charset=utf-8";
-    /*
-    if ((method == 'POST') && !data) {
-      data = encodeParams(params);
-      content_type = "application/x-www-form-urlencoded";
-    } else {
-      url += "?" + encodeParams(params);
-    }*/
-
-
     var ajaxOptions = {
       type: method.toUpperCase(),
       url: self.apiUrl + path,
       success: success,
       error: error,
       data: data || {},
-      contentType: content_type,
+      contentType: "application/json; charset=utf-8",
       dataType: "json"
     }
 
@@ -120,9 +110,10 @@ usergrid.client = (function() {
 
 function encodeParams(params) {
     tail = [];
+    var item = [];
     if (params instanceof Array) {
       for (i in params) {
-        var item = params[i];
+        item = params[i];
         if ((item instanceof Array) && (item.length > 1)) {
           tail.push(item[0] + "=" + encodeURIComponent(item[1]));
         }
@@ -133,7 +124,7 @@ function encodeParams(params) {
           var value = params[key];
           if (value instanceof Array) {
             for (i in value) {
-              var item = value[i];
+              item = value[i];
               tail.push(key + "=" + encodeURIComponent(item));
             }
           } else {
@@ -418,6 +409,24 @@ function encodeParams(params) {
   /*******************************************************************
    *
    * Query object
+   *
+   * Usage: The goal of the query object is to make it easy to run any
+   *        kind of CRUD call against the API.  This is done as follows:
+   *
+   *        1.  Create a query object:
+   *        queryObj = new client.queryObj("GET", "users", null, function() { alert("success"); }, function() { alert("failure"); });
+   *
+   *        2.  Run the query by calling the appropriate endpoint call
+   *        runAppQuery(queryObj);
+   *        or
+   *        runManagementQuery(queryObj);
+   *
+   *        3. Paging - The queryObj holds the cursor information.  To
+   *        use, simply bind click events to functions that call the
+   *        getNext and getPrevious methods of the query object.  This
+   *        will set the cursor correctly, and the runAppQuery method
+   *        can be called again using the same queryObj:
+   *        runAppQuery(queryObj);
    *
    ******************************************************************/
 
