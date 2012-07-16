@@ -19,8 +19,8 @@ usergrid.client = (function() {
 
   var APIGEE_TLD = "apigee.com";
 
-  /*  flag to overide use SSO if needed set to ?use_sso=false */
-  var USE_SSO = 'false';
+  /* flag to overide use SSO if needed set to ?use_sso=no */
+  var USE_SSO = 'no';
 
   var APIGEE_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
 
@@ -93,7 +93,7 @@ usergrid.client = (function() {
     } else {
       url += "?" + encodeParams(params);
     }*/
-    
+
 
     var ajaxOptions = {
       type: method.toUpperCase(),
@@ -144,7 +144,7 @@ function encodeParams(params) {
     }
     return tail.join("&");
   }
-  
+
   /*******************************************************************
    *
    * Management endpoints
@@ -417,10 +417,10 @@ function encodeParams(params) {
 
   /*******************************************************************
    *
-   * Query object 
+   * Query object
    *
    ******************************************************************/
-  
+
   /*
    *  @class queryObj
    *  @purpose a class for holding all query information and paging state
@@ -441,7 +441,7 @@ function encodeParams(params) {
     //callbacks
     this.successCallback = successCallback;
     this.failureCallback = failureCallback;
-    
+
     //paging vars
     this.cursor = null;
     this.next = null
@@ -466,7 +466,7 @@ function encodeParams(params) {
     queryObj.prototype.hasNext = function hasNext(){
       return (this.next);
     }
-    
+
     queryObj.prototype.getNext = function getNext() {
       this.previous.push(this.cursor);
       this.cursor = this.next;
@@ -509,7 +509,7 @@ function encodeParams(params) {
    *  @function processQuery
    *  @purpose to validate and prepare a call to the API
    *  @params queryObj - {method, path, jsonObj, params, successCallback, failureCallback}
-   *            
+   *
    */
   function processQuery(_queryObj, endpoint) {
     //validate parameters
@@ -519,11 +519,11 @@ function encodeParams(params) {
       var jsonObj = _queryObj.jsonObj || {};
       var params = _queryObj.params || {};
 
-      //method - should be GET, POST, PUT, or DELETE only      
+      //method - should be GET, POST, PUT, or DELETE only
       if (method != 'GET' && method != 'POST' && method != 'PUT' && method != 'DELETE') {
         throw(new Error('Invalid method - should be GET, POST, PUT, or DELETE.'));
       }
-      
+
       //add in a timestamp for gets and deletes
       if ((method == "GET") || (method == "DELETE")) {
         params['_'] = new Date().getTime();
@@ -550,7 +550,7 @@ function encodeParams(params) {
         //regex to strip multiple slashes
         while(path.indexOf('//') != -1){
           path = path.replace('//', '/');
-        }        
+        }
       }
 
       //jsonObj - make sure we have a valid json object
@@ -567,7 +567,7 @@ function encodeParams(params) {
       console.log('processQuery - error occured -' + e.message);
       return false;
     }
-    
+
     //log the activity
     console.log("processQuery - " + method + " - " + path);
 
@@ -582,9 +582,9 @@ function encodeParams(params) {
       function(response) {
         console.log('API call failed - ' + response.responseText);
         _queryObj.failureCallback(response)
-      });   
+      });
   }
-  
+
   /*******************************************************************
    *
    * SSO functions
@@ -631,7 +631,7 @@ function encodeParams(params) {
     }
     return encodeURIComponent(callback);
   }
-  
+
   /*******************************************************************
    *
    * Public functions

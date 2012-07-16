@@ -31,9 +31,11 @@ function usergrid_console_app(Pages) {
   var alphaNumRegex = new RegExp("^([0-9a-zA-Z])+$");
   var alphaNumAllowedCharsMessage = 'Collection name only allows : a-z 0-9';
 
-  var pathRegex = new RegExp("^([0-9a-z.-/])+$");
+  var pathRegex = new RegExp("^([0-9a-z./-])+$");
   var pathAllowedCharsMessage = 'Path only allows : /, a-z, 0-9, dot, and dash';
   var roleAllowedCharsMessage = 'Role only allows : /, a-z, 0-9, dot, and dash';
+
+  var intRegex = new RegExp("^([0-9])+$");
 
   var applications = {};
   var applications_by_id = {};
@@ -677,30 +679,30 @@ function usergrid_console_app(Pages) {
   var organization_keys = { };
 
   function requestOrganizationCredentials() {
-    $('#organization-panel-key').html('<div class="alert alert-info">Loading...</div>');
-    $('#organization-panel-secret').html('<div class="alert alert-info">Loading...</div>');
+    $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
+    $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
     client.requestOrganizationCredentials(function(response) {
       $('#organization-panel-key').html(response.credentials.client_id);
       $('#organization-panel-secret').html(response.credentials.client_secret);
       organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
     },
     function() {
-      $('#organization-panel-key').html('<div class="alert">Unable to load...</div>');
-      $('#organization-panel-secret').html('<div class="alert">Unable to load...</div>');
+      $('#organization-panel-key').html('<div class="alert marginless">Unable to load...</div>');
+      $('#organization-panel-secret').html('<div class="alert marginless">Unable to load...</div>');
     });
   }
 
   function newOrganizationCredentials() {
-    $('#organization-panel-key').html('<div class="alert alert-info">Loading...</div>');
-    $('#organization-panel-secret').html('<div class="alert alert-info">Loading...</div>');
+    $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
+    $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
     client.regenerateOrganizationCredentials(function(response) {
       $('#organization-panel-key').html(response.credentials.client_id);
       $('#organization-panel-secret').html(response.credentials.client_secret);
       organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
       },
       function() {
-        $('#organization-panel-key').html('<div class="alert">Unable to load...</div>');
-        $('#organization-panel-secret').html('<div class="alert">Unable to load...</div>');
+        $('#organization-panel-key').html('<div class="alert marginless">Unable to load...</div>');
+        $('#organization-panel-secret').html('<div class="alert marginless">Unable to load...</div>');
       }
     );
   }
@@ -801,6 +803,7 @@ function usergrid_console_app(Pages) {
   $('#dialog-form-add-user-to-group').submit(submitAddUserToGroup);
   $('#dialog-form-add-user-to-role').submit(submitAddUserToRole);
   $('#dialog-form-add-role-to-user').submit(submitAddRoleToUser);
+  $('#dialog-form-add-group-to-role').submit(submitAddGroupToRole);
 
   function checkLength2(input, min, max) {
     if (input.val().length > max || input.val().length < min) {
@@ -1158,7 +1161,7 @@ function usergrid_console_app(Pages) {
     var bValid = checkLength2(roleIdField, 1, 80)
       && checkRegexp2(roleIdField, pathRegex, roleAllowedCharsMessage)
 
-      var username = $('#role-form-username').val();
+    var username = $('#role-form-username').val();
     var roleId = $('#search-role-name-input').val();
     // role may have a preceding or trailing slash, remove it
     roleId = roleId.replace('/','');
@@ -2173,6 +2176,29 @@ function usergrid_console_app(Pages) {
         function() { alertModal("Error", "Unable to retrieve group's activities."); }
       ));
      }
+/*
+      client.queryGroupMemberships(current_application_id, entity.uuid, function(response) {
+        if (group_data && response.entities && (response.entities.length > 0)) {
+          group_data.memberships = response.entities;
+          redrawGroupPanel();
+        }
+      })
+
+      client.queryGroupActivities(current_application_id, entity.uuid, function(response) {
+        if (group_data && response.entities && (response.entities.length > 0)) {
+          group_data.activities = response.entities;
+          redrawGroupPanel();
+        }
+      })
+
+      client.requestGroupRoles(current_application_id, entity.uuid, function(response) {
+        if (group_data && response.entities) {
+          group_data.roles = response.entities;
+          redrawGroupPanel();
+        }
+      })
+    }
+*/
   }
 
   function requestGroup(groupId) {
@@ -2203,6 +2229,7 @@ function usergrid_console_app(Pages) {
     selectFirstTabButton('#roles-panel-tab-bar');
     showPanelList('roles');
     $('#role-panel-users').hide();
+    $('#role-panel-groups').hide();
   }
   window.usergrid.console.pageSelectRoles = pageSelectRoles;
   
@@ -2297,6 +2324,17 @@ function usergrid_console_app(Pages) {
   }
   window.usergrid.console.pageSelectRoleUsers = pageSelectRoleUsers;
 
+  function pageSelectRoleGroups(roleName, roleId) {
+    current_role_name = roleName;
+    current_role_id = roleId;
+    requestRole();
+    showPanel('#role-panel');
+    $('#role-panel-list').hide();
+    selectTabButton('#button-role-groups');
+    $('#role-panel-groups').show();
+  }
+  window.usergrid.console.pageSelectRoleGroups = pageSelectRoleGroups;
+
   var permissions = {};
   function displayPermissions(response) {
     var section = $('#role-permissions');
@@ -2335,6 +2373,12 @@ function usergrid_console_app(Pages) {
     }
   }
 
+  function displayRoleInactivity(response) {
+    console.log(response);
+    $('#role-inactivity-input').val(response.entities[0].inactivity);
+    $('#role-inactivity-submit').on('click', function() {editRoleInactivity(); return false;});
+  }
+
   var rolesUsersResults = ''
   function displayRolesUsers(response) {
       $('#role-users').html('');
@@ -2347,6 +2391,16 @@ function usergrid_console_app(Pages) {
       $.tmpl('usergrid.ui.panels.role.users.html', {"data" : data}, {}).appendTo('#role-users');
       updateUsersForRolesAutocomplete();
     }
+
+  var rolesGroupsResults = ''
+  function displayRoleGroups(response) {
+    $('#role-groups').html('');
+    data = {};
+    data.roleId = current_role_id;
+    data.rolename = current_role_name;
+    $.tmpl('usergrid.ui.role.groups.table_rows.html', response.entities, {}).appendTo('#role-groups');
+    updateGroupsForRolesAutocomplete();
+  }
 
   function selectAllRolesUsers(){
     $('[class=userRoleItem]').attr('checked', true);
@@ -2366,13 +2420,13 @@ function usergrid_console_app(Pages) {
     $('#role-section-title').html("");
     $('#role-permissions').html("");
     $('#role-users').html("");
-    
+    //requestApplicationRoles
     runAppQuery(new client.queryObj("GET",'rolenames', null, null,
       function(response) {
         getRolesCallback(response);
         $('#role-section-title').html(current_role_name + " Role");
         $('#role-permissions').html('<div class="alert alert-info">Loading ' + current_role_name + ' permissions...</div>');
-
+        //requestApplicationRolePermissions
         runAppQuery(new client.queryObj("GET","rolenames/" + current_role_name, null, null,
           function(response) {
             displayPermissions(response);
@@ -2380,7 +2434,7 @@ function usergrid_console_app(Pages) {
           function() {
             $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>');
           }));
-
+        //requestApplicationRoleUsers
         runAppQuery(new client.queryObj("GET","roles/" + current_role_id + "/users" + current_role_name, null, null,
           function(response) {
             displayRolesUsers(response);
@@ -2388,6 +2442,21 @@ function usergrid_console_app(Pages) {
           function() {
             $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>');
           }));
+        //requestRole
+        runAppQuery(new client.queryObj("GET", "role/" + roleId, null, null, displayRoleInactivity,
+            function() {
+              $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>')
+            }
+          ));
+        //requestGroupRoles
+        runAppQuery(new client.queryObj("GET", "/roles/" + current_role_id + "/groups", null, null,
+            function(response) {
+              displayRoleGroups(response);
+            },
+            function() {
+              $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>');
+            }
+          ));            
       },
       function() {
         $('#application-roles').html('<div class="alert">Unable to retrieve roles list.</div>');
@@ -2395,7 +2464,7 @@ function usergrid_console_app(Pages) {
     ));
   }
 
-  function deleteRolePermission(roleName, permission) {
+function deleteRolePermission(roleName, permission) {
     data = {"permission":permission};
     confirmDelete(function(){
       runAppQuery(new client.queryObj("DELETE", "rolenames/" + roleName, null, data, requestRole, requestRole));
@@ -2403,7 +2472,7 @@ function usergrid_console_app(Pages) {
   }
   window.usergrid.console.deleteRolePermission = deleteRolePermission;
 
-  function addRolePermission(roleName) {
+   function addRolePermission(roleName) {
     var path = $('#role-permission-path-entry-input').val();
     var ops = "";
     var s = "";
@@ -2432,6 +2501,19 @@ function usergrid_console_app(Pages) {
     }
   }
   window.usergrid.console.addRolePermission = addRolePermission;
+
+  function editRoleInactivity() {
+    var inactivity = $('#role-inactivity-input').val();
+    var roleId = current_role_id;
+
+    if (intRegex.test(inactivity)) {
+      data = { inactivity: inactivity };
+      runAppQuery(new client.queryObj("DELETE", "/roles/" + roleId, data, null, requestRole, requestRole));
+    } else {
+      $('#inactivity-integer-message').show()
+    }
+  }
+  window.usergrid.console.editRoleInactivity = editRoleInactivity;
 
   function deleteUserPermission(userName, permission) {
     var data = {"permission": permission};
@@ -2483,6 +2565,71 @@ function usergrid_console_app(Pages) {
     }
   }
   window.usergrid.console.addUserPermission = addUserPermission;
+
+  function submitAddGroupToRole() {
+    var form = $(this);
+    formClearErrors(form);
+
+    var groupId = $('#search-roles-group-name-input');
+    var bValid = checkLength2(groupId, 1, 80)
+      && checkRegexp2(groupId, nameRegex, nameAllowedCharsMessage);
+
+    if (bValid) {
+      client.addGroupToRole(
+	current_application_id,
+	current_role_id,
+	groupId.val(),
+	function() {pageSelectRoleGroups(current_role_id, current_role_name);},
+        function() {
+          alertModal("Unable to add group to role", client.getLastErrorMessage("An internal error occured."));
+        }
+      );
+
+      $(this).modal('hide');
+    }
+  }
+  window.usergrid.console.submitAddGroupToRole = submitAddGroupToRole;
+
+  function removeGroupFromRole() {
+    var items = $('input[class=roleGroupItem]:checked');
+    if (!items.length) {
+      alertModal("Error", "Please, first select the groups you want to delete for this role.");
+      return;
+    }
+    confirmDelete(function(){
+      $.each(items, function() {
+        var groupId = $(this).val();
+        client.removeGroupFromRole(
+	  current_application_id,
+	  current_role_id,
+	  groupId,
+	  function() {
+	    pageSelectRoleGroups(current_role_id, current_role_name);
+	  },
+	  function() {
+            alertModal("Error","Unable to remove group from role: " + client.getLastErrorMessage('An internal error occured'));
+          }
+	);
+      });
+    });
+
+  }
+
+  $('#remove-selected-role-groups').click(removeGroupFromRole);
+
+  function selectAllRoleGroups(){
+    $('[class=roleGroupItem]').attr('checked', true);
+    $('#deselectAllRoleGroups').show();
+    $('#selectAllRoleGroups').hide();
+  }
+  window.usergrid.console.selectAllRoleGroups = selectAllRoleGroups;
+
+  function deselectAllRoleGroups(){
+    $('[class=roleGroupItem]').attr('checked', false);
+    $('#selectAllRoleGroups').show();
+    $('#deselectAllRoleGroups').hide();
+  }
+  window.usergrid.console.deselectAllRoleGroups = deselectAllRoleGroups;
 
   /*******************************************************************
    *
@@ -2629,7 +2776,7 @@ function usergrid_console_app(Pages) {
         application_counters = response.counters;
 
         if (!application_counters) {
-          $('#analytics-graph').html('<div class="alert">No counter data.</div>');
+          $('#analytics-graph').html('<div class="alert marginless">No counter data.</div>');
           return;
         }
 
@@ -2705,7 +2852,7 @@ function usergrid_console_app(Pages) {
         $('#analytics-graph').html('<div class="alert">Unable to load...</div>');
       }));
   }
-
+  
   /*******************************************************************
    *
    * Settings
@@ -3007,6 +3154,26 @@ function usergrid_console_app(Pages) {
     pathInput.data('typeahead').source = list;
   }
   window.usergrid.console.updateGroupsAutocompleteCallback = updateGroupsAutocompleteCallback;
+
+  function updateGroupsForRolesAutocomplete(){
+    client.requestGroups(current_application_id, updateGroupsForRolesAutocompleteCallback, null);
+    return false;
+  }
+
+  function updateGroupsForRolesAutocompleteCallback(response) {
+    groups = {};
+    if (response.entities) {
+      groups = response.entities;
+    }
+    var pathInput = $('#search-roles-group-name-input');
+    var list = [];
+    for (var i in groups) {
+      list.push(groups[i].path);
+    }
+    pathInput.typeahead({source:list});
+    pathInput.data('typeahead').source = list;
+  }
+  window.usergrid.console.updateGroupsForRolesAutocompleteCallback = updateGroupsForRolesAutocompleteCallback;
 
   function updatePermissionAutocompleteCollections(){
     var pathInput = $("#role-permission-path-entry-input");
@@ -3468,12 +3635,20 @@ function usergrid_console_app(Pages) {
       selectTabButton('#button-role-settings');
       $('#roles-panel-list').hide();
       $('#role-panel-users').hide();
+      $('#role-panel-groups').hide();
       $('#role-panel-settings').show();
     } else if ($(this).attr('id') == "button-role-users") {
       selectTabButton('#button-role-users');
       $('#roles-panel-list').hide();
       $('#role-panel-settings').hide();
+      $('#role-panel-groups').hide();
       $('#role-panel-users').show();
+    } else if ($(this).attr('id') == "button-role-groups") {
+      selectTabButton('#button-role-groups');
+      $('#roles-panel-list').hide();
+      $('#role-panel-settings').hide();
+      $('#role-panel-users').hide();
+      $('#role-panel-groups').show();
     } else {
       Pages.SelectPanel('roles');
     }
@@ -3554,6 +3729,7 @@ function usergrid_console_app(Pages) {
     usergrid.console.ui.loadTemplate("usergrid.ui.users.table_rows.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.groups.table_rows.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.roles.table_rows.html");
+    usergrid.console.ui.loadTemplate("usergrid.ui.role.groups.table_rows.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.activities.table_rows.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.collections.table_rows.html");
     usergrid.console.ui.loadTemplate("usergrid.ui.panels.role.users.html");
