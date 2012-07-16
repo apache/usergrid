@@ -27,6 +27,7 @@ import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
@@ -123,9 +124,10 @@ public class EntityCleanup extends ToolBase {
                 UUID timestampUuid = newTimeUUID();
                 long timestamp = getTimestampInMicros(timestampUuid);
 
+                Set<String> collectionNames = em.getApplicationCollections();
+
                 // go through each collection and audit the value
-                for (String collectionName : em
-                        .getCollections(new SimpleEntityRef(applicationId))) {
+                for (String collectionName : collectionNames) {
 
                     lastCursor = null;
 
