@@ -209,6 +209,10 @@ usergrid.client = (function() {
     }), success, failure);
   }
 
+  function editRoleInactivity(applicationId, roleId, inactivity, success, failure) {
+    apiRequest("PUT", "/" + session.currentOrganization.uuid + "/" + applicationId + "/roles/" + roleId, JSON.stringify({ inactivity: inactivity }), success, failure);
+  }
+
   function deleteApplicationRolePermission(applicationId, roleName, permission, success, failure) {
     apiRequest("DELETE", "/" + session.currentOrganization.uuid + "/" + applicationId + "/rolenames/" + roleName, {
       permission : permission
@@ -238,7 +242,6 @@ usergrid.client = (function() {
     if (resolution) params.resolution = resolution;
     if (counter) params.counter = counter;
     params.pad = true;
-    console.log(params);
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/counters", params, success, failure);
   }
 
@@ -622,6 +625,10 @@ usergrid.client = (function() {
     apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/rolenames", null, success, failure);
   }
 
+  function requestRole(applicationId, roleId, success, failure) {
+    apiGetRequest("/" + session.currentOrganization.uuid + "/" + applicationId + "/role/" + roleId, null, success, failure);
+  }
+
   function Query(applicationId, path, ql, options, success, failure) {
 
     if (path.lastIndexOf("/", 0) !== 0) {
@@ -905,9 +912,11 @@ usergrid.client = (function() {
     addUserToRole: addUserToRole,
     removeUserFromRole: removeUserFromRole,
     requestRoles: requestRoles,
+    requestRole: requestRole,
     Query: Query,
     setCurrentOrganization: setCurrentOrganization,
-    autoLogin: autoLogin
+    autoLogin: autoLogin,
+    editRoleInactivity: editRoleInactivity
   }
 
   return self

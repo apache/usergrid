@@ -35,6 +35,8 @@ function usergrid_console_app(Pages) {
   var pathAllowedCharsMessage = 'Path only allows : /, a-z, 0-9, dot, and dash';
   var roleAllowedCharsMessage = 'Role only allows : /, a-z, 0-9, dot, and dash';
 
+  var intRegex = new RegExp("^([0-9])+$");
+
   var applications = {};
   var applications_by_id = {};
 
@@ -2361,6 +2363,12 @@ function usergrid_console_app(Pages) {
     }
   }
 
+  function displayRoleInactivity(response) {
+    console.log(response);
+    $('#role-inactivity-input').val(response.entities[0].inactivity);
+    $('#role-inactivity-submit').on('click', function() {editRoleInactivity(); return false;});
+  }
+
   var rolesUsersResults = ''
   function displayRolesUsers(response) {
       $('#role-users').html('');
@@ -2402,6 +2410,7 @@ function usergrid_console_app(Pages) {
     $('#role-section-title').html("");
     $('#role-permissions').html("");
     $('#role-users').html("");
+    $('#role-groups').html("");
     client.requestApplicationRoles(
       current_application_id,
       function(response) {
@@ -2429,7 +2438,14 @@ function usergrid_console_app(Pages) {
             $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>');
           }
         );
-
+	client.requestRole(
+	  session.currentApplicationId,
+	  current_role_id,
+	  displayRoleInactivity,
+	  function() {
+	    $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>')
+	  }
+	);
 	client.requestRoleGroups(
 	  current_application_id,
 	  current_role_id,
@@ -2482,6 +2498,18 @@ function usergrid_console_app(Pages) {
     }
   }
   window.usergrid.console.addRolePermission = addRolePermission;
+
+  function editRoleInactivity() {
+    var inactivity = $('#role-inactivity-input').val();
+    var roleId = current_role_id;
+
+    if (intRegex.test(inactivity)) {
+      client.editRoleInactivity(session.currentApplicationId, roleId, inactivity, requestRole, requestRole);
+    } else {
+      $('#inactivity-integer-message').show()
+    }
+  }
+  window.usergrid.console.editRoleInactivity = editRoleInactivity;
 
   function deleteUserPermission(userName, permission) {
     confirmDelete(function(){

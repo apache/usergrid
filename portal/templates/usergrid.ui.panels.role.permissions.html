@@ -1,3 +1,12 @@
+<h4>Inactivity</h4>
+<div id="role-inactivity-form" class="well form-inline">
+  Seconds: <input type="text" name="role-inactivity" id="role-inactivity-input" value="" /> &nbsp; Integer only. 0 (zero) means no expiration.
+  <button id="role-inactivity-submit" class="btn btn-primary">Edit</button>
+</div>
+<div class="alert alert-error" id="inactivity-integer-message" style="display: none;">
+  Only integers greater than 0 are accepted.
+</div>
+<br />
 <h4>Add Permission Rule</h4>
 <form id="role-permissions-form" action="" onsubmit="usergrid.console.addRolePermission('${role}'); return false;" class="well form-inline" autocomplete="off">
   Path: <input id="role-permission-path-entry-input" type="text" name="path" value="/" />
@@ -13,7 +22,7 @@
   <label class="checkbox">
     <input id="role-permission-op-delete-checkbox" type="checkbox" name="delete" value="delete"/>
     delete </label>
-  <button type="submit" class="btn btn-primary"><i class="icon-plus-sign icon-white"></i> Add</button >
+  <button type="submit" class="btn btn-primary"><i class="icon-plus-sign icon-white"></i> Add</button>
 </form>
 <br/>
 <h4>Permission Rules</h4>
