@@ -271,20 +271,6 @@ usergrid.client = (function() {
     apiRequest("GET", "/management/users/" + session.getLoggedInUserUUID() + "/organizations", null, success, failure);
   }
 
-  function requestOrganizationCredentials(success, failure) {
-    if (!session.getOrganizationUUID()) {
-      failure();
-    }
-    apiRequest("GET", "/management/organizations/" + session.getOrganizationUUID() + "/credentials", null, success, failure);
-  }
-
-  function regenerateOrganizationCredentials(success, failure) {
-    if (!session.getOrganizationUUID()) {
-      failure();
-    }
-    apiRequest("POST", "/management/organizations/" + session.getOrganizationUUID() + "/credentials", null, success, failure);
-  }
-
   function createAdmin(data, success, failure) {
     if (!session.getOrganizationUUID()) {
       failure();
@@ -755,8 +741,6 @@ usergrid.client = (function() {
     createOrganization: createOrganization,
     leaveOrganization: leaveOrganization,
     requestOrganizations: requestOrganizations,
-    requestOrganizationCredentials: requestOrganizationCredentials,
-    regenerateOrganizationCredentials: regenerateOrganizationCredentials,
     createAdmin: createAdmin,
     createCollection: createCollection,
     requestApplicationCounters: requestApplicationCounters,

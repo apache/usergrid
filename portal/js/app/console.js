@@ -685,30 +685,32 @@ function usergrid_console_app(Pages) {
   function requestOrganizationCredentials() {
     $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
     $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
-    client.requestOrganizationCredentials(function(response) {
-      $('#organization-panel-key').html(response.credentials.client_id);
-      $('#organization-panel-secret').html(response.credentials.client_secret);
-      organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
-    },
-    function() {
-      $('#organization-panel-key').html('<div class="alert marginless">Unable to load...</div>');
-      $('#organization-panel-secret').html('<div class="alert marginless">Unable to load...</div>');
-    });
+    runManagementQuery(new client.queryObj("GET",'organizations/'+ session.getOrganizationUUID() + "/credentials", null, null,
+      function(response) {
+        $('#organization-panel-key').html(response.credentials.client_id);
+        $('#organization-panel-secret').html(response.credentials.client_secret);
+        organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
+      },
+      function() {
+        $('#organization-panel-key').html('<div class="alert marginless">Unable to load...</div>');
+        $('#organization-panel-secret').html('<div class="alert marginless">Unable to load...</div>');
+      }));
   }
 
   function newOrganizationCredentials() {
     $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
     $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
-    client.regenerateOrganizationCredentials(function(response) {
-      $('#organization-panel-key').html(response.credentials.client_id);
-      $('#organization-panel-secret').html(response.credentials.client_secret);
-      organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
+    runManagementQuery(new client.queryObj("POST",'organizations/' + session.getOrganizationUUID()  + "/credentials",null, null,
+      function(response) {
+        $('#organization-panel-key').html(response.credentials.client_id);
+        $('#organization-panel-secret').html(response.credentials.client_secret);
+        organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
       },
       function() {
         $('#organization-panel-key').html('<div class="alert marginless">Unable to load...</div>');
         $('#organization-panel-secret').html('<div class="alert marginless">Unable to load...</div>');
       }
-    );
+    ));
   }
   window.usergrid.console.newOrganizationCredentials = newOrganizationCredentials;
 
