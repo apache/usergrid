@@ -11,7 +11,7 @@
   *
   */
  var session = {
-  getOrganizationObj: function () {
+   getOrganizationObj: function () {
     var organization = localStorage.getObject('currentOrganization');
     return organization;
   },
@@ -24,8 +24,20 @@
     return organization.name;
   },
   setOrganization : function(_organization) {
-    organization = _organization;
     localStorage.setObject('currentOrganization', _organization);
+  },
+  setOrganizationObj : function(_organization) {
+    localStorage.setObject('currentOrganization', _organization);
+  },
+  setOrganizationName : function(_name) {
+    organization = {};
+    organization.name= _name;
+    localStorage.setObject('currentOrganization', organization);
+  },
+  setOrganizationUUID : function(_uuid) {
+    organization = {};
+    organization.uuid = _uuid;
+    localStorage.setObject('currentOrganization', organization);
   },
 
   //application id access and setter methods
@@ -35,6 +47,13 @@
   },
   setApplicationId : function(_applicationId) {
     localStorage.setItem('currentApplicationId', _applicationId);
+  },
+  getApplicationName : function() {
+    var applicationName = localStorage.getItem('currentApplicationName');
+    return applicationName;
+  },
+  setApplicationName : function(_applicationName) {
+    localStorage.setItem('currentApplicationName', _applicationName);
   },
 
   //logged in user access and setter methods
@@ -81,6 +100,7 @@
     localStorage.removeItem('usergridUser');
     localStorage.removeItem('currentOrganization');
     localStorage.removeItem('currentApplicationId');
+    localStorage.removeItem('currentApplicationName');
   },
 
   //method to check if user is logged in
@@ -90,6 +110,8 @@
     return (loggedInUser && accessToken);
   }
 }
+
+var usergrid = usergrid || {};
 
 usergrid.client = (function() {
   // reference to the session manager - used to access local storage
@@ -103,7 +125,7 @@ usergrid.client = (function() {
   var APIGEE_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
   var APIGEE_SSO_PROFILE_URL = "https://accounts.apigee.com/accounts/my_account";
   var SSO_LOGOUT_PAGE = 'https://accounts.apigee.com/accounts/sign_out';
-  
+
   // for running Usergrid as a local server
   var LOCAL_STANDALONE_API_URL = "http://localhost:8080";
   var LOCAL_TOMCAT_API_URL = "http://localhost:8080/ROOT";
@@ -440,7 +462,7 @@ usergrid.client = (function() {
               );
   }
 
-  
+
   function autoLogin(successCallback, errorCallback) {
     // check to see if the user has a valid token
     if (!session.loggedIn()) {
@@ -496,7 +518,7 @@ usergrid.client = (function() {
    *        runAppQuery(queryObj);
    *
    ******************************************************************/
-  
+
   /*
    *  @class queryObj
    *  @purpose a class for holding all query information and paging state
@@ -582,7 +604,7 @@ usergrid.client = (function() {
   queryObj.prototype.getCursor = function getCursor() {
     return this.cursor;
   }
- 
+
 
   /*
    *  @function runAppQuery
@@ -732,8 +754,8 @@ usergrid.client = (function() {
     }
     return encodeURIComponent(callback);
   }
-  
-  
+
+
   /*******************************************************************
    *
    * Public functions
@@ -779,5 +801,5 @@ usergrid.client = (function() {
     session:session
   }
 
-  return self
+  return self;
 })();
