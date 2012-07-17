@@ -2899,10 +2899,8 @@ function deleteRolePermission(roleName, permission) {
 
   function scrollToInput() {
     // Do it manually because JQuery seems to not get it right
-    var console_panels = document.getElementById('console-panels');
-    var shell_content = document.getElementById('shell-content');
-    var scrollOffset = Math.max(shell_content.clientHeight - console_panels.clientHeight, 0);
-    console_panels.scrollTop = scrollOffset;
+    var textArea = document.getElementById('shell-output');
+    textArea.scrollTop = textArea.scrollHeight;
   }
 
   function echoInputToShell(s) {
@@ -2923,6 +2921,7 @@ function deleteRolePermission(roleName, permission) {
     printLnToShell(JSON.stringify(response, null, "  "));
     $('#shell-output').append('<hr />');
     prettyPrint();
+    scrollToInput();
   }
 
   function handleShellCommand(s) {
