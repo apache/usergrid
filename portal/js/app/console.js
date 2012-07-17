@@ -931,9 +931,10 @@ function usergrid_console_app(Pages) {
 
     if (bValid) {
       var data = form.serializeObject();
-      client.createOrganization(data,requestOrganizations, function() {
-        alertModal("Unable to create organization");
-      });
+      runManagementQuery(new client.queryObj("POST","users/" + session.getLoggedInUserUUID() + "/organizations", data, null,
+        requestOrganizations,
+        function() { alertModal("Unable to create organization"); }
+      ));
       $(this).modal('hide');
     }
   }
@@ -3529,20 +3530,23 @@ function deleteRolePermission(roleName, permission) {
 
   function requestOrganizations() {
     $('#organizations').html('<div class="alert alert-info">Loading...</div>');
-    client.requestOrganizations(displayOrganizations, function() {
-      $('#organizations').html('<div class="alert">Unable to retrieve organizations list.</div>');
-    });
+    runManagementQuery(new client.queryObj("GET","users/" + session.getLoggedInUserUUID() + "/organizations", null, null,
+      displayOrganizations,
+      function() {
+        $('#organizations').html('<div class="alert">Unable to retrieve organizations list.</div>');
+      }));
   }
   usergrid.console.requestOrganizations = requestOrganizations;
 
   function leaveOrganization(UUID) {
-
     confirmAction(
       "Are you sure you want to leave this Organization?",
       "You will lose all access to it.",
-      function() { client.leaveOrganization(UUID, requestAccountSettings, function() {
-        alertModal("Unable to leave organization");
-      })}
+      function() { 
+        runManagementQuery(new client.queryObj("DELETE","users/" + session.getLoggedInUserUUID() + "/organizations/" + UUID, null, null,
+          requestAccountSettings,
+          function() { alertModal("Unable to leave organization"); }));
+        }
     );
 
     return false;

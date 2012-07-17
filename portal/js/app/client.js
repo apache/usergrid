@@ -253,24 +253,6 @@ usergrid.client = (function() {
     apiRequest("GET", "/management/organizations/" + session.getOrganizationUUID() + "/users", null, success, failure);
   }
 
-  function createOrganization(data, success, failure) {
-    if (!session.getLoggedInUserObj()) {
-      failure();
-    }
-    apiRequest("POST", "/management/users/" + session.getLoggedInUserUUID() + "/organizations", JSON.stringify(data), success, failure);
-  }
-
-  function leaveOrganization(organizationUUID, success, failure) {
-    if (!session.getLoggedInUserObj()) {
-      failure();
-    }
-    apiRequest("DELETE", "/management/users/" + session.getLoggedInUserUUID() + "/organizations/" + organizationUUID, null, success, failure);
-  }
-
-  function requestOrganizations(success, failure) {
-    apiRequest("GET", "/management/users/" + session.getLoggedInUserUUID() + "/organizations", null, success, failure);
-  }
-
   function createAdmin(data, success, failure) {
     if (!session.getOrganizationUUID()) {
       failure();
@@ -738,9 +720,6 @@ usergrid.client = (function() {
     requestApplications: requestApplications,
     createApplication: createApplication,
     requestAdmins: requestAdmins,
-    createOrganization: createOrganization,
-    leaveOrganization: leaveOrganization,
-    requestOrganizations: requestOrganizations,
     createAdmin: createAdmin,
     createCollection: createCollection,
     requestApplicationCounters: requestApplicationCounters,
