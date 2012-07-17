@@ -589,9 +589,10 @@ function usergrid_console_app(Pages) {
   function requestApplications() {
     var sectionApps = $('#organization-applications-table');
     sectionApps.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
-    client.requestApplications(displayApplications, function() {
-      sectionApps.html('<div class="alert user-panel-section">Unable to retrieve application list.</div>');
-    });
+    runManagementQuery(new client.queryObj("GET","organizations/" + session.getOrganizationUUID() + "/applications", null, null,
+      displayApplications,
+      function() { sectionApps.html('<div class="alert user-panel-section">Unable to retrieve application list.</div>'); }
+    ));
   }
 
   function selectFirstApp() {
@@ -630,9 +631,10 @@ function usergrid_console_app(Pages) {
   function requestAdmins() {
     var sectionAdmins =$('#organization-admins-table');
     sectionAdmins.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
-    client.requestAdmins(displayAdmins, function() {
-      sectionAdmins.html('<div class="alert user-panel-section">Unable to retrieve admin list</div>');
-    });
+    runManagementQuery(new client.queryObj("GET","organizations/" + session.getOrganizationUUID() + "/users", null, null,
+      displayAdmins,
+      function() {sectionAdmins.html('<div class="alert user-panel-section">Unable to retrieve admin list</div>');
+    }));
   }
 
   $(document).on('click', '.toggleableSP', function() {
@@ -893,13 +895,15 @@ function usergrid_console_app(Pages) {
       && checkRegexp2(new_application_name, usernameRegex, usernameAllowedCharsMessage);
 
     if (bValid) {
-      client.createApplication(form.serializeObject(), requestApplications, function() {
-        closeErrorMessage = function() {
-          $('#home-messages').hide();
-        };
-        var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
-        $('#home-messages').text("Unable to create application: ").prepend(closebutton).addClass('alert-error').show();
-      });
+      runManagementQuery(new client.queryObj("POST","organizations/" + session.getOrganizationUUID() + "/applications", form.serializeObject(), null,
+        requestApplications,
+        function() {
+          closeErrorMessage = function() {
+            $('#home-messages').hide();
+          };
+          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+          $('#home-messages').text("Unable to create application: ").prepend(closebutton).addClass('alert-error').show();
+      }));
       $(this).modal('hide');
     }
   }
@@ -913,9 +917,10 @@ function usergrid_console_app(Pages) {
       && checkRegexp2(new_admin_email,emailRegex, emailAllowedCharsMessage);
     if (bValid) {
       var data = form.serializeObject();
-      client.createAdmin(data, requestAdmins, function () {
-        alertModal("Unable to create admin");
-      });
+      runManagementQuery(new client.queryObj("POST","organizations/" + session.getOrganizationUUID() + "/users", data, null,
+        requestAdmins,
+        function () { alertModal("Unable to create admin"); }
+      ));
       $(this).modal('hide');
     }
   }

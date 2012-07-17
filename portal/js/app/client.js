@@ -229,39 +229,6 @@ usergrid.client = (function() {
 
   /*******************************************************************
    *
-   * Management endpoints
-   *
-   ******************************************************************/
-  function requestApplications(success, failure) {
-    if (!session.getOrganizationUUID()) {
-      failure();
-    }
-    apiRequest("GET", "/management/organizations/" + session.getOrganizationUUID() + "/applications", null, success, failure);
-  }
-
-  function createApplication(data, success, failure) {
-    if (!session.getOrganizationUUID()) {
-      failure();
-    }
-    apiRequest("POST", "/management/organizations/" + session.getOrganizationUUID() + "/applications", JSON.stringify(data), success, failure);
-  }
-
-  function requestAdmins(success, failure) {
-    if (!session.getOrganizationUUID()) {
-      failure();
-    }
-    apiRequest("GET", "/management/organizations/" + session.getOrganizationUUID() + "/users", null, success, failure);
-  }
-
-  function createAdmin(data, success, failure) {
-    if (!session.getOrganizationUUID()) {
-      failure();
-    }
-    apiRequest("POST", "/management/organizations/" + session.getOrganizationUUID() + "/users", JSON.stringify(data), success, failure);
-  }
-
-  /*******************************************************************
-   *
    * Complex App endpoints
    *
    ******************************************************************/
@@ -717,10 +684,6 @@ usergrid.client = (function() {
     onActiveRequest: null,
     encodePathString: encodePathString,
     apiRequest: apiRequest,
-    requestApplications: requestApplications,
-    createApplication: createApplication,
-    requestAdmins: requestAdmins,
-    createAdmin: createAdmin,
     createCollection: createCollection,
     requestApplicationCounters: requestApplicationCounters,
     loginAdmin: loginAdmin,
