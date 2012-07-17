@@ -2934,26 +2934,27 @@ function deleteRolePermission(roleName, permission) {
     }
     var path = '';
     var params = '';
+
     if (s.startsWith("/")) {
       path = encodePathString(s);
       printLnToShell(path);
-      client.apiGetRequest("/" + orgName + "/" + current_application_id + path, null, displayShellResponse, null);
+      runAppQuery(new client.queryObj("GET",path, null, null, displayShellResponse,null));
     } else if (s.startsWith("get /")) {
       path = encodePathString(s.substring(4));
       printLnToShell(path);
-      client.apiGetRequest("/" + orgName + "/" + current_application_id + path, null, displayShellResponse, null);
+      runAppQuery(new client.queryObj("GET",path, null, null, displayShellResponse,null));
     } else if (s.startsWith("put /")) {
       params = encodePathString(s.substring(4), true);
       printLnToShell(params.path);
-      client.apiRequest("PUT", "/" + orgName + "/" + current_application_id + params.path, null, JSON.stringify(params.payload), displayShellResponse, null);
-    } else if (s.startsWith("post /")) {
+      runAppQuery(new client.queryObj("PUT",params.path, params.payload, null, displayShellResponse,null));
+  } else if (s.startsWith("post /")) {
       params = encodePathString(s.substring(5), true);
       printLnToShell(params.path);
-      client.apiRequest("POST", "/" + orgName + "/" + current_application_id + params.path, null, JSON.stringify(params.payload), displayShellResponse, null);
+      runAppQuery(new client.queryObj("POST",params.path, params.payload, null, displayShellResponse,null));
     } else if (s.startsWith("delete /")) {
       path = encodePathString(s.substring(7));
       printLnToShell(path);
-      client.apiRequest("DELETE", "/" + orgName + "/" + current_application_id + path, null, null, displayShellResponse, null);
+      runAppQuery(new client.queryObj("DELETE",path, null, null, displayShellResponse,null));
     } else if ((s == "clear") || (s == "cls"))  {
       $('#shell-output').html(" ");
     } else if (s == "help") {
