@@ -675,9 +675,8 @@ function usergrid_console_app(Pages) {
   function requestAdminFeed() {
     var section =$('#organization-activities');
     section.empty().html('<div class="alert alert-info">Loading...</div>');
-    client.requestAdminFeed(displayAdminFeed, function() {
-      section.html('<div class="alert">Unable to retrieve feed.</div>');
-    });
+    runManagementQuery(new client.queryObj("GET","users/" + session.getLoggedInUserUUID() + "/feed", null, null, displayAdminFeed,
+      function() { section.html('<div class="alert">Unable to retrieve feed.</div>'); }));
   }
   window.usergrid.console.requestAdminFeed = requestAdminFeed;
 
