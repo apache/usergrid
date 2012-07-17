@@ -3480,10 +3480,7 @@ function deleteRolePermission(roleName, permission) {
       $('#old-account-password').val("");
       $('#update-account-password').val("");
       $('#update-account-password-repeat').val("");
-      client.requestAdminUser(displayAccountSettings,
-          function() {
-          }
-      );
+      runManagementQuery(new client.queryObj("GET",'users/' + session.getLoggedInUserUUID(), null, null, displayAccountSettings, null));
     }
   }
   usergrid.console.requestAccountSettings = requestAccountSettings;

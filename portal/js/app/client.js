@@ -292,13 +292,6 @@ usergrid.client = (function() {
     apiRequest("POST", "/management/organizations/" + session.getOrganizationUUID() + "/users", JSON.stringify(data), success, failure);
   }
 
-  function requestAdminUser(success, failure) {
-    if (!session.getLoggedInUserObj()) {
-      failure();
-    }
-    apiRequest("GET", "/management/users/" + session.getLoggedInUserUUID(), null, success, failure);
-  }
-
   /*******************************************************************
    *
    * Complex App endpoints
@@ -767,7 +760,6 @@ usergrid.client = (function() {
     createAdmin: createAdmin,
     createCollection: createCollection,
     requestApplicationCounters: requestApplicationCounters,
-    requestAdminUser: requestAdminUser,
     loginAdmin: loginAdmin,
     loginAppUser: loginAppUser,
     useSSO: useSSO,
