@@ -5,13 +5,94 @@
  *
  *
  */
+/*
+  *  @class session
+  *  @purpose a class of standardized methods for accessing local storage
+  *
+  */
+ var session = {
+  getOrganizationObj: function () {
+    var organization = localStorage.getObject('currentOrganization');
+    return organization;
+  },
+  getOrganizationUUID : function() {
+    var organization = localStorage.getObject('currentOrganization');
+    return organization.uuid;
+  },
+  getOrganizationName : function() {
+    var organization = localStorage.getObject('currentOrganization');
+    return organization.name;
+  },
+  setOrganization : function(_organization) {
+    organization = _organization;
+    localStorage.setObject('currentOrganization', _organization);
+  },
+
+  //application id access and setter methods
+  getApplicationId : function() {
+    var applicationId = localStorage.getItem('currentApplicationId');
+    return applicationId;
+  },
+  setApplicationId : function(_applicationId) {
+    localStorage.setItem('currentApplicationId', _applicationId);
+  },
+
+  //logged in user access and setter methods
+  getLoggedInUserObj : function() {
+    var loggedInUser = localStorage.getObject('usergridUser');
+    return loggedInUser;
+  },
+  getLoggedInUserUUID : function getLoggedInUserUUID() {
+    var loggedInUser = localStorage.getObject('usergridUser');
+    return loggedInUser.uuid;
+  },
+  getLoggedInUserEmail : function() {
+    var loggedInUser = localStorage.getObject('usergridUser');
+    return loggedInUser.email;
+  },
+  getLoggedInUserOrgs : function() {
+    var loggedInUser = localStorage.getObject('usergridUser');
+    return loggedInUser.organizations;
+  },
+  setLoggedInUser : function(_loggedInUser) {
+    localStorage.setObject('usergridUser', _loggedInUser);
+  },
+
+  //access token access and setter methods
+  getAccessToken : function() {
+    var accessToken = localStorage.getItem('accessToken');
+    return accessToken;
+  },
+  setAccessToken : function(_accessToken) {
+    localStorage.setItem('accessToken', _accessToken);
+  },
+
+  //convenience method for saving all active user vars at once
+  saveAll : function(_organization, _applicationId, _loggedInUser, _accessToken) {
+    this.setOrganization(_organization);
+    this.setApplicationId(_applicationId);
+    this.setLoggedInUser(_loggedInUser);
+    this.setAccessToken(_accessToken);
+  },
+
+  //convenience method for clearing all active user vars at once
+  clearAll : function() {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('usergridUser');
+    localStorage.removeItem('currentOrganization');
+    localStorage.removeItem('currentApplicationId');
+  },
+
+  //method to check if user is logged in
+  loggedIn : function() {
+    var loggedInUser = this.getLoggedInUserObj();
+    var accessToken = this.getAccessToken();
+    return (loggedInUser && accessToken);
+  }
+}
 
 usergrid.client = (function() {
-
-  // This code block *WILL* load before the document is complete
-
-  var session = usergrid.session;
-
+  // reference to the session manager - used to access local storage
   //API endpoint
   var FORCE_PUBLIC_API = true; // Always use public API
   var PUBLIC_API_URL = "https://api.usergrid.com";
@@ -29,9 +110,7 @@ usergrid.client = (function() {
   var LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
 
   //initialization method should be called up front
-  function Init(applicationId, clientId, clientSecret, apiUrl) {
-
-    session.applicationId = applicationId || null;
+  function Init(clientId, clientSecret, apiUrl) {
     self.clientId = clientId || null;
     self.clientSecret = clientSecret || null;
 
@@ -83,13 +162,14 @@ usergrid.client = (function() {
       dataType: "json"
     }
 
-    // This hack is necesary for IE9. IE is too strict when it comes to cross-domain.
+    // work with ie for cross domain scripting
+    var accessToken = session.getAccessToken();
     if (onIE) {
       ajaxOptions.dataType = "jsonp";
-      if (session.accessToken) { ajaxOptions.data['access_token'] = session.accessToken }
+      if (accessToken) { ajaxOptions.data['access_token'] = accessToken }
     } else {
       ajaxOptions.beforeSend = function(xhr) {
-        if (session.accessToken) { xhr.setRequestHeader("Authorization", "Bearer " + session.accessToken) }
+        if (accessToken) { xhr.setRequestHeader("Authorization", "Bearer " + accessToken) }
       }
     }
 
@@ -131,84 +211,84 @@ usergrid.client = (function() {
    *
    ******************************************************************/
   function requestApplications(success, failure) {
-    if (!session.currentOrganization) {
+    if (!session.getOrganizationUUID()) {
       failure();
     }
-    apiRequest("GET", "/management/organizations/" + session.currentOrganization.uuid + "/applications", null, success, failure);
+    apiRequest("GET", "/management/organizations/" + session.getOrganizationUUID() + "/applications", null, success, failure);
   }
 
   function createApplication(data, success, failure) {
-    if (!session.currentOrganization) {
+    if (!session.getOrganizationUUID()) {
       failure();
     }
-    apiRequest("POST", "/management/organizations/" + session.currentOrganization.uuid + "/applications", JSON.stringify(data), success, failure);
+    apiRequest("POST", "/management/organizations/" + session.getOrganizationUUID() + "/applications", JSON.stringify(data), success, failure);
   }
 
   function requestAdmins(success, failure) {
-    if (!session.currentOrganization) {
+    if (!session.getOrganizationUUID()) {
       failure();
     }
-    apiRequest("GET", "/management/organizations/" + session.currentOrganization.uuid + "/users", null, success, failure);
+    apiRequest("GET", "/management/organizations/" + session.getOrganizationUUID() + "/users", null, success, failure);
   }
 
   function createOrganization(data, success, failure) {
-    if (!session.loggedInUser) {
+    if (!session.getLoggedInUserObj()) {
       failure();
     }
-    apiRequest("POST", "/management/users/" + session.loggedInUser.uuid + "/organizations", JSON.stringify(data), success, failure);
+    apiRequest("POST", "/management/users/" + session.getLoggedInUserUUID() + "/organizations", JSON.stringify(data), success, failure);
   }
 
   function leaveOrganization(organizationUUID, success, failure) {
-    if (!session.loggedInUser) {
+    if (!session.getLoggedInUserObj()) {
       failure();
     }
-    apiRequest("DELETE", "/management/users/" + session.loggedInUser.uuid + "/organizations/" + organizationUUID, null, success, failure);
+    apiRequest("DELETE", "/management/users/" + session.getLoggedInUserUUID() + "/organizations/" + organizationUUID, null, success, failure);
   }
 
   function requestOrganizations(success, failure) {
-    apiRequest("GET", "/management/users/" + session.loggedInUser.uuid + "/organizations", null, success, failure);
+    apiRequest("GET", "/management/users/" + session.getLoggedInUserUUID() + "/organizations", null, success, failure);
   }
 
   function requestOrganizationCredentials(success, failure) {
-    if (!session.currentOrganization) {
+    if (!session.getOrganizationUUID()) {
       failure();
     }
-    apiRequest("GET", "/management/organizations/" + session.currentOrganization.uuid + "/credentials", null, success, failure);
+    apiRequest("GET", "/management/organizations/" + session.getOrganizationUUID() + "/credentials", null, success, failure);
   }
 
   function regenerateOrganizationCredentials(success, failure) {
-    if (!session.currentOrganization) {
+    if (!session.getOrganizationUUID()) {
       failure();
     }
-    apiRequest("POST", "/management/organizations/" + session.currentOrganization.uuid + "/credentials", null, success, failure);
+    apiRequest("POST", "/management/organizations/" + session.getOrganizationUUID() + "/credentials", null, success, failure);
   }
 
   function createAdmin(data, success, failure) {
-    if (!session.currentOrganization) {
+    if (!session.getOrganizationUUID()) {
       failure();
     }
-    apiRequest("POST", "/management/organizations/" + session.currentOrganization.uuid + "/users", JSON.stringify(data), success, failure);
+    apiRequest("POST", "/management/organizations/" + session.getOrganizationUUID() + "/users", JSON.stringify(data), success, failure);
   }
 
   function requestAdminUser(success, failure) {
-    if (!session.loggedInUser) {
+    if (!session.getLoggedInUserObj()) {
       failure();
     }
-    apiRequest("GET", "/management/users/" + session.loggedInUser.uuid, null, success, failure);
+    apiRequest("GET", "/management/users/" + session.getLoggedInUserUUID(), null, success, failure);
   }
 
   function updateAdminUser(properties, success, failure) {
-    if (!session.loggedInUser) {
+    if (!session.getLoggedInUserObj()) {
       failure();
     }
-    apiRequest("PUT", "/management/users/" + session.loggedInUser.uuid, JSON.stringify(properties), success, failure);
+    apiRequest("PUT", "/management/users/" + session.getLoggedInUserUUID(), JSON.stringify(properties), success, failure);
   }
 
   function requestAdminFeed(success, failure) {
-    if (!session.loggedInUser) {
+    if (!session.getLoggedInUserObj()) {
       failure();
     }
-    apiRequest("GET", "/management/users/" + session.loggedInUser.uuid + "/feed", null, success, failure);
+    apiRequest("GET", "/management/users/" + session.getLoggedInUserUUID() + "/feed", null, success, failure);
   }
 
   /*******************************************************************
@@ -224,7 +304,9 @@ usergrid.client = (function() {
         collections: collections
       }
     };
-    apiRequest("PUT", "/" + session.currentOrganization.uuid + "/" + applicationId, JSON.stringify(metadata), success, failure);
+    var uuid = session.getOrganizationUUID();
+    var applicationId2 = session.getApplicationId();
+    apiRequest("PUT", "/" + uuid + "/" + applicationId2, JSON.stringify(metadata), success, failure);
   }
 
   function requestApplicationCounters(applicationId, start_time, end_time, resolution, counter, success, failure) {
@@ -234,32 +316,56 @@ usergrid.client = (function() {
     if (resolution) params.resolution = resolution;
     if (counter) params.counter = counter;
     params.pad = true;
-    apiRequest("GET", "/" + session.currentOrganization.uuid + "/" + applicationId + "/counters", params, success, failure);
+
+    var uuid = session.getOrganizationUUID();
+    var applicationId2 = session.getApplicationId();
+    apiRequest("GET", "/" + uuid + "/" + applicationId2 + "/counters", params, success, failure);
   }
 
+  function setCurrentOrganization(orgName) {
+    var organizations = session.getLoggedInUserOrgs();
+    if (!session.getLoggedInUserObj() || ! organizations) {
+      return;
+    }
+
+    if (orgName) {
+      session.setOrganization(organizations[orgName]);
+    } else {
+      var firstOrg = null;
+      for (firstOrg in organizations) {break;}
+      if (firstOrg) {
+        session.setOrganization(organizations[firstOrg]);
+      }
+    }
+  }
+
+
   function loginAdmin(email, password, successCallback, errorCallback) {
-    session.clearIt();
+    session.clearAll();
     var formdata = {
       grant_type: "password",
       username: email,
       password: password
     };
-    apiRequest("GET", "/management/token", formdata,
-      function(data, textStatus, xhr) {
-        if (!data) {
+    runManagementQuery(new queryObj('GET', 'token', null, formdata,
+      function(response) {
+        if (!response) {
           errorCallback();
           return
         }
-        session.loggedInUser = data.user;
-        session.accessToken = data.access_token;
-        setCurrentOrganization();
-        session.saveIt();
+        var firstOrg = null;
+        var organization = null;
+        for (firstOrg in response.user.organizations) {break;}
+        if (firstOrg) {
+          organization = response.user.organizations[firstOrg];
+        }
+        session.saveAll(organization, null, response.user, response.access_token);
         if (successCallback) {
-          successCallback(data, textStatus, xhr);
+          successCallback(response);
         }
       },
       errorCallback
-    );
+    ));
   }
 
   function loginAppUser(applicationId, email, password, success, failure) {
@@ -269,14 +375,12 @@ usergrid.client = (function() {
       password: '',
       invite: true
     };
-    apiRequest("POST", "/" + session.currentOrganization.uuid + "/" + applicationId + "/token", formdata,
+    apiRequest("POST", "/" + session.getOrganizationUUID() + "/" + applicationId + "/token", formdata,
                function(response) {
                  if (response && response.access_token && response.user) {
-                   session.loggedInUser = response.user;
-                   session.accessToken = response.access_token;
+                   session.setLoggedInUser(response.user) ;
+                   session.getAccessToken(response.access_token);
                    setCurrentOrganization();
-                   localStorage.setObject('usergridUser', session.loggedInUser);
-                   localStorage.setItem('accessToken', session.accessToken);
                    if (success) {
                      success();
                    }
@@ -293,22 +397,21 @@ usergrid.client = (function() {
   }
 
   function renewToken(successCallback, errorCallback) {
-    apiRequest("GET", "/management/users/" + session.loggedInUser.email, null,
-                function(data, status, xhr) {
-                  if (!data || !data.data) {
-                    errorCallback();
-                    return
-                  }
-                  session.loggedInUser = data.data;
-		  setCurrentOrganization();
-		  session.saveIt();
-
-                  if (successCallback) {
-                    successCallback(data);
-                  }
-                },
-                errorCallback
-               );
+    apiRequest("GET", "/management/users/" + session.getLoggedInUserEmail(), null,
+      function(data, status, xhr) {
+        if (!data || !data.data) {
+          errorCallback();
+          return
+        }
+        session.setLoggedInUser(data.data);
+        setCurrentOrganization();
+        //session.saveIt();
+        if (successCallback) {
+          successCallback(data);
+        }
+      },
+      errorCallback
+      );
   }
 
   function signup(organization, username, name, email, password, success, failure) {
@@ -337,32 +440,8 @@ usergrid.client = (function() {
               );
   }
 
-  function setCurrentOrganization(orgName) {
-    session.currentOrganization = null;
-    if (!session.loggedInUser || !session.loggedInUser.organizations) {
-      return;
-    }
-
-    if (orgName) {
-      session.currentOrganization = session.loggedInUser.organizations[orgName];
-    } else {
-      session.currentOrganization = session.loggedInUser.organizations[localStorage.getObject('currentOrganization')];
-    }
-
-    if (!session.currentOrganization) {
-      var firstOrg = null;
-      for (firstOrg in session.loggedInUser.organizations) {break;}
-      if (firstOrg) {
-        session.currentOrganization = session.loggedInUser.organizations[firstOrg];
-      }
-    }
-
-    localStorage.currentOrganization = session.currentOrganization;
-    session.saveIt();
-  }
-
+  
   function autoLogin(successCallback, errorCallback) {
-    session.readIt();
     // check to see if the user has a valid token
     if (!session.loggedIn()) {
       // test to see if the Portal is running on Apigee, if so, send to SSO, if not, fall through to login screen
@@ -373,11 +452,10 @@ usergrid.client = (function() {
     } else if (session.loggedIn()) {
       renewToken(
         function() {
-          session.readIt();
           successCallback();
         },
         function() {
-          session.clearIt();
+          session.clearAll();
           errorCallback();
         }
       );
@@ -418,89 +496,93 @@ usergrid.client = (function() {
    *        runAppQuery(queryObj);
    *
    ******************************************************************/
-
+  
   /*
    *  @class queryObj
    *  @purpose a class for holding all query information and paging state
    *  @purpose a query object that will contain all relevant info for API call
-   *  @param method REQUIRED - GET, POST, PUT, DELETE
-   *  @param path REQUIRED - API resource (e.g. "users" or "users/rod", should not include http URL or org_name/app_name)
-   *  @param jsonObj NULLABLE - a json data object to be passed to the API
-   *  @param params NULLABLE - query parameters to be encoded and added to the API URL
+   *  @param _method REQUIRED - GET, POST, PUT, DELETE
+   *  @param _path REQUIRED - API resource (e.g. "users" or "users/rod", should not include http URL or org_name/app_name)
+   *  @param _jsonObj NULLABLE - a json data object to be passed to the API
+   *  @param _params NULLABLE - query parameters to be encoded and added to the API URL
+   *  @param _successCallback REQUIRED - the success callback function
+   *  @param _failureCallback REQUIRED - the failure callback function
    *
    */
-  queryObj = (function(method, path, jsonObj, params, successCallback, failureCallback) {
-    //query vars (are all private)
-    var method = method;
-    var path = path;
-    var jsonObj = jsonObj;
-    var params = params;
-    var successCallback = successCallback;
-    var failureCallback = failureCallback;
+  queryObj = (function(_method, _path, _jsonObj, _params, _successCallback, _failureCallback) {
+    //query vars
+    this.method = _method;
+    this.path = _path;
+    this.jsonObj = _jsonObj;
+    this.params = _params;
+    this.successCallback = _successCallback;
+    this.failureCallback = _failureCallback;
 
-    //paging vars (are all private)
-    var cursor = null;
-    var next = null
-    var previous = [];
-
-    //methods for accessing query vars
-    queryObj.prototype.getMethod = function getMethod() { return method; }
-    queryObj.prototype.setMethod = function setMethod(_method) { method = _method; }
-
-    queryObj.prototype.getPath = function getPath() { return path; }
-    queryObj.prototype.setPath = function setPath(_path) { path = _path; }
-
-    queryObj.prototype.getJsonObj = function getJsonObj() { return jsonObj; }
-    queryObj.prototype.setJsonObj = function setJsonObj(_jsonObj) { jsonObj = _jsonObj; }
-
-    queryObj.prototype.getParams = function getParams() { return params; }
-    queryObj.prototype.setParams = function setParams(_params) { params = _params; }
-
-    queryObj.prototype.getSuccessCallback = function getSuccessCallback() { return successCallback; }
-    queryObj.prototype.callSuccessCallback = function setsuccessCallback(response) { successCallback(response); }
-
-    queryObj.prototype.getFailureCallback = function getFailureCallback() { return failureCallback; }
-    queryObj.prototype.setFailureCallback = function setFailureCallback(response) { failureCallback(response); }
-
-    //methods for accessing paging functions
-    queryObj.prototype.resetPaging = function resetPaging() {
-      previous = [];
-      next = null;
-      cursor = null;
-    }
-
-    queryObj.prototype.hasPrevious = function hasPrevious() {
-      return (previous.length > 0);
-    }
-
-    queryObj.prototype.getPrevious = function getPrevious() {
-      next=null; //clear out next so the comparison will find the next item
-      cursor = previous.pop();
-    }
-
-    queryObj.prototype.hasNext = function hasNext(){
-      return (next);
-    }
-
-    queryObj.prototype.getNext = function getNext() {
-      previous.push(cursor);
-      cursor = next;
-    }
-
-    queryObj.prototype.saveCursor = function saveCursor(_cursor) {
-      cursor = next; //what was new is old again
-      //if current cursor is different, grab it for next cursor
-      if (next != _cursor) {
-        next = _cursor;
-      } else {
-        next = null;
-      }
-    }
-
-    queryObj.prototype.getCursor = function getCursor() {
-      return cursor;
-    }
+    //paging vars
+    this.cursor = null;
+    this.next = null
+    this.previous = [];
   });
+  //methods for accessing query vars
+  queryObj.prototype.getMethod = function getMethod() { return this.method; }
+  queryObj.prototype.setMethod = function setMethod(_method) { this.method = _method; }
+
+  queryObj.prototype.getPath = function getPath() { return this.path; }
+  queryObj.prototype.setPath = function setPath(_path) { this.path = _path; }
+
+  queryObj.prototype.getJsonObj = function getJsonObj() { return this.jsonObj; }
+  queryObj.prototype.setJsonObj = function setJsonObj(_jsonObj) { this.jsonObj = _jsonObj; }
+
+  queryObj.prototype.getParams = function getParams() { return this.params; }
+  queryObj.prototype.setParams = function setParams(_params) { this.params = _params; }
+
+  queryObj.prototype.getSuccessCallback = function getSuccessCallback() { return this.successCallback; }
+  queryObj.prototype.setSuccessCallback = function setSuccessCallback(_successCallback) { this.successCallback = _successCallback; }
+  queryObj.prototype.callSuccessCallback = function callSuccessCallback(response) { this.successCallback(response); }
+
+  queryObj.prototype.getFailureCallback = function getFailureCallback() { return this.failureCallback; }
+  queryObj.prototype.setFailureCallback = function setFailureCallback(_failureCallback) { this.failureCallback = _failureCallback; }
+  queryObj.prototype.callFailureCallback = function callFailureCallback(response) { this.failureCallback(response); }
+
+  //methods for accessing paging functions
+  queryObj.prototype.resetPaging = function resetPaging() {
+    this.previous = [];
+    this.next = null;
+    this.cursor = null;
+  }
+
+  queryObj.prototype.hasPrevious = function hasPrevious() {
+    return (this.previous.length > 0);
+  }
+
+  queryObj.prototype.getPrevious = function getPrevious() {
+    this.next=null; //clear out next so the comparison will find the next item
+    this.cursor = this.previous.pop();
+  }
+
+  queryObj.prototype.hasNext = function hasNext(){
+    return (this.next);
+  }
+
+  queryObj.prototype.getNext = function getNext() {
+    this.previous.push(this.cursor);
+    this.cursor = this.next;
+  }
+
+  queryObj.prototype.saveCursor = function saveCursor(_cursor) {
+    this.cursor = this.next; //what was new is old again
+    //if current cursor is different, grab it for next cursor
+    if (this.next != _cursor) {
+      this.next = _cursor;
+    } else {
+      this.next = null;
+    }
+  }
+
+  queryObj.prototype.getCursor = function getCursor() {
+    return this.cursor;
+  }
+ 
 
   /*
    *  @function runAppQuery
@@ -509,7 +591,7 @@ usergrid.client = (function() {
    *
    */
   function runAppQuery(_queryObj) {
-    var endpoint = "/" + session.currentOrganization.uuid + "/" + session.currentApplicationId + "/";
+    var endpoint = "/" + session.getOrganizationUUID() + "/" + session.getApplicationId() + "/";
     processQuery(_queryObj, endpoint);
   }
 
@@ -520,7 +602,7 @@ usergrid.client = (function() {
    *
    */
   function runManagementQuery(_queryObj) {
-    var endpoint = "/management/users/";
+    var endpoint = "/management/";
     processQuery(_queryObj, endpoint)
   }
 
@@ -650,7 +732,8 @@ usergrid.client = (function() {
     }
     return encodeURIComponent(callback);
   }
-
+  
+  
   /*******************************************************************
    *
    * Public functions
@@ -692,7 +775,8 @@ usergrid.client = (function() {
     autoLogin: autoLogin,
     runAppQuery:runAppQuery,
     runManagementQuery:runManagementQuery,
-    queryObj:queryObj
+    queryObj:queryObj,
+    session:session
   }
 
   return self

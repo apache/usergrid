@@ -2,7 +2,6 @@ function usergrid_console_app(Pages) {
   //This code block *WILL NOT* load before the document is complete
   window.usergrid = window.usergrid || {};
   usergrid.console = usergrid.console || {};
-  session = usergrid.session || {};
   client = usergrid.client || {};
 
   var OFFLINE = false;
@@ -118,12 +117,12 @@ function usergrid_console_app(Pages) {
   }
 
   function getAccessTokenURL(){
-    var bearerToken = localStorage.getItem('accessToken');
-    var app_name = current_application_name;
+    var bearerToken = session.getAccessToken();
+    var app_name = session.getApplicationId();
     if (typeof current_application_name != 'string') {
       app_name = '';
     }
-    var org_name = session.currentOrganization.name;
+    var org_name = session.getOrganizationObj().name;
     if (typeof org_name != 'string') {
       org_name = '';
     }
@@ -228,13 +227,13 @@ function usergrid_console_app(Pages) {
     var ql = $("#query-ql").val();
 
     //merge the data and the query
-    data.ql = ql;
+    var params = {"ql":ql};
     data = JSON.parse(data);
 
     //make a new query object
-    queryObj = new client.queryObj(method, path, data, null, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
+    queryObj = new client.queryObj(method, path, data, params, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
     //store the query object on the stack
-    pushQuery();
+    pushQuery(queryObj);
     //then run the query
     runAppQuery(queryObj);
   }
@@ -298,7 +297,7 @@ function usergrid_console_app(Pages) {
 
   }
 
-  function pushQuery() {
+  function pushQuery(queryObj) {
     //store the query object on the stack
     query_history.push(queryObj);
   }
@@ -310,20 +309,21 @@ function usergrid_console_app(Pages) {
     }
     //get the last query off the stack
     query_history.pop(); //first pull off the current query
-    queryObj = query_history.pop(); //then get the previous one
+    lastQueryObj = query_history.pop(); //then get the previous one
     //set the path in the query explorer
-    $("#query-path").val(queryObj.path);
+    $("#query-path").val(lastQueryObj.getPath());
     //get the ql and set it in the query explorer
-    var ql = queryObj.jsonObj.ql;      
-    $("#query-ql").val(ql);
+    var params = lastQueryObj.getParams();
+    $("#query-ql").val(params.ql);
     //delete the ql from the json obj -it will be restored later when the query is run in getCollection()
-    delete queryObj.jsonObj.ql;
+    var jsonObj = lastQueryObj.getJsonObj();
+    delete jsonObj.ql;
     //set the data obj in the query explorer
-    $("#query-source").val(JSON.stringify(queryObj.jsonObj));
+    $("#query-source").val(JSON.stringify(jsonObj));
 
     showBackButton();
 
-    getCollection(queryObj.getMethod());
+    getCollection(lastQueryObj.getMethod());
   }
 
   //helper function for query explorer back button
@@ -595,12 +595,17 @@ function usergrid_console_app(Pages) {
   }
 
   function selectFirstApp() {
-    if(session.currentApplicationId && applications_by_id[session.currentApplicationId])
-      pageSelect(session.currentApplicationId);
+    applicationId = session.getApplicationId();
+    if(applicationId && applications_by_id[applicationId])
+      pageSelect(applicationId);
     else {
+      var organization = session.getOrganizationObj();
       var firstApp = null;
-      for (firstApp in session.currentOrganization.applications) {break};
-      if (firstApp) {pageSelect(session.currentOrganization.applications[firstApp]);}
+      for (firstApp in organization.applications) {break};
+      if (firstApp) {
+        pageSelect(organization.applications[firstApp]);
+        session.setApplicationId(organization.applications[firstApp]);
+      }
     }
   }
 
@@ -1273,7 +1278,7 @@ function usergrid_console_app(Pages) {
     if (uuid) {
       current_application_id = uuid;
       current_application_name = applications_by_id[uuid];
-      session.currentApplicationId = current_application_id;
+      session.setApplicationId(uuid);
     }
     setNavApplicationText();
     getCollections();
@@ -1292,7 +1297,6 @@ function usergrid_console_app(Pages) {
     pageSelect();
     requestApplicationCredentials();
     requestApplicationUsage();
-    session.saveIt();
   }
   window.usergrid.console.pageSelectApplication = pageSelectApplication;
 
@@ -1513,9 +1517,6 @@ function usergrid_console_app(Pages) {
   var userSortBy = "username";
   
   function pageSelectUsers(uuid) {
-
-    session.applicationId = current_application_id; //move this to one place
-
     //make a new query object
     queryObj = new client.queryObj(null);
     //bind events for previous and next buttons
@@ -1882,8 +1883,6 @@ function usergrid_console_app(Pages) {
   var groupLetter = "*";
   var groupSortBy = "path";
   function pageSelectGroups() {
-    session.applicationId = current_application_id; //move this to one place
-
     //make a new query object
     queryObj = new client.queryObj(null);
     //bind events for previous and next buttons
@@ -2215,8 +2214,6 @@ function usergrid_console_app(Pages) {
   var roleSortBy = 'title';
 
   function pageSelectRoles(uuid) {
-    session.applicationId = current_application_id; //move this to one place
-
     //make a new query object
     queryObj = new client.queryObj(null);
     //bind events for previous and next buttons
@@ -2436,7 +2433,7 @@ function usergrid_console_app(Pages) {
           function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
         ));
         //requestRole
-        runAppQuery(new client.queryObj("GET", "role/" + roleId, null, null,
+        runAppQuery(new client.queryObj("GET", "role/" + current_role_id, null, null,
             displayRoleInactivity,
             function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
           ));
@@ -2620,8 +2617,6 @@ function deleteRolePermission(roleName, permission) {
   var activitiesSortBy = 'created';
 
   function pageSelectActivities(uuid) {
-    session.applicationId = current_application_id; //move this to one place
-
     //make a new query object
     queryObj = new client.queryObj(null);
     //bind events for previous and next buttons
@@ -2925,7 +2920,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function handleShellCommand(s) {
-    var orgName = session.currentOrganization.uuid;
+    var orgName = session.getOrganizationObj().uuid;
 
     if (s) {
       history.push(s);
@@ -3026,8 +3021,6 @@ function deleteRolePermission(roleName, permission) {
    ******************************************************************/
 
   function pageSelectCollections(uuid) {
-    session.applicationId = current_application_id;
-
     getCollections();
   }
   window.usergrid.console.pageSelectCollections = pageSelectCollections;
@@ -3144,7 +3137,9 @@ function deleteRolePermission(roleName, permission) {
   window.usergrid.console.updateGroupsAutocompleteCallback = updateGroupsAutocompleteCallback;
 
   function updateGroupsForRolesAutocomplete(){
-    client.requestGroups(current_application_id, updateGroupsForRolesAutocompleteCallback, null);
+    runAppQuery(new client.queryObj("GET",'groups', null, null, updateGroupsForRolesAutocompleteCallback,
+    function() { alertModal("Error", "Unable to retrieve groups."); }
+    )); 
     return false;
   }
 
@@ -3237,8 +3232,9 @@ function deleteRolePermission(roleName, permission) {
 
   function setupMenu() {
     var userNameBox = $('#userEmail');
-    if (session && session.loggedInUser){
-      userNameBox.html(session.loggedInUser.email);
+    var userEmail = session.getLoggedInUserEmail();
+    if (userEmail){
+      userNameBox.html(userEmail);
       setupOrganizationsMenu();
     } else {
       userNameBox.html("No Logged In User");
@@ -3246,14 +3242,15 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function setupOrganizationsMenu() {
-    if (!session || !session.loggedInUser || !session.loggedInUser.organizations) {
+    var organizations = session.getLoggedInUserOrgs();
+    var orgName = session.getOrganizationName();
+    if (!organizations) {
       return;
     }
-    var orgName = session.currentOrganization.name;
+    
     $('#organizations-menu > a span').text(orgName);
     $('#selectedOrg').text(orgName);
 
-    var organizations = session.loggedInUser.organizations;
     var orgMenu = $('#organizations-menu ul');
     var orgTmpl = $('<li><a href="#">${name}</a></li>');
     var data = [];
@@ -3284,7 +3281,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function logout() {
-    session.clearIt();
+    session.clearAll();
     if (client.useSSO()) {
       Pages.clearPage();
     } else {
@@ -3474,7 +3471,7 @@ function deleteRolePermission(roleName, permission) {
     if (client.useSSO()) {
       client.sendToSSOProfilePage();
     } else {
-      $('#update-account-id').text(session.loggedInUser.uuid);
+      $('#update-account-id').text(session.getLoggedInUserUUID());
       $('#update-account-name').val("");
       $('#update-account-email').val("");
       $('#old-account-password').val("");
@@ -3551,7 +3548,9 @@ function deleteRolePermission(roleName, permission) {
   usergrid.console.leaveOrganization = leaveOrganization;
 
   function displayCurrentOrg() {
-    $('#organizations-table').html('<tr class="zebraRows"><td>' + session.currentOrganization.name + '</td><td class="monospace">' + session.currentOrganization.uuid + '</td></tr>');
+    var orgname = session.getOrganizationName();
+    var uuid = session.getOrganizationUUID();
+    $('#organizations-table').html('<tr class="zebraRows"><td>' + orgname + '</td><td class="monospace">' + uuid + '</td></tr>');
   }
   usergrid.console.displayCurrentOrg = displayCurrentOrg;
 
