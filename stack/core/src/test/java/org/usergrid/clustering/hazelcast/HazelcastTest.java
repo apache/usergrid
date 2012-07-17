@@ -38,75 +38,76 @@ import com.hazelcast.core.MessageListener;
 @Ignore
 public class HazelcastTest implements InstanceListener, MessageListener<Object> {
 
-	private static final Logger logger = LoggerFactory.getLogger(HazelcastTest.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(HazelcastTest.class);
 
-	ClassPathXmlApplicationContext ac;
+    ClassPathXmlApplicationContext ac;
 
-	@Before
-	public void setup() throws Exception {
-		// assertNotNull(client);
+    @Before
+    public void setup() throws Exception {
+        // assertNotNull(client);
 
-		String maven_opts = System.getenv("MAVEN_OPTS");
-		logger.info("Maven options: " + maven_opts);
+        String maven_opts = System.getenv("MAVEN_OPTS");
+        logger.info("Maven options: " + maven_opts);
 
-		String[] locations = { "testApplicationContext.xml" };
-		ac = new ClassPathXmlApplicationContext(locations);
+        String[] locations = { "usergrid-test-context.xml" };
+        ac = new ClassPathXmlApplicationContext(locations);
 
-		AutowireCapableBeanFactory acbf = ac.getAutowireCapableBeanFactory();
-		acbf.autowireBeanProperties(this,
-				AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, false);
-		acbf.initializeBean(this, "testClient");
+        AutowireCapableBeanFactory acbf = ac.getAutowireCapableBeanFactory();
+        acbf.autowireBeanProperties(this,
+                AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, false);
+        acbf.initializeBean(this, "testClient");
 
-	}
+    }
 
-	@Test
-	public void doTest() {
-		logger.info("do test");
-		Hazelcast.addInstanceListener(this);
+    @Test
+    public void doTest() {
+        logger.info("do test");
+        Hazelcast.addInstanceListener(this);
 
-		ITopic<Object> topic = Hazelcast.getTopic("default");
-		topic.addMessageListener(this);
-		topic.publish("my-message-object");
+        ITopic<Object> topic = Hazelcast.getTopic("default");
+        topic.addMessageListener(this);
+        topic.publish("my-message-object");
 
-		Collection<Instance> instances = Hazelcast.getInstances();
-		for (Instance instance : instances) {
-			logger.info("ID: [" + instance.getId() + "] Type: ["
-					+ instance.getInstanceType() + "]");
-		}
+        Collection<Instance> instances = Hazelcast.getInstances();
+        for (Instance instance : instances) {
+            logger.info("ID: [" + instance.getId() + "] Type: ["
+                    + instance.getInstanceType() + "]");
+        }
 
-		Set<Member> setMembers = Hazelcast.getCluster().getMembers();
-		for (Member member : setMembers) {
-			logger.info("isLocalMember " + member.localMember());
-			logger.info("member.inetsocketaddress "
-					+ member.getInetSocketAddress());
-		}
+        Set<Member> setMembers = Hazelcast.getCluster().getMembers();
+        for (Member member : setMembers) {
+            logger.info("isLocalMember " + member.localMember());
+            logger.info("member.inetsocketaddress "
+                    + member.getInetSocketAddress());
+        }
 
-	}
+    }
 
-	@Override
-	public void instanceCreated(InstanceEvent event) {
-		Instance instance = event.getInstance();
-		logger.info("Created instance ID: [" + instance.getId() + "] Type: ["
-				+ instance.getInstanceType() + "]");
-	}
+    @Override
+    public void instanceCreated(InstanceEvent event) {
+        Instance instance = event.getInstance();
+        logger.info("Created instance ID: [" + instance.getId() + "] Type: ["
+                + instance.getInstanceType() + "]");
+    }
 
-	@Override
-	public void instanceDestroyed(InstanceEvent event) {
-		Instance instance = event.getInstance();
-		logger.info("Destroyed isntance ID: [" + instance.getId() + "] Type: ["
-				+ instance.getInstanceType() + "]");
+    @Override
+    public void instanceDestroyed(InstanceEvent event) {
+        Instance instance = event.getInstance();
+        logger.info("Destroyed isntance ID: [" + instance.getId() + "] Type: ["
+                + instance.getInstanceType() + "]");
 
-	}
+    }
 
-	@After
-	public void teardown() {
-		logger.info("Stopping test");
-		ac.close();
-	}
+    @After
+    public void teardown() {
+        logger.info("Stopping test");
+        ac.close();
+    }
 
-	@Override
-	public void onMessage(Object msg) {
-		logger.info("Message received = " + msg);
-	}
+    @Override
+    public void onMessage(Object msg) {
+        logger.info("Message received = " + msg);
+    }
 
 }

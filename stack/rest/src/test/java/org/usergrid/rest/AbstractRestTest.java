@@ -92,7 +92,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
         descriptor = new WebAppDescriptor.Builder("org.usergrid.rest")
                 .contextParam("contextConfigLocation",
-                        "classpath:testApplicationContext.xml")
+                        "classpath:usergrid-rest-context-test.xml")
                 .servletClass(SpringServlet.class)
                 .contextListenerClass(ContextLoaderListener.class)
                 .requestListenerClass(RequestContextListener.class)
