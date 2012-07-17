@@ -1517,12 +1517,12 @@ function usergrid_console_app(Pages) {
    ******************************************************************/
   var userLetter = "*";
   var userSortBy = "username";
-  
+
   function pageSelectUsers(uuid) {
     //make a new query object
     queryObj = new client.queryObj(null);
     //bind events for previous and next buttons
-    bindPagingEvents('users');    
+    bindPagingEvents('users');
     //reset paging so we start at the first page
     queryObj.resetPaging();
     //the method to get the compile and call the query
@@ -1610,7 +1610,7 @@ function usergrid_console_app(Pages) {
   }
   window.usergrid.console.deselectAllUsers = deselectAllUsers;
 
-  
+
 
   $('#delete-users-link').click(deleteUsers);
   function deleteUsers(e) {
@@ -1934,7 +1934,7 @@ function usergrid_console_app(Pages) {
     queryObj.getNext();
     getGroups();
   }
-  
+
   function getGroupsCallback(response) {
     hidePagination('groups');
 
@@ -2232,7 +2232,7 @@ function usergrid_console_app(Pages) {
     $('#role-panel-groups').hide();
   }
   window.usergrid.console.pageSelectRoles = pageSelectRoles;
-  
+
   function getRoles(search, searchType) {
     //clear out the table before we start
     var output = $('#roles-table');
@@ -2373,23 +2373,22 @@ function usergrid_console_app(Pages) {
   }
 
   function displayRoleInactivity(response) {
-    console.log(response);
     $('#role-inactivity-input').val(response.entities[0].inactivity);
     $('#role-inactivity-submit').on('click', function() {editRoleInactivity(); return false;});
   }
 
   var rolesUsersResults = ''
   function displayRolesUsers(response) {
-      $('#role-users').html('');
-      data = {};
-      data.roleId = current_role_id;
-      data.rolename = current_role_name;
-      if (response.entities) {
-        data.users = response.entities;
-      }
-      $.tmpl('usergrid.ui.panels.role.users.html', {"data" : data}, {}).appendTo('#role-users');
-      updateUsersForRolesAutocomplete();
+    $('#role-users').html('');
+    data = {};
+    data.roleId = current_role_id;
+    data.rolename = current_role_name;
+    if (response.entities) {
+      data.users = response.entities;
     }
+    $.tmpl('usergrid.ui.panels.role.users.html', {"data" : data}, {}).appendTo('#role-users');
+    updateUsersForRolesAutocomplete();
+  }
 
   var rolesGroupsResults = ''
   function displayRoleGroups(response) {
@@ -2425,21 +2424,21 @@ function usergrid_console_app(Pages) {
         getRolesCallback(response);
         $('#role-section-title').html(current_role_name + " Role");
         $('#role-permissions').html('<div class="alert alert-info">Loading ' + current_role_name + ' permissions...</div>');
+        //requestRole
+        runAppQuery(new client.queryObj("GET", "roles/" + current_role_id, null, null,
+          displayRoleInactivity,
+          function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
+        ));
         //requestApplicationRolePermissions
-        runAppQuery(new client.queryObj("GET","rolenames/" + current_role_name, null, null,
+        runAppQuery(new client.queryObj("GET", "rolenames/" + current_role_name, null, null,
           function(response) { displayPermissions(response); },
           function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
         ));
         //requestApplicationRoleUsers
-        runAppQuery(new client.queryObj("GET","roles/" + current_role_id + "/users" + current_role_name, null, null,
+        runAppQuery(new client.queryObj("GET", "roles/" + current_role_id + "/users", null, null,
           function(response) { displayRolesUsers(response); },
           function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
         ));
-        //requestRole
-        runAppQuery(new client.queryObj("GET", "role/" + current_role_id, null, null,
-            displayRoleInactivity,
-            function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
-          ));
         //requestGroupRoles
         runAppQuery(new client.queryObj("GET", "/roles/" + current_role_id + "/groups", null, null,
             function(response) { displayRoleGroups(response); },
@@ -2555,16 +2554,10 @@ function deleteRolePermission(roleName, permission) {
       && checkRegexp2(groupId, nameRegex, nameAllowedCharsMessage);
 
     if (bValid) {
-      client.addGroupToRole(
-	current_application_id,
-	current_role_id,
-	groupId.val(),
-	function() {pageSelectRoleGroups(current_role_id, current_role_name);},
-        function() {
-          alertModal("Unable to add group to role", client.getLastErrorMessage("An internal error occured."));
-        }
-      );
-
+      runAppQuery(new client.queryObj("POST", "/roles/" + current_role_id + "/groups/" + groupId.val(), null, null,
+        function() { pageSelectRoleGroups(current_role_id, current_role_name); },
+        function() { alertModal("Unable to add group to role", client.getLastErrorMessage("An internal error occured.")); }
+      ));
       $(this).modal('hide');
     }
   }
@@ -2579,17 +2572,14 @@ function deleteRolePermission(roleName, permission) {
     confirmDelete(function(){
       $.each(items, function() {
         var groupId = $(this).val();
-        client.removeGroupFromRole(
-	  current_application_id,
-	  current_role_id,
-	  groupId,
+        runAppQuery(new client.queryObj("DELETE", "/roles/" + current_role_id + "/groups/" + groupId, null, null,
 	  function() {
 	    pageSelectRoleGroups(current_role_id, current_role_name);
 	  },
 	  function() {
             alertModal("Error","Unable to remove group from role: " + client.getLastErrorMessage('An internal error occured'));
           }
-	);
+	));
       });
     });
 
@@ -2633,7 +2623,7 @@ function deleteRolePermission(roleName, permission) {
 
   }
   window.usergrid.console.pageSelectActivities = pageSelectActivities;
- 
+
   function getActivities(search, searchType) {
     //clear out the table before we start
     var output = $('#activities-table');
@@ -2834,7 +2824,7 @@ function deleteRolePermission(roleName, permission) {
         $('#analytics-graph').html('<div class="alert">Unable to load...</div>');
       }));
   }
-  
+
   /*******************************************************************
    *
    * Settings
@@ -2852,7 +2842,7 @@ function deleteRolePermission(roleName, permission) {
   function requestApplicationCredentials() {
     $('#application-panel-key').html('<div class="alert alert-info">Loading...</div>');
     $('#application-panel-secret').html('<div class="alert alert-info">Loading...</div>');
-    
+
     runAppQuery(new client.queryObj("GET", "credentials", null, null,
       function(response) {
         $('#application-panel-key').html(response.credentials.client_id);
@@ -3041,7 +3031,7 @@ function deleteRolePermission(roleName, permission) {
     var section =$('#application-collections');
     section.empty().html('<div class="alert alert-info">Loading...</div>');
 
-    runAppQuery(new client.queryObj("GET",'', null, null, getCollectionsCallback, 
+    runAppQuery(new client.queryObj("GET",'', null, null, getCollectionsCallback,
       function() { alertModal("Error", "There was an error getting the collections"); }
     ));
     return false;
@@ -3101,7 +3091,7 @@ function deleteRolePermission(roleName, permission) {
   window.usergrid.console.updateUsersAutocompleteCallback = updateUsersAutocompleteCallback;
 
   function updateUsersForRolesAutocomplete(){
-    runAppQuery(new client.queryObj("GET",'users', null, null, updateUsersForRolesAutocompleteCallback, 
+    runAppQuery(new client.queryObj("GET",'users', null, null, updateUsersForRolesAutocompleteCallback,
       function() { alertModal("Error", "Unable to retrieve users."); }
     ));
     return false;
@@ -3123,7 +3113,7 @@ function deleteRolePermission(roleName, permission) {
   window.usergrid.console.updateUsersForRolesAutocompleteCallback = updateUsersForRolesAutocompleteCallback;
 
   function updateGroupsAutocomplete(){
-    runAppQuery(new client.queryObj("GET",'groups', null, null, updateGroupsAutocompleteCallback, 
+    runAppQuery(new client.queryObj("GET",'groups', null, null, updateGroupsAutocompleteCallback,
       function() { alertModal("Error", "Unable to retrieve groups."); }
     ));
     return false;
@@ -3147,7 +3137,7 @@ function deleteRolePermission(roleName, permission) {
   function updateGroupsForRolesAutocomplete(){
     runAppQuery(new client.queryObj("GET",'groups', null, null, updateGroupsForRolesAutocompleteCallback,
     function() { alertModal("Error", "Unable to retrieve groups."); }
-    )); 
+    ));
     return false;
   }
 
@@ -3202,22 +3192,24 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function updateRolesAutocomplete(){
-    runAppQuery(new client.queryObj("GET",'roles', null, null, updateRolesAutocompleteCallback, 
+    runAppQuery(new client.queryObj("GET", 'roles', null, null, updateRolesAutocompleteCallback,
       function() { alertModal("Error", "Unable to retrieve roles."); }
     ));
     return false;
   }
 
   function updateRolesAutocompleteCallback(response) {
+    console.log(response);
+
     roles = {};
-    if (response.data) {
-      roles = response.data;
+    if (response.entities) {
+      roles = response.entities;
     }
     var pathInput = $('#search-role-name-input');
     var list = [];
 
     for (var i in roles) {
-      list.push(i);
+      list.push(roles[i].title);
     }
 
     pathInput.typeahead({source:list});
@@ -3255,7 +3247,7 @@ function deleteRolePermission(roleName, permission) {
     if (!organizations) {
       return;
     }
-    
+
     $('#organizations-menu > a span').text(orgName);
     $('#selectedOrg').text(orgName);
 
