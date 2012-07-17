@@ -299,13 +299,6 @@ usergrid.client = (function() {
     apiRequest("GET", "/management/users/" + session.getLoggedInUserUUID(), null, success, failure);
   }
 
-  function updateAdminUser(properties, success, failure) {
-    if (!session.getLoggedInUserObj()) {
-      failure();
-    }
-    apiRequest("PUT", "/management/users/" + session.getLoggedInUserUUID(), JSON.stringify(properties), success, failure);
-  }
-
   function requestAdminFeed(success, failure) {
     if (!session.getLoggedInUserObj()) {
       failure();
@@ -782,7 +775,6 @@ usergrid.client = (function() {
     createCollection: createCollection,
     requestApplicationCounters: requestApplicationCounters,
     requestAdminUser: requestAdminUser,
-    updateAdminUser: updateAdminUser,
     requestAdminFeed: requestAdminFeed,
     loginAdmin: loginAdmin,
     loginAppUser: loginAppUser,

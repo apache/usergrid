@@ -3395,7 +3395,6 @@ function deleteRolePermission(roleName, permission) {
       $('#update-account-name').val(response.data.name);
       $('#update-account-email').val(response.data.email);
       $('#update-account-picture-img').attr('src', response.data.gravatar);
-      $('#update-account-picture').val(response.data.gravatar);
       $('#update-account-bday').attr('src', response.data.gravatar);
 
       var t = "";
@@ -3455,8 +3454,7 @@ function deleteRolePermission(roleName, permission) {
       userData.newpassword = new_pass;
       userData.oldpassword = old_pass;
     }
-
-    client.updateAdminUser(userData,
+    runManagementQuery(new client.queryObj("PUT",'users/' + session.getLoggedInUserUUID(), userData, null,
       function(response) {
       $('#account-update-modal').modal('show');
         if ((old_pass && new_pass) && (old_pass != new_pass)) {
@@ -3469,7 +3467,7 @@ function deleteRolePermission(roleName, permission) {
         alertModal("Error - Unable to update account settings");
         requestAccountSettings();
       }
-    );
+    ));
     return false;
   });
 
