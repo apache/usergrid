@@ -1204,7 +1204,7 @@ function usergrid_console_app(Pages) {
     confirmDelete(function(){
         items.each(function() {
           var roleId = $(this).attr("value");
-          runAppQuery(new client.queryObj("DELETE", "/users/" + username + "/roles/" + roleId, null, null,
+          runAppQuery(new client.queryObj("DELETE", "/users/" + username + "/rolename/" + roleId, null, null,
             function() { pageSelectUserPermissions (username); },
             function() { alertModal("Unable to remove user from role"); }
           ));
@@ -1793,7 +1793,7 @@ function usergrid_console_app(Pages) {
         function() { alertModal("Error", "Unable to retrieve user's activities."); }
       ));
 
-      runAppQuery(new client.queryObj("GET",'users/' + entity.uuid + '/roles', null, null,
+      runAppQuery(new client.queryObj("GET", 'users/' + entity.uuid + '/roles', null, null,
         function(response) {
           if (user_data && response.entities && (response.entities.length > 0)) {
             user_data.roles = response.entities;
@@ -1805,7 +1805,7 @@ function usergrid_console_app(Pages) {
         function() { alertModal("Error", "Unable to retrieve user's roles."); }
       ));
 
-      runAppQuery(new client.queryObj("GET",'users/' + entity.uuid + '/permissions', null, null,
+      runAppQuery(new client.queryObj("GET", 'users/' + entity.uuid + '/permissions', null, null,
         function(response) {
           var permissions = {};
           if (user_data && response.data && (response.data.length > 0)) {
@@ -1847,7 +1847,7 @@ function usergrid_console_app(Pages) {
         function() { alertModal("Error", "Unable to retrieve user's permissions."); }
       ));
 
-      runAppQuery(new client.queryObj("GET",'users/' + entity.uuid + '/following', null, null,
+      runAppQuery(new client.queryObj("GET", 'users/' + entity.uuid + '/following', null, null,
         function(response) {
           if (user_data && response.entities && (response.entities.length > 0)) {
             user_data.following = response.entities;
@@ -1857,7 +1857,7 @@ function usergrid_console_app(Pages) {
         function() { alertModal("Error", "Unable to retrieve user's following."); }
       ));
 
-      runAppQuery(new client.queryObj("GET",'users/' + entity.uuid + '/followers', null, null,
+      runAppQuery(new client.queryObj("GET", 'users/' + entity.uuid + '/followers', null, null,
         function(response) {
           if (user_data && response.entities && (response.entities.length > 0)) {
             user_data.followers = response.entities;
@@ -1871,7 +1871,7 @@ function usergrid_console_app(Pages) {
 
   function requestUser(userId) {
     $('#user-profile-area').html('<div class="alert alert-info">Loading...</div>');
-    runAppQuery(new client.queryObj("GET",'users/'+userId, null, null, handleUserResponse,
+    runAppQuery(new client.queryObj("GET", 'users/'+userId, null, null, handleUserResponse,
       function() { alertModal("Error", "Unable to retrieve user's profile."); }
     ));
   }
@@ -2737,7 +2737,6 @@ function deleteRolePermission(roleName, permission) {
   function requestApplicationCounters() {
     var counters_checked = $('.analytics-counter-checkbox:checked').serializeArray();
     var counter_names = new Array();
-
     for (var i in counters_checked) {
       counter_names.push(counters_checked[i].value);
     }
@@ -2746,8 +2745,14 @@ function deleteRolePermission(roleName, permission) {
     start_timestamp = $('#start-date').datepicker('getDate').at($('#start-time').timepicker('getTime')).getTime();
     end_timestamp = $('#end-date').datepicker('getDate').at($('#end-time').timepicker('getTime')).getTime();
     resolution = $('select#resolutionSelect').val();
+    var params = {};
+    params.start_time = start_timestamp;
+    params.end_time = end_timestamp;
+    params.resolution = resolution;
+    params.counter = counter_names;
+    params.pad = true;
 
-    runAppQuery(new client.queryObj("GET","counters", null, null,
+    runAppQuery(new client.queryObj("GET","counters", null, params,
       function(response) {
         application_counters = response.counters;
         if (!application_counters) {
@@ -3072,7 +3077,7 @@ function deleteRolePermission(roleName, permission) {
    ******************************************************************/
 
   function updateUsersAutocomplete(){
-    runAppQuery(new client.queryObj("GET",'users/', null, null, updateUsersAutocompleteCallback, 
+    runAppQuery(new client.queryObj("GET", 'users/', null, null, updateUsersAutocompleteCallback,
       function() { alertModal("Error", "Unable to retrieve users."); }
     ));
     return false;
