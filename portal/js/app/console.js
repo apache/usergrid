@@ -1751,13 +1751,14 @@ function usergrid_console_app(Pages) {
         entity_path = path + "/" + entity.uuid;
       }
 
-      if (!entity.picture) {
-        entity.picture = "/images/user_profile.png"
+      var picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user_profile.png";
+      if (entity.picture) {
+        picture = entity.picture + "?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png"
       }
 
       user_data = {
         entity : entity_contents,
-        picture : entity.picture + "?d=http://" + window.location.host + window.location.pathname + "images/user_profile.png",
+        picture : picture,
         name : name,
         username : username,
         path : entity_path,
