@@ -549,6 +549,7 @@ usergrid.client = (function() {
    *
    */
   function processQuery(_queryObj, endpoint) {
+    var curl = "curl ";
     //validate parameters
     try {
       var method = _queryObj.getMethod().toUpperCase();
@@ -560,12 +561,16 @@ usergrid.client = (function() {
       if (method != 'GET' && method != 'POST' && method != 'PUT' && method != 'DELETE') {
         throw(new Error('Invalid method - should be GET, POST, PUT, or DELETE.'));
       }
-
+      //curl - add the method to the command (no need to add anything for GET)
+      if (method == "POST") {curl += "-X POST "; }
+      else if (method == "PUT") { curl += "-X PUT "; }
+      else if (method == "DELETE") { curl += "-X DELETE "; }
+/*
       //add in a timestamp for gets and deletes
       if ((method == "GET") || (method == "DELETE")) {
         params['_'] = new Date().getTime();
       }
-
+*/
       //params - make sure we have a valid json object
       _params = JSON.stringify(params)
       if (!jsonlint.parse(_params)) {
@@ -580,7 +585,9 @@ usergrid.client = (function() {
       }
 
       //path - append params and build out
-      path += "?" + encodeParams(params);
+      if (params.length) {
+        path += "?" + encodeParams(params);
+      }
       path = endpoint + path;
       //make sure path never has more than one / together
       if (path) {
@@ -589,6 +596,8 @@ usergrid.client = (function() {
           path = path.replace('//', '/');
         }
       }
+      //curl - add in the path
+      curl += self.apiUrl + path + " ";
 
       //jsonObj - make sure we have a valid json object
       jsonObj = JSON.stringify(jsonObj)
@@ -597,16 +606,18 @@ usergrid.client = (function() {
       }
       if (jsonObj == '{}') {
         jsonObj = null;
+      } else {
+        //curl - add in the json obj
+        curl += "-d '" + jsonObj + "'";
       }
-
     } catch (e) {
       //parameter was invalid
       console.log('processQuery - error occured -' + e.message);
       return false;
     }
-
+    console.log(curl);
     //log the activity
-    console.log("processQuery - " + method + " - " + path);
+    //console.log("processQuery - " + method + " - " + path);
 
     //send query
     apiRequest(method, path, jsonObj,

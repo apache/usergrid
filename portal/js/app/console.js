@@ -3204,8 +3204,6 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function updateRolesAutocompleteCallback(response) {
-    console.log(response);
-
     roles = {};
     if (response.entities) {
       roles = response.entities;
