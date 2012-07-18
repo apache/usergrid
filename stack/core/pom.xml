@@ -176,12 +176,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.usergrid</groupId>
-			<artifactId>usergrid-config</artifactId>
-			<version>${project.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.usergrid</groupId>
 			<artifactId>usergrid-count-batcher</artifactId>
 			<version>${project.version}</version>
 		</dependency>
