@@ -412,20 +412,22 @@
                                   <input type="text" name="update-account-email" id="update-account-email" class="span4" value="" size="20"/>
                                 </div>
                               </div>
-			      <div class="control-group">
-				<label class="control-label" for="update-account-picture-img">Picture </label>
-				<div class="controls">
-				  <img id="update-account-picture-img" src="" class="" width="50" />
-				</div>
-			      </div>
-			      <div class="control-group">
-				<label class="control-label" for="update-account-picture">Picture URL</label>
-				<div class="controls">
-				  <input type="text" name="update-account-picturs" id="update-account-picture" class="span4" value="" size="20"/>
-				</div>
-			      </div>
+                              <div class="control-group">
+                                <label class="control-label" for="update-account-picture-img">Picture <br />(from <a href="http://gravatar.com">gravatar.com</a>) </label>
+                                <div class="controls">
+                                  <img id="update-account-picture-img" src="" class="" width="50" />
+                                </div>
+                              </div>
+                              <!--
+                              <div class="control-group">
+                                <label class="control-label" for="update-account-picture">Picture URL</label>
+                                <div class="controls">
+                                  <input type="text" name="update-account-picture" id="update-account-picture" class="span4" value="" size="20"/>
+                                </div>
+                              </div>
+                              -->
                               <span class="help-block">Leave blank any of the following to keep the current password unchanged</span>
-			      <br />
+                              <br />
                               <div class="control-group">
                                 <label class="control-label" for="old-account-password">Old Password</label>
                                 <div class="controls">
@@ -960,7 +962,7 @@
                     <div class="well thingy"><span class="title"> Result Analytics <span class="app_title"></span></span></div>
                     <div class="console-section-contents">
                       <div id="analytics-graph"></div>
-                      <div id="analytics-graph-area"></div>
+                      <div id="analytics-graph-area" style="overflow-x: auto;"></div>
                     </div>
                   </div>
                 </div>
@@ -998,7 +1000,7 @@
                 <div id="shell-content" class="console-section">
                   <div class="well thingy"> <span class="title"> Interactive Shell </span></div>
                   <div class="console-section-contents">
-                    <pre id="shell-output" class="prettyprint lang-js">
+                    <pre id="shell-output" class="prettyprint lang-js" style="overflow-x: auto; height: 400px;">
                       <h4>        Usergrid Shell</h4>
                       <p>   Type "help" to view a list of the available commands.</p><hr />
                     </pre>

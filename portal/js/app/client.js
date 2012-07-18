@@ -271,46 +271,11 @@ usergrid.client = (function() {
     apiRequest("GET", "/management/users/" + session.getLoggedInUserUUID() + "/organizations", null, success, failure);
   }
 
-  function requestOrganizationCredentials(success, failure) {
-    if (!session.getOrganizationUUID()) {
-      failure();
-    }
-    apiRequest("GET", "/management/organizations/" + session.getOrganizationUUID() + "/credentials", null, success, failure);
-  }
-
-  function regenerateOrganizationCredentials(success, failure) {
-    if (!session.getOrganizationUUID()) {
-      failure();
-    }
-    apiRequest("POST", "/management/organizations/" + session.getOrganizationUUID() + "/credentials", null, success, failure);
-  }
-
   function createAdmin(data, success, failure) {
     if (!session.getOrganizationUUID()) {
       failure();
     }
     apiRequest("POST", "/management/organizations/" + session.getOrganizationUUID() + "/users", JSON.stringify(data), success, failure);
-  }
-
-  function requestAdminUser(success, failure) {
-    if (!session.getLoggedInUserObj()) {
-      failure();
-    }
-    apiRequest("GET", "/management/users/" + session.getLoggedInUserUUID(), null, success, failure);
-  }
-
-  function updateAdminUser(properties, success, failure) {
-    if (!session.getLoggedInUserObj()) {
-      failure();
-    }
-    apiRequest("PUT", "/management/users/" + session.getLoggedInUserUUID(), JSON.stringify(properties), success, failure);
-  }
-
-  function requestAdminFeed(success, failure) {
-    if (!session.getLoggedInUserObj()) {
-      failure();
-    }
-    apiRequest("GET", "/management/users/" + session.getLoggedInUserUUID() + "/feed", null, success, failure);
   }
 
   /*******************************************************************
@@ -776,14 +741,9 @@ usergrid.client = (function() {
     createOrganization: createOrganization,
     leaveOrganization: leaveOrganization,
     requestOrganizations: requestOrganizations,
-    requestOrganizationCredentials: requestOrganizationCredentials,
-    regenerateOrganizationCredentials: regenerateOrganizationCredentials,
     createAdmin: createAdmin,
     createCollection: createCollection,
     requestApplicationCounters: requestApplicationCounters,
-    requestAdminUser: requestAdminUser,
-    updateAdminUser: updateAdminUser,
-    requestAdminFeed: requestAdminFeed,
     loginAdmin: loginAdmin,
     loginAppUser: loginAppUser,
     useSSO: useSSO,

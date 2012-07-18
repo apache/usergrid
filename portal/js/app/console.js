@@ -675,9 +675,8 @@ function usergrid_console_app(Pages) {
   function requestAdminFeed() {
     var section =$('#organization-activities');
     section.empty().html('<div class="alert alert-info">Loading...</div>');
-    client.requestAdminFeed(displayAdminFeed, function() {
-      section.html('<div class="alert">Unable to retrieve feed.</div>');
-    });
+    runManagementQuery(new client.queryObj("GET","users/" + session.getLoggedInUserUUID() + "/feed", null, null, displayAdminFeed,
+      function() { section.html('<div class="alert">Unable to retrieve feed.</div>'); }));
   }
   window.usergrid.console.requestAdminFeed = requestAdminFeed;
 
@@ -686,30 +685,32 @@ function usergrid_console_app(Pages) {
   function requestOrganizationCredentials() {
     $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
     $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
-    client.requestOrganizationCredentials(function(response) {
-      $('#organization-panel-key').html(response.credentials.client_id);
-      $('#organization-panel-secret').html(response.credentials.client_secret);
-      organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
-    },
-    function() {
-      $('#organization-panel-key').html('<div class="alert marginless">Unable to load...</div>');
-      $('#organization-panel-secret').html('<div class="alert marginless">Unable to load...</div>');
-    });
+    runManagementQuery(new client.queryObj("GET",'organizations/'+ session.getOrganizationUUID() + "/credentials", null, null,
+      function(response) {
+        $('#organization-panel-key').html(response.credentials.client_id);
+        $('#organization-panel-secret').html(response.credentials.client_secret);
+        organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
+      },
+      function() {
+        $('#organization-panel-key').html('<div class="alert marginless">Unable to load...</div>');
+        $('#organization-panel-secret').html('<div class="alert marginless">Unable to load...</div>');
+      }));
   }
 
   function newOrganizationCredentials() {
     $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
     $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
-    client.regenerateOrganizationCredentials(function(response) {
-      $('#organization-panel-key').html(response.credentials.client_id);
-      $('#organization-panel-secret').html(response.credentials.client_secret);
-      organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
+    runManagementQuery(new client.queryObj("POST",'organizations/' + session.getOrganizationUUID()  + "/credentials",null, null,
+      function(response) {
+        $('#organization-panel-key').html(response.credentials.client_id);
+        $('#organization-panel-secret').html(response.credentials.client_secret);
+        organization_keys = {client_id : response.credentials.client_id, client_secret : response.credentials.client_secret};
       },
       function() {
         $('#organization-panel-key').html('<div class="alert marginless">Unable to load...</div>');
         $('#organization-panel-secret').html('<div class="alert marginless">Unable to load...</div>');
       }
-    );
+    ));
   }
   window.usergrid.console.newOrganizationCredentials = newOrganizationCredentials;
 
@@ -2889,10 +2890,8 @@ function deleteRolePermission(roleName, permission) {
 
   function scrollToInput() {
     // Do it manually because JQuery seems to not get it right
-    var console_panels = document.getElementById('console-panels');
-    var shell_content = document.getElementById('shell-content');
-    var scrollOffset = Math.max(shell_content.clientHeight - console_panels.clientHeight, 0);
-    console_panels.scrollTop = scrollOffset;
+    var textArea = document.getElementById('shell-output');
+    textArea.scrollTop = textArea.scrollHeight;
   }
 
   function echoInputToShell(s) {
@@ -2913,6 +2912,7 @@ function deleteRolePermission(roleName, permission) {
     printLnToShell(JSON.stringify(response, null, "  "));
     $('#shell-output').append('<hr />');
     prettyPrint();
+    scrollToInput();
   }
 
   function handleShellCommand(s) {
@@ -3386,7 +3386,6 @@ function deleteRolePermission(roleName, permission) {
       $('#update-account-name').val(response.data.name);
       $('#update-account-email').val(response.data.email);
       $('#update-account-picture-img').attr('src', response.data.gravatar);
-      $('#update-account-picture').val(response.data.gravatar);
       $('#update-account-bday').attr('src', response.data.gravatar);
 
       var t = "";
@@ -3446,8 +3445,7 @@ function deleteRolePermission(roleName, permission) {
       userData.newpassword = new_pass;
       userData.oldpassword = old_pass;
     }
-
-    client.updateAdminUser(userData,
+    runManagementQuery(new client.queryObj("PUT",'users/' + session.getLoggedInUserUUID(), userData, null,
       function(response) {
       $('#account-update-modal').modal('show');
         if ((old_pass && new_pass) && (old_pass != new_pass)) {
@@ -3460,7 +3458,7 @@ function deleteRolePermission(roleName, permission) {
         alertModal("Error - Unable to update account settings");
         requestAccountSettings();
       }
-    );
+    ));
     return false;
   });
 
@@ -3474,10 +3472,7 @@ function deleteRolePermission(roleName, permission) {
       $('#old-account-password').val("");
       $('#update-account-password').val("");
       $('#update-account-password-repeat').val("");
-      client.requestAdminUser(displayAccountSettings,
-          function() {
-          }
-      );
+      runManagementQuery(new client.queryObj("GET",'users/' + session.getLoggedInUserUUID(), null, null, displayAccountSettings, null));
     }
   }
   usergrid.console.requestAccountSettings = requestAccountSettings;
