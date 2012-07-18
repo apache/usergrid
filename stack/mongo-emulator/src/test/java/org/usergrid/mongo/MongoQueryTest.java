@@ -20,51 +20,46 @@ import com.mongodb.Mongo;
 public class MongoQueryTest extends AbstractMongoTest {
 
     @Test
-    public void basicTest() throws Exception {
-        UUID appId = emf.createApplication("test-organization",
-                "test-query-app");
+    public void stringEqual() throws Exception {
+
+        UUID appId = emf.lookupApplication("test-organization/test-app");
         EntityManager em = emf.getEntityManager(appId);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put("name", "Kings of Leon");
         properties.put("genre", "Southern Rock");
-        em.create("band", properties);
+        properties.put("founded", 2000);
+        em.create("stringequal", properties);
 
         properties = new LinkedHashMap<String, Object>();
         properties.put("name", "Stone Temple Pilots");
         properties.put("genre", "Rock");
-        em.create("band", properties);
+        properties.put("founded", 1986);
+        em.create("stringequal", properties);
 
         properties = new LinkedHashMap<String, Object>();
         properties.put("name", "Journey");
         properties.put("genre", "Classic Rock");
-        em.create("band", properties);
+        properties.put("founded", 1973);
+        em.create("stringequal", properties);
 
         // See http://www.mongodb.org/display/DOCS/Java+Tutorial
 
         Mongo m = new Mongo("localhost", 27017);
 
-        DB db = m.getDB("test-organization/test-query-app");
+        DB db = m.getDB("test-organization/test-app");
         db.authenticate("test@usergrid.com", "test".toCharArray());
 
         Set<String> colls = db.getCollectionNames();
 
-        boolean found = false;
+        assertTrue(colls.contains("stringequals"));
 
-        for (String s : colls) {
-            if ("bands".equals(s)) {
-                found = true;
-                break;
-            }
-        }
-
-        assertTrue(found);
-
-        DBCollection coll = db.getCollection("bands");
+        DBCollection coll = db.getCollection("stringequals");
         DBCursor cur = coll.find();
         int count = 0;
 
         while (cur.hasNext()) {
+            cur.next();
             count++;
         }
 
@@ -83,4 +78,217 @@ public class MongoQueryTest extends AbstractMongoTest {
         assertFalse(cur.hasNext());
 
     }
+
+    @Test
+    public void greaterThan() throws Exception {
+
+        UUID appId = emf.lookupApplication("test-organization/test-app");
+        EntityManager em = emf.getEntityManager(appId);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Kings of Leon");
+        properties.put("genre", "Southern Rock");
+        properties.put("founded", 2000);
+        em.create("greaterthan", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Stone Temple Pilots");
+        properties.put("genre", "Rock");
+        properties.put("founded", 1986);
+        em.create("greaterthan", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Journey");
+        properties.put("genre", "Classic Rock");
+        properties.put("founded", 1973);
+        em.create("greaterthan", properties);
+
+        // See http://www.mongodb.org/display/DOCS/Java+Tutorial
+
+        Mongo m = new Mongo("localhost", 27017);
+
+        DB db = m.getDB("test-organization/test-app");
+        db.authenticate("test@usergrid.com", "test".toCharArray());
+
+        BasicDBObject query = new BasicDBObject();
+        query.put("founded", new BasicDBObject("$gt", 1973));
+
+        DBCollection coll = db.getCollection("greaterthans");
+        DBCursor cur = coll.find(query);
+
+        assertTrue(cur.hasNext());
+
+        DBObject result = cur.next();
+        assertEquals("Stone Temple Pilots", result.get("name"));
+        assertEquals("Rock", result.get("genre"));
+
+        result = cur.next();
+        assertEquals("Kings of Leon", result.get("name"));
+        assertEquals("Southern Rock", result.get("genre"));
+
+        assertFalse(cur.hasNext());
+
+    }
+
+    @Test
+    public void greaterThanEqual() throws Exception {
+
+        UUID appId = emf.lookupApplication("test-organization/test-app");
+        EntityManager em = emf.getEntityManager(appId);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Kings of Leon");
+        properties.put("genre", "Southern Rock");
+        properties.put("founded", 2000);
+        em.create("greaterthanequal", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Stone Temple Pilots");
+        properties.put("genre", "Rock");
+        properties.put("founded", 1986);
+        em.create("greaterthanequal", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Journey");
+        properties.put("genre", "Classic Rock");
+        properties.put("founded", 1973);
+        em.create("greaterthanequal", properties);
+
+        // See http://www.mongodb.org/display/DOCS/Java+Tutorial
+
+        Mongo m = new Mongo("localhost", 27017);
+
+        DB db = m.getDB("test-organization/test-app");
+        db.authenticate("test@usergrid.com", "test".toCharArray());
+
+        BasicDBObject query = new BasicDBObject();
+        query.put("founded", new BasicDBObject("$gte", 1973));
+
+        DBCollection coll = db.getCollection("greaterthanequals");
+        DBCursor cur = coll.find(query);
+
+        assertTrue(cur.hasNext());
+
+        DBObject result = cur.next();
+        assertEquals("Journey", result.get("name"));
+        assertEquals("Classic Rock", result.get("genre"));
+
+        result = cur.next();
+        assertEquals("Stone Temple Pilots", result.get("name"));
+        assertEquals("Rock", result.get("genre"));
+
+        result = cur.next();
+        assertEquals("Kings of Leon", result.get("name"));
+        assertEquals("Southern Rock", result.get("genre"));
+
+        assertFalse(cur.hasNext());
+
+    }
+
+    @Test
+    public void lessThan() throws Exception {
+
+        UUID appId = emf.lookupApplication("test-organization/test-app");
+        EntityManager em = emf.getEntityManager(appId);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Kings of Leon");
+        properties.put("genre", "Southern Rock");
+        properties.put("founded", 2000);
+        em.create("lessthan", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Stone Temple Pilots");
+        properties.put("genre", "Rock");
+        properties.put("founded", 1986);
+        em.create("lessthan", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Journey");
+        properties.put("genre", "Classic Rock");
+        properties.put("founded", 1973);
+        em.create("lessthan", properties);
+
+        // See http://www.mongodb.org/display/DOCS/Java+Tutorial
+
+        Mongo m = new Mongo("localhost", 27017);
+
+        DB db = m.getDB("test-organization/test-app");
+        db.authenticate("test@usergrid.com", "test".toCharArray());
+
+        BasicDBObject query = new BasicDBObject();
+        query.put("founded", new BasicDBObject("$lt", 2000));
+
+        DBCollection coll = db.getCollection("lessthans");
+        DBCursor cur = coll.find(query);
+
+        assertTrue(cur.hasNext());
+
+        DBObject result = cur.next();
+        assertEquals("Journey", result.get("name"));
+        assertEquals("Classic Rock", result.get("genre"));
+
+        result = cur.next();
+        assertEquals("Stone Temple Pilots", result.get("name"));
+        assertEquals("Rock", result.get("genre"));
+
+        assertFalse(cur.hasNext());
+
+    }
+
+    @Test
+    public void lessThanEqual() throws Exception {
+
+        UUID appId = emf.lookupApplication("test-organization/test-app");
+        EntityManager em = emf.getEntityManager(appId);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Kings of Leon");
+        properties.put("genre", "Southern Rock");
+        properties.put("founded", 2000);
+        em.create("lessthanequal", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Stone Temple Pilots");
+        properties.put("genre", "Rock");
+        properties.put("founded", 1986);
+        em.create("lessthanequal", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Journey");
+        properties.put("genre", "Classic Rock");
+        properties.put("founded", 1973);
+        em.create("lessthanequal", properties);
+
+        // See http://www.mongodb.org/display/DOCS/Java+Tutorial
+
+        Mongo m = new Mongo("localhost", 27017);
+
+        DB db = m.getDB("test-organization/test-app");
+        db.authenticate("test@usergrid.com", "test".toCharArray());
+
+        BasicDBObject query = new BasicDBObject();
+        query.put("founded", new BasicDBObject("$lte", 2000));
+
+        DBCollection coll = db.getCollection("lessthanequals");
+        DBCursor cur = coll.find(query);
+
+        assertTrue(cur.hasNext());
+
+        DBObject result = cur.next();
+        assertEquals("Journey", result.get("name"));
+        assertEquals("Classic Rock", result.get("genre"));
+
+        result = cur.next();
+        assertEquals("Stone Temple Pilots", result.get("name"));
+        assertEquals("Rock", result.get("genre"));
+
+        result = cur.next();
+        assertEquals("Kings of Leon", result.get("name"));
+        assertEquals("Southern Rock", result.get("genre"));
+
+        assertFalse(cur.hasNext());
+
+    }
+
 }

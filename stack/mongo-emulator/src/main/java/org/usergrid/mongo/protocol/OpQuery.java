@@ -33,259 +33,322 @@ import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Query.SortDirection;
 import org.usergrid.persistence.query.tree.AndOperand;
 import org.usergrid.persistence.query.tree.Equal;
+import org.usergrid.persistence.query.tree.GreaterThan;
+import org.usergrid.persistence.query.tree.GreaterThanEqual;
+import org.usergrid.persistence.query.tree.LessThan;
+import org.usergrid.persistence.query.tree.LessThanEqual;
 import org.usergrid.persistence.query.tree.Operand;
 import org.usergrid.persistence.query.tree.OrOperand;
 
 public class OpQuery extends OpCrud {
 
-	int flags;
-	int numberToSkip;
-	int numberToReturn;
-	BSONObject query;
-	BSONObject returnFieldSelector;
+    int flags;
+    int numberToSkip;
+    int numberToReturn;
+    BSONObject query;
+    BSONObject returnFieldSelector;
 
-	static Set<String> operators = new HashSet<String>();
-	{
-		operators.add("all");
-		operators.add("and");
-		operators.add("elemMatch");
-		operators.add("exists");
-		operators.add("gt");
-		operators.add("gte");
-		operators.add("in");
-		operators.add("lt");
-		operators.add("lte");
-		operators.add("mod");
-		operators.add("ne");
-		operators.add("nin");
-		operators.add("nor");
-		operators.add("not");
-		operators.add("or");
-		operators.add("regex");
-		operators.add("size");
-		operators.add("type");
-		operators.add("where");
-	}
+    static Set<String> operators = new HashSet<String>();
+    {
+        operators.add("all");
+        operators.add("and");
+        operators.add("elemMatch");
+        operators.add("exists");
+        operators.add("gt");
+        operators.add("gte");
+        operators.add("in");
+        operators.add("lt");
+        operators.add("lte");
+        operators.add("mod");
+        operators.add("ne");
+        operators.add("nin");
+        operators.add("nor");
+        operators.add("not");
+        operators.add("or");
+        operators.add("regex");
+        operators.add("size");
+        operators.add("type");
+        operators.add("where");
+    }
 
-	public OpQuery() {
-		opCode = OP_QUERY;
-	}
+    public OpQuery() {
+        opCode = OP_QUERY;
+    }
 
-	public Query toNativeQuery() {
-		if (query == null) {
-			return null;
-		}
+    public Query toNativeQuery() {
+        if (query == null) {
+            return null;
+        }
 
-		BasicBSONObject query_expression = null;
-		BasicBSONObject sort_order = null;
+        BasicBSONObject query_expression = null;
+        BasicBSONObject sort_order = null;
 
-		Object o = query.get("$query");
-		if (!(o instanceof BasicBSONObject)) {
-			o = query.get("query");
-		}
-		if (o instanceof BasicBSONObject) {
-			query_expression = (BasicBSONObject) o;
-		}
+        Object o = query.get("$query");
+        if (!(o instanceof BasicBSONObject)) {
+            o = query.get("query");
+        }
+        if (o instanceof BasicBSONObject) {
+            query_expression = (BasicBSONObject) o;
+        }
 
-		o = query.get("$orderby");
-		if (!(o instanceof BasicBSONObject)) {
-			o = query.get("orderby");
-		}
-		if (o instanceof BasicBSONObject) {
-			sort_order = (BasicBSONObject) o;
-		}
+        o = query.get("$orderby");
+        if (!(o instanceof BasicBSONObject)) {
+            o = query.get("orderby");
+        }
+        if (o instanceof BasicBSONObject) {
+            sort_order = (BasicBSONObject) o;
+        }
 
-		if ((query_expression == null) && (query instanceof BasicBSONObject)) {
-			query_expression = (BasicBSONObject) query;
-			query_expression.removeField("$orderby");
-			query_expression.removeField("$max");
-			query_expression.removeField("$min");
-		}
+        if ((query_expression == null) && (query instanceof BasicBSONObject)) {
+            query_expression = (BasicBSONObject) query;
+            query_expression.removeField("$orderby");
+            query_expression.removeField("$max");
+            query_expression.removeField("$min");
+        }
 
-		if ((query_expression == null) && (sort_order == null)) {
-			return null;
-		}
+        if ((query_expression == null) && (sort_order == null)) {
+            return null;
+        }
 
-		if (query_expression.size() == 0) {
-			if (sort_order.size() == 0) {
-				return null;
-			}
-			if ((sort_order.size() == 1) && sort_order.containsField("_id")) {
-				return null;
-			}
-		}
+        if (query_expression.size() == 0 && sort_order != null) {
+            if (sort_order.size() == 0) {
+                return null;
+            }
+            if ((sort_order.size() == 1) && sort_order.containsField("_id")) {
+                return null;
+            }
+        }
 
-		Query q = new Query();
-		if (getNumberToReturn() > 0) {
-			q.setLimit(getNumberToReturn());
-		}
+        Query q = new Query();
+        if (getNumberToReturn() > 0) {
+            q.setLimit(getNumberToReturn());
+        }
 
-		if (query_expression != null) {
-			AndOperand and = new AndOperand();
-			append(and, query_expression);
-			q.setRootOperand(and);
-		}
+        if (query_expression != null) {
+            Operand root = append(null, query_expression);
+            q.setRootOperand(root);
+        }
 
-		if (sort_order != null) {
-			for (String sort : sort_order.keySet()) {
-				if (!"_id".equals(sort)) {
-					int s = getIntValue(sort_order.toMap(), "_id", 1);
-					q.addSort(sort, s >= 0 ? SortDirection.ASCENDING
-							: SortDirection.DESCENDING);
-				}
-			}
-		}
+        if (sort_order != null) {
+            for (String sort : sort_order.keySet()) {
+                if (!"_id".equals(sort)) {
+                    int s = getIntValue(sort_order.toMap(), "_id", 1);
+                    q.addSort(sort, s >= 0 ? SortDirection.ASCENDING
+                            : SortDirection.DESCENDING);
+                }
+            }
+        }
 
-		return q;
-	}
+        return q;
+    }
 
-	Operand append(Operand op, BSONObject exp) {
-		for (String field : exp.keySet()) {
-			if (field.startsWith("$")) {
-				if ("$or".equals(field)) {
-					// http://www.mongodb.org/display/DOCS/OR+operations+in+query+expressions
-					// or
-					// { $or : [ { a : 1 } , { b : 2 } ] }
-					OrOperand or = new OrOperand(new ClassicToken(0, "="));
-					op.addChild(or);
-					append(or, (BSONObject) exp.get(field));
-				} else if ("$not".equals(field)) {
-					// http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-Metaoperator%3A{{%24not}}
-					// not
-					// { name : { $not : /acme.*corp/i } }
-				} else if ("$ne".equals(field)) {
-					// http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%24ne
-					// not equals
-					// { x : { $ne : 3 } }
-				} else if ("$gt".equals(field)) {
-					// http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%3C%2C%3C%3D%2C%3E%2C%3E%3D
-					// greater than
-					// { "field" : { $gt: value } }
-				} else if ("$gte".equals(field)) {
-					// http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%3C%2C%3C%3D%2C%3E%2C%3E%3D
-					// greater than equals
-					// { "field" : { $gte: value } }
-				} else if ("$lt".equals(field)) {
-					// http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%3C%2C%3C%3D%2C%3E%2C%3E%3D
-					// less than
-					// { "field" : { $lt: value } }
-				} else if ("$lte".equals(field)) {
-					// http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%3C%2C%3C%3D%2C%3E%2C%3E%3D
-					// less than equals
-					// { "field" : { $lte: value } }
-				}
-			} else if (!field.equals("_id")) {
-				Equal equality = new Equal(new ClassicToken(0, "="));
-				equality.setProperty(field);
-				equality.setLiteral(exp.get(field));
-				op.addChild(equality);
-			}
-		}
-		return op;
-	}
+    private Operand append(Operand parent, BSONObject exp) {
+        Operand current = null;
+        Object fieldValue = null;
 
-	public int getFlags() {
-		return flags;
-	}
+        for (String field : exp.keySet()) {
+            fieldValue = exp.get(field);
 
-	public void setFlags(int flags) {
-		this.flags = flags;
-	}
+            // we have a nested object
+            if (fieldValue instanceof BSONObject) {
+                current = handleOperand(parent, field, (BSONObject) fieldValue);
+            }
 
-	public int getNumberToSkip() {
-		return numberToSkip;
-	}
+            else if (!field.equals("_id")) {
+                Equal equality = new Equal(new ClassicToken(0, "="));
+                equality.setProperty(field);
+                equality.setLiteral(exp.get(field));
 
-	public void setNumberToSkip(int numberToSkip) {
-		this.numberToSkip = numberToSkip;
-	}
+                if (parent != null) {
+                    parent.addChild(equality);
+                }
 
-	public int getNumberToReturn() {
-		return numberToReturn;
-	}
+                current = equality;
+            }
+        }
+        return current;
+    }
 
-	public void setNumberToReturn(int numberToReturn) {
-		this.numberToReturn = numberToReturn;
-	}
+    private Operand handleOperand(Operand parent, String sourceField,
+            BSONObject exp) {
 
-	public BSONObject getQuery() {
-		return query;
-	}
+        Operand current = null;
+        Object value = null;
 
-	public void setQuery(BSONObject query) {
-		this.query = query;
-	}
+        for (String field : exp.keySet()) {
+            if (field.startsWith("$")) {
+                if ("$gt".equals(field)) {
+                    value = exp.get(field);
 
-	public void setQuery(Map<?, ?> map) {
-		query = new BasicBSONObject();
-		query.putAll(map);
-	}
+                    GreaterThan gt = new GreaterThan();
+                    gt.setProperty(sourceField);
+                    gt.setLiteral(value);
 
-	public BSONObject getReturnFieldSelector() {
-		return returnFieldSelector;
-	}
+                    current = gt;
+                } else if ("$gte".equals(field)) {
+                    value = exp.get(field);
 
-	public void setReturnFieldSelector(BSONObject returnFieldSelector) {
-		this.returnFieldSelector = returnFieldSelector;
-	}
+                    GreaterThanEqual gte = new GreaterThanEqual();
+                    gte.setProperty(sourceField);
+                    gte.setLiteral(exp.get(field));
 
-	public void setReturnFieldSelector(Map<?, ?> map) {
-		returnFieldSelector = new BasicBSONObject();
-		returnFieldSelector.putAll(map);
-	}
+                    current = gte;
+                    // http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%3C%2C%3C%3D%2C%3E%2C%3E%3D
+                    // greater than equals
+                    // { "field" : { $gte: value } }
+                } else if ("$lt".equals(field)) {
+                    value = exp.get(field);
 
-	@Override
-	public void decode(ChannelBuffer buffer) throws IOException {
-		super.decode(buffer);
-		flags = buffer.readInt();
-		fullCollectionName = readCString(buffer);
-		numberToSkip = buffer.readInt();
-		numberToReturn = buffer.readInt();
-		query = BSONUtils.decoder().readObject(
-				new ChannelBufferInputStream(buffer));
-		if (buffer.readable()) {
-			returnFieldSelector = BSONUtils.decoder().readObject(
-					new ChannelBufferInputStream(buffer));
-		}
-	}
+                    LessThan lt = new LessThan();
+                    lt.setProperty(sourceField);
+                    lt.setLiteral(value);
 
-	@Override
-	public ChannelBuffer encode(ChannelBuffer buffer) {
-		int l = 28; // 7 ints * 4 bytes
+                    current = lt;
+                } else if ("$lte".equals(field)) {
+                    value = exp.get(field);
 
-		ByteBuffer fullCollectionNameBytes = getCString(fullCollectionName);
-		l += fullCollectionNameBytes.capacity();
+                    LessThanEqual lte = new LessThanEqual();
+                    lte.setProperty(sourceField);
+                    lte.setLiteral(value);
 
-		ByteBuffer queryBytes = encodeDocument(query);
-		l += queryBytes.capacity();
+                    current = lte;
+                }
+            }
+        }
 
-		ByteBuffer returnFieldSelectorBytes = encodeDocument(returnFieldSelector);
-		l += returnFieldSelectorBytes.capacity();
+        if (parent != null && current != null) {
+            parent.addChild(current);
+        }
 
-		messageLength = l;
+        return current;
+    }
 
-		buffer = super.encode(buffer);
+    // if ("$or".equals(field)) {
+    // // http://www.mongodb.org/display/DOCS/OR+operations+in+query+expressions
+    // // or
+    // // { $or : [ { a : 1 } , { b : 2 } ] }
+    // OrOperand or = new OrOperand(new ClassicToken(0, "="));
+    //
+    // if (parent != null) {
+    // parent.addChild(or);
+    // }
+    //
+    // append(or, (BSONObject) exp.get(field));
+    //
+    // } else if ("$not".equals(field)) {
+    // //
+    // http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-Metaoperator%3A{{%24not}}
+    // // not
+    // // { name : { $not : /acme.*corp/i } }
+    // } else if ("$ne".equals(field)) {
+    // //
+    // http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%24ne
+    // // not equals
+    // // { x : { $ne : 3 } }
+    // }
 
-		buffer.writeInt(flags);
+    public int getFlags() {
+        return flags;
+    }
 
-		buffer.writeBytes(fullCollectionNameBytes);
+    public void setFlags(int flags) {
+        this.flags = flags;
+    }
 
-		buffer.writeInt(numberToSkip);
-		buffer.writeInt(numberToReturn);
+    public int getNumberToSkip() {
+        return numberToSkip;
+    }
 
-		buffer.writeBytes(queryBytes);
+    public void setNumberToSkip(int numberToSkip) {
+        this.numberToSkip = numberToSkip;
+    }
 
-		buffer.writeBytes(returnFieldSelectorBytes);
+    public int getNumberToReturn() {
+        return numberToReturn;
+    }
 
-		return buffer;
-	}
+    public void setNumberToReturn(int numberToReturn) {
+        this.numberToReturn = numberToReturn;
+    }
 
-	@Override
-	public String toString() {
-		return "OpQuery [flags=" + flags + ", fullCollectionName="
-				+ fullCollectionName + ", numberToSkip=" + numberToSkip
-				+ ", numberToReturn=" + numberToReturn + ", query=" + query
-				+ ", returnFieldSelector=" + returnFieldSelector + "]";
-	}
+    public BSONObject getQuery() {
+        return query;
+    }
+
+    public void setQuery(BSONObject query) {
+        this.query = query;
+    }
+
+    public void setQuery(Map<?, ?> map) {
+        query = new BasicBSONObject();
+        query.putAll(map);
+    }
+
+    public BSONObject getReturnFieldSelector() {
+        return returnFieldSelector;
+    }
+
+    public void setReturnFieldSelector(BSONObject returnFieldSelector) {
+        this.returnFieldSelector = returnFieldSelector;
+    }
+
+    public void setReturnFieldSelector(Map<?, ?> map) {
+        returnFieldSelector = new BasicBSONObject();
+        returnFieldSelector.putAll(map);
+    }
+
+    @Override
+    public void decode(ChannelBuffer buffer) throws IOException {
+        super.decode(buffer);
+        flags = buffer.readInt();
+        fullCollectionName = readCString(buffer);
+        numberToSkip = buffer.readInt();
+        numberToReturn = buffer.readInt();
+        query = BSONUtils.decoder().readObject(
+                new ChannelBufferInputStream(buffer));
+        if (buffer.readable()) {
+            returnFieldSelector = BSONUtils.decoder().readObject(
+                    new ChannelBufferInputStream(buffer));
+        }
+    }
+
+    @Override
+    public ChannelBuffer encode(ChannelBuffer buffer) {
+        int l = 28; // 7 ints * 4 bytes
+
+        ByteBuffer fullCollectionNameBytes = getCString(fullCollectionName);
+        l += fullCollectionNameBytes.capacity();
+
+        ByteBuffer queryBytes = encodeDocument(query);
+        l += queryBytes.capacity();
+
+        ByteBuffer returnFieldSelectorBytes = encodeDocument(returnFieldSelector);
+        l += returnFieldSelectorBytes.capacity();
+
+        messageLength = l;
+
+        buffer = super.encode(buffer);
+
+        buffer.writeInt(flags);
+
+        buffer.writeBytes(fullCollectionNameBytes);
+
+        buffer.writeInt(numberToSkip);
+        buffer.writeInt(numberToReturn);
+
+        buffer.writeBytes(queryBytes);
+
+        buffer.writeBytes(returnFieldSelectorBytes);
+
+        return buffer;
+    }
+
+    @Override
+    public String toString() {
+        return "OpQuery [flags=" + flags + ", fullCollectionName="
+                + fullCollectionName + ", numberToSkip=" + numberToSkip
+                + ", numberToReturn=" + numberToReturn + ", query=" + query
+                + ", returnFieldSelector=" + returnFieldSelector + "]";
+    }
 
 }

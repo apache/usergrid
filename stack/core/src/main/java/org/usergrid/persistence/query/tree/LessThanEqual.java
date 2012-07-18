@@ -15,30 +15,40 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.Token;
 import org.usergrid.persistence.exceptions.NoIndexException;
-
 
 /**
  * @author tnine
  * 
  */
-public class LessThanEqual extends EqualityOperand{
+public class LessThanEqual extends EqualityOperand {
 
-  /**
-   * @param property
-   * @param literal
+    /**
+     * @param property
+     * @param literal
+     */
+    public LessThanEqual(Token t) {
+        super(t);
+    }
+
+    /**
    */
-  public LessThanEqual(Token t) {
-    super(t);
-  }
-  
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence.query.tree.QueryVisitor)
-   */
-  @Override
-  public void visit(QueryVisitor visitor) throws NoIndexException {
-    visitor.visit(this);
-  }
+    public LessThanEqual() {
+        super(new CommonToken(0, "<="));
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence
+     * .query.tree.QueryVisitor)
+     */
+    @Override
+    public void visit(QueryVisitor visitor) throws NoIndexException {
+        visitor.visit(this);
+    }
 
 }
