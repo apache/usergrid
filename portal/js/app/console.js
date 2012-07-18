@@ -30,7 +30,7 @@ function usergrid_console_app(Pages) {
   var alphaNumRegex = new RegExp("^([0-9a-zA-Z])+$");
   var alphaNumAllowedCharsMessage = 'Collection name only allows : a-z 0-9';
 
-  var pathRegex = new RegExp("^([0-9a-z./-])+$");
+  var pathRegex = new RegExp("^([0-9a-zA-Z./-])+$");
   var pathAllowedCharsMessage = 'Path only allows : /, a-z, 0-9, dot, and dash';
   var roleAllowedCharsMessage = 'Role only allows : /, a-z, 0-9, dot, and dash';
 
