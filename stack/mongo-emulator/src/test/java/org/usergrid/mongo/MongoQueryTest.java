@@ -21,7 +21,8 @@ public class MongoQueryTest extends AbstractMongoTest {
 
     @Test
     public void basicTest() throws Exception {
-        UUID appId = emf.lookupApplication("test-organization/test-query-app");
+        UUID appId = emf.createApplication("test-organization",
+                "test-query-app");
         EntityManager em = emf.getEntityManager(appId);
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
