@@ -3289,6 +3289,7 @@ function deleteRolePermission(roleName, permission) {
     session.clearAll();
     if (client.useSSO()) {
       Pages.clearPage();
+      client.sendToSSOLogoutPage();
     } else {
       Pages.ShowPage("login");
     }
