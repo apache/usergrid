@@ -93,14 +93,6 @@ function usergrid_console_app(Pages) {
     $(this).hide();
   });
 
-  client.onActiveRequest = function(activeRequests) {
-    if (activeRequests <= 0) {
-      $("#api-activity").hide();
-    } else {
-      $("#api-activity").show();
-    }
-  };
-
   function showPanel(page) {
     var p = $(page);
     $("#console-panels").children().each(function() {
@@ -480,25 +472,6 @@ function usergrid_console_app(Pages) {
 
   function doBuildIndexMenu() {
     queryQl.data('typeahead').source = indexes;
-  }
-
-  function requestIndexes() {
-    var path = $('#query-path').val();
-    indexes = null;
-    doBuildIndexMenu();
-    path = path + "/indexes";
-    /*
-    if (path.lastIndexOf("/", 0) !== 0) {
-      path = path;
-    }*/
-
-    runAppQuery(new client.queryObj("GET", path, data, null,
-      function(response) {
-      if (response && response.data) {
-        indexes = response.data;
-      }
-      doBuildIndexMenu();
-    }));
   }
 
   $('#delete-entity-link').click(deleteEntity);

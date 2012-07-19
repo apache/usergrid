@@ -169,27 +169,10 @@ usergrid.client = (function() {
 
   /*******************************************************************
    *
-   * Complex App endpoints
+   * login functions
    *
    ******************************************************************/
-  function setCurrentOrganization(orgName) {
-    var organizations = session.getLoggedInUserOrgs();
-    if (!session.getLoggedInUserObj() || ! organizations) {
-      return;
-    }
-
-    if (orgName) {
-      session.setOrganization(organizations[orgName]);
-    } else {
-      var firstOrg = null;
-      for (firstOrg in organizations) {break;}
-      if (firstOrg) {
-        session.setOrganization(organizations[firstOrg]);
-      }
-    }
-  }
-
-
+  
   function loginAdmin(email, password, successCallback, errorCallback) {
     session.clearAll();
     var formdata = {
@@ -215,34 +198,6 @@ usergrid.client = (function() {
         }
       },
       errorCallback
-    ));
-  }
-
-  function loginAppUser(applicationId, email, password, success, failure) {
-    session.clearIt();
-    var formdata = {
-      username: email,
-      password: '',
-      invite: true
-    };
-    runAppQuery(new queryObj('POST', 'token', null, formdata,
-      function(response) {
-        if (response && response.access_token && response.user) {
-          session.setLoggedInUser(response.user) ;
-          session.getAccessToken(response.access_token);
-          setCurrentOrganization();
-          if (success) {
-            success();
-          }
-        } else if (failure) {
-          failure();
-        }
-      },
-      function(response, textStatus, xhr) {
-        if (failure) {
-          failure();
-        }
-      }
     ));
   }
 
@@ -535,13 +490,13 @@ usergrid.client = (function() {
    *  @notes - Do not call this method directly.  Use the runAppQuery and runManagementQuery funcitons instead
    *
    */
-  function apiRequest(method, path, data, success, error) {
+  function apiRequest(method, path, data, successCallback, errorCallback) {
 
     var ajaxOptions = {
       type: method.toUpperCase(),
       url: self.apiUrl + path,
-      success: success,
-      error: error,
+      success: successCallback,
+      error: errorCallback,
       data: data || {},
       contentType: "application/json; charset=utf-8",
       dataType: "json"
@@ -649,27 +604,21 @@ usergrid.client = (function() {
    *
    ******************************************************************/
   var self = {
+    session:session,
     Init: Init,
     apiUrl: PUBLIC_API_URL,
     sso_logout_page: SSO_LOGOUT_PAGE,
-    error: null,
-    activeRequests: 0,
-    onActiveRequest: null,
-    encodePathString: encodePathString,
-    apiRequest: apiRequest,
-    loginAdmin: loginAdmin,
-    loginAppUser: loginAppUser,
     useSSO: useSSO,
     sendToSSOLogoutPage: sendToSSOLogoutPage,
     sendToSSOLoginPage: sendToSSOLoginPage,
     sendToSSOProfilePage: sendToSSOProfilePage,
     getSSOCallback: getSSOCallback,
-    setCurrentOrganization: setCurrentOrganization,
+    loginAdmin: loginAdmin,
     autoLogin: autoLogin,
     runAppQuery:runAppQuery,
     runManagementQuery:runManagementQuery,
     queryObj:queryObj,
-    session:session
+    apiRequest: apiRequest
   }
 
   return self;

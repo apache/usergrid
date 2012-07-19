@@ -7,15 +7,14 @@ var Pages = new UsergridPages();
 
 
 $(document).ready(function () {
-
+  var query_params = getQueryParams();
   initCore();
   initUI();
   startApp();
 
   function initCore() {
     prepareLocalStorage();
-    parseParams();
-    var query_params = getQueryParams();
+    parseParams();    
     usergrid.client.Init(query_params);
   }
   
