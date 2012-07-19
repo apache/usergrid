@@ -483,16 +483,22 @@ function usergrid_console_app(Pages) {
   }
 
   function requestIndexes() {
-    var qpath = $('#query-path').val();
+    var path = $('#query-path').val();
     indexes = null;
     doBuildIndexMenu();
-    client.requestCollectionIndexes(current_application_id, qpath,
+    path = path + "/indexes";
+    /*
+    if (path.lastIndexOf("/", 0) !== 0) {
+      path = path;
+    }*/
+
+    runAppQuery(new client.queryObj("GET", path, data, null,
       function(response) {
       if (response && response.data) {
         indexes = response.data;
       }
       doBuildIndexMenu();
-    });
+    }));
   }
 
   $('#delete-entity-link').click(deleteEntity);

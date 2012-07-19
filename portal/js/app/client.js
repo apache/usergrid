@@ -343,14 +343,6 @@ usergrid.client = (function() {
     }
   }
 
-  function requestCollectionIndexes(applicationId, path, success, failure) {
-    if (path.lastIndexOf("/", 0) !== 0) {
-      path = path;
-    }
-    path = path + "/indexes";
-    apiRequest("GET", path, null, success, failure);
-  }
-
   /*******************************************************************
    *
    * Query object
@@ -665,7 +657,6 @@ usergrid.client = (function() {
     sendToSSOLoginPage: sendToSSOLoginPage,
     sendToSSOProfilePage: sendToSSOProfilePage,
     getSSOCallback: getSSOCallback,
-    requestCollectionIndexes: requestCollectionIndexes,
     setCurrentOrganization: setCurrentOrganization,
     autoLogin: autoLogin,
     runAppQuery:runAppQuery,
