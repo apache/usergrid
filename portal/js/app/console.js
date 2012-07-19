@@ -3271,7 +3271,13 @@ function deleteRolePermission(roleName, permission) {
 
     var link = $(this);
     var orgName = link.text();
-    client.setCurrentOrganization(orgName);
+    var organizations = session.getLoggedInUserOrgs();
+    for (var org in organizations) {
+      if (organizations[org].name == orgName) {
+         session.setOrganizationObj(organizations[org]);
+      }
+    }
+    
     Pages.ShowPage('console');
   }
 
