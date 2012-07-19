@@ -286,7 +286,7 @@ usergrid.client = (function() {
     runManagementQuery(new queryObj('GET', 'token', null, formdata,
       function(response) {
         if (!response) {
-          errorCallback();
+          errorCallback;
           return
         }
         var firstOrg = null;
@@ -312,26 +312,26 @@ usergrid.client = (function() {
       invite: true
     };
     apiRequest("POST", "/" + session.getOrganizationUUID() + "/" + applicationId + "/token", formdata,
-               function(response) {
-                 if (response && response.access_token && response.user) {
-                   session.setLoggedInUser(response.user) ;
-                   session.getAccessToken(response.access_token);
-                   setCurrentOrganization();
-                   if (success) {
-                     success();
-                   }
-                 } else if (failure) {
-                   failure();
-                 }
-               },
-               function(response, textStatus, xhr) {
-                 if (failure) {
-                   failure();
-                 }
-               }
-              );
+    function(response) {
+      if (response && response.access_token && response.user) {
+        session.setLoggedInUser(response.user) ;
+        session.getAccessToken(response.access_token);
+        setCurrentOrganization();
+        if (success) {
+          success();
+        }
+      } else if (failure) {
+        failure();
+      }
+    },
+    function(response, textStatus, xhr) {
+      if (failure) {
+        failure();
+      }
+    }
+  );
   }
-
+/*
   function renewToken(successCallback, errorCallback) {
     apiRequest("GET", "/management/users/" + session.getLoggedInUserEmail(), null,
       function(data, status, xhr) {
@@ -349,34 +349,7 @@ usergrid.client = (function() {
       errorCallback
       );
   }
-
-  function signup(organization, username, name, email, password, success, failure) {
-    var formdata = {
-      organization: organization,
-      username: username,
-      name: name,
-      email: email,
-      password: password
-    };
-    apiRequest("POST", "/management/organizations", formdata,
-               function(response) {
-                 if (response && response.data) {
-                   if (success) {
-                     success(response);
-                   }
-                 } else if (failure) {
-                   failure(response);
-                 }
-               },
-               function(XMLHttpRequest, textStatus, errorThrown) {
-                 if (failure) {
-                   failure();
-                 }
-               }
-              );
-  }
-
-
+*/
   function autoLogin(successCallback, errorCallback) {
     // check to see if the user has a valid token
     if (!session.loggedIn()) {
@@ -386,15 +359,28 @@ usergrid.client = (function() {
         sendToSSOLoginPage();
       }
     } else if (session.loggedIn()) {
-      renewToken(
-        function() {
-          successCallback();
+      runManagementQuery(new queryObj("GET","users/" + session.getLoggedInUserEmail(), null, null,
+        function(response) {
+          if (!response) {
+            errorCallback;
+            return
+          }
+          var firstOrg = null;
+          var organization = null;
+          for (firstOrg in response.data.organizations) {break;}
+          if (firstOrg) {
+            organization = response.data.organizations[firstOrg];
+          }
+          session.saveAll(organization, null, response.data, response.data.token);
+          if (successCallback) {
+            successCallback(response);
+          }
         },
         function() {
           session.clearAll();
-          errorCallback();
+          errorCallback;
         }
-      );
+      ));
       return;
     } else {
       errorCallback()
@@ -549,7 +535,7 @@ usergrid.client = (function() {
    *
    */
   function processQuery(_queryObj, endpoint) {
-    var curl = "curl ";
+    var curl = "curl";
     //validate parameters
     try {
       var method = _queryObj.getMethod().toUpperCase();
@@ -562,15 +548,20 @@ usergrid.client = (function() {
         throw(new Error('Invalid method - should be GET, POST, PUT, or DELETE.'));
       }
       //curl - add the method to the command (no need to add anything for GET)
-      if (method == "POST") {curl += "-X POST "; }
-      else if (method == "PUT") { curl += "-X PUT "; }
-      else if (method == "DELETE") { curl += "-X DELETE "; }
-/*
-      //add in a timestamp for gets and deletes
-      if ((method == "GET") || (method == "DELETE")) {
-        params['_'] = new Date().getTime();
+      if (method == "POST") {curl += " -X POST"; }
+      else if (method == "PUT") { curl += " -X PUT"; }
+      else if (method == "DELETE") { curl += " -X DELETE"; }
+      else { curl += " -X GET"; }
+
+      //curl - append the bearer token if this is not the sandbox app
+      var application_name = session.getApplicationName();
+      if (application_name) {
+        application_name = application_nametoUpperCase();
       }
-*/
+      if (application_name != 'SANDBOX' && session.getAccessToken()) {
+        curl += ' -i -H "Authorization: Bearer ' + session.getAccessToken() + '"';
+      }
+      
       //params - make sure we have a valid json object
       _params = JSON.stringify(params)
       if (!jsonlint.parse(_params)) {
@@ -584,11 +575,9 @@ usergrid.client = (function() {
         delete params.cursor;
       }
 
-      //path - append params and build out
-      if (params.length) {
-        path += "?" + encodeParams(params);
-      }
+      //add the endpoint to the path
       path = endpoint + path;
+
       //make sure path never has more than one / together
       if (path) {
         //regex to strip multiple slashes
@@ -596,8 +585,26 @@ usergrid.client = (function() {
           path = path.replace('//', '/');
         }
       }
-      //curl - add in the path
-      curl += self.apiUrl + path + " ";
+
+      //curl - append the path
+      curl += " " + self.apiUrl + path;
+
+      //curl - append params to the path for curl prior to adding the timestamp
+      var encoded_params = encodeParams(params);
+      if (encoded_params) {
+        curl += "?" + encoded_params;
+      }
+
+      //add in a timestamp for gets and deletes - to avoid caching by the browser
+      if ((method == "GET") || (method == "DELETE")) {
+        params['_'] = new Date().getTime();
+      }
+
+      //append params to the path
+      var encoded_params = encodeParams(params);
+      if (encoded_params) {
+        path += "?" + encoded_params;
+      }
 
       //jsonObj - make sure we have a valid json object
       jsonObj = JSON.stringify(jsonObj)
@@ -608,16 +615,16 @@ usergrid.client = (function() {
         jsonObj = null;
       } else {
         //curl - add in the json obj
-        curl += "-d '" + jsonObj + "'";
+        curl += " -d '" + jsonObj + "'";
       }
+
     } catch (e) {
       //parameter was invalid
       console.log('processQuery - error occured -' + e.message);
       return false;
     }
+    //log the curl command to the console
     console.log(curl);
-    //log the activity
-    //console.log("processQuery - " + method + " - " + path);
 
     //send query
     apiRequest(method, path, jsonObj,
@@ -704,7 +711,6 @@ usergrid.client = (function() {
     sendToSSOLoginPage: sendToSSOLoginPage,
     sendToSSOProfilePage: sendToSSOProfilePage,
     getSSOCallback: getSSOCallback,
-    signup: signup,
     requestCollectionIndexes: requestCollectionIndexes,
     setCurrentOrganization: setCurrentOrganization,
     autoLogin: autoLogin,

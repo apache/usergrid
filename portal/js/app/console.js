@@ -3362,7 +3362,14 @@ function deleteRolePermission(roleName, permission) {
       displaySignupError("Passwords must match.");
       return;
     }
-    client.signup(organization_name, username, name, email, password,
+    var formdata = {
+      "organization": organization_name,
+      "username": username,
+      "name": name,
+      "email": email,
+      "password": password
+    };
+    runManagementQuery(new client.queryObj("POST",'organizations', formdata, null,
       function(response) {
         clearSignupError();
         clearSignupForm();
@@ -3371,7 +3378,7 @@ function deleteRolePermission(roleName, permission) {
       function(response) {
         displaySignupError("Unable to create new organization at this time");
       }
-    );
+    ));
   }
 
   $('#button-signup').click(function() {
