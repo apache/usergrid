@@ -22,10 +22,12 @@ import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import org.antlr.runtime.ClassicToken;
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
+import org.bson.types.BasicBSONList;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.usergrid.mongo.utils.BSONUtils;
@@ -125,7 +127,7 @@ public class OpQuery extends OpCrud {
         }
 
         if (query_expression != null) {
-            Operand root = append(null, query_expression);
+            Operand root = eval(query_expression);
             q.setRootOperand(root);
         }
 
@@ -142,16 +144,66 @@ public class OpQuery extends OpCrud {
         return q;
     }
 
-    private Operand append(Operand parent, BSONObject exp) {
+    private Operand eval(BSONObject exp) {
         Operand current = null;
         Object fieldValue = null;
 
         for (String field : exp.keySet()) {
             fieldValue = exp.get(field);
 
+            if (field.startsWith("$")) {
+                // same as OR with multiple values
+
+                // same as OR with multiple values
+                if ("$or".equals(field)) {
+                    BasicBSONList values = (BasicBSONList) fieldValue;
+
+                    int size = values.size();
+
+                    Stack<Operand> expressions = new Stack<Operand>();
+
+                    for (int i = 0; i < size; i++) {
+                        expressions.push(eval((BSONObject) values.get(i)));
+                    }
+
+                    // we need to build a tree of expressions
+                    while (expressions.size() > 1) {
+                        OrOperand or = new OrOperand();
+                        or.addChild(expressions.pop());
+                        or.addChild(expressions.pop());
+                        expressions.push(or);
+                    }
+
+                    current = expressions.pop();
+
+                }
+
+                else if ("$and".equals(field)) {
+
+                    BasicBSONList values = (BasicBSONList) fieldValue;
+
+                    int size = values.size();
+
+                    Stack<Operand> expressions = new Stack<Operand>();
+
+                    for (int i = 0; i < size; i++) {
+                        expressions.push(eval((BSONObject) values.get(i)));
+                    }
+
+                    while (expressions.size() > 1) {
+                        AndOperand and = new AndOperand();
+                        and.addChild(expressions.pop());
+                        and.addChild(expressions.pop());
+                        expressions.push(and);
+                    }
+
+                    current = expressions.pop();
+                }
+
+            }
             // we have a nested object
-            if (fieldValue instanceof BSONObject) {
-                current = handleOperand(parent, field, (BSONObject) fieldValue);
+            else if (fieldValue instanceof BSONObject) {
+                current = handleOperand(field, (BSONObject) fieldValue);
             }
 
             else if (!field.equals("_id")) {
@@ -159,18 +211,13 @@ public class OpQuery extends OpCrud {
                 equality.setProperty(field);
                 equality.setLiteral(exp.get(field));
 
-                if (parent != null) {
-                    parent.addChild(equality);
-                }
-
                 current = equality;
             }
         }
         return current;
     }
 
-    private Operand handleOperand(Operand parent, String sourceField,
-            BSONObject exp) {
+    private Operand handleOperand(String sourceField, BSONObject exp) {
 
         Operand current = null;
         Object value = null;
@@ -212,12 +259,36 @@ public class OpQuery extends OpCrud {
                     lte.setLiteral(value);
 
                     current = lte;
-                }
-            }
-        }
+                } else if ("$in".equals(field)) {
+                    value = exp.get(field);
 
-        if (parent != null && current != null) {
-            parent.addChild(current);
+                    BasicBSONList values = (BasicBSONList) value;
+
+                    int size = values.size();
+
+                    Stack<Operand> expressions = new Stack<Operand>();
+
+                    for (int i = 0; i < size; i++) {
+                        Equal equal = new Equal();
+                        equal.setProperty(sourceField);
+                        equal.setLiteral(values.get(i));
+
+                        expressions.push(equal);
+                    }
+
+                    // we need to build a tree of expressions
+                    while (expressions.size() > 1) {
+                        OrOperand or = new OrOperand();
+                        or.addChild(expressions.pop());
+                        or.addChild(expressions.pop());
+                        expressions.push(or);
+                    }
+
+                    current = expressions.pop();
+
+                }
+
+            }
         }
 
         return current;

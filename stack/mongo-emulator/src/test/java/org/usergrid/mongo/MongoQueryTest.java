@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.bson.types.BasicBSONList;
 import org.junit.Test;
 import org.usergrid.persistence.EntityManager;
 
@@ -291,4 +292,163 @@ public class MongoQueryTest extends AbstractMongoTest {
 
     }
 
+    @Test
+    public void in() throws Exception {
+
+        UUID appId = emf.lookupApplication("test-organization/test-app");
+        EntityManager em = emf.getEntityManager(appId);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Kings of Leon");
+        properties.put("genre", "Southern Rock");
+        properties.put("founded", 2000);
+        em.create("testin", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Stone Temple Pilots");
+        properties.put("genre", "Rock");
+        properties.put("founded", 1986);
+        em.create("testin", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Journey");
+        properties.put("genre", "Classic Rock");
+        properties.put("founded", 1973);
+        em.create("testin", properties);
+
+        // See http://www.mongodb.org/display/DOCS/Java+Tutorial
+
+        Mongo m = new Mongo("localhost", 27017);
+
+        DB db = m.getDB("test-organization/test-app");
+        db.authenticate("test@usergrid.com", "test".toCharArray());
+
+        BasicBSONList list = new BasicBSONList();
+        list.add("Stone Temple Pilots");
+        list.add("Journey");
+
+        BasicDBObject query = new BasicDBObject();
+        query.put("name", new BasicDBObject("$in", list));
+
+        DBCollection coll = db.getCollection("testins");
+        DBCursor cur = coll.find(query);
+
+        assertTrue(cur.hasNext());
+
+        DBObject result = cur.next();
+        assertEquals("Journey", result.get("name"));
+        assertEquals("Classic Rock", result.get("genre"));
+
+        result = cur.next();
+        assertEquals("Stone Temple Pilots", result.get("name"));
+        assertEquals("Rock", result.get("genre"));
+
+        assertFalse(cur.hasNext());
+
+    }
+
+    @Test
+    public void or() throws Exception {
+
+        UUID appId = emf.lookupApplication("test-organization/test-app");
+        EntityManager em = emf.getEntityManager(appId);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Kings of Leon");
+        properties.put("genre", "Southern Rock");
+        properties.put("founded", 2000);
+        em.create("testor", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Stone Temple Pilots");
+        properties.put("genre", "Rock");
+        properties.put("founded", 1986);
+        em.create("testor", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Journey");
+        properties.put("genre", "Classic Rock");
+        properties.put("founded", 1973);
+        em.create("testor", properties);
+
+        // See http://www.mongodb.org/display/DOCS/Java+Tutorial
+
+        Mongo m = new Mongo("localhost", 27017);
+
+        DB db = m.getDB("test-organization/test-app");
+        db.authenticate("test@usergrid.com", "test".toCharArray());
+
+        BasicBSONList list = new BasicBSONList();
+        list.add(new BasicDBObject("founded", new BasicDBObject("$gte", 2000)));
+        list.add(new BasicDBObject("founded", new BasicDBObject("$lte", 1973)));
+
+        BasicDBObject query = new BasicDBObject();
+        query.put("$or", list);
+
+        DBCollection coll = db.getCollection("testors");
+        DBCursor cur = coll.find(query);
+
+        assertTrue(cur.hasNext());
+
+        DBObject result = cur.next();
+        assertEquals("Journey", result.get("name"));
+        assertEquals("Classic Rock", result.get("genre"));
+
+        result = cur.next();
+        assertEquals("Kings of Leon", result.get("name"));
+        assertEquals("Southern Rock", result.get("genre"));
+
+        assertFalse(cur.hasNext());
+
+    }
+
+    @Test
+    public void and() throws Exception {
+
+        UUID appId = emf.lookupApplication("test-organization/test-app");
+        EntityManager em = emf.getEntityManager(appId);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Kings of Leon");
+        properties.put("genre", "Southern Rock");
+        properties.put("founded", 2000);
+        em.create("testand", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Stone Temple Pilots");
+        properties.put("genre", "Rock");
+        properties.put("founded", 1986);
+        em.create("testand", properties);
+
+        properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "Journey");
+        properties.put("genre", "Classic Rock");
+        properties.put("founded", 1973);
+        em.create("testand", properties);
+
+        // See http://www.mongodb.org/display/DOCS/Java+Tutorial
+
+        Mongo m = new Mongo("localhost", 27017);
+
+        DB db = m.getDB("test-organization/test-app");
+        db.authenticate("test@usergrid.com", "test".toCharArray());
+
+        BasicBSONList list = new BasicBSONList();
+        list.add(new BasicDBObject("founded", new BasicDBObject("$gte", 2000)));
+        list.add(new BasicDBObject("founded", new BasicDBObject("$lte", 2005)));
+
+        BasicDBObject query = new BasicDBObject();
+        query.put("$and", list);
+
+        DBCollection coll = db.getCollection("testands");
+        DBCursor cur = coll.find(query);
+
+        assertTrue(cur.hasNext());
+
+        DBObject result = cur.next();
+        assertEquals("Kings of Leon", result.get("name"));
+        assertEquals("Southern Rock", result.get("genre"));
+        assertFalse(cur.hasNext());
+
+    }
 }
