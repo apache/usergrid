@@ -4,7 +4,7 @@ window.console.log = window.console.log || function() {};
 // fix end here
 
 var Pages = new UsergridPages();
-var query_params = getQueryParams();
+
 
 $(document).ready(function () {
 
@@ -14,8 +14,9 @@ $(document).ready(function () {
 
   function initCore() {
     prepareLocalStorage();
-    parseParams();    
-    usergrid.client.Init();
+    parseParams();
+    var query_params = getQueryParams();
+    usergrid.client.Init(query_params);
   }
   
   function initUI() {

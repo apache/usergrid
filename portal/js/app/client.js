@@ -132,7 +132,7 @@ usergrid.client = (function() {
   var LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
 
   //initialization method should be called up front
-  function Init(clientId, clientSecret, apiUrl) {
+  function Init(query_params, clientId, clientSecret, apiUrl) {
     self.clientId = clientId || null;
     self.clientSecret = clientSecret || null;
 
@@ -165,66 +165,6 @@ usergrid.client = (function() {
 
     self.resetPasswordUrl = self.apiUrl + "/management/users/resetpw";
 
-    if (self.apiUrl != localStorage.getItem('usergrid_api_url')) {
-      localStorage.setItem('usergrid_api_url', self.apiUrl);
-    }
-
-  }
-
-  // The base for all API calls.
-  function apiRequest(method, path, data, success, error) {
-
-    var ajaxOptions = {
-      type: method.toUpperCase(),
-      url: self.apiUrl + path,
-      success: success,
-      error: error,
-      data: data || {},
-      contentType: "application/json; charset=utf-8",
-      dataType: "json"
-    }
-
-    // work with ie for cross domain scripting
-    var accessToken = session.getAccessToken();
-    if (onIE) {
-      ajaxOptions.dataType = "jsonp";
-      if (accessToken) { ajaxOptions.data['access_token'] = accessToken }
-    } else {
-      ajaxOptions.beforeSend = function(xhr) {
-        if (accessToken) { xhr.setRequestHeader("Authorization", "Bearer " + accessToken) }
-      }
-    }
-
-    $.ajax(ajaxOptions);
-  }
-
-  //method to urlencode an array of parameters
-  function encodeParams(params) {
-    tail = [];
-    var item = [];
-    if (params instanceof Array) {
-      for (i in params) {
-        item = params[i];
-        if ((item instanceof Array) && (item.length > 1)) {
-          tail.push(item[0] + "=" + encodeURIComponent(item[1]));
-        }
-      }
-    } else {
-      for (var key in params) {
-        if (params.hasOwnProperty(key)) {
-          var value = params[key];
-          if (value instanceof Array) {
-            for (i in value) {
-              item = value[i];
-              tail.push(key + "=" + encodeURIComponent(item));
-            }
-          } else {
-            tail.push(key + "=" + encodeURIComponent(value));
-          }
-        }
-      }
-    }
-    return tail.join("&");
   }
 
   /*******************************************************************
@@ -285,25 +225,25 @@ usergrid.client = (function() {
       password: '',
       invite: true
     };
-    apiRequest("POST", "/" + session.getOrganizationUUID() + "/" + applicationId + "/token", formdata,
-    function(response) {
-      if (response && response.access_token && response.user) {
-        session.setLoggedInUser(response.user) ;
-        session.getAccessToken(response.access_token);
-        setCurrentOrganization();
-        if (success) {
-          success();
+    runAppQuery(new queryObj('POST', 'token', null, formdata,
+      function(response) {
+        if (response && response.access_token && response.user) {
+          session.setLoggedInUser(response.user) ;
+          session.getAccessToken(response.access_token);
+          setCurrentOrganization();
+          if (success) {
+            success();
+          }
+        } else if (failure) {
+          failure();
         }
-      } else if (failure) {
-        failure();
+      },
+      function(response, textStatus, xhr) {
+        if (failure) {
+          failure();
+        }
       }
-    },
-    function(response, textStatus, xhr) {
-      if (failure) {
-        failure();
-      }
-    }
-  );
+    ));
   }
 
   function autoLogin(successCallback, errorCallback) {
@@ -586,6 +526,73 @@ usergrid.client = (function() {
         console.log('API call failed - ' + response.responseText);
         _queryObj.callFailureCallback(response)
       });
+  }
+
+  /*
+   *  @function apiRequest
+   *  @purpose to run the API call
+   *  @params queryObj - {method, path, data, successCallback, failureCallback}
+   *  @notes - Do not call this method directly.  Use the runAppQuery and runManagementQuery funcitons instead
+   *
+   */
+  function apiRequest(method, path, data, success, error) {
+
+    var ajaxOptions = {
+      type: method.toUpperCase(),
+      url: self.apiUrl + path,
+      success: success,
+      error: error,
+      data: data || {},
+      contentType: "application/json; charset=utf-8",
+      dataType: "json"
+    }
+
+    // work with ie for cross domain scripting
+    var accessToken = session.getAccessToken();
+    if (onIE) {
+      ajaxOptions.dataType = "jsonp";
+      if (accessToken) { ajaxOptions.data['access_token'] = accessToken }
+    } else {
+      ajaxOptions.beforeSend = function(xhr) {
+        if (accessToken) { xhr.setRequestHeader("Authorization", "Bearer " + accessToken) }
+      }
+    }
+
+    $.ajax(ajaxOptions);
+  }
+
+  /*
+   *  @function encodeParams
+   *  @purpose - to encode the query string parameters
+   *  @params params - an object of name value pairs that will be urlencoded
+   *
+   */
+  function encodeParams(params) {
+    tail = [];
+    var item = [];
+    if (params instanceof Array) {
+      for (i in params) {
+        item = params[i];
+        if ((item instanceof Array) && (item.length > 1)) {
+          tail.push(item[0] + "=" + encodeURIComponent(item[1]));
+        }
+      }
+    } else {
+      for (var key in params) {
+        if (params.hasOwnProperty(key)) {
+          var value = params[key];
+          if (value instanceof Array) {
+            for (i in value) {
+              item = value[i];
+              tail.push(key + "=" + encodeURIComponent(item));
+            }
+          } else {
+            tail.push(key + "=" + encodeURIComponent(value));
+          }
+        }
+      }
+    }
+    return tail.join("&");
   }
 
   /*******************************************************************
