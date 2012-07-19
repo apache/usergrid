@@ -232,32 +232,6 @@ usergrid.client = (function() {
    * Complex App endpoints
    *
    ******************************************************************/
-  function createCollection(applicationId, data, success, failure) {
-    var collections = {};
-    collections[data.name] = {};
-    var metadata = {
-      metadata: {
-        collections: collections
-      }
-    };
-    var uuid = session.getOrganizationUUID();
-    var applicationId2 = session.getApplicationId();
-    apiRequest("PUT", "/" + uuid + "/" + applicationId2, JSON.stringify(metadata), success, failure);
-  }
-
-  function requestApplicationCounters(applicationId, start_time, end_time, resolution, counter, success, failure) {
-    var params = {};
-    if (start_time) params.start_time = start_time;
-    if (end_time) params.end_time = end_time;
-    if (resolution) params.resolution = resolution;
-    if (counter) params.counter = counter;
-    params.pad = true;
-
-    var uuid = session.getOrganizationUUID();
-    var applicationId2 = session.getApplicationId();
-    apiRequest("GET", "/" + uuid + "/" + applicationId2 + "/counters", params, success, failure);
-  }
-
   function setCurrentOrganization(orgName) {
     var organizations = session.getLoggedInUserOrgs();
     if (!session.getLoggedInUserObj() || ! organizations) {
@@ -331,25 +305,7 @@ usergrid.client = (function() {
     }
   );
   }
-/*
-  function renewToken(successCallback, errorCallback) {
-    apiRequest("GET", "/management/users/" + session.getLoggedInUserEmail(), null,
-      function(data, status, xhr) {
-        if (!data || !data.data) {
-          errorCallback();
-          return
-        }
-        session.setLoggedInUser(data.data);
-        setCurrentOrganization();
-        //session.saveIt();
-        if (successCallback) {
-          successCallback(data);
-        }
-      },
-      errorCallback
-      );
-  }
-*/
+
   function autoLogin(successCallback, errorCallback) {
     // check to see if the user has a valid token
     if (!session.loggedIn()) {
@@ -702,8 +658,6 @@ usergrid.client = (function() {
     onActiveRequest: null,
     encodePathString: encodePathString,
     apiRequest: apiRequest,
-    createCollection: createCollection,
-    requestApplicationCounters: requestApplicationCounters,
     loginAdmin: loginAdmin,
     loginAppUser: loginAppUser,
     useSSO: useSSO,

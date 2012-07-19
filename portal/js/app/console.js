@@ -1053,7 +1053,14 @@ function usergrid_console_app(Pages) {
 
     if (bValid) {
       var data = form.serializeObject();
-      client.createCollection(current_application_id, data,
+      var collections = {};
+      collections[data.name] = {};
+      var metadata = {
+        metadata: {
+          collections: collections
+        }
+      }
+      runAppQuery(new client.queryObj("PUT", "", metadata, null,
         function() {
           getCollections();
           closeErrorMessage = function() {
@@ -1079,7 +1086,7 @@ function usergrid_console_app(Pages) {
             .addClass('alert alert-error')
             .show();
         }
-      );
+      ));
 
       $(this).modal('hide');
     }
@@ -1344,12 +1351,15 @@ function usergrid_console_app(Pages) {
     $('#application-cpu-time').html("");
     $('#application-data-uploaded').html("");
     $('#application-data-downloaded').html("");
-    start_timestamp = Math.floor(new Date().getTime() / 1209600000) * 1209600000;
-    end_timestamp = start_timestamp + 1209600000;
-    resolution = "day";
-    var counter_names = ["application.entities", "application.request.download", "application.request.time", "application.request.upload"];
+    var params = {};
+    params.start_time = Math.floor(new Date().getTime() / 1209600000) * 1209600000;
+    params.end_time = start_timestamp + 1209600000;
+    params.resolution = "day";
+    params.counter = ["application.entities", "application.request.download", "application.request.time", "application.request.upload"];
+    params.pad = true;
 
-    client.requestApplicationCounters(current_application_id, start_timestamp, end_timestamp, resolution, counter_names, function(response) {
+    runAppQuery(new client.queryObj("GET", "counters", null, params,
+      function(response) {
         var usage_counters = response.counters;
 
         if (!usage_counters) {
@@ -1456,7 +1466,7 @@ function usergrid_console_app(Pages) {
         $('#application-data-uploaded').html("");
         $('#application-data-downloaded').html("");
       }
-    );
+    ));
   }
   window.usergrid.console.requestApplicationUsage = requestApplicationUsage;
 
