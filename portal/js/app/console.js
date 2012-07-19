@@ -1565,6 +1565,7 @@ function usergrid_console_app(Pages) {
         if (!this_data.picture) {
           this_data.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user_profile.png"
         } else {
+          this_data.picture = this_data.picture.replace(/^http:\/\/www.gravatar/i, 'https://secure.gravatar');
           this_data.picture = this_data.picture + "?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png"
         }
         $.tmpl('usergrid.ui.users.table_rows.html', this_data).appendTo('#users-table');
@@ -1754,6 +1755,7 @@ function usergrid_console_app(Pages) {
 
       var picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user_profile.png";
       if (entity.picture) {
+        entity.picture = entity.picture.replace(/^http:\/\/www.gravatar/i, 'https://secure.gravatar');
         picture = entity.picture + "?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png"
       }
 
@@ -2661,6 +2663,8 @@ function deleteRolePermission(roleName, permission) {
         var this_data = response.entities[i];
         if (!this_data.actor.picture) {
           this_data.actor.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user_profile.png"
+        } else {
+          this_data.actor.picture = this_data.actor.picture.replace(/^http:\/\/www.gravatar/i, 'https://secure.gravatar');
         }
 
         $.tmpl('usergrid.ui.activities.table_rows.html', this_data).appendTo('#activities-table');
