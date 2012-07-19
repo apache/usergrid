@@ -1474,6 +1474,10 @@ function usergrid_console_app(Pages) {
     }
   }
 
+  function showCurlCommand(section, curl) {
+    $('#'+section+'-curl').val(curl);
+  }
+
   function bindPagingEvents(section) {
     $(document).off('click', '#'+section+'-previous', getPrevious);
     $(document).off('click', '#'+section+'-next', getNext);
@@ -1567,6 +1571,7 @@ function usergrid_console_app(Pages) {
       }
     }
     showPagination('users');
+    //showCurlCommand('users', queryObj.getCurl());
   }
 
   function showUsersForSearch(search){
