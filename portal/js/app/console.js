@@ -387,7 +387,7 @@ function usergrid_console_app(Pages) {
     $('#button-query-post').click(function() {getCollection('POST');return false;} );
     $('#button-query-put').click(function() {getCollection('PUT');return false;} );
     $('#button-query-delete').click(function() {getCollection('DELETE');return false;} );
-    $('#button-query-validate').click(function() {validateQuerySource();return false;});
+    $('#button-query-validate').click(function() {validateJson();return false;});
   }
 
   function showMoreQueryOptions() {
@@ -423,11 +423,11 @@ function usergrid_console_app(Pages) {
 
   $('#query-source').keypress(function(event) {
     if (event.keyCode == 13) {
-    validateQuerySource();
+      validateJson();
     }
   });
 
-  function validateQuerySource() {
+  function validateJson() {
     try {
       var result = jsonlint.parse($('#query-source').val());
       if (result) {

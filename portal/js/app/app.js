@@ -29,7 +29,6 @@ $(document).ready(function () {
     usergrid.client.autoLogin(
       function() {
         usergrid.console.loginOk();
-        usergrid.client.setCurrentOrganization();
       },
       function() {Pages.ShowPage("login")}
     );

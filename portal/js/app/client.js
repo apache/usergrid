@@ -283,6 +283,9 @@ usergrid.client = (function() {
     this.successCallback = _successCallback;
     this.failureCallback = _failureCallback;
 
+    //curl command - will be populated by runQuery function
+    this.curl = '';
+
     //paging vars
     this.cursor = null;
     this.next = null
@@ -308,6 +311,9 @@ usergrid.client = (function() {
   queryObj.prototype.getFailureCallback = function getFailureCallback() { return this.failureCallback; }
   queryObj.prototype.setFailureCallback = function setFailureCallback(_failureCallback) { this.failureCallback = _failureCallback; }
   queryObj.prototype.callFailureCallback = function callFailureCallback(response) { this.failureCallback(response); }
+
+  queryObj.prototype.getCurl = function getCurl() { return this.curl; }
+  queryObj.prototype.setCurl = function setCurl(_curl) { this.curl = _curl; }
 
   //methods for accessing paging functions
   queryObj.prototype.resetPaging = function resetPaging() {
@@ -468,6 +474,8 @@ usergrid.client = (function() {
     }
     //log the curl command to the console
     console.log(curl);
+    //store the curl command back in the object
+    _queryObj.setCurl(curl);
 
     //send query
     apiRequest(method, path, jsonObj,
