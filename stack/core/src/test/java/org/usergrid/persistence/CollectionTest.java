@@ -519,6 +519,21 @@ public class CollectionTest extends AbstractPersistenceTest {
 
         assertEquals(game2.getUuid(), returned.getUuid());
 
+        query = new Query(
+                "select * where keywords contains 'blah' OR title contains 'hearts')");
+
+        r = em.searchCollection(em.getApplicationRef(), "games", query);
+
+        assertEquals(2, r.size());
+
+        returned = r.getEntities().get(0);
+
+        assertEquals(game1.getUuid(), returned.getUuid());
+
+        returned = r.getEntities().get(1);
+
+        assertEquals(game2.getUuid(), returned.getUuid());
+
     }
 
     public void andQuery() throws Exception {
