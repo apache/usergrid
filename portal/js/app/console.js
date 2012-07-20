@@ -30,8 +30,10 @@ function usergrid_console_app(Pages) {
   var alphaNumRegex = new RegExp("^([0-9a-zA-Z])+$");
   var alphaNumAllowedCharsMessage = 'Collection name only allows : a-z 0-9';
 
-  var pathRegex = new RegExp("^([0-9a-zA-Z./-])+$");
+  var pathRegex = new RegExp("^([0-9a-z./-])+$");
   var pathAllowedCharsMessage = 'Path only allows : /, a-z, 0-9, dot, and dash';
+
+  var roleRegex = new RegExp("^([0-9a-zA-Z./-])+$");
   var roleAllowedCharsMessage = 'Role only allows : /, a-z, 0-9, dot, and dash';
 
   var intRegex = new RegExp("^([0-9])+$");
@@ -1171,7 +1173,7 @@ function usergrid_console_app(Pages) {
 
     var roleIdField = $('#search-role-name-input');
     var bValid = checkLength2(roleIdField, 1, 80)
-      && checkRegexp2(roleIdField, pathRegex, roleAllowedCharsMessage)
+      && checkRegexp2(roleIdField, roleRegex, roleAllowedCharsMessage)
 
     var username = $('#role-form-username').val();
     var roleId = $('#search-role-name-input').val();
@@ -3277,7 +3279,7 @@ function deleteRolePermission(roleName, permission) {
          session.setOrganizationObj(organizations[org]);
       }
     }
-    
+
     Pages.ShowPage('console');
   }
 
@@ -3549,7 +3551,7 @@ function deleteRolePermission(roleName, permission) {
     confirmAction(
       "Are you sure you want to leave this Organization?",
       "You will lose all access to it.",
-      function() { 
+      function() {
         runManagementQuery(new client.queryObj("DELETE","users/" + session.getLoggedInUserUUID() + "/organizations/" + UUID, null, null,
           requestAccountSettings,
           function() { alertModal("Unable to leave organization"); }));
