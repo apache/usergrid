@@ -109,9 +109,9 @@ public class Query {
     public Query() {
     }
 
-    public Query(String type) {
-        this.type = type;
-    }
+    // public Query(String type) {
+    // this.type = type;
+    // }
 
     public Query(Query q) {
         if (q != null) {
@@ -148,7 +148,7 @@ public class Query {
                     q.categories) : null;
             counterFilters = q.counterFilters != null ? new ArrayList<CounterFilterPredicate>(
                     q.counterFilters) : null;
-            
+
         }
     }
 
@@ -242,7 +242,7 @@ public class Query {
         categories = params.get("category");
 
         l = params.get("counter");
-        
+
         if (!isEmpty(l)) {
             counterFilters = CounterFilterPredicate.fromList(l);
         }
@@ -262,12 +262,12 @@ public class Query {
         }
 
         if (ql != null) {
-                q = Query.fromQL(decode(ql));
-           
+            q = Query.fromQL(decode(ql));
+
         }
 
         l = params.get("filter");
-        
+
         if (!isEmpty(l)) {
             q = newQueryIfNull(q);
             for (String s : l) {
@@ -413,7 +413,7 @@ public class Query {
     public boolean hasQueryPredicates() {
         return rootOperand != null;
     }
-    
+
     public boolean containsNameOrEmailIdentifiersOnly() {
         if (hasQueryPredicates()) {
             return false;
@@ -428,7 +428,7 @@ public class Query {
         }
         return true;
     }
-    
+
     public String getSingleNameOrEmailIdentifier() {
         if (!containsSingleNameOrEmailIdentifier()) {
             return null;
@@ -441,11 +441,9 @@ public class Query {
                 && (identifiers.size() == 1);
     }
 
-    
     public boolean containsSingleUuidIdentifier() {
         return containsUuidIdentifersOnly() && (identifiers.size() == 1);
     }
-    
 
     public boolean containsUuidIdentifersOnly() {
         if (hasQueryPredicates()) {
@@ -461,14 +459,13 @@ public class Query {
         }
         return true;
     }
-    
+
     public UUID getSingleUuidIdentifier() {
         if (!containsSingleUuidIdentifier()) {
             return null;
         }
         return (identifiers.get(0).getUUID());
     }
-
 
     public boolean isIdsOnly() {
         if ((selectSubjects.size() == 1)
@@ -671,9 +668,10 @@ public class Query {
     public boolean hasSortPredicates() {
         return !sortPredicates.isEmpty();
     }
-    
+
     /**
      * Add the filter from a string
+     * 
      * @param filter
      * @return
      * @throws RecognitionException
@@ -683,21 +681,21 @@ public class Query {
         QueryFilterLexer lexer = new QueryFilterLexer(in);
         TokenRewriteStream tokens = new TokenRewriteStream(lexer);
         QueryFilterParser parser = new QueryFilterParser(tokens);
-        
+
         Operand root = null;
-        
+
         try {
-           root =  parser.ql().query.getRootOperand();    
-           
+            root = parser.ql().query.getRootOperand();
+
         } catch (RecognitionException e) {
-            //TODO T.N. if we can't parse we just ignore, what error should we throw?
+            // TODO T.N. if we can't parse we just ignore, what error should we
+            // throw?
         }
-        
-        if(root != null){
+
+        if (root != null) {
             addClause(root);
         }
-        
-        
+
         return this;
 
     }
@@ -719,6 +717,7 @@ public class Query {
 
     /**
      * Add a less than equal filter to this query. && with existing clauses
+     * 
      * @param propName
      * @param value
      * @return
@@ -733,6 +732,7 @@ public class Query {
 
     /**
      * Add a equal filter to this query. && with existing clauses
+     * 
      * @param propName
      * @param value
      * @return
@@ -747,7 +747,8 @@ public class Query {
     }
 
     /**
-     * Add a greater than equal  filter to this query. && with existing clauses
+     * Add a greater than equal filter to this query. && with existing clauses
+     * 
      * @param propName
      * @param value
      * @return
@@ -785,7 +786,7 @@ public class Query {
 
         equality.setProperty(propName);
         equality.setValue(keyword);
-        
+
         addClause(equality);
 
         return this;
@@ -806,20 +807,20 @@ public class Query {
         equality.setDistance(distance);
         equality.setLattitude(lattitude);
         equality.setLongitude(longitude);
-        
+
         addClause(equality);
 
         return this;
     }
-    
-    private void addClause(EqualityOperand equals, String propertyName, Object value){
+
+    private void addClause(EqualityOperand equals, String propertyName,
+            Object value) {
         equals.setProperty(propertyName);
         equals.setLiteral(value);
         addClause(equals);
     }
 
     private void addClause(Operand equals) {
-      
 
         if (rootOperand == null) {
             rootOperand = equals;
@@ -834,7 +835,6 @@ public class Query {
         rootOperand = and;
     }
 
- 
     public Operand getRootOperand() {
         return this.rootOperand;
     }
@@ -843,7 +843,6 @@ public class Query {
         this.rootOperand = root;
     }
 
-    
     public void setStartResult(UUID startResult) {
         this.startResult = startResult;
     }
@@ -1812,19 +1811,20 @@ public class Query {
         }
         return null;
     }
-    
+
     /**
      * Decode string
+     * 
      * @param input
      * @return
      */
-    private static String decode(String input){
+    private static String decode(String input) {
         try {
             return URLDecoder.decode(input, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            //shouldn't happen, but just in case
+            // shouldn't happen, but just in case
             throw new RuntimeException(e);
-            
+
         }
     }
 }

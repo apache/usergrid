@@ -478,61 +478,70 @@ public class CollectionTest extends AbstractPersistenceTest {
         properties.put("keywords", "blah,test,game");
         properties.put("title", "Solitaire");
 
-        Entity game1 = em.create("game", properties);
+        Entity game1 = em.create("orquerygame", properties);
         assertNotNull(game1);
 
         properties = new LinkedHashMap<String, Object>();
         properties.put("keywords", "random,test");
         properties.put("title", "Hearts");
 
-        Entity game2 = em.create("game", properties);
+        Entity game2 = em.create("orquerygame", properties);
         assertNotNull(game2);
 
         // EntityRef
-        Query query = new Query(
-                "select * where keywords contains 'Random' OR keywords contains 'Game'");
+        Query query = Query
+                .fromQL("select * where keywords contains 'Random' OR keywords contains 'Game'");
 
-        Results r = em.searchCollection(em.getApplicationRef(), "games", query);
+        Results r = em.searchCollection(em.getApplicationRef(), "orquerygames",
+                query);
 
         assertEquals(2, r.size());
 
         Entity returned = r.getEntities().get(0);
 
-        assertEquals(game1.getUuid(), returned.getUuid());
+        assertEquals(game2.getUuid(), returned.getUuid());
 
         returned = r.getEntities().get(1);
 
-        assertEquals(game2.getUuid(), returned.getUuid());
+        assertEquals(game1.getUuid(), returned.getUuid());
 
-        query = new Query(
-                "select * where( keywords contains 'Random' OR keywords contains 'Game')");
+        query = Query
+                .fromQL("select * where( keywords contains 'Random' OR keywords contains 'Game')");
 
-        r = em.searchCollection(em.getApplicationRef(), "games", query);
+        r = em.searchCollection(em.getApplicationRef(), "orquerygames", query);
 
         assertEquals(2, r.size());
 
         returned = r.getEntities().get(0);
 
-        assertEquals(game1.getUuid(), returned.getUuid());
+        assertEquals(game2.getUuid(), returned.getUuid());
 
         returned = r.getEntities().get(1);
 
-        assertEquals(game2.getUuid(), returned.getUuid());
+        assertEquals(game1.getUuid(), returned.getUuid());
 
-        query = new Query(
-                "select * where keywords contains 'blah' OR title contains 'hearts')");
+        // field order shouldn't matter USERGRID-375
+        query = Query
+                .fromQL("select * where keywords contains 'blah' OR title contains 'blah'");
 
-        r = em.searchCollection(em.getApplicationRef(), "games", query);
+        r = em.searchCollection(em.getApplicationRef(), "orquerygames", query);
 
-        assertEquals(2, r.size());
+        assertEquals(1, r.size());
 
         returned = r.getEntities().get(0);
 
         assertEquals(game1.getUuid(), returned.getUuid());
 
-        returned = r.getEntities().get(1);
+        query = Query
+                .fromQL("select * where  title contains 'blah' OR keywords contains 'blah'");
 
-        assertEquals(game2.getUuid(), returned.getUuid());
+        r = em.searchCollection(em.getApplicationRef(), "orquerygames", query);
+
+        assertEquals(1, r.size());
+
+        returned = r.getEntities().get(0);
+
+        assertEquals(game1.getUuid(), returned.getUuid());
 
     }
 
@@ -558,15 +567,15 @@ public class CollectionTest extends AbstractPersistenceTest {
         assertNotNull(game2);
 
         // EntityRef
-        Query query = new Query(
-                "select * where keywords contains 'foo' AND keywords contains 'random'");
+        Query query = Query
+                .fromQL("select * where keywords contains 'foo' AND keywords contains 'random'");
 
         Results r = em.searchCollection(em.getApplicationRef(), "games", query);
 
         assertEquals(0, r.size());
 
-        query = new Query(
-                "select * where keywords contains 'test' AND keywords contains 'test'");
+        query = Query
+                .fromQL("select * where keywords contains 'test' AND keywords contains 'test'");
 
         r = em.searchCollection(em.getApplicationRef(), "games", query);
 
@@ -579,6 +588,21 @@ public class CollectionTest extends AbstractPersistenceTest {
         returned = r.getEntities().get(1);
 
         assertEquals(game2.getUuid(), returned.getUuid());
+
+        query = Query
+                .fromQL("select * where keywords contains 'test' AND keywords contains 'foobar'");
+
+        r = em.searchCollection(em.getApplicationRef(), "games", query);
+
+        assertEquals(0, r.size());
+
+        query = Query
+                .fromQL("select * where keywords contains 'foobar' AND keywords contains 'test'");
+
+        r = em.searchCollection(em.getApplicationRef(), "games", query);
+
+        assertEquals(0, r.size());
+
     }
 
     @Test
