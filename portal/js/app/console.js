@@ -170,19 +170,8 @@ function usergrid_console_app(Pages) {
     if(!current_application_name) {
       current_application_name = "Select an Application";
     }
-    $('#selectedApp').text(current_application_name);
+    $('#current-app-name').html(current_application_name+ '  <span style="float: right">&#9660;</span>');
     $('.thingy span.title span.app_title').text(" - " + current_application_name);
-  }
-
-  function createAlphabetLinks(containerSelector, callback) {
-    var li = $(containerSelector).html();
-    var s = li.replace('{0}', '*');
-    for (var i = 1; i <= 26; i++) {
-      var char = String.fromCharCode(64 + i);
-      s += li.replace('{0}', char);
-    }
-    $(containerSelector).html(s);
-    $(containerSelector + " a").click(callback);
   }
 
   /*******************************************************************
@@ -560,7 +549,7 @@ function usergrid_console_app(Pages) {
         selectFirstApp();
       }
       appMenu.append('<li class="divider"></li>');
-      appMenu.append('<li><a class="" data-toggle="modal" href="#dialog-form-new-application"> New Application</a></li>');
+      appMenu.append('<li><a class="" data-toggle="modal" href="#dialog-form-new-application"> <strong>+</strong> New Application</a></li>');
     }
 
     if(appList.is(":empty")){
