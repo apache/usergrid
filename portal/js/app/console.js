@@ -1472,8 +1472,33 @@ function usergrid_console_app(Pages) {
     }
   }
 
-  function showCurlCommand(section, curl) {
-    $('#'+section+'-curl').val(curl);
+  function hideCurlCommand(section) {
+    $('#'+section+'-curl-container').hide();
+    $('#'+section+'-curl-token').hide();
+
+  }
+
+  function showCurlCommand(section, curl, token) {
+    $('#'+section+'-curl-container').show();
+    $('#'+section+'-curl').html(curl);
+    if (token) {
+      $('#'+section+'-curl-token').show();
+    }
+  }
+
+  function copyCurlCommand() {
+    $('#copypath', 'body')
+    .find('a')
+        .livequery('click', function() {
+            $(this)
+                .blur();
+            //console.log('copied to copy window');
+            var nodetext = $('#'+section+'-curl').html();
+            $('#copypath input').focus();
+            $('#copypath input').select();
+            return false;
+        });
+
   }
 
   function bindPagingEvents(section) {
@@ -1532,6 +1557,7 @@ function usergrid_console_app(Pages) {
 
   function getUsers(search, searchType) {
     //clear out the table before we start
+    hideCurlCommand('users');
     var output = $('#users-table');
     output.empty();
     var query = {"ql" : "order by " + userSortBy}; //default to built in search
@@ -1551,7 +1577,7 @@ function usergrid_console_app(Pages) {
     runAppQuery(queryObj);
   }
 
-  function getUsersCallback(response) {
+  function getUsersCallback(response) {    
     hidePagination('users');
     var output = $('#users-table');
     if (response.entities.length < 1) {
@@ -1570,7 +1596,7 @@ function usergrid_console_app(Pages) {
       }
     }
     showPagination('users');
-    //showCurlCommand('users', queryObj.getCurl());
+    showCurlCommand('users', queryObj.getCurl(), queryObj.getToken());
   }
 
   function showUsersForSearch(search){

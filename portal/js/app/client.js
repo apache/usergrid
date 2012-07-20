@@ -285,6 +285,7 @@ usergrid.client = (function() {
 
     //curl command - will be populated by runQuery function
     this.curl = '';
+    this.token = false;
 
     //paging vars
     this.cursor = null;
@@ -314,6 +315,9 @@ usergrid.client = (function() {
 
   queryObj.prototype.getCurl = function getCurl() { return this.curl; }
   queryObj.prototype.setCurl = function setCurl(_curl) { this.curl = _curl; }
+
+  queryObj.prototype.getToken = function getToken() { return this.token; }
+  queryObj.prototype.setToken = function setToken(_token) { this.token = _token; }
 
   //methods for accessing paging functions
   queryObj.prototype.resetPaging = function resetPaging() {
@@ -409,6 +413,7 @@ usergrid.client = (function() {
       }
       if (application_name != 'SANDBOX' && session.getAccessToken()) {
         curl += ' -i -H "Authorization: Bearer ' + session.getAccessToken() + '"';
+        _queryObj.setToken(true);
       }
       
       //params - make sure we have a valid json object

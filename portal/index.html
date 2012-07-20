@@ -509,6 +509,21 @@
                       <li id="users-previous" class="previous"><a href="#">&larr; Previous</a></li>
                       <li id="users-next" class="next"><a href="#">Next &rarr;</a></li>
                     </ul>
+
+                    <div id="users-curl-container">
+                      <div style="padding: 5px;">
+                        Want to get the data above programmatically? Here's how you would retrieve it with <a style="color: #007CDC;" href="http://curl.haxx.se/" target="_blank">curl</a>. Just copy-paste the command in a terminal window and you should see the same data come back as JSON!
+                      </div>
+                      <table style="width: 100%;"><tr>
+                        <td style="width: 80%;"><div id="users-curl" class="alert alert-info" style="margin-bottom: 0px;"></div></td>
+                        <td style="width: 20px;">&nbsp;</td>
+                        <td style="vertical-align: middle;"><a id="users-curl-copy" class="btn" style="margin: auto;">Copy cURL Command &nbsp;<img src="images/swish_arrow.png" border="0"></a></td>
+                      </tr></table>
+                      <div id="users-curl-token" style="display: none; padding: 5px;">
+                      Pssst... Are you wondering what this "Authorization: Bearer" stuff is, or how to get a token? We have a <a style="color: #007CDC;" href="http://apigee.com/docs/content/authentication-and-access-usergrid">documentation article about that</a>.
+                      </div>
+                    </div>
+
                   </div>
                 </div>
                 <form id="dialog-form-new-user" class="modal hide fade">
