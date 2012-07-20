@@ -519,7 +519,7 @@ function usergrid_console_app(Pages) {
     var m2 = "";
     applications = {};
     applications_by_id = {};
-    var appMenu = $('#applications-menu ul');
+    var appMenu = $('#applications-menu');
     var appList = $('table#organization-applications-table');
     appMenu.empty();
     appList.empty();
@@ -529,7 +529,7 @@ function usergrid_console_app(Pages) {
       var count = 0;
       var applicationNames = keys(applications).sort();
       var data = [];
-      var appMenuTmpl = $('<div><li><a href="#">${name}</a></li></div>');
+      var appMenuTmpl = $('<li><a href="#">${name}</a></li>');
 
       for (var i in applicationNames) {
         var name = applicationNames[i];
@@ -547,6 +547,7 @@ function usergrid_console_app(Pages) {
           pageSelect(link.tmplItem().data.uuid);
           Pages.SelectPanel('application');
         });
+        
         appList.find("a").click(function selectApp(e) {
           e.preventDefault();
           var link = $(this);
@@ -556,6 +557,8 @@ function usergrid_console_app(Pages) {
         enableApplicationPanelButtons();
         selectFirstApp();
       }
+      appMenu.append('<li class="divider"></li>');
+      appMenu.append('<li><a class="" data-toggle="modal" href="#dialog-form-new-application"> New Application</a></li>');
     }
 
     if(appList.is(":empty")){
@@ -875,7 +878,11 @@ function usergrid_console_app(Pages) {
 
     if (bValid) {
       runManagementQuery(new client.queryObj("POST","organizations/" + session.getOrganizationUUID() + "/applications", form.serializeObject(), null,
-        requestApplications,
+        function(response) {
+          for (var elem in response.data) { break; }
+          pageSelect(response.data[elem]);
+          requestApplications(response);
+        },
         function() {
           closeErrorMessage = function() {
             $('#home-messages').hide();

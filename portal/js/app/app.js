@@ -61,7 +61,7 @@ $(document).ready(function () {
 
   function initConsole() {
     //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
-    Pages.AddPanel('fred', null, null, null, null);
+    //Pages.AddPanel('fred', null, null, null, null);
     Pages.AddPanel('organization', null, null, null, null);
     Pages.AddPanel('console', null, null, null ,null );
     Pages.AddPanel('application', null, null, null, usergrid.console.pageSelectApplication);
