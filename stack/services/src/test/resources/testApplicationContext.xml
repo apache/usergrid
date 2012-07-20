@@ -1,24 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
-	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:beans="http://www.springframework.org/schema/beans"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:lang="http://www.springframework.org/schema/lang"
-	xmlns:task="http://www.springframework.org/schema/task" xmlns:util="http://www.springframework.org/schema/util"
-	xsi:schemaLocation="http://www.springframework.org/schema/aop
-		http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
-		http://www.springframework.org/schema/beans
-		http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
-		http://www.springframework.org/schema/context
-		http://www.springframework.org/schema/context/spring-context-3.1.xsd
-		http://www.springframework.org/schema/jee
-		http://www.springframework.org/schema/jee/spring-jee-3.1.xsd
-		http://www.springframework.org/schema/lang
-		http://www.springframework.org/schema/lang/spring-lang-3.1.xsd
-		http://www.springframework.org/schema/task
-		http://www.springframework.org/schema/task/spring-task-3.1.xsd
-		http://www.springframework.org/schema/util
-		http://www.springframework.org/schema/util/spring-util-3.1.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
 	<context:component-scan base-package="org.usergrid.persistence" />
 	<context:annotation-config />
@@ -29,8 +16,8 @@
 		<property name="ignoreResourceNotFound" value="true" />
 		<property name="locations">
 			<list>
-				<value>classpath:/usergrid.properties</value>
-				<value>file:./usergrid-custom-tools.properties</value>
+				<value>classpath:/usergrid-test.properties</value>
+				<value>${usergrid-custom-spring-test-properties}</value>
 			</list>
 		</property>
 	</bean>
@@ -95,9 +82,6 @@
 	</bean>
 
 	<!-- bean name="lockManager" class="org.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" 
-		/ -->
-
-	<!-- bean name="lockManager" class="org.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" 
 		/> -->
 	<bean name="lockManager" class="org.usergrid.locking.zookeeper.NoOpLockManagerImpl" />
 
@@ -113,6 +97,7 @@
 		class="org.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
 		<constructor-arg ref="cassandraService" />
 		<constructor-arg ref="counterUtils" />
+
 	</bean>
 
 	<bean id="queueManagerFactory" class="org.usergrid.mq.cassandra.QueueManagerFactoryImpl">
@@ -120,28 +105,20 @@
 		<constructor-arg ref="counterUtils" />
 	</bean>
 
+	<bean id="taskExecutor" class="org.springframework.core.task.SyncTaskExecutor">
+	</bean>
+
 	<bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
 		<constructor-arg value="3" />
 		<property name="batchSubmitter" ref="batchSubmitter" />
-		<property name="batchSize" value="0" />
 	</bean>
 
-	<bean id="batchSubmitter" class="com.usergrid.count.CassandraSubmitter">
-		<constructor-arg ref="cassandraCounterStore" />
-	</bean>
-
-	<bean id="cassandraCounterStore" class="com.usergrid.count.CassandraCounterStore">
-		<constructor-arg>
-			<bean id="keyspace" factory-bean="cassandraService"
-				factory-method="getUsergridApplicationKeyspace" />
-		</constructor-arg>
+	<bean id="batchSubmitter" class="com.usergrid.count.Slf4JBatchSubmitter">
 	</bean>
 
 	<bean id="counterUtils" class="org.usergrid.persistence.cassandra.CounterUtils">
 		<property name="batcher" ref="simpleBatcher" />
-		<property name="counterType" value="o" /> <!-- use new couter architecture. p: parallel, o: old -->
 	</bean>
-
 
 	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl" />
 
@@ -152,8 +129,16 @@
 			<ref bean="entityManagerFactory" />
 		</constructor-arg>
 	</bean>
-	
-	 <bean id="indexBucketLocator" class="org.usergrid.persistence.cassandra.SimpleIndexBucketLocatorImpl">
-    	<constructor-arg value="${usergrid.index.defaultbucketsize}"/>
-   	 </bean>
+
+
+	<bean id="indexBucketLocator"
+		class="org.usergrid.persistence.cassandra.SimpleIndexBucketLocatorImpl">
+		<constructor-arg value="${usergrid.index.defaultbucketsize}" />
+	</bean>
+	<bean id="applicationCreator"
+		class="org.usergrid.management.cassandra.ApplicationCreatorImpl">
+		<constructor-arg ref="entityManagerFactory" />
+		<constructor-arg ref="managementService" />
+	</bean>
+
 </beans>
