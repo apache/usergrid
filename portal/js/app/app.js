@@ -9,36 +9,41 @@ var Pages = new UsergridPages();
 $(document).ready(function () {
   var query_params = getQueryParams();
   initCore();
-  initUI();
+  initUI(query_params);
   startApp();
 
   function initCore() {
     prepareLocalStorage();
     parseParams();    
-    usergrid.client.Init(query_params);
   }
   
-  function initUI() {
-    usergrid_console_app(Pages);
+  function initUI(query_params) {
+    usergrid_console_app(Pages, query_params);
     initMenu();
     StatusBar.Init('#statusbar-placeholder');
     toggleableSections();
   }
 
   function startApp() {
-    usergrid.client.autoLogin(
-      function() {
-        usergrid.console.loginOk();
-      },
-      function() {
-        usergrid.console.logout();
+    if (!usergrid.session.loggedIn()) {
+      // test to see if the Portal is running on Apigee, if so, send to SSO, if not, fall through to login screen
+      if ( usergrid.console.useSSO() ){
+        Pages.clearPage();
+        usergrid.console.sendToSSOLoginPage();
+      } else if (query_params.goto_signup) {
+        Pages.ShowPage("signup");
+      } else {
+        usergrid.console.showLoginForNonSSO();
       }
-    );
-
-    if (query_params.goto_signup) {
-      Pages.ShowPage("signup");
     } else {
-      usergrid.console.showLoginForNonSSO();
+      usergrid.client.autoLogin(
+        function() {
+          usergrid.console.loginOk();
+        },
+        function() {
+          usergrid.console.logout();
+        }
+      );
     }
 
   }
