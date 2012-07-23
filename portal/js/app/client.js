@@ -274,90 +274,89 @@ usergrid.client = (function() {
    *  @param _failureCallback REQUIRED - the failure callback function
    *
    */
-  queryObj = (function(_method, _path, _jsonObj, _params, _successCallback, _failureCallback) {
+  queryObj = (function(method, path, jsonObj, params, successCallback, failureCallback) {
     //query vars
-    this.method = _method;
-    this.path = _path;
-    this.jsonObj = _jsonObj;
-    this.params = _params;
-    this.successCallback = _successCallback;
-    this.failureCallback = _failureCallback;
+    this._method = method;
+    this._path = path;
+    this._jsonObj = jsonObj;
+    this._params = params;
+    this._successCallback = successCallback;
+    this._failureCallback = failureCallback;
 
     //curl command - will be populated by runQuery function
-    this.curl = '';
-    this.token = false;
+    this._curl = '';
+    this._token = false;
 
     //paging vars
-    this.cursor = null;
-    this.next = null
-    this.previous = [];
+    this._cursor = null;
+    this._next = null
+    this._previous = [];
   });
   //methods for accessing query vars
-  queryObj.prototype.getMethod = function getMethod() { return this.method; }
-  queryObj.prototype.setMethod = function setMethod(_method) { this.method = _method; }
+  queryObj.prototype.getMethod = function getMethod() { return this._method; }
+  queryObj.prototype.setMethod = function setMethod(method) { this._method = method; }
 
-  queryObj.prototype.getPath = function getPath() { return this.path; }
-  queryObj.prototype.setPath = function setPath(_path) { this.path = _path; }
+  queryObj.prototype.getPath = function getPath() { return this._path; }
+  queryObj.prototype.setPath = function setPath(path) { this._path = path; }
 
-  queryObj.prototype.getJsonObj = function getJsonObj() { return this.jsonObj; }
-  queryObj.prototype.setJsonObj = function setJsonObj(_jsonObj) { this.jsonObj = _jsonObj; }
+  queryObj.prototype.getJsonObj = function getJsonObj() { return this._jsonObj; }
+  queryObj.prototype.setJsonObj = function setJsonObj(jsonObj) { this._jsonObj = jsonObj; }
 
-  queryObj.prototype.getParams = function getParams() { return this.params; }
-  queryObj.prototype.setParams = function setParams(_params) { this.params = _params; }
+  queryObj.prototype.getParams = function getParams() { return this._params; }
+  queryObj.prototype.setParams = function setParams(params) { this._params = params; }
 
-  queryObj.prototype.getSuccessCallback = function getSuccessCallback() { return this.successCallback; }
-  queryObj.prototype.setSuccessCallback = function setSuccessCallback(_successCallback) { this.successCallback = _successCallback; }
-  queryObj.prototype.callSuccessCallback = function callSuccessCallback(response) { this.successCallback(response); }
+  queryObj.prototype.getSuccessCallback = function getSuccessCallback() { return this._successCallback; }
+  queryObj.prototype.setSuccessCallback = function setSuccessCallback(successCallback) { this._successCallback = successCallback; }
+  queryObj.prototype.callSuccessCallback = function callSuccessCallback(response) { this._successCallback(response); }
 
-  queryObj.prototype.getFailureCallback = function getFailureCallback() { return this.failureCallback; }
-  queryObj.prototype.setFailureCallback = function setFailureCallback(_failureCallback) { this.failureCallback = _failureCallback; }
-  queryObj.prototype.callFailureCallback = function callFailureCallback(response) { this.failureCallback(response); }
+  queryObj.prototype.getFailureCallback = function getFailureCallback() { return this._failureCallback; }
+  queryObj.prototype.setFailureCallback = function setFailureCallback(failureCallback) { this._failureCallback = failureCallback; }
+  queryObj.prototype.callFailureCallback = function callFailureCallback(response) { this._failureCallback(response); }
 
-  queryObj.prototype.getCurl = function getCurl() { return this.curl; }
-  queryObj.prototype.setCurl = function setCurl(_curl) { this.curl = _curl; }
+  queryObj.prototype.getCurl = function getCurl() { return this._curl; }
+  queryObj.prototype.setCurl = function setCurl(curl) { this._curl = curl; }
 
-  queryObj.prototype.getToken = function getToken() { return this.token; }
-  queryObj.prototype.setToken = function setToken(_token) { this.token = _token; }
+  queryObj.prototype.getToken = function getToken() { return this._token; }
+  queryObj.prototype.setToken = function setToken(token) { this._token = token; }
 
   //methods for accessing paging functions
   queryObj.prototype.resetPaging = function resetPaging() {
-    this.previous = [];
-    this.next = null;
-    this.cursor = null;
+    this._previous = [];
+    this._next = null;
+    this._cursor = null;
   }
 
   queryObj.prototype.hasPrevious = function hasPrevious() {
-    return (this.previous.length > 0);
+    return (this._previous.length > 0);
   }
 
   queryObj.prototype.getPrevious = function getPrevious() {
-    this.next=null; //clear out next so the comparison will find the next item
-    this.cursor = this.previous.pop();
+    this._next=null; //clear out next so the comparison will find the next item
+    this._cursor = this._previous.pop();
   }
 
   queryObj.prototype.hasNext = function hasNext(){
-    return (this.next);
+    return (this._next);
   }
 
   queryObj.prototype.getNext = function getNext() {
-    this.previous.push(this.cursor);
-    this.cursor = this.next;
+    this._previous.push(this._cursor);
+    this._cursor = this._next;
   }
 
-  queryObj.prototype.saveCursor = function saveCursor(_cursor) {
-    this.cursor = this.next; //what was new is old again
+  queryObj.prototype.saveCursor = function saveCursor(cursor) {
+    this._cursor = this._next; //what was new is old again
     //if current cursor is different, grab it for next cursor
-    if (this.next != _cursor) {
-      this.next = _cursor;
+    if (this._next != cursor) {
+      this._next = _cursor;
     } else {
-      this.next = null;
+      this._next = null;
     }
   }
 
   queryObj.prototype.getCursor = function getCursor() {
-    return this.cursor;
+    return this._cursor;
   }
-
 
   /*
    *  @function runAppQuery
