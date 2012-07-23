@@ -211,8 +211,12 @@ function usergrid_console_app(Pages) {
 
     //merge the data and the query
     var params = {"ql":ql};
+    try{
     data = JSON.parse(data);
-
+    } catch (e) {
+      alertModal("Error", "There is a problem with your JSON.");
+      return false;
+    }
     //make a new query object
     queryObj = new client.queryObj(method, path, data, params, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
     //store the query object on the stack
