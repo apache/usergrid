@@ -11,7 +11,18 @@
 	<context:component-scan base-package="org.usergrid.persistence" />
 	<context:annotation-config />
 
-	
+	<bean id="properties"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="singleton" value="true" />
+		<property name="ignoreResourceNotFound" value="true" />
+		<property name="locations">
+			<list>
+				<value>classpath:/usergrid-test.properties</value>
+				<value>${usergrid-custom-spring-test-properties}</value>
+			</list>
+		</property>
+	</bean>
+
 	<bean id="propertyPlaceholderConfigurer"
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 		<property name="properties" ref="properties" />
@@ -20,20 +31,51 @@
 		</property>
 	</bean>
 
+	<!-- 
+	<bean id="hazelcastLifecycle"
+		class="org.usergrid.clustering.hazelcast.HazelcastLifecycleMonitor"
+		init-method="init" destroy-method="destroy" />
+
+	<bean id="hazelcast" class="com.hazelcast.core.Hazelcast"
+		factory-method="getDefaultInstance" />
+
+	<bean id="map" factory-bean="hazelcast" factory-method="getMap">
+		<constructor-arg value="mymap" />
+	</bean>
+	-->
 	
+	<bean id="cassandraUseRemote" class="java.lang.Boolean">
+		<constructor-arg value="${cassandra.use_remote}" />
+	</bean>
+	<bean id="cassandraLocalUrl" class="java.lang.String">
+		<constructor-arg value="${cassandra.local.url}" />
+	</bean>
+	<bean id="cassandraRemoteUrl" class="java.lang.String">
+		<constructor-arg value="${cassandra.remote.url}" />
+	</bean>
+	<bean id="cassandraUrl" class="java.lang.String">
+		<constructor-arg
+			value="#{cassandraUseRemote ? cassandraRemoteUrl : cassandraLocalUrl}" />
+	</bean>
+	<util:map id="cassandraCredentials" map-class="java.util.HashMap">
+		<entry key="username" value="${cassandra.username}" />
+		<entry key="password" value="${cassandra.password}" />
+	</util:map>
+
 	<!-- The Time Resolution used for the cluster -->
 	<bean id="microsecondsTimeResolution"
 		class="me.prettyprint.cassandra.service.clock.MicrosecondsClockResolution" />
 
 	<bean id="cassandraHostConfigurator"
 		class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
-		<constructor-arg value="${cassandra.url}" />
+		<constructor-arg ref="cassandraUrl" />
 		<property name="clockResolution" ref="microsecondsTimeResolution" />
 	</bean>
 
 	<bean id="cassandraCluster" class="me.prettyprint.cassandra.service.ThriftCluster">
 		<constructor-arg value="${cassandra.cluster}" />
 		<constructor-arg ref="cassandraHostConfigurator" />
+		<constructor-arg ref="cassandraCredentials" />
 	</bean>
 
 	<!-- bean name="lockManager" class="org.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" 
