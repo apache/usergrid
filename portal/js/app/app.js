@@ -30,7 +30,9 @@ $(document).ready(function () {
       function() {
         usergrid.console.loginOk();
       },
-      function() {Pages.ShowPage("login")}
+      function() {
+        usergrid.console.logout();
+      }
     );
 
     if (query_params.goto_signup) {

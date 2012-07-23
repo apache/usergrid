@@ -227,9 +227,9 @@ usergrid.client = (function() {
             successCallback(response);
           }
         },
-        function() {
+        function(response) {
           session.clearAll();
-          errorCallback;
+          errorCallback(response);
         }
       ));
       return;

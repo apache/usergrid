@@ -3251,6 +3251,7 @@ function deleteRolePermission(roleName, permission) {
   $('#login-organization').focus();
 
   function displayLoginError() {
+    logout();
     $('#login-area .box').effect('shake', {times: 2},100);
     $('#login-message').show();
   }
