@@ -113,70 +113,65 @@ public class AppAudit extends ToolBase {
 
         Map<String, UUID> apps = emf.getApplications();
 
-        OrgRepo repo = new OrgRepo();
+        // OrgRepo repo = new OrgRepo();
 
-        Set<String> foundOrgs = new HashSet<String>();
+        Set<String> allOrgs = new HashSet<String>();
         // Set<String> foundApps = new HashSet<String>();
 
         for (Entry<String, UUID> entry : apps.entrySet()) {
             logger.info("Name: {}, Id: {}", entry.getKey(), entry.getValue());
             // repo.putData(entry.getKey(), entry.getValue());
             String[] parts = entry.getKey().split("/");
-            foundOrgs.add(parts[0]);
+            allOrgs.add(parts[0]);
             // foundApps.add(entry.getKey());
         }
+
+        Set<String> collectionOrgs = new HashSet<String>(allOrgs);
+        Set<String> aliasedOrgs = new HashSet<String>(allOrgs);
 
         EntityManager em = emf
                 .getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
 
         // search for all orgs
 
-        EntityRef ref = new SimpleEntityRef("application",
+        EntityRef rootAppRef = new SimpleEntityRef("application",
                 CassandraService.MANAGEMENT_APPLICATION_ID);
 
-        int limit = 100;
         Query query = new Query();
-        query.setLimit(limit);
+        query.setLimit(PAGE_SIZE);
 
         Results r = null;
 
         do {
 
-            r = em.searchCollection(ref, "groups", query);
+            r = em.searchCollection(rootAppRef, "groups", query);
 
             for (Entity entity : r.getEntities()) {
-                foundOrgs.remove(entity.getProperty("path"));
+                collectionOrgs.remove(entity.getProperty("path"));
             }
 
             query.setCursor(r.getCursor());
 
-        } while (r != null && r.size() == limit);
+        } while (r != null && r.size() == PAGE_SIZE);
 
-        // search for all apps
-        // query = new Query();
-        //
-        // do {
-        //
-        // r = em.searchCollection(ref, "application_info", query);
-        //
-        // for (Entity entity : r.getEntities()) {
-        // foundApps.remove(entity.getProperty("name"));
-        // }
-        //
-        // query.setCursor(r.getCursor());
-        //
-        // } while (r != null && r.size() == limit);
+        for (String orgName : allOrgs) {
+            EntityRef group = em.getAlias("group", orgName);
 
+            if (group != null) {
+                aliasedOrgs.remove(orgName);
+            }
+
+        }
         // now dump what we couldn't find!
 
-        for (String orgName : foundOrgs) {
-            logger.info("Cound not find org name: {}", orgName);
+        for (String orgName : collectionOrgs) {
+            logger.info("Cound not find in collection groups.  Org : {}",
+                    orgName);
         }
-        //
-        // for (String appName : foundApps) {
-        // logger.info("Cound not find app with name: {}", appName);
-        // }
 
+        for (String orgName : aliasedOrgs) {
+            logger.info("Cound not find in alias.  Org : {}", orgName);
+        }
     }
 
     /**
