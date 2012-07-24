@@ -5,11 +5,7 @@
  *
  *
  */
-/*
-  *  @class session
-  *  @purpose a class of standardized methods for accessing local storage
-  *
-  */
+
 var usergrid = usergrid || {};
 
 /*******************************************************************
@@ -132,7 +128,11 @@ var usergrid = usergrid || {};
     return this._cursor;
   }
 
-  
+ /*
+  *  @class session
+  *  @purpose a class of standardized methods for accessing local storage
+  *
+  */
  usergrid.session = (function() {
    function getOrganizationObj () {
     var organization = localStorage.getObject('currentOrganization');
@@ -244,6 +244,7 @@ var usergrid = usergrid || {};
     getApplicationId:getApplicationId,
     setApplicationId:setApplicationId,
     getApplicationName: getApplicationName,
+    setApplicationName: setApplicationName,
     getLoggedInUserObj: getLoggedInUserObj,
     getLoggedInUserUUID: getLoggedInUserUUID,
     getLoggedInUserEmail: getLoggedInUserEmail,
@@ -301,7 +302,7 @@ client.prototype.processQuery = function processQuery(_queryObj, endpoint) {
     //curl - append the bearer token if this is not the sandbox app
     var application_name = usergrid.session.getApplicationName();
     if (application_name) {
-      application_name = application_nametoUpperCase();
+      application_name = application_name.toUpperCase();
     }
     if (application_name != 'SANDBOX' && usergrid.session.getAccessToken()) {
       curl += ' -i -H "Authorization: Bearer ' + usergrid.session.getAccessToken() + '"';
