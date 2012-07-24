@@ -1845,6 +1845,7 @@ function usergrid_console_app(Pages, query_params) {
             redrawUserPanel();
           } else {
             user_data.roles = null;
+            redrawUserPanel();
           }
         },
         function() { alertModal("Error", "Unable to retrieve user's roles."); }
