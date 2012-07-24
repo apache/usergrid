@@ -3,6 +3,9 @@ window.console = window.console || {};
 window.console.log = window.console.log || function() {};
 // fix end here
 
+usergrid.session = new Session();
+usergrid.client = new Client();
+
 var Pages = new UsergridPages();
 
 

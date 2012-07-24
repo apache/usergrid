@@ -7,20 +7,20 @@ var usergrid = usergrid || {};
  *  The goal of the query object is to make it easy to run any
  *  kind of CRUD call against the API.  This is done as follows:
  *
- *  1.  Create a query object:
- *      queryObj = new client.queryObj("GET", "users", null, function() { alert("success"); }, function() { alert("failure"); });
+ *  1. Create a query object:
+ *     queryObj = new client.queryObj("GET", "users", null, function() { alert("success"); }, function() { alert("failure"); });
  *
- *  2.  Run the query by calling the appropriate endpoint call
- *      runAppQuery(queryObj);
- *      or
- *      runManagementQuery(queryObj);
+ *  2. Run the query by calling the appropriate endpoint call
+ *     runAppQuery(queryObj);
+ *     or
+ *     runManagementQuery(queryObj);
  *
- *  3.  Paging - The queryObj holds the cursor information.  To
- *      use, simply bind click events to functions that call the
- *      getNext and getPrevious methods of the query object.  This
- *      will set the cursor correctly, and the runAppQuery method
- *      can be called again using the same queryObj:
- *      runAppQuery(queryObj);
+ *  3. Paging - The queryObj holds the cursor information.  To
+ *     use, simply bind click events to functions that call the
+ *     getNext and getPrevious methods of the query object.  This
+ *     will set the cursor correctly, and the runAppQuery method
+ *     can be called again using the same queryObj:
+ *     runAppQuery(queryObj);
  *
  *  @class QueryObj
  *  @param method REQUIRED - GET, POST, PUT, DELETE
@@ -29,7 +29,6 @@ var usergrid = usergrid || {};
  *  @param params NULLABLE - query parameters to be encoded and added to the API URL
  *  @param successCallback REQUIRED - the success callback function
  *  @param failureCallback REQUIRED - the failure callback function
- *
  */
 QueryObj = (function(method, path, jsonObj, params, successCallback, failureCallback) {
   //query vars
@@ -150,7 +149,7 @@ Client.prototype.getResetPasswordUrl = function getResetPasswordUrl() { this.get
 /*
  *  public function to run calls against the app endpoint
  *  @method runAppQuery
- *  @params queryObj - {method, path, jsonObj, params, successCallback, failureCallback}
+ *  @params {object} queryObj - {method, path, jsonObj, params, successCallback, failureCallback}
  *
  */
 Client.prototype.runAppQuery = function runAppQuery(queryObj) {
@@ -162,7 +161,7 @@ Client.prototype.runAppQuery = function runAppQuery(queryObj) {
 /*
  *  public function to run calls against the management endpoint
  *  @method runManagementQuery
- *  @params queryObj - {method, path, jsonObj, params, successCallback, failureCallback}
+ *  @params {object} queryObj - {method, path, jsonObj, params, successCallback, failureCallback}
  *
  */
 Client.prototype.runManagementQuery = function runManagementQuery(queryObj) {
@@ -173,7 +172,7 @@ Client.prototype.runManagementQuery = function runManagementQuery(queryObj) {
 /*
  *  @method processQuery
  *  @purpose to validate and prepare a call to the API
- *  @params queryObj - {method, path, jsonObj, params, successCallback, failureCallback}
+ *  @params {object} queryObj - {method, path, jsonObj, params, successCallback, failureCallback}
  *
  */
 Client.prototype.processQuery = function processQuery(queryObj, endpoint) {
@@ -306,7 +305,7 @@ Client.prototype.processQuery = function processQuery(queryObj, endpoint) {
 /**
  *  @method encodeParams
  *  @purpose - to encode the query string parameters
- *  @params params - an object of name value pairs that will be urlencoded
+ *  @params {object} params - an object of name value pairs that will be urlencoded
  *
  */
 Client.prototype.encodeParams = function encodeParams(params) {
@@ -338,12 +337,12 @@ Client.prototype.encodeParams = function encodeParams(params) {
 }
 
 /**
+ *  Authenticate an admin user and store the token and org list
  *  @method loginAdmin
- *  @purpose - to authenticate an admin user and store the token and org list
- *  @params email - the admin's email (or username)
- *  @params password - the admin's password
- *  @params successCallback - callback function for success
- *  @params errorCallback - callback function for error
+ *  @params {string} email - the admin's email (or username)
+ *  @params {string} password - the admin's password
+ *  @params {function} successCallback - callback function for success
+ *  @params {function} errorCallback - callback function for error
  */
 Client.prototype.loginAdmin = function loginAdmin(email, password, successCallback, errorCallback) {
   usergrid.session.clearAll();
@@ -374,10 +373,10 @@ Client.prototype.loginAdmin = function loginAdmin(email, password, successCallba
 }
 
 /**
+ *  Reauthenticate an admin who already has a token
  *  @method autoLogin
- *  @purpose - to reauthenticate an admin who already has a token
- *  @params successCallback - callback function for success
- *  @params errorCallback - callback function for error
+ *  @params {function} successCallback - callback function for success
+ *  @params {function} errorCallback - callback function for error
  */
 Client.prototype.autoLogin = function autoLogin(successCallback, errorCallback) {
   this.runManagementQuery(new QueryObj("GET","users/" + usergrid.session.getLoggedInUserEmail(), null, null,
@@ -402,99 +401,101 @@ Client.prototype.autoLogin = function autoLogin(successCallback, errorCallback) 
   ));
   return;
 }
-usergrid.client = new Client();
 
-/*
- *  @class session
- *  @purpose a class of standardized methods for accessing local storage
- *
+
+/**
+ *  Standardized methods for mantianing authentication state in the Application
+ *  @class session 
  */
-usergrid.session = (function() {
-  function getOrganizationObj () {
+function Session() {
+  
+}
+
+Session.prototype.getOrganizationObj = function getOrganizationObj() {
   var organization = localStorage.getObject('currentOrganization');
   return organization;
 }
-function getOrganizationUUID () {
+Session.prototype.getOrganizationUUID = function getOrganizationUUID() {
   var organization = localStorage.getObject('currentOrganization');
   return organization.uuid;
 }
-function getOrganizationName() {
+Session.prototype.getOrganizationName = function getOrganizationName() {
   var organization = localStorage.getObject('currentOrganization');
   return organization.name;
 }
-function setOrganization(_organization) {
-  localStorage.setObject('currentOrganization', _organization);
-}
-function setOrganizationObj(_organization) {
-  localStorage.setObject('currentOrganization', _organization);
-}
-function setOrganizationName(_name) {
-  organization = {};
-  organization.name= _name;
+Session.prototype.setOrganization = function setOrganization(organization) {
   localStorage.setObject('currentOrganization', organization);
 }
-function setOrganizationUUID(_uuid) {
+Session.prototype.setOrganizationObj = function setOrganizationObj(organization) {
+  localStorage.setObject('currentOrganization', organization);
+}
+Session.prototype.setOrganizationName = function setOrganizationName(name) {
+  organization = {};
+  organization.name= name;
+  localStorage.setObject('currentOrganization', organization);
+}
+Session.prototype.setOrganizationUUID = function setOrganizationUUID(_uuid) {
   organization = {};
   organization.uuid = _uuid;
   localStorage.setObject('currentOrganization', organization);
 }
 
 //application id access and setter methods
-function getApplicationId() {
+Session.prototype.getApplicationId = function getApplicationId() {
   var applicationId = localStorage.getItem('currentApplicationId');
   return applicationId;
 }
-function setApplicationId(_applicationId) {
-  localStorage.setItem('currentApplicationId', _applicationId);
+Session.prototype.setApplicationId = function setApplicationId(applicationId) {
+  localStorage.setItem('currentApplicationId', applicationId);
 }
-function getApplicationName() {
+Session.prototype.getApplicationName = function getApplicationName() {
   var applicationName = localStorage.getItem('currentApplicationName');
   return applicationName;
 }
-function setApplicationName(_applicationName) {
-  localStorage.setItem('currentApplicationName', _applicationName);
+Session.prototype.setApplicationName = function setApplicationName(applicationName) {
+  localStorage.setItem('currentApplicationName', applicationName);
 }
 
 //logged in user access and setter methods
-function getLoggedInUserObj() {
+Session.prototype.getLoggedInUserObj = function getLoggedInUserObj() {
   var loggedInUser = localStorage.getObject('usergridUser');
   return loggedInUser;
 }
-function getLoggedInUserUUID() {
+Session.prototype.getLoggedInUserUUID = function getLoggedInUserUUID() {
   var loggedInUser = localStorage.getObject('usergridUser');
   return loggedInUser.uuid;
 }
-function getLoggedInUserEmail() {
+Session.prototype.getLoggedInUserEmail = function getLoggedInUserEmail() {
   var loggedInUser = localStorage.getObject('usergridUser');
   return loggedInUser.email;
 }
-function getLoggedInUserOrgs() {
+Session.prototype.getLoggedInUserOrgs = function getLoggedInUserOrgs() {
   var loggedInUser = localStorage.getObject('usergridUser');
   return loggedInUser.organizations;
 }
-function setLoggedInUser(_loggedInUser) {
-  localStorage.setObject('usergridUser', _loggedInUser);
+Session.prototype.setLoggedInUser = function setLoggedInUser(loggedInUser) {
+  localStorage.setObject('usergridUser', loggedInUser);
 }
 
 //access token access and setter methods
-function getAccessToken() {
+Session.prototype.getAccessToken = function getAccessToken() {
   var accessToken = localStorage.getItem('accessToken');
   return accessToken;
 }
-function setAccessToken(_accessToken) {
-  localStorage.setItem('accessToken', _accessToken);
+Session.prototype.setAccessToken = function setAccessToken(accessToken) {
+  localStorage.setItem('accessToken', accessToken);
 }
 
 //convenience method for saving all active user vars at once
-function saveAll(_organization, _applicationId, _loggedInUser, _accessToken) {
-  this.setOrganization(_organization);
-  this.setApplicationId(_applicationId);
-  this.setLoggedInUser(_loggedInUser);
-  this.setAccessToken(_accessToken);
+Session.prototype.saveAll = function saveAll(organization, applicationId, loggedInUser, accessToken) {
+  this.setOrganization(organization);
+  this.setApplicationId(applicationId);
+  this.setLoggedInUser(loggedInUser);
+  this.setAccessToken(accessToken);
 }
 
 //convenience method for clearing all active user vars at once
-function clearAll() {
+Session.prototype.clearAll = function clearAll() {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('usergridUser');
   localStorage.removeItem('currentOrganization');
@@ -503,35 +504,8 @@ function clearAll() {
 }
 
 //method to check if user is logged in
-function loggedIn() {
+Session.prototype.loggedIn = function loggedIn() {
   var loggedInUser = this.getLoggedInUserObj();
   var accessToken = this.getAccessToken();
   return (loggedInUser && accessToken);
 }
-
-var self = {
-  getOrganizationObj:getOrganizationObj,
-  getOrganizationUUID:getOrganizationUUID,
-  getOrganizationName: getOrganizationName,
-  setOrganization: setOrganization,
-  setOrganizationObj: setOrganizationObj,
-  setOrganizationName: setOrganizationName,
-  setOrganizationUUID:setOrganizationUUID,
-  getApplicationId:getApplicationId,
-  setApplicationId:setApplicationId,
-  getApplicationName: getApplicationName,
-  setApplicationName: setApplicationName,
-  getLoggedInUserObj: getLoggedInUserObj,
-  getLoggedInUserUUID: getLoggedInUserUUID,
-  getLoggedInUserEmail: getLoggedInUserEmail,
-  getLoggedInUserOrgs: getLoggedInUserOrgs,
-  setLoggedInUser: setLoggedInUser,
-  getAccessToken: getAccessToken,
-  setAccessToken: setAccessToken,
-  saveAll: saveAll,
-  clearAll: clearAll,
-  loggedIn: loggedIn
-}
-
-return self;
-})();
