@@ -104,109 +104,96 @@ public class EntityCleanup extends ToolBase {
         query.setLimit(PAGE_SIZE);
         String lastCursor = null;
 
-        for (Entry<UUID, String> org : managementService.getOrganizations()
-                .entrySet()) {
+        for (Entry<String, UUID> app : emf.getApplications().entrySet()) {
 
-            for (Entry<UUID, String> app : managementService
-                    .getApplicationsForOrganization(org.getKey()).entrySet()) {
+            logger.info("Starting cleanup for app {}", app.getKey());
 
-                logger.info("Starting cleanup for org {} and app {}",
-                        org.getValue(), app.getValue());
+            UUID applicationId = app.getValue();
+            EntityManagerImpl em = (EntityManagerImpl) emf
+                    .getEntityManager(applicationId);
 
-                UUID applicationId = app.getKey();
-                EntityManagerImpl em = (EntityManagerImpl) emf
-                        .getEntityManager(applicationId);
+            CassandraService cass = em.getCass();
+            IndexBucketLocator indexBucketLocator = em.getIndexBucketLocator();
 
-                CassandraService cass = em.getCass();
-                IndexBucketLocator indexBucketLocator = em
-                        .getIndexBucketLocator();
+            UUID timestampUuid = newTimeUUID();
+            long timestamp = getTimestampInMicros(timestampUuid);
 
-                UUID timestampUuid = newTimeUUID();
-                long timestamp = getTimestampInMicros(timestampUuid);
+            Set<String> collectionNames = em.getApplicationCollections();
 
-                Set<String> collectionNames = em.getApplicationCollections();
+            // go through each collection and audit the value
+            for (String collectionName : collectionNames) {
 
-                // go through each collection and audit the value
-                for (String collectionName : collectionNames) {
+                lastCursor = null;
 
-                    lastCursor = null;
+                do {
 
-                    do {
+                    query.setCursor(lastCursor);
+                    // load all entity ids from the index itself.
 
-                        query.setCursor(lastCursor);
-                        // load all entity ids from the index itself.
+                    ids = cass.getIdList(
+                            cass.getApplicationKeyspace(applicationId),
+                            key(applicationId, DICTIONARY_COLLECTIONS,
+                                    collectionName), query.getStartResult(),
+                            null, query.getLimit() + 1, false,
+                            indexBucketLocator, applicationId, collectionName);
 
-                        ids = cass.getIdList(
-                                cass.getApplicationKeyspace(applicationId),
-                                key(applicationId, DICTIONARY_COLLECTIONS,
-                                        collectionName),
-                                query.getStartResult(), null,
-                                query.getLimit() + 1, false,
-                                indexBucketLocator, applicationId,
-                                collectionName);
+                    CollectionInfo collection = getDefaultSchema()
+                            .getCollection("application", collectionName);
 
-                        CollectionInfo collection = getDefaultSchema()
-                                .getCollection("application", collectionName);
+                    Results tempResults = Results.fromIdList(ids,
+                            collection.getType());
 
-                        Results tempResults = Results.fromIdList(ids,
-                                collection.getType());
+                    if (tempResults != null) {
+                        tempResults.setQuery(query);
+                    }
 
-                        if (tempResults != null) {
-                            tempResults.setQuery(query);
-                        }
+                    results = em.loadEntities(tempResults,
+                            query.getResultsLevel(), query.getLimit());
 
-                        results = em.loadEntities(tempResults,
-                                query.getResultsLevel(), query.getLimit());
+                    // advance the cursor for the next page of results
 
-                        // advance the cursor for the next page of results
+                    lastCursor = results.getCursor();
 
-                        lastCursor = results.getCursor();
+                    // nothing to do they're the same size so there's no
+                    // orphaned uuid's in the entity index
+                    if (ids.size() == results.size()) {
+                        continue;
+                    }
 
-                        // nothing to do they're the same size so there's no
-                        // orphaned uuid's in the entity index
-                        if (ids.size() == results.size()) {
-                            continue;
-                        }
+                    // they're not the same, we have some orphaned records,
+                    // remove them
 
-                        // they're not the same, we have some orphaned records,
-                        // remove them
+                    for (Entity returned : results.getEntities()) {
+                        ids.remove(returned.getUuid());
+                    }
 
-                        for (Entity returned : results.getEntities()) {
-                            ids.remove(returned.getUuid());
-                        }
+                    // what's left needs deleted, do so
 
-                        // what's left needs deleted, do so
+                    logger.info("Cleaning up {} orphaned entities for app {}",
+                            ids.size(), app.getValue());
+
+                    Keyspace ko = cass.getApplicationKeyspace(applicationId);
+                    Mutator<ByteBuffer> m = createMutator(ko, be);
+
+                    for (UUID id : ids) {
+
+                        Object collections_key = key(applicationId,
+                                Schema.DICTIONARY_COLLECTIONS, collectionName,
+                                indexBucketLocator.getBucket(applicationId,
+                                        IndexType.COLLECTION, id,
+                                        collectionName));
+
+                        addDeleteToMutator(m, ENTITY_ID_SETS, collections_key,
+                                id, timestamp);
 
                         logger.info(
-                                "Cleaning up {} orphaned entities for org {} and app {}",
-                                new Object[] { ids.size(), org.getValue(),
-                                        app.getValue() });
+                                "Deleting entity with id '{}' from collection '{}'",
+                                id, collectionName);
+                    }
 
-                        Keyspace ko = cass
-                                .getApplicationKeyspace(applicationId);
-                        Mutator<ByteBuffer> m = createMutator(ko, be);
+                    m.execute();
 
-                        for (UUID id : ids) {
-
-                            Object collections_key = key(applicationId,
-                                    Schema.DICTIONARY_COLLECTIONS,
-                                    collectionName,
-                                    indexBucketLocator.getBucket(applicationId,
-                                            IndexType.COLLECTION, id,
-                                            collectionName));
-
-                            addDeleteToMutator(m, ENTITY_ID_SETS,
-                                    collections_key, id, timestamp);
-
-                            logger.info(
-                                    "Deleting entity with id '{}' from collection '{}'",
-                                    id, collectionName);
-                        }
-
-                        m.execute();
-
-                    } while (ids.size() == PAGE_SIZE);
-                }
+                } while (ids.size() == PAGE_SIZE);
             }
 
         }

@@ -591,37 +591,74 @@ public class Results implements Iterable<Entity> {
     public void merge(Results results) {
         getEntitiesMap();
         results.getEntitiesMap();
-        if ((entitiesMap != null) && (results.entitiesMap != null)) {
+        if (entitiesMap != null || results.entitiesMap != null) {
+
+            level = Level.ALL_PROPERTIES;
+
+            // do nothing, nothing to union
+            if (entitiesMap != null && results.entitiesMap == null) {
+                return;
+                // other side has the results, assign and return
+            } else if (entitiesMap == null && results.entitiesMap != null) {
+                entities = results.entities;
+                return;
+            }
+
             entitiesMap.putAll(results.entitiesMap);
             entities = new ArrayList<Entity>(entitiesMap.values());
-            level = Level.ALL_PROPERTIES;
+
             return;
         }
 
         getRefsMap();
         results.getRefsMap();
-        if ((refsMap != null) && (results.refsMap != null)) {
+        if ((refsMap != null) || (results.refsMap != null)) {
+
+            level = Level.REFS;
+
+            // do nothing, nothing to union
+            if (refsMap != null && results.refsMap == null) {
+                return;
+                // other side has the results, assign and return
+            } else if (refsMap == null && results.refsMap != null) {
+                refs = results.refs;
+                return;
+            }
+
             refsMap.putAll(results.refsMap);
             refs = new ArrayList<EntityRef>(refsMap.values());
-            level = Level.REFS;
+
             return;
         }
 
         getIdSet();
         results.getIdSet();
         if ((idSet != null) && (results.idSet != null)) {
+
+            level = Level.IDS;
+
+            // do nothing, nothing to union
+            if (idSet != null && results.idSet == null) {
+                return;
+                // other side has the results, assign and return
+            } else if (idSet == null && results.idSet != null) {
+                ids = results.ids;
+                return;
+            }
+
             idSet.addAll(results.idSet);
             ids = new ArrayList<UUID>(idSet);
-            level = Level.IDS;
+
             return;
         }
     }
 
     /**
      * Remove the passed in results from the current results
+     * 
      * @param results
      */
-    public void subtract(Results results){
+    public void subtract(Results results) {
         getEntitiesMap();
         results.getEntitiesMap();
 
@@ -668,8 +705,6 @@ public class Results implements Iterable<Entity> {
             return;
         }
     }
-    
-  
 
     /**
      * Perform an intersection of the 2 results
