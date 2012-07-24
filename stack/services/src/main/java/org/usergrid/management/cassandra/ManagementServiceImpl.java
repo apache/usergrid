@@ -42,9 +42,7 @@ import static org.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_NAME;
 import static org.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_TYPE;
 import static org.usergrid.persistence.entities.Activity.PROPERTY_TITLE;
 import static org.usergrid.persistence.entities.Activity.PROPERTY_VERB;
-import static org.usergrid.security.AuthPrincipalType.ADMIN_USER;
-import static org.usergrid.security.AuthPrincipalType.APPLICATION_USER;
-import static org.usergrid.security.AuthPrincipalType.ORGANIZATION;
+import static org.usergrid.security.AuthPrincipalType.*;
 import static org.usergrid.security.oauth.ClientCredentialsInfo.getTypeFromClientId;
 import static org.usergrid.security.oauth.ClientCredentialsInfo.getUUIDFromClientId;
 import static org.usergrid.security.tokens.TokenCategory.ACCESS;
@@ -115,6 +113,7 @@ import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.security.tokens.TokenInfo;
 import org.usergrid.security.tokens.TokenService;
 import org.usergrid.security.tokens.exceptions.BadTokenException;
+import org.usergrid.security.tokens.exceptions.TokenException;
 import org.usergrid.services.ServiceAction;
 import org.usergrid.services.ServiceManager;
 import org.usergrid.services.ServiceManagerFactory;
@@ -1174,7 +1173,10 @@ public class ManagementServiceImpl implements ManagementService {
 			String expected_token_type,
 			AuthPrincipalType expected_principal_type) throws Exception {
 
+    logger.info("expected_token_type: {} exp.princ: {}", expected_token_type, expected_principal_type);
 		TokenInfo tokenInfo = tokens.getTokenInfo(token);
+    logger.info("tokenInfo: {} from token: type {}, principaltype: {}",
+            new Object[]{tokenInfo, tokenInfo.getType(), tokenInfo.getPrincipal().getType()});
 		if (tokenInfo == null) {
 			return null;
 		}
@@ -1566,7 +1568,10 @@ public class ManagementServiceImpl implements ManagementService {
 	@Override
 	public ApplicationInfo getApplicationInfoFromAccessToken(String token)
 			throws Exception {
-		Entity entity = geEntityFromAccessToken(token, null, APPLICATION_USER);
+		Entity entity = geEntityFromAccessToken(token, null, APPLICATION);
+    if ( entity == null ) {
+      throw new TokenException("Could not find an entity for that access token: " + token);
+    }
 		return new ApplicationInfo(entity.getProperties());
 	}
 
