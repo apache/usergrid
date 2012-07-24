@@ -1995,12 +1995,6 @@ function usergrid_console_app(Pages, query_params) {
     showPagination('groups');
   }
 
-  function showGroupsForLetter(c) {
-    groupLetter = c;
-    getGroups();
-  }
-  usergrid.console.showGroupsForLetter = showGroupsForLetter;
-
   function showGroupsForSearch(search){
     selectFirstTabButton('#groups-panel-tab-bar');
     $('#groups-panel-search').hide();
