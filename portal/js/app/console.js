@@ -232,7 +232,7 @@ function usergrid_console_app(Pages, query_params) {
       return false;
     }
     //make a new query object
-    queryObj = new usergrid.queryObj(method, path, data, params, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
+    queryObj = new QueryObj(method, path, data, params, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
     //store the query object on the stack
     pushQuery(queryObj);
     //then run the query
@@ -497,7 +497,7 @@ function usergrid_console_app(Pages, query_params) {
       items.each(function() {
         var entityId = $(this).attr('value');
         var path = $(this).attr('name');
-        runAppQuery(new usergrid.queryObj("DELETE", path + "/" + entityId, null, null,
+        runAppQuery(new QueryObj("DELETE", path + "/" + entityId, null, null,
           getCollection('GET'),
           function() { alertModal("Unable to delete entity"); }
         ));
@@ -580,7 +580,7 @@ function usergrid_console_app(Pages, query_params) {
   function requestApplications() {
     var sectionApps = $('#organization-applications-table');
     sectionApps.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
-    runManagementQuery(new usergrid.queryObj("GET","organizations/" + usergrid.session.getOrganizationUUID() + "/applications", null, null,
+    runManagementQuery(new QueryObj("GET","organizations/" + usergrid.session.getOrganizationUUID() + "/applications", null, null,
       displayApplications,
       function() { sectionApps.html('<div class="alert user-panel-section">Unable to retrieve application list.</div>'); }
     ));
@@ -623,7 +623,7 @@ function usergrid_console_app(Pages, query_params) {
   function requestAdmins() {
     var sectionAdmins =$('#organization-admins-table');
     sectionAdmins.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
-    runManagementQuery(new usergrid.queryObj("GET","organizations/" + usergrid.session.getOrganizationUUID() + "/users", null, null,
+    runManagementQuery(new QueryObj("GET","organizations/" + usergrid.session.getOrganizationUUID() + "/users", null, null,
       displayAdmins,
       function() {sectionAdmins.html('<div class="alert user-panel-section">Unable to retrieve admin list</div>');
     }));
@@ -669,7 +669,7 @@ function usergrid_console_app(Pages, query_params) {
   function requestAdminFeed() {
     var section =$('#organization-activities');
     section.empty().html('<div class="alert alert-info">Loading...</div>');
-    runManagementQuery(new usergrid.queryObj("GET","orgs/" + usergrid.session.getOrganizationUUID() + "/feed", null, null, displayAdminFeed,
+    runManagementQuery(new QueryObj("GET","orgs/" + usergrid.session.getOrganizationUUID() + "/feed", null, null, displayAdminFeed,
       function() { section.html('<div class="alert">Unable to retrieve feed.</div>'); }));
   }
   window.usergrid.console.requestAdminFeed = requestAdminFeed;
@@ -679,7 +679,7 @@ function usergrid_console_app(Pages, query_params) {
   function requestOrganizationCredentials() {
     $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
     $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
-    runManagementQuery(new usergrid.queryObj("GET",'organizations/'+ usergrid.session.getOrganizationUUID() + "/credentials", null, null,
+    runManagementQuery(new QueryObj("GET",'organizations/'+ usergrid.session.getOrganizationUUID() + "/credentials", null, null,
       function(response) {
         $('#organization-panel-key').html(response.credentials.client_id);
         $('#organization-panel-secret').html(response.credentials.client_secret);
@@ -694,7 +694,7 @@ function usergrid_console_app(Pages, query_params) {
   function newOrganizationCredentials() {
     $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
     $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
-    runManagementQuery(new usergrid.queryObj("POST",'organizations/' + usergrid.session.getOrganizationUUID()  + "/credentials",null, null,
+    runManagementQuery(new QueryObj("POST",'organizations/' + usergrid.session.getOrganizationUUID()  + "/credentials",null, null,
       function(response) {
         $('#organization-panel-key').html(response.credentials.client_id);
         $('#organization-panel-secret').html(response.credentials.client_secret);
@@ -887,7 +887,7 @@ function usergrid_console_app(Pages, query_params) {
       && checkRegexp2(new_application_name, usernameRegex, usernameAllowedCharsMessage);
 
     if (bValid) {
-      runManagementQuery(new usergrid.queryObj("POST","organizations/" + usergrid.session.getOrganizationUUID() + "/applications", form.serializeObject(), null,
+      runManagementQuery(new QueryObj("POST","organizations/" + usergrid.session.getOrganizationUUID() + "/applications", form.serializeObject(), null,
         function(response) {
           for (var elem in response.data) { break; }
           pageSelect(response.data[elem]);
@@ -913,7 +913,7 @@ function usergrid_console_app(Pages, query_params) {
       && checkRegexp2(new_admin_email,emailRegex, emailAllowedCharsMessage);
     if (bValid) {
       var data = form.serializeObject();
-      runManagementQuery(new usergrid.queryObj("POST","organizations/" + usergrid.session.getOrganizationUUID() + "/users", data, null,
+      runManagementQuery(new QueryObj("POST","organizations/" + usergrid.session.getOrganizationUUID() + "/users", data, null,
         requestAdmins,
         function () { alertModal("Error", "Unable to create admin"); }
       ));
@@ -932,7 +932,7 @@ function usergrid_console_app(Pages, query_params) {
 
     if (bValid) {
       var data = form.serializeObject();
-      runManagementQuery(new usergrid.queryObj("POST","users/" + usergrid.session.getLoggedInUserUUID() + "/organizations", data, null,
+      runManagementQuery(new QueryObj("POST","users/" + usergrid.session.getLoggedInUserUUID() + "/organizations", data, null,
         requestOrganizations,
         function() { alertModal("Error", "Unable to create organization"); }
       ));
@@ -960,7 +960,7 @@ function usergrid_console_app(Pages, query_params) {
 
     if (bValid) {
       var data = form.serializeObject();
-      runAppQuery(new usergrid.queryObj("POST", 'users', data, null,
+      runAppQuery(new QueryObj("POST", 'users', data, null,
         function() {
           getUsers();
           closeErrorMessage = function() {
@@ -1006,7 +1006,7 @@ function usergrid_console_app(Pages, query_params) {
 
     if (bValid) {
       var data = form.serializeObject();
-      runAppQuery(new usergrid.queryObj("POST", "rolenames", data, null,
+      runAppQuery(new QueryObj("POST", "rolenames", data, null,
         function() {
           getRoles();
           closeErrorMessage = function() {
@@ -1056,7 +1056,7 @@ function usergrid_console_app(Pages, query_params) {
           collections: collections
         }
       }
-      runAppQuery(new usergrid.queryObj("PUT", "", metadata, null,
+      runAppQuery(new QueryObj("PUT", "", metadata, null,
         function() {
           getCollections();
           closeErrorMessage = function() {
@@ -1102,7 +1102,7 @@ function usergrid_console_app(Pages, query_params) {
 
     if (bValid) {
       var data = form.serializeObject();
-      runAppQuery(new usergrid.queryObj("POST", "groups", data, null,
+      runAppQuery(new QueryObj("POST", "groups", data, null,
         function() {
           getGroups();
           closeErrorMessage = function() {
@@ -1140,7 +1140,7 @@ function usergrid_console_app(Pages, query_params) {
       userId = $('#search-group-userid').val();
       groupId = $('#search-group-name-input').val();
 
-      runAppQuery(new usergrid.queryObj("POST", "/groups/" + groupId + "/users/" + userId, null, null,
+      runAppQuery(new QueryObj("POST", "/groups/" + groupId + "/users/" + userId, null, null,
         function() { requestUser(userId); },
         function() { alertModal("Error", "Unable to add group to user"); }
       ));
@@ -1159,7 +1159,7 @@ function usergrid_console_app(Pages, query_params) {
     if (bValid) {
       userId = $('#search-user-name-input').val();
       groupId = $('#search-user-groupid').val();
-      runAppQuery(new usergrid.queryObj("POST", "/groups/" + groupId + "/users/" + userId, null, null,
+      runAppQuery(new QueryObj("POST", "/groups/" + groupId + "/users/" + userId, null, null,
         function() { requestGroup(groupId); },
         function() { alertModal("Error", "Unable to add user to group"); }
       ));
@@ -1174,7 +1174,7 @@ function usergrid_console_app(Pages, query_params) {
     var bValid = checkLength2(roleIdField, 1, 80) && checkRegexp2(roleIdField, usernameRegex, usernameAllowedCharsMessage)
     var username = $('#search-roles-user-name-input').val();
     if (bValid) {
-      runAppQuery(new usergrid.queryObj("POST", "/roles/" + current_role_id + "/users/" + username, null, null,
+      runAppQuery(new QueryObj("POST", "/roles/" + current_role_id + "/users/" + username, null, null,
         function() { pageSelectRoleUsers(current_role_id, current_role_name); },
         function() { alertModal("Error", "Unable to add user to role"); }
       ));
@@ -1195,7 +1195,7 @@ function usergrid_console_app(Pages, query_params) {
     // role may have a preceding or trailing slash, remove it
     roleId = roleId.replace('/','');
     if (bValid) {
-      runAppQuery(new usergrid.queryObj("POST", "/roles/" + roleId + "/users/" + username, null, null,
+      runAppQuery(new QueryObj("POST", "/roles/" + roleId + "/users/" + username, null, null,
         function() { pageSelectUserPermissions(username); },
         function() { alertModal("Error", "Unable to add user to role"); }
       ));
@@ -1214,7 +1214,7 @@ function usergrid_console_app(Pages, query_params) {
     confirmDelete(function(){
         items.each(function() {
           var roleId = $(this).attr("value");
-          runAppQuery(new usergrid.queryObj("DELETE", "/users/" + username + "/rolename/" + roleId, null, null,
+          runAppQuery(new QueryObj("DELETE", "/users/" + username + "/rolename/" + roleId, null, null,
             function() { pageSelectUserPermissions (username); },
             function() { alertModal("Error", "Unable to remove user from role"); }
           ));
@@ -1233,7 +1233,7 @@ function usergrid_console_app(Pages, query_params) {
     confirmDelete(function(){
         items.each(function() {
           var username = $(this).attr("value");
-          runAppQuery(new usergrid.queryObj("DELETE", "/users/" + username + "/roles/" + roleId, null, null,
+          runAppQuery(new QueryObj("DELETE", "/users/" + username + "/roles/" + roleId, null, null,
             function() { pageSelectRoleUsers (roleId, rolename); },
             function() { alertModal("Error", "Unable to remove user from role"); }
           ));
@@ -1251,7 +1251,7 @@ function usergrid_console_app(Pages, query_params) {
     confirmDelete(function(){
       items.each(function() {
         var groupId = $(this).attr("value");
-        runAppQuery(new usergrid.queryObj("DELETE", "/groups/" + groupId + "/users/" + userId, null, null,
+        runAppQuery(new QueryObj("DELETE", "/groups/" + groupId + "/users/" + userId, null, null,
           function() { pageSelectUserGroups (userId); },
           function() { alertModal("Error", "Unable to remove user from group"); }
         ));
@@ -1270,7 +1270,7 @@ function usergrid_console_app(Pages, query_params) {
     confirmDelete(function(){
       items.each(function() {
         var userId = $(this).attr("value");
-        runAppQuery(new usergrid.queryObj("DELETE", "/groups/" + groupId + "/users/" + userId, null, null,
+        runAppQuery(new QueryObj("DELETE", "/groups/" + groupId + "/users/" + userId, null, null,
           function() { pageSelectGroupMemberships (groupId); },
           function() { alertModal("Error", "Unable to remove user from group"); }
         ));
@@ -1355,7 +1355,7 @@ function usergrid_console_app(Pages, query_params) {
     params.counter = ["application.entities", "application.request.download", "application.request.time", "application.request.upload"];
     params.pad = true;
 
-    runAppQuery(new usergrid.queryObj("GET", "counters", null, params,
+    runAppQuery(new QueryObj("GET", "counters", null, params,
       function(response) {
         var usage_counters = response.counters;
 
@@ -1561,7 +1561,7 @@ function usergrid_console_app(Pages, query_params) {
 
   function pageSelectUsers(uuid) {
     //make a new query object
-    queryObj = new usergrid.queryObj(null);
+    queryObj = new QueryObj(null);
     //bind events for previous and next buttons
     bindPagingEvents('users');
     //reset paging so we start at the first page
@@ -1593,7 +1593,7 @@ function usergrid_console_app(Pages, query_params) {
       query = {"ql" : searchType + "='" + userLetter + "*'"};
     }
 
-    queryObj = new usergrid.queryObj("GET", "users", null, query, getUsersCallback, function() { alertModal("Error", "Unable to retrieve users."); });
+    queryObj = new QueryObj("GET", "users", null, query, getUsersCallback, function() { alertModal("Error", "Unable to retrieve users."); });
     runAppQuery(queryObj);
   }
 
@@ -1669,7 +1669,7 @@ function usergrid_console_app(Pages, query_params) {
     confirmDelete(function(){
       items.each(function() {
         var userId = $(this).attr("value");
-        runAppQuery(new usergrid.queryObj("DELETE", 'users/' + userId, null, null,
+        runAppQuery(new QueryObj("DELETE", 'users/' + userId, null, null,
           getUsers,
           function() { alertModal("Error", "Unable to delete user - " + userId) }
         ));
@@ -1717,7 +1717,7 @@ function usergrid_console_app(Pages, query_params) {
 
   function saveUserProfile(uuid){
     var payload = usergrid.console.ui.jsonSchemaToPayload(usergrid.console.ui.collections.vcard_schema);
-    runAppQuery(new usergrid.queryObj("PUT", "users/"+uuid, payload, null,
+    runAppQuery(new QueryObj("PUT", "users/"+uuid, payload, null,
       completeSave,
       function() { alertModal("Error", "Unable to update User"); }
     ));
@@ -1816,7 +1816,7 @@ function usergrid_console_app(Pages, query_params) {
 
       redrawUserPanel();
 
-      runAppQuery(new usergrid.queryObj("GET", 'users/' + entity.uuid + '/groups', null, null,
+      runAppQuery(new QueryObj("GET", 'users/' + entity.uuid + '/groups', null, null,
         function(response) {
           if (user_data && response.entities && (response.entities.length > 0)) {
             user_data.memberships = response.entities;
@@ -1826,7 +1826,7 @@ function usergrid_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve user's groups."); }
       ));
 
-      runAppQuery(new usergrid.queryObj("GET", 'users/' + entity.uuid + '/activities', null, null,
+      runAppQuery(new QueryObj("GET", 'users/' + entity.uuid + '/activities', null, null,
         function(response) {
           if (user_data && response.entities && (response.entities.length > 0)) {
             user_data.activities = response.entities;
@@ -1840,7 +1840,7 @@ function usergrid_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve user's activities."); }
       ));
 
-      runAppQuery(new usergrid.queryObj("GET", 'users/' + entity.uuid + '/roles', null, null,
+      runAppQuery(new QueryObj("GET", 'users/' + entity.uuid + '/roles', null, null,
         function(response) {
           if (user_data && response.entities && (response.entities.length > 0)) {
             user_data.roles = response.entities;
@@ -1853,7 +1853,7 @@ function usergrid_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve user's roles."); }
       ));
 
-      runAppQuery(new usergrid.queryObj("GET", 'users/' + entity.uuid + '/permissions', null, null,
+      runAppQuery(new QueryObj("GET", 'users/' + entity.uuid + '/permissions', null, null,
         function(response) {
           var permissions = {};
           if (user_data && response.data && (response.data.length > 0)) {
@@ -1895,7 +1895,7 @@ function usergrid_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve user's permissions."); }
       ));
 
-      runAppQuery(new usergrid.queryObj("GET", 'users/' + entity.uuid + '/following', null, null,
+      runAppQuery(new QueryObj("GET", 'users/' + entity.uuid + '/following', null, null,
         function(response) {
           if (user_data && response.entities && (response.entities.length > 0)) {
             user_data.following = response.entities;
@@ -1905,7 +1905,7 @@ function usergrid_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve user's following."); }
       ));
 
-      runAppQuery(new usergrid.queryObj("GET", 'users/' + entity.uuid + '/followers', null, null,
+      runAppQuery(new QueryObj("GET", 'users/' + entity.uuid + '/followers', null, null,
         function(response) {
           if (user_data && response.entities && (response.entities.length > 0)) {
             user_data.followers = response.entities;
@@ -1919,7 +1919,7 @@ function usergrid_console_app(Pages, query_params) {
 
   function requestUser(userId) {
     $('#user-profile-area').html('<div class="alert alert-info">Loading...</div>');
-    runAppQuery(new usergrid.queryObj("GET", 'users/'+userId, null, null, handleUserResponse,
+    runAppQuery(new QueryObj("GET", 'users/'+userId, null, null, handleUserResponse,
       function() { alertModal("Error", "Unable to retrieve user's profile."); }
     ));
   }
@@ -1933,7 +1933,7 @@ function usergrid_console_app(Pages, query_params) {
   var groupSortBy = "path";
   function pageSelectGroups() {
     //make a new query object
-    queryObj = new usergrid.queryObj(null);
+    queryObj = new QueryObj(null);
     //bind events for previous and next buttons
     bindPagingEvents('groups', getPreviousGroups, getNextGroups);
     //reset paging so we start at the first page
@@ -1965,7 +1965,7 @@ function usergrid_console_app(Pages, query_params) {
       query = {"ql" : searchType + "='" + groupLetter + "*'"};
     }
 
-    queryObj = new usergrid.queryObj("GET", "groups", null, query, getGroupsCallback, function() { alertModal("Error", "Unable to retrieve groups."); });
+    queryObj = new QueryObj("GET", "groups", null, query, getGroupsCallback, function() { alertModal("Error", "Unable to retrieve groups."); });
     runAppQuery(queryObj);
 
     return false;
@@ -2050,7 +2050,7 @@ function usergrid_console_app(Pages, query_params) {
     confirmDelete(function(){
       items.each(function() {
         var groupId = $(this).attr('value');
-        runAppQuery(new usergrid.queryObj("DELETE", "groups/" + groupId, null, null,
+        runAppQuery(new QueryObj("DELETE", "groups/" + groupId, null, null,
           getGroups,
           function() { alertModal("Error", "Unable to delete group"); }
         ));
@@ -2109,7 +2109,7 @@ function usergrid_console_app(Pages, query_params) {
 
   function saveGroupProfile(uuid){
     var payload = usergrid.console.ui.jsonSchemaToPayload(usergrid.console.ui.collections.group_schema);
-    runAppQuery(new usergrid.queryObj("PUT", "groups/"+uuid, payload, null, completeSave,
+    runAppQuery(new QueryObj("PUT", "groups/"+uuid, payload, null, completeSave,
       function() {
         closeErrorMessage = function() {
           $('#group-messages').hide();
@@ -2185,7 +2185,7 @@ function usergrid_console_app(Pages, query_params) {
 
       redrawGroupPanel();
 
-      runAppQuery(new usergrid.queryObj("GET",'groups/' + entity.uuid + '/users', null, null,
+      runAppQuery(new QueryObj("GET",'groups/' + entity.uuid + '/users', null, null,
         function(response) {
           if (user_data && response.entities && (response.entities.length > 0)) {
             group_data.memberships = response.entities;
@@ -2195,7 +2195,7 @@ function usergrid_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve group's users."); }
       ));
 
-      runAppQuery(new usergrid.queryObj("GET",'groups/' + entity.uuid + '/activities', null, null,
+      runAppQuery(new QueryObj("GET",'groups/' + entity.uuid + '/activities', null, null,
         function(response) {
           if (user_data && response.entities && (response.entities.length > 0)) {
             group_data.activities = response.entities;
@@ -2205,7 +2205,7 @@ function usergrid_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve group's activities."); }
       ));
 
-      runAppQuery(new usergrid.queryObj("GET",'groups/' + entity.uuid + '/rolenames', null, null,
+      runAppQuery(new QueryObj("GET",'groups/' + entity.uuid + '/rolenames', null, null,
         function(response) {
           if (user_data && response.entities && (response.entities.length > 0)) {
             group_data.roles = response.data;
@@ -2215,7 +2215,7 @@ function usergrid_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve group's rolenames."); }
       ));
    
-      runAppQuery(new usergrid.queryObj("GET",'groups/' + entity.uuid + '/users', null, null,
+      runAppQuery(new QueryObj("GET",'groups/' + entity.uuid + '/users', null, null,
         function(response) {
           if (group_data && response.entities && (response.entities.length > 0)) {
             group_data.memberships = response.entities;
@@ -2225,7 +2225,7 @@ function usergrid_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve group's rolenames."); }
       ));
       
-      runAppQuery(new usergrid.queryObj("GET",'groups/' + entity.uuid + '/activities', null, null,
+      runAppQuery(new QueryObj("GET",'groups/' + entity.uuid + '/activities', null, null,
         function(response) {
           if (group_data && response.entities && (response.entities.length > 0)) {
             group_data.activities = response.entities;
@@ -2235,7 +2235,7 @@ function usergrid_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve group's rolenames."); }
       ));
 
-      runAppQuery(new usergrid.queryObj("GET",'groups/' + entity.uuid + '/roles', null, null,
+      runAppQuery(new QueryObj("GET",'groups/' + entity.uuid + '/roles', null, null,
         function(response) {
           if (group_data && response.entities) {
             group_data.roles = response.entities;
@@ -2250,7 +2250,7 @@ function usergrid_console_app(Pages, query_params) {
 
   function requestGroup(groupId) {
     $('#group-details-area').html('<div class="alert alert-info">Loading...</div>');
-    runAppQuery(new usergrid.queryObj("GET",'groups/'+ groupId, null, null,
+    runAppQuery(new QueryObj("GET",'groups/'+ groupId, null, null,
       handleGroupResponse,
       function() { alertModal("Error", "Unable to retrieve group details."); }
     ));
@@ -2266,7 +2266,7 @@ function usergrid_console_app(Pages, query_params) {
 
   function pageSelectRoles(uuid) {
     //make a new query object
-    queryObj = new usergrid.queryObj(null);
+    queryObj = new QueryObj(null);
     //bind events for previous and next buttons
     bindPagingEvents('roles', getPreviousRoles, getNextRoles);
     //reset paging so we start at the first page
@@ -2291,7 +2291,7 @@ function usergrid_console_app(Pages, query_params) {
     var query = {};
     if (roleLetter != "*") query = {"ql" : roleSortBy + "='" + groupLetter + "*'"};
 
-    queryObj = new usergrid.queryObj("GET", "roles", null, query, getRolesCallback, function() { alertModal("Error", "Unable to retrieve roles."); });
+    queryObj = new QueryObj("GET", "roles", null, query, getRolesCallback, function() { alertModal("Error", "Unable to retrieve roles."); });
     runAppQuery(queryObj);
     return false;
   }
@@ -2333,7 +2333,7 @@ function usergrid_console_app(Pages, query_params) {
     confirmDelete(function(){
       items.each(function() {
         var roleId = $(this).attr("value");
-        runAppQuery(new usergrid.queryObj("DELETE", "role/" + roleId, null, null, getRoles,
+        runAppQuery(new QueryObj("DELETE", "role/" + roleId, null, null, getRoles,
           function() { alertModal("Error", "Unable to delete role"); }
         ));
       });
@@ -2467,28 +2467,28 @@ function usergrid_console_app(Pages, query_params) {
     $('#role-permissions').html("");
     $('#role-users').html("");
     //requestApplicationRoles
-    runAppQuery(new usergrid.queryObj("GET",'rolenames', null, null,
+    runAppQuery(new QueryObj("GET",'rolenames', null, null,
       function(response) {
         getRolesCallback(response);
         $('#role-section-title').html(current_role_name + " Role");
         $('#role-permissions').html('<div class="alert alert-info">Loading ' + current_role_name + ' permissions...</div>');
         //requestRole
-        runAppQuery(new usergrid.queryObj("GET", "roles/" + current_role_id, null, null,
+        runAppQuery(new QueryObj("GET", "roles/" + current_role_id, null, null,
           displayRoleInactivity,
           function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
         ));
         //requestApplicationRolePermissions
-        runAppQuery(new usergrid.queryObj("GET", "rolenames/" + current_role_name, null, null,
+        runAppQuery(new QueryObj("GET", "rolenames/" + current_role_name, null, null,
           function(response) { displayPermissions(response); },
           function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
         ));
         //requestApplicationRoleUsers
-        runAppQuery(new usergrid.queryObj("GET", "roles/" + current_role_id + "/users", null, null,
+        runAppQuery(new QueryObj("GET", "roles/" + current_role_id + "/users", null, null,
           function(response) { displayRolesUsers(response); },
           function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
         ));
         //requestGroupRoles
-        runAppQuery(new usergrid.queryObj("GET", "/roles/" + current_role_id + "/groups", null, null,
+        runAppQuery(new QueryObj("GET", "/roles/" + current_role_id + "/groups", null, null,
             function(response) { displayRoleGroups(response); },
             function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
           ));
@@ -2502,7 +2502,7 @@ function usergrid_console_app(Pages, query_params) {
 function deleteRolePermission(roleName, permission) {
     data = {"permission":permission};
     confirmDelete(function(){
-      runAppQuery(new usergrid.queryObj("DELETE", "rolenames/" + roleName, null, data, requestRole, requestRole));
+      runAppQuery(new QueryObj("DELETE", "rolenames/" + roleName, null, data, requestRole, requestRole));
     });
   }
   window.usergrid.console.deleteRolePermission = deleteRolePermission;
@@ -2530,7 +2530,7 @@ function deleteRolePermission(roleName, permission) {
     var permission = ops + ":" + path;
     var data = {"permission": ops + ":" + path};
     if (ops) {
-      runAppQuery(new usergrid.queryObj("POST", "/rolenames/" + roleName, data, null, requestRole, requestRole));
+      runAppQuery(new QueryObj("POST", "/rolenames/" + roleName, data, null, requestRole, requestRole));
     } else {
       alertModal("Error", "Please select a verb");
     }
@@ -2543,7 +2543,7 @@ function deleteRolePermission(roleName, permission) {
 
     if (intRegex.test(inactivity)) {
       data = { inactivity: inactivity };
-      runAppQuery(new usergrid.queryObj("DELETE", "/roles/" + roleId, data, null, requestRole, requestRole));
+      runAppQuery(new QueryObj("DELETE", "/roles/" + roleId, data, null, requestRole, requestRole));
     } else {
       $('#inactivity-integer-message').show()
     }
@@ -2553,7 +2553,7 @@ function deleteRolePermission(roleName, permission) {
   function deleteUserPermission(userName, permission) {
     var data = {"permission": permission};
     confirmDelete(function(){
-      runAppQuery(new usergrid.queryObj("DELETE", "/users/" + userName + "/permissions", null, data,
+      runAppQuery(new QueryObj("DELETE", "/users/" + userName + "/permissions", null, data,
         function() { pageSelectUserPermissions (userName); },
         function() { alertModal("Error", "Unable to delete permission"); }
       ));
@@ -2583,7 +2583,7 @@ function deleteRolePermission(roleName, permission) {
     }
     var data = {"permission": ops + ":" + path};
     if (ops) {
-      runAppQuery(new usergrid.queryObj("POST", "/users/" + userName + "/permissions/", data, null,
+      runAppQuery(new QueryObj("POST", "/users/" + userName + "/permissions/", data, null,
         function() { pageSelectUserPermissions (userName); },
         function() { alertModal("Error", "Unable to add permission"); }
       ));
@@ -2602,7 +2602,7 @@ function deleteRolePermission(roleName, permission) {
       && checkRegexp2(groupId, nameRegex, nameAllowedCharsMessage);
 
     if (bValid) {
-      runAppQuery(new usergrid.queryObj("POST", "/roles/" + current_role_id + "/groups/" + groupId.val(), null, null,
+      runAppQuery(new QueryObj("POST", "/roles/" + current_role_id + "/groups/" + groupId.val(), null, null,
         function() { pageSelectRoleGroups(current_role_id, current_role_name); },
         function() { alertModal("Error", "Unable to add group to role"); }
       ));
@@ -2620,7 +2620,7 @@ function deleteRolePermission(roleName, permission) {
     confirmDelete(function(){
       $.each(items, function() {
         var groupId = $(this).val();
-        runAppQuery(new usergrid.queryObj("DELETE", "/roles/" + current_role_id + "/groups/" + groupId, null, null,
+        runAppQuery(new QueryObj("DELETE", "/roles/" + current_role_id + "/groups/" + groupId, null, null,
 	  function() {
 	    pageSelectRoleGroups(current_role_id, current_role_name);
 	  },
@@ -2659,7 +2659,7 @@ function deleteRolePermission(roleName, permission) {
 
   function pageSelectActivities(uuid) {
     //make a new query object
-    queryObj = new usergrid.queryObj(null);
+    queryObj = new QueryObj(null);
     //bind events for previous and next buttons
     bindPagingEvents('activities', getPreviousActivities, getNextActivities);
     //reset paging so we start at the first page
@@ -2684,7 +2684,7 @@ function deleteRolePermission(roleName, permission) {
       }
     }
 
-    queryObj = new usergrid.queryObj("GET", "activities", {}, query, getActivitiesCallback, function() { alertModal("Error", "Unable to retrieve activities.")});
+    queryObj = new QueryObj("GET", "activities", {}, query, getActivitiesCallback, function() { alertModal("Error", "Unable to retrieve activities.")});
     runAppQuery(queryObj);
     return false;
   }
@@ -2749,7 +2749,7 @@ function deleteRolePermission(roleName, permission) {
 
   function requestApplicationCounterNames() {
     $('#analytics-counter-names').html('<div class="alert alert-info">Loading...</div>');
-    runAppQuery(new usergrid.queryObj("GET","counters", null, null,
+    runAppQuery(new QueryObj("GET","counters", null, null,
       function(response) {
         application_counters_names = response.data;
         var html = usergrid.console.ui.makeTableFromList(application_counters_names, 1, {
@@ -2794,7 +2794,7 @@ function deleteRolePermission(roleName, permission) {
     params.counter = counter_names;
     params.pad = true;
 
-    runAppQuery(new usergrid.queryObj("GET","counters", null, params,
+    runAppQuery(new QueryObj("GET","counters", null, params,
       function(response) {
         application_counters = response.counters;
         if (!application_counters) {
@@ -2893,7 +2893,7 @@ function deleteRolePermission(roleName, permission) {
     $('#application-panel-key').html('<div class="alert alert-info">Loading...</div>');
     $('#application-panel-secret').html('<div class="alert alert-info">Loading...</div>');
 
-    runAppQuery(new usergrid.queryObj("GET", "credentials", null, null,
+    runAppQuery(new QueryObj("GET", "credentials", null, null,
       function(response) {
         $('#application-panel-key').html(response.credentials.client_id);
         $('#application-panel-secret').html(response.credentials.client_secret);
@@ -2910,7 +2910,7 @@ function deleteRolePermission(roleName, permission) {
     $('#application-panel-key').html('<div class="alert alert-info">Loading...</div>');
     $('#application-panel-secret').html('<div class="alert alert-info">Loading...</div>');
 
-    runAppQuery(new usergrid.queryObj("POST", "credentials", null, null,
+    runAppQuery(new QueryObj("POST", "credentials", null, null,
       function(response) {
         $('#application-panel-key').html(response.credentials.client_id);
         $('#application-panel-secret').html(response.credentials.client_secret);
@@ -2979,23 +2979,23 @@ function deleteRolePermission(roleName, permission) {
     if (s.startsWith("/")) {
       path = encodePathString(s);
       printLnToShell(path);
-      runAppQuery(new usergrid.queryObj("GET",path, null, null, displayShellResponse,null));
+      runAppQuery(new QueryObj("GET",path, null, null, displayShellResponse,null));
     } else if (s.startsWith("get /")) {
       path = encodePathString(s.substring(4));
       printLnToShell(path);
-      runAppQuery(new usergrid.queryObj("GET",path, null, null, displayShellResponse,null));
+      runAppQuery(new QueryObj("GET",path, null, null, displayShellResponse,null));
     } else if (s.startsWith("put /")) {
       params = encodePathString(s.substring(4), true);
       printLnToShell(params.path);
-      runAppQuery(new usergrid.queryObj("PUT",params.path, params.payload, null, displayShellResponse,null));
+      runAppQuery(new QueryObj("PUT",params.path, params.payload, null, displayShellResponse,null));
   } else if (s.startsWith("post /")) {
       params = encodePathString(s.substring(5), true);
       printLnToShell(params.path);
-      runAppQuery(new usergrid.queryObj("POST",params.path, params.payload, null, displayShellResponse,null));
+      runAppQuery(new QueryObj("POST",params.path, params.payload, null, displayShellResponse,null));
     } else if (s.startsWith("delete /")) {
       path = encodePathString(s.substring(7));
       printLnToShell(path);
-      runAppQuery(new usergrid.queryObj("DELETE",path, null, null, displayShellResponse,null));
+      runAppQuery(new QueryObj("DELETE",path, null, null, displayShellResponse,null));
     } else if ((s == "clear") || (s == "cls"))  {
       $('#shell-output').html(" ");
     } else if (s == "help") {
@@ -3081,7 +3081,7 @@ function deleteRolePermission(roleName, permission) {
     var section =$('#application-collections');
     section.empty().html('<div class="alert alert-info">Loading...</div>');
 
-    runAppQuery(new usergrid.queryObj("GET",'', null, null, getCollectionsCallback,
+    runAppQuery(new QueryObj("GET",'', null, null, getCollectionsCallback,
       function() { alertModal("Error", "There was an error getting the collections"); }
     ));
     return false;
@@ -3119,7 +3119,7 @@ function deleteRolePermission(roleName, permission) {
    ******************************************************************/
 
   function updateUsersAutocomplete(){
-    runAppQuery(new usergrid.queryObj("GET", 'users/', null, null, updateUsersAutocompleteCallback,
+    runAppQuery(new QueryObj("GET", 'users/', null, null, updateUsersAutocompleteCallback,
       function() { alertModal("Error", "Unable to retrieve users."); }
     ));
     return false;
@@ -3141,7 +3141,7 @@ function deleteRolePermission(roleName, permission) {
   window.usergrid.console.updateUsersAutocompleteCallback = updateUsersAutocompleteCallback;
 
   function updateUsersForRolesAutocomplete(){
-    runAppQuery(new usergrid.queryObj("GET",'users', null, null, updateUsersForRolesAutocompleteCallback,
+    runAppQuery(new QueryObj("GET",'users', null, null, updateUsersForRolesAutocompleteCallback,
       function() { alertModal("Error", "Unable to retrieve users."); }
     ));
     return false;
@@ -3163,7 +3163,7 @@ function deleteRolePermission(roleName, permission) {
   window.usergrid.console.updateUsersForRolesAutocompleteCallback = updateUsersForRolesAutocompleteCallback;
 
   function updateGroupsAutocomplete(){
-    runAppQuery(new usergrid.queryObj("GET",'groups', null, null, updateGroupsAutocompleteCallback,
+    runAppQuery(new QueryObj("GET",'groups', null, null, updateGroupsAutocompleteCallback,
       function() { alertModal("Error", "Unable to retrieve groups."); }
     ));
     return false;
@@ -3185,7 +3185,7 @@ function deleteRolePermission(roleName, permission) {
   window.usergrid.console.updateGroupsAutocompleteCallback = updateGroupsAutocompleteCallback;
 
   function updateGroupsForRolesAutocomplete(){
-    runAppQuery(new usergrid.queryObj("GET",'groups', null, null, updateGroupsForRolesAutocompleteCallback,
+    runAppQuery(new QueryObj("GET",'groups', null, null, updateGroupsForRolesAutocompleteCallback,
     function() { alertModal("Error", "Unable to retrieve groups."); }
     ));
     return false;
@@ -3242,7 +3242,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function updateRolesAutocomplete(){
-    runAppQuery(new usergrid.queryObj("GET", 'roles', null, null, updateRolesAutocompleteCallback,
+    runAppQuery(new QueryObj("GET", 'roles', null, null, updateRolesAutocompleteCallback,
       function() { alertModal("Error", "Unable to retrieve roles."); }
     ));
     return false;
@@ -3421,7 +3421,7 @@ function deleteRolePermission(roleName, permission) {
       "email": email,
       "password": password
     };
-    runManagementQuery(new usergrid.queryObj("POST",'organizations', formdata, null,
+    runManagementQuery(new QueryObj("POST",'organizations', formdata, null,
       function(response) {
         clearSignupError();
         clearSignupForm();
@@ -3511,7 +3511,7 @@ function deleteRolePermission(roleName, permission) {
       userData.newpassword = new_pass;
       userData.oldpassword = old_pass;
     }
-    runManagementQuery(new usergrid.queryObj("PUT",'users/' + usergrid.session.getLoggedInUserUUID(), userData, null,
+    runManagementQuery(new QueryObj("PUT",'users/' + usergrid.session.getLoggedInUserUUID(), userData, null,
       function(response) {
       $('#account-update-modal').modal('show');
         if ((old_pass && new_pass) && (old_pass != new_pass)) {
@@ -3538,7 +3538,7 @@ function deleteRolePermission(roleName, permission) {
       $('#old-account-password').val("");
       $('#update-account-password').val("");
       $('#update-account-password-repeat').val("");
-      runManagementQuery(new usergrid.queryObj("GET",'users/' + usergrid.session.getLoggedInUserUUID(), null, null, displayAccountSettings, null));
+      runManagementQuery(new QueryObj("GET",'users/' + usergrid.session.getLoggedInUserUUID(), null, null, displayAccountSettings, null));
     }
   }
   usergrid.console.requestAccountSettings = requestAccountSettings;
@@ -3585,7 +3585,7 @@ function deleteRolePermission(roleName, permission) {
 
   function requestOrganizations() {
     $('#organizations').html('<div class="alert alert-info">Loading...</div>');
-    runManagementQuery(new usergrid.queryObj("GET","users/" + usergrid.session.getLoggedInUserUUID() + "/organizations", null, null,
+    runManagementQuery(new QueryObj("GET","users/" + usergrid.session.getLoggedInUserUUID() + "/organizations", null, null,
       displayOrganizations,
       function() {
         $('#organizations').html('<div class="alert">Unable to retrieve organizations list.</div>');
@@ -3598,7 +3598,7 @@ function deleteRolePermission(roleName, permission) {
       "Are you sure you want to leave this Organization?",
       "You will lose all access to it.",
       function() {
-        runManagementQuery(new usergrid.queryObj("DELETE","users/" + usergrid.session.getLoggedInUserUUID() + "/organizations/" + UUID, null, null,
+        runManagementQuery(new QueryObj("DELETE","users/" + usergrid.session.getLoggedInUserUUID() + "/organizations/" + UUID, null, null,
           requestAccountSettings,
           function() { alertModal("Error", "Unable to leave organization"); }));
         }
