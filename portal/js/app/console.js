@@ -126,7 +126,7 @@ function usergrid_console_app(Pages, query_params) {
 
   function getAccessTokenURL(){
     var bearerToken = usergrid.session.getAccessToken();
-    var app_name = usergrid.session.getApplicationId();
+    var app_name = usergrid.session.getApplicationName();
     if (typeof current_application_name != 'string') {
       app_name = '';
     }
@@ -597,6 +597,7 @@ function usergrid_console_app(Pages, query_params) {
       if (firstApp) {
         pageSelect(organization.applications[firstApp]);
         usergrid.session.setApplicationId(organization.applications[firstApp]);
+        usergrid.session.setApplicationName(applications_by_id[organization.applications[firstApp]]);
       }
     }
   }
@@ -1288,6 +1289,7 @@ function usergrid_console_app(Pages, query_params) {
       current_application_id = uuid;
       current_application_name = applications_by_id[uuid];
       usergrid.session.setApplicationId(uuid);
+      usergrid.session.setApplicationName(current_application_name);
     }
     setNavApplicationText();
     getCollections();
