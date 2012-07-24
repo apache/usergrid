@@ -1173,10 +1173,8 @@ public class ManagementServiceImpl implements ManagementService {
 			String expected_token_type,
 			AuthPrincipalType expected_principal_type) throws Exception {
 
-    logger.info("expected_token_type: {} exp.princ: {}", expected_token_type, expected_principal_type);
 		TokenInfo tokenInfo = tokens.getTokenInfo(token);
-    logger.info("tokenInfo: {} from token: type {}, principaltype: {}",
-            new Object[]{tokenInfo, tokenInfo.getType(), tokenInfo.getPrincipal().getType()});
+
 		if (tokenInfo == null) {
 			return null;
 		}
