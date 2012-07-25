@@ -1,4 +1,8 @@
 /**
+ *  App SDK is a collection of classes designed to make working with
+ *  the Appigee App Services API as easy as possible.
+ *  Learn more at http://apigee.com/docs
+ *
  *  QueryObj is a class for holding all query information and paging state
  *
  *  The goal of the query object is to make it easy to run any
@@ -121,10 +125,8 @@ QueryObj.prototype.getCursor = function getCursor() {
 function APIClient() {
   //API endpoint
   this._apiUrl = "https://api.usergrid.com";
-  this._organization = null;
-  this._application = null;
-  this._orgUUID = null;
-  this._appUUID = null;
+  this._orgName = null;
+  this._appName = null;
   this._token = null;
   var clientId = null;
   var clientSecret = null;
@@ -134,20 +136,16 @@ function APIClient() {
  *  @method getOrganizationName
  *  @method setOrganizationName
  */
-APIClient.prototype.getOrganizationName = function getOrganizationName() { return this._organization; }
-APIClient.prototype.setOrganizationName = function setOrganizationName(organization) { this._organization = organization; }
-APIClient.prototype.getOrganizationUUID = function getOrganizationUUID() { return this._orgUUID; }
-APIClient.prototype.setOrganizationUUID = function setOrganizationUUID(orgUUID) { this._orgUUID = orgUUID; }
+APIClient.prototype.getOrganizationName = function getOrganizationName() { return this._orgName; }
+APIClient.prototype.setOrganizationName = function setOrganizationName(organization) { this._orgName = organization; }
 
 /*
  *  method to set the application name to be used by the client
  *  @method getApplicationName
  *  @method setApplicationName
  */
-APIClient.prototype.getApplicationName = function getApplicationName() { return this._application; }
-APIClient.prototype.setApplicationName = function setApplicationName(application) { this._application = application; }
-APIClient.prototype.getApplicationUUID = function getApplicationUUID() { return this._appUUID; }
-APIClient.prototype.setApplicationUUID = function setApplicationUUID(appUUID) { this._appUUID = appUUID; }
+APIClient.prototype.getApplicationName = function getApplicationName() { return this._appName; }
+APIClient.prototype.setApplicationName = function setApplicationName(application) { this._appName = application; }
 
 /*
  *  method to set the token to be used by the client
