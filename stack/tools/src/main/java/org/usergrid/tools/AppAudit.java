@@ -15,16 +15,6 @@
  ******************************************************************************/
 package org.usergrid.tools;
 
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static org.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
-import static org.usergrid.persistence.Schema.getDefaultSchema;
-import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
-import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
-import static org.usergrid.utils.UUIDUtils.newTimeUUID;
-
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,8 +26,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.mutation.Mutator;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -49,15 +37,10 @@ import org.usergrid.management.ApplicationInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
-import org.usergrid.persistence.IndexBucketLocator;
-import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
-import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.CassandraService;
-import org.usergrid.persistence.cassandra.EntityManagerImpl;
-import org.usergrid.persistence.schema.CollectionInfo;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
