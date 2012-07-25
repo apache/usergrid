@@ -125,7 +125,7 @@ function usergrid_console_app(Pages, query_params) {
   }
 
   function getAccessTokenURL(){
-    var bearerToken = usergrid.currentUser.getToken();
+    var bearerToken = client.getToken();
     var app_name = usergrid.currentApplication.getName();
     if (typeof current_application_name != 'string') {
       app_name = '';
@@ -2970,8 +2970,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function handleShellCommand(s) {
-    //var orgName = usergrid.currentOrg.getName(); //FRODE TODO - change to Name when working
-    var orgName = usergrid.currentOrg.getUUID();
+    var orgName = usergrid.currentOrg.getName();
 
     if (s) {
       history.push(s);
@@ -3296,8 +3295,7 @@ function deleteRolePermission(roleName, permission) {
 
   function setupOrganizationsMenu() {
     var organizations = usergrid.organizations.getList();
-    //var orgName = usergrid.currentOrg.getName();//FRODE TODO - change to Name when working
-    var orgName = usergrid.currentOrg.getUUID();
+    var orgName = usergrid.currentOrg.getName();
     if (!organizations) {
       return;
     }
@@ -3312,7 +3310,7 @@ function deleteRolePermission(roleName, permission) {
     var i=0;
     for (i=0;i<count;i++) {
       var name = organizations[i].getName();
-      data.push({"uuid":name, "name":name});
+      data.push({"uuid":name, "name":name}); //only using name now
     }
     orgMenu.empty();
     orgTmpl.tmpl(data).appendTo(orgMenu);
@@ -3411,7 +3409,9 @@ function deleteRolePermission(roleName, permission) {
         //store userdata in temporary storage
         usergrid.currentUser.setUUID(response.user.uuid);
         usergrid.currentUser.setEmail(response.user.email);
-        usergrid.currentUser.setToken(response.access_token);
+
+        //store the token in the client
+        usergrid.client.setToken(response.access_token);
 
         //call the success callback funciton
         loginOk(response);
@@ -3435,13 +3435,13 @@ function deleteRolePermission(roleName, permission) {
   *  @params {function} errorCallback - callback function for error
   */
   function autoLogin(successCallback, errorCallback) {
-    var token = usergrid.session.getAccessToken();
+    //repopulate the user and the client with the info from the session
     var email = usergrid.session.getLoggedInUserEmail();
     var uuid = usergrid.session.getLoggedInUserUUID();
-
-    usergrid.currentUser.setToken(token);
+    var token = usergrid.session.getAccessToken();
     usergrid.currentUser.setEmail(email);
     usergrid.currentUser.setUUID(uuid);
+    usergrid.client.setToken(token);
 
     runManagementQuery(new QueryObj("GET","users/" + email, null, null,
       function(response) {
@@ -3480,7 +3480,9 @@ function deleteRolePermission(roleName, permission) {
         //store userdata in temporary storage
         usergrid.currentUser.setUUID(response.data.uuid);
         usergrid.currentUser.setEmail(response.data.email);
-        usergrid.currentUser.setToken(response.data.token);
+
+        //store the token in the client
+        usergrid.client.setToken(response.data.token);
 
         if (successCallback) {
           successCallback(response);

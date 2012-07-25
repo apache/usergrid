@@ -25,12 +25,9 @@ Item.prototype.setUUID = function setUUID(uuid) { this._uuid = uuid; }
 function User(name, uuid, token, email){
   this._name = name;
   this._uuid = uuid;
-  this._token = token;
   this._email = email;
 }
 User.prototype = new Item();
-User.prototype.getToken = function getToken() { return this._token; }
-User.prototype.setToken = function setToken(token) { this._token = token; }
 User.prototype.getEmail = function getEmail() { return this._email; }
 User.prototype.setEmail = function setEmail(email) { this._email = email; }
 User.prototype.clearAll = function clearAll() {

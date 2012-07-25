@@ -1,6 +1,3 @@
-
-var usergrid = usergrid || {};
-
 /**
  *  QueryObj is a class for holding all query information and paging state
  *
@@ -116,18 +113,19 @@ QueryObj.prototype.getCursor = function getCursor() {
 }
 
 /**
-* Client class is charged with making calls to the API endpoint
+* APIClient class is charged with making calls to the API endpoint
 *
-* @class Client
+* @class APIClient
 * @constructor
 */
-function Client() {
+function APIClient() {
   //API endpoint
   this._apiUrl = "https://api.usergrid.com";
   this._organization = null;
   this._application = null;
   this._orgUUID = null;
   this._appUUID = null;
+  this._token = null;
   var clientId = null;
   var clientSecret = null;
 }
@@ -136,36 +134,45 @@ function Client() {
  *  @method getOrganizationName
  *  @method setOrganizationName
  */
-Client.prototype.getOrganizationName = function getOrganizationName() { return this._organization; }
-Client.prototype.setOrganizationName = function setOrganizationName(organization) { this._organization = organization; }
-Client.prototype.getOrganizationUUID = function getOrganizationUUID() { return this._orgUUID; }
-Client.prototype.setOrganizationUUID = function setOrganizationUUID(orgUUID) { this._orgUUID = orgUUID; }
+APIClient.prototype.getOrganizationName = function getOrganizationName() { return this._organization; }
+APIClient.prototype.setOrganizationName = function setOrganizationName(organization) { this._organization = organization; }
+APIClient.prototype.getOrganizationUUID = function getOrganizationUUID() { return this._orgUUID; }
+APIClient.prototype.setOrganizationUUID = function setOrganizationUUID(orgUUID) { this._orgUUID = orgUUID; }
 
 /*
  *  method to set the application name to be used by the client
  *  @method getApplicationName
  *  @method setApplicationName
  */
-Client.prototype.getApplicationName = function getApplicationName() { return this._application; }
-Client.prototype.setApplicationName = function setApplicationName(application) { this._application = application; }
-Client.prototype.getApplicationUUID = function getApplicationUUID() { return this._appUUID; }
-Client.prototype.setApplicationUUID = function setApplicationUUID(appUUID) { this._appUUID = appUUID; }
+APIClient.prototype.getApplicationName = function getApplicationName() { return this._application; }
+APIClient.prototype.setApplicationName = function setApplicationName(application) { this._application = application; }
+APIClient.prototype.getApplicationUUID = function getApplicationUUID() { return this._appUUID; }
+APIClient.prototype.setApplicationUUID = function setApplicationUUID(appUUID) { this._appUUID = appUUID; }
+
+/*
+ *  method to set the token to be used by the client
+ *  @method getToken
+ *  @method setToken
+ */
+APIClient.prototype.getToken = function getToken() { return this._token; }
+APIClient.prototype.setToken = function setToken(token) { this._token = token; }
+
 /*
  *  allows API URL to be overridden
  *  @method setApiUrl
  */
-Client.prototype.setApiUrl = function setApiUrl(apiUrl) { this._apiUrl = apiUrl; }
+APIClient.prototype.setApiUrl = function setApiUrl(apiUrl) { this._apiUrl = apiUrl; }
 /*
  *  returns API URL
  *  @method getApiUrl
  */
-Client.prototype.getApiUrl = function getApiUrl() { return this._apiUrl }
+APIClient.prototype.getApiUrl = function getApiUrl() { return this._apiUrl }
 
 /*
  *  returns the api url of the reset pasword endpoint
  *  @method getResetPasswordUrl
  */
-Client.prototype.getResetPasswordUrl = function getResetPasswordUrl() { this.getApiUrl() + "/management/users/resetpw" }
+APIClient.prototype.getResetPasswordUrl = function getResetPasswordUrl() { this.getApiUrl() + "/management/users/resetpw" }
 
 
 /*
@@ -174,8 +181,7 @@ Client.prototype.getResetPasswordUrl = function getResetPasswordUrl() { this.get
  *  @params {object} queryObj - {method, path, jsonObj, params, successCallback, failureCallback}
  *
  */
-Client.prototype.runAppQuery = function runAppQuery(queryObj) {
-  //var endpoint = "/" + usergrid.currentOrg.getName() + "/" + usergrid.currentApp.getName() + "/";
+APIClient.prototype.runAppQuery = function runAppQuery(queryObj) {
   var endpoint = "/" + this.getOrganizationName() + "/" + this.getApplicationName() + "/";
   this.processQuery(queryObj, endpoint);
 }
@@ -186,7 +192,7 @@ Client.prototype.runAppQuery = function runAppQuery(queryObj) {
  *  @params {object} queryObj - {method, path, jsonObj, params, successCallback, failureCallback}
  *
  */
-Client.prototype.runManagementQuery = function runManagementQuery(queryObj) {
+APIClient.prototype.runManagementQuery = function runManagementQuery(queryObj) {
   var endpoint = "/management/";
   this.processQuery(queryObj, endpoint)
 }
@@ -197,7 +203,7 @@ Client.prototype.runManagementQuery = function runManagementQuery(queryObj) {
  *  @params {object} queryObj - {method, path, jsonObj, params, successCallback, failureCallback}
  *
  */
-Client.prototype.processQuery = function processQuery(queryObj, endpoint) {
+APIClient.prototype.processQuery = function processQuery(queryObj, endpoint) {
   var curl = "curl";
   //validate parameters
   try {
@@ -217,12 +223,12 @@ Client.prototype.processQuery = function processQuery(queryObj, endpoint) {
     else { curl += " -X GET"; }
 
     //curl - append the bearer token if this is not the sandbox app
-    var application_name = usergrid.currentApp.getName();
+    var application_name = this.getApplicationName();
     if (application_name) {
       application_name = application_name.toUpperCase();
     }
-    if (application_name != 'SANDBOX' && usergrid.currentUser.getToken()) {
-      curl += ' -i -H "Authorization: Bearer ' + usergrid.currentUser.getToken() + '"';
+    if (application_name != 'SANDBOX' && this.getToken()) {
+      curl += ' -i -H "Authorization: Bearer ' + this.getToken() + '"';
       queryObj.setToken(true);
     }
 
@@ -311,7 +317,7 @@ Client.prototype.processQuery = function processQuery(queryObj, endpoint) {
   }
 
   // work with ie for cross domain scripting
-  var accessToken = usergrid.currentUser.getToken();
+  var accessToken = this.getToken();
   if (onIE) {
     ajaxOptions.dataType = "jsonp";
     if (application_name != 'SANDBOX' && accessToken) { ajaxOptions.data['access_token'] = accessToken }
@@ -330,7 +336,7 @@ Client.prototype.processQuery = function processQuery(queryObj, endpoint) {
  *  @params {object} params - an object of name value pairs that will be urlencoded
  *
  */
-Client.prototype.encodeParams = function encodeParams(params) {
+APIClient.prototype.encodeParams = function encodeParams(params) {
   tail = [];
   var item = [];
   if (params instanceof Array) {

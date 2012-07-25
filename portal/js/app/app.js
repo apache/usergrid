@@ -2,15 +2,16 @@
 window.console = window.console || {};
 window.console.log = window.console.log || function() {};
 // fix end here
+
+var usergrid = usergrid || {};
 usergrid.session = new Session();
 usergrid.currentUser = new User();
 usergrid.currentApp = new Application();
 usergrid.currentOrg = new Organization();
 usergrid.organizations = new Organizations();
-usergrid.client = new Client();
+usergrid.client = new APIClient();
 
 var Pages = new UsergridPages();
-
 
 $(document).ready(function () {
   var query_params = getQueryParams();
