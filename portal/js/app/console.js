@@ -125,12 +125,12 @@ function usergrid_console_app(Pages, query_params) {
   }
 
   function getAccessTokenURL(){
-    var bearerToken = usergrid.session.getAccessToken();
-    var app_name = usergrid.session.getApplicationName();
+    var bearerToken = usergrid.currentUser.getToken();
+    var app_name = usergrid.currentApplication.getName();
     if (typeof current_application_name != 'string') {
       app_name = '';
     }
-    var org_name = usergrid.session.getOrganizationObj().name;
+    var org_name = usergrid.currentOrganization.getName();
     if (typeof org_name != 'string') {
       org_name = '';
     }
@@ -181,11 +181,12 @@ function usergrid_console_app(Pages, query_params) {
   }
 
   function setNavApplicationText() {
-    if(!current_application_name) {
-      current_application_name = "Select an Application";
+    var name = usergrid.currentApp.getName();
+    if(!name) {
+      name = "Select an Application";
     }
-    $('#current-app-name').html(current_application_name+ '  <span style="float: right">&#9660;</span>');
-    $('.thingy span.title span.app_title').text(" - " + current_application_name);
+    $('#current-app-name').html(name + '  <span style="float: right">&#9660;</span>');
+    $('.thingy span.title span.app_title').text(" - " + name);
   }
 
   /*******************************************************************
@@ -553,14 +554,14 @@ function usergrid_console_app(Pages, query_params) {
         appMenuTmpl.tmpl(data).appendTo(appMenu);
         appMenu.find("a").click(function selectApp(e) {
           var link = $(this);
-          pageSelect(link.tmplItem().data.uuid);
+          pageSelect(link.tmplItem().data.name);
           Pages.SelectPanel('application');
         });
         
         appList.find("a").click(function selectApp(e) {
           e.preventDefault();
           var link = $(this);
-          pageSelect(link.tmplItem().data.uuid);
+          pageSelect(link.tmplItem().data.name);
           Pages.SelectPanel('application');
         });
         enableApplicationPanelButtons();
@@ -580,25 +581,26 @@ function usergrid_console_app(Pages, query_params) {
   function requestApplications() {
     var sectionApps = $('#organization-applications-table');
     sectionApps.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
-    runManagementQuery(new QueryObj("GET","organizations/" + usergrid.session.getOrganizationUUID() + "/applications", null, null,
+    runManagementQuery(new QueryObj("GET","organizations/" + usergrid.currentOrg.getUUID() + "/applications", null, null,
       displayApplications,
       function() { sectionApps.html('<div class="alert user-panel-section">Unable to retrieve application list.</div>'); }
     ));
   }
 
   function selectFirstApp() {
-    applicationId = usergrid.session.getApplicationId();
-    if(applicationId && applications_by_id[applicationId])
-      pageSelect(applicationId);
-    else {
-      var organization = usergrid.session.getOrganizationObj();
-      var firstApp = null;
-      for (firstApp in organization.applications) {break};
-      if (firstApp) {
-        pageSelect(organization.applications[firstApp]);
-        usergrid.session.setApplicationId(organization.applications[firstApp]);
-        usergrid.session.setApplicationName(applications_by_id[organization.applications[firstApp]]);
-      }
+
+    var appName = usergrid.currentApp.getName();
+    var app = usergrid.currentOrg.getItemByName(appName);
+    if(appName && app) {
+      client.setApplicationName(appName);      
+      client.setApplicationUUID(app.getUUID());
+      pageSelect(appName);
+    } else {
+      app = usergrid.currentOrg.getFirstItem();
+      usergrid.currentApp.setCurrentApplication(app);
+      client.setApplicationName(usergrid.currentApp.getName());
+      client.setApplicationUUID(usergrid.currentApp.getUUID());
+      pageSelect(usergrid.currentApp.getName());
     }
   }
 
@@ -623,7 +625,7 @@ function usergrid_console_app(Pages, query_params) {
   function requestAdmins() {
     var sectionAdmins =$('#organization-admins-table');
     sectionAdmins.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
-    runManagementQuery(new QueryObj("GET","organizations/" + usergrid.session.getOrganizationUUID() + "/users", null, null,
+    runManagementQuery(new QueryObj("GET","organizations/" + usergrid.currentOrg.getUUID()  + "/users", null, null,
       displayAdmins,
       function() {sectionAdmins.html('<div class="alert user-panel-section">Unable to retrieve admin list</div>');
     }));
@@ -669,7 +671,7 @@ function usergrid_console_app(Pages, query_params) {
   function requestAdminFeed() {
     var section =$('#organization-activities');
     section.empty().html('<div class="alert alert-info">Loading...</div>');
-    runManagementQuery(new QueryObj("GET","orgs/" + usergrid.session.getOrganizationUUID() + "/feed", null, null, displayAdminFeed,
+    runManagementQuery(new QueryObj("GET","orgs/" + usergrid.currentOrg.getUUID()  + "/feed", null, null, displayAdminFeed,
       function() { section.html('<div class="alert">Unable to retrieve feed.</div>'); }));
   }
   window.usergrid.console.requestAdminFeed = requestAdminFeed;
@@ -679,7 +681,7 @@ function usergrid_console_app(Pages, query_params) {
   function requestOrganizationCredentials() {
     $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
     $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
-    runManagementQuery(new QueryObj("GET",'organizations/'+ usergrid.session.getOrganizationUUID() + "/credentials", null, null,
+    runManagementQuery(new QueryObj("GET",'organizations/'+ usergrid.currentOrg.getUUID()  + "/credentials", null, null,
       function(response) {
         $('#organization-panel-key').html(response.credentials.client_id);
         $('#organization-panel-secret').html(response.credentials.client_secret);
@@ -694,7 +696,7 @@ function usergrid_console_app(Pages, query_params) {
   function newOrganizationCredentials() {
     $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
     $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
-    runManagementQuery(new QueryObj("POST",'organizations/' + usergrid.session.getOrganizationUUID()  + "/credentials",null, null,
+    runManagementQuery(new QueryObj("POST",'organizations/' + usergrid.currentOrg.getUUID()   + "/credentials",null, null,
       function(response) {
         $('#organization-panel-key').html(response.credentials.client_id);
         $('#organization-panel-secret').html(response.credentials.client_secret);
@@ -887,10 +889,11 @@ function usergrid_console_app(Pages, query_params) {
       && checkRegexp2(new_application_name, usernameRegex, usernameAllowedCharsMessage);
 
     if (bValid) {
-      runManagementQuery(new QueryObj("POST","organizations/" + usergrid.session.getOrganizationUUID() + "/applications", form.serializeObject(), null,
+      runManagementQuery(new QueryObj("POST","organizations/" + usergrid.currentOrg.getUUID()  + "/applications", form.serializeObject(), null,
         function(response) {
-          for (var elem in response.data) { break; }
-          pageSelect(response.data[elem]);
+          for (var appName in response.data) { break; }
+          usergrid.currentOrg.addListItem(new Application(appName, response.data[appName]));
+          pageSelect(appName);
           requestApplications(response);
         },
         function() {
@@ -913,7 +916,7 @@ function usergrid_console_app(Pages, query_params) {
       && checkRegexp2(new_admin_email,emailRegex, emailAllowedCharsMessage);
     if (bValid) {
       var data = form.serializeObject();
-      runManagementQuery(new QueryObj("POST","organizations/" + usergrid.session.getOrganizationUUID() + "/users", data, null,
+      runManagementQuery(new QueryObj("POST","organizations/" + usergrid.currentOrg.getUUID()  + "/users", data, null,
         requestAdmins,
         function () { alertModal("Error", "Unable to create admin"); }
       ));
@@ -932,7 +935,7 @@ function usergrid_console_app(Pages, query_params) {
 
     if (bValid) {
       var data = form.serializeObject();
-      runManagementQuery(new QueryObj("POST","users/" + usergrid.session.getLoggedInUserUUID() + "/organizations", data, null,
+      runManagementQuery(new QueryObj("POST","users/" + usergrid.currentUser.getUUID() + "/organizations", data, null,
         requestOrganizations,
         function() { alertModal("Error", "Unable to create organization"); }
       ));
@@ -1284,12 +1287,12 @@ function usergrid_console_app(Pages, query_params) {
    * Generic page select
    *
    ******************************************************************/
-  function pageSelect(uuid) {
-    if (uuid) {
-      current_application_id = uuid;
-      current_application_name = applications_by_id[uuid];
-      usergrid.session.setApplicationId(uuid);
-      usergrid.session.setApplicationName(current_application_name);
+  function pageSelect(name) {
+    if (name) {
+      var app = usergrid.currentOrg.getItemByName(name);
+      usergrid.currentApp.setCurrentApplication(app);
+      client.setApplicationName(usergrid.currentApp.getName());
+      client.setApplicationUUID(usergrid.currentApp.getUUID());
     }
     setNavApplicationText();
     getCollections();
@@ -2967,7 +2970,8 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function handleShellCommand(s) {
-    var orgName = usergrid.session.usergrid.getOrganizationObj().uuid;
+    //var orgName = usergrid.currentOrg.getName(); //FRODE TODO - change to Name when working
+    var orgName = usergrid.currentOrg.getUUID();
 
     if (s) {
       history.push(s);
@@ -3281,7 +3285,7 @@ function deleteRolePermission(roleName, permission) {
 
   function setupMenu() {
     var userNameBox = $('#userEmail');
-    var userEmail = usergrid.session.getLoggedInUserEmail();
+    var userEmail = usergrid.currentUser.getEmail();
     if (userEmail){
       userNameBox.html(userEmail);
       setupOrganizationsMenu();
@@ -3291,8 +3295,9 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function setupOrganizationsMenu() {
-    var organizations = usergrid.session.getLoggedInUserOrgs();
-    var orgName = usergrid.session.getOrganizationName();
+    var organizations = usergrid.organizations.getList();
+    //var orgName = usergrid.currentOrg.getName();//FRODE TODO - change to Name when working
+    var orgName = usergrid.currentOrg.getUUID();
     if (!organizations) {
       return;
     }
@@ -3303,8 +3308,11 @@ function deleteRolePermission(roleName, permission) {
     var orgMenu = $('#organizations-menu ul');
     var orgTmpl = $('<li><a href="#">${name}</a></li>');
     var data = [];
-    for (var name in organizations) {
-      data.push({uuid:organizations[name].uuid, name:name});
+    var count = organizations.length;
+    var i=0;
+    for (i=0;i<count;i++) {
+      var name = organizations[i].getName();
+      data.push({"uuid":name, "name":name});
     }
     orgMenu.empty();
     orgTmpl.tmpl(data).appendTo(orgMenu);
@@ -3319,24 +3327,15 @@ function deleteRolePermission(roleName, permission) {
 
     var link = $(this);
     var orgName = link.text();
-    var organizations = usergrid.session.getLoggedInUserOrgs();
-    for (var org in organizations) {
-      if (organizations[org].name == orgName) {
-         usergrid.session.setOrganizationObj(organizations[org]);
-      }
-    }
-
+    var currentOrg = usergrid.organizations.getItemByName(orgName);
+    usergrid.currentOrg.setCurrentOrganization(currentOrg);
+    usergrid.client.setOrganizationName(currentOrg.getName());
+    usergrid.client.setOrganizationUUID(currentOrg.getUUID());
     Pages.ShowPage('console');
   }
 
-  function login() {
-    var email = $('#login-email').val();
-    var password = $('#login-password').val();
-    client.loginAdmin(email, password, loginOk, displayLoginError);
-  }
-
   function logout() {
-    usergrid.session.clearAll();
+    usergrid.currentUser.clearAll();
     if (useSSO()) {
       Pages.clearPage();
       sendToSSOLogoutPage();
@@ -3352,6 +3351,155 @@ function deleteRolePermission(roleName, permission) {
     login();
     return false;
   });
+
+  /**
+  *  Authenticate an admin user and store the token and org list
+  *  @method login
+  *  @params {string} email - the admin's email (or username)
+  *  @params {string} password - the admin's password
+  *  @params {function} successCallback - callback function for success
+  *  @params {function} errorCallback - callback function for error
+  */
+  function login(successCallback, errorCallback) {
+    var email = $('#login-email').val();
+    var password = $('#login-password').val();
+
+    //empty local storage
+    usergrid.session.clearAll();
+    //empty temporary storage
+    usergrid.currentUser.clearAll();
+
+    var formdata = {
+      grant_type: "password",
+      username: email,
+      password: password
+    };
+    runManagementQuery(new QueryObj('GET', 'token', null, formdata,
+      function(response) {
+        if (!response) {
+          displayLoginError();
+          return
+        }
+        //store all the organizations and their applications
+        for (org in response.user.organizations) {
+          //grab the name
+          var orgName = response.user.organizations[org].name;
+          //grab the uuid
+          var orgUUID = response.user.organizations[org].uuid;
+          organization = new Organization(orgName, orgUUID);
+          for (app in response.user.organizations[org].applications) {
+            //grab the name
+            var appName = app.split("/")[1];
+            //grab the id
+            var appUUID = response.user.organizations[org].applications[app];
+            //store in the new Application object
+            application = new Application(appName, appUUID);
+            organization.addListItem(application);
+          }
+          //usergrid.applications
+          usergrid.organizations.addListItem(organization);
+        }
+        //select the first org by default
+        var firstOrg = usergrid.organizations.getFirstItem();
+        //save the first org in temporary storage
+        usergrid.currentOrg.setCurrentOrganization(firstOrg);
+        //save the first org in the client
+        usergrid.client.setOrganizationName(firstOrg.getName());
+
+        //store user data in local storage
+        usergrid.session.saveAll(response.user.uuid, response.user.email, response.access_token);
+        //store userdata in temporary storage
+        usergrid.currentUser.setUUID(response.user.uuid);
+        usergrid.currentUser.setEmail(response.user.email);
+        usergrid.currentUser.setToken(response.access_token);
+
+        //call the success callback funciton
+        loginOk(response);
+      },
+      function(response) {
+        //empty local storage
+        usergrid.session.clearAll();
+        //empty temporary storage
+        usergrid.currentUser.clearAll();
+        //call the error function
+        displayLoginError(response);
+      }
+    ));
+  }
+  window.usergrid.console.login = login;
+
+  /**
+  *  Reauthenticate an admin who already has a token
+  *  @method autoLogin
+  *  @params {function} successCallback - callback function for success
+  *  @params {function} errorCallback - callback function for error
+  */
+  function autoLogin(successCallback, errorCallback) {
+    var token = usergrid.session.getAccessToken();
+    var email = usergrid.session.getLoggedInUserEmail();
+    var uuid = usergrid.session.getLoggedInUserUUID();
+
+    usergrid.currentUser.setToken(token);
+    usergrid.currentUser.setEmail(email);
+    usergrid.currentUser.setUUID(uuid);
+
+    runManagementQuery(new QueryObj("GET","users/" + email, null, null,
+      function(response) {
+        if (!response) {
+          errorCallback();
+          return
+        }
+        //store all the organizations and their applications
+        for (org in response.data.organizations) {
+          //grab the name
+          var orgName = response.data.organizations[org].name;
+          //grab the uuid
+          var orgUUID = response.data.organizations[org].uuid;
+          organization = new Organization(orgName, orgUUID);
+          for (app in response.data.organizations[org].applications) {
+            //grab the name
+            var appName = app.split("/")[1];
+            //grab the id
+            var appUUID = response.data.organizations[org].applications[app];
+            //store in the new Application object
+            application = new Application(appName, appUUID);
+            organization.addListItem(application);
+          }
+          //usergrid.applications
+          usergrid.organizations.addListItem(organization);
+        }
+        //select the first org by default
+        var firstOrg = usergrid.organizations.getFirstItem();
+        //save the first org in temporary storage
+        usergrid.currentOrg.setCurrentOrganization(firstOrg);
+        //save the first org in the client
+        usergrid.client.setOrganizationName(firstOrg.getName());
+
+        //store user data in local storage
+        usergrid.session.saveAll(response.data.uuid, response.data.email, response.data.token);
+        //store userdata in temporary storage
+        usergrid.currentUser.setUUID(response.data.uuid);
+        usergrid.currentUser.setEmail(response.data.email);
+        usergrid.currentUser.setToken(response.data.token);
+
+        if (successCallback) {
+          successCallback(response);
+        }
+      },
+      function(response) {
+        //empty local storage
+        usergrid.session.clearAll();
+        //empty temporary storage
+        usergrid.currentUser.clearAll();
+        if (errorCallback) {
+          errorCallback(response);
+        }
+      }
+    ));
+    return;
+  }
+  window.usergrid.console.autoLogin = autoLogin;
+
 
   /*******************************************************************
    *
@@ -3511,7 +3659,7 @@ function deleteRolePermission(roleName, permission) {
       userData.newpassword = new_pass;
       userData.oldpassword = old_pass;
     }
-    runManagementQuery(new QueryObj("PUT",'users/' + usergrid.session.getLoggedInUserUUID(), userData, null,
+    runManagementQuery(new QueryObj("PUT",'users/' + usergrid.currentUser.getUUID(), userData, null,
       function(response) {
       $('#account-update-modal').modal('show');
         if ((old_pass && new_pass) && (old_pass != new_pass)) {
@@ -3532,13 +3680,13 @@ function deleteRolePermission(roleName, permission) {
     if (useSSO()) {
       sendToSSOProfilePage();
     } else {
-      $('#update-account-id').text(usergrid.session.getLoggedInUserUUID());
+      $('#update-account-id').text(usergrid.currentUser.getUUID());
       $('#update-account-name').val("");
       $('#update-account-email').val("");
       $('#old-account-password').val("");
       $('#update-account-password').val("");
       $('#update-account-password-repeat').val("");
-      runManagementQuery(new QueryObj("GET",'users/' + usergrid.session.getLoggedInUserUUID(), null, null, displayAccountSettings, null));
+      runManagementQuery(new QueryObj("GET",'users/' + usergrid.currentUser.getUUID(), null, null, displayAccountSettings, null));
     }
   }
   usergrid.console.requestAccountSettings = requestAccountSettings;
@@ -3585,7 +3733,7 @@ function deleteRolePermission(roleName, permission) {
 
   function requestOrganizations() {
     $('#organizations').html('<div class="alert alert-info">Loading...</div>');
-    runManagementQuery(new QueryObj("GET","users/" + usergrid.session.getLoggedInUserUUID() + "/organizations", null, null,
+    runManagementQuery(new QueryObj("GET","users/" + usergrid.currentUser.getUUID() + "/organizations", null, null,
       displayOrganizations,
       function() {
         $('#organizations').html('<div class="alert">Unable to retrieve organizations list.</div>');
@@ -3598,7 +3746,7 @@ function deleteRolePermission(roleName, permission) {
       "Are you sure you want to leave this Organization?",
       "You will lose all access to it.",
       function() {
-        runManagementQuery(new QueryObj("DELETE","users/" + usergrid.session.getLoggedInUserUUID() + "/organizations/" + UUID, null, null,
+        runManagementQuery(new QueryObj("DELETE","users/" + usergrid.currentUser.getUUID() + "/organizations/" + UUID, null, null,
           requestAccountSettings,
           function() { alertModal("Error", "Unable to leave organization"); }));
         }
@@ -3609,9 +3757,9 @@ function deleteRolePermission(roleName, permission) {
   usergrid.console.leaveOrganization = leaveOrganization;
 
   function displayCurrentOrg() {
-    var orgname = usergrid.session.getOrganizationName();
-    var uuid = usergrid.session.getOrganizationUUID();
-    $('#organizations-table').html('<tr class="zebraRows"><td>' + orgname + '</td><td class="monospace">' + uuid + '</td></tr>');
+    var name = usergrid.currentOrg.getName() ;
+    var uuid = usergrid.currentOrg.getUUID() ;
+    $('#organizations-table').html('<tr class="zebraRows"><td>' + name + '</td><td class="monospace">' + uuid + '</td></tr>');
   }
   usergrid.console.displayCurrentOrg = displayCurrentOrg;
 
@@ -3760,7 +3908,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function showLoginForNonSSO(){
-    if (!usergrid.session.loggedIn() && !useSSO()) {
+    if (!usergrid.currentUser.loggedIn() && !useSSO()) {
       Pages.ShowPage('login');
     }
   }

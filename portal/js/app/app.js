@@ -2,8 +2,11 @@
 window.console = window.console || {};
 window.console.log = window.console.log || function() {};
 // fix end here
-
 usergrid.session = new Session();
+usergrid.currentUser = new User();
+usergrid.currentApp = new Application();
+usergrid.currentOrg = new Organization();
+usergrid.organizations = new Organizations();
 usergrid.client = new Client();
 
 var Pages = new UsergridPages();
@@ -39,7 +42,7 @@ $(document).ready(function () {
         usergrid.console.showLoginForNonSSO();
       }
     } else {
-      usergrid.client.autoLogin(
+      usergrid.console.autoLogin(
         function() {
           usergrid.console.loginOk();
         },
