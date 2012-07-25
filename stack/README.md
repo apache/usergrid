@@ -14,9 +14,9 @@ Note: The easiest way to run Usergrid is to download our latest nightly, pre-bui
     
 Then start Usergrid with:
 
-    java -jar usergrid-launcher-0.0.1-SNAPSHOT.jar
+    cd launcher; java -jar target/usergrid-launcher-*.jar
 
-Usergrid is now running at `http://localhost:8080/`.
+It should pop up an admin window. Press play to spin up Usergrid; it’ll run locally on `http://localhost:8080/`.
 
 You can use our admin UI on it by visiting [http://apigee.github.com/usergrid-portal/?api_url=http://localhost:8080](http://apigee.github.com/usergrid-portal/?api_url=http://localhost:8080)
 
@@ -40,7 +40,7 @@ Usergrid-core contains the persistence layer and shared utilities for powering t
 You can run Usergrid from the command-line from the
 jar in the usergrid/standalone project:
 
-    java -jar standalone/target/usergrid-standalone-0.0.1-SNAPSHOT.jar
+    cd launcher; java -jar target/usergrid-launcher-*.jar
 
 After startup, your instance will be available on localhost, port 8080.
 To check it’s running properly, you can try loading our status page:
@@ -56,6 +56,12 @@ your local instance instead. For example, you could reuse the version of the adm
 `http://apigee.github.com/usergrid-portal/?api_url=http://localhost:8080`
 
 The same trick would work if you used a local copy of the portal code served from your own machine or servers.
+
+## Contributing
+
+We welcome all contributions! If you want to submit code, please submit a pull request to [apigee/usergrid-stack](https://github.com/apigee/usergrid-stack/), using a [topic branch](http://git-scm.com/book/en/Git-Branching-Branching-Workflows).
+
+We’d prefer if your commit messages referenced the issue at hand (if applicable). We don’t have particular guidelines for commit messages but we appreciate branch names that observe the following format: `issue#-singleworddescription` (i.e. `325-twitter`) or just a single word if no issue exists on the topic. Thanks!
 
 ## Licenses
 
