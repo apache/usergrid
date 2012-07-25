@@ -593,13 +593,11 @@ function usergrid_console_app(Pages, query_params) {
     var app = usergrid.currentOrg.getItemByName(appName);
     if(appName && app) {
       client.setApplicationName(appName);      
-      client.setApplicationUUID(app.getUUID());
       pageSelect(appName);
     } else {
       app = usergrid.currentOrg.getFirstItem();
       usergrid.currentApp.setCurrentApplication(app);
       client.setApplicationName(usergrid.currentApp.getName());
-      client.setApplicationUUID(usergrid.currentApp.getUUID());
       pageSelect(usergrid.currentApp.getName());
     }
   }
@@ -1292,7 +1290,6 @@ function usergrid_console_app(Pages, query_params) {
       var app = usergrid.currentOrg.getItemByName(name);
       usergrid.currentApp.setCurrentApplication(app);
       client.setApplicationName(usergrid.currentApp.getName());
-      client.setApplicationUUID(usergrid.currentApp.getUUID());
     }
     setNavApplicationText();
     getCollections();
