@@ -557,7 +557,7 @@ function usergrid_console_app(Pages, query_params) {
           pageSelect(link.tmplItem().data.name);
           Pages.SelectPanel('application');
         });
-        
+
         appList.find("a").click(function selectApp(e) {
           e.preventDefault();
           var link = $(this);
@@ -1597,7 +1597,7 @@ function usergrid_console_app(Pages, query_params) {
     runAppQuery(queryObj);
   }
 
-  function getUsersCallback(response) {    
+  function getUsersCallback(response) {
     hidePagination('users');
     var output = $('#users-table');
     if (response.entities.length < 1) {
@@ -2214,7 +2214,7 @@ function usergrid_console_app(Pages, query_params) {
         },
         function() { alertModal("Error", "Unable to retrieve group's rolenames."); }
       ));
-   
+
       runAppQuery(new QueryObj("GET",'groups/' + entity.uuid + '/users', null, null,
         function(response) {
           if (group_data && response.entities && (response.entities.length > 0)) {
@@ -2224,7 +2224,7 @@ function usergrid_console_app(Pages, query_params) {
         },
         function() { alertModal("Error", "Unable to retrieve group's rolenames."); }
       ));
-      
+
       runAppQuery(new QueryObj("GET",'groups/' + entity.uuid + '/activities', null, null,
         function(response) {
           if (group_data && response.entities && (response.entities.length > 0)) {
@@ -2421,8 +2421,6 @@ function usergrid_console_app(Pages, query_params) {
   }
 
   function displayRoleInactivity(response) {
-    $('#role-inactivity-input').val(response.entities[0].inactivity);
-    $('#role-inactivity-submit').on('click', function() {editRoleInactivity(); return false;});
   }
 
   var rolesUsersResults = ''
@@ -2472,9 +2470,13 @@ function usergrid_console_app(Pages, query_params) {
         getRolesCallback(response);
         $('#role-section-title').html(current_role_name + " Role");
         $('#role-permissions').html('<div class="alert alert-info">Loading ' + current_role_name + ' permissions...</div>');
-        //requestRole
-        runAppQuery(new QueryObj("GET", "roles/" + current_role_id, null, null,
-          displayRoleInactivity,
+        //requestRole & displayInactivity
+        runAppQuery(new QueryObj("GET", "role/" + current_role_id, null, null,
+          function(response) {
+	    var inactivity = response.entities[0].inactivity.toString();
+	    $('#role-inactivity-input').val(inactivity);
+	    console.log(inactivity);
+	  },
           function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
         ));
         //requestApplicationRolePermissions
@@ -2488,7 +2490,7 @@ function usergrid_console_app(Pages, query_params) {
           function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
         ));
         //requestGroupRoles
-        runAppQuery(new QueryObj("GET", "/roles/" + current_role_id + "/groups", null, null,
+        runAppQuery(new QueryObj("GET", "roles/" + current_role_id + "/groups", null, null,
             function(response) { displayRoleGroups(response); },
             function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
           ));
@@ -2543,7 +2545,7 @@ function deleteRolePermission(roleName, permission) {
 
     if (intRegex.test(inactivity)) {
       data = { inactivity: inactivity };
-      runAppQuery(new QueryObj("DELETE", "/roles/" + roleId, data, null, requestRole, requestRole));
+      runAppQuery(new QueryObj("PUT", "/role/" + roleId, data, null, requestRole, requestRole));
     } else {
       $('#inactivity-integer-message').show()
     }
@@ -3931,7 +3933,7 @@ function deleteRolePermission(roleName, permission) {
   if (query_params.apigee_sso_profile_url) {
     self.apigee_sso_profile_url = query_params.apigee_sso_profile_url;
   }
-    
+
   function useSSO() {
     return apigeeUser() || self.use_sso=='true' || self.use_sso=='yes'
   }

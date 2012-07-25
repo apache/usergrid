@@ -1,8 +1,8 @@
 <h4>Inactivity</h4>
-<div id="role-inactivity-form" class="well form-inline">
-  Seconds: <input type="text" name="role-inactivity" id="role-inactivity-input" value="" /> &nbsp; Integer only. 0 (zero) means no expiration.
-  <button id="role-inactivity-submit" class="btn btn-primary">Edit</button>
-</div>
+<form id="role-inactivity-form" class="well form-inline" action="" onsubmit="usergrid.console.editRoleInactivity(); return false;">
+  Seconds: <input type="text" name="role-inactivity" id="role-inactivity-input" /> &nbsp; Integer only. 0 (zero) means no expiration.
+  <button type="submit" id="role-inactivity-submit" class="btn btn-primary">Edit</button>
+</form>
 <div class="alert alert-error" id="inactivity-integer-message" style="display: none;">
   Only integers greater than 0 are accepted.
 </div>
