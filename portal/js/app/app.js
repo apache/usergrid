@@ -5,7 +5,6 @@ window.console.log = window.console.log || function() {};
 
 var usergrid = usergrid || {};
 usergrid.session = new Session();
-usergrid.currentUser = new User();
 usergrid.currentApp = new Application();
 usergrid.currentOrg = new Organization();
 usergrid.organizations = new Organizations();

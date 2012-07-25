@@ -16,31 +16,6 @@ Item.prototype.getUUID = function getUUID() { return this._uuid; }
 Item.prototype.setUUID = function setUUID(uuid) { this._uuid = uuid; }
 
 /**
- *  User is a class for holding application info
- *
- *  @class Application
- *  @param {string} name the name of the application
- *  @param {string} uuid the uuid of the application
- */
-function User(name, uuid, token, email){
-  this._name = name;
-  this._uuid = uuid;
-  this._email = email;
-}
-User.prototype = new Item();
-User.prototype.getEmail = function getEmail() { return this._email; }
-User.prototype.setEmail = function setEmail(email) { this._email = email; }
-User.prototype.clearAll = function clearAll() {
-  this._name = null;
-  this._uuid = null;
-  this._token = null;
-  this._email = null;
-}
-User.prototype.loggedIn = function loggedIn() {
-  return (this._token && this._email);
-}
-
-/**
  *  Application is a class for holding application info
  *
  *  @class Application
@@ -137,9 +112,7 @@ Organizations.prototype.constructor=Organizations;
  *  Standardized methods for mantianing authentication state in the Application
  *  @class session
  */
-function Session() {
-
-}
+function Session() {}
 
 //access token access and setter methods
 Session.prototype.getAccessToken = function getAccessToken() {
@@ -150,30 +123,38 @@ Session.prototype.setAccessToken = function setAccessToken(accessToken) {
   localStorage.setItem('accessToken', accessToken);
 }
 //logged in user access and setter methods
-Session.prototype.getLoggedInUserUUID = function getLoggedInUserUUID() {
+Session.prototype.getUserUUID = function getUserUUID() {
   return localStorage.getItem('usergridUserUUID');
 }
-Session.prototype.setLoggedInUserUUID = function setLoggedInUserUUID(uuid) {
+Session.prototype.setUserUUID = function setUserUUID(uuid) {
  localStorage.setItem('usergridUserUUID', uuid);
 }
-Session.prototype.getLoggedInUserEmail = function getLoggedInUserEmail() {
+
+Session.prototype.getUserUUID = function getUserUUID() {
+  return localStorage.getItem('usergridUserUUID');
+}
+Session.prototype.setUserUUID = function setUserUUID(uuid) {
+ localStorage.setItem('usergridUserUUID', uuid);
+}
+
+Session.prototype.getUserEmail = function getUserEmail() {
   return localStorage.getItem('usergridUserEmail');
 }
-Session.prototype.setLoggedInUserEmail = function setLoggedInUserEmail(email) {
+Session.prototype.setUserEmail = function setUserEmail(email) {
   localStorage.setItem('usergridUserEmail', email);
 }
 
 //convenience method to verify if user is logged in
 Session.prototype.loggedIn = function loggedIn() {
   var token = this.getAccessToken();
-  var email = this.getLoggedInUserEmail();
+  var email = this.getUserEmail();
   return (token && email);
 }
 
 //convenience method for saving all active user vars at once
 Session.prototype.saveAll = function saveAll(uuid, email, accessToken) {
-  this.setLoggedInUserUUID(uuid);
-  this.setLoggedInUserEmail(email);
+  this.setUserUUID(uuid);
+  this.setUserEmail(email);
   this.setAccessToken(accessToken);
 }
 

@@ -933,7 +933,7 @@ function usergrid_console_app(Pages, query_params) {
 
     if (bValid) {
       var data = form.serializeObject();
-      runManagementQuery(new QueryObj("POST","users/" + usergrid.currentUser.getUUID() + "/organizations", data, null,
+      runManagementQuery(new QueryObj("POST","users/" + usergrid.session.getUserUUID() + "/organizations", data, null,
         requestOrganizations,
         function() { alertModal("Error", "Unable to create organization"); }
       ));
@@ -3281,7 +3281,7 @@ function deleteRolePermission(roleName, permission) {
 
   function setupMenu() {
     var userNameBox = $('#userEmail');
-    var userEmail = usergrid.currentUser.getEmail();
+    var userEmail = usergrid.session.getUserEmail();
     if (userEmail){
       userNameBox.html(userEmail);
       setupOrganizationsMenu();
@@ -3330,7 +3330,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function logout() {
-    usergrid.currentUser.clearAll();
+    usergrid.session.clearAll();
     if (useSSO()) {
       Pages.clearPage();
       sendToSSOLogoutPage();
@@ -3360,9 +3360,7 @@ function deleteRolePermission(roleName, permission) {
     var password = $('#login-password').val();
 
     //empty local storage
-    usergrid.session.clearAll();
-    //empty temporary storage
-    usergrid.currentUser.clearAll();
+    usergrid.session.clearAll();;
 
     var formdata = {
       grant_type: "password",
@@ -3403,9 +3401,6 @@ function deleteRolePermission(roleName, permission) {
 
         //store user data in local storage
         usergrid.session.saveAll(response.user.uuid, response.user.email, response.access_token);
-        //store userdata in temporary storage
-        usergrid.currentUser.setUUID(response.user.uuid);
-        usergrid.currentUser.setEmail(response.user.email);
 
         //store the token in the client
         usergrid.client.setToken(response.access_token);
@@ -3416,8 +3411,6 @@ function deleteRolePermission(roleName, permission) {
       function(response) {
         //empty local storage
         usergrid.session.clearAll();
-        //empty temporary storage
-        usergrid.currentUser.clearAll();
         //call the error function
         displayLoginError(response);
       }
@@ -3433,14 +3426,10 @@ function deleteRolePermission(roleName, permission) {
   */
   function autoLogin(successCallback, errorCallback) {
     //repopulate the user and the client with the info from the session
-    var email = usergrid.session.getLoggedInUserEmail();
-    var uuid = usergrid.session.getLoggedInUserUUID();
     var token = usergrid.session.getAccessToken();
-    usergrid.currentUser.setEmail(email);
-    usergrid.currentUser.setUUID(uuid);
     usergrid.client.setToken(token);
 
-    runManagementQuery(new QueryObj("GET","users/" + email, null, null,
+    runManagementQuery(new QueryObj("GET","users/" + usergrid.session.getUserEmail(), null, null,
       function(response) {
         if (!response) {
           errorCallback();
@@ -3474,9 +3463,6 @@ function deleteRolePermission(roleName, permission) {
 
         //store user data in local storage
         usergrid.session.saveAll(response.data.uuid, response.data.email, response.data.token);
-        //store userdata in temporary storage
-        usergrid.currentUser.setUUID(response.data.uuid);
-        usergrid.currentUser.setEmail(response.data.email);
 
         //store the token in the client
         usergrid.client.setToken(response.data.token);
@@ -3488,8 +3474,6 @@ function deleteRolePermission(roleName, permission) {
       function(response) {
         //empty local storage
         usergrid.session.clearAll();
-        //empty temporary storage
-        usergrid.currentUser.clearAll();
         if (errorCallback) {
           errorCallback(response);
         }
@@ -3658,7 +3642,7 @@ function deleteRolePermission(roleName, permission) {
       userData.newpassword = new_pass;
       userData.oldpassword = old_pass;
     }
-    runManagementQuery(new QueryObj("PUT",'users/' + usergrid.currentUser.getUUID(), userData, null,
+    runManagementQuery(new QueryObj("PUT",'users/' + usergrid.session.getUserUUID(), userData, null,
       function(response) {
       $('#account-update-modal').modal('show');
         if ((old_pass && new_pass) && (old_pass != new_pass)) {
@@ -3679,13 +3663,13 @@ function deleteRolePermission(roleName, permission) {
     if (useSSO()) {
       sendToSSOProfilePage();
     } else {
-      $('#update-account-id').text(usergrid.currentUser.getUUID());
+      $('#update-account-id').text(usergrid.session.getUserUUID());
       $('#update-account-name').val("");
       $('#update-account-email').val("");
       $('#old-account-password').val("");
       $('#update-account-password').val("");
       $('#update-account-password-repeat').val("");
-      runManagementQuery(new QueryObj("GET",'users/' + usergrid.currentUser.getUUID(), null, null, displayAccountSettings, null));
+      runManagementQuery(new QueryObj("GET",'users/' + usergrid.session.getUserUUID(), null, null, displayAccountSettings, null));
     }
   }
   usergrid.console.requestAccountSettings = requestAccountSettings;
@@ -3732,7 +3716,7 @@ function deleteRolePermission(roleName, permission) {
 
   function requestOrganizations() {
     $('#organizations').html('<div class="alert alert-info">Loading...</div>');
-    runManagementQuery(new QueryObj("GET","users/" + usergrid.currentUser.getUUID() + "/organizations", null, null,
+    runManagementQuery(new QueryObj("GET","users/" + usergrid.session.getUserUUID() + "/organizations", null, null,
       displayOrganizations,
       function() {
         $('#organizations').html('<div class="alert">Unable to retrieve organizations list.</div>');
@@ -3745,7 +3729,7 @@ function deleteRolePermission(roleName, permission) {
       "Are you sure you want to leave this Organization?",
       "You will lose all access to it.",
       function() {
-        runManagementQuery(new QueryObj("DELETE","users/" + usergrid.currentUser.getUUID() + "/organizations/" + UUID, null, null,
+        runManagementQuery(new QueryObj("DELETE","users/" + usergrid.session.getUserUUID() + "/organizations/" + UUID, null, null,
           requestAccountSettings,
           function() { alertModal("Error", "Unable to leave organization"); }));
         }
@@ -3907,7 +3891,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function showLoginForNonSSO(){
-    if (!usergrid.currentUser.loggedIn() && !useSSO()) {
+    if (!usergrid.session.loggedIn() && !useSSO()) {
       Pages.ShowPage('login');
     }
   }

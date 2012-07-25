@@ -122,11 +122,11 @@ QueryObj.prototype.getCursor = function getCursor() {
 * @class APIClient
 * @constructor
 */
-function APIClient() {
+function APIClient(orgName, appName) {
   //API endpoint
   this._apiUrl = "https://api.usergrid.com";
-  this._orgName = null;
-  this._appName = null;
+  this._orgName = orgName;
+  this._appName = appName;
   this._token = null;
   var clientId = null;
   var clientSecret = null;
