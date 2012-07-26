@@ -2148,7 +2148,6 @@ function usergrid_console_app(Pages, query_params) {
 
       $.tmpl('usergrid.ui.panels.group.permissions.html', group_data).appendTo('#group-panel-permissions');
       updateRolesForGroupsAutocomplete();
-      console.log(group_data);
     }
   }
 
@@ -2561,7 +2560,6 @@ function usergrid_console_app(Pages, query_params) {
           function(response) {
 	    var inactivity = response.entities[0].inactivity.toString();
 	    $('#role-inactivity-input').val(inactivity);
-	    console.log(inactivity);
 	  },
           function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
         ));
