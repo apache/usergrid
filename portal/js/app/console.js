@@ -592,7 +592,7 @@ function usergrid_console_app(Pages, query_params) {
     var appName = usergrid.currentApp.getName();
     var app = usergrid.currentOrg.getItemByName(appName);
     if(appName && app) {
-      client.setApplicationName(appName);      
+      client.setApplicationName(appName);
       pageSelect(appName);
     } else {
       app = usergrid.currentOrg.getFirstItem();
@@ -804,6 +804,7 @@ function usergrid_console_app(Pages, query_params) {
   $('#dialog-form-add-user-to-role').submit(submitAddUserToRole);
   $('#dialog-form-add-role-to-user').submit(submitAddRoleToUser);
   $('#dialog-form-add-group-to-role').submit(submitAddGroupToRole);
+  $('#dialog-form-add-role-to-group').submit(submitAddRoleToGroup);
 
   function checkLength2(input, min, max) {
     if (input.val().length > max || input.val().length < min) {
@@ -1279,6 +1280,48 @@ function usergrid_console_app(Pages, query_params) {
     });
   }
   window.usergrid.console.removeGroupFromUser = removeGroupFromUser;
+
+  function deleteRolesFromGroup(roleId, rolename) {
+    var items = $('input[class=groupRoleItem]:checked');
+    if(!items.length){
+      alertModal("Error", "Please, first select the roles you want to delete from this group.")
+        return;
+    }
+
+    confirmDelete(function(){
+      items.each(function() {
+        var roleId = $(this).attr("value");
+	var groupname = $('#role-form-groupname').val();
+        runAppQuery(new QueryObj("DELETE", "/groups/" + groupname + "/roles/" + roleId, null, null,
+          function() { pageSelectGroupPermissions(groupname); },
+          function() { alertModal("Error", "Unable to remove role from group"); }
+        ));
+      });
+    });
+  }
+  window.usergrid.console.deleteRolesFromGroup = deleteRolesFromGroup;
+
+  function submitAddRoleToGroup() {
+    var form = $(this);
+    formClearErrors(form);
+
+    var roleIdField = $('#search-groups-role-name-input');
+    var bValid = checkLength2(roleIdField, 1, 80)
+      && checkRegexp2(roleIdField, roleRegex, roleAllowedCharsMessage)
+
+    var groupname = $('#role-form-groupname').val();
+    var roleId = $('#search-groups-role-name-input').val();
+    // role may have a preceding or trailing slash, remove it
+    roleId = roleId.replace('/','');
+    if (bValid) {
+      runAppQuery(new QueryObj("POST", "/groups/" + groupname + "/roles/" + roleId, null, null,
+        function() { pageSelectGroupPermissions(groupname); },
+        function() { alertModal("Error", "Unable to add user to role"); }
+      ));
+
+      $(this).modal('hide');
+    }
+  }
 
   /*******************************************************************
    *
@@ -2104,6 +2147,8 @@ function usergrid_console_app(Pages, query_params) {
       }
 
       $.tmpl('usergrid.ui.panels.group.permissions.html', group_data).appendTo('#group-panel-permissions');
+      updateRolesForGroupsAutocomplete();
+      console.log(group_data);
     }
   }
 
@@ -2245,6 +2290,47 @@ function usergrid_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve group's rolenames."); }
       ));
 
+      runAppQuery(new QueryObj("GET", 'groups/' + entity.uuid + '/permissions', null, null,
+        function(response) {
+          var permissions = {};
+          if (group_data && response.data && (response.data.length > 0)) {
+
+            if (response.data) {
+              var perms = response.data;
+              var count = 0;
+
+              for (var i in perms) {
+                count++;
+                var perm = perms[i];
+                var parts = perm.split(':');
+                var ops_part = "";
+                var path_part = parts[0];
+
+                if (parts.length > 1) {
+                  ops_part = parts[0];
+                  path_part = parts[1];
+                }
+
+                ops_part.replace("*", "get,post,put,delete")
+                  var ops = ops_part.split(',');
+                permissions[perm] = {ops : {}, path : path_part, perm : perm};
+
+                for (var j in ops) {
+                  permissions[perm].ops[ops[j]] = true;
+                }
+              }
+
+              if (count == 0) {
+                permissions = null;
+              }
+
+              group_data.permissions = permissions;
+              redrawGroupPanel();
+            }
+          }
+        },
+        function() { alertModal("Error", "Unable to retrieve group's permissions."); }
+      ));
     }
   }
 
@@ -2595,6 +2681,46 @@ function deleteRolePermission(roleName, permission) {
   }
   window.usergrid.console.addUserPermission = addUserPermission;
 
+  function addGroupPermission(groupName) {
+    var path = $('#group-permission-path-entry-input').val();
+    var ops = "";
+    var s = "";
+    if ($('#group-permission-op-get-checkbox').prop("checked")) {
+      ops = "get";
+      s = ",";
+    }
+    if ($('#group-permission-op-post-checkbox').prop("checked")) {
+      ops = ops + s + "post";
+      s = ",";
+    }
+    if ($('#group-permission-op-put-checkbox').prop("checked")) {
+      ops =  ops + s + "put";
+      s = ",";
+    }
+    if ($('#group-permission-op-delete-checkbox').prop("checked")) {
+      ops =  ops + s + "delete";
+      s = ",";
+    }
+    var data = {"permission": ops + ":" + path};
+    if (ops) {
+      runAppQuery(new QueryObj("POST", "/groups/" + groupName + "/permissions/", data, null,
+        function() { pageSelectGroupPermissions(groupName); },
+        function() { alertModal("Error", "Unable to add permission"); }
+      ));
+    } else {
+      alertModal("Error", "Please select a verb");
+    }
+  }
+  window.usergrid.console.addGroupPermission = addGroupPermission;
+
+  function pageSelectGroupPermissions(groupId) {
+    Pages.SelectPanel('group');
+    requestGroup(groupId);
+    selectTabButton('#button-group-permissions');
+    showPanelContent('#group-panel', '#group-panel-permissions');
+  }
+  window.usergrid.console.pageSelectGroupPermissions = pageSelectGroupPermissions;
+
   function submitAddGroupToRole() {
     var form = $(this);
     formClearErrors(form);
@@ -2612,6 +2738,7 @@ function deleteRolePermission(roleName, permission) {
     }
   }
   window.usergrid.console.submitAddGroupToRole = submitAddGroupToRole;
+
 
   function removeGroupFromRole() {
     var items = $('input[class=roleGroupItem]:checked');
@@ -3266,6 +3393,31 @@ function deleteRolePermission(roleName, permission) {
     pathInput.data('typeahead').source = list;
   }
   window.usergrid.console.updateRolesAutocompleteCallback = updateRolesAutocompleteCallback;
+
+  function updateRolesForGroupsAutocomplete(){
+    runAppQuery(new QueryObj("GET", 'roles', null, null, updateRolesForGroupsAutocompleteCallback,
+      function() { alertModal("Error", "Unable to retrieve roles."); }
+    ));
+    return false;
+  }
+
+  function updateRolesForGroupsAutocompleteCallback(response) {
+    roles = {};
+    if (response.entities) {
+      roles = response.entities;
+    }
+    var pathInput = $('#search-groups-role-name-input');
+    var list = [];
+
+    for (var i in roles) {
+      list.push(roles[i].title);
+    }
+
+    pathInput.typeahead({source:list});
+    pathInput.data('typeahead').source = list;
+  }
+  window.usergrid.console.updateRolesAutocompleteCallback = updateRolesAutocompleteCallback;
+
 
   /*******************************************************************
    *
