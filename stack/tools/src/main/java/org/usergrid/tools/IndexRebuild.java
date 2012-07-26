@@ -35,6 +35,7 @@ import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.CassandraService;
+import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 
 /**
@@ -163,12 +164,10 @@ public class IndexRebuild extends ToolBase {
         logger.info("Reindexing collection: {} for app id: {}", collectionName,
                 appId);
 
-        EntityManager em = emf
-                .getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
+        EntityManager em = emf.getEntityManager(appId);
+        Application app = em.getApplication();
 
         // search for all orgs
-
-        EntityRef appRef = new SimpleEntityRef("application", appId);
 
         Query query = new Query();
         query.setLimit(PAGE_SIZE);
@@ -176,7 +175,7 @@ public class IndexRebuild extends ToolBase {
 
         do {
 
-            r = em.searchCollection(appRef, collectionName, query);
+            r = em.searchCollection(app, collectionName, query);
 
             for (Entity entity : r.getEntities()) {
                 logger.info(
