@@ -1256,9 +1256,17 @@ public class ManagementServiceImpl implements ManagementService {
                 User.ENTITY_TYPE, userId), "groups", null, 10000,
                 Level.ALL_PROPERTIES, false);
 
+        String path = null;
+
         for (Entity entity : results.getEntities()) {
-            organizations.put(entity.getUuid(),
-                    (String) entity.getProperty("path"));
+
+            path = (String) entity.getProperty("path");
+
+            if (path != null) {
+                path = path.toLowerCase();
+            }
+
+            organizations.put(entity.getUuid(), path);
         }
 
         return organizations;
