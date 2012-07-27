@@ -1,6 +1,8 @@
 package org.usergrid.security.tokens.cassandra;
 
 import static java.lang.System.currentTimeMillis;
+import static me.prettyprint.hector.api.factory.HFactory.createColumn;
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
@@ -27,7 +29,11 @@ import java.util.Properties;
 import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
+import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
+import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.mutation.Mutator;
 
 import org.mortbay.log.Log;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +59,7 @@ public class TokenServiceImpl implements TokenService {
 	private static final String TOKEN_TYPE = "type";
 	private static final String TOKEN_CREATED = "created";
 	private static final String TOKEN_ACCESSED = "accessed";
+	private static final String TOKEN_INACTIVE = "inactive";
 	private static final String TOKEN_PRINCIPAL_TYPE = "principal";
 	private static final String TOKEN_ENTITY = "entity";
 	private static final String TOKEN_APPLICATION = "application";
@@ -67,6 +74,7 @@ public class TokenServiceImpl implements TokenService {
 		TOKEN_PROPERTIES.add(TOKEN_TYPE);
 		TOKEN_PROPERTIES.add(TOKEN_CREATED);
 		TOKEN_PROPERTIES.add(TOKEN_ACCESSED);
+		TOKEN_PROPERTIES.add(TOKEN_INACTIVE);
 		TOKEN_PROPERTIES.add(TOKEN_PRINCIPAL_TYPE);
 		TOKEN_PROPERTIES.add(TOKEN_ENTITY);
 		TOKEN_PROPERTIES.add(TOKEN_APPLICATION);
@@ -80,6 +88,7 @@ public class TokenServiceImpl implements TokenService {
 		REQUIRED_TOKEN_PROPERTIES.add(TOKEN_TYPE);
 		REQUIRED_TOKEN_PROPERTIES.add(TOKEN_CREATED);
 		REQUIRED_TOKEN_PROPERTIES.add(TOKEN_ACCESSED);
+		REQUIRED_TOKEN_PROPERTIES.add(TOKEN_INACTIVE);
 	}
 
 	public static final String TOKEN_SECRET_SALT = "super secret token value";
@@ -188,19 +197,9 @@ public class TokenServiceImpl implements TokenService {
 			type = TOKEN_TYPE_ACCESS;
 		}
 		TokenInfo tokenInfo = new TokenInfo(uuid, type, timestamp, timestamp,
-				principal, state);
+				0, principal, state);
 		putTokenInfo(tokenInfo);
 		return getTokenForUUID(tokenCategory, uuid);
-	}
-
-	@Override
-	public void accessTokenInfo(String token) throws Exception {
-		UUID uuid = getUUIDForToken(token);
-		if (uuid != null) {
-			cassandra.setColumn(cassandra.getSystemKeyspace(), TOKENS_CF, uuid,
-					TOKEN_ACCESSED, currentTimeMillis(),
-					(int) (maxPersistenceTokenAge / 1000));
-		}
 	}
 
 	@Override
@@ -210,9 +209,26 @@ public class TokenServiceImpl implements TokenService {
 		if (uuid != null) {
 			tokenInfo = getTokenInfo(uuid);
 			if (tokenInfo != null) {
-				cassandra.setColumn(cassandra.getSystemKeyspace(), TOKENS_CF,
-						uuid, TOKEN_ACCESSED, currentTimeMillis(),
-						(int) (maxPersistenceTokenAge / 1000));
+				long now = currentTimeMillis();
+
+				Mutator<UUID> batch = createMutator(
+						cassandra.getSystemKeyspace(), UUIDSerializer.get());
+
+				HColumn<String, Long> col = createColumn(TOKEN_ACCESSED, now,
+						(int) (maxPersistenceTokenAge / 1000),
+						StringSerializer.get(), LongSerializer.get());
+				batch.addInsertion(uuid, TOKENS_CF, col);
+
+				long inactive = now - tokenInfo.getAccessed();
+				if (inactive > tokenInfo.getInactive()) {
+					col = createColumn(TOKEN_INACTIVE, inactive,
+							(int) (maxPersistenceTokenAge / 1000),
+							StringSerializer.get(), LongSerializer.get());
+					batch.addInsertion(uuid, TOKENS_CF, col);
+					tokenInfo.setInactive(inactive);
+				}
+
+				batch.execute();
 			}
 		}
 		return tokenInfo;
@@ -242,6 +258,7 @@ public class TokenServiceImpl implements TokenService {
 		String type = string(columns.get(TOKEN_TYPE));
 		long created = getLong(columns.get(TOKEN_CREATED));
 		long accessed = getLong(columns.get(TOKEN_ACCESSED));
+		long inactive = getLong(columns.get(TOKEN_INACTIVE));
 		String principalTypeStr = string(columns.get(TOKEN_PRINCIPAL_TYPE));
 		AuthPrincipalType principalType = null;
 		if (principalTypeStr != null) {
@@ -260,7 +277,8 @@ public class TokenServiceImpl implements TokenService {
 		@SuppressWarnings("unchecked")
 		Map<String, Object> state = (Map<String, Object>) JsonUtils
 				.fromByteBuffer(columns.get(TOKEN_STATE));
-		return new TokenInfo(uuid, type, created, accessed, principal, state);
+		return new TokenInfo(uuid, type, created, accessed, inactive,
+				principal, state);
 	}
 
 	public void putTokenInfo(TokenInfo tokenInfo) throws Exception {
@@ -269,6 +287,7 @@ public class TokenServiceImpl implements TokenService {
 		columns.put(TOKEN_TYPE, bytebuffer(tokenInfo.getType()));
 		columns.put(TOKEN_CREATED, bytebuffer(tokenInfo.getCreated()));
 		columns.put(TOKEN_ACCESSED, bytebuffer(tokenInfo.getAccessed()));
+		columns.put(TOKEN_INACTIVE, bytebuffer(tokenInfo.getInactive()));
 		if (tokenInfo.getPrincipal() != null) {
 			columns.put(TOKEN_PRINCIPAL_TYPE, bytebuffer(tokenInfo
 					.getPrincipal().getType().toString().toLowerCase()));
