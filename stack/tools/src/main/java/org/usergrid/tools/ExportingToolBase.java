@@ -3,6 +3,7 @@ package org.usergrid.tools;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.UUID;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -14,6 +15,7 @@ import org.codehaus.jackson.impl.DefaultPrettyPrinter;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.utils.ConversionUtils;
 
 /**
  * @author zznate
@@ -30,6 +32,8 @@ public abstract class ExportingToolBase extends ToolBase {
 
     protected String baseOutputDirName = "export";
 
+    protected UUID orgId;
+
     JsonFactory jsonFactory = new JsonFactory();
     
     protected long startTime = System.currentTimeMillis();
@@ -43,8 +47,10 @@ public abstract class ExportingToolBase extends ToolBase {
         Option outputDir = OptionBuilder.hasArg()
                 .withDescription("output file name -outputDir")
                 .create(OUTPUT_DIR);
+        Option orgId = OptionBuilder.hasArg().withDescription("Use a specific organization -orgId").create("orgId");
 
         options.addOption(outputDir);
+        options.addOption(orgId);
 
         return options;
     }
@@ -56,6 +62,12 @@ public abstract class ExportingToolBase extends ToolBase {
         if (hasOutputDir) {
             baseOutputDirName = line.getOptionValue(OUTPUT_DIR);
         }
+    }
+
+    protected void applyOrgId(CommandLine line) {
+      if ( line.hasOption("orgId")) {
+        orgId = ConversionUtils.uuid(line.getOptionValue("orgId"));
+      }
     }
 
     /**
@@ -148,6 +160,10 @@ public abstract class ExportingToolBase extends ToolBase {
 
         return outputFileName;
     }
+
+  protected JsonGenerator getJsonGenerator(String outFile) throws IOException {
+      return getJsonGenerator(new File(outputDir,outFile));
+  }
 
     protected JsonGenerator getJsonGenerator(File outFile) throws IOException {
         PrintWriter out = new PrintWriter(outFile, "UTF-8");

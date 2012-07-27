@@ -1,22 +1,19 @@
 package org.usergrid.tools;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang.time.DateUtils;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
+import org.usergrid.management.ApplicationInfo;
+import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityManager;
-import org.usergrid.tools.bean.AppScore;
-import org.usergrid.tools.bean.MetricLine;
-import org.usergrid.tools.bean.MetricSort;
-import org.usergrid.tools.bean.OrgScore;
+import org.usergrid.persistence.*;
+import org.usergrid.tools.bean.*;
+import org.usergrid.utils.TimeUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,185 +21,189 @@ import java.util.*;
 
 /**
  * Tools class which dumps metrics for tracking Usergrid developer adoption
- * and high-level application usage
+ * and high-level application usage.
+ *
+ * Can be called thusly:
+ * mvn exec:java -Dexec.mainClass="org.usergrid.tools.Command" -Dexec.args="Metrics -host localhost -outputDir ./output"
+ *
  * @author zznate
  */
 public class Metrics extends ExportingToolBase {
 
-
+  private BiMap<UUID, String> organizations;
+  private ListMultimap<UUID, ApplicationInfo> orgApps = ArrayListMultimap.create();
+  private ListMultimap<Long, UUID> totalScore = ArrayListMultimap.create();
+  private Map<UUID,MetricLine> collector = new HashMap<UUID, MetricLine>();
+  private int reportThreshold = 50;
+  private long startDate;
+  private long endDate;
 
   @Override
   public void runTool(CommandLine line) throws Exception {
     startSpring();
 
     setVerbose(line);
+
     prepareBaseOutputFileName(line);
+
+    parseDuration(line);
+
+    applyOrgId(line);
+
+    parseDateRange(line);
 
     outputDir = createOutputParentDir();
 
     logger.info("Export directory: {}",outputDir.getAbsolutePath());
 
-    BiMap<UUID, String> organizations = managementService
-    				.getOrganizations();
-
-    ListMultimap<OrgScore,AppScore> appScores = ArrayListMultimap.create();
-
-    for (Map.Entry<UUID, String> organization : organizations.entrySet()) {
-      System.out.println("Org Name: " + organization.getValue());
-      OrgScore orgScore = new OrgScore(organization.getKey(), organization.getValue());
-
-      List<UserInfo> adminUsers = managementService.getAdminUsersForOrganization(orgScore.getId());
-      orgScore.setAdminCount(adminUsers.size());
-      // TODO orgScore.setAdminLoginCount
-      /*
-      if (organization.equals(properties
-              .getProperty("usergrid.test-account.organization"))) {
-        // Skip test data from being exported.
-        // orgScore.setIsTestAccount(true);
-        continue;
-      }
-      */
-
-      // for each organization
-      // get # of admin users
-      // get applications
-      BiMap<UUID, String> applications = managementService
-      				.getApplicationsForOrganization(organization.getKey());
-      orgScore.setAppCount(applications.size());
-      for (UUID uuid : applications.keySet() ) {
-        AppScore appScore = new AppScore(orgScore, uuid, applications.get(uuid));
-        EntityManager em = emf.getEntityManager(uuid);
-        Map<String,Long> counters = em.getApplicationCounters();
-        //application.collection.users
-        appScore.setUserCount(counters.get("application.collection.users"));
-        orgScore.addToUserCount(appScore.getUserCount());
-
-        appScore.setRequestCount(counters.get("application.requests"));
-        System.out.println(applications.get(uuid) + " has counters: " + em.getApplicationCounters());
-
-        appScores.put(orgScore,appScore);
+    if ( orgId == null ) {
+      organizations = managementService.getOrganizations();
+      for (Map.Entry<UUID, String> organization : organizations.entrySet()) {
+        logger.info("Org Name: {} key: {}",organization.getValue(), organization.getKey());
+        orgId = organization.getKey();
+        //List<UserInfo> adminUsers = managementService.getAdminUsersForOrganization(orgId);
+        applicationsFor(orgId);
 
       }
-      // get users count for application :em.getApplicationCounters(); getEntityCounters(uuid entityId)
-      // - keep user count for organization
-      // - keep user count for all apps
-      // - keep req. aggregate for all apps
-
+    } else {
+      OrganizationInfo orgInfo = managementService.getOrganizationByUuid(orgId);
+      applicationsFor(orgInfo.getUuid());
+      organizations = HashBiMap.create(1);
+      organizations.put(orgInfo.getUuid(), orgInfo.getName());
     }
-    //System.out.println("AppScores multimap: " + appScores);
-    JsonGenerator jg = getJsonGenerator(outputDir);
-    // begin output of various sorts
-    // TODO convert to ouput printing types
-    jsonLineWriter(jg, MetricSort.APP_REQ_COUNT, appScores);
-    //System.out.println("Apps by request: \n" + sortDelegator(appScores, MetricSort.APP_REQ_COUNT));
 
-    jsonLineWriter(jg, MetricSort.APP_USER_COUNT, appScores);
-    //System.out.println("Apps by user count: \n" + sortDelegator(appScores, MetricSort.APP_USER_COUNT));
+    Iterable<UUID> workingOrgs = applyThreshold();
 
-    jsonLineWriter(jg, MetricSort.ORG_ADMIN_COUNT, appScores);
-    //System.out.println("Orgs by Admin Count: \n" + sortDelegator(appScores, MetricSort.ORG_ADMIN_COUNT));
+    printReport(MetricSort.APP_REQ_COUNT, workingOrgs);
+  }
 
-    jsonLineWriter(jg, MetricSort.ORG_USER_COUNT, appScores);
-    //System.out.println("Orgs by Total User Count: \n" + sortDelegator(appScores, MetricSort.ORG_USER_COUNT));
 
-    jsonLineWriter(jg, MetricSort.ORG_APP_COUNT, appScores);
-    //System.out.println("Orgs by Application Count: \n" + sortDelegator(appScores, MetricSort.ORG_APP_COUNT));
 
-    jsonLineWriter(jg, MetricSort.ORG_ADMIN_LOGIN_COUNT, appScores);
-    //System.out.println("Orgs by Admin Login Count: \n" + sortDelegator(appScores, MetricSort.ORG_ADMIN_LOGIN_COUNT));
+  @Override
+  public Options createOptions() {
+    Options options = super.createOptions();
+    Option duration = OptionBuilder.hasArg()
+            .withDescription("A duration signifying the previous time until now. " +
+                    "Supported forms: h,m,d eg. '30d' would be 30 days")
+            .create("duration");
+    Option startDate = OptionBuilder.hasArg().withDescription("The start date of the report")
+            .create("startDate");
+    Option endDate = OptionBuilder.hasArg().withDescription("The end date of the report")
+                .create("endDate");
+
+    options.addOption(duration).addOption(endDate).addOption(startDate);
+
+    return options;
+  }
+
+  /**
+   * 30 days in milliseconds by default
+   * @param line
+   * @return
+   */
+  private void parseDuration(CommandLine line) {
+    String duration = line.getOptionValue("duration");
+    if ( duration != null ) {
+      startDate = TimeUtils.millisFromDuration(duration);
+      endDate = System.currentTimeMillis();
+    }
+  }
+
+  private void parseDateRange(CommandLine line) throws Exception {
+    if ( line.hasOption("startDate")) {
+      startDate = DateUtils.parseDate(line.getOptionValue("startDate"),new String[]{"yyyyMMdd-HHmm"}).getTime();
+    }
+    if ( line.hasOption("endDate")) {
+      endDate = DateUtils.parseDate(line.getOptionValue("endDate"),new String[]{"yyyyMMdd-HHmm"}).getTime();
+    }
+  }
+
+  private Iterable<UUID> applyThreshold() throws Exception {
+    Set<UUID> orgs = new HashSet<UUID>(reportThreshold);
+    for ( Long l : Ordering.natural().greatestOf(totalScore.keys(), reportThreshold) ) {
+      List<UUID> apps = totalScore.get(l);
+      for ( UUID appId : apps ) {
+        orgs.add(managementService.getOrganizationForApplication(appId).getUuid());
+      }
+    }
+    return orgs;
+  }
+
+  private void printReport(MetricSort metricSort, Iterable<UUID> workingOrgs) throws Exception {
+    JsonGenerator jg = getJsonGenerator(createOutputFile("metrics", metricSort.name().toLowerCase()));
+    jg.writeStartObject();
+    jg.writeStringField("report", metricSort.name());
+    jg.writeStringField("date", new Date().toString());
+    jg.writeArrayFieldStart("orgs");
+    for ( UUID orgId : workingOrgs ) {
+      jg.writeStartObject();
+      jg.writeStringField("org_id", orgId.toString());
+      jg.writeStringField("org_name",organizations.get(orgId));
+      jg.writeArrayFieldStart("admins");
+      for (UserInfo userInfo : managementService.getAdminUsersForOrganization(orgId) ) {
+        jg.writeString(userInfo.getEmail());
+      }
+      jg.writeEndArray();
+      writeAppLines(jg, orgId);
+      jg.writeEndObject();
+    }
+    jg.writeEndArray();
+    jg.writeEndObject();
     jg.close();
   }
 
-  private List<MetricLine> sortDelegator(ListMultimap<OrgScore,AppScore> scoreMaps, MetricSort sortType) {
-    List<MetricLine> metrics = new ArrayList<MetricLine>(scoreMaps.size()*2);
-    List<AppScore> appScores;
-    List<OrgScore> orgScores;
-    switch (sortType) {
-      case APP_REQ_COUNT:
-        appScores = new ArrayList<AppScore>(scoreMaps.values());
-        Collections.sort(appScores, new Comparator<AppScore>() {
-          public int compare(AppScore a1, AppScore a2) {
-            return new Long(a1.getRequestCount()).compareTo(a2.getRequestCount());
-          }
-        });
-        for (AppScore as : appScores) {
-          metrics.add(new MetricLine(MetricSort.APP_REQ_COUNT, as.getRequestCount(), as.getOrgScore(), as));
-        }
-        break;
-      case APP_USER_COUNT:
-        appScores = new ArrayList<AppScore>(scoreMaps.values());
-        Collections.sort(appScores, new Comparator<AppScore>() {
-          public int compare(AppScore a1, AppScore a2) {
-            return new Long(a1.getUserCount()).compareTo(a2.getUserCount());
-          }
-        });
-        for (AppScore as : appScores) {
-          metrics.add(new MetricLine(MetricSort.APP_USER_COUNT, as.getRequestCount(), as.getOrgScore(), as));
-        }
-        break;
-      case ORG_ADMIN_COUNT:
-        orgScores = new ArrayList<OrgScore>(scoreMaps.keys());
-        Collections.sort(orgScores, new Comparator<OrgScore>() {
-          public int compare(OrgScore a1, OrgScore a2) {
-            return new Long(a1.getAdminCount()).compareTo(a2.getAdminCount());
-          }
-        });
-        for (OrgScore orgScore : orgScores) {
-          metrics.add(new MetricLine(MetricSort.ORG_ADMIN_COUNT, orgScore.getAdminCount(), orgScore, null));
-        }
-        break;
-      case ORG_USER_COUNT:
-        orgScores = new ArrayList<OrgScore>(scoreMaps.keys());
-        Collections.sort(orgScores, new Comparator<OrgScore>() {
-          public int compare(OrgScore a1, OrgScore a2) {
-            return new Long(a1.getUserCount()).compareTo(a2.getUserCount());
-          }
-        });
-        for (OrgScore orgScore : orgScores) {
-          metrics.add(new MetricLine(MetricSort.ORG_USER_COUNT, orgScore.getUserCount(), orgScore, null));
-        }
-        break;
-      case ORG_APP_COUNT:
-        orgScores = new ArrayList<OrgScore>(scoreMaps.keys());
-        Collections.sort(orgScores, new Comparator<OrgScore>() {
-          public int compare(OrgScore a1, OrgScore a2) {
-            return new Long(a1.getAppCount()).compareTo(a2.getAppCount());
-          }
-        });
-        for (OrgScore orgScore : orgScores) {
-          metrics.add(new MetricLine(MetricSort.ORG_APP_COUNT, orgScore.getAppCount(), orgScore, null));
-        }
-        break;
-      case ORG_ADMIN_LOGIN_COUNT:
-        orgScores = new ArrayList<OrgScore>(scoreMaps.keys());
-        Collections.sort(orgScores, new Comparator<OrgScore>() {
-          public int compare(OrgScore a1, OrgScore a2) {
-            return new Long(a1.getAdminLogins()).compareTo(a2.getAdminLogins());
-          }
-        });
-        for (OrgScore orgScore : orgScores) {
-          metrics.add(new MetricLine(MetricSort.ORG_ADMIN_LOGIN_COUNT, orgScore.getAdminLogins(), orgScore, null));
-        }
-        break;
-    }
-    return metrics;
-  }
+  private void writeAppLines(JsonGenerator jg, UUID orgId) throws Exception {
+    jg.writeArrayFieldStart("apps");
+    for (ApplicationInfo appInfo : orgApps.get(orgId) ) {
 
-  private void jsonLineWriter(JsonGenerator jg, MetricSort metricSort, ListMultimap<OrgScore,AppScore> scoreMaps) {
-    try {
       jg.writeStartObject();
-      jg.writeString(MetricSort.APP_REQ_COUNT.toString());
-      jg.writeStartArray();
-      for (MetricLine ml : sortDelegator(scoreMaps, MetricSort.APP_REQ_COUNT)) {
-        jg.writeObject(ml);
+      jg.writeStringField("app_id", appInfo.getId().toString());
+      jg.writeStringField("app_name",appInfo.getName());
+      jg.writeArrayFieldStart("counts");
+      MetricLine line = collector.get(appInfo.getId());
+      if ( line != null ) {
+        jg.writeStartObject();
+        for ( AggregateCounter ag : line.getAggregateCounters() ) {
+          jg.writeStringField(new Date(ag.getTimestamp()).toString(),Long.toString(ag.getValue()));
+        }
+        jg.writeEndObject();
       }
       jg.writeEndArray();
       jg.writeEndObject();
-    } catch (IOException e) {
-      e.printStackTrace();
+
     }
+    jg.writeEndArray();
+  }
+
+  private void applicationsFor(UUID orgId) throws Exception {
+    BiMap<UUID, String> applications = managementService
+            .getApplicationsForOrganization(orgId);
+
+    for (UUID uuid : applications.keySet() ) {
+      logger.info("Checking app: {}", applications.get(uuid));
+
+      orgApps.put(orgId, new ApplicationInfo(uuid, applications.get(uuid)));
+
+      collect(MetricQuery.getInstance(uuid, MetricSort.APP_REQ_COUNT)
+              .resolution(CounterResolution.DAY)
+              .startDate(startDate)
+              .endDate(endDate)
+              .execute(emf.getEntityManager(uuid)));
+
+    }
+  }
+
+  private void collect(MetricLine metricLine) {
+    for ( AggregateCounter a : metricLine.getAggregateCounters() ) {
+      logger.info("col: {} val: {}",new Date(a.getTimestamp()), a.getValue());
+    }
+    totalScore.put(metricLine.getCount(), metricLine.getAppId());
+    collector.put(metricLine.getAppId(), metricLine);
 
   }
+  // line format: {reportQuery: application.requests, date: date, startDate : startDate, endDate: endDate, orgs : [
+  // {orgId: guid, orgName: name, apps [{appId: guid, appName: name, dates: [{"[human date from ts]" : "[value]"},{...
+
 
 
 }
