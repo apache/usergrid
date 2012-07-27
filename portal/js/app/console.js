@@ -1291,7 +1291,7 @@ function usergrid_console_app(Pages, query_params) {
     confirmDelete(function(){
       items.each(function() {
         var roleId = $(this).attr("value");
-	var groupname = $('#role-form-groupname').val();
+        var groupname = $('#role-form-groupname').val();
         runAppQuery(new QueryObj("DELETE", "/groups/" + groupname + "/roles/" + roleId, null, null,
           function() { pageSelectGroupPermissions(groupname); },
           function() { alertModal("Error", "Unable to remove role from group"); }
@@ -2558,9 +2558,9 @@ function usergrid_console_app(Pages, query_params) {
         //requestRole & displayInactivity
         runAppQuery(new QueryObj("GET", "role/" + current_role_id, null, null,
           function(response) {
-	    var inactivity = response.entities[0].inactivity.toString();
-	    $('#role-inactivity-input').val(inactivity);
-	  },
+            var inactivity = response.entities[0].inactivity.toString();
+            $('#role-inactivity-input').val(inactivity);
+          },
           function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
         ));
         //requestApplicationRolePermissions
@@ -2748,13 +2748,13 @@ function deleteRolePermission(roleName, permission) {
       $.each(items, function() {
         var groupId = $(this).val();
         runAppQuery(new QueryObj("DELETE", "/roles/" + current_role_id + "/groups/" + groupId, null, null,
-	  function() {
-	    pageSelectRoleGroups(current_role_id, current_role_name);
-	  },
-	  function() {
+          function() {
+            pageSelectRoleGroups(current_role_id, current_role_name);
+          },
+          function() {
             alertModal("Error","Unable to remove group from role: ");
           }
-	));
+        ));
       });
     });
 
