@@ -476,9 +476,10 @@ function usergrid_console_app(Pages, query_params) {
     path += event.target.innerText;
     $('#query-path').val(path);
   };
-
+	
+	//TODO: check how queryQl works
   var queryQl = $('#query-ql');
-  queryQl.typeahead();
+  //queryQl.typeahead({source:indexes});
 
   function doBuildIndexMenu() {
     queryQl.data('typeahead').source = indexes;
@@ -3499,7 +3500,7 @@ function deleteRolePermission(roleName, permission) {
     return false;
   });
 
-  /**
+  /** //TODO Update documentation for .login() usage
   *  Authenticate an admin user and store the token and org list
   *  @method login
   *  @params {string} email - the admin's email (or username)
@@ -3512,7 +3513,7 @@ function deleteRolePermission(roleName, permission) {
     var password = $('#login-password').val();
 
     //empty local storage
-    usergrid.session.clearAll();;
+    usergrid.session.clearAll();
 
     var formdata = {
       grant_type: "password",
@@ -3987,8 +3988,8 @@ function deleteRolePermission(roleName, permission) {
     }
     return false;
   });
-
-  $('button, input:submit, input:button').button();
+//TODO: why is this object out of scope of .button()??
+  //$('button, input:submit, input:button').button();
 
   $('select#indexSelect').change( function(e){
     $('#query-ql').val($(this).val() || "");
