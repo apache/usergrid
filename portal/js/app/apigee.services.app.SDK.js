@@ -9,21 +9,21 @@
  *  kind of CRUD call against the API.  This is done as follows:
  *
  *  1. Create a query object:
- *     apigee.services.QueryObj = new client.apigee.services.QueryObj("GET", "users", null, function() { alert("success"); }, function() { alert("failure"); });
+ *     queryObj = new apigee.QueryObj("GET", "users", null, function() { alert("success"); }, function() { alert("failure"); });
  *
  *  2. Run the query by calling the appropriate endpoint call
- *     runAppQuery(apigee.services.QueryObj);
+ *     runAppQuery(queryObj);
  *     or
- *     runManagementQuery(apigee.services.QueryObj);
+ *     runManagementQuery(queryObj);
  *
- *  3. Paging - The apigee.services.QueryObj holds the cursor information.  To
+ *  3. Paging - The apigee.QueryObj holds the cursor information.  To
  *     use, simply bind click events to functions that call the
  *     getNext and getPrevious methods of the query object.  This
  *     will set the cursor correctly, and the runAppQuery method
- *     can be called again using the same apigee.services.QueryObj:
- *     runAppQuery(apigee.services.QueryObj);
+ *     can be called again using the same apigee.QueryObj:
+ *     runAppQuery(queryObj);
  *
- *  @class apigee.services.QueryObj
+ *  @class apigee.QueryObj
  *  @param method REQUIRED - GET, POST, PUT, DELETE
  *  @param path REQUIRED - API resource (e.g. "users" or "users/rod", should not include http URL or org_name/app_name)
  *  @param jsonObj NULLABLE - a json data object to be passed to the API
@@ -36,6 +36,7 @@ window.apigee = window.apigee || {};
 apigee = apigee || {};
 
 (function () {
+
   apigee.QueryObj = function(method, path, jsonObj, params, successCallback, failureCallback) {
     //query vars
     this._method = method;
@@ -221,7 +222,7 @@ apigee = apigee || {};
     /*
     *  public function to run calls against the app endpoint
     *  @method runAppQuery
-    *  @params {object} apigee.services.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
+    *  @params {object} apigee.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
     *
     */
     runAppQuery: function(QueryObj) {
@@ -232,7 +233,7 @@ apigee = apigee || {};
     /*
     *  public function to run calls against the management endpoint
     *  @method runManagementQuery
-    *  @params {object} apigee.services.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
+    *  @params {object} apigee.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
     *
     */
     runManagementQuery: function(QueryObj) {
@@ -243,7 +244,7 @@ apigee = apigee || {};
     /*
     *  @method processQuery
     *  @purpose to validate and prepare a call to the API
-    *  @params {object} apigee.services.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
+    *  @params {object} apigee.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
     *
     */
     processQuery: function(QueryObj, endpoint) {

@@ -7,7 +7,7 @@ var apigee = apigee || {};
 apigee.userSession = new UserSession();
 apigee.organizations = new Organization();
 
-var Pages = new UsergridPages();
+var Pages = new ApigeePages();
 
 $(document).ready(function () {
   var query_params = getQueryParams();

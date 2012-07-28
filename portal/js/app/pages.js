@@ -1,4 +1,4 @@
-function UsergridPages() {
+function ApigeePages() {
   var self = {
     pages: {},
     panels: {},
