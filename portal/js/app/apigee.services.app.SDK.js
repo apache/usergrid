@@ -87,8 +87,10 @@ apigee = apigee || {};
     setSuccessCallback: function(successCallback) { 
       this._successCallback = successCallback;
     },
-    callSuccessCallback: function(response) { 
-      this._successCallback(response);
+    callSuccessCallback: function(response) {
+      if (this._successCallback) {
+        this._successCallback(response);
+      }
     },
     getFailureCallback: function() { 
       return this._failureCallback;
@@ -96,8 +98,10 @@ apigee = apigee || {};
     setFailureCallback: function(failureCallback) { 
       this._failureCallback = failureCallback;
     },
-    callFailureCallback: function(response) { 
-      this._failureCallback(response);
+    callFailureCallback: function(response) {
+      if (this._failureCallback) {
+        this._failureCallback(response);
+      }
     },
 
     getCurl: function() { 

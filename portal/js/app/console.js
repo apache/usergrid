@@ -497,7 +497,7 @@ function apigee_console_app(Pages, query_params) {
         var entityId = $(this).attr('value');
         var path = $(this).attr('name');
         runAppQuery(new apigee.QueryObj("DELETE", path + "/" + entityId, null, null,
-          getCollection('GET'),
+          function() { getCollection('GET'); },
           function() { alertModal("Unable to delete entity"); }
         ));
       });
