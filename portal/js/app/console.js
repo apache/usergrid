@@ -437,7 +437,7 @@ function apigee_console_app(Pages, query_params) {
 
   function validateJson() {
     try {
-      var result = jsonlint.parse($('#query-source').val());
+      var result = JSON.parse($('#query-source').val());
       if (result) {
         showQueryStatus('JSON is valid!');
         $('#query-source').val(
