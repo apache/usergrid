@@ -1,8 +1,146 @@
 
+(function() {
+
+  
+    /**
+     *  Application is a class for holding application info
+     *
+     *  @class Application
+     *  @param {string} name the name of the application
+     *  @param {string} uuid the uuid of the application
+     */
+    var Application = (function () {
+      var _name = null;
+      var _uuid = null;
+
+      Application = function (name, uuid) {
+        _name = name;
+        _uuid = uuid;
+      };
+      Application.prototype = {
+       getName: function() { 
+          return _name;
+        },
+        setName: function(name) { 
+          _name = name;
+        },
+        getUUID: function() { 
+          return _uuid;
+        },
+        setUUID: function(uuid) {
+          _uuid = uuid;
+        },
+        setCurrentApplication: function(app) {
+          this.setName(app.getName());
+          this.setUUID(app.getUUID());
+        }
+      };
+      return Application;
+    })();
+
+    
+    /**
+     *  Organization is a class for holding application info
+     *
+     *  @class Organization
+     *  @param {string} name organization's name
+     *  @param {string} organization's uuid
+     *  @param {string} list organization's applications
+     */
+    var Organization = (function () {
+      var _name = null;
+      var _uuid = null;
+      var _list = [];
+
+      var Organization = function(name, uuid) {
+        _name = name;
+        _uuid = uuid;
+        _list = [];
+      };
+
+      Organization.prototype = {
+        getName: function() {
+          return _name;
+        },
+        setName: function(name) {
+          _name = name;
+        },
+        getUUID: function() {
+          return _uuid;
+        },
+        setUUID: function(uuid) {
+          _uuid = uuid;
+        },
+        setCurrentOrganization: function(org) {
+          _name = org.getName();
+          _uuid = org.getUUID();
+          _list = org.getList();
+        },
+        addItem: function(item) {
+          var count = _list.length;
+          _list[count] = item;
+        },
+        getItemByName: function(name) {
+          var count = _list.length;
+          var i=0;
+          for (i=0; i<count; i++) {
+            if (_list[i].getName() == name) {
+              return _list[i];
+            }
+          }
+        },
+        getItemByUUID: function(UUID) {
+          var count = _list.length;
+          var i=0;
+          for (i=0; i<count; i++) {
+            if (_list[i].getUUID() == UUID) {
+              return _list[i];
+            }
+          }
+        },
+        getFirstItem: function() {
+          var count = _list.length;
+          if (count > 0) {
+            return _list[0];
+          }
+          return null;
+        },
+        getList: function() {
+          return _list;
+        },
+        setList: function(list) {
+          _list = list;
+        },
+        clearList: function() {
+          _list = [];
+        }
+      };
+      return Organization;
+    })();
+
+    /**
+     *  Organizations is a class for holding all organizations
+     *
+     *  @class Organizations
+     *  @param {string} name organization's name
+     *  @param {string} organization's uuid
+     *  @param {string} list organization's applications
+     */
+    var Organizations = Organizations;
+
+    return {
+        Application: Application,
+        Organization: Organization,
+        Organizations: Organizations
+    };
+})();
+
+
+
 /**
- *  Item is a base container class for apps and orgs
+ *  Item is a base class for holding application info
  *
- *  @class Item
+ *  @class Application
  *  @param {string} name the name of the application
  *  @param {string} uuid the uuid of the application
  */
@@ -33,13 +171,13 @@ Application.prototype.setCurrentApplication = function setCurrentApplication(app
 }
 
 /**
- *  Organization is a class for holding application info
- *
- *  @class Organization
- *  @param {string} name organization's name
- *  @param {string} organization's uuid
- *  @param {string} list organization's applications
- */
+     *  Organization is a class for holding application info
+     *
+     *  @class Organization
+     *  @param {string} name organization's name
+     *  @param {string} organization's uuid
+     *  @param {string} list organization's applications
+     */
 function Organization(name, uuid){
   this._name = name;
   this._uuid = uuid;
@@ -52,7 +190,7 @@ Item.prototype.setCurrentOrganization = function setCurrentOrganization(org) {
   this._uuid = org.getUUID();
   this._list = org.getList();
 }
-Organization.prototype.addListItem = function addListItem(item) {
+Organization.prototype.addItem = function addItem(item) {
   var count = this._list.length;
   this._list[count] = item;
 }
@@ -92,13 +230,13 @@ Organization.prototype.clearList = function clearList() {
 }
 
 /**
- *  Organizations is a class for holding all organizations
- *
- *  @class Organizations
- *  @param {string} name organization's name
- *  @param {string} organization's uuid
- *  @param {string} list organization's applications
- */
+     *  Organizations is a class for holding all organizations
+     *
+     *  @class Organizations
+     *  @param {string} name organization's name
+     *  @param {string} organization's uuid
+     *  @param {string} list organization's applications
+     */
 function Organizations(){
   this._list = [];
 }
@@ -107,60 +245,51 @@ Organizations.prototype.constructor=Organizations;
 
 
 
-
 /**
  *  Standardized methods for mantianing authentication state in the Application
- *  @class session
+ *  @class UserSession
  */
-function Session() {}
+function UserSession() {}
 
 //access token access and setter methods
-Session.prototype.getAccessToken = function getAccessToken() {
+UserSession.prototype.getAccessToken = function getAccessToken() {
   var accessToken = localStorage.getItem('accessToken');
   return accessToken;
 }
-Session.prototype.setAccessToken = function setAccessToken(accessToken) {
+UserSession.prototype.setAccessToken = function setAccessToken(accessToken) {
   localStorage.setItem('accessToken', accessToken);
 }
 //logged in user access and setter methods
-Session.prototype.getUserUUID = function getUserUUID() {
-  return localStorage.getItem('usergridUserUUID');
+UserSession.prototype.getUserUUID = function getUserUUID() {
+  return localStorage.getItem('userUUID');
 }
-Session.prototype.setUserUUID = function setUserUUID(uuid) {
- localStorage.setItem('usergridUserUUID', uuid);
+UserSession.prototype.setUserUUID = function setUserUUID(uuid) {
+ localStorage.setItem('userUUID', uuid);
 }
-
-Session.prototype.getUserUUID = function getUserUUID() {
-  return localStorage.getItem('usergridUserUUID');
+UserSession.prototype.getUserEmail = function getUserEmail() {
+  return localStorage.getItem('userEmail');
 }
-Session.prototype.setUserUUID = function setUserUUID(uuid) {
- localStorage.setItem('usergridUserUUID', uuid);
-}
-
-Session.prototype.getUserEmail = function getUserEmail() {
-  return localStorage.getItem('usergridUserEmail');
-}
-Session.prototype.setUserEmail = function setUserEmail(email) {
-  localStorage.setItem('usergridUserEmail', email);
+UserSession.prototype.setUserEmail = function setUserEmail(email) {
+  localStorage.setItem('userEmail', email);
 }
 
 //convenience method to verify if user is logged in
-Session.prototype.loggedIn = function loggedIn() {
+UserSession.prototype.loggedIn = function loggedIn() {
   var token = this.getAccessToken();
   var email = this.getUserEmail();
   return (token && email);
 }
 
 //convenience method for saving all active user vars at once
-Session.prototype.saveAll = function saveAll(uuid, email, accessToken) {
+UserSession.prototype.saveAll = function saveAll(uuid, email, accessToken) {
   this.setUserUUID(uuid);
   this.setUserEmail(email);
   this.setAccessToken(accessToken);
 }
 
 //convenience method for clearing all active user vars at once
-Session.prototype.clearAll = function clearAll() {
-  localStorage.removeItem('usergridUserUUID');
-  localStorage.removeItem('usergridUserEmail');
+UserSession.prototype.clearAll = function clearAll() {
+  localStorage.removeItem('userUUID');
+  localStorage.removeItem('userEmail');
   localStorage.removeItem('accessToken');
 }

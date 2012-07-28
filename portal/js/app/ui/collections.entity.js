@@ -1,7 +1,7 @@
-window.usergrid = window.usergrid || {};
-usergrid.console = usergrid.console || {};
-usergrid.console.ui = usergrid.console.ui || { };
-usergrid.console.ui.collections = usergrid.console.ui.collections || { };
+window.apigee = window.apigee || {};
+apigee.console = apigee.console || {};
+apigee.console.ui = apigee.console.ui || { };
+apigee.console.ui.collections = apigee.console.ui.collections || { };
 
 (function() {
   // This code block *WILL* load before the document is complete
@@ -18,7 +18,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 
       var entity_id = el.dataset('entity-id');
       var entity_type = el.dataset('entity-type');
-      var entity = usergrid.console.getQueryResultEntity(entity_id);
+      var entity = apigee.console.getQueryResultEntity(entity_id);
       if (!entity) return;
       o.entity = entity;
       o.path = el.dataset('collection-path');
@@ -99,7 +99,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
         entity.picture = entity.picture + "?d=http://" + window.location.host + window.location.pathname + "images/user_profile.png"
       }
 
-      return $.tmpl("usergrid.ui.collections.entity.header.html", {
+      return $.tmpl("apigee.ui.collections.entity.header.html", {
         entity : entity,
         name : name,
         picture: entity.picture,
@@ -116,11 +116,11 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
       var collections = $.extend({ }, (entity.metadata || { }).collections, (entity.metadata || { }).connections);
 
       if (!$.isEmptyObject(collections)) {
-        return $.tmpl("usergrid.ui.collections.entity.collections.html", {
+        return $.tmpl("apigee.ui.collections.entity.collections.html", {
           collections : collections
         }, {
-          makeObjectTable : usergrid.console.ui.makeObjectTable,
-          tableOpts : usergrid.console.ui.standardTableOpts
+          makeObjectTable : apigee.console.ui.makeObjectTable,
+          tableOpts : apigee.console.ui.standardTableOpts
         });
       }
       return $("");
@@ -136,33 +136,33 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
       entity_contents = $.extend( false, entity_contents, {'collections': collections});
 
       delete entity_contents['metadata'];
-      return $.tmpl("usergrid.ui.collections.entity.contents.html", {
+      return $.tmpl("apigee.ui.collections.entity.contents.html", {
         entity : entity_contents
       }, {
-        makeObjectTable : usergrid.console.ui.makeObjectTable,
-        tableOpts : usergrid.console.ui.standardTableOpts
+        makeObjectTable : apigee.console.ui.makeObjectTable,
+        tableOpts : apigee.console.ui.standardTableOpts
       });
     },
 
     getMetadata : function() {
       var entity = this.options.entity;
       if (!$.isEmptyObject(entity.metadata)) {
-        return $.tmpl("usergrid.ui.collections.entity.metadata.html", {
+        return $.tmpl("apigee.ui.collections.entity.metadata.html", {
           metadata : entity.metadata
         }, {
-          makeObjectTable : usergrid.console.ui.makeObjectTable,
-          tableOpts : usergrid.console.ui.metadataTableOpts
+          makeObjectTable : apigee.console.ui.makeObjectTable,
+          tableOpts : apigee.console.ui.metadataTableOpts
         });
       }
       return $("");
     },
 
     getJson : function() {
-      return $.tmpl("usergrid.ui.collections.entity.json.html", {
+      return $.tmpl("apigee.ui.collections.entity.json.html", {
         entity : this.options.entity
       }, {
-        makeObjectTable : usergrid.console.ui.makeObjectTable,
-        tableOpts : usergrid.console.ui.standardTableOpts
+        makeObjectTable : apigee.console.ui.makeObjectTable,
+        tableOpts : apigee.console.ui.standardTableOpts
       });
     },
 
@@ -177,7 +177,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
     }
 
   }
-  usergrid.console.ui.collections.entity_list_item = entity_list_item;
+  apigee.console.ui.collections.entity_list_item = entity_list_item;
 
   var entity_detail = {
     options: {
@@ -191,7 +191,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 
       var entity_id = el.dataset('entity-id');
       var entity_type = el.dataset('entity-type');
-      var entity = usergrid.console.getQueryResultEntity(entity_id);
+      var entity = apigee.console.getQueryResultEntity(entity_id);
       if (!entity) return;
       o.entity = entity;
       o.path = el.dataset('collection-path');
@@ -264,7 +264,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
       var metadata = entity.metadata;
       if ($.isEmptyObject(metadata)) metadata = null;
 
-      return $.tmpl("usergrid.ui.collections.entity.detail.html", {
+      return $.tmpl("apigee.ui.collections.entity.detail.html", {
         entity : entity_contents,
         name : name,
         path : this.options.path,
@@ -272,9 +272,9 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
         metadata : metadata,
         uri : (entity.metadata || { }).uri
       }, {
-        makeObjectTable : usergrid.console.ui.makeObjectTable,
-        tableOpts : usergrid.console.ui.standardTableOpts,
-        metadataTableOpts : usergrid.console.ui.metadataTableOpts
+        makeObjectTable : apigee.console.ui.makeObjectTable,
+        tableOpts : apigee.console.ui.standardTableOpts,
+        metadataTableOpts : apigee.console.ui.metadataTableOpts
       });
 
     },
@@ -288,13 +288,13 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
     }
 
   };
-  usergrid.console.ui.collections.entity_detail = entity_detail;
+  apigee.console.ui.collections.entity_detail = entity_detail;
 
   (function($) {
     // This code block *WILL NOT* load before the document is complete
 
-    $.widget("ui.usergrid_collections_entity_list_item", entity_list_item);
-    $.widget("ui.usergrid_collections_entity_detail", entity_detail);
+    $.widget("ui.apigee_collections_entity_list_item", entity_list_item);
+    $.widget("ui.apigee_collections_entity_detail", entity_detail);
 
   })(jQuery);
 

@@ -1,5 +1,5 @@
 <h4>Inactivity</h4>
-<form id="role-inactivity-form" class="well form-inline" action="" onsubmit="usergrid.console.editRoleInactivity(); return false;">
+<form id="role-inactivity-form" class="well form-inline" action="" onsubmit="Apigee.console.editRoleInactivity(); return false;">
   Seconds: <input type="text" name="role-inactivity" id="role-inactivity-input" /> &nbsp; Integer only. 0 (zero) means no expiration.
   <button type="submit" id="role-inactivity-submit" class="btn btn-primary">Edit</button>
 </form>
@@ -8,7 +8,7 @@
 </div>
 <br />
 <h4>Add Permission Rule</h4>
-<form id="role-permissions-form" action="" onsubmit="usergrid.console.addRolePermission('${role}'); return false;" class="well form-inline" autocomplete="off">
+<form id="role-permissions-form" action="" onsubmit="Apigee.console.addRolePermission('${role}'); return false;" class="well form-inline" autocomplete="off">
   Path: <input id="role-permission-path-entry-input" type="text" name="path" value="/" />
   <label class="checkbox">
     <input id="role-permission-op-get-checkbox" type="checkbox" name="get" value="get"/>
@@ -47,7 +47,7 @@
       <td class="role-permission-op">{{if $value.ops.put}}<i class="icon-ok"></i>{{/if}}</td>
       <td class="role-permission-op">{{if $value.ops.delete}}<i class="icon-ok"></i>{{/if}}</td>
       <td class="role-permission-delete">
-        <a onclick="usergrid.console.deleteRolePermission('${role}', '${$value.perm}'); return false;" href="#" class="btn btn-danger"><i class="icon-trash icon-white"></i> Remove</a>
+        <a onclick="Apigee.console.deleteRolePermission('${role}', '${$value.perm}'); return false;" href="#" class="btn btn-danger"><i class="icon-trash icon-white"></i> Remove</a>
       </td>
     </tr>
     {{/each}}
