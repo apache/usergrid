@@ -4,8 +4,8 @@ window.console.log = window.console.log || function() {};
 // fix end here
 
 var apigee = apigee || {};
-apigee.userSession = new UserSession();
-apigee.organizations = new Organization();
+apigee.userSession = new apigee.UserSession();
+apigee.organizations = new apigee.Organization();
 
 var Pages = new ApigeePages();
 

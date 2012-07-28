@@ -896,7 +896,7 @@ function apigee_console_app(Pages, query_params) {
         function(response) {
           for (var appName in response.data) { break; }
           var currentOrg = apiClient.getOrganizationName();
-          apigee.organizations.getItemByName(currentOrg).addItem(new Application(appName, response.data[appName]));
+          apigee.organizations.getItemByName(currentOrg).addItem(new apigee.Application(appName, response.data[appName]));
           pageSelect(appName);
           requestApplications(response);
         },
@@ -3540,14 +3540,14 @@ function deleteRolePermission(roleName, permission) {
           var orgName = response.user.organizations[org].name;
           //grab the uuid
           var orgUUID = response.user.organizations[org].uuid;
-          organization = new Organization(orgName, orgUUID);
+          organization = new apigee.Organization(orgName, orgUUID);
           for (app in response.user.organizations[org].applications) {
             //grab the name
             var appName = app.split("/")[1];
             //grab the id
             var appUUID = response.user.organizations[org].applications[app];
             //store in the new Application object
-            application = new Application(appName, appUUID);
+            application = new apigee.Application(appName, appUUID);
             organization.addItem(application);
           }
           //apigee.applications
@@ -3601,7 +3601,7 @@ function deleteRolePermission(roleName, permission) {
           var orgName = response.data.organizations[org].name;
           //grab the uuid
           var orgUUID = response.data.organizations[org].uuid;
-          organization = new Organization(orgName, orgUUID);
+          organization = new apigee.Organization(orgName, orgUUID);
           for (app in response.data.organizations[org].applications) {
             //grab the name
             var appName = app.split("/")[1];
@@ -3609,7 +3609,7 @@ function deleteRolePermission(roleName, permission) {
             //grab the id
             var appUUID = response.data.organizations[org].applications[app];
             //store in the new Application object
-            application = new Application(appName, appUUID);
+            application = new apigee.Application(appName, appUUID);
             organization.addItem(application);
           }
           //add organization to organizations list
