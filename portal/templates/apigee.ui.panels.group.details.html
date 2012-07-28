@@ -2,11 +2,11 @@
 <div id="group-messages" class="alert" style="display: none;"></div>
 <div class="console-section">
   <div class="well thingy">
-    {{if path}}<span class="title" href="" onclick="Apigee.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+    {{if path}}<span class="title" href="" onclick="apigee.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
       ${name}
     {{if path}}</span>{{/if}}
     <div class="bar">
-      <a href="#" onclick="Apigee.console.saveGroupProfile('${uuid}'); return false;"> Save Group </a>
+      <a href="#" onclick="apigee.console.saveGroupProfile('${uuid}'); return false;"> Save Group </a>
     </div>
   </div>
   <h3>Edit</h3>

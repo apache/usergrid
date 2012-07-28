@@ -3,7 +3,7 @@
     <td class="query-result-td-checkbox"><input type="checkbox" name="${entity.type}" value="${entity.uuid}" id="queryResultItem" /></td>
     <td class="query-result-td-header-name">
       <div class="query-result-header-name">
-        {{if path}}<a href="" onclick="Apigee.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+        {{if path}}<a href="" onclick="apigee.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
           ${name}
         {{if path}}</a>{{/if}}
       </div>
