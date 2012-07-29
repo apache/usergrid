@@ -449,14 +449,7 @@ apigee = apigee || {};
           alert(response);
       }
 
-
-
-      xhr.open(method, this.getApiUrl() + path, true);
-      if (application_name != 'SANDBOX' && this.getToken()) {
-        xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
-        xhr.withCredentials = true;
-      }
-     // Handle response.
+      // Handle response.
       xhr.onerror = function() {
         //network error
         clearTimeout(timeout);
