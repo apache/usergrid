@@ -1,7 +1,3 @@
-// fix for IE8 which has no console.log... go figure
-window.console = window.console || {};
-window.console.log = window.console.log || function() {};
-// fix end here
 
 var apigee = apigee || {};
 apigee.userSession = new apigee.UserSession();

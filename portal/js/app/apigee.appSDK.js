@@ -41,6 +41,9 @@
  * </pre>
  */
 
+window.console = window.console || {};
+window.console.log = window.console.log || function() {};
+
 window.apigee = window.apigee || {};
 apigee = apigee || {};
 
@@ -167,8 +170,6 @@ apigee = apigee || {};
     }
   };
 
-
-
   /**
   * APIClient class is charged with making calls to the API endpoint
   *
@@ -177,7 +178,7 @@ apigee = apigee || {};
   */
   apigee.APIClient = function (orgName, appName) {
     //API endpoint
-    this._apiUrl = "https://api.usergrid.com";
+    this._apiUrl = "http://api.usergrid.com";
     this._orgName = orgName;
     this._orgUUID = null;
     this._appName = appName;
@@ -410,7 +411,47 @@ apigee = apigee || {};
       QueryObj.setCurl(curl);
 
       //so far so good, so run the query
-      var xhr = new XMLHttpRequest();
+      //var xhr = new XMLHttpRequest();
+
+
+
+      var url = 'http://api.usergrid.com/ApigeeRod/sandbox/users';
+      var xD = window.XDomainRequest ? true : false;
+      var xhr;
+
+      if(xD)
+      {
+          xhr = new window.XDomainRequest();
+          xhr.onload = outputResult;
+          xhr.open(method, this.getApiUrl() + path, true);
+          if (application_name != 'SANDBOX' && this.getToken()) {
+            xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
+            xhr.withCredentials = true;
+          }
+          xhr.send(jsonObj);
+      }
+      else
+      {
+        xhr = new XMLHttpRequest();
+        xhr.open(method, this.getApiUrl() + path, true);
+        if (application_name != 'SANDBOX' && this.getToken()) {
+          xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
+          xhr.withCredentials = true;
+        }
+        xhr.send(jsonObj);
+          //xhr.open('GET', url, true);
+          //xhr.onreadystatechange = handler;
+          // xhr.send();
+      }
+
+      function outputResult()
+      {
+          var response = xhr.responseText;
+          alert(response);
+      }
+
+
+
       xhr.open(method, this.getApiUrl() + path, true);
       if (application_name != 'SANDBOX' && this.getToken()) {
         xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
@@ -429,7 +470,7 @@ apigee = apigee || {};
         //call completed
         clearTimeout(timeout);
         response = JSON.parse(xhr.responseText);
-        if (xhr.status != 200)  {
+        if (xhr.status != 200 && !xD)   {
           //there was an api error
           var error = response.error;
           console.log('API call failed: (status: '+xhr.status+').' + error.type);
