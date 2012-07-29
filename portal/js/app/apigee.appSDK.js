@@ -411,24 +411,23 @@ apigee = apigee || {};
       QueryObj.setCurl(curl);
 
       //so far so good, so run the query
-      //var xhr = new XMLHttpRequest();
-
-
-
-      var url = 'http://api.usergrid.com/ApigeeRod/sandbox/users';
       var xD = window.XDomainRequest ? true : false;
       var xhr;
 
       if(xD)
-      {
-          xhr = new window.XDomainRequest();
-          xhr.onload = outputResult;
-          xhr.open(method, this.getApiUrl() + path, true);
-          if (application_name != 'SANDBOX' && this.getToken()) {
-            xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
-            xhr.withCredentials = true;
+      {          
+        xhr = new window.XDomainRequest();
+        xhr.onload = outputResult;
+        if (application_name != 'SANDBOX' && this.getToken()) {
+          if (path.indexOf("?")) {
+            path += '&access_token='+this.getToken();
+          } else {
+            path = '?access_token='+this.getToken();
           }
-          xhr.send(jsonObj);
+        }
+        xhr.open(method, this.getApiUrl() + path, true);
+
+        xhr.send(jsonObj);
       }
       else
       {
