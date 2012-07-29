@@ -417,7 +417,6 @@ apigee = apigee || {};
       if(xD)
       {          
         xhr = new window.XDomainRequest();
-        xhr.onload = outputResult;
         if (application_name != 'SANDBOX' && this.getToken()) {
           if (path.indexOf("?")) {
             path += '&access_token='+this.getToken();
@@ -426,8 +425,6 @@ apigee = apigee || {};
           }
         }
         xhr.open(method, this.getApiUrl() + path, true);
-
-        xhr.send(jsonObj);
       }
       else
       {
@@ -437,19 +434,15 @@ apigee = apigee || {};
           xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
           xhr.withCredentials = true;
         }
-        xhr.send(jsonObj);
-          //xhr.open('GET', url, true);
-          //xhr.onreadystatechange = handler;
-          // xhr.send();
       }
 
-      function outputResult()
-      {
-          var response = xhr.responseText;
-          alert(response);
-      }
 
-      // Handle response.
+      xhr.open(method, this.getApiUrl() + path, true);
+      if (application_name != 'SANDBOX' && this.getToken()) {
+        xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
+        xhr.withCredentials = true;
+      }
+     // Handle response.
       xhr.onerror = function() {
         //network error
         clearTimeout(timeout);
