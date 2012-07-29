@@ -388,6 +388,7 @@ ol {
 }
 li {
   line-height: 18px;
+  margin-bottom: 3px;
 }
 ul.unstyled {
   margin-left: 0;
@@ -3590,8 +3591,6 @@ html {
   /* center, not in IE5 */
 
   height: auto !important;
-  /* real browsers */
-
   min-height: 100%;
   /* real browsers */
 
@@ -3663,6 +3662,9 @@ a:active {
 .clear {
   clear: both;
 }
+.marginless {
+  margin-bottom: 0 !important;
+}
 .navbar {
   height: 46px;
   min-width: 700px;
@@ -3728,7 +3730,7 @@ a:active {
   left: 5px;
   width: 155px;
 }
-.nav-list  > li > a {
+.nav-list > li > a {
   text-align: left;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -3950,8 +3952,8 @@ a:active {
   color: black;
 }
 #application-panel-table table {
-  width: 200px;
-  margin-left: 50px;
+  width: 300px;
+  margin-left: 10px;
 }
 #application-panel-table table tr > * {
   text-align: left;

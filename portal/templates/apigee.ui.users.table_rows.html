@@ -1,0 +1,15 @@
+<tr class="zebraRows users-row">
+  <td class="checkboxo">
+    <input class="userListItem" type="checkbox" name="${name}" value="${uuid}" />
+  </td>
+  <td class="gravatar50-td">
+    <img src="${picture}" class="gravatar50"/>
+  </td>
+  <td class="user-details">
+    {{if uuid}}
+      <a href="" onclick="apigee.console.pageOpenUserProfile('${uuid}'); return false;">${username}: ${name}</a>
+    {{else}}
+      ${username}: ${name}</a>
+    {{/if}}
+  </td>
+</tr>

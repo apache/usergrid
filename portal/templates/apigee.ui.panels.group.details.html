@@ -1,0 +1,95 @@
+<div class="alert messages" style="display: none;"></div>
+<div id="group-messages" class="alert" style="display: none;"></div>
+<div class="console-section">
+  <div class="well thingy">
+    {{if path}}<span class="title" href="" onclick="apigee.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+      ${name}
+    {{if path}}</span>{{/if}}
+    <div class="bar">
+      <a href="#" onclick="apigee.console.saveGroupProfile('${uuid}'); return false;"> Save Group </a>
+    </div>
+  </div>
+  <h3>Edit</h3>
+  <div class="query-result-form"></div>
+  <div class="content-container">
+    <h3>Contents</h3>
+    <table class="table">
+      <tbody>
+        <tr class="zebraRows">
+          <td>UUID</td>
+          <td>${entity.uuid}</td>
+        </tr>
+        <tr class="zebraRows">
+          <td>Type</td>
+          <td>${entity.type}</td>
+        </tr>
+        <tr class="zebraRows">
+          <td>
+            Created
+          </td>
+          <td>
+            <a href="#" class="toggleableSP">${dateToString(entity.created)}</a>
+            <a href="#" class="toggleableSP hide">${entity.created}</a>
+          </td>
+        </tr>
+        <tr class="zebraRows">
+          <td>
+            Modified
+          </td>
+          <td>
+            <a href="#" class="toggleableSP">${dateToString(entity.modified)}</a>
+            <a href="#" class="toggleableSP hide">${entity.modified}</a>
+          </td>
+        </tr>
+        <tr class="zebraRows">
+          <td>Title</td>
+          <td>${entity.title}</td>
+        </tr>
+        <tr class="zebraRows">
+          <td>Path</td>
+          <td>${name}</td>
+        </tr>
+        <tr class="zebraRows">
+          <td>Sets</td>
+          <td>
+            <table class="table table-striped">
+              <tbody>
+                {{each metadata.sets}}
+                <tr>
+                  <td>
+                    ${$index}
+                  </td>
+                  <td>
+                    <a href="#" onclick="Apigee.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
+                  </td>
+                </tr>
+                {{/each}}
+              <tbody>
+            </table>
+          </td>
+        </tr>
+        <tr class="zebraRows">
+          <td>Collections</td>
+          <td>
+            <table class="table table-striped">
+              <tbody>
+                {{each metadata.collections}}
+                <tr>
+                  <td>
+                    ${$index}
+                  </td>
+                  <td>
+                    <a href="#" onclick="Apigee.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
+                  </td>
+                </tr>
+                {{/each}}
+              <tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>JSON</h3>
+    <pre class="query-result-json-inner">${JSON.stringify(entity, null, "  ")}</pre>
+  </div>
+</div>

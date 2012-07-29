@@ -1,0 +1,12 @@
+<tr class="zebraRows">
+  <td class="checkboxo">
+    <input class="roleGroupItem" type="checkbox" value="${uuid}" />
+  </td>
+  <td>
+    {{if uuid}}
+      <a href="" onclick="apigee.console.pageOpenGroupProfile('${uuid}'); return false;">${title}: ${path}</a>
+    {{else}}
+      ${title}: ${path}</a>
+    {{/if}}
+  </td>
+</tr>

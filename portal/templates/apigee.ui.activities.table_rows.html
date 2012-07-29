@@ -1,0 +1,14 @@
+<tr class="zebraRows">
+  <td>
+    <a href="#" class="toggleableSP">${dateToString(created)}</a>
+    <a href="#" class="toggleableSP hide">${created}</a>
+  </td>
+  <td class="gravatar20">
+    <img src="${actor.picture}"/>
+  </td>
+  <td>
+    ${actor.displayName}
+  </td>
+  <td>{{if content}}${content}{{else}} {{/if}}</td>
+  <td>${verb}</td>
+</tr>
