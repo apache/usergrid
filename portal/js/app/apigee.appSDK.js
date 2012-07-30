@@ -213,7 +213,7 @@ var APIClient = (function () {
       if ((method == "GET") || (method == "DELETE")) {
         params['_'] = new Date().getTime();
       }
-
+		//TODO: double use of encodeParams ( is it necesary?)
       //append params to the path
       var encoded_params = this.encodeParams(params);
       if (encoded_params) {

@@ -947,7 +947,14 @@ function apigee_console_app(Pages, query_params) {
       $(this).modal('hide');
     }
   }
-
+ //TODO: the organization, and required fields for this method, are hidden. There is no quick way to check variable names and order
+ /*
+  * Needed fields: 
+  * username:
+  * name: FULL NAME
+  * email: 
+  * password: 
+  */
   function submitNewUser() {
     var form = $(this);
     formClearErrors(form);
@@ -3522,11 +3529,7 @@ function deleteRolePermission(roleName, permission) {
     var password = $('#login-password').val();
 
     //empty local storage
-<<<<<<< HEAD
-    usergrid.session.clearAll();
-=======
-    apigee.userSession.clearAll();;
->>>>>>> 7b71ddd55bdc2071f61a5b3b545382d9e820f4ae
+    apigee.userSession.clearAll();
 
     var formdata = {
       grant_type: "password",
@@ -4002,7 +4005,7 @@ function deleteRolePermission(roleName, permission) {
     return false;
   });
 //TODO: why is this object out of scope of .button()??
-  //$('button, input:submit, input:button').button();
+  $('button, input:submit, input:button').button();
 
   $('select#indexSelect').change( function(e){
     $('#query-ql').val($(this).val() || "");
