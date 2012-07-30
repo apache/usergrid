@@ -17,13 +17,16 @@ var APIClient = (function () {
   var _orgUUID = null;
   var _appName = null;
   var _token = null;
-  var clientId = null; //to be implemented
-  var clientSecret = null; //to be implemented
+  var _appUserUsername = null;
+  var _appUserName = null;
+  var _appUserEmail = null;
+  var _appUserUUID = null;
 
   function init(orgName, appName){
     _orgName = orgName;
     _appName = appName;
   }
+
   /*
     *  method to get the organization name to be used by the client
     *  @method getOrganizationName
@@ -33,7 +36,7 @@ var APIClient = (function () {
   }
   /*
     *  method to set the organization name to be used by the client
-    *  @method getOrganizationName
+    *  @method setOrganizationName
     *  @param orgName - the organization name
     */
   function setOrganizationName(orgName) {
@@ -88,6 +91,70 @@ var APIClient = (function () {
   }
 
   /*
+    *  method to get the app user's username to be used by the client
+    *  @method getAppUserUsername
+    */
+  function getAppUserUsername() {
+    return _appUserUsername;
+  }
+  /*
+    *  method to set the app user's username to be used by the client
+    *  @method setAppUserUsername
+    *  @param appUserUsername - the app user's username
+    */
+  function setAppUserUsername(appUserUsername) {
+    _appUserUsername = appUserUsername;
+  }
+
+  /*
+    *  method to get the app user's name to be used by the client
+    *  @method getAppUserName
+    */
+  function getAppUserFullName() {
+    return _appUserName;
+  }
+  /*
+    *  method to set the app user's name to be used by the client
+    *  @method setAppUserName
+    *  @param appUserName - the app user's name
+    */
+  function setAppUserFullName(appUserName) {
+    _appUserName = appUserName;
+  }
+
+  /*
+    *  method to get the app user's email to be used by the client
+    *  @method getAppUserEmail
+    */
+  function getAppUserEmail() {
+    return _appUserEmail;
+  }
+  /*
+    *  method to set the app user's email to be used by the client
+    *  @method setAppUserEmail
+    *  @param appUserEmail - the app user's email
+    */
+  function setAppUserEmail(appUserEmail) {
+    _appUserEmail = appUserEmail;
+  }
+
+  /*
+    *  method to get the app user's uuid to be used by the client
+    *  @method getAppUserUUID
+    */
+  function getAppUserUUID() {
+    return _appUserUUID;
+  }
+  /*
+    *  method to set the app user's uuid to be used by the client
+    *  @method setAppUserUUID
+    *  @param appUserUUID - the app user's uuid
+    */
+  function setAppUserUUID(appUserUUID) {
+    _appUserUUID = appUserUUID;
+  }
+
+  /*
   *  returns API URL
   *  @method getApiUrl
   */
@@ -130,6 +197,31 @@ var APIClient = (function () {
   function runManagementQuery (QueryObj) {
     var endpoint = "/management/";
     this.processQuery(QueryObj, endpoint)
+  }
+
+  function loginAppUser (username, password, successCallback, failureCallback) {
+    var data = {"username": username, "password": password, "grant_type": "password"};
+    this.runAppQuery(new apigee.QueryObj('POST', 'token', data, null,
+      function (response) {
+        this.setAppUserUsername(response.user.username);
+        this.setAppUserFullName(response.user.name);
+        this.setAppUserEmail(response.user.email);
+        this.setAppUserUUID(response.user.uuid);
+        this.setToken(response.access_token);
+        if (successCallback && typeof(successCallback) == "function") {
+          successCallback(response);
+        }
+      },
+      function (response) {
+        if (failureCallback && typeof(failureCallback) == "function") {
+          failureCallback(response);
+        }
+      }
+     ));
+  }
+
+  function renewAppUserToken() {
+
   }
 
   /*
@@ -201,13 +293,14 @@ var APIClient = (function () {
       }
 
       //curl - append the path
-      curl += " " + this.getApiUrl() + path;
+      curl += ' "' + this.getApiUrl() + path;
 
       //curl - append params to the path for curl prior to adding the timestamp
       var encoded_params = this.encodeParams(params);
       if (encoded_params) {
         curl += "?" + encoded_params;
       }
+      curl += '"';
 
       //add in a timestamp for gets and deletes - to avoid caching by the browser
       if ((method == "GET") || (method == "DELETE")) {
@@ -290,9 +383,7 @@ var APIClient = (function () {
       //network error
       clearTimeout(timeout);
       console.log('API call failed at the network level.');
-      if (QueryObj.callFailureCallback) {
-        QueryObj.callFailureCallback({'error':'error'});
-      }
+      QueryObj.callFailureCallback({'error':'error'});
     };
     xhr.onload = function() {
       //call completed
@@ -313,10 +404,7 @@ var APIClient = (function () {
             }
         }
         //otherwise, just call the failure callback
-        if (QueryObj.callFailureCallback) {
-          QueryObj.callFailureCallback(response);
-        }
-
+        QueryObj.callFailureCallback(response);
         return;
       } else {
         //success
@@ -325,9 +413,7 @@ var APIClient = (function () {
         var cursor = response.cursor || null;
         QueryObj.saveCursor(cursor);
         //then call the original callback
-        if (QueryObj.callSuccessCallback) {
-          QueryObj.callSuccessCallback(response);
-        }
+        QueryObj.callSuccessCallback(response);
       }
     };
     var timeout = setTimeout(function() { xhr.abort(); }, 10000);
@@ -391,11 +477,21 @@ var APIClient = (function () {
     setApplicationName:setApplicationName,
     getToken:getToken,
     setToken:setToken,
+    getAppUserUsername:getAppUserUsername,
+    setAppUserUsername:setAppUserUsername,
+    getAppUserFullName:getAppUserFullName,
+    setAppUserFullName:setAppUserFullName,
+    getAppUserEmail:getAppUserEmail,
+    setAppUserEmail:setAppUserEmail,
+    getAppUserUUID:getAppUserUUID,
+    setAppUserUUID:setAppUserUUID,
     getApiUrl:getApiUrl,
     setApiUrl:setApiUrl,
     getResetPasswordUrl:getResetPasswordUrl,
     runAppQuery:runAppQuery,
     runManagementQuery:runManagementQuery,
+    loginAppUser:loginAppUser,
+    renewAppUserToken:renewAppUserToken,
     processQuery:processQuery,
     encodeParams:encodeParams,
     isUUID:isUUID
@@ -504,9 +600,10 @@ var APIClient = (function () {
       this._successCallback = successCallback;
     },
     callSuccessCallback: function(response) {
-      if (this._successCallback) {
+      if (this._successCallback && typeof(errorCallback) == "function") {
         this._successCallback(response);
       }
+      return false;
     },
     getFailureCallback: function() {
       return this._failureCallback;
@@ -515,9 +612,10 @@ var APIClient = (function () {
       this._failureCallback = failureCallback;
     },
     callFailureCallback: function(response) {
-      if (this._failureCallback) {
+      if (this._failureCallback && typeof(errorCallback) == "function") {
         this._failureCallback(response);
       }
+      return false;
     },
 
     getCurl: function() {
