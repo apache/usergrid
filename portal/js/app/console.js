@@ -2,7 +2,7 @@ function apigee_console_app(Pages, query_params) {
   //This code block *WILL NOT* load before the document is complete
   window.apigee = window.apigee || {};
   apigee.console = apigee.console || {};
-  var apiClient = new apigee.APIClient();
+  var apiClient = APIClient;
 
   // for running Apigee App Services as a local server
   var LOCAL_STANDALONE_API_URL = "http://localhost:8080";
