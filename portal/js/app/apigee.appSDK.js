@@ -201,7 +201,7 @@ var APIClient = (function () {
 
   function loginAppUser (username, password, successCallback, failureCallback) {
     var data = {"username": username, "password": password, "grant_type": "password"};
-    this.runAppQuery(new apigee.QueryObj('POST', 'token', data, null,
+    this.runAppQuery(new apigee.QueryObj('GET', 'token', null, data,
       function (response) {
         this.setAppUserUsername(response.user.username);
         this.setAppUserFullName(response.user.name);
@@ -372,12 +372,6 @@ var APIClient = (function () {
       xhr.open(method, this.getApiUrl() + path, true);
     }
 
-
-    xhr.open(method, this.getApiUrl() + path, true);
-    if (application_name != 'SANDBOX' && this.getToken()) {
-      xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
-      xhr.withCredentials = true;
-    }
     // Handle response.
     xhr.onerror = function() {
       //network error
@@ -600,7 +594,7 @@ var APIClient = (function () {
       this._successCallback = successCallback;
     },
     callSuccessCallback: function(response) {
-      if (this._successCallback && typeof(errorCallback) == "function") {
+      if (this._successCallback && typeof(this._successCallback ) == "function") {
         this._successCallback(response);
       }
       return false;
@@ -612,7 +606,7 @@ var APIClient = (function () {
       this._failureCallback = failureCallback;
     },
     callFailureCallback: function(response) {
-      if (this._failureCallback && typeof(errorCallback) == "function") {
+      if (this._failureCallback && typeof(this._failureCallback) == "function") {
         this._failureCallback(response);
       }
       return false;
