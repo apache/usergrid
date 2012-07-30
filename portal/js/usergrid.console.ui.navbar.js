@@ -1,6 +1,6 @@
 (function($) {
 
-  $.widget("ui.usergrid_console_navbar", {
+  $.widget("ui.apigee_console_navbar", {
     options : {},
 
     _create : function() {

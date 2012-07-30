@@ -1,7 +1,7 @@
-window.usergrid = window.usergrid || {};
-usergrid.console = usergrid.console || {};
-usergrid.console.ui = usergrid.console.ui || { };
-usergrid.console.ui.collections = usergrid.console.ui.collections || { };
+window.apigee = window.apigee || {};
+apigee.console = apigee.console || {};
+apigee.console.ui = apigee.console.ui || { };
+apigee.console.ui.collections = apigee.console.ui.collections || { };
 
 (function($) {
   //This code block *WILL NOT* load before the document is complete
@@ -99,7 +99,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
       }
     }
   };
-  usergrid.console.ui.collections.vcard_schema = vcard_schema;
+  apigee.console.ui.collections.vcard_schema = vcard_schema;
 
   var group_schema = {
     "description":"A representation of a group",
@@ -117,13 +117,13 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
       }
     }
   };
-  usergrid.console.ui.collections.group_schema = group_schema;
+  apigee.console.ui.collections.group_schema = group_schema;
 
-  usergrid.console.ui.loadTemplate("usergrid.ui.collections.user.header.html");
-  usergrid.console.ui.loadTemplate("usergrid.ui.collections.user.detail.html");
+  apigee.console.ui.loadTemplate("apigee.ui.collections.user.header.html");
+  apigee.console.ui.loadTemplate("apigee.ui.collections.user.detail.html");
 
   // User list view is a subclass of the Entity list view
-  $.widget("ui.usergrid_collections_user_list_item", $.extend( true, { }, usergrid.console.ui.collections.entity_list_item, {
+  $.widget("ui.apigee_collections_user_list_item", $.extend( true, { }, apigee.console.ui.collections.entity_list_item, {
 
     getHeader : function() {
       var entity = this.options.entity;
@@ -148,7 +148,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
         entity.picture = entity.picture + "?d=http://" + window.location.host + window.location.pathname + "images/user_profile.png"
       }
 
-      return $.tmpl("usergrid.ui.collections.user.header.html", {
+      return $.tmpl("apigee.ui.collections.user.header.html", {
         entity : entity,
         picture : entity.picture,
         name : name,
@@ -162,7 +162,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
 
   }));
 
-  $.widget("ui.usergrid_collections_user_detail", $.extend( true, { }, usergrid.console.ui.collections.entity_detail, {
+  $.widget("ui.apigee_collections_user_detail", $.extend( true, { }, apigee.console.ui.collections.entity_detail, {
 
     getDetails : function() {
       var entity = this.options.entity;
@@ -189,7 +189,7 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
       var metadata = entity.metadata;
       if ($.isEmptyObject(metadata)) metadata = null;
 
-      var details = $.tmpl("usergrid.ui.collections.user.detail.html", {
+      var details = $.tmpl("apigee.ui.collections.user.detail.html", {
         entity : entity_contents,
         picture : entity.picture,
         name : name,
@@ -198,13 +198,13 @@ usergrid.console.ui.collections = usergrid.console.ui.collections || { };
         metadata : metadata,
         uri : (entity.metadata || { }).uri
       }, {
-        makeObjectTable : usergrid.console.ui.makeObjectTable,
-        tableOpts : usergrid.console.ui.standardTableOpts,
-        metadataTableOpts : usergrid.console.ui.metadataTableOpts
+        makeObjectTable : apigee.console.ui.makeObjectTable,
+        tableOpts : apigee.console.ui.standardTableOpts,
+        metadataTableOpts : apigee.console.ui.metadataTableOpts
       });
 
       var formDiv = details.find(".query-result-form");
-      $(formDiv).buildForm(usergrid.console.ui.jsonSchemaToDForm(vcard_schema, entity));
+      $(formDiv).buildForm(apigee.console.ui.jsonSchemaToDForm(vcard_schema, entity));
 
       return details;
     }
