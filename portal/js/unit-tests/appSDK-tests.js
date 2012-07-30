@@ -31,12 +31,13 @@ function defaultSuccess(data, status, xhr) {
   } else {
 	console.log('no data');
   }
-  // console.log(xhr);
+  
   ok(true, "yahoo!!!");
 }
 
 function defaultError(xhr, status, error) {
   start();
+  console.log(xhr);
   console.log('boo!');
   throw new Error("error!");
 }
@@ -68,7 +69,8 @@ module("", {
 module("login", {
 	setup:function(){
 		
-		initCore();/*
+		initCore();
+		/* TODO: Check if commented part of the code is needed
 		var $fixture = $("#qunit-fixture");
 		var $inputEmail = $("<input type='text' />").attr("id", credentials.loginId).attr("value", credentials.login)
 		var $inputPassword = $("<input type='password'/>").attr("id", credentials.passwordId).attr("value", credentials.password);
@@ -83,14 +85,21 @@ module("login", {
 });//END MODULE DEFINITION
 
 
-asyncTest("login from webpage(credentials)", function(){
+asyncTest("login with credentials", function(){
 	expect(1);
 	var formdata = {
       	grant_type: "password",
      	username: credentials.login,
      	password: credentials.password
    	 	};			
-	usergrid.client.runManagementQuery(new QueryObj('GET', 'token', null, formdata))
+	usergrid.client.runManagementQuery(new QueryObj('GET', 'token', null, formdata, defaultSuccess, defaultError));
+});
+
+asyncTest("login with Token", function(){
+	expect(1);
+	var token = usergrid.session.getAccessToken();
+	usergrid.client.setToken(token);
+	usergrid.client.runManagementQuery(new QueryObj("GET","users/" + usergrid.session.getUserEmail(), null, null, defaultSuccess, defaultError));
 });
 
 module("APIClient");
