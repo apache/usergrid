@@ -47,157 +47,157 @@ import org.usergrid.security.tokens.TokenService;
 @Component
 public class ManagementTestHelperImpl implements ManagementTestHelper {
 
-	public static final boolean FORCE_QUIT = false;
+    public static final boolean FORCE_QUIT = false;
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(ManagementTestHelperImpl.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(ManagementTestHelperImpl.class);
 
-	// private static final String TMP = "tmp";
+    // private static final String TMP = "tmp";
 
-	// DatastoreTestClient client;
+    // DatastoreTestClient client;
 
-	EntityManagerFactory emf;
+    EntityManagerFactory emf;
 
-	javax.persistence.EntityManagerFactory jpaEmf;
+    javax.persistence.EntityManagerFactory jpaEmf;
 
-	ManagementService management;
+    ManagementService management;
 
-	TokenService tokens;
+    TokenService tokens;
 
-	Properties properties;
+    Properties properties;
 
-	public boolean forceQuit = FORCE_QUIT;
+    public boolean forceQuit = FORCE_QUIT;
 
-	public ManagementTestHelperImpl() {
-	}
+    public ManagementTestHelperImpl() {
+    }
 
-	/*
-	 * public DatastoreTestHelperImpl(DatastoreTestClient client) { this.client
-	 * = client; }
-	 * 
-	 * public DatastoreTestClient getClient() { return client; }
-	 * 
-	 * public void setClient(DatastoreTestClient client) {
-	 * assertNull(this.client); this.client = client; }
-	 */
+    /*
+     * public DatastoreTestHelperImpl(DatastoreTestClient client) { this.client
+     * = client; }
+     * 
+     * public DatastoreTestClient getClient() { return client; }
+     * 
+     * public void setClient(DatastoreTestClient client) {
+     * assertNull(this.client); this.client = client; }
+     */
 
-	EmbeddedServerHelper embedded = null;
-	ApplicationContext ac = null;
+    EmbeddedServerHelper embedded = null;
+    ApplicationContext ac = null;
 
-	@Override
-	public void setup() throws Exception {
-		// assertNotNull(client);
+    @Override
+    public void setup() throws Exception {
+        // assertNotNull(client);
 
-		String maven_opts = System.getenv("MAVEN_OPTS");
-		logger.info("Maven options: " + maven_opts);
+        String maven_opts = System.getenv("MAVEN_OPTS");
+        logger.info("Maven options: " + maven_opts);
 
-		logger.info("Starting Cassandra");
-		embedded = new EmbeddedServerHelper();
-		embedded.setup();
+        logger.info("Starting Cassandra");
+        embedded = new EmbeddedServerHelper();
+        embedded.setup();
 
-		// copy("/testApplicationContext.xml", TMP);
+        // copy("/testApplicationContext.xml", TMP);
 
-		String[] locations = { "testApplicationContext.xml" };
-		ac = new ClassPathXmlApplicationContext(locations);
+        String[] locations = { "usergrid-test-context.xml" };
+        ac = new ClassPathXmlApplicationContext(locations);
 
-		AutowireCapableBeanFactory acbf = ac.getAutowireCapableBeanFactory();
-		acbf.autowireBeanProperties(this,
-				AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, false);
-		acbf.initializeBean(this, "testClient");
+        AutowireCapableBeanFactory acbf = ac.getAutowireCapableBeanFactory();
+        acbf.autowireBeanProperties(this,
+                AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, false);
+        acbf.initializeBean(this, "testClient");
 
-		assertNotNull(emf);
-		assertTrue(
-				"EntityManagerFactory is instance of EntityManagerFactoryImpl",
-				emf instanceof EntityManagerFactoryImpl);
+        assertNotNull(emf);
+        assertTrue(
+                "EntityManagerFactory is instance of EntityManagerFactoryImpl",
+                emf instanceof EntityManagerFactoryImpl);
 
-		emf.setup();
+        emf.setup();
 
-		management.setup();
+        management.setup();
 
-	}
+    }
 
-	@Override
-	public void teardown() {
-		logger.info("Stopping Cassandra");
-		EmbeddedServerHelper.teardown();
+    @Override
+    public void teardown() {
+        logger.info("Stopping Cassandra");
+        EmbeddedServerHelper.teardown();
 
-		forceQuit();
-	}
+        forceQuit();
+    }
 
-	public void forceQuit() {
-		if (forceQuit) {
-			logger.warn("\n\n\n******\n\nSystem.exit(0) to workaround Cassandra not stopping!\n\n******\n\n\n");
-			System.exit(0);
-		}
-	}
+    public void forceQuit() {
+        if (forceQuit) {
+            logger.warn("\n\n\n******\n\nSystem.exit(0) to workaround Cassandra not stopping!\n\n******\n\n\n");
+            System.exit(0);
+        }
+    }
 
-	@Override
-	public EntityManagerFactory getEntityManagerFactory() {
-		return emf;
-	}
+    @Override
+    public EntityManagerFactory getEntityManagerFactory() {
+        return emf;
+    }
 
-	@Override
-	@Autowired
-	public void setEntityManagerFactory(EntityManagerFactory emf) {
-		this.emf = emf;
-		logger.info("ManagementTestHelperImpl.setEntityManagerFactory");
-	}
+    @Override
+    @Autowired
+    public void setEntityManagerFactory(EntityManagerFactory emf) {
+        this.emf = emf;
+        logger.info("ManagementTestHelperImpl.setEntityManagerFactory");
+    }
 
-	@Override
-	public javax.persistence.EntityManagerFactory getJpaEntityManagerFactory() {
-		return jpaEmf;
-	}
+    @Override
+    public javax.persistence.EntityManagerFactory getJpaEntityManagerFactory() {
+        return jpaEmf;
+    }
 
-	@Override
-	public void setJpaEntityManagerFactory(
-			javax.persistence.EntityManagerFactory jpaEmf) {
-		this.jpaEmf = jpaEmf;
-	}
+    @Override
+    public void setJpaEntityManagerFactory(
+            javax.persistence.EntityManagerFactory jpaEmf) {
+        this.jpaEmf = jpaEmf;
+    }
 
-	@Override
-	public ManagementService getManagementService() {
-		return management;
-	}
+    @Override
+    public ManagementService getManagementService() {
+        return management;
+    }
 
-	@Override
-	@Autowired
-	public void setManagementService(ManagementService management) {
-		this.management = management;
-	}
+    @Override
+    @Autowired
+    public void setManagementService(ManagementService management) {
+        this.management = management;
+    }
 
-	@Override
-	public Properties getProperties() {
-		return properties;
-	}
+    @Override
+    public Properties getProperties() {
+        return properties;
+    }
 
-	@Override
-	@Autowired
-	public void setProperties(Properties properties) {
-		this.properties = properties;
-	}
+    @Override
+    @Autowired
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
 
-	@Override
-	public TokenService getTokenService() {
-		return tokens;
-	}
+    @Override
+    public TokenService getTokenService() {
+        return tokens;
+    }
 
-	@Override
-	@Autowired
-	public void setTokenService(TokenService tokens) {
-		this.tokens = tokens;
-	}
+    @Override
+    @Autowired
+    public void setTokenService(TokenService tokens) {
+        this.tokens = tokens;
+    }
 
-	public boolean isForceQuit() {
-		return forceQuit;
-	}
+    public boolean isForceQuit() {
+        return forceQuit;
+    }
 
-	public void setForceQuit(boolean forceQuit) {
-		this.forceQuit = forceQuit;
-	}
+    public void setForceQuit(boolean forceQuit) {
+        this.forceQuit = forceQuit;
+    }
 
-	@Override
-	public ApplicationContext getApplicationContext() {
-		return ac;
-	}
+    @Override
+    public ApplicationContext getApplicationContext() {
+        return ac;
+    }
 
 }
