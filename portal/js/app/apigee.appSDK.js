@@ -316,8 +316,11 @@ var APIClient = (function () {
         delete params.cursor;
       }
 
+      //strip off the leading slash of the endpoint if there is one
+      endpoint = endpoint.indexOf('/') == 0 ? endpoint.substring(1) : endpoint;
+
       //add the endpoint to the path
-      path = this.getApiUrl() + endpoint + path;
+      path = endpoint + path;
 
       //make sure path never has more than one / together
       if (path) {
@@ -326,6 +329,9 @@ var APIClient = (function () {
           path = path.replace('//', '/');
         }
       }
+
+      //add the http:// bit on the front
+      path = this.getApiUrl() + path;
 
       //curl - append the path
       curl += ' "' + path;
