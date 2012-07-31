@@ -12,16 +12,6 @@ function cleanFixture(){
 	var $fixture = $("#qunit-fixture");
 	$fixture.children("*").remove("*");
 };
-//TODO: utility method, remove soon
-function isInScope(scope, functionName){
-	for (name in scope) {
-    	if(name==functionName){
-    		return true;
-    	}
-	};
-	return false;
-
-};
 
 function printScope(scope){
 	for (name in scope){
@@ -29,39 +19,59 @@ function printScope(scope){
 	};
 };
 
-/*
-*Default Callbacks
-*/
 
-function defaultSuccess(data, status, xhr) {
-  start();
-  if (data) {
-	console.log(data);
-  } else {
-	console.log('no data');
-  }
-  
-  ok(true, "yahoo!!!");
+function loginWithCredentials(calledFunction){	
+	var formdata = {
+      	grant_type: "password",
+     	username: credentials.login,
+     	password: credentials.password
+   	 	};   		
+		apiClient.runManagementQuery(new apigee.QueryObj('GET', 'token', null, formdata, 
+		//Success callback
+		function(data){
+			if(data){
+				calledFunction(data.access_token);
+			};					
+		}, defaultError));
+};
+//CLEANUP: used to remove users created programatically
+function deleteUser(uuid){
+	loginWithCredentials(function(token){
+		apiClient.setToken(token)
+		apiClient.setOrganizationName(mockOrg.UUID);
+		apiClient.setApplicationName(mockOrg.mockApp.UUID);
+		apiClient.runAppQuery(new apigee.QueryObj("DELETE", 'users/' + uuid, null, null));
+		console.log("CLEANUP: DELETED USER UUID: " + uuid);		
+	});
 };
 
-function loginSuccess(data, status, xhr){
-	start()
-		if(data){
-			console.log(data);
-			credentials.token = data.access_token;
-		}else{
-			console.log("no Data");
-		}
-		
-		ok(true, "loginSuccess")
+//SETUP: used to create users to be deleted or modified
+function createUser(){
+	var uuid;
+	var data = getMockUserData();
+	loginWithCredentials(function(){
+		APIClient.setToken();		
+		apiClient.setOrganizationName(mockOrg.UUID);
+		apiClient.setApplicationName(mockOrg.mockApp.UUID);	
+		apiClient.runAppQuery(new apigee.QueryObj("POST", 'users', data, null,
+		function(data){
+			console.log(data.entities[0].uuid);
+			credentials.UUID = data.entities[0].uuid;
+		}));		
+	});
+	
 };
 
-function defaultError(xhr, status, error) {
-  start();
-  console.log(xhr);
-  console.log('boo!');
-  throw new Error("error!");
-}
+function getMockUserData(){
+	var userMod = "1";
+	var data = {
+		username: mockCreateUser.baseUserName + userMod,
+		name: mockCreateUser.baseName,
+		email: mockCreateUser.emailHead + userMod + mockCreateUser.emailTail,
+		password: mockCreateUser.password,
+	}	
+	return data;
+};
 
 /*
 * Fixtures
@@ -69,28 +79,60 @@ function defaultError(xhr, status, error) {
 var	credentials = {		
 		login :"tperegrina@nearbpo.com",
 		password:"123456789",
-		token:"",
 		UUID: "",
-		userName: "",
-		
-	};
+		userName: "",		
+};
 	
 var apiClient = APIClient;
 
-var org = {
+var mockOrg = {
 	UUID : "ee6f0b10-d747-11e1-afad-12313b01d5c1",
-	app1UUID: "ab252e3b-da8d-11e1-afad-12313b01d5c1",
-	app2UUID: "568af5e2-d748-11e1-afad-12313b01d5c1",
-	orgName: "MusicOrg",
+	mockApp: {
+		name: "App1",
+		UUID: "ab252e3b-da8d-11e1-afad-12313b01d5c1"
+	},
+	name: "MusicOrg",
 };
-
 var mockUser = {
-	username: "",
-	name:"",
-	email :"",
-	password:"",
-	UUID: "",	
+	username: "User1",
+	name:"Ann User",
+	email :"annUser@AnnUserEnterprises.com",
+	password:"123456789",
+	UUID: "01c889d7-db28-11e1-afad-12313b01d5c1",	
 };
+var mockCreateUser = {
+	baseUserName: "User-",
+	baseName : "Mock User",
+	emailHead: "MockUser-",
+	emailTail: "@mockuser.com",
+	password: "12345679",
+	UUID: "",
+}
+/*
+*Default Callbacks
+*/
+function defaultSuccess(data, status, xhr) {
+  start();
+  if (data) {
+	console.log(data);
+  } else {
+	console.log('no data');
+  }  
+  ok(true, "yahoo!!!");
+};
+function userCreateSuccess(data, status, xhr){
+	start();
+	var uuid = data.entities[0].uuid;
+	deleteUser(uuid);
+	ok(true, "UserCreated Success ID:" + uuid);
+}
+
+function defaultError(xhr, status, error) {
+  start();
+  console.log(xhr);
+  console.log('boo!');
+  throw new Error("error!");
+}
 
 /*
  * Clean templates to Copy/Paste
@@ -117,37 +159,47 @@ module("login", {
 });//END MODULE DEFINITION
 
 asyncTest("login with credentials", function(){
-	expect(1);
-	
-	var formdata = {
-      	grant_type: "password",
-     	username: credentials.login,
-     	password: credentials.password
-   	 	};   		
-		apiClient.runManagementQuery(new apigee.QueryObj('GET', 'token', null, formdata, loginSuccess, defaultError));
+	expect(1);	
+	loginWithCredentials(function(token){
+		start();		
+		ok(true, "Succesful login TOKEN: " + token);		
+	});
 });
 
-asyncTest("login with Token", function(){
-	expect(1);
-	var token = credentials.token;
-	apiClient.setToken(token);
-	apiClient.runManagementQuery(new apigee.QueryObj("GET","users/" + credentials.login, null, null, defaultSuccess, defaultError));
+asyncTest("login with Token", function(){	
+	expect(1);	
+	loginWithCredentials(function(token){				
+		apiClient.setToken(token);
+		apiClient.runManagementQuery(new apigee.QueryObj("GET","users/" + credentials.login, null, null, defaultSuccess, defaultError));		
+	});
 });
 
 module("GET Methods", {
 	setup:function(){		
-		initCore();	
+		initCore();
 	},//FIN SETUP
 	teardown:function(){
 		 cleanFixture();
 	}//END TEARDOWN
 });//END MODULE DEFINITION
 
-asyncTest("Fetching Apps from Org: " + org.orgName + " GET", function(){
+asyncTest("Fetching Apps from Org: " + mockOrg.name + " GET", function(){
 	expect(1);
-	apiClient.runManagementQuery(new apigee.QueryObj("GET", "organizations/" + org.UUID + "/applications", null, null, defaultSuccess, defaultError));
+	loginWithCredentials(function(token){
+		apiClient.setToken(token);	
+		apiClient.runManagementQuery(new apigee.QueryObj("GET", "organizations/" + mockOrg.UUID + "/applications", null, null, defaultSuccess, defaultError));
+	});
 });
 
+asyncTest("Requesting User ID : " + mockUser.UUID + " GET", function(){
+	expect(1);
+	loginWithCredentials(function(token){			
+		apiClient.setToken(token);		
+		apiClient.setOrganizationName(mockOrg.UUID);
+		apiClient.setApplicationName(mockOrg.mockApp.UUID);	
+		apiClient.runAppQuery(new apigee.QueryObj("GET", 'users/'+ mockUser.UUID, null, null, defaultSuccess, defaultError));
+	});
+});
 
 module("POST Methods", {
 	setup:function(){		
@@ -158,15 +210,42 @@ module("POST Methods", {
 	}//END TEARDOWN
 });//END MODULE DEFINITION
 
+
 asyncTest("Add new User : " + mockUser.username + " POST", function(){
 	expect(1);
-	var data = {
-		username: mockUser.username,
-		name: mockUser.name,
-		email: mockUser.email,
-		password: mockUser.password	
-	};
-	apiClient.runAppQuery(new apigee.QueryObj("POST", 'users', data, null,defaultSuccess, defaultError));
+	loginWithCredentials(function(token){		
+		apiClient.setToken(token);		
+		var data = getMockUserData();
+		apiClient.setOrganizationName(mockOrg.UUID);
+		apiClient.setApplicationName(mockOrg.mockApp.UUID);	
+		apiClient.runAppQuery(new apigee.QueryObj("POST", 'users', data, null, userCreateSuccess, defaultError));
+	});
+});
+
+module("DELETE Methods", {
+	setup:function(){
+		initCore();
+	},
+	teardown:function(){
+		cleanFixture();
+	}
+});
+//TODO: Refractor the user creation out of this method
+asyncTest("Delete User : " + mockUser.username + " DELETE", function(){
+	expect(1);
+	loginWithCredentials(function(token){		
+		apiClient.setToken(token);
+		var data = getMockUserData();
+		apiClient.setOrganizationName(mockOrg.UUID);
+		apiClient.setApplicationName(mockOrg.mockApp.UUID);
+		apiClient.runAppQuery(new apigee.QueryObj("POST", 'users', data, null,
+		function(data){
+			console.log(data.entities[0].uuid);
+			var uuid= data.entities[0].uuid;
+			apiClient.runAppQuery(new apigee.QueryObj("DELETE", 'users/' + uuid, null, null, defaultSuccess, defaultError));
+		}));			
+		
+	});
 });
 
 module("PUT Methods", {
@@ -185,23 +264,7 @@ asyncTest("Update AccountUser : " + mockUser.username + " PUT", function(){
 		password: credentials.password,
 		email:	credentials.userName,
 	};
-	apiClient.runManagementQuery(new apigee.QueryObj("PUT",'users/' + credentialsUUID, userData, null, defaultSuccess, defaultError));
-});
-
-module("DELETE Methods", {
-	setup:function(){
-		initCore();
-	},
-	teardown:function(){
-		cleanFixture();
-	}
-});
-
-asyncTest("Delete User : " + mockUser.username + " DELETE", function(){
-	expect(1);
-	//TODO: save user UUID en el fixtures? u obtenerlo dinamico? a lo mejor, crear y borrar user en el mismo test, pero deja de ser unitario
-	var userId = "";
-	apiClient.runAppQuery(new apigee.QueryObj("DELETE", 'users/' + userId, null, null, defaultSuccess, defaultError));
+	apiClient.runManagementQuery(new apigee.QueryObj("PUT",'users/' + credentialsUUID, userData, null, userCreateSuccess, defaultError));
 });
 
 

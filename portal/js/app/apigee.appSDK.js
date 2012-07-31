@@ -173,7 +173,7 @@ var APIClient = (function () {
       }
       if (application_name != 'SANDBOX' && this.getToken()) {
         curl += ' -i -H "Authorization: Bearer ' + this.getToken() + '"';
-        QueryObj.setToken(true);
+        QueryObj.setHasToken(true);
       }
 
       //params - make sure we have a valid json object
@@ -261,11 +261,12 @@ var APIClient = (function () {
     }
     else if (xM)
     {
-      xhr = new XMLHttpRequest();
+      xhr = new XMLHttpRequest();     
       xhr.open(method, this.getApiUrl() + path, true);
       if (application_name != 'SANDBOX' && this.getToken()) {
         xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
-        xhr.withCredentials = true;
+        xhr.withCredentials = true;      
+       
       }
     } else {
       xhr = new ActiveXObject("MSXML2.XMLHTTP.3.0");
@@ -279,12 +280,14 @@ var APIClient = (function () {
       xhr.open(method, this.getApiUrl() + path, true);
     }
 
-
+	//TODO: probable code duplication
+	/*
     xhr.open(method, this.getApiUrl() + path, true);
     if (application_name != 'SANDBOX' && this.getToken()) {
       xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
       xhr.withCredentials = true;
     }
+    */
     // Handle response.
     xhr.onerror = function() {
       //network error
@@ -456,7 +459,7 @@ var APIClient = (function () {
 
     //curl command - will be populated by runQuery function
     this._curl = '';
-    this._token = false;
+    this._hasToken = false;
 
     //paging vars
     this._cursor = null;
@@ -527,11 +530,11 @@ var APIClient = (function () {
       this._curl = curl;
     },
 
-    getToken: function() {
-      return this._token;
+    getHasToken: function() {
+      return this._hasToken;
     },
-    setToken: function(token) {
-      this._token = token;
+    setHasToken: function(token) {
+      this._hasToken = token;
     },
 
     //methods for accessing paging functions
