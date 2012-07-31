@@ -27,7 +27,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
 
 	private static final Logger logger = LoggerFactory.getLogger(GroupsService.class);
 
-  static CharMatcher matcher = CharMatcher.JAVA_LETTER_OR_DIGIT.or(CharMatcher.anyOf("-."));
+  static CharMatcher matcher = CharMatcher.JAVA_LETTER_OR_DIGIT.or(CharMatcher.anyOf("-./"));
 
 	public GroupsService() {
 		super();
