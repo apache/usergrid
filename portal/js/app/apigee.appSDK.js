@@ -206,6 +206,7 @@ var APIClient = (function () {
       function (response) {
         self.setAppUserUsername(response.user.username);
         self.setAppUserFullName(response.user.name);
+        self.setAppUserFullName(response.user.givenName + response.user.familyName);
         self.setAppUserEmail(response.user.email);
         self.setAppUserUUID(response.user.uuid);
         self.setToken(response.access_token);
@@ -221,14 +222,14 @@ var APIClient = (function () {
      ));
   }
 
-  function createAppUser(username, password, email, name, successCallback, failureCallback) {
+  function createAppUser(name, email, username, password, successCallback, failureCallback) {
     var self = this;
     var data = {"username":username, "password":password, "email":email, "name":name};
     this.runAppQuery(new apigee.QueryObj('POST', 'users', data, null,
       function (response) {
         var user = response.entities[0];
         self.setAppUserUsername(user.username);
-        self.setAppUserFullName(user.name);
+        self.setAppUserFullName(user.givenName + user.familyName);
         self.setAppUserEmail(user.email);
         self.setAppUserUUID(user.uuid);
         if (successCallback && typeof(successCallback) == "function") {
@@ -316,7 +317,7 @@ var APIClient = (function () {
       }
 
       //add the endpoint to the path
-      path = endpoint + path;
+      path = this.getApiUrl() + endpoint + path;
 
       //make sure path never has more than one / together
       if (path) {
@@ -327,7 +328,7 @@ var APIClient = (function () {
       }
 
       //curl - append the path
-      curl += ' "' + this.getApiUrl() + path;
+      curl += ' "' + path;
 
       //curl - append params to the path for curl prior to adding the timestamp
       var encoded_params = this.encodeParams(params);
@@ -384,12 +385,12 @@ var APIClient = (function () {
           path = '?access_token='+this.getToken();
         }
       }
-      xhr.open(method, this.getApiUrl() + path, true);
+      xhr.open(method, path, true);
     }
     else if (xM)
     {
       xhr = new XMLHttpRequest();
-      xhr.open(method, this.getApiUrl() + path, true);
+      xhr.open(method, path, true);
       if (application_name != 'SANDBOX' && this.getToken()) {
         xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
         xhr.withCredentials = true;
@@ -403,7 +404,7 @@ var APIClient = (function () {
           path = '?access_token='+this.getToken();
         }
       }
-      xhr.open(method, this.getApiUrl() + path, true);
+      xhr.open(method, path, true);
     }
 
     // Handle response.
@@ -483,19 +484,7 @@ var APIClient = (function () {
     }
     return tail.join("&");
   }
-  /**
-    * Tests if the string is a uuid
-    * @public
-    * @function
-    * @param {string} uuid The string to test
-    * @returns {Boolean} true if string is uuid
-    */
-  function isUUID (uuid) {
-    var uuidValueRegex = /\"([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})\"/gm;
-    if (!uuid) return false;
-    return uuidValueRegex.test(uuid);
-  }
-  return {
+return {
     init:init,
     getOrganizationName:getOrganizationName,
     setOrganizationName:setOrganizationName,
@@ -524,7 +513,139 @@ var APIClient = (function () {
     logoutAppUser:logoutAppUser,
     isLoggedInAppUser:isLoggedInAppUser,
     processQuery:processQuery,
-    encodeParams:encodeParams,
+    encodeParams:encodeParams
+  }
+})();
+
+
+apigee.validaation = apigee.validaation || {};
+
+apigee.validaation = (function () {
+
+  var usernameRegex = new RegExp("^([0-9a-zA-Z\.\-])+$");
+  var nameRegex     = new RegExp("^([0-9a-zA-Z@#$%^&!?;:.,'\"~*-=+_\[\\](){}/\\ |])+$");
+  var emailRegex    = new RegExp("^(([0-9a-zA-Z]+[_\+.-]?)+@[0-9a-zA-Z]+[0-9,a-z,A-Z,.,-]*(.){1}[a-zA-Z]{2,4})+$");
+  var passwordRegex = new RegExp("^([0-9a-zA-Z@#$%^&!?<>;:.,'\"~*-=+_\[\\](){}/\\ |])+$");
+  var pathRegex     = new RegExp("^([0-9a-z./-])+$");
+  var titleRegex    = new RegExp("^([0-9a-zA-Z.!-?/])+$");
+
+  function validateUsername(username, failureCallback) {
+    if (usernameRegex.test(username) && checkLength(username, 4, 80)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getUsernameAllowedChars());
+      }
+      return false;
+    }
+  }
+  function getUsernameAllowedChars(){
+    return 'Length: min 6, max 80. Allowed: A-Z, a-z, 0-9, dot, and dash';
+  }
+
+  function validateName(name, failureCallback) {
+    if (nameRegex.test(name) && checkLength(name, 5, 16)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getNameAllowedChars());
+      }
+      return false;
+    }
+  }
+  function getNameAllowedChars(){
+    return 'Length: min 4, max 80. Allowed: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . / ? !';
+  }
+
+  function validatePassword(password, failureCallback) {
+    if (passwordRegex.test(password) && checkLength(password, 5, 16)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getPasswordAllowedChars());
+      }
+      return false;
+    }
+  }
+  function getPasswordAllowedChars(){
+    return 'Length: min 5, max 16. Allowed: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . < > / ? !';
+  }
+
+  function validateEmail(email, failureCallback) {
+    if (emailRegex.test(email) && checkLength(email, 4, 80)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getEmailAllowedChars());
+      }
+      return false;
+    }
+  }
+  function getEmailAllowedChars(){
+    return 'Email must be in standard form: e.g. example@apigee.com';
+  }
+
+  function validatePath(path, failureCallback) {
+    if (pathRegex.test(path) && checkLength(path, 4, 80)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getPathAllowedChars());
+      }
+      return false;
+    }
+  }
+  function getPathAllowedChars(){
+    return 'Length: min 4, max 80. Allowed: /, a-z, 0-9, dot, and dash';
+  }
+
+  function validateTitle(title, failureCallback) {
+    if (titleRegex.test(title) && checkLength(title, 4, 80)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getTitleAllowedChars());
+      }
+      return false;
+    }
+  }
+  function getTitleAllowedChars(){
+    return 'Length: min 4, max 80. Allowed: space, A-Z, a-z, 0-9, dot, dash, /, !, and ?';
+  }
+
+  function checkLength(sting, min, max) {
+    if (sting.length > max || sting.length < min) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+    * Tests if the string is a uuid
+    * @public
+    * @function
+    * @param {string} uuid The string to test
+    * @returns {Boolean} true if string is uuid
+    */
+  function isUUID (uuid) {
+    var uuidValueRegex = /\"([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})\"/gm;
+    if (!uuid) return false;
+    return uuidValueRegex.test(uuid);
+  }
+
+  return {
+    validateUsername:validateUsername,
+    getUsernameAllowedChars:getUsernameAllowedChars,
+    validateName:validateName,
+    getNameAllowedChars:getNameAllowedChars,
+    validatePassword:validatePassword,
+    getPasswordAllowedChars:getPasswordAllowedChars,
+    validateEmail:validateEmail,
+    getEmailAllowedChars:getEmailAllowedChars,
+    validatePath:validatePath,
+    getPathAllowedChars:getPathAllowedChars,
+    validateTitle:validateTitle,
+    getTitleAllowedChars:getTitleAllowedChars,
     isUUID:isUUID
   }
 })();
@@ -696,9 +817,11 @@ var APIClient = (function () {
       //if current cursor is different, grab it for next cursor
       if (this._next != cursor) {
         this._next = cursor;
+      } /*else if (cursor == this._previous[this._previous.length-1]) {
+        this._next = cursor;
       } else {
         this._next = null;
-      }
+      }*/
     },
 
     getCursor: function() {

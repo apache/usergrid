@@ -1160,7 +1160,7 @@ function apigee_console_app(Pages, query_params) {
     var form = $(this);
     formClearErrors(form);
     var add_user_username = $('#search-user-name-input');
-    var bValid = checkLength2(add_user_username, 1, 80)
+    var bValid = checkLength2(add_user_username, 4, 80)
       && checkRegexp2(add_user_username, usernameRegex, usernameAllowedCharsMessage);
 
     if (bValid) {
