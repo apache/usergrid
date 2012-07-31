@@ -12,7 +12,7 @@ apigee = apigee || {};
 
 var APIClient = (function () {
   //API endpoint
-  var _apiUrl = "http://api.usergrid.com";
+  var _apiUrl = "http://api.usergrid.com/";
   var _orgName = null;
   var _orgUUID = null;
   var _appName = null;
