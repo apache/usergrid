@@ -200,14 +200,37 @@ var APIClient = (function () {
   }
 
   function loginAppUser (username, password, successCallback, failureCallback) {
+    var self = this;
     var data = {"username": username, "password": password, "grant_type": "password"};
     this.runAppQuery(new apigee.QueryObj('GET', 'token', null, data,
       function (response) {
-        this.setAppUserUsername(response.user.username);
-        this.setAppUserFullName(response.user.name);
-        this.setAppUserEmail(response.user.email);
-        this.setAppUserUUID(response.user.uuid);
-        this.setToken(response.access_token);
+        self.setAppUserUsername(response.user.username);
+        self.setAppUserFullName(response.user.name);
+        self.setAppUserEmail(response.user.email);
+        self.setAppUserUUID(response.user.uuid);
+        self.setToken(response.access_token);
+        if (successCallback && typeof(successCallback) == "function") {
+          successCallback(response);
+        }
+      },
+      function (response) {
+        if (failureCallback && typeof(failureCallback) == "function") {
+          failureCallback(response);
+        }
+      }
+     ));
+  }
+
+  function createAppUser(username, password, email, name, successCallback, failureCallback) {
+    var self = this;
+    var data = {"username":username, "password":password, "email":email, "name":name};
+    this.runAppQuery(new apigee.QueryObj('POST', 'users', data, null,
+      function (response) {
+        var user = response.entities[0];
+        self.setAppUserUsername(user.username);
+        self.setAppUserFullName(user.name);
+        self.setAppUserEmail(user.email);
+        self.setAppUserUUID(user.uuid);
         if (successCallback && typeof(successCallback) == "function") {
           successCallback(response);
         }
@@ -224,6 +247,17 @@ var APIClient = (function () {
 
   }
 
+  function logoutAppUser() {
+    this.setAppUserUsername(null);
+    this.setAppUserFullName(null);
+    this.setAppUserEmail(null);
+    this.setAppUserUUID(null);
+    this.setToken(null);
+  }
+
+  function isLoggedInAppUser() {
+    return (this.getToken() && this.getAppUserUUID());
+  }
   /*
   *  @method processQuery
   *  @purpose to validate and prepare a call to the API
@@ -246,7 +280,7 @@ var APIClient = (function () {
       var method = QueryObj.getMethod().toUpperCase();
       var path = QueryObj.getPath();
       var jsonObj = QueryObj.getJsonObj() || {};
-      var params = QueryObj.getParams() || {};
+      var params = QueryObj.getQueryParams() || {};
 
       //method - should be GET, POST, PUT, or DELETE only
       if (method != 'GET' && method != 'POST' && method != 'PUT' && method != 'DELETE') {
@@ -485,7 +519,10 @@ var APIClient = (function () {
     runAppQuery:runAppQuery,
     runManagementQuery:runManagementQuery,
     loginAppUser:loginAppUser,
+    createAppUser:createAppUser,
     renewAppUserToken:renewAppUserToken,
+    logoutAppUser:logoutAppUser,
+    isLoggedInAppUser:isLoggedInAppUser,
     processQuery:processQuery,
     encodeParams:encodeParams,
     isUUID:isUUID
@@ -535,12 +572,12 @@ var APIClient = (function () {
 
 (function () {
 
-  apigee.QueryObj = function(method, path, jsonObj, params, successCallback, failureCallback) {
+  apigee.QueryObj = function(method, path, jsonObj, queryParams, successCallback, failureCallback) {
     //query vars
     this._method = method;
     this._path = path;
     this._jsonObj = jsonObj;
-    this._params = params;
+    this._queryParams = queryParams;
     this._successCallback = successCallback;
     this._failureCallback = failureCallback;
 
@@ -581,11 +618,11 @@ var APIClient = (function () {
     setJsonObj: function(jsonObj) {
       this._jsonObj = jsonObj;
     },
-    getParams: function() {
-      return this._params;
+    getQueryParams: function() {
+      return this._queryParams;
     },
-    setParams: function(params) {
-      this._params = params;
+    setQueryParams: function(queryParams) {
+      this._queryParams = queryParams;
     },
     getSuccessCallback: function() {
       return this._successCallback;
@@ -596,8 +633,10 @@ var APIClient = (function () {
     callSuccessCallback: function(response) {
       if (this._successCallback && typeof(this._successCallback ) == "function") {
         this._successCallback(response);
+        return true;
+      } else {
+        return false;
       }
-      return false;
     },
     getFailureCallback: function() {
       return this._failureCallback;
@@ -608,8 +647,10 @@ var APIClient = (function () {
     callFailureCallback: function(response) {
       if (this._failureCallback && typeof(this._failureCallback) == "function") {
         this._failureCallback(response);
+        return true;
+      } else {
+        return false;
       }
-      return false;
     },
 
     getCurl: function() {
@@ -652,7 +693,6 @@ var APIClient = (function () {
     },
 
     saveCursor: function(cursor) {
-      this._cursor = this._next; //what was new is old again
       //if current cursor is different, grab it for next cursor
       if (this._next != cursor) {
         this._next = cursor;
@@ -892,6 +932,9 @@ var APIClient = (function () {
         this.setEntityList([]);
         APIClient.runAppQuery(this._queryObj);
       }
+    },
+    setQueryParams: function(query) {
+      this._queryObj.setQueryParams(query);
     },
     get: function(successCallback, errorCallback) {
       var path = this.getPath();
