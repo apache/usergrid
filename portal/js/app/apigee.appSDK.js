@@ -222,9 +222,39 @@ var APIClient = (function () {
      ));
   }
 
-  function createAppUser(name, email, username, password, successCallback, failureCallback) {
+  function updateAppUser(uuid, name, email, username, password, data, successCallback, failureCallback) {
     var self = this;
-    var data = {"username":username, "password":password, "email":email, "name":name};
+    var data = data || {}
+    data.username = username;
+    data.password = password;
+    data.email = email;
+    data.name = name;
+    this.runAppQuery(new apigee.QueryObj('PUT', 'users/'+uuid, data, null,
+      function (response) {
+        var user = response.entities[0];
+        self.setAppUserUsername(user.username);
+        self.setAppUserFullName(user.givenName + user.familyName);
+        self.setAppUserEmail(user.email);
+        self.setAppUserUUID(user.uuid);
+        if (successCallback && typeof(successCallback) == "function") {
+          successCallback(response);
+        }
+      },
+      function (response) {
+        if (failureCallback && typeof(failureCallback) == "function") {
+          failureCallback(response);
+        }
+      }
+     ));
+  }
+
+  function createAppUser(name, email, username, password, data, successCallback, failureCallback) {
+    var self = this;
+    var data = data || {}
+    data.username = username;
+    data.password = password;
+    data.email = email;
+    data.name = name;
     this.runAppQuery(new apigee.QueryObj('POST', 'users', data, null,
       function (response) {
         var user = response.entities[0];
@@ -1061,6 +1091,9 @@ apigee.validaation = (function () {
         this.setEntityList([]);
         APIClient.runAppQuery(this._queryObj);
       }
+    },
+    clearQueryObj: function() {
+      this._queryObj = new apigee.QueryObj();
     },
     setQueryParams: function(query) {
       this._queryObj.setQueryParams(query);

@@ -1613,7 +1613,7 @@ function apigee_console_app(Pages, query_params) {
   var userLetter = "*";
   var userSortBy = "username";
 
-  function pageSelectUsers(uuid) {
+  function pageSelectUsers() {
     //make a new query object
     queryObj = new apigee.QueryObj(null);
     //bind events for previous and next buttons
