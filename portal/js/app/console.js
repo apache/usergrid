@@ -2514,9 +2514,19 @@ function apigee_console_app(Pages, query_params) {
     } else {
       section.html('<div class="alert">No permission information retrieved.</div>');
     }
+
+    displayRoleInactivity();
   }
 
   function displayRoleInactivity(response) {
+    //requestRole & displayInactivity
+    runAppQuery(new apigee.QueryObj("GET", "roles/" + current_role_id, null, null,
+      function(response) {
+        var inactivity = response.entities[0].inactivity.toString();
+	  $('#role-inactivity-input').val(inactivity);
+	},
+        function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
+    ));
   }
 
   var rolesUsersResults = ''
@@ -2566,14 +2576,6 @@ function apigee_console_app(Pages, query_params) {
         getRolesCallback(response);
         $('#role-section-title').html(current_role_name + " Role");
         $('#role-permissions').html('<div class="alert alert-info">Loading ' + current_role_name + ' permissions...</div>');
-        //requestRole & displayInactivity
-        runAppQuery(new apigee.QueryObj("GET", "role/" + current_role_id, null, null,
-          function(response) {
-            var inactivity = response.entities[0].inactivity.toString();
-            $('#role-inactivity-input').val(inactivity);
-          },
-          function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
-        ));
         //requestApplicationRolePermissions
         runAppQuery(new apigee.QueryObj("GET", "rolenames/" + current_role_name, null, null,
           function(response) { displayPermissions(response); },
