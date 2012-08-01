@@ -17,6 +17,9 @@ package org.usergrid.rest.applications;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.usergrid.utils.MapUtils.hashMap;
+
+import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
@@ -33,13 +36,12 @@ import org.usergrid.rest.AbstractRestTest;
  */
 public class ApplicationResourceTest extends AbstractRestTest {
 
-
     @Test
     public void applicationWithOrgCredentials() throws Exception {
 
         OrganizationInfo orgInfo = managementService
                 .getOrganizationByName("test-organization");
-      
+
         String clientId = managementService.getClientIdForOrganization(orgInfo
                 .getUuid());
         String clientSecret = managementService
@@ -50,32 +52,72 @@ public class ApplicationResourceTest extends AbstractRestTest {
                 .queryParam("client_secret", clientSecret)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        
-        
+
         assertNotNull(node.get("entities"));
 
     }
-    
+
     @Test
     public void applicationWithAppCredentials() throws Exception {
 
         ApplicationInfo appInfo = managementService
                 .getApplicationInfo("test-organization/test-app");
-      
-        String clientId = managementService.getClientIdForApplication(appInfo.getId());
-        String clientSecret = managementService.getClientSecretForApplication(appInfo.getId());
+
+        String clientId = managementService.getClientIdForApplication(appInfo
+                .getId());
+        String clientSecret = managementService
+                .getClientSecretForApplication(appInfo.getId());
 
         JsonNode node = resource().path("/test-organization/test-app/users")
                 .queryParam("client_id", clientId)
                 .queryParam("client_secret", clientSecret)
-                 .accept(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        
-        
+
         assertNotNull(node.get("entities"));
 
     }
-    
+
+    @Test
+    public void applicationWithJsonCreds() throws Exception {
+
+        ApplicationInfo appInfo = managementService
+                .getApplicationInfo("test-organization/test-app");
+
+        String clientId = managementService.getClientIdForApplication(appInfo
+                .getId());
+        String clientSecret = managementService
+                .getClientSecretForApplication(appInfo.getId());
+
+        Map<String, String> payload = hashMap("email",
+                "applicationWithJsonCreds@usergrid.org")
+                .map("username", "applicationWithJsonCreds")
+                .map("name", "applicationWithJsonCreds")
+                .map("password", "applicationWithJsonCreds").map("pin", "1234");
+
+        JsonNode node = resource().path("/test-organization/test-app/users")
+                .queryParam("client_id", clientId)
+                .queryParam("client_secret", clientSecret)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(JsonNode.class, payload);
+
+        assertNotNull(getEntity(node, 0));
+
+        payload = hashMap("username", "applicationWithJsonCreds").map(
+                "password", "applicationWithJsonCreds").map("grant_type",
+                "password");
+
+        node = resource().path("/test-organization/test-app/token")
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(JsonNode.class, payload);
+
+        JsonNode token = node.get("access_token");
+
+        assertNotNull(token);
+
+    }
 
     @Test
     public void test_GET_credentials_ok() {
