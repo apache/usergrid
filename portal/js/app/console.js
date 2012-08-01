@@ -1389,6 +1389,7 @@ function apigee_console_app(Pages, query_params) {
     new google.visualization.PieChart(
       document.getElementById('application-panel-entity-graph')).
       draw(data, {
+        height: 200,
         is3D: true,
         backgroundColor: backgroundGraphColor
       }
