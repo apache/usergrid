@@ -40,7 +40,7 @@ public class LongLiteral extends Literal<Long> implements NumericLiteral{
    * 
    * @param value
    */
-  public LongLiteral(int value){
+  public LongLiteral(long value){
     super(new ClassicToken(0, String.valueOf(value)));
     this.value = value;
   }

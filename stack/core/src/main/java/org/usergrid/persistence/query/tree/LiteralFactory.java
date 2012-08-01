@@ -33,7 +33,10 @@ public class LiteralFactory {
     if(value instanceof Integer){
       return new LongLiteral((Integer)value);
     }
-    
+    if(value instanceof Long){
+      return new LongLiteral((Long)value);
+    }
+
     if(value instanceof String){
       return new StringLiteral((String) value);
     }
