@@ -17,6 +17,12 @@ function apigee_console_app(Pages, query_params) {
       apiClient.setApiUrl(query_params.api_url);
   }
 
+  var HIDE_CONSOLE = query_params.hide_console || "";
+
+  if (HIDE_CONSOLE.indexOf("true") >= 0) {
+    $('#sidebar-menu ul li a[href="#console"]').hide();
+  }
+
   var OFFLINE = false;
   var OFFLINE_PAGE = "#query-page";
 
