@@ -129,12 +129,6 @@ public class ContentTypeFilter implements Filter {
 
             logger.debug("Content path is '{}'", path);
 
-            if (path != null && path.contains("management/orgs")) {
-                logger.debug("Short circuiting for path '{}'", path);
-
-                return;
-            }
-
             int initial = inputStream.read();
 
             String method = origRequest.getMethod();
@@ -142,8 +136,10 @@ public class ContentTypeFilter implements Filter {
             // nothing to read, check if it's a put or a post. If so set the
             // content type to json to create an empty json request
             if (initial == -1) {
-                if (HttpMethod.POST.equals(method)
-                        || HttpMethod.PUT.equals(method)) {
+                if ((HttpMethod.POST.equals(method) || HttpMethod.PUT
+                        .equals(method))
+                        && !MediaType.APPLICATION_FORM_URLENCODED
+                                .equals(getContentType())) {
 
                     logger.debug(
                             "Setting content type to application/json for POST or PUT with no content at path '{}'",
