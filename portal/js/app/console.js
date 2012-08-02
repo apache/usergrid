@@ -3491,11 +3491,11 @@ function deleteRolePermission(roleName, permission) {
     var link = $(this);
     var orgName = link.text();
     var currentOrg = apigee.organizations.getItemByName(orgName);
+    apiClient.setOrganizationName(currentOrg.getName());
+    apiClient.setOrganizationUUID(currentOrg.getUUID());
     // make sure there is an application for this org
     var app = currentOrg.getFirstItem();
     if (app) {
-      apiClient.setOrganizationName(currentOrg.getName());
-      apiClient.setOrganizationUUID(currentOrg.getUUID());
       apiClient.setApplicationName(app.getName());
     } else {
       forceNewApp();
