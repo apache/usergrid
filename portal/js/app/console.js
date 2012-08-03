@@ -3035,12 +3035,7 @@ function deleteRolePermission(roleName, permission) {
    * Settings
    *
    ******************************************************************/
-	//DEPRECATED: no longer in use.
-  function pageSelectSettings(uuid) {
-    requestApplicationCredentials();
-    requestOrganizations();
-  }
-  window.apigee.console.pageSelectSettings = pageSelectSettings;
+
 
   var application_keys = {};
 
