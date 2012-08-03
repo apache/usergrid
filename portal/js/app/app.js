@@ -1,5 +1,5 @@
 
-var apigee = apigee || {};
+
 apigee.userSession = new apigee.UserSession();
 apigee.organizations = new apigee.Organization();
 

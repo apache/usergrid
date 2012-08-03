@@ -290,7 +290,11 @@ var APIClient = (function () {
     */
     // Handle response.
     xhr.onerror = function() {
-      //network error
+      //network error  
+      //TODO REMOVE DEBUG
+      	for (name in xhr){
+		console.log("this["+name+"]");
+		};    
       clearTimeout(timeout);
       console.log('API call failed at the network level.');
       if (QueryObj.callFailureCallback) {
@@ -298,6 +302,8 @@ var APIClient = (function () {
       }
     };
     xhr.onload = function() {
+    	//TODO: REMOVE FOR DEBUG
+    	console.log(xhr.responseText);
       //call completed
       clearTimeout(timeout);
       response = JSON.parse(xhr.responseText);

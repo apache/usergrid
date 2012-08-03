@@ -21,7 +21,9 @@ function printScope(scope){
 
 
 function loginWithCredentials(calledFunction){	
+	start();
 	var formdata = {
+		
       	grant_type: "password",
      	username: credentials.login,
      	password: credentials.password
@@ -29,6 +31,7 @@ function loginWithCredentials(calledFunction){
 		apiClient.runManagementQuery(new apigee.QueryObj('GET', 'token', null, formdata, 
 		//Success callback
 		function(data){
+			
 			if(data){
 				calledFunction(data.access_token);
 			};					
@@ -98,7 +101,7 @@ var mockUser = {
 	name:"Ann User",
 	email :"annUser@AnnUserEnterprises.com",
 	password:"123456789",
-	UUID: "01c889d7-db28-11e1-afad-12313b01d5c1",	
+	UUID: "08bc0ec6-dbf8-11e1-93e3-12313b0c5c38",	
 };
 var mockCreateUser = {
 	baseUserName: "User-",
