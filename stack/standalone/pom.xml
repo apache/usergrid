@@ -32,6 +32,7 @@
 				<filtering>true</filtering>
 				<includes>
 					<include>**/*.xml</include>
+                    <include>**/*.yaml</include>
                     <include>**/*.properties</include>
 				</includes>
 			</resource>

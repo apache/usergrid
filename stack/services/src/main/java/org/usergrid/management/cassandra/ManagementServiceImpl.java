@@ -417,9 +417,13 @@ public class ManagementServiceImpl implements ManagementService {
         OrganizationInfo organization = null;
 
         try {
-
-            user = createAdminUser(username, name, email, password, activated,
-                    disabled, sendEmail);
+            if ( areActivationChecksDisabled() ) {
+              user = createAdminUser(username, name, email, password, true,
+                                                  false, false);
+            } else {
+              user = createAdminUser(username, name, email, password, activated,
+                                    disabled, sendEmail);
+            }
 
             organization = createOrganization(organizationName, user, true,
                     false);
@@ -2796,4 +2800,11 @@ public class ManagementServiceImpl implements ManagementService {
         return user;
 
     }
+
+  private boolean areActivationChecksDisabled() {
+    if ( !newOrganizationsNeedSysAdminApproval() && !newOrganizationsRequireConfirmation() ) {
+      return !newAdminUsersNeedSysAdminApproval() && !newAdminUsersRequireConfirmation();
+    }
+    return false;
+  }
 }
