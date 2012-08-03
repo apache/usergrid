@@ -17,6 +17,12 @@ function apigee_console_app(Pages, query_params) {
       apiClient.setApiUrl(query_params.api_url);
   }
 
+  var HIDE_CONSOLE = query_params.hide_console || "";
+
+  if (HIDE_CONSOLE.indexOf("true") >= 0) {
+    $('#sidebar-menu ul li a[href="#console"]').hide();
+  }
+
   var OFFLINE = false;
   var OFFLINE_PAGE = "#query-page";
 
@@ -1168,7 +1174,7 @@ function apigee_console_app(Pages, query_params) {
     var form = $(this);
     formClearErrors(form);
     var add_user_username = $('#search-user-name-input');
-    var bValid = checkLength2(add_user_username, 1, 80)
+    var bValid = checkLength2(add_user_username, 4, 80)
       && checkRegexp2(add_user_username, usernameRegex, usernameAllowedCharsMessage);
 
     if (bValid) {
@@ -1397,6 +1403,7 @@ function apigee_console_app(Pages, query_params) {
     new google.visualization.PieChart(
       document.getElementById('application-panel-entity-graph')).
       draw(data, {
+        height: 200,
         is3D: true,
         backgroundColor: backgroundGraphColor
       }
@@ -1621,7 +1628,7 @@ function apigee_console_app(Pages, query_params) {
   var userLetter = "*";
   var userSortBy = "username";
 
-  function pageSelectUsers(uuid) {
+  function pageSelectUsers() {
     //make a new query object
     queryObj = new apigee.QueryObj(null);
     //bind events for previous and next buttons
@@ -2522,9 +2529,19 @@ function apigee_console_app(Pages, query_params) {
     } else {
       section.html('<div class="alert">No permission information retrieved.</div>');
     }
+
+    displayRoleInactivity();
   }
 
   function displayRoleInactivity(response) {
+    //requestRole & displayInactivity
+    runAppQuery(new apigee.QueryObj("GET", "roles/" + current_role_id, null, null,
+      function(response) {
+        var inactivity = response.entities[0].inactivity.toString();
+	  $('#role-inactivity-input').val(inactivity);
+	},
+        function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
+    ));
   }
 
   var rolesUsersResults = ''
@@ -2574,14 +2591,6 @@ function apigee_console_app(Pages, query_params) {
         getRolesCallback(response);
         $('#role-section-title').html(current_role_name + " Role");
         $('#role-permissions').html('<div class="alert alert-info">Loading ' + current_role_name + ' permissions...</div>');
-        //requestRole & displayInactivity
-        runAppQuery(new apigee.QueryObj("GET", "role/" + current_role_id, null, null,
-          function(response) {
-            var inactivity = response.entities[0].inactivity.toString();
-            $('#role-inactivity-input').val(inactivity);
-          },
-          function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
-        ));
         //requestApplicationRolePermissions
         runAppQuery(new apigee.QueryObj("GET", "rolenames/" + current_role_name, null, null,
           function(response) { displayPermissions(response); },
@@ -3490,11 +3499,15 @@ function deleteRolePermission(roleName, permission) {
     var link = $(this);
     var orgName = link.text();
     var currentOrg = apigee.organizations.getItemByName(orgName);
-    apiClient.setOrganizationName(currentOrg.getName());
-    apiClient.setOrganizationUUID(currentOrg.getUUID());
+    // make sure there is an application for this org
     var app = currentOrg.getFirstItem();
-    apiClient.setApplicationName(app.getName());
-
+    if (app) {
+      apiClient.setOrganizationName(currentOrg.getName());
+      apiClient.setOrganizationUUID(currentOrg.getUUID());
+      apiClient.setApplicationName(app.getName());
+    } else {
+      forceNewApp();
+    }
     Pages.ShowPage('console');
   }
 

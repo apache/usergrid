@@ -12,18 +12,21 @@ apigee = apigee || {};
 
 var APIClient = (function () {
   //API endpoint
-  var _apiUrl = "http://api.usergrid.com";
+  var _apiUrl = "http://api.usergrid.com/";
   var _orgName = null;
   var _orgUUID = null;
   var _appName = null;
   var _token = null;
-  var clientId = null; //to be implemented
-  var clientSecret = null; //to be implemented
+  var _appUserUsername = null;
+  var _appUserName = null;
+  var _appUserEmail = null;
+  var _appUserUUID = null;
 
   function init(orgName, appName){
     _orgName = orgName;
     _appName = appName;
   }
+
   /*
     *  method to get the organization name to be used by the client
     *  @method getOrganizationName
@@ -33,7 +36,7 @@ var APIClient = (function () {
   }
   /*
     *  method to set the organization name to be used by the client
-    *  @method getOrganizationName
+    *  @method setOrganizationName
     *  @param orgName - the organization name
     */
   function setOrganizationName(orgName) {
@@ -88,6 +91,70 @@ var APIClient = (function () {
   }
 
   /*
+    *  method to get the app user's username to be used by the client
+    *  @method getAppUserUsername
+    */
+  function getAppUserUsername() {
+    return _appUserUsername;
+  }
+  /*
+    *  method to set the app user's username to be used by the client
+    *  @method setAppUserUsername
+    *  @param appUserUsername - the app user's username
+    */
+  function setAppUserUsername(appUserUsername) {
+    _appUserUsername = appUserUsername;
+  }
+
+  /*
+    *  method to get the app user's name to be used by the client
+    *  @method getAppUserName
+    */
+  function getAppUserFullName() {
+    return _appUserName;
+  }
+  /*
+    *  method to set the app user's name to be used by the client
+    *  @method setAppUserName
+    *  @param appUserName - the app user's name
+    */
+  function setAppUserFullName(appUserName) {
+    _appUserName = appUserName;
+  }
+
+  /*
+    *  method to get the app user's email to be used by the client
+    *  @method getAppUserEmail
+    */
+  function getAppUserEmail() {
+    return _appUserEmail;
+  }
+  /*
+    *  method to set the app user's email to be used by the client
+    *  @method setAppUserEmail
+    *  @param appUserEmail - the app user's email
+    */
+  function setAppUserEmail(appUserEmail) {
+    _appUserEmail = appUserEmail;
+  }
+
+  /*
+    *  method to get the app user's uuid to be used by the client
+    *  @method getAppUserUUID
+    */
+  function getAppUserUUID() {
+    return _appUserUUID;
+  }
+  /*
+    *  method to set the app user's uuid to be used by the client
+    *  @method setAppUserUUID
+    *  @param appUserUUID - the app user's uuid
+    */
+  function setAppUserUUID(appUserUUID) {
+    _appUserUUID = appUserUUID;
+  }
+
+  /*
   *  returns API URL
   *  @method getApiUrl
   */
@@ -132,6 +199,96 @@ var APIClient = (function () {
     this.processQuery(QueryObj, endpoint)
   }
 
+  function loginAppUser (username, password, successCallback, failureCallback) {
+    var self = this;
+    var data = {"username": username, "password": password, "grant_type": "password"};
+    this.runAppQuery(new apigee.QueryObj('GET', 'token', null, data,
+      function (response) {
+        self.setAppUserUsername(response.user.username);
+        self.setAppUserFullName(response.user.name);
+        self.setAppUserFullName(response.user.givenName + response.user.familyName);
+        self.setAppUserEmail(response.user.email);
+        self.setAppUserUUID(response.user.uuid);
+        self.setToken(response.access_token);
+        if (successCallback && typeof(successCallback) == "function") {
+          successCallback(response);
+        }
+      },
+      function (response) {
+        if (failureCallback && typeof(failureCallback) == "function") {
+          failureCallback(response);
+        }
+      }
+     ));
+  }
+
+  function updateAppUser(uuid, name, email, username, password, data, successCallback, failureCallback) {
+    var self = this;
+    var data = data || {}
+    data.username = username;
+    data.password = password;
+    data.email = email;
+    data.name = name;
+    this.runAppQuery(new apigee.QueryObj('PUT', 'users/'+uuid, data, null,
+      function (response) {
+        var user = response.entities[0];
+        self.setAppUserUsername(user.username);
+        self.setAppUserFullName(user.givenName + user.familyName);
+        self.setAppUserEmail(user.email);
+        self.setAppUserUUID(user.uuid);
+        if (successCallback && typeof(successCallback) == "function") {
+          successCallback(response);
+        }
+      },
+      function (response) {
+        if (failureCallback && typeof(failureCallback) == "function") {
+          failureCallback(response);
+        }
+      }
+     ));
+  }
+
+  function createAppUser(name, email, username, password, data, successCallback, failureCallback) {
+    var self = this;
+    var data = data || {}
+    data.username = username;
+    data.password = password;
+    data.email = email;
+    data.name = name;
+    this.runAppQuery(new apigee.QueryObj('POST', 'users', data, null,
+      function (response) {
+        var user = response.entities[0];
+        self.setAppUserUsername(user.username);
+        self.setAppUserFullName(user.givenName + user.familyName);
+        self.setAppUserEmail(user.email);
+        self.setAppUserUUID(user.uuid);
+        if (successCallback && typeof(successCallback) == "function") {
+          successCallback(response);
+        }
+      },
+      function (response) {
+        if (failureCallback && typeof(failureCallback) == "function") {
+          failureCallback(response);
+        }
+      }
+     ));
+  }
+
+  function renewAppUserToken() {
+
+  }
+
+  function logoutAppUser() {
+    this.setAppUserUsername(null);
+    this.setAppUserFullName(null);
+    this.setAppUserEmail(null);
+    this.setAppUserUUID(null);
+    this.setToken(null);
+  }
+
+  function isLoggedInAppUser() {
+    return (this.getToken() && this.getAppUserUUID());
+  }
   /*
   *  @method processQuery
   *  @purpose to validate and prepare a call to the API
@@ -154,7 +311,7 @@ var APIClient = (function () {
       var method = QueryObj.getMethod().toUpperCase();
       var path = QueryObj.getPath();
       var jsonObj = QueryObj.getJsonObj() || {};
-      var params = QueryObj.getParams() || {};
+      var params = QueryObj.getQueryParams() || {};
 
       //method - should be GET, POST, PUT, or DELETE only
       if (method != 'GET' && method != 'POST' && method != 'PUT' && method != 'DELETE') {
@@ -173,7 +330,7 @@ var APIClient = (function () {
       }
       if (application_name != 'SANDBOX' && this.getToken()) {
         curl += ' -i -H "Authorization: Bearer ' + this.getToken() + '"';
-        QueryObj.setHasToken(true);
+        QueryObj.setToken(true);
       }
 
       //params - make sure we have a valid json object
@@ -189,6 +346,9 @@ var APIClient = (function () {
         delete params.cursor;
       }
 
+      //strip off the leading slash of the endpoint if there is one
+      endpoint = endpoint.indexOf('/') == 0 ? endpoint.substring(1) : endpoint;
+
       //add the endpoint to the path
       path = endpoint + path;
 
@@ -200,20 +360,24 @@ var APIClient = (function () {
         }
       }
 
+      //add the http:// bit on the front
+      path = this.getApiUrl() + path;
+
       //curl - append the path
-      curl += " " + this.getApiUrl() + path;
+      curl += ' "' + path;
 
       //curl - append params to the path for curl prior to adding the timestamp
       var encoded_params = this.encodeParams(params);
       if (encoded_params) {
         curl += "?" + encoded_params;
       }
+      curl += '"';
 
       //add in a timestamp for gets and deletes - to avoid caching by the browser
-      if ((method == "GET") || (method == "DELETE") || (method == "POST")) {
+      if ((method == "GET") || (method == "DELETE")) {
         params['_'] = new Date().getTime();
       }
-		//TODO: double use of encodeParams ( is it necesary?)
+
       //append params to the path
       var encoded_params = this.encodeParams(params);
       if (encoded_params) {
@@ -257,17 +421,15 @@ var APIClient = (function () {
           path = '?access_token='+this.getToken();
         }
       }
-      console.log("PATH: "+this.getApiUrl()+path);
-      xhr.open(method, this.getApiUrl() + path, true);
+      xhr.open(method, path, true);
     }
     else if (xM)
     {
-      xhr = new XMLHttpRequest();     
-      xhr.open(method, this.getApiUrl() + path, true);
+      xhr = new XMLHttpRequest();
+      xhr.open(method, path, true);
       if (application_name != 'SANDBOX' && this.getToken()) {
         xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
-        xhr.withCredentials = true;      
-       
+        xhr.withCredentials = true;
       }
     } else {
       xhr = new ActiveXObject("MSXML2.XMLHTTP.3.0");
@@ -278,26 +440,15 @@ var APIClient = (function () {
           path = '?access_token='+this.getToken();
         }
       }
-      xhr.open(method, this.getApiUrl() + path, true);
+      xhr.open(method, path, true);
     }
 
-	//TODO: probable code duplication
-	/*
-    xhr.open(method, this.getApiUrl() + path, true);
-    if (application_name != 'SANDBOX' && this.getToken()) {
-      xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
-      xhr.withCredentials = true;
-    }
-    */
     // Handle response.
     xhr.onerror = function() {
-      //network error  
-		console.log("this["+name+"]");		
+      //network error
       clearTimeout(timeout);
       console.log('API call failed at the network level.');
-      if (QueryObj.callFailureCallback) {
-        QueryObj.callFailureCallback({'error':'error'});
-      }
+      QueryObj.callFailureCallback({'error':'error'});
     };
     xhr.onload = function() {
       //call completed
@@ -318,10 +469,7 @@ var APIClient = (function () {
             }
         }
         //otherwise, just call the failure callback
-        if (QueryObj.callFailureCallback) {
-          QueryObj.callFailureCallback(response);
-        }
-
+        QueryObj.callFailureCallback(response);
         return;
       } else {
         //success
@@ -330,16 +478,13 @@ var APIClient = (function () {
         var cursor = response.cursor || null;
         QueryObj.saveCursor(cursor);
         //then call the original callback
-        if (QueryObj.callSuccessCallback) {
-          QueryObj.callSuccessCallback(response);
-        }
+        QueryObj.callSuccessCallback(response);
       }
     };
     var timeout = setTimeout(function() { xhr.abort(); }, 10000);
 
     xhr.send(jsonObj);
   }
- 
 
 
   /**
@@ -348,7 +493,7 @@ var APIClient = (function () {
   *  @params {object} params - an object of name value pairs that will be urlencoded
   *
   */
-  function encodeParams(params) {
+  function encodeParams (params) {
     tail = [];
     var item = [];
     if (params instanceof Array) {
@@ -375,6 +520,142 @@ var APIClient = (function () {
     }
     return tail.join("&");
   }
+return {
+    init:init,
+    getOrganizationName:getOrganizationName,
+    setOrganizationName:setOrganizationName,
+    getOrganizationUUID:getOrganizationUUID,
+    setOrganizationUUID:setOrganizationUUID,
+    getApplicationName:getApplicationName,
+    setApplicationName:setApplicationName,
+    getToken:getToken,
+    setToken:setToken,
+    getAppUserUsername:getAppUserUsername,
+    setAppUserUsername:setAppUserUsername,
+    getAppUserFullName:getAppUserFullName,
+    setAppUserFullName:setAppUserFullName,
+    getAppUserEmail:getAppUserEmail,
+    setAppUserEmail:setAppUserEmail,
+    getAppUserUUID:getAppUserUUID,
+    setAppUserUUID:setAppUserUUID,
+    getApiUrl:getApiUrl,
+    setApiUrl:setApiUrl,
+    getResetPasswordUrl:getResetPasswordUrl,
+    runAppQuery:runAppQuery,
+    runManagementQuery:runManagementQuery,
+    loginAppUser:loginAppUser,
+    createAppUser:createAppUser,
+    renewAppUserToken:renewAppUserToken,
+    logoutAppUser:logoutAppUser,
+    isLoggedInAppUser:isLoggedInAppUser,
+    processQuery:processQuery,
+    encodeParams:encodeParams
+  }
+})();
+
+
+apigee.validaation = apigee.validaation || {};
+
+apigee.validaation = (function () {
+
+  var usernameRegex = new RegExp("^([0-9a-zA-Z\.\-])+$");
+  var nameRegex     = new RegExp("^([0-9a-zA-Z@#$%^&!?;:.,'\"~*-=+_\[\\](){}/\\ |])+$");
+  var emailRegex    = new RegExp("^(([0-9a-zA-Z]+[_\+.-]?)+@[0-9a-zA-Z]+[0-9,a-z,A-Z,.,-]*(.){1}[a-zA-Z]{2,4})+$");
+  var passwordRegex = new RegExp("^([0-9a-zA-Z@#$%^&!?<>;:.,'\"~*-=+_\[\\](){}/\\ |])+$");
+  var pathRegex     = new RegExp("^([0-9a-z./-])+$");
+  var titleRegex    = new RegExp("^([0-9a-zA-Z.!-?/])+$");
+
+  function validateUsername(username, failureCallback) {
+    if (usernameRegex.test(username) && checkLength(username, 4, 80)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getUsernameAllowedChars());
+      }
+      return false;
+    }
+  }
+  function getUsernameAllowedChars(){
+    return 'Length: min 6, max 80. Allowed: A-Z, a-z, 0-9, dot, and dash';
+  }
+
+  function validateName(name, failureCallback) {
+    if (nameRegex.test(name) && checkLength(name, 5, 16)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getNameAllowedChars());
+      }
+      return false;
+    }
+  }
+  function getNameAllowedChars(){
+    return 'Length: min 4, max 80. Allowed: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . / ? !';
+  }
+
+  function validatePassword(password, failureCallback) {
+    if (passwordRegex.test(password) && checkLength(password, 5, 16)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getPasswordAllowedChars());
+      }
+      return false;
+    }
+  }
+  function getPasswordAllowedChars(){
+    return 'Length: min 5, max 16. Allowed: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . < > / ? !';
+  }
+
+  function validateEmail(email, failureCallback) {
+    if (emailRegex.test(email) && checkLength(email, 4, 80)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getEmailAllowedChars());
+      }
+      return false;
+    }
+  }
+  function getEmailAllowedChars(){
+    return 'Email must be in standard form: e.g. example@apigee.com';
+  }
+
+  function validatePath(path, failureCallback) {
+    if (pathRegex.test(path) && checkLength(path, 4, 80)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getPathAllowedChars());
+      }
+      return false;
+    }
+  }
+  function getPathAllowedChars(){
+    return 'Length: min 4, max 80. Allowed: /, a-z, 0-9, dot, and dash';
+  }
+
+  function validateTitle(title, failureCallback) {
+    if (titleRegex.test(title) && checkLength(title, 4, 80)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getTitleAllowedChars());
+      }
+      return false;
+    }
+  }
+  function getTitleAllowedChars(){
+    return 'Length: min 4, max 80. Allowed: space, A-Z, a-z, 0-9, dot, dash, /, !, and ?';
+  }
+
+  function checkLength(sting, min, max) {
+    if (sting.length > max || sting.length < min) {
+      return false;
+    }
+    return true;
+  }
+
   /**
     * Tests if the string is a uuid
     * @public
@@ -387,23 +668,20 @@ var APIClient = (function () {
     if (!uuid) return false;
     return uuidValueRegex.test(uuid);
   }
+
   return {
-    init:init,
-    getOrganizationName:getOrganizationName,
-    setOrganizationName:setOrganizationName,
-    getOrganizationUUID:getOrganizationUUID,
-    setOrganizationUUID:setOrganizationUUID,
-    getApplicationName:getApplicationName,
-    setApplicationName:setApplicationName,
-    getToken:getToken,
-    setToken:setToken,
-    getApiUrl:getApiUrl,
-    setApiUrl:setApiUrl,
-    getResetPasswordUrl:getResetPasswordUrl,
-    runAppQuery:runAppQuery,
-    runManagementQuery:runManagementQuery,
-    processQuery:processQuery,
-    encodeParams:encodeParams,
+    validateUsername:validateUsername,
+    getUsernameAllowedChars:getUsernameAllowedChars,
+    validateName:validateName,
+    getNameAllowedChars:getNameAllowedChars,
+    validatePassword:validatePassword,
+    getPasswordAllowedChars:getPasswordAllowedChars,
+    validateEmail:validateEmail,
+    getEmailAllowedChars:getEmailAllowedChars,
+    validatePath:validatePath,
+    getPathAllowedChars:getPathAllowedChars,
+    validateTitle:validateTitle,
+    getTitleAllowedChars:getTitleAllowedChars,
     isUUID:isUUID
   }
 })();
@@ -451,18 +729,18 @@ var APIClient = (function () {
 
 (function () {
 
-  apigee.QueryObj = function(method, path, jsonObj, params, successCallback, failureCallback) {
+  apigee.QueryObj = function(method, path, jsonObj, queryParams, successCallback, failureCallback) {
     //query vars
     this._method = method;
     this._path = path;
     this._jsonObj = jsonObj;
-    this._params = params;
+    this._queryParams = queryParams;
     this._successCallback = successCallback;
     this._failureCallback = failureCallback;
 
     //curl command - will be populated by runQuery function
     this._curl = '';
-    this._hasToken = false;
+    this._token = false;
 
     //paging vars
     this._cursor = null;
@@ -497,11 +775,11 @@ var APIClient = (function () {
     setJsonObj: function(jsonObj) {
       this._jsonObj = jsonObj;
     },
-    getParams: function() {
-      return this._params;
+    getQueryParams: function() {
+      return this._queryParams;
     },
-    setParams: function(params) {
-      this._params = params;
+    setQueryParams: function(queryParams) {
+      this._queryParams = queryParams;
     },
     getSuccessCallback: function() {
       return this._successCallback;
@@ -510,8 +788,11 @@ var APIClient = (function () {
       this._successCallback = successCallback;
     },
     callSuccessCallback: function(response) {
-      if (this._successCallback) {
+      if (this._successCallback && typeof(this._successCallback ) == "function") {
         this._successCallback(response);
+        return true;
+      } else {
+        return false;
       }
     },
     getFailureCallback: function() {
@@ -521,8 +802,11 @@ var APIClient = (function () {
       this._failureCallback = failureCallback;
     },
     callFailureCallback: function(response) {
-      if (this._failureCallback) {
+      if (this._failureCallback && typeof(this._failureCallback) == "function") {
         this._failureCallback(response);
+        return true;
+      } else {
+        return false;
       }
     },
 
@@ -533,11 +817,11 @@ var APIClient = (function () {
       this._curl = curl;
     },
 
-    getHasToken: function() {
-      return this._hasToken;
+    getToken: function() {
+      return this._token;
     },
-    setHasToken: function(token) {
-      this._hasToken = token;
+    setToken: function(token) {
+      this._token = token;
     },
 
     //methods for accessing paging functions
@@ -566,13 +850,14 @@ var APIClient = (function () {
     },
 
     saveCursor: function(cursor) {
-      this._cursor = this._next; //what was new is old again
       //if current cursor is different, grab it for next cursor
       if (this._next != cursor) {
         this._next = cursor;
+      } /*else if (cursor == this._previous[this._previous.length-1]) {
+        this._next = cursor;
       } else {
         this._next = null;
-      }
+      }*/
     },
 
     getCursor: function() {
@@ -806,6 +1091,12 @@ var APIClient = (function () {
         this.setEntityList([]);
         APIClient.runAppQuery(this._queryObj);
       }
+    },
+    clearQueryObj: function() {
+      this._queryObj = new apigee.QueryObj();
+    },
+    setQueryParams: function(query) {
+      this._queryObj.setQueryParams(query);
     },
     get: function(successCallback, errorCallback) {
       var path = this.getPath();
