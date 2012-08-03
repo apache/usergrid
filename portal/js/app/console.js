@@ -481,14 +481,13 @@ function apigee_console_app(Pages, query_params) {
     $('#query-path').val(path);
   };
 	
-	//TODO: check how queryQl works
   var queryQl = $('#query-ql');
-  //queryQl.typeahead({source:indexes});
-/*
+  queryQl.typeahead({source:indexes});
+
   function doBuildIndexMenu() {
     queryQl.data('typeahead').source = indexes;
   }
-*/
+
   $('#delete-entity-link').click(deleteEntity);
   function deleteEntity(e) {
     e.preventDefault();
@@ -1379,7 +1378,8 @@ function apigee_console_app(Pages, query_params) {
   }
   window.apigee.console.pageSelectApplication = pageSelectApplication;
 
-  function updateApplicationDashboard() {
+  function updateApplicationDashboard(){
+  	requestApplicationCredentials();
     var data = new google.visualization.DataTable();
     data.addColumn('string', 'Entity');
     data.addColumn('number', 'Count');
@@ -3035,7 +3035,7 @@ function deleteRolePermission(roleName, permission) {
    * Settings
    *
    ******************************************************************/
-
+	//DEPRECATED: no longer in use.
   function pageSelectSettings(uuid) {
     requestApplicationCredentials();
     requestOrganizations();

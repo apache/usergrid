@@ -78,7 +78,6 @@ $(document).ready(function () {
     Pages.AddPanel('activities', null, null, null, apigee.console.pageSelectActivities);
     Pages.AddPanel('collections', null, null, null, apigee.console.pageSelectCollections);
     Pages.AddPanel('analytics', null, null, null, apigee.console.pageSelectAnalytics);
-    Pages.AddPanel('settings', null, null, null, apigee.console.pageSelectSettings);
     Pages.AddPanel('shell', null, null, null, apigee.console.pageSelectShell);
     Pages.AddPanel('account', "#account-link", null, null, apigee.console.requestAccountSettings);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
