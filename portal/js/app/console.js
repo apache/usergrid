@@ -478,11 +478,11 @@ function apigee_console_app(Pages, query_params) {
 	//TODO: check how queryQl works
   var queryQl = $('#query-ql');
   //queryQl.typeahead({source:indexes});
-
+/*
   function doBuildIndexMenu() {
     queryQl.data('typeahead').source = indexes;
   }
-
+*/
   $('#delete-entity-link').click(deleteEntity);
   function deleteEntity(e) {
     e.preventDefault();

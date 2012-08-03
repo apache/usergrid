@@ -21,20 +21,18 @@ function printScope(scope){
 
 
 function loginWithCredentials(calledFunction){	
-	start();
-	var formdata = {
-		
+	
+	var formdata = {		
       	grant_type: "password",
      	username: credentials.login,
      	password: credentials.password
    	 	};   		
 		apiClient.runManagementQuery(new apigee.QueryObj('GET', 'token', null, formdata, 
 		//Success callback
-		function(data){
-			
+		function(data){		
 			if(data){
 				calledFunction(data.access_token);
-			};					
+			};				
 		}, defaultError));
 };
 //CLEANUP: used to remove users created programatically
@@ -89,10 +87,10 @@ var	credentials = {
 var apiClient = APIClient;
 
 var mockOrg = {
-	UUID : "ee6f0b10-d747-11e1-afad-12313b01d5c1",
+	UUID : "af32c228-d745-11e1-b36a-12313b01d5c1",
 	mockApp: {
-		name: "App1",
-		UUID: "ab252e3b-da8d-11e1-afad-12313b01d5c1"
+		name: "SANDBOX",
+		UUID: "af4fe725-d745-11e1-b36a-12313b01d5c1",
 	},
 	name: "MusicOrg",
 };
@@ -136,20 +134,6 @@ function defaultError(xhr, status, error) {
   console.log('boo!');
   throw new Error("error!");
 }
-
-/*
- * Clean templates to Copy/Paste
- */
-//TODO: remove templates after placing initial infrastructure
-module("", {
-		setup:function(){
-			//Before test
-	},
-	teardown:function(){
-		//after test
-	}
-});//END MODULE DEFINITION
-
 
 module("login", {
 	setup:function(){		
@@ -215,14 +199,11 @@ module("POST Methods", {
 
 
 asyncTest("Add new User : " + mockUser.username + " POST", function(){
-	expect(1);
-	loginWithCredentials(function(token){		
-		apiClient.setToken(token);		
+	expect(1);		
 		var data = getMockUserData();
 		apiClient.setOrganizationName(mockOrg.UUID);
 		apiClient.setApplicationName(mockOrg.mockApp.UUID);	
 		apiClient.runAppQuery(new apigee.QueryObj("POST", 'users', data, null, userCreateSuccess, defaultError));
-	});
 });
 
 module("DELETE Methods", {

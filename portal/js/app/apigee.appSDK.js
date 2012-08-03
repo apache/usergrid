@@ -210,7 +210,7 @@ var APIClient = (function () {
       }
 
       //add in a timestamp for gets and deletes - to avoid caching by the browser
-      if ((method == "GET") || (method == "DELETE")) {
+      if ((method == "GET") || (method == "DELETE") || (method == "POST")) {
         params['_'] = new Date().getTime();
       }
 		//TODO: double use of encodeParams ( is it necesary?)
@@ -257,6 +257,7 @@ var APIClient = (function () {
           path = '?access_token='+this.getToken();
         }
       }
+      console.log("PATH: "+this.getApiUrl()+path);
       xhr.open(method, this.getApiUrl() + path, true);
     }
     else if (xM)
@@ -291,10 +292,7 @@ var APIClient = (function () {
     // Handle response.
     xhr.onerror = function() {
       //network error  
-      //TODO REMOVE DEBUG
-      	for (name in xhr){
-		console.log("this["+name+"]");
-		};    
+		console.log("this["+name+"]");		
       clearTimeout(timeout);
       console.log('API call failed at the network level.');
       if (QueryObj.callFailureCallback) {
@@ -302,8 +300,6 @@ var APIClient = (function () {
       }
     };
     xhr.onload = function() {
-    	//TODO: REMOVE FOR DEBUG
-    	console.log(xhr.responseText);
       //call completed
       clearTimeout(timeout);
       response = JSON.parse(xhr.responseText);
@@ -343,6 +339,7 @@ var APIClient = (function () {
 
     xhr.send(jsonObj);
   }
+ 
 
 
   /**
@@ -351,7 +348,7 @@ var APIClient = (function () {
   *  @params {object} params - an object of name value pairs that will be urlencoded
   *
   */
-  function encodeParams (params) {
+  function encodeParams(params) {
     tail = [];
     var item = [];
     if (params instanceof Array) {
