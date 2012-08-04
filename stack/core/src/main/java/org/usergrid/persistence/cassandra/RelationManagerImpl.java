@@ -2787,9 +2787,8 @@ public class RelationManagerImpl implements RelationManager,
 
         if (results != null) {
             results.setQuery(query);
-
-            results.setCursor(null);
         }
+        
         if (results.getLevel().ordinal() >= Results.Level.CORE_PROPERTIES
                 .ordinal()) {
             List<Entity> entities = results.getEntities();
@@ -2797,10 +2796,12 @@ public class RelationManagerImpl implements RelationManager,
                 qp.sort(entities);
             }
         }
-        logger.info("Query cursor: " + results.getCursor());
-
+      
         // now we need to set the cursor from our tree evaluation for return
         results.setCursor(qp.getCursor());
+        
+        logger.info("Query cursor: " + results.getCursor());
+
 
         return results;
     }
@@ -3236,6 +3237,12 @@ public class RelationManagerImpl implements RelationManager,
 
                 if (r.size() > query.getLimit()) {
                     r.setCursorToLastResult();
+                }
+                
+                //we've hit the last element in the index in a page.  I.E 40 elements at 10 page size 4 times.  Our cursor
+                //needs to be max so we don't get any results in the next page call
+                else if(r.size() == query.getLimit()){
+                   r.setCursorMax(slice.getFinish());
                 }
 
                 if (r.getCursor() != null) {

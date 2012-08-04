@@ -48,10 +48,7 @@ public class QuerySlice {
 
     /**
      * @param propertyName
-     * @param start
-     * @param finish
-     * @param cursor
-     * @param reversed
+     * @param nodeId
      */
     public QuerySlice(String propertyName, int nodeId ) {
         this.propertyName = propertyName;
