@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" href="css/bootstrap-combined.min.css" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+        <script src="js/apigee.appSDK.js" type="text/javascript"></script>
+        <script type="text/javascript">
+
+            //first set the app path (orgname, appname)
+            apigee.ApiClient.init('yourorgname', 'sandbox'); //<== update this line with the org name you signed up with
+
+            $(document).ready(function () {
+                var username = 'testuser';
+                
+                //bind the click event
+                $('#create-user').bind('click', function() {
+                    createUser();
+                });
+
+                $('#get-user').bind('click', function() {
+                    getUser(username);
+                });
+
+                //function to create the user
+                function createUser(){
+                    //get the values from the form
+                    username = $("#username").val();
+                    var name = $("#name").val();
+                    var email = $("#email").val();
+
+                    $("#name-help").hide();
+                    $("#name-control").removeClass('error');
+                    $("#email-help").hide();
+                    $("#email-control").removeClass('error');
+                    $("#username-help").hide();
+                    $("#username-control").removeClass('error');
+
+                    if (apigee.validation.validateName(name, function (){
+                          $("#name").focus();
+                          $("#name-help").show();
+                          $("#name-control").addClass('error');}) &&
+                        apigee.validation.validateUsername(username, function (){
+                          $("#username").focus();
+                          $("#username-help").show();
+                          $("#username-control").addClass('error');}) &&
+                        apigee.validation.validateEmail(email, function (){
+                          $("#email").focus();
+                          $("#email-help").show();
+                          $("#email-control").addClass('error');})
+                        ) {
+                        data = {"name": name, "username":username, "email":email}
+                        var user = new apigee.Entity('users');
+                        user.setData(data);
+                        user.save(
+                            function() {
+                                $('#new-user').hide();
+                                $('#user-list').show();
+                                getUser(username);
+                            },
+                            function() {
+                                alert('Oops! There was an error creating the user.  Did you set your org name correctly?');
+                            }
+                        );
+                    }
+                }
+
+                //function to get the most recent user
+                function getUser(username){
+                    $("#userlist").html('');
+                    apigee.ApiClient.runAppQuery(new apigee.QueryObj("GET", "users/"+username, null, null,
+                        function(response) {
+                            for (count in response.entities){
+                                var html = "{<br />";
+                                html += ' &nbsp; &nbsp; "name":' + response.entities[count].name + "<br />";
+                                html += ' &nbsp; &nbsp; "email":' + response.entities[count].email + "<br />";
+                                html += ' &nbsp; &nbsp; "username":' + response.entities[count].username + "<br />";
+                                $("#userlist").append( "<div>" + response.entities[count].name + ' - ' + response.entities[count].email + "</div>" );
+                                html += "<br />}";
+                            }
+                            $("#userlist").html(html);
+                        },
+                        function(e) {
+                            $('#new-user').show();
+                            $('#user-list').hide();
+                            alert('Error getting user: ' + e.responseText);
+                        }
+                    ));
+                }
+            });
+        </script>
+    </head>
+    <body>
+        <div style="width: 100%; height: 60px; background-color: #41aee3;">
+            &nbsp;
+        </div>
+
+        <div id="new-user" style="width: 400px; margin: 40px auto; display: block;">
+            <h2>Welcome to Sandbox</h2>
+            <div style="padding-top: 10px;">
+                This is a sample signup form. Sandbox isn't a real app, but we're using it as an example web application to help
+                you learn how Usergrid works.  What you see below is information that you, the developer of Sandbox, would like
+                to collect for users to register.
+            </div>
+            <div style="padding: 10px 0 10px 0;">
+                <strong>Get started by creating a new user.</strong>
+            </div>
+            <form name="newuser-form" id="newuser-form">
+                <div id="name-control" class="control-group">
+                    <label class="control-label" for="name">Full Name</label>
+                    <div class="controls">
+                        <input type="text" name="name" id="name" class="span4" />
+                        <span id="name-help" class="help-inline" style="display: none">Please correct the error</span>
+                    </div>
+                </div>
+                <div id="username-control" class="control-group">
+                    <label class="control-label" for="username">Username</label>
+                    <div class="controls">
+                        <input type="text" name="username" id="username" class="span4" />
+                        <span id="username-help" class="help-inline" style="display: none">Please correct the error</span>
+                    </div>
+                </div>
+                <div id="email-control" class="control-group">
+                    <label class="control-label" for="email">Email</label>
+                    <div class="controls">
+                        <input type="text" name="email" id="email" class="span4" />
+                        <span id="email-help" class="help-inline" style="display: none">Please correct the error</span>
+                    </div>
+                </div>
+            </form>
+            <a class="btn-large btn-primary" href="#" id="create-user">Create User</a>
+        </div>
+
+        <div id="user-list" style="width: 400px; margin: 40px auto; display: none;">
+            <h1>Success!</h1>
+            <div style="padding-top: 10px;">
+                You've created your first user in the Sandbox web app.
+            </div>
+            <div style="padding: 10px 0 10px 0; font-weight: bold;">
+                <strong>You can now return to the tutorial. In the next step, you'll check that the user you created shows up in your Usergrid database.</strong>
+            </div>
+            <div id="userlist">
+                User not found
+            </div>
+            <div style="margin-top: 20px;">
+                <a class="btn-large btn-primary" href="#" id="get-user">Get User Again</a>
+            </div>
+        </div>
+
+    </body>
+</html>
