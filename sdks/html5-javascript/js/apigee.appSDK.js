@@ -1779,10 +1779,9 @@ apigee.validation = (function () {
  *
  *  Say we want to display a list of all the cars in the collection:
  *
- *  var carlist = cars.getEntityList(); // gives us an array of Entity Objects
- *  for(var i=0; i<carlist.length; i++) {
- *    var car = carlist[i];
- *    $('#mycarlist').append('<li>'+ getName() + '</li>');
+ *  while(cars.hasNextEntity()) {
+ *    var item = cars.getNextEntity();
+ *    $('#mycarlist').append('<li>'+ item.getName() + '</li>');
  *  }
  *
  *
