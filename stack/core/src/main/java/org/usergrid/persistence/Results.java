@@ -46,6 +46,8 @@ import org.usergrid.utils.StringUtils;
 @XmlRootElement
 public class Results implements Iterable<Entity> {
 
+    private static final String EMPTY = "";
+    
     public enum Level {
         IDS, REFS, CORE_PROPERTIES, ALL_PROPERTIES, LINKED_PROPERTIES
     }
@@ -1091,20 +1093,10 @@ public class Results implements Iterable<Entity> {
     }
 
     /**
-     * Set the cursor to the largest possible value
+     * Set the cursor to the empty value.  This signifies that no more results can be found for this range
      */
-    public void setCursorMax(RangeValue max) {
-
-        ByteBuffer bytes = null;
-        
-        if(max != null ){
-            bytes = DynamicComposite.toByteBuffer(max.getCode(), max.getValue());
-        }else{
-            bytes = ByteBuffer.allocate(0);
-        }
-        
-        
-        cursor = encodeBase64URLSafeString(bytes(bytes));
+    public void setCursorMax() {
+        cursor = EMPTY;
     }
 
     public void setCursor(String cursor) {

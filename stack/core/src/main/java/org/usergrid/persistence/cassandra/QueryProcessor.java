@@ -80,7 +80,8 @@ public class QueryProcessor {
     private String entityType;
     private CollectionInfo collectionInfo;
 
-    public QueryProcessor(Query query, CollectionInfo collectionInfo) throws PersistenceException {
+    public QueryProcessor(Query query, CollectionInfo collectionInfo)
+            throws PersistenceException {
         sortCache = new SortCache(query.getSortPredicates());
         cursorCache = new CursorCache(query.getCursor());
         rootOperand = query.getRootOperand();
@@ -204,9 +205,8 @@ public class QueryProcessor {
         // stack for nodes that will be used to construct the tree and create
         // objects
         private Stack<QueryNode> nodes = new Stack<QueryNode>();
-        
-        private Schema schema = getDefaultSchema();
 
+        private Schema schema = getDefaultSchema();
 
         private int contextCount = -1;
 
@@ -326,8 +326,7 @@ public class QueryProcessor {
 
             String propertyName = op.getProperty().getValue();
 
-            if (!schema.isPropertyFulltextIndexed(entityType,
-                    propertyName)) {
+            if (!schema.isPropertyFulltextIndexed(entityType, propertyName)) {
                 throw new NoFullTextIndexException(entityType, propertyName);
             }
 
@@ -514,7 +513,8 @@ public class QueryProcessor {
          * @param child
          */
         private void createNewSlice(Operand child) {
-            if (child instanceof EqualityOperand || child instanceof AndOperand || child instanceof ContainsOperand) {
+            if (child instanceof EqualityOperand || child instanceof AndOperand
+                    || child instanceof ContainsOperand) {
                 newSliceNode();
             }
 
@@ -538,8 +538,10 @@ public class QueryProcessor {
         }
 
         private void checkIndexed(String propertyName) throws NoIndexException {
-            
-            if (!schema.isPropertyIndexed(entityType, propertyName) && collectionInfo != null && !collectionInfo.isSubkeyProperty(propertyName)) {
+
+            if (!schema.isPropertyIndexed(entityType, propertyName)
+                    && collectionInfo != null
+                    && !collectionInfo.isSubkeyProperty(propertyName)) {
                 throw new NoIndexException(entityType, propertyName);
             }
         }
@@ -574,12 +576,17 @@ public class QueryProcessor {
 
                 String[] parts = split(c, ':');
 
-                if (parts.length == 2 && isNotBlank(parts[1])) {
+                if (parts.length >= 1) {
 
                     int hashCode = parseInt(parts[0]);
 
-                    ByteBuffer cursorBytes = ByteBuffer
-                            .wrap(decodeBase64(parts[1]));
+                    ByteBuffer cursorBytes = null;
+
+                    if (parts.length == 2) {
+                        cursorBytes = ByteBuffer.wrap(decodeBase64(parts[1]));
+                    } else {
+                        cursorBytes = ByteBuffer.allocate(0);
+                    }
 
                     cursors.put(hashCode, cursorBytes);
                 }
