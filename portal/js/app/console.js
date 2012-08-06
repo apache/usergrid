@@ -1684,7 +1684,7 @@ function apigee_console_app(Pages, query_params) {
       }
     }
     showPagination('users');
-    showCurlCommand('users', queryObj.getCurl(), queryObj.getHasToken());
+    showCurlCommand('users', queryObj.getCurl(), queryObj.getToken());
   }
 
   function showUsersForSearch(search){
