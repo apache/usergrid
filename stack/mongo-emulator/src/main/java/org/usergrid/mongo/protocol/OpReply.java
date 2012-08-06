@@ -141,10 +141,16 @@ public class OpReply extends Message {
 
 	@Override
 	public String toString() {
+		String docs_str = null;
+		try {
+			docs_str = documents.toString();
+		} catch (Exception e) {
+			docs_str = "error(" + e.getMessage() + ")";
+		}
 		return "OpReply [responseFlags=" + responseFlags + ", cursorID="
 				+ cursorID + ", startingFrom=" + startingFrom
 				+ ", numberReturned=" + numberReturned + ", documents="
-				+ documents + "]";
+				+ docs_str + "]";
 	}
 
 	public static OpReply errorReply(String message) {

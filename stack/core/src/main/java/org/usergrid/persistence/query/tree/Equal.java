@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
 import org.usergrid.persistence.exceptions.NoIndexException;
 
@@ -32,7 +33,9 @@ public class Equal extends EqualityOperand {
         super(t);
     }
 
-   
+    public Equal() {
+        super(new ClassicToken(0, "="));
+    }
 
     /*
      * (non-Javadoc)
