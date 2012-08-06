@@ -743,5 +743,163 @@ public class CollectionTest extends AbstractPersistenceTest {
         }
 
     }
+    
 
+    @Test
+    public void pagingLessThanWithCriteria() throws Exception {
+
+        UUID applicationId = createApplication("testOrganization",
+                "pagingLessThanWithCriteria");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        int size = 40;
+        List<UUID> entityIds = new ArrayList<UUID>();
+
+        for (int i = 0; i < size; i++) {
+            Map<String, Object> properties = new LinkedHashMap<String, Object>();
+            properties.put("index", i);
+            Entity created = em.create("page", properties);
+
+            entityIds.add(created.getUuid());
+        }
+
+        int pageSize = 10;
+        
+        Query query = new Query();
+        query.setLimit(pageSize);
+        query.addFilter("index < " + size*2);
+
+     
+        Results r = null;
+        
+        // check they're all the same before deletion
+        for (int i = 0; i < size/pageSize; i++) {
+            
+             r = em.searchCollection(em.getApplicationRef(), "pages", query);
+
+            logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+
+            assertEquals(pageSize, r.size());
+
+            for(int j = 0; j < pageSize; j++){
+                assertEquals(entityIds.get(i*pageSize + j), r.getEntities().get(j).getUuid());
+            }
+          
+            query.setCursor(r.getCursor());
+        }
+        
+        r = em.searchCollection(em.getApplicationRef(), "pages", query);
+        
+        assertEquals(0, r.size());
+        
+    }
+
+    @Test
+    public void pagingGreaterThanWithCriteria() throws Exception {
+
+        UUID applicationId = createApplication("testOrganization",
+                "pagingGreaterThanWithCriteria");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        int size = 40;
+        List<UUID> entityIds = new ArrayList<UUID>();
+
+        for (int i = 0; i < size; i++) {
+            Map<String, Object> properties = new LinkedHashMap<String, Object>();
+            properties.put("index", i);
+            Entity created = em.create("page", properties);
+
+            entityIds.add(created.getUuid());
+        }
+
+        int pageSize = 10;
+        
+        Query query = new Query();
+        query.setLimit(pageSize);
+        query.addFilter("index >= " + size/2);
+
+     
+        Results r = null;
+        
+        // check they're all the same before deletion
+        for (int i = 2; i < size/pageSize; i++) {
+            
+            r = em.searchCollection(em.getApplicationRef(), "pages", query);
+
+            logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+
+            assertEquals(pageSize, r.size());
+
+            for(int j = 0; j < pageSize; j++){
+                assertEquals(entityIds.get(i*pageSize + j), r.getEntities().get(j).getUuid());
+            }
+          
+            query.setCursor(r.getCursor());
+        }
+        
+        r = em.searchCollection(em.getApplicationRef(), "pages", query);
+        
+        assertEquals(0, r.size());
+        
+    }
+    
+    @Test
+    public void pagingWithBoundsCriteria() throws Exception {
+
+        UUID applicationId = createApplication("testOrganization",
+                "pagingWithBoundsCriteria");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        int size = 40;
+        List<UUID> entityIds = new ArrayList<UUID>();
+
+        for (int i = 0; i < size; i++) {
+            Map<String, Object> properties = new LinkedHashMap<String, Object>();
+            properties.put("index", i);
+            Entity created = em.create("page", properties);
+
+            entityIds.add(created.getUuid());
+        }
+
+        int pageSize = 10;
+        
+        Query query = new Query();
+        query.setLimit(pageSize);
+        query.addFilter("index >= 10");
+        query.addFilter("index <= 29");
+
+     
+        Results r = null;
+        
+        // check they're all the same before deletion
+        for (int i = 1; i < 3; i++) {
+            
+            r = em.searchCollection(em.getApplicationRef(), "pages", query);
+
+            logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+
+            assertEquals(pageSize, r.size());
+
+            for(int j = 0; j < pageSize; j++){
+                assertEquals(entityIds.get(i*pageSize + j), r.getEntities().get(j).getUuid());
+            }
+          
+            query.setCursor(r.getCursor());
+        }
+        
+        r = em.searchCollection(em.getApplicationRef(), "pages", query);
+        
+        assertEquals(0, r.size());
+        
+    }
+    
 }
