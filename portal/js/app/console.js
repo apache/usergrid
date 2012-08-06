@@ -480,9 +480,9 @@ function apigee_console_app(Pages, query_params) {
     path += event.target.innerText;
     $('#query-path').val(path);
   };
-
+	
   var queryQl = $('#query-ql');
-  queryQl.typeahead();
+  queryQl.typeahead({source:indexes});
 
   function doBuildIndexMenu() {
     queryQl.data('typeahead').source = indexes;
@@ -952,7 +952,14 @@ function apigee_console_app(Pages, query_params) {
       $(this).modal('hide');
     }
   }
-
+ //TODO: the organization, and required fields for this method, are hidden. There is no quick way to check variable names and order
+ /*
+  * Needed fields: 
+  * username:
+  * name: FULL NAME
+  * email: 
+  * password: 
+  */
   function submitNewUser() {
     var form = $(this);
     formClearErrors(form);
@@ -1371,7 +1378,8 @@ function apigee_console_app(Pages, query_params) {
   }
   window.apigee.console.pageSelectApplication = pageSelectApplication;
 
-  function updateApplicationDashboard() {
+  function updateApplicationDashboard(){
+  	requestApplicationCredentials();
     var data = new google.visualization.DataTable();
     data.addColumn('string', 'Entity');
     data.addColumn('number', 'Count');
@@ -1677,7 +1685,7 @@ function apigee_console_app(Pages, query_params) {
       }
     }
     showPagination('users');
-    showCurlCommand('users', queryObj.getCurl(), queryObj.getToken());
+    showCurlCommand('users', queryObj.getCurl(), queryObj.getHasToken());
   }
 
   function showUsersForSearch(search){
@@ -3028,11 +3036,6 @@ function deleteRolePermission(roleName, permission) {
    *
    ******************************************************************/
 
-  function pageSelectSettings(uuid) {
-    requestApplicationCredentials();
-    requestOrganizations();
-  }
-  window.apigee.console.pageSelectSettings = pageSelectSettings;
 
   var application_keys = {};
 
@@ -3521,7 +3524,7 @@ function deleteRolePermission(roleName, permission) {
     return false;
   });
 
-  /**
+  /** //TODO Update documentation for .login() usage
   *  Authenticate an admin user and store the token and org list
   *  @method login
   *  @params {string} email - the admin's email (or username)
@@ -3534,7 +3537,7 @@ function deleteRolePermission(roleName, permission) {
     var password = $('#login-password').val();
 
     //empty local storage
-    apigee.userSession.clearAll();;
+    apigee.userSession.clearAll();
 
     var formdata = {
       grant_type: "password",
@@ -4009,7 +4012,7 @@ function deleteRolePermission(roleName, permission) {
     }
     return false;
   });
-
+//TODO: why is this object out of scope of .button()??
   $('button, input:submit, input:button').button();
 
   $('select#indexSelect').change( function(e){

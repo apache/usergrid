@@ -112,10 +112,11 @@ apigee = apigee || {};
     *  Standardized methods for mantianing user and authentication state in the Application
     *  @class UserSession
     */
-  apigee.UserSession = function() {};    
-  apigee.UserSession.prototype = {
+  apigee.UserSession = function(){};
+        
+  apigee.UserSession.prototype = {  	
     //access token access and setter methods
-    getAccessToken: function getAccessToken() {
+    getAccessToken: function() {
       var accessToken = localStorage.getItem('accessToken');
       return accessToken;
     },
@@ -123,35 +124,35 @@ apigee = apigee || {};
       localStorage.setItem('accessToken', accessToken);
     },
     //logged in user access and setter methods
-    getUserUUID: function getUserUUID() {
+    getUserUUID: function () {
       return localStorage.getItem('userUUID');
     },
-    setUserUUID: function setUserUUID(uuid) {
+    setUserUUID: function (uuid) {
     localStorage.setItem('userUUID', uuid);
     },
-    getUserEmail: function getUserEmail() {
+    getUserEmail: function () {
       return localStorage.getItem('userEmail');
     },
-    setUserEmail: function setUserEmail(email) {
+    setUserEmail: function (email) {
       localStorage.setItem('userEmail', email);
     },
 
     //convenience method to verify if user is logged in
-    loggedIn: function loggedIn() {
+    loggedIn: function () {
       var token = this.getAccessToken();
       var email = this.getUserEmail();
       return (token && email);
     },
 
     //convenience method for saving all active user vars at once
-    saveAll: function saveAll(uuid, email, accessToken) {
+    saveAll: function (uuid, email, accessToken) {
       this.setUserUUID(uuid);
       this.setUserEmail(email);
       this.setAccessToken(accessToken);
     },
 
     //convenience method for clearing all active user vars at once
-    clearAll: function clearAll() {
+    clearAll: function () {
       localStorage.removeItem('userUUID');
       localStorage.removeItem('userEmail');
       localStorage.removeItem('accessToken');

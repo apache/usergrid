@@ -204,7 +204,6 @@
                 <li><a href="#analytics"><i class="icon-signal"></i> Analytics</a></li>
                 <li><a href="#shell"><i class="icon-warning-sign"></i> Shell</a></li>
                 <li><a href="#console"><i class="icon-list-alt"></i> Console</a></li>
-                <li><a href="#settings"><i class="icon-cog"></i> Settings</a></li>
                 <li><a href="http://apigee.com/docs/usergrid" target="_blank"><i class="icon-question-sign"></i> Help</a></li>
               </ul>
             </div>
@@ -363,9 +362,36 @@
                     <div class="row">
                       <div id="application-data-uploaded" class="span graph"></div>
                       <div id="application-data-downloaded" class="span graph"></div>
-                    </div>
+                    </div>                   
                   </div>
                 </div>
+                <div class="console-section">
+	                  	<div class="well thingy"><span class="title"> Application API Credentials <span class="app_title"></span></span>
+	                      <div class="bar">
+	                        <a class="" href="" onclick="apigee.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
+	                      </div>
+	                    </div>
+	                    <div class="console-section-contents"> 
+		                  	<table id="application-panel-key-table" class="table">
+		                      <tr>
+		                        <td>
+		                          <span class="span3">Client ID</span>
+		                        </td>
+		                        <td>
+		                          <span id="application-panel-key">...</span>
+		                        </td>
+		                      </tr>
+		                      <tr>
+		                        <td>
+		                          <span class="span3">Client Secret</span>
+		                        </td>
+		                        <td>
+		                          <span id="application-panel-secret">...</span>
+		                        <td>      	
+		                      </tr>
+		                   	</table>
+	                   	</div>
+                   	</div>
               </div>
               <div id="account-panel" class="container-fluid hide">
                 <div id="account-update-modal" class="modal hide fade">
@@ -974,36 +1000,7 @@
                     </div>
                   </div>
                 </div>
-              </div>
-              <div id="settings-panel" style="display: none">
-                <div class="panel-content">
-                  <div class="console-section">
-                    <div class="well thingy"><span class="title"> Application API Credentials <span class="app_title"></span></span>
-                      <div class="bar">
-                        <a class="" href="" onclick="apigee.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
-                      </div>
-                    </div>
-                    <table id="application-panel-key-table" class="table">
-                      <tr>
-                        <td>
-                          <span class="span3">Client ID</span>
-                        </td>
-                        <td>
-                          <span id="application-panel-key">...</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="span3">Client Secret</span>
-                        </td>
-                        <td>
-                          <span id="application-panel-secret">...</span>
-                        <td>
-                      </tr>
-                    </table>
-                  </div>
-                </div>
-              </div>
+              </div>              
               <div id="shell-panel" style="display: none">
                 <div id="shell-content" class="console-section">
                   <div class="well thingy"> <span class="title"> Interactive Shell </span></div>
