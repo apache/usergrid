@@ -74,6 +74,7 @@ apigee.ApiClient = (function () {
   /*
    *  A method to set up the ApiClient with orgname and appname
    *  @method init
+   *  @public
    *  @param {string} orgName
    *  @param {string} appName
    *  @return none
@@ -87,6 +88,7 @@ apigee.ApiClient = (function () {
   /*
     *  A public method to get the organization name to be used by the client
     *  @method getOrganizationName
+    *  @public
     *  @return {string} the organization name
     */
   function getOrganizationName() {
@@ -106,6 +108,7 @@ apigee.ApiClient = (function () {
   /*
     *  A public method to get the organization UUID to be used by the client
     *  @method getOrganizationUUID
+    *  @public
     *  @return {string} the organization UUID
     */
   function getOrganizationUUID() {
@@ -115,6 +118,7 @@ apigee.ApiClient = (function () {
   /*
     *  A public method to set the organization UUID to be used by the client
     *  @method setOrganizationUUID
+    *  @public
     *  @param orgUUID - the organization UUID
     *  @return none
     */
@@ -125,6 +129,7 @@ apigee.ApiClient = (function () {
   /*
   *  A public method to get the application name to be used by the client
   *  @method getApplicationName
+  *  @public
   *  @return {string} the application name
   */
   function getApplicationName() {
@@ -134,6 +139,7 @@ apigee.ApiClient = (function () {
   /*
   *  A public method to set the application name to be used by the client
   *  @method setApplicationName
+  *  @public
   *  @param appName - the application name
   *  @return none
   */
@@ -144,6 +150,7 @@ apigee.ApiClient = (function () {
   /*
   *  A public method to get the token to be used by the client
   *  @method getToken
+  *  @public
   *  @return {string} the current token
   */
   function getToken() {
@@ -153,6 +160,7 @@ apigee.ApiClient = (function () {
   /*
   *  A public method to set the token to be used by the client
   *  @method setToken
+  *  @public
   *  @param token - the bearer token
   *  @return none
   */
@@ -163,6 +171,7 @@ apigee.ApiClient = (function () {
   /*
     *  A public method to get the app user's username to be used by the client
     *  @method getAppUserUsername
+    *  @public
     *  @return {string} the app user's username
     */
   function getAppUserUsername() {
@@ -172,6 +181,7 @@ apigee.ApiClient = (function () {
   /*
     *  A public method to set the app user's username to be used by the client
     *  @method setAppUserUsername
+    *  @public
     *  @param appUserUsername - the app user's username
     *  @return none
     */
@@ -182,6 +192,7 @@ apigee.ApiClient = (function () {
   /*
     *  method to get the app user's name to be used by the client
     *  @method getAppUserName
+    *  @public
     *  @return {string} the app user's name
     */
   function getAppUserFullName() {
@@ -191,6 +202,7 @@ apigee.ApiClient = (function () {
   /*
     *  A public method to set the app user's name to be used by the client
     *  @method setAppUserName
+    *  @public
     *  @param appUserName - the app user's name
     *  @return none
     */
@@ -201,6 +213,7 @@ apigee.ApiClient = (function () {
   /*
     *  A public method to get the app user's email to be used by the client
     *  @method getAppUserEmail
+    *  @public
     *  @return {string} the app user's email
     */
   function getAppUserEmail() {
@@ -210,6 +223,7 @@ apigee.ApiClient = (function () {
   /*
     *  A public method to set the app user's email to be used by the client
     *  @method setAppUserEmail
+    *  @public
     *  @param appUserEmail - the app user's email
     *  @return none
     */
@@ -220,6 +234,7 @@ apigee.ApiClient = (function () {
   /*
     *  A public method to get the app user's UUID to be used by the client
     *  @method getAppUserUUID
+    *  @public
     *  @return {string} the app users' UUID
     */
   function getAppUserUUID() {
@@ -229,6 +244,7 @@ apigee.ApiClient = (function () {
   /*
     *  A public method to set the app user's UUID to be used by the client
     *  @method setAppUserUUID
+    *  @public
     *  @param appUserUUID - the app user's UUID
     *  @return none
     */
@@ -239,6 +255,7 @@ apigee.ApiClient = (function () {
   /*
   *  A public method to return the API URL
   *  @method getApiUrl
+  *  @public
   *  @return {string} the API url
   */
   function getApiUrl() {
@@ -248,6 +265,7 @@ apigee.ApiClient = (function () {
   /*
   *  A public method to overide the API url
   *  @method setApiUrl
+  *  @public
   *  @return none
   */
   function setApiUrl(apiUrl) {
@@ -257,6 +275,7 @@ apigee.ApiClient = (function () {
   /*
   *  A public method to get the api url of the reset pasword endpoint
   *  @method getResetPasswordUrl
+  *  @public
   *  @return {string} the api rul of the reset password endpoint
   */
   function getResetPasswordUrl() {
@@ -266,28 +285,31 @@ apigee.ApiClient = (function () {
   /*
   *  A public method to run calls against the app endpoint
   *  @method runAppQuery
+  *  @public
   *  @params {object} apigee.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
   *  @return none
   */
   function runAppQuery (QueryObj) {
     var endpoint = "/" + this.getOrganizationName() + "/" + this.getApplicationName() + "/";
-    this.processQuery(QueryObj, endpoint);
+    processQuery(QueryObj, endpoint, self);
   }
 
   /*
   *  A public method to run calls against the management endpoint
   *  @method runManagementQuery
+  *  @public
   *  @params {object} apigee.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
   *  @return none
   */
   function runManagementQuery (QueryObj) {
     var endpoint = "/management/";
-    this.processQuery(QueryObj, endpoint)
+    processQuery(QueryObj, endpoint, self)
   }
 
   /*
   *  A public method to log in an app user - stores the token for later use
   *  @method loginAppUser
+  *  @public
   *  @params {string} username
   *  @params {string} password
   *  @params {function} successCallback
@@ -322,6 +344,7 @@ apigee.ApiClient = (function () {
   *  data update as two separate calls, but this will be changed to one call when the
   *  API is updated to support this
   *  @method updateAppUser
+  *  @public
   *  @params {string} uuid
   *  @params {string} name
   *  @params {string} email
@@ -376,6 +399,7 @@ apigee.ApiClient = (function () {
   /**
    *  A public method to create an app user
    *  @method createAppUser
+   *  @public
    *  @param {string} name
    *  @param {string} email
    *  @param {string} username
@@ -414,6 +438,7 @@ apigee.ApiClient = (function () {
   /*
    *  TODO:  NOT IMPLEMENTED YET - A method to renew an app user's token
    *  @method renewAppUserToken
+   *  @public
    *  @return none
    */
   function renewAppUserToken() {
@@ -423,6 +448,7 @@ apigee.ApiClient = (function () {
   /**
    *  A public method to log out an app user - clears all user fields from client
    *  @method logoutAppUser
+   *  @public
    *  @return none
    */
   function logoutAppUser() {
@@ -437,6 +463,7 @@ apigee.ApiClient = (function () {
    *  A public method to test if a user is logged in - does not guarantee that the token is still valid,
    *  but rather that one exists, and that there is a valid UUID
    *  @method isLoggedInAppUser
+   *  @public
    *  @params {object} apigee.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
    *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
    */
@@ -445,10 +472,47 @@ apigee.ApiClient = (function () {
   }
 
   /**
-   *  This private method should not be called directly!!
-   *  It is the main function that validates and prepares a call to the API
-   *  Use runAppQuery or runManagementQuery instead
+   *  Private helper method to encode the query string parameters
+   *
+   *  @method encodeParams
+   *  @public
+   *  @params {object} params - an object of name value pairs that will be urlencoded
+   *  @return {string} Returns the encoded string
+   */
+  function encodeParams (params) {
+    tail = [];
+    var item = [];
+    if (params instanceof Array) {
+      for (i in params) {
+        item = params[i];
+        if ((item instanceof Array) && (item.length > 1)) {
+          tail.push(item[0] + "=" + encodeURIComponent(item[1]));
+        }
+      }
+    } else {
+      for (var key in params) {
+        if (params.hasOwnProperty(key)) {
+          var value = params[key];
+          if (value instanceof Array) {
+            for (i in value) {
+              item = value[i];
+              tail.push(key + "=" + encodeURIComponent(item));
+            }
+          } else {
+            tail.push(key + "=" + encodeURIComponent(value));
+          }
+        }
+      }
+    }
+    return tail.join("&");
+  }
+
+  /**
+   *  A private method to validate, prepare,, and make the calls to the API
+   *  Use runAppQuery or runManagementQuery to make your calls!
+   *
    *  @method processQuery
+   *  @private
    *  @params {object} apigee.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
    *  @params {string} endpoint - used to differentiate between management and app queries
    *  @return {response} callback functions return API response object
@@ -482,12 +546,12 @@ apigee.ApiClient = (function () {
       else { curl += " -X GET"; }
 
       //curl - append the bearer token if this is not the sandbox app
-      var application_name = this.getApplicationName();
+      var application_name = apigee.ApiClient.getApplicationName();
       if (application_name) {
         application_name = application_name.toUpperCase();
       }
-      if (application_name != 'SANDBOX' && this.getToken()) {
-        curl += ' -i -H "Authorization: Bearer ' + this.getToken() + '"';
+      if (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) {
+        curl += ' -i -H "Authorization: Bearer ' + apigee.ApiClient.getToken() + '"';
         QueryObj.setToken(true);
       }
 
@@ -519,13 +583,13 @@ apigee.ApiClient = (function () {
       }
 
       //add the http:// bit on the front
-      path = this.getApiUrl() + path;
+      path = apigee.ApiClient.getApiUrl() + path;
 
       //curl - append the path
       curl += ' "' + path;
 
       //curl - append params to the path for curl prior to adding the timestamp
-      var curl_encoded_params = this.encodeParams(params);
+      var curl_encoded_params = encodeParams(params);
       if (curl_encoded_params) {
         curl += "?" + curl_encoded_params;
       }
@@ -537,7 +601,7 @@ apigee.ApiClient = (function () {
       }
 
       //append params to the path
-      var encoded_params = this.encodeParams(params);
+      var encoded_params = encodeParams(params);
       if (encoded_params) {
         path += "?" + encoded_params;
       }
@@ -572,11 +636,11 @@ apigee.ApiClient = (function () {
     if(xD)
     {
       xhr = new window.XDomainRequest();
-      if (application_name != 'SANDBOX' && this.getToken()) {
+      if (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) {
         if (path.indexOf("?")) {
-          path += '&access_token='+this.getToken();
+          path += '&access_token='+apigee.ApiClient.getToken();
         } else {
-          path = '?access_token='+this.getToken();
+          path = '?access_token='+apigee.ApiClient.getToken();
         }
       }
       xhr.open(method, path, true);
@@ -585,17 +649,17 @@ apigee.ApiClient = (function () {
     {
       xhr = new XMLHttpRequest();
       xhr.open(method, path, true);
-      if (application_name != 'SANDBOX' && this.getToken()) {
-        xhr.setRequestHeader("Authorization", "Bearer " + this.getToken());
+      if (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) {
+        xhr.setRequestHeader("Authorization", "Bearer " + apigee.ApiClient.getToken());
         xhr.withCredentials = true;
       }
     } else {
       xhr = new ActiveXObject("MSXML2.XMLHTTP.3.0");
-      if (application_name != 'SANDBOX' && this.getToken()) {
+      if (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) {
         if (path.indexOf("?")) {
-          path += '&access_token='+this.getToken();
+          path += '&access_token='+apigee.ApiClient.getToken();
         } else {
-          path = '?access_token='+this.getToken();
+          path = '?access_token='+apigee.ApiClient.getToken();
         }
       }
       xhr.open(method, path, true);
@@ -644,40 +708,6 @@ apigee.ApiClient = (function () {
     xhr.send(jsonObj);
   }
 
-  /**
-   *  Private helper method to encode the query string parameters
-   *  @method encodeParams
-   *  @params {object} params - an object of name value pairs that will be urlencoded
-   *  @return {string} Returns the encoded string
-   */
-  function encodeParams (params) {
-    tail = [];
-    var item = [];
-    if (params instanceof Array) {
-      for (i in params) {
-        item = params[i];
-        if ((item instanceof Array) && (item.length > 1)) {
-          tail.push(item[0] + "=" + encodeURIComponent(item[1]));
-        }
-      }
-    } else {
-      for (var key in params) {
-        if (params.hasOwnProperty(key)) {
-          var value = params[key];
-          if (value instanceof Array) {
-            for (i in value) {
-              item = value[i];
-              tail.push(key + "=" + encodeURIComponent(item));
-            }
-          } else {
-            tail.push(key + "=" + encodeURIComponent(value));
-          }
-        }
-      }
-    }
-    return tail.join("&");
-  }
-
   return {
     init:init,
     getOrganizationName:getOrganizationName,
@@ -706,9 +736,7 @@ apigee.ApiClient = (function () {
     updateAppUser:updateAppUser,
     renewAppUserToken:renewAppUserToken,
     logoutAppUser:logoutAppUser,
-    isLoggedInAppUser:isLoggedInAppUser,
-    processQuery:processQuery,
-    encodeParams:encodeParams
+    isLoggedInAppUser:isLoggedInAppUser
   }
 })();
 
@@ -999,16 +1027,16 @@ apigee.validation = (function () {
    *  @param {string} method
    *  @param {string} path
    *  @param {object} jsonObj
-   *  @param {object} queryParams
+   *  @param {object} paramsObj
    *  @param {function} successCallback
    *  @param {function} failureCallback
    */
-  apigee.QueryObj = function(method, path, jsonObj, queryParams, successCallback, failureCallback) {
+  apigee.QueryObj = function(method, path, jsonObj, paramsObj, successCallback, failureCallback) {
     //query vars
     this._method = method;
     this._path = path;
     this._jsonObj = jsonObj;
-    this._queryParams = queryParams;
+    this._paramsObj = paramsObj;
     this._successCallback = successCallback;
     this._failureCallback = failureCallback;
 
@@ -1030,18 +1058,32 @@ apigee.validation = (function () {
      *  @param {string} method
      *  @param {string} path
      *  @param {object} jsonObj
-     *  @param {object} queryParams
+     *  @param {object} paramsObj
      *  @param {function} successCallback
      *  @param {function} failureCallback
      *  @return none
      */
-    setAll: function(method, path, jsonObj, params, successCallback, failureCallback) {
+    setAllQueryParams: function(method, path, jsonObj, paramsObj, successCallback, failureCallback) {
       this._method = method;
       this._path = path;
       this._jsonObj = jsonObj;
-      this._params = params;
+      this._paramsObj = paramsObj;
       this._successCallback = successCallback;
       this._failureCallback = failureCallback;
+    },
+
+    /**
+     *  A method to reset all the parameters in one call
+     *  @public
+     *  @return none
+     */
+    clearAll: function() {
+      this._method = null;
+      this._path = null;
+      this._jsonObj = {};
+      this._paramsObj = {};
+      this._successCallback = null;
+      this._failureCallback = null;
     },
     /**
     * Returns the method
@@ -1108,7 +1150,7 @@ apigee.validation = (function () {
     * @return {object} Returns Query Parameters object
     */
     getQueryParams: function() {
-      return this._queryParams;
+      return this._paramsObj;
     },
 
     /**
@@ -1117,8 +1159,8 @@ apigee.validation = (function () {
     * @method setQueryParams
     * @return none
     */
-    setQueryParams: function(queryParams) {
-      this._queryParams = queryParams;
+    setQueryParams: function(paramsObj) {
+      this._paramsObj = paramsObj;
     },
 
     /**
@@ -1370,315 +1412,319 @@ apigee.validation = (function () {
     this._data = {};
     this._uuid = uuid;
   };
-  apigee.Entity.prototype = {
-    /**
-     *  gets the current Entity type
-     *
-     *  @method getCollectionType
-     *  @return {string} collection type
-     *
-     */
-    getCollectionType: function() {
-      return this._collectionType;
-    },
 
-     /**
-     *  sets the collection type of the Entity
-     *
-     *  @method setCollectionType
-     *  @param {string} collectionType
-     *  @return none
-     *
-     */
-    setCollectionType: function(collectionType) {
-      this._collectionType = collectionType;
-    },
+  apigee.Entity.prototype = new apigee.QueryObj();
 
-    /**
-     *  gets the current Entity UUID
-     *
-     *  @method getUUID
-     *  @return {string} uuid
-     *
-     */
-    getUUID: function() {
-      return this._uuid;
-    },
+  /**
+   *  gets the current Entity type
+   *
+   *  @method getCollectionType
+   *  @return {string} collection type
+   */
+  apigee.Entity.prototype.getCollectionType = function (){
+    return this._collectionType;
+  }
 
-     /**
-     *  sets the UUID of the Entity
-     *
-     *  @method setUUID
-     *  @param {string} uuid
-     *  @return none
-     *
-     */
-    setUUID: function(uuid) {
-      this._uuid = uuid;
-    },
+  /**
+   *  sets the collection type of the Entity
+   *
+   *  @method setCollectionType
+   *  @param {string} collectionType
+   *  @return none
+   *
+   */
+  apigee.Entity.prototype.setCollectionType = function (collectionType){
+    this._collectionType = collectionType;
+  }
 
-    /**
-     *  gets the current Entity Name
-     *
-     *  @method getName
-     *  @return {string} name
-     *
-     */
-    getName: function() {
-      return this.getField('name');
-    },
+  /**
+   *  gets the current Entity UUID
+   *
+   *  @method getUUID
+   *  @return {string} uuid
+   *
+   */
+  apigee.Entity.prototype.getUUID = function (){
+    return this._uuid;
+  }
 
-     /**
-     *  sets the Name of the Entity
-     *
-     *  @method setName
-     *  @param {string} name
-     *  @return none
-     *
-     */
-    setName: function(name) {
-      this.setField('name', name);
-    },
+  /**
+   *  sets the UUID of the Entity
+   *
+   *  @method setUUID
+   *  @param {string} uuid
+   *  @return none
+   *
+   */
+  apigee.Entity.prototype.setUUID = function (uuid){
+    this._uuid = uuid;
+  }
 
-    /**
-     *  gets the current Entity data object
-     *
-     *  @method getData
-     *  @return {object} data
-     *
-     */
-    getData: function() {
-      return this._data;
-    },
+  /**
+   *  gets the current Entity Name
+   *
+   *  @method getName
+   *  @return {string} name
+   *
+   */
+  apigee.Entity.prototype.getName = function (){
+    return this.getField('name');
+  }
 
-     /**
-     *  sets the data object
-     *
-     *  @method setData
-     *  @param {object} data
-     *  @return none
-     *
-     */
-    setData: function(data) {
-      for(item in data) {
-        this._data[item] = data[item];
-      }
-    },
+  /**
+   *  sets the Name of the Entity
+   *
+   *  @method setName
+   *  @param {string} name
+   *  @return none
+   *
+   */
+  apigee.Entity.prototype.setName = function (name){
+    this.setField('name', name);
+  }
 
-     /**
-     *  clears out the data object
-     *
-     *  @method clearData
-     *  @return none
-     *
-     */
-    clearData: function () {
-      this._data = null;
-    },
+  /**
+   *  gets the current Entity data object
+   *
+   *  @method getData
+   *  @return {object} data
+   *
+   */
+  apigee.Entity.prototype.getData = function (){
+    return this._data;
+  }
 
-    /**
-     *  gets a specific field from the data object
-     *
-     *  @method getField
-     *  @param {string} field
-     *  @return {string} data field
-     *
-     */
-    getField: function(field) {
-      return this._data[field];
-    },
+  /**
+   *  sets the data object
+   *
+   *  @method setData
+   *  @param {object} data
+   *  @return none
+   *
+   */
+  apigee.Entity.prototype.setData = function (data){
+    for(item in data) {
+      this._data[item] = data[item];
+    }
+  }
 
-    /**
-     *  sets a specific field in the data object
-     *
-     *  @method setField
-     *  @param {string} field
-     *  @param {string} value
-     *  @return none
-     *
-     */
-    setField: function(field, value) {
-      this._data[field] = value;
-    },
+  /**
+   *  clears out the data object
+   *
+   *  @method clearData
+   *  @return none
+   *
+   */
+  apigee.Entity.prototype.clearData = function (){
+    this._data = null;
+  },
 
-    /**
-     *  removes a specific field from the data object
-     *
-     *  @method deleteField
-     *  @param {string} field
-     *  @return none
-     *
-     */
-    deleteField: function(field) {
-      delete this._data[field];
-    },
+  /**
+   *  gets a specific field from the data object
+   *
+   *  @method getField
+   *  @param {string} field
+   *  @return {string} data field
+   *
+   */
+  apigee.Entity.prototype.getField = function (field){
+    return this._data[field];
+  },
 
-    /**
-     *  Private method for handling the response from the server
-     *
-     *  @method processResponse
-     *  @private
-     *  @param {string} self
-     *  @param {object} response
-     *  @return {boolean} true if the response was populated, false otherwise
-     *
-     */
-    processResponse: function(self, response){
-      if (response.entities[0]) { // && apigee.ApiClient.isUUID(response.entities[0].uuid )){
-        var entity = response.entities[0];
-        //first save off the uuid
-        if (entity.uuid) {
-          self.setUUID(entity.uuid);
-        }
-        delete entity.uuid; //remove uuid from the object
-        delete entity.metadata; //remove uuid from the object
+  /**
+   *  sets a specific field in the data object
+   *
+   *  @method setField
+   *  @param {string} field
+   *  @param {string} value
+   *  @return none
+   *
+   */
+  apigee.Entity.prototype.setField = function (field, value){
+    this._data[field] = value;
+  }
 
-        //store the rest of the fields
-        self.setData(entity);
-        return true;
-      }
-      return false;
-    },
+  /**
+   *  removes a specific field from the data object
+   *
+   *  @method deleteField
+   *  @param {string} field
+   *  @return none
+   *
+   */
+  apigee.Entity.prototype.deleteField = function (field){
+    delete this._data[field];
+  }
 
-    /**
-     *  Saves the entity back to the database
-     *
-     *  @method save
-     *  @public
-     *  @param {function} successCallback
-     *  @param {function} errorCallback
-     *  @return none
-     *
-     */
-    save: function(successCallback, errorCallback) {
-      var path = this.getCollectionType();
-      //TODO:  API will be changed soon to accomodate PUTs via name which create new entities
-      //       This function should be changed to PUT only at that time, and updated to use
-      //       either uuid or name
-      var method = 'POST';
-      if (this.getUUID()) {
-        method = 'PUT';
-        if (apigee.validation.isUUID(this.getUUID())) {
-          path += "/" + this.getUUID();
-        }
-      }
-      var self = this;
-      apigee.ApiClient.runAppQuery(new apigee.QueryObj(method, path, this.getData(), null,
-        function(response) {
-          if (self.processResponse(self, response)){
-            if (typeof(successCallback) == "function"){
-              successCallback(response);
-            }
-          } else {
-            if (typeof(errorCallback) == "function"){
-                errorCallback(response);
-            }
-          }
-        },
-        function(response) {
-          if (typeof(errorCallback) == "function"){
-              errorCallback(response);
-          }
-        }
-      ));
-    },
-
-    /**
-     *  refreshes the entity by making a GET call back to the database
-     *
-     *  @method get
-     *  @public
-     *  @param {function} successCallback
-     *  @param {function} errorCallback
-     *  @return none
-     *
-     */
-    get: function(successCallback, errorCallback) {
-      var path = this.getCollectionType();
-      //if a uuid is available, use that, otherwise, use the name
-      if (this.getUUID()) {
+  /**
+   *  Saves the entity back to the database
+   *
+   *  @method save
+   *  @public
+   *  @param {function} successCallback
+   *  @param {function} errorCallback
+   *  @return none
+   *
+   */
+  apigee.Entity.prototype.save = function (successCallback, errorCallback){
+    var path = this.getCollectionType();
+    //TODO:  API will be changed soon to accomodate PUTs via name which create new entities
+    //       This function should be changed to PUT only at that time, and updated to use
+    //       either uuid or name
+    var method = 'POST';
+    if (this.getUUID()) {
+      method = 'PUT';
+      if (apigee.validation.isUUID(this.getUUID())) {
         path += "/" + this.getUUID();
-      } else {
-        if (path == "users") {
-          if (this.getField("username")) {
-            path += "/" + this.getField("username");
-          } else {
-            console.log('no username specified');
-            if (typeof(errorCallback) == "function"){
-              console.log('no username specified');
-            }
-          }
-        } else {
-          if (this.getName()) {
-            path += "/" + this.getName();
-          } else {
-            console.log('no entity identifier specified');
-            if (typeof(errorCallback) == "function"){
-              console.log('no entity identifier specified');
-            }
-          }
-        }
       }
-      var self = this;
-      apigee.ApiClient.runAppQuery(new apigee.QueryObj('GET', path, null, null,
-        function(response) {
-          if (self.processResponse(self, response)){
-            if (typeof(successCallback) == "function"){
-              successCallback(response);
-            }
-          } else {
-            if (typeof(errorCallback) == "function"){
-                errorCallback(response);
-            }
-          }
-        },
-        function(response) {
-          if (typeof(errorCallback) == "function"){
-              errorCallback(response);
-          }
-        }
-      ));
-    },
-
-    /**
-     *  deletes the entity from the database - will only delete
-     *  if the object has a valid uuid
-     *
-     *  @method destroy
-     *  @public
-     *  @param {function} successCallback
-     *  @param {function} errorCallback
-     *  @return none
-     *
-     */
-    destroy: function(successCallback, errorCallback) {
-      var path = this.getCollectionType();
-      if (this.getUUID()) {
-        path += "/" + this.getUUID();
-      } else {
-        console.log('Error trying to delete object - no uuid specified.');
-        if (typeof(errorCallback) == "function"){
-          errorCallback('Error trying to delete object - no uuid specified.');
-        }
-      }
-      var self = this;
-      apigee.ApiClient.runAppQuery(new apigee.QueryObj('DELETE', path, null, null,
-        function(response) {
-          //clear out this object
-          self.clearData();
-          self.setUUID(null);
+    }
+    var self = this;
+    this.setAllQueryParams(method, path, this.getData(), null,
+      function(response) {
+        if (self.processResponse(self, response)){
           if (typeof(successCallback) == "function"){
             successCallback(response);
           }
-        },
-        function(response) {
+        } else {
           if (typeof(errorCallback) == "function"){
               errorCallback(response);
           }
         }
-      ));
+      },
+      function(response) {
+        if (typeof(errorCallback) == "function"){
+            errorCallback(response);
+        }
+      }
+    );
+    apigee.ApiClient.runAppQuery(this);
+  }
+
+  /**
+   *  refreshes the entity by making a GET call back to the database
+   *
+   *  @method get
+   *  @public
+   *  @param {function} successCallback
+   *  @param {function} errorCallback
+   *  @return none
+   *
+   */
+  apigee.Entity.prototype.get = function (successCallback, errorCallback){
+    var path = this.getCollectionType();
+    //if a uuid is available, use that, otherwise, use the name
+    if (this.getUUID()) {
+      path += "/" + this.getUUID();
+    } else {
+      if (path == "users") {
+        if (this.getField("username")) {
+          path += "/" + this.getField("username");
+        } else {
+          console.log('no username specified');
+          if (typeof(errorCallback) == "function"){
+            console.log('no username specified');
+          }
+        }
+      } else {
+        if (this.getName()) {
+          path += "/" + this.getName();
+        } else {
+          console.log('no entity identifier specified');
+          if (typeof(errorCallback) == "function"){
+            console.log('no entity identifier specified');
+          }
+        }
+      }
     }
-  };
+    var self = this;
+    this.setAllQueryParams('GET', path, null, null,
+      function(response) {
+        if (self.processResponse(self, response)){
+          if (typeof(successCallback) == "function"){
+            successCallback(response);
+          }
+        } else {
+          if (typeof(errorCallback) == "function"){
+              errorCallback(response);
+          }
+        }
+      },
+      function(response) {
+        if (typeof(errorCallback) == "function"){
+            errorCallback(response);
+        }
+      }
+    );
+    apigee.ApiClient.runAppQuery(this);
+  }
+
+  /**
+   *  deletes the entity from the database - will only delete
+   *  if the object has a valid uuid
+   *
+   *  @method destroy
+   *  @public
+   *  @param {function} successCallback
+   *  @param {function} errorCallback
+   *  @return none
+   *
+   */
+  apigee.Entity.prototype.destroy = function (successCallback, errorCallback){
+    var path = this.getCollectionType();
+    if (this.getUUID()) {
+      path += "/" + this.getUUID();
+    } else {
+      console.log('Error trying to delete object - no uuid specified.');
+      if (typeof(errorCallback) == "function"){
+        errorCallback('Error trying to delete object - no uuid specified.');
+      }
+    }
+    var self = this;
+    this.setAllQueryParams('DELETE', path, null, null,
+      function(response) {
+        //clear out this object
+        self.clearData();
+        self.setUUID(null);
+        if (typeof(successCallback) == "function"){
+          successCallback(response);
+        }
+      },
+      function(response) {
+        if (typeof(errorCallback) == "function"){
+            errorCallback(response);
+        }
+      }
+    );
+    apigee.ApiClient.runAppQuery(this);
+  }
+
+  /**
+    *  Private method for handling the response from the server
+    *
+    *  @method processResponse
+    *  @private
+    *  @param {string} self
+    *  @param {object} response
+    *  @return {boolean} true if the response was populated, false otherwise
+    *
+    */
+  function processResponse(self, response){
+    if (response.entities[0]) { // && apigee.ApiClient.isUUID(response.entities[0].uuid )){
+      var entity = response.entities[0];
+      //first save off the uuid
+      if (entity.uuid) {
+        self.setUUID(entity.uuid);
+      }
+      delete entity.uuid; //remove uuid from the object
+      delete entity.metadata; //remove uuid from the object
+
+      //store the rest of the fields
+      self.setData(entity);
+      return true;
+    }
+    return false;
+  }
+
 })(apigee);
 
 
@@ -1794,89 +1840,90 @@ apigee.validation = (function () {
    *  Collection is a container class for holding entities
    *
    *  @constructor
-   *  @param {string} path - the type of collection to model
+   *  @param {string} collectionPath - the type of collection to model
    *  @param {uuid} uuid - (optional), the UUID of the collection if it is known
    */
-  apigee.Collection = function(path, uuid) {
-    this._path = path;
+  apigee.Collection = function(collectionPath, uuid) {
+    this._collectionPath = collectionPath;
     this._uuid = uuid;
     this._list = [];
     this._queryObj = new apigee.QueryObj();
     this._iterator = -1; //first thing we do is increment, so set to -1
   };
 
-  apigee.Collection.prototype = {
-    /**
-     *  gets the current Collection path
-     *
-     *  @method getPath
-     *  @return {string} path
-     *
-     */
-    getPath: function() {
-      return this._path;
-    },
+  apigee.Collection.prototype = new apigee.QueryObj();
 
-    /**
-     *  sets the current Collection path
-     *
-     *  @method setPath
-     *  @param {string} path
-     *  @return none
-     *
-     */
-    setPath: function(path) {
-      this._path = path;
-    },
+  /**
+   *  gets the current Collection path
+   *
+   *  @method getCollectionPath
+   *  @return {string} collectionPath
+   *
+   */
+  apigee.Collection.prototype.getCollectionPath = function (){
+    return this._collectionPath;
+  }
 
-    /**
-     *  gets the current Collection UUID
-     *
-     *  @method getUUID
-     *  @param {string} uuid
-     *  @return {string} the uuid
-     *
-     */
-    getUUID: function() {
-      return this._uuid;
-    },
+  /**
+   *  sets the current Collection path
+   *
+   *  @method setCollectionPath
+   *  @param {string} collectionPath
+   *  @return none
+   *
+   */
+  apigee.Collection.prototype.setCollectionPath = function (collectionPath){
+    this._collectionPath = collectionPath;
+  }
 
-    /**
-     *  sets the current Collection UUID
-     *
-     *  @method setUUID
-     *  @param {string} uuid
-     *  @return none
-     *
-     */
-    setUUID: function(uuid) {
-      this._uuid = uuid;
-    },
+  /**
+   *  gets the current Collection UUID
+   *
+   *  @method getUUID
+   *  @param {string} uuid
+   *  @return {string} the uuid
+   *
+   */
+  apigee.Collection.prototype.getUUID = function (){
+    return this._uuid;
+  }
 
-    /**
-     *  Adds an Entity to the list
-     *
-     *  @method addEntity
-     *  @param {object} entity
-     *  @return none
-     *
-     */
-    addEntity: function(entity) {
-      var count = this._list.length;
+  /**
+   *  sets the current Collection UUID
+   *
+   *  @method setUUID
+   *  @param {string} uuid
+   *  @return none
+   *
+   */
+  apigee.Collection.prototype.setUUID = function (uuid){
+    this._uuid = uuid;
+  }
+
+  /**
+   *  Adds an Entity to the list
+   *
+   *  @method addEntity
+   *  @param {object} entity
+   *  @return none
+   *
+   */
+  apigee.Collection.prototype.addEntity = function (entity){
+    var count = this._list.length;
       this._list[count] = entity;
-    },
+  }
 
-    /**
-     *  Looks up an Entity by a specific field
-     *
-     *  @method getEntityByField
-     *  @param {string} field
-     *  @param {string} value
-     *  @return {object} returns an entity object, or null if it is not found
-     *
-     */
-    getEntityByField: function(field, value) {
-      var count = this._list.length;
+  /**
+   *  Looks up an Entity by a specific field
+   *
+   *  @method getEntityByField
+   *  @param {string} field
+   *  @param {string} value
+   *  @return {object} returns an entity object, or null if it is not found
+   *
+   */
+  apigee.Collection.prototype.getEntityByField = function (field, value){
+    var count = this._list.length;
       var i=0;
       for (i=0; i<count; i++) {
         if (this._list[i].getField(field) == value) {
@@ -1884,18 +1931,18 @@ apigee.validation = (function () {
         }
       }
       return null;
-    },
+  }
 
-    /**
-     *  Looks up an Entity by UUID
-     *
-     *  @method getEntityByUUID
-     *  @param {string} UUID
-     *  @return {object} returns an entity object, or null if it is not found
-     *
-     */
-    getEntityByUUID: function(UUID) {
-      var count = this._list.length;
+  /**
+   *  Looks up an Entity by UUID
+   *
+   *  @method getEntityByUUID
+   *  @param {string} UUID
+   *  @return {object} returns an entity object, or null if it is not found
+   *
+   */
+  apigee.Collection.prototype.getEntityByUUID = function (UUID){
+    var count = this._list.length;
       var i=0;
       for (i=0; i<count; i++) {
         if (this._list[i].getUUID() == UUID) {
@@ -1903,304 +1950,293 @@ apigee.validation = (function () {
         }
       }
       return null;
-    },
+  }
 
-    /**
-     *  Returns the first Entity of the Entity list - does not affect the iterator
-     *
-     *  @method getFirstEntity
-     *  @return {object} returns an entity object
-     *
-     */
-    getFirstEntity: function() {
-      var count = this._list.length;
+  /**
+   *  Returns the first Entity of the Entity list - does not affect the iterator
+   *
+   *  @method getFirstEntity
+   *  @return {object} returns an entity object
+   *
+   */
+  apigee.Collection.prototype.getFirstEntity = function (){
+    var count = this._list.length;
       if (count > 0) {
         return this._list[0];
       }
       return null;
-    },
+  }
 
-    /**
-     *  Returns the last Entity of the Entity list - does not affect the iterator
-     *
-     *  @method getLastEntity
-     *  @return {object} returns an entity object
-     *
-     */
-    getLastEntity: function() {
-      var count = this._list.length;
+  /**
+   *  Returns the last Entity of the Entity list - does not affect the iterator
+   *
+   *  @method getLastEntity
+   *  @return {object} returns an entity object
+   *
+   */
+  apigee.Collection.prototype.getLastEntity = function (){
+    var count = this._list.length;
       if (count > 0) {
         return this._list[count-1];
       }
       return null;
-    },
+  }
 
-    /**
-     *  Entity iteration -Checks to see if there is a "next" entity
-     *  in the list.  The first time this method is called on an entity
-     *  list, or after the resetEntityPointer method is called, it will
-     *  return true referencing the first entity in the list
-     *
-     *  @method hasNextEntity
-     *  @return {boolean} true if there is a next entity, false if not
-     *
-     */
-    hasNextEntity: function() {
-      var next = this._iterator + 1;
+  /**
+   *  Entity iteration -Checks to see if there is a "next" entity
+   *  in the list.  The first time this method is called on an entity
+   *  list, or after the resetEntityPointer method is called, it will
+   *  return true referencing the first entity in the list
+   *
+   *  @method hasNextEntity
+   *  @return {boolean} true if there is a next entity, false if not
+   *
+   */
+  apigee.Collection.prototype.hasNextEntity = function (){
+    var next = this._iterator + 1;
       if(next >=0 && next < this._list.length) {
         return true;
       }
       return false;
-    },
+  }
 
-    /**
-     *  Entity iteration - Gets the "next" entity in the list.  The first
-     *  time this method is called on an entity list, or after the method
-     *  resetEntityPointer is called, it will return the,
-     *  first entity in the list
-     *
-     *  @method hasNextEntity
-     *  @return {object} entity
-     *
-     */
-    getNextEntity: function() {
-      this._iterator++;
+  /**
+   *  Entity iteration - Gets the "next" entity in the list.  The first
+   *  time this method is called on an entity list, or after the method
+   *  resetEntityPointer is called, it will return the,
+   *  first entity in the list
+   *
+   *  @method hasNextEntity
+   *  @return {object} entity
+   *
+   */
+  apigee.Collection.prototype.getNextEntity = function (){
+    this._iterator++;
       if(this._iterator >= 0 && this._iterator <= this._list.length) {
         return this._list[this._iterator];
       }
       return false;
-    },
+  }
 
-    /**
-     *  Entity iteration - Checks to see if there is a "previous"
-     *  entity in the list.
-     *
-     *  @method hasPreviousEntity
-     *  @return {boolean} true if there is a previous entity, false if not
-     *
-     */
-    hasPreviousEntity: function() {
-      var previous = this._iterator - 1;
+  /**
+   *  Entity iteration - Checks to see if there is a "previous"
+   *  entity in the list.
+   *
+   *  @method hasPreviousEntity
+   *  @return {boolean} true if there is a previous entity, false if not
+   *
+   */
+  apigee.Collection.prototype.hasPreviousEntity = function (){
+    var previous = this._iterator - 1;
       if(previous >=0 && previous < this._list.length) {
         return true;
       }
       return false;
-    },
+  }
 
-    /**
-     *  Entity iteration - Gets the "previous" entity in the list.
-     *
-     *  @method getPreviousEntity
-     *  @return {object} entity
-     *
-     */
-    getPreviousEntity: function() {
-      this._iterator--;
+  /**
+   *  Entity iteration - Gets the "previous" entity in the list.
+   *
+   *  @method getPreviousEntity
+   *  @return {object} entity
+   *
+   */
+  apigee.Collection.prototype.getPreviousEntity = function (){
+     this._iterator--;
       if(this._iterator >= 0 && this._iterator <= this._list.length) {
         return this.list[this._iterator];
       }
       return false;
-    },
+  }
 
-    /**
-     *  Entity iteration - Resets the iterator back to the beginning
-     *  of the list
-     *
-     *  @method resetEntityPointer
-     *  @return none
-     *
-     */
-    resetEntityPointer: function() {
-      this._iterator  = -1;
-    },
+  /**
+   *  Entity iteration - Resets the iterator back to the beginning
+   *  of the list
+   *
+   *  @method resetEntityPointer
+   *  @return none
+   *
+   */
+  apigee.Collection.prototype.resetEntityPointer = function (){
+     this._iterator  = -1;
+  }
 
-    /**
-     *  Paging -  checks to see if there is a next page of data
-     *
-     *  @method getEntityList
-     *  @return {array} returns an array of entity objects
-     *
-     */
-    getEntityList: function() {
-      return this._list;
-    },
+  /**
+   *  gets and array of all entities currently in the colleciton object
+   *
+   *  @method getEntityList
+   *  @return {array} returns an array of entity objects
+   *
+   */
+  apigee.Collection.prototype.getEntityList = function (){
+     return this._list;
+  }
 
-    /**
-     *  sets the entity list
-     *
-     *  @method setEntityList
-     *  @param {array} list - an array of Entity objects
-     *  @return none
-     *
-     */
-    setEntityList: function(list) {
-      this._list = list;
-    },
+  /**
+   *  sets the entity list
+   *
+   *  @method setEntityList
+   *  @param {array} list - an array of Entity objects
+   *  @return none
+   *
+   */
+  apigee.Collection.prototype.setEntityList = function (list){
+    this._list = list;
+  }
 
-    /**
-     *  Paging -  checks to see if there is a next page od data
-     *
-     *  @method hasNext
-     *  @return {boolean} returns true if there is a next page of data, false otherwise
-     *
-     */
-    hasNextPage:  function() {
-      return this._queryObj.hasNext();
-    },
+  /**
+   *  Paging -  checks to see if there is a next page od data
+   *
+   *  @method hasNext
+   *  @return {boolean} returns true if there is a next page of data, false otherwise
+   *
+   */
+  apigee.Collection.prototype.hasNextPage = function (){
+    return this.hasNext();
+  }
 
-    /**
-     *  Paging - advances the cursor and gets the next
-     *  page of data from the API.  Stores returned entities
-     *  in the Entity list.
-     *
-     *  @method getNext
-     *  @return none
-     *
-     */
-    getNextPage: function() {
-      if (this._queryObj.hasNext()) {
-        this._queryObj.getNext();
+  /**
+   *  Paging - advances the cursor and gets the next
+   *  page of data from the API.  Stores returned entities
+   *  in the Entity list.
+   *
+   *  @method getNext
+   *  @return none
+   *
+   */
+  apigee.Collection.prototype.getNextPage = function (){
+    if (this.hasNext()) {
+        //set the cursor to the next page of data
+        this.getNext();
         //empty the list
         this.setEntityList([]);
-        apigee.ApiClient.runAppQuery(this._queryObj);
+        apigee.ApiClient.runAppQuery(this);
       }
-    },
+  }
 
-    /**
-     *  Paging -  checks to see if there is a previous page od data
-     *
-     *  @method hasPrevious
-     *  @return {boolean} returns true if there is a previous page of data, false otherwise
-     *
-     */
-    hasPreviousPage:  function() {
-      return this._queryObj.hasPrevious();
-    },
+  /**
+   *  Paging -  checks to see if there is a previous page od data
+   *
+   *  @method hasPrevious
+   *  @return {boolean} returns true if there is a previous page of data, false otherwise
+   *
+   */
+  apigee.Collection.prototype.hasPreviousPage = function (){
+    return this.hasPrevious();
+  }
 
-    /**
-     *  Paging - reverts the cursor and gets the previous
-     *  page of data from the API.  Stores returned entities
-     *  in the Entity list.
-     *
-     *  @method getPrevious
-     *  @return none
-     *
-     */
-    getPreviousPage: function() {
-      if (this._queryObj.hasPrevious()) {
-        this._queryObj.getPrevious();
+  /**
+   *  Paging - reverts the cursor and gets the previous
+   *  page of data from the API.  Stores returned entities
+   *  in the Entity list.
+   *
+   *  @method getPrevious
+   *  @return none
+   *
+   */
+  apigee.Collection.prototype.getPreviousPage = function (){
+    if (this.hasPrevious()) {
+        this.getPrevious();
         //empty the list
         this.setEntityList([]);
-        apigee.ApiClient.runAppQuery(this._queryObj);
+        apigee.ApiClient.runAppQuery(this);
       }
-    },
+  }
 
-    /**
-     *  clears the query parameters object
-     *
-     *  @method clearQueryObj
-     *  @return none
-     *
-     */
-    clearQueryObj: function() {
-      this._queryObj = new apigee.QueryObj();
-    },
+  /**
+   *  clears the query parameters object
+   *
+   *  @method clearQueryObj
+   *  @return none
+   *
+   */
+  apigee.Collection.prototype.clearQueryObj = function (){
+    this.clearAll();
+  }
 
-    /**
-     *  sets the query parameters object
-     *
-     *  @method setQueryParams
-     *  @param {object} query
-     *  @return none
-     *
-     */
-    setQueryParams: function(query) {
-      this._queryObj.setQueryParams(query);
-    },
-
-    /**
-     *  A method to get all items in the collection, as dictated by the
-     *  cursor and the query.  By default, the API returns 10 items in
-     *  a given call.  This can be overriden so that more or fewer items
-     *  are returned.  The entities returned are all stored in the colleciton
-     *  object's entity list, and can be retrieved by calling getEntityList()
-     *
-     *  @method get
-     *  @param {function} successCallback
-     *  @param {function} errorCallback
-     *  @return none
-     *
-     */
-    get: function(successCallback, errorCallback) {
-      var path = this.getPath();
-      var self = this;
-      //empty the list
-      this.setEntityList([]);
-      this._queryObj.setAll('GET', path, null, null,
-        function(response) {
-          if (response.entities) {
-            var count = response.entities.length;
-            for (var i=0;i<count;i++) {
-              var uuid = response.entities[i].uuid;
-              if (uuid) {
-                var entity = new apigee.Entity(self.getPath(), uuid);
-                //store the data in the entity
-                var data = response.entities[i] || {};
-                delete data.uuid; //remove uuid from the object
-                delete data.metadata; //remove uuid from the object
-                entity.setData(data);
-                //store the new entity in this collection
-                self.addEntity(entity);
-              }
-            }
-            if (typeof(successCallback) == "function"){
-              successCallback(response);
-            }
-          } else {
-            if (typeof(errorCallback) == "function"){
-                errorCallback(response);
+  /**
+   *  A method to get all items in the collection, as dictated by the
+   *  cursor and the query.  By default, the API returns 10 items in
+   *  a given call.  This can be overriden so that more or fewer items
+   *  are returned.  The entities returned are all stored in the colleciton
+   *  object's entity list, and can be retrieved by calling getEntityList()
+   *
+   *  @method get
+   *  @param {function} successCallback
+   *  @param {function} errorCallback
+   *  @return none
+   *
+   */
+  apigee.Collection.prototype.get = function (successCallback, errorCallback){
+    var self = this;
+    //empty the list
+    this.setEntityList([]);
+    this.setAllQueryParams('GET', this.getCollectionPath(), null, null,
+      function(response) {
+        if (response.entities) {
+          var count = response.entities.length;
+          for (var i=0;i<count;i++) {
+            var uuid = response.entities[i].uuid;
+            if (uuid) {
+              var entity = new apigee.Entity(self.getCollectionPath(), uuid);
+              //store the data in the entity
+              var data = response.entities[i] || {};
+              delete data.uuid; //remove uuid from the object
+              delete data.metadata; //remove uuid from the object
+              entity.setData(data);
+              //store the new entity in this collection
+              self.addEntity(entity);
             }
           }
-        },
-        function(response) {
+          if (typeof(successCallback) == "function"){
+            successCallback(response);
+          }
+        } else {
           if (typeof(errorCallback) == "function"){
               errorCallback(response);
           }
         }
-      );
-      apigee.ApiClient.runAppQuery(this._queryObj);
-    },
-    /**
-     *  A method to save all items currently stored in the collection object
-     *  caveat with this method: we can't update anything except the items
-     *  currently stored in the collection.
-     *
-     *  @method save
-     *  @param {function} successCallback
-     *  @param {function} errorCallback
-     *  @return none
-     *
-     */
-    save: function(successCallback, errorCallback) {
-      //loop across all entities and save each one
-      var entities = this.getEntityList();
-      var count = entities.length;
-      var jsonObj = [];
-      for (var i=0;i<count;i++) {
-        entity = entities[i];
-        data = entity.getData();
-        if (entity.getUUID()) {
-          data.uuid = entity.getUUID();
-          jsonObj.push(data);
-        } else {
-          //the entity does not yet exist in the database
-          // so save it via the entity so the uuid is captured
-
-          entity.save(); //need to deal with callbacks
+      },
+      function(response) {
+        if (typeof(errorCallback) == "function"){
+            errorCallback(response);
         }
       }
-      this._queryObj.setAll('PUT', path, jsonObj, null,successCallback, errorCallback);
+    );
+    apigee.ApiClient.runAppQuery(this);
+  }
+
+
+  /**
+   *  A method to save all items currently stored in the collection object
+   *  caveat with this method: we can't update anything except the items
+   *  currently stored in the collection.
+   *
+   *  @method save
+   *  @param {function} successCallback
+   *  @param {function} errorCallback
+   *  @return none
+   *
+   */
+  apigee.Collection.prototype.save = function (successCallback, errorCallback){
+    //loop across all entities and save each one
+    var entities = this.getEntityList();
+    var count = entities.length;
+    var jsonObj = [];
+    for (var i=0;i<count;i++) {
+      entity = entities[i];
+      data = entity.getData();
+      if (entity.getUUID()) {
+        data.uuid = entity.getUUID();
+        jsonObj.push(data);
+      } else {
+        //the entity does not yet exist in the database
+        // so save it via the entity so the uuid is captured
+        entity.save(); //need to deal with callbacks
+      }
     }
-  };
+    this.setAllQueryParams('PUT', this.getCollectionPath(), jsonObj, null,successCallback, errorCallback);
+    apigee.ApiClient.runAppQuery(this);
+  }
 
 })(apigee);
