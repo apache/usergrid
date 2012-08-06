@@ -1379,7 +1379,6 @@ function apigee_console_app(Pages, query_params) {
   window.apigee.console.pageSelectApplication = pageSelectApplication;
 
   function updateApplicationDashboard(){
-  	requestApplicationCredentials();
     var data = new google.visualization.DataTable();
     data.addColumn('string', 'Entity');
     data.addColumn('number', 'Count');
