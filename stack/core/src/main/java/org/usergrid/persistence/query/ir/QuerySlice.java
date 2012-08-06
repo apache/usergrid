@@ -48,10 +48,7 @@ public class QuerySlice {
 
     /**
      * @param propertyName
-     * @param start
-     * @param finish
-     * @param cursor
-     * @param reversed
+     * @param nodeId
      */
     public QuerySlice(String propertyName, int nodeId ) {
         this.propertyName = propertyName;
@@ -104,6 +101,15 @@ public class QuerySlice {
 
     public void setReversed(boolean reversed) {
         this.reversed = reversed;
+    }
+    
+    /**
+     * Return true if we have a cursor and it's empty.  This means that we've already returned all possible values
+     * from this slice range with our existing data in a previous invocation of search
+     * @return
+     */
+    public boolean isComplete(){
+        return cursor != null && cursor.remaining() == 0;
     }
 
     /**
