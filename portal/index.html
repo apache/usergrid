@@ -346,6 +346,33 @@
                 <iframe class="container" src="loading.html" scrolling="no"></iframe>
               </div>
               <div id="application-panel" style="display: none">
+			    <div class="console-section">
+	              	<div class="well thingy"><span class="title"> Application API Credentials <span class="app_title"></span></span>
+	                  <div class="bar">
+	                    <a class="" href="" onclick="apigee.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
+	                  </div>
+	                </div>
+	                <div class="console-section-contents"> 
+	                  	<table id="application-panel-key-table" class="table">
+	                      <tr>
+	                        <td>
+	                          <span class="span3">Client ID</span>
+	                        </td>
+	                        <td>
+	                          <span id="application-panel-key">...</span>
+	                        </td>
+	                      </tr>
+	                      <tr>
+	                        <td>
+	                          <span class="span3">Client Secret</span>
+	                        </td>
+	                        <td>
+	                          <span id="application-panel-secret">...</span>
+	                        <td>      	
+	                      </tr>
+	                   	</table>
+	               	</div>
+                </div>
                 <div class="console-section">
                   <div class="well thingy">
                     <span class="title"> Application Dashboard <span class="app_title"></span> </span>
@@ -365,33 +392,7 @@
                     </div>                   
                   </div>
                 </div>
-                <div class="console-section">
-	                  	<div class="well thingy"><span class="title"> Application API Credentials <span class="app_title"></span></span>
-	                      <div class="bar">
-	                        <a class="" href="" onclick="apigee.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
-	                      </div>
-	                    </div>
-	                    <div class="console-section-contents"> 
-		                  	<table id="application-panel-key-table" class="table">
-		                      <tr>
-		                        <td>
-		                          <span class="span3">Client ID</span>
-		                        </td>
-		                        <td>
-		                          <span id="application-panel-key">...</span>
-		                        </td>
-		                      </tr>
-		                      <tr>
-		                        <td>
-		                          <span class="span3">Client Secret</span>
-		                        </td>
-		                        <td>
-		                          <span id="application-panel-secret">...</span>
-		                        <td>      	
-		                      </tr>
-		                   	</table>
-	                   	</div>
-                   	</div>
+
               </div>
               <div id="account-panel" class="container-fluid hide">
                 <div id="account-update-modal" class="modal hide fade">
