@@ -1,16 +1,9 @@
-// fix for IE8 which has no console.log... go figure
-window.console = window.console || {};
-window.console.log = window.console.log || function() {};
-// fix end here
 
-var usergrid = usergrid || {};
-usergrid.session = new Session();
-usergrid.currentApp = new Application();
-usergrid.currentOrg = new Organization();
-usergrid.organizations = new Organizations();
-usergrid.client = new APIClient();
 
-var Pages = new UsergridPages();
+apigee.userSession = new apigee.UserSession();
+apigee.organizations = new apigee.Organization();
+
+var Pages = new ApigeePages();
 
 $(document).ready(function () {
   var query_params = getQueryParams();
@@ -24,30 +17,30 @@ $(document).ready(function () {
   }
   
   function initUI(query_params) {
-    usergrid_console_app(Pages, query_params);
+    apigee_console_app(Pages, query_params);
     initMenu();
     StatusBar.Init('#statusbar-placeholder');
     toggleableSections();
   }
 
   function startApp() {
-    if (!usergrid.session.loggedIn()) {
-      // test to see if the Portal is running on Apigee, if so, send to SSO, if not, fall through to login screen
-      if ( usergrid.console.useSSO() ){
+    if (!apigee.userSession.loggedIn()) {
+      // test to see if the Portal is running on apigee, if so, send to SSO, if not, fall through to login screen
+      if ( apigee.console.useSSO() ){
         Pages.clearPage();
-        usergrid.console.sendToSSOLoginPage();
+        apigee.console.sendToSSOLoginPage();
       } else if (query_params.goto_signup) {
         Pages.ShowPage("signup");
       } else {
-        usergrid.console.showLoginForNonSSO();
+        apigee.console.showLoginForNonSSO();
       }
     } else {
-      usergrid.console.autoLogin(
+      apigee.console.autoLogin(
         function() {
-          usergrid.console.loginOk();
+          apigee.console.loginOk();
         },
         function() {
-          usergrid.console.logout();
+          apigee.console.logout();
         }
       );
     }
@@ -57,7 +50,7 @@ $(document).ready(function () {
   function initMenu() {
     $('.navbar .dropdown-toggle').dropdown();
     $('#sidebar-menu .dropdown-toggle').dropdown();
-    $('#logout-link').click(usergrid.console.logout);
+    $('#logout-link').click(apigee.console.logout);
     $('#hideBanner').click(Pages.hideBanner);
 
     var publicMenu = $('#publicMenu');
@@ -68,7 +61,7 @@ $(document).ready(function () {
     Pages.AddPage({name:'signup', menu:publicMenu});
     Pages.AddPage({name:'forgot-password', menu:publicMenu});
     Pages.AddPage({name:'post-signup', menu:publicMenu});
-    Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction:usergrid.console.pageSelectHome});
+    Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction:apigee.console.pageSelectHome});
 
   }
 
@@ -76,18 +69,17 @@ $(document).ready(function () {
     //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
     Pages.AddPanel('organization', null, null, null, null);
     Pages.AddPanel('console', null, null, null ,null );
-    Pages.AddPanel('application', null, null, null, usergrid.console.pageSelectApplication);
+    Pages.AddPanel('application', null, null, null, apigee.console.pageSelectApplication);
     Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
-    Pages.AddPanel('users', null, null, null, usergrid.console.pageSelectUsers);
+    Pages.AddPanel('users', null, null, null, apigee.console.pageSelectUsers);
     Pages.AddPanel('group', "#sidebar-menu a[href='#groups']", null, null, null);
-    Pages.AddPanel('groups', null, null, null, usergrid.console.pageSelectGroups);
-    Pages.AddPanel('roles', null, null, null, usergrid.console.pageSelectRoles);
-    Pages.AddPanel('activities', null, null, null, usergrid.console.pageSelectActivities);
-    Pages.AddPanel('collections', null, null, null, usergrid.console.pageSelectCollections);
-    Pages.AddPanel('analytics', null, null, null, usergrid.console.pageSelectAnalytics);
-    Pages.AddPanel('settings', null, null, null, usergrid.console.pageSelectSettings);
-    Pages.AddPanel('shell', null, null, null, usergrid.console.pageSelectShell);
-    Pages.AddPanel('account', "#account-link", null, null, usergrid.console.requestAccountSettings);
+    Pages.AddPanel('groups', null, null, null, apigee.console.pageSelectGroups);
+    Pages.AddPanel('roles', null, null, null, apigee.console.pageSelectRoles);
+    Pages.AddPanel('activities', null, null, null, apigee.console.pageSelectActivities);
+    Pages.AddPanel('collections', null, null, null, apigee.console.pageSelectCollections);
+    Pages.AddPanel('analytics', null, null, null, apigee.console.pageSelectAnalytics);
+    Pages.AddPanel('shell', null, null, null, apigee.console.pageSelectShell);
+    Pages.AddPanel('account', "#account-link", null, null, apigee.console.requestAccountSettings);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
   }
 

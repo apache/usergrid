@@ -1,10 +1,10 @@
 <div class="well thingy">
   <span id="role-section-title" class="title">Users</span>
   <div class="bar">
-    <a id="selectAllRolesUsers" class="" href="#" onclick="usergrid.console.selectAllRolesUsers();"> Select All </a>
-    <a id="deselectAllRolesUsers" style="display: none;" class="" href="#" onclick="usergrid.console.deselectAllRolesUsers();"> Deselect All </a>
+    <a id="selectAllRolesUsers" class="" href="#" onclick="apigee.console.selectAllRolesUsers();"> Select All </a>
+    <a id="deselectAllRolesUsers" style="display: none;" class="" href="#" onclick="apigee.console.deselectAllRolesUsers();"> Deselect All </a>
     <a data-toggle="modal" href="#dialog-form-add-role-to-user"> Add </a>
-    <a data-toggle="modal" href="#" onclick="usergrid.console.deleteRoleFromUser('${data.rolename}', '${data.roleId}'); return false;"> Remove </a>
+    <a data-toggle="modal" href="#" onclick="apigee.console.deleteRoleFromUser('${data.rolename}', '${data.roleId}'); return false;"> Remove </a>
   </div>
 </div>
 {{if data.users}}
@@ -13,7 +13,7 @@
   <tr class="zebraRows users-row">
     <td class="checkboxo"><input type="checkbox" name="${name}" class="userRoleItem" value="${uuid}" /></td>
     <td class="gravatar50-td"><img src="${picture}?d=http://${window.location.host + window.location.pathname}images/user_profile.png" class="gravatar50" /></td>
-    <td class="user-details">{{if uuid}}<a href="" onclick="usergrid.console.pageOpenUserProfile('${uuid}'); return false;">{{/if}}${name}{{if uuid}}</a>{{/if}}</td>
+    <td class="user-details">{{if uuid}}<a href="" onclick="apigee.console.pageOpenUserProfile('${uuid}'); return false;">{{/if}}${name}{{if uuid}}</a>{{/if}}</td>
   </tr>
   {{/each}}
 </table>

@@ -3,10 +3,10 @@
   <div class="well thingy">
     <img src="${picture}" class="gravatar50" />
     <div class="title">
-      {{if path}}<a href="" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}${name}{{if path}}</a>{{/if}}
+      {{if path}}<a href="" onclick="apigee.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}${name}{{if path}}</a>{{/if}}
     </div>
     <div class="bar">
-      <a href="#" onclick="usergrid.console.saveUserProfile('${username}'); return false;"> Save User </a>
+      <a href="#" onclick="apigee.console.saveUserProfile('${username}'); return false;"> Save User </a>
     </div>
   </div>
   <h3>Edit</h3>
@@ -63,7 +63,7 @@
         </tr>
         <tr class="zebraRows">
           <td>Path</td>
-          <td><a href="#" onclick="usergrid.console.pageOpenQueryExplorer('${path}'); return false;">${path}</a></td>
+          <td><a href="#" onclick="apigee.console.pageOpenQueryExplorer('${path}'); return false;">${path}</a></td>
         </tr>
         <tr class="zebraRows">
           <td>Sets</td>
@@ -76,7 +76,7 @@
                     ${$index}
                   </td>
                   <td>
-                    <a href="#" onclick="usergrid.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
+                    <a href="#" onclick="apigee.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
                   </td>
                 </tr>
                 {{/each}}
@@ -95,7 +95,7 @@
                     ${$index}
                   </td>
                   <td>
-                    <a href="#" onclick="usergrid.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
+                    <a href="#" onclick="apigee.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
                   </td>
                 </tr>
                 {{/each}}

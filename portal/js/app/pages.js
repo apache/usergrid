@@ -1,4 +1,4 @@
-function UsergridPages() {
+function ApigeePages() {
   var self = {
     pages: {},
     panels: {},
@@ -98,7 +98,7 @@ function UsergridPages() {
     }
 
     if (panelName == 'console') {
-      url = usergrid.console.getAccessTokenURL();
+      url = apigee.console.getAccessTokenURL();
       $("#console-panel iframe").attr("src", url);
     }
 
