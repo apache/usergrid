@@ -28,8 +28,7 @@
 	</bean>
 
 
-	<bean id="taskExecutor" class="org.springframework.core.task.SyncTaskExecutor">
-	</bean>
+	<bean id="taskExecutor" class="org.springframework.core.task.SyncTaskExecutor"/>
 
 	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl" />
 

@@ -32,7 +32,7 @@
 				<directory>src/test/resources</directory>
 				<filtering>true</filtering>
 				<includes>
-					<include>**/*.xml</include>
+					<include>**/*</include>
 				</includes>
 			</testResource>
 		</testResources>
