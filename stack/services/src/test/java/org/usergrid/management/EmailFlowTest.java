@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.*;
+import static org.usergrid.management.AccountCreationProps.*;
 
 import java.io.IOException;
 import java.util.HashMap;
