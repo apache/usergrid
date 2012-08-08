@@ -388,7 +388,6 @@ ol {
 }
 li {
   line-height: 18px;
-  margin-bottom: 3px;
 }
 ul.unstyled {
   margin-left: 0;
@@ -1220,7 +1219,7 @@ table .span12 {
   width: 14px;
   height: 14px;
   vertical-align: text-top;
-  background-image: url(../img/glyphicons-halflings.png);
+  background-image: url(../bootstrap/less/../bootstrap/less/../img/glyphicons-halflings.png);
   background-position: 14px 14px;
   background-repeat: no-repeat;
   *margin-right: .3em;
@@ -1229,7 +1228,7 @@ table .span12 {
   *margin-left: 0;
 }
 .icon-white {
-  background-image: url(../img/glyphicons-halflings-white.png);
+  background-image: url(../bootstrap/less/../bootstrap/less/../bootstrap/less/../bootstrap/less/../img/glyphicons-halflings-white.png);
 }
 .icon-glass {
   background-position: 0      0;
@@ -3591,6 +3590,8 @@ html {
   /* center, not in IE5 */
 
   height: auto !important;
+  /* real browsers */
+
   min-height: 100%;
   /* real browsers */
 
@@ -3663,7 +3664,7 @@ a:active {
   clear: both;
 }
 .marginless {
-  margin-bottom: 0 !important;
+  margin: 0 !important;
 }
 .navbar {
   height: 46px;
@@ -3730,7 +3731,7 @@ a:active {
   left: 5px;
   width: 155px;
 }
-.nav-list > li > a {
+.nav-list  > li > a {
   text-align: left;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -3762,7 +3763,7 @@ a:active {
   display: none;
 }
 #application-panel-buttons .active > a i {
-  background-image: url(../img/glyphicons-halflings-white.png);
+  background-image: url(../bootstrap/less/../bootstrap/less/../bootstrap/less/../bootstrap/less/../img/glyphicons-halflings-white.png);
 }
 #application-panel-buttons .active > a:hover i {
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
@@ -4746,4 +4747,19 @@ table .zebraRows:nth-child(2n) {
 #update-account-form .help-block {
   padding-left: 40px;
   padding-right: 40px;
+}
+/* ---------------- Curl Container ------------ */
+.curl-container .curl-info,
+.curl-container .curl-token {
+  padding-left: 5px;
+}
+.curl-container .input-append {
+  position: relative;
+}
+.curl-container .curl-data {
+  width: 75%;
+  margin-bottom: 0;
+}
+.curl-container .clippy-btn {
+  margin-left: 10px;
 }
