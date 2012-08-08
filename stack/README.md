@@ -5,21 +5,6 @@ A highly-scalable data platform for mobile applications.
 * **Homepage**: http://apigee.com/about/products/usergrid
 * **Google Group**: http://groups.google.com/group/usergrid
 
-
-## Getting Started
-
-Note: The easiest way to run Usergrid is to download our latest nightly, pre-built jar:
-
-    curl -O https://usergrid.ci.cloudbees.com/job/Usergrid%20Nightly/lastSuccessfulBuild/org.usergrid$usergrid-launcher/artifact/org.usergrid/usergrid-launcher/0.0.1-SNAPSHOT/usergrid-launcher-0.0.1-SNAPSHOT.jar
-    
-Then start Usergrid with:
-
-    cd launcher; java -jar target/usergrid-launcher-*.jar
-
-It should pop up an admin window. Press play to spin up Usergrid; it’ll run locally on `http://localhost:8080/`.
-
-You can use our admin UI on it by visiting [http://apigee.github.com/usergrid-portal/?api_url=http://localhost:8080](http://apigee.github.com/usergrid-portal/?api_url=http://localhost:8080)
-
 ## Requirements
 
 * JDK 1.6 (http://www.oracle.com/technetwork/java/javase/downloads/index.html)
@@ -30,8 +15,6 @@ You can use our admin UI on it by visiting [http://apigee.github.com/usergrid-po
 From the command line, go to the usergrid directory and type the following:
 
     mvn clean install -DskipTests=true
-
-If you don't want to do a full build, you can download a [pre-built version of the launcher app](https://usergrid.ci.cloudbees.com/job/Usergrid%20Nightly/lastSuccessfulBuild/org.usergrid$usergrid-launcher/artifact/org.usergrid/usergrid-launcher/0.0.1-SNAPSHOT/usergrid-launcher-0.0.1-SNAPSHOT.jar) from our Cloudbees nightlies.
 
 ## Running
 
