@@ -19,6 +19,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.MessageEvent;
+import org.usergrid.mongo.MongoChannelHandler;
 
 public class OpGetMore extends OpCrud {
 
@@ -83,5 +86,14 @@ public class OpGetMore extends OpCrud {
 				+ ", numberToReturn=" + numberToReturn + ", cursorID="
 				+ cursorID + "]";
 	}
+
+    /* (non-Javadoc)
+     * @see org.usergrid.mongo.protocol.OpCrud#doOp(org.usergrid.mongo.MongoChannelHandler, org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.MessageEvent)
+     */
+    @Override
+    public OpReply doOp(MongoChannelHandler handler, ChannelHandlerContext ctx,
+            MessageEvent messageEvent) {
+        return new OpReply(this);
+    }
 
 }

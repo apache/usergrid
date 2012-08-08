@@ -15,20 +15,31 @@
  ******************************************************************************/
 package org.usergrid.mongo.protocol;
 
-public class OpCrud extends Message {
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.MessageEvent;
+import org.usergrid.mongo.MongoChannelHandler;
 
-	String fullCollectionName;
+public abstract class OpCrud extends Message {
 
-	public String getFullCollectionName() {
-		return fullCollectionName;
-	}
+    protected String fullCollectionName;
 
-	public String getDatabaseName() {
-		return getDatabaseName(fullCollectionName);
-	}
+    public String getFullCollectionName() {
+        return fullCollectionName;
+    }
 
-	public String getCollectionName() {
-		return getCollectionName(fullCollectionName);
-	}
+    public String getDatabaseName() {
+        return getDatabaseName(fullCollectionName);
+    }
 
+    public String getCollectionName() {
+        return getCollectionName(fullCollectionName);
+    }
+
+    /**
+     * Perform the operation
+     * 
+     * @param messageEvent
+     */
+    public abstract OpReply doOp(MongoChannelHandler handler,
+            ChannelHandlerContext ctx, MessageEvent messageEvent);
 }

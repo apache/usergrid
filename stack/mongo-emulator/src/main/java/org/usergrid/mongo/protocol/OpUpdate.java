@@ -23,6 +23,9 @@ import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.MessageEvent;
+import org.usergrid.mongo.MongoChannelHandler;
 import org.usergrid.mongo.utils.BSONUtils;
 
 public class OpUpdate extends OpCrud {
@@ -117,5 +120,14 @@ public class OpUpdate extends OpCrud {
 				+ ", flags=" + flags + ", selector=" + selector + ", update="
 				+ update + "]";
 	}
+
+    /* (non-Javadoc)
+     * @see org.usergrid.mongo.protocol.OpCrud#doOp(org.usergrid.mongo.MongoChannelHandler, org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.MessageEvent)
+     */
+    @Override
+    public OpReply doOp(MongoChannelHandler handler, ChannelHandlerContext ctx,
+            MessageEvent messageEvent) {
+        return new OpReply(this);
+    }
 
 }

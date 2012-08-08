@@ -25,12 +25,25 @@ import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.MessageEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.usergrid.management.ApplicationInfo;
+import org.usergrid.mongo.MongoChannelHandler;
 import org.usergrid.mongo.utils.BSONUtils;
+import org.usergrid.persistence.DynamicEntity;
+import org.usergrid.persistence.Entity;
+import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.Identifier;
+import org.usergrid.security.shiro.utils.SubjectUtils;
 
 public class OpInsert extends OpCrud {
 
-	int flags;
-	List<BSONObject> documents = new ArrayList<BSONObject>();
+    private static final Logger logger = LoggerFactory.getLogger(OpInsert.class);
+    
+	protected int flags;
+	protected List<BSONObject> documents = new ArrayList<BSONObject>();
 
 	public OpInsert() {
 		opCode = OP_INSERT;
@@ -108,5 +121,38 @@ public class OpInsert extends OpCrud {
 		return "OpInsert [flags=" + flags + ", fullCollectionName="
 				+ fullCollectionName + ", documents=" + documents + "]";
 	}
+
+    /* (non-Javadoc)
+     * @see org.usergrid.mongo.protocol.OpCrud#doOp(org.usergrid.mongo.MongoChannelHandler, org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.MessageEvent)
+     */
+    @Override
+    public OpReply doOp(MongoChannelHandler handler, ChannelHandlerContext ctx,
+            MessageEvent messageEvent) {
+        
+        ApplicationInfo application = SubjectUtils.getApplication(Identifier
+                .fromName(getDatabaseName()));
+      
+        if (application == null) {
+            OpReply reply = new OpReply(this);
+            return reply;
+        }
+       
+        EntityManager em = handler.getEmf().getEntityManager(application.getId());
+        
+        OpReply reply = new OpReply(this);
+        
+        for(BSONObject document: documents){
+            try {
+               Entity newEntity =  em.create(getCollectionName(), document.toMap());
+               
+               reply.addDocument(newEntity.getProperties());
+               
+            } catch (Exception e) {
+                logger.error("Unable to insert mongo document {}", document, e);
+            }
+        }
+        
+        return reply;
+    }
 
 }

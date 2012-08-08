@@ -1,81 +1,86 @@
 package org.usergrid.mongo;
 
+import static org.junit.Assert.*;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Test;
+import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
 
-public class BasicMongoTest extends AbstractMongoTest {
+//public class BasicMongoTest extends AbstractMongoTest {
+    public class BasicMongoTest {
 
-	@Test
-	public void basicTest() throws Exception {
-		UUID appId = emf.lookupApplication("test-organization/test-app");
-		EntityManager em = emf.getEntityManager(appId);
+    @Test
+    public void insertTest() throws Exception {
+        Mongo m = new Mongo("localhost", 27017);
+        m.setWriteConcern(WriteConcern.SAFE);
 
-		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("name", "nico");
-		properties.put("color", "tabby");
-		em.create("cat", properties);
+        DB db = m.getDB("test-organization/test-app");
+        db.authenticate("test@usergrid.com", "test".toCharArray());
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("name", "dylan");
-		properties.put("color", "black");
-		em.create("cat", properties);
+        BasicDBObject doc = new BasicDBObject();
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("name", "fishbone");
-		properties.put("color", "tuxedo");
-		em.create("cat", properties);
+        doc.put("name", "nico");
+        doc.put("color", "tabby");
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("name", "fritz");
-		properties.put("color", "tabby");
-		em.create("cat", properties);
+        WriteResult result = db.getCollection("inserttests").insert(doc);
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("name", "lulu");
-		properties.put("color", "tabby");
-		em.create("cat", properties);
+        assertNull(result.getError());
+        Object field = result.getField("_id");
 
-		properties = new LinkedHashMap<String, Object>();
-		properties.put("name", "mimi");
-		properties.put("color", "black");
-		em.create("cat", properties);
+        assertNotNull(field);
+        
+        Object uuid = result.getField("uuid");
+        
+        assertNotNull(uuid);
+        
+        UUID id = UUID.fromString(uuid.toString());
 
-		// See http://www.mongodb.org/display/DOCS/Java+Tutorial
+        Set<String> colls = db.getCollectionNames();
 
-		Mongo m = new Mongo("localhost", 27017);
+        assertTrue(colls.contains("inserttests"));
+        
+        
 
-		DB db = m.getDB("test-organization/test-app");
-		db.authenticate("test@usergrid.com", "test".toCharArray());
+        DBCollection coll = db.getCollection("inserttests");
+        DBCursor cur = coll.find();
+        
+        int count = 0;
+        
+        DBObject object = null;
+        
+        while (cur.hasNext()) {
+            count++;
+            object = cur.next();
+            assertEquals("nico", object.get("name"));
+            assertEquals("tabby", object.get("color"));
+        }
+        
+        assertEquals(1, count);
+        
 
-		Set<String> colls = db.getCollectionNames();
-
-		for (String s : colls) {
-			System.out.println(s);
-		}
-
-		DBCollection coll = db.getCollection("cats");
-		DBCursor cur = coll.find();
-		while (cur.hasNext()) {
-			System.out.println(cur.next());
-		}
-
-		BasicDBObject query = new BasicDBObject();
-		query.put("color", "black");
-		cur = coll.find(query);
-
-		while (cur.hasNext()) {
-			System.out.println(cur.next());
-		}
-	}
+//        UUID appId = emf.lookupApplication("test-organization/test-app");
+//        EntityManager em = emf.getEntityManager(appId);
+//        
+//        
+//        Entity entity = em.get(id);
+//        assertEquals("nico", entity.getProperty("name"));
+//        assertEquals("tabby", entity.getProperty("color"));
+        
+        
+       
+    }
 }
