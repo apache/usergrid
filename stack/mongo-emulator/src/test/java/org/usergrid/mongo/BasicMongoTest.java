@@ -28,8 +28,11 @@ import com.mongodb.WriteResult;
         Mongo m = new Mongo("localhost", 27017);
         m.setWriteConcern(WriteConcern.SAFE);
 
-        DB db = m.getDB("test-organization/test-app");
-        db.authenticate("test@usergrid.com", "test".toCharArray());
+//        DB db = m.getDB("test-organization/test-app");
+//        db.authenticate("test@usergrid.com", "test".toCharArray());
+        
+        DB db = m.getDB("testapp");
+        db.authenticate("test", "test".toCharArray());
 
         BasicDBObject doc = new BasicDBObject();
 
