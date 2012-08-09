@@ -27,6 +27,8 @@ window.apigee = window.apigee || {};
 apigee = apigee || {};
 apigee.SDK_VERSION = '0.9.1';
 
+apigee.M = 'ManagementQuery';
+apigee.A = 'ApplicationQuery';
 /*
  *  apigee.ApiClient
  *
@@ -70,6 +72,7 @@ apigee.ApiClient = (function () {
   var _appUserName = null;
   var _appUserEmail = null;
   var _appUserUUID = null;
+  var _queryType = null;
 
   /*
    *  A method to set up the ApiClient with orgname and appname
@@ -279,7 +282,15 @@ apigee.ApiClient = (function () {
   *  @return {string} the api rul of the reset password endpoint
   */
   function getResetPasswordUrl() {
-    this.getApiUrl() + "/management/users/resetpw"
+    getApiUrl() + "/management/users/resetpw"
+  }
+
+  function setQueryType(type) {
+    _queryType = type;
+  }
+
+  function getQueryType() {
+    return _queryType;
   }
 
   /*
@@ -291,6 +302,7 @@ apigee.ApiClient = (function () {
   */
   function runAppQuery (Query) {
     var endpoint = "/" + this.getOrganizationName() + "/" + this.getApplicationName() + "/";
+    setQueryType(apigee.A);
     processQuery(Query, endpoint, self);
   }
 
@@ -303,6 +315,7 @@ apigee.ApiClient = (function () {
   */
   function runManagementQuery (Query) {
     var endpoint = "/management/";
+    setQueryType(apigee.M);
     processQuery(Query, endpoint, self)
   }
 
@@ -546,7 +559,8 @@ apigee.ApiClient = (function () {
       if (application_name) {
         application_name = application_name.toUpperCase();
       }
-      if (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) {
+      //if (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) {
+      if ( (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) || (getQueryType() == apigee.M && apigee.ApiClient.getToken())) {
         curl += ' -i -H "Authorization: Bearer ' + apigee.ApiClient.getToken() + '"';
         Query.setToken(true);
       }
@@ -632,7 +646,7 @@ apigee.ApiClient = (function () {
     if(xD)
     {
       xhr = new window.XDomainRequest();
-      if (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) {
+      if ( (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) || (getQueryType() == apigee.M && apigee.ApiClient.getToken())) {
         if (path.indexOf("?")) {
           path += '&access_token='+apigee.ApiClient.getToken();
         } else {
@@ -645,13 +659,13 @@ apigee.ApiClient = (function () {
     {
       xhr = new XMLHttpRequest();
       xhr.open(method, path, true);
-      if (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) {
+      if ( (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) || (getQueryType() == apigee.M && apigee.ApiClient.getToken())) {
         xhr.setRequestHeader("Authorization", "Bearer " + apigee.ApiClient.getToken());
         xhr.withCredentials = true;
       }
     } else {
       xhr = new ActiveXObject("MSXML2.XMLHTTP.3.0");
-      if (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) {
+      if ( (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) || (getQueryType() == apigee.M && apigee.ApiClient.getToken())) {
         if (path.indexOf("?")) {
           path += '&access_token='+apigee.ApiClient.getToken();
         } else {
