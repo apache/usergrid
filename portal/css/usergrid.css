@@ -4763,3 +4763,29 @@ table .zebraRows:nth-child(2n) {
 .curl-container .clippy-btn {
   margin-left: 10px;
 }
+/* ---------------Clippy -----------------------*/
+.global-clippy #global-clippy-data {
+  visibility: hidden;
+}
+.global-clippy #global-clippy-container {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  z-index: 999;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.clippy-btn {
+  width: 16px;
+  height: 16px;
+  background-image: url('../images/clippy-bg.png');
+  display: inline-block;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  vertical-align: text-bottom;
+  margin: 5px 0 0 5px;
+}
