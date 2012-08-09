@@ -51,7 +51,7 @@
                           $("#email-control").addClass('error');})
                         ) {
                         data = {"name": name, "username":username, "email":email}
-                        var user = new apigee.Entity('users');
+                        var user = new apigee.User();
                         user.setData(data);
                         user.save(
                             function() {
@@ -69,7 +69,7 @@
                 //function to get the most recent user
                 function getUser(username){
                     $("#userlist").html('');
-                    apigee.ApiClient.runAppQuery(new apigee.QueryObj("GET", "users/"+username, null, null,
+                    apigee.ApiClient.runAppQuery(new apigee.Query("GET", "users/"+username, null, null,
                         function(response) {
                             for (count in response.entities){
                                 var html = "{<br />";

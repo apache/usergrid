@@ -42,10 +42,10 @@ apigee.SDK_VERSION = '0.9.1';
  *
  *  Main methods for making calls to the API are:
  *
- *  runAppQuery (queryObj)
- *  runManagementQuery(queryObj)
+ *  runAppQuery (Query)
+ *  runManagementQuery(Query)
  *
- *  Create a new apigee.QueryObject and then pass it to either of these
+ *  Create a new apigee.Query and then pass it to either of these
  *  two methods for making calls directly to the API.
  *
  *  Several convenience methods exist for making app user related calls easier.  These are:
@@ -60,7 +60,7 @@ apigee.SDK_VERSION = '0.9.1';
  */
 apigee.ApiClient = (function () {
   //API endpoint
-  var _apiUrl = "http://api.usergrid.com/";
+  var _apiUrl = "https://api.usergrid.com/";
   //var _apiUrl = "http://ug-developer-testing.elasticbeanstalk.com/";
   var _orgName = null;
   var _orgUUID = null;
@@ -286,24 +286,24 @@ apigee.ApiClient = (function () {
   *  A public method to run calls against the app endpoint
   *  @method runAppQuery
   *  @public
-  *  @params {object} apigee.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
+  *  @params {object} apigee.Query - {method, path, jsonObj, params, successCallback, failureCallback}
   *  @return none
   */
-  function runAppQuery (QueryObj) {
+  function runAppQuery (Query) {
     var endpoint = "/" + this.getOrganizationName() + "/" + this.getApplicationName() + "/";
-    processQuery(QueryObj, endpoint, self);
+    processQuery(Query, endpoint, self);
   }
 
   /*
   *  A public method to run calls against the management endpoint
   *  @method runManagementQuery
   *  @public
-  *  @params {object} apigee.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
+  *  @params {object} apigee.Query - {method, path, jsonObj, params, successCallback, failureCallback}
   *  @return none
   */
-  function runManagementQuery (QueryObj) {
+  function runManagementQuery (Query) {
     var endpoint = "/management/";
-    processQuery(QueryObj, endpoint, self)
+    processQuery(Query, endpoint, self)
   }
 
   /*
@@ -319,7 +319,7 @@ apigee.ApiClient = (function () {
   function loginAppUser (username, password, successCallback, failureCallback) {
     var self = this;
     var data = {"username": username, "password": password, "grant_type": "password"};
-    this.runAppQuery(new apigee.QueryObj('GET', 'token', null, data,
+    this.runAppQuery(new apigee.Query('GET', 'token', null, data,
       function (response) {
         self.setAppUserUsername(response.user.username);
         self.setAppUserFullName(response.user.name);
@@ -368,7 +368,7 @@ apigee.ApiClient = (function () {
     //Note: we have ticket in to change PUT calls to /users to accept the password change
     //      once that is done, we will remove this call and merge it all into one
     if (oldpassword && newpassword) {
-      this.runAppQuery(new apigee.QueryObj('PUT', 'users/'+uuid+'/password', pwdata, null,
+      this.runAppQuery(new apigee.Query('PUT', 'users/'+uuid+'/password', pwdata, null,
         function (response) {
 
         },
@@ -377,7 +377,7 @@ apigee.ApiClient = (function () {
         }
       ));
     }
-    this.runAppQuery(new apigee.QueryObj('PUT', 'users/'+uuid+'', data, null,
+    this.runAppQuery(new apigee.Query('PUT', 'users/'+uuid+'', data, null,
       function (response) {
         var user = response.entities[0];
         self.setAppUserUsername(user.username);
@@ -416,7 +416,7 @@ apigee.ApiClient = (function () {
     data.password = password;
     data.email = email;
     data.name = name;
-    this.runAppQuery(new apigee.QueryObj('POST', 'users', data, null,
+    this.runAppQuery(new apigee.Query('POST', 'users', data, null,
       function (response) {
         var user = response.entities[0];
         self.setAppUserUsername(user.username);
@@ -464,7 +464,7 @@ apigee.ApiClient = (function () {
    *  but rather that one exists, and that there is a valid UUID
    *  @method isLoggedInAppUser
    *  @public
-   *  @params {object} apigee.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
+   *  @params {object} apigee.Query - {method, path, jsonObj, params, successCallback, failureCallback}
    *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
    */
   function isLoggedInAppUser() {
@@ -513,27 +513,23 @@ apigee.ApiClient = (function () {
    *
    *  @method processQuery
    *  @private
-   *  @params {object} apigee.QueryObj - {method, path, jsonObj, params, successCallback, failureCallback}
+   *  @params {object} apigee.Query - {method, path, jsonObj, params, successCallback, failureCallback}
    *  @params {string} endpoint - used to differentiate between management and app queries
    *  @return {response} callback functions return API response object
    */
-  function processQuery (QueryObj, endpoint) {
+  function processQuery (Query, endpoint) {
     var curl = "curl";
     //validate parameters
     try {
-      //verify that the current rendering platform supports XMLHttpRequest
-      if(typeof XMLHttpRequest === 'undefined') {
-        throw(new Error('Ru-rho! XMLHttpRequest is not supported on this device.'));
-      }
       //verify that the query object is valid
-      if(!(QueryObj instanceof apigee.QueryObj)) {
-        throw(new Error('QueryObj is not a valid object.'));
+      if(!(Query instanceof apigee.Query)) {
+        throw(new Error('Query is not a valid object.'));
       }
       //peel the data out of the query object
-      var method = QueryObj.getMethod().toUpperCase();
-      var path = QueryObj.getPath();
-      var jsonObj = QueryObj.getJsonObj() || {};
-      var params = QueryObj.getQueryParams() || {};
+      var method = Query.getMethod().toUpperCase();
+      var path = Query.getPath();
+      var jsonObj = Query.getJsonObj() || {};
+      var params = Query.getQueryParams() || {};
 
       //method - should be GET, POST, PUT, or DELETE only
       if (method != 'GET' && method != 'POST' && method != 'PUT' && method != 'DELETE') {
@@ -552,7 +548,7 @@ apigee.ApiClient = (function () {
       }
       if (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) {
         curl += ' -i -H "Authorization: Bearer ' + apigee.ApiClient.getToken() + '"';
-        QueryObj.setToken(true);
+        Query.setToken(true);
       }
 
       //params - make sure we have a valid json object
@@ -562,8 +558,8 @@ apigee.ApiClient = (function () {
       }
 
       //add in the cursor if one is available
-      if (QueryObj.getCursor()) {
-        params.cursor = QueryObj.getCursor();
+      if (Query.getCursor()) {
+        params.cursor = Query.getCursor();
       } else {
         delete params.cursor;
       }
@@ -626,7 +622,7 @@ apigee.ApiClient = (function () {
     //log the curl command to the console
     console.log(curl);
     //store the curl command back in the object
-    QueryObj.setCurl(curl);
+    Query.setCurl(curl);
 
     //so far so good, so run the query
     var xD = window.XDomainRequest ? true : false;
@@ -670,7 +666,7 @@ apigee.ApiClient = (function () {
       //network error
       clearTimeout(timeout);
       console.log('API call failed at the network level.');
-      QueryObj.callFailureCallback({'error':'error'});
+      Query.callFailureCallback({'error':'error'});
     };
     xhr.onload = function() {
       //call completed
@@ -691,16 +687,16 @@ apigee.ApiClient = (function () {
             }
         }
         //otherwise, just call the failure callback
-        QueryObj.callFailureCallback(response);
+        Query.callFailureCallback(response);
         return;
       } else {
         //success
 
         //query completed succesfully, so store cursor
         var cursor = response.cursor || null;
-        QueryObj.saveCursor(cursor);
+        Query.saveCursor(cursor);
         //then call the original callback
-        QueryObj.callSuccessCallback(response);
+        Query.callSuccessCallback(response);
       }
     };
     var timeout = setTimeout(function() { xhr.abort(); }, 10000);
@@ -981,27 +977,27 @@ apigee.validation = (function () {
 
 
 /**
- *  apigee.QueryObj is a class for holding all query information and paging state
+ *  apigee.Query is a class for holding all query information and paging state
  *
  *  The goal of the query object is to make it easy to run any
  *  kind of CRUD call against the API.  This is done as follows:
  *
  *  1. Create a query object:
- *     queryObj = new apigee.QueryObj("GET", "users", null, function() { alert("success"); }, function() { alert("failure"); });
+ *     Query = new apigee.Query("GET", "users", null, function() { alert("success"); }, function() { alert("failure"); });
  *
  *  2. Run the query by calling the appropriate endpoint call
- *     runAppQuery(queryObj);
+ *     runAppQuery(Query);
  *     or
- *     runManagementQuery(queryObj);
+ *     runManagementQuery(Query);
  *
- *  3. Paging - The apigee.QueryObj holds the cursor information.  To
+ *  3. Paging - The apigee.Query holds the cursor information.  To
  *     use, simply bind click events to functions that call the
  *     getNext and getPrevious methods of the query object.  This
  *     will set the cursor correctly, and the runAppQuery method
- *     can be called again using the same apigee.QueryObj:
- *     runAppQuery(queryObj);
+ *     can be called again using the same apigee.Query:
+ *     runAppQuery(Query);
  *
- *  @class apigee.QueryObj
+ *  @class apigee.Query
  *  @param method REQUIRED - GET, POST, PUT, DELETE
  *  @param path REQUIRED - API resource (e.g. "users" or "users/rod", should not include http URL or org_name/app_name)
  *  @param jsonObj NULLABLE - a json data object to be passed to the API
@@ -1016,7 +1012,7 @@ apigee.validation = (function () {
  *  }
  *  </pre>
  *
- *  @class QueryObj
+ *  @class Query
  *  @author Rod Simpson (rod@apigee.com)
  */
 
@@ -1031,7 +1027,7 @@ apigee.validation = (function () {
    *  @param {function} successCallback
    *  @param {function} failureCallback
    */
-  apigee.QueryObj = function(method, path, jsonObj, paramsObj, successCallback, failureCallback) {
+  apigee.Query = function(method, path, jsonObj, paramsObj, successCallback, failureCallback) {
     //query vars
     this._method = method;
     this._path = path;
@@ -1050,9 +1046,9 @@ apigee.validation = (function () {
     this._previous = [];
   };
 
-  apigee.QueryObj.prototype = {
+  apigee.Query.prototype = {
     /**
-     *  A method to set all settable parameters of the QueryObj at one time
+     *  A method to set all settable parameters of the Query at one time
      *  @public
      *  @method validateUsername
      *  @param {string} method
@@ -1413,7 +1409,7 @@ apigee.validation = (function () {
     this._uuid = uuid;
   };
 
-  apigee.Entity.prototype = new apigee.QueryObj();
+  apigee.Entity.prototype = new apigee.Query();
 
   /**
    *  gets the current Entity type
@@ -1847,11 +1843,11 @@ apigee.validation = (function () {
     this._collectionPath = collectionPath;
     this._uuid = uuid;
     this._list = [];
-    this._queryObj = new apigee.QueryObj();
+    this._Query = new apigee.Query();
     this._iterator = -1; //first thing we do is increment, so set to -1
   };
 
-  apigee.Collection.prototype = new apigee.QueryObj();
+  apigee.Collection.prototype = new apigee.Query();
 
   /**
    *  gets the current Collection path
@@ -2146,11 +2142,11 @@ apigee.validation = (function () {
   /**
    *  clears the query parameters object
    *
-   *  @method clearQueryObj
+   *  @method clearQuery
    *  @return none
    *
    */
-  apigee.Collection.prototype.clearQueryObj = function (){
+  apigee.Collection.prototype.clearQuery = function (){
     this.clearAll();
   }
 
