@@ -85,8 +85,8 @@ An easy way to move through your result set is to use paging.  The Collection ob
 #Direct API calls
 For most purposes, some combination of Entity and Collection will likely suffice.  However, there are times when one must make a direct call to the API.  The following sections describe how to do this against the Application endpoint as well as the Management endpoint.
 
-##The QueryObj Object
-The QueryObj
+##The Query object
+The Query object is a container for the information 
 
 
 

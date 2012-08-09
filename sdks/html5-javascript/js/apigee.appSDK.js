@@ -25,7 +25,7 @@ window.console.log = window.console.log || function() {};
 //apigee namespace encapsulates this SDK
 window.apigee = window.apigee || {};
 apigee = apigee || {};
-apigee.SDK_VERSION = '0.9.1';
+apigee.SDK_VERSION = '0.9.2';
 
 apigee.M = 'ManagementQuery';
 apigee.A = 'ApplicationQuery';
