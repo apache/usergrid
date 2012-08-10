@@ -4,7 +4,7 @@
 The Apigee Usergrid Javascript SDK was designed to make…
 
 #How to use
-
+This SDK comes 
 
 #Entities and Collecitons
 Entities and Collections are used to model the custom data you need to store in your app.  To facilitate using these in your app, the Javascript SDK provides the Entity and the Collection objects. 
