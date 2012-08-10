@@ -172,125 +172,178 @@ apigee.ApiClient = (function () {
   }
 
   /*
-    *  A public method to get the app user's username to be used by the client
-    *  @method getAppUserUsername
-    *  @public
-    *  @return {string} the app user's username
-    */
+   *  A public method to get the app user's username to be used by the client
+   *  @method getAppUserUsername
+   *  @public
+   *  @return {string} the app user's username
+   */
   function getAppUserUsername() {
     return _appUserUsername;
   }
 
   /*
-    *  A public method to set the app user's username to be used by the client
-    *  @method setAppUserUsername
-    *  @public
-    *  @param appUserUsername - the app user's username
-    *  @return none
-    */
+   *  A public method to set the app user's username to be used by the client
+   *  @method setAppUserUsername
+   *  @public
+   *  @param appUserUsername - the app user's username
+   *  @return none
+   */
   function setAppUserUsername(appUserUsername) {
     _appUserUsername = appUserUsername;
   }
 
   /*
-    *  method to get the app user's name to be used by the client
-    *  @method getAppUserName
-    *  @public
-    *  @return {string} the app user's name
-    */
+   *  method to get the app user's name to be used by the client
+   *  @method getAppUserName
+   *  @public
+   *  @return {string} the app user's name
+   */
   function getAppUserFullName() {
     return _appUserName;
   }
 
   /*
-    *  A public method to set the app user's name to be used by the client
-    *  @method setAppUserName
-    *  @public
-    *  @param appUserName - the app user's name
-    *  @return none
-    */
+   *  A public method to set the app user's name to be used by the client
+   *  @method setAppUserName
+   *  @public
+   *  @param appUserName - the app user's name
+   *  @return none
+   */
   function setAppUserFullName(appUserName) {
     _appUserName = appUserName;
   }
 
   /*
-    *  A public method to get the app user's email to be used by the client
-    *  @method getAppUserEmail
-    *  @public
-    *  @return {string} the app user's email
-    */
+   *  A public method to get the app user's email to be used by the client
+   *  @method getAppUserEmail
+   *  @public
+   *  @return {string} the app user's email
+   */
   function getAppUserEmail() {
     return _appUserEmail;
   }
 
   /*
-    *  A public method to set the app user's email to be used by the client
-    *  @method setAppUserEmail
-    *  @public
-    *  @param appUserEmail - the app user's email
-    *  @return none
-    */
+   *  A public method to set the app user's email to be used by the client
+   *  @method setAppUserEmail
+   *  @public
+   *  @param appUserEmail - the app user's email
+   *  @return none
+   */
   function setAppUserEmail(appUserEmail) {
     _appUserEmail = appUserEmail;
   }
 
   /*
-    *  A public method to get the app user's UUID to be used by the client
-    *  @method getAppUserUUID
-    *  @public
-    *  @return {string} the app users' UUID
-    */
+   *  A public method to get the app user's UUID to be used by the client
+   *  @method getAppUserUUID
+   *  @public
+   *  @return {string} the app users' UUID
+   */
   function getAppUserUUID() {
     return _appUserUUID;
   }
 
   /*
-    *  A public method to set the app user's UUID to be used by the client
-    *  @method setAppUserUUID
-    *  @public
-    *  @param appUserUUID - the app user's UUID
-    *  @return none
-    */
+   *  A public method to set the app user's UUID to be used by the client
+   *  @method setAppUserUUID
+   *  @public
+   *  @param appUserUUID - the app user's UUID
+   *  @return none
+   */
   function setAppUserUUID(appUserUUID) {
     _appUserUUID = appUserUUID;
   }
 
   /*
-  *  A public method to return the API URL
-  *  @method getApiUrl
-  *  @public
-  *  @return {string} the API url
-  */
+   *  A public method to return the API URL
+   *  @method getApiUrl
+   *  @public
+   *  @return {string} the API url
+   */
   function getApiUrl() {
     return _apiUrl
   }
 
   /*
-  *  A public method to overide the API url
-  *  @method setApiUrl
-  *  @public
-  *  @return none
-  */
+   *  A public method to overide the API url
+   *  @method setApiUrl
+   *  @public
+   *  @return none
+   */
   function setApiUrl(apiUrl) {
     _apiUrl = apiUrl;
   }
 
   /*
-  *  A public method to get the api url of the reset pasword endpoint
-  *  @method getResetPasswordUrl
-  *  @public
-  *  @return {string} the api rul of the reset password endpoint
-  */
+   *  A public method to get the api url of the reset pasword endpoint
+   *  @method getResetPasswordUrl
+   *  @public
+   *  @return {string} the api rul of the reset password endpoint
+   */
   function getResetPasswordUrl() {
     getApiUrl() + "/management/users/resetpw"
   }
 
+  /*
+   *  A private method to get the type of the current api call -
+   *  (Management or Application)
+   *  @method getQueryType
+   *  @private
+   *  @return {string} the call type
+   */
+  function getQueryType() {
+    return _queryType;
+  }
+  /*
+   *  A private method to set the type of the current api call -
+   *  (Management or Application)
+   *  @method setQueryType
+   *  @private
+   *  @param {string} call type
+   *  @return none
+   */
   function setQueryType(type) {
     _queryType = type;
   }
 
-  function getQueryType() {
-    return _queryType;
+  /*
+   *  A public method to get the logout callback, which is called
+   *  when the token is found to be invalid
+   *  @method getLogoutCallback
+   *  @public
+   *  @return {string} the api rul of the reset password endpoint
+   */
+  function getLogoutCallback() {
+    return _logoutCallback;
+  }
+
+  /*
+   *  A public method to set the logout callback, which is called
+   *  when the token is found to be invalid
+   *  @method setLogoutCallback
+   *  @public
+   *  @param {function} logoutCallback
+   *  @return none
+   */
+  function setLogoutCallback(logoutCallback) {
+    _logoutCallback = logoutCallback
+  }
+
+  /*
+   *  A public method to call the logout callback, which is called
+   *  when the token is found to be invalid
+   *  @method callLogoutCallback
+   *  @public
+   *  @return none
+   */
+  function callLogoutCallback() {
+    if (_logoutCallback && typeof(_logoutCallback ) == "function") {
+      _logoutCallback();
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /*
@@ -695,10 +748,12 @@ apigee.ApiClient = (function () {
               (error.type == "auth_missing_credentials")   ||
               (error.type == "auth_invalid")) {
             //this error type means the user is not authorized. If a logout function is defined, call it
+            callLogoutCallback();
+            /*
             if (apigee.console.logout) {
               apigee.console.logout();
               return;
-            }
+            }*/
         }
         //otherwise, just call the failure callback
         Query.callFailureCallback(response);
@@ -742,6 +797,9 @@ apigee.ApiClient = (function () {
     runAppQuery:runAppQuery,
     runManagementQuery:runManagementQuery,
     loginAppUser:loginAppUser,
+    getLogoutCallback:getLogoutCallback,
+    setLogoutCallback:setLogoutCallback,
+    callLogoutCallback:callLogoutCallback,
     createAppUser:createAppUser,
     updateAppUser:updateAppUser,
     renewAppUserToken:renewAppUserToken,
