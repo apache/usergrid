@@ -72,10 +72,10 @@ public interface ManagementService {
 	public UserInfo createAdminFromPrexistingPassword(User user,
 			String precypheredPassword, String hashType, boolean sendEmail) throws Exception;
 
-	public UUID createApplication(UUID organizationId, String applicationName)
+	public ApplicationInfo createApplication(UUID organizationId, String applicationName)
 			throws Exception;
 
-	public UUID createApplication(UUID organizationId, String applicationName,
+	public ApplicationInfo createApplication(UUID organizationId, String applicationName,
 			Map<String, Object> properties) throws Exception;
 
 	public OrganizationInfo createOrganization(String organizationName,

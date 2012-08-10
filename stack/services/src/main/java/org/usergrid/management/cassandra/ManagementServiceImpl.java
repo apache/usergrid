@@ -282,9 +282,10 @@ public class ManagementServiceImpl implements ManagementService {
 
             OrganizationInfo organization = createOrganization(
                     test_organization_name, user, true, false);
-            // TODO change to organizationName/applicationName
+
             UUID appId = createApplication(organization.getUuid(),
-                    organization.getName() + "/" + test_app_name);
+                    buildAppName(test_app_name, organization))
+                    .getId();
 
             postOrganizationActivity(organization.getUuid(), user, "create",
                     new SimpleEntityRef(APPLICATION_INFO, appId),
@@ -1392,7 +1393,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public UUID createApplication(UUID organizationId, String applicationName)
+    public ApplicationInfo createApplication(UUID organizationId, String applicationName)
             throws Exception {
 
         if ((organizationId == null) || (applicationName == null)) {
@@ -1403,7 +1404,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public UUID createApplication(UUID organizationId, String applicationName,
+    public ApplicationInfo createApplication(UUID organizationId, String applicationName,
             Map<String, Object> properties) throws Exception {
 
         if ((organizationId == null) || (applicationName == null)) {
@@ -1448,8 +1449,7 @@ public class ManagementServiceImpl implements ManagementService {
                             + ")</a> created a new application named "
                             + applicationName, null);
         }
-
-        return applicationId;
+        return new ApplicationInfo(applicationId, applicationEntity.getName());
     }
 
     @Override

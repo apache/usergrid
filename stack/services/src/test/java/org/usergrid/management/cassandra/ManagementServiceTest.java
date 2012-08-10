@@ -52,7 +52,8 @@ public class ManagementServiceTest {
 		organization = managementService.createOrganization("ed-organization",
 				adminUser, true, false);
 		applicationId = managementService.createApplication(
-				organization.getUuid(), "ed-application");
+				organization.getUuid(), "ed-application")
+            .getId();
 	}
 
 	@AfterClass

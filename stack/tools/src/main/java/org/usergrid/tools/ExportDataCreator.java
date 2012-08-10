@@ -67,7 +67,8 @@ public class ExportDataCreator {
                         false);
 
         UUID appId = managementService.createApplication(orgInfo
-                .getOrganization().getUuid(), "application");
+                .getOrganization().getUuid(), "application")
+                .getId();
 
         EntityManager em = emf.getEntityManager(appId);
 

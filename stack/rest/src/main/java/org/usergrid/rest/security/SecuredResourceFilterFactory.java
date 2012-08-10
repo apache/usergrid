@@ -243,6 +243,7 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
             if (SubjectUtils.isAnonymous()) {
                 ApplicationInfo application = null;
                 try {
+                  // TODO not safe. could load arbitrary application
                     application = management
                             .getApplicationInfo(getApplicationIdentifier());
                 } catch (Exception e) {
@@ -252,6 +253,7 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
                 Map<String, String> roles = null;
                 try {
                     roles = em.getRoles();
+                    logger.info("found roles {}", roles);
                 } catch (Exception e) {
                     logger.error("Unable retrieve roles", e);
                 }

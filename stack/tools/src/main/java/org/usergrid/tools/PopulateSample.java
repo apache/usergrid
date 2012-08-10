@@ -73,7 +73,8 @@ public class PopulateSample extends ToolBase {
 		logger.info("creating application: testEntityManagerTest");
 		// TODO update to organizationName/applicationName
 		UUID applicationId = managementService.createApplication(
-				organization.getUuid(), "sample-application");
+				organization.getUuid(), "sample-application")
+            .getId();
 
 		ServiceManager sm = smf.getServiceManager(applicationId);
 

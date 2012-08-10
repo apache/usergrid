@@ -79,7 +79,8 @@ public class OrganizationTest {
 		assertEquals("wrong number of users", 1, users.size());
 
 		UUID applicationId = management.createApplication(
-				organization.getUuid(), "ed-application");
+				organization.getUuid(), "ed-application")
+            .getId();
 		assertNotNull(applicationId);
 
 		Map<UUID, String> applications = management

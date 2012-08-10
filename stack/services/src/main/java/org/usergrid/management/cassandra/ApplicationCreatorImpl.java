@@ -46,7 +46,7 @@ public class ApplicationCreatorImpl implements ApplicationCreator {
         UUID appId = null;
         try {
             appId = managementService.createApplication(
-                    organizationInfo.getUuid(), sampleAppName);
+                    organizationInfo.getUuid(), sampleAppName).getId();
         } catch (Exception ex) {
             throw new ApplicationCreationException("'" + sampleAppName
                     + "' could not be created for organization: "
