@@ -25,7 +25,7 @@ window.console.log = window.console.log || function() {};
 //apigee namespace encapsulates this SDK
 window.apigee = window.apigee || {};
 apigee = apigee || {};
-apigee.SDK_VERSION = '0.9.2';
+apigee.SDK_VERSION = '0.9.3';
 
 apigee.M = 'ManagementQuery';
 apigee.A = 'ApplicationQuery';
@@ -54,7 +54,6 @@ apigee.A = 'ApplicationQuery';
  *
  *  loginAppUser (username, password, successCallback, failureCallback)
  *  updateAppUser(uuid, name, email, username, oldpassword, newpassword, data, successCallback, failureCallback)
- *  createAppUser(name, email, username, password, data, successCallback, failureCallback)
  *
  *  @class apigee.ApiClient
  *  @author Rod Simpson (rod@apigee.com)
@@ -345,7 +344,7 @@ apigee.ApiClient = (function () {
       return false;
     }
   }
-  
+
   /*
   *  A public method to run calls against the app endpoint
   *  @method runAppQuery
@@ -389,106 +388,9 @@ apigee.ApiClient = (function () {
       function (response) {
         self.setAppUserUsername(response.user.username);
         self.setAppUserFullName(response.user.name);
-        self.setAppUserFullName(response.user.givenName + response.user.familyName);
         self.setAppUserEmail(response.user.email);
         self.setAppUserUUID(response.user.uuid);
         self.setToken(response.access_token);
-        if (successCallback && typeof(successCallback) == "function") {
-          successCallback(response);
-        }
-      },
-      function (response) {
-        if (failureCallback && typeof(failureCallback) == "function") {
-          failureCallback(response);
-        }
-      }
-     ));
-  }
-
-  /*
-  *  A public method to update an app user - currently does password update and user
-  *  data update as two separate calls, but this will be changed to one call when the
-  *  API is updated to support this
-  *  @method updateAppUser
-  *  @public
-  *  @params {string} uuid
-  *  @params {string} name
-  *  @params {string} email
-  *  @params {string} username
-  *  @params {string} oldpassword
-  *  @params {string} newpassword
-  *  @params {function} successCallback
-  *  @params {function} failureCallback
-  *  @return {response} callback functions return API response object
-  */
-  function updateAppUser(uuid, name, email, username, oldpassword, newpassword, data, successCallback, failureCallback) {
-    var self = this;
-    var data = data || {}
-    data.username = username;
-    data.email = email;
-    data.name = name;
-
-    var pwdata = {};
-    if (oldpassword) { pwdata.oldpassword = oldpassword; }
-    if (newpassword) { pwdata.newpassword = newpassword; }
-    //Note: we have ticket in to change PUT calls to /users to accept the password change
-    //      once that is done, we will remove this call and merge it all into one
-    if (oldpassword && newpassword) {
-      this.runAppQuery(new apigee.Query('PUT', 'users/'+uuid+'/password', pwdata, null,
-        function (response) {
-
-        },
-        function (response) {
-
-        }
-      ));
-    }
-    this.runAppQuery(new apigee.Query('PUT', 'users/'+uuid+'', data, null,
-      function (response) {
-        var user = response.entities[0];
-        self.setAppUserUsername(user.username);
-        self.setAppUserFullName(user.givenName + user.familyName);
-        self.setAppUserEmail(user.email);
-        self.setAppUserUUID(user.uuid);
-        if (successCallback && typeof(successCallback) == "function") {
-          successCallback(response);
-        }
-      },
-      function (response) {
-        if (failureCallback && typeof(failureCallback) == "function") {
-          failureCallback(response);
-        }
-      }
-     ));
-  }
-
-  /**
-   *  A public method to create an app user
-   *  @method createAppUser
-   *  @public
-   *  @param {string} name
-   *  @param {string} email
-   *  @param {string} username
-   *  @param {string} password
-   *  @param {object} data
-   *  @param {function} successCallback
-   *  @param {function} failureCallback
-   *  @return {response} callback functions return API response object
-   */
-  function createAppUser(name, email, username, password, data, successCallback, failureCallback) {
-    var self = this;
-    var data = data || {}
-    data.username = username;
-    data.password = password;
-    data.email = email;
-    data.name = name;
-    this.runAppQuery(new apigee.Query('POST', 'users', data, null,
-      function (response) {
-        var user = response.entities[0];
-        self.setAppUserUsername(user.username);
-        self.setAppUserFullName(user.givenName + user.familyName);
-        self.setAppUserEmail(user.email);
-        self.setAppUserUUID(user.uuid);
         if (successCallback && typeof(successCallback) == "function") {
           successCallback(response);
         }
@@ -768,7 +670,7 @@ apigee.ApiClient = (function () {
         Query.callSuccessCallback(response);
       }
     };
-    var timeout = setTimeout(function() { xhr.abort(); }, 10000);
+    var timeout = setTimeout(function() { xhr.abort(); }, 15000);
 
     xhr.send(jsonObj);
   }
@@ -800,8 +702,6 @@ apigee.ApiClient = (function () {
     getLogoutCallback:getLogoutCallback,
     setLogoutCallback:setLogoutCallback,
     callLogoutCallback:callLogoutCallback,
-    createAppUser:createAppUser,
-    updateAppUser:updateAppUser,
     renewAppUserToken:renewAppUserToken,
     logoutAppUser:logoutAppUser,
     isLoggedInAppUser:isLoggedInAppUser
@@ -852,7 +752,7 @@ apigee.validation = (function () {
     * @return {string} Returns a string with the allowed chars
     */
   function getUsernameAllowedChars(){
-    return 'Length: min 6, max 80. Allowed: A-Z, a-z, 0-9, dot, and dash';
+    return 'Length: min 4, max 80. Allowed: A-Z, a-z, 0-9, dot, and dash';
   }
 
   /**
@@ -864,7 +764,7 @@ apigee.validation = (function () {
     * @return {boolean} Returns true if string passes regex, false if not
     */
   function validateName(name, failureCallback) {
-    if (nameRegex.test(name) && checkLength(name, 5, 16)) {
+    if (nameRegex.test(name) && checkLength(name, 4, 16)) {
       return true;
     } else {
       if (failureCallback && typeof(failureCallback) == "function") {
@@ -1646,10 +1546,36 @@ apigee.validation = (function () {
         path += "/" + this.getUUID();
       }
     }
+
+    //if this is a user, update the password if it has been specified
+    if (path == 'users') {
+      var data = this.getData();
+      var pwdata = {};
+      //Note: we have a ticket in to change PUT calls to /users to accept the password change
+      //      once that is done, we will remove this call and merge it all into one
+      if (data.oldpassword && data.newpassword) {
+        pwdata.oldpassword = data.oldpassword;
+        pwdata.newpassword = data.newpassword;
+        this.runAppQuery(new apigee.Query('PUT', 'users/'+uuid+'/password', pwdata, null,
+          function (response) {
+            //not calling any callbacks - this section will be merged as soon as API supports
+            //   updating passwords in general PUT call
+          },
+          function (response) {
+
+          }
+        ));
+      }
+      //remove old and new password fields so they don't end up as part of the entity object
+      delete data.oldpassword;
+      delete data.newpassword;
+    }
+
+    //update the entity
     var self = this;
     this.setAllQueryParams(method, path, this.getData(), null,
       function(response) {
-        if (self.processResponse(self, response)){
+        if (processResponse(self, response)){
           if (typeof(successCallback) == "function"){
             successCallback(response);
           }
@@ -1707,7 +1633,7 @@ apigee.validation = (function () {
     var self = this;
     this.setAllQueryParams('GET', path, null, null,
       function(response) {
-        if (self.processResponse(self, response)){
+        if (processResponse(self, response)){
           if (typeof(successCallback) == "function"){
             successCallback(response);
           }
@@ -1845,7 +1771,7 @@ apigee.validation = (function () {
    *  @param {uuid} uuid - (optional), the UUID of the user if it is known
    */
   apigee.User = function(username, uuid) {
-    this._collectionType = 'user';
+    this._collectionType = 'users';
     this._data = {};
     this.setUsername(username);
     this._uuid = uuid;
@@ -1872,6 +1798,66 @@ apigee.validation = (function () {
    */
   apigee.User.prototype.getUsername = function (){
     return this.getField('username');
+  }
+
+  /**
+   *  Logs a user in
+   *
+   *  @method getUsername
+   *  @return none
+   */
+  apigee.User.prototype.login = function (username, password, successCallback, failureCallback){
+    var self = this;
+    apigee.ApiClient.loginAppUser(username, password,
+      function (response) {
+        //store the user's info
+        if (processResponse(self, response)){
+          if (typeof(successCallback) == "function"){
+            successCallback(response);
+          }
+        } else {
+          if (typeof(errorCallback) == "function"){
+              errorCallback(response);
+          }
+        }
+      },
+      function (response) {
+        if (typeof(failureCallback) == "function"){
+          failureCallback(response);
+        }
+      }
+    );
+  }
+
+  /**
+    *  Private method for handling the response from the server
+    *
+    *  @method processResponse
+    *  @private
+    *  @param {string} self
+    *  @param {object} response
+    *  @return {boolean} true if the response was populated, false otherwise
+    *
+    */
+  function processResponse(self, response){
+    if (response.user) { // && apigee.ApiClient.isUUID(response.entities[0].uuid )){
+      var entity = response.user;
+      //first save off the uuid
+      if (entity.uuid) {
+        self.setUUID(entity.uuid);
+      }
+      delete entity.uuid; //remove uuid from the object
+      delete entity.metadata; //remove uuid from the object
+      delete entity.created; //remove created from the object
+      delete entity.modified; //remove modified from the object
+      delete entity.type; //remove type from the object
+      delete entity.activated; //remove activated from the object
+
+      //store the rest of the fields
+      self.setData(entity);
+      return true;
+    }
+    return false;
   }
 
  })(apigee);
