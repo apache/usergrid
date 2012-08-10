@@ -1649,7 +1649,7 @@ apigee.validation = (function () {
     var self = this;
     this.setAllQueryParams(method, path, this.getData(), null,
       function(response) {
-        if (self.processResponse(self, response)){
+        if (processResponse(self, response)){
           if (typeof(successCallback) == "function"){
             successCallback(response);
           }
@@ -1707,7 +1707,7 @@ apigee.validation = (function () {
     var self = this;
     this.setAllQueryParams('GET', path, null, null,
       function(response) {
-        if (self.processResponse(self, response)){
+        if (processResponse(self, response)){
           if (typeof(successCallback) == "function"){
             successCallback(response);
           }
