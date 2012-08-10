@@ -128,7 +128,7 @@ apigee = apigee || {};
       return localStorage.getItem('userUUID');
     },
     setUserUUID: function (uuid) {
-    localStorage.setItem('userUUID', uuid);
+      localStorage.setItem('userUUID', uuid);
     },
     getUserEmail: function () {
       return localStorage.getItem('userEmail');
