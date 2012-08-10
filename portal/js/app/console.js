@@ -1562,6 +1562,8 @@ function apigee_console_app(Pages, query_params) {
   function hideCurlCommand(section) {
     $('#'+section+'-curl-container').hide();
     $('#'+section+'-curl-token').hide();
+    //Clippy
+    $('#'+section+'clippy-btn').detachClippy();
 
   }
 
@@ -1570,7 +1572,11 @@ function apigee_console_app(Pages, query_params) {
     $('#'+section+'-curl').html(curl);
     if (token) {
       $('#'+section+'-curl-token').show();
-    }
+    };
+    //CLIPPY
+    if ($('#'+section+'-clippy-btn')){
+    	$('#'+section+'-clippy-btn').attachClippy({dataId: $('#'+section+'-curl')});
+    };    
   }
 
   function copyCurlCommand() {
@@ -2018,7 +2024,7 @@ function apigee_console_app(Pages, query_params) {
     //clear out the table before we start
     var output = $('#groups-table');
     output.empty();
-
+	hideCurlCommand('groups');
     var query = {"ql" : "order by " + groupSortBy};
     if (typeof search == 'string') {
       if (search.length > 0) {
@@ -2063,6 +2069,7 @@ function apigee_console_app(Pages, query_params) {
     }
 
     showPagination('groups');
+    showCurlCommand('groups', queryObj.getCurl(), queryObj.getToken());
   }
 
   function showGroupsForSearch(search){
@@ -2394,7 +2401,7 @@ function apigee_console_app(Pages, query_params) {
     //clear out the table before we start
     var output = $('#roles-table');
     output.empty();
-
+	hideCurlCommand('roles')
     //put the sort by back in once the API is fixed
     //var query = {"ql" : "order by " + roleSortBy};
     var query = {};
@@ -2427,6 +2434,7 @@ function apigee_console_app(Pages, query_params) {
       }
     }
     showPagination('roles');
+    showCurlCommand('roles', queryObj.getCurl(), queryObj.getToken());
   }
 
   $('#delete-roles-link').click(deleteRoles);
@@ -3225,7 +3233,7 @@ function deleteRolePermission(roleName, permission) {
     //clear out the table before we start
     var output = $('#collections-table');
     output.empty();
-
+	hideCurlCommand('collections');
     var section =$('#application-collections');
     section.empty().html('<div class="alert alert-info">Loading...</div>');
 
@@ -3258,6 +3266,7 @@ function deleteRolePermission(roleName, permission) {
         $.tmpl('apigee.ui.collections.table_rows.html', this_data).appendTo('#collections-table');
       }
     }
+	showCurlCommand('collections', queryObj.getCurl(), queryObj.getToken());
   }
 
   /*******************************************************************
