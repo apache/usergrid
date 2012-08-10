@@ -1396,10 +1396,6 @@ public class ManagementServiceImpl implements ManagementService {
     public ApplicationInfo createApplication(UUID organizationId, String applicationName)
             throws Exception {
 
-        if ((organizationId == null) || (applicationName == null)) {
-            return null;
-        }
-
         return createApplication(organizationId, applicationName, null);
     }
 
