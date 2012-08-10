@@ -1,0 +1,14 @@
+/* 
+    Document   : styles
+    Created on : Aug 10, 2012, 7:55:13 AM
+    Author     : rodericksimpson
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+body {
+  background-image:url('../images/wood_pattern.png');
+}
+
+/* buttons ================================================================= */
+.btn-primary{background-color:#146cab;background-image:-moz-linear-gradient(top, #147bab, #1455ab);background-image:-ms-linear-gradient(top, #147bab, #1455ab);background-image:-webkit-gradient(linear, 0 0, 0 100%, from(#147bab), to(#1455ab));background-image:-webkit-linear-gradient(top, #147bab, #1455ab);background-image:-o-linear-gradient(top, #147bab, #1455ab);background-image:linear-gradient(top, #147bab, #1455ab);background-repeat:repeat-x;filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#147bab', endColorstr='#1455ab', GradientType=0);border-color:#1455ab #1455ab #0c3367;border-color:rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);filter:progid:dximagetransform.microsoft.gradient(enabled=false);}.btn-primary:hover,.btn-primary:active,.btn-primary.active,.btn-primary.disabled,.btn-primary[disabled]{background-color:#1455ab;}

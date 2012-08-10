@@ -4,12 +4,13 @@
         <title></title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <link rel="stylesheet" href="css/bootstrap-combined.min.css" />
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+        <link rel="stylesheet" href="css/styles.css" />
+        <script src="js/jquery.min.js" type="text/javascript"></script>
         <script src="js/apigee.appSDK.js" type="text/javascript"></script>
         <script type="text/javascript">
 
             //first set the app path (orgname, appname)
-            apigee.ApiClient.init('<yourorgname>', 'sandbox'); //<== update this line with the org name you signed up with
+            apigee.ApiClient.init('ApigeeRod', 'sandbox'); //<== update this line with the org name you signed up with
 
             $(document).ready(function () {
                 var username = 'testuser';
@@ -25,6 +26,7 @@
 
                 //function to create the user
                 function createUser(){
+                    $('#create-user').addClass("disabled");
                     //get the values from the form
                     username = $("#username").val();
                     var name = $("#name").val();
@@ -58,9 +60,11 @@
                                 $('#new-user').hide();
                                 $('#user-list').show();
                                 getUser(username);
+                                $('#create-user').removeClass("disabled");
                             },
                             function() {
                                 alert('Oops! There was an error creating the user.  Did you set your org name correctly?');
+                                $('#create-user').removeClass("disabled");
                             }
                         );
                     }
@@ -68,7 +72,7 @@
 
                 //function to get the most recent user
                 function getUser(username){
-                    $("#userlist").html('');
+                    $("#userlist").html('Getting user... <br /><br />');
                     apigee.ApiClient.runAppQuery(new apigee.Query("GET", "users/"+username, null, null,
                         function(response) {
                             for (count in response.entities){
@@ -92,18 +96,19 @@
         </script>
     </head>
     <body>
-        <div style="width: 100%; height: 60px; background-color: #41aee3;">
-            &nbsp;
+        <div style="width: 100%; height: 80px; background-color: #0099cc;">
+          &nbsp;
         </div>
 
-        <div id="new-user" style="width: 400px; margin: 40px auto; display: block;">
+        <div id="new-user" style="width: 600px; margin: auto; display: block; background-color: #fff; padding: 30px;">
+            <img src="images/sandboxlogo.png" style="margin-top: -115px;">
             <h2>Welcome to Sandbox</h2>
             <div style="padding-top: 10px;">
-                This is a sample signup form. Sandbox isn't a real app, but we're using it as an example web application to help
-                you learn how Usergrid works.  What you see below is information that you, the developer of Sandbox, would like
-                to collect for users to register.
+                Sandbox is an example web application to help you learn how Apigee's App Services works.  What you see
+                below is information that you, the developer of Sandbox, might collect from users when they register inside your application.
             </div>
             <div style="padding: 10px 0 10px 0;">
+                Lets see how creating a new user here in Sandbox adds a new user to your Sandbox app in App Services.
                 <strong>Get started by creating a new user.</strong>
             </div>
             <form name="newuser-form" id="newuser-form">
@@ -129,10 +134,11 @@
                     </div>
                 </div>
             </form>
-            <a class="btn-large btn-primary" href="#" id="create-user">Create User</a>
+            <button class="btn-large btn-primary" id="create-user">Create User</button>
         </div>
 
-        <div id="user-list" style="width: 400px; margin: 40px auto; display: none;">
+        <div id="user-list" style="width: 600px; margin: auto; display: block; background-color: #fff; padding: 30px; display: none;">
+            <img src="images/sandboxlogo.png" style="margin-top: -115px;">
             <h1>Success!</h1>
             <div style="padding-top: 10px;">
                 You've created your first user in the Sandbox web app.
