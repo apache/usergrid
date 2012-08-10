@@ -670,7 +670,7 @@ apigee.ApiClient = (function () {
         Query.callSuccessCallback(response);
       }
     };
-    var timeout = setTimeout(function() { xhr.abort(); }, 10000);
+    var timeout = setTimeout(function() { xhr.abort(); }, 15000);
 
     xhr.send(jsonObj);
   }
@@ -1551,11 +1551,11 @@ apigee.validation = (function () {
     if (path == 'users') {
       var data = this.getData();
       var pwdata = {};
-      if (data.oldpassword) { pwdata.oldpassword = data.oldpassword; }
-      if (data.newpassword) { pwdata.newpassword = data.newpassword; }
       //Note: we have a ticket in to change PUT calls to /users to accept the password change
       //      once that is done, we will remove this call and merge it all into one
-      if (oldpassword && newpassword) {
+      if (data.oldpassword && data.newpassword) {
+        pwdata.oldpassword = data.oldpassword;
+        pwdata.newpassword = data.newpassword;
         this.runAppQuery(new apigee.Query('PUT', 'users/'+uuid+'/password', pwdata, null,
           function (response) {
             //not calling any callbacks - this section will be merged as soon as API supports
@@ -1771,7 +1771,7 @@ apigee.validation = (function () {
    *  @param {uuid} uuid - (optional), the UUID of the user if it is known
    */
   apigee.User = function(username, uuid) {
-    this._collectionType = 'user';
+    this._collectionType = 'users';
     this._data = {};
     this.setUsername(username);
     this._uuid = uuid;
