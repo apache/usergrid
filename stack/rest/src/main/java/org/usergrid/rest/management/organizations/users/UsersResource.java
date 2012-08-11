@@ -128,7 +128,7 @@ public class UsersResource extends AbstractContextResource {
 
 		if (user == null) {
 			user = management.createAdminUser(email, email, email, password,
-					false, false, true);
+					false, false);
 		}
 
 		if (user == null) {

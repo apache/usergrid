@@ -92,7 +92,7 @@ public class EmailFlowTest {
 		OrganizationOwnerInfo org_owner = management
 				.createOwnerAndOrganization("test-org-1", "test-user-1",
 						"Test User", "test-user-1@mockserver.com",
-						"testpassword", false, false, true);
+						"testpassword", false, false);
 		assertNotNull(org_owner);
 
 		List<Message> inbox = org.jvnet.mock_javamail.Mailbox
@@ -123,7 +123,6 @@ public class EmailFlowTest {
 		client = new MockImapClient("mockserver.com", "test-user-1",
 				"somepassword");
 		client.processMail();
-
 	}
 
 	@Test
@@ -142,7 +141,7 @@ public class EmailFlowTest {
 		OrganizationOwnerInfo org_owner = management
 				.createOwnerAndOrganization("test-org-2", "test-user-2",
 						"Test User", "test-user-2@mockserver.com",
-						"testpassword", false, false, true);
+						"testpassword", false, false);
 		assertNotNull(org_owner);
 
 		List<Message> user_inbox = org.jvnet.mock_javamail.Mailbox

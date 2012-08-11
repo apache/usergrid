@@ -208,12 +208,13 @@ public class ManagementServiceImpl implements ManagementService {
                 return;
             }
 
-            UserInfo user = createAdminUser(test_admin_username,
-                    test_admin_name, test_admin_email, test_admin_password,
-                    true, false, false);
+          UserInfo user = createAdminUser(test_admin_username,
+                  test_admin_name, test_admin_email, test_admin_password,
+                  true, false);
 
-            OrganizationInfo organization = createOrganization(
-                    test_organization_name, user, true, false);
+          OrganizationInfo organization = createOrganization(
+                    test_organization_name, user, true);
+
             // TODO change to organizationName/applicationName
             UUID appId = createApplication(organization.getUuid(),
                     organization.getName() + "/" + test_app_name);
@@ -236,7 +237,7 @@ public class ManagementServiceImpl implements ManagementService {
                     superuser_password)) {
                 user = createAdminUser(superuser_username, "Super User",
                         superuser_email, superuser_password, superuser_enabled,
-                        !superuser_enabled, false);
+                        !superuser_enabled);
             } else {
                 logger.warn("Missing values for superuser account, check properties.  Skipping superuser account setup...");
             }
@@ -331,15 +332,14 @@ public class ManagementServiceImpl implements ManagementService {
         // if we are active and enabled, skip the send email step
 
         return createOwnerAndOrganization(organizationName, username, name,
-                email, password, activated, disabled, true);
+                email, password, activated, disabled);
 
     }
 
     @Override
     public OrganizationOwnerInfo createOwnerAndOrganization(
             String organizationName, String username, String name,
-            String email, String password, boolean activated, boolean disabled,
-            boolean sendEmail) throws Exception {
+            String email, String password, boolean activated, boolean disabled) throws Exception {
 
         lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "groups", "path");
         lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "users",
@@ -351,14 +351,13 @@ public class ManagementServiceImpl implements ManagementService {
         try {
             if ( areActivationChecksDisabled() ) {
               user = createAdminUser(username, name, email, password, true,
-                                                  false, false);
+                                                  false);
             } else {
               user = createAdminUser(username, name, email, password, activated,
-                                    disabled, sendEmail);
+                                    disabled);
             }
 
-            organization = createOrganization(organizationName, user, true,
-                    false);
+            organization = createOrganization(organizationName, user, true);
 
         } finally {
             lockManager.unlockProperty(MANAGEMENT_APPLICATION_ID, "groups",
@@ -373,8 +372,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public OrganizationInfo createOrganization(String organizationName,
-            UserInfo user, boolean activated, boolean sendEmail)
-            throws Exception {
+            UserInfo user, boolean activated) throws Exception {
 
         if ((organizationName == null) || (user == null)) {
             return null;
@@ -408,9 +406,7 @@ public class ManagementServiceImpl implements ManagementService {
                         + ")</a> created a new organization account named "
                         + organizationName, null);
 
-        if (sendEmail) {
-            startOrganizationActivationFlow(organization);
-        }
+        startOrganizationActivationFlow(organization);
 
         return organization;
     }
@@ -649,11 +645,10 @@ public class ManagementServiceImpl implements ManagementService {
         return results;
     }
 
-    private UserInfo doCreateAdmin(User user, boolean sendEmail,
-            Map<String, CredentialsInfo> credentials) throws Exception {
+    private UserInfo doCreateAdmin(User user,
+                                   Map<String, CredentialsInfo> credentials) throws Exception {
         EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-        credentials
-                .put("secret",
+        credentials.put("secret",
                         plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
         em.addMapToDictionary(user, DICTIONARY_CREDENTIALS, credentials);
 
@@ -661,16 +656,17 @@ public class ManagementServiceImpl implements ManagementService {
                 user.getUuid(), user.getUsername(), user.getName(),
                 user.getEmail(), user.getActivated(), user.getDisabled());
 
-        if (sendEmail && !user.getActivated()) {
-            this.startAdminUserActivationFlow(userInfo);
+        // special case for sysadmin only
+        if (!user.getEmail().equals(properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL))) {
+          this.startAdminUserActivationFlow(userInfo);
         }
+
         return userInfo;
     }
 
     @Override
     public UserInfo createAdminFromPrexistingPassword(User user,
-            String precypheredPassword, String hashType, boolean sendEmail)
-            throws Exception {
+            String precypheredPassword, String hashType) throws Exception {
 
         emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
@@ -688,25 +684,21 @@ public class ManagementServiceImpl implements ManagementService {
                 "mongo_pwd",
                 mongoPasswordCredentials(user.getUsername(),
                         precypheredPassword));
-        return doCreateAdmin(user, sendEmail, credentials);
+        return doCreateAdmin(user, credentials);
     }
 
     @Override
-    public UserInfo createAdminFrom(User user, String password,
-            boolean sendEmail) throws Exception {
-        emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    public UserInfo createAdminFrom(User user, String password) throws Exception {
         Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
         credentials.put("password", passwordCredentials(password));
-        credentials.put("mongo_pwd",
-                mongoPasswordCredentials(user.getUsername(), password));
+        credentials.put("mongo_pwd", mongoPasswordCredentials(user.getUsername(), password));
 
-        return doCreateAdmin(user, sendEmail, credentials);
+        return doCreateAdmin(user, credentials);
     }
 
     @Override
     public UserInfo createAdminUser(String username, String name, String email,
-            String password, boolean activated, boolean disabled,
-            boolean sendEmail) throws Exception {
+            String password, boolean activated, boolean disabled) throws Exception {
 
         if (email == null) {
             return null;
@@ -738,7 +730,7 @@ public class ManagementServiceImpl implements ManagementService {
         user.setUsername(username);
         user.setName(name);
         user.setEmail(email);
-        user.setActivated(activated);
+        user.setActivated(activated); // sdg - added
         user.setConfirmed(!newAdminUsersRequireConfirmation()); // only
                                                                 // hardcoded
                                                                 // param now
@@ -748,7 +740,7 @@ public class ManagementServiceImpl implements ManagementService {
         user.setDisabled(disabled);
         user = em.create(user);
 
-        return createAdminFrom(user, password, sendEmail);
+        return createAdminFrom(user, password);
     }
 
     public UserInfo getUserInfo(UUID applicationId, Entity entity) {
@@ -1946,13 +1938,16 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public void startAdminUserActivationFlow(UserInfo user) throws Exception {
-        if (newAdminUsersRequireConfirmation()) {
-            sendAdminUserConfirmationEmail(user);
-        } else if (newAdminUsersNeedSysAdminApproval()) {
-            sendSysAdminRequestAdminActivationEmail(user);
+        if (user.isActivated()) {
+          sendAdminUserActivatedEmail(user);
+          sendSysAdminNewAdminActivatedNotificationEmail(user);
         } else {
-            sendAdminUserActivatedEmail(user);
-            sendSysAdminNewAdminActivatedNotificationEmail(user);
+            if (newAdminUsersRequireConfirmation()) {
+                sendAdminUserConfirmationEmail(user);
+            } else if (newAdminUsersNeedSysAdminApproval()) {
+                sendSysAdminRequestAdminActivationEmail(user);
+            }
+            // sdg: else... anything?
         }
     }
 
@@ -2082,8 +2077,7 @@ public class ManagementServiceImpl implements ManagementService {
         activateOrganization(organization, true);
     }
 
-    @Override
-    public void activateOrganization(OrganizationInfo organization,
+     private void activateOrganization(OrganizationInfo organization,
             boolean sendEmail) throws Exception {
         EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         em.setProperty(
@@ -2708,13 +2702,17 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     private boolean areActivationChecksDisabled() {
-        if (!newOrganizationsNeedSysAdminApproval() && !properties.newOrganizationsRequireConfirmation()) {
-            return !newAdminUsersNeedSysAdminApproval() && !newAdminUsersRequireConfirmation();
-        }
-        return false;
+        return !(newOrganizationsNeedSysAdminApproval()
+                || properties.newOrganizationsRequireConfirmation()
+                || newAdminUsersNeedSysAdminApproval()
+                || newAdminUsersRequireConfirmation());
     }
 
     private static void sendHtmlMail(AccountCreationProps props, String to, String from, String subject, String html) {
         MailUtils.sendHtmlMail(props.getMailProperties(), to, from, subject, html);
     }
+
+  public AccountCreationProps getAccountCreationProps() {
+    return properties;
+  }
 }

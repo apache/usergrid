@@ -47,7 +47,7 @@ public class ApplicationCreatorTest {
                 .createOwnerAndOrganization("appcreatortest",
                         "nate-appcreatortest", "Nate",
                         "nate+appcreatortest@apigee.com", "password", true,
-                        false, false);
+                        false);
         ApplicationInfo appInfo = applicationCreator.createSampleFor(orgOwner
                 .getOrganization());
         assertNotNull(appInfo);
@@ -65,7 +65,7 @@ public class ApplicationCreatorTest {
                 .createOwnerAndOrganization("appcreatortestcustom",
                         "nate-appcreatortestcustom", "Nate",
                         "nate+appcreatortestcustom@apigee.com", "password",
-                        true, false, false);
+                        true, false);
         ApplicationCreatorImpl customCreator = new ApplicationCreatorImpl(emf,
                 managementService);
         customCreator.setSampleAppName("messagee");
