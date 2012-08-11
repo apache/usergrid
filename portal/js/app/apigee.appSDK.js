@@ -493,6 +493,8 @@ apigee.ApiClient = (function () {
       if(!(Query instanceof apigee.Query)) {
         throw(new Error('Query is not a valid object.'));
       }
+      //for timing, call start
+      Query.setQueryStartTime();
       //peel the data out of the query object
       var method = Query.getMethod().toUpperCase();
       var path = Query.getPath();
@@ -632,12 +634,20 @@ apigee.ApiClient = (function () {
 
     // Handle response.
     xhr.onerror = function() {
+      //for timing, call end
+      Query.setQueryEndTime();
+      //for timing, log the total call time
+      console.log(Query.getQueryTotalTime());
       //network error
       clearTimeout(timeout);
       console.log('API call failed at the network level.');
       Query.callFailureCallback({'error':'error'});
     };
     xhr.onload = function() {
+      //for timing, call end
+      Query.setQueryEndTime();
+      //for timing, log the total call time
+      console.log('call completion time: ' + Query.getQueryTotalTime());
       //call completed
       clearTimeout(timeout);
       response = JSON.parse(xhr.responseText);
@@ -1016,9 +1026,25 @@ apigee.validation = (function () {
     this._cursor = null;
     this._next = null
     this._previous = [];
+    this._start = 0;
+    this._end = 0;
   };
 
   apigee.Query.prototype = {
+     setQueryStartTime: function() {
+       this._start = new Date().getTime();
+     },
+
+     setQueryEndTime: function() {
+       this._end = new Date().getTime();
+     },
+
+     getQueryTotalTime: function() {
+       var seconds = 0;
+       var time = this._end - this._start;
+       try { seconds = (time/10) / 60 } catch(e){ return 0; }
+       return seconds;
+     },
     /**
      *  A method to set all settable parameters of the Query at one time
      *  @public
@@ -2223,11 +2249,13 @@ apigee.validation = (function () {
    */
   apigee.Collection.prototype.get = function (successCallback, errorCallback){
     var self = this;
+    var queryParams = this.getQueryParams();
     //empty the list
     this.setEntityList([]);
-    this.setAllQueryParams('GET', this.getCollectionPath(), null, null,
+    this.setAllQueryParams('GET', this.getCollectionPath(), null, queryParams,
       function(response) {
         if (response.entities) {
+          this.resetEntityPointer();
           var count = response.entities.length;
           for (var i=0;i<count;i++) {
             var uuid = response.entities[i].uuid;
