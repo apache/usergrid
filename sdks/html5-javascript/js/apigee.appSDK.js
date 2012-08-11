@@ -2223,11 +2223,13 @@ apigee.validation = (function () {
    */
   apigee.Collection.prototype.get = function (successCallback, errorCallback){
     var self = this;
+    var queryParams = this.getQueryParams();
     //empty the list
     this.setEntityList([]);
-    this.setAllQueryParams('GET', this.getCollectionPath(), null, null,
+    this.setAllQueryParams('GET', this.getCollectionPath(), null, queryParams,
       function(response) {
         if (response.entities) {
+          this.resetEntityPointer();
           var count = response.entities.length;
           for (var i=0;i<count;i++) {
             var uuid = response.entities[i].uuid;
