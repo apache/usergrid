@@ -647,7 +647,7 @@ apigee.ApiClient = (function () {
       //for timing, call end
       Query.setQueryEndTime();
       //for timing, log the total call time
-      console.log('call completion time: ' + Query.getQueryTotalTime());
+      console.log('Call timing: ' + Query.getQueryTotalTime());
       //call completed
       clearTimeout(timeout);
       response = JSON.parse(xhr.responseText);
@@ -1042,8 +1042,10 @@ apigee.validation = (function () {
      getQueryTotalTime: function() {
        var seconds = 0;
        var time = this._end - this._start;
-       try { seconds = (time/10) / 60 } catch(e){ return 0; }
-       return seconds;
+       try { 
+          seconds = ((time/10) / 60).toFixed(2);
+       } catch(e){ return 0; }
+       return this.getMethod() + " " + this.getPath() + " - " + seconds + " seconds";
      },
     /**
      *  A method to set all settable parameters of the Query at one time
