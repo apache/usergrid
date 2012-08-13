@@ -727,7 +727,7 @@ public class ManagementServiceImpl implements ManagementService {
         user.setUsername(username);
         user.setName(name);
         user.setEmail(email);
-        user.setActivated(activated); // sdg - added
+        user.setActivated(activated);
         user.setConfirmed(!newAdminUsersRequireConfirmation()); // only
                                                                 // hardcoded
                                                                 // param now
@@ -1936,8 +1936,11 @@ public class ManagementServiceImpl implements ManagementService {
                 sendAdminUserConfirmationEmail(user);
             } else if (newAdminUsersNeedSysAdminApproval()) {
                 sendSysAdminRequestAdminActivationEmail(user);
+            } else {
+              // sdg: There seems to be a hole in the logic. The user has been created
+              // in an inactive state but nobody is being notified.
+              activateAdminUser(user.getUuid());
             }
-            // sdg: else... anything?
         }
     }
 
