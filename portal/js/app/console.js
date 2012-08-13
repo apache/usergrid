@@ -4149,8 +4149,10 @@ function deleteRolePermission(roleName, permission) {
       callback = callback + separatorMark + 'use_sso=' + self.use_sso;
       separatorMark = '&';
     }
-      callback = callback + separatorMark + 'api_url=' + apigee.ApiClient.getApiUrl();
+    if (apigee.ApiClient.getApiUrl() != PUBLIC_API_URL) {
+      callback = callback + separatorMark + 'api_url=' + self.apiUrl;
       separatorMark = '&';
+    }
     return encodeURIComponent(callback);
   }
   apigee.console.getSSOCallback = getSSOCallback;
