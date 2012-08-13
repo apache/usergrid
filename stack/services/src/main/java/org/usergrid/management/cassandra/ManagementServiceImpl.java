@@ -19,11 +19,7 @@ import static java.lang.Boolean.parseBoolean;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.usergrid.persistence.CredentialsInfo.checkPassword;
-import static org.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
-import static org.usergrid.persistence.CredentialsInfo.mongoPasswordCredentials;
-import static org.usergrid.persistence.CredentialsInfo.passwordCredentials;
-import static org.usergrid.persistence.CredentialsInfo.plainTextCredentials;
+import static org.usergrid.persistence.CredentialsInfo.*;
 import static org.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
 import static org.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.usergrid.persistence.Schema.PROPERTY_PATH;
@@ -691,7 +687,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo createAdminFrom(User user, String password) throws Exception {
         Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
-        credentials.put("password", passwordCredentials(password));
+        credentials.put("password", hashedCredentials(properties.getProperty(PROPERTIES_PASSWORD_SALT,""), password));
         credentials.put("mongo_pwd", mongoPasswordCredentials(user.getUsername(), password));
 
         return doCreateAdmin(user, credentials);
@@ -969,8 +965,7 @@ public class ManagementServiceImpl implements ManagementService {
             logger.info("Old password doesn't match");
             throw new IncorrectPasswordException();
         }
-        em.addToDictionary(user, DICTIONARY_CREDENTIALS, "password",
-                passwordCredentials(newPassword));
+        saltedPasswordToDictionary(em, user, newPassword);
         em.addToDictionary(
                 user,
                 DICTIONARY_CREDENTIALS,
@@ -989,8 +984,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         Entity user = em.get(userId);
-        em.addToDictionary(user, DICTIONARY_CREDENTIALS, "password",
-                passwordCredentials(newPassword));
+        saltedPasswordToDictionary(em, user, newPassword);
         em.addToDictionary(
                 user,
                 DICTIONARY_CREDENTIALS,
@@ -2363,9 +2357,8 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager(applicationId);
-        em.addToDictionary(new SimpleEntityRef(User.ENTITY_TYPE, userId),
-                DICTIONARY_CREDENTIALS, "password",
-                passwordCredentials(newPassword));
+        User user = new User(userId);
+        saltedPasswordToDictionary(em, user, newPassword);
     }
 
     @Override
@@ -2387,8 +2380,7 @@ public class ManagementServiceImpl implements ManagementService {
             logger.info("Old password doesn't match");
             throw new IncorrectPasswordException();
         }
-        em.addToDictionary(user, DICTIONARY_CREDENTIALS, "password",
-                passwordCredentials(newPassword));
+        saltedPasswordToDictionary(em, user, newPassword);
     }
 
     @Override
@@ -2710,5 +2702,10 @@ public class ManagementServiceImpl implements ManagementService {
 
   public AccountCreationProps getAccountCreationProps() {
     return properties;
+  }
+
+  private void saltedPasswordToDictionary(EntityManager em, Entity user, String password) throws Exception {
+    em.addToDictionary(user, DICTIONARY_CREDENTIALS, "password",
+            hashedCredentials(properties.getProperty(PROPERTIES_PASSWORD_SALT, ""),password));
   }
 }
