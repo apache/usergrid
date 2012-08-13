@@ -47,9 +47,9 @@ public class TokenServiceTest {
 
 	public static void setupLocal() throws Exception {
 		adminUser = managementService.createAdminUser("edanuff", "Ed Anuff",
-				"ed@anuff.com", "test", false, false, false);
+				"ed@anuff.com", "test", false, false);
 		organization = managementService.createOrganization("ed-organization",
-				adminUser, true, false);
+				adminUser, true);
 		// TODO update to organizationName/applicationName
 		applicationId = managementService.createApplication(
 				organization.getUuid(), "ed-organization/ed-application");

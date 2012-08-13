@@ -62,11 +62,11 @@ public class OrganizationTest {
 	public void testCreateOrganization() throws Exception {
 
 		UserInfo user = management.createAdminUser("edanuff", "Ed Anuff",
-				"ed@anuff.com", "test", false, false, true);
+				"ed@anuff.com", "test", false, false);
 		assertNotNull(user);
 
 		OrganizationInfo organization = management.createOrganization(
-				"ed-organization", user, false, true);
+				"ed-organization", user, false);
 		assertNotNull(organization);
 
 		Map<UUID, String> userOrganizations = management
@@ -112,7 +112,7 @@ public class OrganizationTest {
 
 		UserInfo new_user = management.createAdminUser("test-user-1",
 				"Test User", "test-user-1@mockserver.com", "testpassword",
-				true, true, false);
+				true, true);
 		assertNotNull(new_user);
 
 		management.addAdminUserToOrganization(new_user, organization2, false);
