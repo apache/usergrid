@@ -4120,7 +4120,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function sendToSSOLogoutPage() {
-    var newLoc= self.sso_logout_page + '?callback=' + getSSOCallback();
+    var newLoc= SSO_LOGOUT_PAGE + '?callback=' + getSSOCallback();
     window.location = newLoc;
     return false;
   }
