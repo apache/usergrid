@@ -72,7 +72,7 @@ public class RoleTest {
 
 		OrganizationOwnerInfo ooi = management.createOwnerAndOrganization(
 				"ed-organization", "edanuff", "Ed Anuff", "ed@anuff.com",
-				"test", true, false, false);
+				"test", true, false);
 
 		OrganizationInfo organization = ooi.getOrganization();
 

@@ -105,7 +105,7 @@ public class UsersResource extends AbstractContextResource {
 		response.setAction("create user");
 
 		UserInfo user = management.createAdminUser(username, name, email,
-				password, false, false, true);
+				password, false, false);
 		Map<String, Object> result = new LinkedHashMap<String, Object>();
 		if (user != null) {
 			result.put("user", user);
