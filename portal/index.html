@@ -16,9 +16,12 @@
     <script src="js/lib/date.min.js" type="text/javascript"></script>
     <script src="js/app/helpers.js" type="text/javascript"></script>
     <script src="js/app/session.js" type="text/javascript"></script>
+    <script src="js/app/clippy-jQ.js" type="text/javascript"></script>
     <script src="js/app/apigee.appSDK.js" type="text/javascript"></script>
     <script src="js/app/console.js" type="text/javascript"></script>
     <script src="js/app/ui/ui.js" type="text/javascript"></script>
+    <!--TODO: move clippy to a more apropiate area-->
+  
   </head>
   <body>
     <div id="fullContainer">
@@ -537,21 +540,9 @@
                       <li id="users-previous" class="previous"><a href="#">&larr; Previous</a></li>
                       <li id="users-next" class="next"><a href="#">Next &rarr;</a></li>
                     </ul>
-
-                    <div id="users-curl-container">
-                      <div style="padding: 5px;">
-                        Want to get the data above programmatically? Here's how you would retrieve it with <a style="color: #007CDC;" href="http://curl.haxx.se/" target="_blank">curl</a>. Just copy-paste the command in a terminal window and you should see the same data come back as JSON!
-                      </div>
-                      <table style="width: 100%;"><tr>
-                        <td style="width: 80%;"><div id="users-curl" class="alert alert-info" style="margin-bottom: 0px;"></div></td>
-                        <td style="width: 20px;">&nbsp;</td>
-                        <td style="vertical-align: middle;"><a id="users-curl-copy" class="btn" style="margin: auto;">Copy cURL Command &nbsp;<img src="images/swish_arrow.png" border="0"></a></td>
-                      </tr></table>
-                      <div id="users-curl-token" style="display: none; padding: 5px;">
-                      Pssst... Are you wondering what this "Authorization: Bearer" stuff is, or how to get a token? We have a <a style="color: #007CDC;" href="http://apigee.com/docs/content/authentication-and-access-usergrid">documentation article about that</a>.
-                      </div>
+                    <div id="users-curl-container" class="row-fluid curl-container ">
+                      
                     </div>
-
                   </div>
                 </div>
                 <form id="dialog-form-new-user" class="modal hide fade">
@@ -686,6 +677,20 @@
                       <li id="groups-previous" class="previous"><a href="#">&larr; Previous</a></li>
                       <li id="groups-next" class="next"><a href="#">Next &rarr;</a></li>
                     </ul>
+                  	<div id="groups-curl-container" class="row-fluid curl-container ">
+                      <div class="curl-info">
+                        Want to get the data above programmatically? Here's how you would retrieve it with <a style="color: #007CDC;" href="http://curl.haxx.se/" target="_blank">curl</a>. Just copy-paste the command in a terminal window and you should see the same data come back as JSON!
+                      </div>
+                     <div class="input-append">
+                      		<div id="groups-curl" class="alert alert-info curl-data pull-left">                      		
+                      		</div> 
+							<div id="groups-clippy-btn" class="clippy-btn">								
+							</div>
+                     </div>
+                      <div id="groups-curl-token" class="curl-token">
+                      Pssst... Are you wondering what this "Authorization: Bearer" stuff is, or how to get a token? We have a <a style="color: #007CDC;" href="http://apigee.com/docs/content/authentication-and-access-usergrid">documentation article about that</a>.
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <form id="dialog-form-new-group" class="modal hide fade">
@@ -795,6 +800,20 @@
                       <li id="roles-previous" class="previous"><a href="#">&larr; Previous</a></li>
                       <li id="roles-next" class="next"><a href="#">Next &rarr;</a></li>
                     </ul>
+                  	<div id="roles-curl-container" class="row-fluid curl-container ">
+                      <div class="curl-info">
+                        Want to get the data above programmatically? Here's how you would retrieve it with <a style="color: #007CDC;" href="http://curl.haxx.se/" target="_blank">curl</a>. Just copy-paste the command in a terminal window and you should see the same data come back as JSON!
+                      </div>
+                     <div class="input-append">
+                      		<div id="roles-curl" class="alert alert-info curl-data pull-left">                      		
+                      		</div> 
+							<div id="roles-clippy-btn" class="clippy-btn">								
+							</div>
+                     </div>
+                      <div id="roles-curl-token" class="curl-token">
+                      Pssst... Are you wondering what this "Authorization: Bearer" stuff is, or how to get a token? We have a <a style="color: #007CDC;" href="http://apigee.com/docs/content/authentication-and-access-usergrid">documentation article about that</a>.
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div id="roles-panel-search" class="panel-content" style="display: none;">
@@ -1034,6 +1053,20 @@
                       <li id="collections-previous" class="previous"><a href="#">&larr; Previous</a></li>
                       <li id="collections-next" class="next"><a href="#">Next &rarr;</a></li>
                     </ul>
+                  	<div id="collections-curl-container" class="row-fluid curl-container ">
+                      <div class="curl-info">
+                        Want to get the data above programmatically? Here's how you would retrieve it with <a style="color: #007CDC;" href="http://curl.haxx.se/" target="_blank">curl</a>. Just copy-paste the command in a terminal window and you should see the same data come back as JSON!
+                      </div>
+                     <div class="input-append">
+                      		<div id="collections-curl" class="alert alert-info curl-data pull-left">                      		
+                      		</div> 
+							<div id="collections-clippy-btn" class="clippy-btn">								
+							</div>
+                     </div>
+                      <div id="collections-curl-token" class="curl-token">
+                      Pssst... Are you wondering what this "Authorization: Bearer" stuff is, or how to get a token? We have a <a style="color: #007CDC;" href="http://apigee.com/docs/content/authentication-and-access-usergrid">documentation article about that</a>.
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <form id="dialog-form-new-collection" class="modal hide fade">
@@ -1165,6 +1198,30 @@
         </div>
       </form>
       <div class="clear"></div>
+      <div class="global-clippy">
+      	<div id="global-clippy-data"></div>
+      	<div id="global-clippy-container">
+		 	<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"
+						            width="100%"
+						            height="100%"
+						            id="clippy">
+						    <param name="movie" value="js/clippy/kneath-clippy-686fe1f/build/clippy.swf"/>
+						    <param name="allowScriptAccess" value="always" />		    
+						    <param name="scale" value="exactfit" />
+						    <param NAME="FlashVars" value="id=global-clippy-data"/>
+						    <embed src="js/clippy/kneath-clippy-686fe1f/build/clippy.swf"
+						           width="100%"
+						           height="100%"
+						           name="clippy"
+						           scale="exactfit"
+						           allowScriptAccess="always"
+						           type="application/x-shockwave-flash"
+						           pluginspage="http://www.macromedia.com/go/getflashplayer"
+						           FlashVars="id=global-clippy-data"
+						    />
+			</object>
+		</div>	
+      </div>
       <footer>
         <div class="container-fluid">
           <div class="subnav pull-left">
