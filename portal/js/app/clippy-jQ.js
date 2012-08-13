@@ -18,7 +18,7 @@
 			$(this).mouseover(function(){
 				var offset = $(this).offset();
 				options.clippyContainerId.css({
-					//TODO: 1 is the offset given by the HTML tag border-left of 1, find a better way to check and apply this offset.
+					//TODO: 1 is the offset FF is adding to the body, Chrome doesnt need this.
 					left: Math.round(offset.left)-1,
 					top: Math.round(offset.top),
 				});
@@ -26,8 +26,7 @@
 				options.clippyDataId.text(options.dataId.text());
 			});
 			//hide clippy movie
-			options.clippyContainerId.mouseout(function(){
-				
+			options.clippyContainerId.mouseout(function(){				
 				options.clippyContainerId.css({
 					left: -9999,
 					top: -9999,
