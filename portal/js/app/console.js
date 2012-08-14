@@ -13,7 +13,14 @@ function apigee_console_app(Pages, query_params) {
     apigee.ApiClient.setApiUrl(LOCAL_API_URL);
   }
 
+  String.prototype.endsWith = function (s) {
+    return this.length >= s.length && this.substr(this.length - s.length) == s;
+  }
+
   if (query_params.api_url) {
+      if (!query_params.api_url.endsWith('/')) {
+        query_params.api_url += '/';
+      }
       apigee.ApiClient.setApiUrl(query_params.api_url);
   }
 
