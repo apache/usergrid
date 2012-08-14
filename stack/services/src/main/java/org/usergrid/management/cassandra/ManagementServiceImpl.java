@@ -1124,14 +1124,14 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo verifyMongoCredentials(String name, String nonce, String key)
             throws Exception {
-//        UserInfo userInfo = null;
+
         Entity user = findUserEntity(MANAGEMENT_APPLICATION_ID, name);
 
         if (user == null) {
             return null;
         }
-
         String mongo_pwd = readUserMongoPassword(MANAGEMENT_APPLICATION_ID, user.getUuid()).getSecret();
+   
 
         if (mongo_pwd == null) {
             throw new IncorrectPasswordException(
@@ -2797,132 +2797,107 @@ public class ManagementServiceImpl implements ManagementService {
                     && !newAdminUsersRequireConfirmation();
         }
         return false;
-    }
+      }
+      
+      
+      /**
+       * Persist the user's password credentials info
+       * @param appId
+       * @param ownerId
+       * @param creds
+     * @throws Exception 
+       */
+      protected void writeUserPassword(UUID appId, EntityRef owner,CredentialsInfo creds) throws Exception{
+          writeCreds(appId, owner, creds, USER_PASSWORD);
+      }
+      
+      /**
+       * read the user password credential's info
+       * @param appId
+       * @param ownerId
+       * @return
+     * @throws Exception 
+       */
+      protected CredentialsInfo readUserPasswordCredentials(UUID appId, UUID ownerId) throws Exception{
+         return readCreds(appId, ownerId, USER_PASSWORD);
+      }
+      
+      /**
+       * Write the user's token
+       * @param appId
+       * @param ownerId
+       * @param token
+     * @throws Exception 
+       */
+      protected void writeUserToken(UUID appId, EntityRef owner, CredentialsInfo token) throws Exception{
+          writeCreds(appId, owner, token, USER_TOKEN);
+      }
+      
+      /**
+       * Read the credentials info for the user's token
+       * @param appId
+       * @param ownerId
+       * @return
+     * @throws Exception 
+       */
+      protected CredentialsInfo readUserToken(UUID appId, UUID ownerId) throws Exception{
+          return readCreds(appId, ownerId, USER_TOKEN);
+      }
+      
+      /**
+       * Write the mongo password
+       * @param appId
+       * @param ownerId
+       * @param password
+     * @throws Exception 
+       */
+      protected void writeUserMongoPassword(UUID appId, EntityRef owner, CredentialsInfo password) throws Exception{
+         writeCreds(appId, owner, password, USER_MONGO_PASSWORD);
+      }
+      
+      /**
+       * Read the mongo password
+       * @param appID
+       * @param ownerID
+       * @return
+     * @throws Exception 
+       */
+      protected CredentialsInfo readUserMongoPassword(UUID appId, UUID ownerId) throws Exception{
+          return readCreds(appId, ownerId, USER_MONGO_PASSWORD);
+      }
+      
+      /**
+       * Write the user's pin
+       * @param appId
+       * @param ownerId
+       * @param pin
+       * @throws Exception 
+       */
+      protected void writeUserPin(UUID appId, EntityRef owner, CredentialsInfo pin) throws Exception{
+          writeCreds(appId, owner, pin, USER_PIN);
+      }
+      
+      /**
+       * Read the user's pin
+       * @param appId
+       * @param ownerId
+       * @return
+     * @throws Exception 
+       */
+      protected CredentialsInfo readUserPin(UUID appId, UUID ownerId) throws Exception{
+          return readCreds(appId, ownerId, USER_PIN);
+      }
+      
+      private void writeCreds(UUID appId, EntityRef owner, CredentialsInfo creds, String key) throws Exception{
+          EntityManager em = emf.getEntityManager(appId);
+          em.addToDictionary(owner, DICTIONARY_CREDENTIALS, key, creds);
+          
+      }
+      
+      private CredentialsInfo readCreds(UUID appId, UUID ownerId, String key) throws Exception{
+          EntityManager em = emf.getEntityManager(appId);
+          Entity owner = em.get(ownerId);
+          return (CredentialsInfo) em.getDictionaryElementValue(owner, DICTIONARY_CREDENTIALS, key);
+      }
 
-    /**
-     * Persist the user's password credentials info
-     * 
-     * @param appId
-     * @param ownerId
-     * @param creds
-     */
-    protected void writeUserPassword(UUID appId, EntityRef owner,
-            CredentialsInfo creds) {
-
-    }
-
-    /**
-     * read the user password credential's info
-     * 
-     * @param appId
-     * @param ownerId
-     * @return
-     * @throws Exception
-     */
-    protected CredentialsInfo readUserPasswordCredentials(UUID appId,
-            UUID ownerId) throws Exception {
-
-        EntityManager em = emf.getEntityManager(ownerId);
-        Entity owner = em.get(ownerId);
-        
-        if(owner == null){
-            return null;
-        }
-
-        return (CredentialsInfo) em.getDictionaryElementValue(owner,
-                DICTIONARY_CREDENTIALS, USER_PASSWORD);
-    }
-
-    /**
-     * Write the user's token
-     * 
-     * @param appId
-     * @param ownerId
-     * @param token
-     * @throws Exception
-     */
-    protected void writeUserToken(UUID appId, EntityRef owner,
-            CredentialsInfo token) throws Exception {
-        writeCreds(appId, owner, token, USER_TOKEN);
-    }
-
-    /**
-     * Read the credentials info for the user's token
-     * 
-     * @param appId
-     * @param ownerId
-     * @return
-     * @throws Exception
-     */
-    protected CredentialsInfo readUserToken(UUID appId, UUID ownerId)
-            throws Exception {
-        return readCreds(appId, ownerId, USER_TOKEN);
-    }
-
-    /**
-     * Write the mongo password
-     * 
-     * @param appId
-     * @param ownerId
-     * @param password
-     * @throws Exception
-     */
-    protected void writeUserMongoPassword(UUID appId, EntityRef owner,
-            CredentialsInfo password) throws Exception {
-        writeCreds(appId, owner, password, USER_MONGO_PASSWORD);
-    }
-
-    /**
-     * Read the mongo password
-     * 
-     * @param appID
-     * @param ownerID
-     * @return
-     * @throws Exception
-     */
-    protected CredentialsInfo readUserMongoPassword(UUID appId, UUID ownerId)
-            throws Exception {
-        return readCreds(appId, ownerId, USER_MONGO_PASSWORD);
-    }
-
-    /**
-     * Write the user's pin
-     * 
-     * @param appId
-     * @param ownerId
-     * @param pin
-     * @throws Exception
-     */
-    protected void writeUserPin(UUID appId, EntityRef owner, CredentialsInfo pin)
-            throws Exception {
-        writeCreds(appId, owner, pin, USER_PIN);
-    }
-
-    /**
-     * Read the user's pin
-     * 
-     * @param appId
-     * @param ownerId
-     * @return
-     * @throws Exception
-     */
-    protected CredentialsInfo readUserPin(UUID appId, UUID ownerId)
-            throws Exception {
-        return readCreds(appId, ownerId, USER_PIN);
-    }
-
-    private void writeCreds(UUID appId, EntityRef owner, CredentialsInfo creds,
-            String key) throws Exception {
-        EntityManager em = emf.getEntityManager(appId);
-        em.addToDictionary(owner, DICTIONARY_CREDENTIALS, key, creds);
-
-    }
-
-    private CredentialsInfo readCreds(UUID appId, UUID ownerId, String key)
-            throws Exception {
-        EntityManager em = emf.getEntityManager(appId);
-        Entity owner = em.get(ownerId);
-        return (CredentialsInfo) em.getDictionaryElementValue(owner,
-                DICTIONARY_CREDENTIALS, key);
-    }
 }
