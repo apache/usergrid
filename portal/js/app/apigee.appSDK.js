@@ -616,9 +616,6 @@ apigee.ApiClient = (function () {
     {
       xhr = new XMLHttpRequest();
       xhr.open(method, path, true);
-      if (jsonObj) {
-        xhr.setRequestHeader("Content-Type", "application/json");
-      }
       if ( (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) || (getQueryType() == apigee.M && apigee.ApiClient.getToken())) {
         xhr.setRequestHeader("Authorization", "Bearer " + apigee.ApiClient.getToken());
         xhr.withCredentials = true;
@@ -633,6 +630,10 @@ apigee.ApiClient = (function () {
         }
       }
       xhr.open(method, path, true);
+    }
+
+    if (jsonObj) {
+      xhr.setRequestHeader("Content-Type", "application/json");
     }
 
     // Handle response.
