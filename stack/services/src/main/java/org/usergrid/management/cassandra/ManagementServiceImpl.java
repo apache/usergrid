@@ -135,7 +135,7 @@ public class ManagementServiceImpl implements ManagementService {
     /**
      * Key for the user's pin
      */
-    private static final String USER_PIN = "pin";
+    protected static final String USER_PIN = "pin";
 
     /**
      * Key for the user's oauth secret
@@ -151,6 +151,8 @@ public class ManagementServiceImpl implements ManagementService {
      * Key for the user's password
      */
     protected static final String USER_PASSWORD = "password";
+    
+    
 
     private static final String TOKEN_TYPE_ACTIVATION = "activate";
 
@@ -1613,12 +1615,11 @@ public class ManagementServiceImpl implements ManagementService {
             UUID ownerId = AuthPrincipalType.APPLICATION_USER.equals(type) ? applicationId
                     : MANAGEMENT_APPLICATION_ID;
 
-            return getCredentialsSecret(readUserPasswordCredentials(ownerId, id));
+            return getCredentialsSecret(readUserToken(ownerId, id));
 
         } else if (AuthPrincipalType.ADMIN_USER.equals(type)
                 || AuthPrincipalType.APPLICATION_USER.equals(type)) {
-            return getCredentialsSecret(readUserPasswordCredentials(
-                    applicationId, id));
+            return getCredentialsSecret(readUserPasswordCredentials(applicationId, id));
         }
         throw new IllegalArgumentException(
                 "Must specify an admin user, organization or application principal");
@@ -2476,9 +2477,9 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager(applicationId);
-        em.addToDictionary(new SimpleEntityRef(User.ENTITY_TYPE, userId),
-                DICTIONARY_CREDENTIALS, USER_PASSWORD,
-                passwordCredentials(newPassword));
+        Entity owner = em.get(userId);
+        
+        writeUserPassword(applicationId, owner, passwordCredentials(newPassword));
     }
 
     @Override
