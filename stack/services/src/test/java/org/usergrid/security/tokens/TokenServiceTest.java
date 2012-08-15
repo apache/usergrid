@@ -52,7 +52,8 @@ public class TokenServiceTest {
 				adminUser, true);
 		// TODO update to organizationName/applicationName
 		applicationId = managementService.createApplication(
-				organization.getUuid(), "ed-organization/ed-application");
+				organization.getUuid(), "ed-organization/ed-application")
+    .getId();
 	}
 
 	@AfterClass

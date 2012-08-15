@@ -19,11 +19,7 @@ import static java.lang.Boolean.parseBoolean;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.usergrid.persistence.CredentialsInfo.checkPassword;
-import static org.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
-import static org.usergrid.persistence.CredentialsInfo.mongoPasswordCredentials;
-import static org.usergrid.persistence.CredentialsInfo.passwordCredentials;
-import static org.usergrid.persistence.CredentialsInfo.plainTextCredentials;
+import static org.usergrid.persistence.CredentialsInfo.*;
 import static org.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
 import static org.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.usergrid.persistence.Schema.PROPERTY_PATH;
@@ -237,9 +233,10 @@ public class ManagementServiceImpl implements ManagementService {
           OrganizationInfo organization = createOrganization(
                     test_organization_name, user, true);
 
-            // TODO change to organizationName/applicationName
+
             UUID appId = createApplication(organization.getUuid(),
-                    organization.getName() + "/" + test_app_name);
+                    buildAppName(test_app_name, organization))
+                    .getId();
 
             postOrganizationActivity(organization.getUuid(), user, "create",
                     new SimpleEntityRef(APPLICATION_INFO, appId),
@@ -709,10 +706,8 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public UserInfo createAdminFrom(User user, String password) throws Exception {
-
-        return doCreateAdmin(user, passwordCredentials(password),
+        return doCreateAdmin(user, hashedCredentials(properties.getProperty(PROPERTIES_PASSWORD_SALT,""), password),
                 mongoPasswordCredentials(user.getUsername(), password));
-
     }
 
     @Override
@@ -998,8 +993,9 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         Entity user = em.get(userId);
+
         writeUserPassword(MANAGEMENT_APPLICATION_ID, user,
-                passwordCredentials(newPassword));
+                maybeSaltPassword(newPassword));
         writeUserMongoPassword(
                 MANAGEMENT_APPLICATION_ID,
                 user,
@@ -1324,18 +1320,14 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public UUID createApplication(UUID organizationId, String applicationName)
+    public ApplicationInfo createApplication(UUID organizationId, String applicationName)
             throws Exception {
-
-        if ((organizationId == null) || (applicationName == null)) {
-            return null;
-        }
 
         return createApplication(organizationId, applicationName, null);
     }
 
     @Override
-    public UUID createApplication(UUID organizationId, String applicationName,
+    public ApplicationInfo createApplication(UUID organizationId, String applicationName,
             Map<String, Object> properties) throws Exception {
 
         if ((organizationId == null) || (applicationName == null)) {
@@ -1377,8 +1369,7 @@ public class ManagementServiceImpl implements ManagementService {
                             + ")</a> created a new application named "
                             + applicationName, null);
         }
-
-        return applicationId;
+        return new ApplicationInfo(applicationId, applicationEntity.getName());
     }
 
     @Override
@@ -2372,8 +2363,8 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager(applicationId);
         Entity owner = em.get(userId);
-        
-        writeUserPassword(applicationId, owner, passwordCredentials(newPassword));
+        writeUserPassword(applicationId, owner, maybeSaltPassword(newPassword));
+
     }
 
     @Override
@@ -2393,7 +2384,9 @@ public class ManagementServiceImpl implements ManagementService {
             throw new IncorrectPasswordException();
         }
 
+
         setAppUserPassword(applicationId, userId, newPassword);
+
     }
 
     @Override
@@ -2690,7 +2683,7 @@ public class ManagementServiceImpl implements ManagementService {
       /**
        * Persist the user's password credentials info
        * @param appId
-       * @param ownerId
+       * @param owner
        * @param creds
        * @throws Exception 
        */
@@ -2712,7 +2705,7 @@ public class ManagementServiceImpl implements ManagementService {
       /**
        * Write the user's token
        * @param appId
-       * @param ownerId
+       * @param owner
        * @param token
      * @throws Exception 
        */
@@ -2734,7 +2727,7 @@ public class ManagementServiceImpl implements ManagementService {
       /**
        * Write the mongo password
        * @param appId
-       * @param ownerId
+       * @param owner
        * @param password
      * @throws Exception 
        */
@@ -2744,8 +2737,8 @@ public class ManagementServiceImpl implements ManagementService {
       
       /**
        * Read the mongo password
-       * @param appID
-       * @param ownerID
+       * @param appId
+       * @param ownerId
        * @return
      * @throws Exception 
        */
@@ -2756,7 +2749,7 @@ public class ManagementServiceImpl implements ManagementService {
       /**
        * Write the user's pin
        * @param appId
-       * @param ownerId
+       * @param owner
        * @param pin
        * @throws Exception 
        */
@@ -2813,5 +2806,9 @@ public class ManagementServiceImpl implements ManagementService {
 
   public AccountCreationProps getAccountCreationProps() {
     return properties;
+  }
+
+  private CredentialsInfo maybeSaltPassword(String password) throws Exception {
+    return hashedCredentials(properties.getProperty(PROPERTIES_PASSWORD_SALT, ""),password);
   }
 }
