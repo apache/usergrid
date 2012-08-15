@@ -16,7 +16,7 @@
 		<shiro-version>1.2.0</shiro-version>
 		<junit-version>4.8.2</junit-version>
 		<log4j-version>1.2.16</log4j-version>
-		<org.springframework.version>3.1.0.RELEASE</org.springframework.version>
+		<org.springframework.version>3.1.2.RELEASE</org.springframework.version>
 		<slf4j-version>1.6.1</slf4j-version>
 		<snakeyaml-version>1.8</snakeyaml-version>
 		<usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
