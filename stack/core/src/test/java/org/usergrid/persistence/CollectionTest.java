@@ -17,6 +17,7 @@ package org.usergrid.persistence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.MapUtils.hashMap;
 
@@ -790,10 +791,9 @@ public class CollectionTest extends AbstractPersistenceTest {
           
             query.setCursor(r.getCursor());
         }
+      
+        assertNull(r.getCursor());
         
-        r = em.searchCollection(em.getApplicationRef(), "pages", query);
-        
-        assertEquals(0, r.size());
         
     }
 
@@ -843,9 +843,9 @@ public class CollectionTest extends AbstractPersistenceTest {
             query.setCursor(r.getCursor());
         }
         
-        r = em.searchCollection(em.getApplicationRef(), "pages", query);
+        assertNull(r.getCursor());
         
-        assertEquals(0, r.size());
+     
         
     }
     
@@ -895,10 +895,9 @@ public class CollectionTest extends AbstractPersistenceTest {
           
             query.setCursor(r.getCursor());
         }
+        assertNull(r.getCursor());
         
-        r = em.searchCollection(em.getApplicationRef(), "pages", query);
-        
-        assertEquals(0, r.size());
+       
         
     }
     

@@ -628,12 +628,28 @@ public class QueryProcessor {
             }
 
             StringBuffer buff = new StringBuffer();
+            
+            int nullCount = 0;
+            ByteBuffer value = null;
 
             for (Entry<Integer, ByteBuffer> entry : cursors.entrySet()) {
+                value = entry.getValue();
+                
                 buff.append(entry.getKey());
                 buff.append(":");
-                buff.append(encodeBase64URLSafeString(bytes(entry.getValue())));
+                buff.append(encodeBase64URLSafeString(bytes(value)));
                 buff.append("|");
+                
+                //this range was empty, mark it as a null
+                if(value.remaining() == 0){
+                    nullCount++;
+                }
+                
+            }
+            
+            //all cursors are complete, return null
+            if(nullCount == cursors.size()){
+                return null;
             }
 
             // trim off the last pipe

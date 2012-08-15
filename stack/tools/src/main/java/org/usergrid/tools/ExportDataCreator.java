@@ -63,8 +63,7 @@ public class ExportDataCreator {
         OrganizationOwnerInfo orgInfo = managementService
                 .createOwnerAndOrganization(orgName,
                         "textExportUser@apigee.com", "Test User",
-                        "textExportUser@apigee.com", "password", true, false,
-                        false);
+                        "textExportUser@apigee.com", "password", true, false);
 
         UUID appId = managementService.createApplication(orgInfo
                 .getOrganization().getUuid(), "application");
