@@ -56,7 +56,7 @@ public class BasicMongoTest extends AbstractMongoTest {
 		Mongo m = new Mongo("localhost", 27017);
 
 		DB db = m.getDB("test-organization/test-app");
-		db.authenticate("test@usergrid.com", "test".toCharArray());
+		db.authenticate("test", "test".toCharArray());
 
 		Set<String> colls = db.getCollectionNames();
 
