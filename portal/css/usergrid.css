@@ -1219,7 +1219,7 @@ table .span12 {
   width: 14px;
   height: 14px;
   vertical-align: text-top;
-  background-image: url(../bootstrap/less/../bootstrap/less/../img/glyphicons-halflings.png);
+  background-image: url(../img/glyphicons-halflings.png);
   background-position: 14px 14px;
   background-repeat: no-repeat;
   *margin-right: .3em;
@@ -1228,7 +1228,7 @@ table .span12 {
   *margin-left: 0;
 }
 .icon-white {
-  background-image: url(../bootstrap/less/../bootstrap/less/../bootstrap/less/../bootstrap/less/../img/glyphicons-halflings-white.png);
+  background-image: url(../img/glyphicons-halflings-white.png);
 }
 .icon-glass {
   background-position: 0      0;
@@ -3763,7 +3763,7 @@ a:active {
   display: none;
 }
 #application-panel-buttons .active > a i {
-  background-image: url(../bootstrap/less/../bootstrap/less/../bootstrap/less/../bootstrap/less/../img/glyphicons-halflings-white.png);
+  background-image: url(../img/glyphicons-halflings-white.png);
 }
 #application-panel-buttons .active > a:hover i {
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
@@ -4786,6 +4786,5 @@ table .zebraRows:nth-child(2n) {
   background-color: transparent;
   background-repeat: no-repeat;
   background-position: 0 0;
-  vertical-align: text-bottom;
   margin: 5px 0 0 5px;
 }
