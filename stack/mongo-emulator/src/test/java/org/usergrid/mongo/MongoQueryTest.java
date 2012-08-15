@@ -49,7 +49,7 @@ public class MongoQueryTest extends AbstractMongoTest {
         Mongo m = new Mongo("localhost", 27017);
 
         DB db = m.getDB("test-organization/test-app");
-        db.authenticate("test@usergrid.com", "test".toCharArray());
+        db.authenticate("test", "test".toCharArray());
 
         Set<String> colls = db.getCollectionNames();
 
@@ -109,7 +109,7 @@ public class MongoQueryTest extends AbstractMongoTest {
         Mongo m = new Mongo("localhost", 27017);
 
         DB db = m.getDB("test-organization/test-app");
-        db.authenticate("test@usergrid.com", "test".toCharArray());
+        db.authenticate("test", "test".toCharArray());
 
         BasicDBObject query = new BasicDBObject();
         query.put("founded", new BasicDBObject("$gt", 1973));
@@ -160,7 +160,7 @@ public class MongoQueryTest extends AbstractMongoTest {
         Mongo m = new Mongo("localhost", 27017);
 
         DB db = m.getDB("test-organization/test-app");
-        db.authenticate("test@usergrid.com", "test".toCharArray());
+        db.authenticate("test", "test".toCharArray());
 
         BasicDBObject query = new BasicDBObject();
         query.put("founded", new BasicDBObject("$gte", 1973));
@@ -215,7 +215,7 @@ public class MongoQueryTest extends AbstractMongoTest {
         Mongo m = new Mongo("localhost", 27017);
 
         DB db = m.getDB("test-organization/test-app");
-        db.authenticate("test@usergrid.com", "test".toCharArray());
+        db.authenticate("test", "test".toCharArray());
 
         BasicDBObject query = new BasicDBObject();
         query.put("founded", new BasicDBObject("$lt", 2000));
@@ -266,7 +266,7 @@ public class MongoQueryTest extends AbstractMongoTest {
         Mongo m = new Mongo("localhost", 27017);
 
         DB db = m.getDB("test-organization/test-app");
-        db.authenticate("test@usergrid.com", "test".toCharArray());
+        db.authenticate("test", "test".toCharArray());
 
         BasicDBObject query = new BasicDBObject();
         query.put("founded", new BasicDBObject("$lte", 2000));
@@ -321,7 +321,7 @@ public class MongoQueryTest extends AbstractMongoTest {
         Mongo m = new Mongo("localhost", 27017);
 
         DB db = m.getDB("test-organization/test-app");
-        db.authenticate("test@usergrid.com", "test".toCharArray());
+        db.authenticate("test", "test".toCharArray());
 
         BasicBSONList list = new BasicBSONList();
         list.add("Stone Temple Pilots");
@@ -376,7 +376,7 @@ public class MongoQueryTest extends AbstractMongoTest {
         Mongo m = new Mongo("localhost", 27017);
 
         DB db = m.getDB("test-organization/test-app");
-        db.authenticate("test@usergrid.com", "test".toCharArray());
+        db.authenticate("test", "test".toCharArray());
 
         BasicBSONList list = new BasicBSONList();
         list.add(new BasicDBObject("founded", new BasicDBObject("$gte", 2000)));
@@ -431,7 +431,7 @@ public class MongoQueryTest extends AbstractMongoTest {
         Mongo m = new Mongo("localhost", 27017);
 
         DB db = m.getDB("test-organization/test-app");
-        db.authenticate("test@usergrid.com", "test".toCharArray());
+        db.authenticate("test", "test".toCharArray());
 
         BasicBSONList list = new BasicBSONList();
         list.add(new BasicDBObject("founded", new BasicDBObject("$gte", 2000)));

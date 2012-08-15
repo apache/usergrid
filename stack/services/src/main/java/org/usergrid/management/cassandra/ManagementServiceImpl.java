@@ -128,6 +128,28 @@ import org.usergrid.utils.MailUtils;
 
 public class ManagementServiceImpl implements ManagementService {
 
+    /**
+     * Key for the user's pin
+     */
+    protected static final String USER_PIN = "pin";
+
+    /**
+     * Key for the user's oauth secret
+     */
+    protected static final String USER_TOKEN = "secret";
+
+    /**
+     * Key for the user's mongo password
+     */
+    protected static final String USER_MONGO_PASSWORD = "mongo_pwd";
+
+    /**
+     * Key for the user's password
+     */
+    protected static final String USER_PASSWORD = "password";
+    
+    
+
     private static final String TOKEN_TYPE_ACTIVATION = "activate";
 
     private static final String TOKEN_TYPE_PASSWORD_RESET = "resetpw";
@@ -349,12 +371,11 @@ public class ManagementServiceImpl implements ManagementService {
         OrganizationInfo organization = null;
 
         try {
-            if ( areActivationChecksDisabled() ) {
-              user = createAdminUser(username, name, email, password, true,
-                                                  false);
+            if (areActivationChecksDisabled()) {
+                user = createAdminUser(username, name, email, password, true, false);
             } else {
-              user = createAdminUser(username, name, email, password, activated,
-                                    disabled);
+                user = createAdminUser(username, name, email, password,
+                        activated, disabled);
             }
 
             organization = createOrganization(organizationName, user, true);
@@ -390,12 +411,10 @@ public class ManagementServiceImpl implements ManagementService {
         em.addToCollection(organizationEntity, "users", new SimpleEntityRef(
                 User.ENTITY_TYPE, user.getUuid()));
 
-        Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
-        credentials
-                .put("secret",
-                        plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION)));
-        em.addMapToDictionary(organizationEntity, DICTIONARY_CREDENTIALS,
-                credentials);
+        writeUserToken(
+                MANAGEMENT_APPLICATION_ID,
+                organizationEntity,
+                plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION)));
 
         OrganizationInfo organization = new OrganizationInfo(
                 organizationEntity.getUuid(), organizationName);
@@ -472,12 +491,10 @@ public class ManagementServiceImpl implements ManagementService {
         Entity app = em.create(applicationId, APPLICATION_INFO,
                 application.getProperties());
 
-        Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
-        credentials
-                .put("secret",
-                        CredentialsInfo
-                                .plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.APPLICATION)));
-        em.addMapToDictionary(app, DICTIONARY_CREDENTIALS, credentials);
+        writeUserToken(
+                MANAGEMENT_APPLICATION_ID,
+                app,
+                plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.APPLICATION)));
 
         addApplicationToOrganization(organizationId, applicationId);
         return applicationId;
@@ -645,12 +662,18 @@ public class ManagementServiceImpl implements ManagementService {
         return results;
     }
 
-    private UserInfo doCreateAdmin(User user,
-                                   Map<String, CredentialsInfo> credentials) throws Exception {
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-        credentials.put("secret",
-                        plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
-        em.addMapToDictionary(user, DICTIONARY_CREDENTIALS, credentials);
+
+    private UserInfo doCreateAdmin(User user, CredentialsInfo userPassword, CredentialsInfo mongoPassword)
+            throws Exception {
+
+        writeUserToken(
+                MANAGEMENT_APPLICATION_ID,
+                user,
+                plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
+
+        writeUserPassword(MANAGEMENT_APPLICATION_ID, user, userPassword);
+
+        writeUserMongoPassword(MANAGEMENT_APPLICATION_ID, user, mongoPassword);
 
         UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
                 user.getUuid(), user.getUsername(), user.getName(),
@@ -668,9 +691,6 @@ public class ManagementServiceImpl implements ManagementService {
     public UserInfo createAdminFromPrexistingPassword(User user,
             String precypheredPassword, String hashType) throws Exception {
 
-        emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-        Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
-
         CredentialsInfo ci = new CredentialsInfo();
         ci.setRecoverable(false);
         ci.setCipher("sha-1");
@@ -679,21 +699,20 @@ public class ManagementServiceImpl implements ManagementService {
         ci.setEncrypted(true);
         ci.setHashType(hashType);
 
-        credentials.put("password", ci);
-        credentials.put(
-                "mongo_pwd",
+        return doCreateAdmin(
+                user,
+                ci,
                 mongoPasswordCredentials(user.getUsername(),
                         precypheredPassword));
-        return doCreateAdmin(user, credentials);
+
     }
 
     @Override
     public UserInfo createAdminFrom(User user, String password) throws Exception {
-        Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
-        credentials.put("password", passwordCredentials(password));
-        credentials.put("mongo_pwd", mongoPasswordCredentials(user.getUsername(), password));
 
-        return doCreateAdmin(user, credentials);
+        return doCreateAdmin(user, passwordCredentials(password),
+                mongoPasswordCredentials(user.getUsername(), password));
+
     }
 
     @Override
@@ -960,22 +979,13 @@ public class ManagementServiceImpl implements ManagementService {
             return;
         }
 
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-        Entity user = em.get(userId);
         if (!checkPassword(oldPassword,
-                (CredentialsInfo) em.getDictionaryElementValue(user,
-                        DICTIONARY_CREDENTIALS, "password"))) {
+                readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId))) {
             logger.info("Old password doesn't match");
             throw new IncorrectPasswordException();
         }
-        em.addToDictionary(user, DICTIONARY_CREDENTIALS, "password",
-                passwordCredentials(newPassword));
-        em.addToDictionary(
-                user,
-                DICTIONARY_CREDENTIALS,
-                "mongo_pwd",
-                mongoPasswordCredentials((String) user.getProperty("username"),
-                        newPassword));
+
+        setAdminUserPassword(userId, newPassword);
     }
 
     @Override
@@ -988,12 +998,11 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         Entity user = em.get(userId);
-        em.addToDictionary(user, DICTIONARY_CREDENTIALS, "password",
+        writeUserPassword(MANAGEMENT_APPLICATION_ID, user,
                 passwordCredentials(newPassword));
-        em.addToDictionary(
+        writeUserMongoPassword(
+                MANAGEMENT_APPLICATION_ID,
                 user,
-                DICTIONARY_CREDENTIALS,
-                "mongo_pwd",
                 mongoPasswordCredentials((String) user.getProperty("username"),
                         newPassword));
     }
@@ -1005,13 +1014,8 @@ public class ManagementServiceImpl implements ManagementService {
             return false;
         }
 
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-        User user = em.get(userId, User.class);
-        CredentialsInfo credentialsInfo = (CredentialsInfo) em
-                .getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
-                        "password");
-
-        if (checkPassword(password, credentialsInfo)) {
+        if (checkPassword(password,
+                readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId))) {
             return true;
         }
         logger.info("password compare fail for uuid {}", userId);
@@ -1028,12 +1032,10 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-
-        CredentialsInfo credentialsInfo = (CredentialsInfo) em
-                .getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
-                        "password");
-        if (checkPassword(password, credentialsInfo)) {
+        if (checkPassword(
+                password,
+                readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID,
+                        user.getUuid()))) {
             userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
             if (!userInfo.isActivated()) {
                 throw new UnactivatedAdminUserException();
@@ -1051,34 +1053,40 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo verifyMongoCredentials(String name, String nonce, String key)
             throws Exception {
-        UserInfo userInfo = null;
+
         Entity user = findUserEntity(MANAGEMENT_APPLICATION_ID, name);
+
         if (user == null) {
             return null;
         }
-        String mongo_pwd = (String) user.getProperty("mongo_pwd");
+        String mongo_pwd = readUserMongoPassword(MANAGEMENT_APPLICATION_ID, user.getUuid()).getSecret();
+   
+
         if (mongo_pwd == null) {
-            userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
-                    user.getProperties());
+            throw new IncorrectPasswordException(
+                    "Your mongo password has not be set");
         }
 
-        if (userInfo == null) {
-            String expected_key = DigestUtils.md5Hex(nonce
-                    + user.getProperty("username") + mongo_pwd);
-            if (expected_key.equalsIgnoreCase(key)) {
-                userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
-                        user.getProperties());
-            }
+        String expected_key = DigestUtils.md5Hex(nonce
+                + user.getProperty("username") + mongo_pwd);
+        
+        if (!expected_key.equalsIgnoreCase(key)) {
+            throw new IncorrectPasswordException();
         }
 
-        if (userInfo != null) {
-            if (!userInfo.isActivated()) {
-                throw new UnactivatedAdminUserException();
-            }
-            if (userInfo.isDisabled()) {
-                throw new DisabledAdminUserException();
-            }
+        
+        UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
+                user.getProperties());
+        
+  
+        if (!userInfo.isActivated()) {
+            throw new UnactivatedAdminUserException();
         }
+        if (userInfo.isDisabled()) {
+            throw new DisabledAdminUserException();
+        }
+        
+        
         return userInfo;
     }
 
@@ -1348,13 +1356,10 @@ public class ManagementServiceImpl implements ManagementService {
         Entity applicationEntity = em.create(applicationId, APPLICATION_INFO,
                 properties);
 
-        Map<String, CredentialsInfo> credentials = new HashMap<String, CredentialsInfo>();
-        credentials
-                .put("secret",
-                        plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.APPLICATION)));
-        em.addMapToDictionary(applicationEntity, DICTIONARY_CREDENTIALS,
-                credentials);
-
+        writeUserToken(
+                MANAGEMENT_APPLICATION_ID,
+                applicationEntity,
+                plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.APPLICATION)));
         addApplicationToOrganization(organizationId, applicationId);
 
         UserInfo user = null;
@@ -1532,22 +1537,16 @@ public class ManagementServiceImpl implements ManagementService {
 
     public String getSecret(UUID applicationId, AuthPrincipalType type, UUID id)
             throws Exception {
-        EntityManager em = emf
-                .getEntityManager(AuthPrincipalType.APPLICATION_USER
-                        .equals(type) ? applicationId
-                        : MANAGEMENT_APPLICATION_ID);
         if (AuthPrincipalType.ORGANIZATION.equals(type)
                 || AuthPrincipalType.APPLICATION.equals(type)) {
-            return getCredentialsSecret((CredentialsInfo) em
-                    .getDictionaryElementValue(
-                            new SimpleEntityRef(type.getEntityType(), id),
-                            DICTIONARY_CREDENTIALS, "secret"));
+            UUID ownerId = AuthPrincipalType.APPLICATION_USER.equals(type) ? applicationId
+                    : MANAGEMENT_APPLICATION_ID;
+
+            return getCredentialsSecret(readUserToken(ownerId, id));
+
         } else if (AuthPrincipalType.ADMIN_USER.equals(type)
                 || AuthPrincipalType.APPLICATION_USER.equals(type)) {
-            return getCredentialsSecret((CredentialsInfo) em
-                    .getDictionaryElementValue(
-                            new SimpleEntityRef(type.getEntityType(), id),
-                            DICTIONARY_CREDENTIALS, "password"));
+            return getCredentialsSecret(readUserPasswordCredentials(applicationId, id));
         }
         throw new IllegalArgumentException(
                 "Must specify an admin user, organization or application principal");
@@ -1581,10 +1580,12 @@ public class ManagementServiceImpl implements ManagementService {
 
     public String newSecretKey(AuthPrincipalType type, UUID id)
             throws Exception {
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         String secret = generateOAuthSecretKey(type);
-        em.addToDictionary(new SimpleEntityRef(type.getEntityType(), id),
-                DICTIONARY_CREDENTIALS, "secret", plainTextCredentials(secret));
+
+        writeUserToken(MANAGEMENT_APPLICATION_ID,
+                new SimpleEntityRef(type.getEntityType(), id),
+                plainTextCredentials(secret));
+
         return secret;
     }
 
@@ -2370,9 +2371,9 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager(applicationId);
-        em.addToDictionary(new SimpleEntityRef(User.ENTITY_TYPE, userId),
-                DICTIONARY_CREDENTIALS, "password",
-                passwordCredentials(newPassword));
+        Entity owner = em.get(userId);
+        
+        writeUserPassword(applicationId, owner, passwordCredentials(newPassword));
     }
 
     @Override
@@ -2386,16 +2387,13 @@ public class ManagementServiceImpl implements ManagementService {
                     "oldpassword and newpassword are both required");
         }
 
-        EntityManager em = emf.getEntityManager(applicationId);
-        Entity user = em.get(userId);
         if (!checkPassword(oldPassword,
-                (CredentialsInfo) em.getDictionaryElementValue(user,
-                        DICTIONARY_CREDENTIALS, "password"))) {
+                readUserPasswordCredentials(applicationId, userId))) {
             logger.info("Old password doesn't match");
             throw new IncorrectPasswordException();
         }
-        em.addToDictionary(user, DICTIONARY_CREDENTIALS, "password",
-                passwordCredentials(newPassword));
+
+        setAppUserPassword(applicationId, userId, newPassword);
     }
 
     @Override
@@ -2407,12 +2405,8 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        EntityManager em = emf.getEntityManager(applicationId);
-
-        CredentialsInfo credentialsInfo = (CredentialsInfo) em
-                .getDictionaryElementValue(user, DICTIONARY_CREDENTIALS,
-                        "password");
-        if (checkPassword(password, credentialsInfo)) {
+        if (checkPassword(password,
+                readUserPasswordCredentials(applicationId, user.getUuid()))) {
             if (!user.activated()) {
                 throw new UnactivatedAdminUserException();
             }
@@ -2458,9 +2452,8 @@ public class ManagementServiceImpl implements ManagementService {
             return;
         }
 
-        EntityManager em = emf.getEntityManager(applicationId);
-        em.addToDictionary(new SimpleEntityRef(User.ENTITY_TYPE, userId),
-                DICTIONARY_CREDENTIALS, "pin", plainTextCredentials(newPin));
+        writeUserPin(applicationId, new SimpleEntityRef(User.ENTITY_TYPE,
+                userId), plainTextCredentials(newPin));
     }
 
     @Override
@@ -2474,14 +2467,14 @@ public class ManagementServiceImpl implements ManagementService {
         if (user.getEmail() == null) {
             return;
         }
-        String pin = getCredentialsSecret((CredentialsInfo) em
-                .getDictionaryElementValue(user, DICTIONARY_CREDENTIALS, "pin"));
+        String pin = getCredentialsSecret(readUserPin(applicationId, userId));
+
         sendHtmlMail(
                 properties,
                 user.getDisplayEmailAddress(),
                 properties.getProperty(PROPERTIES_MAILER_EMAIL),
                 "Your app pin",
-                appendEmailFooter(emailMsg(hashMap("pin", pin),
+                appendEmailFooter(emailMsg(hashMap(USER_PIN, pin),
                         PROPERTIES_EMAIL_USER_PIN_REQUEST)));
 
     }
@@ -2489,13 +2482,13 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public User verifyAppUserPinCredentials(UUID applicationId, String name,
             String pin) throws Exception {
-        EntityManager em = emf.getEntityManager(applicationId);
+
         User user = findUserEntity(applicationId, name);
         if (user == null) {
             return null;
         }
-        if (pin.equals(getCredentialsSecret((CredentialsInfo) em
-                .getDictionaryElementValue(user, DICTIONARY_CREDENTIALS, "pin")))) {
+        if (pin.equals(getCredentialsSecret(readUserPin(applicationId,
+                user.getUuid())))) {
             return user;
         }
         return null;
@@ -2691,6 +2684,109 @@ public class ManagementServiceImpl implements ManagementService {
         return user;
 
     }
+
+     
+      
+      /**
+       * Persist the user's password credentials info
+       * @param appId
+       * @param ownerId
+       * @param creds
+       * @throws Exception 
+       */
+      protected void writeUserPassword(UUID appId, EntityRef owner,CredentialsInfo creds) throws Exception{
+          writeCreds(appId, owner, creds, USER_PASSWORD);
+      }
+      
+      /**
+       * read the user password credential's info
+       * @param appId
+       * @param ownerId
+       * @return
+     * @throws Exception 
+       */
+      protected CredentialsInfo readUserPasswordCredentials(UUID appId, UUID ownerId) throws Exception{
+         return readCreds(appId, ownerId, USER_PASSWORD);
+      }
+      
+      /**
+       * Write the user's token
+       * @param appId
+       * @param ownerId
+       * @param token
+     * @throws Exception 
+       */
+      protected void writeUserToken(UUID appId, EntityRef owner, CredentialsInfo token) throws Exception{
+          writeCreds(appId, owner, token, USER_TOKEN);
+      }
+      
+      /**
+       * Read the credentials info for the user's token
+       * @param appId
+       * @param ownerId
+       * @return
+     * @throws Exception 
+       */
+      protected CredentialsInfo readUserToken(UUID appId, UUID ownerId) throws Exception{
+          return readCreds(appId, ownerId, USER_TOKEN);
+      }
+      
+      /**
+       * Write the mongo password
+       * @param appId
+       * @param ownerId
+       * @param password
+     * @throws Exception 
+       */
+      protected void writeUserMongoPassword(UUID appId, EntityRef owner, CredentialsInfo password) throws Exception{
+         writeCreds(appId, owner, password, USER_MONGO_PASSWORD);
+      }
+      
+      /**
+       * Read the mongo password
+       * @param appID
+       * @param ownerID
+       * @return
+     * @throws Exception 
+       */
+      protected CredentialsInfo readUserMongoPassword(UUID appId, UUID ownerId) throws Exception{
+          return readCreds(appId, ownerId, USER_MONGO_PASSWORD);
+      }
+      
+      /**
+       * Write the user's pin
+       * @param appId
+       * @param ownerId
+       * @param pin
+       * @throws Exception 
+       */
+      protected void writeUserPin(UUID appId, EntityRef owner, CredentialsInfo pin) throws Exception{
+          writeCreds(appId, owner, pin, USER_PIN);
+      }
+      
+      /**
+       * Read the user's pin
+       * @param appId
+       * @param ownerId
+       * @return
+     * @throws Exception 
+       */
+      protected CredentialsInfo readUserPin(UUID appId, UUID ownerId) throws Exception{
+          return readCreds(appId, ownerId, USER_PIN);
+      }
+      
+      private void writeCreds(UUID appId, EntityRef owner, CredentialsInfo creds, String key) throws Exception{
+          EntityManager em = emf.getEntityManager(appId);
+          em.addToDictionary(owner, DICTIONARY_CREDENTIALS, key, creds);
+          
+      }
+      
+      private CredentialsInfo readCreds(UUID appId, UUID ownerId, String key) throws Exception{
+          EntityManager em = emf.getEntityManager(appId);
+          Entity owner = em.get(ownerId);
+          return (CredentialsInfo) em.getDictionaryElementValue(owner, DICTIONARY_CREDENTIALS, key);
+      }
+
 
     public boolean newAdminUsersNeedSysAdminApproval() {
         return properties.newAdminUsersNeedSysAdminApproval();

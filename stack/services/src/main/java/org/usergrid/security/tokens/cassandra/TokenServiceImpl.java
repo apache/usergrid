@@ -37,6 +37,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 
 import org.mortbay.log.Log;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
@@ -166,6 +167,7 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Autowired
+	@Qualifier("cassandraService")
 	public void setCassandraService(CassandraService cassandra) {
 		this.cassandra = cassandra;
 	}
