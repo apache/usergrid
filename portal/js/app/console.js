@@ -2560,7 +2560,7 @@ function apigee_console_app(Pages, query_params) {
   window.apigee.console.pageSelectRoleGroups = pageSelectRoleGroups;
 
   var permissions = {};
-  function displayPermissions(response) {
+  function displayPermissions(response, curl) {
     var section = $('#role-permissions');
     section.empty();
 
@@ -2595,7 +2595,7 @@ function apigee_console_app(Pages, query_params) {
     } else {
       section.html('<div class="alert">No permission information retrieved.</div>');
     }
-
+	showCurlCommand('role-permissions', curl);
     displayRoleInactivity();
   }
 
@@ -2613,7 +2613,7 @@ function apigee_console_app(Pages, query_params) {
 
   var rolesUsersResults = ''
   
-  function displayRolesUsers(response) {
+  function displayRolesUsers(response, curl) {
     $('#role-users').html('');
     data = {};
     data.roleId = current_role_id;
@@ -2623,17 +2623,19 @@ function apigee_console_app(Pages, query_params) {
     }
     $.tmpl('apigee.ui.panels.role.users.html', {"data" : data}, {}).appendTo('#role-users');
     updateUsersForRolesAutocomplete();
+    showCurlCommand('role-users', curl);
   }
 //TODO: MARKED FOr REfactoring
   var rolesGroupsResults = ''
   
-  function displayRoleGroups(response) {
+  function displayRoleGroups(response, curl) {
     $('#role-groups').html('');
     data = {};
     data.roleId = current_role_id;
     data.rolename = current_role_name;
     $.tmpl('apigee.ui.role.groups.table_rows.html', response.entities, {}).appendTo('#role-groups');
     updateGroupsForRolesAutocomplete();
+    showCurlCommand('role-groups', curl);
   }
 
   function selectAllRolesUsers(){
@@ -2657,22 +2659,22 @@ function apigee_console_app(Pages, query_params) {
     //requestApplicationRoles
     runAppQuery(new apigee.Query("GET",'rolenames', null, null,
       function(response) {
-        getRolesCallback(response);
+        //getRolesCallback(response);
         $('#role-section-title').html(current_role_name + " Role");
         $('#role-permissions').html('<div class="alert alert-info">Loading ' + current_role_name + ' permissions...</div>');
         //requestApplicationRolePermissions
         runAppQuery(new apigee.Query("GET", "rolenames/" + current_role_name, null, null,
-          function(response) { displayPermissions(response); },
+          function(response) { displayPermissions(response, this.getCurl()); },
           function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
         ));
         //requestApplicationRoleUsers
         runAppQuery(new apigee.Query("GET", "roles/" + current_role_id + "/users", null, null,
-          function(response) { displayRolesUsers(response); },
+          function(response) { displayRolesUsers(response, this.getCurl()); },
           function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
         ));
         //requestGroupRoles
         runAppQuery(new apigee.Query("GET", "roles/" + current_role_id + "/groups", null, null,
-            function(response) { displayRoleGroups(response); },
+            function(response) { displayRoleGroups(response, this.getCurl()); },
             function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
           ));
       },
