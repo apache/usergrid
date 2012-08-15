@@ -1595,12 +1595,14 @@ function apigee_console_app(Pages, query_params) {
   		curlData: curl,
   		sectionName: section,
   	};
+  	//TODO: remove DEBUG
+  	
+  	console.log("CURL: "+curl);
   	var sectionId = $('#'+section+'-curl-container');
   	sectionId.html("");
   	$.tmpl('apigee.ui.curl.detail.html', data).appendTo(sectionId);
    	sectionId.show();
     $('#'+section+'-curl-token').show();
-    //CLIPPY
     $('#'+section+'-clippy-btn').attachClippy({dataId: $('#'+section+'-curl')});  
   }
 
@@ -1940,8 +1942,12 @@ function apigee_console_app(Pages, query_params) {
 	  	metadata: metadata,
 	  	uri: (entity.metadata || { }).uri,
 	  	curl: this.getCurl(),
+	  	followingCurl: "",
+	  	followersCurl: "",
+	  	rolesCurl: "",
+	  	permissionsCurl: "",
 	  }
-	  
+	  	  
 	  redrawUserProfile(data);
 		//TODO: This block and the subsequent blocks could all be methods of their own
       runAppQuery(new apigee.Query("GET", 'users/' + entity.uuid + '/groups', null, null,
@@ -1965,11 +1971,12 @@ function apigee_console_app(Pages, query_params) {
               $(this).html(created);
             });
           }
+          redrawUserActivities(data);
         },
-        function() { alertModal("Error", "Unable to retrieve user's activities."); }
+        function() { alertModal("Error", "Unable to retrieve user's activities.");}
       ));
       
-      redrawUserActivities(data);
+      
 
       runAppQuery(new apigee.Query("GET", 'users/' + entity.uuid + '/roles', null, null,
         function(response) {
@@ -1979,83 +1986,80 @@ function apigee_console_app(Pages, query_params) {
           } else {
             data.roles = null;
           }
+          //Run Permissions query after roles query has been handled
+	      runAppQuery(new apigee.Query("GET", 'users/' + entity.uuid + '/permissions', null, null,
+	        function(response) {
+	          data.permissionsCurl = this.getCurl();
+	          var permissions = {};
+	          if (data && response.data && (response.data.length > 0)) {
+	
+	            if (response.data) {
+	              var perms = response.data;
+	              var count = 0;
+	
+	              for (var i in perms) {
+	                count++;
+	                var perm = perms[i];
+	                var parts = perm.split(':');
+	                var ops_part = "";
+	                var path_part = parts[0];
+	
+	                if (parts.length > 1) {
+	                  ops_part = parts[0];
+	                  path_part = parts[1];
+	                }
+	
+	                ops_part.replace("*", "get,post,put,delete")
+	                  var ops = ops_part.split(',');
+	                permissions[perm] = {ops : {}, path : path_part, perm : perm};
+	
+	                for (var j in ops) {
+	                  permissions[perm].ops[ops[j]] = true;
+	                }
+	              }
+	
+	              if (count == 0) {
+	                permissions = null;
+	              }
+	              data.permissions = permissions;      
+	            }            
+	          }
+	          redrawUserPermissions(data);
+	        },
+	        function() { alertModal("Error", "Unable to retrieve user's permissions.");
+	
+	        data.permissionsCurl = this.getCurl();
+	        redrawUserPermissions(data); }
+	      ));
         },
         function() { alertModal("Error", "Unable to retrieve user's roles.");
+
         data.rolesCurl = this.getCurl(); }
       ));
 
-      runAppQuery(new apigee.Query("GET", 'users/' + entity.uuid + '/permissions', null, null,
-        function(response) {
-          data.permissionsCurl = this.getCurl();
-          var permissions = {};
-          if (data && response.data && (response.data.length > 0)) {
-
-            if (response.data) {
-              var perms = response.data;
-              var count = 0;
-
-              for (var i in perms) {
-                count++;
-                var perm = perms[i];
-                var parts = perm.split(':');
-                var ops_part = "";
-                var path_part = parts[0];
-
-                if (parts.length > 1) {
-                  ops_part = parts[0];
-                  path_part = parts[1];
-                }
-
-                ops_part.replace("*", "get,post,put,delete")
-                  var ops = ops_part.split(',');
-                permissions[perm] = {ops : {}, path : path_part, perm : perm};
-
-                for (var j in ops) {
-                  permissions[perm].ops[ops[j]] = true;
-                }
-              }
-
-              if (count == 0) {
-                permissions = null;
-              }
-              data.permissions = permissions;      
-            }            
-          }
-          redrawUserPermissions(data);
-        },
-        function() { alertModal("Error", "Unable to retrieve user's permissions.");
-        data.permissionsCurl = this.getCurl();
-        redrawUserPermissions(data); }
-      ));
-      
-      
-      
-	//TODO: Following and followers go together in /graphs
-      runAppQuery(new apigee.Query("GET", 'users/' + entity.uuid + '/following', null, null,
-        function(response) {
-          data.followingCurl = this.getCurl();
-          if (data && response.entities && (response.entities.length > 0)) {
-            data.following = response.entities;            
-          }
+      	runAppQuery(new apigee.Query("GET", 'users/' + entity.uuid + '/following', null, null,
+	        function(response) {    
+	          data.followingCurl = this.getCurl();
+	          if (data && response.entities && (response.entities.length > 0)) {
+	            data.following = response.entities;            
+	          }
+	          //Requests /Followers after the /following response has been handled.
+	          runAppQuery(new apigee.Query("GET", 'users/' + entity.uuid + '/followers', null, null,
+		        function(response) {
+		          data.followersCurl = this.getCurl();
+		          if (data && response.entities && (response.entities.length > 0)) {
+		            data.followers = response.entities;		                      
+		          }
+		          redrawUserGraph(data);	          
+		        },
+		        function() { alertModal("Error", "Unable to retrieve user's followers.");
+			        data.followersCurl = this.getCurl();
+		        }
+	      	));
         },
         function() { alertModal("Error", "Unable to retrieve user's following.");
-        data.followingCurl = this.getCurl(); }
-      ));
-      runAppQuery(new apigee.Query("GET", 'users/' + entity.uuid + '/followers', null, null,
-        function(response) {
-          data.followersCurl = this.getCurl();
-          if (data && response.entities && (response.entities.length > 0)) {
-            data.followers = response.entities;
-                       
-          }
-          redrawUserGraph(data); 
-        },
-        function() { alertModal("Error", "Unable to retrieve user's followers.");
-        data.followingCurl = this.getCurl();
-        redrawUserGraph(data); }
-      ));
-      
-    
+        	data.followingCurl = this.getCurl();
+        }));    
     }    
   };
 
@@ -2514,7 +2518,7 @@ function apigee_console_app(Pages, query_params) {
       }
     }
     showPagination('roles');
-    showCurlCommand('roles', queryObj.getCurl(), queryObj.getToken());
+    showCurlCommand('roles', this.getCurl(), this.getToken());
   }
 
   $('#delete-roles-link').click(deleteRoles);
@@ -2580,7 +2584,7 @@ function apigee_console_app(Pages, query_params) {
   window.apigee.console.pageSelectRoleGroups = pageSelectRoleGroups;
 
   var permissions = {};
-  function displayPermissions(response) {
+  function displayPermissions(response, curl) {
     var section = $('#role-permissions');
     section.empty();
 
@@ -2615,7 +2619,7 @@ function apigee_console_app(Pages, query_params) {
     } else {
       section.html('<div class="alert">No permission information retrieved.</div>');
     }
-
+	showCurlCommand('role-permissions', curl);
     displayRoleInactivity();
   }
 
@@ -2629,9 +2633,11 @@ function apigee_console_app(Pages, query_params) {
         function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
     ));
   }
+//TODO: MARKED FOr REfactoring
 
   var rolesUsersResults = ''
-  function displayRolesUsers(response) {
+  
+  function displayRolesUsers(response, curl) {
     $('#role-users').html('');
     data = {};
     data.roleId = current_role_id;
@@ -2641,16 +2647,19 @@ function apigee_console_app(Pages, query_params) {
     }
     $.tmpl('apigee.ui.panels.role.users.html', {"data" : data}, {}).appendTo('#role-users');
     updateUsersForRolesAutocomplete();
+    showCurlCommand('role-users', curl);
   }
-
+//TODO: MARKED FOr REfactoring
   var rolesGroupsResults = ''
-  function displayRoleGroups(response) {
+  
+  function displayRoleGroups(response, curl) {
     $('#role-groups').html('');
     data = {};
     data.roleId = current_role_id;
     data.rolename = current_role_name;
     $.tmpl('apigee.ui.role.groups.table_rows.html', response.entities, {}).appendTo('#role-groups');
     updateGroupsForRolesAutocomplete();
+    showCurlCommand('role-groups', curl);
   }
 
   function selectAllRolesUsers(){
@@ -2674,22 +2683,22 @@ function apigee_console_app(Pages, query_params) {
     //requestApplicationRoles
     runAppQuery(new apigee.Query("GET",'rolenames', null, null,
       function(response) {
-        getRolesCallback(response);
+        //getRolesCallback(response);
         $('#role-section-title').html(current_role_name + " Role");
         $('#role-permissions').html('<div class="alert alert-info">Loading ' + current_role_name + ' permissions...</div>');
         //requestApplicationRolePermissions
         runAppQuery(new apigee.Query("GET", "rolenames/" + current_role_name, null, null,
-          function(response) { displayPermissions(response); },
+          function(response) { displayPermissions(response, this.getCurl()); },
           function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
         ));
         //requestApplicationRoleUsers
         runAppQuery(new apigee.Query("GET", "roles/" + current_role_id + "/users", null, null,
-          function(response) { displayRolesUsers(response); },
+          function(response) { displayRolesUsers(response, this.getCurl()); },
           function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
         ));
         //requestGroupRoles
         runAppQuery(new apigee.Query("GET", "roles/" + current_role_id + "/groups", null, null,
-            function(response) { displayRoleGroups(response); },
+            function(response) { displayRoleGroups(response, this.getCurl()); },
             function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
           ));
       },

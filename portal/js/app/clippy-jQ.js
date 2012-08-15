@@ -18,8 +18,7 @@
 			$(this).mouseover(function(){
 				var offset = $(this).offset();
 				options.clippyContainerId.css({
-					//TODO: 1 is the offset FF is adding to the body, Chrome doesnt need this.
-					left: Math.round(offset.left)-1,
+					left: Math.round(offset.left),
 					top: Math.round(offset.top),
 				});
 				//Set Data to be copied by clippy

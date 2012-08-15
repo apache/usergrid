@@ -2,9 +2,9 @@
 <movie version="8" width="14" height="14" framerate="0">
   <frame>
     <library>
-      <clip id="button_up" import="assets/button_up.png"/>
-      <clip id="button_over" import="assets/button_over.png"/>
-      <clip id="button_down" import="assets/button_down.png"/>
+      <clip id="ButtonUp" import="assets/btn-copyCurl-dn.png"/>
+      <clip id="ButtonOver" import="assets/btn-copyCurl-hover.png"/>
+      <clip id="ButtonDown" import="assets/btn-copyCurl-up.png"/>
     </library>
   </frame>
 </movie>
