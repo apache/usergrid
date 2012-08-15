@@ -243,12 +243,28 @@ function apigee_console_app(Pages, query_params) {
       alertModal("Error", "There is a problem with your JSON.");
       return false;
     }
-    //make a new query object
-    queryObj = new apigee.Query(method, path, data, params, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
-    //store the query object on the stack
-    pushQuery(queryObj);
-    //then run the query
-    runAppQuery(queryObj);
+    var run = true;
+    if(method.toUpperCase() == 'PUT' && !apigee.validation.isUUID( path.split("/").pop())) {
+      run = false;
+      confirmAction("Warning!",
+        "You are attempting to run a PUT (update) command, but it appears that you have not given a specific entity to act on.  This action may update all entities in this colleciton.  Are you sure you want to proceed?",
+        function() {
+          //make a new query object
+          queryObj = new apigee.Query(method, path, data, params, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
+          //store the query object on the stack
+          pushQuery(queryObj);
+          //then run the query
+          runAppQuery(queryObj);
+        }
+      );
+    } else {
+      //make a new query object
+      queryObj = new apigee.Query(method, path, data, params, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
+      //store the query object on the stack
+      pushQuery(queryObj);
+      //then run the query
+      runAppQuery(queryObj);
+    }
   }
 
 
@@ -294,6 +310,8 @@ function apigee_console_app(Pages, query_params) {
         if ($.isEmptyObject(entity_path)) {
           entity_path = path + "/" + entity.uuid;
         }
+        
+        $("#query-path").val(entity_path);
 
         t = '<div class="query-result-row entity_detail" id="query-result-detail" data-entity-type="'
           + entity.type
