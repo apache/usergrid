@@ -243,9 +243,7 @@ function apigee_console_app(Pages, query_params) {
       alertModal("Error", "There is a problem with your JSON.");
       return false;
     }
-    var run = true;
     if(method.toUpperCase() == 'PUT' && !apigee.validation.isUUID( path.split("/").pop())) {
-      run = false;
       confirmAction("Warning!",
         "You are attempting to run a PUT (update) command, but it appears that you have not given a specific entity to act on.  This action may update all entities in this colleciton.  Are you sure you want to proceed?",
         function() {
