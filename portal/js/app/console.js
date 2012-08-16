@@ -342,7 +342,7 @@ function apigee_console_app(Pages, query_params) {
     //set the path in the query explorer
     $("#query-path").val(lastQuery.getPath());
     //get the ql and set it in the query explorer
-    var params = lastQuery.getParams();
+    var params = lastQuery.getQueryParams();
     $("#query-ql").val(params.ql);
     //delete the ql from the json obj -it will be restored later when the query is run in getCollection()
     var jsonObj = lastQuery.getJsonObj();
