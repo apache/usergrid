@@ -77,10 +77,39 @@ A custom query allows you to tell the API you want your results filtered / alter
 ###Collection Paging
 An easy way to move through your result set is to use paging.  The Collection object provides a facility for this via the Query Object.
 
-
 #The User Object
 
-
+ <pre>
+ *  //first create a new user:
+ *  var marty = new User("fred"); //<==argument is username)
+ *  //next add more data if needed:
+ *  marty.setName("Marty McFly");
+ *  marty.setField("City", "Hill Valley");
+ *  marty.setField("State", "California");
+ *  //finally, create the user in the database:
+ *  marty.create();
+ *  //if the user is updated:
+ *  marty.setField("girlfriend","Jennifer");
+ *  //call save on the user:
+ *  marty.save();
+ *
+ *  To refresh the user's info from the database:
+ *  marty.get();
+ *
+ *  //to get properties from the user object:
+ *  var city = marty.getField("city");
+ *
+ *  If you don't need the object anymore, simply call the destroy
+ *  method and it will be deleted from database:
+ *
+ *  marty.delete();
+ *
+ *  //the object is now deleted from the database, although it remains
+ *  //in your program.  Destroy it if needed by calling:
+ *
+ *  marty = null;
+ *
+ *  </pre>
 
 #Direct API calls
 For most purposes, some combination of Entity and Collection will likely suffice.  However, there are times when one must make a direct call to the API.  The following sections describe how to do this against the Application endpoint as well as the Management endpoint.
@@ -88,7 +117,39 @@ For most purposes, some combination of Entity and Collection will likely suffice
 ##The Query object
 The Query object is a container for the information 
 
-
+ The goal of the query object is to make it easy to run any
+ *  kind of CRUD call against the API.  This is done as follows:
+ *
+ *  1. Create a query object:
+ *     Query = new Usergrid.Query("GET", "users", null, function() { alert("success"); }, function() { alert("failure"); });
+ *
+ *  2. Run the query by calling the appropriate endpoint call
+ *     runAppQuery(Query);
+ *     or
+ *     runManagementQuery(Query);
+ *
+ *  3. Paging - The Usergrid.Query holds the cursor information.  To
+ *     use, simply bind click events to functions that call the
+ *     getNext and getPrevious methods of the query object.  This
+ *     will set the cursor correctly, and the runAppQuery method
+ *     can be called again using the same Usergrid.Query:
+ *     runAppQuery(Query);
+ *
+ *  @class Usergrid.Query
+ *  @param method REQUIRED - GET, POST, PUT, DELETE
+ *  @param path REQUIRED - API resource (e.g. "users" or "users/rod", should not include http URL or org_name/app_name)
+ *  @param jsonObj NULLABLE - a json data object to be passed to the API
+ *  @param params NULLABLE - query parameters to be encoded and added to the API URL
+ *  @param {Function} successCallback function called with response: <pre>
+ *  {
+ *    alert('Hurray! Everything worked.');
+ *  }
+ *  @param {Function} failureCallback function called with response if available: <pre>
+ *  {
+ *    alert('An error occured');
+ *  }
+ *  </pre>
+ *
 
 ##The ApiClient singleton
 
