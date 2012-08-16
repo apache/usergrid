@@ -27,7 +27,7 @@ function loginWithCredentials(calledFunction){
      	username: credentials.login,
      	password: credentials.password
    	 	};   		
-		apiClient.runManagementQuery(new apigee.QueryObj('GET', 'token', null, formdata, 
+		apiClient.runManagementQuery(new Usergrid.Query('GET', 'token', null, formdata,
 		//Success callback
 		function(data){		
 			if(data){
@@ -41,7 +41,7 @@ function deleteUser(uuid){
 		apiClient.setToken(token)
 		apiClient.setOrganizationName(mockOrg.UUID);
 		apiClient.setApplicationName(mockOrg.mockApp.UUID);
-		apiClient.runAppQuery(new apigee.QueryObj("DELETE", 'users/' + uuid, null, null));
+		apiClient.runAppQuery(new Usergrid.Query("DELETE", 'users/' + uuid, null, null));
 		console.log("CLEANUP: DELETED USER UUID: " + uuid);		
 	});
 };
@@ -54,7 +54,7 @@ function createUser(){
 		APIClient.setToken();		
 		apiClient.setOrganizationName(mockOrg.UUID);
 		apiClient.setApplicationName(mockOrg.mockApp.UUID);	
-		apiClient.runAppQuery(new apigee.QueryObj("POST", 'users', data, null,
+		apiClient.runAppQuery(new Usergrid.Query("POST", 'users', data, null,
 		function(data){
 			console.log(data.entities[0].uuid);
 			credentials.UUID = data.entities[0].uuid;
@@ -138,7 +138,7 @@ function defaultError(xhr, status, error) {
 module("login", {
 	setup:function(){		
 		initCore();
-		apigee.userSession.clearAll();		
+		Usergrid.userSession.clearAll();
 	},//FIN SETUP
 	teardown:function(){
 		 cleanFixture();
@@ -157,7 +157,7 @@ asyncTest("login with Token", function(){
 	expect(1);	
 	loginWithCredentials(function(token){				
 		apiClient.setToken(token);
-		apiClient.runManagementQuery(new apigee.QueryObj("GET","users/" + credentials.login, null, null, defaultSuccess, defaultError));		
+		apiClient.runManagementQuery(new Usergrid.Query("GET","users/" + credentials.login, null, null, defaultSuccess, defaultError));
 	});
 });
 
@@ -174,7 +174,7 @@ asyncTest("Fetching Apps from Org: " + mockOrg.name + " GET", function(){
 	expect(1);
 	loginWithCredentials(function(token){
 		apiClient.setToken(token);	
-		apiClient.runManagementQuery(new apigee.QueryObj("GET", "organizations/" + mockOrg.UUID + "/applications", null, null, defaultSuccess, defaultError));
+		apiClient.runManagementQuery(new Usergrid.Query("GET", "organizations/" + mockOrg.UUID + "/applications", null, null, defaultSuccess, defaultError));
 	});
 });
 
@@ -184,7 +184,7 @@ asyncTest("Requesting User ID : " + mockUser.UUID + " GET", function(){
 		apiClient.setToken(token);		
 		apiClient.setOrganizationName(mockOrg.UUID);
 		apiClient.setApplicationName(mockOrg.mockApp.UUID);	
-		apiClient.runAppQuery(new apigee.QueryObj("GET", 'users/'+ mockUser.UUID, null, null, defaultSuccess, defaultError));
+		apiClient.runAppQuery(new Usergrid.Query("GET", 'users/'+ mockUser.UUID, null, null, defaultSuccess, defaultError));
 	});
 });
 
@@ -203,7 +203,7 @@ asyncTest("Add new User : " + mockUser.username + " POST", function(){
 		var data = getMockUserData();
 		apiClient.setOrganizationName(mockOrg.UUID);
 		apiClient.setApplicationName(mockOrg.mockApp.UUID);	
-		apiClient.runAppQuery(new apigee.QueryObj("POST", 'users', data, null, userCreateSuccess, defaultError));
+		apiClient.runAppQuery(new Usergrid.Query("POST", 'users', data, null, userCreateSuccess, defaultError));
 });
 
 module("DELETE Methods", {
@@ -222,11 +222,11 @@ asyncTest("Delete User : " + mockUser.username + " DELETE", function(){
 		var data = getMockUserData();
 		apiClient.setOrganizationName(mockOrg.UUID);
 		apiClient.setApplicationName(mockOrg.mockApp.UUID);
-		apiClient.runAppQuery(new apigee.QueryObj("POST", 'users', data, null,
+		apiClient.runAppQuery(new Usergrid.Query("POST", 'users', data, null,
 		function(data){
 			console.log(data.entities[0].uuid);
 			var uuid= data.entities[0].uuid;
-			apiClient.runAppQuery(new apigee.QueryObj("DELETE", 'users/' + uuid, null, null, defaultSuccess, defaultError));
+			apiClient.runAppQuery(new Usergrid.Query("DELETE", 'users/' + uuid, null, null, defaultSuccess, defaultError));
 		}));			
 		
 	});
@@ -248,7 +248,7 @@ asyncTest("Update AccountUser : " + mockUser.username + " PUT", function(){
 		password: credentials.password,
 		email:	credentials.userName,
 	};
-	apiClient.runManagementQuery(new apigee.QueryObj("PUT",'users/' + credentialsUUID, userData, null, userCreateSuccess, defaultError));
+	apiClient.runManagementQuery(new Usergrid.Query("PUT",'users/' + credentialsUUID, userData, null, userCreateSuccess, defaultError));
 });
 
 

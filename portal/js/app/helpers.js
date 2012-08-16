@@ -197,9 +197,9 @@ function parseParams() {
   }
 
   if (query_params.access_token && query_params.admin_email && query_params.uuid) {
-    apigee.userSession.setAccessToken(query_params.access_token);
-    apigee.userSession.setUserEmail(query_params.admin_email);
-    apigee.userSession.setUserUUID(query_params.uuid);
+    Usergrid.userSession.setAccessToken(query_params.access_token);
+    Usergrid.userSession.setUserEmail(query_params.admin_email);
+    Usergrid.userSession.setUserUUID(query_params.uuid);
     //then send the user to the parent
     var new_target = window.location.host + window.location.pathname;
 

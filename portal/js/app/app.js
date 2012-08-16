@@ -1,7 +1,7 @@
 
 
-apigee.userSession = new apigee.UserSession();
-apigee.organizations = new apigee.Organization();
+Usergrid.userSession = new Usergrid.userSession();
+Usergrid.organizations = new Usergrid.Organization();
 
 var Pages = new ApigeePages();
 
@@ -24,7 +24,7 @@ $(document).ready(function () {
   }
 
   function startApp() {
-    if (!apigee.userSession.loggedIn()) {
+    if (!Usergrid.userSession.loggedIn()) {
       // test to see if the Portal is running on apigee, if so, send to SSO, if not, fall through to login screen
       if ( Usergrid.console.useSSO() ){
         Pages.clearPage();

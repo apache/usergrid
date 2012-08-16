@@ -1,4 +1,4 @@
-window.apigee = window.apigee || {};
+window.Usergrid = window.Usergrid || {};
 Usergrid.console = Usergrid.console || {};
 Usergrid.console.ui = Usergrid.console.ui || { };
 Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };

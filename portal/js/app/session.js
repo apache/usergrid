@@ -1,6 +1,6 @@
 
-window.apigee = window.apigee || {};
-apigee = apigee || {};
+window.Usergrid = window.Usergrid || {};
+Usergrid = Usergrid || {};
 
 (function() {
   /**
@@ -10,11 +10,11 @@ apigee = apigee || {};
    *  @param {string} name the name of the application
    *  @param {string} uuid the uuid of the application
    */
-  apigee.Application = function(name, uuid) {
+  Usergrid.Application = function(name, uuid) {
     this._name = name;
     this._uuid = uuid;
   };
-  apigee.Application.prototype = {
+  Usergrid.Application.prototype = {
     getName: function() { 
       return this._name;
     },
@@ -42,13 +42,13 @@ apigee = apigee || {};
    *  @param {string} organization's uuid
    *  @param {string} list organization's applications
    */
-  apigee.Organization = function(name, uuid) {
+  Usergrid.Organization = function(name, uuid) {
     this._name = name;
     this._uuid = uuid;
     this._list = [];
   };
 
-  apigee.Organization.prototype = {
+  Usergrid.Organization.prototype = {
     getName: function() {
       return this._name;
     },
@@ -112,9 +112,9 @@ apigee = apigee || {};
     *  Standardized methods for mantianing user and authentication state in the Application
     *  @class UserSession
     */
-  apigee.UserSession = function(){};
+  Usergrid.userSession = function(){};
         
-  apigee.UserSession.prototype = {  	
+  Usergrid.userSession.prototype = {
     //access token access and setter methods
     getAccessToken: function() {
       var accessToken = localStorage.getItem('accessToken');
@@ -158,4 +158,4 @@ apigee = apigee || {};
       localStorage.removeItem('accessToken');
     }
   };
-})(apigee);
+})(Usergrid);

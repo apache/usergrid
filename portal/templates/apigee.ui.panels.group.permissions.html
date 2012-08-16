@@ -23,11 +23,13 @@
           </td>
         </tr>
         {{/each}}
-      </table>
+      </table>      
       {{/if}}
       {{else}}
       <div class="group-panel-section-message">No Roles</div>
       {{/if}}
+      <div id="group-panel-roles-curl-container" class="curl-container">
+	  </div>      
       <br/>
       <div class="user-roles-title">Permissions </div>
       <h4>Add Permission Rule</h4>
@@ -79,6 +81,8 @@
       {{else}}
       <div class="alert">No Permissions</div>
       {{/if}}
+      <div id="group-panel-permissions-curl-container" class="curl-container">
+	  </div>
     </div>
   </div>
 </div>
