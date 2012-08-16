@@ -72,12 +72,13 @@ public class RoleTest {
 
 		OrganizationOwnerInfo ooi = management.createOwnerAndOrganization(
 				"ed-organization", "edanuff", "Ed Anuff", "ed@anuff.com",
-				"test", true, false, false);
+				"test", true, false);
 
 		OrganizationInfo organization = ooi.getOrganization();
 
 		UUID applicationId = management.createApplication(
-				organization.getUuid(), "test-app");
+				organization.getUuid(), "test-app")
+            .getId();
 		EntityManager em = emf.getEntityManager(applicationId);
 
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();

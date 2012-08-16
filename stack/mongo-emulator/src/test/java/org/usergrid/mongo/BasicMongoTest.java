@@ -1,15 +1,14 @@
 package org.usergrid.mongo;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Test;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityManager;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -20,19 +19,21 @@ import com.mongodb.Mongo;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 
-//public class BasicMongoTest extends AbstractMongoTest {
-    public class BasicMongoTest {
+public class BasicMongoTest extends AbstractMongoTest {
+//    public class BasicMongoTest {
 
     @Test
     public void insertTest() throws Exception {
         Mongo m = new Mongo("localhost", 27017);
         m.setWriteConcern(WriteConcern.SAFE);
 
-//        DB db = m.getDB("test-organization/test-app");
-//        db.authenticate("test@usergrid.com", "test".toCharArray());
-        
-        DB db = m.getDB("testapp");
+        DB db = m.getDB("test-organization/test-app");
         db.authenticate("test", "test".toCharArray());
+
+        
+        
+//        DB db = m.getDB("testapp");
+//        db.authenticate("test", "test".toCharArray());
 
         BasicDBObject doc = new BasicDBObject();
 

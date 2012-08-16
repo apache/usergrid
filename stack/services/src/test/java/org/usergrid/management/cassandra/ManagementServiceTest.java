@@ -1,27 +1,26 @@
 package org.usergrid.management.cassandra;
 
+import static java.lang.Boolean.parseBoolean;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.usergrid.management.AccountCreationProps.*;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.management.ManagementTestHelper;
-import org.usergrid.management.OrganizationInfo;
-import org.usergrid.management.UserInfo;
+import org.usergrid.management.*;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.utils.JsonUtils;
+
+import javax.mail.Message;
 
 /**
  * @author zznate
@@ -40,19 +39,19 @@ public class ManagementServiceTest {
 		log.info("in setup");
 		assertNull(helper);
 		helper = new ManagementTestHelperImpl();
-		helper.setup();
-		managementService = (ManagementServiceImpl) helper
-				.getManagementService();
+    helper.setup();
+    managementService = (ManagementServiceImpl) helper.getManagementService();
 		setupLocal();
 	}
 
 	public static void setupLocal() throws Exception {
 		adminUser = managementService.createAdminUser("edanuff", "Ed Anuff",
-				"ed@anuff.com", "test", false, false, false);
+				"ed@anuff.com", "test", false, false);
 		organization = managementService.createOrganization("ed-organization",
-				adminUser, true, false);
+				adminUser, true);
 		applicationId = managementService.createApplication(
-				organization.getUuid(), "ed-application");
+				organization.getUuid(), "ed-application")
+            .getId();
 	}
 
 	@AfterClass
@@ -85,7 +84,7 @@ public class ManagementServiceTest {
 
 	@Test
 	public void testGetTokenForPrincipalUser() throws Exception {
-		// create a user
+    // create a user
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
 		properties.put("username", "edanuff");
 		properties.put("email", "ed@anuff.com");
@@ -102,7 +101,7 @@ public class ManagementServiceTest {
 
 	@Test
 	public void testCountAdminUserAction() throws Exception {
-		managementService.countAdminUserAction(adminUser, "login");
+    managementService.countAdminUserAction(adminUser, "login");
 
 		EntityManager em = helper.getEntityManagerFactory().getEntityManager(
 				MANAGEMENT_APPLICATION_ID);

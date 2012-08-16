@@ -34,6 +34,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import com.google.common.base.Preconditions;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationInfo;
@@ -84,23 +85,8 @@ public class ApplicationsResource extends AbstractContextResource {
 			Map<String, Object> json,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
-
 		String applicationName = (String) json.get("name");
-		if (isEmpty(applicationName)) {
-			return null;
-		}
-
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("new application for organization");
-    // TODO change to organizationName/applicationName
-		UUID applicationId = management.createApplication(
-				organization.getUuid(), applicationName);
-
-		LinkedHashMap<String, UUID> applications = new LinkedHashMap<String, UUID>();
-		applications.put(applicationName, applicationId);
-		response.setData(applications);
-
-		return new JSONWithPadding(response, callback);
+		return newApplicationForOrganizationFromForm(ui, json, callback, applicationName);
 	}
 
 	@RequireOrganizationAccess
@@ -111,18 +97,17 @@ public class ApplicationsResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback,
 			@FormParam("name") String applicationName) throws Exception {
 
-		if (isEmpty(applicationName)) {
-			return null;
-		}
+    Preconditions.checkArgument(!isEmpty(applicationName),
+            "The 'name' parameter is required and cannot be empty: " + applicationName);
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("new application for organization");
-    // TODO change to organizationName/applicationName
-		UUID applicationId = management.createApplication(
+
+		ApplicationInfo applicationInfo = management.createApplication(
 				organization.getUuid(), applicationName);
 
 		LinkedHashMap<String, UUID> applications = new LinkedHashMap<String, UUID>();
-		applications.put(applicationName, applicationId);
+		applications.put(applicationInfo.getName(), applicationInfo.getId());
 		response.setData(applications);
 
 		return new JSONWithPadding(response, callback);
