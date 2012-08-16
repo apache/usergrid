@@ -26,21 +26,21 @@ $(document).ready(function () {
   function startApp() {
     if (!apigee.userSession.loggedIn()) {
       // test to see if the Portal is running on apigee, if so, send to SSO, if not, fall through to login screen
-      if ( apigee.console.useSSO() ){
+      if ( Usergrid.console.useSSO() ){
         Pages.clearPage();
-        apigee.console.sendToSSOLoginPage();
+        Usergrid.console.sendToSSOLoginPage();
       } else if (query_params.goto_signup) {
         Pages.ShowPage("signup");
       } else {
-        apigee.console.showLoginForNonSSO();
+        Usergrid.console.showLoginForNonSSO();
       }
     } else {
-      apigee.console.autoLogin(
+      Usergrid.console.autoLogin(
         function() {
-          apigee.console.loginOk();
+          Usergrid.console.loginOk();
         },
         function() {
-          apigee.console.logout();
+          Usergrid.console.logout();
         }
       );
     }
@@ -50,7 +50,7 @@ $(document).ready(function () {
   function initMenu() {
     $('.navbar .dropdown-toggle').dropdown();
     $('#sidebar-menu .dropdown-toggle').dropdown();
-    $('#logout-link').click(apigee.console.logout);
+    $('#logout-link').click(Usergrid.console.logout);
     $('#hideBanner').click(Pages.hideBanner);
 
     var publicMenu = $('#publicMenu');
@@ -61,7 +61,7 @@ $(document).ready(function () {
     Pages.AddPage({name:'signup', menu:publicMenu});
     Pages.AddPage({name:'forgot-password', menu:publicMenu});
     Pages.AddPage({name:'post-signup', menu:publicMenu});
-    Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction:apigee.console.pageSelectHome});
+    Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction:Usergrid.console.pageSelectHome});
 
   }
 
@@ -69,17 +69,17 @@ $(document).ready(function () {
     //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
     Pages.AddPanel('organization', null, null, null, null);
     Pages.AddPanel('console', null, null, null ,null );
-    Pages.AddPanel('application', null, null, null, apigee.console.pageSelectApplication);
+    Pages.AddPanel('application', null, null, null, Usergrid.console.pageSelectApplication);
     Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
-    Pages.AddPanel('users', null, null, null, apigee.console.pageSelectUsers);
+    Pages.AddPanel('users', null, null, null, Usergrid.console.pageSelectUsers);
     Pages.AddPanel('group', "#sidebar-menu a[href='#groups']", null, null, null);
-    Pages.AddPanel('groups', null, null, null, apigee.console.pageSelectGroups);
-    Pages.AddPanel('roles', null, null, null, apigee.console.pageSelectRoles);
-    Pages.AddPanel('activities', null, null, null, apigee.console.pageSelectActivities);
-    Pages.AddPanel('collections', null, null, null, apigee.console.pageSelectCollections);
-    Pages.AddPanel('analytics', null, null, null, apigee.console.pageSelectAnalytics);
-    Pages.AddPanel('shell', null, null, null, apigee.console.pageSelectShell);
-    Pages.AddPanel('account', "#account-link", null, null, apigee.console.requestAccountSettings);
+    Pages.AddPanel('groups', null, null, null, Usergrid.console.pageSelectGroups);
+    Pages.AddPanel('roles', null, null, null, Usergrid.console.pageSelectRoles);
+    Pages.AddPanel('activities', null, null, null, Usergrid.console.pageSelectActivities);
+    Pages.AddPanel('collections', null, null, null, Usergrid.console.pageSelectCollections);
+    Pages.AddPanel('analytics', null, null, null, Usergrid.console.pageSelectAnalytics);
+    Pages.AddPanel('shell', null, null, null, Usergrid.console.pageSelectShell);
+    Pages.AddPanel('account', "#account-link", null, null, Usergrid.console.requestAccountSettings);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
   }
 

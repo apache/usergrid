@@ -1,6 +1,6 @@
 window.apigee = window.apigee || {};
-apigee.console = apigee.console || {};
-apigee.console.ui = apigee.console.ui || { };
+Usergrid.console = Usergrid.console || {};
+Usergrid.console.ui = Usergrid.console.ui || { };
 
 (function() {
   //This code block *WILL* load before the document is complete
@@ -17,31 +17,31 @@ apigee.console.ui = apigee.console.ui || { };
       }
     });
   }
-  apigee.console.ui.loadTemplate = loadTemplate;
+  Usergrid.console.ui.loadTemplate = loadTemplate;
 
   var standardTableOpts = {
     "base_css" : "query-result-table",
     "links" : {
-      "metadata.collections*" : "<a href=\"#\" onclick=\"apigee.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
-      "metadata.connections*" : "<a href=\"#\" onclick=\"apigee.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
-      "all_collections*" : "<a href=\"#\" onclick=\"apigee.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
-      "metadata.path" : "<a href=\"#\" onclick=\"apigee.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
+      "metadata.collections*" : "<a href=\"#\" onclick=\"Usergrid.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
+      "metadata.connections*" : "<a href=\"#\" onclick=\"Usergrid.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
+      "all_collections*" : "<a href=\"#\" onclick=\"Usergrid.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
+      "metadata.path" : "<a href=\"#\" onclick=\"Usergrid.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
       "*uri" : "<a href=\"${value}\">${value}</a>",
       "*link" : "<a href=\"${value}\">${value}</a>"
     }
   };
-  apigee.console.ui.standardTableOpts = standardTableOpts;
+  Usergrid.console.ui.standardTableOpts = standardTableOpts;
 
   var metadataTableOpts = {
     "base_css" : "query-result-table",
     "links" : {
-      "collections*" : "<a href=\"#\" onclick=\"apigee.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
-      "connections*" : "<a href=\"#\" onclick=\"apigee.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
-      "path" : "<a href=\"#\" onclick=\"apigee.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
+      "collections*" : "<a href=\"#\" onclick=\"Usergrid.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
+      "connections*" : "<a href=\"#\" onclick=\"Usergrid.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
+      "path" : "<a href=\"#\" onclick=\"Usergrid.console.pageOpenQueryExplorer('${value}'); return false;\">${value}</a>",
       "uri" : "<a href=\"${value}\">${value}</a>"
     }
   };
-  apigee.console.ui.metadataTableOpts = metadataTableOpts;
+  Usergrid.console.ui.metadataTableOpts = metadataTableOpts;
 
   var re1 = /[^a-zA-Z0-9-]/g;
   var re2 = /--*/g;
@@ -103,7 +103,7 @@ apigee.console.ui = apigee.console.ui || { };
     t += "</table>";
     return t;
   }
-  apigee.console.ui.makeObjectTable = makeObjectTable;
+  Usergrid.console.ui.makeObjectTable = makeObjectTable;
 
   function makeTableFromList(list, width, options) {
     var getListItem = null;
@@ -178,7 +178,7 @@ apigee.console.ui = apigee.console.ui || { };
     t += "</table>\n";
     return t;
   }
-  apigee.console.ui.makeTableFromList = makeTableFromList;
+  Usergrid.console.ui.makeTableFromList = makeTableFromList;
 
   function jsonSchemaToDForm(schema, obj) {
     var dform = { elements : [] };
@@ -209,7 +209,7 @@ apigee.console.ui = apigee.console.ui || { };
     }
     return dform;
   }
-  apigee.console.ui.jsonSchemaToDForm = jsonSchemaToDForm;
+  Usergrid.console.ui.jsonSchemaToDForm = jsonSchemaToDForm;
 
   function jsonSchemaToPayload(schema){
     var payloadData = new Object();
@@ -228,7 +228,7 @@ apigee.console.ui = apigee.console.ui || { };
     }
     return payloadData;
   }
-  apigee.console.ui.jsonSchemaToPayload = jsonSchemaToPayload;
+  Usergrid.console.ui.jsonSchemaToPayload = jsonSchemaToPayload;
 
   function displayEntityListResponse(query_results, options, response) {
 
@@ -397,6 +397,6 @@ apigee.console.ui = apigee.console.ui || { };
 
     return query_results;
   }
-  apigee.console.ui.displayEntityListResponse = displayEntityListResponse;
+  Usergrid.console.ui.displayEntityListResponse = displayEntityListResponse;
 
 })();

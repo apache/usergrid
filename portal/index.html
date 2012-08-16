@@ -235,7 +235,7 @@
                   <div class="well thingy">
                     <span class="title"> Activities </span>
                     <div class="bar">
-                      <a class="" onclick="apigee.console.requestAdminFeed(); return false;">Update Activities</a>
+                      <a class="" onclick="Usergrid.console.requestAdminFeed(); return false;">Update Activities</a>
                     </div>
                   </div>
                   <table id="organization-feed-table" class="hideable table">
@@ -255,7 +255,7 @@
                 <div class="console-section">
                   <div class="well thingy"><span class="title"> Organization API Credentials </span>
                     <div class="bar">
-                      <a href="" onclick="apigee.console.newOrganizationCredentials(); return false;"> Regenerate Credentials</a>
+                      <a href="" onclick="Usergrid.console.newOrganizationCredentials(); return false;"> Regenerate Credentials</a>
                     </div>
                   </div>
                   <table class="hideable table">
@@ -353,7 +353,7 @@
 			    <div class="console-section">
 	              	<div class="well thingy"><span class="title"> Application API Credentials <span class="app_title"></span></span>
 	                  <div class="bar">
-	                    <a class="" href="" onclick="apigee.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
+	                    <a class="" href="" onclick="Usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
 	                  </div>
 	                </div>
 	                <div class="console-section-contents"> 
@@ -523,13 +523,13 @@
                   <div class="console-section">
                     <div class="well thingy"><span class="title"> Users <span class="app_title"></span></span>
                       <div class="bar">
-                        <input onkeyup="apigee.console.searchUsers();" type="text" name="search-user-username" id="search-user-username" class="input-small search" placeholder="Search"/>
-                        <select id="search-user-type" onChange="apigee.console.searchUsers();" class="input-medium search">
+                        <input onkeyup="Usergrid.console.searchUsers();" type="text" name="search-user-username" id="search-user-username" class="input-small search" placeholder="Search"/>
+                        <select id="search-user-type" onChange="Usergrid.console.searchUsers();" class="input-medium search">
                           <option value="username">Username</option>
                           <option value="name">Full Name</option>
                         </select>
-                        <a id="selectAllUsers" class="" href="#" onclick="apigee.console.selectAllUsers();"> Select All </a>
-                        <a id="deselectAllUsers" style="display: none;" class="" href="#" onclick="apigee.console.deselectAllUsers();"> Deselect All </a>
+                        <a id="selectAllUsers" class="" href="#" onclick="Usergrid.console.selectAllUsers();"> Select All </a>
+                        <a id="deselectAllUsers" style="display: none;" class="" href="#" onclick="Usergrid.console.deselectAllUsers();"> Deselect All </a>
                         <a class="" data-toggle="modal" href="#dialog-form-new-user"> Add</a>
                         <a id="delete-users-link" href="#"> Delete</a>
                       </div>
@@ -659,13 +659,13 @@
                   <div class="console-section">
                     <div class="well thingy"><span class="title"> Groups <span class="app_title"></span> </span>
                       <div class="bar">
-                        <input onkeyup="apigee.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search" placeholder="Search"/>
-                        <select id="search-group-type" onChange="apigee.console.searchGroups();" class="input-medium search">
+                        <input onkeyup="Usergrid.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search" placeholder="Search"/>
+                        <select id="search-group-type" onChange="Usergrid.console.searchGroups();" class="input-medium search">
                           <option value="path">Path</option>
                           <option value="title">Group Name</option>
                         </select>
-                        <a id="selectAllGroups" class="" href="#" onclick="apigee.console.selectAllGroups();"> Select All </a>
-                        <a id="deselectAllGroups" style="display: none;" class="" href="#" onclick="apigee.console.deselectAllGroups();"> Deselect All </a>
+                        <a id="selectAllGroups" class="" href="#" onclick="Usergrid.console.selectAllGroups();"> Select All </a>
+                        <a id="deselectAllGroups" style="display: none;" class="" href="#" onclick="Usergrid.console.deselectAllGroups();"> Deselect All </a>
                         <a class="" data-toggle="modal" href="#dialog-form-new-group"> Add </a>
                         <a id="delete-groups-link" href="#"> Delete </a>
                       </div>
@@ -863,8 +863,8 @@
                       <div class="bar">
                         <a data-toggle="modal" href="#dialog-form-add-group-to-role"> Add </a>
                         <a id="remove-selected-role-groups" href="#"> Remove </a>
-                        <a id="selectAllRoleGroups" class="" href="#" onclick="apigee.console.selectAllRoleGroups();"> Select All </a>
-                        <a id="deselectAllRoleGroups" style="display: none;" class="" href="#" onclick="apigee.console.deselectAllRoleGroups();"> Deselect All </a>
+                        <a id="selectAllRoleGroups" class="" href="#" onclick="Usergrid.console.selectAllRoleGroups();"> Select All </a>
+                        <a id="deselectAllRoleGroups" style="display: none;" class="" href="#" onclick="Usergrid.console.deselectAllRoleGroups();"> Deselect All </a>
                       </div>
                     </div>
                     <table id="role-groups" class="table">
@@ -924,12 +924,12 @@
                   <div class="console-section">
                     <div class="well thingy"><span class="title"> Activities <span class="app_title"></span></span>
                       <div class="bar">
-                        <input onkeyup="apigee.console.searchActivities();" type="text" name="search-activities" id="search-activities" class="input-small search" placeholder="Search"/>
-                        <select id="search-activities-type" onChange="apigee.console.searchActivities();" class="input-medium search">
+                        <input onkeyup="Usergrid.console.searchActivities();" type="text" name="search-activities" id="search-activities" class="input-small search" placeholder="Search"/>
+                        <select id="search-activities-type" onChange="Usergrid.console.searchActivities();" class="input-medium search">
                           <option value="content">Content</option>
                           <option value="actor">Actor</option>
                         </select>
-                        <a class="" onclick="apigee.console.requestActivities(); return false;">Update Activities</a>
+                        <a class="" onclick="Usergrid.console.requestActivities(); return false;">Update Activities</a>
                       </div>
                     </div>
                     <table id="activities-table" class="table">
@@ -1025,7 +1025,7 @@
                     <div class="well thingy"><span class="title"> Collections <span class="app_title"></span></span>
                       <div class="bar">
                         <a class="" data-toggle="modal" href="#dialog-form-new-collection"> Add </a>
-                        <a href="" onclick="apigee.console.pageOpenQueryExplorer(); return false;">Query Explorer</a>
+                        <a href="" onclick="Usergrid.console.pageOpenQueryExplorer(); return false;">Query Explorer</a>
                       </div>
                     </div>
                     <table id="collections-table" class="table">

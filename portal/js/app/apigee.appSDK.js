@@ -22,34 +22,33 @@
 window.console = window.console || {};
 window.console.log = window.console.log || function() {};
 
-//apigee namespace encapsulates this SDK
-window.apigee = window.apigee || {};
-apigee = apigee || {};
-apigee.SDK_VERSION = '0.9.3';
-
+//Usergrid namespace encapsulates this SDK
+window.Usergrid = window.Usergrid || {};
+Usergrid = Usergrid || {};
+Usergrid.SDK_VERSION = '0.9.4';
 
 /**
- *  apigee.Query is a class for holding all query information and paging state
+ *  Usergrid.Query is a class for holding all query information and paging state
  *
  *  The goal of the query object is to make it easy to run any
  *  kind of CRUD call against the API.  This is done as follows:
  *
  *  1. Create a query object:
- *     Query = new apigee.Query("GET", "users", null, function() { alert("success"); }, function() { alert("failure"); });
+ *     Query = new Usergrid.Query("GET", "users", null, function() { alert("success"); }, function() { alert("failure"); });
  *
  *  2. Run the query by calling the appropriate endpoint call
  *     runAppQuery(Query);
  *     or
  *     runManagementQuery(Query);
  *
- *  3. Paging - The apigee.Query holds the cursor information.  To
+ *  3. Paging - The Usergrid.Query holds the cursor information.  To
  *     use, simply bind click events to functions that call the
  *     getNext and getPrevious methods of the query object.  This
  *     will set the cursor correctly, and the runAppQuery method
- *     can be called again using the same apigee.Query:
+ *     can be called again using the same Usergrid.Query:
  *     runAppQuery(Query);
  *
- *  @class apigee.Query
+ *  @class Usergrid.Query
  *  @param method REQUIRED - GET, POST, PUT, DELETE
  *  @param path REQUIRED - API resource (e.g. "users" or "users/rod", should not include http URL or org_name/app_name)
  *  @param jsonObj NULLABLE - a json data object to be passed to the API
@@ -79,7 +78,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {function} successCallback
    *  @param {function} failureCallback
    */
-  apigee.Query = function(method, path, jsonObj, paramsObj, successCallback, failureCallback) {
+  Usergrid.Query = function(method, path, jsonObj, paramsObj, successCallback, failureCallback) {
     //query vars
     this._method = method;
     this._path = path;
@@ -100,7 +99,7 @@ apigee.SDK_VERSION = '0.9.3';
     this._end = 0;
   };
 
-  apigee.Query.prototype = {
+  Usergrid.Query.prototype = {
      setQueryStartTime: function() {
        this._start = new Date().getTime();
      },
@@ -416,7 +415,7 @@ apigee.SDK_VERSION = '0.9.3';
       return this._cursor;
     }
   };
-})(apigee);
+})(Usergrid);
 
 
 /**
@@ -432,20 +431,20 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {string} collectionType - the type of collection to model
    *  @param {uuid} uuid - (optional), the UUID of the collection if it is known
    */
-  apigee.Entity = function(collectionType, uuid) {
+  Usergrid.Entity = function(collectionType, uuid) {
     this._collectionType = collectionType;
     this._data = {};
     this._uuid = uuid;
   };
 
-  apigee.Entity.prototype = new apigee.Query();
+  Usergrid.Entity.prototype = new Usergrid.Query();
 
   /**
    *  gets the current Entity type
    *  @method getCollectionType
    *  @return {string} collection type
    */
-  apigee.Entity.prototype.getCollectionType = function (){
+  Usergrid.Entity.prototype.getCollectionType = function (){
     return this._collectionType;
   }
 
@@ -455,7 +454,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {string} collectionType
    *  @return none
    */
-  apigee.Entity.prototype.setCollectionType = function (collectionType){
+  Usergrid.Entity.prototype.setCollectionType = function (collectionType){
     this._collectionType = collectionType;
   }
 
@@ -466,7 +465,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {string} field
    *  @return {string} || {object} data
    */
-  apigee.Entity.prototype.get = function (field){
+  Usergrid.Entity.prototype.get = function (field){
     if (field) {
       return this._data[field];
     } else {
@@ -481,7 +480,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {string} value
    *  @return none
    */
-  apigee.Entity.prototype.set = function (item, value){
+  Usergrid.Entity.prototype.set = function (item, value){
     if (typeof item == 'object') {
       for(field in item) {
         this._data[field] = item[field];
@@ -501,7 +500,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {function} errorCallback
    *  @return none
    */
-  apigee.Entity.prototype.save = function (successCallback, errorCallback){
+  Usergrid.Entity.prototype.save = function (successCallback, errorCallback){
     var path = this.getCollectionType();
     //TODO:  API will be changed soon to accomodate PUTs via name which create new entities
     //       This function should be changed to PUT only at that time, and updated to use
@@ -509,7 +508,7 @@ apigee.SDK_VERSION = '0.9.3';
     var method = 'POST';
     if (this.get('uuid')) {
       method = 'PUT';
-      if (apigee.isUUID(this.get('uuid'))) {
+      if (Usergrid.validation.isUUID(this.get('uuid'))) {
         path += "/" + this.get('uuid');
       }
     }
@@ -523,7 +522,7 @@ apigee.SDK_VERSION = '0.9.3';
       if (data.oldpassword && data.newpassword) {
         pwdata.oldpassword = data.oldpassword;
         pwdata.newpassword = data.newpassword;
-        this.runAppQuery(new apigee.Query('PUT', 'users/'+uuid+'/password', pwdata, null,
+        this.runAppQuery(new Usergrid.Query('PUT', 'users/'+uuid+'/password', pwdata, null,
           function (response) {
             //not calling any callbacks - this section will be merged as soon as API supports
             //   updating passwords in general PUT call
@@ -541,15 +540,16 @@ apigee.SDK_VERSION = '0.9.3';
     //update the entity
     var self = this;
 
+    var data = {};
     var entityData = this.get();
-    //remove system specific fields
-    delete entityData.metadata;
-    delete entityData.created;
-    delete entityData.modified;
-    delete entityData.type;
-    delete entityData.activated;
+    //remove system specific properties
+    for (var item in entityData) {
+      if (item == 'metadata' || item == 'created' || item == 'modified' ||
+          item == 'type' || item == 'activatted' ) { continue; }
+      data[item] = entityData[item];
+    }
 
-    this.setAllQueryParams(method, path, entityData, null,
+    this.setAllQueryParams(method, path, data, null,
       function(response) {
         try {
           var entity = response.entities[0];
@@ -569,7 +569,7 @@ apigee.SDK_VERSION = '0.9.3';
         }
       }
     );
-    apigee.ApiClient.runAppQuery(this);
+    Usergrid.ApiClient.runAppQuery(this);
   }
 
   /**
@@ -580,7 +580,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {function} errorCallback
    *  @return none
    */
-  apigee.Entity.prototype.fetch = function (successCallback, errorCallback){
+  Usergrid.Entity.prototype.fetch = function (successCallback, errorCallback){
     var path = this.getCollectionType();
     //if a uuid is available, use that, otherwise, use the name
     if (this.get('uuid')) {
@@ -630,7 +630,7 @@ apigee.SDK_VERSION = '0.9.3';
         }
       }
     );
-    apigee.ApiClient.runAppQuery(this);
+    Usergrid.ApiClient.runAppQuery(this);
   }
 
   /**
@@ -643,7 +643,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @return none
    *
    */
-  apigee.Entity.prototype.destroy = function (successCallback, errorCallback){
+  Usergrid.Entity.prototype.destroy = function (successCallback, errorCallback){
     var path = this.getCollectionType();
     if (this.get('uuid')) {
       path += "/" + this.get('uuid');
@@ -668,10 +668,10 @@ apigee.SDK_VERSION = '0.9.3';
         }
       }
     );
-    apigee.ApiClient.runAppQuery(this);
+    Usergrid.ApiClient.runAppQuery(this);
   }
 
-})(apigee);
+})(Usergrid);
 
 
 /**
@@ -706,22 +706,22 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {string} collectionPath - the type of collection to model
    *  @param {uuid} uuid - (optional), the UUID of the collection if it is known
    */
-  apigee.Collection = function(collectionPath, uuid) {
+  Usergrid.Collection = function(collectionPath, uuid) {
     this._collectionPath = collectionPath;
     this._uuid = uuid;
     this._list = [];
-    this._Query = new apigee.Query();
+    this._Query = new Usergrid.Query();
     this._iterator = -1; //first thing we do is increment, so set to -1
   };
 
-  apigee.Collection.prototype = new apigee.Query();
+  Usergrid.Collection.prototype = new Usergrid.Query();
 
   /**
    *  gets the current Collection path
    *  @method getCollectionPath
    *  @return {string} collectionPath
    */
-  apigee.Collection.prototype.getCollectionPath = function (){
+  Usergrid.Collection.prototype.getCollectionPath = function (){
     return this._collectionPath;
   }
 
@@ -731,7 +731,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {string} collectionPath
    *  @return none
    */
-  apigee.Collection.prototype.setCollectionPath = function (collectionPath){
+  Usergrid.Collection.prototype.setCollectionPath = function (collectionPath){
     this._collectionPath = collectionPath;
   }
 
@@ -741,7 +741,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {string} uuid
    *  @return {string} the uuid
    */
-  apigee.Collection.prototype.getUUID = function (){
+  Usergrid.Collection.prototype.getUUID = function (){
     return this._uuid;
   }
 
@@ -751,30 +751,41 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {string} uuid
    *  @return none
    */
-  apigee.Collection.prototype.setUUID = function (uuid){
+  Usergrid.Collection.prototype.setUUID = function (uuid){
     this._uuid = uuid;
   }
 
   /**
-   *  Adds an Entity to the collection (saves, then adds to the local object)
+   *  Adds an Entity to the collection (adds to the local object)
    *
    *  @method addEntity
    *  @param {object} entity
    *  @return none
    */
-  apigee.Collection.prototype.addEntity = function (entity){
-    //save the entity
-    entity.save();
+  Usergrid.Collection.prototype.addEntity = function (entity){
     //then add it to the list
     var count = this._list.length;
     this._list[count] = entity;
   }
 
-  apigee.Collection.prototype.destroyEntity = function (entity) {
+  /**
+   *  Adds a new Entity to the collection (saves, then adds to the local object)
+   *
+   *  @method addEntity
+   *  @param {object} entity
+   *  @return none
+   */
+  Usergrid.Collection.prototype.addNewEntity = function (entity) {
+    //save the entity
+    entity.save();
+    this.addEntity(entity);
+  }
+
+  Usergrid.Collection.prototype.destroyEntity = function (entity) {
     //first get the entities uuid
     var uuid = entity.get('uuid');
     //if the entity has a uuid, delete it
-    if (apigee.isUUID(uuid)) {
+    if (Usergrid.validation.isUUID(uuid)) {
       //then remove it from the list
       var count = this._list.length;
       var i=0;
@@ -803,7 +814,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {string} value
    *  @return {object} returns an entity object, or null if it is not found
    */
-  apigee.Collection.prototype.getEntityByField = function (field, value){
+  Usergrid.Collection.prototype.getEntityByField = function (field, value){
     var count = this._list.length;
     var i=0;
     for (i=0; i<count; i++) {
@@ -821,7 +832,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {string} UUID
    *  @return {object} returns an entity object, or null if it is not found
    */
-  apigee.Collection.prototype.getEntityByUUID = function (UUID){
+  Usergrid.Collection.prototype.getEntityByUUID = function (UUID){
     var count = this._list.length;
     var i=0;
     for (i=0; i<count; i++) {
@@ -838,7 +849,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @method getFirstEntity
    *  @return {object} returns an entity object
    */
-  apigee.Collection.prototype.getFirstEntity = function (){
+  Usergrid.Collection.prototype.getFirstEntity = function (){
     var count = this._list.length;
       if (count > 0) {
         return this._list[0];
@@ -852,7 +863,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @method getLastEntity
    *  @return {object} returns an entity object
    */
-  apigee.Collection.prototype.getLastEntity = function (){
+  Usergrid.Collection.prototype.getLastEntity = function (){
     var count = this._list.length;
       if (count > 0) {
         return this._list[count-1];
@@ -869,7 +880,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @method hasNextEntity
    *  @return {boolean} true if there is a next entity, false if not
    */
-  apigee.Collection.prototype.hasNextEntity = function (){
+  Usergrid.Collection.prototype.hasNextEntity = function (){
     var next = this._iterator + 1;
       if(next >=0 && next < this._list.length) {
         return true;
@@ -886,7 +897,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @method hasNextEntity
    *  @return {object} entity
    */
-  apigee.Collection.prototype.getNextEntity = function (){
+  Usergrid.Collection.prototype.getNextEntity = function (){
     this._iterator++;
       if(this._iterator >= 0 && this._iterator <= this._list.length) {
         return this._list[this._iterator];
@@ -901,7 +912,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @method hasPreviousEntity
    *  @return {boolean} true if there is a previous entity, false if not
    */
-  apigee.Collection.prototype.hasPreviousEntity = function (){
+  Usergrid.Collection.prototype.hasPreviousEntity = function (){
     var previous = this._iterator - 1;
       if(previous >=0 && previous < this._list.length) {
         return true;
@@ -915,7 +926,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @method getPreviousEntity
    *  @return {object} entity
    */
-  apigee.Collection.prototype.getPreviousEntity = function (){
+  Usergrid.Collection.prototype.getPreviousEntity = function (){
      this._iterator--;
       if(this._iterator >= 0 && this._iterator <= this._list.length) {
         return this.list[this._iterator];
@@ -930,7 +941,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @method resetEntityPointer
    *  @return none
    */
-  apigee.Collection.prototype.resetEntityPointer = function (){
+  Usergrid.Collection.prototype.resetEntityPointer = function (){
      this._iterator  = -1;
   }
 
@@ -940,7 +951,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @method getEntityList
    *  @return {array} returns an array of entity objects
    */
-  apigee.Collection.prototype.getEntityList = function (){
+  Usergrid.Collection.prototype.getEntityList = function (){
      return this._list;
   }
 
@@ -951,7 +962,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {array} list - an array of Entity objects
    *  @return none
    */
-  apigee.Collection.prototype.setEntityList = function (list){
+  Usergrid.Collection.prototype.setEntityList = function (list){
     this._list = list;
   }
 
@@ -961,7 +972,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @method hasNextPage
    *  @return {boolean} returns true if there is a next page of data, false otherwise
    */
-  apigee.Collection.prototype.hasNextPage = function (){
+  Usergrid.Collection.prototype.hasNextPage = function (){
     return this.hasNext();
   }
 
@@ -973,13 +984,13 @@ apigee.SDK_VERSION = '0.9.3';
    *  @method getNextPage
    *  @return none
    */
-  apigee.Collection.prototype.getNextPage = function (){
+  Usergrid.Collection.prototype.getNextPage = function (){
     if (this.hasNext()) {
         //set the cursor to the next page of data
         this.getNext();
         //empty the list
         this.setEntityList([]);
-        apigee.ApiClient.runAppQuery(this);
+        Usergrid.ApiClient.runAppQuery(this);
       }
   }
 
@@ -989,7 +1000,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @method hasPreviousPage
    *  @return {boolean} returns true if there is a previous page of data, false otherwise
    */
-  apigee.Collection.prototype.hasPreviousPage = function (){
+  Usergrid.Collection.prototype.hasPreviousPage = function (){
     return this.hasPrevious();
   }
 
@@ -1001,12 +1012,12 @@ apigee.SDK_VERSION = '0.9.3';
    *  @method getPreviousPage
    *  @return none
    */
-  apigee.Collection.prototype.getPreviousPage = function (){
+  Usergrid.Collection.prototype.getPreviousPage = function (){
     if (this.hasPrevious()) {
         this.getPrevious();
         //empty the list
         this.setEntityList([]);
-        apigee.ApiClient.runAppQuery(this);
+        Usergrid.ApiClient.runAppQuery(this);
       }
   }
 
@@ -1016,7 +1027,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @method clearQuery
    *  @return none
    */
-  apigee.Collection.prototype.clearQuery = function (){
+  Usergrid.Collection.prototype.clearQuery = function (){
     this.clearAll();
   }
 
@@ -1032,7 +1043,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {function} errorCallback
    *  @return none
    */
-  apigee.Collection.prototype.get = function (successCallback, errorCallback){
+  Usergrid.Collection.prototype.get = function (successCallback, errorCallback){
     var self = this;
     var queryParams = this.getQueryParams();
     //empty the list
@@ -1045,11 +1056,10 @@ apigee.SDK_VERSION = '0.9.3';
           for (var i=0;i<count;i++) {
             var uuid = response.entities[i].uuid;
             if (uuid) {
-              var entity = new apigee.Entity(self.getCollectionPath(), uuid);
+              var entity = new Usergrid.Entity(self.getCollectionPath(), uuid);
               //store the data in the entity
               var data = response.entities[i] || {};
               delete data.uuid; //remove uuid from the object
-              delete data.metadata; //remove uuid from the object
               entity.set(data);
               //store the new entity in this collection
               self.addEntity(entity);
@@ -1070,7 +1080,7 @@ apigee.SDK_VERSION = '0.9.3';
         }
       }
     );
-    apigee.ApiClient.runAppQuery(this);
+    Usergrid.ApiClient.runAppQuery(this);
   }
 
   /**
@@ -1083,7 +1093,7 @@ apigee.SDK_VERSION = '0.9.3';
    *  @param {function} errorCallback
    *  @return none
    */
-  apigee.Collection.prototype.save = function (successCallback, errorCallback){
+  Usergrid.Collection.prototype.save = function (successCallback, errorCallback){
     //loop across all entities and save each one
     var entities = this.getEntityList();
     var count = entities.length;
@@ -1098,13 +1108,13 @@ apigee.SDK_VERSION = '0.9.3';
       entity.save();
     }
     this.setAllQueryParams('PUT', this.getCollectionPath(), jsonObj, null,successCallback, errorCallback);
-    apigee.ApiClient.runAppQuery(this);
+    Usergrid.ApiClient.runAppQuery(this);
   }
-})(apigee);
+})(Usergrid);
 
 
 /*
- *  apigee.ApiClient
+ *  Usergrid.ApiClient
  *
  *  A Singleton that is the main client for making calls to the API. Maintains
  *  state between calls for the following items:
@@ -1117,20 +1127,20 @@ apigee.SDK_VERSION = '0.9.3';
  *  runAppQuery (Query)
  *  runManagementQuery(Query)
  *
- *  Create a new apigee.Query object and then pass it to either of these
+ *  Create a new Usergrid.Query object and then pass it to either of these
  *  two methods for making calls directly to the API.
  *
  *  A method for logging in an app user (to get a OAuth token) also exists:
  *
  *  logInAppUser (username, password, successCallback, failureCallback)
  *
- *  @class apigee.ApiClient
+ *  @class Usergrid.ApiClient
  *  @author Rod Simpson (rod@apigee.com)
  *
  */
-apigee.M = 'ManagementQuery';
-apigee.A = 'ApplicationQuery';
-apigee.ApiClient = (function () {
+Usergrid.M = 'ManagementQuery';
+Usergrid.A = 'ApplicationQuery';
+Usergrid.ApiClient = (function () {
   //API endpoint
   var _apiUrl = "https://api.usergrid.com/";
   var _orgName = null;
@@ -1164,12 +1174,12 @@ apigee.ApiClient = (function () {
   *
   *  @method runAppQuery
   *  @public
-  *  @params {object} apigee.Query - {method, path, jsonObj, params, successCallback, failureCallback}
+  *  @params {object} Usergrid.Query - {method, path, jsonObj, params, successCallback, failureCallback}
   *  @return none
   */
   function runAppQuery (Query) {
     var endpoint = "/" + this.getOrganizationName() + "/" + this.getApplicationName() + "/";
-    setQueryType(apigee.A);
+    setQueryType(Usergrid.A);
     run(Query, endpoint, self);
   }
 
@@ -1178,12 +1188,12 @@ apigee.ApiClient = (function () {
   *
   *  @method runManagementQuery
   *  @public
-  *  @params {object} apigee.Query - {method, path, jsonObj, params, successCallback, failureCallback}
+  *  @params {object} Usergrid.Query - {method, path, jsonObj, params, successCallback, failureCallback}
   *  @return none
   */
   function runManagementQuery (Query) {
     var endpoint = "/management/";
-    setQueryType(apigee.M);
+    setQueryType(Usergrid.M);
     run(Query, endpoint, self)
   }
 
@@ -1342,9 +1352,9 @@ apigee.ApiClient = (function () {
   function logInAppUser (username, password, successCallback, failureCallback) {
     var self = this;
     var data = {"username": username, "password": password, "grant_type": "password"};
-    this.runAppQuery(new apigee.Query('GET', 'token', null, data,
+    this.runAppQuery(new Usergrid.Query('GET', 'token', null, data,
       function (response) {
-        var user = new apigee.Entity('users');
+        var user = new Usergrid.Entity('users');
         user.set('username', response.user.username);
         user.set('name', response.user.name);
         user.set('email', response.user.email);
@@ -1392,12 +1402,12 @@ apigee.ApiClient = (function () {
    *
    *  @method isLoggedInAppUser
    *  @public
-   *  @params {object} apigee.Query - {method, path, jsonObj, params, successCallback, failureCallback}
+   *  @params {object} Usergrid.Query - {method, path, jsonObj, params, successCallback, failureCallback}
    *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
    */
   function isLoggedInAppUser() {
     var user = this.getLoggedInUser();
-    return (this.getToken() && apigee.isUUID(user.get('uuid')));
+    return (this.getToken() && Usergrid.validation.isUUID(user.get('uuid')));
   }
 
    /*
@@ -1506,7 +1516,7 @@ apigee.ApiClient = (function () {
    *
    *  @method run
    *  @private
-   *  @params {object} apigee.Query - {method, path, jsonObj, params, successCallback, failureCallback}
+   *  @params {object} Usergrid.Query - {method, path, jsonObj, params, successCallback, failureCallback}
    *  @params {string} endpoint - used to differentiate between management and app queries
    *  @return {response} callback functions return API response object
    */
@@ -1515,7 +1525,7 @@ apigee.ApiClient = (function () {
     //validate parameters
     try {
       //verify that the query object is valid
-      if(!(Query instanceof apigee.Query)) {
+      if(!(Query instanceof Usergrid.Query)) {
         throw(new Error('Query is not a valid object.'));
       }
       //for timing, call start
@@ -1537,13 +1547,13 @@ apigee.ApiClient = (function () {
       else { curl += " -X GET"; }
 
       //curl - append the bearer token if this is not the sandbox app
-      var application_name = apigee.ApiClient.getApplicationName();
+      var application_name = Usergrid.ApiClient.getApplicationName();
       if (application_name) {
         application_name = application_name.toUpperCase();
       }
-      //if (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) {
-      if ( (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) || (getQueryType() == apigee.M && apigee.ApiClient.getToken())) {
-        curl += ' -i -H "Authorization: Bearer ' + apigee.ApiClient.getToken() + '"';
+      //if (application_name != 'SANDBOX' && Usergrid.ApiClient.getToken()) {
+      if ( (application_name != 'SANDBOX' && Usergrid.ApiClient.getToken()) || (getQueryType() == Usergrid.M && Usergrid.ApiClient.getToken())) {
+        curl += ' -i -H "Authorization: Bearer ' + Usergrid.ApiClient.getToken() + '"';
         Query.setToken(true);
       }
 
@@ -1575,7 +1585,7 @@ apigee.ApiClient = (function () {
       }
 
       //add the http:// bit on the front
-      path = apigee.ApiClient.getApiUrl() + path;
+      path = Usergrid.ApiClient.getApiUrl() + path;
 
       //curl - append the path
       curl += ' "' + path;
@@ -1628,11 +1638,11 @@ apigee.ApiClient = (function () {
     if(xD)
     {
       xhr = new window.XDomainRequest();
-      if ( (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) || (getQueryType() == apigee.M && apigee.ApiClient.getToken())) {
+      if ( (application_name != 'SANDBOX' && Usergrid.ApiClient.getToken()) || (getQueryType() == Usergrid.M && Usergrid.ApiClient.getToken())) {
         if (path.indexOf("?")) {
-          path += '&access_token='+apigee.ApiClient.getToken();
+          path += '&access_token='+Usergrid.ApiClient.getToken();
         } else {
-          path = '?access_token='+apigee.ApiClient.getToken();
+          path = '?access_token='+Usergrid.ApiClient.getToken();
         }
       }
       xhr.open(method, path, true);
@@ -1641,17 +1651,17 @@ apigee.ApiClient = (function () {
     {
       xhr = new XMLHttpRequest();
       xhr.open(method, path, true);
-      if ( (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) || (getQueryType() == apigee.M && apigee.ApiClient.getToken())) {
-        xhr.setRequestHeader("Authorization", "Bearer " + apigee.ApiClient.getToken());
+      if ( (application_name != 'SANDBOX' && Usergrid.ApiClient.getToken()) || (getQueryType() == Usergrid.M && Usergrid.ApiClient.getToken())) {
+        xhr.setRequestHeader("Authorization", "Bearer " + Usergrid.ApiClient.getToken());
         xhr.withCredentials = true;
       }
     } else {
       xhr = new ActiveXObject("MSXML2.XMLHTTP.3.0");
-      if ( (application_name != 'SANDBOX' && apigee.ApiClient.getToken()) || (getQueryType() == apigee.M && apigee.ApiClient.getToken())) {
+      if ( (application_name != 'SANDBOX' && Usergrid.ApiClient.getToken()) || (getQueryType() == Usergrid.M && Usergrid.ApiClient.getToken())) {
         if (path.indexOf("?")) {
-          path += '&access_token='+apigee.ApiClient.getToken();
+          path += '&access_token='+Usergrid.ApiClient.getToken();
         } else {
-          path = '?access_token='+apigee.ApiClient.getToken();
+          path = '?access_token='+Usergrid.ApiClient.getToken();
         }
       }
       xhr.open(method, path, true);
@@ -1683,13 +1693,19 @@ apigee.ApiClient = (function () {
       clearTimeout(timeout);
       if (xhr.status != 200 && !xD)   {
         //there was an api error
-        var error = response.error;
-        console.log('API call failed: (status: '+xhr.status+').' + error.type);
-        if ( (error.type == "auth_expired_session_token") ||
-              (error.type == "auth_missing_credentials")   ||
-              (error.type == "auth_invalid")) {
+        var error = '';
+        try{
+          error = xhr.statusText;
+          error = error.toLowerCase();
+        } catch(e){}
+        console.log('API call failed: (status: '+xhr.status+') - ' + error);
+        if ( (error == "auth_expired_session_token") ||
+             (error == "unauthorized")   ||
+             (error == "auth_missing_credentials")   ||
+             (error == "auth_invalid")) {
             //this error type means the user is not authorized. If a logout function is defined, call it
             callLogoutCallback();
+            return;
         }
       }
       //response looks good
@@ -1710,7 +1726,7 @@ apigee.ApiClient = (function () {
         Query.callFailureCallback();
       }
     };
-    var timeout = setTimeout(function() { xhr.abort(); }, 15000);
+    var timeout = setTimeout(function() { xhr.abort(); }, 30000);
 
     xhr.send(jsonObj);
   }
@@ -1743,14 +1759,236 @@ apigee.ApiClient = (function () {
 })();
 
 /**
+ * validation is a Singleton that provides methods for validating common field types
+ *
+ * @class Usergrid.validation
+ * @author Rod Simpson (rod@apigee.com)
+**/
+Usergrid.validation = (function () {
+
+  var usernameRegex = new RegExp("^([0-9a-zA-Z\.\-])+$");
+  var nameRegex     = new RegExp("^([0-9a-zA-Z@#$%^&!?;:.,'\"~*-=+_\[\\](){}/\\ |])+$");
+  var emailRegex    = new RegExp("^(([0-9a-zA-Z]+[_\+.-]?)+@[0-9a-zA-Z]+[0-9,a-z,A-Z,.,-]*(.){1}[a-zA-Z]{2,4})+$");
+  var passwordRegex = new RegExp("^([0-9a-zA-Z@#$%^&!?<>;:.,'\"~*-=+_\[\\](){}/\\ |])+$");
+  var pathRegex     = new RegExp("^([0-9a-z./-])+$");
+  var titleRegex    = new RegExp("^([0-9a-zA-Z.!-?/])+$");
+
+  /**
+    * Tests the string against the allowed chars regex
+    * @public
+    * @method validateUsername
+    * @param {string} username - The string to test
+    * @param {function} failureCallback - (optional), the function to call on a failure
+    * @return {boolean} Returns true if string passes regex, false if not
+    */
+  function validateUsername(username, failureCallback) {
+    if (usernameRegex.test(username) && checkLength(username, 4, 80)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getUsernameAllowedChars());
+      }
+      return false;
+    }
+  }
+
+  /**
+    * Returns the regex of allowed chars
+    * @public
+    * @method getUsernameAllowedChars
+    * @return {string} Returns a string with the allowed chars
+    */
+  function getUsernameAllowedChars(){
+    return 'Length: min 4, max 80. Allowed: A-Z, a-z, 0-9, dot, and dash';
+  }
+
+  /**
+    * Tests the string against the allowed chars regex
+    * @public
+    * @method validateName
+    * @param {string} name - The string to test
+    * @param {function} failureCallback - (optional), the function to call on a failure
+    * @return {boolean} Returns true if string passes regex, false if not
+    */
+  function validateName(name, failureCallback) {
+    if (nameRegex.test(name) && checkLength(name, 4, 16)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getNameAllowedChars());
+      }
+      return false;
+    }
+  }
+
+  /**
+    * Returns the regex of allowed chars
+    * @public
+    * @method getNameAllowedChars
+    * @return {string} Returns a string with the allowed chars
+    */
+  function getNameAllowedChars(){
+    return 'Length: min 4, max 80. Allowed: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . / ? !';
+  }
+
+  /**
+    * Tests the string against the allowed chars regex
+    * @public
+    * @method validatePassword
+    * @param {string} password - The string to test
+    * @param {function} failureCallback - (optional), the function to call on a failure
+    * @return {boolean} Returns true if string passes regex, false if not
+    */
+  function validatePassword(password, failureCallback) {
+    if (passwordRegex.test(password) && checkLength(password, 5, 16)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getPasswordAllowedChars());
+      }
+      return false;
+    }
+  }
+
+  /**
+    * Returns the regex of allowed chars
+    * @public
+    * @method getPasswordAllowedChars
+    * @return {string} Returns a string with the allowed chars
+    */
+  function getPasswordAllowedChars(){
+    return 'Length: min 5, max 16. Allowed: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . < > / ? !';
+  }
+
+  /**
+    * Tests the string against the allowed chars regex
+    * @public
+    * @method validateEmail
+    * @param {string} email - The string to test
+    * @param {function} failureCallback - (optional), the function to call on a failure
+    * @return {boolean} Returns true if string passes regex, false if not
+    */
+  function validateEmail(email, failureCallback) {
+    if (emailRegex.test(email) && checkLength(email, 4, 80)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getEmailAllowedChars());
+      }
+      return false;
+    }
+  }
+
+  /**
+    * Returns the regex of allowed chars
+    * @public
+    * @method getEmailAllowedChars
+    * @return {string} Returns a string with the allowed chars
+    */
+  function getEmailAllowedChars(){
+    return 'Email must be in standard form: e.g. example@Usergrid.com';
+  }
+
+  /**
+    * Tests the string against the allowed chars regex
+    * @public
+    * @method validatePath
+    * @param {string} path - The string to test
+    * @param {function} failureCallback - (optional), the function to call on a failure
+    * @return {boolean} Returns true if string passes regex, false if not
+    */
+  function validatePath(path, failureCallback) {
+    if (pathRegex.test(path) && checkLength(path, 4, 80)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getPathAllowedChars());
+      }
+      return false;
+    }
+  }
+
+  /**
+    * Returns the regex of allowed chars
+    * @public
+    * @method getPathAllowedChars
+    * @return {string} Returns a string with the allowed chars
+    */
+  function getPathAllowedChars(){
+    return 'Length: min 4, max 80. Allowed: /, a-z, 0-9, dot, and dash';
+  }
+
+  /**
+    * Tests the string against the allowed chars regex
+    * @public
+    * @method validateTitle
+    * @param {string} title - The string to test
+    * @param {function} failureCallback - (optional), the function to call on a failure
+    * @return {boolean} Returns true if string passes regex, false if not
+    */
+  function validateTitle(title, failureCallback) {
+    if (titleRegex.test(title) && checkLength(title, 4, 80)) {
+      return true;
+    } else {
+      if (failureCallback && typeof(failureCallback) == "function") {
+        failureCallback(this.getTitleAllowedChars());
+      }
+      return false;
+    }
+  }
+
+  /**
+    * Returns the regex of allowed chars
+    * @public
+    * @method getTitleAllowedChars
+    * @return {string} Returns a string with the allowed chars
+    */
+  function getTitleAllowedChars(){
+    return 'Length: min 4, max 80. Allowed: space, A-Z, a-z, 0-9, dot, dash, /, !, and ?';
+  }
+
+  /**
+    * Tests if the string is the correct length
+    * @public
+    * @method checkLength
+    * @param {string} string - The string to test
+    * @param {integer} min - the lower bound
+    * @param {integer} max - the upper bound
+    * @return {boolean} Returns true if string is correct length, false if not
+    */
+  function checkLength(string, min, max) {
+    if (string.length > max || string.length < min) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
     * Tests if the string is a uuid
     * @public
     * @method isUUID
     * @param {string} uuid The string to test
     * @returns {Boolean} true if string is uuid
     */
-  apigee.isUUID = function(uuid) {
+  function isUUID (uuid) {
     var uuidValueRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
     if (!uuid) return false;
     return uuidValueRegex.test(uuid);
   }
+
+  return {
+    validateUsername:validateUsername,
+    getUsernameAllowedChars:getUsernameAllowedChars,
+    validateName:validateName,
+    getNameAllowedChars:getNameAllowedChars,
+    validatePassword:validatePassword,
+    getPasswordAllowedChars:getPasswordAllowedChars,
+    validateEmail:validateEmail,
+    getEmailAllowedChars:getEmailAllowedChars,
+    validatePath:validatePath,
+    getPathAllowedChars:getPathAllowedChars,
+    validateTitle:validateTitle,
+    getTitleAllowedChars:getTitleAllowedChars,
+    isUUID:isUUID
+  }
+})();

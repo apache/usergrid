@@ -2,7 +2,7 @@
   <div class="well thingy">
     {{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
     <div class="title">
-      {{if path}}<a href="" onclick="apigee.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+      {{if path}}<a href="" onclick="Usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
         ${name}
         {{if path}}</a>{{/if}}
     </div>
@@ -20,7 +20,7 @@
       </td>
       <td>
         {{if $value.actor.uuid}}
-        <a href="#" onclick="apigee.console.pageOpenUserProfile('${$value.actor.uuid}'); return false;">${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}</a>
+        <a href="#" onclick="Usergrid.console.pageOpenUserProfile('${$value.actor.uuid}'); return false;">${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}</a>
         {{else}}
         ${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}
         {{/if}}

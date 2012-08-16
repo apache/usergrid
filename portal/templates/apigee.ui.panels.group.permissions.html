@@ -3,7 +3,7 @@
     <span class="title">${name}</span>
     <div class="bar">
       <a data-toggle="modal" href="#dialog-form-add-role-to-group"> Add </a>
-      <a data-toggle="modal" href="#" onclick="apigee.console.deleteRolesFromGroup(''); return false;"> Remove </a>
+      <a data-toggle="modal" href="#" onclick="Usergrid.console.deleteRolesFromGroup(''); return false;"> Remove </a>
     </div>
   </div>
   <div class="console-section-contents">
@@ -16,7 +16,7 @@
         <tr class="zebraRows">
           <td class="checkboxo"><input type="checkbox" name="${name}" class="groupRoleItem" value="${name}" /></td>
           <td>
-            {{if path}}<a href="" onclick="apigee.console.pageOpenRole('${name}'); return false;">{{/if}}
+            {{if path}}<a href="" onclick="Usergrid.console.pageOpenRole('${name}'); return false;">{{/if}}
               ${title}
               (${name})
             {{if path}}</a>{{/if}}
@@ -31,7 +31,7 @@
       <br/>
       <div class="user-roles-title">Permissions </div>
       <h4>Add Permission Rule</h4>
-      <form id="role-permissions-form" action="" onsubmit="apigee.console.addGroupPermission('${name}'); return false;" class="well form-inline" autocomplete="off">
+      <form id="role-permissions-form" action="" onsubmit="Usergrid.console.addGroupPermission('${name}'); return false;" class="well form-inline" autocomplete="off">
         Path: <input id="group-permission-path-entry-input" type="text" name="path" value="/" />
         <label class="checkbox">
           <input id="group-permission-op-get-checkbox" type="checkbox" name="get" value="get"/>
@@ -70,7 +70,7 @@
             <td class="role-permission-op">{{if $value.ops.put}}<i class="icon-ok"></i>{{/if}}</td>
             <td class="role-permission-op">{{if $value.ops.delete}}<i class="icon-ok"></i>{{/if}}</td>
             <td class="role-permission-delete">
-              <a onclick="apigee.console.deleteGroupPermission('${groupname}', '${$value.perm}'); return false;" href="#" class="btn btn-danger"><i class="icon-trash icon-white"></i> Remove</a>
+              <a onclick="Usergrid.console.deleteGroupPermission('${groupname}', '${$value.perm}'); return false;" href="#" class="btn btn-danger"><i class="icon-trash icon-white"></i> Remove</a>
             </td>
           </tr>
           {{/each}}

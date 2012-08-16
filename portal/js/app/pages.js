@@ -98,7 +98,7 @@ function ApigeePages() {
     }
 
     if (panelName == 'console') {
-      url = apigee.console.getAccessTokenURL();
+      url = Usergrid.console.getAccessTokenURL();
       $("#console-panel iframe").attr("src", url);
     }
 
