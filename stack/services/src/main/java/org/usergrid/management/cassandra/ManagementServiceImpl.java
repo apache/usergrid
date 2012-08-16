@@ -706,7 +706,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public UserInfo createAdminFrom(User user, String password) throws Exception {
-        return doCreateAdmin(user, hashedCredentials(properties.getProperty(PROPERTIES_PASSWORD_SALT,""), password),
+        return doCreateAdmin(user, maybeSaltPassword(password),
                 mongoPasswordCredentials(user.getUsername(), password));
     }
 
@@ -974,10 +974,10 @@ public class ManagementServiceImpl implements ManagementService {
             return;
         }
 
-        if (!checkPassword(oldPassword,
-                readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId))) {
+        if (!maybeSaltPassword(oldPassword)
+                .compare(readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId))) {
             logger.info("Old password doesn't match");
-            throw new IncorrectPasswordException();
+            throw new IncorrectPasswordException("Old password does not match");
         }
 
         setAdminUserPassword(userId, newPassword);
@@ -1010,12 +1010,8 @@ public class ManagementServiceImpl implements ManagementService {
             return false;
         }
 
-        if (checkPassword(password,
-                readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId))) {
-            return true;
-        }
-        logger.info("password compare fail for uuid {}", userId);
-        return false;
+        return maybeSaltPassword(password)
+                .compare(readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId));
     }
 
     @Override
@@ -1028,10 +1024,8 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        if (checkPassword(
-                password,
-                readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID,
-                        user.getUuid()))) {
+        if (maybeSaltPassword(password)
+                .compare(readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID,user.getUuid()))) {
             userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
             if (!userInfo.isActivated()) {
                 throw new UnactivatedAdminUserException();
@@ -2378,10 +2372,8 @@ public class ManagementServiceImpl implements ManagementService {
                     "oldpassword and newpassword are both required");
         }
 
-        if (!checkPassword(oldPassword,
-                readUserPasswordCredentials(applicationId, userId))) {
-            logger.info("Old password doesn't match");
-            throw new IncorrectPasswordException();
+        if (!maybeSaltPassword(oldPassword).compare(readUserPasswordCredentials(applicationId, userId))) {
+            throw new IncorrectPasswordException("Old password does not match");
         }
 
 
@@ -2398,8 +2390,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        if (checkPassword(password,
-                readUserPasswordCredentials(applicationId, user.getUuid()))) {
+        if (maybeSaltPassword(password).compare(readUserPasswordCredentials(applicationId, user.getUuid()))) {
             if (!user.activated()) {
                 throw new UnactivatedAdminUserException();
             }

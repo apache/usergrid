@@ -74,10 +74,6 @@ public class CredentialsInfo {
 		return credentials;
 	}
 
-	public static CredentialsInfo passwordCredentials(String secret) {
-		return hashedCredentials(null, secret);
-	}
-
 	public static CredentialsInfo mongoPasswordCredentials(String username,
 			String password) {
 		return plainTextCredentials(mongoPassword(username, password));
@@ -151,6 +147,7 @@ public class CredentialsInfo {
 	}
 
 	/**
+   * Used for handling legacy passwords encrypted in md5 or similar.
 	 * @param hashType
 	 *            the hashType to set
 	 */
@@ -203,6 +200,13 @@ public class CredentialsInfo {
 		return compareSecret("sha-1", salt, secret);
 	}
 
+  /**
+   *
+   * @param password
+   * @param credentials
+   * @return
+   *
+   */
 	public static boolean checkPassword(String password,
 			CredentialsInfo credentials) {
 		if (credentials == null) {
@@ -238,7 +242,7 @@ public class CredentialsInfo {
 		} else if ("bcrypt".equals(cipher)) {
 			return BCrypt.hashpw(secret, BCrypt.gensalt());
 		} else if ("sha-1".equals(cipher)) {
-			return encodeBase64URLSafeString(computeHash(secret));
+			return encodeBase64URLSafeString(computeHash((isBlank(salt) ? secret : salt + secret)));
 		} else if ("md5".equals(cipher)) {
 			return DigestUtils.md5Hex(secret);
 		} else if ("aes".equals(cipher)) {
@@ -247,4 +251,13 @@ public class CredentialsInfo {
 		return secret;
 	}
 
+  /**
+   * Main entry point for password equivalency comparrison. Compares the output
+   * of {@link #getSecret()} for this object and the provided object.
+   * @param other
+   * @return
+   */
+  public boolean compare(CredentialsInfo other) {
+    return this.getSecret().equals(other.getSecret());
+  }
 }
