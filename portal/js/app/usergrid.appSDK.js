@@ -1638,7 +1638,7 @@ Usergrid.ApiClient = (function () {
     if(xD)
     {
       xhr = new window.XDomainRequest();
-      if ( (application_name != 'SANDBOX' && Usergrid.ApiClient.getToken()) || (getQueryType() == Usergrid.M && Usergrid.ApiClient.getToken())) {
+      if (Usergrid.ApiClient.getToken()) {
         if (path.indexOf("?")) {
           path += '&access_token='+Usergrid.ApiClient.getToken();
         } else {
@@ -1651,13 +1651,13 @@ Usergrid.ApiClient = (function () {
     {
       xhr = new XMLHttpRequest();
       xhr.open(method, path, true);
-      if ( (application_name != 'SANDBOX' && Usergrid.ApiClient.getToken()) || (getQueryType() == Usergrid.M && Usergrid.ApiClient.getToken())) {
+      if (Usergrid.ApiClient.getToken()) {
         xhr.setRequestHeader("Authorization", "Bearer " + Usergrid.ApiClient.getToken());
         xhr.withCredentials = true;
       }
     } else {
       xhr = new ActiveXObject("MSXML2.XMLHTTP.3.0");
-      if ( (application_name != 'SANDBOX' && Usergrid.ApiClient.getToken()) || (getQueryType() == Usergrid.M && Usergrid.ApiClient.getToken())) {
+      if (Usergrid.ApiClient.getToken()) {
         if (path.indexOf("?")) {
           path += '&access_token='+Usergrid.ApiClient.getToken();
         } else {
@@ -1726,7 +1726,7 @@ Usergrid.ApiClient = (function () {
         Query.callFailureCallback();
       }
     };
-    var timeout = setTimeout(function() { xhr.abort(); }, 30000);
+    var timeout = setTimeout(function() { xhr.abort(); }, 15000);
 
     xhr.send(jsonObj);
   }
