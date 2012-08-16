@@ -25,43 +25,10 @@ window.console.log = window.console.log || function() {};
 //Usergrid namespace encapsulates this SDK
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
-Usergrid.SDK_VERSION = '0.9.4';
+Usergrid.SDK_VERSION = '0.9.5';
 
 /**
  *  Usergrid.Query is a class for holding all query information and paging state
- *
- *  The goal of the query object is to make it easy to run any
- *  kind of CRUD call against the API.  This is done as follows:
- *
- *  1. Create a query object:
- *     Query = new Usergrid.Query("GET", "users", null, function() { alert("success"); }, function() { alert("failure"); });
- *
- *  2. Run the query by calling the appropriate endpoint call
- *     runAppQuery(Query);
- *     or
- *     runManagementQuery(Query);
- *
- *  3. Paging - The Usergrid.Query holds the cursor information.  To
- *     use, simply bind click events to functions that call the
- *     getNext and getPrevious methods of the query object.  This
- *     will set the cursor correctly, and the runAppQuery method
- *     can be called again using the same Usergrid.Query:
- *     runAppQuery(Query);
- *
- *  @class Usergrid.Query
- *  @param method REQUIRED - GET, POST, PUT, DELETE
- *  @param path REQUIRED - API resource (e.g. "users" or "users/rod", should not include http URL or org_name/app_name)
- *  @param jsonObj NULLABLE - a json data object to be passed to the API
- *  @param params NULLABLE - query parameters to be encoded and added to the API URL
- *  @param {Function} successCallback function called with response: <pre>
- *  {
- *    alert('Hurray! Everything worked.');
- *  }
- *  @param {Function} failureCallback function called with response if available: <pre>
- *  {
- *    alert('An error occured');
- *  }
- *  </pre>
  *
  *  @class Query
  *  @author Rod Simpson (rod@apigee.com)
@@ -118,6 +85,7 @@ Usergrid.SDK_VERSION = '0.9.4';
      },
     /**
      *  A method to set all settable parameters of the Query at one time
+     *
      *  @public
      *  @method validateUsername
      *  @param {string} method
@@ -139,6 +107,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
      *  A method to reset all the parameters in one call
+     *
      *  @public
      *  @return none
      */
@@ -152,6 +121,7 @@ Usergrid.SDK_VERSION = '0.9.4';
     },
     /**
     * Returns the method
+    *
     * @public
     * @method getMethod
     * @return {string} Returns method
@@ -162,6 +132,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * sets the method (POST, PUT, DELETE, GET)
+    *
     * @public
     * @method setMethod
     * @return none
@@ -169,8 +140,10 @@ Usergrid.SDK_VERSION = '0.9.4';
     setMethod: function(method) {
       this._method = method;
     },
+
     /**
     * Returns the path
+    *
     * @public
     * @method getPath
     * @return {string} Returns path
@@ -181,6 +154,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * sets the path
+    *
     * @public
     * @method setPath
     * @return none
@@ -191,6 +165,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Returns the json Object
+    *
     * @public
     * @method getJsonObj
     * @return {object} Returns the json Object
@@ -201,6 +176,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * sets the json object
+    *
     * @public
     * @method setJsonObj
     * @return none
@@ -210,6 +186,7 @@ Usergrid.SDK_VERSION = '0.9.4';
     },
     /**
     * Returns the Query Parameters object
+    *
     * @public
     * @method getQueryParams
     * @return {object} Returns Query Parameters object
@@ -220,6 +197,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * sets the query parameter object
+    *
     * @public
     * @method setQueryParams
     * @return none
@@ -230,6 +208,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Returns the success callback function
+    *
     * @public
     * @method getSuccessCallback
     * @return {function} Returns the successCallback
@@ -240,6 +219,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * sets the success callback function
+    *
     * @public
     * @method setSuccessCallback
     * @return none
@@ -250,6 +230,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Calls the success callback function
+    *
     * @public
     * @method callSuccessCallback
     * @return {boolean} Returns true or false based on if there was a callback to call
@@ -265,6 +246,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Returns the failure callback function
+    *
     * @public
     * @method getFailureCallback
     * @return {function} Returns the failureCallback
@@ -275,6 +257,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * sets the failure callback function
+    *
     * @public
     * @method setFailureCallback
     * @return none
@@ -285,6 +268,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Calls the failure callback function
+    *
     * @public
     * @method callFailureCallback
     * @return {boolean} Returns true or false based on if there was a callback to call
@@ -300,6 +284,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Returns the curl call
+    *
     * @public
     * @method getCurl
     * @return {function} Returns the curl call
@@ -310,6 +295,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * sets the curl call
+    *
     * @public
     * @method setCurl
     * @return none
@@ -320,6 +306,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Returns the Token
+    *
     * @public
     * @method getToken
     * @return {function} Returns the Token
@@ -330,6 +317,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Method to set
+    *
     * @public
     * @method setToken
     * @return none
@@ -340,6 +328,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Resets the paging pointer (back to original page)
+    *
     * @public
     * @method resetPaging
     * @return none
@@ -352,6 +341,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Method to determine if there is a previous page of data
+    *
     * @public
     * @method hasPrevious
     * @return {boolean} true or false based on if there is a previous page
@@ -362,6 +352,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Method to set the paging object to get the previous page of data
+    *
     * @public
     * @method getPrevious
     * @return none
@@ -373,6 +364,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Method to determine if there is a next page of data
+    *
     * @public
     * @method hasNext
     * @return {boolean} true or false based on if there is a next page
@@ -383,6 +375,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Method to set the paging object to get the next page of data
+    *
     * @public
     * @method getNext
     * @return none
@@ -394,6 +387,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Method to save off the cursor just returned by the last API call
+    *
     * @public
     * @method saveCursor
     * @return none
@@ -407,6 +401,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
     /**
     * Method to determine if there is a next page of data
+    *
     * @public
     * @method getCursor
     * @return {string} the current cursor
@@ -427,6 +422,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 (function () {
   /**
    *  Constructor for initializing an entity
+   *
    *  @constructor
    *  @param {string} collectionType - the type of collection to model
    *  @param {uuid} uuid - (optional), the UUID of the collection if it is known
@@ -437,10 +433,12 @@ Usergrid.SDK_VERSION = '0.9.4';
     this._uuid = uuid;
   };
 
+  //inherit prototype from Query
   Usergrid.Entity.prototype = new Usergrid.Query();
 
   /**
    *  gets the current Entity type
+   *
    *  @method getCollectionType
    *  @return {string} collection type
    */
@@ -450,7 +448,8 @@ Usergrid.SDK_VERSION = '0.9.4';
 
   /**
    *  sets the current Entity type
-   *  @method getCollectionType
+   *
+   *  @method setCollectionType
    *  @param {string} collectionType
    *  @return none
    */
@@ -461,6 +460,7 @@ Usergrid.SDK_VERSION = '0.9.4';
   /**
    *  gets a specific field or the entire data object. If null or no argument
    *  passed, will return all data, else, will return a specific field
+   *
    *  @method get
    *  @param {string} field
    *  @return {string} || {object} data
@@ -475,8 +475,9 @@ Usergrid.SDK_VERSION = '0.9.4';
 
   /**
    *  adds a specific field or object to the Entity's data
+   *
    *  @method set
-   *  @param {string} || {object} item
+   *  @param {string} item || {object}
    *  @param {string} value
    *  @return none
    */
@@ -494,6 +495,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
   /**
    *  Saves the entity back to the database
+   *
    *  @method save
    *  @public
    *  @param {function} successCallback
@@ -514,8 +516,9 @@ Usergrid.SDK_VERSION = '0.9.4';
     }
 
     //if this is a user, update the password if it has been specified
+    var data = {};
     if (path == 'users') {
-      var data = this.get();
+      data = this.get();
       var pwdata = {};
       //Note: we have a ticket in to change PUT calls to /users to accept the password change
       //      once that is done, we will remove this call and merge it all into one
@@ -540,7 +543,7 @@ Usergrid.SDK_VERSION = '0.9.4';
     //update the entity
     var self = this;
 
-    var data = {};
+    data = {};
     var entityData = this.get();
     //remove system specific properties
     for (var item in entityData) {
@@ -574,6 +577,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
   /**
    *  refreshes the entity by making a GET call back to the database
+   *
    *  @method fetch
    *  @public
    *  @param {function} successCallback
@@ -636,6 +640,7 @@ Usergrid.SDK_VERSION = '0.9.4';
   /**
    *  deletes the entity from the database - will only delete
    *  if the object has a valid uuid
+   *
    *  @method destroy
    *  @public
    *  @param {function} successCallback
@@ -675,33 +680,17 @@ Usergrid.SDK_VERSION = '0.9.4';
 
 
 /**
- *
  *  The Collection class models Usergrid Collections.  It essentially
  *  acts as a container for holding Entity objects, while providing
  *  additional funcitonality such as paging, and saving
  *
- *  To use the Collection class, simply create a new Collection object:
- *
- *  var cars = new Collection('cars');
- *
- *  Once the collection is created, you can refresh it from the database
- *
- *  cars.get();
- *
- *  Say we want to display a list of all the cars in the collection:
- *
- *  while(cars.hasNextEntity()) {
- *    var item = cars.getNextEntity();
- *    $('#mycarlist').append('<li>'+ item.getName() + '</li>');
- *  }
- *
-
  *  @class Collection
  *  @author Rod Simpson (rod@apigee.com)
  */
 (function () {
   /**
    *  Collection is a container class for holding entities
+   *
    *  @constructor
    *  @param {string} collectionPath - the type of collection to model
    *  @param {uuid} uuid - (optional), the UUID of the collection if it is known
@@ -718,6 +707,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
   /**
    *  gets the current Collection path
+   *
    *  @method getCollectionPath
    *  @return {string} collectionPath
    */
@@ -727,6 +717,7 @@ Usergrid.SDK_VERSION = '0.9.4';
 
   /**
    *  sets the current Collection path
+   *
    *  @method setCollectionPath
    *  @param {string} collectionPath
    *  @return none
@@ -737,8 +728,8 @@ Usergrid.SDK_VERSION = '0.9.4';
 
   /**
    *  gets the current Collection UUID
+   *
    *  @method getUUID
-   *  @param {string} uuid
    *  @return {string} the uuid
    */
   Usergrid.Collection.prototype.getUUID = function (){
@@ -1199,6 +1190,7 @@ Usergrid.ApiClient = (function () {
 
   /*
     *  A public method to get the organization name to be used by the client
+    *
     *  @method getOrganizationName
     *  @public
     *  @return {string} the organization name
@@ -1209,6 +1201,7 @@ Usergrid.ApiClient = (function () {
 
   /*
     *  A public method to set the organization name to be used by the client
+    *
     *  @method setOrganizationName
     *  @param orgName - the organization name
     *  @return none
@@ -1219,6 +1212,7 @@ Usergrid.ApiClient = (function () {
 
   /*
     *  A public method to get the organization UUID to be used by the client
+    *
     *  @method getOrganizationUUID
     *  @public
     *  @return {string} the organization UUID
@@ -1229,6 +1223,7 @@ Usergrid.ApiClient = (function () {
 
   /*
     *  A public method to set the organization UUID to be used by the client
+    *
     *  @method setOrganizationUUID
     *  @public
     *  @param orgUUID - the organization UUID
@@ -1240,6 +1235,7 @@ Usergrid.ApiClient = (function () {
 
   /*
   *  A public method to get the application name to be used by the client
+  *
   *  @method getApplicationName
   *  @public
   *  @return {string} the application name
@@ -1250,6 +1246,7 @@ Usergrid.ApiClient = (function () {
 
   /*
   *  A public method to set the application name to be used by the client
+  *
   *  @method setApplicationName
   *  @public
   *  @param appName - the application name
@@ -1735,12 +1732,12 @@ Usergrid.ApiClient = (function () {
     init:init,
     runAppQuery:runAppQuery,
     runManagementQuery:runManagementQuery,
-      getOrganizationName:getOrganizationName,
-      setOrganizationName:setOrganizationName,
-      getOrganizationUUID:getOrganizationUUID,
-      setOrganizationUUID:setOrganizationUUID,
-      getApplicationName:getApplicationName,
-      setApplicationName:setApplicationName,
+    getOrganizationName:getOrganizationName,
+    setOrganizationName:setOrganizationName,
+    getOrganizationUUID:getOrganizationUUID,
+    setOrganizationUUID:setOrganizationUUID,
+    getApplicationName:getApplicationName,
+    setApplicationName:setApplicationName,
     getToken:getToken,
     setToken:setToken,
     getApiUrl:getApiUrl,
@@ -1775,6 +1772,7 @@ Usergrid.validation = (function () {
 
   /**
     * Tests the string against the allowed chars regex
+    *
     * @public
     * @method validateUsername
     * @param {string} username - The string to test
@@ -1794,6 +1792,7 @@ Usergrid.validation = (function () {
 
   /**
     * Returns the regex of allowed chars
+    *
     * @public
     * @method getUsernameAllowedChars
     * @return {string} Returns a string with the allowed chars
@@ -1804,6 +1803,7 @@ Usergrid.validation = (function () {
 
   /**
     * Tests the string against the allowed chars regex
+    *
     * @public
     * @method validateName
     * @param {string} name - The string to test
@@ -1823,6 +1823,7 @@ Usergrid.validation = (function () {
 
   /**
     * Returns the regex of allowed chars
+    *
     * @public
     * @method getNameAllowedChars
     * @return {string} Returns a string with the allowed chars
@@ -1833,6 +1834,7 @@ Usergrid.validation = (function () {
 
   /**
     * Tests the string against the allowed chars regex
+    *
     * @public
     * @method validatePassword
     * @param {string} password - The string to test
@@ -1852,6 +1854,7 @@ Usergrid.validation = (function () {
 
   /**
     * Returns the regex of allowed chars
+    *
     * @public
     * @method getPasswordAllowedChars
     * @return {string} Returns a string with the allowed chars
@@ -1862,6 +1865,7 @@ Usergrid.validation = (function () {
 
   /**
     * Tests the string against the allowed chars regex
+    *
     * @public
     * @method validateEmail
     * @param {string} email - The string to test
@@ -1881,6 +1885,7 @@ Usergrid.validation = (function () {
 
   /**
     * Returns the regex of allowed chars
+    *
     * @public
     * @method getEmailAllowedChars
     * @return {string} Returns a string with the allowed chars
@@ -1891,6 +1896,7 @@ Usergrid.validation = (function () {
 
   /**
     * Tests the string against the allowed chars regex
+    *
     * @public
     * @method validatePath
     * @param {string} path - The string to test
@@ -1910,6 +1916,7 @@ Usergrid.validation = (function () {
 
   /**
     * Returns the regex of allowed chars
+    *
     * @public
     * @method getPathAllowedChars
     * @return {string} Returns a string with the allowed chars
@@ -1920,6 +1927,7 @@ Usergrid.validation = (function () {
 
   /**
     * Tests the string against the allowed chars regex
+    *
     * @public
     * @method validateTitle
     * @param {string} title - The string to test
@@ -1939,6 +1947,7 @@ Usergrid.validation = (function () {
 
   /**
     * Returns the regex of allowed chars
+    *
     * @public
     * @method getTitleAllowedChars
     * @return {string} Returns a string with the allowed chars
@@ -1949,6 +1958,7 @@ Usergrid.validation = (function () {
 
   /**
     * Tests if the string is the correct length
+    *
     * @public
     * @method checkLength
     * @param {string} string - The string to test
@@ -1965,6 +1975,7 @@ Usergrid.validation = (function () {
 
   /**
     * Tests if the string is a uuid
+    *
     * @public
     * @method isUUID
     * @param {string} uuid The string to test
