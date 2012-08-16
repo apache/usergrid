@@ -957,20 +957,46 @@ function apigee_console_app(Pages, query_params) {
     }
   }
 
+  function addOrganizationToList(orgName) {
+    runManagementQuery(new Usergrid.Query("GET","orgs/" + orgName, null, null,
+      function(response) {
+        var orgName = response.organization.name;
+        var orgUUID = response.organization.uuid;
+        organization = new Usergrid.Organization(orgName, orgUUID);
+        var apps = response.organization.applications;
+        for(app in apps) {
+          var appName = app.split("/")[1];
+          //grab the id
+          var appUUID = response.organization.applications[app];
+          //store in the new Application object
+          application = new Usergrid.Application(appName, appUUID);
+          organization.addItem(application);
+        }
+        //add organization to organizations list
+        Usergrid.organizations.addItem(organization);
+        requestAccountSettings();
+        setupOrganizationsMenu();
+      },
+      function() { alertModal("Error", "Unable to get organization" + orgName);
+      }
+    ));
+  }
+
   function submitNewOrg() {
     var form = $(this);
     formClearErrors(form);
 
     var new_organization_name = $('#new-organization-name');
-
+    var new_organization_name_val = $('#new-organization-name').val();
     var bValid = checkLength2(new_organization_name, 4, 80)
       && checkRegexp2(new_organization_name, organizatioNameRegex, organizationNameAllowedCharsMessage);
 
     if (bValid) {
       var data = form.serializeObject();
       runManagementQuery(new Usergrid.Query("POST","users/" + Usergrid.userSession.getUserUUID() + "/organizations", data, null,
-        //requestOrganizations,
-        requestAccountSettings,
+        function() {
+          addOrganizationToList(new_organization_name_val);
+        },
         function() { alertModal("Error", "Unable to create organization"); }
       ));
       $(this).modal('hide');
