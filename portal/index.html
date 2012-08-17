@@ -349,32 +349,32 @@
                 <iframe class="container" src="loading.html" scrolling="no"></iframe>
               </div>
               <div id="application-panel" style="display: none">
-			    <div class="console-section">
-	              	<div class="well thingy"><span class="title"> Application API Credentials <span class="app_title"></span></span>
-	                  <div class="bar">
-	                    <a class="" href="" onclick="Usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
-	                  </div>
-	                </div>
-	                <div class="console-section-contents">
-	                  	<table id="application-panel-key-table" class="table">
-	                      <tr>
-	                        <td>
-	                          <span class="span3">Client ID</span>
-	                        </td>
-	                        <td>
-	                          <span id="application-panel-key">...</span>
-	                        </td>
-	                      </tr>
-	                      <tr>
-	                        <td>
-	                          <span class="span3">Client Secret</span>
-	                        </td>
-	                        <td>
-	                          <span id="application-panel-secret">...</span>
-	                        <td>
-	                      </tr>
-	                   	</table>
-	               	</div>
+                <div class="console-section">
+                  <div class="well thingy"><span class="title"> Application API Credentials <span class="app_title"></span></span>
+                    <div class="bar">
+                      <a class="" href="" onclick="Usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
+                    </div>
+                  </div>
+                  <div class="console-section-contents">
+                    <table id="application-panel-key-table" class="table">
+                      <tr>
+                        <td>
+                          <span class="span3">Client ID</span>
+                        </td>
+                        <td>
+                          <span id="application-panel-key">...</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span class="span3">Client Secret</span>
+                        </td>
+                        <td>
+                          <span id="application-panel-secret">...</span>
+                        <td>
+                      </tr>
+                    </table>
+                  </div>
                 </div>
                 <div class="console-section">
                   <div class="well thingy">
@@ -848,12 +848,12 @@
                     </div>
                   </div>
                   <div id="role-permissions-curl-container" class="curl-container">
-				  </div>
+                  </div>
                 </div>
                 <div id="role-panel-users" class="panel-content">
                   <div class="console-section" id="role-users"></div>
                   <div id="role-users-curl-container" class="curl-container">
-				  </div>
+                  </div>
                 </div>
                 <div id="role-panel-groups" class="panel-content">
                   <div class="console-section">
@@ -871,7 +871,7 @@
                     </table>
                   </div>
                   <div id="role-groups-curl-container" class="curl-container">
-				  </div>
+                  </div>
                 </div>
                   <form id="dialog-form-add-group-to-role" class="modal hide fade">
                   <div class="modal-header">
@@ -1035,7 +1035,7 @@
                       <li id="collections-next" class="next"><a href="#">Next &rarr;</a></li>
                     </ul>
                   </div>
-				  <div id="collections-curl-container" class="row-fluid curl-container ">
+                  <div id="collections-curl-container" class="row-fluid curl-container ">
                   </div>
                 </div>
                 <form id="dialog-form-new-collection" class="modal hide fade">
@@ -1045,7 +1045,6 @@
                   </div>
                   <div class="modal-body">
                     <p class="validateTips">All form fields are required.</p>
-
                     <fieldset>
                       <div class="control-group">
                         <label for="new-collection-name">Name</label>
@@ -1110,7 +1109,7 @@
                     <span class="title"> Received <span class="app_title"></span></span>
                     <div class="bar">
                       <a id="delete-entity-link" href="" > Delete Entity</a>
-		      <a id="selectAllCollections" onclick="Usergrid.console.selectAllCollections();"> Select All </a>
+                      <a id="selectAllCollections" onclick="Usergrid.console.selectAllCollections();"> Select All </a>
                       <a id="deselectAllCollections" style="display: none;" onclick="Usergrid.console.deselectAllCollections();"> Deselect All </a>
                     </div>
                   </div>
@@ -1170,33 +1169,28 @@
       </form>
       <div class="clear"></div>
       <div class="global-clippy">
-      	<div id="global-clippy-data"></div>
-      	<div id="global-clippy-container">
-		 	<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"
-						            width="100%"
-						            height="100%"
-						            id="clippy">
-<<<<<<< HEAD
-						    <param name="movie" value="js/clippy/build/clippy.swf"/>
-						    <param name="allowScriptAccess" value="always" />		    
-=======
-						    <param name="movie" value="js/clippy/kneath-clippy-686fe1f/build/clippy.swf"/>
-						    <param name="allowScriptAccess" value="always" />
->>>>>>> 5560ccb556fcb72faf64bfeaa3f3ed31feacbf58
-						    <param name="scale" value="exactfit" />
-						    <param NAME="FlashVars" value="id=global-clippy-data"/>
-						    <embed src="js/clippy/build/clippy.swf"
-						           width="100%"
-						           height="100%"
-						           name="clippy"
-						           scale="exactfit"
-						           allowScriptAccess="always"
-						           type="application/x-shockwave-flash"
-						           pluginspage="http://www.macromedia.com/go/getflashplayer"
-						           FlashVars="id=global-clippy-data"
-						    />
-			</object>
-		</div>
+      <div id="global-clippy-data"></div>
+      <div id="global-clippy-container">
+        <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"
+          width="100%"
+          height="100%"
+          id="clippy">
+          <param name="movie" value="js/clippy/build/clippy.swf"/>
+          <param name="allowScriptAccess" value="always" />
+          <param name="scale" value="exactfit" />
+          <param NAME="FlashVars" value="id=global-clippy-data"/>
+          <embed src="js/clippy/build/clippy.swf"
+            width="100%"
+            height="100%"
+            name="clippy"
+            scale="exactfit"
+            allowScriptAccess="always"
+            type="application/x-shockwave-flash"
+            pluginspage="http://www.macromedia.com/go/getflashplayer"
+            FlashVars="id=global-clippy-data"
+          />
+        </object>
+      </div>
       </div>
       <footer>
         <div class="container-fluid">
