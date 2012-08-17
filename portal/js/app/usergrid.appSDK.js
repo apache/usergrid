@@ -1042,7 +1042,7 @@ Usergrid.SDK_VERSION = '0.9.6';
     var queryParams = this.getQueryParams();
     //empty the list
     this.setEntityList([]);
-    this.setAllQueryParams('GET', this.getCollectionPath(), null, queryParams,
+    this.setAllQueryParams('GET', this.getPath(), null, queryParams,
       function(response) {
         if (response.entities) {
           this.resetEntityPointer();
@@ -1050,7 +1050,7 @@ Usergrid.SDK_VERSION = '0.9.6';
           for (var i=0;i<count;i++) {
             var uuid = response.entities[i].uuid;
             if (uuid) {
-              var entity = new Usergrid.Entity(self.getCollectionPath(), uuid);
+              var entity = new Usergrid.Entity(self.getPath(), uuid);
               //store the data in the entity
               var data = response.entities[i] || {};
               delete data.uuid; //remove uuid from the object
@@ -1101,7 +1101,7 @@ Usergrid.SDK_VERSION = '0.9.6';
       }
       entity.save();
     }
-    this.setAllQueryParams('PUT', this.getCollectionPath(), jsonObj, null,successCallback, errorCallback);
+    this.setAllQueryParams('PUT', this.getPath(), jsonObj, null,successCallback, errorCallback);
     Usergrid.ApiClient.runAppQuery(this);
   }
 })(Usergrid);
