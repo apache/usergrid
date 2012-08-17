@@ -533,8 +533,8 @@ function apigee_console_app(Pages, query_params) {
         runAppQuery(new Usergrid.Query("DELETE", path + "/" + entityId, null, null,
           function() { 
           	itemsCount--;
-          	//CALL get collection until all of the items are deleted.
           	if(itemsCount==0){
+          		deselectAllCollections();
           		getCollection('GET');
           	}},
           function() { alertModal("Unable to delete entity ID: " + entityId); }
@@ -2305,7 +2305,7 @@ function apigee_console_app(Pages, query_params) {
   }
 
   function redrawGroupPermissions(data){
-  	//TODO: IS THIS NEEDED? WHY?
+  	
   	if (data.roles && data.roles.length == 0) {
     	delete data.roles
     }
@@ -2379,18 +2379,7 @@ function apigee_console_app(Pages, query_params) {
       if ($.isEmptyObject(entity_path)) {
         entity_path = path + "/" + entity.uuid;
       }
-/* TODO: MARKED FOR REMOVAL
-      group_data = {
-        entity : entity_contents,
-        picture : entity.picture,
-        name : name,
-        uuid : uuid,
-        path : entity_path,
-        collections : collections,
-        metadata : metadata,
-        uri : (entity.metadata || { }).uri
-      };
-*/
+
 	var data = {
 		entity : entity_contents,
         picture : entity.picture,
@@ -2403,8 +2392,6 @@ function apigee_console_app(Pages, query_params) {
 	}
 
 	redrawGroupDetails(data, this.getCurl());
-
-   //   redrawGroupPanel();
 
       runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/users', null, null,
         function(response) {
@@ -2427,41 +2414,10 @@ function apigee_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve group's activities."); }
       ));
 
-      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/rolenames', null, null,
-        function(response) {
-          if (user_data && response.entities && (response.entities.length > 0)) {
-            group_data.roles = response.data;
-            redrawGroupPanel();
-          }
-        },
-        function() { alertModal("Error", "Unable to retrieve group's rolenames."); }
-      ));
-		//TODO: check if duplicate.
-      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/users', null, null,
-        function(response) {
-          if (group_data && response.entities && (response.entities.length > 0)) {
-            group_data.memberships = response.entities;
-            redrawGroupPanel();
-          }
-        },
-        function() { alertModal("Error", "Unable to retrieve group's rolenames."); }
-      ));
-		//TODO: check if duplicate.
-      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/activities', null, null,
-        function(response) {
-          if (group_data && response.entities && (response.entities.length > 0)) {
-            group_data.activities = response.entities;
-            redrawGroupPanel();
-          }
-        },
-        function() { alertModal("Error", "Unable to retrieve group's rolenames."); }
-      ));
-//TODO: check against /rolenames
       runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/roles', null, null,
         function(response) {
           if (data && response.entities) {
             data.roles = response.entities;
-
           }
           data.groupRolesCurl = this.getCurl();
           //WHEN /Roles is properly handled, get permissions
@@ -2696,7 +2652,6 @@ function apigee_console_app(Pages, query_params) {
         function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
     ));
   }
-//TODO: MARKED FOr REfactoring
 
   var rolesUsersResults = ''
 
@@ -2712,7 +2667,7 @@ function apigee_console_app(Pages, query_params) {
     updateUsersForRolesAutocomplete();
     showCurlCommand('role-users', curl);
   }
-//TODO: MARKED FOr REfactoring
+  
   var rolesGroupsResults = ''
 
   function displayRoleGroups(response, curl) {
@@ -4179,7 +4134,7 @@ function deleteRolePermission(roleName, permission) {
     }
     return false;
   });
-//TODO: why is this object out of scope of .button()??
+  
   $('button, input:submit, input:button').button();
 
   $('select#indexSelect').change( function(e){
