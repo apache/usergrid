@@ -1,7 +1,7 @@
-window.apigee = window.apigee || {};
-apigee.console = apigee.console || {};
-apigee.console.ui = apigee.console.ui || { };
-apigee.console.ui.collections = apigee.console.ui.collections || { };
+window.Usergrid = window.Usergrid || {};
+Usergrid.console = Usergrid.console || {};
+Usergrid.console.ui = Usergrid.console.ui || { };
+Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
 
 (function() {
   // This code block *WILL* load before the document is complete
@@ -18,7 +18,7 @@ apigee.console.ui.collections = apigee.console.ui.collections || { };
 
       var entity_id = el.dataset('entity-id');
       var entity_type = el.dataset('entity-type');
-      var entity = apigee.console.getQueryResultEntity(entity_id);
+      var entity = Usergrid.console.getQueryResultEntity(entity_id);
       if (!entity) return;
       o.entity = entity;
       o.path = el.dataset('collection-path');
@@ -119,8 +119,8 @@ apigee.console.ui.collections = apigee.console.ui.collections || { };
         return $.tmpl("apigee.ui.collections.entity.collections.html", {
           collections : collections
         }, {
-          makeObjectTable : apigee.console.ui.makeObjectTable,
-          tableOpts : apigee.console.ui.standardTableOpts
+          makeObjectTable : Usergrid.console.ui.makeObjectTable,
+          tableOpts : Usergrid.console.ui.standardTableOpts
         });
       }
       return $("");
@@ -128,19 +128,20 @@ apigee.console.ui.collections = apigee.console.ui.collections || { };
 
     getContents : function() {
       var entity_contents = $.extend( false, { }, this.options.entity);
-      var path = entity_contents['metadata']['path'];
-      entity_contents = $.extend( false, entity_contents, {'path': path});
-      var sets = entity_contents['metadata']['sets'];
-      entity_contents = $.extend( false, entity_contents, {'sets': sets});
-      var collections = entity_contents['metadata']['collections'];
-      entity_contents = $.extend( false, entity_contents, {'collections': collections});
-
-      delete entity_contents['metadata'];
+      try { // metadata may or may not be present
+        var path = entity_contents['metadata']['path'];
+        entity_contents = $.extend( false, entity_contents, {'path': path});
+        var sets = entity_contents['metadata']['sets'];
+        entity_contents = $.extend( false, entity_contents, {'sets': sets});
+        var collections = entity_contents['metadata']['collections'];
+        entity_contents = $.extend( false, entity_contents, {'collections': collections});
+        delete entity_contents['metadata'];
+      } catch(e) {}
       return $.tmpl("apigee.ui.collections.entity.contents.html", {
         entity : entity_contents
       }, {
-        makeObjectTable : apigee.console.ui.makeObjectTable,
-        tableOpts : apigee.console.ui.standardTableOpts
+        makeObjectTable : Usergrid.console.ui.makeObjectTable,
+        tableOpts : Usergrid.console.ui.standardTableOpts
       });
     },
 
@@ -150,8 +151,8 @@ apigee.console.ui.collections = apigee.console.ui.collections || { };
         return $.tmpl("apigee.ui.collections.entity.metadata.html", {
           metadata : entity.metadata
         }, {
-          makeObjectTable : apigee.console.ui.makeObjectTable,
-          tableOpts : apigee.console.ui.metadataTableOpts
+          makeObjectTable : Usergrid.console.ui.makeObjectTable,
+          tableOpts : Usergrid.console.ui.metadataTableOpts
         });
       }
       return $("");
@@ -161,8 +162,8 @@ apigee.console.ui.collections = apigee.console.ui.collections || { };
       return $.tmpl("apigee.ui.collections.entity.json.html", {
         entity : this.options.entity
       }, {
-        makeObjectTable : apigee.console.ui.makeObjectTable,
-        tableOpts : apigee.console.ui.standardTableOpts
+        makeObjectTable : Usergrid.console.ui.makeObjectTable,
+        tableOpts : Usergrid.console.ui.standardTableOpts
       });
     },
 
@@ -177,7 +178,7 @@ apigee.console.ui.collections = apigee.console.ui.collections || { };
     }
 
   }
-  apigee.console.ui.collections.entity_list_item = entity_list_item;
+  Usergrid.console.ui.collections.entity_list_item = entity_list_item;
 
   var entity_detail = {
     options: {
@@ -191,7 +192,7 @@ apigee.console.ui.collections = apigee.console.ui.collections || { };
 
       var entity_id = el.dataset('entity-id');
       var entity_type = el.dataset('entity-type');
-      var entity = apigee.console.getQueryResultEntity(entity_id);
+      var entity = Usergrid.console.getQueryResultEntity(entity_id);
       if (!entity) return;
       o.entity = entity;
       o.path = el.dataset('collection-path');
@@ -272,9 +273,9 @@ apigee.console.ui.collections = apigee.console.ui.collections || { };
         metadata : metadata,
         uri : (entity.metadata || { }).uri
       }, {
-        makeObjectTable : apigee.console.ui.makeObjectTable,
-        tableOpts : apigee.console.ui.standardTableOpts,
-        metadataTableOpts : apigee.console.ui.metadataTableOpts
+        makeObjectTable : Usergrid.console.ui.makeObjectTable,
+        tableOpts : Usergrid.console.ui.standardTableOpts,
+        metadataTableOpts : Usergrid.console.ui.metadataTableOpts
       });
 
     },
@@ -288,7 +289,7 @@ apigee.console.ui.collections = apigee.console.ui.collections || { };
     }
 
   };
-  apigee.console.ui.collections.entity_detail = entity_detail;
+  Usergrid.console.ui.collections.entity_detail = entity_detail;
 
   (function($) {
     // This code block *WILL NOT* load before the document is complete

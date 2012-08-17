@@ -1,20 +1,33 @@
 function apigee_console_app(Pages, query_params) {
   //This code block *WILL NOT* load before the document is complete
-  window.apigee = window.apigee || {};
-  apigee.console = apigee.console || {};
-  var apiClient = new apigee.APIClient();
+  window.Usergrid = window.Usergrid || {};
+  Usergrid.console = Usergrid.console || {};
 
   // for running Apigee App Services as a local server
   var LOCAL_STANDALONE_API_URL = "http://localhost:8080";
   var LOCAL_TOMCAT_API_URL = "http://localhost:8080/ROOT";
   var LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
+  var PUBLIC_API_URL = "https://api.usergrid.com/";
   var FORCE_PUBLIC_API = true; // Always use public API
   if (!FORCE_PUBLIC_API && (document.domain.substring(0,9) == "localhost")) {
-    apiClient.setApiUrl(LOCAL_API_URL);
+    Usergrid.ApiClient.setApiUrl(LOCAL_API_URL);
+  }
+
+  String.prototype.endsWith = function (s) {
+    return this.length >= s.length && this.substr(this.length - s.length) == s;
   }
 
   if (query_params.api_url) {
-      apiClient.setApiUrl(query_params.api_url);
+      if (!query_params.api_url.endsWith('/')) {
+        query_params.api_url += '/';
+      }
+      Usergrid.ApiClient.setApiUrl(query_params.api_url);
+  }
+
+  var HIDE_CONSOLE = query_params.hide_console || "";
+
+  if (HIDE_CONSOLE.indexOf("true") >= 0) {
+    $('#sidebar-menu ul li a[href="#console"]').hide();
   }
 
   var OFFLINE = false;
@@ -65,7 +78,7 @@ function apigee_console_app(Pages, query_params) {
 
   var indexes = [];
   var backgroundGraphColor = '#ffffff';
-  Pages.resetPasswordUrl = apiClient.getResetPasswordUrl();
+  Pages.resetPasswordUrl = Usergrid.ApiClient.getResetPasswordUrl();
 
   String.prototype.startsWith = function(s) {
     return this.lastIndexOf(s, 0) === 0;
@@ -123,12 +136,12 @@ function apigee_console_app(Pages, query_params) {
   }
 
   function getAccessTokenURL(){
-    var bearerToken = apiClient.getToken();
-    var app_name = apiClient.getApplicationName();
+    var bearerToken = Usergrid.ApiClient.getToken();
+    var app_name = Usergrid.ApiClient.getApplicationName();
     if (typeof app_name != 'string') {
       app_name = '';
     }
-    var org_name = apiClient.getOrganizationName();
+    var org_name = Usergrid.ApiClient.getOrganizationName();
     if (typeof org_name != 'string') {
       org_name = '';
     }
@@ -154,7 +167,7 @@ function apigee_console_app(Pages, query_params) {
     var url = 'https://apigee.com/console/usergrid?v=2&embedded=true&auth=' + bearerTokenString;
     return url;
   }
-  apigee.console.getAccessTokenURL = getAccessTokenURL;
+  Usergrid.console.getAccessTokenURL = getAccessTokenURL;
 
   function showPanelContent(panelDiv, contentDiv) {
     var cdiv = $(contentDiv);
@@ -179,7 +192,7 @@ function apigee_console_app(Pages, query_params) {
   }
 
   function setNavApplicationText() {
-    var name = apiClient.getApplicationName();
+    var name = Usergrid.ApiClient.getApplicationName();
     if(!name) {
       name = "Select an Application";
     }
@@ -214,7 +227,7 @@ function apigee_console_app(Pages, query_params) {
       getCollection('GET');
     }
   }
-  window.apigee.console.pageOpenQueryExplorer = pageOpenQueryExplorer;
+  window.Usergrid.console.pageOpenQueryExplorer = pageOpenQueryExplorer;
 
   function getCollection(method){
     //get the data to run the query
@@ -230,12 +243,26 @@ function apigee_console_app(Pages, query_params) {
       alertModal("Error", "There is a problem with your JSON.");
       return false;
     }
-    //make a new query object
-    queryObj = new apigee.QueryObj(method, path, data, params, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
-    //store the query object on the stack
-    pushQuery(queryObj);
-    //then run the query
-    runAppQuery(queryObj);
+    if(method.toUpperCase() == 'PUT' && !Usergrid.validation.isUUID( path.split("/").pop())) {
+      confirmAction("Warning!",
+        "You are attempting to run a PUT (update) command, but it appears that you have not given a specific entity to act on.  This action may update all entities in this colleciton.  Are you sure you want to proceed?",
+        function() {
+          //make a new query object
+          queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
+          //store the query object on the stack
+          pushQuery(queryObj);
+          //then run the query
+          runAppQuery(queryObj);
+        }
+      );
+    } else {
+      //make a new query object
+      queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
+      //store the query object on the stack
+      pushQuery(queryObj);
+      //then run the query
+      runAppQuery(queryObj);
+    }
   }
 
 
@@ -281,6 +308,8 @@ function apigee_console_app(Pages, query_params) {
         if ($.isEmptyObject(entity_path)) {
           entity_path = path + "/" + entity.uuid;
         }
+        
+        $("#query-path").val(entity_path);
 
         t = '<div class="query-result-row entity_detail" id="query-result-detail" data-entity-type="'
           + entity.type
@@ -309,21 +338,21 @@ function apigee_console_app(Pages, query_params) {
     }
     //get the last query off the stack
     query_history.pop(); //first pull off the current query
-    lastQueryObj = query_history.pop(); //then get the previous one
+    lastQuery = query_history.pop(); //then get the previous one
     //set the path in the query explorer
-    $("#query-path").val(lastQueryObj.getPath());
+    $("#query-path").val(lastQuery.getPath());
     //get the ql and set it in the query explorer
-    var params = lastQueryObj.getParams();
+    var params = lastQuery.getQueryParams();
     $("#query-ql").val(params.ql);
     //delete the ql from the json obj -it will be restored later when the query is run in getCollection()
-    var jsonObj = lastQueryObj.getJsonObj();
+    var jsonObj = lastQuery.getJsonObj();
     delete jsonObj.ql;
     //set the data obj in the query explorer
     $("#query-source").val(JSON.stringify(jsonObj));
 
     showBackButton();
 
-    getCollection(lastQueryObj.getMethod());
+    getCollection(lastQuery.getMethod());
   }
 
   //helper function for query explorer back button
@@ -363,7 +392,7 @@ function apigee_console_app(Pages, query_params) {
     }
     return null;
   }
-  window.apigee.console.getQueryResultEntity = getQueryResultEntity;
+  window.Usergrid.console.getQueryResultEntity = getQueryResultEntity;
 
   function showQueryStatus(s, _type) {
     StatusBar.showAlert(s, _type);
@@ -466,7 +495,7 @@ function apigee_console_app(Pages, query_params) {
     return false;
   });
 
-  window.apigee.console.doChildClick = function(event) {
+  window.Usergrid.console.doChildClick = function(event) {
     var path = new String($('#query-path').val());
     if (!path.endsWith("/")) {
       path += "/";
@@ -474,9 +503,9 @@ function apigee_console_app(Pages, query_params) {
     path += event.target.innerText;
     $('#query-path').val(path);
   };
-
+	
   var queryQl = $('#query-ql');
-  queryQl.typeahead();
+  queryQl.typeahead({source:indexes});
 
   function doBuildIndexMenu() {
     queryQl.data('typeahead').source = indexes;
@@ -496,7 +525,7 @@ function apigee_console_app(Pages, query_params) {
       items.each(function() {
         var entityId = $(this).attr('value');
         var path = $(this).attr('name');
-        runAppQuery(new apigee.QueryObj("DELETE", path + "/" + entityId, null, null,
+        runAppQuery(new Usergrid.Query("DELETE", path + "/" + entityId, null, null,
           function() { getCollection('GET'); },
           function() { alertModal("Unable to delete entity"); }
         ));
@@ -518,7 +547,7 @@ function apigee_console_app(Pages, query_params) {
     requestOrganizationCredentials();
     requestAdminFeed();
   }
-  window.apigee.console.pageSelectHome = pageSelectHome;
+  window.Usergrid.console.pageSelectHome = pageSelectHome;
 
   $(document).on('click','#go-home', pageSelectHome);
 
@@ -579,7 +608,7 @@ function apigee_console_app(Pages, query_params) {
   function requestApplications() {
     var sectionApps = $('#organization-applications-table');
     sectionApps.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
-    runManagementQuery(new apigee.QueryObj("GET","organizations/" + apiClient.getOrganizationUUID() + "/applications", null, null,
+    runManagementQuery(new Usergrid.Query("GET","organizations/" + Usergrid.ApiClient.getOrganizationUUID() + "/applications", null, null,
       displayApplications,
       function() { sectionApps.html('<div class="alert user-panel-section">Unable to retrieve application list.</div>'); }
     ));
@@ -587,21 +616,21 @@ function apigee_console_app(Pages, query_params) {
 
   function selectFirstApp() {
     //get the currently specified app name
-    var appName = apiClient.getApplicationName();
+    var appName = Usergrid.ApiClient.getApplicationName();
     //and make sure we it is in one of the current orgs
-    var app = apigee.organizations.getItemByName(appName);
+    var app = Usergrid.organizations.getItemByName(appName);
     if(appName && app) {
-      apiClient.setApplicationName(appName);
+      Usergrid.ApiClient.setApplicationName(appName);
       pageSelect(appName);
     } else {
       //we need to select an app, so get the current org name
-      var orgName = apiClient.getOrganizationName();
+      var orgName = Usergrid.ApiClient.getOrganizationName();
       //get a reference to the org object by using the name
-      var org = apigee.organizations.getItemByName(orgName);
+      var org = Usergrid.organizations.getItemByName(orgName);
       //get a handle to the first app in the org
       app = org.getFirstItem();
       //store the new app in the client
-      apiClient.setApplicationName(app.getName());
+      Usergrid.ApiClient.setApplicationName(app.getName());
       pageSelect(app.getName());
     }
   }
@@ -627,7 +656,7 @@ function apigee_console_app(Pages, query_params) {
   function requestAdmins() {
     var sectionAdmins =$('#organization-admins-table');
     sectionAdmins.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
-    runManagementQuery(new apigee.QueryObj("GET","organizations/" + apiClient.getOrganizationUUID()  + "/users", null, null,
+    runManagementQuery(new Usergrid.Query("GET","organizations/" + Usergrid.ApiClient.getOrganizationUUID()  + "/users", null, null,
       displayAdmins,
       function() {sectionAdmins.html('<div class="alert user-panel-section">Unable to retrieve admin list</div>');
     }));
@@ -673,17 +702,17 @@ function apigee_console_app(Pages, query_params) {
   function requestAdminFeed() {
     var section =$('#organization-activities');
     section.empty().html('<div class="alert alert-info">Loading...</div>');
-    runManagementQuery(new apigee.QueryObj("GET","orgs/" + apiClient.getOrganizationUUID()  + "/feed", null, null, displayAdminFeed,
+    runManagementQuery(new Usergrid.Query("GET","orgs/" + Usergrid.ApiClient.getOrganizationUUID()  + "/feed", null, null, displayAdminFeed,
       function() { section.html('<div class="alert">Unable to retrieve feed.</div>'); }));
   }
-  window.apigee.console.requestAdminFeed = requestAdminFeed;
+  window.Usergrid.console.requestAdminFeed = requestAdminFeed;
 
   var organization_keys = { };
 
   function requestOrganizationCredentials() {
     $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
     $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
-    runManagementQuery(new apigee.QueryObj("GET",'organizations/'+ apiClient.getOrganizationUUID()  + "/credentials", null, null,
+    runManagementQuery(new Usergrid.Query("GET",'organizations/'+ Usergrid.ApiClient.getOrganizationUUID()  + "/credentials", null, null,
       function(response) {
         $('#organization-panel-key').html(response.credentials.client_id);
         $('#organization-panel-secret').html(response.credentials.client_secret);
@@ -698,7 +727,7 @@ function apigee_console_app(Pages, query_params) {
   function newOrganizationCredentials() {
     $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
     $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
-    runManagementQuery(new apigee.QueryObj("POST",'organizations/' + apiClient.getOrganizationUUID()   + "/credentials",null, null,
+    runManagementQuery(new Usergrid.Query("POST",'organizations/' + Usergrid.ApiClient.getOrganizationUUID()   + "/credentials",null, null,
       function(response) {
         $('#organization-panel-key').html(response.credentials.client_id);
         $('#organization-panel-secret').html(response.credentials.client_secret);
@@ -710,7 +739,7 @@ function apigee_console_app(Pages, query_params) {
       }
     ));
   }
-  window.apigee.console.newOrganizationCredentials = newOrganizationCredentials;
+  window.Usergrid.console.newOrganizationCredentials = newOrganizationCredentials;
 
   function updateTips(t) {
     tips.text(t).addClass('ui-state-highlight');
@@ -892,11 +921,11 @@ function apigee_console_app(Pages, query_params) {
       && checkRegexp2(new_application_name, usernameRegex, usernameAllowedCharsMessage);
 
     if (bValid) {
-      runManagementQuery(new apigee.QueryObj("POST","organizations/" + apiClient.getOrganizationUUID()  + "/applications", form.serializeObject(), null,
+      runManagementQuery(new Usergrid.Query("POST","organizations/" + Usergrid.ApiClient.getOrganizationUUID()  + "/applications", form.serializeObject(), null,
         function(response) {
           for (var appName in response.data) { break; }
-          var currentOrg = apiClient.getOrganizationName();
-          apigee.organizations.getItemByName(currentOrg).addItem(new apigee.Application(appName, response.data[appName]));
+          var currentOrg = Usergrid.ApiClient.getOrganizationName();
+          Usergrid.organizations.getItemByName(currentOrg).addItem(new Usergrid.Application(appName, response.data[appName]));
           pageSelect(appName);
           requestApplications(response);
         },
@@ -920,7 +949,7 @@ function apigee_console_app(Pages, query_params) {
       && checkRegexp2(new_admin_email,emailRegex, emailAllowedCharsMessage);
     if (bValid) {
       var data = form.serializeObject();
-      runManagementQuery(new apigee.QueryObj("POST","organizations/" + apiClient.getOrganizationUUID() + "/users", data, null,
+      runManagementQuery(new Usergrid.Query("POST","organizations/" + Usergrid.ApiClient.getOrganizationUUID() + "/users", data, null,
         requestAdmins,
         function () { alertModal("Error", "Unable to create admin"); }
       ));
@@ -928,25 +957,59 @@ function apigee_console_app(Pages, query_params) {
     }
   }
 
+  function addOrganizationToList(orgName) {
+    runManagementQuery(new Usergrid.Query("GET","orgs/" + orgName, null, null,
+      function(response) {
+        var orgName = response.organization.name;
+        var orgUUID = response.organization.uuid;
+        organization = new Usergrid.Organization(orgName, orgUUID);
+        var apps = response.organization.applications;
+        for(app in apps) {
+          var appName = app.split("/")[1];
+          //grab the id
+          var appUUID = response.organization.applications[app];
+          //store in the new Application object
+          application = new Usergrid.Application(appName, appUUID);
+          organization.addItem(application);
+        }
+        //add organization to organizations list
+        Usergrid.organizations.addItem(organization);
+        requestAccountSettings();
+        setupOrganizationsMenu();
+      },
+      function() { alertModal("Error", "Unable to get organization" + orgName);
+      }
+    ));
+  }
+
   function submitNewOrg() {
     var form = $(this);
     formClearErrors(form);
 
     var new_organization_name = $('#new-organization-name');
-
+    var new_organization_name_val = $('#new-organization-name').val();
     var bValid = checkLength2(new_organization_name, 4, 80)
       && checkRegexp2(new_organization_name, organizatioNameRegex, organizationNameAllowedCharsMessage);
 
     if (bValid) {
       var data = form.serializeObject();
-      runManagementQuery(new apigee.QueryObj("POST","users/" + apigee.userSession.getUserUUID() + "/organizations", data, null,
-        requestOrganizations,
+      runManagementQuery(new Usergrid.Query("POST","users/" + Usergrid.userSession.getUserUUID() + "/organizations", data, null,
+        function() {
+          addOrganizationToList(new_organization_name_val);
+        },
         function() { alertModal("Error", "Unable to create organization"); }
       ));
       $(this).modal('hide');
     }
   }
-
+ //TODO: the organization, and required fields for this method, are hidden. There is no quick way to check variable names and order
+ /*
+  * Needed fields: 
+  * username:
+  * name: FULL NAME
+  * email: 
+  * password: 
+  */
   function submitNewUser() {
     var form = $(this);
     formClearErrors(form);
@@ -967,7 +1030,7 @@ function apigee_console_app(Pages, query_params) {
 
     if (bValid) {
       var data = form.serializeObject();
-      runAppQuery(new apigee.QueryObj("POST", 'users', data, null,
+      runAppQuery(new Usergrid.Query("POST", 'users', data, null,
         function() {
           getUsers();
           closeErrorMessage = function() {
@@ -1013,7 +1076,7 @@ function apigee_console_app(Pages, query_params) {
 
     if (bValid) {
       var data = form.serializeObject();
-      runAppQuery(new apigee.QueryObj("POST", "rolenames", data, null,
+      runAppQuery(new Usergrid.Query("POST", "rolenames", data, null,
         function() {
           getRoles();
           closeErrorMessage = function() {
@@ -1063,7 +1126,7 @@ function apigee_console_app(Pages, query_params) {
           collections: collections
         }
       }
-      runAppQuery(new apigee.QueryObj("PUT", "", metadata, null,
+      runAppQuery(new Usergrid.Query("PUT", "", metadata, null,
         function() {
           getCollections();
           closeErrorMessage = function() {
@@ -1109,7 +1172,7 @@ function apigee_console_app(Pages, query_params) {
 
     if (bValid) {
       var data = form.serializeObject();
-      runAppQuery(new apigee.QueryObj("POST", "groups", data, null,
+      runAppQuery(new Usergrid.Query("POST", "groups", data, null,
         function() {
           getGroups();
           closeErrorMessage = function() {
@@ -1147,7 +1210,7 @@ function apigee_console_app(Pages, query_params) {
       userId = $('#search-group-userid').val();
       groupId = $('#search-group-name-input').val();
 
-      runAppQuery(new apigee.QueryObj("POST", "/groups/" + groupId + "/users/" + userId, null, null,
+      runAppQuery(new Usergrid.Query("POST", "/groups/" + groupId + "/users/" + userId, null, null,
         function() { requestUser(userId); },
         function() { alertModal("Error", "Unable to add group to user"); }
       ));
@@ -1160,13 +1223,13 @@ function apigee_console_app(Pages, query_params) {
     var form = $(this);
     formClearErrors(form);
     var add_user_username = $('#search-user-name-input');
-    var bValid = checkLength2(add_user_username, 1, 80)
+    var bValid = checkLength2(add_user_username, 4, 80)
       && checkRegexp2(add_user_username, usernameRegex, usernameAllowedCharsMessage);
 
     if (bValid) {
       userId = $('#search-user-name-input').val();
       groupId = $('#search-user-groupid').val();
-      runAppQuery(new apigee.QueryObj("POST", "/groups/" + groupId + "/users/" + userId, null, null,
+      runAppQuery(new Usergrid.Query("POST", "/groups/" + groupId + "/users/" + userId, null, null,
         function() { requestGroup(groupId); },
         function() { alertModal("Error", "Unable to add user to group"); }
       ));
@@ -1181,7 +1244,7 @@ function apigee_console_app(Pages, query_params) {
     var bValid = checkLength2(roleIdField, 1, 80) && checkRegexp2(roleIdField, usernameRegex, usernameAllowedCharsMessage)
     var username = $('#search-roles-user-name-input').val();
     if (bValid) {
-      runAppQuery(new apigee.QueryObj("POST", "/roles/" + current_role_id + "/users/" + username, null, null,
+      runAppQuery(new Usergrid.Query("POST", "/roles/" + current_role_id + "/users/" + username, null, null,
         function() { pageSelectRoleUsers(current_role_id, current_role_name); },
         function() { alertModal("Error", "Unable to add user to role"); }
       ));
@@ -1202,7 +1265,7 @@ function apigee_console_app(Pages, query_params) {
     // role may have a preceding or trailing slash, remove it
     roleId = roleId.replace('/','');
     if (bValid) {
-      runAppQuery(new apigee.QueryObj("POST", "/roles/" + roleId + "/users/" + username, null, null,
+      runAppQuery(new Usergrid.Query("POST", "/roles/" + roleId + "/users/" + username, null, null,
         function() { pageSelectUserPermissions(username); },
         function() { alertModal("Error", "Unable to add user to role"); }
       ));
@@ -1221,14 +1284,14 @@ function apigee_console_app(Pages, query_params) {
     confirmDelete(function(){
         items.each(function() {
           var roleId = $(this).attr("value");
-          runAppQuery(new apigee.QueryObj("DELETE", "/users/" + username + "/rolename/" + roleId, null, null,
+          runAppQuery(new Usergrid.Query("DELETE", "/users/" + username + "/rolename/" + roleId, null, null,
             function() { pageSelectUserPermissions (username); },
             function() { alertModal("Error", "Unable to remove user from role"); }
           ));
       });
     });
   }
-  window.apigee.console.deleteUsersFromRoles = deleteUsersFromRoles;
+  window.Usergrid.console.deleteUsersFromRoles = deleteUsersFromRoles;
 
   function deleteRoleFromUser(roleId, rolename) {
     var items = $('#role-users input[class^=userRoleItem]:checked');
@@ -1240,14 +1303,14 @@ function apigee_console_app(Pages, query_params) {
     confirmDelete(function(){
         items.each(function() {
           var username = $(this).attr("value");
-          runAppQuery(new apigee.QueryObj("DELETE", "/users/" + username + "/roles/" + roleId, null, null,
+          runAppQuery(new Usergrid.Query("DELETE", "/users/" + username + "/roles/" + roleId, null, null,
             function() { pageSelectRoleUsers (roleId, rolename); },
             function() { alertModal("Error", "Unable to remove user from role"); }
           ));
       });
     });
   }
-  window.apigee.console.deleteRoleFromUser = deleteRoleFromUser;
+  window.Usergrid.console.deleteRoleFromUser = deleteRoleFromUser;
 
   function removeUserFromGroup(userId) {
     var items = $('#user-panel-memberships input[class^=userGroupItem]:checked');
@@ -1258,14 +1321,14 @@ function apigee_console_app(Pages, query_params) {
     confirmDelete(function(){
       items.each(function() {
         var groupId = $(this).attr("value");
-        runAppQuery(new apigee.QueryObj("DELETE", "/groups/" + groupId + "/users/" + userId, null, null,
+        runAppQuery(new Usergrid.Query("DELETE", "/groups/" + groupId + "/users/" + userId, null, null,
           function() { pageSelectUserGroups (userId); },
           function() { alertModal("Error", "Unable to remove user from group"); }
         ));
       });
     });
   }
-  window.apigee.console.removeUserFromGroup = removeUserFromGroup;
+  window.Usergrid.console.removeUserFromGroup = removeUserFromGroup;
 
   function removeGroupFromUser(groupId) {
     var items = $('#group-panel-memberships input[id^=userGroupItem]:checked');
@@ -1277,14 +1340,14 @@ function apigee_console_app(Pages, query_params) {
     confirmDelete(function(){
       items.each(function() {
         var userId = $(this).attr("value");
-        runAppQuery(new apigee.QueryObj("DELETE", "/groups/" + groupId + "/users/" + userId, null, null,
+        runAppQuery(new Usergrid.Query("DELETE", "/groups/" + groupId + "/users/" + userId, null, null,
           function() { pageSelectGroupMemberships (groupId); },
           function() { alertModal("Error", "Unable to remove user from group"); }
         ));
       });
     });
   }
-  window.apigee.console.removeGroupFromUser = removeGroupFromUser;
+  window.Usergrid.console.removeGroupFromUser = removeGroupFromUser;
 
   function deleteRolesFromGroup(roleId, rolename) {
     var items = $('input[class=groupRoleItem]:checked');
@@ -1297,14 +1360,14 @@ function apigee_console_app(Pages, query_params) {
       items.each(function() {
         var roleId = $(this).attr("value");
         var groupname = $('#role-form-groupname').val();
-        runAppQuery(new apigee.QueryObj("DELETE", "/groups/" + groupname + "/roles/" + roleId, null, null,
+        runAppQuery(new Usergrid.Query("DELETE", "/groups/" + groupname + "/roles/" + roleId, null, null,
           function() { pageSelectGroupPermissions(groupname); },
           function() { alertModal("Error", "Unable to remove role from group"); }
         ));
       });
     });
   }
-  window.apigee.console.deleteRolesFromGroup = deleteRolesFromGroup;
+  window.Usergrid.console.deleteRolesFromGroup = deleteRolesFromGroup;
 
   function submitAddRoleToGroup() {
     var form = $(this);
@@ -1319,7 +1382,7 @@ function apigee_console_app(Pages, query_params) {
     // role may have a preceding or trailing slash, remove it
     roleId = roleId.replace('/','');
     if (bValid) {
-      runAppQuery(new apigee.QueryObj("POST", "/groups/" + groupname + "/roles/" + roleId, null, null,
+      runAppQuery(new Usergrid.Query("POST", "/groups/" + groupname + "/roles/" + roleId, null, null,
         function() { pageSelectGroupPermissions(groupname); },
         function() { alertModal("Error", "Unable to add user to role"); }
       ));
@@ -1337,19 +1400,19 @@ function apigee_console_app(Pages, query_params) {
     if (name) {
       //the following 3 lines are just a safety check, we could just store the name
       //get the current org name
-      var currentOrg = apiClient.getOrganizationName();
+      var currentOrg = Usergrid.ApiClient.getOrganizationName();
       //get a reference to the current org object by using the name
-      var org = apigee.organizations.getItemByName(currentOrg);
+      var org = Usergrid.organizations.getItemByName(currentOrg);
       //get a reference to the specified app by name
       var app = org.getItemByName(name);
       //store the name
-      apiClient.setApplicationName(app.getName());
+      Usergrid.ApiClient.setApplicationName(app.getName());
     }
     setNavApplicationText();
     getCollections();
     query_history = [];
   }
-  window.apigee.console.pageSelect = pageSelect;
+  window.Usergrid.console.pageSelect = pageSelect;
 
 
   /*******************************************************************
@@ -1363,9 +1426,9 @@ function apigee_console_app(Pages, query_params) {
     requestApplicationCredentials();
     requestApplicationUsage();
   }
-  window.apigee.console.pageSelectApplication = pageSelectApplication;
+  window.Usergrid.console.pageSelectApplication = pageSelectApplication;
 
-  function updateApplicationDashboard() {
+  function updateApplicationDashboard(){
     var data = new google.visualization.DataTable();
     data.addColumn('string', 'Entity');
     data.addColumn('number', 'Count');
@@ -1389,6 +1452,7 @@ function apigee_console_app(Pages, query_params) {
     new google.visualization.PieChart(
       document.getElementById('application-panel-entity-graph')).
       draw(data, {
+        height: 200,
         is3D: true,
         backgroundColor: backgroundGraphColor
       }
@@ -1409,7 +1473,7 @@ function apigee_console_app(Pages, query_params) {
     params.counter = ["application.entities", "application.request.download", "application.request.time", "application.request.upload"];
     params.pad = true;
 
-    runAppQuery(new apigee.QueryObj("GET", "counters", null, params,
+    runAppQuery(new Usergrid.Query("GET", "counters", null, params,
       function(response) {
         var usage_counters = response.counters;
 
@@ -1519,7 +1583,7 @@ function apigee_console_app(Pages, query_params) {
       }
     ));
   }
-  window.apigee.console.requestApplicationUsage = requestApplicationUsage;
+  window.Usergrid.console.requestApplicationUsage = requestApplicationUsage;
 
   /*******************************************************************
    *
@@ -1549,15 +1613,20 @@ function apigee_console_app(Pages, query_params) {
   function hideCurlCommand(section) {
     $('#'+section+'-curl-container').hide();
     $('#'+section+'-curl-token').hide();
-
+    $('#'+section+'clippy-btn').detachClippy();
   }
 
   function showCurlCommand(section, curl, token) {
-    $('#'+section+'-curl-container').show();
-    $('#'+section+'-curl').html(curl);
-    if (token) {
-      $('#'+section+'-curl-token').show();
-    }
+  	var data = {
+  		curlData: curl,
+  		sectionName: section,
+  	};
+  	var sectionId = $('#'+section+'-curl-container');
+  	sectionId.html("");
+  	$.tmpl('apigee.ui.curl.detail.html', data).appendTo(sectionId);
+   	sectionId.show();
+    $('#'+section+'-curl-token').show();
+    $('#'+section+'-clippy-btn').attachClippy({dataId: $('#'+section+'-curl')});  
   }
 
   function copyCurlCommand() {
@@ -1566,7 +1635,6 @@ function apigee_console_app(Pages, query_params) {
         .livequery('click', function() {
             $(this)
                 .blur();
-            //console.log('copied to copy window');
             var nodetext = $('#'+section+'-curl').html();
             $('#copypath input').focus();
             $('#copypath input').select();
@@ -1595,13 +1663,13 @@ function apigee_console_app(Pages, query_params) {
 
   function runAppQuery(_queryObj) {
     var obj = _queryObj || queryObj;
-    apiClient.runAppQuery(obj);
+    Usergrid.ApiClient.runAppQuery(obj);
     return false;
   }
 
   function runManagementQuery(_queryObj) {
     var obj = _queryObj || queryObj;
-    apiClient.runManagementQuery(obj);
+    Usergrid.ApiClient.runManagementQuery(obj);
     return false;
   }
 
@@ -1613,9 +1681,9 @@ function apigee_console_app(Pages, query_params) {
   var userLetter = "*";
   var userSortBy = "username";
 
-  function pageSelectUsers(uuid) {
+  function pageSelectUsers() {
     //make a new query object
-    queryObj = new apigee.QueryObj(null);
+    queryObj = new Usergrid.Query(null);
     //bind events for previous and next buttons
     bindPagingEvents('users');
     //reset paging so we start at the first page
@@ -1627,7 +1695,7 @@ function apigee_console_app(Pages, query_params) {
     showPanelList('users');
     $('#search-user-username').val(''); //reset the search box
   }
-  window.apigee.console.pageSelectUsers = pageSelectUsers;
+  window.Usergrid.console.pageSelectUsers = pageSelectUsers;
 
   function getUsers(search, searchType) {
     //clear out the table before we start
@@ -1647,7 +1715,7 @@ function apigee_console_app(Pages, query_params) {
       query = {"ql" : searchType + "='" + userLetter + "*'"};
     }
 
-    queryObj = new apigee.QueryObj("GET", "users", null, query, getUsersCallback, function() { alertModal("Error", "Unable to retrieve users."); });
+    queryObj = new Usergrid.Query("GET", "users", null, query, getUsersCallback, function() { alertModal("Error", "Unable to retrieve users."); });
     runAppQuery(queryObj);
   }
 
@@ -1681,7 +1749,7 @@ function apigee_console_app(Pages, query_params) {
     userLetter = search;
     getUsers();
   }
-  apigee.console.showUsersForSearch = showUsersForSearch;
+  Usergrid.console.showUsersForSearch = showUsersForSearch;
 
   function searchUsers(){
     var search = $('#search-user-username').val();
@@ -1692,21 +1760,21 @@ function apigee_console_app(Pages, query_params) {
     } else if (searchType == 'username') {searchType = 'username';}
     getUsers(search, searchType);
   }
-  apigee.console.searchUsers = searchUsers;
+  Usergrid.console.searchUsers = searchUsers;
 
   function selectAllUsers(){
     $('[class=userListItem]').attr('checked', true);
     $('#deselectAllUsers').show();
     $('#selectAllUsers').hide();
   }
-  window.apigee.console.selectAllUsers = selectAllUsers;
+  window.Usergrid.console.selectAllUsers = selectAllUsers;
 
   function deselectAllUsers(){
     $('[class=userListItem]').attr('checked', false);
     $('#selectAllUsers').show();
     $('#deselectAllUsers').hide();
   }
-  window.apigee.console.deselectAllUsers = deselectAllUsers;
+  window.Usergrid.console.deselectAllUsers = deselectAllUsers;
 
 
 
@@ -1723,7 +1791,7 @@ function apigee_console_app(Pages, query_params) {
     confirmDelete(function(){
       items.each(function() {
         var userId = $(this).attr("value");
-        runAppQuery(new apigee.QueryObj("DELETE", 'users/' + userId, null, null,
+        runAppQuery(new Usergrid.Query("DELETE", 'users/' + userId, null, null,
           getUsers,
           function() { alertModal("Error", "Unable to delete user - " + userId) }
         ));
@@ -1743,7 +1811,7 @@ function apigee_console_app(Pages, query_params) {
     selectTabButton('#button-user-profile');
     showPanelContent('#user-panel', '#user-panel-profile');
   }
-  window.apigee.console.pageOpenUserProfile = pageOpenUserProfile;
+  window.Usergrid.console.pageOpenUserProfile = pageOpenUserProfile;
 
   function pageOpenUserActivities(userId) {
     Pages.SelectPanel('user');
@@ -1751,7 +1819,7 @@ function apigee_console_app(Pages, query_params) {
     selectTabButton('#button-user-activities');
     showPanelContent('#user-panel', '#user-panel-activities');
   }
-  window.apigee.console.pageOpenUserActivities = pageOpenUserActivities;
+  window.Usergrid.console.pageOpenUserActivities = pageOpenUserActivities;
 
   function pageSelectUserPermissions(userId) {
     Pages.SelectPanel('user');
@@ -1759,7 +1827,7 @@ function apigee_console_app(Pages, query_params) {
     selectTabButton('#button-user-permissions');
     showPanelContent('#user-panel', '#user-panel-permissions');
   }
-  window.apigee.console.pageSelectUserPermissions = pageSelectUserPermissions;
+  window.Usergrid.console.pageSelectUserPermissions = pageSelectUserPermissions;
 
   function pageSelectUserGroups(userId) {
     Pages.SelectPanel('user');
@@ -1767,16 +1835,16 @@ function apigee_console_app(Pages, query_params) {
     selectTabButton('#button-user-memberships');
     showPanelContent('#user-panel', '#user-panel-memberships');
   }
-  window.apigee.console.pageSelectUserGroups = pageSelectUserGroups;
+  window.Usergrid.console.pageSelectUserGroups = pageSelectUserGroups;
 
   function saveUserProfile(uuid){
-    var payload = apigee.console.ui.jsonSchemaToPayload(apigee.console.ui.collections.vcard_schema);
-    runAppQuery(new apigee.QueryObj("PUT", "users/"+uuid, payload, null,
+    var payload = Usergrid.console.ui.jsonSchemaToPayload(Usergrid.console.ui.collections.vcard_schema);
+    runAppQuery(new Usergrid.Query("PUT", "users/"+uuid, payload, null,
       completeSave,
       function() { alertModal("Error", "Unable to update User"); }
     ));
   }
-  window.apigee.console.saveUserProfile = saveUserProfile;
+  window.Usergrid.console.saveUserProfile = saveUserProfile;
 
   function completeSave(){
     closeMessage = function() {
@@ -1785,36 +1853,74 @@ function apigee_console_app(Pages, query_params) {
     var closebutton = '<a href="#" onclick="closeMessage();" class="close">&times;</a>'
     $('.messages').text("Information Saved.").prepend(closebutton).show();
   }
+  
+  function redrawUserProfile(data, curl){
+  	redrawFormPanel($('#user-panel-profile'), 'apigee.ui.panels.user.profile.html', data);
+	attachCurl('user-panel-profile', curl); 	
+  };
+  
+  function redrawUserMemberships(data, curl){
+  	redrawPanel('user-panel-memberships', 'apigee.ui.panels.user.memberships.html', data);
+  	attachCurl('user-panel-memberships', curl);
+  	updateGroupsAutocomplete();
+  };
+  
+  function redrawUserActivities(data, curl){
+  	redrawPanel('user-panel-activities', 'apigee.ui.panels.user.activities.html', data);
+  	attachCurl('user-panel-activities', curl);
+  };
+  
+  function redrawUserGraph(data){
+  	redrawPanel('user-panel-graph', 'apigee.ui.panels.user.graph.html', data);
+  	attachCurl('user-panel-following', data.followingCurl);
+  	attachCurl('user-panel-followers', data.followersCurl);
+  };
+  
+  function redrawUserPermissions(data){
+  	redrawPanel('user-panel-permissions', 'apigee.ui.panels.user.permissions.html', data);
+  	attachCurl('user-panel-roles', data.rolesCurl);
+  	attachCurl('user-panel-permissions', data.permissionsCurl);
+  	updateRolesAutocomplete();
+    updateQueryAutocompleteCollectionsUsers();
+  };
 
-  function redrawUserPanel() {
-    $('#user-panel-profile').html("");
-    $('#user-panel-memberships').html("");
-    $('#user-panel-activities').html("");
-    $('#user-panel-graph').html("");
-    $('#user-panel-permissions').html("");
-
-    if (user_data) {
-      var details = $.tmpl('apigee.ui.panels.user.profile.html', user_data);
-      var formDiv = details.find('.query-result-form');
-      $(formDiv).buildForm(apigee.console.ui.jsonSchemaToDForm(apigee.console.ui.collections.vcard_schema, user_data.entity));
-
-      details.appendTo('#user-panel-profile');
-
-      $.tmpl('apigee.ui.panels.user.memberships.html', user_data).appendTo('#user-panel-memberships');
-      updateGroupsAutocomplete();
-
-      $.tmpl('apigee.ui.panels.user.activities.html', user_data).appendTo('#user-panel-activities');
-      $.tmpl('apigee.ui.panels.user.graph.html', user_data).appendTo('#user-panel-graph');
-      $.tmpl('apigee.ui.panels.user.permissions.html', user_data).appendTo('#user-panel-permissions');
-      updateRolesAutocomplete();
-      updateQueryAutocompleteCollectionsUsers();
-    }
+  /*
+   * Utilitary function, clears and draws a specific panel
+   * panelDiv: the DOM elemente which will be deleted and redrawn
+   * panelTmpl: the html Template to be used
+   * data: the data inserted into the htmlTemplate
+   */
+  function attachCurl(curlSectionId, curl){  	
+	hideCurlCommand(curlSectionId);	
+	showCurlCommand(curlSectionId, curl);
+  }	
+	
+  function redrawPanel(panelDiv, panelTemplate, data){
+	$("#"+panelDiv).html("");
+	$.tmpl(panelTemplate, data).appendTo($("#"+panelDiv));
+  };
+  
+  function redrawGroupForm(panelDiv, panelTemplate, data){
+  	$("#"+panelDiv).html("");
+  	var details = $.tmpl(panelTemplate, data);
+  	var formDiv = details.find('.query-result-form');
+  	$(formDiv).buildForm(apigee.console.ui.jsonSchemaToDForm(apigee.console.ui.collections.group_schema, data.entity));
+  	details.appendTo($("#"+panelDiv));
+    details.find('.button').button();
   }
-
+  
+  function redrawFormPanel(panelDiv, panelTemplate, data){
+	$(panelDiv).html("");
+	var details = $.tmpl(panelTemplate, data);
+	var formDiv = details.find('.query-result-form');
+	$(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.vcard_schema, data.entity));
+	details.appendTo($(panelDiv));
+  };  
+  
   function saveUserData(){
-    apigee.console.ui.jsonSchemaToPayload(schema, obj);
+    Usergrid.console.ui.jsonSchemaToPayload(schema, obj);
   }
-
+	//TODO: MARKED for Refactoring
   var user_data = null;
 
   function handleUserResponse(response) {
@@ -1857,123 +1963,133 @@ function apigee_console_app(Pages, query_params) {
         picture = entity.picture + "?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png"
       }
 
-      user_data = {
-        entity : entity_contents,
-        picture : picture,
-        name : name,
-        username : username,
-        path : entity_path,
-        collections : collections,
-        metadata : metadata,
-        uri : (entity.metadata || { }).uri
-      };
-
-      redrawUserPanel();
-
-      runAppQuery(new apigee.QueryObj("GET", 'users/' + entity.uuid + '/groups', null, null,
+	  var data = {
+	  	entity: entity_contents,
+	  	picture: picture,
+	  	name: name,
+	  	username: username,
+	  	path: entity_path,
+	  	collections: collections,
+	  	metadata: metadata,
+	  	uri: (entity.metadata || { }).uri,
+	  	followingCurl: "",
+	  	followersCurl: "",
+	  	rolesCurl: "",
+	  	permissionsCurl: ""
+	  }
+	  	  
+	  redrawUserProfile(data, this.getCurl());
+		//TODO: This block and the subsequent blocks could all be methods of their own
+      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/groups', null, null,
         function(response) {
-          if (user_data && response.entities && (response.entities.length > 0)) {
-            user_data.memberships = response.entities;
-            redrawUserPanel();
+          if (data && response.entities && (response.entities.length > 0)) {
+            data.memberships = response.entities; 
           }
+          redrawUserMemberships(data, this.getCurl());
         },
         function() { alertModal("Error", "Unable to retrieve user's groups."); }
       ));
 
-      runAppQuery(new apigee.QueryObj("GET", 'users/' + entity.uuid + '/activities', null, null,
+      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/activities', null, null,
         function(response) {
-          if (user_data && response.entities && (response.entities.length > 0)) {
-            user_data.activities = response.entities;
-            redrawUserPanel();
+          if (data && response.entities && (response.entities.length > 0)) {
+            data.activities = response.entities;
+            data.curl = this.getCurl();            
             $('span[id^=activities-date-field]').each( function() {
               var created = dateToString(parseInt($(this).html()))
               $(this).html(created);
             });
           }
+          redrawUserActivities(data, this.getCurl());
         },
-        function() { alertModal("Error", "Unable to retrieve user's activities."); }
+        function() { alertModal("Error", "Unable to retrieve user's activities.");}
       ));
+      
+      
 
-      runAppQuery(new apigee.QueryObj("GET", 'users/' + entity.uuid + '/roles', null, null,
+      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/roles', null, null,
         function(response) {
-          if (user_data && response.entities && (response.entities.length > 0)) {
-            user_data.roles = response.entities;
-            redrawUserPanel();
+          if (data && response.entities && (response.entities.length > 0)) {
+            data.roles = response.entities;
           } else {
-            user_data.roles = null;
-            redrawUserPanel();
-          }
+            data.roles = null;
+          }          
+          data.rolesCurl = this.getCurl();
+          //Run Permissions query after roles query has been handled
+	      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/permissions', null, null,
+	        function(response) {
+	          var permissions = {};
+	          if (data && response.data && (response.data.length > 0)) {
+	
+	            if (response.data) {
+	              var perms = response.data;
+	              var count = 0;
+	
+	              for (var i in perms) {
+	                count++;
+	                var perm = perms[i];
+	                var parts = perm.split(':');
+	                var ops_part = "";
+	                var path_part = parts[0];
+	
+	                if (parts.length > 1) {
+	                  ops_part = parts[0];
+	                  path_part = parts[1];
+	                }
+	
+	                ops_part.replace("*", "get,post,put,delete")
+	                  var ops = ops_part.split(',');
+	                permissions[perm] = {ops : {}, path : path_part, perm : perm};
+	
+	                for (var j in ops) {
+	                  permissions[perm].ops[ops[j]] = true;
+	                }
+	              }
+	
+	              if (count == 0) {
+	                permissions = null;
+	              }
+	              data.permissions = permissions;      
+	            }            
+	          }	          
+	          data.permissionsCurl = this.getCurl();
+	          redrawUserPermissions(data);
+	        },
+	        function() { alertModal("Error", "Unable to retrieve user's permissions.");}
+	      ));
         },
-        function() { alertModal("Error", "Unable to retrieve user's roles."); }
+        function() { alertModal("Error", "Unable to retrieve user's roles.");}
       ));
 
-      runAppQuery(new apigee.QueryObj("GET", 'users/' + entity.uuid + '/permissions', null, null,
-        function(response) {
-          var permissions = {};
-          if (user_data && response.data && (response.data.length > 0)) {
-
-            if (response.data) {
-              var perms = response.data;
-              var count = 0;
-
-              for (var i in perms) {
-                count++;
-                var perm = perms[i];
-                var parts = perm.split(':');
-                var ops_part = "";
-                var path_part = parts[0];
-
-                if (parts.length > 1) {
-                  ops_part = parts[0];
-                  path_part = parts[1];
-                }
-
-                ops_part.replace("*", "get,post,put,delete")
-                  var ops = ops_part.split(',');
-                permissions[perm] = {ops : {}, path : path_part, perm : perm};
-
-                for (var j in ops) {
-                  permissions[perm].ops[ops[j]] = true;
-                }
-              }
-
-              if (count == 0) {
-                permissions = null;
-              }
-
-              user_data.permissions = permissions;
-              redrawUserPanel();
-            }
-          }
+      	runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/following', null, null,
+	        function(response) {    
+	          data.followingCurl = this.getCurl();
+	          if (data && response.entities && (response.entities.length > 0)) {
+	            data.following = response.entities;            
+	          }
+	          //Requests /Followers after the /following response has been handled.
+	          runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/followers', null, null,
+		        function(response) {
+		          
+		          if (data && response.entities && (response.entities.length > 0)) {
+		            data.followers = response.entities;		                      
+		          }
+		          data.followersCurl = this.getCurl();
+		          redrawUserGraph(data);	          
+		        },
+		        function() { alertModal("Error", "Unable to retrieve user's followers.");
+		        }
+	      	));
         },
-        function() { alertModal("Error", "Unable to retrieve user's permissions."); }
-      ));
-
-      runAppQuery(new apigee.QueryObj("GET", 'users/' + entity.uuid + '/following', null, null,
-        function(response) {
-          if (user_data && response.entities && (response.entities.length > 0)) {
-            user_data.following = response.entities;
-            redrawUserPanel();
-          }
-        },
-        function() { alertModal("Error", "Unable to retrieve user's following."); }
-      ));
-
-      runAppQuery(new apigee.QueryObj("GET", 'users/' + entity.uuid + '/followers', null, null,
-        function(response) {
-          if (user_data && response.entities && (response.entities.length > 0)) {
-            user_data.followers = response.entities;
-            redrawUserPanel();
-          }
-        },
-        function() { alertModal("Error", "Unable to retrieve user's followers."); }
-      ));
-    }
-  }
+        function() { alertModal("Error", "Unable to retrieve user's following.");}
+        ));   
+    }    
+    
+  };
 
   function requestUser(userId) {
     $('#user-profile-area').html('<div class="alert alert-info">Loading...</div>');
-    runAppQuery(new apigee.QueryObj("GET", 'users/'+userId, null, null, handleUserResponse,
+    runAppQuery(new Usergrid.Query("GET", 'users/'+userId, null, null, handleUserResponse,
       function() { alertModal("Error", "Unable to retrieve user's profile."); }
     ));
   }
@@ -1987,7 +2103,7 @@ function apigee_console_app(Pages, query_params) {
   var groupSortBy = "path";
   function pageSelectGroups() {
     //make a new query object
-    queryObj = new apigee.QueryObj(null);
+    queryObj = new Usergrid.Query(null);
     //bind events for previous and next buttons
     bindPagingEvents('groups', getPreviousGroups, getNextGroups);
     //reset paging so we start at the first page
@@ -1999,13 +2115,13 @@ function apigee_console_app(Pages, query_params) {
     showPanelList('groups');
     $('#search-user-groupname').val('');
   }
-  window.apigee.console.pageSelectGroups = pageSelectGroups;
+  window.Usergrid.console.pageSelectGroups = pageSelectGroups;
 
   function getGroups(search, searchType) {
     //clear out the table before we start
     var output = $('#groups-table');
     output.empty();
-
+	hideCurlCommand('groups');
     var query = {"ql" : "order by " + groupSortBy};
     if (typeof search == 'string') {
       if (search.length > 0) {
@@ -2019,7 +2135,7 @@ function apigee_console_app(Pages, query_params) {
       query = {"ql" : searchType + "='" + groupLetter + "*'"};
     }
 
-    queryObj = new apigee.QueryObj("GET", "groups", null, query, getGroupsCallback, function() { alertModal("Error", "Unable to retrieve groups."); });
+    queryObj = new Usergrid.Query("GET", "groups", null, query, getGroupsCallback, function() { alertModal("Error", "Unable to retrieve groups."); });
     runAppQuery(queryObj);
 
     return false;
@@ -2050,6 +2166,7 @@ function apigee_console_app(Pages, query_params) {
     }
 
     showPagination('groups');
+    showCurlCommand('groups', queryObj.getCurl(), queryObj.getToken());
   }
 
   function showGroupsForSearch(search){
@@ -2060,7 +2177,7 @@ function apigee_console_app(Pages, query_params) {
     groupLetter = search;
     getGroups();
   }
-  apigee.console.showUsersForSearch = showUsersForSearch;
+  Usergrid.console.showUsersForSearch = showUsersForSearch;
 
   function searchGroups(){
     var search = $('#search-user-groupname').val();
@@ -2074,21 +2191,21 @@ function apigee_console_app(Pages, query_params) {
 
     getGroups(search, searchType);
   }
-  apigee.console.searchGroups = searchGroups;
+  Usergrid.console.searchGroups = searchGroups;
 
   function selectAllGroups(){
     $('[class=groupListItem]').attr('checked', true);
     $('#deselectAllGroups').show();
     $('#selectAllGroups').hide();
   }
-  window.apigee.console.selectAllGroups = selectAllGroups;
+  window.Usergrid.console.selectAllGroups = selectAllGroups;
 
   function deselectAllGroups(){
     $('[class=groupListItem]').attr('checked', false);
     $('#selectAllGroups').show();
     $('#deselectAllGroups').hide();
   }
-  window.apigee.console.deselectAllGroups = deselectAllGroups;
+  window.Usergrid.console.deselectAllGroups = deselectAllGroups;
 
   $('#delete-groups-link').click(deleteGroups);
 
@@ -2104,7 +2221,7 @@ function apigee_console_app(Pages, query_params) {
     confirmDelete(function(){
       items.each(function() {
         var groupId = $(this).attr('value');
-        runAppQuery(new apigee.QueryObj("DELETE", "groups/" + groupId, null, null,
+        runAppQuery(new Usergrid.Query("DELETE", "groups/" + groupId, null, null,
           getGroups,
           function() { alertModal("Error", "Unable to delete group"); }
         ));
@@ -2124,7 +2241,7 @@ function apigee_console_app(Pages, query_params) {
     selectTabButton('#button-group-details');
     showPanelContent('#group-panel', '#group-panel-details');
   }
-  window.apigee.console.pageOpenGroupProfile = pageOpenGroupProfile;
+  window.Usergrid.console.pageOpenGroupProfile = pageOpenGroupProfile;
 
   function pageSelectGroupMemberships(groupId) {
     Pages.SelectPanel('group');
@@ -2132,9 +2249,9 @@ function apigee_console_app(Pages, query_params) {
     selectTabButton('#button-group-memberships');
     showPanelContent('#group-panel', '#group-panel-memberships');
   }
-  window.apigee.console.pageSelectGroupMemberships = pageSelectGroupMemberships;
-
-  function redrawGroupPanel() {
+  window.Usergrid.console.pageSelectGroupMemberships = pageSelectGroupMemberships;
+//TODO: MARKED FOR REMOVAL BY REFACTORING
+  function redrawGroupPanel(){
     $('#group-panel-details').html("");
     $('#group-panel-memberships').html("");
     $('#group-panel-activities').html("");
@@ -2142,7 +2259,7 @@ function apigee_console_app(Pages, query_params) {
     if (group_data) {
       var details = $.tmpl('apigee.ui.panels.group.details.html', group_data);
       var formDiv = details.find('.query-result-form');
-      $(formDiv).buildForm(apigee.console.ui.jsonSchemaToDForm(apigee.console.ui.collections.group_schema, group_data.entity));
+      $(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.group_schema, group_data.entity));
 
       details.appendTo('#group-panel-details');
       details.find('.button').button();
@@ -2161,10 +2278,37 @@ function apigee_console_app(Pages, query_params) {
       updateRolesForGroupsAutocomplete();
     }
   }
+  
+  function redrawGroupDetails(data,curl){
+  	redrawGroupForm('group-panel-details', 'apigee.ui.panels.group.details.html', data);
+  	attachCurl('group-panel-details', curl);  	
+  }
+  
+  function redrawGroupMemberships(data, curl){
+  	redrawPanel('group-panel-memberships', 'apigee.ui.panels.group.memberships.html', data);
+  	attachCurl('group-panel-memberships', curl);
+  	updateUsersAutocomplete();
+  }
+  
+  function redrawGroupActivities(data, curl){
+  	redrawPanel('group-panel-activities', 'apigee.ui.panels.group.activities.html', data);
+  	attachCurl('group-panel-activities', curl);
+  }
+  
+  function redrawGroupPermissions(data){
+  	//TODO: IS THIS NEEDED? WHY?
+  	if (data.roles && data.roles.length == 0) {
+    	delete data.roles
+    }
+  	redrawPanel('group-panel-permissions', 'apigee.ui.panels.group.permissions.html', data);
+  	attachCurl('group-panel-roles', data.groupRolesCurl);
+  	attachCurl('group-panel-permissions', data.groupPermissionsCurl);
+  	updateRolesForGroupsAutocomplete();
+  }
 
   function saveGroupProfile(uuid){
-    var payload = apigee.console.ui.jsonSchemaToPayload(apigee.console.ui.collections.group_schema);
-    runAppQuery(new apigee.QueryObj("PUT", "groups/"+uuid, payload, null, completeSave,
+    var payload = Usergrid.console.ui.jsonSchemaToPayload(Usergrid.console.ui.collections.group_schema);
+    runAppQuery(new Usergrid.Query("PUT", "groups/"+uuid, payload, null, completeSave,
       function() {
         closeErrorMessage = function() {
           $('#group-messages').hide();
@@ -2175,21 +2319,21 @@ function apigee_console_app(Pages, query_params) {
     ));
   }
 
-  window.apigee.console.saveGroupProfile = saveGroupProfile;
+  window.Usergrid.console.saveGroupProfile = saveGroupProfile;
 
   function selectAllGroupMemberships(){
     $('[id=userGroupItem]').attr('checked', true);
     $('#deselectAllGroupMemberships').show();
     $('#selectAllGroupMemberships').hide();
   }
-  apigee.console.selectAllGroupMemberships = selectAllGroupMemberships;
+  Usergrid.console.selectAllGroupMemberships = selectAllGroupMemberships;
 
   function deselectAllGroupMemberships(){
     $('[id=userGroupItem]').attr('checked', false);
     $('#deselectAllGroupMemberships').hide();
     $('#selectAllGroupMemberships').show();
   }
-  apigee.console.deselectAllGroupMemberships = deselectAllGroupMemberships;
+  Usergrid.console.deselectAllGroupMemberships = deselectAllGroupMemberships;
 
   var group_data = null;
 
@@ -2226,7 +2370,7 @@ function apigee_console_app(Pages, query_params) {
       if ($.isEmptyObject(entity_path)) {
         entity_path = path + "/" + entity.uuid;
       }
-
+/* TODO: MARKED FOR REMOVAL 
       group_data = {
         entity : entity_contents,
         picture : entity.picture,
@@ -2237,30 +2381,44 @@ function apigee_console_app(Pages, query_params) {
         metadata : metadata,
         uri : (entity.metadata || { }).uri
       };
+*/
+	var data = {
+		entity : entity_contents,
+        picture : entity.picture,
+        name : name,
+        uuid : uuid,
+        path : entity_path,
+        collections : collections,
+        metadata : metadata,
+        uri : (entity.metadata || { }).uri
+	}
+      
+	redrawGroupDetails(data, this.getCurl());
 
-      redrawGroupPanel();
-
-      runAppQuery(new apigee.QueryObj("GET",'groups/' + entity.uuid + '/users', null, null,
+   //   redrawGroupPanel();
+	  
+      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/users', null, null,
         function(response) {
-          if (user_data && response.entities && (response.entities.length > 0)) {
-            group_data.memberships = response.entities;
-            redrawGroupPanel();
+          if (data && response.entities && (response.entities.length > 0)) {
+            data.memberships = response.entities;
+            
           }
+          redrawGroupMemberships(data, this.getCurl());
         },
         function() { alertModal("Error", "Unable to retrieve group's users."); }
       ));
 
-      runAppQuery(new apigee.QueryObj("GET",'groups/' + entity.uuid + '/activities', null, null,
+      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/activities', null, null,
         function(response) {
-          if (user_data && response.entities && (response.entities.length > 0)) {
-            group_data.activities = response.entities;
-            redrawGroupPanel();
+          if (data && response.entities && (response.entities.length > 0)) {
+            data.activities = response.entities;            
           }
+          redrawGroupActivities(data, this.getCurl());
         },
         function() { alertModal("Error", "Unable to retrieve group's activities."); }
       ));
 
-      runAppQuery(new apigee.QueryObj("GET",'groups/' + entity.uuid + '/rolenames', null, null,
+      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/rolenames', null, null,
         function(response) {
           if (user_data && response.entities && (response.entities.length > 0)) {
             group_data.roles = response.data;
@@ -2269,8 +2427,8 @@ function apigee_console_app(Pages, query_params) {
         },
         function() { alertModal("Error", "Unable to retrieve group's rolenames."); }
       ));
-
-      runAppQuery(new apigee.QueryObj("GET",'groups/' + entity.uuid + '/users', null, null,
+		//TODO: check if duplicate.
+      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/users', null, null,
         function(response) {
           if (group_data && response.entities && (response.entities.length > 0)) {
             group_data.memberships = response.entities;
@@ -2279,8 +2437,8 @@ function apigee_console_app(Pages, query_params) {
         },
         function() { alertModal("Error", "Unable to retrieve group's rolenames."); }
       ));
-
-      runAppQuery(new apigee.QueryObj("GET",'groups/' + entity.uuid + '/activities', null, null,
+		//TODO: check if duplicate.
+      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/activities', null, null,
         function(response) {
           if (group_data && response.entities && (response.entities.length > 0)) {
             group_data.activities = response.entities;
@@ -2289,65 +2447,65 @@ function apigee_console_app(Pages, query_params) {
         },
         function() { alertModal("Error", "Unable to retrieve group's rolenames."); }
       ));
-
-      runAppQuery(new apigee.QueryObj("GET",'groups/' + entity.uuid + '/roles', null, null,
+//TODO: check against /rolenames
+      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/roles', null, null,
         function(response) {
-          if (group_data && response.entities) {
-            group_data.roles = response.entities;
-            redrawGroupPanel();
+          if (data && response.entities) {
+            data.roles = response.entities;
+            
           }
+          data.groupRolesCurl = this.getCurl();
+          //WHEN /Roles is properly handled, get permissions
+          runAppQuery(new Usergrid.Query("GET", 'groups/' + entity.uuid + '/permissions', null, null,
+	        function(response) {
+	          var permissions = {};
+	          if (data && response.data && (response.data.length > 0)) {
+	
+	            if (response.data) {
+	              var perms = response.data;
+	              var count = 0;
+	
+	              for (var i in perms) {
+	                count++;
+	                var perm = perms[i];
+	                var parts = perm.split(':');
+	                var ops_part = "";
+	                var path_part = parts[0];
+	
+	                if (parts.length > 1) {
+	                  ops_part = parts[0];
+	                  path_part = parts[1];
+	                }
+	
+	                ops_part.replace("*", "get,post,put,delete")
+	                  var ops = ops_part.split(',');
+	                permissions[perm] = {ops : {}, path : path_part, perm : perm};
+	
+	                for (var j in ops) {
+	                  permissions[perm].ops[ops[j]] = true;
+	                }
+	              }	
+	              if (count == 0) {
+	                permissions = null;
+	              }	
+	              data.permissions = permissions;	              
+	            }
+	          }
+	          data.groupPermissionsCurl = this.getCurl();
+	          redrawGroupPermissions(data);
+	        },
+	        function() { alertModal("Error", "Unable to retrieve group's permissions."); }
+	      ));
         },
-        function() { alertModal("Error", "Unable to retrieve group's rolenames."); }
-      ));
-
-      runAppQuery(new apigee.QueryObj("GET", 'groups/' + entity.uuid + '/permissions', null, null,
-        function(response) {
-          var permissions = {};
-          if (group_data && response.data && (response.data.length > 0)) {
-
-            if (response.data) {
-              var perms = response.data;
-              var count = 0;
-
-              for (var i in perms) {
-                count++;
-                var perm = perms[i];
-                var parts = perm.split(':');
-                var ops_part = "";
-                var path_part = parts[0];
-
-                if (parts.length > 1) {
-                  ops_part = parts[0];
-                  path_part = parts[1];
-                }
-
-                ops_part.replace("*", "get,post,put,delete")
-                  var ops = ops_part.split(',');
-                permissions[perm] = {ops : {}, path : path_part, perm : perm};
-
-                for (var j in ops) {
-                  permissions[perm].ops[ops[j]] = true;
-                }
-              }
-
-              if (count == 0) {
-                permissions = null;
-              }
-
-              group_data.permissions = permissions;
-              redrawGroupPanel();
-            }
-          }
-        },
-        function() { alertModal("Error", "Unable to retrieve group's permissions."); }
+        function() { alertModal("Error", "Unable to retrieve group's roles."); }
       ));
     }
   }
 
+
   function requestGroup(groupId) {
     $('#group-details-area').html('<div class="alert alert-info">Loading...</div>');
-    runAppQuery(new apigee.QueryObj("GET",'groups/'+ groupId, null, null,
-      handleGroupResponse,
+    runAppQuery(new Usergrid.Query("GET",'groups/'+ groupId, null, null,handleGroupResponse,
       function() { alertModal("Error", "Unable to retrieve group details."); }
     ));
   }
@@ -2362,7 +2520,7 @@ function apigee_console_app(Pages, query_params) {
 
   function pageSelectRoles(uuid) {
     //make a new query object
-    queryObj = new apigee.QueryObj(null);
+    queryObj = new Usergrid.Query(null);
     //bind events for previous and next buttons
     bindPagingEvents('roles', getPreviousRoles, getNextRoles);
     //reset paging so we start at the first page
@@ -2375,19 +2533,19 @@ function apigee_console_app(Pages, query_params) {
     $('#role-panel-users').hide();
     $('#role-panel-groups').hide();
   }
-  window.apigee.console.pageSelectRoles = pageSelectRoles;
+  window.Usergrid.console.pageSelectRoles = pageSelectRoles;
 
   function getRoles(search, searchType) {
     //clear out the table before we start
     var output = $('#roles-table');
     output.empty();
-
+	hideCurlCommand('roles')
     //put the sort by back in once the API is fixed
     //var query = {"ql" : "order by " + roleSortBy};
     var query = {};
     if (roleLetter != "*") query = {"ql" : roleSortBy + "='" + groupLetter + "*'"};
 
-    queryObj = new apigee.QueryObj("GET", "roles", null, query, getRolesCallback, function() { alertModal("Error", "Unable to retrieve roles."); });
+    var queryObj = new Usergrid.Query("GET", "roles", null, query, getRolesCallback, function() { alertModal("Error", "Unable to retrieve roles."); });
     runAppQuery(queryObj);
     return false;
   }
@@ -2414,6 +2572,7 @@ function apigee_console_app(Pages, query_params) {
       }
     }
     showPagination('roles');
+    showCurlCommand('roles', this.getCurl(), this.getToken());
   }
 
   $('#delete-roles-link').click(deleteRoles);
@@ -2429,7 +2588,7 @@ function apigee_console_app(Pages, query_params) {
     confirmDelete(function(){
       items.each(function() {
         var roleId = $(this).attr("value");
-        runAppQuery(new apigee.QueryObj("DELETE", "role/" + roleId, null, null, getRoles,
+        runAppQuery(new Usergrid.Query("DELETE", "role/" + roleId, null, null, getRoles,
           function() { alertModal("Error", "Unable to delete role"); }
         ));
       });
@@ -2454,7 +2613,7 @@ function apigee_console_app(Pages, query_params) {
     selectTabButton('#button-role-settings');
     $('#role-panel-settings').show();
   }
-  window.apigee.console.pageOpenRole = pageOpenRole;
+  window.Usergrid.console.pageOpenRole = pageOpenRole;
 
   function pageSelectRoleUsers (roleName, roleId){
     current_role_name = roleName;
@@ -2465,7 +2624,7 @@ function apigee_console_app(Pages, query_params) {
     selectTabButton('#button-role-users');
     $('#role-panel-users').show();
   }
-  window.apigee.console.pageSelectRoleUsers = pageSelectRoleUsers;
+  window.Usergrid.console.pageSelectRoleUsers = pageSelectRoleUsers;
 
   function pageSelectRoleGroups(roleName, roleId) {
     current_role_name = roleName;
@@ -2476,10 +2635,10 @@ function apigee_console_app(Pages, query_params) {
     selectTabButton('#button-role-groups');
     $('#role-panel-groups').show();
   }
-  window.apigee.console.pageSelectRoleGroups = pageSelectRoleGroups;
+  window.Usergrid.console.pageSelectRoleGroups = pageSelectRoleGroups;
 
   var permissions = {};
-  function displayPermissions(response) {
+  function displayPermissions(response, curl) {
     var section = $('#role-permissions');
     section.empty();
 
@@ -2514,13 +2673,25 @@ function apigee_console_app(Pages, query_params) {
     } else {
       section.html('<div class="alert">No permission information retrieved.</div>');
     }
+	showCurlCommand('role-permissions', curl);
+    displayRoleInactivity();
   }
 
   function displayRoleInactivity(response) {
+    //requestRole & displayInactivity
+    runAppQuery(new Usergrid.Query("GET", "roles/" + current_role_id, null, null,
+      function(response) {
+        var inactivity = response.entities[0].inactivity.toString();
+	  $('#role-inactivity-input').val(inactivity);
+	},
+        function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
+    ));
   }
+//TODO: MARKED FOr REfactoring
 
   var rolesUsersResults = ''
-  function displayRolesUsers(response) {
+  
+  function displayRolesUsers(response, curl) {
     $('#role-users').html('');
     data = {};
     data.roleId = current_role_id;
@@ -2530,16 +2701,19 @@ function apigee_console_app(Pages, query_params) {
     }
     $.tmpl('apigee.ui.panels.role.users.html', {"data" : data}, {}).appendTo('#role-users');
     updateUsersForRolesAutocomplete();
+    showCurlCommand('role-users', curl);
   }
-
+//TODO: MARKED FOr REfactoring
   var rolesGroupsResults = ''
-  function displayRoleGroups(response) {
+  
+  function displayRoleGroups(response, curl) {
     $('#role-groups').html('');
     data = {};
     data.roleId = current_role_id;
     data.rolename = current_role_name;
     $.tmpl('apigee.ui.role.groups.table_rows.html', response.entities, {}).appendTo('#role-groups');
     updateGroupsForRolesAutocomplete();
+    showCurlCommand('role-groups', curl);
   }
 
   function selectAllRolesUsers(){
@@ -2547,46 +2721,38 @@ function apigee_console_app(Pages, query_params) {
     $('#deselectAllRolesUsers').show();
     $('#selectAllRolesUsers').hide();
   }
-  window.apigee.console.selectAllRolesUsers = selectAllRolesUsers;
+  window.Usergrid.console.selectAllRolesUsers = selectAllRolesUsers;
 
   function deselectAllRolesUsers(){
     $('[class=userRoleItem]').attr('checked', false);
     $('#selectAllRolesUsers').show();
     $('#deselectAllRolesUsers').hide();
   }
-  window.apigee.console.deselectAllRolesUsers = deselectAllRolesUsers;
+  window.Usergrid.console.deselectAllRolesUsers = deselectAllRolesUsers;
 
   function requestRole() {
     $('#role-section-title').html("");
     $('#role-permissions').html("");
     $('#role-users').html("");
     //requestApplicationRoles
-    runAppQuery(new apigee.QueryObj("GET",'rolenames', null, null,
+    runAppQuery(new Usergrid.Query("GET",'rolenames', null, null,
       function(response) {
-        getRolesCallback(response);
+        //getRolesCallback(response);
         $('#role-section-title').html(current_role_name + " Role");
         $('#role-permissions').html('<div class="alert alert-info">Loading ' + current_role_name + ' permissions...</div>');
-        //requestRole & displayInactivity
-        runAppQuery(new apigee.QueryObj("GET", "role/" + current_role_id, null, null,
-          function(response) {
-            var inactivity = response.entities[0].inactivity.toString();
-            $('#role-inactivity-input').val(inactivity);
-          },
-          function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
-        ));
         //requestApplicationRolePermissions
-        runAppQuery(new apigee.QueryObj("GET", "rolenames/" + current_role_name, null, null,
-          function(response) { displayPermissions(response); },
+        runAppQuery(new Usergrid.Query("GET", "rolenames/" + current_role_name, null, null,
+          function(response) { displayPermissions(response, this.getCurl()); },
           function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
         ));
         //requestApplicationRoleUsers
-        runAppQuery(new apigee.QueryObj("GET", "roles/" + current_role_id + "/users", null, null,
-          function(response) { displayRolesUsers(response); },
+        runAppQuery(new Usergrid.Query("GET", "roles/" + current_role_id + "/users", null, null,
+          function(response) { displayRolesUsers(response, this.getCurl()); },
           function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
         ));
         //requestGroupRoles
-        runAppQuery(new apigee.QueryObj("GET", "roles/" + current_role_id + "/groups", null, null,
-            function(response) { displayRoleGroups(response); },
+        runAppQuery(new Usergrid.Query("GET", "roles/" + current_role_id + "/groups", null, null,
+            function(response) { displayRoleGroups(response, this.getCurl()); },
             function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + current_role_name + ' role permissions.</div>'); }
           ));
       },
@@ -2599,10 +2765,10 @@ function apigee_console_app(Pages, query_params) {
 function deleteRolePermission(roleName, permission) {
     data = {"permission":permission};
     confirmDelete(function(){
-      runAppQuery(new apigee.QueryObj("DELETE", "rolenames/" + roleName, null, data, requestRole, requestRole));
+      runAppQuery(new Usergrid.Query("DELETE", "rolenames/" + roleName, null, data, requestRole, requestRole));
     });
   }
-  window.apigee.console.deleteRolePermission = deleteRolePermission;
+  window.Usergrid.console.deleteRolePermission = deleteRolePermission;
 
    function addRolePermission(roleName) {
     var path = $('#role-permission-path-entry-input').val();
@@ -2627,12 +2793,12 @@ function deleteRolePermission(roleName, permission) {
     var permission = ops + ":" + path;
     var data = {"permission": ops + ":" + path};
     if (ops) {
-      runAppQuery(new apigee.QueryObj("POST", "/rolenames/" + roleName, data, null, requestRole, requestRole));
+      runAppQuery(new Usergrid.Query("POST", "/rolenames/" + roleName, data, null, requestRole, requestRole));
     } else {
       alertModal("Error", "Please select a verb");
     }
   }
-  window.apigee.console.addRolePermission = addRolePermission;
+  window.Usergrid.console.addRolePermission = addRolePermission;
 
   function editRoleInactivity() {
     var inactivity = $('#role-inactivity-input').val();
@@ -2640,23 +2806,23 @@ function deleteRolePermission(roleName, permission) {
 
     if (intRegex.test(inactivity)) {
       data = { inactivity: inactivity };
-      runAppQuery(new apigee.QueryObj("PUT", "/role/" + roleId, data, null, requestRole, requestRole));
+      runAppQuery(new Usergrid.Query("PUT", "/role/" + roleId, data, null, requestRole, requestRole));
     } else {
       $('#inactivity-integer-message').show()
     }
   }
-  window.apigee.console.editRoleInactivity = editRoleInactivity;
+  window.Usergrid.console.editRoleInactivity = editRoleInactivity;
 
   function deleteUserPermission(userName, permission) {
     var data = {"permission": permission};
     confirmDelete(function(){
-      runAppQuery(new apigee.QueryObj("DELETE", "/users/" + userName + "/permissions", null, data,
+      runAppQuery(new Usergrid.Query("DELETE", "/users/" + userName + "/permissions", null, data,
         function() { pageSelectUserPermissions (userName); },
         function() { alertModal("Error", "Unable to delete permission"); }
       ));
     });
   }
-  window.apigee.console.deleteUserPermission = deleteUserPermission;
+  window.Usergrid.console.deleteUserPermission = deleteUserPermission;
 
   function addUserPermission(userName) {
     var path = $('#user-permission-path-entry-input').val();
@@ -2680,7 +2846,7 @@ function deleteRolePermission(roleName, permission) {
     }
     var data = {"permission": ops + ":" + path};
     if (ops) {
-      runAppQuery(new apigee.QueryObj("POST", "/users/" + userName + "/permissions/", data, null,
+      runAppQuery(new Usergrid.Query("POST", "/users/" + userName + "/permissions/", data, null,
         function() { pageSelectUserPermissions (userName); },
         function() { alertModal("Error", "Unable to add permission"); }
       ));
@@ -2688,7 +2854,7 @@ function deleteRolePermission(roleName, permission) {
       alertModal("Error", "Please select a verb");
     }
   }
-  window.apigee.console.addUserPermission = addUserPermission;
+  window.Usergrid.console.addUserPermission = addUserPermission;
 
   function addGroupPermission(groupName) {
     var path = $('#group-permission-path-entry-input').val();
@@ -2712,7 +2878,7 @@ function deleteRolePermission(roleName, permission) {
     }
     var data = {"permission": ops + ":" + path};
     if (ops) {
-      runAppQuery(new apigee.QueryObj("POST", "/groups/" + groupName + "/permissions/", data, null,
+      runAppQuery(new Usergrid.Query("POST", "/groups/" + groupName + "/permissions/", data, null,
         function() { pageSelectGroupPermissions(groupName); },
         function() { alertModal("Error", "Unable to add permission"); }
       ));
@@ -2720,7 +2886,7 @@ function deleteRolePermission(roleName, permission) {
       alertModal("Error", "Please select a verb");
     }
   }
-  window.apigee.console.addGroupPermission = addGroupPermission;
+  window.Usergrid.console.addGroupPermission = addGroupPermission;
 
   function pageSelectGroupPermissions(groupId) {
     Pages.SelectPanel('group');
@@ -2728,7 +2894,7 @@ function deleteRolePermission(roleName, permission) {
     selectTabButton('#button-group-permissions');
     showPanelContent('#group-panel', '#group-panel-permissions');
   }
-  window.apigee.console.pageSelectGroupPermissions = pageSelectGroupPermissions;
+  window.Usergrid.console.pageSelectGroupPermissions = pageSelectGroupPermissions;
 
   function submitAddGroupToRole() {
     var form = $(this);
@@ -2739,14 +2905,14 @@ function deleteRolePermission(roleName, permission) {
       && checkRegexp2(groupId, nameRegex, nameAllowedCharsMessage);
 
     if (bValid) {
-      runAppQuery(new apigee.QueryObj("POST", "/roles/" + current_role_id + "/groups/" + groupId.val(), null, null,
+      runAppQuery(new Usergrid.Query("POST", "/roles/" + current_role_id + "/groups/" + groupId.val(), null, null,
         function() { pageSelectRoleGroups(current_role_id, current_role_name); },
         function() { alertModal("Error", "Unable to add group to role"); }
       ));
       $(this).modal('hide');
     }
   }
-  window.apigee.console.submitAddGroupToRole = submitAddGroupToRole;
+  window.Usergrid.console.submitAddGroupToRole = submitAddGroupToRole;
 
 
   function removeGroupFromRole() {
@@ -2758,7 +2924,7 @@ function deleteRolePermission(roleName, permission) {
     confirmDelete(function(){
       $.each(items, function() {
         var groupId = $(this).val();
-        runAppQuery(new apigee.QueryObj("DELETE", "/roles/" + current_role_id + "/groups/" + groupId, null, null,
+        runAppQuery(new Usergrid.Query("DELETE", "/roles/" + current_role_id + "/groups/" + groupId, null, null,
           function() {
             pageSelectRoleGroups(current_role_id, current_role_name);
           },
@@ -2778,14 +2944,14 @@ function deleteRolePermission(roleName, permission) {
     $('#deselectAllRoleGroups').show();
     $('#selectAllRoleGroups').hide();
   }
-  window.apigee.console.selectAllRoleGroups = selectAllRoleGroups;
+  window.Usergrid.console.selectAllRoleGroups = selectAllRoleGroups;
 
   function deselectAllRoleGroups(){
     $('[class=roleGroupItem]').attr('checked', false);
     $('#selectAllRoleGroups').show();
     $('#deselectAllRoleGroups').hide();
   }
-  window.apigee.console.deselectAllRoleGroups = deselectAllRoleGroups;
+  window.Usergrid.console.deselectAllRoleGroups = deselectAllRoleGroups;
 
   /*******************************************************************
    *
@@ -2797,7 +2963,7 @@ function deleteRolePermission(roleName, permission) {
 
   function pageSelectActivities(uuid) {
     //make a new query object
-    queryObj = new apigee.QueryObj(null);
+    queryObj = new Usergrid.Query(null);
     //bind events for previous and next buttons
     bindPagingEvents('activities', getPreviousActivities, getNextActivities);
     //reset paging so we start at the first page
@@ -2808,7 +2974,7 @@ function deleteRolePermission(roleName, permission) {
     showPanelList('activities');
 
   }
-  window.apigee.console.pageSelectActivities = pageSelectActivities;
+  window.Usergrid.console.pageSelectActivities = pageSelectActivities;
 
   function getActivities(search, searchType) {
     //clear out the table before we start
@@ -2822,7 +2988,7 @@ function deleteRolePermission(roleName, permission) {
       }
     }
 
-    queryObj = new apigee.QueryObj("GET", "activities", {}, query, getActivitiesCallback, function() { alertModal("Error", "Unable to retrieve activities.")});
+    queryObj = new Usergrid.Query("GET", "activities", {}, query, getActivitiesCallback, function() { alertModal("Error", "Unable to retrieve activities.")});
     runAppQuery(queryObj);
     return false;
   }
@@ -2870,7 +3036,7 @@ function deleteRolePermission(roleName, permission) {
 
     getActivities(search, searchType);
   }
-  apigee.console.searchActivities = searchActivities;
+  Usergrid.console.searchActivities = searchActivities;
 
   /*******************************************************************
    *
@@ -2881,16 +3047,16 @@ function deleteRolePermission(roleName, permission) {
   function pageSelectAnalytics(uuid) {
     requestApplicationCounterNames();
   }
-  window.apigee.console.pageSelectAnalytics = pageSelectAnalytics;
+  window.Usergrid.console.pageSelectAnalytics = pageSelectAnalytics;
 
   var application_counters_names = [];
 
   function requestApplicationCounterNames() {
     $('#analytics-counter-names').html('<div class="alert alert-info">Loading...</div>');
-    runAppQuery(new apigee.QueryObj("GET","counters", null, null,
+    runAppQuery(new Usergrid.Query("GET","counters", null, null,
       function(response) {
         application_counters_names = response.data;
-        var html = apigee.console.ui.makeTableFromList(application_counters_names, 1, {
+        var html = Usergrid.console.ui.makeTableFromList(application_counters_names, 1, {
           tableId : "analytics-counter-names-table",
           getListItem : function(i, col, row) {
             var counter_name = application_counters_names[i];
@@ -2932,7 +3098,7 @@ function deleteRolePermission(roleName, permission) {
     params.counter = counter_names;
     params.pad = true;
 
-    runAppQuery(new apigee.QueryObj("GET","counters", null, params,
+    runAppQuery(new Usergrid.Query("GET","counters", null, params,
       function(response) {
         application_counters = response.counters;
         if (!application_counters) {
@@ -3019,11 +3185,6 @@ function deleteRolePermission(roleName, permission) {
    *
    ******************************************************************/
 
-  function pageSelectSettings(uuid) {
-    requestApplicationCredentials();
-    requestOrganizations();
-  }
-  window.apigee.console.pageSelectSettings = pageSelectSettings;
 
   var application_keys = {};
 
@@ -3031,7 +3192,7 @@ function deleteRolePermission(roleName, permission) {
     $('#application-panel-key').html('<div class="alert alert-info">Loading...</div>');
     $('#application-panel-secret').html('<div class="alert alert-info">Loading...</div>');
 
-    runAppQuery(new apigee.QueryObj("GET", "credentials", null, null,
+    runAppQuery(new Usergrid.Query("GET", "credentials", null, null,
       function(response) {
         $('#application-panel-key').html(response.credentials.client_id);
         $('#application-panel-secret').html(response.credentials.client_secret);
@@ -3048,7 +3209,7 @@ function deleteRolePermission(roleName, permission) {
     $('#application-panel-key').html('<div class="alert alert-info">Loading...</div>');
     $('#application-panel-secret').html('<div class="alert alert-info">Loading...</div>');
 
-    runAppQuery(new apigee.QueryObj("POST", "credentials", null, null,
+    runAppQuery(new Usergrid.Query("POST", "credentials", null, null,
       function(response) {
         $('#application-panel-key').html(response.credentials.client_id);
         $('#application-panel-secret').html(response.credentials.client_secret);
@@ -3060,7 +3221,7 @@ function deleteRolePermission(roleName, permission) {
       }
     ));
   }
-  window.apigee.console.newApplicationCredentials = newApplicationCredentials;
+  window.Usergrid.console.newApplicationCredentials = newApplicationCredentials;
 
   /*******************************************************************
    *
@@ -3072,7 +3233,7 @@ function deleteRolePermission(roleName, permission) {
     requestApplicationCredentials();
     $('#shell-input').focus();
   }
-  window.apigee.console.pageSelectShell = pageSelectShell;
+  window.Usergrid.console.pageSelectShell = pageSelectShell;
 
   var history_i = 0;
   var history = new Array();
@@ -3105,7 +3266,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function handleShellCommand(s) {
-    var orgName = apiClient.getOrganizationName();
+    var orgName = Usergrid.ApiClient.getOrganizationName();
 
     if (s) {
       history.push(s);
@@ -3117,23 +3278,23 @@ function deleteRolePermission(roleName, permission) {
     if (s.startsWith("/")) {
       path = encodePathString(s);
       printLnToShell(path);
-      runAppQuery(new apigee.QueryObj("GET",path, null, null, displayShellResponse,null));
+      runAppQuery(new Usergrid.Query("GET",path, null, null, displayShellResponse,null));
     } else if (s.startsWith("get /")) {
       path = encodePathString(s.substring(4));
       printLnToShell(path);
-      runAppQuery(new apigee.QueryObj("GET",path, null, null, displayShellResponse,null));
+      runAppQuery(new Usergrid.Query("GET",path, null, null, displayShellResponse,null));
     } else if (s.startsWith("put /")) {
       params = encodePathString(s.substring(4), true);
       printLnToShell(params.path);
-      runAppQuery(new apigee.QueryObj("PUT",params.path, params.payload, null, displayShellResponse,null));
+      runAppQuery(new Usergrid.Query("PUT",params.path, params.payload, null, displayShellResponse,null));
   } else if (s.startsWith("post /")) {
       params = encodePathString(s.substring(5), true);
       printLnToShell(params.path);
-      runAppQuery(new apigee.QueryObj("POST",params.path, params.payload, null, displayShellResponse,null));
+      runAppQuery(new Usergrid.Query("POST",params.path, params.payload, null, displayShellResponse,null));
     } else if (s.startsWith("delete /")) {
       path = encodePathString(s.substring(7));
       printLnToShell(path);
-      runAppQuery(new apigee.QueryObj("DELETE",path, null, null, displayShellResponse,null));
+      runAppQuery(new Usergrid.Query("DELETE",path, null, null, displayShellResponse,null));
     } else if ((s == "clear") || (s == "cls"))  {
       $('#shell-output').html(" ");
     } else if (s == "help") {
@@ -3209,19 +3370,21 @@ function deleteRolePermission(roleName, permission) {
   function pageSelectCollections(uuid) {
     getCollections();
   }
-  window.apigee.console.pageSelectCollections = pageSelectCollections;
+  window.Usergrid.console.pageSelectCollections = pageSelectCollections;
 
   function getCollections(search, searchType) {
     //clear out the table before we start
     var output = $('#collections-table');
     output.empty();
-
+	hideCurlCommand('collections');
     var section =$('#application-collections');
     section.empty().html('<div class="alert alert-info">Loading...</div>');
 
-    runAppQuery(new apigee.QueryObj("GET",'', null, null, getCollectionsCallback,
+    var queryObj = new Usergrid.Query("GET",'', null, null, getCollectionsCallback,
       function() { alertModal("Error", "There was an error getting the collections"); }
-    ));
+    );
+    
+    runAppQuery(queryObj);
     return false;
   }
 
@@ -3248,6 +3411,7 @@ function deleteRolePermission(roleName, permission) {
         $.tmpl('apigee.ui.collections.table_rows.html', this_data).appendTo('#collections-table');
       }
     }
+	showCurlCommand('collections', this.getCurl(), this.getToken());
   }
 
   /*******************************************************************
@@ -3257,7 +3421,7 @@ function deleteRolePermission(roleName, permission) {
    ******************************************************************/
 
   function updateUsersAutocomplete(){
-    runAppQuery(new apigee.QueryObj("GET", 'users/', null, null, updateUsersAutocompleteCallback,
+    runAppQuery(new Usergrid.Query("GET", 'users/', null, null, updateUsersAutocompleteCallback,
       function() { alertModal("Error", "Unable to retrieve users."); }
     ));
     return false;
@@ -3276,10 +3440,10 @@ function deleteRolePermission(roleName, permission) {
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
   }
-  window.apigee.console.updateUsersAutocompleteCallback = updateUsersAutocompleteCallback;
+  window.Usergrid.console.updateUsersAutocompleteCallback = updateUsersAutocompleteCallback;
 
   function updateUsersForRolesAutocomplete(){
-    runAppQuery(new apigee.QueryObj("GET",'users', null, null, updateUsersForRolesAutocompleteCallback,
+    runAppQuery(new Usergrid.Query("GET",'users', null, null, updateUsersForRolesAutocompleteCallback,
       function() { alertModal("Error", "Unable to retrieve users."); }
     ));
     return false;
@@ -3298,10 +3462,10 @@ function deleteRolePermission(roleName, permission) {
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
   }
-  window.apigee.console.updateUsersForRolesAutocompleteCallback = updateUsersForRolesAutocompleteCallback;
+  window.Usergrid.console.updateUsersForRolesAutocompleteCallback = updateUsersForRolesAutocompleteCallback;
 
   function updateGroupsAutocomplete(){
-    runAppQuery(new apigee.QueryObj("GET",'groups', null, null, updateGroupsAutocompleteCallback,
+    runAppQuery(new Usergrid.Query("GET",'groups', null, null, updateGroupsAutocompleteCallback,
       function() { alertModal("Error", "Unable to retrieve groups."); }
     ));
     return false;
@@ -3320,10 +3484,10 @@ function deleteRolePermission(roleName, permission) {
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
   }
-  window.apigee.console.updateGroupsAutocompleteCallback = updateGroupsAutocompleteCallback;
+  window.Usergrid.console.updateGroupsAutocompleteCallback = updateGroupsAutocompleteCallback;
 
   function updateGroupsForRolesAutocomplete(){
-    runAppQuery(new apigee.QueryObj("GET",'groups', null, null, updateGroupsForRolesAutocompleteCallback,
+    runAppQuery(new Usergrid.Query("GET",'groups', null, null, updateGroupsForRolesAutocompleteCallback,
     function() { alertModal("Error", "Unable to retrieve groups."); }
     ));
     return false;
@@ -3342,7 +3506,7 @@ function deleteRolePermission(roleName, permission) {
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
   }
-  window.apigee.console.updateGroupsForRolesAutocompleteCallback = updateGroupsForRolesAutocompleteCallback;
+  window.Usergrid.console.updateGroupsForRolesAutocompleteCallback = updateGroupsForRolesAutocompleteCallback;
 
   function updatePermissionAutocompleteCollections(){
     var pathInput = $("#role-permission-path-entry-input");
@@ -3380,7 +3544,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function updateRolesAutocomplete(){
-    runAppQuery(new apigee.QueryObj("GET", 'roles', null, null, updateRolesAutocompleteCallback,
+    runAppQuery(new Usergrid.Query("GET", 'roles', null, null, updateRolesAutocompleteCallback,
       function() { alertModal("Error", "Unable to retrieve roles."); }
     ));
     return false;
@@ -3401,10 +3565,10 @@ function deleteRolePermission(roleName, permission) {
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
   }
-  window.apigee.console.updateRolesAutocompleteCallback = updateRolesAutocompleteCallback;
+  window.Usergrid.console.updateRolesAutocompleteCallback = updateRolesAutocompleteCallback;
 
   function updateRolesForGroupsAutocomplete(){
-    runAppQuery(new apigee.QueryObj("GET", 'roles', null, null, updateRolesForGroupsAutocompleteCallback,
+    runAppQuery(new Usergrid.Query("GET", 'roles', null, null, updateRolesForGroupsAutocompleteCallback,
       function() { alertModal("Error", "Unable to retrieve roles."); }
     ));
     return false;
@@ -3425,7 +3589,7 @@ function deleteRolePermission(roleName, permission) {
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
   }
-  window.apigee.console.updateRolesAutocompleteCallback = updateRolesAutocompleteCallback;
+  window.Usergrid.console.updateRolesAutocompleteCallback = updateRolesAutocompleteCallback;
 
 
   /*******************************************************************
@@ -3444,7 +3608,7 @@ function deleteRolePermission(roleName, permission) {
 
   function setupMenu() {
     var userNameBox = $('#userEmail');
-    var userEmail = apigee.userSession.getUserEmail();
+    var userEmail = Usergrid.userSession.getUserEmail();
     if (userEmail){
       userNameBox.html(userEmail);
       setupOrganizationsMenu();
@@ -3454,8 +3618,8 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function setupOrganizationsMenu() {
-    var organizations = apigee.organizations.getList();
-    var orgName = apiClient.getOrganizationName();
+    var organizations = Usergrid.organizations.getList();
+    var orgName = Usergrid.ApiClient.getOrganizationName();
     if (!organizations) {
       return;
     }
@@ -3481,17 +3645,21 @@ function deleteRolePermission(roleName, permission) {
   function selectOrganization(e) {
     var link = $(this);
     var orgName = link.text();
-    var currentOrg = apigee.organizations.getItemByName(orgName);
-    apiClient.setOrganizationName(currentOrg.getName());
-    apiClient.setOrganizationUUID(currentOrg.getUUID());
+    var currentOrg = Usergrid.organizations.getItemByName(orgName);
+    Usergrid.ApiClient.setOrganizationName(currentOrg.getName());
+    Usergrid.ApiClient.setOrganizationUUID(currentOrg.getUUID());
+    // make sure there is an application for this org
     var app = currentOrg.getFirstItem();
-    apiClient.setApplicationName(app.getName());
-
+    if (app) {
+      Usergrid.ApiClient.setApplicationName(app.getName());
+    } else {
+      forceNewApp();
+    }
     Pages.ShowPage('console');
   }
 
   function logout() {
-    apigee.userSession.clearAll();
+    Usergrid.userSession.clearAll();
     if (useSSO()) {
       Pages.clearPage();
       sendToSSOLogoutPage();
@@ -3501,14 +3669,16 @@ function deleteRolePermission(roleName, permission) {
     initOrganizationVars();
     return false;
   }
-  apigee.console.logout = logout;
+  Usergrid.console.logout = logout;
+
+  Usergrid.ApiClient.setLogoutCallback(Usergrid.console.logout);
 
   $("#login-form").submit(function () {
     login();
     return false;
   });
 
-  /**
+  /** //TODO Update documentation for .login() usage
   *  Authenticate an admin user and store the token and org list
   *  @method login
   *  @params {string} email - the admin's email (or username)
@@ -3521,14 +3691,14 @@ function deleteRolePermission(roleName, permission) {
     var password = $('#login-password').val();
 
     //empty local storage
-    apigee.userSession.clearAll();;
+    Usergrid.userSession.clearAll();
 
     var formdata = {
       grant_type: "password",
       username: email,
       password: password
     };
-    runManagementQuery(new apigee.QueryObj('GET', 'token', null, formdata,
+    runManagementQuery(new Usergrid.Query('GET', 'token', null, formdata,
       function(response) {
         if (!response) {
           displayLoginError();
@@ -3540,43 +3710,43 @@ function deleteRolePermission(roleName, permission) {
           var orgName = response.user.organizations[org].name;
           //grab the uuid
           var orgUUID = response.user.organizations[org].uuid;
-          organization = new apigee.Organization(orgName, orgUUID);
+          organization = new Usergrid.Organization(orgName, orgUUID);
           for (app in response.user.organizations[org].applications) {
             //grab the name
             var appName = app.split("/")[1];
             //grab the id
             var appUUID = response.user.organizations[org].applications[app];
             //store in the new Application object
-            application = new apigee.Application(appName, appUUID);
+            application = new Usergrid.Application(appName, appUUID);
             organization.addItem(application);
           }
-          //apigee.applications
-          apigee.organizations.addItem(organization);
+          //add organization to organizations list
+          Usergrid.organizations.addItem(organization);
         }
         //select the first org by default
-        var firstOrg = apigee.organizations.getFirstItem();
+        var firstOrg = Usergrid.organizations.getFirstItem();
         //save the first org in the client
-        apiClient.setOrganizationName(firstOrg.getName());
-        apiClient.setOrganizationUUID(firstOrg.getUUID());
+        Usergrid.ApiClient.setOrganizationName(firstOrg.getName());
+        Usergrid.ApiClient.setOrganizationUUID(firstOrg.getUUID());
 
         //store user data in local storage
-        apigee.userSession.saveAll(response.user.uuid, response.user.email, response.access_token);
+        Usergrid.userSession.saveAll(response.user.uuid, response.user.email, response.access_token);
 
         //store the token in the client
-        apiClient.setToken(response.access_token);
+        Usergrid.ApiClient.setToken(response.access_token);
 
         //call the success callback funciton
         loginOk(response);
       },
       function(response) {
         //empty local storage
-        apigee.userSession.clearAll();
+        Usergrid.userSession.clearAll();
         //call the error function
         displayLoginError(response);
       }
     ));
   }
-  window.apigee.console.login = login;
+  window.Usergrid.console.login = login;
 
   /**
   *  Reauthenticate an admin who already has a token
@@ -3586,10 +3756,10 @@ function deleteRolePermission(roleName, permission) {
   */
   function autoLogin(successCallback, errorCallback) {
     //repopulate the user and the client with the info from the userSession
-    var token = apigee.userSession.getAccessToken();
-    apiClient.setToken(token);
+    var token = Usergrid.userSession.getAccessToken();
+    Usergrid.ApiClient.setToken(token);
 
-    runManagementQuery(new apigee.QueryObj("GET","users/" + apigee.userSession.getUserEmail(), null, null,
+    runManagementQuery(new Usergrid.Query("GET","users/" + Usergrid.userSession.getUserEmail(), null, null,
       function(response) {
         if (!response) {
           errorCallback();
@@ -3601,7 +3771,7 @@ function deleteRolePermission(roleName, permission) {
           var orgName = response.data.organizations[org].name;
           //grab the uuid
           var orgUUID = response.data.organizations[org].uuid;
-          organization = new apigee.Organization(orgName, orgUUID);
+          organization = new Usergrid.Organization(orgName, orgUUID);
           for (app in response.data.organizations[org].applications) {
             //grab the name
             var appName = app.split("/")[1];
@@ -3609,23 +3779,23 @@ function deleteRolePermission(roleName, permission) {
             //grab the id
             var appUUID = response.data.organizations[org].applications[app];
             //store in the new Application object
-            application = new apigee.Application(appName, appUUID);
+            application = new Usergrid.Application(appName, appUUID);
             organization.addItem(application);
           }
           //add organization to organizations list
-          apigee.organizations.addItem(organization);
+          Usergrid.organizations.addItem(organization);
         }
         //select the first org by default
-        var firstOrg = apigee.organizations.getFirstItem();
+        var firstOrg = Usergrid.organizations.getFirstItem();
         //save the first org in the client
-        apiClient.setOrganizationName(firstOrg.getName());
-        apiClient.setOrganizationUUID(firstOrg.getUUID());
+        Usergrid.ApiClient.setOrganizationName(firstOrg.getName());
+        Usergrid.ApiClient.setOrganizationUUID(firstOrg.getUUID());
 
         //store user data in local storage
-        apigee.userSession.saveAll(response.data.uuid, response.data.email, response.data.token);
+        Usergrid.userSession.saveAll(response.data.uuid, response.data.email, response.data.token);
 
         //store the token in the client
-        apiClient.setToken(response.data.token);
+        Usergrid.ApiClient.setToken(response.data.token);
 
         if (successCallback) {
           successCallback(response);
@@ -3633,7 +3803,7 @@ function deleteRolePermission(roleName, permission) {
       },
       function(response) {
         //empty local storage
-        apigee.userSession.clearAll();
+        Usergrid.userSession.clearAll();
         if (errorCallback) {
           errorCallback(response);
         }
@@ -3641,7 +3811,7 @@ function deleteRolePermission(roleName, permission) {
     ));
     return;
   }
-  window.apigee.console.autoLogin = autoLogin;
+  window.Usergrid.console.autoLogin = autoLogin;
 
 
   /*******************************************************************
@@ -3712,7 +3882,7 @@ function deleteRolePermission(roleName, permission) {
       "email": email,
       "password": password
     };
-    runManagementQuery(new apigee.QueryObj("POST",'organizations', formdata, null,
+    runManagementQuery(new Usergrid.Query("POST",'organizations', formdata, null,
       function(response) {
         clearSignupError();
         clearSignupForm();
@@ -3763,7 +3933,7 @@ function deleteRolePermission(roleName, permission) {
           '<span class="monospace">' + uuid + '</span>' +
           '</td>' +
           '<td>' +
-          "<a onclick=\"apigee.console.leaveOrganization('" + uuid + "')\"" + ' ' + "href=\"#" + uuid + "\" class=\"btn btn-danger\">Leave</a>" +
+          "<a onclick=\"Usergrid.console.leaveOrganization('" + uuid + "')\"" + ' ' + "href=\"#" + uuid + "\" class=\"btn btn-danger\">Leave</a>" +
           '</td>' +
           '</tr>';
       }
@@ -3776,7 +3946,7 @@ function deleteRolePermission(roleName, permission) {
     } else {
     }
   }
-  apigee.console.displayAccountSettings = displayAccountSettings;
+  Usergrid.console.displayAccountSettings = displayAccountSettings;
 
   $('#button-update-account').click(function() {
     var userData = {
@@ -3802,7 +3972,7 @@ function deleteRolePermission(roleName, permission) {
       userData.newpassword = new_pass;
       userData.oldpassword = old_pass;
     }
-    runManagementQuery(new apigee.QueryObj("PUT",'users/' + apigee.userSession.getUserUUID(), userData, null,
+    runManagementQuery(new Usergrid.Query("PUT",'users/' + Usergrid.userSession.getUserUUID(), userData, null,
       function(response) {
       $('#account-update-modal').modal('show');
         if ((old_pass && new_pass) && (old_pass != new_pass)) {
@@ -3823,21 +3993,21 @@ function deleteRolePermission(roleName, permission) {
     if (useSSO()) {
       sendToSSOProfilePage();
     } else {
-      $('#update-account-id').text(apigee.userSession.getUserUUID());
+      $('#update-account-id').text(Usergrid.userSession.getUserUUID());
       $('#update-account-name').val("");
       $('#update-account-email').val("");
       $('#old-account-password').val("");
       $('#update-account-password').val("");
       $('#update-account-password-repeat').val("");
-      runManagementQuery(new apigee.QueryObj("GET",'users/' + apigee.userSession.getUserUUID(), null, null, displayAccountSettings, null));
+      runManagementQuery(new Usergrid.Query("GET",'users/' + Usergrid.userSession.getUserUUID(), null, null, displayAccountSettings, null));
     }
   }
-  apigee.console.requestAccountSettings = requestAccountSettings;
+  Usergrid.console.requestAccountSettings = requestAccountSettings;
 
   function displayOrganizations(response) {
     var t = "";
     var m = "";
-    organizations = {};
+    organizations = Usergrid.organizations.getList();
     orgainzations_by_id = {};
     if (response.data) {
       organizations = response.data;
@@ -3857,7 +4027,7 @@ function deleteRolePermission(roleName, permission) {
           '<span>' + uuid + '</span>' +
           '</td>' +
           '<td>' +
-          "<a onclick=\"apigee.console.leaveOrganization('" + uuid + "')\" class=\"btn btn-danger\">Leave</a>" +
+          "<a onclick=\"Usergrid.console.leaveOrganization('" + uuid + "')\" class=\"btn btn-danger\">Leave</a>" +
           '</td>' +
           '</tr>';
 
@@ -3874,22 +4044,12 @@ function deleteRolePermission(roleName, permission) {
     }
   }
 
-  function requestOrganizations() {
-    $('#organizations').html('<div class="alert alert-info">Loading...</div>');
-    runManagementQuery(new apigee.QueryObj("GET","users/" + apigee.userSession.getUserUUID() + "/organizations", null, null,
-      displayOrganizations,
-      function() {
-        $('#organizations').html('<div class="alert">Unable to retrieve organizations list.</div>');
-      }));
-  }
-  apigee.console.requestOrganizations = requestOrganizations;
-
   function leaveOrganization(UUID) {
     confirmAction(
       "Are you sure you want to leave this Organization?",
       "You will lose all access to it.",
       function() {
-        runManagementQuery(new apigee.QueryObj("DELETE","users/" + apigee.userSession.getUserUUID() + "/organizations/" + UUID, null, null,
+        runManagementQuery(new Usergrid.Query("DELETE","users/" + Usergrid.userSession.getUserUUID() + "/organizations/" + UUID, null, null,
           requestAccountSettings,
           function() { alertModal("Error", "Unable to leave organization"); }));
         }
@@ -3897,15 +4057,15 @@ function deleteRolePermission(roleName, permission) {
 
     return false;
   }
-  apigee.console.leaveOrganization = leaveOrganization;
+  Usergrid.console.leaveOrganization = leaveOrganization;
 
   function displayCurrentOrg() {
-    var name = apiClient.getOrganizationName() ;
-    var org = apigee.organizations.getItemByName(name);
+    var name = Usergrid.ApiClient.getOrganizationName() ;
+    var org = Usergrid.organizations.getItemByName(name);
     var uuid = org.getUUID() ;
     $('#organizations-table').html('<tr class="zebraRows"><td>' + name + '</td><td class="monospace">' + uuid + '</td></tr>');
   }
-  apigee.console.displayCurrentOrg = displayCurrentOrg;
+  Usergrid.console.displayCurrentOrg = displayCurrentOrg;
 
   /*******************************************************************
    *
@@ -3996,7 +4156,7 @@ function deleteRolePermission(roleName, permission) {
     }
     return false;
   });
-
+//TODO: why is this object out of scope of .button()??
   $('button, input:submit, input:button').button();
 
   $('select#indexSelect').change( function(e){
@@ -4047,16 +4207,15 @@ function deleteRolePermission(roleName, permission) {
   });
 
   if (OFFLINE) {
-    Pages.ShowPage(OFFLINE_PAGE)
-    return;
+    Pages.ShowPage(OFFLINE_PAGE);   
   }
 
   function showLoginForNonSSO(){
-    if (!apigee.userSession.loggedIn() && !useSSO()) {
+    if (!Usergrid.userSession.loggedIn() && !useSSO()) {
       Pages.ShowPage('login');
     }
   }
-  apigee.console.showLoginForNonSSO = showLoginForNonSSO;
+  Usergrid.console.showLoginForNonSSO = showLoginForNonSSO;
 
   function loginOk(){
     $('#login-message').hide();
@@ -4064,7 +4223,7 @@ function deleteRolePermission(roleName, permission) {
     $('#login-password').val("");
     Pages.ShowPage('console');
   }
-  apigee.console.loginOk = loginOk;
+  Usergrid.console.loginOk = loginOk;
 
   /*******************************************************************
    *
@@ -4096,18 +4255,18 @@ function deleteRolePermission(roleName, permission) {
   function useSSO() {
     return apigeeUser() || self.use_sso=='true' || self.use_sso=='yes'
   }
-  apigee.console.useSSO = useSSO;
+  Usergrid.console.useSSO = useSSO;
 
   function apigeeUser() {
     return window.location.host == apigee_TLD
   }
 
   function sendToSSOLogoutPage() {
-    var newLoc= self.sso_logout_page + '?callback=' + getSSOCallback();
+    var newLoc= SSO_LOGOUT_PAGE + '?callback=' + getSSOCallback();
     window.location = newLoc;
     return false;
   }
-  apigee.console.sendToSSOLogoutPage = sendToSSOLogoutPage;
+  Usergrid.console.sendToSSOLogoutPage = sendToSSOLogoutPage;
 
   function sendToSSOLoginPage() {
     var newLoc = self.apigee_sso_url + '?callback=' + getSSOCallback();
@@ -4115,7 +4274,7 @@ function deleteRolePermission(roleName, permission) {
     throw "stop!";
     return false;
   }
-  apigee.console.sendToSSOLoginPage = sendToSSOLoginPage;
+  Usergrid.console.sendToSSOLoginPage = sendToSSOLoginPage;
 
   function sendToSSOProfilePage() {
     var newLoc = self.apigee_sso_profile_url + '?callback=' + getSSOCallback();
@@ -4123,7 +4282,7 @@ function deleteRolePermission(roleName, permission) {
     throw "stop!";
     return false;
   }
-  apigee.console.sendToSSOProfilePage = sendToSSOProfilePage;
+  Usergrid.console.sendToSSOProfilePage = sendToSSOProfilePage;
 
   function getSSOCallback() {
     var callback = window.location.protocol+'//'+ window.location.host + window.location.pathname;
@@ -4132,44 +4291,45 @@ function deleteRolePermission(roleName, permission) {
       callback = callback + separatorMark + 'use_sso=' + self.use_sso;
       separatorMark = '&';
     }
-    if (self.apiUrl != PUBLIC_API_URL) {
+    if (Usergrid.ApiClient.getApiUrl() != PUBLIC_API_URL) {
       callback = callback + separatorMark + 'api_url=' + self.apiUrl;
       separatorMark = '&';
     }
     return encodeURIComponent(callback);
   }
-  apigee.console.getSSOCallback = getSSOCallback;
+  Usergrid.console.getSSOCallback = getSSOCallback;
 
   //load the templates only after the rest of the page is
   $(window).bind("load", function() {
-    apigee.console.ui.loadTemplate("apigee.ui.users.table_rows.html");
-    apigee.console.ui.loadTemplate("apigee.ui.groups.table_rows.html");
-    apigee.console.ui.loadTemplate("apigee.ui.roles.table_rows.html");
-    apigee.console.ui.loadTemplate("apigee.ui.role.groups.table_rows.html");
-    apigee.console.ui.loadTemplate("apigee.ui.activities.table_rows.html");
-    apigee.console.ui.loadTemplate("apigee.ui.collections.table_rows.html");
-    apigee.console.ui.loadTemplate("apigee.ui.panels.role.users.html");
-    apigee.console.ui.loadTemplate("apigee.ui.panels.role.permissions.html");
-    apigee.console.ui.loadTemplate("apigee.ui.panels.user.profile.html");
-    apigee.console.ui.loadTemplate("apigee.ui.panels.user.memberships.html");
-    apigee.console.ui.loadTemplate("apigee.ui.panels.user.activities.html");
-    apigee.console.ui.loadTemplate("apigee.ui.panels.user.graph.html");
-    apigee.console.ui.loadTemplate("apigee.ui.panels.user.permissions.html");
-    apigee.console.ui.loadTemplate("apigee.ui.collections.entity.header.html");
-    apigee.console.ui.loadTemplate("apigee.ui.collections.entity.contents.html");
-    apigee.console.ui.loadTemplate("apigee.ui.collections.entity.metadata.html");
-    apigee.console.ui.loadTemplate("apigee.ui.collections.entity.collections.html");
-    apigee.console.ui.loadTemplate("apigee.ui.collections.entity.json.html");
-    apigee.console.ui.loadTemplate("apigee.ui.collections.entity.detail.html");
-    apigee.console.ui.loadTemplate("apigee.ui.panels.group.details.html");
-    apigee.console.ui.loadTemplate("apigee.ui.panels.group.memberships.html");
-    apigee.console.ui.loadTemplate("apigee.ui.panels.group.activities.html");
-    apigee.console.ui.loadTemplate("apigee.ui.panels.group.permissions.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.users.table_rows.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.groups.table_rows.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.roles.table_rows.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.role.groups.table_rows.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.activities.table_rows.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.collections.table_rows.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.panels.role.users.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.panels.role.permissions.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.profile.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.memberships.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.activities.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.graph.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.permissions.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.header.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.contents.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.metadata.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.collections.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.json.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.detail.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.details.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.memberships.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.activities.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.permissions.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.curl.detail.html");
   });
 
   //these templates are used on the front page and should be loaded up front
-  apigee.console.ui.loadTemplate("apigee.ui.applications.table_rows.html");
-  apigee.console.ui.loadTemplate("apigee.ui.admins.table_rows.html");
-  apigee.console.ui.loadTemplate("apigee.ui.feed.table_rows.html");
+  Usergrid.console.ui.loadTemplate("apigee.ui.applications.table_rows.html");
+  Usergrid.console.ui.loadTemplate("apigee.ui.admins.table_rows.html");
+  Usergrid.console.ui.loadTemplate("apigee.ui.feed.table_rows.html");
 
 }

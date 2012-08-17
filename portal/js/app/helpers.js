@@ -197,9 +197,9 @@ function parseParams() {
   }
 
   if (query_params.access_token && query_params.admin_email && query_params.uuid) {
-    apigee.userSession.setAccessToken(query_params.access_token);
-    apigee.userSession.setUserEmail(query_params.admin_email);
-    apigee.userSession.setUserUUID(query_params.uuid);
+    Usergrid.userSession.setAccessToken(query_params.access_token);
+    Usergrid.userSession.setUserEmail(query_params.admin_email);
+    Usergrid.userSession.setUserUUID(query_params.uuid);
     //then send the user to the parent
     var new_target = window.location.host + window.location.pathname;
 
@@ -238,3 +238,25 @@ function selectFirstElement(object) {
   }
   return first
 }
+
+var clippy = {
+	clippyId: $("#global-clippy-container"),
+	clippyDataId: $("#global-clippy-data"),
+	attach: function(element){
+		var offset = element.offset();
+		clippyId.css({
+			left: offset.left,
+			top: offset.top,
+		});
+	},
+	detach: function(){
+		clippyId.css({
+			left: -9999,
+			top: -9999,
+		});
+	},
+	setData: function(dataText){
+		clippyDataId.text(dataText);
+	}
+};
+

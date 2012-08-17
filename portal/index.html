@@ -16,9 +16,12 @@
     <script src="js/lib/date.min.js" type="text/javascript"></script>
     <script src="js/app/helpers.js" type="text/javascript"></script>
     <script src="js/app/session.js" type="text/javascript"></script>
-    <script src="js/app/apigee.appSDK.js" type="text/javascript"></script>
+    <script src="js/app/clippy-jQ.js" type="text/javascript"></script>
+    <script src="js/app/usergrid.appSDK.js" type="text/javascript"></script>
     <script src="js/app/console.js" type="text/javascript"></script>
     <script src="js/app/ui/ui.js" type="text/javascript"></script>
+    <!--TODO: move clippy to a more apropiate area-->
+  
   </head>
   <body>
     <div id="fullContainer">
@@ -204,7 +207,6 @@
                 <li><a href="#analytics"><i class="icon-signal"></i> Analytics</a></li>
                 <li><a href="#shell"><i class="icon-warning-sign"></i> Shell</a></li>
                 <li><a href="#console"><i class="icon-list-alt"></i> Console</a></li>
-                <li><a href="#settings"><i class="icon-cog"></i> Settings</a></li>
                 <li><a href="http://apigee.com/docs/usergrid" target="_blank"><i class="icon-question-sign"></i> Help</a></li>
               </ul>
             </div>
@@ -232,7 +234,7 @@
                   <div class="well thingy">
                     <span class="title"> Activities </span>
                     <div class="bar">
-                      <a class="" onclick="apigee.console.requestAdminFeed(); return false;">Update Activities</a>
+                      <a class="" onclick="Usergrid.console.requestAdminFeed(); return false;">Update Activities</a>
                     </div>
                   </div>
                   <table id="organization-feed-table" class="hideable table">
@@ -252,7 +254,7 @@
                 <div class="console-section">
                   <div class="well thingy"><span class="title"> Organization API Credentials </span>
                     <div class="bar">
-                      <a href="" onclick="apigee.console.newOrganizationCredentials(); return false;"> Regenerate Credentials</a>
+                      <a href="" onclick="Usergrid.console.newOrganizationCredentials(); return false;"> Regenerate Credentials</a>
                     </div>
                   </div>
                   <table class="hideable table">
@@ -278,7 +280,7 @@
                 </div>
                 <form id="dialog-form-force-new-application" class="modal hide fade" action="#">
                   <div class="modal-header">
-                    <h4>No applications for this organizations</h4>
+                    <h4>No applications for this organization</h4>
                   </div>
                   <div class="modal-body">
                     <p class="validateTips">All organizations require at least one application. Please create one.</p>
@@ -347,6 +349,33 @@
                 <iframe class="container" src="loading.html" scrolling="no"></iframe>
               </div>
               <div id="application-panel" style="display: none">
+			    <div class="console-section">
+	              	<div class="well thingy"><span class="title"> Application API Credentials <span class="app_title"></span></span>
+	                  <div class="bar">
+	                    <a class="" href="" onclick="Usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
+	                  </div>
+	                </div>
+	                <div class="console-section-contents"> 
+	                  	<table id="application-panel-key-table" class="table">
+	                      <tr>
+	                        <td>
+	                          <span class="span3">Client ID</span>
+	                        </td>
+	                        <td>
+	                          <span id="application-panel-key">...</span>
+	                        </td>
+	                      </tr>
+	                      <tr>
+	                        <td>
+	                          <span class="span3">Client Secret</span>
+	                        </td>
+	                        <td>
+	                          <span id="application-panel-secret">...</span>
+	                        <td>      	
+	                      </tr>
+	                   	</table>
+	               	</div>
+                </div>
                 <div class="console-section">
                   <div class="well thingy">
                     <span class="title"> Application Dashboard <span class="app_title"></span> </span>
@@ -363,9 +392,10 @@
                     <div class="row">
                       <div id="application-data-uploaded" class="span graph"></div>
                       <div id="application-data-downloaded" class="span graph"></div>
-                    </div>
+                    </div>                   
                   </div>
                 </div>
+
               </div>
               <div id="account-panel" class="container-fluid hide">
                 <div id="account-update-modal" class="modal hide fade">
@@ -492,13 +522,13 @@
                   <div class="console-section">
                     <div class="well thingy"><span class="title"> Users <span class="app_title"></span></span>
                       <div class="bar">
-                        <input onkeyup="apigee.console.searchUsers();" type="text" name="search-user-username" id="search-user-username" class="input-small search" placeholder="Search"/>
-                        <select id="search-user-type" onChange="apigee.console.searchUsers();" class="input-medium search">
+                        <input onkeyup="Usergrid.console.searchUsers();" type="text" name="search-user-username" id="search-user-username" class="input-small search" placeholder="Search"/>
+                        <select id="search-user-type" onChange="Usergrid.console.searchUsers();" class="input-medium search">
                           <option value="username">Username</option>
                           <option value="name">Full Name</option>
                         </select>
-                        <a id="selectAllUsers" class="" href="#" onclick="apigee.console.selectAllUsers();"> Select All </a>
-                        <a id="deselectAllUsers" style="display: none;" class="" href="#" onclick="apigee.console.deselectAllUsers();"> Deselect All </a>
+                        <a id="selectAllUsers" class="" href="#" onclick="Usergrid.console.selectAllUsers();"> Select All </a>
+                        <a id="deselectAllUsers" style="display: none;" class="" href="#" onclick="Usergrid.console.deselectAllUsers();"> Deselect All </a>
                         <a class="" data-toggle="modal" href="#dialog-form-new-user"> Add</a>
                         <a id="delete-users-link" href="#"> Delete</a>
                       </div>
@@ -510,21 +540,8 @@
                       <li id="users-previous" class="previous"><a href="#">&larr; Previous</a></li>
                       <li id="users-next" class="next"><a href="#">Next &rarr;</a></li>
                     </ul>
-
-                    <div id="users-curl-container">
-                      <div style="padding: 5px;">
-                        Want to get the data above programmatically? Here's how you would retrieve it with <a style="color: #007CDC;" href="http://curl.haxx.se/" target="_blank">curl</a>. Just copy-paste the command in a terminal window and you should see the same data come back as JSON!
-                      </div>
-                      <table style="width: 100%;"><tr>
-                        <td style="width: 80%;"><div id="users-curl" class="alert alert-info" style="margin-bottom: 0px;"></div></td>
-                        <td style="width: 20px;">&nbsp;</td>
-                        <td style="vertical-align: middle;"><a id="users-curl-copy" class="btn" style="margin: auto;">Copy cURL Command &nbsp;<img src="images/swish_arrow.png" border="0"></a></td>
-                      </tr></table>
-                      <div id="users-curl-token" style="display: none; padding: 5px;">
-                      Pssst... Are you wondering what this "Authorization: Bearer" stuff is, or how to get a token? We have a <a style="color: #007CDC;" href="http://apigee.com/docs/content/authentication-and-access-usergrid">documentation article about that</a>.
-                      </div>
-                    </div>
-
+                  </div>
+                  <div id="users-curl-container" class="row-fluid curl-container ">                      
                   </div>
                 </div>
                 <form id="dialog-form-new-user" class="modal hide fade">
@@ -641,13 +658,13 @@
                   <div class="console-section">
                     <div class="well thingy"><span class="title"> Groups <span class="app_title"></span> </span>
                       <div class="bar">
-                        <input onkeyup="apigee.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search" placeholder="Search"/>
-                        <select id="search-group-type" onChange="apigee.console.searchGroups();" class="input-medium search">
+                        <input onkeyup="Usergrid.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search" placeholder="Search"/>
+                        <select id="search-group-type" onChange="Usergrid.console.searchGroups();" class="input-medium search">
                           <option value="path">Path</option>
                           <option value="title">Group Name</option>
                         </select>
-                        <a id="selectAllGroups" class="" href="#" onclick="apigee.console.selectAllGroups();"> Select All </a>
-                        <a id="deselectAllGroups" style="display: none;" class="" href="#" onclick="apigee.console.deselectAllGroups();"> Deselect All </a>
+                        <a id="selectAllGroups" class="" href="#" onclick="Usergrid.console.selectAllGroups();"> Select All </a>
+                        <a id="deselectAllGroups" style="display: none;" class="" href="#" onclick="Usergrid.console.deselectAllGroups();"> Deselect All </a>
                         <a class="" data-toggle="modal" href="#dialog-form-new-group"> Add </a>
                         <a id="delete-groups-link" href="#"> Delete </a>
                       </div>
@@ -659,6 +676,8 @@
                       <li id="groups-previous" class="previous"><a href="#">&larr; Previous</a></li>
                       <li id="groups-next" class="next"><a href="#">Next &rarr;</a></li>
                     </ul>
+                  </div>
+                  <div id="groups-curl-container" class="row-fluid curl-container ">
                   </div>
                 </div>
                 <form id="dialog-form-new-group" class="modal hide fade">
@@ -769,6 +788,8 @@
                       <li id="roles-next" class="next"><a href="#">Next &rarr;</a></li>
                     </ul>
                   </div>
+                  <div id="roles-curl-container" class="row-fluid curl-container ">
+                  </div>
                 </div>
                 <div id="roles-panel-search" class="panel-content" style="display: none;">
                   <div class="console-section">
@@ -826,9 +847,13 @@
                       </div>
                     </div>
                   </div>
+                  <div id="role-permissions-curl-container" class="curl-container">
+				  </div>
                 </div>
                 <div id="role-panel-users" class="panel-content">
                   <div class="console-section" id="role-users"></div>
+                  <div id="role-users-curl-container" class="curl-container">
+				  </div>
                 </div>
                 <div id="role-panel-groups" class="panel-content">
                   <div class="console-section">
@@ -837,14 +862,16 @@
                       <div class="bar">
                         <a data-toggle="modal" href="#dialog-form-add-group-to-role"> Add </a>
                         <a id="remove-selected-role-groups" href="#"> Remove </a>
-                        <a id="selectAllRoleGroups" class="" href="#" onclick="apigee.console.selectAllRoleGroups();"> Select All </a>
-                        <a id="deselectAllRoleGroups" style="display: none;" class="" href="#" onclick="apigee.console.deselectAllRoleGroups();"> Deselect All </a>
+                        <a id="selectAllRoleGroups" class="" href="#" onclick="Usergrid.console.selectAllRoleGroups();"> Select All </a>
+                        <a id="deselectAllRoleGroups" style="display: none;" class="" href="#" onclick="Usergrid.console.deselectAllRoleGroups();"> Deselect All </a>
                       </div>
                     </div>
                     <table id="role-groups" class="table">
                       <tbody></tbody>
                     </table>
                   </div>
+                  <div id="role-groups-curl-container" class="curl-container">
+				  </div>
                 </div>
                   <form id="dialog-form-add-group-to-role" class="modal hide fade">
                   <div class="modal-header">
@@ -896,12 +923,12 @@
                   <div class="console-section">
                     <div class="well thingy"><span class="title"> Activities <span class="app_title"></span></span>
                       <div class="bar">
-                        <input onkeyup="apigee.console.searchActivities();" type="text" name="search-activities" id="search-activities" class="input-small search" placeholder="Search"/>
-                        <select id="search-activities-type" onChange="apigee.console.searchActivities();" class="input-medium search">
+                        <input onkeyup="Usergrid.console.searchActivities();" type="text" name="search-activities" id="search-activities" class="input-small search" placeholder="Search"/>
+                        <select id="search-activities-type" onChange="Usergrid.console.searchActivities();" class="input-medium search">
                           <option value="content">Content</option>
                           <option value="actor">Actor</option>
                         </select>
-                        <a class="" onclick="apigee.console.requestActivities(); return false;">Update Activities</a>
+                        <a class="" onclick="Usergrid.console.requestActivities(); return false;">Update Activities</a>
                       </div>
                     </div>
                     <table id="activities-table" class="table">
@@ -974,36 +1001,7 @@
                     </div>
                   </div>
                 </div>
-              </div>
-              <div id="settings-panel" style="display: none">
-                <div class="panel-content">
-                  <div class="console-section">
-                    <div class="well thingy"><span class="title"> Application API Credentials <span class="app_title"></span></span>
-                      <div class="bar">
-                        <a class="" href="" onclick="apigee.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
-                      </div>
-                    </div>
-                    <table id="application-panel-key-table" class="table">
-                      <tr>
-                        <td>
-                          <span class="span3">Client ID</span>
-                        </td>
-                        <td>
-                          <span id="application-panel-key">...</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="span3">Client Secret</span>
-                        </td>
-                        <td>
-                          <span id="application-panel-secret">...</span>
-                        <td>
-                      </tr>
-                    </table>
-                  </div>
-                </div>
-              </div>
+              </div>              
               <div id="shell-panel" style="display: none">
                 <div id="shell-content" class="console-section">
                   <div class="well thingy"> <span class="title"> Interactive Shell </span></div>
@@ -1026,7 +1024,7 @@
                     <div class="well thingy"><span class="title"> Collections <span class="app_title"></span></span>
                       <div class="bar">
                         <a class="" data-toggle="modal" href="#dialog-form-new-collection"> Add </a>
-                        <a href="" onclick="apigee.console.pageOpenQueryExplorer(); return false;">Query Explorer</a>
+                        <a href="" onclick="Usergrid.console.pageOpenQueryExplorer(); return false;">Query Explorer</a>
                       </div>
                     </div>
                     <table id="collections-table" class="table">
@@ -1036,6 +1034,8 @@
                       <li id="collections-previous" class="previous"><a href="#">&larr; Previous</a></li>
                       <li id="collections-next" class="next"><a href="#">Next &rarr;</a></li>
                     </ul>
+                  </div>
+				  <div id="collections-curl-container" class="row-fluid curl-container ">
                   </div>
                 </div>
                 <form id="dialog-form-new-collection" class="modal hide fade">
@@ -1167,6 +1167,30 @@
         </div>
       </form>
       <div class="clear"></div>
+      <div class="global-clippy">
+      	<div id="global-clippy-data"></div>
+      	<div id="global-clippy-container">
+		 	<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"
+						            width="100%"
+						            height="100%"
+						            id="clippy">
+						    <param name="movie" value="js/clippy/kneath-clippy-686fe1f/build/clippy.swf"/>
+						    <param name="allowScriptAccess" value="always" />		    
+						    <param name="scale" value="exactfit" />
+						    <param NAME="FlashVars" value="id=global-clippy-data"/>
+						    <embed src="js/clippy/kneath-clippy-686fe1f/build/clippy.swf"
+						           width="100%"
+						           height="100%"
+						           name="clippy"
+						           scale="exactfit"
+						           allowScriptAccess="always"
+						           type="application/x-shockwave-flash"
+						           pluginspage="http://www.macromedia.com/go/getflashplayer"
+						           FlashVars="id=global-clippy-data"
+						    />
+			</object>
+		</div>	
+      </div>
       <footer>
         <div class="container-fluid">
           <div class="subnav pull-left">

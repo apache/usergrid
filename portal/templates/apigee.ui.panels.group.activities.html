@@ -1,6 +1,6 @@
 <div class="console-section">
   <div class="well thingy">
-    {{if path}}<span class="title" href="" onclick="apigee.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+    {{if path}}<span class="title" href="" onclick="Usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
       ${name}
     {{if path}}</span>{{/if}}
   </div>
@@ -23,4 +23,6 @@
   {{else}}
   <div class="group-panel-section-message">No Group Activities</div>
   {{/if}}
+</div>
+<div id="group-panel-activities-curl-container" class="curl-container">
 </div>

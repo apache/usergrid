@@ -2,7 +2,7 @@
   <div class="well thingy">
     {{if picture}}<img src="${picture}" class="user-profile-picture" />{{/if}}
     <div class="title">
-      {{if path}}<a href="" onclick="apigee.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+      {{if path}}<a href="" onclick="Usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
         ${name}
 	{{if path}}</a>{{/if}}
     </div>
@@ -21,7 +21,7 @@
               <td class="query-result-td-header-name">
                 <div class="query-result-header-name query-result-picture-vert-offset">
                   {{if path}}
-                  <a href="" onclick="apigee.console.pageOpenUserProfile('${username}'); return false;">
+                  <a href="" onclick="Usergrid.console.pageOpenUserProfile('${username}'); return false;">
                     <span class="user-role-row-name">${name}</span>
                     <span class="user-role-row-title"><a href="mailto:${email}">${email}</a></span>
                   </a>
@@ -39,6 +39,8 @@
       {{/if}}
       <br/>
     </div>
+    <div id="user-panel-following-curl-container" class="curl-container">
+  	</div>
     <br/>
     <div class="user-roles-title">Followers </div>
     <div class="user-panel-section">
@@ -53,7 +55,7 @@
               <td class="query-result-td-header-name">
 		<div class="query-result-header-name query-result-picture-vert-offset">
                   {{if path}}
-                  <a href="" onclick="apigee.console.pageOpenUserProfile('${username}'); return false;">
+                  <a href="" onclick="Usergrid.console.pageOpenUserProfile('${username}'); return false;">
                     <span class="user-role-row-name">${name}</span>
                     <span class="user-role-row-title"><a href="mailto:${email}">${email}</a></span>
                   </a>
@@ -71,5 +73,7 @@
       {{/if}}
       <br/>
     </div>
+  	<div id="user-panel-followers-curl-container" class="curl-container">
+  	</div>
   </div>
 </div>

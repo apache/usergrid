@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Clippy jQuery Plugin Demo</title>
+	<script src="js/jquery-1.7.1.min.js" type="application/javascript"></script>
+	<script src="js/lib/clippy/jquery.clippy.min.js" type="text/javascript"></script>
+	<style>
+		body{
+		}
+		.clippy-btn{
+			width: 16px;
+			height: 16px;
+			background-image: url('images/clippy-bg.png');
+			display: inline-block;
+			background-color: transparent;
+			background-repeat:no-repeat;
+			background-position: 0 0;
+			vertical-align: text-bottom;
+			margin: 5px 0 0 5px;
+	}
+	</style>
+
+</head>
+<body>
+	<div id="container">
+		<input id="change_me" type="text" placeholder="Generate a dynamic clippy" value="">
+		<div id="text1">
+			TEXTO 1
+		</div>
+		<div id="text2">
+			TEXTO 2
+		</div>
+		<div id="clippy-btn1" class="clippy-btn" ></div>
+		<div id="clippy-btn2" class="clippy-btn" ></div>
+					    
+	</div>
+		<div id="global-clippy-data" style="visibility: hidden"></div>
+		<div id="global-clippy-container" style="position: absolute; left:-9999px; top:-9999px; z-index: 999; width: 16px; height: 16px; margin: 0; border: 0; padding: 0;">
+		 	<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"
+						            width="100%"
+						            height="100%"
+						            id="clippy">
+						    <param name="movie" value="js/clippy/kneath-clippy-686fe1f/build/clippy.swf"/>
+						    <param name="allowScriptAccess" value="always" />		    
+						    <param name="scale" value="exactfit" />
+						    <param NAME="FlashVars" value="id=global-clippy-data"/>
+						    <embed src="js/clippy/kneath-clippy-686fe1f/build/clippy.swf"
+						           width="100%"
+						           height="100%"
+						           name="clippy"
+						           scale="exactfit"
+						           allowScriptAccess="always"
+						           type="application/x-shockwave-flash"
+						           pluginspage="http://www.macromedia.com/go/getflashplayer"
+						           FlashVars="id=global-clippy-data"
+						    />
+			</object>
+		</div>	
+	
+
+<script type="text/javascript">
+		$(window).ready(function()
+		{	
+			function attachClippy(element){
+				var offset = element.offset();
+				var clippy = $("#global-clippy-container");
+				clippy.css({
+					left: offset.left,
+					top: offset.top,
+				});
+			};
+			function detachClippy(element){
+				var clippy = $("#global-clippy-container");
+				clippy.css({
+					left: -99999,
+					top: -99999,
+				})
+			};
+			function setClippyData(element){				
+				var text = element.text();
+				var clippyData = $('#global-clippy-data');
+				clippyData.html(text);
+			};
+			//Each time a clippy enabled session loads
+			$('.clippy-btn').mouseover(function(){
+				attachClippy($(this));
+			})
+			//INIT
+			$('#global-clippy-container').mouseout(function(){
+				detachClippy($(this));
+			});
+			//
+			$('#clippy-btn1').mouseover(function(){
+				setClippyData($('#text1'));
+			});
+			$('#clippy-btn2').mouseover(function(){
+				setClippyData($('#text2'));
+			});
+		});
+	</script>
+</body>
+</html>

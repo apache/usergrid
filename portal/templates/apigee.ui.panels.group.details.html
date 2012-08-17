@@ -2,11 +2,11 @@
 <div id="group-messages" class="alert" style="display: none;"></div>
 <div class="console-section">
   <div class="well thingy">
-    {{if path}}<span class="title" href="" onclick="apigee.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
+    {{if path}}<span class="title" href="" onclick="Usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
       ${name}
     {{if path}}</span>{{/if}}
     <div class="bar">
-      <a href="#" onclick="apigee.console.saveGroupProfile('${uuid}'); return false;"> Save Group </a>
+      <a href="#" onclick="Usergrid.console.saveGroupProfile('${uuid}'); return false;"> Save Group </a>
     </div>
   </div>
   <h3>Edit</h3>
@@ -60,7 +60,7 @@
                     ${$index}
                   </td>
                   <td>
-                    <a href="#" onclick="Apigee.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
+                    <a href="#" onclick="Usergrid.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
                   </td>
                 </tr>
                 {{/each}}
@@ -79,7 +79,7 @@
                     ${$index}
                   </td>
                   <td>
-                    <a href="#" onclick="Apigee.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
+                    <a href="#" onclick="Usergrid.console.pageOpenQueryExplorer('${$value}'); return false;">${$value}</a>
                   </td>
                 </tr>
                 {{/each}}
@@ -92,4 +92,6 @@
     <h3>JSON</h3>
     <pre class="query-result-json-inner">${JSON.stringify(entity, null, "  ")}</pre>
   </div>
+</div>
+<div id="group-panel-details-curl-container" class="curl-container">
 </div>
