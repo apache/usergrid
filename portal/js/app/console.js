@@ -322,7 +322,10 @@ function apigee_console_app(Pages, query_params) {
       }
       showBackButton();
       showPagination('query-response');
+    }else{
+      $("#query-response-table").html("<div class='group-panel-section-message'>No Collection Entities Found</div>");
     }
+     
 
   }
 
@@ -515,20 +518,26 @@ function apigee_console_app(Pages, query_params) {
   function deleteEntity(e) {
     e.preventDefault();
 
-    var items = $('#query-response-table input[class=collectionListItem]:checked');
+    var items = $('#query-response-table input[class=queryResultItem]:checked');
+    console.log("ITEMS SIZE: "+items.size());
     if(!items.length){
       alertModal("Please, first select the entities you want to delete.");
       return;
     }
-
+	var itemsCount = items.size();
     confirmDelete(function(){
       items.each(function() {
         var entityId = $(this).attr('value');
-	console.log(entityId);
+		console.log(entityId);
         var path = $(this).attr('name');
         runAppQuery(new Usergrid.Query("DELETE", path + "/" + entityId, null, null,
-          function() { getCollection('GET'); },
-          function() { alertModal("Unable to delete entity"); }
+          function() { 
+          	itemsCount--;
+          	//CALL get collection until all of the items are deleted.
+          	if(itemsCount==0){
+          		getCollection('GET');
+          	}},
+          function() { alertModal("Unable to delete entity ID: " + entityId); }
         ));
       });
     });
@@ -1905,7 +1914,7 @@ function apigee_console_app(Pages, query_params) {
   	$("#"+panelDiv).html("");
   	var details = $.tmpl(panelTemplate, data);
   	var formDiv = details.find('.query-result-form');
-  	$(formDiv).buildForm(apigee.console.ui.jsonSchemaToDForm(apigee.console.ui.collections.group_schema, data.entity));
+  	$(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.group_schema, data.entity));
   	details.appendTo($("#"+panelDiv));
     details.find('.button').button();
   }
@@ -3415,18 +3424,18 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function selectAllCollections(){
-    $('[class=collectionListItem]').attr('checked', true);
+    $('#query-response-table input[class=queryResultItem]').attr('checked', true);
     $('#deselectAllCollections').show();
     $('#selectAllCollections').hide();
   }
-  window.apigee.console.selectAllCollections = selectAllCollections;
+  window.Usergrid.console.selectAllCollections = selectAllCollections;
 
   function deselectAllCollections(){
-    $('[class=collectionListItem]').attr('checked', false);
+    $('#query-response-table input[class=queryResultItem]').attr('checked', false);
     $('#deselectAllCollections').hide();
     $('#selectAllCollections').show();
   }
-  window.apigee.console.deselectAllCollections = deselectAllCollections;
+  window.Usergrid.console.deselectAllCollections = deselectAllCollections;
 
   /*******************************************************************
    *
