@@ -308,7 +308,7 @@ function apigee_console_app(Pages, query_params) {
         if ($.isEmptyObject(entity_path)) {
           entity_path = path + "/" + entity.uuid;
         }
-        
+
         $("#query-path").val(entity_path);
 
         t = '<div class="query-result-row entity_detail" id="query-result-detail" data-entity-type="'
@@ -322,7 +322,10 @@ function apigee_console_app(Pages, query_params) {
       }
       showBackButton();
       showPagination('query-response');
+    }else{
+      $("#query-response-table").html("<div class='group-panel-section-message'>No Collection Entities Found</div>");
     }
+     
 
   }
 
@@ -503,7 +506,7 @@ function apigee_console_app(Pages, query_params) {
     path += event.target.innerText;
     $('#query-path').val(path);
   };
-	
+
   var queryQl = $('#query-ql');
   queryQl.typeahead({source:indexes});
 
@@ -515,19 +518,26 @@ function apigee_console_app(Pages, query_params) {
   function deleteEntity(e) {
     e.preventDefault();
 
-    var items = $('#query-response-table input[id^=queryResultItem]:checked');
+    var items = $('#query-response-table input[class=queryResultItem]:checked');
+    console.log("ITEMS SIZE: "+items.size());
     if(!items.length){
       alertModal("Please, first select the entities you want to delete.");
       return;
     }
-
+	var itemsCount = items.size();
     confirmDelete(function(){
       items.each(function() {
         var entityId = $(this).attr('value');
+		console.log(entityId);
         var path = $(this).attr('name');
         runAppQuery(new Usergrid.Query("DELETE", path + "/" + entityId, null, null,
-          function() { getCollection('GET'); },
-          function() { alertModal("Unable to delete entity"); }
+          function() { 
+          	itemsCount--;
+          	//CALL get collection until all of the items are deleted.
+          	if(itemsCount==0){
+          		getCollection('GET');
+          	}},
+          function() { alertModal("Unable to delete entity ID: " + entityId); }
         ));
       });
     });
@@ -1004,11 +1014,11 @@ function apigee_console_app(Pages, query_params) {
   }
  //TODO: the organization, and required fields for this method, are hidden. There is no quick way to check variable names and order
  /*
-  * Needed fields: 
+  * Needed fields:
   * username:
   * name: FULL NAME
-  * email: 
-  * password: 
+  * email:
+  * password:
   */
   function submitNewUser() {
     var form = $(this);
@@ -1626,7 +1636,7 @@ function apigee_console_app(Pages, query_params) {
   	$.tmpl('apigee.ui.curl.detail.html', data).appendTo(sectionId);
    	sectionId.show();
     $('#'+section+'-curl-token').show();
-    $('#'+section+'-clippy-btn').attachClippy({dataId: $('#'+section+'-curl')});  
+    $('#'+section+'-clippy-btn').attachClippy({dataId: $('#'+section+'-curl')});
   }
 
   function copyCurlCommand() {
@@ -1853,29 +1863,29 @@ function apigee_console_app(Pages, query_params) {
     var closebutton = '<a href="#" onclick="closeMessage();" class="close">&times;</a>'
     $('.messages').text("Information Saved.").prepend(closebutton).show();
   }
-  
+
   function redrawUserProfile(data, curl){
   	redrawFormPanel($('#user-panel-profile'), 'apigee.ui.panels.user.profile.html', data);
-	attachCurl('user-panel-profile', curl); 	
+	attachCurl('user-panel-profile', curl);
   };
-  
+
   function redrawUserMemberships(data, curl){
   	redrawPanel('user-panel-memberships', 'apigee.ui.panels.user.memberships.html', data);
   	attachCurl('user-panel-memberships', curl);
   	updateGroupsAutocomplete();
   };
-  
+
   function redrawUserActivities(data, curl){
   	redrawPanel('user-panel-activities', 'apigee.ui.panels.user.activities.html', data);
   	attachCurl('user-panel-activities', curl);
   };
-  
+
   function redrawUserGraph(data){
   	redrawPanel('user-panel-graph', 'apigee.ui.panels.user.graph.html', data);
   	attachCurl('user-panel-following', data.followingCurl);
   	attachCurl('user-panel-followers', data.followersCurl);
   };
-  
+
   function redrawUserPermissions(data){
   	redrawPanel('user-panel-permissions', 'apigee.ui.panels.user.permissions.html', data);
   	attachCurl('user-panel-roles', data.rolesCurl);
@@ -1890,33 +1900,33 @@ function apigee_console_app(Pages, query_params) {
    * panelTmpl: the html Template to be used
    * data: the data inserted into the htmlTemplate
    */
-  function attachCurl(curlSectionId, curl){  	
-	hideCurlCommand(curlSectionId);	
+  function attachCurl(curlSectionId, curl){
+	hideCurlCommand(curlSectionId);
 	showCurlCommand(curlSectionId, curl);
-  }	
-	
+  }
+
   function redrawPanel(panelDiv, panelTemplate, data){
 	$("#"+panelDiv).html("");
 	$.tmpl(panelTemplate, data).appendTo($("#"+panelDiv));
   };
-  
+
   function redrawGroupForm(panelDiv, panelTemplate, data){
   	$("#"+panelDiv).html("");
   	var details = $.tmpl(panelTemplate, data);
   	var formDiv = details.find('.query-result-form');
-  	$(formDiv).buildForm(apigee.console.ui.jsonSchemaToDForm(apigee.console.ui.collections.group_schema, data.entity));
+  	$(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.group_schema, data.entity));
   	details.appendTo($("#"+panelDiv));
     details.find('.button').button();
   }
-  
+
   function redrawFormPanel(panelDiv, panelTemplate, data){
 	$(panelDiv).html("");
 	var details = $.tmpl(panelTemplate, data);
 	var formDiv = details.find('.query-result-form');
 	$(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.vcard_schema, data.entity));
 	details.appendTo($(panelDiv));
-  };  
-  
+  };
+
   function saveUserData(){
     Usergrid.console.ui.jsonSchemaToPayload(schema, obj);
   }
@@ -1977,13 +1987,14 @@ function apigee_console_app(Pages, query_params) {
 	  	rolesCurl: "",
 	  	permissionsCurl: ""
 	  }
-	  	  
+
 	  redrawUserProfile(data, this.getCurl());
+
 		//TODO: This block and the subsequent blocks could all be methods of their own
       runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/groups', null, null,
         function(response) {
           if (data && response.entities && (response.entities.length > 0)) {
-            data.memberships = response.entities; 
+            data.memberships = response.entities;
           }
           redrawUserMemberships(data, this.getCurl());
         },
@@ -1994,7 +2005,7 @@ function apigee_console_app(Pages, query_params) {
         function(response) {
           if (data && response.entities && (response.entities.length > 0)) {
             data.activities = response.entities;
-            data.curl = this.getCurl();            
+            data.curl = this.getCurl();
             $('span[id^=activities-date-field]').each( function() {
               var created = dateToString(parseInt($(this).html()))
               $(this).html(created);
@@ -2004,8 +2015,6 @@ function apigee_console_app(Pages, query_params) {
         },
         function() { alertModal("Error", "Unable to retrieve user's activities.");}
       ));
-      
-      
 
       runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/roles', null, null,
         function(response) {
@@ -2013,45 +2022,45 @@ function apigee_console_app(Pages, query_params) {
             data.roles = response.entities;
           } else {
             data.roles = null;
-          }          
+          }
           data.rolesCurl = this.getCurl();
           //Run Permissions query after roles query has been handled
 	      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/permissions', null, null,
 	        function(response) {
 	          var permissions = {};
 	          if (data && response.data && (response.data.length > 0)) {
-	
+
 	            if (response.data) {
 	              var perms = response.data;
 	              var count = 0;
-	
+
 	              for (var i in perms) {
 	                count++;
 	                var perm = perms[i];
 	                var parts = perm.split(':');
 	                var ops_part = "";
 	                var path_part = parts[0];
-	
+
 	                if (parts.length > 1) {
 	                  ops_part = parts[0];
 	                  path_part = parts[1];
 	                }
-	
+
 	                ops_part.replace("*", "get,post,put,delete")
 	                  var ops = ops_part.split(',');
 	                permissions[perm] = {ops : {}, path : path_part, perm : perm};
-	
+
 	                for (var j in ops) {
 	                  permissions[perm].ops[ops[j]] = true;
 	                }
 	              }
-	
+
 	              if (count == 0) {
 	                permissions = null;
 	              }
-	              data.permissions = permissions;      
-	            }            
-	          }	          
+	              data.permissions = permissions;
+	            }
+	          }
 	          data.permissionsCurl = this.getCurl();
 	          redrawUserPermissions(data);
 	        },
@@ -2062,29 +2071,29 @@ function apigee_console_app(Pages, query_params) {
       ));
 
       	runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/following', null, null,
-	        function(response) {    
+	        function(response) {
 	          data.followingCurl = this.getCurl();
 	          if (data && response.entities && (response.entities.length > 0)) {
-	            data.following = response.entities;            
+	            data.following = response.entities;
 	          }
 	          //Requests /Followers after the /following response has been handled.
 	          runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/followers', null, null,
 		        function(response) {
-		          
+
 		          if (data && response.entities && (response.entities.length > 0)) {
-		            data.followers = response.entities;		                      
+		            data.followers = response.entities;
 		          }
 		          data.followersCurl = this.getCurl();
-		          redrawUserGraph(data);	          
+		          redrawUserGraph(data);
 		        },
 		        function() { alertModal("Error", "Unable to retrieve user's followers.");
 		        }
 	      	));
         },
         function() { alertModal("Error", "Unable to retrieve user's following.");}
-        ));   
-    }    
-    
+        ));
+    }
+
   };
 
   function requestUser(userId) {
@@ -2278,23 +2287,23 @@ function apigee_console_app(Pages, query_params) {
       updateRolesForGroupsAutocomplete();
     }
   }
-  
+
   function redrawGroupDetails(data,curl){
   	redrawGroupForm('group-panel-details', 'apigee.ui.panels.group.details.html', data);
-  	attachCurl('group-panel-details', curl);  	
+  	attachCurl('group-panel-details', curl);
   }
-  
+
   function redrawGroupMemberships(data, curl){
   	redrawPanel('group-panel-memberships', 'apigee.ui.panels.group.memberships.html', data);
   	attachCurl('group-panel-memberships', curl);
   	updateUsersAutocomplete();
   }
-  
+
   function redrawGroupActivities(data, curl){
   	redrawPanel('group-panel-activities', 'apigee.ui.panels.group.activities.html', data);
   	attachCurl('group-panel-activities', curl);
   }
-  
+
   function redrawGroupPermissions(data){
   	//TODO: IS THIS NEEDED? WHY?
   	if (data.roles && data.roles.length == 0) {
@@ -2370,7 +2379,7 @@ function apigee_console_app(Pages, query_params) {
       if ($.isEmptyObject(entity_path)) {
         entity_path = path + "/" + entity.uuid;
       }
-/* TODO: MARKED FOR REMOVAL 
+/* TODO: MARKED FOR REMOVAL
       group_data = {
         entity : entity_contents,
         picture : entity.picture,
@@ -2392,16 +2401,16 @@ function apigee_console_app(Pages, query_params) {
         metadata : metadata,
         uri : (entity.metadata || { }).uri
 	}
-      
+
 	redrawGroupDetails(data, this.getCurl());
 
    //   redrawGroupPanel();
-	  
+
       runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/users', null, null,
         function(response) {
           if (data && response.entities && (response.entities.length > 0)) {
             data.memberships = response.entities;
-            
+
           }
           redrawGroupMemberships(data, this.getCurl());
         },
@@ -2411,7 +2420,7 @@ function apigee_console_app(Pages, query_params) {
       runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/activities', null, null,
         function(response) {
           if (data && response.entities && (response.entities.length > 0)) {
-            data.activities = response.entities;            
+            data.activities = response.entities;
           }
           redrawGroupActivities(data, this.getCurl());
         },
@@ -2452,7 +2461,7 @@ function apigee_console_app(Pages, query_params) {
         function(response) {
           if (data && response.entities) {
             data.roles = response.entities;
-            
+
           }
           data.groupRolesCurl = this.getCurl();
           //WHEN /Roles is properly handled, get permissions
@@ -2460,35 +2469,35 @@ function apigee_console_app(Pages, query_params) {
 	        function(response) {
 	          var permissions = {};
 	          if (data && response.data && (response.data.length > 0)) {
-	
+
 	            if (response.data) {
 	              var perms = response.data;
 	              var count = 0;
-	
+
 	              for (var i in perms) {
 	                count++;
 	                var perm = perms[i];
 	                var parts = perm.split(':');
 	                var ops_part = "";
 	                var path_part = parts[0];
-	
+
 	                if (parts.length > 1) {
 	                  ops_part = parts[0];
 	                  path_part = parts[1];
 	                }
-	
+
 	                ops_part.replace("*", "get,post,put,delete")
 	                  var ops = ops_part.split(',');
 	                permissions[perm] = {ops : {}, path : path_part, perm : perm};
-	
+
 	                for (var j in ops) {
 	                  permissions[perm].ops[ops[j]] = true;
 	                }
-	              }	
+	              }
 	              if (count == 0) {
 	                permissions = null;
-	              }	
-	              data.permissions = permissions;	              
+	              }
+	              data.permissions = permissions;
 	            }
 	          }
 	          data.groupPermissionsCurl = this.getCurl();
@@ -2690,7 +2699,7 @@ function apigee_console_app(Pages, query_params) {
 //TODO: MARKED FOr REfactoring
 
   var rolesUsersResults = ''
-  
+
   function displayRolesUsers(response, curl) {
     $('#role-users').html('');
     data = {};
@@ -2705,7 +2714,7 @@ function apigee_console_app(Pages, query_params) {
   }
 //TODO: MARKED FOr REfactoring
   var rolesGroupsResults = ''
-  
+
   function displayRoleGroups(response, curl) {
     $('#role-groups').html('');
     data = {};
@@ -3383,7 +3392,7 @@ function deleteRolePermission(roleName, permission) {
     var queryObj = new Usergrid.Query("GET",'', null, null, getCollectionsCallback,
       function() { alertModal("Error", "There was an error getting the collections"); }
     );
-    
+
     runAppQuery(queryObj);
     return false;
   }
@@ -3413,6 +3422,20 @@ function deleteRolePermission(roleName, permission) {
     }
 	showCurlCommand('collections', this.getCurl(), this.getToken());
   }
+
+  function selectAllCollections(){
+    $('#query-response-table input[class=queryResultItem]').attr('checked', true);
+    $('#deselectAllCollections').show();
+    $('#selectAllCollections').hide();
+  }
+  window.Usergrid.console.selectAllCollections = selectAllCollections;
+
+  function deselectAllCollections(){
+    $('#query-response-table input[class=queryResultItem]').attr('checked', false);
+    $('#deselectAllCollections').hide();
+    $('#selectAllCollections').show();
+  }
+  window.Usergrid.console.deselectAllCollections = deselectAllCollections;
 
   /*******************************************************************
    *
@@ -4207,7 +4230,7 @@ function deleteRolePermission(roleName, permission) {
   });
 
   if (OFFLINE) {
-    Pages.ShowPage(OFFLINE_PAGE);   
+    Pages.ShowPage(OFFLINE_PAGE);
   }
 
   function showLoginForNonSSO(){
