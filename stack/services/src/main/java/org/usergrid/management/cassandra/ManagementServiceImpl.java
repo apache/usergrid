@@ -2357,6 +2357,8 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager(applicationId);
         Entity owner = em.get(userId);
+
+
         writeUserPassword(applicationId, owner, maybeSaltPassword(newPassword));
 
     }
@@ -2371,7 +2373,7 @@ public class ManagementServiceImpl implements ManagementService {
             throw new IllegalArgumentException(
                     "oldpassword and newpassword are both required");
         }
-
+        // TODO load the user, send the hashType down to maybeSaltPassword
         if (!maybeSaltPassword(oldPassword).compare(readUserPasswordCredentials(applicationId, userId))) {
             throw new IncorrectPasswordException("Old password does not match");
         }

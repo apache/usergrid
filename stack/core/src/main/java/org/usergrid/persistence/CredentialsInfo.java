@@ -142,6 +142,7 @@ public class CredentialsInfo {
 	/**
 	 * @return the hashType
 	 */
+  @JsonSerialize(include = Inclusion.NON_NULL)
 	public String getHashType() {
 		return hashType;
 	}
