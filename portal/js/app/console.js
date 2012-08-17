@@ -340,7 +340,7 @@ function apigee_console_app(Pages, query_params) {
     query_history.pop(); //first pull off the current query
     lastQuery = query_history.pop(); //then get the previous one
     //set the path in the query explorer
-    $("#query-path").val(lastQuery.getPath());
+    $("#query-path").val(lastQuery.getResource());
     //get the ql and set it in the query explorer
     var params = lastQuery.getQueryParams();
     $("#query-ql").val(params.ql);
