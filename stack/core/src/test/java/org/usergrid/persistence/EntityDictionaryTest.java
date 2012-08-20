@@ -115,7 +115,7 @@ public class EntityDictionaryTest extends AbstractPersistenceTest {
 
 		// test encrypted and unrecoverable
 
-		credentials = CredentialsInfo.hashedCredentials("salt", "test");
+		credentials = CredentialsInfo.hashedCredentials("salt", "test",null);
 
 		em.addToDictionary(user, "credentials", "hashed", credentials);
 
@@ -126,7 +126,22 @@ public class EntityDictionaryTest extends AbstractPersistenceTest {
 		c = (CredentialsInfo) o;
 
 		assertNotSame("test", c.getSecret());
-		assertTrue(credentials.compareSha1Secret("salt", "test"));
+
+		assertTrue(credentials.compare(c));
+
+    // test pre-hashed legacy
+    credentials = CredentialsInfo.hashedCredentials("salt", "test","md5");
+
+    em.addToDictionary(user, "credentials", "hashed", credentials);
+
+    o = em.getDictionaryElementValue(user, "credentials", "hashed");
+    logger.info(JsonUtils.mapToFormattedJsonString(o));
+
+    assertEquals(CredentialsInfo.class, o.getClass());
+    c = (CredentialsInfo) o;
+
+    assertNotSame("test", c.getSecret());
+    assertTrue(credentials.compare(CredentialsInfo.hashedCredentials("salt","test","md5")));
 
 	}
 

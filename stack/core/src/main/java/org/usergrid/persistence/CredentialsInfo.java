@@ -66,10 +66,11 @@ public class CredentialsInfo {
 		return credentials;
 	}
 
-	public static CredentialsInfo hashedCredentials(String salt, String secret) {
+	public static CredentialsInfo hashedCredentials(String salt, String secret, String hashType) {
 		CredentialsInfo credentials = new CredentialsInfo();
 		credentials.setRecoverable(false);
 		credentials.setCipher("sha-1");
+    credentials.setHashType(hashType);
 		credentials.setEncryptedSecret("sha-1", salt, secret);
 		return credentials;
 	}
@@ -142,7 +143,6 @@ public class CredentialsInfo {
 	/**
 	 * @return the hashType
 	 */
-  @JsonSerialize(include = Inclusion.NON_NULL)
 	public String getHashType() {
 		return hashType;
 	}
@@ -180,60 +180,22 @@ public class CredentialsInfo {
 		return null;
 	}
 
-	public boolean compareSecret(String cipher, String salt, String secret) {
-		if (secret == null) {
-			return false;
-		}
-		if (this.secret == null) {
-			return false;
-		}
-		if ("bcrypt".equals(cipher)) {
-			return BCrypt.checkpw(secret, this.secret);
-		}
-		return this.secret.equals(encrypt(cipher, salt, secret));
-	}
-
-	public boolean compareSha1Secret(String secret) {
-		return compareSecret("sha-1", null, secret);
-	}
-
-	public boolean compareSha1Secret(String salt, String secret) {
-		return compareSecret("sha-1", salt, secret);
-	}
 
   /**
-   *
-   * @param password
-   * @param credentials
-   * @return
-   *
+   * If hashType on this object is set, we will do a first-pass call to {@link #encrypt(String, String, String)}
+   * with that hashType. The primary use case is to support imported legacy data with weaker password hashing
+   * such as vanilla md5.
+   * @param cipher
+   * @param salt
+   * @param secret
    */
-	public static boolean checkPassword(String password,
-			CredentialsInfo credentials) {
-		if (credentials == null) {
-			return false;
-		}
-		if (password == null) {
-			return false;
-		}
-
-		// pre-hash for legacy system imports
-		if (credentials.getHashType() != null) {
-			password = credentials.encrypt(credentials.getHashType(), "",
-					password);
-		}
-
-		return credentials.compareSha1Secret(password);
-	}
-
-	public boolean compareBCryptSecret(String secret) {
-		return compareSecret("bcrypt", null, secret);
-	}
-
 	public void setEncryptedSecret(String cipher, String salt, String secret) {
 		encrypted = true;
 		recoverable = ("aes".equals(cipher) || "plaintext".equals(cipher) || (cipher == null));
 		this.cipher = cipher;
+    if ( this.hashType != null ) {
+      secret = encrypt(this.hashType, "", secret);
+    }
 		this.secret = encrypt(cipher, salt, secret);
 	}
 

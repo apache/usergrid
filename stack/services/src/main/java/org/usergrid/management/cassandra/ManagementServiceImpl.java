@@ -706,7 +706,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public UserInfo createAdminFrom(User user, String password) throws Exception {
-        return doCreateAdmin(user, maybeSaltPassword(password),
+        return doCreateAdmin(user, maybeSaltPassword(user, password),
                 mongoPasswordCredentials(user.getUsername(), password));
     }
 
@@ -973,8 +973,8 @@ public class ManagementServiceImpl implements ManagementService {
         if ((userId == null) || (oldPassword == null) || (newPassword == null)) {
             return;
         }
-
-        if (!maybeSaltPassword(oldPassword)
+        User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId, User.class);
+        if (!maybeSaltPassword(user, oldPassword)
                 .compare(readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId))) {
             logger.info("Old password doesn't match");
             throw new IncorrectPasswordException("Old password does not match");
@@ -991,11 +991,10 @@ public class ManagementServiceImpl implements ManagementService {
             return;
         }
 
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-        Entity user = em.get(userId);
+        User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId, User.class);
 
         writeUserPassword(MANAGEMENT_APPLICATION_ID, user,
-                maybeSaltPassword(newPassword));
+                maybeSaltPassword(user, newPassword));
         writeUserMongoPassword(
                 MANAGEMENT_APPLICATION_ID,
                 user,
@@ -1009,8 +1008,8 @@ public class ManagementServiceImpl implements ManagementService {
         if ((userId == null) || (password == null)) {
             return false;
         }
-
-        return maybeSaltPassword(password)
+        User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId, User.class);
+        return maybeSaltPassword(user, password)
                 .compare(readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId));
     }
 
@@ -1024,7 +1023,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        if (maybeSaltPassword(password)
+        if (maybeSaltPassword(user, password)
                 .compare(readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID,user.getUuid()))) {
             userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
             if (!userInfo.isActivated()) {
@@ -2356,10 +2355,10 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager(applicationId);
-        Entity owner = em.get(userId);
+        User user = em.get(userId, User.class);
 
 
-        writeUserPassword(applicationId, owner, maybeSaltPassword(newPassword));
+        writeUserPassword(applicationId, user, maybeSaltPassword(user, newPassword));
 
     }
 
@@ -2374,7 +2373,8 @@ public class ManagementServiceImpl implements ManagementService {
                     "oldpassword and newpassword are both required");
         }
         // TODO load the user, send the hashType down to maybeSaltPassword
-        if (!maybeSaltPassword(oldPassword).compare(readUserPasswordCredentials(applicationId, userId))) {
+        User user = emf.getEntityManager(applicationId).get(userId, User.class);
+        if (!maybeSaltPassword(user, oldPassword).compare(readUserPasswordCredentials(applicationId, userId))) {
             throw new IncorrectPasswordException("Old password does not match");
         }
 
@@ -2392,7 +2392,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        if (maybeSaltPassword(password).compare(readUserPasswordCredentials(applicationId, user.getUuid()))) {
+        if (maybeSaltPassword(user, password).compare(readUserPasswordCredentials(applicationId, user.getUuid()))) {
             if (!user.activated()) {
                 throw new UnactivatedAdminUserException();
             }
@@ -2801,7 +2801,11 @@ public class ManagementServiceImpl implements ManagementService {
     return properties;
   }
 
-  private CredentialsInfo maybeSaltPassword(String password) throws Exception {
-    return hashedCredentials(properties.getProperty(PROPERTIES_PASSWORD_SALT, ""),password);
+  private CredentialsInfo maybeSaltPassword(User user, String password) throws Exception {
+    String hashType = null;
+    if (user.getProperty(User.PROPERTY_HASHTYPE) != null ) {
+      hashType = (String)user.getProperty(User.PROPERTY_HASHTYPE);
+    }
+    return hashedCredentials(properties.getProperty(PROPERTIES_PASSWORD_SALT, ""),password, hashType);
   }
 }
