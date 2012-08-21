@@ -117,11 +117,17 @@ public class CORSUtils {
 		}
 
 		boolean origin_sent = false;
+		boolean null_origin_received = false;
 		if (request.getRequestHeaders().containsKey(ORIGIN_HEADER)) {
 			for (String value : request.getRequestHeaders().get(ORIGIN_HEADER)) {
-				if (!(value == null || "null".equalsIgnoreCase(value))) {
-          origin_sent = true;
-          response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_ORIGIN, value);
+				if (value != null) {
+					if ("null".equalsIgnoreCase(value)) {
+						null_origin_received = true;
+					} else {
+						origin_sent = true;
+						response.getHttpHeaders().add(
+								ACCESS_CONTROL_ALLOW_ORIGIN, value);
+					}
 				}
 			}
 		}
@@ -129,15 +135,22 @@ public class CORSUtils {
 		if (!origin_sent) {
 			String origin = getOrigin(request);
 			if (origin != null) {
-				response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
-				response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+				response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_CREDENTIALS,
+						"true");
+				response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_ORIGIN,
+						origin);
 			} else {
-        if (!request.getRequestHeaders().containsKey(AUTHORIZATION_HEADER)) {
-          response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-        }
+				if (!null_origin_received) {
+					if (!request.getRequestHeaders().containsKey(
+							AUTHORIZATION_HEADER)) {
+						response.getHttpHeaders().add(
+								ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+					}
+				}
 			}
 		} else {
-			response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+			response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_CREDENTIALS,
+					"true");
 		}
 
 		return response;
