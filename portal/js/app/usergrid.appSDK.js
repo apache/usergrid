@@ -25,7 +25,7 @@ window.console.log = window.console.log || function() {};
 //Usergrid namespace encapsulates this SDK
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
-Usergrid.SDK_VERSION = '0.9.5';
+Usergrid.SDK_VERSION = '0.9.6';
 
 /**
  *  Usergrid.Query is a class for holding all query information and paging state
@@ -45,10 +45,10 @@ Usergrid.SDK_VERSION = '0.9.5';
    *  @param {function} successCallback
    *  @param {function} failureCallback
    */
-  Usergrid.Query = function(method, path, jsonObj, paramsObj, successCallback, failureCallback) {
+  Usergrid.Query = function(method, resource, jsonObj, paramsObj, successCallback, failureCallback) {
     //query vars
     this._method = method;
-    this._path = path;
+    this._resource = resource;
     this._jsonObj = jsonObj;
     this._paramsObj = paramsObj;
     this._successCallback = successCallback;
@@ -81,7 +81,7 @@ Usergrid.SDK_VERSION = '0.9.5';
        try {
           seconds = ((time/10) / 60).toFixed(2);
        } catch(e){ return 0; }
-       return this.getMethod() + " " + this.getPath() + " - " + seconds + " seconds";
+       return this.getMethod() + " " + this.getResource() + " - " + seconds + " seconds";
      },
     /**
      *  A method to set all settable parameters of the Query at one time
@@ -96,9 +96,9 @@ Usergrid.SDK_VERSION = '0.9.5';
      *  @param {function} failureCallback
      *  @return none
      */
-    setAllQueryParams: function(method, path, jsonObj, paramsObj, successCallback, failureCallback) {
+    setAllQueryParams: function(method, resource, jsonObj, paramsObj, successCallback, failureCallback) {
       this._method = method;
-      this._path = path;
+      this._resource = resource;
       this._jsonObj = jsonObj;
       this._paramsObj = paramsObj;
       this._successCallback = successCallback;
@@ -113,7 +113,7 @@ Usergrid.SDK_VERSION = '0.9.5';
      */
     clearAll: function() {
       this._method = null;
-      this._path = null;
+      this._resource = null;
       this._jsonObj = {};
       this._paramsObj = {};
       this._successCallback = null;
@@ -142,25 +142,25 @@ Usergrid.SDK_VERSION = '0.9.5';
     },
 
     /**
-    * Returns the path
+    * Returns the resource
     *
     * @public
-    * @method getPath
-    * @return {string} Returns path
+    * @method getResource
+    * @return {string} the resource
     */
-    getPath: function() {
-      return this._path;
+    getResource: function() {
+      return this._resource;
     },
 
     /**
-    * sets the path
+    * sets the resource
     *
     * @public
-    * @method setPath
+    * @method setResource
     * @return none
     */
-    setPath: function(path) {
-      this._path = path;
+    setResource: function(resource) {
+      this._resource = resource;
     },
 
     /**
@@ -695,8 +695,8 @@ Usergrid.SDK_VERSION = '0.9.5';
    *  @param {string} collectionPath - the type of collection to model
    *  @param {uuid} uuid - (optional), the UUID of the collection if it is known
    */
-  Usergrid.Collection = function(collectionPath, uuid) {
-    this._collectionPath = collectionPath;
+  Usergrid.Collection = function(path, uuid) {
+    this._path = path;
     this._uuid = uuid;
     this._list = [];
     this._Query = new Usergrid.Query();
@@ -708,22 +708,22 @@ Usergrid.SDK_VERSION = '0.9.5';
   /**
    *  gets the current Collection path
    *
-   *  @method getCollectionPath
-   *  @return {string} collectionPath
+   *  @method getPath
+   *  @return {string} path
    */
-  Usergrid.Collection.prototype.getCollectionPath = function (){
-    return this._collectionPath;
+  Usergrid.Collection.prototype.getPath = function (){
+    return this._path;
   }
 
   /**
-   *  sets the current Collection path
+   *  sets the Collection path
    *
-   *  @method setCollectionPath
-   *  @param {string} collectionPath
+   *  @method setPath
+   *  @param {string} path
    *  @return none
    */
-  Usergrid.Collection.prototype.setCollectionPath = function (collectionPath){
-    this._collectionPath = collectionPath;
+  Usergrid.Collection.prototype.setPath = function (path){
+    this._path = path;
   }
 
   /**
@@ -751,6 +751,8 @@ Usergrid.SDK_VERSION = '0.9.5';
    *
    *  @method addEntity
    *  @param {object} entity
+   *  @param {function} successCallback
+   *  @param {function} errorCallback
    *  @return none
    */
   Usergrid.Collection.prototype.addEntity = function (entity){
@@ -762,14 +764,15 @@ Usergrid.SDK_VERSION = '0.9.5';
   /**
    *  Adds a new Entity to the collection (saves, then adds to the local object)
    *
-   *  @method addEntity
+   *  @method addNewEntity
    *  @param {object} entity
    *  @return none
    */
-  Usergrid.Collection.prototype.addNewEntity = function (entity) {
-    //save the entity
-    entity.save();
+  Usergrid.Collection.prototype.addNewEntity = function (entity,successCallback, errorCallback) {
+    //add the entity to the list
     this.addEntity(entity);
+    //then save the entity
+    entity.save(successCallback, errorCallback);
   }
 
   Usergrid.Collection.prototype.destroyEntity = function (entity) {
@@ -1039,7 +1042,7 @@ Usergrid.SDK_VERSION = '0.9.5';
     var queryParams = this.getQueryParams();
     //empty the list
     this.setEntityList([]);
-    this.setAllQueryParams('GET', this.getCollectionPath(), null, queryParams,
+    this.setAllQueryParams('GET', this.getPath(), null, queryParams,
       function(response) {
         if (response.entities) {
           this.resetEntityPointer();
@@ -1047,7 +1050,7 @@ Usergrid.SDK_VERSION = '0.9.5';
           for (var i=0;i<count;i++) {
             var uuid = response.entities[i].uuid;
             if (uuid) {
-              var entity = new Usergrid.Entity(self.getCollectionPath(), uuid);
+              var entity = new Usergrid.Entity(self.getPath(), uuid);
               //store the data in the entity
               var data = response.entities[i] || {};
               delete data.uuid; //remove uuid from the object
@@ -1098,7 +1101,7 @@ Usergrid.SDK_VERSION = '0.9.5';
       }
       entity.save();
     }
-    this.setAllQueryParams('PUT', this.getCollectionPath(), jsonObj, null,successCallback, errorCallback);
+    this.setAllQueryParams('PUT', this.getPath(), jsonObj, null,successCallback, errorCallback);
     Usergrid.ApiClient.runAppQuery(this);
   }
 })(Usergrid);
@@ -1144,6 +1147,7 @@ Usergrid.ApiClient = (function () {
   var _appUserUUID = null;
   var _queryType = null;
   var _loggedInUser = null;
+  var _logoutCallback = null;
 
   /*
    *  A method to set up the ApiClient with orgname and appname
@@ -1529,7 +1533,7 @@ Usergrid.ApiClient = (function () {
       Query.setQueryStartTime();
       //peel the data out of the query object
       var method = Query.getMethod().toUpperCase();
-      var path = Query.getPath();
+      var path = Query.getResource();
       var jsonObj = Query.getJsonObj() || {};
       var params = Query.getQueryParams() || {};
 
