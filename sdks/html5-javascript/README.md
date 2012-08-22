@@ -1,9 +1,17 @@
 #Apigee App Services Javascript SDK
 
 #Overview
-The Apigee App Services Javascript SDK was designed to make developing Apigee App Services powered Javascript apps as easy as possible. This project is open source, and we welcome your contributions and suggestions.  The repository is located on github:
+The Apigee App Services Javascript SDK was designed to make developing Apigee App Services powered Javascript apps as easy as possible. This project is open source and we welcome your contributions and suggestions.  The repository is located on github:
 
 <https://github.com/apigee/usergrid-javascript-sdk>
+
+To find out more about Apigee App Services, please go here:
+
+<http://usergrid.apigee.com>
+
+Our docs site is located here:
+
+<http://usergrid.apigee.com/docs>
 
 #Getting started
 The SDK consists of just one Javascript file.  Include this at the top of your html file (in between the head tags):
@@ -12,7 +20,7 @@ The SDK consists of just one Javascript file.  Include this at the top of your h
 
 Once you have done this, you are ready to start building entities and collections to drive your app and model your data.  
 
-The SDK project comes with a simple app that is simply a list of dogs.  It retrieves the collection from the API, shows you how to page through the results, and shows you how to create a new entity.  For a more complex example, check out our Messagee app:
+The SDK project includes a simple app that is simply a list of dogs.  It retrieves the collection from the API, shows you how to page through the results, and shows you how to create a new entity.  For a more complex example, check out our Messagee app:
 
 <https://github.com/apigee/usergrid-sample-html5-messagee>
 
