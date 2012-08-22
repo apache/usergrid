@@ -14,13 +14,23 @@ Our docs site is located here:
 <http://usergrid.apigee.com/docs>
 
 #Getting started
-The SDK consists of just one Javascript file.  Include this at the top of your html file (in between the head tags):
+The SDK consists of just one Javascript file.  It is located in this project here:
 
-	<script src="js/usergrid.appSDK.js" type="text/javascript"></script>
+	/sdk/usergrid.appSDK.js 
+
+Include this file at the top of your html file (in between the head tags):
+
+	<script src="sdk/usergrid.appSDK.js" type="text/javascript"></script>
 
 Once you have done this, you are ready to start building entities and collections to drive your app and model your data.  
 
-The SDK project includes a simple app that is simply a list of dogs.  It retrieves the collection from the API, shows you how to page through the results, and shows you how to create a new entity.  For a more complex example, check out our Messagee app:
+A minified version of the file is located here:
+
+	/sdk/usergrid.appSDK.min.js
+
+
+#Sample apps
+The SDK project includes a simple app called Dogs, that is simply a list of dogs.  It retrieves the collection from the API, shows you how to page through the results, and shows you how to create a new entity.  For a more complex example, check out our Messagee app:
 
 <https://github.com/apigee/usergrid-sample-html5-messagee>
 
