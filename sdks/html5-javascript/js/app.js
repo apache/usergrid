@@ -28,7 +28,7 @@
 *  This file contains the main program logic for Dogs.
 */
 $(document).ready(function () {
-   //first set the org / app path
+   //first set the org / app path (must be orgname / appname or org id / app id - can't mix names and uuids!!)
    Usergrid.ApiClient.init('Apigee', 'dogs');
 
    //make a new "dogs" Collection
@@ -107,7 +107,9 @@ $(document).ready(function () {
       if (Usergrid.validation.validateName(name, function (){
             $("#name").focus();
             $("#name-help").show();
-            $("#name-control").addClass('error');}) 
+            $("#name-control").addClass('error');
+            $("#name-help").html(Usergrid.validation.getNameAllowedChars());
+            $('#create-dog').removeClass("disabled");})
          ) {
          //all is well, so make the new dog
          var dog = new Usergrid.Entity('dogs');

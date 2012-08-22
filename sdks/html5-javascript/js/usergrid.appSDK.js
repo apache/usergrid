@@ -424,11 +424,11 @@ Usergrid.SDK_VERSION = '0.9.6';
    *  Constructor for initializing an entity
    *
    *  @constructor
-   *  @param {string} path - the type of collection to model
+   *  @param {string} collectionType - the type of collection to model
    *  @param {uuid} uuid - (optional), the UUID of the collection if it is known
    */
-  Usergrid.Entity = function(path, uuid) {
-    this._path = path;
+  Usergrid.Entity = function(collectionType, uuid) {
+    this._collectionType = collectionType;
     this._data = {};
     this._uuid = uuid;
   };
@@ -439,22 +439,22 @@ Usergrid.SDK_VERSION = '0.9.6';
   /**
    *  gets the current Entity type
    *
-   *  @method getPath
+   *  @method getCollectionType
    *  @return {string} collection type
    */
-  Usergrid.Entity.prototype.getPath = function (){
-    return this._path;
+  Usergrid.Entity.prototype.getCollectionType = function (){
+    return this._collectionType;
   }
 
   /**
    *  sets the current Entity type
    *
-   *  @method setPath
-   *  @param {string} path
+   *  @method setCollectionType
+   *  @param {string} collectionType
    *  @return none
    */
-  Usergrid.Entity.prototype.setPath = function (path){
-    this._path = path;
+  Usergrid.Entity.prototype.setCollectionType = function (collectionType){
+    this._collectionType = collectionType;
   }
 
   /**
@@ -503,7 +503,7 @@ Usergrid.SDK_VERSION = '0.9.6';
    *  @return none
    */
   Usergrid.Entity.prototype.save = function (successCallback, errorCallback){
-    var path = this.getPath();
+    var path = this.getCollectionType();
     //TODO:  API will be changed soon to accomodate PUTs via name which create new entities
     //       This function should be changed to PUT only at that time, and updated to use
     //       either uuid or name
@@ -585,7 +585,7 @@ Usergrid.SDK_VERSION = '0.9.6';
    *  @return none
    */
   Usergrid.Entity.prototype.fetch = function (successCallback, errorCallback){
-    var path = this.getPath();
+    var path = this.getCollectionType();
     //if a uuid is available, use that, otherwise, use the name
     if (this.get('uuid')) {
       path += "/" + this.get('uuid');
@@ -649,7 +649,7 @@ Usergrid.SDK_VERSION = '0.9.6';
    *
    */
   Usergrid.Entity.prototype.destroy = function (successCallback, errorCallback){
-    var path = this.getPath();
+    var path = this.getCollectionType();
     if (this.get('uuid')) {
       path += "/" + this.get('uuid');
     } else {
@@ -657,7 +657,6 @@ Usergrid.SDK_VERSION = '0.9.6';
       if (typeof(errorCallback) == "function"){
         errorCallback('Error trying to delete object - no uuid specified.');
       }
-      return;
     }
     var self = this;
     this.setAllQueryParams('DELETE', path, null, null,
@@ -1148,6 +1147,7 @@ Usergrid.ApiClient = (function () {
   var _appUserUUID = null;
   var _queryType = null;
   var _loggedInUser = null;
+  var _logoutCallback = null;
 
   /*
    *  A method to set up the ApiClient with orgname and appname
