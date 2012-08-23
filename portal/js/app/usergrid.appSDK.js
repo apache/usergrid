@@ -1639,6 +1639,7 @@ Usergrid.ApiClient = (function () {
     if(xD)
     {
       xhr = new window.XDomainRequest();
+      xhr.open(method, path, true);
       if (Usergrid.ApiClient.getToken()) {
         if (path.indexOf("?")) {
           path += '&access_token='+Usergrid.ApiClient.getToken();
@@ -1646,7 +1647,6 @@ Usergrid.ApiClient = (function () {
           path = '?access_token='+Usergrid.ApiClient.getToken();
         }
       }
-      xhr.open(method, path, true);
     }
     else if (xM)
     {
@@ -1658,6 +1658,7 @@ Usergrid.ApiClient = (function () {
       }
     } else {
       xhr = new ActiveXObject("MSXML2.XMLHTTP.3.0");
+      xhr.open(method, path, true);
       if (Usergrid.ApiClient.getToken()) {
         if (path.indexOf("?")) {
           path += '&access_token='+Usergrid.ApiClient.getToken();
@@ -1665,7 +1666,6 @@ Usergrid.ApiClient = (function () {
           path = '?access_token='+Usergrid.ApiClient.getToken();
         }
       }
-      xhr.open(method, path, true);
     }
 
     //add content type = json if there is a json payload
