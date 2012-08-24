@@ -132,14 +132,14 @@ public class OpInsert extends OpCrud {
         ApplicationInfo application = SubjectUtils.getApplication(Identifier
                 .fromName(getDatabaseName()));
       
+        OpReply reply = new OpReply(this);
+        
         if (application == null) {
-            OpReply reply = new OpReply(this);
             return reply;
         }
        
         EntityManager em = handler.getEmf().getEntityManager(application.getId());
         
-        OpReply reply = new OpReply(this);
         
         for(BSONObject document: documents){
             try {

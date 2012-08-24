@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Set;
 import java.util.UUID;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.mongodb.BasicDBObject;
@@ -23,6 +24,7 @@ public class BasicMongoTest extends AbstractMongoTest {
 //    public class BasicMongoTest {
 
     @Test
+//    @Ignore
     public void insertTest() throws Exception {
         Mongo m = new Mongo("localhost", 27017);
         m.setWriteConcern(WriteConcern.SAFE);
@@ -43,20 +45,24 @@ public class BasicMongoTest extends AbstractMongoTest {
         WriteResult result = db.getCollection("inserttests").insert(doc);
 
         assertNull(result.getError());
-        Object field = result.getField("_id");
+        Object mongoId = result.getField("_id");
 
-        assertNotNull(field);
+        assertNotNull(mongoId);
+        
+        assertEquals(doc.get("_id"), mongoId);
         
         Object uuid = result.getField("uuid");
         
         assertNotNull(uuid);
         
         UUID id = UUID.fromString(uuid.toString());
+        
+        assertNotNull(id);
+        
 
         Set<String> colls = db.getCollectionNames();
 
         assertTrue(colls.contains("inserttests"));
-        
         
 
         DBCollection coll = db.getCollection("inserttests");
@@ -71,6 +77,8 @@ public class BasicMongoTest extends AbstractMongoTest {
             object = cur.next();
             assertEquals("nico", object.get("name"));
             assertEquals("tabby", object.get("color"));
+            assertEquals(mongoId, object.get("_id"));
+            assertEquals(id, object.get("uuid"));
         }
         
         assertEquals(1, count);
