@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.usergrid.utils.MapUtils.hashMap;
@@ -26,8 +27,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.java.client.entities.Group;
 import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.utils.UUIDUtils;
@@ -38,11 +37,7 @@ import org.usergrid.utils.UUIDUtils;
  * @author tnine
  */
 public class PermissionsResourceTest extends AbstractRestTest {
-    private static Logger log = LoggerFactory
-            .getLogger(PermissionsResourceTest.class);
-
-    private static final String GROUP = "permtestgroup";
-
+    
     private static final String ROLE = "permtestrole";
 
     private static final String USER = "edanuff";
