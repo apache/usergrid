@@ -13,6 +13,7 @@
 		<property name="ignoreResourceNotFound" value="true" />
 		<property name="locations">
 			<list>
+				<value>classpath:/usergrid-default.properties</value>
 				<value>classpath:/usergrid-test.properties</value>
 				<value>${usergrid-custom-spring-test-properties}</value>
 			</list>
