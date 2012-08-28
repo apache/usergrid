@@ -18,12 +18,14 @@ package org.usergrid.rest.applications.utils;
 import java.util.UUID;
 
 import org.codehaus.jackson.JsonNode;
+import org.junit.Ignore;
 import org.usergrid.utils.UUIDUtils;
 
 /**
  * @author tnine
  *
  */
+@Ignore("Not a test")
 public class TestUtils {
 
     /**
