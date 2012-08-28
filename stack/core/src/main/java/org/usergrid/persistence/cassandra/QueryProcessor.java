@@ -489,6 +489,14 @@ public class QueryProcessor {
                 return newSliceNode();
             }
 
+          // sdg - if left & right have same field name, we need to create a new slice
+          if (nodes.peek() instanceof SliceNode && current instanceof ContainsOperand) {
+            String fieldName = appendSuffix(((ContainsOperand)current).getProperty().getValue(), "keywords");
+            if (((SliceNode)nodes.peek()).getSlice(fieldName) != null) {
+              return newSliceNode();
+            }
+          }
+
             return (SliceNode) nodes.peek();
 
         }
