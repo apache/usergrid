@@ -430,7 +430,7 @@ Usergrid.SDK_VERSION = '0.9.6';
   Usergrid.Entity = function(collectionType, uuid) {
     this._collectionType = collectionType;
     this._data = {};
-    this._uuid = uuid;
+    this._data['uuid'] = uuid;
   };
 
   //inherit prototype from Query
