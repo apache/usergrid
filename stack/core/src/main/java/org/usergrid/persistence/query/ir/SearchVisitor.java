@@ -55,7 +55,7 @@ public abstract class SearchVisitor implements NodeVisitor {
         Results right = results.pop();
         Results left = results.pop();
 
-        left.merge(right);
+        left.and(right);
 
         results.push(left);
     }
