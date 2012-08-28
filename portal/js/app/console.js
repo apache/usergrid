@@ -3663,7 +3663,7 @@ function deleteRolePermission(roleName, permission) {
     };
     runManagementQuery(new Usergrid.Query('GET', 'token', null, formdata,
       function(response) {
-        if (!response) {
+        if (!response || response.error){
           displayLoginError();
           return
         }
