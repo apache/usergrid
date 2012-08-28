@@ -25,7 +25,6 @@ public abstract class SearchVisitor implements NodeVisitor {
 
     /**
      * @param query
-     * @param collectionName
      */
     public SearchVisitor(Query query, QueryProcessor queryProcessor) {
         this.query = query;
@@ -68,23 +67,14 @@ public abstract class SearchVisitor implements NodeVisitor {
      */
     @Override
     public void visit(NotNode node) throws Exception {
+      node.getChild().visit(this);
+      Results not = results.pop();
 
-        // edge case where the not node is the root node. in this case we
-        // need to select all, evaluate the child, then subtract
-        if (node == queryProcessor.getFirstNode()) {
-            // do full results scan here
-        }
+      node.getAllNode().visit(this);
+      Results parent = results.pop();
+      parent.subtract(not);
 
-        node.getChild().visit(this);
-
-        Results childResults = results.pop();
-
-        Results existing = results.pop();
-
-        existing.subtract(childResults);
-
-        results.push(existing);
-
+      results.push(parent);
     }
 
     /*
@@ -101,9 +91,14 @@ public abstract class SearchVisitor implements NodeVisitor {
         Results right = results.pop();
         Results left = results.pop();
 
-        left.merge(right);
-
+      if (left != null) {
+        if (right != null) {
+          left.merge(right);
+        }
         results.push(left);
+      } else {
+        results.push(right);
+      }
     }
 
 }
