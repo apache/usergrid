@@ -43,13 +43,7 @@ import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.exceptions.NoFullTextIndexException;
 import org.usergrid.persistence.exceptions.NoIndexException;
 import org.usergrid.persistence.exceptions.PersistenceException;
-import org.usergrid.persistence.query.ir.AndNode;
-import org.usergrid.persistence.query.ir.NotNode;
-import org.usergrid.persistence.query.ir.OrNode;
-import org.usergrid.persistence.query.ir.QueryNode;
-import org.usergrid.persistence.query.ir.QuerySlice;
-import org.usergrid.persistence.query.ir.SliceNode;
-import org.usergrid.persistence.query.ir.WithinNode;
+import org.usergrid.persistence.query.ir.*;
 import org.usergrid.persistence.query.tree.AndOperand;
 import org.usergrid.persistence.query.tree.ContainsOperand;
 import org.usergrid.persistence.query.tree.Equal;
@@ -301,17 +295,13 @@ public class QueryProcessor {
         @Override
         public void visit(NotOperand op) throws PersistenceException {
 
-            // create a new context since any child of NOT will need to be
-            // evaluated independently
-
-            Operand child = op.getOperation();
-
+          // create a new context since any child of NOT will need to be
+          // evaluated independently
+          Operand child = op.getOperation();
             createNewSlice(child);
-
             child.visit(this);
 
-            NotNode not = new NotNode(nodes.pop());
-            nodes.push(not);
+            nodes.push(new NotNode(nodes.pop(), new AllNode()));
         }
 
         /*
@@ -469,7 +459,7 @@ public class QueryProcessor {
 
         /**
          * Return the current leaf node to add to if it exists. This means that
-         * we can compress multile 'AND' operations and ranges into a single
+         * we can compress multiple 'AND' operations and ranges into a single
          * node. Otherwise a new node is created and pushed to the stack
          * 
          * @param current
@@ -488,6 +478,14 @@ public class QueryProcessor {
             if (nodes.size() == 0 || !(nodes.peek() instanceof SliceNode)) {
                 return newSliceNode();
             }
+
+          // sdg - if left & right have same field name, we need to create a new slice
+          if (nodes.peek() instanceof SliceNode && current instanceof ContainsOperand) {
+            String fieldName = appendSuffix(((ContainsOperand)current).getProperty().getValue(), "keywords");
+            if (((SliceNode)nodes.peek()).getSlice(fieldName) != null) {
+              return newSliceNode();
+            }
+          }
 
             return (SliceNode) nodes.peek();
 

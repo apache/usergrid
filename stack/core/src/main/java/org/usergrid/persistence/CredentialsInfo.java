@@ -66,16 +66,13 @@ public class CredentialsInfo {
 		return credentials;
 	}
 
-	public static CredentialsInfo hashedCredentials(String salt, String secret) {
+	public static CredentialsInfo hashedCredentials(String salt, String secret, String hashType) {
 		CredentialsInfo credentials = new CredentialsInfo();
 		credentials.setRecoverable(false);
 		credentials.setCipher("sha-1");
+    credentials.setHashType(hashType);
 		credentials.setEncryptedSecret("sha-1", salt, secret);
 		return credentials;
-	}
-
-	public static CredentialsInfo passwordCredentials(String secret) {
-		return hashedCredentials(null, secret);
 	}
 
 	public static CredentialsInfo mongoPasswordCredentials(String username,
@@ -151,6 +148,7 @@ public class CredentialsInfo {
 	}
 
 	/**
+   * Used for handling legacy passwords encrypted in md5 or similar.
 	 * @param hashType
 	 *            the hashType to set
 	 */
@@ -182,53 +180,22 @@ public class CredentialsInfo {
 		return null;
 	}
 
-	public boolean compareSecret(String cipher, String salt, String secret) {
-		if (secret == null) {
-			return false;
-		}
-		if (this.secret == null) {
-			return false;
-		}
-		if ("bcrypt".equals(cipher)) {
-			return BCrypt.checkpw(secret, this.secret);
-		}
-		return this.secret.equals(encrypt(cipher, salt, secret));
-	}
 
-	public boolean compareSha1Secret(String secret) {
-		return compareSecret("sha-1", null, secret);
-	}
-
-	public boolean compareSha1Secret(String salt, String secret) {
-		return compareSecret("sha-1", salt, secret);
-	}
-
-	public static boolean checkPassword(String password,
-			CredentialsInfo credentials) {
-		if (credentials == null) {
-			return false;
-		}
-		if (password == null) {
-			return false;
-		}
-
-		// pre-hash for legacy system imports
-		if (credentials.getHashType() != null) {
-			password = credentials.encrypt(credentials.getHashType(), "",
-					password);
-		}
-
-		return credentials.compareSha1Secret(password);
-	}
-
-	public boolean compareBCryptSecret(String secret) {
-		return compareSecret("bcrypt", null, secret);
-	}
-
+  /**
+   * If hashType on this object is set, we will do a first-pass call to {@link #encrypt(String, String, String)}
+   * with that hashType. The primary use case is to support imported legacy data with weaker password hashing
+   * such as vanilla md5.
+   * @param cipher
+   * @param salt
+   * @param secret
+   */
 	public void setEncryptedSecret(String cipher, String salt, String secret) {
 		encrypted = true;
 		recoverable = ("aes".equals(cipher) || "plaintext".equals(cipher) || (cipher == null));
 		this.cipher = cipher;
+    if ( this.hashType != null ) {
+      secret = encrypt(this.hashType, "", secret);
+    }
 		this.secret = encrypt(cipher, salt, secret);
 	}
 
@@ -238,7 +205,7 @@ public class CredentialsInfo {
 		} else if ("bcrypt".equals(cipher)) {
 			return BCrypt.hashpw(secret, BCrypt.gensalt());
 		} else if ("sha-1".equals(cipher)) {
-			return encodeBase64URLSafeString(computeHash(secret));
+			return encodeBase64URLSafeString(computeHash((isBlank(salt) ? secret : salt + secret)));
 		} else if ("md5".equals(cipher)) {
 			return DigestUtils.md5Hex(secret);
 		} else if ("aes".equals(cipher)) {
@@ -247,4 +214,13 @@ public class CredentialsInfo {
 		return secret;
 	}
 
+  /**
+   * Main entry point for password equivalency comparrison. Compares the output
+   * of {@link #getSecret()} for this object and the provided object.
+   * @param other
+   * @return
+   */
+  public boolean compare(CredentialsInfo other) {
+    return this.getSecret().equals(other.getSecret());
+  }
 }
