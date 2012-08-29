@@ -109,7 +109,7 @@ Usergrid = Usergrid || {};
   };
 
   /**
-    *  Standardized methods for mantianing user and authentication state in the Application
+    *  Standardized methods for maintaining user and authentication state in the Application
     *  @class UserSession
     */
   Usergrid.userSession = function(){};

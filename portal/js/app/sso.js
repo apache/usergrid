@@ -1,6 +1,9 @@
 /*
  * Usergrid.SSO
- * SSO functions apigee specific,
+ * SSO functions apigee specific
+ *
+ * Requires:
+ * Usergrid.ApiClient
  */
 (function () {
   Usergrid.SSO = function () {
@@ -8,12 +11,10 @@
 
   Usergrid.SSO.default = {
     top_level_domain:"apigee.com",
-    use_sso:true, // flag to overide use SSO if needed set to ?use_sso=no
+    use_sso:true, // flag to override use SSO if needed set to ?use_sso=no
     login_url:"https://accounts.apigee.com/accounts/sign_in",
     profile_url:"https://accounts.apigee.com/accounts/my_account",
-    logout_url:"https://accounts.apigee.com/accounts/sign_out",
-    //this variable is repeated from console.js TODO: find a suitable container in which to place this variable.
-    api_url:"https://api.usergrid.com/"
+    logout_url:"https://accounts.apigee.com/accounts/sign_out"
   };
 
   Usergrid.SSO.prototype = {
@@ -31,7 +32,7 @@
       }
       if (Usergrid.ApiClient.getApiUrl() !== undefined && (Usergrid.ApiClient.getApiUrl() !== this.default.api_url)) {
         separatorMark = '&';
-        callbackUrl = callbackUrl + separatorMark + 'api_url=' + self.apiUrl;
+        callbackUrl = callbackUrl + separatorMark + 'api_url=' + Usergrid.ApiClient.getApiUrl();
       }
       return encodeURIComponent(callbackUrl);
     },
@@ -41,17 +42,17 @@
     },
     //Private
     sendToPage:function (url) {
-      //TODO: check if throwing an exception is necesary to stop page from loading after sending it to the SSO page
       window.location = url + '?callback=' + this.getSSOCallback();
+      throw ("Sending to : " + url );
       return false;
     },
-    SendToSSOLogoutPage:function () {
+    sendToSSOLogoutPage:function () {
       this.sendToPage(this.default.logout_url);
     },
-    SendToSSOLoginPage:function () {
+    sendToSSOLoginPage:function () {
       this.sendToPage(this.default.login_url);
     },
-    SendToSSOProfilePage:function () {
+    sendToSSOProfilePage:function () {
       this.sendToPage(this.default.profile_url);
     },
     setUseSSO:function (sso) {

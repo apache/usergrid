@@ -4203,79 +4203,13 @@ function deleteRolePermission(roleName, permission) {
   }
   Usergrid.console.loginOk = loginOk;
 
-  /*******************************************************************
-   *
-   * SSO functions
-   *
-   ******************************************************************/
-    //SSO information - apigee Specific
-  var apigee_TLD = "apigee.com";
-  var USE_SSO = 'no'; // flag to overide use SSO if needed set to ?use_sso=no
-  var apigee_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
-  var apigee_SSO_PROFILE_URL = "https://accounts.apigee.com/accounts/my_account";
-  var SSO_LOGOUT_PAGE = 'https://accounts.apigee.com/accounts/sign_out';
+  Usergrid.SSO.useSSO = useSSO;
 
-  self.use_sso = USE_SSO;
-  if (query_params.use_sso) {
-    self.use_sso = query_params.use_sso;
-  }
+  Usergrid.SSO.sendToSSOLogoutPage = sendToSSOLogoutPage;
 
-  self.apigee_sso_url = apigee_SSO_URL;
-  if (query_params.apigee_sso_url) {
-    self.apigee_sso_url = query_params.apigee_sso_url;
-  }
+  Usergrid.SSO.sendToSSOLoginPage = sendToSSOLoginPage;
 
-  self.apigee_sso_profile_url = apigee_SSO_PROFILE_URL;
-  if (query_params.apigee_sso_profile_url) {
-    self.apigee_sso_profile_url = query_params.apigee_sso_profile_url;
-  }
-
-  function useSSO() {
-    return apigeeUser() || self.use_sso=='true' || self.use_sso=='yes'
-  }
-  Usergrid.console.useSSO = useSSO;
-
-  function apigeeUser() {
-    return window.location.host == apigee_TLD
-  }
-
-  function sendToSSOLogoutPage() {
-    var newLoc= SSO_LOGOUT_PAGE + '?callback=' + getSSOCallback();
-    window.location = newLoc;
-    return false;
-  }
-  Usergrid.console.sendToSSOLogoutPage = sendToSSOLogoutPage;
-
-  function sendToSSOLoginPage() {
-    var newLoc = self.apigee_sso_url + '?callback=' + getSSOCallback();
-    window.location = newLoc;
-    throw "stop!";
-    return false;
-  }
-  Usergrid.console.sendToSSOLoginPage = sendToSSOLoginPage;
-
-  function sendToSSOProfilePage() {
-    var newLoc = self.apigee_sso_profile_url + '?callback=' + getSSOCallback();
-    window.location = newLoc;
-    throw "stop!";
-    return false;
-  }
-  Usergrid.console.sendToSSOProfilePage = sendToSSOProfilePage;
-
-  function getSSOCallback() {
-    var callback = window.location.protocol+'//'+ window.location.host + window.location.pathname;
-    var separatorMark = '?';
-    if (self.use_sso == 'true' || self.use_sso == 'yes') {
-      callback = callback + separatorMark + 'use_sso=' + self.use_sso;
-      separatorMark = '&';
-    }
-    if (Usergrid.ApiClient.getApiUrl() != PUBLIC_API_URL) {
-      callback = callback + separatorMark + 'api_url=' + self.apiUrl;
-      separatorMark = '&';
-    }
-    return encodeURIComponent(callback);
-  }
-  Usergrid.console.getSSOCallback = getSSOCallback;
+  Usergrid.SSO.sendToSSOProfilePage = sendToSSOProfilePage;
 
   //load the templates only after the rest of the page is
   $(window).bind("load", function() {
