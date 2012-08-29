@@ -1,11 +1,12 @@
 grammar QueryFilter;
 //NOTES:  '^' denotes operator, all others in the string become operands
 
-
 options {
     output=AST;
 //    ASTLabelType=CommonTree;
 }
+
+@rulecatch { }
 
 @header {
 package org.usergrid.persistence.query.tree;
