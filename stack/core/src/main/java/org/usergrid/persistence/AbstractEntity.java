@@ -108,7 +108,7 @@ public abstract class AbstractEntity implements Entity {
 	}
 
 	@Override
-	@JsonIgnore
+	@JsonSerialize(include = Inclusion.NON_NULL)
 	public String getName() {
 		return (String) getProperty(PROPERTY_NAME);
 	}
