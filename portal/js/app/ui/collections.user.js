@@ -25,13 +25,11 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
         "optional":true,
         "title" : "Full Name"
       },
-      "familyName":{
-        "type":"string",
-        "title" : "Last Name"
-      },
-      "givenName":{
-        "type":"string",
-        "title" : "First Name"
+      "title":{
+      	"description":"User Title",
+      	"type":"string",
+      	"optional": true,
+      	"title":"Title"
       },
       "url":{
         "type":"string",
