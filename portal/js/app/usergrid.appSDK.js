@@ -1147,6 +1147,7 @@ Usergrid.ApiClient = (function () {
   var _appUserUUID = null;
   var _queryType = null;
   var _loggedInUser = null;
+  var _logoutCallback = null;
 
   /*
    *  A method to set up the ApiClient with orgname and appname

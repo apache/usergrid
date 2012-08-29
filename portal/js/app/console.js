@@ -1080,7 +1080,7 @@ function apigee_console_app(Pages, query_params) {
     var new_role_title = $('#new-role-title');
 
     var bValid = checkLength2(new_role_name, 1, 80)
-      && checkRegexp2(new_role_name, usernameRegex, usernameAllowedCharsMessage)
+      && checkRegexp2(new_role_name, roleRegex, roleAllowedCharsMessage)
       && checkLength2(new_role_title, 1, 80)
       && checkRegexp2(new_role_title,titleRegex, titleAllowedCharsMessage);
 
