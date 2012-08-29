@@ -18,8 +18,10 @@ package org.usergrid.persistence;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.usergrid.persistence.SimpleEntityRef.ref;
 import static org.usergrid.utils.ClassUtils.cast;
+import static org.usergrid.utils.CompositeUtils.setEqualityFlag;
 import static org.usergrid.utils.ConversionUtils.bytes;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -32,14 +34,20 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import me.prettyprint.hector.api.beans.DynamicComposite;
+import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
+
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import org.usergrid.persistence.query.ir.QuerySlice.RangeValue;
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
 
 @XmlRootElement
 public class Results implements Iterable<Entity> {
 
+    private static final String EMPTY = "";
+    
     public enum Level {
         IDS, REFS, CORE_PROPERTIES, ALL_PROPERTIES, LINKED_PROPERTIES
     }
@@ -591,37 +599,74 @@ public class Results implements Iterable<Entity> {
     public void merge(Results results) {
         getEntitiesMap();
         results.getEntitiesMap();
-        if ((entitiesMap != null) && (results.entitiesMap != null)) {
+        if (entitiesMap != null || results.entitiesMap != null) {
+
+            level = Level.ALL_PROPERTIES;
+
+            // do nothing, nothing to union
+            if (entitiesMap != null && results.entitiesMap == null) {
+                return;
+                // other side has the results, assign and return
+            } else if (entitiesMap == null && results.entitiesMap != null) {
+                entities = results.entities;
+                return;
+            }
+
             entitiesMap.putAll(results.entitiesMap);
             entities = new ArrayList<Entity>(entitiesMap.values());
-            level = Level.ALL_PROPERTIES;
+
             return;
         }
 
         getRefsMap();
         results.getRefsMap();
-        if ((refsMap != null) && (results.refsMap != null)) {
+        if ((refsMap != null) || (results.refsMap != null)) {
+
+            level = Level.REFS;
+
+            // do nothing, nothing to union
+            if (refsMap != null && results.refsMap == null) {
+                return;
+                // other side has the results, assign and return
+            } else if (refsMap == null && results.refsMap != null) {
+                refs = results.refs;
+                return;
+            }
+
             refsMap.putAll(results.refsMap);
             refs = new ArrayList<EntityRef>(refsMap.values());
-            level = Level.REFS;
+
             return;
         }
 
         getIdSet();
         results.getIdSet();
         if ((idSet != null) && (results.idSet != null)) {
+
+            level = Level.IDS;
+
+            // do nothing, nothing to union
+            if (idSet != null && results.idSet == null) {
+                return;
+                // other side has the results, assign and return
+            } else if (idSet == null && results.idSet != null) {
+                ids = results.ids;
+                return;
+            }
+
             idSet.addAll(results.idSet);
             ids = new ArrayList<UUID>(idSet);
-            level = Level.IDS;
+
             return;
         }
     }
 
     /**
      * Remove the passed in results from the current results
+     * 
      * @param results
      */
-    public void subtract(Results results){
+    public void subtract(Results results) {
         getEntitiesMap();
         results.getEntitiesMap();
 
@@ -668,8 +713,6 @@ public class Results implements Iterable<Entity> {
             return;
         }
     }
-    
-  
 
     /**
      * Perform an intersection of the 2 results
@@ -1049,6 +1092,13 @@ public class Results implements Iterable<Entity> {
         }
     }
 
+    /**
+     * Set the cursor to the empty value.  This signifies that no more results can be found for this range
+     */
+    public void setCursorMax() {
+        cursor = EMPTY;
+    }
+
     public void setCursor(String cursor) {
         this.cursor = cursor;
     }
@@ -1128,70 +1178,5 @@ public class Results implements Iterable<Entity> {
             }
         }
     }
-
-    /*
-     * private void updateIndex(UUID id, String name, Object value) { Map<UUID,
-     * Entity> map = getEntitiesMap(); Entity entity = null; if (map != null) {
-     * entity = map.get(id); } // Map<String, Map<Object, List<UUID>>>
-     * metadataValueToIds; // Map<String, Map<Object, List<Entity>>>
-     * metadataValueToEntities; if (metadataValueToIds == null) {
-     * metadataValueToIds = new LinkedHashMap<String, Map<Object, Set<UUID>>>();
-     * metadataValueToEntities = new LinkedHashMap<String, Map<Object,
-     * List<Entity>>>(); } Map<Object, Set<UUID>> valueToIds =
-     * metadataValueToIds.get(name); Map<Object, List<Entity>> valueToEntities =
-     * metadataValueToEntities .get(name); if (valueToIds == null) { valueToIds
-     * = new LinkedHashMap<Object, Set<UUID>>(); metadataValueToIds.put(name,
-     * valueToIds); valueToEntities = new LinkedHashMap<Object, List<Entity>>();
-     * metadataValueToEntities.put(name, valueToEntities); } Set<UUID> idSet =
-     * valueToIds.get(value); List<Entity> eList = valueToEntities.get(value);
-     * if (idSet == null) { idSet = new LinkedHashSet<UUID>();
-     * valueToIds.put(value, idSet); eList = new ArrayList<Entity>();
-     * valueToEntities.put(value, eList); } if (!idSet.contains(id)) {
-     * idSet.add(id); if (entity != null) { eList.add(entity); } }
-     * 
-     * }
-     * 
-     * public List<Object> getValuesForMetadata(String name) { Map<Object,
-     * Set<UUID>> valueToIds = metadataValueToIds.get(name); if (valueToIds ==
-     * null) { return null; } if (valueToIds.size() > 0) { return new
-     * ArrayList<Object>(valueToIds.keySet()); } return null; }
-     * 
-     * public List<Entity> getEntitiesForMetadata(String name, Object value) {
-     * Map<Object, List<Entity>> valueToEntities = metadataValueToEntities
-     * .get(name); if (valueToEntities == null) { return null; } List<Entity>
-     * eList = valueToEntities.get(value); return eList; }
-     * 
-     * public List<UUID> getIdsForMetadata(String name, Object value) {
-     * Map<Object, Set<UUID>> valueToIds = metadataValueToIds.get(name); if
-     * (valueToIds == null) { return null; } Set<UUID> idSet =
-     * valueToIds.get(value); if ((idSet != null) && (idSet.size() > 0)) {
-     * List<UUID> idList = new ArrayList<UUID>(idSet); return idList; } return
-     * null; }
-     */
-    /*
-     * public Map<String, Map<String, List<UUID>>>
-     * getConnectionTypeAndEntityTypeToEntityIdMap() { if
-     * (connectionTypeAndEntityTypeToEntityIdMap != null) { return
-     * connectionTypeAndEntityTypeToEntityIdMap; } if (connections != null) {
-     * connectionTypeAndEntityTypeToEntityIdMap = new LinkedHashMap<String,
-     * Map<String, List<UUID>>>(); for (Connection connection : connections) {
-     * MapUtils.addMapMapList( connectionTypeAndEntityTypeToEntityIdMap,
-     * connection.getConnectionType(), connection.getType(),
-     * connection.getId()); } } return connectionTypeAndEntityTypeToEntityIdMap;
-     * }
-     * 
-     * public Map<String, Map<String, List<Entity>>>
-     * getConnectionTypeAndEntityTypeToEntityMap() { if
-     * (connectionTypeAndEntityTypeToEntityMap != null) { return
-     * connectionTypeAndEntityTypeToEntityMap; } if (connections != null) {
-     * getEntitiesMap(); connectionTypeAndEntityTypeToEntityMap = new
-     * LinkedHashMap<String, Map<String, List<Entity>>>(); if (entitiesMap !=
-     * null) { for (Connection connection : connections) { Entity entity =
-     * entitiesMap.get(connection .getConnectedEntity().getId()); if (entity !=
-     * null) { MapUtils.addMapMapList( connectionTypeAndEntityTypeToEntityMap,
-     * connection.getConnectionType(), connection
-     * .getConnectedEntity().getType(), entity); } } } } return
-     * connectionTypeAndEntityTypeToEntityMap; }
-     */
 
 }

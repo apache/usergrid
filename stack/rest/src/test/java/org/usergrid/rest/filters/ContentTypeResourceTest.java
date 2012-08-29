@@ -19,6 +19,8 @@ import static org.junit.Assert.assertEquals;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.HttpHeaders;
@@ -28,22 +30,27 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
 import org.apache.http.util.EntityUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.utils.JsonUtils;
+import org.usergrid.utils.UUIDUtils;
 
 /**
  * @author tnine
  * 
  */
 
-@Ignore("Client login is causing tests to fail due to socket closure by grizzly.  Need to re-enable once we're not using grizzly to test")
+// @Ignore("Client login is causing tests to fail due to socket closure by grizzly.  Need to re-enable once we're not using grizzly to test")
 public class ContentTypeResourceTest extends AbstractRestTest {
 
     /**
@@ -112,6 +119,85 @@ public class ContentTypeResourceTest extends AbstractRestTest {
     }
 
     /**
+     * Tests that application/x-www-url-form-encoded works correctly
+     * 
+     * @throws
+     * @throws Exception
+     */
+    @Test
+    public void formEncodedContentType() throws Exception {
+
+        List<NameValuePair> pairs = new ArrayList<NameValuePair>();
+
+        pairs.add(new BasicNameValuePair("organization", "formContentOrg"));
+        pairs.add(new BasicNameValuePair("username", "formContentOrg"));
+        pairs.add(new BasicNameValuePair("name", "Test User"));
+        pairs.add(new BasicNameValuePair("email", UUIDUtils.newTimeUUID()
+                + "@usergrid.org"));
+        pairs.add(new BasicNameValuePair("password", "foobar"));
+
+        UrlEncodedFormEntity entity = new UrlEncodedFormEntity(pairs, "UTF-8");
+
+        DefaultHttpClient client = new DefaultHttpClient();
+
+        HttpHost host = new HttpHost(super.getBaseURI().getHost(), super
+                .getBaseURI().getPort());
+
+        HttpPost post = new HttpPost("/management/orgs");
+        post.setEntity(entity);
+        // post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + access_token);
+
+        post.setHeader(HttpHeaders.CONTENT_TYPE,
+                MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpResponse rsp = client.execute(host, post);
+
+        printResponse(rsp);
+
+        // should be an error, no content type was set
+        assertEquals(200, rsp.getStatusLine().getStatusCode());
+
+    }
+
+    /**
+     * Tests that application/x-www-url-form-encoded works correctly
+     * 
+     * @throws
+     * @throws Exception
+     */
+    @Test
+    @Ignore("This will only pass in tomcat, and shouldn't pass in grizzly")
+    public void formEncodedUrlContentType() throws Exception {
+        BasicHttpParams params = new BasicHttpParams();
+
+        params.setParameter("organization", "formUrlContentOrg");
+        params.setParameter("username", "formUrlContentOrg");
+        params.setParameter("name", "Test User");
+        params.setParameter("email", UUIDUtils.newTimeUUID() + "@usergrid.org");
+        params.setParameter("password", "foobar");
+        params.setParameter("grant_type", "password");
+
+        DefaultHttpClient client = new DefaultHttpClient();
+
+        HttpHost host = new HttpHost(super.getBaseURI().getHost(), super
+                .getBaseURI().getPort());
+
+        HttpPost post = new HttpPost("/management/orgs");
+        post.setParams(params);
+
+        post.setHeader(HttpHeaders.CONTENT_TYPE,
+                MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpResponse rsp = client.execute(host, post);
+
+        printResponse(rsp);
+
+        // should be an error, no content type was set
+        assertEquals(200, rsp.getStatusLine().getStatusCode());
+
+    }
+
+    /**
      * Creates a simple entity of type game. Does not set the content type or
      * accept. The type should be set to json to match the body
      * 
@@ -120,6 +206,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
      */
     @Test
     public void missingAcceptAndContent() throws Exception {
+
         Map<String, String> data = hashMap("name", "Solitaire");
 
         String json = JsonUtils.mapToFormattedJsonString(data);

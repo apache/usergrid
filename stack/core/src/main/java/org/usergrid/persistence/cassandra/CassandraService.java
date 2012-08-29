@@ -306,6 +306,9 @@ public class CassandraService {
 
         boolean delay_configuration = (!"org.apache.cassandra.locator.SimpleStrategy"
                 .equals(strategy_class)) || (replication_factor > 1);
+        if ( properties.getProperty("cassandra.configuration.use_delay") != null ) {
+          delay_configuration = Boolean.parseBoolean(properties.getProperty("cassandra.configuration.use_delay"));
+        }
 
         if (delay_configuration) {
             logger.info("Waiting 10s after keyspace creation");

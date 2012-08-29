@@ -16,11 +16,13 @@
 package org.usergrid.rest.applications.users;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.util.UUID;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +59,15 @@ public class GroupResourceTest extends AbstractRestTest {
         client.createGroup(GROUP);
 
         groupCreated = true;
+    }
+
+    @Ignore
+    public void failGroupNameValidation() {
+      ApiResponse response = client.createGroup("groupName/withslash");
+      assertNotNull(response.getError());
+
+      response = client.createGroup("groupName withspace");
+      assertNotNull(response.getError());
     }
 
     @Test

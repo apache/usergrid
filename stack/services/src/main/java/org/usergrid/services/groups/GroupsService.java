@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.usergrid.services.groups;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.services.AbstractPathBasedColllectionService;
@@ -24,6 +26,8 @@ import org.usergrid.services.ServiceResults;
 public class GroupsService extends AbstractPathBasedColllectionService {
 
 	private static final Logger logger = LoggerFactory.getLogger(GroupsService.class);
+
+  static CharMatcher matcher = CharMatcher.JAVA_LETTER_OR_DIGIT.or(CharMatcher.anyOf("-./"));
 
 	public GroupsService() {
 		super();
@@ -41,7 +45,14 @@ public class GroupsService extends AbstractPathBasedColllectionService {
 	@Override
 	public ServiceResults postCollection(ServiceContext context)
 			throws Exception {
-		logger.info("Creating group with path " + context.getProperty("path"));
+
+    String path = (String)context.getProperty("path");
+
+    logger.info("Creating group with path {}", path);
+
+    Preconditions.checkArgument(matcher.matchesAllOf(path),
+            "Illegal characters found in group name: " + path);
+
 		return super.postCollection(context);
 	}
 

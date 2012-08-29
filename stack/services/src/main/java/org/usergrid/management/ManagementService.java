@@ -38,9 +38,6 @@ public interface ManagementService {
 	public void activateOrganization(OrganizationInfo organization)
 			throws Exception;
 
-	public void activateOrganization(OrganizationInfo organization,
-			boolean sendEmail) throws Exception;
-
 	public void addAdminUserToOrganization(UserInfo user,
 			OrganizationInfo organization, boolean email) throws Exception;
 
@@ -63,29 +60,29 @@ public interface ManagementService {
 			throws Exception;
 
 	public UserInfo createAdminUser(String username, String name, String email,
-			String password, boolean activated, boolean disabled,
-			boolean sendEmail) throws Exception;
+			String password, boolean activated, boolean disabled) throws Exception;
 
-	public UserInfo createAdminFrom(User user, String password,
-			boolean sendEmail) throws Exception;
+	public UserInfo createAdminFrom(User user, String password) throws Exception;
 
 	public UserInfo createAdminFromPrexistingPassword(User user,
-			String precypheredPassword, String hashType, boolean sendEmail) throws Exception;
+			String precypheredPassword, String hashType) throws Exception;
 
-	public UUID createApplication(UUID organizationId, String applicationName)
+	public ApplicationInfo createApplication(UUID organizationId, String applicationName)
 			throws Exception;
 
-	public UUID createApplication(UUID organizationId, String applicationName,
+	public ApplicationInfo createApplication(UUID organizationId, String applicationName,
 			Map<String, Object> properties) throws Exception;
 
 	public OrganizationInfo createOrganization(String organizationName,
-			UserInfo user, boolean activated, boolean sendEmail)
-			throws Exception;
+			UserInfo user, boolean activated) throws Exception;
+
+  public OrganizationOwnerInfo createOwnerAndOrganization(
+ 			String organizationName, String username, String name,
+ 			String email, String password) throws Exception;
 
 	public OrganizationOwnerInfo createOwnerAndOrganization(
 			String organizationName, String username, String name,
-			String email, String password, boolean activated, boolean disabled,
-			boolean sendEmail) throws Exception;
+			String email, String password, boolean activated, boolean disabled) throws Exception;
 
 	public void deactivateAdminUser(UUID userId) throws Exception;
 
@@ -348,5 +345,8 @@ public interface ManagementService {
 
 	public User getOrCreateUserForFacebookAccessToken(UUID applicationId,
 			String fb_access_token) throws Exception;
+
+	public User getOrCreateUserForFoursquareAccessToken(UUID applicationId,
+			String fq_access_token) throws Exception;
 
 }

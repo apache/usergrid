@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.usergrid.management.cassandra.ManagementServiceImpl.*;
+import static org.usergrid.management.AccountCreationProps.*;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -42,6 +42,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
+import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.cassandra.CassandraService;
+import org.usergrid.persistence.entities.User;
 
 public class EmailFlowTest {
 
@@ -89,7 +92,7 @@ public class EmailFlowTest {
 		OrganizationOwnerInfo org_owner = management
 				.createOwnerAndOrganization("test-org-1", "test-user-1",
 						"Test User", "test-user-1@mockserver.com",
-						"testpassword", false, false, true);
+						"testpassword", false, false);
 		assertNotNull(org_owner);
 
 		List<Message> inbox = org.jvnet.mock_javamail.Mailbox
@@ -120,7 +123,6 @@ public class EmailFlowTest {
 		client = new MockImapClient("mockserver.com", "test-user-1",
 				"somepassword");
 		client.processMail();
-
 	}
 
 	@Test
@@ -139,7 +141,7 @@ public class EmailFlowTest {
 		OrganizationOwnerInfo org_owner = management
 				.createOwnerAndOrganization("test-org-2", "test-user-2",
 						"Test User", "test-user-2@mockserver.com",
-						"testpassword", false, false, true);
+						"testpassword", false, false);
 		assertNotNull(org_owner);
 
 		List<Message> user_inbox = org.jvnet.mock_javamail.Mailbox
@@ -200,6 +202,25 @@ public class EmailFlowTest {
 		// text/plain and the url isn't the last character in the email
 		return token;
 	}
+
+  @Test
+  public void skipAllEmailConfiguration() throws Exception {
+    properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
+            "false");
+    properties.setProperty(PROPERTIES_ORGANIZATIONS_REQUIRE_CONFIRMATION,
+            "false");
+    properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false");
+    properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
+            "false");
+    OrganizationOwnerInfo ooi = management.createOwnerAndOrganization("org-skipallemailtest",
+            "user-skipallemailtest","name-skipallemailtest",
+            "nate+skipallemailtest@apigee.com","password");
+    EntityManager em = helper.getEntityManagerFactory().getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
+    User user = em.get(ooi.getOwner().getUuid(), User.class);
+    assertTrue(user.activated());
+    assertFalse(user.disabled());
+    assertTrue(user.confirmed());
+  }
 
 	@Test
 	public void testEmailStrings() {

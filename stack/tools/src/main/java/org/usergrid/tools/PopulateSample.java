@@ -61,19 +61,20 @@ public class PopulateSample extends ToolBase {
 		startSpring();
 
 		UserInfo user = managementService.createAdminUser("admin", "admin",
-				"admin@ug.com", "none", false, false, false);
+				"admin@ug.com", "none", false, false);
 
 		logger.info("Creating organization: sample-organization");
 		// management
 		// .createOrganization("sample-organization", "sample@organization.com",
 		// "1234");
 		OrganizationInfo organization = managementService.createOrganization(
-				"sample-organization", user, false, false);
+				"sample-organization", user, false);
 
 		logger.info("creating application: testEntityManagerTest");
 		// TODO update to organizationName/applicationName
 		UUID applicationId = managementService.createApplication(
-				organization.getUuid(), "sample-application");
+				organization.getUuid(), "sample-application")
+            .getId();
 
 		ServiceManager sm = smf.getServiceManager(applicationId);
 

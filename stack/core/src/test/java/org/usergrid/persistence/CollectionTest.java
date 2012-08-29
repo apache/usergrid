@@ -17,10 +17,13 @@ package org.usergrid.persistence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.MapUtils.hashMap;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -476,46 +479,70 @@ public class CollectionTest extends AbstractPersistenceTest {
         properties.put("keywords", "blah,test,game");
         properties.put("title", "Solitaire");
 
-        Entity game1 = em.create("game", properties);
+        Entity game1 = em.create("orquerygame", properties);
         assertNotNull(game1);
 
         properties = new LinkedHashMap<String, Object>();
         properties.put("keywords", "random,test");
         properties.put("title", "Hearts");
 
-        Entity game2 = em.create("game", properties);
+        Entity game2 = em.create("orquerygame", properties);
         assertNotNull(game2);
 
         // EntityRef
-        Query query = new Query(
-                "select * where keywords contains 'Random' OR keywords contains 'Game'");
+        Query query = Query
+                .fromQL("select * where keywords contains 'Random' OR keywords contains 'Game'");
 
-        Results r = em.searchCollection(em.getApplicationRef(), "games", query);
+        Results r = em.searchCollection(em.getApplicationRef(), "orquerygames",
+                query);
 
         assertEquals(2, r.size());
 
         Entity returned = r.getEntities().get(0);
 
-        assertEquals(game1.getUuid(), returned.getUuid());
+        assertEquals(game2.getUuid(), returned.getUuid());
 
         returned = r.getEntities().get(1);
 
-        assertEquals(game2.getUuid(), returned.getUuid());
+        assertEquals(game1.getUuid(), returned.getUuid());
 
-        query = new Query(
-                "select * where( keywords contains 'Random' OR keywords contains 'Game')");
+        query = Query
+                .fromQL("select * where( keywords contains 'Random' OR keywords contains 'Game')");
 
-        r = em.searchCollection(em.getApplicationRef(), "games", query);
+        r = em.searchCollection(em.getApplicationRef(), "orquerygames", query);
 
         assertEquals(2, r.size());
 
         returned = r.getEntities().get(0);
 
-        assertEquals(game1.getUuid(), returned.getUuid());
+        assertEquals(game2.getUuid(), returned.getUuid());
 
         returned = r.getEntities().get(1);
 
-        assertEquals(game2.getUuid(), returned.getUuid());
+        assertEquals(game1.getUuid(), returned.getUuid());
+
+        // field order shouldn't matter USERGRID-375
+        query = Query
+                .fromQL("select * where keywords contains 'blah' OR title contains 'blah'");
+
+        r = em.searchCollection(em.getApplicationRef(), "orquerygames", query);
+
+        assertEquals(1, r.size());
+
+        returned = r.getEntities().get(0);
+
+        assertEquals(game1.getUuid(), returned.getUuid());
+
+        query = Query
+                .fromQL("select * where  title contains 'blah' OR keywords contains 'blah'");
+
+        r = em.searchCollection(em.getApplicationRef(), "orquerygames", query);
+
+        assertEquals(1, r.size());
+
+        returned = r.getEntities().get(0);
+
+        assertEquals(game1.getUuid(), returned.getUuid());
 
     }
 
@@ -541,15 +568,15 @@ public class CollectionTest extends AbstractPersistenceTest {
         assertNotNull(game2);
 
         // EntityRef
-        Query query = new Query(
-                "select * where keywords contains 'foo' AND keywords contains 'random'");
+        Query query = Query
+                .fromQL("select * where keywords contains 'foo' AND keywords contains 'random'");
 
         Results r = em.searchCollection(em.getApplicationRef(), "games", query);
 
         assertEquals(0, r.size());
 
-        query = new Query(
-                "select * where keywords contains 'test' AND keywords contains 'test'");
+        query = Query
+                .fromQL("select * where keywords contains 'test' AND keywords contains 'test'");
 
         r = em.searchCollection(em.getApplicationRef(), "games", query);
 
@@ -562,6 +589,21 @@ public class CollectionTest extends AbstractPersistenceTest {
         returned = r.getEntities().get(1);
 
         assertEquals(game2.getUuid(), returned.getUuid());
+
+        query = Query
+                .fromQL("select * where keywords contains 'test' AND keywords contains 'foobar'");
+
+        r = em.searchCollection(em.getApplicationRef(), "games", query);
+
+        assertEquals(0, r.size());
+
+        query = Query
+                .fromQL("select * where keywords contains 'foobar' AND keywords contains 'test'");
+
+        r = em.searchCollection(em.getApplicationRef(), "games", query);
+
+        assertEquals(0, r.size());
+
     }
 
     @Test
@@ -634,4 +676,229 @@ public class CollectionTest extends AbstractPersistenceTest {
         assertEquals(thirdGame.getUuid(), r.getEntities().get(1).getUuid());
 
     }
+
+    @Test
+    public void pagingAfterDelete() throws Exception {
+
+        UUID applicationId = createApplication("testOrganization",
+                "pagingAfterDelete");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        int size = 20;
+        List<UUID> entityIds = new ArrayList<UUID>();
+
+        for (int i = 0; i < size; i++) {
+            Map<String, Object> properties = new LinkedHashMap<String, Object>();
+            properties.put("name", "object" + 1);
+            Entity created = em.create("objects", properties);
+
+            entityIds.add(created.getUuid());
+        }
+
+        Query query = new Query();
+        query.setLimit(50);
+
+        Results r = em.searchCollection(em.getApplicationRef(), "objects",
+                query);
+
+        logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+
+        assertEquals(size, r.size());
+
+        // check they're all the same before deletion
+        for (int i = 0; i < size; i++) {
+            assertEquals(entityIds.get(i), r.getEntities().get(i).getUuid());
+        }
+
+        // now delete 5 items that will span the 10 pages
+        for (int i = 5; i < 10; i++) {
+            Entity entity = r.getEntities().get(i);
+            em.delete(entity);
+            entityIds.remove(entity.getUuid());
+        }
+
+        // now query with paging
+        query = new Query();
+
+        r = em.searchCollection(em.getApplicationRef(), "objects", query);
+
+        assertEquals(10, r.size());
+
+        for (int i = 0; i < 10; i++) {
+            assertEquals(entityIds.get(i), r.getEntities().get(i).getUuid());
+        }
+
+        // try the next page, set our cursor, it should be the last 5 entities
+        query = new Query();
+        query.setCursor(r.getCursor());
+
+        r = em.searchCollection(em.getApplicationRef(), "objects", query);
+
+        assertEquals(5, r.size());
+        for (int i = 10; i < 15; i++) {
+            assertEquals(entityIds.get(i), r.getEntities().get(i - 10)
+                    .getUuid());
+        }
+
+    }
+    
+
+    @Test
+    public void pagingLessThanWithCriteria() throws Exception {
+
+        UUID applicationId = createApplication("testOrganization",
+                "pagingLessThanWithCriteria");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        int size = 40;
+        List<UUID> entityIds = new ArrayList<UUID>();
+
+        for (int i = 0; i < size; i++) {
+            Map<String, Object> properties = new LinkedHashMap<String, Object>();
+            properties.put("index", i);
+            Entity created = em.create("page", properties);
+
+            entityIds.add(created.getUuid());
+        }
+
+        int pageSize = 10;
+        
+        Query query = new Query();
+        query.setLimit(pageSize);
+        query.addFilter("index < " + size*2);
+
+     
+        Results r = null;
+        
+        // check they're all the same before deletion
+        for (int i = 0; i < size/pageSize; i++) {
+            
+             r = em.searchCollection(em.getApplicationRef(), "pages", query);
+
+            logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+
+            assertEquals(pageSize, r.size());
+
+            for(int j = 0; j < pageSize; j++){
+                assertEquals(entityIds.get(i*pageSize + j), r.getEntities().get(j).getUuid());
+            }
+          
+            query.setCursor(r.getCursor());
+        }
+      
+        assertNull(r.getCursor());
+        
+        
+    }
+
+    @Test
+    public void pagingGreaterThanWithCriteria() throws Exception {
+
+        UUID applicationId = createApplication("testOrganization",
+                "pagingGreaterThanWithCriteria");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        int size = 40;
+        List<UUID> entityIds = new ArrayList<UUID>();
+
+        for (int i = 0; i < size; i++) {
+            Map<String, Object> properties = new LinkedHashMap<String, Object>();
+            properties.put("index", i);
+            Entity created = em.create("page", properties);
+
+            entityIds.add(created.getUuid());
+        }
+
+        int pageSize = 10;
+        
+        Query query = new Query();
+        query.setLimit(pageSize);
+        query.addFilter("index >= " + size/2);
+
+     
+        Results r = null;
+        
+        // check they're all the same before deletion
+        for (int i = 2; i < size/pageSize; i++) {
+            
+            r = em.searchCollection(em.getApplicationRef(), "pages", query);
+
+            logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+
+            assertEquals(pageSize, r.size());
+
+            for(int j = 0; j < pageSize; j++){
+                assertEquals(entityIds.get(i*pageSize + j), r.getEntities().get(j).getUuid());
+            }
+          
+            query.setCursor(r.getCursor());
+        }
+        
+        assertNull(r.getCursor());
+        
+     
+        
+    }
+    
+    @Test
+    public void pagingWithBoundsCriteria() throws Exception {
+
+        UUID applicationId = createApplication("testOrganization",
+                "pagingWithBoundsCriteria");
+        assertNotNull(applicationId);
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        int size = 40;
+        List<UUID> entityIds = new ArrayList<UUID>();
+
+        for (int i = 0; i < size; i++) {
+            Map<String, Object> properties = new LinkedHashMap<String, Object>();
+            properties.put("index", i);
+            Entity created = em.create("page", properties);
+
+            entityIds.add(created.getUuid());
+        }
+
+        int pageSize = 10;
+        
+        Query query = new Query();
+        query.setLimit(pageSize);
+        query.addFilter("index >= 10");
+        query.addFilter("index <= 29");
+
+     
+        Results r = null;
+        
+        // check they're all the same before deletion
+        for (int i = 1; i < 3; i++) {
+            
+            r = em.searchCollection(em.getApplicationRef(), "pages", query);
+
+            logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+
+            assertEquals(pageSize, r.size());
+
+            for(int j = 0; j < pageSize; j++){
+                assertEquals(entityIds.get(i*pageSize + j), r.getEntities().get(j).getUuid());
+            }
+          
+            query.setCursor(r.getCursor());
+        }
+        assertNull(r.getCursor());
+        
+       
+        
+    }
+    
 }

@@ -15,33 +15,39 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
+import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.Token;
 import org.usergrid.persistence.exceptions.PersistenceException;
 
-
-
-
 /**
  * @author tnine
- *
+ * 
  */
 public class OrOperand extends BooleanOperand {
 
-  /**
-   * @param left
-   * @param token
-   * @param right
-   */
-  public OrOperand(Token t) {
-    super(t);
-  }
-  
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence.query.tree.QueryVisitor)
-   */
-  @Override
-  public void visit(QueryVisitor visitor) throws PersistenceException {
-    visitor.visit(this);
-  }
+    /**
+     * @param left
+     * @param token
+     * @param right
+     */
+    public OrOperand(Token t) {
+        super(t);
+    }
+
+    public OrOperand() {
+        super(new CommonToken(0, "or"));
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence
+     * .query.tree.QueryVisitor)
+     */
+    @Override
+    public void visit(QueryVisitor visitor) throws PersistenceException {
+        visitor.visit(this);
+    }
 
 }

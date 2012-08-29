@@ -31,9 +31,11 @@ import static org.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
 import static org.usergrid.persistence.Schema.DICTIONARY_PERMISSIONS;
 import static org.usergrid.persistence.Schema.DICTIONARY_PROPERTIES;
 import static org.usergrid.persistence.Schema.DICTIONARY_ROLENAMES;
+import static org.usergrid.persistence.Schema.DICTIONARY_ROLETIMES;
 import static org.usergrid.persistence.Schema.DICTIONARY_SETS;
 import static org.usergrid.persistence.Schema.PROPERTY_ASSOCIATED;
 import static org.usergrid.persistence.Schema.PROPERTY_CREATED;
+import static org.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
 import static org.usergrid.persistence.Schema.PROPERTY_MODIFIED;
 import static org.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.usergrid.persistence.Schema.PROPERTY_TIMESTAMP;
@@ -89,7 +91,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -1641,8 +1642,8 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	public void batchCreateRole(Mutator<ByteBuffer> batch, UUID groupId,
-			String roleName, String roleTitle, RoleRef roleRef,
-			UUID timestampUuid) throws Exception {
+			String roleName, String roleTitle, long inactivity,
+			RoleRef roleRef, UUID timestampUuid) throws Exception {
 
 		long timestamp = getTimestampInMicros(timestampUuid);
 
@@ -1669,6 +1670,7 @@ public class EntityManagerImpl implements EntityManager,
 		properties.put(PROPERTY_NAME, roleRef.getApplicationRoleName());
 		properties.put("roleName", roleRef.getRoleName());
 		properties.put("title", roleTitle);
+		properties.put(PROPERTY_INACTIVITY, inactivity);
 
 		Entity role = batchCreate(batch, Role.ENTITY_TYPE, null, properties,
 				roleRef.getUuid(), timestampUuid);
@@ -1676,6 +1678,10 @@ public class EntityManagerImpl implements EntityManager,
 		addInsertToMutator(batch, ENTITY_DICTIONARIES,
 				key(ownerRef.getUuid(), Schema.DICTIONARY_ROLENAMES),
 				roleRef.getRoleName(), roleTitle, timestamp);
+
+		addInsertToMutator(batch, ENTITY_DICTIONARIES,
+				key(ownerRef.getUuid(), Schema.DICTIONARY_ROLETIMES),
+				roleRef.getRoleName(), inactivity, timestamp);
 
 		addInsertToMutator(batch, ENTITY_DICTIONARIES,
 				key(ownerRef.getUuid(), DICTIONARY_SETS),
@@ -2118,31 +2124,31 @@ public class EntityManagerImpl implements EntityManager,
 		setProperty(entityRef, propertyName, propertyValue, false);
 
 	}
-	
+
 	@Override
-    public void setProperty(EntityRef entityRef, String propertyName,
-            Object propertyValue, boolean override) throws Exception {
+	public void setProperty(EntityRef entityRef, String propertyName,
+			Object propertyValue, boolean override) throws Exception {
 
-        if ((propertyValue instanceof String)
-                && ((String) propertyValue).equals("")) {
-            propertyValue = null;
-        }
+		if ((propertyValue instanceof String)
+				&& ((String) propertyValue).equals("")) {
+			propertyValue = null;
+		}
 
-        DynamicEntity entity = loadPartialEntity(entityRef.getUuid());
+		DynamicEntity entity = loadPartialEntity(entityRef.getUuid());
 
-        UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = createMutator(
-                cass.getApplicationKeyspace(applicationId), be);
+		UUID timestampUuid = newTimeUUID();
+		Mutator<ByteBuffer> batch = createMutator(
+				cass.getApplicationKeyspace(applicationId), be);
 
-        propertyValue = getDefaultSchema().validateEntityPropertyValue(
-                entity.getType(), propertyName, propertyValue);
+		propertyValue = getDefaultSchema().validateEntityPropertyValue(
+				entity.getType(), propertyName, propertyValue);
 
-        entity.setProperty(propertyName, propertyValue);
-        batch = batchSetProperty(batch, entity, propertyName, propertyValue,
-                override, false,timestampUuid);
-        batchExecute(batch, CassandraService.RETRY_COUNT);
+		entity.setProperty(propertyName, propertyValue);
+		batch = batchSetProperty(batch, entity, propertyName, propertyValue,
+				override, false, timestampUuid);
+		batchExecute(batch, CassandraService.RETRY_COUNT);
 
-    }
+	}
 
 	@Override
 	public void updateProperties(EntityRef entityRef,
@@ -2366,34 +2372,54 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
-	public Map<String, String> getRolesWithTitles(Set<String> roleNames)
+	public Map<String, Role> getRolesWithTitles(Set<String> roleNames)
 			throws Exception {
-		Map<String, String> rolesWithTitles = new HashMap<String, String>();
 
-		Map<String, Object> results = getDictionaryElementValues(
-				getApplicationRef(), DICTIONARY_ROLENAMES,
+		Map<String, Role> rolesWithTitles = new HashMap<String, Role>();
+
+		Map<String, Object> nameResults = null;
+
+		if (roleNames != null) {
+			nameResults = getDictionaryElementValues(getApplicationRef(),
+					DICTIONARY_ROLENAMES, roleNames.toArray(new String[0]));
+		} else {
+			nameResults = cast(getDictionaryAsMap(getApplicationRef(),
+					DICTIONARY_ROLENAMES));
+			roleNames = nameResults.keySet();
+		}
+		Map<String, Object> timeResults = getDictionaryElementValues(
+				getApplicationRef(), DICTIONARY_ROLETIMES,
 				roleNames.toArray(new String[0]));
 
 		for (String roleName : roleNames) {
-			rolesWithTitles.put(roleName, roleName);
-		}
 
-		if (results != null) {
-			for (Entry<String, Object> result : results.entrySet()) {
-				rolesWithTitles.put(result.getKey(), string(result.getValue()));
+			String savedTitle = string(nameResults.get(roleName));
+
+			// no title, skip the role
+			if (savedTitle == null) {
+				continue;
 			}
+
+			Role newRole = new Role();
+			newRole.setName(roleName);
+			newRole.setTitle(savedTitle);
+			newRole.setInactivity(getLong(timeResults.get(roleName)));
+
+			rolesWithTitles.put(roleName, newRole);
+
 		}
 
 		return rolesWithTitles;
 	}
 
 	@Override
-	public Entity createRole(String roleName, String roleTitle)
+	public Entity createRole(String roleName, String roleTitle, long inactivity)
 			throws Exception {
 		UUID timestampUuid = newTimeUUID();
 		Mutator<ByteBuffer> batch = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		batchCreateRole(batch, null, roleName, roleTitle, null, timestampUuid);
+		batchCreateRole(batch, null, roleName, roleTitle, inactivity, null,
+				timestampUuid);
 		batchExecute(batch, CassandraService.RETRY_COUNT);
 		return get(roleRef(roleName));
 	}
@@ -2456,6 +2482,8 @@ public class EntityManagerImpl implements EntityManager,
 		roleName = roleName.toLowerCase();
 		removeFromDictionary(getApplicationRef(), DICTIONARY_ROLENAMES,
 				roleName);
+		removeFromDictionary(getApplicationRef(), DICTIONARY_ROLETIMES,
+				roleName);
 		delete(roleRef(roleName));
 	}
 
@@ -2470,12 +2498,13 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
-	public Entity createGroupRole(UUID groupId, String roleName)
+	public Entity createGroupRole(UUID groupId, String roleName, long inactivity)
 			throws Exception {
 		UUID timestampUuid = newTimeUUID();
 		Mutator<ByteBuffer> batch = createMutator(
 				cass.getApplicationKeyspace(applicationId), be);
-		batchCreateRole(batch, groupId, roleName, null, null, timestampUuid);
+		batchCreateRole(batch, groupId, roleName, null, inactivity, null,
+				timestampUuid);
 		batchExecute(batch, CassandraService.RETRY_COUNT);
 		return get(roleRef(groupId, roleName));
 	}
@@ -2535,7 +2564,7 @@ public class EntityManagerImpl implements EntityManager,
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Map<String, String> getUserRolesWithTitles(UUID userId)
+	public Map<String, Role> getUserRolesWithTitles(UUID userId)
 			throws Exception {
 		return getRolesWithTitles((Set<String>) cast(getDictionaryAsSet(
 				userRef(userId), DICTIONARY_ROLENAMES)));
@@ -2793,6 +2822,14 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+	public void copyRelationships(EntityRef srcEntityRef,
+			String srcRelationName, EntityRef dstEntityRef,
+			String dstRelationName) throws Exception {
+		getRelationManager(srcEntityRef).copyRelationships(srcRelationName,
+				dstEntityRef, dstRelationName);
+	}
+
+	@Override
 	public Results searchCollection(EntityRef entityRef, String collectionName,
 			Query query) throws Exception {
 		return getRelationManager(entityRef).searchCollection(collectionName,
@@ -2972,19 +3009,19 @@ public class EntityManagerImpl implements EntityManager,
 	public void resetRoles() throws Exception {
 
 		try {
-			createRole("admin", "Administrator");
+			createRole("admin", "Administrator", 0);
 		} catch (Exception e) {
 			logger.error("Could not create admin role, may already exist", e);
 		}
 
 		try {
-			createRole("default", "Default");
+			createRole("default", "Default", 0);
 		} catch (Exception e) {
 			logger.error("Could not create default role, may already exist", e);
 		}
 
 		try {
-			createRole("guest", "Guest");
+			createRole("guest", "Guest", 0);
 		} catch (Exception e) {
 			logger.error("Could not create guest role, may already exist", e);
 		}

@@ -6,7 +6,7 @@
 	<display-name>Usergrid REST API Server</display-name>
 	<context-param>
 		<param-name>contextConfigLocation</param-name>
-		<param-value>classpath:applicationContext.xml</param-value>
+		<param-value>classpath:usergrid-rest-context.xml</param-value>
 	</context-param>
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
@@ -33,7 +33,7 @@
 	<!--  filter for setting default accept and Content-Type as application/json when undefined by client -->
 	<filter>
 		<filter-name>contentTypeFilter</filter-name>
-		<filter-class>org.usergrid.rest.filters</filter-class>
+		<filter-class>org.usergrid.rest.filters.ContentTypeFilter</filter-class>
 	</filter>
 	<filter-mapping>
 		<filter-name>contentTypeFilter</filter-name>

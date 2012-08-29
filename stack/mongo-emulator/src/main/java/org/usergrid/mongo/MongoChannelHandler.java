@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.mongo;
 
+import static org.usergrid.utils.JsonUtils.toJsonMap;
 import static org.usergrid.utils.MapUtils.entry;
 import static org.usergrid.utils.MapUtils.map;
 
@@ -44,6 +45,7 @@ import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.Identifier;
+import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Schema;
 import org.usergrid.security.shiro.PrincipalCredentialsToken;
@@ -165,7 +167,7 @@ public class MongoChannelHandler extends SimpleChannelUpstreamHandler {
 				if (!currentUser.isAuthenticated()) {
 					return handleUnauthorizedQuery(ctx, e, (OpQuery) message);
 				}
-				if ("system.applications".equals(collectionName)) {
+				if ("system.namespaces".equals(collectionName)) {
 					return handleListCollections(ctx, e, (OpQuery) message,
 							q.getDatabaseName());
 				} else if ("system.users".equals(collectionName)) {
@@ -318,14 +320,21 @@ public class MongoChannelHandler extends SimpleChannelUpstreamHandler {
 		EntityManager em = emf.getEntityManager(application.getId());
 		OpReply reply = new OpReply(opQuery);
 		try {
-			Results results = em.getCollection(em.getApplicationRef(),
-					collectionName, null, count, Results.Level.ALL_PROPERTIES,
-					false);
+			Results results = null;
+			Query q = opQuery.toNativeQuery();
+			if (q != null) {
+				results = em.searchCollection(em.getApplicationRef(),
+						collectionName, q);
+			} else {
+				results = em.getCollection(em.getApplicationRef(),
+						collectionName, null, count,
+						Results.Level.ALL_PROPERTIES, false);
+			}
 			if (!results.isEmpty()) {
 				for (Entity entity : results.getEntities()) {
 					reply.addDocument(map(
 							entry("_id", entity.getUuid()),
-							entity,
+							toJsonMap(entity),
 							entry(Schema.PROPERTY_UUID, entity.getUuid()
 									.toString())));
 				}

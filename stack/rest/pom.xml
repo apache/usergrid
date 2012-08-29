@@ -32,7 +32,7 @@
 				<directory>src/test/resources</directory>
 				<filtering>true</filtering>
 				<includes>
-					<include>**/*.xml</include>
+					<include>**/*</include>
 				</includes>
 			</testResource>
 		</testResources>
@@ -110,6 +110,11 @@
 							<classesDirectory>${project.build.directory}/jsp-source</classesDirectory>
 						</configuration>
 					</execution>
+			         <execution>
+			           <goals>
+			             <goal>test-jar</goal>
+			           </goals>
+			         </execution>
 				</executions>
 			</plugin>
 			<plugin>
@@ -139,14 +144,14 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
             </plugin>
-			<!-- <plugin> <groupId>org.codehaus.enunciate</groupId> <artifactId>maven-enunciate-plugin</artifactId> 
-				<version>1.23-RC1</version> <executions> <execution> <goals> <goal>docs</goal> 
-				</goals> <configuration> <docsDir> ${project.build.directory}/docs </docsDir> 
+			<!-- <plugin> <groupId>org.codehaus.enunciate</groupId> <artifactId>maven-enunciate-plugin</artifactId>
+				<version>1.23-RC1</version> <executions> <execution> <goals> <goal>docs</goal>
+				</goals> <configuration> <docsDir> ${project.build.directory}/docs </docsDir>
 				</configuration> </execution> </executions> </plugin> -->
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
+				<!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
@@ -233,6 +238,7 @@
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -384,7 +390,7 @@
 			<groupId>org.apache.amber</groupId>
 			<artifactId>oauth2-resourceserver</artifactId>
 		</dependency>
-        <dependency>
+		<dependency>
             <groupId>com.yammer.metrics</groupId>
             <artifactId>metrics-core</artifactId>
         </dependency>
@@ -477,7 +483,7 @@
 		<dependency>
 			<groupId>org.usergrid</groupId>
 			<artifactId>usergrid-java-client</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.3</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
