@@ -3217,8 +3217,6 @@ function deleteRolePermission(roleName, permission) {
   function handleShellCommand(s) {
     var orgName = Usergrid.ApiClient.getOrganizationName();
 
-    s = s.toLowerCase();
-
     if (s) {
       history.push(s);
       history_i = history.length - 1;
