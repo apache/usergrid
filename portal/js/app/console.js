@@ -14,8 +14,8 @@ function apigee_console_app(Pages, query_params) {
   }
 
   String.prototype.endsWith = function (s) {
-    return this.length >= s.length && this.substr(this.length - s.length) == s;
-  }
+    return (this.length >= s.length && this.substr(this.length - s.length) == s);
+  };
 
   if (query_params.api_url) {
       if (!query_params.api_url.endsWith('/')) {
@@ -325,7 +325,7 @@ function apigee_console_app(Pages, query_params) {
     }else{
       $("#query-response-table").html("<div class='group-panel-section-message'>No Collection Entities Found</div>");
     }
-     
+
 
   }
 
@@ -531,7 +531,7 @@ function apigee_console_app(Pages, query_params) {
 		console.log(entityId);
         var path = $(this).attr('name');
         runAppQuery(new Usergrid.Query("DELETE", path + "/" + entityId, null, null,
-          function() { 
+          function() {
           	itemsCount--;
           	if(itemsCount==0){
           		deselectAllCollections();
@@ -1036,7 +1036,7 @@ function apigee_console_app(Pages, query_params) {
       && checkLength2(new_user_email, 6, 80)
       && checkRegexp2(new_user_email,emailRegex, emailAllowedCharsMessage)
       && checkLength2(new_user_password, 5, 16)
-      && checkRegexp2(new_user_password,passwordRegex, passwordAllowedCharsMessage);
+      && (new_user_password === "" || checkRegexp2(new_user_password,passwordRegex, passwordAllowedCharsMessage));
 
     if (bValid) {
       var data = form.serializeObject();
@@ -1046,7 +1046,7 @@ function apigee_console_app(Pages, query_params) {
           closeErrorMessage = function() {
             $('#users-messages').hide();
           };
-          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>';
           $('#users-messages')
             .text("User created successfully.")
             .prepend(closebutton)
@@ -1890,7 +1890,7 @@ function apigee_console_app(Pages, query_params) {
   	updateRolesAutocomplete();
     updateQueryAutocompleteCollectionsUsers();
   };
-  
+
   function redrawPanel(panelDiv, panelTemplate, data){
 	$("#"+panelDiv).html("");
 	$.tmpl(panelTemplate, data).appendTo($("#"+panelDiv));
@@ -2055,7 +2055,7 @@ function apigee_console_app(Pages, query_params) {
         },
         function() { alertModal("Error", "Unable to retrieve user's roles.");}
       ));
-      
+
       	runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/following', null, null,
 	        function(response) {
 	          data.followingCurl = this.getCurl();
@@ -2290,7 +2290,7 @@ function apigee_console_app(Pages, query_params) {
     showCurlCommand('group-panel-activities', curl);
   }
 
-  function redrawGroupPermissions(data, curlRoles, curlPermissions){  	
+  function redrawGroupPermissions(data, curlRoles, curlPermissions){
     if (data.roles && data.roles.length == 0) {
       delete data.roles
     }
@@ -2652,7 +2652,7 @@ function apigee_console_app(Pages, query_params) {
     updateUsersForRolesAutocomplete();
     showCurlCommand('role-users', curl);
   }
-  
+
   var rolesGroupsResults = ''
 
   function displayRoleGroups(response, curl) {
@@ -3623,9 +3623,9 @@ function deleteRolePermission(roleName, permission) {
 
   function logout() {
     Usergrid.userSession.clearAll();
-    if (useSSO()) {
+    if (Usergrid.SSO.usingSSO()) {
       Pages.clearPage();
-      sendToSSOLogoutPage();
+      Usergrid.SSO.sendToSSOLogoutPage();
     } else {
       Pages.ShowPage("login");
     }
@@ -3953,7 +3953,7 @@ function deleteRolePermission(roleName, permission) {
   });
 
   function requestAccountSettings() {
-    if (useSSO()) {
+    if (Usergrid.SSO.usingSSO()) {
       sendToSSOProfilePage();
     } else {
       $('#update-account-id').text(Usergrid.userSession.getUserUUID());
@@ -4119,7 +4119,7 @@ function deleteRolePermission(roleName, permission) {
     }
     return false;
   });
-  
+
   $('button, input:submit, input:button').button();
 
   $('select#indexSelect').change( function(e){
@@ -4174,7 +4174,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function showLoginForNonSSO(){
-    if (!Usergrid.userSession.loggedIn() && !useSSO()) {
+    if (!Usergrid.userSession.loggedIn() && !Usergrid.SSO.usingSSO()) {
       Pages.ShowPage('login');
     }
   }
@@ -4187,80 +4187,6 @@ function deleteRolePermission(roleName, permission) {
     Pages.ShowPage('console');
   }
   Usergrid.console.loginOk = loginOk;
-
-  /*******************************************************************
-   *
-   * SSO functions
-   *
-   ******************************************************************/
-    //SSO information - apigee Specific
-  var apigee_TLD = "apigee.com";
-  var USE_SSO = 'no'; // flag to overide use SSO if needed set to ?use_sso=no
-  var apigee_SSO_URL = "https://accounts.apigee.com/accounts/sign_in";
-  var apigee_SSO_PROFILE_URL = "https://accounts.apigee.com/accounts/my_account";
-  var SSO_LOGOUT_PAGE = 'https://accounts.apigee.com/accounts/sign_out';
-
-  self.use_sso = USE_SSO;
-  if (query_params.use_sso) {
-    self.use_sso = query_params.use_sso;
-  }
-
-  self.apigee_sso_url = apigee_SSO_URL;
-  if (query_params.apigee_sso_url) {
-    self.apigee_sso_url = query_params.apigee_sso_url;
-  }
-
-  self.apigee_sso_profile_url = apigee_SSO_PROFILE_URL;
-  if (query_params.apigee_sso_profile_url) {
-    self.apigee_sso_profile_url = query_params.apigee_sso_profile_url;
-  }
-
-  function useSSO() {
-    return apigeeUser() || self.use_sso=='true' || self.use_sso=='yes'
-  }
-  Usergrid.console.useSSO = useSSO;
-
-  function apigeeUser() {
-    return window.location.host == apigee_TLD
-  }
-
-  function sendToSSOLogoutPage() {
-    var newLoc= SSO_LOGOUT_PAGE + '?callback=' + getSSOCallback();
-    window.location = newLoc;
-    return false;
-  }
-  Usergrid.console.sendToSSOLogoutPage = sendToSSOLogoutPage;
-
-  function sendToSSOLoginPage() {
-    var newLoc = self.apigee_sso_url + '?callback=' + getSSOCallback();
-    window.location = newLoc;
-    throw "stop!";
-    return false;
-  }
-  Usergrid.console.sendToSSOLoginPage = sendToSSOLoginPage;
-
-  function sendToSSOProfilePage() {
-    var newLoc = self.apigee_sso_profile_url + '?callback=' + getSSOCallback();
-    window.location = newLoc;
-    throw "stop!";
-    return false;
-  }
-  Usergrid.console.sendToSSOProfilePage = sendToSSOProfilePage;
-
-  function getSSOCallback() {
-    var callback = window.location.protocol+'//'+ window.location.host + window.location.pathname;
-    var separatorMark = '?';
-    if (self.use_sso == 'true' || self.use_sso == 'yes') {
-      callback = callback + separatorMark + 'use_sso=' + self.use_sso;
-      separatorMark = '&';
-    }
-    if (Usergrid.ApiClient.getApiUrl() != PUBLIC_API_URL) {
-      callback = callback + separatorMark + 'api_url=' + self.apiUrl;
-      separatorMark = '&';
-    }
-    return encodeURIComponent(callback);
-  }
-  Usergrid.console.getSSOCallback = getSSOCallback;
 
   //load the templates only after the rest of the page is
   $(window).bind("load", function() {
