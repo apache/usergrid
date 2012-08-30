@@ -29,10 +29,8 @@ function ApigeePages() {
     }
 
     if(Usergrid.userSession.getBannerState() == 'true'){
-      showBanner();
+      this.showBanner();
     }
-
-    return;
   }
   self.showBanner = function(){
     Usergrid.userSession.showBanner();
