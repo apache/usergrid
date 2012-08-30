@@ -765,6 +765,9 @@ public class Results implements Iterable<Entity> {
             level = Level.IDS;
             return;
         }
+
+      // should be empty
+      init();
     }
 
     public void replace(Entity entity) {

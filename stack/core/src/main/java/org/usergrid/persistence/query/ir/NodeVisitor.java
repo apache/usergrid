@@ -56,4 +56,12 @@ public interface NodeVisitor {
      * @throws Exception 
      */
     public void visit(WithinNode node) throws Exception;
+
+    /**
+     *
+     * @param node
+     * @throws Exception
+     */
+    public void visit(AllNode node) throws Exception;
+
 }
