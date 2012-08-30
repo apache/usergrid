@@ -3217,36 +3217,39 @@ function deleteRolePermission(roleName, permission) {
   function handleShellCommand(s) {
     var orgName = Usergrid.ApiClient.getOrganizationName();
 
+    s = s.toLowerCase();
+
     if (s) {
       history.push(s);
       history_i = history.length - 1;
     }
     var path = '';
     var params = '';
-
-    if (s.startsWith("/")) {
+    //Matches any sting that begins with "/", ignoring whitespaces.
+    if (s.match(/^\s*\//)) {
       path = encodePathString(s);
       printLnToShell(path);
       runAppQuery(new Usergrid.Query("GET",path, null, null, displayShellResponse,null));
-    } else if (s.startsWith("get /")) {
+    //matches get or GET ignoring white spaces
+    } else if (s.match(/^\s*get\s*\//i)) {
       path = encodePathString(s.substring(4));
       printLnToShell(path);
       runAppQuery(new Usergrid.Query("GET",path, null, null, displayShellResponse,null));
-    } else if (s.startsWith("put /")) {
+    } else if (s.match(/^\s*put\s*\//i)) {
       params = encodePathString(s.substring(4), true);
       printLnToShell(params.path);
       runAppQuery(new Usergrid.Query("PUT",params.path, params.payload, null, displayShellResponse,null));
-  } else if (s.startsWith("post /")) {
+  } else if (s.match(/^\s*post\s*\//i)) {
       params = encodePathString(s.substring(5), true);
       printLnToShell(params.path);
       runAppQuery(new Usergrid.Query("POST",params.path, params.payload, null, displayShellResponse,null));
-    } else if (s.startsWith("delete /")) {
+    } else if (s.match(/^\s*delete\s*\//i)) {
       path = encodePathString(s.substring(7));
       printLnToShell(path);
       runAppQuery(new Usergrid.Query("DELETE",path, null, null, displayShellResponse,null));
-    } else if ((s == "clear") || (s == "cls"))  {
+    } else if (s.match(/^\s*clear|cls\s*\//i))  {
       $('#shell-output').html(" ");
-    } else if (s == "help") {
+    } else if (s.match(/^\s*help\s*\//i)) {
       printLnToShell("/&lt;path&gt; - API get request");
       printLnToShell("get /&lt;path&gt; - API get request");
       printLnToShell("put /&lt;path&gt; {&lt;json&gt;} - API put request");
@@ -3254,7 +3257,7 @@ function deleteRolePermission(roleName, permission) {
       printLnToShell("delete /&lt;path&gt; - API delete request");
       printLnToShell("cls, clear - clear the screen");
       printLnToShell("help - show this help");
-    } else if (s == "") {
+    } else if (s === "") {
       printLnToShell("ok");
     } else {
       printLnToShell('<strong>syntax error!</strong><hr />');
