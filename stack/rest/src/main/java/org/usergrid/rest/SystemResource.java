@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.usergrid.rest;
 
+import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+
 import java.util.Map;
 
 import javax.ws.rs.DefaultValue;
@@ -30,6 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.usergrid.rest.applications.ApplicationResource;
+import org.usergrid.rest.exceptions.NoOpException;
 import org.usergrid.rest.security.annotations.RequireSystemAccess;
 
 import com.sun.jersey.api.json.JSONWithPadding;
@@ -38,69 +42,81 @@ import com.sun.jersey.api.json.JSONWithPadding;
 @Component
 @Scope("singleton")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-		"application/x-javascript", "text/ecmascript",
-		"application/ecmascript", "text/jscript" })
+        "application/x-javascript", "text/ecmascript",
+        "application/ecmascript", "text/jscript" })
 public class SystemResource extends AbstractContextResource {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(SystemResource.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(SystemResource.class);
 
-	public SystemResource() {
-		logger.info("SystemResource initialized");
-	}
+    public SystemResource() {
+        logger.info("SystemResource initialized");
+    }
 
-	@RequireSystemAccess
-	@GET
-	@Path("database/setup")
-	public JSONWithPadding getSetup(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @RequireSystemAccess
+    @GET
+    @Path("database/setup")
+    public JSONWithPadding getSetup(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("cassandra setup");
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("cassandra setup");
 
-		logger.info("Setting up Cassandra");
+        logger.info("Setting up Cassandra");
 
-		Map<String, String> properties = emf.getServiceProperties();
-		if (properties != null) {
-			response.setError("System properties are initialized, database is set up already.");
-			return new JSONWithPadding(response, callback);
-		}
+        Map<String, String> properties = emf.getServiceProperties();
+        if (properties != null) {
+            response.setError("System properties are initialized, database is set up already.");
+            return new JSONWithPadding(response, callback);
+        }
 
-		try {
-			emf.setup();
-		} catch (Exception e) {
-			logger.error(
-					"Unable to complete core database setup, possibly due to it being setup already",
-					e);
-		}
+        try {
+            emf.setup();
+        } catch (Exception e) {
+            logger.error(
+                    "Unable to complete core database setup, possibly due to it being setup already",
+                    e);
+        }
 
-		try {
-			management.setup();
-		} catch (Exception e) {
-			logger.error(
-					"Unable to complete management database setup, possibly due to it being setup already",
-					e);
-		}
+        try {
+            management.setup();
+        } catch (Exception e) {
+            logger.error(
+                    "Unable to complete management database setup, possibly due to it being setup already",
+                    e);
+        }
 
-		response.setSuccess();
+        response.setSuccess();
 
-		return new JSONWithPadding(response, callback);
-	}
+        return new JSONWithPadding(response, callback);
+    }
 
-	@RequireSystemAccess
-	@GET
-	@Path("hello")
-	public JSONWithPadding hello(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
-		logger.info("Saying hello");
+    @RequireSystemAccess
+    @GET
+    @Path("hello")
+    public JSONWithPadding hello(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
+        logger.info("Saying hello");
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("Greetings Professor Falken");
-		response.setSuccess();
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("Greetings Professor Falken");
+        response.setSuccess();
 
-		return new JSONWithPadding(response, callback);
-	}
+        return new JSONWithPadding(response, callback);
+    }
+
+    @RequireSystemAccess
+    @Path("application")
+    public ApplicationResource getSystemApplication() throws Exception {
+
+        if ("options".equalsIgnoreCase(request.getMethod())) {
+            throw new NoOpException();
+        }
+
+        return getSubResource(ApplicationResource.class).init(
+                MANAGEMENT_APPLICATION_ID);
+    }
 
 }
