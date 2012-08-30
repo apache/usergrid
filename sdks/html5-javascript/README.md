@@ -44,9 +44,9 @@ Start by creating a new Entity object, where the argument is the name of the col
 
 Next, add any needed custom fields. For example:
 
- 	dog("name","Dino");
- 	dog("owner","Fred");
- 	dog("state","hungry");
+ 	dog.set("name","Dino");
+ 	dog.set("owner","Fred");
+ 	dog.set("state","hungry");
 
 After the object is complete, save it back to the API, for example:
 
