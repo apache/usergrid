@@ -1157,7 +1157,7 @@ public class EntityManagerImpl implements EntityManager,
 	 * @throws Exception
 	 *             the exception
 	 */
-  @Metered(group="core",name="EntityManager_loadPartialProperties")
+  @Metered(group="core",name="EntityManager_loadPartialEntity")
 	public DynamicEntity loadPartialEntity(UUID entityId,
 			String... propertyNames) throws Exception {
 
