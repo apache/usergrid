@@ -3,11 +3,11 @@ function ApigeePages() {
     pages: {},
     panels: {},
     resetPasswordUrl: ''
-  }
+  };
 
   self.clearPage = function(){
     $("#pages > div").hide();
-  }
+  };
 
   self.ShowPage = function(pageName){
     // console.log('showing ' + pageName);
@@ -29,20 +29,18 @@ function ApigeePages() {
     }
 
     if(Usergrid.userSession.getBannerState() == 'true'){
-      showBanner();
+      this.showBanner();
     }
-
-    return;
-  }
+  };
   self.showBanner = function(){
     Usergrid.userSession.showBanner();
     $('#banner').show();
-  }
+  };
   
   self.hideBanner = function(){
     Usergrid.userSession.hideBanner();
     $("#banner").hide();
-  }
+  };
 
   self.AddPage = function(page) {
     if(!page.link)
@@ -59,7 +57,7 @@ function ApigeePages() {
 
     LoadPage(page);
     self.pages[page.name] = page;
-  }
+  };
 
   self.AddPanel = function(panelName, linkSelector,boxSelector,initFunction,showFunction) {
     if (!linkSelector) {
@@ -76,7 +74,7 @@ function ApigeePages() {
       box: $(boxSelector),
       initFunction: initFunction,
       showFunction: showFunction
-    }
+    };
 
     if (panel.initFunction) {
       panel.initFunction();
@@ -88,7 +86,7 @@ function ApigeePages() {
     });
 
     self.panels[panel.name] = panel;
-  }
+  };
 
   self.SelectPanel = function (panelName){
     var panel = self.panels[panelName];
@@ -108,7 +106,7 @@ function ApigeePages() {
     $("#console-panels > div").hide();
     panel.box.show();
 
-  }
+  };
 
   function LoadPage(page){
 
@@ -125,9 +123,6 @@ function ApigeePages() {
         page.initFunction();
       }
     }
-
-    return;
   }
-
   return self;
 }

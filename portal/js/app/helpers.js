@@ -172,7 +172,6 @@ function prepareLocalStorage() {
       this.setItem(key, JSON.stringify(value));
     };
   }
-
   if (!Storage.prototype.getObject) {
     Storage.prototype.getObject = function(key) {
       try {
@@ -239,24 +238,4 @@ function selectFirstElement(object) {
   return first
 }
 
-var clippy = {
-	clippyId: $("#global-clippy-container"),
-	clippyDataId: $("#global-clippy-data"),
-	attach: function(element){
-		var offset = element.offset();
-		clippyId.css({
-			left: offset.left,
-			top: offset.top,
-		});
-	},
-	detach: function(){
-		clippyId.css({
-			left: -9999,
-			top: -9999,
-		});
-	},
-	setData: function(dataText){
-		clippyDataId.text(dataText);
-	}
-};
 

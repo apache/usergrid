@@ -1,7 +1,6 @@
 
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
-
 (function() {
   /**
    *  Application is a class for holding application info
@@ -109,7 +108,7 @@ Usergrid = Usergrid || {};
   };
 
   /**
-    *  Standardized methods for mantianing user and authentication state in the Application
+    *  Standardized methods for maintaining user and authentication state in the Application
     *  @class UserSession
     */
   Usergrid.userSession = function(){};
@@ -167,3 +166,5 @@ Usergrid = Usergrid || {};
     }
   };
 })(Usergrid);
+
+Usergrid.userSession = new Usergrid.userSession();
