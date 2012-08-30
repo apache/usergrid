@@ -1,0 +1,20 @@
+<div class="curl-info">
+<<<<<<< HEAD
+  Want to get the data above programmatically? Here's how you would retrieve it with <a style="color: #007CDC;" href="http://curl.haxx.se/" target="_blank">curl</a>. Just copy-paste the command in a terminal window and you should see the same data come back as JSON!
+</div>
+<div class="input-append">
+      <div id="${sectionName}-curl" class="alert alert-info curl-data pull-left">
+        ${curlData}
+      </div>
+=======
+Want to get the data above programmatically? You can retrieve it with <a style="color: #007CDC;" href="http://curl.haxx.se/" target="_blank">curl</a>. Copy-paste the command in a terminal window and you should see the same data come back as JSON.
+</div>
+<div class="input-append">
+  <div id="${sectionName}-curl" class="alert alert-info curl-data">
+    ${curlData}
+  </div>
+>>>>>>> master
+</div>
+<div id="${sectionName}curl-token" class="curl-token">
+Not sure what "Authorization: Bearer” is, or how to get a token? We have a  <a style="color: #007CDC;" href="http://apigee.com/docs/content/authentication-and-access-usergrid">documentation article about that</a>
+</div>

@@ -14,11 +14,13 @@
       Quick Login: script loads the minimal amount of resources to be able to detect if the user is logged in
       and if not, send him directly to the SSO page
        */
+
       Usergrid.Params.parseParams();
       Usergrid.SSO.setUseSSO(Usergrid.Params.queryParams.use_sso);
+      /*
       Usergrid.QuickLogin.init(Usergrid.Params.queryParams,Usergrid.userSession.loggedIn(),
         (Usergrid.SSO.usingSSO ));
-
+       */
     </script>
     <script src="js/lib/jquery-1.7.2.min.js" type="text/javascript"></script>
     <script src="js/lib/jquery-ui-1.8.18.min.js" type="text/javascript"></script>
@@ -30,6 +32,10 @@
     <script src="js/lib/jquery.ui.statusbar.min.js" type="text/javascript"></script>
     <script src="js/lib/date.min.js" type="text/javascript"></script>
     <script src="js/app/helpers.js" type="text/javascript"></script>
+<<<<<<< HEAD
+=======
+    <script src="js/app/session.js" type="text/javascript"></script>
+>>>>>>> master
     <script src="js/app/usergrid.appSDK.js" type="text/javascript"></script>
     <script src="js/app/console.js" type="text/javascript"></script>
     <script src="js/app/ui/ui.js" type="text/javascript"></script>
@@ -296,6 +302,28 @@
                   </div>
                   <div class="modal-body">
                     <p class="validateTips">All organizations require at least one application. Please create one.</p>
+                    <fieldset>
+                      <div class="control-group">
+                        <label for="new-application-name">Name</label>
+                        <div class="controls">
+                          <input type="text" name="name" id="" value="" class="input-xlarge new-application-name"/>
+                          <p class="help-block">Length of name must be between 4 and 80</p>
+                        </div>
+                      </div>
+                    </fieldset>
+                  </div>
+                  <div class="modal-footer">
+                    <input type="submit" class="btn btn-usergrid" value="Create"/>
+                    <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                  </div>
+                </form>
+                <form id="dialog-form-new-application" class="modal hide fade" action="#">
+                  <div class="modal-header">
+                    <a class="close" data-dismiss="modal">&times</a>
+                    <h4>Create new application</h4>
+                  </div>
+                  <div class="modal-body">
+                    <p class="validateTips">All form fields are required.</p>
                     <fieldset>
                       <div class="control-group">
                         <label for="new-application-name">Name</label>
@@ -1157,29 +1185,11 @@
           <input type="reset" class="btn btn-usergrid" value="OK" data-dismiss="modal"/>
         </div>
       </form>
-	  <form id="dialog-form-new-application" class="modal hide fade" action="#">
-	      <div class="modal-header">
-	        <a class="close" data-dismiss="modal">&times</a>
-	        <h4>Create new application</h4>
-	      </div>
-	      <div class="modal-body">
-	        <p class="validateTips">All form fields are required.</p>
-	        <fieldset>
-	          <div class="control-group">
-	            <label for="new-application-name">Name</label>
-	            <div class="controls">
-	              <input type="text" name="name" id="" value="" class="input-xlarge new-application-name"/>
-	              <p class="help-block">Length of name must be between 4 and 80</p>
-	            </div>
-	          </div>
-	        </fieldset>
-	      </div>
-	      <div class="modal-footer">
-	        <input type="submit" class="btn btn-usergrid" value="Create"/>
-	        <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
-	      </div>
-	  </form>
       <div class="clear"></div>
+<<<<<<< HEAD
+=======
+      </div>
+>>>>>>> master
       <footer>
         <div class="container-fluid">
           <div class="subnav pull-left">
