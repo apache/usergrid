@@ -21,20 +21,22 @@
       return window.location.host === this.default.top_level_domain;
     },
     usingSSO:function () {
+      return this.getSSO() && this.isTopLevelDomain();
+    },
+    getSSO:function (){
       return this.default.use_sso;
     },
     getSSOCallback:function () {
       var callbackUrl = this.buildBaseUrl();
       var separatorMark = '?';
-      if (this.usingSSO()) {
+      if (this.getSSO()) {
         callbackUrl = callbackUrl + separatorMark + 'use_sso=' + this.default.use_sso;
       }
-      /* TODO: Check if this logic is still necessary
+
       if (Usergrid.ApiClient.getApiUrl() !== undefined && (Usergrid.ApiClient.getApiUrl() !== this.default.api_url)) {
         separatorMark = '&';
         callbackUrl = callbackUrl + separatorMark + 'api_url=' + Usergrid.ApiClient.getApiUrl();
       }
-      */
       return encodeURIComponent(callbackUrl);
     },
     buildBaseUrl:function () {
