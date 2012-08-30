@@ -10,22 +10,21 @@
 (function(){
   Usergrid.QuickLogin = function(){};
 
-  Usergrid.QuickLogin.default = {
-  };
-
   Usergrid.QuickLogin.prototype = {
-    init : function(){
-      if(this.credentialsInParams()){
-        Usergrid.userSession.setUserUUID(Usergrid.Params.default.queryParams.uuid);
-        Usergrid.userSession.setUserEmail(Usergrid.Params.default.queryParams.admin_email);
-        Usergrid.userSession.setAccessToken(Usergrid.Params.default.queryParams.access_token);
+    init : function(queryParams, sessionExists, useSSO){
+      if(this.credentialsInParams(queryParams)){
+        Usergrid.userSession.setUserUUID(queryParams.uuid);
+        Usergrid.userSession.setUserEmail(queryParams.admin_email);
+        Usergrid.userSession.setAccessToken(queryParams.access_token);
       }
-      if (!Usergrid.userSession.loggedIn() && Usergrid.SSO.usingSSO()){
+      if (!sessionExists && useSSO){
         Usergrid.SSO.sendToSSOLoginPage();
       }
     },
-    credentialsInParams : function(){
-      return(Usergrid.Params.default.queryParams.access_token && Usergrid.Params.default.queryParams.admin_email && Usergrid.Params.default.queryParams.uuid)
+    credentialsInParams : function(params){
+      return(params.access_token && params.admin_email && params.uuid);
     }
   };
 })(Usergrid);
+
+Usergrid.QuickLogin = new Usergrid.QuickLogin();

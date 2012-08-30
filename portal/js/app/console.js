@@ -14,8 +14,8 @@ function apigee_console_app(Pages, query_params) {
   }
 
   String.prototype.endsWith = function (s) {
-    return this.length >= s.length && this.substr(this.length - s.length) == s;
-  }
+    return (this.length >= s.length && this.substr(this.length - s.length) == s);
+  };
 
   if (query_params.api_url) {
       if (!query_params.api_url.endsWith('/')) {
@@ -1623,7 +1623,6 @@ function apigee_console_app(Pages, query_params) {
   function hideCurlCommand(section) {
     $('#'+section+'-curl-container').hide();
     $('#'+section+'-curl-token').hide();
-    $('#'+section+'clippy-btn').detachClippy();
   }
 
   function showCurlCommand(section, curl, token) {
@@ -1636,7 +1635,6 @@ function apigee_console_app(Pages, query_params) {
   	$.tmpl('apigee.ui.curl.detail.html', data).appendTo(sectionId);
    	sectionId.show();
     $('#'+section+'-curl-token').show();
-    $('#'+section+'-clippy-btn').attachClippy({dataId: $('#'+section+'-curl')});
   }
 
   function copyCurlCommand() {
@@ -3638,9 +3636,9 @@ function deleteRolePermission(roleName, permission) {
 
   function logout() {
     Usergrid.userSession.clearAll();
-    if (useSSO()) {
+    if (Usergrid.SSO.usingSSO()) {
       Pages.clearPage();
-      sendToSSOLogoutPage();
+      Usergrid.SSO.sendToSSOLogoutPage();
     } else {
       Pages.ShowPage("login");
     }
@@ -3968,7 +3966,7 @@ function deleteRolePermission(roleName, permission) {
   });
 
   function requestAccountSettings() {
-    if (useSSO()) {
+    if (Usergrid.SSO.usingSSO()) {
       sendToSSOProfilePage();
     } else {
       $('#update-account-id').text(Usergrid.userSession.getUserUUID());
@@ -4189,7 +4187,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function showLoginForNonSSO(){
-    if (!Usergrid.userSession.loggedIn() && !useSSO()) {
+    if (!Usergrid.userSession.loggedIn() && !Usergrid.SSO.usingSSO()) {
       Pages.ShowPage('login');
     }
   }
@@ -4202,14 +4200,6 @@ function deleteRolePermission(roleName, permission) {
     Pages.ShowPage('console');
   }
   Usergrid.console.loginOk = loginOk;
-
-  Usergrid.SSO.useSSO = useSSO;
-
-  Usergrid.SSO.sendToSSOLogoutPage = sendToSSOLogoutPage;
-
-  Usergrid.SSO.sendToSSOLoginPage = sendToSSOLoginPage;
-
-  Usergrid.SSO.sendToSSOProfilePage = sendToSSOProfilePage;
 
   //load the templates only after the rest of the page is
   $(window).bind("load", function() {

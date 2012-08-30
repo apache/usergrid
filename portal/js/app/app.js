@@ -1,10 +1,9 @@
-Usergrid.userSession = new Usergrid.userSession();
 Usergrid.organizations = new Usergrid.Organization();
 
 var Pages = new ApigeePages();
 
 $(document).ready(function () {
-  var query_params = getQueryParams();
+  var query_params = Usergrid.Params.queryParams;
   initCore();
   initUI(query_params);
   startApp();
@@ -24,9 +23,9 @@ $(document).ready(function () {
   function startApp() {
     if (!Usergrid.userSession.loggedIn()) {
       // test to see if the Portal is running on apigee, if so, send to SSO, if not, fall through to login screen
-      if (Usergrid.console.useSSO()) {
+      if (Usergrid.SSO.usingSSO()) {
         Pages.clearPage();
-        Usergrid.console.sendToSSOLoginPage();
+        Usergrid.SSO.sendToSSOLoginPage();
       } else if (query_params.goto_signup) {
         Pages.ShowPage("signup");
       } else {

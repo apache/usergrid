@@ -1,7 +1,6 @@
 
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
-
 (function() {
   /**
    *  Application is a class for holding application info
@@ -159,3 +158,5 @@ Usergrid = Usergrid || {};
     }
   };
 })(Usergrid);
+
+Usergrid.userSession = new Usergrid.userSession();
