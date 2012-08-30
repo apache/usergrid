@@ -1035,8 +1035,8 @@ function apigee_console_app(Pages, query_params) {
       && checkRegexp2(new_user_username, usernameRegex, usernameAllowedCharsMessage)
       && checkLength2(new_user_email, 6, 80)
       && checkRegexp2(new_user_email,emailRegex, emailAllowedCharsMessage)
-      && checkLength2(new_user_password, 5, 16)
-      && (new_user_password === "" || checkRegexp2(new_user_password,passwordRegex, passwordAllowedCharsMessage));
+      && (checkLength2(new_user_password, 5, 16) || checkLength2(new_user_password,0,0))
+      && (new_user_password.text() === "" || checkRegexp2(new_user_password,passwordRegex, passwordAllowedCharsMessage));
 
     if (bValid) {
       var data = form.serializeObject();
