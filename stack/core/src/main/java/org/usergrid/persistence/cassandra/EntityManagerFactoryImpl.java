@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import com.yammer.metrics.annotation.Metered;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
@@ -247,6 +248,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
 	}
 
 	@Override
+  @Metered(group="core",name="EntityManagerFactory_lookupApplication_byName")
 	public UUID lookupApplication(String name) throws Exception {
 		name = name.toLowerCase();
 		HColumn<String, ByteBuffer> column = cass.getColumn(
@@ -267,6 +269,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
 	 * @throws Exception
 	 *             the exception
 	 */
+  @Metered(group="core",name="EntityManagerFactory_getApplication")
 	public Application getApplication(String name) throws Exception {
 		name = name.toLowerCase();
 		HColumn<String, ByteBuffer> column = cass.getColumn(

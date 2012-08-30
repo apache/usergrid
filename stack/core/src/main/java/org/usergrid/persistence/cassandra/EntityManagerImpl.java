@@ -96,6 +96,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.yammer.metrics.annotation.Metered;
 import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
@@ -518,6 +519,7 @@ public class EntityManagerImpl implements EntityManager,
 		return batch;
 	}
 
+  @Metered(group="core", name="EntityManager_isPropertyValueUniqueForEntity")
 	public boolean isPropertyValueUniqueForEntity(UUID thisEntity,
 			String entityType, String propertyName, Object propertyValue)
 			throws Exception {
@@ -567,6 +569,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core",name="EntityManager_createAlias")
 	public UUID createAlias(UUID ownerId, EntityRef ref, String aliasType,
 			String alias) throws Exception {
 
@@ -609,6 +612,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core", name="EntityManager_deleteAlias")
 	public void deleteAlias(UUID ownerId, String aliasType, String alias)
 			throws Exception {
 		if (ownerId == null) {
@@ -629,6 +633,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core", name="EntityManager_getAlias_single")
 	public EntityRef getAlias(UUID ownerId, String aliasType, String alias)
 			throws Exception {
 		if (ownerId == null) {
@@ -670,6 +675,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core", name="EntityManager_getAlias_multi")
 	public Map<String, EntityRef> getAlias(UUID ownerId, String aliasType,
 			List<String> aliases) throws Exception {
 		if (ownerId == null) {
@@ -725,6 +731,7 @@ public class EntityManagerImpl implements EntityManager,
 		return aliasedEntities;
 	}
 
+  @Metered(group="core", name="EntityManager_getAliases")
 	public List<UUID> getAliases(UUID entityId) {
 		Keyspace ko = cass.getApplicationKeyspace(applicationId);
 		List<UUID> aliases = new ArrayList<UUID>();
@@ -748,6 +755,7 @@ public class EntityManagerImpl implements EntityManager,
 		deleteAliasesForEntity(entityId, timestamp);
 	}
 
+  @Metered(group="core",name="EntityManager_deleteAliasesForEntity")
 	public void deleteAliasesForEntity(UUID entityId, long timestamp)
 			throws Exception {
 		Keyspace ko = cass.getApplicationKeyspace(applicationId);
@@ -815,6 +823,7 @@ public class EntityManagerImpl implements EntityManager,
 	 * @throws Exception
 	 *             the exception
 	 */
+  @Metered(group="core",name="EntityManager_create")
 	public <A extends Entity> A create(String entityType, Class<A> entityClass,
 			Map<String, Object> properties, UUID importId) throws Exception {
 
@@ -831,6 +840,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@SuppressWarnings("unchecked")
+  @Metered(group = "core", name = "EntityManager_batchCreate")
 	public <A extends Entity> A batchCreate(Mutator<ByteBuffer> m,
 			String entityType, Class<A> entityClass,
 			Map<String, Object> properties, UUID importId, UUID timestampUuid)
@@ -1075,6 +1085,7 @@ public class EntityManagerImpl implements EntityManager,
 		}
 	}
 
+  @Metered(group="core", name="EntityManager_insertEntity")
 	public void insertEntity(String type, UUID entityId) throws Exception {
 
 		Keyspace ko = cass.getApplicationKeyspace(applicationId);
@@ -1121,6 +1132,7 @@ public class EntityManagerImpl implements EntityManager,
 	 * @throws Exception
 	 *             the exception
 	 */
+  @Metered(group="core", name="EntityManager_getEntityType")
 	public String getEntityType(UUID entityId) throws Exception {
 
 		HColumn<String, String> column = cass.getColumn(
@@ -1145,6 +1157,7 @@ public class EntityManagerImpl implements EntityManager,
 	 * @throws Exception
 	 *             the exception
 	 */
+  @Metered(group="core",name="EntityManager_loadPartialEntity")
 	public DynamicEntity loadPartialEntity(UUID entityId,
 			String... propertyNames) throws Exception {
 
@@ -1255,6 +1268,7 @@ public class EntityManagerImpl implements EntityManager,
 	 * @throws Exception
 	 *             the exception
 	 */
+  @Metered(group="core", name="EntityManager_getEntities")
 	public <A extends Entity> List<A> getEntities(List<UUID> entityIds,
 			String entityType, Class<A> entityClass) throws Exception {
 
@@ -1317,6 +1331,7 @@ public class EntityManagerImpl implements EntityManager,
 		return entities;
 	}
 
+  @Metered(group="core",name="EntityManager_getPropertyNames")
 	public Set<String> getPropertyNames(EntityRef entity) throws Exception {
 
 		Set<String> propertyNames = new TreeSet<String>(CASE_INSENSITIVE_ORDER);
@@ -1340,6 +1355,7 @@ public class EntityManagerImpl implements EntityManager,
 		return propertyNames;
 	}
 
+  @Metered(group="core",name="EntityManager_getDictionaryNames")
 	public Set<String> getDictionaryNames(EntityRef entity) throws Exception {
 
 		Set<String> dictionaryNames = new TreeSet<String>(
@@ -1364,6 +1380,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core",name="EntityManager_getDictionaryElementValue")
 	public Object getDictionaryElementValue(EntityRef entity,
 			String dictionaryName, String elementName) throws Exception {
 
@@ -1403,6 +1420,7 @@ public class EntityManagerImpl implements EntityManager,
 		return value;
 	}
 
+  @Metered(group="core",name="EntityManager_getDictionaryElementValues")
 	public Map<String, Object> getDictionaryElementValues(EntityRef entity,
 			String dictionaryName, String... elementNames) throws Exception {
 
@@ -1474,6 +1492,7 @@ public class EntityManagerImpl implements EntityManager,
 	 *             the exception
 	 */
 	@Override
+  @Metered(group="core",name="EntityManager_getDictionaryAsMap")
 	public Map<Object, Object> getDictionaryAsMap(EntityRef entity,
 			String dictionaryName) throws Exception {
 
@@ -1542,6 +1561,7 @@ public class EntityManagerImpl implements EntityManager,
 	 * @throws Exception
 	 *             the exception
 	 */
+  @Metered(group="core",name="EntityManager_updateProperties")
 	public void updateProperties(UUID entityId, Map<String, Object> properties)
 			throws Exception {
 
@@ -1561,6 +1581,7 @@ public class EntityManagerImpl implements EntityManager,
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
+  @Metered(group="core",name="EntityManager_deleteEntity")
 	public void deleteEntity(UUID entityId) throws Exception {
 
 		logger.info("deleteEntity {} of application {}", entityId,
@@ -1745,6 +1766,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core",name="EntityManager_getAggregateCounters")
 	public Results getAggregateCounters(UUID userId, UUID groupId,
 			UUID queueId, String category, String counterName,
 			CounterResolution resolution, long start, long finish, boolean pad) {
@@ -1782,6 +1804,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core",name="EntityManager_getAggregateCounters_fromQueryObj")
 	public Results getAggregateCounters(Query query) throws Exception {
 		CounterResolution resolution = query.getResolution();
 		if (resolution == null) {
@@ -1872,6 +1895,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core",name="EntityManager_getEntityCounters")
 	public Map<String, Long> getEntityCounters(UUID entityId) throws Exception {
 
 		Map<String, Long> counters = new HashMap<String, Long>();
@@ -1892,6 +1916,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core",name="EntityManager_createApplicationCollection")
 	public void createApplicationCollection(String entityType) throws Exception {
 
 		Keyspace ko = cass.getApplicationKeyspace(applicationId);
@@ -2655,6 +2680,7 @@ public class EntityManagerImpl implements EntityManager,
 				value, cassandraTimestamp);
 	}
 
+  @Metered(group="core",name="EntityManager_incrementAggregateCounters_single")
 	public void incrementAggregateCounters(UUID userId, UUID groupId,
 			String category, String counterName, long value,
 			long cassandraTimestamp) {
@@ -2670,6 +2696,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core",name="EntityManager_incrementAggregateCounters_multi")
 	public void incrementAggregateCounters(UUID userId, UUID groupId,
 			String category, Map<String, Long> counters) {
 		long timestamp = cass.createTimestamp();
@@ -2691,6 +2718,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core",name="EntityManager_incrementApplicationCounters_multi")
 	public void incrementApplicationCounters(Map<String, Long> counts) {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
@@ -2703,6 +2731,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core",name="EntityManager_incrementApplicationCounters_single")
 	public void incrementApplicationCounter(String name, long value) {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
@@ -2715,6 +2744,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core",name="EntityManager_incrementEntityCounters_multi")
 	public void incrementEntitiesCounters(Map<UUID, Map<String, Long>> counts) {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
@@ -2726,6 +2756,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core",name="EntityManager_incrementEntityCounters_single")
 	public void incrementEntityCounters(UUID entityId, Map<String, Long> counts) {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
@@ -2738,6 +2769,7 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	@Override
+  @Metered(group="core",name="EntityManager_incrementEntityCounter")
 	public void incrementEntityCounter(UUID entityId, String name, long value) {
 		long timestamp = cass.createTimestamp();
 		Mutator<ByteBuffer> m = createMutator(
