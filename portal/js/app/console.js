@@ -1080,7 +1080,7 @@ function apigee_console_app(Pages, query_params) {
     var new_role_title = $('#new-role-title');
 
     var bValid = checkLength2(new_role_name, 1, 80)
-      && checkRegexp2(new_role_name, usernameRegex, usernameAllowedCharsMessage)
+      && checkRegexp2(new_role_name, roleRegex, roleAllowedCharsMessage)
       && checkLength2(new_role_title, 1, 80)
       && checkRegexp2(new_role_title,titleRegex, titleAllowedCharsMessage);
 
@@ -1634,7 +1634,6 @@ function apigee_console_app(Pages, query_params) {
   	sectionId.html("");
   	$.tmpl('apigee.ui.curl.detail.html', data).appendTo(sectionId);
    	sectionId.show();
-    $('#'+section+'-curl-token').show();
   }
 
   function copyCurlCommand() {
@@ -1863,46 +1862,35 @@ function apigee_console_app(Pages, query_params) {
   }
 
   function redrawUserProfile(data, curl){
-  	redrawFormPanel($('#user-panel-profile'), 'apigee.ui.panels.user.profile.html', data);
-	attachCurl('user-panel-profile', curl);
+  	redrawFormPanel('user-panel-profile', 'apigee.ui.panels.user.profile.html', data);
+  	showCurlCommand('user-panel-profile', curl);
   };
 
   function redrawUserMemberships(data, curl){
   	redrawPanel('user-panel-memberships', 'apigee.ui.panels.user.memberships.html', data);
-  	attachCurl('user-panel-memberships', curl);
+  	showCurlCommand('user-panel-memberships', curl);
   	updateGroupsAutocomplete();
   };
 
   function redrawUserActivities(data, curl){
   	redrawPanel('user-panel-activities', 'apigee.ui.panels.user.activities.html', data);
-  	attachCurl('user-panel-activities', curl);
+  	showCurlCommand('user-panel-activities', curl);
   };
 
-  function redrawUserGraph(data){
+  function redrawUserGraph(data, curlFollowing, curlFollowers){
   	redrawPanel('user-panel-graph', 'apigee.ui.panels.user.graph.html', data);
-  	attachCurl('user-panel-following', data.followingCurl);
-  	attachCurl('user-panel-followers', data.followersCurl);
+  	showCurlCommand('user-panel-following', curlFollowing);
+  	showCurlCommand('user-panel-followers', curlFollowers);
   };
 
-  function redrawUserPermissions(data){
+  function redrawUserPermissions(data, curlRoles, curlPermissions){
   	redrawPanel('user-panel-permissions', 'apigee.ui.panels.user.permissions.html', data);
-  	attachCurl('user-panel-roles', data.rolesCurl);
-  	attachCurl('user-panel-permissions', data.permissionsCurl);
+  	showCurlCommand('user-panel-roles', curlRoles);
+  	showCurlCommand('user-panel-permissions', curlPermissions);
   	updateRolesAutocomplete();
     updateQueryAutocompleteCollectionsUsers();
   };
-
-  /*
-   * Utilitary function, clears and draws a specific panel
-   * panelDiv: the DOM elemente which will be deleted and redrawn
-   * panelTmpl: the html Template to be used
-   * data: the data inserted into the htmlTemplate
-   */
-  function attachCurl(curlSectionId, curl){
-	hideCurlCommand(curlSectionId);
-	showCurlCommand(curlSectionId, curl);
-  }
-
+  
   function redrawPanel(panelDiv, panelTemplate, data){
 	$("#"+panelDiv).html("");
 	$.tmpl(panelTemplate, data).appendTo($("#"+panelDiv));
@@ -1918,11 +1906,11 @@ function apigee_console_app(Pages, query_params) {
   }
 
   function redrawFormPanel(panelDiv, panelTemplate, data){
-	$(panelDiv).html("");
+	$("#"+panelDiv).html("");
 	var details = $.tmpl(panelTemplate, data);
 	var formDiv = details.find('.query-result-form');
 	$(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.vcard_schema, data.entity));
-	details.appendTo($(panelDiv));
+	details.appendTo($("#"+panelDiv));
   };
 
   function saveUserData(){
@@ -2060,14 +2048,14 @@ function apigee_console_app(Pages, query_params) {
 	            }
 	          }
 	          data.permissionsCurl = this.getCurl();
-	          redrawUserPermissions(data);
+	          redrawUserPermissions(data, data.rolesCurl, data.permissionsCurl);
 	        },
 	        function() { alertModal("Error", "Unable to retrieve user's permissions.");}
 	      ));
         },
         function() { alertModal("Error", "Unable to retrieve user's roles.");}
       ));
-
+      
       	runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/following', null, null,
 	        function(response) {
 	          data.followingCurl = this.getCurl();
@@ -2082,7 +2070,7 @@ function apigee_console_app(Pages, query_params) {
 		            data.followers = response.entities;
 		          }
 		          data.followersCurl = this.getCurl();
-		          redrawUserGraph(data);
+		          redrawUserGraph(data, data.followingCurl, data.followersCurl);
 		        },
 		        function() { alertModal("Error", "Unable to retrieve user's followers.");
 		        }
@@ -2287,30 +2275,29 @@ function apigee_console_app(Pages, query_params) {
   }
 
   function redrawGroupDetails(data,curl){
-  	redrawGroupForm('group-panel-details', 'apigee.ui.panels.group.details.html', data);
-  	attachCurl('group-panel-details', curl);
+    redrawGroupForm('group-panel-details', 'apigee.ui.panels.group.details.html', data);
+    showCurlCommand('group-panel-details', curl);
   }
 
   function redrawGroupMemberships(data, curl){
-  	redrawPanel('group-panel-memberships', 'apigee.ui.panels.group.memberships.html', data);
-  	attachCurl('group-panel-memberships', curl);
-  	updateUsersAutocomplete();
+    redrawPanel('group-panel-memberships', 'apigee.ui.panels.group.memberships.html', data);
+    showCurlCommand('group-panel-memberships', curl);
+    updateUsersAutocomplete();
   }
 
   function redrawGroupActivities(data, curl){
-  	redrawPanel('group-panel-activities', 'apigee.ui.panels.group.activities.html', data);
-  	attachCurl('group-panel-activities', curl);
+    redrawPanel('group-panel-activities', 'apigee.ui.panels.group.activities.html', data);
+    showCurlCommand('group-panel-activities', curl);
   }
 
-  function redrawGroupPermissions(data){
-  	
-  	if (data.roles && data.roles.length == 0) {
-    	delete data.roles
+  function redrawGroupPermissions(data, curlRoles, curlPermissions){  	
+    if (data.roles && data.roles.length == 0) {
+      delete data.roles
     }
-  	redrawPanel('group-panel-permissions', 'apigee.ui.panels.group.permissions.html', data);
-  	attachCurl('group-panel-roles', data.groupRolesCurl);
-  	attachCurl('group-panel-permissions', data.groupPermissionsCurl);
-  	updateRolesForGroupsAutocomplete();
+    redrawPanel('group-panel-permissions', 'apigee.ui.panels.group.permissions.html', data);
+    showCurlCommand('group-panel-roles', curlRoles);
+    showCurlCommand('group-panel-permissions', curlPermissions);
+    updateRolesForGroupsAutocomplete();
   }
 
   function saveGroupProfile(uuid){
@@ -2455,7 +2442,7 @@ function apigee_console_app(Pages, query_params) {
 	            }
 	          }
 	          data.groupPermissionsCurl = this.getCurl();
-	          redrawGroupPermissions(data);
+	          redrawGroupPermissions(data,data.groupRolesCurl, data.groupPermissionsCurl);
 	        },
 	        function() { alertModal("Error", "Unable to retrieve group's permissions."); }
 	      ));
@@ -3373,7 +3360,7 @@ function deleteRolePermission(roleName, permission) {
         $.tmpl('apigee.ui.collections.table_rows.html', this_data).appendTo('#collections-table');
       }
     }
-	showCurlCommand('collections', this.getCurl(), this.getToken());
+	  showCurlCommand('collections', this.getCurl(), this.getToken());
   }
 
   function selectAllCollections(){
@@ -3676,7 +3663,7 @@ function deleteRolePermission(roleName, permission) {
     };
     runManagementQuery(new Usergrid.Query('GET', 'token', null, formdata,
       function(response) {
-        if (!response) {
+        if (!response || response.error){
           displayLoginError();
           return
         }

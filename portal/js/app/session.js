@@ -135,7 +135,15 @@ Usergrid = Usergrid || {};
     setUserEmail: function (email) {
       localStorage.setItem('userEmail', email);
     },
-
+    hideBanner: function(){
+      localStorage.setItem('showBanner', 'false');
+    },
+    showBanner: function(){
+      localStorage.setItem('showBanner', 'true');
+    },
+    getBannerState: function(){
+      return localStorage.getItem('showBanner');
+    },
     //convenience method to verify if user is logged in
     loggedIn: function () {
       var token = this.getAccessToken();

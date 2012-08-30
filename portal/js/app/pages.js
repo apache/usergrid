@@ -28,16 +28,19 @@ function ApigeePages() {
       page.showFunction();
     }
 
-    var showBanner = localStorage.getItem('showBanner');
-    if (showBanner != 'false') {
-        $("#banner").show();
+    if(Usergrid.userSession.getBannerState() == 'true'){
+      showBanner();
     }
 
     return;
   }
-
+  self.showBanner = function(){
+    Usergrid.userSession.showBanner();
+    $('#banner').show();
+  }
+  
   self.hideBanner = function(){
-    localStorage.setItem('showBanner', 'false');
+    Usergrid.userSession.hideBanner();
     $("#banner").hide();
   }
 

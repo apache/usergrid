@@ -4757,6 +4757,6 @@ table .zebraRows:nth-child(2n) {
   position: relative;
 }
 .curl-container .curl-data {
-  width: 75%;
-  margin-bottom: 0;
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
