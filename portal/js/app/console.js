@@ -2486,10 +2486,10 @@ function apigee_console_app(Pages, query_params) {
   window.Usergrid.console.pageSelectRoles = pageSelectRoles;
 
   function getRoles(search, searchType) {
-    //clear out the table before we start
     var output = $('#roles-table');
     output.empty();
-	hideCurlCommand('roles')
+
+    hideCurlCommand('roles');
     //put the sort by back in once the API is fixed
     //var query = {"ql" : "order by " + roleSortBy};
     var query = {};
@@ -2512,7 +2512,8 @@ function apigee_console_app(Pages, query_params) {
 
   function getRolesCallback(response) {
     hidePagination('roles');
-    var output = $('#roles-table');
+    var output = $('#roles-table')
+    output.empty();
     if (response.entities.length < 1) {
       output.html('<div class="group-panel-section-message">No roles found.</div>');
     } else {
