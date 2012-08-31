@@ -3669,6 +3669,8 @@ function deleteRolePermission(roleName, permission) {
           displayLoginError();
           return
         }
+        //Fist clear the Organizations list
+        Usergrid.organizations.clearList();
         //store all the organizations and their applications
         for (org in response.user.organizations) {
           //grab the name
