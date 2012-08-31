@@ -15,8 +15,6 @@
  ******************************************************************************/
 package org.usergrid.rest;
 
-import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-
 import java.util.Map;
 
 import javax.ws.rs.DefaultValue;
@@ -32,8 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.usergrid.rest.applications.ApplicationResource;
-import org.usergrid.rest.exceptions.NoOpException;
 import org.usergrid.rest.security.annotations.RequireSystemAccess;
 
 import com.sun.jersey.api.json.JSONWithPadding;
@@ -105,18 +101,6 @@ public class SystemResource extends AbstractContextResource {
         response.setSuccess();
 
         return new JSONWithPadding(response, callback);
-    }
-
-    @RequireSystemAccess
-    @Path("application")
-    public ApplicationResource getSystemApplication() throws Exception {
-
-        if ("options".equalsIgnoreCase(request.getMethod())) {
-            throw new NoOpException();
-        }
-
-        return getSubResource(ApplicationResource.class).init(
-                MANAGEMENT_APPLICATION_ID);
     }
 
 }

@@ -18,6 +18,7 @@ import org.usergrid.rest.applications.ApplicationResource;
 import org.usergrid.rest.exceptions.NoOpException;
 import org.usergrid.rest.exceptions.OrganizationApplicationNotFoundException;
 import org.usergrid.rest.utils.PathingUtils;
+import org.usergrid.security.shiro.utils.SubjectUtils;
 
 import com.google.common.collect.BiMap;
 
@@ -41,7 +42,8 @@ public class OrganizationResource extends AbstractContextResource {
 
     private ApplicationResource appResourceFor(UUID applicationId)
             throws Exception {
-        if (applicationId.equals(MANAGEMENT_APPLICATION_ID)) {
+        if (applicationId.equals(MANAGEMENT_APPLICATION_ID)
+                && !SubjectUtils.isServiceAdmin()) {
             throw new UnauthorizedException();
         }
 
