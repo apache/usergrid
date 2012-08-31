@@ -19,8 +19,9 @@
         ${$value.content}
       </td>
       <td>
-        {{if $value.actor.uuid}}
-        <a href="#" onclick="Usergrid.console.pageOpenUserProfile('${$value.actor.uuid}'); return false;">${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}</a>
+        {{if $value.actor.username}}
+        <a href="#"
+           onclick="Usergrid.console.pageOpenUserProfile('${$value.actor.username}'); return false;">${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}</a>
         {{else}}
         ${$value.actor.displayName} {{if $value.actor.email}} (${$value.actor.email}) {{/if}}
         {{/if}}
