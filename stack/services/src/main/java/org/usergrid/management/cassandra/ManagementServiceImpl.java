@@ -336,6 +336,31 @@ public class ManagementServiceImpl implements ManagementService {
                         superuser_password);
     }
 
+    @Override
+    public void provisionSuperuser() throws Exception {
+        boolean superuser_enabled = parseBoolean(properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_ALLOWED));
+        String superuser_username = properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
+        String superuser_email = properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL);
+        String superuser_password = properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_PASSWORD);
+
+        if (!anyNull(superuser_username, superuser_email, superuser_password)) {
+            UserInfo user = this.getAdminUserByUsername(superuser_username);
+            if (user == null) {
+                createAdminUser(superuser_username, "Super User",
+                        superuser_email, superuser_password, superuser_enabled,
+                        !superuser_enabled);
+            } else {
+                this.setAdminUserPassword(user.getUuid(), superuser_password);
+            }
+        } else {
+            logger.warn("Missing values for superuser account, check properties.  Skipping superuser account setup...");
+        }
+    }
+
     public String generateOAuthSecretKey(AuthPrincipalType type) {
         long timestamp = System.currentTimeMillis();
         ByteBuffer bytes = ByteBuffer.allocate(20);

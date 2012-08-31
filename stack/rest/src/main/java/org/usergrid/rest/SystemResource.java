@@ -103,4 +103,27 @@ public class SystemResource extends AbstractContextResource {
         return new JSONWithPadding(response, callback);
     }
 
+    @RequireSystemAccess
+    @GET
+    @Path("superuser/setup")
+    public JSONWithPadding getSetupSuperuser(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
+
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("superuser setup");
+
+        logger.info("Setting up Superuser");
+
+        try {
+            management.provisionSuperuser();
+        } catch (Exception e) {
+            logger.error("Unable to complete superuser setup", e);
+        }
+
+        response.setSuccess();
+
+        return new JSONWithPadding(response, callback);
+    }
+
 }

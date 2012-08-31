@@ -37,7 +37,7 @@ public class ApplicationCreatorTest {
     public static void setup() throws Exception {
         helper = new ManagementTestHelperImpl();
         helper.setup();
-        managementService = (ManagementServiceImpl) helper
+        managementService = (ManagementService) helper
                 .getManagementService();
     }
 

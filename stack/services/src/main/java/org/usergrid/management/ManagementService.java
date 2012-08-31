@@ -349,4 +349,6 @@ public interface ManagementService {
 	public User getOrCreateUserForFoursquareAccessToken(UUID applicationId,
 			String fq_access_token) throws Exception;
 
+    public abstract void provisionSuperuser() throws Exception;
+
 }
