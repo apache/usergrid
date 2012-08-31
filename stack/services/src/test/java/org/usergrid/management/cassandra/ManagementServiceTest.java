@@ -1,26 +1,30 @@
 package org.usergrid.management.cassandra;
 
-import static java.lang.Boolean.parseBoolean;
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
-import static org.usergrid.management.AccountCreationProps.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.management.*;
+import org.usergrid.management.ManagementTestHelper;
+import org.usergrid.management.OrganizationInfo;
+import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.utils.JsonUtils;
-
-import javax.mail.Message;
 
 /**
  * @author zznate
@@ -101,7 +105,7 @@ public class ManagementServiceTest {
 
 	@Test
 	public void testCountAdminUserAction() throws Exception {
-    managementService.countAdminUserAction(adminUser, "login");
+	    managementService.countAdminUserAction(adminUser, "login");
 
 		EntityManager em = helper.getEntityManagerFactory().getEntityManager(
 				MANAGEMENT_APPLICATION_ID);
@@ -111,5 +115,50 @@ public class ManagementServiceTest {
 		log.info(JsonUtils.mapToJsonString(em.getCounterNames()));
 		assertNotNull(counts.get("admin_logins"));
 		assertEquals(1, counts.get("admin_logins").intValue());
+	}
+	
+	@Test
+	public void deactivateUser() throws Exception{
+	    
+	    Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
+
+        
+        EntityManager em = helper.getEntityManagerFactory()
+                .getEntityManager(applicationId);
+        
+        Entity entity = em.create("user", properties);
+
+        assertNotNull(entity);
+        
+        User user = em.get(entity.getUuid(), User.class);
+        
+        assertFalse(user.activated());
+        assertNull(user.getDeactivated());
+        
+        
+        managementService.activateAppUser(applicationId, user.getUuid());
+        
+        user = em.get(entity.getUuid(), User.class);
+        
+        
+        assertTrue(user.activated());
+        assertNull(user.getDeactivated());
+        
+      
+        
+        long startTime = System.currentTimeMillis();
+	    
+	    managementService.deactivateUser(applicationId, user.getUuid());
+	    
+	    long endTime = System.currentTimeMillis();
+	    
+	    user = em.get(entity.getUuid(), User.class);
+        
+        assertFalse(user.activated());
+        assertNotNull(user.getDeactivated());
+        
+        assertTrue(startTime <= user.getDeactivated() && user.getDeactivated() <= endTime);
 	}
 }

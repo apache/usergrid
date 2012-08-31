@@ -74,6 +74,7 @@ import org.usergrid.locking.LockManager;
 import org.usergrid.management.*;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
 import org.usergrid.management.exceptions.IncorrectPasswordException;
+import org.usergrid.management.exceptions.ManagementException;
 import org.usergrid.management.exceptions.UnableToLeaveOrganizationException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
 import org.usergrid.persistence.CredentialsInfo;
@@ -1705,10 +1706,19 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public void deactivateAdminUser(UUID userId) throws Exception {
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-        em.setProperty(new SimpleEntityRef(User.ENTITY_TYPE, userId),
-                "activated", false);
+    public void deactivateUser(UUID applicationId, UUID userId) throws Exception {
+        EntityManager em = emf.getEntityManager(applicationId);
+        
+        User user = em.get(userId, User.class);
+        
+        if(user == null){
+            throw new ManagementException(String.format("User with id %s does not exist in app %s", userId, applicationId));
+        }
+        
+        user.setActivated(false);
+        user.setDeactivated(System.currentTimeMillis());
+        
+        em.update(user);
     }
 
     @Override
