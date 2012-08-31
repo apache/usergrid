@@ -1812,9 +1812,9 @@ function apigee_console_app(Pages, query_params) {
    *
    ******************************************************************/
 
-  function pageOpenUserProfile(userId) {
+  function pageOpenUserProfile(userName) {
     Pages.SelectPanel('user');
-    requestUser(userId);
+    requestUser(userName);
     selectTabButton('#button-user-profile');
     showPanelContent('#user-panel', '#user-panel-profile');
   }
@@ -1977,7 +1977,7 @@ function apigee_console_app(Pages, query_params) {
 	  redrawUserProfile(data, this.getCurl());
 
 		//TODO: This block and the subsequent blocks could all be methods of their own
-      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/groups', null, null,
+      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.username + '/groups', null, null,
         function(response) {
           if (data && response.entities && (response.entities.length > 0)) {
             data.memberships = response.entities;
@@ -1987,7 +1987,7 @@ function apigee_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve user's groups."); }
       ));
 
-      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/activities', null, null,
+      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.username + '/activities', null, null,
         function(response) {
           if (data && response.entities && (response.entities.length > 0)) {
             data.activities = response.entities;
@@ -2002,7 +2002,7 @@ function apigee_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve user's activities.");}
       ));
 
-      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/roles', null, null,
+      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.username + '/roles', null, null,
         function(response) {
           if (data && response.entities && (response.entities.length > 0)) {
             data.roles = response.entities;
@@ -2011,7 +2011,7 @@ function apigee_console_app(Pages, query_params) {
           }
           data.rolesCurl = this.getCurl();
           //Run Permissions query after roles query has been handled
-	      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/permissions', null, null,
+	      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.username + '/permissions', null, null,
 	        function(response) {
 	          var permissions = {};
 	          if (data && response.data && (response.data.length > 0)) {
@@ -2056,14 +2056,14 @@ function apigee_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve user's roles.");}
       ));
 
-      	runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/following', null, null,
+      	runAppQuery(new Usergrid.Query("GET", 'users/' + entity.username + '/following', null, null,
 	        function(response) {
 	          data.followingCurl = this.getCurl();
 	          if (data && response.entities && (response.entities.length > 0)) {
 	            data.following = response.entities;
 	          }
 	          //Requests /Followers after the /following response has been handled.
-	          runAppQuery(new Usergrid.Query("GET", 'users/' + entity.uuid + '/followers', null, null,
+	          runAppQuery(new Usergrid.Query("GET", 'users/' + entity.username + '/followers', null, null,
 		        function(response) {
 
 		          if (data && response.entities && (response.entities.length > 0)) {
@@ -2230,9 +2230,9 @@ function apigee_console_app(Pages, query_params) {
    *
    ******************************************************************/
 
-  function pageOpenGroupProfile(groupId) {
+  function pageOpenGroupProfile(groupPath) {
     Pages.SelectPanel('group');
-    requestGroup(groupId);
+    requestGroup(groupPath);
     selectTabButton('#button-group-details');
     showPanelContent('#group-panel', '#group-panel-details');
   }
@@ -2378,7 +2378,7 @@ function apigee_console_app(Pages, query_params) {
 
 	redrawGroupDetails(data, this.getCurl());
 
-      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/users', null, null,
+      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.path + '/users', null, null,
         function(response) {
           if (data && response.entities && (response.entities.length > 0)) {
             data.memberships = response.entities;
@@ -2389,7 +2389,7 @@ function apigee_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve group's users."); }
       ));
 
-      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/activities', null, null,
+      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.path + '/activities', null, null,
         function(response) {
           if (data && response.entities && (response.entities.length > 0)) {
             data.activities = response.entities;
@@ -2399,14 +2399,14 @@ function apigee_console_app(Pages, query_params) {
         function() { alertModal("Error", "Unable to retrieve group's activities."); }
       ));
 
-      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.uuid + '/roles', null, null,
+      runAppQuery(new Usergrid.Query("GET",'groups/' + entity.path + '/roles', null, null,
         function(response) {
           if (data && response.entities) {
             data.roles = response.entities;
           }
           data.groupRolesCurl = this.getCurl();
           //WHEN /Roles is properly handled, get permissions
-          runAppQuery(new Usergrid.Query("GET", 'groups/' + entity.uuid + '/permissions', null, null,
+          runAppQuery(new Usergrid.Query("GET", 'groups/' + entity.path + '/permissions', null, null,
 	        function(response) {
 	          var permissions = {};
 	          if (data && response.data && (response.data.length > 0)) {
