@@ -19,7 +19,50 @@ import static java.lang.Boolean.parseBoolean;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.usergrid.persistence.CredentialsInfo.*;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_ACTIVATION_URL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_CONFIRMATION_URL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_RESETPW_URL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_ACTIVATED;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_CONFIRMATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_INVITED;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_FOOTER;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ORGANIZATION_ACTIVATED;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ORGANIZATION_CONFIRMED_AWAITING_ACTIVATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATED;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATED;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_ACTIVATED;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_CONFIRMATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_CONFIRMED_AWAITING_ACTIVATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_PASSWORD_RESET;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_PIN_REQUEST;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_MAILER_EMAIL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_ORGANIZATION_ACTIVATION_URL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_PASSWORD_SALT;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_SETUP_TEST_ACCOUNT;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_EMAIL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_NAME;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_PASSWORD;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_NAME;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_USERNAME;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_APP;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ORGANIZATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_ACTIVATION_URL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
+import static org.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
+import static org.usergrid.persistence.CredentialsInfo.hashedCredentials;
+import static org.usergrid.persistence.CredentialsInfo.mongoPasswordCredentials;
+import static org.usergrid.persistence.CredentialsInfo.plainTextCredentials;
 import static org.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
 import static org.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.usergrid.persistence.Schema.PROPERTY_PATH;
@@ -38,7 +81,10 @@ import static org.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_NAME;
 import static org.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_TYPE;
 import static org.usergrid.persistence.entities.Activity.PROPERTY_TITLE;
 import static org.usergrid.persistence.entities.Activity.PROPERTY_VERB;
-import static org.usergrid.security.AuthPrincipalType.*;
+import static org.usergrid.security.AuthPrincipalType.ADMIN_USER;
+import static org.usergrid.security.AuthPrincipalType.APPLICATION;
+import static org.usergrid.security.AuthPrincipalType.APPLICATION_USER;
+import static org.usergrid.security.AuthPrincipalType.ORGANIZATION;
 import static org.usergrid.security.oauth.ClientCredentialsInfo.getTypeFromClientId;
 import static org.usergrid.security.oauth.ClientCredentialsInfo.getUUIDFromClientId;
 import static org.usergrid.security.tokens.TokenCategory.ACCESS;
@@ -49,7 +95,6 @@ import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.ListUtils.anyNull;
 import static org.usergrid.utils.MapUtils.hashMap;
-import static org.usergrid.management.AccountCreationProps.*;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -71,7 +116,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.locking.LockManager;
-import org.usergrid.management.*;
+import org.usergrid.management.AccountCreationProps;
+import org.usergrid.management.ActivationState;
+import org.usergrid.management.ApplicationInfo;
+import org.usergrid.management.ManagementService;
+import org.usergrid.management.OrganizationInfo;
+import org.usergrid.management.OrganizationOwnerInfo;
+import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
 import org.usergrid.management.exceptions.IncorrectPasswordException;
 import org.usergrid.management.exceptions.UnableToLeaveOrganizationException;
@@ -112,6 +163,7 @@ import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
 import org.usergrid.utils.ConversionUtils;
 import org.usergrid.utils.JsonUtils;
+import org.usergrid.utils.MailUtils;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -120,7 +172,6 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
-import org.usergrid.utils.MailUtils;
 
 public class ManagementServiceImpl implements ManagementService {
 
@@ -143,8 +194,6 @@ public class ManagementServiceImpl implements ManagementService {
      * Key for the user's password
      */
     protected static final String USER_PASSWORD = "password";
-    
-    
 
     private static final String TOKEN_TYPE_ACTIVATION = "activate";
 
@@ -212,12 +261,18 @@ public class ManagementServiceImpl implements ManagementService {
     public void setup() throws Exception {
 
         if (parseBoolean(properties.getProperty(PROPERTIES_SETUP_TEST_ACCOUNT))) {
-            String test_app_name = properties.getProperty(PROPERTIES_TEST_ACCOUNT_APP);
-            String test_organization_name = properties.getProperty(PROPERTIES_TEST_ACCOUNT_ORGANIZATION);
-            String test_admin_username = properties.getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_USERNAME);
-            String test_admin_name = properties.getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_NAME);
-            String test_admin_email = properties.getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL);
-            String test_admin_password = properties.getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD);
+            String test_app_name = properties
+                    .getProperty(PROPERTIES_TEST_ACCOUNT_APP);
+            String test_organization_name = properties
+                    .getProperty(PROPERTIES_TEST_ACCOUNT_ORGANIZATION);
+            String test_admin_username = properties
+                    .getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_USERNAME);
+            String test_admin_name = properties
+                    .getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_NAME);
+            String test_admin_email = properties
+                    .getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL);
+            String test_admin_password = properties
+                    .getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD);
 
             if (anyNull(test_app_name, test_organization_name,
                     test_admin_username, test_admin_name, test_admin_email,
@@ -226,17 +281,15 @@ public class ManagementServiceImpl implements ManagementService {
                 return;
             }
 
-          UserInfo user = createAdminUser(test_admin_username,
-                  test_admin_name, test_admin_email, test_admin_password,
-                  true, false);
+            UserInfo user = createAdminUser(test_admin_username,
+                    test_admin_name, test_admin_email, test_admin_password,
+                    true, false);
 
-          OrganizationInfo organization = createOrganization(
+            OrganizationInfo organization = createOrganization(
                     test_organization_name, user, true);
 
-
             UUID appId = createApplication(organization.getUuid(),
-                    buildAppName(test_app_name, organization))
-                    .getId();
+                    buildAppName(test_app_name, organization)).getId();
 
             postOrganizationActivity(organization.getUuid(), user, "create",
                     new SimpleEntityRef(APPLICATION_INFO, appId),
@@ -246,24 +299,41 @@ public class ManagementServiceImpl implements ManagementService {
                             + ")</a> created a new application named "
                             + test_app_name, null);
 
-            boolean superuser_enabled = parseBoolean(properties
-                    .getProperty(PROPERTIES_SYSADMIN_LOGIN_ALLOWED));
-            String superuser_username = properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
-            String superuser_email = properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL);
-            String superuser_password = properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_PASSWORD);
-
-            if (!anyNull(superuser_username, superuser_email,
-                    superuser_password)) {
-                user = createAdminUser(superuser_username, "Super User",
-                        superuser_email, superuser_password, superuser_enabled,
-                        !superuser_enabled);
-            } else {
-                logger.warn("Missing values for superuser account, check properties.  Skipping superuser account setup...");
-            }
         } else {
             logger.warn("Test app creation disabled");
         }
 
+        boolean superuser_enabled = parseBoolean(properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_ALLOWED));
+        String superuser_username = properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
+        String superuser_email = properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL);
+        String superuser_password = properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_PASSWORD);
+
+        if (!anyNull(superuser_username, superuser_email, superuser_password)) {
+            createAdminUser(superuser_username, "Super User", superuser_email,
+                    superuser_password, superuser_enabled, !superuser_enabled);
+        } else {
+            logger.warn("Missing values for superuser account, check properties.  Skipping superuser account setup...");
+        }
+
+    }
+
+    public boolean superuserEnabled() {
+        boolean superuser_enabled = parseBoolean(properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_ALLOWED));
+        String superuser_username = properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
+        String superuser_email = properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL);
+        String superuser_password = properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_PASSWORD);
+
+        return superuser_enabled
+                && !anyNull(superuser_username, superuser_email,
+                        superuser_password);
     }
 
     public String generateOAuthSecretKey(AuthPrincipalType type) {
@@ -358,7 +428,8 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public OrganizationOwnerInfo createOwnerAndOrganization(
             String organizationName, String username, String name,
-            String email, String password, boolean activated, boolean disabled) throws Exception {
+            String email, String password, boolean activated, boolean disabled)
+            throws Exception {
 
         lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "groups", "path");
         lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "users",
@@ -369,7 +440,8 @@ public class ManagementServiceImpl implements ManagementService {
 
         try {
             if (areActivationChecksDisabled()) {
-                user = createAdminUser(username, name, email, password, true, false);
+                user = createAdminUser(username, name, email, password, true,
+                        false);
             } else {
                 user = createAdminUser(username, name, email, password,
                         activated, disabled);
@@ -501,7 +573,7 @@ public class ManagementServiceImpl implements ManagementService {
      * Test if the applicationName contains a '/' character, prepend with
      * orgName if it does not, assume it is complete (and that organization is
      * needed) if so.
-     *
+     * 
      * @param applicationName
      * @param organization
      * @return
@@ -659,9 +731,8 @@ public class ManagementServiceImpl implements ManagementService {
         return results;
     }
 
-
-    private UserInfo doCreateAdmin(User user, CredentialsInfo userPassword, CredentialsInfo mongoPassword)
-            throws Exception {
+    private UserInfo doCreateAdmin(User user, CredentialsInfo userPassword,
+            CredentialsInfo mongoPassword) throws Exception {
 
         writeUserToken(
                 MANAGEMENT_APPLICATION_ID,
@@ -677,8 +748,9 @@ public class ManagementServiceImpl implements ManagementService {
                 user.getEmail(), user.getActivated(), user.getDisabled());
 
         // special case for sysadmin only
-        if (!user.getEmail().equals(properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL))) {
-          this.startAdminUserActivationFlow(userInfo);
+        if (!user.getEmail().equals(
+                properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL))) {
+            this.startAdminUserActivationFlow(userInfo);
         }
 
         return userInfo;
@@ -705,14 +777,16 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public UserInfo createAdminFrom(User user, String password) throws Exception {
+    public UserInfo createAdminFrom(User user, String password)
+            throws Exception {
         return doCreateAdmin(user, maybeSaltPassword(user, password),
                 mongoPasswordCredentials(user.getUsername(), password));
     }
 
     @Override
     public UserInfo createAdminUser(String username, String name, String email,
-            String password, boolean activated, boolean disabled) throws Exception {
+            String password, boolean activated, boolean disabled)
+            throws Exception {
 
         if (email == null) {
             return null;
@@ -973,9 +1047,10 @@ public class ManagementServiceImpl implements ManagementService {
         if ((userId == null) || (oldPassword == null) || (newPassword == null)) {
             return;
         }
-        User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId, User.class);
-        if (!maybeSaltPassword(user, oldPassword)
-                .compare(readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId))) {
+        User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId,
+                User.class);
+        if (!maybeSaltPassword(user, oldPassword).compare(
+                readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId))) {
             logger.info("Old password doesn't match");
             throw new IncorrectPasswordException("Old password does not match");
         }
@@ -991,7 +1066,8 @@ public class ManagementServiceImpl implements ManagementService {
             return;
         }
 
-        User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId, User.class);
+        User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId,
+                User.class);
 
         writeUserPassword(MANAGEMENT_APPLICATION_ID, user,
                 maybeSaltPassword(user, newPassword));
@@ -1008,9 +1084,10 @@ public class ManagementServiceImpl implements ManagementService {
         if ((userId == null) || (password == null)) {
             return false;
         }
-        User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId, User.class);
-        return maybeSaltPassword(user, password)
-                .compare(readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId));
+        User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId,
+                User.class);
+        return maybeSaltPassword(user, password).compare(
+                readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId));
     }
 
     @Override
@@ -1023,8 +1100,9 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        if (maybeSaltPassword(user, password)
-                .compare(readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID,user.getUuid()))) {
+        if (maybeSaltPassword(user, password).compare(
+                readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID,
+                        user.getUuid()))) {
             userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
             if (!userInfo.isActivated()) {
                 throw new UnactivatedAdminUserException();
@@ -1048,8 +1126,8 @@ public class ManagementServiceImpl implements ManagementService {
         if (user == null) {
             return null;
         }
-        String mongo_pwd = readUserMongoPassword(MANAGEMENT_APPLICATION_ID, user.getUuid()).getSecret();
-   
+        String mongo_pwd = readUserMongoPassword(MANAGEMENT_APPLICATION_ID,
+                user.getUuid()).getSecret();
 
         if (mongo_pwd == null) {
             throw new IncorrectPasswordException(
@@ -1058,24 +1136,21 @@ public class ManagementServiceImpl implements ManagementService {
 
         String expected_key = DigestUtils.md5Hex(nonce
                 + user.getProperty("username") + mongo_pwd);
-        
+
         if (!expected_key.equalsIgnoreCase(key)) {
             throw new IncorrectPasswordException();
         }
 
-        
         UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
                 user.getProperties());
-        
-  
+
         if (!userInfo.isActivated()) {
             throw new UnactivatedAdminUserException();
         }
         if (userInfo.isDisabled()) {
             throw new DisabledAdminUserException();
         }
-        
-        
+
         return userInfo;
     }
 
@@ -1219,8 +1294,18 @@ public class ManagementServiceImpl implements ManagementService {
         Map<String, Map<String, Object>> jsonOrganizations = new HashMap<String, Map<String, Object>>();
         json.put("organizations", jsonOrganizations);
 
-        Map<UUID, String> organizations = getOrganizationsForAdminUser(user
-                .getUuid());
+        Map<UUID, String> organizations = null;
+
+        boolean superuser_enabled = parseBoolean(properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_ALLOWED));
+        String superuser_username = properties
+                .getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
+        if (superuser_enabled && (superuser_username != null)
+                && superuser_username.equals(user.getUsername())) {
+            organizations = getOrganizations();
+        } else {
+            organizations = getOrganizationsForAdminUser(user.getUuid());
+        }
 
         for (Entry<UUID, String> organization : organizations.entrySet()) {
             Map<String, Object> jsonOrganization = new HashMap<String, Object>();
@@ -1313,15 +1398,16 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public ApplicationInfo createApplication(UUID organizationId, String applicationName)
-            throws Exception {
+    public ApplicationInfo createApplication(UUID organizationId,
+            String applicationName) throws Exception {
 
         return createApplication(organizationId, applicationName, null);
     }
 
     @Override
-    public ApplicationInfo createApplication(UUID organizationId, String applicationName,
-            Map<String, Object> properties) throws Exception {
+    public ApplicationInfo createApplication(UUID organizationId,
+            String applicationName, Map<String, Object> properties)
+            throws Exception {
 
         if ((organizationId == null) || (applicationName == null)) {
             return null;
@@ -1530,7 +1616,8 @@ public class ManagementServiceImpl implements ManagementService {
 
         } else if (AuthPrincipalType.ADMIN_USER.equals(type)
                 || AuthPrincipalType.APPLICATION_USER.equals(type)) {
-            return getCredentialsSecret(readUserPasswordCredentials(applicationId, id));
+            return getCredentialsSecret(readUserPasswordCredentials(
+                    applicationId, id));
         }
         throw new IllegalArgumentException(
                 "Must specify an admin user, organization or application principal");
@@ -1924,17 +2011,18 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public void startAdminUserActivationFlow(UserInfo user) throws Exception {
         if (user.isActivated()) {
-          sendAdminUserActivatedEmail(user);
-          sendSysAdminNewAdminActivatedNotificationEmail(user);
+            sendAdminUserActivatedEmail(user);
+            sendSysAdminNewAdminActivatedNotificationEmail(user);
         } else {
             if (newAdminUsersRequireConfirmation()) {
                 sendAdminUserConfirmationEmail(user);
             } else if (newAdminUsersNeedSysAdminApproval()) {
                 sendSysAdminRequestAdminActivationEmail(user);
             } else {
-              // sdg: There seems to be a hole in the logic. The user has been created
-              // in an inactive state but nobody is being notified.
-              activateAdminUser(user.getUuid());
+                // sdg: There seems to be a hole in the logic. The user has been
+                // created
+                // in an inactive state but nobody is being notified.
+                activateAdminUser(user.getUuid());
             }
         }
     }
@@ -2029,7 +2117,8 @@ public class ManagementServiceImpl implements ManagementService {
         sendAdminUserEmail(
                 user,
                 "User Account Confirmed",
-                properties.getProperty(PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION));
+                properties
+                        .getProperty(PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION));
 
     }
 
@@ -2065,7 +2154,7 @@ public class ManagementServiceImpl implements ManagementService {
         activateOrganization(organization, true);
     }
 
-     private void activateOrganization(OrganizationInfo organization,
+    private void activateOrganization(OrganizationInfo organization,
             boolean sendEmail) throws Exception {
         EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         em.setProperty(
@@ -2322,7 +2411,8 @@ public class ManagementServiceImpl implements ManagementService {
         sendAppUserEmail(
                 user,
                 "User Account Confirmed",
-                properties.getProperty(PROPERTIES_EMAIL_USER_CONFIRMED_AWAITING_ACTIVATION));
+                properties
+                        .getProperty(PROPERTIES_EMAIL_USER_CONFIRMED_AWAITING_ACTIVATION));
 
     }
 
@@ -2357,8 +2447,8 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager(applicationId);
         User user = em.get(userId, User.class);
 
-
-        writeUserPassword(applicationId, user, maybeSaltPassword(user, newPassword));
+        writeUserPassword(applicationId, user,
+                maybeSaltPassword(user, newPassword));
 
     }
 
@@ -2374,10 +2464,10 @@ public class ManagementServiceImpl implements ManagementService {
         }
         // TODO load the user, send the hashType down to maybeSaltPassword
         User user = emf.getEntityManager(applicationId).get(userId, User.class);
-        if (!maybeSaltPassword(user, oldPassword).compare(readUserPasswordCredentials(applicationId, userId))) {
+        if (!maybeSaltPassword(user, oldPassword).compare(
+                readUserPasswordCredentials(applicationId, userId))) {
             throw new IncorrectPasswordException("Old password does not match");
         }
-
 
         setAppUserPassword(applicationId, userId, newPassword);
 
@@ -2392,7 +2482,8 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        if (maybeSaltPassword(user, password).compare(readUserPasswordCredentials(applicationId, user.getUuid()))) {
+        if (maybeSaltPassword(user, password).compare(
+                readUserPasswordCredentials(applicationId, user.getUuid()))) {
             if (!user.activated()) {
                 throw new UnactivatedAdminUserException();
             }
@@ -2671,117 +2762,136 @@ public class ManagementServiceImpl implements ManagementService {
 
     }
 
-     
-      
-      /**
-       * Persist the user's password credentials info
-       * @param appId
-       * @param owner
-       * @param creds
-       * @throws Exception 
-       */
-      protected void writeUserPassword(UUID appId, EntityRef owner,CredentialsInfo creds) throws Exception{
-          writeCreds(appId, owner, creds, USER_PASSWORD);
-      }
-      
-      /**
-       * read the user password credential's info
-       * @param appId
-       * @param ownerId
-       * @return
-     * @throws Exception 
-       */
-      protected CredentialsInfo readUserPasswordCredentials(UUID appId, UUID ownerId) throws Exception{
-         return readCreds(appId, ownerId, USER_PASSWORD);
-      }
-      
-      /**
-       * Write the user's token
-       * @param appId
-       * @param owner
-       * @param token
-     * @throws Exception 
-       */
-      protected void writeUserToken(UUID appId, EntityRef owner, CredentialsInfo token) throws Exception{
-          writeCreds(appId, owner, token, USER_TOKEN);
-      }
-      
-      /**
-       * Read the credentials info for the user's token
-       * @param appId
-       * @param ownerId
-       * @return
-     * @throws Exception 
-       */
-      protected CredentialsInfo readUserToken(UUID appId, UUID ownerId) throws Exception{
-          return readCreds(appId, ownerId, USER_TOKEN);
-      }
-      
-      /**
-       * Write the mongo password
-       * @param appId
-       * @param owner
-       * @param password
-     * @throws Exception 
-       */
-      protected void writeUserMongoPassword(UUID appId, EntityRef owner, CredentialsInfo password) throws Exception{
-         writeCreds(appId, owner, password, USER_MONGO_PASSWORD);
-      }
-      
-      /**
-       * Read the mongo password
-       * @param appId
-       * @param ownerId
-       * @return
-     * @throws Exception 
-       */
-      protected CredentialsInfo readUserMongoPassword(UUID appId, UUID ownerId) throws Exception{
-          return readCreds(appId, ownerId, USER_MONGO_PASSWORD);
-      }
-      
-      /**
-       * Write the user's pin
-       * @param appId
-       * @param owner
-       * @param pin
-       * @throws Exception 
-       */
-      protected void writeUserPin(UUID appId, EntityRef owner, CredentialsInfo pin) throws Exception{
-          writeCreds(appId, owner, pin, USER_PIN);
-      }
-      
-      /**
-       * Read the user's pin
-       * @param appId
-       * @param ownerId
-       * @return
-     * @throws Exception 
-       */
-      protected CredentialsInfo readUserPin(UUID appId, UUID ownerId) throws Exception{
-          return readCreds(appId, ownerId, USER_PIN);
-      }
-      
-      private void writeCreds(UUID appId, EntityRef owner, CredentialsInfo creds, String key) throws Exception{
-          EntityManager em = emf.getEntityManager(appId);
-          em.addToDictionary(owner, DICTIONARY_CREDENTIALS, key, creds);
-          
-      }
-      
-      private CredentialsInfo readCreds(UUID appId, UUID ownerId, String key) throws Exception{
-          EntityManager em = emf.getEntityManager(appId);
-          Entity owner = em.get(ownerId);
-          return (CredentialsInfo) em.getDictionaryElementValue(owner, DICTIONARY_CREDENTIALS, key);
-      }
+    /**
+     * Persist the user's password credentials info
+     * 
+     * @param appId
+     * @param owner
+     * @param creds
+     * @throws Exception
+     */
+    protected void writeUserPassword(UUID appId, EntityRef owner,
+            CredentialsInfo creds) throws Exception {
+        writeCreds(appId, owner, creds, USER_PASSWORD);
+    }
 
+    /**
+     * read the user password credential's info
+     * 
+     * @param appId
+     * @param ownerId
+     * @return
+     * @throws Exception
+     */
+    protected CredentialsInfo readUserPasswordCredentials(UUID appId,
+            UUID ownerId) throws Exception {
+        return readCreds(appId, ownerId, USER_PASSWORD);
+    }
 
+    /**
+     * Write the user's token
+     * 
+     * @param appId
+     * @param owner
+     * @param token
+     * @throws Exception
+     */
+    protected void writeUserToken(UUID appId, EntityRef owner,
+            CredentialsInfo token) throws Exception {
+        writeCreds(appId, owner, token, USER_TOKEN);
+    }
+
+    /**
+     * Read the credentials info for the user's token
+     * 
+     * @param appId
+     * @param ownerId
+     * @return
+     * @throws Exception
+     */
+    protected CredentialsInfo readUserToken(UUID appId, UUID ownerId)
+            throws Exception {
+        return readCreds(appId, ownerId, USER_TOKEN);
+    }
+
+    /**
+     * Write the mongo password
+     * 
+     * @param appId
+     * @param owner
+     * @param password
+     * @throws Exception
+     */
+    protected void writeUserMongoPassword(UUID appId, EntityRef owner,
+            CredentialsInfo password) throws Exception {
+        writeCreds(appId, owner, password, USER_MONGO_PASSWORD);
+    }
+
+    /**
+     * Read the mongo password
+     * 
+     * @param appId
+     * @param ownerId
+     * @return
+     * @throws Exception
+     */
+    protected CredentialsInfo readUserMongoPassword(UUID appId, UUID ownerId)
+            throws Exception {
+        return readCreds(appId, ownerId, USER_MONGO_PASSWORD);
+    }
+
+    /**
+     * Write the user's pin
+     * 
+     * @param appId
+     * @param owner
+     * @param pin
+     * @throws Exception
+     */
+    protected void writeUserPin(UUID appId, EntityRef owner, CredentialsInfo pin)
+            throws Exception {
+        writeCreds(appId, owner, pin, USER_PIN);
+    }
+
+    /**
+     * Read the user's pin
+     * 
+     * @param appId
+     * @param ownerId
+     * @return
+     * @throws Exception
+     */
+    protected CredentialsInfo readUserPin(UUID appId, UUID ownerId)
+            throws Exception {
+        return readCreds(appId, ownerId, USER_PIN);
+    }
+
+    private void writeCreds(UUID appId, EntityRef owner, CredentialsInfo creds,
+            String key) throws Exception {
+        EntityManager em = emf.getEntityManager(appId);
+        em.addToDictionary(owner, DICTIONARY_CREDENTIALS, key, creds);
+
+    }
+
+    private CredentialsInfo readCreds(UUID appId, UUID ownerId, String key)
+            throws Exception {
+        EntityManager em = emf.getEntityManager(appId);
+        Entity owner = em.get(ownerId);
+        return (CredentialsInfo) em.getDictionaryElementValue(owner,
+                DICTIONARY_CREDENTIALS, key);
+    }
+
+    @Override
     public boolean newAdminUsersNeedSysAdminApproval() {
         return properties.newAdminUsersNeedSysAdminApproval();
     }
 
+    @Override
     public boolean newAdminUsersRequireConfirmation() {
         return properties.newAdminUsersRequireConfirmation();
     }
 
+    @Override
     public boolean newOrganizationsNeedSysAdminApproval() {
         return properties.newOrganizationsNeedSysAdminApproval();
     }
@@ -2789,23 +2899,27 @@ public class ManagementServiceImpl implements ManagementService {
     private boolean areActivationChecksDisabled() {
         return !(newOrganizationsNeedSysAdminApproval()
                 || properties.newOrganizationsRequireConfirmation()
-                || newAdminUsersNeedSysAdminApproval()
-                || newAdminUsersRequireConfirmation());
+                || newAdminUsersNeedSysAdminApproval() || newAdminUsersRequireConfirmation());
     }
 
-    private static void sendHtmlMail(AccountCreationProps props, String to, String from, String subject, String html) {
-        MailUtils.sendHtmlMail(props.getMailProperties(), to, from, subject, html);
+    private static void sendHtmlMail(AccountCreationProps props, String to,
+            String from, String subject, String html) {
+        MailUtils.sendHtmlMail(props.getMailProperties(), to, from, subject,
+                html);
     }
 
-  public AccountCreationProps getAccountCreationProps() {
-    return properties;
-  }
-
-  private CredentialsInfo maybeSaltPassword(User user, String password) throws Exception {
-    String hashType = null;
-    if (user.getProperty(User.PROPERTY_HASHTYPE) != null ) {
-      hashType = (String)user.getProperty(User.PROPERTY_HASHTYPE);
+    public AccountCreationProps getAccountCreationProps() {
+        return properties;
     }
-    return hashedCredentials(properties.getProperty(PROPERTIES_PASSWORD_SALT, ""),password, hashType);
-  }
+
+    private CredentialsInfo maybeSaltPassword(User user, String password)
+            throws Exception {
+        String hashType = null;
+        if (user.getProperty(User.PROPERTY_HASHTYPE) != null) {
+            hashType = (String) user.getProperty(User.PROPERTY_HASHTYPE);
+        }
+        return hashedCredentials(
+                properties.getProperty(PROPERTIES_PASSWORD_SALT, ""), password,
+                hashType);
+    }
 }
