@@ -290,4 +290,17 @@ public abstract class AbstractRestTest extends JerseyTest {
     protected JsonNode getEntity(JsonNode response, int index) {
         return response.get("entities").get(index);
     }
+    
+    /**
+     * Get the entity from the entity array in the response
+     * 
+     * @param response
+     * @param index
+     * @return
+     */
+    protected JsonNode getEntity(JsonNode response, String name) {
+        return response.get("entities").get(name);
+    }
 }
+
+

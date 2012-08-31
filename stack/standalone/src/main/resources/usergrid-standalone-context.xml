@@ -15,6 +15,7 @@
 		<property name="ignoreResourceNotFound" value="true" />
 		<property name="locations">
 			<list>
+				<value>classpath:/usergrid-default.properties</value>
 				<value>classpath:/usergrid-standalone.properties</value>
 				<value>classpath:/usergrid-custom.properties</value>
 				<value>file:./usergrid-custom-standalone.properties</value>

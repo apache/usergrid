@@ -11,6 +11,18 @@
 	
 	<context:component-scan base-package="org.usergrid.rest" />
 	
+	
+	<bean id="properties"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="singleton" value="true" />
+		<property name="ignoreResourceNotFound" value="true" />
+		<property name="locations">
+			<list>
+				<value>classpath:/usergrid-default.properties</value>
+			</list>
+		</property>
+	</bean>
+	
 
 	<bean
 		class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"

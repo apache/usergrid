@@ -21,14 +21,15 @@ package org.usergrid.persistence.query.ir;
  */
 public class NotNode extends QueryNode {
 
-    protected QueryNode child;
+    protected QueryNode child, allNode;
     
     /**
-     * @param left
-     * @param right
+     * @param child
+     * @param allNode may be null if there are parents to this
      */
-    public NotNode(QueryNode child){
+    public NotNode(QueryNode child, QueryNode allNode){
         this.child = child;
+      this.allNode = allNode;
     }
 
     /**
@@ -38,7 +39,14 @@ public class NotNode extends QueryNode {
         return child;
     }
 
-    /* (non-Javadoc)
+  /**
+   * @return the all
+   */
+  public QueryNode getAllNode() {
+    return allNode;
+  }
+
+  /* (non-Javadoc)
      * @see org.usergrid.persistence.query.ir.QueryNode#visit(org.usergrid.persistence.query.ir.NodeVisitor)
      */
     @Override
@@ -51,7 +59,7 @@ public class NotNode extends QueryNode {
 		return "NotNode [child=" + child + "]";
 	}
 
-    
- 
+
+
 
 }

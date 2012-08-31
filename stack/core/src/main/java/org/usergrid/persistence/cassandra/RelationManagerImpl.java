@@ -141,10 +141,7 @@ import org.usergrid.persistence.SimpleRoleRef;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.entities.Group;
-import org.usergrid.persistence.query.ir.QuerySlice;
-import org.usergrid.persistence.query.ir.SearchVisitor;
-import org.usergrid.persistence.query.ir.SliceNode;
-import org.usergrid.persistence.query.ir.WithinNode;
+import org.usergrid.persistence.query.ir.*;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
@@ -3057,26 +3054,18 @@ public class RelationManagerImpl implements RelationManager,
             // check if we have sub keys for equality clauses at this node
             // level. If so we can just use them as a row key for faster seek
 
-            // Object indexKey = key(headEntity.getUuid(), collection.getName())
-            // ;
             Results results = null;
 
             int limit = query.getLimit() + 1;
 
             Level resultsLevel = query.getResultsLevel();
 
-            // key(owner.getUuid(),
-            // collectionName, subkey_key,
-            // indexEntry.getPath())
             Object subKey = getCFKeyForSubkey(collection, node);
 
-            //
             for (QuerySlice slice : node.getAllSlices()) {
 
                 // NOTE we explicitly do not append the slice value here. This
-                // is
-                // done in the searchIndex
-                // method below
+                // is done in the searchIndex method below
                 Object indexKey = subKey == null ? key(headEntity.getUuid(),
                         collection.getName()) : key(headEntity.getUuid(),
                         collection.getName(), subKey);
@@ -3107,9 +3096,8 @@ public class RelationManagerImpl implements RelationManager,
                 }
 
                 // we've hit the last element in the index in a page. I.E 40
-                // elements at 10 page size 4 times. Our cursor
-                // needs to be max so we don't get any results in the next page
-                // call
+                // elements at 10 page size 4 times. Our cursor needs
+                // to be max so we don't get any results in the next page call
                 else {
                     r.setCursorMax();
                 }
@@ -3127,7 +3115,27 @@ public class RelationManagerImpl implements RelationManager,
 
         }
 
-        /*
+      public void visit(AllNode node) throws Exception {
+
+        String collectionName = collection.getName();
+
+        List<UUID> ids = cass.getIdList(
+                cass.getApplicationKeyspace(applicationId),
+                key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName),
+                query.getStartResult(),
+                null,
+                query.getLimit() + 1,
+                query.isReversed(),
+                indexBucketLocator,
+                applicationId,
+                collectionName);
+
+        Results results = Results.fromIdList(ids, collection.getType());
+
+        this.results.push(results);
+      }
+
+      /*
          * (non-Javadoc)
          * 
          * @see
@@ -3259,6 +3267,10 @@ public class RelationManagerImpl implements RelationManager,
             results.push(r);
         }
 
+      @Override
+      public void visit(AllNode node) throws Exception {
+        // todo: What do I do here?
+      }
     }
 
 }
