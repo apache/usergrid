@@ -1628,7 +1628,7 @@ function apigee_console_app(Pages, query_params) {
   function showCurlCommand(section, curl, token) {
   	var data = {
   		curlData: curl,
-  		sectionName: section,
+  		sectionName: section
   	};
   	var sectionId = $('#'+section+'-curl-container');
   	sectionId.html("");
