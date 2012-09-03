@@ -2169,10 +2169,17 @@ public class ManagementServiceImpl implements ManagementService {
             throws Exception {
         String token = getPasswordResetTokenForAppUser(applicationId,
                 user.getUuid());
-        String reset_url = String.format(
+        String reset_url = buildUserAppUrl(applicationId,
                 properties.getProperty(PROPERTIES_USER_RESETPW_URL),
-                applicationId.toString(), user.getUuid().toString())
+                user);
+
+      /*String reset_url = String.format(
+                properties.getProperty(PROPERTIES_USER_RESETPW_URL),
+                oi.getName(),
+                ai.getName(),
+                user.getUuid().toString())
                 + "?token=" + token;
+                */
         sendHtmlMail(
                 properties,
                 user.getDisplayEmailAddress(),
@@ -2273,10 +2280,14 @@ public class ManagementServiceImpl implements ManagementService {
             throws Exception {
         String token = getConfirmationTokenForAppUser(applicationId,
                 user.getUuid());
-        String confirmation_url = String.format(
+        String confirmation_url = buildUserAppUrl(applicationId,
+                properties.getProperty(PROPERTIES_USER_CONFIRMATION_URL),
+                user);
+        /*String confirmation_url = String.format(
                 properties.getProperty(PROPERTIES_USER_CONFIRMATION_URL),
                 applicationId.toString(), user.getUuid().toString())
                 + "?token=" + token;
+                */
         sendAppUserEmail(
                 user,
                 "User Account Confirmation: " + user.getEmail(),
@@ -2285,14 +2296,30 @@ public class ManagementServiceImpl implements ManagementService {
 
     }
 
+    private String buildUserAppUrl(UUID applicationId, String url, User user) throws Exception {
+      ApplicationInfo ai = getApplicationInfo(applicationId);
+      OrganizationInfo oi = getOrganizationForApplication(applicationId);
+      return String.format(url,
+              oi.getName(),
+              ai.getName(),
+              user.getUuid().toString())
+              + "?token="+getActivationTokenForAppUser(applicationId,
+                              user.getUuid());
+    }
+
     public void sendAdminRequestAppUserActivationEmail(UUID applicationId,
             User user) throws Exception {
         String token = getActivationTokenForAppUser(applicationId,
                 user.getUuid());
+        String activation_url = buildUserAppUrl(applicationId,
+                properties.getProperty(PROPERTIES_USER_ACTIVATION_URL),
+                user);
+        /*
         String activation_url = String.format(
                 properties.getProperty(PROPERTIES_USER_ACTIVATION_URL),
                 applicationId.toString(), user.getUuid().toString())
                 + "?token=" + token;
+                */
         OrganizationInfo organization = this
                 .getOrganizationForApplication(applicationId);
         this.sendOrganizationEmail(
