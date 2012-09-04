@@ -23,6 +23,18 @@ import javax.servlet.http.HttpServletResponse;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerResponse;
 
+/* Note: At one point there was a special case in this code that would
+   convert an origin header sent with a string containing the contents
+   "null" to an actual null and dealing with that case as if the header
+   had not been sent at all. This, however, caused problems with the
+   Firefox and Chrome browsers that intend that the "null" be the actual
+   origin when the file:// protocol is used and specifically look for it
+   in the response. By removing this special case and instead allowing
+   the normal processing (ie. allowing "null" to be a valid origin), it
+   removed the issue for those browsers. Safari works regardless as it
+   actually leaves off the header (a true null). IE still doesn't work
+   on file:// regardless for reasons unknown.
+*/
 public class CORSUtils {
 
 	private static final String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
