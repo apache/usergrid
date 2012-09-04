@@ -848,6 +848,7 @@ function apigee_console_app(Pages, query_params) {
   $('#dialog-form-add-role-to-user').submit(submitAddRoleToUser);
   $('#dialog-form-add-group-to-role').submit(submitAddGroupToRole);
   $('#dialog-form-add-role-to-group').submit(submitAddRoleToGroup);
+  $('#dialog-form-follow-user').submit(submitFollowUser);
 
   function checkLength2(input, min, max) {
     if (input.val().length > max || input.val().length < min) {
@@ -1242,6 +1243,22 @@ function apigee_console_app(Pages, query_params) {
       runAppQuery(new Usergrid.Query("POST", "/groups/" + groupId + "/users/" + userId, null, null,
         function() { requestGroup(groupId); },
         function() { alertModal("Error", "Unable to add user to group"); }
+      ));
+      $(this).modal('hide');
+    }
+  }
+
+  function submitFollowUser(){
+    var form = $(this);
+    formClearErrors(form);
+    var username = $('#search-follow-username-input');
+    var bValid = checkLength2(username, 4, 80) && checkRegexp2(username, usernameRegex, usernameAllowedCharsMessage);
+    if (bValid) {
+      var followingUserId = $('#search-follow-username').val();
+      var followedUserId = $('#search-follow-username-input').val();
+      runAppQuery(new Usergrid.Query("POST", "/users/" + followingUserId + "/following/user/" + followedUserId, null, null,
+        function() { pageSelectUserGraph(followingUserId)},
+        function() {alertModal("Error", "Unable to follow User");}
       ));
       $(this).modal('hide');
     }
@@ -1842,6 +1859,14 @@ function apigee_console_app(Pages, query_params) {
     selectTabButton('#button-user-memberships');
     showPanelContent('#user-panel', '#user-panel-memberships');
   }
+
+  function pageSelectUserGraph(userId) {
+    Pages.SelectPanel('user');
+    requestUser(userId);
+    selectTabButton('#button-user-graph');
+    showPanelContent('#user-panel', '#user-panel-graph');
+  }
+
   window.Usergrid.console.pageSelectUserGroups = pageSelectUserGroups;
 
   function saveUserProfile(uuid){
@@ -3392,7 +3417,7 @@ function deleteRolePermission(roleName, permission) {
     return false
   }
 
-  function updateTypeahead(response, inputId){
+  function updateUsersTypeahead(response, inputId){
     users = {};
     if (response.entities) {
       users = response.entities;
@@ -3401,6 +3426,34 @@ function deleteRolePermission(roleName, permission) {
     var list = [];
     for (var i in users) {
       list.push(users[i].username);
+    }
+    pathInput.typeahead({source:list});
+    pathInput.data('typeahead').source = list;
+  }
+
+  function updateRolesTypeahead(response, inputId){
+    roles = {};
+    if (response.entities) {
+      roles = response.entities;
+    }
+    var pathInput = $('#'+inputId);
+    var list = [];
+    for (var i in roles) {
+      list.push(roles[i].title);
+    }
+    pathInput.typeahead({source:list});
+    pathInput.data('typeahead').source = list;
+  }
+
+  function updateGroupsTypeahead(response, inputId){
+    groups = {};
+    if (response.entities) {
+      groups = response.entities;
+    }
+    var pathInput = $('#'+inputId);
+    var list = [];
+    for (var i in groups) {
+      list.push(groups[i].path);
     }
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
@@ -3423,7 +3476,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function updateUsersAutocompleteCallback(response) {
-    updateTypeahead(response, 'search-user-name-input');
+    updateUsersTypeahead(response, 'search-user-name-input');
   }
   window.Usergrid.console.updateUsersAutocompleteCallback = updateUsersAutocompleteCallback;
 
@@ -3432,7 +3485,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function updateFollowUserAutocompleteCallback(response){
-    updateTypeahead(response, 'search-follow-user-name-input');
+    updateUsersTypeahead(response, 'search-follow-username-input');
   }
 
   function updateUsersForRolesAutocomplete(){
@@ -3440,7 +3493,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function updateUsersForRolesAutocompleteCallback(response) {
-    updateTypeahead(response, 'search-roles-user-name-input');
+    updateUsersTypeahead(response, 'search-roles-user-name-input');
   }
 
   window.Usergrid.console.updateUsersForRolesAutocompleteCallback = updateUsersForRolesAutocompleteCallback;
@@ -3450,7 +3503,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function updateGroupsAutocompleteCallback(response) {
-    updateTypeahead(response, 'search-group-name-input');
+    updateGroupsTypeahead(response, 'search-group-name-input');
   }
   window.Usergrid.console.updateGroupsAutocompleteCallback = updateGroupsAutocompleteCallback;
 
@@ -3459,7 +3512,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function updateGroupsForRolesAutocompleteCallback(response) {
-    updateTypeahead(response, 'search-roles-group-name-input');
+    updateGroupsTypeahead(response, 'search-roles-group-name-input');
   }
   window.Usergrid.console.updateGroupsForRolesAutocompleteCallback = updateGroupsForRolesAutocompleteCallback;
 
@@ -3480,7 +3533,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function updateRolesAutocompleteCallback(response) {
-    updateTypeahead(response, 'search-role-name-input');
+    updateRolesTypeahead(response, 'search-role-name-input');
   }
 
   window.Usergrid.console.updateRolesAutocompleteCallback = updateRolesAutocompleteCallback;
@@ -3490,7 +3543,7 @@ function deleteRolePermission(roleName, permission) {
   }
 
   function updateRolesForGroupsAutocompleteCallback(response) {
-    updateTypeahead(response, 'search-groups-role-name-input');
+    updateRolesTypeahead(response, 'search-groups-role-name-input');
   }
   window.Usergrid.console.updateRolesAutocompleteCallback = updateRolesAutocompleteCallback;
 
