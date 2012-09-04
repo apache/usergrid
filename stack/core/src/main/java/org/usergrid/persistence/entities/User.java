@@ -80,6 +80,12 @@ public class User extends TypedEntity {
 
 	@EntityProperty(indexed = false)
 	protected String picture;
+	
+	/**
+	 * The time this user was deactivated
+	 */
+	@EntityProperty(indexed=true)
+	protected Long deactivated;
 
 	@EntityDictionary(keyType = java.lang.String.class)
 	protected Set<String> connections;
@@ -165,9 +171,30 @@ public class User extends TypedEntity {
 
 	public void setActivated(Boolean activated) {
 		this.activated = activated;
+		
+		if(activated){
+		    deactivated = null;
+		}
 	}
+	
+	
 
-	public boolean confirmed() {
+	/**
+     * @return the deactivated
+     */
+	@JsonSerialize(include = Inclusion.NON_NULL)
+    public Long getDeactivated() {
+        return deactivated;
+    }
+
+    /**
+     * @param deactivated the deactivated to set
+     */
+    public void setDeactivated(Long deactivated) {
+        this.deactivated = deactivated;
+    }
+
+    public boolean confirmed() {
 		return (confirmed != null) && confirmed;
 	}
 
