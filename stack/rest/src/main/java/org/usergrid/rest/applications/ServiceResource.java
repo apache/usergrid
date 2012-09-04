@@ -53,6 +53,7 @@ import org.usergrid.persistence.AggregateCounter;
 import org.usergrid.persistence.AggregateCounterSet;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.Query;
+import org.usergrid.persistence.entities.Application;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
@@ -105,6 +106,7 @@ public class ServiceResource extends AbstractContextResource {
 	public UUID getApplicationId() {
 		return services.getApplicationId();
 	}
+	
 
 	public List<ServiceParameter> getServiceParameters() {
 		if (serviceParameters != null) {
@@ -239,8 +241,9 @@ public class ServiceResource extends AbstractContextResource {
 		logger.info("ServiceResource.executeGet");
 
 		ApiResponse response = new ApiResponse(ui);
+		
 		response.setAction("get");
-		response.setApplication(services.getApplicationId());
+		response.setApplication(services.getApplication());
 		response.setParams(ui.getQueryParameters());
 
 		executeServiceRequest(ui, response, ServiceAction.GET, null);
@@ -282,10 +285,12 @@ public class ServiceResource extends AbstractContextResource {
 		logger.info("ServiceResource.executePost");
 
 		Object json = body.getEntity();
-
+       
 		ApiResponse response = new ApiResponse(ui);
+		
+		
 		response.setAction("post");
-		response.setApplication(services.getApplicationId());
+		response.setApplication(services.getApplication());
 		response.setParams(ui.getQueryParameters());
 
 		ServicePayload payload = getPayload(json);
@@ -305,9 +310,12 @@ public class ServiceResource extends AbstractContextResource {
 
 		logger.info("ServiceResource.executePut");
 
+		
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("put");
-		response.setApplication(services.getApplicationId());
+		
+		services.getApplicationRef();
+		response.setApplication(services.getApplication());
 		response.setParams(ui.getQueryParameters());
 
 		ServicePayload payload = getPayload(json);
@@ -324,10 +332,10 @@ public class ServiceResource extends AbstractContextResource {
 			throws Exception {
 
 		logger.info("ServiceResource.executeDelete");
-
+	
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("delete");
-		response.setApplication(services.getApplicationId());
+		response.setApplication(services.getApplication());
 		response.setParams(ui.getQueryParameters());
 
 		executeServiceRequest(ui, response, ServiceAction.DELETE, null);

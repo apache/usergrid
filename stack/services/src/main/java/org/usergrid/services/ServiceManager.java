@@ -22,6 +22,8 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.UUID;
 
+import javax.management.RuntimeErrorException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -49,13 +51,15 @@ public class ServiceManager implements ApplicationContextAware {
 	private static final Logger logger = LoggerFactory
 			.getLogger(ServiceManager.class);
 
-	ApplicationContext applicationContext;
+	private ApplicationContext applicationContext;
 
-	UUID applicationId;
+	private Application application;
+	
+	private UUID applicationId;
 
-	EntityManager em;
+	private EntityManager em;
 
-	ServiceManagerFactory smf;
+	private ServiceManagerFactory smf;
 
 	// search for commercial packages first for SaaS version
 	public static String[] package_prefixes = { COM_PACKAGE_PREFIX,
@@ -70,7 +74,13 @@ public class ServiceManager implements ApplicationContextAware {
 		this.smf = smf;
 		this.em = em;
 		if (em != null) {
-			applicationId = em.getApplicationRef().getUuid();
+			try {
+                application = em.getApplication();
+                applicationId = em.getApplicationRef().getUuid();
+            } catch (Exception e) {
+                logger.error("This should never happen", e);
+                throw new RuntimeException(e);
+            }
 		}
 		return this;
 	}
@@ -80,15 +90,17 @@ public class ServiceManager implements ApplicationContextAware {
 	}
 
 	public UUID getApplicationId() {
-		return applicationId;
+		return application.getUuid();
 	}
 
-	public void setApplicationId(UUID applicationId) {
-		this.applicationId = applicationId;
-	}
-
+	
 	public EntityRef getApplicationRef() {
 		return ref(Application.ENTITY_TYPE, applicationId);
+	}
+	
+
+	public Application getApplication(){
+	    return application;
 	}
 
 	public Service getEntityService(String entityType) {
