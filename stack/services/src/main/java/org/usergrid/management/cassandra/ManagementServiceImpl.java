@@ -1706,7 +1706,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public void deactivateUser(UUID applicationId, UUID userId) throws Exception {
+    public User deactivateUser(UUID applicationId, UUID userId) throws Exception {
         EntityManager em = emf.getEntityManager(applicationId);
         
         User user = em.get(userId, User.class);
@@ -1719,6 +1719,8 @@ public class ManagementServiceImpl implements ManagementService {
         user.setDeactivated(System.currentTimeMillis());
         
         em.update(user);
+        
+        return user;
     }
 
     @Override

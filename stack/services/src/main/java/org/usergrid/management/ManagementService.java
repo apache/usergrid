@@ -84,7 +84,14 @@ public interface ManagementService {
 			String organizationName, String username, String name,
 			String email, String password, boolean activated, boolean disabled) throws Exception;
 
-	public void deactivateUser(UUID applicationId, UUID userId) throws Exception;
+	/**
+	 * Deactivate the user and return it's current state
+	 * @param applicationId
+	 * @param userId
+	 * @return
+	 * @throws Exception
+	 */
+	public User deactivateUser(UUID applicationId, UUID userId) throws Exception;
 
 	public void deactivateOrganization(UUID organizationId) throws Exception;
 

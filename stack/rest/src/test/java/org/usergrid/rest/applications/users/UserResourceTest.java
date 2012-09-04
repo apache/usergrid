@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -22,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.usergrid.rest.applications.utils.TestUtils.getIdFromSearchResults;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -777,6 +779,32 @@ public class UserResourceTest extends AbstractRestTest {
 
         assertNotNull(node);
         logNode(node);
+
+    }
+    
+    @Test
+    public void deactivateUser(){
+        JsonNode response = resource().path("/test-organization/test-app/users")
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+        String uuid = getEntity(response, 0).get("uuid").getTextValue();
+        
+        //disable the user
+        
+        Map<String, String> data = new HashMap<String, String>();
+        
+        response = resource().path(String.format("/test-organization/test-app/users/%s/deactivate", uuid))
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class,data);
+        
+        JsonNode entity = getEntity(response, 0);
+        
+        
+        assertFalse(entity.get("activated").asBoolean());
+        assertNotNull(entity.get("deactivated"));
 
     }
 
