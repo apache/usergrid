@@ -11,6 +11,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import me.prettyprint.cassandra.utils.TimeUUIDUtils;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -25,6 +27,7 @@ import org.usergrid.persistence.entities.User;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.utils.JsonUtils;
+import org.usergrid.utils.UUIDUtils;
 
 /**
  * @author zznate
@@ -120,9 +123,10 @@ public class ManagementServiceTest {
 	@Test
 	public void deactivateUser() throws Exception{
 	    
+	    UUID uuid = UUIDUtils.newTimeUUID();
 	    Map<String, Object> properties = new LinkedHashMap<String, Object>();
-        properties.put("username", "edanuff");
-        properties.put("email", "ed@anuff.com");
+        properties.put("username", "test"+uuid);
+        properties.put("email", String.format("test%s@anuff.com", uuid));
 
         
         EntityManager em = helper.getEntityManagerFactory()

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.rest.applications.utils.TestUtils.getIdFromSearchResults;
+import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -784,18 +785,34 @@ public class UserResourceTest extends AbstractRestTest {
     
     @Test
     public void deactivateUser(){
+
+        UUID newUserUuid = UUIDUtils.newTimeUUID();
+        
+        String userName = String.format("test%s", newUserUuid);
+        
+        Map<String, String> payload = hashMap("email", String.format("%s@anuff.com", newUserUuid))
+                .map("username", userName).map("name", "Ed Anuff")
+                .map("password", "sesame").map("pin", "1234");
+
+        JsonNode node = resource().path("/test-organization/test-app/users")
+                .queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(JsonNode.class, payload);
+        
+        
         JsonNode response = resource().path("/test-organization/test-app/users")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        String uuid = getEntity(response, 0).get("uuid").getTextValue();
+      
         
         //disable the user
         
         Map<String, String> data = new HashMap<String, String>();
         
-        response = resource().path(String.format("/test-organization/test-app/users/%s/deactivate", uuid))
+        response = resource().path(String.format("/test-organization/test-app/users/%s/deactivate", userName))
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class,data);

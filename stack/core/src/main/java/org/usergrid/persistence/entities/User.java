@@ -182,6 +182,7 @@ public class User extends TypedEntity {
 	/**
      * @return the deactivated
      */
+	@JsonSerialize(include = Inclusion.NON_NULL)
     public Long getDeactivated() {
         return deactivated;
     }
