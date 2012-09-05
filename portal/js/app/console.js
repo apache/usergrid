@@ -57,7 +57,7 @@ function apigee_console_app(Pages, query_params) {
   var alphaNumAllowedCharsMessage = 'Collection name only allows : a-z 0-9';
 
   var pathRegex = new RegExp("^[0-9a-z.-]+[\/]?[0-9a-z.-]+$[^\/]*");
-  var pathAllowedCharsMessage = 'Path only allows : /, a-z, 0-9, dot, and dash';
+  var pathAllowedCharsMessage = 'Path only allows : /, a-z, 0-9, dot, and dash, paths of the format: /path, path//, or path//path are not allowed';
 
   var roleRegex = new RegExp("^([0-9a-zA-Z./-])+$");
   var roleAllowedCharsMessage = 'Role only allows : /, a-z, 0-9, dot, and dash';
