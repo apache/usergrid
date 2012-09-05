@@ -848,6 +848,7 @@ function apigee_console_app(Pages, query_params) {
   $('#dialog-form-add-role-to-user').submit(submitAddRoleToUser);
   $('#dialog-form-add-group-to-role').submit(submitAddGroupToRole);
   $('#dialog-form-add-role-to-group').submit(submitAddRoleToGroup);
+  $('#dialog-form-follow-user').submit(submitFollowUser);
 
   function checkLength2(input, min, max) {
     if (input.val().length > max || input.val().length < min) {
@@ -1242,6 +1243,22 @@ function apigee_console_app(Pages, query_params) {
       runAppQuery(new Usergrid.Query("POST", "/groups/" + groupId + "/users/" + userId, null, null,
         function() { requestGroup(groupId); },
         function() { alertModal("Error", "Unable to add user to group"); }
+      ));
+      $(this).modal('hide');
+    }
+  }
+
+  function submitFollowUser(){
+    var form = $(this);
+    formClearErrors(form);
+    var username = $('#search-follow-username-input');
+    var bValid = checkLength2(username, 4, 80) && checkRegexp2(username, usernameRegex, usernameAllowedCharsMessage);
+    if (bValid) {
+      var followingUserId = $('#search-follow-username').val();
+      var followedUserId = $('#search-follow-username-input').val();
+      runAppQuery(new Usergrid.Query("POST", "/users/" + followingUserId + "/following/user/" + followedUserId, null, null,
+        function() { pageSelectUserGraph(followingUserId)},
+        function() {alertModal("Error", "Unable to follow User");}
       ));
       $(this).modal('hide');
     }
@@ -1842,6 +1859,14 @@ function apigee_console_app(Pages, query_params) {
     selectTabButton('#button-user-memberships');
     showPanelContent('#user-panel', '#user-panel-memberships');
   }
+
+  function pageSelectUserGraph(userId) {
+    Pages.SelectPanel('user');
+    requestUser(userId);
+    selectTabButton('#button-user-graph');
+    showPanelContent('#user-panel', '#user-panel-graph');
+  }
+
   window.Usergrid.console.pageSelectUserGroups = pageSelectUserGroups;
 
   function saveUserProfile(uuid){
@@ -1881,6 +1906,7 @@ function apigee_console_app(Pages, query_params) {
   	redrawPanel('user-panel-graph', 'apigee.ui.panels.user.graph.html', data);
   	showCurlCommand('user-panel-following', curlFollowing);
   	showCurlCommand('user-panel-followers', curlFollowers);
+    updateFollowUserAutocomplete();
   };
 
   function redrawUserPermissions(data, curlRoles, curlPermissions){
@@ -3384,20 +3410,19 @@ function deleteRolePermission(roleName, permission) {
    * Autocomplete
    *
    ******************************************************************/
-
-  function updateUsersAutocomplete(){
-    runAppQuery(new Usergrid.Query("GET", 'users/', null, null, updateUsersAutocompleteCallback,
-      function() { alertModal("Error", "Unable to retrieve users."); }
+  function updateAutocomplete(path, successCallback, failureMessage){
+    runAppQuery(new Usergrid.Query("GET", path, null, null, successCallback,
+    function(){ alertModal("Error", failureMessage)}
     ));
-    return false;
+    return false
   }
 
-  function updateUsersAutocompleteCallback(response) {
+  function updateUsersTypeahead(response, inputId){
     users = {};
     if (response.entities) {
       users = response.entities;
     }
-    var pathInput = $('#search-user-name-input');
+    var pathInput = $('#'+inputId);
     var list = [];
     for (var i in users) {
       list.push(users[i].username);
@@ -3405,43 +3430,27 @@ function deleteRolePermission(roleName, permission) {
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
   }
-  window.Usergrid.console.updateUsersAutocompleteCallback = updateUsersAutocompleteCallback;
 
-  function updateUsersForRolesAutocomplete(){
-    runAppQuery(new Usergrid.Query("GET",'users', null, null, updateUsersForRolesAutocompleteCallback,
-      function() { alertModal("Error", "Unable to retrieve users."); }
-    ));
-    return false;
-  }
-
-  function updateUsersForRolesAutocompleteCallback(response) {
-    users = {};
+  function updateRolesTypeahead(response, inputId){
+    roles = {};
     if (response.entities) {
-      users = response.entities;
+      roles = response.entities;
     }
-    var pathInput = $('#search-roles-user-name-input');
+    var pathInput = $('#'+inputId);
     var list = [];
-    for (var i in users) {
-      list.push(users[i].username);
+    for (var i in roles) {
+      list.push(roles[i].title);
     }
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
   }
-  window.Usergrid.console.updateUsersForRolesAutocompleteCallback = updateUsersForRolesAutocompleteCallback;
 
-  function updateGroupsAutocomplete(){
-    runAppQuery(new Usergrid.Query("GET",'groups', null, null, updateGroupsAutocompleteCallback,
-      function() { alertModal("Error", "Unable to retrieve groups."); }
-    ));
-    return false;
-  }
-
-  function updateGroupsAutocompleteCallback(response) {
+  function updateGroupsTypeahead(response, inputId){
     groups = {};
     if (response.entities) {
       groups = response.entities;
     }
-    var pathInput = $("#search-group-name-input");
+    var pathInput = $('#'+inputId);
     var list = [];
     for (var i in groups) {
       list.push(groups[i].path);
@@ -3449,32 +3458,9 @@ function deleteRolePermission(roleName, permission) {
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
   }
-  window.Usergrid.console.updateGroupsAutocompleteCallback = updateGroupsAutocompleteCallback;
 
-  function updateGroupsForRolesAutocomplete(){
-    runAppQuery(new Usergrid.Query("GET",'groups', null, null, updateGroupsForRolesAutocompleteCallback,
-    function() { alertModal("Error", "Unable to retrieve groups."); }
-    ));
-    return false;
-  }
-
-  function updateGroupsForRolesAutocompleteCallback(response) {
-    groups = {};
-    if (response.entities) {
-      groups = response.entities;
-    }
-    var pathInput = $('#search-roles-group-name-input');
-    var list = [];
-    for (var i in groups) {
-      list.push(groups[i].path);
-    }
-    pathInput.typeahead({source:list});
-    pathInput.data('typeahead').source = list;
-  }
-  window.Usergrid.console.updateGroupsForRolesAutocompleteCallback = updateGroupsForRolesAutocompleteCallback;
-
-  function updatePermissionAutocompleteCollections(){
-    var pathInput = $("#role-permission-path-entry-input");
+  function updateCollectionTypeahead(inputId){
+    var pathInput = $("#"+ inputId);
     var list = [];
 
     for (var i in applicationData.Collections) {
@@ -3482,77 +3468,82 @@ function deleteRolePermission(roleName, permission) {
     }
 
     pathInput.typeahead({source:list});
-   }
+    pathInput.data('typeahead').source = list;
+  }
+
+  function updateUsersAutocomplete(){
+    updateAutocomplete('users/', updateUsersAutocompleteCallback, "Unable to retrieve Users.");
+  }
+
+  function updateUsersAutocompleteCallback(response) {
+    updateUsersTypeahead(response, 'search-user-name-input');
+  }
+  window.Usergrid.console.updateUsersAutocompleteCallback = updateUsersAutocompleteCallback;
+
+  function updateFollowUserAutocomplete(){
+    updateAutocomplete('users/',updateFollowUserAutocompleteCallback,"Unable to retrieve Users.");
+  }
+
+  function updateFollowUserAutocompleteCallback(response){
+    updateUsersTypeahead(response, 'search-follow-username-input');
+  }
+
+  function updateUsersForRolesAutocomplete(){
+    updateAutocomplete('users', updateUsersForRolesAutocompleteCallback,"Unable to retrieve Users.");
+  }
+
+  function updateUsersForRolesAutocompleteCallback(response) {
+    updateUsersTypeahead(response, 'search-roles-user-name-input');
+  }
+
+  window.Usergrid.console.updateUsersForRolesAutocompleteCallback = updateUsersForRolesAutocompleteCallback;
+
+  function updateGroupsAutocomplete(){
+    updateAutocomplete('groups', updateGroupsAutocompleteCallback, "Unable to retrieve Groups.");
+  }
+
+  function updateGroupsAutocompleteCallback(response) {
+    updateGroupsTypeahead(response, 'search-group-name-input');
+  }
+  window.Usergrid.console.updateGroupsAutocompleteCallback = updateGroupsAutocompleteCallback;
+
+  function updateGroupsForRolesAutocomplete(){
+    updateAutocomplete('groups', updateGroupsForRolesAutocompleteCallback, "Unable to retrieve Groups.");
+  }
+
+  function updateGroupsForRolesAutocompleteCallback(response) {
+    updateGroupsTypeahead(response, 'search-roles-group-name-input');
+  }
+  window.Usergrid.console.updateGroupsForRolesAutocompleteCallback = updateGroupsForRolesAutocompleteCallback;
+
+  function updatePermissionAutocompleteCollections(){
+    updateCollectionTypeahead('role-permission-path-entry-input');
+  }
 
   function updateQueryAutocompleteCollectionsUsers(){
-    var pathInput = $("#user-permission-path-entry-input");
-    var list = [];
-
-    for (var i in applicationData.Collections) {
-      list.push('/' + applicationData.Collections[i].name + '/');
-    }
-
-    pathInput.typeahead({source:list});
-    pathInput.data('typeahead').source = list;
+    updateCollectionTypeahead('user-permission-path-entry-input');
   }
 
   function updateQueryAutocompleteCollections(){
-    var pathInput = $('#query-path');
-    var list = [];
-
-    for (var i in applicationData.Collections) {
-      list.push('/' + applicationData.Collections[i].name + '/');
-    }
-
-    pathInput.typeahead({source:list});
-    pathInput.data('typeahead').source = list;
+    updateCollectionTypeahead('query-path');
   }
 
   function updateRolesAutocomplete(){
-    runAppQuery(new Usergrid.Query("GET", 'roles', null, null, updateRolesAutocompleteCallback,
-      function() { alertModal("Error", "Unable to retrieve roles."); }
-    ));
-    return false;
+    updateAutocomplete('roles', updateRolesAutocompleteCallback, "Unable to retrieve Roles.");
   }
 
   function updateRolesAutocompleteCallback(response) {
-    roles = {};
-    if (response.entities) {
-      roles = response.entities;
-    }
-    var pathInput = $('#search-role-name-input');
-    var list = [];
-
-    for (var i in roles) {
-      list.push(roles[i].title);
-    }
-
-    pathInput.typeahead({source:list});
-    pathInput.data('typeahead').source = list;
+    updateRolesTypeahead(response, 'search-role-name-input');
   }
+
   window.Usergrid.console.updateRolesAutocompleteCallback = updateRolesAutocompleteCallback;
 
   function updateRolesForGroupsAutocomplete(){
-    runAppQuery(new Usergrid.Query("GET", 'roles', null, null, updateRolesForGroupsAutocompleteCallback,
-      function() { alertModal("Error", "Unable to retrieve roles."); }
-    ));
-    return false;
+    updateAutocomplete('roles', updateRolesForGroupsAutocompleteCallback, "Unable to retrieve Roles.");
   }
 
   function updateRolesForGroupsAutocompleteCallback(response) {
-    roles = {};
-    if (response.entities) {
-      roles = response.entities;
-    }
-    var pathInput = $('#search-groups-role-name-input');
-    var list = [];
-
-    for (var i in roles) {
-      list.push(roles[i].title);
-    }
-
-    pathInput.typeahead({source:list});
-    pathInput.data('typeahead').source = list;
+    updateRolesTypeahead(response, 'search-groups-role-name-input');
   }
   window.Usergrid.console.updateRolesAutocompleteCallback = updateRolesAutocompleteCallback;
 
