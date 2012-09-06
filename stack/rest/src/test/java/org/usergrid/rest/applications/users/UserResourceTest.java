@@ -912,7 +912,6 @@ public class UserResourceTest extends AbstractRestTest {
         try {
             resource()
                     .path("/test-organization/test-app/users/edanuff/password")
-                    .queryParam("access_token", access_token)
                     .accept(MediaType.APPLICATION_JSON)
                     .type(MediaType.APPLICATION_JSON_TYPE)
                     .post(JsonNode.class, data);
