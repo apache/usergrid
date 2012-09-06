@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import com.yammer.metrics.annotation.Metered;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
@@ -61,7 +60,6 @@ import org.usergrid.persistence.DynamicEntity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.entities.Application;
-import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.usergrid.utils.UUIDUtils;
 
@@ -72,298 +70,300 @@ import org.usergrid.utils.UUIDUtils;
  * 
  */
 public class EntityManagerFactoryImpl implements EntityManagerFactory,
-		ApplicationContextAware {
+        ApplicationContextAware {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(EntityManagerFactoryImpl.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(EntityManagerFactoryImpl.class);
 
-	public static String IMPLEMENTATION_DESCRIPTION = "Cassandra Entity Manager Factory 1.0";
+    public static String IMPLEMENTATION_DESCRIPTION = "Cassandra Entity Manager Factory 1.0";
 
-	public static final Class<DynamicEntity> APPLICATION_ENTITY_CLASS = DynamicEntity.class;
+    public static final Class<DynamicEntity> APPLICATION_ENTITY_CLASS = DynamicEntity.class;
 
-	public static final StringSerializer se = new StringSerializer();
-	public static final ByteBufferSerializer be = new ByteBufferSerializer();
-	public static final UUIDSerializer ue = new UUIDSerializer();
-	public static final BytesArraySerializer bae = new BytesArraySerializer();
-	public static final DynamicCompositeSerializer dce = new DynamicCompositeSerializer();
-	public static final LongSerializer le = new LongSerializer();
+    public static final StringSerializer se = new StringSerializer();
+    public static final ByteBufferSerializer be = new ByteBufferSerializer();
+    public static final UUIDSerializer ue = new UUIDSerializer();
+    public static final BytesArraySerializer bae = new BytesArraySerializer();
+    public static final DynamicCompositeSerializer dce = new DynamicCompositeSerializer();
+    public static final LongSerializer le = new LongSerializer();
 
-	ApplicationContext applicationContext;
+    ApplicationContext applicationContext;
 
-	CassandraService cass;
-	CounterUtils counterUtils;
+    CassandraService cass;
+    CounterUtils counterUtils;
 
-	/**
-	 * Must be constructed with a CassandraClientPool.
-	 * 
-	 * @param cass
-	 *            the cassandraService instance
-	 */
-	public EntityManagerFactoryImpl(CassandraService cass,
-			CounterUtils counterUtils) {
-		this.cass = cass;
-		this.counterUtils = counterUtils;
-	}
+    /**
+     * Must be constructed with a CassandraClientPool.
+     * 
+     * @param cass
+     *            the cassandraService instance
+     */
+    public EntityManagerFactoryImpl(CassandraService cass,
+            CounterUtils counterUtils) {
+        this.cass = cass;
+        this.counterUtils = counterUtils;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.usergrid.core.Datastore#getImpementationDescription()
-	 */
-	@Override
-	public String getImpementationDescription() {
-		return IMPLEMENTATION_DESCRIPTION;
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.usergrid.core.Datastore#getImpementationDescription()
+     */
+    @Override
+    public String getImpementationDescription() {
+        return IMPLEMENTATION_DESCRIPTION;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.usergrid.core.Datastore#getEntityDao(java.util.UUID,
-	 * java.util.UUID)
-	 */
-	@Override
-	public EntityManager getEntityManager(UUID applicationId) {
-		return applicationContext.getAutowireCapableBeanFactory()
-				.createBean(EntityManagerImpl.class)
-				.init(this, cass, counterUtils, applicationId);
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.usergrid.core.Datastore#getEntityDao(java.util.UUID,
+     * java.util.UUID)
+     */
+    @Override
+    public EntityManager getEntityManager(UUID applicationId) {
+        return applicationContext.getAutowireCapableBeanFactory()
+                .createBean(EntityManagerImpl.class)
+                .init(this, cass, counterUtils, applicationId);
+    }
 
-	/**
-	 * Gets the setup.
-	 * 
-	 * @return Setup helper
-	 */
-	public Setup getSetup() {
-		return new Setup(this, cass);
-	}
+    /**
+     * Gets the setup.
+     * 
+     * @return Setup helper
+     */
+    public Setup getSetup() {
+        return new Setup(this, cass);
+    }
 
-	@Override
-	public void setup() throws Exception {
-		Setup setup = getSetup();
+    @Override
+    public void setup() throws Exception {
+        Setup setup = getSetup();
 
-		setup.setup();
-		setup.checkKeyspaces();
+        setup.setup();
+        setup.checkKeyspaces();
 
-		if (cass.getPropertiesMap() != null) {
-			updateServiceProperties(cass.getPropertiesMap());
-		}
-	}
+        if (cass.getPropertiesMap() != null) {
+            updateServiceProperties(cass.getPropertiesMap());
+        }
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.usergrid.core.Datastore#createApplication(java.lang.String)
-	 */
-	@Override
-	public UUID createApplication(String organization, String name) throws Exception {
-		return createApplication(organization, name, null);
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.usergrid.core.Datastore#createApplication(java.lang.String)
+     */
+    @Override
+    public UUID createApplication(String organization, String name)
+            throws Exception {
+        return createApplication(organization, name, null);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.usergrid.core.Datastore#createApplication(java.lang.String,
-	 * java.util.Map)
-	 */
-	@Override
-	public UUID createApplication(String organizationName, String name, Map<String, Object> properties)
-			throws Exception {
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.usergrid.core.Datastore#createApplication(java.lang.String,
+     * java.util.Map)
+     */
+    @Override
+    public UUID createApplication(String organizationName, String name,
+            Map<String, Object> properties) throws Exception {
 
-    String appName = buildAppName(organizationName, name);
+        String appName = buildAppName(organizationName, name);
 
+        HColumn<String, ByteBuffer> column = cass.getColumn(
+                cass.getSystemKeyspace(), APPLICATIONS_CF, appName,
+                PROPERTY_UUID);
+        if (column != null) {
+            throw new ApplicationAlreadyExistsException(name);
+            // UUID uuid = uuid(column.getValue());
+            // return uuid;
+        }
 
-		HColumn<String, ByteBuffer> column = cass.getColumn(
-            cass.getSystemKeyspace(), APPLICATIONS_CF, appName, PROPERTY_UUID);
-		if (column != null) {
-			throw new ApplicationAlreadyExistsException(name);
-			// UUID uuid = uuid(column.getValue());
-			// return uuid;
-		}
+        UUID applicationId = UUIDUtils.newTimeUUID();
+        logger.info("New application id " + applicationId.toString());
 
-		UUID applicationId = UUIDUtils.newTimeUUID();
-		logger.info("New application id " + applicationId.toString());
+        initializeApplication(organizationName, applicationId, appName,
+                properties);
 
-		initializeApplication(organizationName, applicationId, appName, properties);
+        return applicationId;
+    }
 
-		return applicationId;
-	}
+    private String buildAppName(String organizationName, String name) {
+        return StringUtils.lowerCase(name.contains("/") ? name
+                : organizationName + "/" + name);
+    }
 
-  private String buildAppName(String organizationName, String name) {
-    return StringUtils.lowerCase(name.contains("/") ? name : organizationName + "/" + name);
-  }
+    public UUID initializeApplication(String organizationName,
+            UUID applicationId, String name, Map<String, Object> properties)
+            throws Exception {
 
-  public UUID initializeApplication(String organizationName, UUID applicationId, String name,
-			Map<String, Object> properties) throws Exception {
+        String appName = buildAppName(organizationName, name);
 
-		String appName = buildAppName(organizationName, name);
+        if (properties == null) {
+            properties = new TreeMap<String, Object>(CASE_INSENSITIVE_ORDER);
+        }
 
-		if (properties == null) {
-			properties = new TreeMap<String, Object>(CASE_INSENSITIVE_ORDER);
-		}
+        properties.put(PROPERTY_NAME, appName);
 
-		properties.put(PROPERTY_NAME, appName);
+        getSetup().setupApplicationKeyspace(applicationId, appName);
 
-		getSetup().setupApplicationKeyspace(applicationId, appName);
+        getSetup().checkKeyspaces();
 
-		getSetup().checkKeyspaces();
+        Keyspace ko = cass.getSystemKeyspace();
+        Mutator<ByteBuffer> m = createMutator(ko, be);
 
-		Keyspace ko = cass.getSystemKeyspace();
-		Mutator<ByteBuffer> m = createMutator(ko, be);
+        long timestamp = cass.createTimestamp();
 
-		long timestamp = cass.createTimestamp();
+        addInsertToMutator(m, APPLICATIONS_CF, appName, PROPERTY_UUID,
+                applicationId, timestamp);
+        addInsertToMutator(m, APPLICATIONS_CF, appName, PROPERTY_NAME, appName,
+                timestamp);
 
-		addInsertToMutator(m, APPLICATIONS_CF, appName, PROPERTY_UUID,
-				applicationId, timestamp);
-		addInsertToMutator(m, APPLICATIONS_CF, appName, PROPERTY_NAME, appName,
-				timestamp);
+        batchExecute(m, RETRY_COUNT);
 
-		batchExecute(m, RETRY_COUNT);
+        EntityManager em = getEntityManager(applicationId);
+        ((EntityManagerImpl) em).create(TYPE_APPLICATION,
+                APPLICATION_ENTITY_CLASS, properties);
 
-		EntityManager em = getEntityManager(applicationId);
-		((EntityManagerImpl) em).create(TYPE_APPLICATION,
-				APPLICATION_ENTITY_CLASS, properties);
+        em.resetRoles();
 
-		em.resetRoles();
+        return applicationId;
+    }
 
-		return applicationId;
-	}
+    @Override
+    public UUID importApplication(String organizationName, UUID applicationId,
+            String name, Map<String, Object> properties) throws Exception {
 
-	@Override
-	public UUID importApplication(String organizationName,
-                                UUID applicationId,
-                                String name,
-			Map<String, Object> properties) throws Exception {
+        name = buildAppName(organizationName, name);
 
-		name = buildAppName(organizationName, name);
+        HColumn<String, ByteBuffer> column = cass.getColumn(
+                cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID);
+        if (column != null) {
+            throw new ApplicationAlreadyExistsException(name);
+            // UUID uuid = uuid(column.getValue());
+            // return uuid;
+        }
 
-		HColumn<String, ByteBuffer> column = cass.getColumn(
-				cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID);
-		if (column != null) {
-			throw new ApplicationAlreadyExistsException(name);
-			// UUID uuid = uuid(column.getValue());
-			// return uuid;
-		}
+        return initializeApplication(organizationName, applicationId, name,
+                properties);
+    }
 
-		return initializeApplication(organizationName, applicationId, name, properties);
-	}
+    @Override
+    public UUID lookupApplication(String name) throws Exception {
+        name = name.toLowerCase();
+        HColumn<String, ByteBuffer> column = cass.getColumn(
+                cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID);
+        if (column != null) {
+            UUID uuid = uuid(column.getValue());
+            return uuid;
+        }
+        return null;
+    }
 
-	@Override
-  @Metered(group="core",name="EntityManagerFactory_lookupApplication_byName")
-	public UUID lookupApplication(String name) throws Exception {
-		name = name.toLowerCase();
-		HColumn<String, ByteBuffer> column = cass.getColumn(
-				cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID);
-		if (column != null) {
-			UUID uuid = uuid(column.getValue());
-			return uuid;
-		}
-		return null;
-	}
+    /**
+     * Gets the application.
+     * 
+     * @param name
+     *            the name
+     * @return application for name
+     * @throws Exception
+     *             the exception
+     */
+    public Application getApplication(String name) throws Exception {
+        name = name.toLowerCase();
+        HColumn<String, ByteBuffer> column = cass.getColumn(
+                cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID);
+        if (column == null) {
+            return null;
+        }
 
-	/**
-	 * Gets the application.
-	 * 
-	 * @param name
-	 *            the name
-	 * @return application for name
-	 * @throws Exception
-	 *             the exception
-	 */
-  @Metered(group="core",name="EntityManagerFactory_getApplication")
-	public Application getApplication(String name) throws Exception {
-		name = name.toLowerCase();
-		HColumn<String, ByteBuffer> column = cass.getColumn(
-				cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID);
-		if (column == null) {
-			return null;
-		}
+        UUID applicationId = uuid(column.getValue());
 
-		UUID applicationId = uuid(column.getValue());
+        EntityManager em = getEntityManager(applicationId);
+        return ((EntityManagerImpl) em).getEntity(applicationId,
+                TYPE_APPLICATION, Application.class);
+    }
 
-		EntityManager em = getEntityManager(applicationId);
-		return ((EntityManagerImpl) em).getEntity(applicationId,
-				TYPE_APPLICATION, Application.class);
-	}
+    @Override
+    public Map<String, UUID> getApplications() throws Exception {
+        Map<String, UUID> applications = new TreeMap<String, UUID>(
+                CASE_INSENSITIVE_ORDER);
+        Keyspace ko = cass.getSystemKeyspace();
+        RangeSlicesQuery<String, String, UUID> q = createRangeSlicesQuery(ko,
+                se, se, ue);
+        q.setKeys("", "\uFFFF");
+        q.setColumnFamily(APPLICATIONS_CF);
+        q.setColumnNames(PROPERTY_UUID);
+        q.setRowCount(10000);
+        QueryResult<OrderedRows<String, String, UUID>> r = q.execute();
+        Rows<String, String, UUID> rows = r.get();
+        for (Row<String, String, UUID> row : rows) {
+            ColumnSlice<String, UUID> slice = row.getColumnSlice();
+            HColumn<String, UUID> column = slice.getColumnByName(PROPERTY_UUID);
+            applications.put(row.getKey(), column.getValue());
+        }
+        return applications;
+    }
 
-	@Override
-	public Map<String, UUID> getApplications() throws Exception {
-		Map<String, UUID> applications = new TreeMap<String, UUID>(
-				CASE_INSENSITIVE_ORDER);
-		Keyspace ko = cass.getSystemKeyspace();
-		RangeSlicesQuery<String, String, UUID> q = createRangeSlicesQuery(ko,
-				se, se, ue);
-		q.setKeys("", "\uFFFF");
-		q.setColumnFamily(APPLICATIONS_CF);
-		q.setColumnNames(PROPERTY_UUID);
-		QueryResult<OrderedRows<String, String, UUID>> r = q.execute();
-		Rows<String, String, UUID> rows = r.get();
-		for (Row<String, String, UUID> row : rows) {
-			ColumnSlice<String, UUID> slice = row.getColumnSlice();
-			HColumn<String, UUID> column = slice.getColumnByName(PROPERTY_UUID);
-			applications.put(row.getKey(), column.getValue());
-		}
-		return applications;
-	}
+    @Override
+    public boolean setServiceProperty(String name, String value) {
+        try {
+            cass.setColumn(cass.getSystemKeyspace(), PROPERTIES_CF,
+                    PROPERTIES_CF, name, value);
+            return true;
+        } catch (Exception e) {
+            logger.error("Unable to set property " + name + ": "
+                    + e.getMessage());
+        }
+        return false;
+    }
 
-	@Override
-	public boolean setServiceProperty(String name, String value) {
-		try {
-			cass.setColumn(cass.getSystemKeyspace(), PROPERTIES_CF,
-					PROPERTIES_CF, name, value);
-			return true;
-		} catch (Exception e) {
-			logger.error("Unable to set property " + name + ": "
-					+ e.getMessage());
-		}
-		return false;
-	}
+    @Override
+    public boolean deleteServiceProperty(String name) {
+        try {
+            cass.deleteColumn(cass.getSystemKeyspace(), PROPERTIES_CF,
+                    PROPERTIES_CF, name);
+            return true;
+        } catch (Exception e) {
+            logger.error("Unable to delete property " + name + ": "
+                    + e.getMessage());
+        }
+        return false;
+    }
 
-	@Override
-	public boolean deleteServiceProperty(String name) {
-		try {
-			cass.deleteColumn(cass.getSystemKeyspace(), PROPERTIES_CF,
-					PROPERTIES_CF, name);
-			return true;
-		} catch (Exception e) {
-			logger.error("Unable to delete property " + name + ": "
-					+ e.getMessage());
-		}
-		return false;
-	}
+    @Override
+    public boolean updateServiceProperties(Map<String, String> properties) {
+        try {
+            cass.setColumns(cass.getSystemKeyspace(), PROPERTIES_CF,
+                    PROPERTIES_CF.getBytes(), properties);
+            return true;
+        } catch (Exception e) {
+            logger.error("Unable to update properties: " + e.getMessage());
+        }
+        return false;
+    }
 
-	@Override
-	public boolean updateServiceProperties(Map<String, String> properties) {
-		try {
-			cass.setColumns(cass.getSystemKeyspace(), PROPERTIES_CF,
-					PROPERTIES_CF.getBytes(), properties);
-			return true;
-		} catch (Exception e) {
-			logger.error("Unable to update properties: " + e.getMessage());
-		}
-		return false;
-	}
+    @Override
+    public Map<String, String> getServiceProperties() {
+        Map<String, String> properties = null;
+        try {
+            properties = asMap(cass.getAllColumns(cass.getSystemKeyspace(),
+                    PROPERTIES_CF, PROPERTIES_CF, se, se));
+            return properties;
+        } catch (Exception e) {
+            logger.error("Unable to load properties: " + e.getMessage());
+        }
+        return null;
+    }
 
-	@Override
-	public Map<String, String> getServiceProperties() {
-		Map<String, String> properties = null;
-		try {
-			properties = asMap(cass.getAllColumns(cass.getSystemKeyspace(),
-					PROPERTIES_CF, PROPERTIES_CF, se, se));
-			return properties;
-		} catch (Exception e) {
-			logger.error("Unable to load properties: " + e.getMessage());
-		}
-		return null;
-	}
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext)
+            throws BeansException {
+        this.applicationContext = applicationContext;
+    }
 
-	@Override
-	public void setApplicationContext(ApplicationContext applicationContext)
-			throws BeansException {
-		this.applicationContext = applicationContext;
-	}
-
-  public void setCounterUtils(CounterUtils counterUtils) {
-    this.counterUtils = counterUtils;
-  }
+    public void setCounterUtils(CounterUtils counterUtils) {
+        this.counterUtils = counterUtils;
+    }
 
 }
