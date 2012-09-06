@@ -169,6 +169,24 @@ public class UserResource extends ServiceResource {
 			throws Exception {
 		return setUserPasswordPut(ui, json, callback);
 	}
+	
+	@POST
+	@Path("deactivate")
+	public JSONWithPadding deactivate(@Context UriInfo ui,
+            Map<String, Object> json,
+            @QueryParam("callback") @DefaultValue("") String callback)
+            throws Exception {
+	
+	    ApiResponse response = new ApiResponse();
+	    response.setAction("Deactivate user");
+	    
+	    User user = management.deactivateUser(getApplicationId(), getUserUuid());
+	    
+	    response.withEntity(user);
+	    
+	    return new JSONWithPadding(response, callback);
+	    
+	}
 
 	@GET
 	@Path("sendpin")

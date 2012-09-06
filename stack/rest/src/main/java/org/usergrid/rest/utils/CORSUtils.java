@@ -23,6 +23,18 @@ import javax.servlet.http.HttpServletResponse;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerResponse;
 
+/* Note: At one point there was a special case in this code that would
+   convert an origin header sent with a string containing the contents
+   "null" to an actual null and dealing with that case as if the header
+   had not been sent at all. This, however, caused problems with the
+   Firefox and Chrome browsers that intend that the "null" be the actual
+   origin when the file:// protocol is used and specifically look for it
+   in the response. By removing this special case and instead allowing
+   the normal processing (ie. allowing "null" to be a valid origin), it
+   removed the issue for those browsers. Safari works regardless as it
+   actually leaves off the header (a true null). IE still doesn't work
+   on file:// regardless for reasons unknown.
+*/
 public class CORSUtils {
 
 	private static final String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
@@ -33,7 +45,6 @@ public class CORSUtils {
 	private static final String ACCESS_CONTROL_REQUEST_HEADERS = "access-control-request-headers";
 	private static final String ORIGIN_HEADER = "origin";
 	private static final String REFERER_HEADER = "referer";
-	private static final String AUTHORIZATION_HEADER = "authorization";
 
 	public static void allowAllOrigins(HttpServletRequest request,
 			HttpServletResponse response) {
@@ -59,19 +70,14 @@ public class CORSUtils {
 		}
 
 		boolean origin_sent = false;
-		boolean null_origin_received = false;
 		if (request.getHeader(ORIGIN_HEADER) != null) {
 			@SuppressWarnings("unchecked")
 			Enumeration<String> e = request.getHeaders(ORIGIN_HEADER);
 			while (e.hasMoreElements()) {
 				String value = e.nextElement();
 				if (value != null) {
-					if ("null".equalsIgnoreCase(value)) {
-						null_origin_received = true;
-					} else {
-						origin_sent = true;
-						response.addHeader(ACCESS_CONTROL_ALLOW_ORIGIN, value);
-					}
+          origin_sent = true;
+          response.addHeader(ACCESS_CONTROL_ALLOW_ORIGIN, value);
 				}
 			}
 		}
@@ -82,11 +88,7 @@ public class CORSUtils {
 				response.addHeader(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
 				response.addHeader(ACCESS_CONTROL_ALLOW_ORIGIN, origin);
 			} else {
-				if (!null_origin_received) {
-					if (request.getHeaders(AUTHORIZATION_HEADER) == null) {
-						response.addHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-					}
-				}
+        response.addHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*");
 			}
 		} else {
 			response.addHeader(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
@@ -117,17 +119,11 @@ public class CORSUtils {
 		}
 
 		boolean origin_sent = false;
-		boolean null_origin_received = false;
 		if (request.getRequestHeaders().containsKey(ORIGIN_HEADER)) {
 			for (String value : request.getRequestHeaders().get(ORIGIN_HEADER)) {
-				if (value != null) {
-					if ("null".equalsIgnoreCase(value)) {
-						null_origin_received = true;
-					} else {
-						origin_sent = true;
-						response.getHttpHeaders().add(
-								ACCESS_CONTROL_ALLOW_ORIGIN, value);
-					}
+        if (value != null) {
+          origin_sent = true;
+          response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_ORIGIN, value);
 				}
 			}
 		}
@@ -135,22 +131,13 @@ public class CORSUtils {
 		if (!origin_sent) {
 			String origin = getOrigin(request);
 			if (origin != null) {
-				response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_CREDENTIALS,
-						"true");
-				response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_ORIGIN,
-						origin);
+				response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+				response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_ORIGIN, origin);
 			} else {
-				if (!null_origin_received) {
-					if (!request.getRequestHeaders().containsKey(
-							AUTHORIZATION_HEADER)) {
-						response.getHttpHeaders().add(
-								ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-					}
-				}
+        response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_ORIGIN, "*");
 			}
 		} else {
-			response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_CREDENTIALS,
-					"true");
+			response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
 		}
 
 		return response;

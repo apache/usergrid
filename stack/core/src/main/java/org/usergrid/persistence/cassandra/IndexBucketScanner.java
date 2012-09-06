@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.yammer.metrics.annotation.Metered;
 import me.prettyprint.hector.api.beans.HColumn;
 
 import org.apache.cassandra.config.ConfigurationException;
@@ -86,6 +87,7 @@ public class IndexBucketScanner {
      * @return
      * @throws Exception
      */
+    @Metered(group="core",name="IndexBucketScanner_load")
     public List<HColumn<ByteBuffer, ByteBuffer>> load()
             throws Exception {
 
