@@ -281,43 +281,23 @@ public class ManagementServiceImpl implements ManagementService {
                 logger.warn("Missing values for test app, check properties.  Skipping test app setup...");
                 return;
             }
-
-            UserInfo user = createAdminUser(test_admin_username,
-                    test_admin_name, test_admin_email, test_admin_password,
-                    true, false);
-
-            OrganizationInfo organization = createOrganization(
-                    test_organization_name, user, true);
-
-            UUID appId = createApplication(organization.getUuid(),
-                    buildAppName(test_app_name, organization)).getId();
-
-            postOrganizationActivity(organization.getUuid(), user, "create",
-                    new SimpleEntityRef(APPLICATION_INFO, appId),
-                    "Application", test_app_name,
-                    "<a mailto=\"" + user.getEmail() + "\">" + user.getName()
-                            + " (" + user.getEmail()
-                            + ")</a> created a new application named "
-                            + test_app_name, null);
+            
+            OrganizationOwnerInfo created = createOwnerAndOrganization(test_organization_name,
+                      test_admin_username, test_admin_name, test_admin_email,
+                      test_admin_password, true, false);
+            
+            
+              
+              
+              OrganizationInfo organization = created.getOrganization();
+              createApplication(organization.getUuid(), test_app_name);
 
         } else {
             logger.warn("Test app creation disabled");
         }
 
-        boolean superuser_enabled = parseBoolean(properties
-                .getProperty(PROPERTIES_SYSADMIN_LOGIN_ALLOWED));
-        String superuser_username = properties
-                .getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
-        String superuser_email = properties
-                .getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL);
-        String superuser_password = properties
-                .getProperty(PROPERTIES_SYSADMIN_LOGIN_PASSWORD);
-
-        if (!anyNull(superuser_username, superuser_email, superuser_password)) {
-            createAdminUser(superuser_username, "Super User", superuser_email,
-                    superuser_password, superuser_enabled, !superuser_enabled);
-        } else {
-            logger.warn("Missing values for superuser account, check properties.  Skipping superuser account setup...");
+        if(superuserEnabled()){
+            provisionSuperuser();
         }
 
     }

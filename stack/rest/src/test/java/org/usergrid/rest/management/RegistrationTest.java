@@ -144,7 +144,7 @@ public class RegistrationTest extends AbstractRestTest {
         properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
                 "sysadmin-1@mockserver.com");
 
-        String t = mgmtToken();
+        String t = adminToken();
         MultivaluedMap formData = new MultivaluedMapImpl();
         formData.add("foo", "bar");
         try {
@@ -172,7 +172,7 @@ public class RegistrationTest extends AbstractRestTest {
         properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
                 "sysadmin-1@mockserver.com");
 
-        String t = mgmtToken();
+        String t = adminToken();
         postAddAdminToOrg("test-organization", "test-admin@mockserver.com",
                 "password", t);
 

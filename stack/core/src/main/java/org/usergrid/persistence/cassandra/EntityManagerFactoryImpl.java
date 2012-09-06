@@ -63,6 +63,8 @@ import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.usergrid.utils.UUIDUtils;
 
+import com.yammer.metrics.annotation.Metered;
+
 /**
  * Cassandra-specific implementation of Datastore
  * 
@@ -249,6 +251,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
     }
 
     @Override
+    @Metered(group="core",name="EntityManagerFactory_lookupApplication_byName")
     public UUID lookupApplication(String name) throws Exception {
         name = name.toLowerCase();
         HColumn<String, ByteBuffer> column = cass.getColumn(
@@ -269,6 +272,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
      * @throws Exception
      *             the exception
      */
+    @Metered(group="core",name="EntityManagerFactory_getApplication")
     public Application getApplication(String name) throws Exception {
         name = name.toLowerCase();
         HColumn<String, ByteBuffer> column = cass.getColumn(

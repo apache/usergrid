@@ -15,18 +15,15 @@
  ******************************************************************************/
 package org.usergrid.security.shiro;
 
-import static java.lang.Boolean.parseBoolean;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED;
-import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_NAME;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
@@ -51,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.usergrid.management.AccountCreationProps;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationInfo;
@@ -82,7 +80,6 @@ import org.usergrid.security.tokens.TokenService;
 import com.google.common.collect.HashBiMap;
 
 public class Realm extends AuthorizingRealm {
-
     private static final Logger logger = LoggerFactory.getLogger(Realm.class);
 
     public final static String ROLE_SERVICE_ADMIN = "service-admin";
@@ -91,15 +88,15 @@ public class Realm extends AuthorizingRealm {
     public final static String ROLE_APPLICATION_ADMIN = "application-admin";
     public final static String ROLE_APPLICATION_USER = "application-user";
 
-    EntityManagerFactory emf;
-    Properties properties;
-    ManagementService management;
-    TokenService tokens;
+    private EntityManagerFactory emf;
+    private ManagementService management;
+    private TokenService tokens;
 
-    @Value("${usergrid.system.login.name:admin}")
-    String systemUser;
-    @Value("${usergrid.system.login.password:admin}")
-    String systemPassword;
+    
+    @Value("${"+PROPERTIES_SYSADMIN_LOGIN_ALLOWED+"}")
+    private boolean superUserEnabled;
+    @Value("${"+AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_NAME+":admin}")
+    private String superUser;
 
     public Realm() {
         setCredentialsMatcher(new AllowAllCredentialsMatcher());
@@ -145,11 +142,6 @@ public class Realm extends AuthorizingRealm {
     @Autowired
     public void setEntityManagerFactory(EntityManagerFactory emf) {
         this.emf = emf;
-    }
-
-    @Autowired
-    public void setProperties(Properties properties) {
-        this.properties = properties;
     }
 
     @Autowired
@@ -281,12 +273,8 @@ public class Realm extends AuthorizingRealm {
 
                 UserInfo user = ((AdminUserPrincipal) principal).getUser();
 
-                boolean superuser_enabled = parseBoolean(properties
-                        .getProperty(PROPERTIES_SYSADMIN_LOGIN_ALLOWED));
-                String superuser_username = properties
-                        .getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
-                if (superuser_enabled && (superuser_username != null)
-                        && superuser_username.equals(user.getUsername())) {
+                if (superUserEnabled && (superUser != null)
+                        && superUser.equals(user.getUsername())) {
                     // The system user has access to everything
 
                     role(info, principal, ROLE_SERVICE_ADMIN);
