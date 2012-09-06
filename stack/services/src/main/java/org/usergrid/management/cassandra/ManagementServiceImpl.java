@@ -213,12 +213,18 @@ public class ManagementServiceImpl implements ManagementService {
     public void setup() throws Exception {
 
         if (parseBoolean(properties.getProperty(PROPERTIES_SETUP_TEST_ACCOUNT))) {
-            String test_app_name = properties.getProperty(PROPERTIES_TEST_ACCOUNT_APP);
-            String test_organization_name = properties.getProperty(PROPERTIES_TEST_ACCOUNT_ORGANIZATION);
-            String test_admin_username = properties.getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_USERNAME);
-            String test_admin_name = properties.getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_NAME);
-            String test_admin_email = properties.getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL);
-            String test_admin_password = properties.getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD);
+            String test_app_name = properties
+                    .getProperty(PROPERTIES_TEST_ACCOUNT_APP);
+            String test_organization_name = properties
+                    .getProperty(PROPERTIES_TEST_ACCOUNT_ORGANIZATION);
+            String test_admin_username = properties
+                    .getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_USERNAME);
+            String test_admin_name = properties
+                    .getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_NAME);
+            String test_admin_email = properties
+                    .getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL);
+            String test_admin_password = properties
+                    .getProperty(PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD);
 
             if (anyNull(test_app_name, test_organization_name,
                     test_admin_username, test_admin_name, test_admin_email,
@@ -227,35 +233,30 @@ public class ManagementServiceImpl implements ManagementService {
                 return;
             }
 
-          UserInfo user = createAdminUser(test_admin_username,
-                  test_admin_name, test_admin_email, test_admin_password,
-                  true, false);
-
-          OrganizationInfo organization = createOrganization(
-                    test_organization_name, user, true);
-
-
-            UUID appId = createApplication(organization.getUuid(),
-                    buildAppName(test_app_name, organization))
-                    .getId();
-
-            postOrganizationActivity(organization.getUuid(), user, "create",
-                    new SimpleEntityRef(APPLICATION_INFO, appId),
-                    "Application", test_app_name,
-                    "<a mailto=\"" + user.getEmail() + "\">" + user.getName()
-                            + " (" + user.getEmail()
-                            + ")</a> created a new application named "
-                            + test_app_name, null);
-
+          
+          OrganizationOwnerInfo created = createOwnerAndOrganization(test_organization_name,
+                    test_admin_username, test_admin_name, test_admin_email,
+                    test_admin_password, true, false);
+          
+          
+            
+            
+            OrganizationInfo organization = created.getOrganization();
+            ApplicationInfo info = createApplication(organization.getUuid(), test_app_name);
+            
+           
             boolean superuser_enabled = parseBoolean(properties
                     .getProperty(PROPERTIES_SYSADMIN_LOGIN_ALLOWED));
-            String superuser_username = properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
-            String superuser_email = properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL);
-            String superuser_password = properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_PASSWORD);
+            String superuser_username = properties
+                    .getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
+            String superuser_email = properties
+                    .getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL);
+            String superuser_password = properties
+                    .getProperty(PROPERTIES_SYSADMIN_LOGIN_PASSWORD);
 
             if (!anyNull(superuser_username, superuser_email,
                     superuser_password)) {
-                user = createAdminUser(superuser_username, "Super User",
+                createAdminUser(superuser_username, "Super User",
                         superuser_email, superuser_password, superuser_enabled,
                         !superuser_enabled);
             } else {

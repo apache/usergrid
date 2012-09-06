@@ -48,10 +48,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.usergrid.management.AccountCreationProps;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
+import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.Results;
@@ -93,9 +95,9 @@ public class Realm extends AuthorizingRealm {
 	ManagementService management;
 	TokenService tokens;
 
-	@Value("${usergrid.system.login.name:admin}")
+	@Value("${"+AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_NAME+":admin}")
 	String systemUser;
-	@Value("${usergrid.system.login.password:admin}")
+	@Value("${"+AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_PASSWORD+":admin}")
 	String systemPassword;
 
 	public Realm() {
@@ -278,7 +280,7 @@ public class Realm extends AuthorizingRealm {
 
 				UserInfo user = ((AdminUserPrincipal) principal).getUser();
 
-				if (user.getUsername().equals("superuser")) {
+				if (user.getUsername().equals(systemUser)) {
 					// The system user has access to everything
 
 					role(info, principal, ROLE_SERVICE_ADMIN);

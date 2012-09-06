@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import javax.management.RuntimeErrorException;
 
+import org.apache.cassandra.thrift.Cassandra;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -32,6 +33,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.services.ServiceParameter.IdParameter;
 import org.usergrid.services.applications.ApplicationsService;
@@ -93,6 +95,13 @@ public class ServiceManager implements ApplicationContextAware {
 		return application.getUuid();
 	}
 
+	/**
+	 * Return true if our current applicationId is the managment Id
+	 * @return
+	 */
+	public boolean isMangementApplication(){
+	    return CassandraService.MANAGEMENT_APPLICATION_ID.equals(getApplicationId());
+	}
 	
 	public EntityRef getApplicationRef() {
 		return ref(Application.ENTITY_TYPE, applicationId);

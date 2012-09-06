@@ -17,11 +17,13 @@ package org.usergrid.rest;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_USERNAME;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -42,8 +44,12 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.filter.DelegatingFilterProxy;
 import org.usergrid.java.client.Client;
+import org.usergrid.management.AccountCreationProps;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
+import org.usergrid.management.UserInfo;
+import org.usergrid.management.cassandra.AccountCreationPropsImpl;
+import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.filters.ContentTypeFilter;
@@ -77,6 +83,8 @@ public abstract class AbstractRestTest extends JerseyTest {
     protected static Properties properties;
 
     protected static String access_token;
+    
+    protected static String adminAccessToken;
 
     protected ManagementService managementService;
 
@@ -156,21 +164,15 @@ public abstract class AbstractRestTest extends JerseyTest {
             return;
         }
 
-        JsonNode node = resource().path("/management/token")
-                .queryParam("grant_type", "password")
-                .queryParam("username", "test@usergrid.com")
-                .queryParam("password", "test")
-                .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
-
-        String mgmToken = node.get("access_token").getTextValue();
+        adminToken();
         //
 
         Map<String, String> payload = hashMap("email", "ed@anuff.com")
                 .map("username", "edanuff").map("name", "Ed Anuff")
                 .map("password", "sesame").map("pin", "1234");
 
-        node = resource().path("/test-organization/test-app/users")
-                .queryParam("access_token", mgmToken)
+        JsonNode node = resource().path("/test-organization/test-app/users")
+                .queryParam("access_token", adminAccessToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(JsonNode.class, payload);
@@ -191,8 +193,20 @@ public abstract class AbstractRestTest extends JerseyTest {
         for (int i = 0; i < 10; i++) {
 
             try {
-                client = new Client("test-organization", "test-app")
-                        .withApiUrl(getBaseURI().toString());
+                Map<String, String> data = new HashMap<String, String>();
+                data.put("newpassword", "sesame");
+                
+                
+                //change the password as admin.  The old password isn't required
+                JsonNode node = resource().path("/test-organization/test-app/users/edanuff/password")
+                        .queryParam("access_token", adminAccessToken)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
+                
+                assertNull(getError(node));
+                
+                
+                client = new Client("test-organization", "test-app").withApiUrl(getBaseURI().toString());
 
                 org.usergrid.java.client.response.ApiResponse response = client
                         .authorizeAppUser("ed@anuff.com", "sesame");
@@ -210,6 +224,7 @@ public abstract class AbstractRestTest extends JerseyTest {
         }
 
     }
+  
 
     @Override
     protected TestContainerFactory getTestContainerFactory() {
@@ -248,9 +263,9 @@ public abstract class AbstractRestTest extends JerseyTest {
 
         properties = (Properties) context.getBean("properties");
 
-        managementService = (ManagementService) context
-                .getBean("managementService");
-
+        managementService = (ManagementService) context.getBean("managementService");
+        
+      
         ApplicationInfo appInfo = managementService
                 .getApplicationInfo("test-organization/test-app");
 
@@ -259,23 +274,47 @@ public abstract class AbstractRestTest extends JerseyTest {
 
         access_token = managementService.getAccessTokenForAppUser(
                 appInfo.getId(), user.getUuid());
+      
+        adminToken();
 
         loginClient();
 
     }
+    
+    
 
     /**
-     * Acquire the management token for the test@usergrid.com user
+     * Acquire the management token for the test@usergrid.com user with the default password
      * 
      * @return
      */
-    protected String mgmtToken() {
+    protected String adminToken() {
+        adminAccessToken =  mgmtToken("test@usergrid.com", "test");
+        return adminAccessToken;
+    }
+    
+    /**
+     * Get the super user's access token
+     * @return
+     */
+    protected String superAdminToken(){
+        return mgmtToken("superuser", "superpassword");
+    }
+    
+    /**
+     * Acquire the management token for the test@usergrid.com user with the given password
+     * 
+     * @return
+     */
+    protected String mgmtToken(String user, String password) {
         JsonNode node = resource().path("/management/token")
                 .queryParam("grant_type", "password")
-                .queryParam("username", "test@usergrid.com")
-                .queryParam("password", "test")
+                .queryParam("username", user)
+                .queryParam("password", password)
                 .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+        
         String mgmToken = node.get("access_token").getTextValue();
+         
         return mgmToken;
 
     }
@@ -300,6 +339,15 @@ public abstract class AbstractRestTest extends JerseyTest {
      */
     protected JsonNode getEntity(JsonNode response, String name) {
         return response.get("entities").get(name);
+    }
+    
+    /**
+     * Get the error response
+     * @param response
+     * @return
+     */
+    protected JsonNode getError(JsonNode response){
+        return response.get("error");
     }
 }
 

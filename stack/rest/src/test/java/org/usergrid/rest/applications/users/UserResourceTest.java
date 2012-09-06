@@ -50,6 +50,7 @@ import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.rest.applications.utils.UserRepo;
 import org.usergrid.utils.UUIDUtils;
 
+import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
 /**
@@ -695,9 +696,8 @@ public class UserResourceTest extends AbstractRestTest {
                 response.getError());
 
         Entity userEntity = response.getEntities().get(0);
-        
 
-        //attempt to log in
+        // attempt to log in
         JsonNode node = resource().path("/test-organization/test-app/token")
                 .queryParam("username", username)
                 .queryParam("password", "password")
@@ -705,29 +705,26 @@ public class UserResourceTest extends AbstractRestTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        
         assertEquals(username, node.get("user").get("username").asText());
         assertEquals(name, node.get("user").get("name").asText());
         assertEquals(email, node.get("user").get("email").asText());
-        
-        //now update the name and email
+
+        // now update the name and email
         String newName = "newName";
-        String newEmail = "newEmail"+UUIDUtils.newTimeUUID()+"@usergrid.org";
-        
+        String newEmail = "newEmail" + UUIDUtils.newTimeUUID()
+                + "@usergrid.org";
 
         userEntity.setProperty("name", newName);
         userEntity.setProperty("email", newEmail);
-        
-        
 
         node = resource()
                 .path(String.format("/test-organization/test-app/users/%s",
                         username)).queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).put(JsonNode.class, userEntity.getProperties());
-        
-      
-        //now see if we've updated 
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .put(JsonNode.class, userEntity.getProperties());
+
+        // now see if we've updated
         node = resource().path("/test-organization/test-app/token")
                 .queryParam("username", username)
                 .queryParam("password", "password")
@@ -735,7 +732,6 @@ public class UserResourceTest extends AbstractRestTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        
         assertEquals(username, node.get("user").get("username").asText());
         assertEquals(newName, node.get("user").get("name").asText());
         assertEquals(newEmail, node.get("user").get("email").asText());
@@ -782,15 +778,16 @@ public class UserResourceTest extends AbstractRestTest {
         logNode(node);
 
     }
-    
+
     @Test
-    public void deactivateUser(){
+    public void deactivateUser() {
 
         UUID newUserUuid = UUIDUtils.newTimeUUID();
-        
+
         String userName = String.format("test%s", newUserUuid);
-        
-        Map<String, String> payload = hashMap("email", String.format("%s@anuff.com", newUserUuid))
+
+        Map<String, String> payload = hashMap("email",
+                String.format("%s@anuff.com", newUserUuid))
                 .map("username", userName).map("name", "Ed Anuff")
                 .map("password", "sesame").map("pin", "1234");
 
@@ -799,27 +796,27 @@ public class UserResourceTest extends AbstractRestTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(JsonNode.class, payload);
-        
-        
-        JsonNode response = resource().path("/test-organization/test-app/users")
+
+        JsonNode response = resource()
+                .path("/test-organization/test-app/users")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-      
-        
-        //disable the user
-        
+        // disable the user
+
         Map<String, String> data = new HashMap<String, String>();
-        
-        response = resource().path(String.format("/test-organization/test-app/users/%s/deactivate", userName))
-                .queryParam("access_token", access_token)
+
+        response = resource()
+                .path(String.format(
+                        "/test-organization/test-app/users/%s/deactivate",
+                        userName)).queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class,data);
-        
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(JsonNode.class, data);
+
         JsonNode entity = getEntity(response, 0);
-        
-        
+
         assertFalse(entity.get("activated").asBoolean());
         assertNotNull(entity.get("deactivated"));
 
@@ -871,5 +868,64 @@ public class UserResourceTest extends AbstractRestTest {
         assertNull(response.getError());
 
     }
+
+    @Test
+    public void setUserPasswordAsAdmin() {
+
+        String newPassword = "foo";
+
+        Map<String, String> data = new HashMap<String, String>();
+        data.put("newpassword", newPassword);
+
+        // change the password as admin. The old password isn't required
+        JsonNode node = resource()
+                .path("/test-organization/test-app/users/edanuff/password")
+                .queryParam("access_token", adminAccessToken)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(JsonNode.class, data);
+
+        assertNull(getError(node));
+
+        ApiResponse response = client.authorizeAppUser("ed@anuff.com",
+                newPassword);
+
+        assertNull(response.getError());
+
+    }
+    
+
+    @Test
+    public void passwordMismatchErrorUser() {
+        String origPassword = "foo";
+        String newPassword = "bar";
+
+        Map<String, String> data = new HashMap<String, String>();
+        data.put("newpassword", origPassword);
+
+        // now change the password, with an incorrect old password
+
+        data.put("oldpassword", origPassword);
+        data.put("newpassword", newPassword);
+
+        Status responseStatus = null;
+        try {
+            resource()
+                    .path("/test-organization/test-app/users/edanuff/password")
+                    .queryParam("access_token", access_token)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE)
+                    .post(JsonNode.class, data);
+        } catch (UniformInterfaceException uie) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertNotNull(responseStatus);
+        
+        assertEquals(Status.BAD_REQUEST, responseStatus);
+
+    }
+    
+
 
 }

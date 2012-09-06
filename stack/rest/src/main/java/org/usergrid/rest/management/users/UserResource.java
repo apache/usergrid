@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.management.users;
 
+import static org.usergrid.security.shiro.utils.SubjectUtils.*;
 import static org.usergrid.utils.ConversionUtils.string;
 
 import java.util.Map;
@@ -35,8 +36,10 @@ import javax.ws.rs.core.UriInfo;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 
+import org.apache.shiro.authz.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ActivationState;
@@ -101,12 +104,7 @@ public class UserResource extends AbstractContextResource {
 			return null;
 		}
 
-		String oldPassword = string(json.get("oldpassword"));
-		String newPassword = string(json.get("newpassword"));
-		if ((oldPassword != null) && (newPassword != null)) {
-			management.setAdminUserPassword(user.getUuid(), oldPassword,
-					newPassword);
-		}
+		setUserPasswordPut(ui, json, callback);
 
 		String email = string(json.get("email"));
 		String username = string(json.get("username"));
@@ -122,26 +120,40 @@ public class UserResource extends AbstractContextResource {
 
 	@PUT
 	@Path("password")
-	public JSONWithPadding setUserPassword(@Context UriInfo ui,
+	public JSONWithPadding setUserPasswordPut(@Context UriInfo ui,
 			Map<String, Object> json,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		if (json == null) {
-			return null;
-		}
+        if (json == null) {
+            return null;
+        }
 
-		String oldPassword = string(json.get("oldpassword"));
-		String newPassword = string(json.get("newpassword"));
-		management.setAdminUserPassword(user.getUuid(), oldPassword,
-				newPassword);
+        String oldPassword = string(json.get("oldpassword"));
+        String newPassword = string(json.get("newpassword"));
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("set user password");
+        if (isServiceAdmin()) {
+            management.setAdminUserPassword(user.getUuid(), newPassword);
+        } else {
+            management.setAdminUserPassword(user.getUuid(), oldPassword,
+                    newPassword);
+        }
 
-		return new JSONWithPadding(response, callback);
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("set user password");
+
+        return new JSONWithPadding(response, callback);
 	}
 
+	@POST
+	@Path("password")
+	public JSONWithPadding setUserPasswordPost(@Context UriInfo ui,
+            Map<String, Object> json,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
+	    return setUserPasswordPut(ui, json, callback);
+	}
+	
 	@RequireAdminUserAccess
 	@GET
 	@Path("feed")
