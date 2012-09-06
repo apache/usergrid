@@ -232,18 +232,22 @@ function apigee_console_app(Pages, query_params) {
   function getCollection(method){
     //get the data to run the query
     var path = $("#query-path").val();
-    var data = $("#query-source").val();
+    if(method.toUpperCase() !== 'GET'){
+      var data = $("#query-source").val();
+      try{
+        data = JSON.parse(data);
+      } catch (e) {
+        alertModal("Error", "There is a problem with your JSON.");
+        return false;
+      }
+    }
     var ql = $("#query-ql").val();
 
-    //merge the data and the query
-    var params = {"ql":ql};
-    try{
-    data = JSON.parse(data);
-    } catch (e) {
-      alertModal("Error", "There is a problem with your JSON.");
-      return false;
+    //merge the data and the query only if query is not empty
+    if(ql !== ""){
+      var params = {"ql":ql};
     }
-    if(method.toUpperCase() == 'PUT' && !Usergrid.validation.isUUID( path.split("/").pop())) {
+    if(method.toUpperCase() === 'PUT' && !Usergrid.validation.isUUID( path.split("/").pop())) {
       confirmAction("Warning!",
         "You are attempting to run a PUT (update) command, but it appears that you have not given a specific entity to act on.  This action may update all entities in this colleciton.  Are you sure you want to proceed?",
         function() {
