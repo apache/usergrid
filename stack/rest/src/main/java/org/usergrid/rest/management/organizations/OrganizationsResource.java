@@ -43,6 +43,7 @@ import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.exceptions.ManagementException;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
+import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
@@ -63,6 +64,7 @@ public class OrganizationsResource extends AbstractContextResource {
     }
 
     @Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    @RequireOrganizationAccess
     public OrganizationResource getOrganizationById(@Context UriInfo ui,
             @PathParam("organizationId") String organizationIdStr)
             throws Exception {
@@ -76,6 +78,7 @@ public class OrganizationsResource extends AbstractContextResource {
     }
 
     @Path("{organizationName}")
+    @RequireOrganizationAccess
     public OrganizationResource getOrganizationByName(@Context UriInfo ui,
             @PathParam("organizationName") String organizationName)
             throws Exception {
