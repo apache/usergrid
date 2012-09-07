@@ -12,6 +12,8 @@
 	<context:component-scan base-package="org.usergrid.rest" />
 	
 
+	
+
 	<bean
 		class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
 		depends-on="lifecycleBeanPostProcessor" />

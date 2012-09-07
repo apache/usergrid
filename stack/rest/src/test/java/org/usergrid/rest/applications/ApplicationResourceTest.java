@@ -121,7 +121,7 @@ public class ApplicationResourceTest extends AbstractRestTest {
 
     @Test
     public void test_GET_credentials_ok() {
-        String mgmtToken = mgmtToken();
+        String mgmtToken = adminToken();
 
         JsonNode node = resource()
                 .path("/test-organization/test-app/credentials")

@@ -50,31 +50,33 @@ import org.usergrid.utils.InflectionUtils;
 @XmlRootElement
 public class ApiResponse {
 
-	UriInfo ui;
-	ServiceRequest esp;
+	private UriInfo ui;
+	private ServiceRequest esp;
 
-	String error;
-	String errorDescription;
-	String errorUri;
-	String exception;
-	String callback;
+	private String error;
+	private String errorDescription;
+	private String errorUri;
+	private String exception;
+	private String callback;
 
-	String path;
-	String uri;
-	String status;
-	long timestamp;
-	UUID application;
-	List<Entity> entities;
-	UUID next;
-	String cursor;
-	String action;
-	List<Object> list;
-	Object data;
-	Map<String, UUID> applications;
-	Map<String, Object> metadata;
-	Map<String, List<String>> params;
-	List<AggregateCounterSet> counters;
-	ClientCredentialsInfo credentials;
+	private String path;
+	private String uri;
+	private String status;
+	private long timestamp;
+	private String organization;
+	private String applicationName;
+	private UUID application;
+	private List<Entity> entities;
+	private UUID next;
+	private String cursor;
+	private String action;
+	private List<Object> list;
+	private Object data;
+	private Map<String, UUID> applications;
+	private Map<String, Object> metadata;
+	private Map<String, List<String>> params;
+	private List<AggregateCounterSet> counters;
+	private ClientCredentialsInfo credentials;
 
 	protected Map<String, Object> properties = new TreeMap<String, Object>(
 			String.CASE_INSENSITIVE_ORDER);
@@ -197,8 +199,7 @@ public class ApiResponse {
 			uri = null;
 		}
 		this.path = path;
-		uri = ui.getBaseUri() + application.toString()
-				+ (path != null ? path : "");
+		uri = createPath(path);
 	}
 
 	@JsonSerialize(include = Inclusion.NON_NULL)
@@ -210,8 +211,7 @@ public class ApiResponse {
 		esp = p;
 		if (p != null) {
 			path = p.getPath();
-			uri = ui.getBaseUri() + application.toString()
-					+ (path != null ? path : "");
+			uri = createPath(path);
 		}
 	}
 
@@ -271,22 +271,35 @@ public class ApiResponse {
 	public UUID getApplication() {
 		return application;
 	}
-
-	public void setApplication(UUID applicationId) {
-		if (applicationId != null) {
-			application = applicationId;
-		} else {
-			application = new UUID(0, 0);
-		}
-		if (esp != null) {
-			uri = ui.getBaseUri() + application.toString() + esp.toString();
-		}
+	
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	public String applicationName(){
+	    return applicationName;
 	}
+    
+    /**
+     * @return the orgId
+     */
 
-	public ApiResponse withApplication(UUID applicationId) {
-		setApplication(applicationId);
-		return this;
-	}
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public String getOrganization() {
+        return organization;
+    }
+
+    /**
+     * Set the application and organization information
+     * @param organization The organization name
+     * @param application The application name
+     */
+    public void setApplication(Application app){
+        this.organization = app.getOrganizationName();
+        this.applicationName = app.getApplicationName();
+        this.application = app.getUuid();
+        
+        if (esp != null) {
+            uri = createPath(esp.toString());
+        }
+    }
 
 	@JsonSerialize(include = Inclusion.NON_NULL)
 	@XmlAnyElement
@@ -450,10 +463,9 @@ public class ApiResponse {
 	public String getEntityPath(String url_base, Entity entity) {
 		String entity_uri = null;
 		if (!Application.ENTITY_TYPE.equals(entity.getType())) {
-			entity_uri = url_base + application.toString() + "/"
-					+ pluralize(entity.getType()) + "/" + entity.getUuid();
+			entity_uri = createPath(pluralize(entity.getType()) , entity.getUuid().toString());
 		} else {
-			entity_uri = url_base + application.toString();
+			entity_uri = createPath();
 		}
 		return entity_uri;
 	}
@@ -479,6 +491,40 @@ public class ApiResponse {
 	@JsonAnySetter
 	public void setProperty(String key, Object value) {
 		properties.put(key, value);
+	}
+	
+	/**
+	 * Create a path 
+	 * @param suffix
+	 * @return
+	 */
+	private String createPath(String... suffixes){
+	    
+	    StringBuilder builder = new StringBuilder();
+	    
+	    builder.append(ui.getBaseUri());
+	    builder.append(organization);
+	    builder.append("/");
+	    builder.append(applicationName);
+	    
+	    if(suffixes.length == 0){
+	        return builder.toString();
+	    }
+	    
+	    
+	    for(String current: suffixes){
+	        if(current == null){
+	            continue;
+	        }
+	        
+	        if(!current.startsWith("/")){
+	            builder.append("/");
+	        }
+	        builder.append(current);
+	        
+	    }
+	    
+	    return builder.toString();
 	}
 
 }

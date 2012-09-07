@@ -38,69 +38,92 @@ import com.sun.jersey.api.json.JSONWithPadding;
 @Component
 @Scope("singleton")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-		"application/x-javascript", "text/ecmascript",
-		"application/ecmascript", "text/jscript" })
+        "application/x-javascript", "text/ecmascript",
+        "application/ecmascript", "text/jscript" })
 public class SystemResource extends AbstractContextResource {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(SystemResource.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(SystemResource.class);
 
-	public SystemResource() {
-		logger.info("SystemResource initialized");
-	}
+    public SystemResource() {
+        logger.info("SystemResource initialized");
+    }
 
-	@RequireSystemAccess
-	@GET
-	@Path("database/setup")
-	public JSONWithPadding getSetup(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @RequireSystemAccess
+    @GET
+    @Path("database/setup")
+    public JSONWithPadding getSetup(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("cassandra setup");
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("cassandra setup");
 
-		logger.info("Setting up Cassandra");
+        logger.info("Setting up Cassandra");
 
-		Map<String, String> properties = emf.getServiceProperties();
-		if (properties != null) {
-			response.setError("System properties are initialized, database is set up already.");
-			return new JSONWithPadding(response, callback);
-		}
+        Map<String, String> properties = emf.getServiceProperties();
+        if (properties != null) {
+            response.setError("System properties are initialized, database is set up already.");
+            return new JSONWithPadding(response, callback);
+        }
 
-		try {
-			emf.setup();
-		} catch (Exception e) {
-			logger.error(
-					"Unable to complete core database setup, possibly due to it being setup already",
-					e);
-		}
+        try {
+            emf.setup();
+        } catch (Exception e) {
+            logger.error(
+                    "Unable to complete core database setup, possibly due to it being setup already",
+                    e);
+        }
 
-		try {
-			management.setup();
-		} catch (Exception e) {
-			logger.error(
-					"Unable to complete management database setup, possibly due to it being setup already",
-					e);
-		}
+        try {
+            management.setup();
+        } catch (Exception e) {
+            logger.error(
+                    "Unable to complete management database setup, possibly due to it being setup already",
+                    e);
+        }
 
-		response.setSuccess();
+        response.setSuccess();
 
-		return new JSONWithPadding(response, callback);
-	}
+        return new JSONWithPadding(response, callback);
+    }
 
-	@RequireSystemAccess
-	@GET
-	@Path("hello")
-	public JSONWithPadding hello(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
-		logger.info("Saying hello");
+    @RequireSystemAccess
+    @GET
+    @Path("hello")
+    public JSONWithPadding hello(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
+        logger.info("Saying hello");
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("Greetings Professor Falken");
-		response.setSuccess();
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("Greetings Professor Falken");
+        response.setSuccess();
 
-		return new JSONWithPadding(response, callback);
-	}
+        return new JSONWithPadding(response, callback);
+    }
+
+    @RequireSystemAccess
+    @GET
+    @Path("superuser/setup")
+    public JSONWithPadding getSetupSuperuser(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
+
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("superuser setup");
+
+        logger.info("Setting up Superuser");
+
+        try {
+            management.provisionSuperuser();
+        } catch (Exception e) {
+            logger.error("Unable to complete superuser setup", e);
+        }
+
+        response.setSuccess();
+
+        return new JSONWithPadding(response, callback);
+    }
 
 }

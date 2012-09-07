@@ -119,6 +119,7 @@ public class Application extends TypedEntity {
 	@EntityCollection(type = "device", propertiesIndexed = {}, indexingDynamicProperties = false)
 	protected List<UUID> devices;
 
+
 	public Application() {
 		// id = UUIDUtils.newTimeUUID();
 	}
@@ -352,6 +353,34 @@ public class Application extends TypedEntity {
 	public void setOauthproviders(Map<String, OAuthProvider> oauthproviders) {
 		this.oauthproviders = oauthproviders;
 	}
+	
+	/**
+	 * Get the organization name of this app
+	 * @return
+	 */
+	public String getOrganizationName(){
+	    String[] names = name.split("/");
+	    
+	    if(names.length == 2){
+	        return names[0];
+	    }
+	    
+	    return null;
+	}
+	
+	/**
+	 * Get the application name of this app
+	 * @return
+	 */
+	public String getApplicationName(){
+        String[] names = name.split("/");
+        
+        if(names.length == 2){
+            return names[1];
+        }
+        
+        return null;
+    }
 
 	@XmlRootElement
 	public static class OAuthProvider {

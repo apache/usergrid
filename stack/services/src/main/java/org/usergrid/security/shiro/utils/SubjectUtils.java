@@ -286,6 +286,7 @@ public class SubjectUtils {
 		return currentUser.hasRole(ROLE_APPLICATION_USER);
 	}
 
+	
 	public static boolean isAdminUser() {
 		if (isServiceAdmin()) {
 			return true;
@@ -307,6 +308,16 @@ public class SubjectUtils {
 		}
 		UserPrincipal principal = (UserPrincipal) currentUser.getPrincipal();
 		return principal.getUser();
+	}
+	
+	public static UUID getSubjectUserId(){
+	    
+	    UserInfo info = getUser();
+	    if(info == null){
+	        return null;
+	    }
+	    
+	    return info.getUuid();
 	}
 
 	public static boolean isUserActivated() {

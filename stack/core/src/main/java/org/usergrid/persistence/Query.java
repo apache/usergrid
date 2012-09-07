@@ -688,8 +688,8 @@ public class Query {
             root = parser.ql().query.getRootOperand();
 
         } catch (RecognitionException e) {
-            // TODO T.N. if we can't parse we just ignore, what error should we
-            // throw?
+            // todo: should we create a specific Exception for this? checked?
+          throw new RuntimeException("Unknown operation: " + filter, e);
         }
 
         if (root != null) {

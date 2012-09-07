@@ -14,10 +14,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.management.ManagementService;
 import org.usergrid.management.ManagementTestHelper;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
-import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
@@ -25,7 +25,7 @@ import org.usergrid.security.AuthPrincipalType;
 public class TokenServiceTest {
 
 	static Logger log = LoggerFactory.getLogger(TokenServiceTest.class);
-	static ManagementServiceImpl managementService;
+	static ManagementService managementService;
 	static ManagementTestHelper helper;
 	static TokenService tokenService;
 	// app-level data generated only once
@@ -39,7 +39,7 @@ public class TokenServiceTest {
 		assertNull(helper);
 		helper = new ManagementTestHelperImpl();
 		helper.setup();
-		managementService = (ManagementServiceImpl) helper
+		managementService = (ManagementService) helper
 				.getManagementService();
 		tokenService = helper.getTokenService();
 		setupLocal();
