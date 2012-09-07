@@ -62,22 +62,40 @@ public enum ApplicationCF implements CFEnum {
 	ENTITY_ALIASES("Entity_Aliases", "BytesType", null,
 			"entityId,entityType:BytesType,aliasType:BytesType,alias:UTF8Type"),
 
+	/**
+	 * The index that contains a list of all entities from their source entity.
+	 */
 	ENTITY_CONNECTIONS("Entity_Connections", "BytesType", null,
 			ConnectionRefImpl.getIndexes()),
 
+	/**
+	 * Contains all secondary indexes for entities
+	 */
 	ENTITY_INDEX(
 			"Entity_Index",
 			"DynamicCompositeType(a=>AsciiType,b=>BytesType,i=>IntegerType,x=>LexicalUUIDType,l=>LongType,t=>TimeUUIDType,s=>UTF8Type,u=>UUIDType,A=>AsciiType(reversed=true),B=>BytesType(reversed=true),I=>IntegerType(reversed=true),X=>LexicalUUIDType(reversed=true),L=>LongType(reversed=true),T=>TimeUUIDType(reversed=true),S=>UTF8Type(reversed=true),U=>UUIDType(reversed=true))"),
 
+	/**
+	 * Contains all properties that have ever been indexed for an entity
+	 */
 	ENTITY_INDEX_ENTRIES(
 			"Entity_Index_Entries",
 			"DynamicCompositeType(a=>AsciiType,b=>BytesType,i=>IntegerType,x=>LexicalUUIDType,l=>LongType,t=>TimeUUIDType,s=>UTF8Type,u=>UUIDType,A=>AsciiType(reversed=true),B=>BytesType(reversed=true),I=>IntegerType(reversed=true),X=>LexicalUUIDType(reversed=true),L=>LongType(reversed=true),T=>TimeUUIDType(reversed=true),S=>UTF8Type(reversed=true),U=>UUIDType(reversed=true))"),
 
+	/**
+	 * All roles that exist within an application
+	 */
 	APPLICATION_ROLES("Application_Roles", "BytesType"),
 
+	/**
+	 * Application counters
+	 */
 	APPLICATION_AGGREGATE_COUNTERS("Application_Aggregate_Counters",
 			"LongType", COUNTERTYPE.getClassName()),
 
+	/**
+	 * Entity counters
+	 */
 	ENTITY_COUNTERS("Entity_Counters", "BytesType", COUNTERTYPE.getClassName()),
 
 	;
