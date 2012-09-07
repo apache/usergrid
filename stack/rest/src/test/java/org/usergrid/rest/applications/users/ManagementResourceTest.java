@@ -29,6 +29,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.java.client.response.ApiResponse;
+import org.usergrid.management.OrganizationInfo;
+import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractRestTest;
 
@@ -110,22 +112,19 @@ public class ManagementResourceTest extends AbstractRestTest {
         assertEquals(Status.BAD_REQUEST, responseStatus);
 
     }
-    
 
     @Test
     public void setAdminPasswordAsSysAdmin() {
 
-        
         String superToken = superAdminToken();
-        
+
         String newPassword = "foo";
 
         Map<String, String> data = new HashMap<String, String>();
         data.put("newpassword", newPassword);
 
         // change the password as admin. The old password isn't required
-        JsonNode node = resource()
-                .path("/management/users/test/password")
+        JsonNode node = resource().path("/management/users/test/password")
                 .queryParam("access_token", superToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
@@ -133,26 +132,100 @@ public class ManagementResourceTest extends AbstractRestTest {
 
         assertNull(getError(node));
 
-        //log in with the new password
+        // log in with the new password
         String token = mgmtToken("test", newPassword);
-        
+
         assertNotNull(token);
-        
+
         data.put("newpassword", "test");
-        
-        //now change the password back
-        node = resource()
-                .path("/management/users/test/password")
+
+        // now change the password back
+        node = resource().path("/management/users/test/password")
                 .queryParam("access_token", superToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(JsonNode.class, data);
 
         assertNull(getError(node));
-
-        
 
     }
-    
+
+    /**
+     * Test that admins can't view organizations they're not authorized to view.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void crossOrgsNotViewable() throws Exception {
+
+        OrganizationOwnerInfo orgInfo = managementService
+                .createOwnerAndOrganization("crossOrgsNotViewable",
+                        "crossOrgsNotViewable", "TestName",
+                        "crossOrgsNotViewable@usergrid.org", "password");
+
+        // check that the test admin cannot access the new org info
+
+        Status status = null;
+
+        try {
+            resource()
+                    .path(String.format("/management/orgs/%s", orgInfo
+                            .getOrganization().getName()))
+                    .queryParam("access_token", adminAccessToken)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertNotNull(status);
+        assertEquals(Status.UNAUTHORIZED, status);
+
+        status = null;
+
+        try {
+            resource()
+                    .path(String.format("/management/orgs/%s", orgInfo
+                            .getOrganization().getUuid()))
+                    .queryParam("access_token", adminAccessToken)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertNotNull(status);
+        assertEquals(Status.UNAUTHORIZED, status);
+
+        // this admin should have access to test org
+        status = null;
+        try {
+            resource().path("/management/orgs/test-organization")
+                    .queryParam("access_token", adminAccessToken)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertNull(status);
+
+        OrganizationInfo org = managementService
+                .getOrganizationByName("test-organization");
+
+        status = null;
+        try {
+            resource()
+                    .path(String.format("/management/orgs/%s", org.getUuid()))
+                    .queryParam("access_token", adminAccessToken)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertNull(status);
+
+    }
 
 }
