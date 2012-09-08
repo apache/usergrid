@@ -38,14 +38,18 @@ public class Count extends MongoCommand {
 	@Override
 	public OpReply execute(MongoChannelHandler handler,
 			ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery) {
+	    
+	    OpReply reply = new OpReply(opQuery);
+	    
 		ApplicationInfo application = SubjectUtils.getApplication(Identifier
 				.fromName(opQuery.getDatabaseName()));
+		
 		if (application == null) {
-			OpReply reply = new OpReply(opQuery);
 			return reply;
 		}
+		
 		EntityManager em = handler.getEmf().getEntityManager(application.getId());
-		OpReply reply = new OpReply(opQuery);
+		
 		try {
 			Results results = em.getCollection(em.getApplicationRef(),
 					(String) opQuery.getQuery().get("count"), null, 100000,

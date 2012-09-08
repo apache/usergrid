@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.mongo.MongoChannelHandler;
 import org.usergrid.mongo.utils.BSONUtils;
-import org.usergrid.persistence.DynamicEntity;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Identifier;
@@ -80,7 +79,7 @@ public class OpInsert extends OpCrud {
 
 	@Override
 	public void decode(ChannelBuffer buffer) throws IOException {
-		super.decode(buffer);
+	    super.decode(buffer);
 
 		flags = buffer.readInt();
 		fullCollectionName = readCString(buffer);
@@ -116,11 +115,6 @@ public class OpInsert extends OpCrud {
 		return buffer;
 	}
 
-	@Override
-	public String toString() {
-		return "OpInsert [flags=" + flags + ", fullCollectionName="
-				+ fullCollectionName + ", documents=" + documents + "]";
-	}
 
     /* (non-Javadoc)
      * @see org.usergrid.mongo.protocol.OpCrud#doOp(org.usergrid.mongo.MongoChannelHandler, org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.MessageEvent)
@@ -132,27 +126,33 @@ public class OpInsert extends OpCrud {
         ApplicationInfo application = SubjectUtils.getApplication(Identifier
                 .fromName(getDatabaseName()));
       
-        OpReply reply = new OpReply(this);
-        
-        if (application == null) {
-            return reply;
-        }
        
         EntityManager em = handler.getEmf().getEntityManager(application.getId());
         
         
         for(BSONObject document: documents){
             try {
-               Entity newEntity =  em.create(getCollectionName(), document.toMap());
-               
-               reply.addDocument(newEntity.getProperties());
+              em.create(getCollectionName(), document.toMap());
                
             } catch (Exception e) {
                 logger.error("Unable to insert mongo document {}", document, e);
             }
         }
         
-        return reply;
+        //insert never returns a response in mongo
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "OpInsert [flags=" + flags + ", documents=" + documents
+                + ", fullCollectionName=" + fullCollectionName
+                + ", messageLength=" + messageLength + ", requestID="
+                + requestID + ", responseTo=" + responseTo + ", opCode="
+                + opCode + "]";
     }
 
 }

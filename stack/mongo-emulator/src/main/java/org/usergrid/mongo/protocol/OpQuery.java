@@ -415,13 +415,6 @@ public class OpQuery extends OpCrud {
         return buffer;
     }
 
-    @Override
-    public String toString() {
-        return "OpQuery [flags=" + flags + ", fullCollectionName="
-                + fullCollectionName + ", numberToSkip=" + numberToSkip
-                + ", numberToReturn=" + numberToReturn + ", query=" + query
-                + ", returnFieldSelector=" + returnFieldSelector + "]";
-    }
 
     /*
      * (non-Javadoc)
@@ -562,17 +555,17 @@ public class OpQuery extends OpCrud {
         logger.info("Handling list collections for database {} ... ",
                 databaseName);
 
+        OpReply reply = new OpReply(this);
+        
         ApplicationInfo application = SubjectUtils.getApplication(Identifier
                 .fromName(databaseName));
       
         if (application == null) {
-            OpReply reply = new OpReply(this);
             return reply;
         }
        
         EntityManager em = handler.getEmf().getEntityManager(application.getId());
         
-        OpReply reply = new OpReply(this);
         
         try {
             Set<String> collections = em.getApplicationCollections();
@@ -580,9 +573,8 @@ public class OpQuery extends OpCrud {
                 if (Schema.isAssociatedEntityType(colName)) {
                     continue;
                 }
-                reply.addDocument(map("name", databaseName + "." + colName));
-                reply.addDocument(map("name", databaseName + "." + colName
-                        + ".$_id_"));
+                reply.addDocument(map("name", String.format("%s.%s", databaseName, colName)));
+                reply.addDocument(map("name", String.format("%s.%s.$_id_", databaseName , colName)));
             }
             // reply.addDocument(map("name", databaseName + ".system.indexes"));
         } catch (Exception ex) {
@@ -592,8 +584,7 @@ public class OpQuery extends OpCrud {
     }
 
     private OpReply handleListUsers() {
-        logger.info("Handling list users for database " + getDatabaseName()
-                + "... ");
+        logger.info("Handling list users for database {} ...  " ,  getDatabaseName());
 
         OpReply reply = new OpReply(this);
         return reply;
@@ -601,19 +592,22 @@ public class OpQuery extends OpCrud {
 
     private OpReply handleQuery(MongoChannelHandler handler) {
         logger.info("Handling a query... ");
+        OpReply reply = new OpReply(this);
+        
         ApplicationInfo application = SubjectUtils.getApplication(Identifier
                 .fromName(getDatabaseName()));
         if (application == null) {
-            OpReply reply = new OpReply(this);
             return reply;
         }
+        
         int count = getNumberToReturn();
         if (count <= 0) {
             count = 30;
         }
+        
         EntityManager em = handler.getEmf().getEntityManager(
                 application.getId());
-        OpReply reply = new OpReply(this);
+        
         try {
             Results results = null;
             Query q = this.toNativeQuery();
@@ -638,6 +632,20 @@ public class OpQuery extends OpCrud {
             logger.error("Unable to retrieve collections", ex);
         }
         return reply;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "OpQuery [flags=" + flags + ", numberToSkip=" + numberToSkip
+                + ", numberToReturn=" + numberToReturn + ", query=" + query
+                + ", returnFieldSelector=" + returnFieldSelector
+                + ", fullCollectionName=" + fullCollectionName
+                + ", messageLength=" + messageLength + ", requestID="
+                + requestID + ", responseTo=" + responseTo + ", opCode="
+                + opCode + "]";
     }
 
 }

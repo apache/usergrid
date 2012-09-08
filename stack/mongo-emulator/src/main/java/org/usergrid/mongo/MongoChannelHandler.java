@@ -95,10 +95,13 @@ public class MongoChannelHandler extends SimpleChannelUpstreamHandler {
 			}
 
 			if (message != null) {
-				logger.info(">>> " + message.toString());
+				logger.info(">>> {}\n" , message);
 				OpReply reply = handleMessage(ctx, e, message);
-				logger.info("<<< " + reply.toString() + "\n");
-				e.getChannel().write(reply);
+				logger.info("<<< {}\n", reply);
+				
+				if(reply != null){
+				    e.getChannel().write(reply);
+				}
 			}
 
 		} finally {

@@ -114,13 +114,6 @@ public class OpUpdate extends OpCrud {
 		return buffer;
 	}
 
-	@Override
-	public String toString() {
-		return "OpUpdate [fullCollectionName=" + fullCollectionName
-				+ ", flags=" + flags + ", selector=" + selector + ", update="
-				+ update + "]";
-	}
-
     /* (non-Javadoc)
      * @see org.usergrid.mongo.protocol.OpCrud#doOp(org.usergrid.mongo.MongoChannelHandler, org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.MessageEvent)
      */
@@ -129,5 +122,19 @@ public class OpUpdate extends OpCrud {
             MessageEvent messageEvent) {
         return new OpReply(this);
     }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "OpUpdate [flags=" + flags + ", selector=" + selector
+                + ", update=" + update + ", fullCollectionName="
+                + fullCollectionName + ", messageLength=" + messageLength
+                + ", requestID=" + requestID + ", responseTo=" + responseTo
+                + ", opCode=" + opCode + "]";
+    }
+    
+    
 
 }

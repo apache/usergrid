@@ -18,6 +18,7 @@ package org.usergrid.mongo.protocol;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -99,6 +100,8 @@ public class OpReply extends Message {
 		documents.add(b);
 		numberReturned = documents.size();
 	}
+	
+	
 
 	@Override
 	public void decode(ChannelBuffer buffer) throws IOException {
@@ -139,19 +142,6 @@ public class OpReply extends Message {
 		return buffer;
 	}
 
-	@Override
-	public String toString() {
-		String docs_str = null;
-		try {
-			docs_str = documents.toString();
-		} catch (Exception e) {
-			docs_str = "error(" + e.getMessage() + ")";
-		}
-		return "OpReply [responseFlags=" + responseFlags + ", cursorID="
-				+ cursorID + ", startingFrom=" + startingFrom
-				+ ", numberReturned=" + numberReturned + ", documents="
-				+ docs_str + "]";
-	}
 
 	public static OpReply errorReply(String message) {
 		OpReply reply = new OpReply();
@@ -162,5 +152,27 @@ public class OpReply extends Message {
 		reply.documents.add(b);
 		return reply;
 	}
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        String docs_str = null;
+        try {
+            docs_str = documents.toString();
+        } catch (Exception e) {
+            docs_str = "error(" + e.getMessage() + ")";
+        }
+        
+        return "OpReply [responseFlags=" + responseFlags + ", cursorID="
+                + cursorID + ", startingFrom=" + startingFrom
+                + ", numberReturned=" + numberReturned + ", documents="
+                + documents + ", messageLength=" + messageLength
+                + ", requestID=" + requestID + ", responseTo=" + responseTo
+                + ", opCode=" + opCode + ", documents=" + docs_str + "]";
+    }
+
+	
 
 }

@@ -93,11 +93,8 @@ public class OpDelete extends OpCrud {
 		return buffer;
 	}
 
-	@Override
-	public String toString() {
-		return "OpDelete [fullCollectionName=" + fullCollectionName
-				+ ", flags=" + flags + ", selector=" + selector + "]";
-	}
+	
+
 
     /* (non-Javadoc)
      * @see org.usergrid.mongo.protocol.OpCrud#doOp(org.usergrid.mongo.MongoChannelHandler, org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.MessageEvent)
@@ -108,4 +105,16 @@ public class OpDelete extends OpCrud {
        return new OpReply(this);
     }
 
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "OpDelete [flags=" + flags + ", selector=" + selector
+                + ", fullCollectionName=" + fullCollectionName
+                + ", messageLength=" + messageLength + ", requestID="
+                + requestID + ", responseTo=" + responseTo + ", opCode="
+                + opCode + "]";
+    }
 }
