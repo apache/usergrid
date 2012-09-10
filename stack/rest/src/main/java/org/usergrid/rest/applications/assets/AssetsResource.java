@@ -40,6 +40,7 @@ public class AssetsResource extends ServiceResource {
   private BinaryStore binaryStore;
 
   @Override
+  @RequireApplicationAccess
   @GET
   public JSONWithPadding executeGet(@Context UriInfo ui,
                                     @QueryParam("callback") @DefaultValue("callback") String callback)
@@ -72,7 +73,7 @@ public class AssetsResource extends ServiceResource {
     EntityManager em = emf.getEntityManager(getApplicationId());
     Asset asset = em.get(assetId, Asset.class);
 
-    binaryStore.write(asset, uploadedInputStream);
+    binaryStore.write(getApplicationId(), asset, uploadedInputStream);
 
     return Response.status(200).build();
   }
@@ -85,11 +86,11 @@ public class AssetsResource extends ServiceResource {
                                     InputStream uploadedInputStream) throws Exception {
 
     UUID assetId = UUID.fromString(entityId.getPath());
-    logger.info("In AssetsResource.uploadData with id: {}",assetId);
+    logger.info("In AssetsResource.uploadDataStream with id: {}",assetId);
     EntityManager em = emf.getEntityManager(getApplicationId());
     Asset asset = em.get(assetId, Asset.class);
 
-    binaryStore.write(asset, uploadedInputStream);
+    binaryStore.write(getApplicationId(), asset, uploadedInputStream);
 
     return Response.status(200).build();
   }
@@ -109,10 +110,10 @@ public class AssetsResource extends ServiceResource {
 
     InputStream is;
     if ( StringUtils.isBlank(range) ) {
-      is = binaryStore.read(asset);
+      is = binaryStore.read(getApplicationId(), asset);
     } else {
       // TODO range parser
-      is = binaryStore.read(asset);
+      is = binaryStore.read(getApplicationId(), asset);
     }
 
     return Response.ok(is)

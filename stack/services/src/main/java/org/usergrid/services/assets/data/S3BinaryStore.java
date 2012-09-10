@@ -27,6 +27,7 @@ import javax.ws.rs.core.MediaType;
 import java.io.*;
 import java.util.Collection;
 import java.util.Properties;
+import java.util.UUID;
 
 /**
  * @author zznate
@@ -48,6 +49,7 @@ public class S3BinaryStore implements BinaryStore {
 
   private static final long FIVE_MB = (FileUtils.ONE_MB * 5);
 
+  private String bucketName = "usergrid-test";
 
   public S3BinaryStore(String accessId, String secretKey) {
     this.accessId = accessId;
@@ -63,18 +65,26 @@ public class S3BinaryStore implements BinaryStore {
     mimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.MagicMimeMimeDetector");
   }
 
+  /**
+   * Set the base bucket name for this binary store
+   * @param bucketName
+   */
+  public void setBucketName(String bucketName) {
+    this.bucketName = bucketName;
+  }
+
   public void destroy() {
     context.close();
   }
 
   @Override
-  public void write(Asset asset, InputStream inputStream) {
+  public void write(UUID appId, Asset asset, InputStream inputStream) {
     // write(UUID applicationId, Asset asset, InputStream is)
     try {
       // Create Container (the bucket in s3)
       AsyncBlobStore blobStore = context.getAsyncBlobStore(); // it can be changed to sync
       // BlobStore (retruns false if it already exists)
-      blobStore.createContainerInLocation(null, "usergrid-test");
+      blobStore.createContainerInLocation(null, bucketName);
       // bad name will throw ContainerNotFoundException
 
       // Add a Blob
@@ -99,10 +109,10 @@ public class S3BinaryStore implements BinaryStore {
 
           copied = IOUtils.copyLarge(inputStream, os, 0, (FileUtils.ONE_GB * 5));
 
-          bb = blobStore.blobBuilder(asset.getUuid().toString())
+          bb = blobStore.blobBuilder(AssetUtils.buildAssetKey(appId, asset))
                   .payload(f)
                   .calculateMD5()
-                  .contentType(getMimeType(asset, f));
+                  .contentType(AssetMimeHandler.get().getMimeType(asset, f));
         } catch (Exception ex) {
           ex.printStackTrace();
         } finally {
@@ -114,29 +124,29 @@ public class S3BinaryStore implements BinaryStore {
       } else {
         byte[] data = baos.toByteArray();
         copied = data.length;
-        bb = blobStore.blobBuilder(asset.getUuid().toString())
+        bb = blobStore.blobBuilder(AssetUtils.buildAssetKey(appId, asset))
                 .payload(data)
                 .calculateMD5()
-                .contentType(getMimeType(asset, data));
+                .contentType(AssetMimeHandler.get().getMimeType(asset, data));
       }
 
-      asset.setProperty("content-length",copied);
+      asset.setProperty(AssetUtils.CONTENT_LENGTH,copied);
 
-      if ( asset.getProperty("content-disposition") != null ) {
-        bb.contentDisposition(asset.getProperty("content-disposition").toString());
+      if ( asset.getProperty(AssetUtils.CONTENT_DISPOSITION) != null ) {
+        bb.contentDisposition(asset.getProperty(AssetUtils.CONTENT_DISPOSITION).toString());
       }
       Blob blob = bb.build();
 
       String md5sum = Hex.encodeHexString(blob.getMetadata().getContentMetadata().getContentMD5());
-      asset.setProperty("checksum",md5sum);
+      asset.setProperty(AssetUtils.CHECKSUM,md5sum);
       // containername?
-      ListenableFuture<String> futureETag = blobStore.putBlob("usergrid-test", blob, PutOptions.Builder.multipart());
+      ListenableFuture<String> futureETag = blobStore.putBlob(bucketName, blob, PutOptions.Builder.multipart());
       // move update of properties into: futureETag.addListener();
 
       // asynchronously wait for the upload if we are not doing a large file
       if ( copied < FIVE_MB ) {
         String eTag = futureETag.get();
-        asset.setProperty("etag",eTag);
+        asset.setProperty(AssetUtils.E_TAG,eTag);
       }
 
     } catch (Exception e) {
@@ -144,41 +154,17 @@ public class S3BinaryStore implements BinaryStore {
     }
   }
 
-  private <T> String getMimeType(Asset asset, T t) {
-    String contentType = MediaType.APPLICATION_OCTET_STREAM;
-    if ( asset.getProperty("content-type") != null ) {
-      contentType = asset.getProperty("content-type").toString();
-    } else {
-      Collection col;
-      if ( t instanceof byte[] ) {
-        col = mimeUtil.getMimeTypes((byte[])t);
-      } else if ( t instanceof File ) {
-        col = mimeUtil.getMimeTypes((File)t);
-      } else {
-        return contentType;
-      }
-      if ( !col.isEmpty() ) {
-        try {
-          MimeType mime = ((MimeType)col.iterator().next());
-          contentType = mime.toString();
-          asset.setProperty("content-type",contentType);
-        } catch(MimeException me) {
-          logger.error("could not sniff mime type for asset {}", asset.getUuid());
-        }
-      }
-    }
-    return contentType;
-  }
+
 
   @Override
-  public InputStream read(Asset asset, long offset, long length) {
+  public InputStream read(UUID appId, Asset asset, long offset, long length) {
     AsyncBlobStore blobStore = context.getAsyncBlobStore();
     ListenableFuture<Blob> blobFuture;
     if ( offset == 0 && length == FIVE_MB ) {
-      blobFuture = blobStore.getBlob("usergrid-test",asset.getUuid().toString());
+      blobFuture = blobStore.getBlob(bucketName,AssetUtils.buildAssetKey(appId, asset));
     } else {
       GetOptions options = GetOptions.Builder.range(offset, length);
-      blobFuture = blobStore.getBlob("usergrid-test",asset.getUuid().toString(), options);
+      blobFuture = blobStore.getBlob(bucketName,AssetUtils.buildAssetKey(appId, asset), options);
     }
     try {
       return blobFuture.get().getPayload().getInput();
@@ -192,16 +178,16 @@ public class S3BinaryStore implements BinaryStore {
   }
 
   @Override
-  public InputStream read(Asset asset) {
-    return read(asset,0,FIVE_MB);
+  public InputStream read(UUID appId, Asset asset) {
+    return read(appId, asset,0,FIVE_MB);
   }
 
   @Override
-  public void delete(Asset asset) {
+  public void delete(UUID appId, Asset asset) {
 
     AsyncBlobStore blobStore = context.getAsyncBlobStore();
 
-    blobStore.removeBlob("usergrid-test",asset.getUuid().toString());
+    blobStore.removeBlob(bucketName, AssetUtils.buildAssetKey(appId, asset));
 
   }
 }

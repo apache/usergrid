@@ -46,9 +46,4 @@
 		<constructor-arg ref="managementService" />
 	</bean>
 
-    <bean id="binaryStore" class="org.usergrid.services.assets.data.S3BinaryStore">
-        <constructor-arg ref="${AWS_ACCESS_KEY_ID}"/>
-        <constructor-arg ref="${AWS_ACCESS_KEY_SECRET}"/>
-    </bean>
-
 </beans>
