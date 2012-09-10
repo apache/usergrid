@@ -16,6 +16,7 @@ import org.usergrid.persistence.entities.Asset;
 import org.usergrid.rest.applications.ApplicationResource;
 import org.usergrid.rest.applications.ServiceResource;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
+import org.usergrid.services.assets.data.AssetUtils;
 import org.usergrid.services.assets.data.BinaryStore;
 import org.usergrid.utils.StringUtils;
 
@@ -74,7 +75,7 @@ public class AssetsResource extends ServiceResource {
     Asset asset = em.get(assetId, Asset.class);
 
     binaryStore.write(getApplicationId(), asset, uploadedInputStream);
-
+    em.update(asset);
     return Response.status(200).build();
   }
 
@@ -91,7 +92,8 @@ public class AssetsResource extends ServiceResource {
     Asset asset = em.get(assetId, Asset.class);
 
     binaryStore.write(getApplicationId(), asset, uploadedInputStream);
-
+    logger.info("uploadDataStream written, returning response");
+    em.update(asset);
     return Response.status(200).build();
   }
 
@@ -100,14 +102,17 @@ public class AssetsResource extends ServiceResource {
   public Response findAsset(@Context UriInfo ui,
                                    @QueryParam("callback") @DefaultValue("callback") String callback,
                                    @PathParam("entityId") PathSegment entityId,
-                                   @HeaderParam("range") String range)
+                                   @HeaderParam("range") String range,
+                                   @HeaderParam("if-modified-since") String modifiedSince)
           throws Exception {
     UUID assetId = UUID.fromString(entityId.getPath());
-    logger.info("In AssetsResource.findAsset with id: {} and range: {}",assetId, range);
+    logger.info("In AssetsResource.findAsset with id: {}, range: {}, modifiedSince: {}",
+            new Object[]{assetId, range, modifiedSince});
     EntityManager em = emf.getEntityManager(getApplicationId());
 
     Asset asset = em.get(assetId, Asset.class);
 
+    // TODO return a 302 if not modified
     InputStream is;
     if ( StringUtils.isBlank(range) ) {
       is = binaryStore.read(getApplicationId(), asset);
@@ -116,10 +121,19 @@ public class AssetsResource extends ServiceResource {
       is = binaryStore.read(getApplicationId(), asset);
     }
 
-    return Response.ok(is)
+    logger.info("AssetResource.findAsset read inputStream, composing response");
+    Response.ResponseBuilder responseBuilder = Response.ok(is)
             .type(asset.getProperty("content-type").toString())
-            .lastModified(new Date(asset.getModified()))
-            .build();
+            .lastModified(new Date(asset.getModified()));
+    if ( asset.getProperty(AssetUtils.E_TAG) != null ) {
+      responseBuilder.tag((String)asset.getProperty(AssetUtils.E_TAG));
+    }
+    if ( StringUtils.isNotBlank(range)) {
+      logger.info("Range header was not blank, sending back Content-Range");
+      // TODO build content range header if needed
+      //responseBuilder.header("Content-Range", );
+    }
+    return responseBuilder.build();
   }
 
 }

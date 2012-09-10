@@ -160,13 +160,14 @@ public class S3BinaryStore implements BinaryStore {
   public InputStream read(UUID appId, Asset asset, long offset, long length) {
     AsyncBlobStore blobStore = context.getAsyncBlobStore();
     ListenableFuture<Blob> blobFuture;
-    if ( offset == 0 && length == FIVE_MB ) {
-      blobFuture = blobStore.getBlob(bucketName,AssetUtils.buildAssetKey(appId, asset));
-    } else {
-      GetOptions options = GetOptions.Builder.range(offset, length);
-      blobFuture = blobStore.getBlob(bucketName,AssetUtils.buildAssetKey(appId, asset), options);
-    }
     try {
+      if ( offset == 0 && length == FIVE_MB ) {
+        // missing file will throw: org.jclouds.aws.AWSResponseException:
+        blobFuture = blobStore.getBlob(bucketName,AssetUtils.buildAssetKey(appId, asset));
+      } else {
+        GetOptions options = GetOptions.Builder.range(offset, length);
+        blobFuture = blobStore.getBlob(bucketName,AssetUtils.buildAssetKey(appId, asset), options);
+      }
       return blobFuture.get().getPayload().getInput();
       //return blob.getPayload().
       //return null;

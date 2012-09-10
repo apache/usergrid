@@ -40,8 +40,6 @@ public class AssetResourceTest extends AbstractRestTest {
     JsonNode idNode = node.get("entities").get(0).get("uuid");
     assertNotNull(idNode.getTextValue());
 
-
-
     logNode(node);
   }
 
