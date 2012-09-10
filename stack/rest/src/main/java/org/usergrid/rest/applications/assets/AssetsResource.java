@@ -79,6 +79,15 @@ public class AssetsResource extends ServiceResource {
     return Response.status(200).build();
   }
 
+  @PUT
+  @RequireApplicationAccess
+  @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+  @Path("{entityId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}/data")
+  public Response uploadDataStreamPut( @PathParam("entityId") PathSegment entityId,
+                                    InputStream uploadedInputStream) throws Exception {
+    return uploadDataStream(entityId, uploadedInputStream);
+  }
+
   @POST
   @RequireApplicationAccess
   @Consumes(MediaType.APPLICATION_OCTET_STREAM)
