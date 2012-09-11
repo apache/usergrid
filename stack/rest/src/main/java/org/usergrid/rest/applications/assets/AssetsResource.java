@@ -121,13 +121,23 @@ public class AssetsResource extends ServiceResource {
 
     Asset asset = em.get(assetId, Asset.class);
 
-    // TODO return a 302 if not modified
+    // return a 302 if not modified
+    Date moded = AssetUtils.fromIfModifiedSince(modifiedSince);
+    if ( moded != null ) {
+      if ( asset.getModified() - moded.getTime() < 0 ) {
+        return Response.status(Response.Status.NOT_MODIFIED).build();
+      }
+    }
+
     InputStream is;
     if ( StringUtils.isBlank(range) ) {
       is = binaryStore.read(getApplicationId(), asset);
     } else {
       // TODO range parser
       is = binaryStore.read(getApplicationId(), asset);
+    }
+    if ( is == null ) {
+      return Response.status(Response.Status.NOT_FOUND).build();
     }
 
     logger.info("AssetResource.findAsset read inputStream, composing response");

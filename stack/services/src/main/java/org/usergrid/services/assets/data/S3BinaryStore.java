@@ -28,6 +28,7 @@ import java.io.*;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author zznate
@@ -50,6 +51,8 @@ public class S3BinaryStore implements BinaryStore {
   private static final long FIVE_MB = (FileUtils.ONE_MB * 5);
 
   private String bucketName = "usergrid-test";
+
+  private final AtomicBoolean containerCreated = new AtomicBoolean(false);
 
   public S3BinaryStore(String accessId, String secretKey) {
     this.accessId = accessId;
@@ -84,7 +87,10 @@ public class S3BinaryStore implements BinaryStore {
       // Create Container (the bucket in s3)
       AsyncBlobStore blobStore = context.getAsyncBlobStore(); // it can be changed to sync
       // BlobStore (retruns false if it already exists)
-      blobStore.createContainerInLocation(null, bucketName);
+      if ( !containerCreated.get() ) {
+        ListenableFuture<Boolean> createContainer = blobStore.createContainerInLocation(null, bucketName);
+        containerCreated.set(true);
+      }
       // bad name will throw ContainerNotFoundException
 
       // Add a Blob
