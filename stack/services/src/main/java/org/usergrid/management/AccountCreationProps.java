@@ -73,8 +73,6 @@ public interface AccountCreationProps {
     public static final String PROPERTIES_TEST_ACCOUNT_APP = "usergrid.test-account.app";
     public static final String PROPERTIES_SETUP_TEST_ACCOUNT = "usergrid.setup-test-account";
 
-    public static final String PROPERTIES_PASSWORD_SALT = "usergrid.password.salt";
-
     public boolean newOrganizationsNeedSysAdminApproval();
     public boolean newAdminUsersNeedSysAdminApproval();
     public boolean newAdminUsersRequireConfirmation();
