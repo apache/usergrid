@@ -3834,7 +3834,7 @@ a:active {
   min-width: 450px;
   margin: 0 0px 20px;
   border: solid 1px #cccccc;
-  overflow: hidden;
+  overflow: show;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
