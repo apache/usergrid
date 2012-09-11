@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.management.ManagementService;
 import org.usergrid.mongo.protocol.Message;
 import org.usergrid.mongo.protocol.OpCrud;
-import org.usergrid.mongo.protocol.OpQuery;
 import org.usergrid.mongo.protocol.OpReply;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.services.ServiceManagerFactory;
@@ -104,7 +103,14 @@ public class MongoChannelHandler extends SimpleChannelUpstreamHandler {
 				}
 			}
 
-		} finally {
+		}
+		//an error occurred.  Set this as the attachment so subsequent calls to getlastError can return correct
+		//errors
+		catch(Exception ex){
+		    ctx.setAttachment(ex);
+		}
+		
+		finally {
 			if (threadState != null) {
 				threadState.clear();
 				// logger.info("Security subject unbound from thread");

@@ -126,6 +126,11 @@ public class OpInsert extends OpCrud {
         ApplicationInfo application = SubjectUtils.getApplication(Identifier
                 .fromName(getDatabaseName()));
       
+        if (application == null) {
+            ctx.setAttachment(new IllegalArgumentException(String.format("Could not find application with name '%s' ", getDatabaseName())));
+            return null;
+        }
+        
        
         EntityManager em = handler.getEmf().getEntityManager(application.getId());
         
@@ -136,6 +141,7 @@ public class OpInsert extends OpCrud {
                
             } catch (Exception e) {
                 logger.error("Unable to insert mongo document {}", document, e);
+                ctx.setAttachment(e);
             }
         }
         
