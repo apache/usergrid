@@ -41,20 +41,18 @@ public class LocalFileBinaryStore implements BinaryStore {
 
   @Override
   public void write(UUID appId, Asset asset, InputStream inputStream) {
-    OutputStream out = null;
+
     File file = path(appId, asset);
     try {
-      out = new BufferedOutputStream(
-              new FileOutputStream(file)
-      );
 
-      long size = IOUtils.copyLarge(inputStream, out);
+      FileUtils.copyInputStreamToFile(inputStream, file);
+
+      long size = FileUtils.sizeOf(file);
+
       asset.setProperty("content-length",size);
 
     } catch (IOException e) {
       e.printStackTrace();
-    } finally {
-      IOUtils.closeQuietly(out);
     }
     // if we were successful, write the mime type
     if ( file.exists() ) {
