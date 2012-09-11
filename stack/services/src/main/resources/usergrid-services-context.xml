@@ -32,7 +32,11 @@
 
 	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl" />
 
-	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl" />
+	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl" >
+		<property name="saltProvider" ref="saltProvider"/>
+	</bean>
+	
+	<bean id="saltProvider" class="org.usergrid.security.salt.NoOpSaltProvider" />
 
 	<bean id="serviceManagerFactory" class="org.usergrid.services.ServiceManagerFactory">
 		<constructor-arg>

@@ -43,7 +43,6 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_PIN_REQUEST;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_MAILER_EMAIL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_ORGANIZATION_ACTIVATION_URL;
-import static org.usergrid.management.AccountCreationProps.PROPERTIES_PASSWORD_SALT;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SETUP_TEST_ACCOUNT;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED;
@@ -146,6 +145,7 @@ import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
+import org.usergrid.security.salt.SaltProvider;
 import org.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.usergrid.security.shiro.credentials.ApplicationClientCredentials;
 import org.usergrid.security.shiro.credentials.OrganizationClientCredentials;
@@ -220,6 +220,8 @@ public class ManagementServiceImpl implements ManagementService {
     protected LockManager lockManager;
 
     protected TokenService tokens;
+    
+    protected SaltProvider saltProvider;
 
     /**
      * Must be constructed with a CassandraClientPool.
@@ -785,7 +787,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo createAdminFrom(User user, String password)
             throws Exception {
-        return doCreateAdmin(user, maybeSaltPassword(user, password),
+        return doCreateAdmin(user, maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, password),
                 mongoPasswordCredentials(user.getUsername(), password));
     }
 
@@ -1055,7 +1057,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
         User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId,
                 User.class);
-        if (!maybeSaltPassword(user, oldPassword).compare(
+        if (!maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, oldPassword).compare(
                 readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId))) {
             logger.info("Old password doesn't match");
             throw new IncorrectPasswordException("Old password does not match");
@@ -1076,7 +1078,7 @@ public class ManagementServiceImpl implements ManagementService {
                 User.class);
 
         writeUserPassword(MANAGEMENT_APPLICATION_ID, user,
-                maybeSaltPassword(user, newPassword));
+                maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, newPassword));
         writeUserMongoPassword(
                 MANAGEMENT_APPLICATION_ID,
                 user,
@@ -1092,7 +1094,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
         User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId,
                 User.class);
-        return maybeSaltPassword(user, password).compare(
+        return maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, password).compare(
                 readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId));
     }
 
@@ -1106,7 +1108,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        if (maybeSaltPassword(user, password).compare(
+        if (maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, password).compare(
                 readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID,
                         user.getUuid()))) {
             userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
@@ -2492,7 +2494,7 @@ public class ManagementServiceImpl implements ManagementService {
         User user = em.get(userId, User.class);
 
         writeUserPassword(applicationId, user,
-                maybeSaltPassword(user, newPassword));
+                maybeSaltPassword(applicationId, user, newPassword));
 
     }
 
@@ -2508,7 +2510,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
         // TODO load the user, send the hashType down to maybeSaltPassword
         User user = emf.getEntityManager(applicationId).get(userId, User.class);
-        if (!maybeSaltPassword(user, oldPassword).compare(
+        if (!maybeSaltPassword(applicationId, user, oldPassword).compare(
                 readUserPasswordCredentials(applicationId, userId))) {
             throw new IncorrectPasswordException("Old password does not match");
         }
@@ -2526,7 +2528,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        if (maybeSaltPassword(user, password).compare(
+        if (maybeSaltPassword(applicationId, user, password).compare(
                 readUserPasswordCredentials(applicationId, user.getUuid()))) {
             if (!user.activated()) {
                 throw new UnactivatedAdminUserException();
@@ -2939,6 +2941,8 @@ public class ManagementServiceImpl implements ManagementService {
     public boolean newOrganizationsNeedSysAdminApproval() {
         return properties.newOrganizationsNeedSysAdminApproval();
     }
+    
+    
 
     private boolean areActivationChecksDisabled() {
         return !(newOrganizationsNeedSysAdminApproval()
@@ -2956,14 +2960,30 @@ public class ManagementServiceImpl implements ManagementService {
         return properties;
     }
 
-    private CredentialsInfo maybeSaltPassword(User user, String password)
+    private CredentialsInfo maybeSaltPassword(UUID applicationId, User user, String password)
             throws Exception {
         String hashType = null;
+        
         if (user.getProperty(User.PROPERTY_HASHTYPE) != null) {
             hashType = (String) user.getProperty(User.PROPERTY_HASHTYPE);
         }
+        
         return hashedCredentials(
-                properties.getProperty(PROPERTIES_PASSWORD_SALT, ""), password,
+               saltProvider.getSalt(applicationId, user.getUuid()), password,
                 hashType);
+    }
+
+    /**
+     * @return the saltProvider
+     */
+    public SaltProvider getSaltProvider() {
+        return saltProvider;
+    }
+
+    /**
+     * @param saltProvider the saltProvider to set
+     */
+    public void setSaltProvider(SaltProvider saltProvider) {
+        this.saltProvider = saltProvider;
     }
 }
