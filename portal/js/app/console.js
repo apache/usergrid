@@ -2658,7 +2658,11 @@ function apigee_console_app(Pages, query_params) {
     //requestRole & displayInactivity
     runAppQuery(new Usergrid.Query("GET", "roles/" + current_role_id, null, null,
       function(response) {
-        var inactivity = response.entities[0].inactivity.toString();
+        if ( response && response.entities && response.entities[0].inactivity ){
+          var inactivity = response.entities[0].inactivity.toString();
+        } else {
+         inactivity = 0;
+        }
 	  $('#role-inactivity-input').val(inactivity);
 	},
         function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
