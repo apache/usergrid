@@ -3272,9 +3272,9 @@ function deleteRolePermission(roleName, permission) {
       path = encodePathString(s.substring(7));
       printLnToShell(path);
       runAppQuery(new Usergrid.Query("DELETE",path, null, null, displayShellResponse,null));
-    } else if (s.match(/^\s*clear|cls\s*\//i))  {
+    } else if (s.match(/^\s*clear|cls\s*/i))  {
       $('#shell-output').html(" ");
-    } else if (s.match(/^\s*help\s*\//i)) {
+    } else if (s.match(/^\s*help\s*/i)) {
       printLnToShell("/&lt;path&gt; - API get request");
       printLnToShell("get /&lt;path&gt; - API get request");
       printLnToShell("put /&lt;path&gt; {&lt;json&gt;} - API put request");
