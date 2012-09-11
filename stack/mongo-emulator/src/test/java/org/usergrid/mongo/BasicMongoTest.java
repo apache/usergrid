@@ -10,6 +10,7 @@ import java.net.UnknownHostException;
 import java.util.Set;
 import java.util.UUID;
 
+import org.bson.types.ObjectId;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.persistence.Entity;
@@ -39,45 +40,60 @@ public class BasicMongoTest extends AbstractMongoTest {
 
         WriteResult result = db.getCollection("inserttests").insert(doc);
 
+        
+        ObjectId savedOid = doc.getObjectId("_id");
+     
+        
         assertNull(result.getError());
+        
+        //check we've created the collection
 
         Set<String> colls = db.getCollectionNames();
 
         assertTrue(colls.contains("inserttests"));
 
+        //iterate the collection to ensure we can retreive the object
         DBCollection coll = db.getCollection("inserttests");
         DBCursor cur = coll.find();
 
-        int count = 0;
-
-        DBObject object = null;
-
+        BasicDBObject returnedObject = null;
 
         assertTrue(cur.hasNext());
 
-        object = cur.next();
-        
+        returnedObject = (BasicDBObject)cur.next();
+
         assertFalse(cur.hasNext());
+
+        UUID id = UUID.fromString(returnedObject.get("uuid").toString());
         
-        UUID id = UUID.fromString(object.get("uuid").toString());
+        ObjectId returnedOid = returnedObject.getObjectId("_id");
+
         
-        Object oid = object.get("_id");
-        
-        
-        
-        
-        assertEquals("nico", object.get("name"));
-        assertEquals("tabby", object.get("color"));
-        assertNotNull(oid);
+        assertEquals("nico", returnedObject.get("name"));
+        assertEquals("tabby", returnedObject.get("color"));
+        assertEquals(savedOid, returnedOid);
         assertNotNull(id);
         
+        BasicDBObject query = new BasicDBObject();
+        query.put("_id", savedOid);
+
+        // now load by the mongo Id. Users will use this the most to read data.
+
+        returnedObject =  new BasicDBObject(db.getCollection("inserttests").findOne(query).toMap());
         
-        
+        assertEquals("nico", returnedObject.get("name"));
+        assertEquals("tabby", returnedObject.get("color"));
+      
+        assertEquals(savedOid, returnedObject.getObjectId("_id"));
+        assertNotNull(id.toString(), returnedObject.get("uuid"));
+
+        // check we can find it when using the native entity manager
+
         UUID appId = emf.lookupApplication("test-organization/test-app");
         EntityManager em = emf.getEntityManager(appId);
 
         Entity entity = em.get(id);
-        
+
         assertNotNull(entity);
         assertEquals("nico", entity.getProperty("name"));
         assertEquals("tabby", entity.getProperty("color"));

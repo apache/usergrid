@@ -81,6 +81,7 @@ public abstract class AbstractMongoTest {
         m.setWriteConcern(WriteConcern.SAFE);
 
         DB db = m.getDB("test-organization/test-app");
+//        DB db = m.getDB("test-app");
         db.authenticate("test", "test".toCharArray());
         
         return db;
