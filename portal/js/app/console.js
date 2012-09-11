@@ -560,6 +560,7 @@ function apigee_console_app(Pages, query_params) {
 
   function buildIndexDropdown(menuId, indexes) {
     var menu = $("#" + menuId);
+    menu.empty();
     $.tmpl('apigee.ui.collections.query.indexes.html', indexes).appendTo(menu);
   }
 
