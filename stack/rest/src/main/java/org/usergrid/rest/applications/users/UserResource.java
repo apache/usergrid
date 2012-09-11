@@ -102,377 +102,387 @@ import com.sun.jersey.api.view.Viewable;
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource extends ServiceResource {
 
-	public static final String USER_EXTENSION_RESOURCE_PREFIX = "org.usergrid.rest.applications.users.extensions.";
+    public static final String USER_EXTENSION_RESOURCE_PREFIX = "org.usergrid.rest.applications.users.extensions.";
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(UserResource.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(UserResource.class);
 
-	User user;
+    User user;
 
-	Identifier userIdentifier;
+    Identifier userIdentifier;
 
-	String errorMsg;
+    String errorMsg;
 
-	String token;
+    String token;
 
-	public UserResource() {
-	}
+    public UserResource() {
+    }
 
-	public UserResource init(Identifier userIdentifier) throws Exception {
-		this.userIdentifier = userIdentifier;
-		return this;
-	}
+    public UserResource init(Identifier userIdentifier) throws Exception {
+        this.userIdentifier = userIdentifier;
+        return this;
+    }
 
-	@PUT
-	@Path("password")
-	public JSONWithPadding setUserPasswordPut(@Context UriInfo ui,
-			Map<String, Object> json,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @PUT
+    @Path("password")
+    public JSONWithPadding setUserPasswordPut(@Context UriInfo ui,
+            Map<String, Object> json,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
 
-		logger.info("UserResource.setUserPassword");
+        logger.info("UserResource.setUserPassword");
 
-		if (json == null) {
-			return null;
-		}
+        if (json == null) {
+            return null;
+        }
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("set user password");
-		String oldPassword = string(json.get("oldpassword"));
-		String newPassword = string(json.get("newpassword"));
-		if (StringUtils.isBlank(oldPassword)
-				|| StringUtils.isBlank(newPassword)) {
-			throw new IllegalArgumentException(
-					"oldpassword and newpassword are both required");
-		}
-		if (getUser() != null) {
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("set user password");
+        String oldPassword = string(json.get("oldpassword"));
+        String newPassword = string(json.get("newpassword"));
 
-			if (isApplicationAdmin(Identifier.fromUUID(getApplicationId()))) {
-				management
-						.setAdminUserPassword(getApplicationId(), newPassword);
-			} else {
-				management.setAppUserPassword(getApplicationId(), getUser()
-						.getUuid(), oldPassword, newPassword);
-			}
-		} else {
-			response.setError("User not found");
-		}
+        if (newPassword == null) {
+            throw new IllegalArgumentException("newpassword is required");
+        }
 
-		return new JSONWithPadding(response, callback);
-	}
+        UUID applicationId = getApplicationId();
+        UUID targetUserId = getUserUuid();
 
-	@POST
-	@Path("password")
-	public JSONWithPadding setUserPasswordPost(@Context UriInfo ui,
-			Map<String, Object> json,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
-		return setUserPasswordPut(ui, json, callback);
-	}
-	
-	@POST
-	@Path("deactivate")
-	public JSONWithPadding deactivate(@Context UriInfo ui,
+        if (targetUserId == null) {
+            response.setError("User not found");
+            return new JSONWithPadding(response, callback);
+        }
+
+
+        if ( isApplicationAdmin()) {
+
+            management.setAppUserPassword(applicationId, targetUserId,
+                    newPassword);
+
+        }
+
+        // we're not an admin user, we can only update the password ourselves
+        else {
+            management.setAppUserPassword(getApplicationId(), targetUserId,
+                    oldPassword, newPassword);
+        }
+
+        return new JSONWithPadding(response, callback);
+    }
+
+    @POST
+    @Path("password")
+    public JSONWithPadding setUserPasswordPost(@Context UriInfo ui,
+            Map<String, Object> json,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
+        return setUserPasswordPut(ui, json, callback);
+    }
+
+    @POST
+    @Path("deactivate")
+    public JSONWithPadding deactivate(@Context UriInfo ui,
             Map<String, Object> json,
             @QueryParam("callback") @DefaultValue("") String callback)
             throws Exception {
-	
-	    ApiResponse response = new ApiResponse();
-	    response.setAction("Deactivate user");
-	    
-	    User user = management.deactivateUser(getApplicationId(), getUserUuid());
-	    
-	    response.withEntity(user);
-	    
-	    return new JSONWithPadding(response, callback);
-	    
-	}
 
-	@GET
-	@Path("sendpin")
-	public JSONWithPadding sendPin(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+        ApiResponse response = new ApiResponse();
+        response.setAction("Deactivate user");
 
-		logger.info("UserResource.sendPin");
+        User user = management
+                .deactivateUser(getApplicationId(), getUserUuid());
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("retrieve user pin");
+        response.withEntity(user);
 
-		if (getUser() != null) {
-			management.sendAppUserPin(getApplicationId(), getUserUuid());
-		} else {
-			response.setError("User not found");
-		}
+        return new JSONWithPadding(response, callback);
 
-		return new JSONWithPadding(response, callback);
-	}
+    }
 
-	@POST
-	@Path("sendpin")
-	public JSONWithPadding postSendPin(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
-		return sendPin(ui, callback);
-	}
+    @GET
+    @Path("sendpin")
+    public JSONWithPadding sendPin(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
 
-	@GET
-	@Path("setpin")
-	@RequireApplicationAccess
-	public JSONWithPadding setPin(@Context UriInfo ui,
-			@QueryParam("pin") String pin,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+        logger.info("UserResource.sendPin");
 
-		logger.info("UserResource.setPin");
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("retrieve user pin");
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("set user pin");
+        if (getUser() != null) {
+            management.sendAppUserPin(getApplicationId(), getUserUuid());
+        } else {
+            response.setError("User not found");
+        }
 
-		if (getUser() != null) {
-			management.setAppUserPin(getApplicationId(), getUserUuid(), pin);
-		} else {
-			response.setError("User not found");
-		}
+        return new JSONWithPadding(response, callback);
+    }
 
-		return new JSONWithPadding(response, callback);
-	}
+    @POST
+    @Path("sendpin")
+    public JSONWithPadding postSendPin(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
+        return sendPin(ui, callback);
+    }
 
-	@POST
-	@Path("setpin")
-	@Consumes("application/x-www-form-urlencoded")
-	@RequireApplicationAccess
-	public JSONWithPadding postPin(@Context UriInfo ui,
-			@FormParam("pin") String pin,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @GET
+    @Path("setpin")
+    @RequireApplicationAccess
+    public JSONWithPadding setPin(@Context UriInfo ui,
+            @QueryParam("pin") String pin,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
 
-		logger.info("UserResource.postPin");
+        logger.info("UserResource.setPin");
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("set user pin");
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("set user pin");
 
-		if (getUser() != null) {
-			management.setAppUserPin(getApplicationId(), getUserUuid(), pin);
-		} else {
-			response.setError("User not found");
-		}
+        if (getUser() != null) {
+            management.setAppUserPin(getApplicationId(), getUserUuid(), pin);
+        } else {
+            response.setError("User not found");
+        }
 
-		return new JSONWithPadding(response, callback);
-	}
+        return new JSONWithPadding(response, callback);
+    }
 
-	@POST
-	@Path("setpin")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@RequireApplicationAccess
-	public JSONWithPadding jsonPin(@Context UriInfo ui, JsonNode json,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @POST
+    @Path("setpin")
+    @Consumes("application/x-www-form-urlencoded")
+    @RequireApplicationAccess
+    public JSONWithPadding postPin(@Context UriInfo ui,
+            @FormParam("pin") String pin,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
 
-		logger.info("UserResource.jsonPin");
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("set user pin");
+        logger.info("UserResource.postPin");
 
-		if (getUser() != null) {
-			String pin = json.path("pin").getTextValue();
-			management.setAppUserPin(getApplicationId(), getUserUuid(), pin);
-		} else {
-			response.setError("User not found");
-		}
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("set user pin");
 
-		return new JSONWithPadding(response, callback);
-	}
+        if (getUser() != null) {
+            management.setAppUserPin(getApplicationId(), getUserUuid(), pin);
+        } else {
+            response.setError("User not found");
+        }
 
-	@GET
-	@Path("resetpw")
-	public Viewable showPasswordResetForm(@Context UriInfo ui,
-			@QueryParam("token") String token) {
+        return new JSONWithPadding(response, callback);
+    }
 
-		logger.info("UserResource.showPasswordResetForm");
+    @POST
+    @Path("setpin")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @RequireApplicationAccess
+    public JSONWithPadding jsonPin(@Context UriInfo ui, JsonNode json,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
 
-		this.token = token;
-		try {
-			if (management.checkPasswordResetTokenForAppUser(
-					getApplicationId(), getUserUuid(), token)) {
-				return handleViewable("resetpw_set_form", this);
-			} else {
-				return handleViewable("resetpw_email_form", this);
-			}
-		} catch (RedirectionException e) {
-			throw e;
-		} catch (Exception e) {
-			return handleViewable("error", e);
-		}
-	}
+        logger.info("UserResource.jsonPin");
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("set user pin");
 
-	@POST
-	@Path("resetpw")
-	@Consumes("application/x-www-form-urlencoded")
-	public Viewable handlePasswordResetForm(@Context UriInfo ui,
-			@FormParam("token") String token,
-			@FormParam("password1") String password1,
-			@FormParam("password2") String password2,
-			@FormParam("recaptcha_challenge_field") String challenge,
-			@FormParam("recaptcha_response_field") String uresponse) {
+        if (getUser() != null) {
+            String pin = json.path("pin").getTextValue();
+            management.setAppUserPin(getApplicationId(), getUserUuid(), pin);
+        } else {
+            response.setError("User not found");
+        }
 
-		try {
-			logger.info("UserResource.handlePasswordResetForm");
+        return new JSONWithPadding(response, callback);
+    }
 
-			this.token = token;
+    @GET
+    @Path("resetpw")
+    public Viewable showPasswordResetForm(@Context UriInfo ui,
+            @QueryParam("token") String token) {
 
-			if ((password1 != null) || (password2 != null)) {
-				if (management.checkPasswordResetTokenForAppUser(
-						getApplicationId(), getUserUuid(), token)) {
-					if ((password1 != null) && password1.equals(password2)) {
-						management.setAppUserPassword(getApplicationId(),
-								getUser().getUuid(), password1);
-						return handleViewable("resetpw_set_success", this);
-					} else {
-						errorMsg = "Passwords didn't match, let's try again...";
-						return handleViewable("resetpw_set_form", this);
-					}
-				} else {
-					errorMsg = "Something odd happened, let's try again...";
-					return handleViewable("resetpw_email_form", this);
-				}
-			}
+        logger.info("UserResource.showPasswordResetForm");
 
-			if (!useReCaptcha()) {
-				management.startAppUserPasswordResetFlow(getApplicationId(),
-						user);
-				return handleViewable("resetpw_email_success", this);
-			}
+        this.token = token;
+        try {
+            if (management.checkPasswordResetTokenForAppUser(
+                    getApplicationId(), getUserUuid(), token)) {
+                return handleViewable("resetpw_set_form", this);
+            } else {
+                return handleViewable("resetpw_email_form", this);
+            }
+        } catch (RedirectionException e) {
+            throw e;
+        } catch (Exception e) {
+            return handleViewable("error", e);
+        }
+    }
 
-			ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-			reCaptcha.setPrivateKey(properties
-					.getProperty("usergrid.recaptcha.private"));
+    @POST
+    @Path("resetpw")
+    @Consumes("application/x-www-form-urlencoded")
+    public Viewable handlePasswordResetForm(@Context UriInfo ui,
+            @FormParam("token") String token,
+            @FormParam("password1") String password1,
+            @FormParam("password2") String password2,
+            @FormParam("recaptcha_challenge_field") String challenge,
+            @FormParam("recaptcha_response_field") String uresponse) {
 
-			ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
-					httpServletRequest.getRemoteAddr(), challenge, uresponse);
+        try {
+            logger.info("UserResource.handlePasswordResetForm");
 
-			if (reCaptchaResponse.isValid()) {
-				management.startAppUserPasswordResetFlow(getApplicationId(),
-						user);
-				return handleViewable("resetpw_email_success", this);
-			} else {
-				errorMsg = "Incorrect Captcha";
-				return handleViewable("resetpw_email_form", this);
-			}
-		} catch (RedirectionException e) {
-			throw e;
-		} catch (Exception e) {
-			return handleViewable("error", e);
-		}
+            this.token = token;
 
-	}
+            if ((password1 != null) || (password2 != null)) {
+                if (management.checkPasswordResetTokenForAppUser(
+                        getApplicationId(), getUserUuid(), token)) {
+                    if ((password1 != null) && password1.equals(password2)) {
+                        management.setAppUserPassword(getApplicationId(),
+                                getUser().getUuid(), password1);
+                        return handleViewable("resetpw_set_success", this);
+                    } else {
+                        errorMsg = "Passwords didn't match, let's try again...";
+                        return handleViewable("resetpw_set_form", this);
+                    }
+                } else {
+                    errorMsg = "Something odd happened, let's try again...";
+                    return handleViewable("resetpw_email_form", this);
+                }
+            }
 
-	public String getErrorMsg() {
-		return errorMsg;
-	}
+            if (!useReCaptcha()) {
+                management.startAppUserPasswordResetFlow(getApplicationId(),
+                        user);
+                return handleViewable("resetpw_email_success", this);
+            }
 
-	public String getToken() {
-		return token;
-	}
+            ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
+            reCaptcha.setPrivateKey(properties
+                    .getProperty("usergrid.recaptcha.private"));
 
-	public User getUser() {
-		if (user == null) {
-			EntityManager em = getServices().getEntityManager();
-			try {
-				user = em.get(em.getUserByIdentifier(userIdentifier),
-						User.class);
-			} catch (Exception e) {
-				logger.error("Unable go get user", e);
-			}
+            ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
+                    httpServletRequest.getRemoteAddr(), challenge, uresponse);
 
-		}
-		return user;
-	}
+            if (reCaptchaResponse.isValid()) {
+                management.startAppUserPasswordResetFlow(getApplicationId(),
+                        user);
+                return handleViewable("resetpw_email_success", this);
+            } else {
+                errorMsg = "Incorrect Captcha";
+                return handleViewable("resetpw_email_form", this);
+            }
+        } catch (RedirectionException e) {
+            throw e;
+        } catch (Exception e) {
+            return handleViewable("error", e);
+        }
 
-	public UUID getUserUuid() {
-		user = getUser();
-		if (user == null) {
-			return null;
-		}
-		return user.getUuid();
-	}
+    }
 
-	@GET
-	@Path("activate")
-	public Viewable activate(@Context UriInfo ui,
-			@QueryParam("token") String token) {
+    public String getErrorMsg() {
+        return errorMsg;
+    }
 
-		try {
-			management.handleActivationTokenForAppUser(getApplicationId(),
-					getUserUuid(), token);
-			return handleViewable("activate", this);
-		} catch (TokenException e) {
-			return handleViewable("bad_activation_token", this);
-		} catch (RedirectionException e) {
-			throw e;
-		} catch (Exception e) {
-			return handleViewable("error", e);
-		}
-	}
+    public String getToken() {
+        return token;
+    }
 
-	@GET
-	@Path("confirm")
-	public Viewable confirm(@Context UriInfo ui,
-			@QueryParam("token") String token) {
+    public User getUser() {
+        if (user == null) {
+            EntityManager em = getServices().getEntityManager();
+            try {
+                user = em.get(em.getUserByIdentifier(userIdentifier),
+                        User.class);
+            } catch (Exception e) {
+                logger.error("Unable go get user", e);
+            }
 
-		try {
-			ActivationState state = management
-					.handleConfirmationTokenForAppUser(getApplicationId(),
-							getUserUuid(), token);
-			if (state == ActivationState.CONFIRMED_AWAITING_ACTIVATION) {
-				return handleViewable("confirm", this);
-			}
-			return handleViewable("activate", this);
-		} catch (TokenException e) {
-			return handleViewable("bad_confirmation_token", this);
-		} catch (RedirectionException e) {
-			throw e;
-		} catch (Exception e) {
-			return handleViewable("error", e);
-		}
-	}
+        }
+        return user;
+    }
 
-	@GET
-	@Path("reactivate")
-	public JSONWithPadding reactivate(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    public UUID getUserUuid() {
+        user = getUser();
+        if (user == null) {
+            return null;
+        }
+        return user.getUuid();
+    }
 
-		logger.info("Send activation email for user: " + getUserUuid());
+    @GET
+    @Path("activate")
+    public Viewable activate(@Context UriInfo ui,
+            @QueryParam("token") String token) {
 
-		ApiResponse response = new ApiResponse(ui);
+        try {
+            management.handleActivationTokenForAppUser(getApplicationId(),
+                    getUserUuid(), token);
+            return handleViewable("activate", this);
+        } catch (TokenException e) {
+            return handleViewable("bad_activation_token", this);
+        } catch (RedirectionException e) {
+            throw e;
+        } catch (Exception e) {
+            return handleViewable("error", e);
+        }
+    }
 
-		management.startAppUserActivationFlow(getApplicationId(), user);
+    @GET
+    @Path("confirm")
+    public Viewable confirm(@Context UriInfo ui,
+            @QueryParam("token") String token) {
 
-		response.setAction("reactivate user");
-		return new JSONWithPadding(response, callback);
-	}
+        try {
+            ActivationState state = management
+                    .handleConfirmationTokenForAppUser(getApplicationId(),
+                            getUserUuid(), token);
+            if (state == ActivationState.CONFIRMED_AWAITING_ACTIVATION) {
+                return handleViewable("confirm", this);
+            }
+            return handleViewable("activate", this);
+        } catch (TokenException e) {
+            return handleViewable("bad_confirmation_token", this);
+        } catch (RedirectionException e) {
+            throw e;
+        } catch (Exception e) {
+            return handleViewable("error", e);
+        }
+    }
 
-	@Override
-	@Path("{itemName}")
-	public AbstractContextResource addNameParameter(@Context UriInfo ui,
-			@PathParam("itemName") PathSegment itemName) throws Exception {
+    @GET
+    @Path("reactivate")
+    public JSONWithPadding reactivate(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
 
-		// check for user extension
-		String resourceClass = USER_EXTENSION_RESOURCE_PREFIX
-				+ StringUtils.capitalize(itemName.getPath()) + "Resource";
-		AbstractUserExtensionResource extensionResource = null;
-		try {
-			@SuppressWarnings("unchecked")
-			Class<AbstractUserExtensionResource> extensionCls = (Class<AbstractUserExtensionResource>) Class
-					.forName(resourceClass);
-			extensionResource = getSubResource(extensionCls);
-		} catch (Exception e) {
-		}
-		if (extensionResource != null) {
-			return extensionResource;
-		}
+        logger.info("Send activation email for user: " + getUserUuid());
 
-		return super.addNameParameter(ui, itemName);
-	}
+        ApiResponse response = new ApiResponse(ui);
+
+        management.startAppUserActivationFlow(getApplicationId(), user);
+
+        response.setAction("reactivate user");
+        return new JSONWithPadding(response, callback);
+    }
+
+    @Override
+    @Path("{itemName}")
+    public AbstractContextResource addNameParameter(@Context UriInfo ui,
+            @PathParam("itemName") PathSegment itemName) throws Exception {
+
+        // check for user extension
+        String resourceClass = USER_EXTENSION_RESOURCE_PREFIX
+                + StringUtils.capitalize(itemName.getPath()) + "Resource";
+        AbstractUserExtensionResource extensionResource = null;
+        try {
+            @SuppressWarnings("unchecked")
+            Class<AbstractUserExtensionResource> extensionCls = (Class<AbstractUserExtensionResource>) Class
+                    .forName(resourceClass);
+            extensionResource = getSubResource(extensionCls);
+        } catch (Exception e) {
+        }
+        if (extensionResource != null) {
+            return extensionResource;
+        }
+
+        return super.addNameParameter(ui, itemName);
+    }
 
 }

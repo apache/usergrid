@@ -74,7 +74,7 @@ public class BasicTest extends AbstractRestTest {
 
 		// test get token for admin user with correct default password
 
-		String mgmtToken = mgmtToken();
+		String mgmtToken = adminToken();
 		// test get admin user with token
 
 		node = resource().path("/management/users/test@usergrid.com")

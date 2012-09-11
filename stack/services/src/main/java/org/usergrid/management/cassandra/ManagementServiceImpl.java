@@ -43,7 +43,6 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_PIN_REQUEST;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_MAILER_EMAIL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_ORGANIZATION_ACTIVATION_URL;
-import static org.usergrid.management.AccountCreationProps.PROPERTIES_PASSWORD_SALT;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SETUP_TEST_ACCOUNT;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED;
@@ -146,6 +145,7 @@ import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
+import org.usergrid.security.salt.SaltProvider;
 import org.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.usergrid.security.shiro.credentials.ApplicationClientCredentials;
 import org.usergrid.security.shiro.credentials.OrganizationClientCredentials;
@@ -220,6 +220,8 @@ public class ManagementServiceImpl implements ManagementService {
     protected LockManager lockManager;
 
     protected TokenService tokens;
+    
+    protected SaltProvider saltProvider;
 
     /**
      * Must be constructed with a CassandraClientPool.
@@ -281,43 +283,23 @@ public class ManagementServiceImpl implements ManagementService {
                 logger.warn("Missing values for test app, check properties.  Skipping test app setup...");
                 return;
             }
-
-            UserInfo user = createAdminUser(test_admin_username,
-                    test_admin_name, test_admin_email, test_admin_password,
-                    true, false);
-
-            OrganizationInfo organization = createOrganization(
-                    test_organization_name, user, true);
-
-            UUID appId = createApplication(organization.getUuid(),
-                    buildAppName(test_app_name, organization)).getId();
-
-            postOrganizationActivity(organization.getUuid(), user, "create",
-                    new SimpleEntityRef(APPLICATION_INFO, appId),
-                    "Application", test_app_name,
-                    "<a mailto=\"" + user.getEmail() + "\">" + user.getName()
-                            + " (" + user.getEmail()
-                            + ")</a> created a new application named "
-                            + test_app_name, null);
+            
+            OrganizationOwnerInfo created = createOwnerAndOrganization(test_organization_name,
+                      test_admin_username, test_admin_name, test_admin_email,
+                      test_admin_password, true, false);
+            
+            
+              
+              
+              OrganizationInfo organization = created.getOrganization();
+              createApplication(organization.getUuid(), test_app_name);
 
         } else {
             logger.warn("Test app creation disabled");
         }
 
-        boolean superuser_enabled = parseBoolean(properties
-                .getProperty(PROPERTIES_SYSADMIN_LOGIN_ALLOWED));
-        String superuser_username = properties
-                .getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
-        String superuser_email = properties
-                .getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL);
-        String superuser_password = properties
-                .getProperty(PROPERTIES_SYSADMIN_LOGIN_PASSWORD);
-
-        if (!anyNull(superuser_username, superuser_email, superuser_password)) {
-            createAdminUser(superuser_username, "Super User", superuser_email,
-                    superuser_password, superuser_enabled, !superuser_enabled);
-        } else {
-            logger.warn("Missing values for superuser account, check properties.  Skipping superuser account setup...");
+        if(superuserEnabled()){
+            provisionSuperuser();
         }
 
     }
@@ -805,7 +787,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo createAdminFrom(User user, String password)
             throws Exception {
-        return doCreateAdmin(user, maybeSaltPassword(user, password),
+        return doCreateAdmin(user, maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, password),
                 mongoPasswordCredentials(user.getUsername(), password));
     }
 
@@ -1075,7 +1057,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
         User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId,
                 User.class);
-        if (!maybeSaltPassword(user, oldPassword).compare(
+        if (!maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, oldPassword).compare(
                 readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId))) {
             logger.info("Old password doesn't match");
             throw new IncorrectPasswordException("Old password does not match");
@@ -1096,7 +1078,7 @@ public class ManagementServiceImpl implements ManagementService {
                 User.class);
 
         writeUserPassword(MANAGEMENT_APPLICATION_ID, user,
-                maybeSaltPassword(user, newPassword));
+                maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, newPassword));
         writeUserMongoPassword(
                 MANAGEMENT_APPLICATION_ID,
                 user,
@@ -1112,7 +1094,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
         User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId,
                 User.class);
-        return maybeSaltPassword(user, password).compare(
+        return maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, password).compare(
                 readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId));
     }
 
@@ -1126,7 +1108,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        if (maybeSaltPassword(user, password).compare(
+        if (maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, password).compare(
                 readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID,
                         user.getUuid()))) {
             userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
@@ -2512,7 +2494,7 @@ public class ManagementServiceImpl implements ManagementService {
         User user = em.get(userId, User.class);
 
         writeUserPassword(applicationId, user,
-                maybeSaltPassword(user, newPassword));
+                maybeSaltPassword(applicationId, user, newPassword));
 
     }
 
@@ -2528,7 +2510,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
         // TODO load the user, send the hashType down to maybeSaltPassword
         User user = emf.getEntityManager(applicationId).get(userId, User.class);
-        if (!maybeSaltPassword(user, oldPassword).compare(
+        if (!maybeSaltPassword(applicationId, user, oldPassword).compare(
                 readUserPasswordCredentials(applicationId, userId))) {
             throw new IncorrectPasswordException("Old password does not match");
         }
@@ -2546,7 +2528,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        if (maybeSaltPassword(user, password).compare(
+        if (maybeSaltPassword(applicationId, user, password).compare(
                 readUserPasswordCredentials(applicationId, user.getUuid()))) {
             if (!user.activated()) {
                 throw new UnactivatedAdminUserException();
@@ -2959,6 +2941,8 @@ public class ManagementServiceImpl implements ManagementService {
     public boolean newOrganizationsNeedSysAdminApproval() {
         return properties.newOrganizationsNeedSysAdminApproval();
     }
+    
+    
 
     private boolean areActivationChecksDisabled() {
         return !(newOrganizationsNeedSysAdminApproval()
@@ -2976,14 +2960,30 @@ public class ManagementServiceImpl implements ManagementService {
         return properties;
     }
 
-    private CredentialsInfo maybeSaltPassword(User user, String password)
+    private CredentialsInfo maybeSaltPassword(UUID applicationId, User user, String password)
             throws Exception {
         String hashType = null;
+        
         if (user.getProperty(User.PROPERTY_HASHTYPE) != null) {
             hashType = (String) user.getProperty(User.PROPERTY_HASHTYPE);
         }
+        
         return hashedCredentials(
-                properties.getProperty(PROPERTIES_PASSWORD_SALT, ""), password,
+               saltProvider.getSalt(applicationId, user.getUuid()), password,
                 hashType);
+    }
+
+    /**
+     * @return the saltProvider
+     */
+    public SaltProvider getSaltProvider() {
+        return saltProvider;
+    }
+
+    /**
+     * @param saltProvider the saltProvider to set
+     */
+    public void setSaltProvider(SaltProvider saltProvider) {
+        this.saltProvider = saltProvider;
     }
 }
