@@ -30,7 +30,7 @@ public class NoOpSaltProvider implements SaltProvider {
      */
     @Override
     public String getSalt(UUID applicationId, UUID userId) {
-        return null;
+        return "";
     }
 
 }
