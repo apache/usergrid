@@ -3104,4 +3104,43 @@ public class EntityManagerImpl implements EntityManager,
 		return indexBucketLocator;
 	}
 
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public Map<String, Role> getGroupRolesWithTitles(UUID groupId) throws Exception {
+    return getRolesWithTitles(
+            (Set<String>) cast(getDictionaryAsSet(groupRef(groupId), DICTIONARY_ROLENAMES)));
+  }
+
+  @Override
+  public void addGroupToRole(UUID groupId, String roleName) throws Exception {
+    roleName = roleName.toLowerCase();
+    addToDictionary(groupRef(groupId), DICTIONARY_ROLENAMES, roleName, roleName);
+    addToCollection(groupRef(groupId), COLLECTION_ROLES, roleRef(roleName));
+  }
+
+  @Override
+  public void removeGroupFromRole(UUID groupId, String roleName) throws Exception {
+    roleName = roleName.toLowerCase();
+    removeFromDictionary(groupRef(groupId), DICTIONARY_ROLENAMES, roleName);
+    removeFromCollection(groupRef(groupId), COLLECTION_ROLES, roleRef(roleName));
+  }
+
+  @Override
+  public Set<String> getGroupPermissions(UUID groupId) throws Exception {
+    return cast(getDictionaryAsSet(groupRef(groupId), Schema.DICTIONARY_PERMISSIONS));
+  }
+
+  @Override
+  public void grantGroupPermission(UUID groupId, String permission) throws Exception {
+    permission = permission.toLowerCase();
+    addToDictionary(groupRef(groupId), DICTIONARY_PERMISSIONS, permission);
+  }
+
+  @Override
+  public void revokeGroupPermission(UUID groupId, String permission) throws Exception {
+    permission = permission.toLowerCase();
+    removeFromDictionary(groupRef(groupId), DICTIONARY_PERMISSIONS, permission);
+  }
+
 }
