@@ -4049,6 +4049,9 @@ a:active {
 .query-result-td-checkbox input {
   width: 20px;
 }
+.hidden {
+  visibility: hidden;
+}
 .query-result-td-checkbox {
   background-color: #888;
   vertical-align: middle;
@@ -4755,8 +4758,4 @@ table .zebraRows:nth-child(2n) {
 }
 .curl-container .input-append {
   position: relative;
-}
-.curl-container .curl-data {
-    margin-top: 5px;
-    margin-bottom: 5px;
 }
