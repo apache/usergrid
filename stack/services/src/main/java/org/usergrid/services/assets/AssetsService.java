@@ -18,8 +18,9 @@ package org.usergrid.services.assets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.services.AbstractCollectionService;
+import org.usergrid.services.AbstractPathBasedColllectionService;
 
-public class AssetsService extends AbstractCollectionService {
+public class AssetsService extends AbstractPathBasedColllectionService {
 
 	private static final Logger logger = LoggerFactory.getLogger(AssetsService.class);
 

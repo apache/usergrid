@@ -13,6 +13,7 @@ import org.usergrid.mq.QueueQuery;
 import org.usergrid.mq.QueueResults;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.entities.Asset;
+import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.applications.ApplicationResource;
 import org.usergrid.rest.applications.ServiceResource;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
@@ -41,14 +42,26 @@ public class AssetsResource extends ServiceResource {
   private BinaryStore binaryStore;
 
   @Override
+  @Path("{itemName}")
+  public AbstractContextResource addNameParameter(@Context UriInfo ui,
+                                                  @PathParam("itemName") PathSegment itemName) throws Exception {
+    logger.info("in AssetsResource.addNameParameter");
+    super.addNameParameter(ui, itemName);
+    logger.info("serviceParamters now has: {}", getServiceParameters());
+    // HTF to work w/ the ../data endpoint when we are looking up by path?
+    return getSubResource(AssetsResource.class);
+  }
+
+  @Override
   @RequireApplicationAccess
   @GET
   public JSONWithPadding executeGet(@Context UriInfo ui,
                                     @QueryParam("callback") @DefaultValue("callback") String callback)
           throws Exception {
-    logger.info("In AssetsResource.executeGet with ui: {} and callback: {}", ui, callback);
+    logger.info("In AssetsResource.executeGet with ui: {} and callback: {}", ui );
     return super.executeGet(ui, callback);
   }
+
 
   @Override
   @PUT
