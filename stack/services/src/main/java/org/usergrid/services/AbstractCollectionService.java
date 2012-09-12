@@ -116,15 +116,8 @@ public class AbstractCollectionService extends AbstractService {
 		if (nameProperty == null) {
 			nameProperty = "name";
 		}
-    EntityRef entity = null;
-    if ( getEntityType().equals(User.ENTITY_TYPE) ) {
-      Identifier id = Identifier.from(name);
-      if ( id != null ) {
-        entity = em.getUserByIdentifier(id);
-      }
-    } else {
-      entity = em.getAlias(getEntityType(), name);
-    }
+    EntityRef entity = em.getAlias(getEntityType(), name);
+
 		if (entity == null) {
       logger.info("miss on entityType: {} with name: {}", getEntityType(), name);
 			throw new ServiceResourceNotFoundException(context);
