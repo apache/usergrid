@@ -20,42 +20,32 @@ import org.usergrid.persistence.exceptions.PersistenceException;
 
 /**
  * @author tnine
- *
+ * 
  */
-public class ContainsOperand extends Operand {
+public class ContainsOperand extends EqualityOperand {
 
-  
-  
-  /**
-   * @param property
-   * @param literal
-   */
-  public ContainsOperand(Token t) {
-    super(t);
-  }
-  
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence.query.tree.QueryVisitor)
-   */
-  @Override
-  public void visit(QueryVisitor visitor) throws PersistenceException {
-    visitor.visit(this);
-  }
-  
-  public void setProperty(String name){
-      setChild(0, new Property(name));
-  }
-  
-  public void setValue(String value){
-      setChild(1, new StringLiteral(value));
-  }
-  
-  public Property getProperty(){
-    return (Property) this.children.get(0);
-  }
-  
-  public StringLiteral getString(){
-    return (StringLiteral) this.children.get(1);
-  }
+    /**
+     * @param property
+     * @param literal
+     */
+    public ContainsOperand(Token t) {
+        super(t);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence
+     * .query.tree.QueryVisitor)
+     */
+    @Override
+    public void visit(QueryVisitor visitor) throws PersistenceException {
+        visitor.visit(this);
+    }
+
+    public StringLiteral getString() {
+       return (StringLiteral) getLiteral();
+    }
 
 }

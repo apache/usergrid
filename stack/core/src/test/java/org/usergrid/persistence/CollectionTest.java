@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -955,5 +956,66 @@ public class CollectionTest extends AbstractPersistenceTest {
 
 
   }
+  
+
+    @Test
+    public void subpropertyQuerying() throws Exception {
+        Map<String, Object> root = new HashMap<String, Object>();
+
+        Map<String, Object> subEntity = new HashMap<String, Object>();
+
+        root.put("rootprop1", "simpleprop");
+
+        subEntity.put("intprop", 10);
+        subEntity.put("substring","I'm a tokenized string that should be indexed");
+
+        root.put("subentity", subEntity);
+
+        UUID applicationId = createApplication("testOrganization",
+                "subpropertyQuerying");
+        assertNotNull(applicationId);
+
+       
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        Entity saved = em.create("test", root);
+
+        
+        
+        Query query = new Query();
+        query.addEqualityFilter("rootprop1","simpleprop");
+
+        Results results = em.searchCollection(em.getApplicationRef(), "tests",
+                query);
+        
+        
+        Entity entity = results.getEntitiesMap().get(saved.getUuid());
+
+        assertNotNull(entity);
+        
+        
+        //query on the nested int value
+        query = new Query();
+        query.addEqualityFilter("subentity.intprop", 10);
+
+         results = em.searchCollection(em.getApplicationRef(), "tests",
+                query);
+
+        entity = results.getEntitiesMap().get(saved.getUuid());
+
+        assertNotNull(entity);
+
+        //query on the nexted tokenized value
+        query = new Query();
+        query.addContainsFilter("subentity.substring", "tokenized");
+        query.addContainsFilter("subentity.substring", "indexed");
+
+        results = em.searchCollection(em.getApplicationRef(), "tests", query);
+
+        entity = results.getEntitiesMap().get(saved.getUuid());
+
+        assertNotNull(entity);
+    }
 
 }
