@@ -50,14 +50,14 @@ function apigee_console_app(Pages, query_params) {
   var nameRegex = new RegExp("[0-9a-zA-ZáéíóúÁÉÍÓÚÑñ@#$%^&!?;:.,'\"~*-=+_\(\)\[\]\{\}|\/\]+");
   var nameAllowedCharsMessage = 'Name field only allows: A-Z, a-z, áéíóúÁÉÍÓÚÑñ, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . / ? !';
 
-  var titleRegex = new RegExp("[0-9a-zA-Z.!-?/]+");
+  var titleRegex = new RegExp("[a-zA-Z0-9.!-?]+[\/]?");
   var titleAllowedCharsMessage = 'Title field only allows : space, A-Z, a-z, 0-9, dot, dash, /, !, and ?';
 
   var alphaNumRegex = new RegExp("[0-9a-zA-Z]+");
   var alphaNumAllowedCharsMessage = 'Collection name only allows : a-z A-Z 0-9';
 
-  var pathRegex = new RegExp("^[0-9a-zA-Z.-]+[\/]?[0-9a-zA-Z.-]+$[^\/]*");
-  var pathAllowedCharsMessage = 'Path only allows : /, a-z, 0-9, dot, and dash, paths of the format: /path, path//, or path//path are not allowed';
+  var pathRegex = new RegExp("^[^\/]*([a-zA-Z0-9\.-]+[\/]{0,1})+[^\/]$");
+  var pathAllowedCharsMessage = 'Path only allows : /, a-z, 0-9, dot, and dash, paths of the format: /path, path/, or path//path are not allowed';
 
   var roleRegex = new RegExp("^([0-9a-zA-Z./-])+$");
   var roleAllowedCharsMessage = 'Role only allows : /, a-z, 0-9, dot, and dash';
