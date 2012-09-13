@@ -602,6 +602,7 @@
     Pages.SelectPanel('organization');
     requestApplications();
     requestAdmins();
+    displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
     requestOrganizationCredentials();
     requestAdminFeed();
   }
