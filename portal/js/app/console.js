@@ -218,7 +218,7 @@
     $("#query-ql").val("");
     query_history = [];
     //Prepare Collection Index Dropdown Menu
-    requestIndexes(path);
+    requestIndexes(collection);
     //bind events for previous and next buttons
     bindPagingEvents('query-response');
     //clear out the table before we start
