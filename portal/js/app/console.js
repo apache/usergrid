@@ -245,6 +245,7 @@ function apigee_console_app(Pages, query_params) {
       }
     }
     var ql = $("#query-ql").val();
+    requestIndexes(path);
     //merge the data and the query only if query is not empty
     if(ql !== ""){
       var params = {"ql":ql};
