@@ -1697,6 +1697,9 @@ function apigee_console_app(Pages, query_params) {
   	sectionId.html("");
   	$.tmpl('apigee.ui.curl.detail.html', data).appendTo(sectionId);
    	sectionId.show();
+    if (!token) {
+      $('#'+section+'-curl-token').hide();
+    }
   }
 
   function copyCurlCommand() {

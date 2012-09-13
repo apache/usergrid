@@ -4493,7 +4493,7 @@ a:active {
   color: white !important;
 }
 .graph {
-  margin: 5px -25px 5px -15px;
+  margin: 5px -25px 5px 15px;
 }
 #application-panel-text {
   min-width: 340px !important;
