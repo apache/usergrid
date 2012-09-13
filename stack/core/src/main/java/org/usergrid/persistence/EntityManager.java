@@ -865,4 +865,21 @@ public interface EntityManager {
     public Map<String, Role> getUserRolesWithTitles(UUID userId)
             throws Exception;
 
+
+    // Group role membership
+
+    public Map<String, Role> getGroupRolesWithTitles(UUID userId) throws Exception;
+
+    public void addGroupToRole(UUID userId, String roleName) throws Exception;
+
+    public void removeGroupFromRole(UUID userId, String roleName) throws Exception;
+
+    // Group permissions
+
+    public Set<String> getGroupPermissions(UUID groupId) throws Exception;
+
+    public void grantGroupPermission(UUID groupId, String permission) throws Exception;
+
+    public void revokeGroupPermission(UUID groupId, String permission) throws Exception;
+
 }

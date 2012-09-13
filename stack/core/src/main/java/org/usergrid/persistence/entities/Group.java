@@ -52,7 +52,10 @@ public class Group extends TypedEntity {
 	@EntityDictionary(keyType = java.lang.String.class, valueType = java.lang.String.class)
 	protected Map<String, String> rolenames;
 
-	@EntityDictionary(keyType = java.lang.String.class, valueType = CredentialsInfo.class)
+  @EntityDictionary(keyType = java.lang.String.class)
+  protected Set<String> permissions;
+
+  @EntityDictionary(keyType = java.lang.String.class, valueType = CredentialsInfo.class)
 	protected Map<String, CredentialsInfo> credentials;
 
 	@EntityCollection(type = "user", propertiesIndexed = { "username", "email" }, linkedCollection = "groups", indexingDynamicProperties = true)
