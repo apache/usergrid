@@ -617,7 +617,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public OrganizationInfo getOrganizationInfoFromAccessToken(String token)
             throws Exception {
-        Entity entity = geEntityFromAccessToken(token, null, ORGANIZATION);
+        Entity entity = getEntityFromAccessToken(token, null, ORGANIZATION);
         if (entity == null) {
             return null;
         }
@@ -1176,6 +1176,17 @@ public class ManagementServiceImpl implements ManagementService {
                 new AuthPrincipalInfo(principal_type, id, applicationId), null);
 
     }
+    
+    public void revokeTokensForPrincipal( AuthPrincipalType principalType, UUID applicationId,  UUID id) throws Exception  {
+
+        if (anyNull(applicationId, principalType, id)) {
+            throw new IllegalArgumentException("applicationId, principal_type and id are required");
+        }
+
+        AuthPrincipalInfo principal =   new AuthPrincipalInfo(principalType, id, applicationId);
+        
+        tokens.removeTokens(principal);
+    }
 
     public AuthPrincipalInfo getPrincipalFromAccessToken(String token,
             String expected_token_type,
@@ -1205,7 +1216,7 @@ public class ManagementServiceImpl implements ManagementService {
         return principal;
     }
 
-    public Entity geEntityFromAccessToken(String token,
+    public Entity getEntityFromAccessToken(String token,
             String expected_token_type,
             AuthPrincipalType expected_principal_type) throws Exception {
 
@@ -1215,10 +1226,10 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        return geEntityFromPrincipal(principal);
+        return getEntityFromPrincipal(principal);
     }
 
-    public Entity geEntityFromPrincipal(AuthPrincipalInfo principal)
+    public Entity getEntityFromPrincipal(AuthPrincipalInfo principal)
             throws Exception {
 
         EntityManager em = emf
@@ -1235,11 +1246,19 @@ public class ManagementServiceImpl implements ManagementService {
                 ADMIN_USER, userId);
     }
 
+    /* (non-Javadoc)
+     * @see org.usergrid.management.ManagementService#revokeAccessTokensForAdminUser(java.util.UUID)
+     */
+    @Override
+    public void revokeAccessTokensForAdminUser(UUID userId) throws Exception {
+        revokeTokensForPrincipal(ADMIN_USER, MANAGEMENT_APPLICATION_ID, userId);
+    }
+
     @Override
     public Entity getAdminUserEntityFromAccessToken(String token)
             throws Exception {
 
-        Entity user = geEntityFromAccessToken(token, null, ADMIN_USER);
+        Entity user = getEntityFromAccessToken(token, null, ADMIN_USER);
         return user;
     }
 
@@ -1595,7 +1614,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public ApplicationInfo getApplicationInfoFromAccessToken(String token)
             throws Exception {
-        Entity entity = geEntityFromAccessToken(token, null, APPLICATION);
+        Entity entity = getEntityFromAccessToken(token, null, APPLICATION);
         if (entity == null) {
             throw new TokenException(
                     "Could not find an entity for that access token: " + token);
@@ -1814,6 +1833,9 @@ public class ManagementServiceImpl implements ManagementService {
         
         em.update(user);
         
+        //revoke all access tokens for the app
+        revokeAccessTokensForAppUser(applicationId, userId);
+        
         return user;
     }
 
@@ -1857,6 +1879,8 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         em.setProperty(new SimpleEntityRef(User.ENTITY_TYPE, userId),
                 "disabled", true);
+        
+        revokeAccessTokensForAdminUser(userId);
     }
 
     @Override
@@ -2245,6 +2269,15 @@ public class ManagementServiceImpl implements ManagementService {
             throws Exception {
         return getTokenForPrincipal(ACCESS, null, applicationId,
                 APPLICATION_USER, userId);
+    }
+
+    
+    /* (non-Javadoc)
+     * @see org.usergrid.management.ManagementService#revokeAccessTokensForAappUser(java.util.UUID, java.util.UUID)
+     */
+    @Override
+    public void revokeAccessTokensForAppUser(UUID applicationId, UUID userId) throws Exception {
+        revokeTokensForPrincipal(APPLICATION_USER, applicationId, userId);
     }
 
     @Override

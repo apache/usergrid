@@ -24,4 +24,11 @@ public interface TokenService {
 
 	public long getMaxTokenAge(String token);
 
+	/**
+	 * Remove all tokens currently issued for the given AuthPrincipal.  Removes the specified type of token
+	 * for the given principal uuid and application uuid
+	 * @param principal
+	 * @throws Exception 
+	 */
+	public void removeTokens(AuthPrincipalInfo principal) throws Exception;
 }

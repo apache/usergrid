@@ -461,6 +461,32 @@ public class UserResource extends ServiceResource {
         response.setAction("reactivate user");
         return new JSONWithPadding(response, callback);
     }
+    
+    @POST
+    @Path("revoketokens")
+    public JSONWithPadding revokeTokensPost(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
+
+        logger.info("Revoking user tokens for " + getUserUuid());
+
+        ApiResponse response = new ApiResponse(ui);
+
+        management.revokeAccessTokensForAppUser(getApplicationId(), getUserUuid());
+
+        response.setAction("revoked user tokens");
+        return new JSONWithPadding(response, callback);
+        
+    }
+    
+    @PUT
+    @Path("revoketokens")
+    public JSONWithPadding revokeTokensPut(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
+        return revokeTokensPost(ui, callback);
+        
+    }
 
     @Override
     @Path("{itemName}")
