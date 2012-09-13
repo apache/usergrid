@@ -659,6 +659,11 @@
       appMenu.html('<li>--No Apps--</li>');
       forceNewApp();
     }
+
+    var appName = Usergrid.ApiClient.getApplicationName();
+    if (!appName) {
+      selectFirstApp();
+    }
   }
 
   function requestApplications() {
@@ -689,6 +694,7 @@
       Usergrid.ApiClient.setApplicationName(app.getName());
       pageSelect(app.getName());
     }
+    setNavApplicationText();
   }
 
   function displayAdmins(response) {
@@ -3632,6 +3638,7 @@ function deleteRolePermission(roleName, permission) {
     var app = currentOrg.getFirstItem();
     if (app) {
       Usergrid.ApiClient.setApplicationName(app.getName());
+      setNavApplicationText();
     } else {
       forceNewApp();
     }
