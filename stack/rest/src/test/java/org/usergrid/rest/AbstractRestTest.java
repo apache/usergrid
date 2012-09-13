@@ -265,20 +265,25 @@ public abstract class AbstractRestTest extends JerseyTest {
 
         managementService = (ManagementService) context.getBean("managementService");
         
-      
+     
+        access_token = userToken();
+        
+        adminToken();
+
+        loginClient();
+
+    }
+    
+    public String userToken() throws Exception{
+        
         ApplicationInfo appInfo = managementService
                 .getApplicationInfo("test-organization/test-app");
 
         User user = managementService.getAppUserByIdentifier(appInfo.getId(),
                 Identifier.from("ed@anuff.com"));
 
-        access_token = managementService.getAccessTokenForAppUser(
+        return managementService.getAccessTokenForAppUser(
                 appInfo.getId(), user.getUuid());
-      
-        adminToken();
-
-        loginClient();
-
     }
     
     
