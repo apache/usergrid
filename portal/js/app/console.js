@@ -217,6 +217,9 @@ function apigee_console_app(Pages, query_params) {
     $("#query-source").val("{ }");
     $("#query-ql").val("");
     query_history = [];
+    //Prepare Collection Index Dropdown Menu
+
+
     //bind events for previous and next buttons
     bindPagingEvents('query-response');
     //clear out the table before we start
@@ -234,7 +237,7 @@ function apigee_console_app(Pages, query_params) {
     var path = $("#query-path").val();
     var data = $("#query-source").val();
     var ql = $("#query-ql").val();
-
+    requestIndexes(path);
     //merge the data and the query
     var params = {"ql":ql};
     try{
@@ -524,24 +527,48 @@ function apigee_console_app(Pages, query_params) {
       alertModal("Please, first select the entities you want to delete.");
       return;
     }
-	var itemsCount = items.size();
+    var itemsCount = items.size();
     confirmDelete(function(){
       items.each(function() {
         var entityId = $(this).attr('value');
-		console.log(entityId);
+    console.log(entityId);
         var path = $(this).attr('name');
         runAppQuery(new Usergrid.Query("DELETE", path + "/" + entityId, null, null,
           function() {
-          	itemsCount--;
-          	if(itemsCount==0){
-          		deselectAllCollections();
-          		getCollection('GET');
-          	}},
+            itemsCount--;
+            if(itemsCount==0){
+              deselectAllCollections();
+              getCollection('GET');
+            }},
           function() { alertModal("Unable to delete entity ID: " + entityId); }
         ));
       });
     });
   }
+
+  function requestIndexes(path){
+    var data = {};
+    runAppQuery(new Usergrid.Query("GET", path + "/indexes", null, null,
+      function(response) {
+        if(response && response.data) {
+          data = response;
+        }
+        buildIndexDropdown('query-collections-indexes-list', data);
+
+      }));
+  }
+
+  function buildIndexDropdown(menuId, indexes) {
+    var menu = $("#" + menuId);
+    menu.empty();
+    $.tmpl('apigee.ui.collections.query.indexes.html', indexes).appendTo(menu);
+  }
+
+  function appendToCollectionsQuery(message){
+    var queryTextArea = $("#query-ql");
+    queryTextArea.val(queryTextArea.val()+ " " + message );
+  }
+  window.Usergrid.console.appendToCollectionsQuery = appendToCollectionsQuery;
 
   /*******************************************************************
    *
@@ -2271,34 +2298,6 @@ function apigee_console_app(Pages, query_params) {
     showPanelContent('#group-panel', '#group-panel-memberships');
   }
   window.Usergrid.console.pageSelectGroupMemberships = pageSelectGroupMemberships;
-//TODO: MARKED FOR REMOVAL BY REFACTORING
-  function redrawGroupPanel(){
-    $('#group-panel-details').html("");
-    $('#group-panel-memberships').html("");
-    $('#group-panel-activities').html("");
-    $('#group-panel-permissions').html("");
-    if (group_data) {
-      var details = $.tmpl('apigee.ui.panels.group.details.html', group_data);
-      var formDiv = details.find('.query-result-form');
-      $(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.group_schema, group_data.entity));
-
-      details.appendTo('#group-panel-details');
-      details.find('.button').button();
-
-      $.tmpl('apigee.ui.panels.group.memberships.html', group_data).appendTo('#group-panel-memberships');
-      updateUsersAutocomplete();
-
-      $.tmpl('apigee.ui.panels.group.activities.html', group_data).appendTo('#group-panel-activities');
-      $.tmpl('apigee.ui.panels.group.graph.html', group_data).appendTo('#group-panel-graph');
-
-      if (group_data.roles && group_data.roles.length == 0) {
-        delete group_data.roles
-      }
-
-      $.tmpl('apigee.ui.panels.group.permissions.html', group_data).appendTo('#group-panel-permissions');
-      updateRolesForGroupsAutocomplete();
-    }
-  }
 
   function redrawGroupDetails(data,curl){
     redrawGroupForm('group-panel-details', 'apigee.ui.panels.group.details.html', data);
@@ -4204,6 +4203,7 @@ function deleteRolePermission(roleName, permission) {
     Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.collections.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.json.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.detail.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.collections.query.indexes.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.details.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.memberships.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.activities.html");

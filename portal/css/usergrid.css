@@ -3834,7 +3834,7 @@ a:active {
   min-width: 450px;
   margin: 0 0px 20px;
   border: solid 1px #cccccc;
-  overflow: hidden;
+  overflow: show;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
@@ -3939,6 +3939,10 @@ a:active {
 }
 .form-horizontal .controls span.add-on {
   margin-top: 0px;
+}
+.add-on {
+  cursor: pointer;
+  padding: 4px 5px !important;
 }
 #resolutionSelect-menu {
   display: none;
@@ -4755,8 +4759,4 @@ table .zebraRows:nth-child(2n) {
 }
 .curl-container .input-append {
   position: relative;
-}
-.curl-container .curl-data {
-    margin-top: 5px;
-    margin-bottom: 5px;
 }
