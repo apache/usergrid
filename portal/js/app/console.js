@@ -238,6 +238,7 @@ function apigee_console_app(Pages, query_params) {
     if(method.toUpperCase() !== 'GET'){
       var data = $("#query-source").val();
       try{
+        validateJson();
         data = JSON.parse(data);
       } catch (e) {
         alertModal("Error", "There is a problem with your JSON.");
@@ -349,25 +350,28 @@ function apigee_console_app(Pages, query_params) {
     //get the last query off the stack
     query_history.pop(); //first pull off the current query
     lastQuery = query_history.pop(); //then get the previous one
-    //set the path in the query explorer
-    $("#query-path").val(lastQuery.getResource());
-    //get the ql and set it in the query explorer
-    var params = lastQuery.getQueryParams();
-    $("#query-ql").val(params.ql);
-    //delete the ql from the json obj -it will be restored later when the query is run in getCollection()
-    var jsonObj = lastQuery.getJsonObj();
-    delete jsonObj.ql;
-    //set the data obj in the query explorer
-    $("#query-source").val(JSON.stringify(jsonObj));
-
+    if (lastQuery) {
+      //set the path in the query explorer
+      $("#query-path").val(lastQuery.getResource());
+      //get the ql and set it in the query explorer
+      var params = lastQuery.getQueryParams() || {};
+      $("#query-ql").val(params.ql);
+      //delete the ql from the json obj -it will be restored later when the query is run in getCollection()
+      var jsonObj = lastQuery.getJsonObj() || {};
+      delete jsonObj.ql;
+      //set the data obj in the query explorer
+      $("#query-source").val(JSON.stringify(jsonObj));
+    } else {
+      $("#query-path").val('');
+      $("#query-ql").val('');
+      $("#query-source").val('');
+    }
     showBackButton();
-
-    getCollection(lastQuery.getMethod());
   }
 
   //helper function for query explorer back button
   function showBackButton() {
-    if (query_history.length > 1){
+    if (query_history.length > 0){
       $('#button-query-back').show();
     } else {
       $('#button-query-back').hide();
