@@ -649,7 +649,6 @@
           Pages.SelectPanel('application');
         });
         enableApplicationPanelButtons();
-        selectFirstApp();
       }
       appMenu.append('<li class="divider"></li>');
       appMenu.append('<li><a class="" data-toggle="modal" href="#dialog-form-new-application"> <strong>+</strong> New Application</a></li>');
@@ -984,7 +983,7 @@
           var currentOrg = Usergrid.ApiClient.getOrganizationName();
           Usergrid.organizations.getItemByName(currentOrg).addItem(new Usergrid.Application(appName, response.data[appName]));
           pageSelect(appName);
-          requestApplications(response);
+          requestApplications();
         },
         function() {
           closeErrorMessage = function() {
