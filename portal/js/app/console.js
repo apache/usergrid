@@ -164,7 +164,7 @@
       }]
     );
     var bearerTokenString = encodeURIComponent(bearerTokenJson);
-    var url = 'https://apigee.com/console/usergrid?v=2&embedded=true&auth=' + bearerTokenString;
+    var url = 'https://apigee.com/apigeedev/console/usergrid?v=2&embedded=true&auth=' + bearerTokenString;
     return url;
   }
   Usergrid.console.getAccessTokenURL = getAccessTokenURL;
