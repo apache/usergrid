@@ -1084,6 +1084,30 @@ public class EntityManagerImpl implements EntityManager,
 			logger.error("Unable to increment counter application.entities", e);
 		}
 	}
+	
+	public void decrementEntityCollection(String collection_name) {
+
+		long cassandraTimestamp = cass.createTimestamp();
+		decrementEntityCollection(collection_name, cassandraTimestamp);
+	}
+  
+  	public void decrementEntityCollection(String collection_name,
+			long cassandraTimestamp) {
+		try {
+			incrementAggregateCounters(null, null, null,
+					"application.collection." + collection_name, -1L,
+					cassandraTimestamp);
+		} catch (Exception e) {
+			logger.error("Unable to decrement counter application.collection."
+					+ collection_name, e);
+		}
+		try {
+			incrementAggregateCounters(null, null, null,
+					"application.entities", -1L, cassandraTimestamp);
+		} catch (Exception e) {
+			logger.error("Unable to decrement counter application.entities", e);
+		}
+	}
 
   @Metered(group="core", name="EntityManager_insertEntity")
 	public void insertEntity(String type, UUID entityId) throws Exception {
@@ -1631,6 +1655,12 @@ public class EntityManagerImpl implements EntityManager,
 
 		// find all the containing collections
 		getRelationManager(entity).batchRemoveFromContainers(m, timestampUuid);
+		
+		//decrease entity count
+		if(!TYPE_APPLICATION.equals(entity.getType())) {
+			String collection_name = Schema.defaultCollectionName(entity.getType());
+			decrementEntityCollection(collection_name);
+		}
 
 		batchExecute(m, CassandraService.RETRY_COUNT);
 

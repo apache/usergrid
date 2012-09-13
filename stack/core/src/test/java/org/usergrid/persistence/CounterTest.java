@@ -17,9 +17,9 @@ package org.usergrid.persistence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import org.usergrid.persistence.entities.Event;
 import org.usergrid.persistence.entities.Group;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.utils.JsonUtils;
 
 public class CounterTest extends AbstractPersistenceTest {
@@ -39,6 +40,36 @@ public class CounterTest extends AbstractPersistenceTest {
 
 	public CounterTest() {
 		super();
+	}
+	
+	@Test
+	public void testIncrementAndDecrement() throws Exception {
+		
+		logger.info("CounterTest.testIncrementAndDecrement");
+		
+		UUID applicationId = createApplication("testOrganization", "testCounters");
+		assertNotNull(applicationId);
+
+		EntityManager em = emf.getEntityManager(applicationId);
+		assertNotNull(em);
+		
+		Map<String, Long> counters = em.getEntityCounters(applicationId);
+		assertEquals(null, counters.get("application.collection.users"));
+
+		UUID uuid = UUID.randomUUID();
+		Map<String, Object> userProperties = new HashMap<String, Object>();
+		userProperties.put("name", "test-name");
+		userProperties.put("username", "test-username");
+		userProperties.put("email", "test-email");
+		User user = (User) em.create(uuid, "user", userProperties).toTypedEntity();
+		logger.debug("user={}", user);
+		
+		counters = em.getEntityCounters(applicationId);
+		assertEquals(new Long(1), counters.get("application.collection.users"));
+		
+		em.delete(user);
+		counters = em.getEntityCounters(applicationId);
+		assertEquals(new Long(0), counters.get("application.collection.users"));
 	}
 
 	@Test
