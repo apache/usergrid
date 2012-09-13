@@ -920,11 +920,86 @@ public class UserResourceTest extends AbstractRestTest {
         }
 
         assertNotNull(responseStatus);
-        
+
         assertEquals(Status.BAD_REQUEST, responseStatus);
 
     }
-    
+
+
+  @Test
+  public void addRemoveRole() {
+
+    UUID id = UUIDUtils.newTimeUUID();
+
+    String roleName = "rolename" + id;
+
+    String username = "username" + id;
+    String name = "name" + id;
+    String email = "email" + id + "@usergrid.org";
+
+    ApiResponse response = client.createUser(username, name, email, "password");
+    assertNull("Error was: " + response.getErrorDescription(), response.getError());
+
+    UUID createdId = response.getEntities().get(0).getUuid();
+
+    // create Role
+
+    String json = "{\"title\":\"" + roleName + "\",\"name\":\"" + roleName + "\"}";
+    JsonNode node = resource()
+        .path("/test-organization/test-app/rolenames")
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .post(JsonNode.class, json);
+
+    // check it
+    assertNull(node.get("errors"));
+
+
+    // add Role
+
+    node = resource()
+        .path("/test-organization/test-app/users/" + createdId + "/roles/" + roleName)
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .post(JsonNode.class);
+
+    // check it
+    assertNull(node.get("errors"));
+    assertEquals(node.get("entities").get(0).get("name").asText(), roleName);
+
+    node = resource()
+        .path("/test-organization/test-app/users/" + createdId + "/roles")
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .get(JsonNode.class);
+    assertNull(node.get("errors"));
+    assertEquals(node.get("entities").get(0).get("name").asText(), roleName);
+
+
+    // remove Role
+
+    node = resource()
+        .path("/test-organization/test-app/users/" + createdId + "/roles/" + roleName)
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .delete(JsonNode.class);
+
+    // check it
+    assertNull(node.get("errors"));
+
+    node = resource()
+        .path("/test-organization/test-app/users/" + createdId + "/roles")
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .get(JsonNode.class);
+    assertNull(node.get("errors"));
+    assertTrue(node.get("entities").size() == 0);
+  }
 
 
 }
