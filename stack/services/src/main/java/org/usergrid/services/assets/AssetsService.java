@@ -17,8 +17,13 @@ package org.usergrid.services.assets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.EntityRef;
 import org.usergrid.services.AbstractCollectionService;
 import org.usergrid.services.AbstractPathBasedColllectionService;
+import org.usergrid.services.ServiceContext;
+import org.usergrid.services.ServiceResults;
+
+import java.util.List;
 
 public class AssetsService extends AbstractPathBasedColllectionService {
 
@@ -27,6 +32,21 @@ public class AssetsService extends AbstractPathBasedColllectionService {
 	public AssetsService() {
 		super();
 		logger.info("/assets");
+    declareServiceCommands("data");
 	}
 
+  @Override
+  public ServiceResults getEntityCommand(ServiceContext context, List<EntityRef> refs, String command) throws Exception {
+    logger.info("handling command: {}", command);
+
+    ServiceResults sr = ServiceResults.genericServiceResults();
+
+    return sr;
+  }
+
+  @Override
+  public ServiceResults getServiceCommand(ServiceContext context, String command) throws Exception {
+    logger.info("in getServiceCommand with command: {}", command);
+    return ServiceResults.genericServiceResults();
+  }
 }
