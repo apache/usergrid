@@ -15,7 +15,8 @@
     use_sso:true, // flag to override use SSO if needed set to ?use_sso=no
     login_url:"https://accounts.apigee.com/accounts/sign_in",
     profile_url:"https://accounts.apigee.com/accounts/my_account",
-    logout_url:"https://accounts.apigee.com/accounts/sign_out"
+    logout_url:"https://accounts.apigee.com/accounts/sign_out",
+    api_url:"https://api.usergrid.com/"
     },
     isTopLevelDomain:function () {
       return window.location.host === this.default.top_level_domain;
@@ -29,10 +30,6 @@
     getSSOCallback:function () {
       var callbackUrl = this.buildBaseUrl();
       var separatorMark = '?';
-      if (this.getSSO()) {
-        callbackUrl = callbackUrl + separatorMark + 'use_sso=' + this.default.use_sso;
-      }
-
       if (Usergrid.ApiClient.getApiUrl() !== undefined && (Usergrid.ApiClient.getApiUrl() !== this.default.api_url)) {
         separatorMark = '&';
         callbackUrl = callbackUrl + separatorMark + 'api_url=' + Usergrid.ApiClient.getApiUrl();
@@ -45,8 +42,9 @@
     },
     //Private
     sendToPage:function (url) {
-      window.location = url + '?callback=' + this.getSSOCallback();
-      throw ("Sending to : " + url );
+      var newpage = url + '?callback=' + this.getSSOCallback();
+      console.log(newpage);
+      window.location = newpage;
     },
     sendToSSOLogoutPage:function () {
       this.sendToPage(this.default.logout_url);
