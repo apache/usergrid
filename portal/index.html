@@ -201,7 +201,17 @@
           <div>
             <div id="sidebar-menu">
               <ul id="application-panel-buttons" class="nav nav-list" style="margin-bottom: 5px;">
-                <li><a href="#organization" id="go-home"><i class="icon-home"></i> Home</a></li>
+                <h4 class="panel-title">
+                  ORGANIZATION
+                </h4>
+                <li><a href="#organization" id="go-home">
+                  <i class="icon-home"></i>
+                  <div id="organization-name">Home</div>
+                </a></li>
+                <br>
+                <h4 class="panel-title">
+                  APPLICATION
+                </h4>
                 <li>
                   <div class="btn-group">
                     <a id="current-app-name" class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="width: 109px; text-align: left;">
@@ -220,6 +230,7 @@
                 <li><a href="#activities"><i class="icon-calendar"></i> Activities</a></li>
                 <li><a href="#collections" id="application-panel-button-collections"><i class="icon-book"></i> Collections</a></li>
                 <li><a href="#analytics"><i class="icon-signal"></i> Analytics</a></li>
+                <li><a href="#properties"><i class="wrench "></i>Properties</a></li>
                 <li><a href="#shell"><i class="icon-warning-sign"></i> Shell</a></li>
                 <li><a href="#console"><i class="icon-list-alt"></i> Console</a></li>
                 <li><a href="http://apigee.com/docs/usergrid" target="_blank"><i class="icon-question-sign"></i> Help</a></li>
@@ -343,33 +354,6 @@
               </div>
               <div id="application-panel" style="display: none">
                 <div class="console-section">
-                  <div class="well thingy"><span class="title"> Application API Credentials <span class="app_title"></span></span>
-                    <div class="bar">
-                      <a class="" href="" onclick="Usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
-                    </div>
-                  </div>
-                  <div class="console-section-contents">
-                    <table id="application-panel-key-table" class="table">
-                      <tr>
-                        <td>
-                          <span class="span3">Client ID</span>
-                        </td>
-                        <td>
-                          <span id="application-panel-key">...</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="span3">Client Secret</span>
-                        </td>
-                        <td>
-                          <span id="application-panel-secret">...</span>
-                        <td>
-                      </tr>
-                    </table>
-                  </div>
-                </div>
-                <div class="console-section">
                   <div class="well thingy">
                     <span class="title"> Application Dashboard <span class="app_title"></span> </span>
                   </div>
@@ -388,7 +372,6 @@
                     </div>
                   </div>
                 </div>
-
               </div>
               <div id="account-panel" class="container-fluid hide">
                 <div id="account-update-modal" class="modal hide fade">
@@ -1015,6 +998,36 @@
                       <div id="analytics-graph"></div>
                       <div id="analytics-graph-area" style="overflow-x: auto;"></div>
                     </div>
+                  </div>
+                </div>
+              </div>
+              <div id="properties-panel" style="display: none">
+                <div class="console-section">
+                  <div class="well thingy"><span class="title"> Application
+                    Properties <span class="app_title"></span></span>
+                    <div class="bar">
+                      <a class="" href="" onclick="Usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
+                    </div>
+                  </div>
+                  <div class="console-section-contents">
+                    <table id="application-panel-key-table" class="table">
+                      <tr>
+                        <td>
+                          <span class="span3">Client ID</span>
+                        </td>
+                        <td>
+                          <span id="application-panel-key">...</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span class="span3">Client Secret</span>
+                        </td>
+                        <td>
+                          <span id="application-panel-secret">...</span>
+                        </td>
+                      </tr>
+                    </table>
                   </div>
                 </div>
               </div>
