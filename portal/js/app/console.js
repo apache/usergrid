@@ -50,7 +50,7 @@ function apigee_console_app(Pages, query_params) {
   var nameRegex = new RegExp("^([0-9a-zA-Z@#$%^&!?;:.,'\"~*-=+_\[\\](){}/\\ |])+$");
   var nameAllowedCharsMessage = 'Name field only allows: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . / ? !';
 
-  var titleRegex = new RegExp("^([0-9a-zA-Z.!-?/])+$");
+  var titleRegex = new RegExp("[0-9a-zA-Z.!-?/]+");
   var titleAllowedCharsMessage = 'Title field only allows : space, A-Z, a-z, 0-9, dot, dash, /, !, and ?';
 
   var alphaNumRegex = new RegExp("^([0-9a-zA-Z])+$");
