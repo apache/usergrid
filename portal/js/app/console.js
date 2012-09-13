@@ -544,11 +544,9 @@ function apigee_console_app(Pages, query_params) {
       return;
     }
     var itemsCount = items.size();
-<<<<<<< HEAD
     confirmDelete(function(){
       items.each(function() {
         var entityId = $(this).attr('value');
-    console.log(entityId);
         var path = $(this).attr('name');
         runAppQuery(new Usergrid.Query("DELETE", path + "/" + entityId, null, null,
           function() {
@@ -559,23 +557,8 @@ function apigee_console_app(Pages, query_params) {
             }},
           function() { alertModal("Unable to delete entity ID: " + entityId); }
         ));
-=======
-      confirmDelete(function(){
-        items.each(function() {
-          var entityId = $(this).attr('value');
-          var path = $(this).attr('name');
-          runAppQuery(new Usergrid.Query("DELETE", path + "/" + entityId, null, null,
-            function() {
-              itemsCount--;
-              if(itemsCount==0){
-                deselectAllCollections();
-                getCollection('GET');
-              }},
-            function() { alertModal("Unable to delete entity ID: " + entityId); }
-          ));
-        });
->>>>>>> a4105baf9eba16bbee94dcaebec67aa07e93e430
       });
+    });
   }
 
   function requestIndexes(path){
