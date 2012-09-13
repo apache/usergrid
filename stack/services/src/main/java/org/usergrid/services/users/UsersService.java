@@ -33,14 +33,12 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.UserInfo;
-import org.usergrid.persistence.EntityRef;
-import org.usergrid.persistence.Query;
+import org.usergrid.persistence.*;
 import org.usergrid.persistence.entities.Role;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.security.shiro.utils.SubjectUtils;
-import org.usergrid.services.AbstractCollectionService;
-import org.usergrid.services.ServiceContext;
-import org.usergrid.services.ServicePayload;
-import org.usergrid.services.ServiceResults;
+import org.usergrid.services.*;
+import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
 public class UsersService extends AbstractCollectionService {
 
@@ -62,7 +60,39 @@ public class UsersService extends AbstractCollectionService {
 
     }
 
-    @Override
+  @Override
+  public ServiceResults getItemByName(ServiceContext context, String name) throws Exception {
+    String nameProperty = Schema.getDefaultSchema().aliasProperty(
+  				getEntityType());
+  		if (nameProperty == null) {
+  			nameProperty = "name";
+  		}
+      EntityRef entity = null;
+      Identifier id = Identifier.from(name);
+      if ( id != null ) {
+        entity = em.getUserByIdentifier(id);
+      }
+
+  		if (entity == null) {
+        logger.info("miss on entityType: {} with name: {}", getEntityType(), name);
+  			throw new ServiceResourceNotFoundException(context);
+  		}
+
+  		if (!context.moreParameters()) {
+  			entity = em.get(entity);
+  			entity = importEntity(context, (Entity) entity);
+  		}
+
+  		checkPermissionsForEntity(context, entity);
+
+  		List<ServiceRequest> nextRequests = context
+  				.getNextServiceRequests(entity);
+
+  		return new ServiceResults(this, context, ServiceResults.Type.COLLECTION,
+  				Results.fromRef(entity), null, nextRequests);
+  }
+
+  @Override
     public ServiceResults invokeItemWithName(ServiceContext context, String name)
             throws Exception {
         if ("me".equals(name)) {

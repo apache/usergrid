@@ -139,9 +139,7 @@ public class ApplicationResource extends ServiceResource {
 
     @Path("users")
     public UsersResource getUsers(@Context UriInfo ui) throws Exception {
-
-        logger.info("ServiceResource.addNameParameter");
-
+        logger.info("ApplicationResource.getUsers");
         addParameter(getServiceParameters(), "users");
 
         PathSegment ps = getFirstPathSegment("users");
