@@ -405,12 +405,15 @@ function apigee_console_app(Pages, query_params) {
   };
 
   function hideEntityCheckboxes(){
-    $(".query-result-td-checkbox").hide();
-    $("#query-result-item").attr('checked', true);
+    $(".queryResultItem").hide();
+    $(".queryResultItem").attr('checked', true);
   }
 
   function hideEntitySelectButton(){
     $("#selectAllCollections").hide();
+  }
+  function showEntitySelectButton(){
+    $("#selectAllCollections").show();
   }
 
   function getQueryResultEntity(id) {
@@ -542,7 +545,7 @@ function apigee_console_app(Pages, query_params) {
 
   function deleteEntity(e) {
     e.preventDefault();
-    var items = $('#query-response-table input[id=query-result-item]:checked');
+    var items = $('#query-response-table input[class=queryResultItem]:checked');
     if(!items.length){
       alertModal("Please, first select the entities you want to delete.");
       return;
@@ -3394,7 +3397,7 @@ function deleteRolePermission(roleName, permission) {
     $('#collections-pagination').hide();
     $('#collections-next').hide();
     $('#collections-previous').hide();
-
+    showEntitySelectButton();
     if (response.entities && response.entities[0] && response.entities[0].metadata && response.entities[0].metadata.collections) {
       applicationData.Collections = response.entities[0].metadata.collections;
       updateApplicationDashboard();
