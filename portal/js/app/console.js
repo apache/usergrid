@@ -1,4 +1,4 @@
-function apigee_console_app(Pages, query_params) {
+﻿function apigee_console_app(Pages, query_params) {
   //This code block *WILL NOT* load before the document is complete
   window.Usergrid = window.Usergrid || {};
   Usergrid.console = Usergrid.console || {};
@@ -46,9 +46,9 @@ function apigee_console_app(Pages, query_params) {
 
   var organizatioNameRegex = new RegExp ("^([0-9a-zA-Z.-])+$");
   var organizationNameAllowedCharsMessage = 'Organization name field only allows : A-Z, a-z, 0-9, dot, and dash';
-
-  var nameRegex = new RegExp("[0-9a-zA-ZáéíóúÁÉÍÓÚÑñ@#$%^&!?;:.,'\"~*-=+_\(\)\[\]\{\}|\/\]+");
-  var nameAllowedCharsMessage = 'Name field only allows: A-Z, a-z, áéíóúÁÉÍÓÚÑñ, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . / ? !';
+  //Regex declared differently from al the others because of the use of ". Functions exacly as if it was called from new RegExp
+  var nameRegex = /[0-9a-zA-ZáéíóúÁÉÍÓÚÑñ@#$%\^&!\?;:\.,'\"~\*-=\+_\(\)\[\]\{\}\|\/\\]+/;
+  var nameAllowedCharsMessage = "Name field only allows: A-Z, a-z, áéíóúÁÉÍÓÚÑñ, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' \" , . / ? !";
 
   var titleRegex = new RegExp("[a-zA-Z0-9.!-?]+[\/]?");
   var titleAllowedCharsMessage = 'Title field only allows : space, A-Z, a-z, 0-9, dot, dash, /, !, and ?';
@@ -914,7 +914,6 @@ function apigee_console_app(Pages, query_params) {
       validationError(input,tip);
       return false;
     }
-
     return true;
   }
 
