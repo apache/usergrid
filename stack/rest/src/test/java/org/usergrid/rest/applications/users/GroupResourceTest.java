@@ -71,7 +71,7 @@ public class GroupResourceTest extends AbstractRestTest {
       assertNotNull(response.getError());
     }
 
-//    @Test
+    @Test
     public void postGroupActivity() {
 
         // don't populate the user, it will use the currently authenticated
