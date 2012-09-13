@@ -528,4 +528,24 @@ public class GrammarTreeTest {
         
     }
 
+    
+    @Test
+    public void stringLower() throws Exception{
+        String queryString = "select * where  title = 'Hot'";
+        
+
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
+
+        Query query = parser.ql().query;
+        
+        Equal rootNode = (Equal) query.getRootOperand();
+        
+        assertEquals("title", rootNode.getProperty().getValue());
+        assertEquals("hot", ((StringLiteral)rootNode.getLiteral()).getValue());
+        
+        
+    }
 }

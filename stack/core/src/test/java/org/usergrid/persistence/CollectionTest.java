@@ -1018,4 +1018,35 @@ public class CollectionTest extends AbstractPersistenceTest {
         assertNotNull(entity);
     }
 
+
+    @Test
+    public void stringWithSpaces() throws Exception {
+        Map<String, Object> props = new HashMap<String, Object>();
+
+        props.put("string", "My simple string");
+        
+        UUID applicationId = createApplication("testOrganization",
+                "stringWithSpaces");
+        assertNotNull(applicationId);
+
+       
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        Entity saved = em.create("test", props);
+
+        
+        
+        Query query = new Query();
+        query.addEqualityFilter("string","My simple string");
+
+        Results results = em.searchCollection(em.getApplicationRef(), "tests",
+                query);
+        
+        
+        Entity entity = results.getEntitiesMap().get(saved.getUuid());
+
+        assertNotNull(entity);
+        
+    }
 }

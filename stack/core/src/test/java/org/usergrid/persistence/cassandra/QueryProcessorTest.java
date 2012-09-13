@@ -601,5 +601,33 @@ public class QueryProcessorTest {
         assertEquals(BigInteger.valueOf(2), slice.getFinish().getValue());
         assertTrue(slice.getFinish().isInclusive());
     }
+    
+    @Test
+    public void stringWithSpaces() throws Exception {
+        String queryString = "select * where a = 'foo with bar'";
+
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
+
+        Query query = parser.ql().query;
+
+        QueryProcessor processor = new QueryProcessor(query, null);
+
+        SliceNode node = (SliceNode) processor.getFirstNode();
+
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+
+        QuerySlice slice = slices.next();
+
+        assertEquals("a", slice.getPropertyName());
+
+        assertEquals("foo with bar", slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+
+        assertEquals("foo with bar", slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
+    }
 
 }
