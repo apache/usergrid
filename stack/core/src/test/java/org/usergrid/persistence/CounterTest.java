@@ -47,7 +47,7 @@ public class CounterTest extends AbstractPersistenceTest {
 		
 		logger.info("CounterTest.testIncrementAndDecrement");
 		
-		UUID applicationId = createApplication("testOrganization", "testCounters");
+		UUID applicationId = createApplication("testOrganization", "testCountersIandD");
 		assertNotNull(applicationId);
 
 		EntityManager em = emf.getEntityManager(applicationId);
