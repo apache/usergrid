@@ -2270,6 +2270,10 @@ input[type="submit"].btn.small {
 }
 .nav-tabs {
   border-bottom: 1px solid #ddd;
+
+  /*TODO:poner en el Less*/
+  display: inline-block;
+  width: 100%;
 }
 .nav-tabs > li {
   margin-bottom: -1px;
@@ -3597,11 +3601,13 @@ html {
 
   height: 100%;
   /* IE6: treaded as min-height*/
-
-  min-width: 600px;
+/*TODO:agregar al less*/
+  min-width: 640px;
+  max-width: 960px;
 }
 #pages {
   padding: 70px 0 50px 0px;
+
 }
 #pages > div {
   display: none;
@@ -3612,7 +3618,16 @@ html {
 #console-panels {
   margin-left: 160px;
   border-left: 1px solid #c9c9c9;
+  min-width: 640px;
 }
+/*TODO agreagar al less*/
+/*
+#console-page {
+  margin: 0 auto;
+  max-width: 960px;
+  min-width: 640px;
+}
+*/
 footer {
   position: absolute;
   bottom: 0;
@@ -3727,7 +3742,7 @@ a:active {
   font-weight: bold;
 }
 #sidebar-menu {
-  position: absolute;
+  float: left;
   left: 5px;
   width: 155px;
 }
@@ -3885,13 +3900,16 @@ a:active {
 .console-section h3:after {
   clear: both;
   content: ".";
-  display: block;
   height: 0;
   visibility: hidden;
+  /*TODO: add to less*/
+  display: inline-block;
 }
 .console-section form {
   margin: 0px;
   padding-top: 10px;
+  /*TODO: add to less*/
+  display: inline-block;
 }
 .console-section .form-actions {
   margin-bottom: 0px;
@@ -3903,6 +3921,8 @@ a:active {
   position: relative;
   padding: 10px;
   line-height: 25px;
+  /*TODO add to less*/
+  display: inline-block;
 }
 .console-section .console-section-contents .form-actions {
   margin: 20px -10px -10px;
@@ -4395,6 +4415,8 @@ a:active {
 }
 #shell-content * {
   font-family: monospace;
+  /*TODO: add to Less*/
+  width: 90%;
 }
 /* --------- --------------- ------------*/
 #statusbar-placeholder {
@@ -4763,3 +4785,4 @@ table .zebraRows:nth-child(2n) {
 .curl-container .input-append {
   position: relative;
 }
+
