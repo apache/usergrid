@@ -47,6 +47,8 @@ public class ConversionUtils {
 	 * 
 	 */
 	public static final String ASCII_ENCODING = "US-ASCII";
+	
+	public static final ByteBuffer HOLDER = ByteBuffer.wrap(new byte[]{0});
 
 	/**
 	 * @param uuid

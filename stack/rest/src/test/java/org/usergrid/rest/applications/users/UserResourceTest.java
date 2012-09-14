@@ -68,17 +68,13 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "username = 'user*'";
 
-        JsonNode node = resource().path("/test-organization/test-app/users")
-                .queryParam("ql", ql).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        JsonNode node = resource().path("/test-organization/test-app/users").queryParam("ql", ql)
+                .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        assertEquals(UserRepo.INSTANCE.getByUserName("user1"),
-                getIdFromSearchResults(node, 0));
-        assertEquals(UserRepo.INSTANCE.getByUserName("user2"),
-                getIdFromSearchResults(node, 1));
-        assertEquals(UserRepo.INSTANCE.getByUserName("user3"),
-                getIdFromSearchResults(node, 2));
+        assertEquals(UserRepo.INSTANCE.getByUserName("user1"), getIdFromSearchResults(node, 0));
+        assertEquals(UserRepo.INSTANCE.getByUserName("user2"), getIdFromSearchResults(node, 1));
+        assertEquals(UserRepo.INSTANCE.getByUserName("user3"), getIdFromSearchResults(node, 2));
 
     }
 
@@ -89,15 +85,12 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "name = 'John*'";
 
-        JsonNode node = resource().path("/test-organization/test-app/users")
-                .queryParam("ql", ql).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        JsonNode node = resource().path("/test-organization/test-app/users").queryParam("ql", ql)
+                .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        assertEquals(UserRepo.INSTANCE.getByUserName("user2"),
-                getIdFromSearchResults(node, 0));
-        assertEquals(UserRepo.INSTANCE.getByUserName("user3"),
-                getIdFromSearchResults(node, 1));
+        assertEquals(UserRepo.INSTANCE.getByUserName("user2"), getIdFromSearchResults(node, 0));
+        assertEquals(UserRepo.INSTANCE.getByUserName("user3"), getIdFromSearchResults(node, 1));
 
     }
 
@@ -107,16 +100,11 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "name = 'John*'";
 
-        ApplicationInfo appInfo = managementService
-                .getApplicationInfo("test-organization/test-app");
-        OrganizationInfo orgInfo = managementService
-                .getOrganizationByName("test-organization");
+        ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
+        OrganizationInfo orgInfo = managementService.getOrganizationByName("test-organization");
 
-        resource()
-                .path("/" + orgInfo.getUuid() + "/" + appInfo.getId()
-                        + "/users").queryParam("ql", ql)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        resource().path("/" + orgInfo.getUuid() + "/" + appInfo.getId() + "/users").queryParam("ql", ql)
+                .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
     }
@@ -128,17 +116,13 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "name contains 'Smith' order by name ";
 
-        JsonNode node = resource().path("/test-organization/test-app/users")
-                .queryParam("ql", ql).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        JsonNode node = resource().path("/test-organization/test-app/users").queryParam("ql", ql)
+                .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        assertEquals(UserRepo.INSTANCE.getByUserName("user1"),
-                getIdFromSearchResults(node, 0));
-        assertEquals(UserRepo.INSTANCE.getByUserName("user2"),
-                getIdFromSearchResults(node, 1));
-        assertEquals(UserRepo.INSTANCE.getByUserName("user3"),
-                getIdFromSearchResults(node, 2));
+        assertEquals(UserRepo.INSTANCE.getByUserName("user1"), getIdFromSearchResults(node, 0));
+        assertEquals(UserRepo.INSTANCE.getByUserName("user2"), getIdFromSearchResults(node, 1));
+        assertEquals(UserRepo.INSTANCE.getByUserName("user3"), getIdFromSearchResults(node, 2));
 
     }
 
@@ -153,9 +137,8 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "username contains 'user' ";
 
-        resource().path("/test-organization/test-app/users")
-                .queryParam("ql", ql).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        resource().path("/test-organization/test-app/users").queryParam("ql", ql)
+                .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
     }
@@ -171,9 +154,8 @@ public class UserResourceTest extends AbstractRestTest {
 
         String ql = "picture = 'foo' ";
 
-        resource().path("/test-organization/test-app/users")
-                .queryParam("ql", ql).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        resource().path("/test-organization/test-app/users").queryParam("ql", ql)
+                .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
     }
@@ -192,11 +174,9 @@ public class UserResourceTest extends AbstractRestTest {
         activity.setProperty("verb", "POST");
         activity.setProperty("content", "Look! more new content");
 
-        ApiResponse response = client.postUserActivity(userId.toString(),
-                activity);
+        ApiResponse response = client.postUserActivity(userId.toString(), activity);
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         Entity entity = response.getEntities().get(0);
 
@@ -234,11 +214,9 @@ public class UserResourceTest extends AbstractRestTest {
 
         activity.setActor(actorPost);
 
-        ApiResponse response = client.postUserActivity(userId.toString(),
-                activity);
+        ApiResponse response = client.postUserActivity(userId.toString(), activity);
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         Entity entity = response.getEntities().get(0);
 
@@ -282,11 +260,9 @@ public class UserResourceTest extends AbstractRestTest {
 
         activity.setActor(actorPost);
 
-        ApiResponse response = client.postUserActivity(userId.toString(),
-                activity);
+        ApiResponse response = client.postUserActivity(userId.toString(), activity);
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         Entity entity = response.getEntities().get(0);
 
@@ -318,11 +294,9 @@ public class UserResourceTest extends AbstractRestTest {
         activity.setProperty("verb", "POST");
         activity.setProperty("content", "activity 1");
 
-        ApiResponse response = client.postUserActivity(userId.toString(),
-                activity);
+        ApiResponse response = client.postUserActivity(userId.toString(), activity);
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         Entity entity = response.getFirstEntity();
 
@@ -335,8 +309,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         response = client.postUserActivity(userId.toString(), activity);
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         entity = response.getFirstEntity();
 
@@ -369,8 +342,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         ApiResponse response = query.getResponse();
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         int nonOrderedSize = response.getEntities().size();
 
@@ -414,11 +386,9 @@ public class UserResourceTest extends AbstractRestTest {
         String username = "username" + id;
         String name = "name" + id;
 
-        ApiResponse response = client.createUser(username, name, id
-                + "@usergrid.org", "password");
+        ApiResponse response = client.createUser(username, name, id + "@usergrid.org", "password");
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         UUID createdId = response.getEntities().get(0).getUuid();
 
@@ -436,32 +406,25 @@ public class UserResourceTest extends AbstractRestTest {
         String username = "username" + id;
         String name = "name" + id;
 
-        ApiResponse response = client.createUser(username, name, id
-                + "@usergrid.org", "password");
+        ApiResponse response = client.createUser(username, name, id + "@usergrid.org", "password");
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         UUID createdId = response.getEntities().get(0).getUuid();
 
-        JsonNode node = resource()
-                .path("/test-organization/test-app/users/" + createdId)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        JsonNode node = resource().path("/test-organization/test-app/users/" + createdId)
+                .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).delete(JsonNode.class);
 
         assertNull(node.get("errors"));
 
-        Query results = client.queryUsers(String
-                .format("username = '%s'", name));
+        Query results = client.queryUsers(String.format("username = '%s'", name));
         assertEquals(0, results.getResponse().getEntities(User.class).size());
 
         // now create that same user again, it should work
-        response = client.createUser(username, name, id + "@usergrid.org",
-                "password");
+        response = client.createUser(username, name, id + "@usergrid.org", "password");
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         createdId = response.getEntities().get(0).getUuid();
 
@@ -477,11 +440,9 @@ public class UserResourceTest extends AbstractRestTest {
         String name = "name1" + id;
         String email = "email1" + id + "@usergrid.org";
 
-        ApiResponse response = client.createUser(username, name, email,
-                "password");
+        ApiResponse response = client.createUser(username, name, email, "password");
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         UUID firstCreatedId = response.getEntities().get(0).getUuid();
 
@@ -491,8 +452,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         response = client.createUser(username, name, email, "password");
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         UUID secondCreatedId = response.getEntities().get(0).getUuid();
 
@@ -500,68 +460,48 @@ public class UserResourceTest extends AbstractRestTest {
         // second using pluralized form
 
         // plural collection name
-        String path = String.format(
-                "/test-organization/test-app/users/%s/conn1/%s",
-                firstCreatedId, secondCreatedId);
+        String path = String.format("/test-organization/test-app/users/%s/conn1/%s", firstCreatedId, secondCreatedId);
 
-        JsonNode node = resource().path(path)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+        JsonNode node = resource().path(path).queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
 
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
-                .asText());
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
 
         // singular collection name
-        path = String.format("/test-organization/test-app/user/%s/conn2/%s",
-                firstCreatedId, secondCreatedId);
+        path = String.format("/test-organization/test-app/user/%s/conn2/%s", firstCreatedId, secondCreatedId);
 
-        node = resource().path(path).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        node = resource().path(path).queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
 
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
-                .asText());
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
 
-        path = String.format("/test-organization/test-app/users/%s/conn1",
-                firstCreatedId);
+        path = String.format("/test-organization/test-app/users/%s/conn1", firstCreatedId);
 
-        node = resource().path(path).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        node = resource().path(path).queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
-                .asText());
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
 
-        path = String.format("/test-organization/test-app/user/%s/conn1",
-                firstCreatedId);
+        path = String.format("/test-organization/test-app/user/%s/conn1", firstCreatedId);
 
-        node = resource().path(path).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        node = resource().path(path).queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
-                .asText());
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
 
-        path = String.format("/test-organization/test-app/users/%s/conn2",
-                firstCreatedId);
+        path = String.format("/test-organization/test-app/users/%s/conn2", firstCreatedId);
 
-        node = resource().path(path).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        node = resource().path(path).queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
-                .asText());
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
 
-        path = String.format("/test-organization/test-app/user/%s/conn2",
-                firstCreatedId);
+        path = String.format("/test-organization/test-app/user/%s/conn2", firstCreatedId);
 
-        node = resource().path(path).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        node = resource().path(path).queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
-                .asText());
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
 
     }
 
@@ -573,11 +513,9 @@ public class UserResourceTest extends AbstractRestTest {
         String name1 = "name1" + id;
         String email1 = "email1" + id + "@usergrid.org";
 
-        ApiResponse response = client.createUser(username1, name1, email1,
-                "password");
+        ApiResponse response = client.createUser(username1, name1, email1, "password");
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         UUID firstCreatedId = response.getEntities().get(0).getUuid();
 
@@ -587,8 +525,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         response = client.createUser(username2, name2, email2, "password");
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         UUID secondCreatedId = response.getEntities().get(0).getUuid();
 
@@ -596,29 +533,20 @@ public class UserResourceTest extends AbstractRestTest {
         // second using pluralized form
 
         // named entity in collection name
-        String path = String.format(
-                "/test-organization/test-app/users/%s/conn1/users/%s",
-                firstCreatedId, username2);
+        String path = String.format("/test-organization/test-app/users/%s/conn1/users/%s", firstCreatedId, username2);
 
-        JsonNode node = resource().path(path)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+        JsonNode node = resource().path(path).queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
 
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
-                .asText());
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
 
         // named entity in collection name
-        path = String.format(
-                "/test-organization/test-app/users/%s/conn2/users/%s",
-                username1, username2);
+        path = String.format("/test-organization/test-app/users/%s/conn2/users/%s", username1, username2);
 
-        node = resource().path(path).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        node = resource().path(path).queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
 
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
-                .asText());
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
 
     }
 
@@ -630,11 +558,9 @@ public class UserResourceTest extends AbstractRestTest {
         String name1 = "name1" + id;
         String email1 = "email1" + id + "@usergrid.org";
 
-        ApiResponse response = client.createUser(username1, name1, email1,
-                "password");
+        ApiResponse response = client.createUser(username1, name1, email1, "password");
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         UUID firstCreatedId = response.getEntities().get(0).getUuid();
 
@@ -646,8 +572,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         response = client.createEntity(pizza);
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         UUID secondCreatedId = response.getEntities().get(0).getUuid();
 
@@ -655,29 +580,21 @@ public class UserResourceTest extends AbstractRestTest {
         // second using pluralized form
 
         // named entity in collection name
-        String path = String.format(
-                "/test-organization/test-app/users/%s/conn1/pizzas/%s",
-                firstCreatedId, secondCreatedId);
+        String path = String.format("/test-organization/test-app/users/%s/conn1/pizzas/%s", firstCreatedId,
+                secondCreatedId);
 
-        JsonNode node = resource().path(path)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+        JsonNode node = resource().path(path).queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
 
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
-                .asText());
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
 
         // named entity in collection name
-        path = String.format(
-                "/test-organization/test-app/users/%s/conn2/pizzas/%s",
-                username1, name);
+        path = String.format("/test-organization/test-app/users/%s/conn2/pizzas/%s", username1, name);
 
-        node = resource().path(path).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        node = resource().path(path).queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
 
-        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid")
-                .asText());
+        assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
 
     }
 
@@ -689,21 +606,16 @@ public class UserResourceTest extends AbstractRestTest {
         String name = "name" + id;
         String email = "email" + id + "@usergrid.org";
 
-        ApiResponse response = client.createUser(username, name, email,
-                "password");
+        ApiResponse response = client.createUser(username, name, email, "password");
 
-        assertNull("Error was: " + response.getErrorDescription(),
-                response.getError());
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
 
         Entity userEntity = response.getEntities().get(0);
 
         // attempt to log in
-        JsonNode node = resource().path("/test-organization/test-app/token")
-                .queryParam("username", username)
-                .queryParam("password", "password")
-                .queryParam("grant_type", "password")
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        JsonNode node = resource().path("/test-organization/test-app/token").queryParam("username", username)
+                .queryParam("password", "password").queryParam("grant_type", "password")
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
         assertEquals(username, node.get("user").get("username").asText());
         assertEquals(name, node.get("user").get("name").asText());
@@ -711,26 +623,19 @@ public class UserResourceTest extends AbstractRestTest {
 
         // now update the name and email
         String newName = "newName";
-        String newEmail = "newEmail" + UUIDUtils.newTimeUUID()
-                + "@usergrid.org";
+        String newEmail = "newEmail" + UUIDUtils.newTimeUUID() + "@usergrid.org";
 
         userEntity.setProperty("name", newName);
         userEntity.setProperty("email", newEmail);
 
-        node = resource()
-                .path(String.format("/test-organization/test-app/users/%s",
-                        username)).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .put(JsonNode.class, userEntity.getProperties());
+        node = resource().path(String.format("/test-organization/test-app/users/%s", username))
+                .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).put(JsonNode.class, userEntity.getProperties());
 
         // now see if we've updated
-        node = resource().path("/test-organization/test-app/token")
-                .queryParam("username", username)
-                .queryParam("password", "password")
-                .queryParam("grant_type", "password")
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        node = resource().path("/test-organization/test-app/token").queryParam("username", username)
+                .queryParam("password", "password").queryParam("grant_type", "password")
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
         assertEquals(username, node.get("user").get("username").asText());
         assertEquals(newName, node.get("user").get("name").asText());
@@ -768,11 +673,8 @@ public class UserResourceTest extends AbstractRestTest {
         properties.put("username", "test_user_3");
         batch.add(properties);
 
-        node = resource().path("/test-organization/test-app/users/")
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, batch);
+        node = resource().path("/test-organization/test-app/users/").queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, batch);
 
         assertNotNull(node);
         logNode(node);
@@ -786,34 +688,23 @@ public class UserResourceTest extends AbstractRestTest {
 
         String userName = String.format("test%s", newUserUuid);
 
-        Map<String, String> payload = hashMap("email",
-                String.format("%s@anuff.com", newUserUuid))
-                .map("username", userName).map("name", "Ed Anuff")
-                .map("password", "sesame").map("pin", "1234");
+        Map<String, String> payload = hashMap("email", String.format("%s@anuff.com", newUserUuid))
+                .map("username", userName).map("name", "Ed Anuff").map("password", "sesame").map("pin", "1234");
 
-        JsonNode node = resource().path("/test-organization/test-app/users")
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, payload);
+        JsonNode node = resource().path("/test-organization/test-app/users").queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
 
-        JsonNode response = resource()
-                .path("/test-organization/test-app/users")
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
+        JsonNode response = resource().path("/test-organization/test-app/users")
+                .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
         // disable the user
 
         Map<String, String> data = new HashMap<String, String>();
 
-        response = resource()
-                .path(String.format(
-                        "/test-organization/test-app/users/%s/deactivate",
-                        userName)).queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, data);
+        response = resource().path(String.format("/test-organization/test-app/users/%s/deactivate", userName))
+                .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
 
         JsonNode entity = getEntity(response, 0);
 
@@ -833,27 +724,21 @@ public class UserResourceTest extends AbstractRestTest {
     public void test_GET_user_ok() throws InterruptedException {
 
         // TODO figure out what is being overridden? why 400?
-        JsonNode node = resource().path("/test-organization/test-app/users")
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        JsonNode node = resource().path("/test-organization/test-app/users").queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
         String uuid = node.get("entities").get(0).get("uuid").getTextValue();
 
-        node = resource().path("/test-organization/test-app/users/" + uuid)
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        node = resource().path("/test-organization/test-app/users/" + uuid).queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         logNode(node);
-        assertEquals("ed@anuff.com", node.get("entities").get(0).get("email")
-                .getTextValue());
+        assertEquals("ed@anuff.com", node.get("entities").get(0).get("email").getTextValue());
     }
 
     @Test
     public void test_PUT_password_ok() {
 
-        ApiResponse response = client.changePassword("edanuff", "sesame",
-                "sesame1");
+        ApiResponse response = client.changePassword("edanuff", "sesame", "sesame1");
 
         assertNull(response.getError());
 
@@ -878,22 +763,17 @@ public class UserResourceTest extends AbstractRestTest {
         data.put("newpassword", newPassword);
 
         // change the password as admin. The old password isn't required
-        JsonNode node = resource()
-                .path("/test-organization/test-app/users/edanuff/password")
-                .queryParam("access_token", adminAccessToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, data);
+        JsonNode node = resource().path("/test-organization/test-app/users/edanuff/password")
+                .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
 
         assertNull(getError(node));
 
-        ApiResponse response = client.authorizeAppUser("ed@anuff.com",
-                newPassword);
+        ApiResponse response = client.authorizeAppUser("ed@anuff.com", newPassword);
 
         assertNull(response.getError());
 
     }
-    
 
     @Test
     public void passwordMismatchErrorUser() {
@@ -910,11 +790,8 @@ public class UserResourceTest extends AbstractRestTest {
 
         Status responseStatus = null;
         try {
-            resource()
-                    .path("/test-organization/test-app/users/edanuff/password")
-                    .accept(MediaType.APPLICATION_JSON)
-                    .type(MediaType.APPLICATION_JSON_TYPE)
-                    .post(JsonNode.class, data);
+            resource().path("/test-organization/test-app/users/edanuff/password").accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -924,7 +801,6 @@ public class UserResourceTest extends AbstractRestTest {
         assertEquals(Status.BAD_REQUEST, responseStatus);
 
     }
-
 
   @Test
   public void addRemoveRole() {
@@ -1001,5 +877,52 @@ public class UserResourceTest extends AbstractRestTest {
     assertTrue(node.get("entities").size() == 0);
   }
 
+    @Test
+    public void revokeToken() throws Exception {
+
+        String token1 = super.userToken();
+        String token2 = super.userToken();
+
+        JsonNode response = resource().path("/test-organization/test-app/users/edanuff")
+                .queryParam("access_token", token1).accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+        assertNotNull(getEntity(response, 0));
+
+        response = resource().path("/test-organization/test-app/users/edanuff").queryParam("access_token", token2)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+        assertNotNull(getEntity(response, 0));
+
+        // now revoke the tokens
+        response = resource().path("/test-organization/test-app/users/edanuff/revoketokens")
+                .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+
+        // the tokens shouldn't work
+        
+        Status status = null;
+         
+        try{
+            response = resource().path("/test-organization/test-app/users/edanuff").queryParam("access_token", token1)
+                    .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        }catch(UniformInterfaceException uie){
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals(Status.UNAUTHORIZED, status);
+        
+        status = null;
+
+        try{
+            response = resource().path("/test-organization/test-app/users/edanuff").queryParam("access_token", token2)
+                    .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        }catch(UniformInterfaceException uie){
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals(Status.UNAUTHORIZED, status);
+
+    }
 
 }

@@ -109,6 +109,13 @@ public interface ManagementService {
 	public UserInfo findAdminUser(String identifier);
 
 	public String getAccessTokenForAdminUser(UUID userId) throws Exception;
+	
+	/**
+	 * Revoke all active access tokens for this admin user
+	 * @param userId
+	 * @throws Exception 
+	 */
+	public void revokeAccessTokensForAdminUser(UUID userId) throws Exception;
 
 	public String getActivationTokenForAdminUser(UUID userId) throws Exception;
 
@@ -302,6 +309,13 @@ public interface ManagementService {
 
 	public String getAccessTokenForAppUser(UUID applicationId, UUID userId)
 			throws Exception;
+	
+	/**
+     * Revoke all active access tokens for this admin user
+     * @param userId
+	 * @throws Exception 
+     */
+    public void revokeAccessTokensForAppUser(UUID applicationId, UUID userId) throws Exception;
 
 	public User getAppUserByIdentifier(UUID applicationId, Identifier identifier)
 			throws Exception;
