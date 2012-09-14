@@ -4780,7 +4780,7 @@ table .zebraRows:nth-child(2n) {
   margin-right: .3em;
 }
 #application-panel-buttons .active > a i.wrench {
-  background-image: url("../images/glyphicons_halflings_135_wrench-white2.png") !important;
+  background-image: url("../images/glyphicons_halflings_wrench_white.png") !important;
 }
 #application-panel-buttons .active > a:hover i.wrench {
   background-image: url("../images/glyphicons_halflings_135_wrench.png") !important;
