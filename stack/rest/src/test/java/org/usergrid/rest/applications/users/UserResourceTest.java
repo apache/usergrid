@@ -880,8 +880,8 @@ public class UserResourceTest extends AbstractRestTest {
     @Test
     public void revokeToken() throws Exception {
 
-        String token1 = super.userToken();
-        String token2 = super.userToken();
+        String token1 = super.userToken("edanuff", "sesame");
+        String token2 = super.userToken("edanuff", "sesame");
 
         JsonNode response = resource().path("/test-organization/test-app/users/edanuff")
                 .queryParam("access_token", token1).accept(MediaType.APPLICATION_JSON)
@@ -925,4 +925,5 @@ public class UserResourceTest extends AbstractRestTest {
 
     }
 
+    
 }
