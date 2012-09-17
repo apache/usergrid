@@ -18,6 +18,13 @@ public interface TokenService {
 			AuthPrincipalInfo principal, Map<String, Object> state)
 			throws Exception;
 
+	/**
+	 * Create the token with the given ttl. 
+	 */
+	public String createToken(TokenCategory tokenCategory, String type,
+            AuthPrincipalInfo principal, Map<String, Object> state, long duration)
+            throws Exception;
+	
 	public TokenInfo getTokenInfo(String token) throws Exception;
 
 	public String refreshToken(String token) throws Exception;
