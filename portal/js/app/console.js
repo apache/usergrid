@@ -164,7 +164,7 @@
       }]
     );
     var bearerTokenString = encodeURIComponent(bearerTokenJson);
-    var url = 'https://apigee.com/console/usergrid?v=2&embedded=true&auth=' + bearerTokenString;
+    var url = 'https://apigee.com/apigeedev/console/usergrid?v=2&embedded=true&auth=' + bearerTokenString;
     return url;
   }
   Usergrid.console.getAccessTokenURL = getAccessTokenURL;
@@ -218,7 +218,7 @@
     $("#query-ql").val("");
     query_history = [];
     //Prepare Collection Index Dropdown Menu
-    requestIndexes(path);
+    requestIndexes(collection);
     //bind events for previous and next buttons
     bindPagingEvents('query-response');
     //clear out the table before we start
@@ -649,7 +649,6 @@
           Pages.SelectPanel('application');
         });
         enableApplicationPanelButtons();
-        selectFirstApp();
       }
       appMenu.append('<li class="divider"></li>');
       appMenu.append('<li><a class="" data-toggle="modal" href="#dialog-form-new-application"> <strong>+</strong> New Application</a></li>');
@@ -659,6 +658,11 @@
       appList.html('<div class="alert user-panel-section">No applications created.</div>');
       appMenu.html('<li>--No Apps--</li>');
       forceNewApp();
+    }
+
+    var appName = Usergrid.ApiClient.getApplicationName();
+    if (!appName) {
+      selectFirstApp();
     }
   }
 
@@ -690,6 +694,7 @@
       Usergrid.ApiClient.setApplicationName(app.getName());
       pageSelect(app.getName());
     }
+    setNavApplicationText();
   }
 
   function displayAdmins(response) {
@@ -984,7 +989,7 @@
           var currentOrg = Usergrid.ApiClient.getOrganizationName();
           Usergrid.organizations.getItemByName(currentOrg).addItem(new Usergrid.Application(appName, response.data[appName]));
           pageSelect(appName);
-          requestApplications(response);
+          requestApplications();
         },
         function() {
           closeErrorMessage = function() {
@@ -3633,6 +3638,7 @@ function deleteRolePermission(roleName, permission) {
     var app = currentOrg.getFirstItem();
     if (app) {
       Usergrid.ApiClient.setApplicationName(app.getName());
+      setNavApplicationText();
     } else {
       forceNewApp();
     }
