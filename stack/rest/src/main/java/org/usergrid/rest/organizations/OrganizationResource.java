@@ -4,11 +4,17 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
 
 import java.util.UUID;
 
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -17,10 +23,12 @@ import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.applications.ApplicationResource;
 import org.usergrid.rest.exceptions.NoOpException;
 import org.usergrid.rest.exceptions.OrganizationApplicationNotFoundException;
+import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.usergrid.rest.utils.PathingUtils;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 
 import com.google.common.collect.BiMap;
+import com.sun.jersey.api.json.JSONWithPadding;
 
 @Component("org.usergrid.rest.organizations.OrganizationResource")
 @Scope("prototype")
@@ -133,6 +141,16 @@ public class OrganizationResource extends AbstractContextResource {
             @PathParam("applicationName") String applicationName)
             throws Exception {
         return getApplicationByName(applicationName);
+    }
+    
+
+    @DELETE
+    @RequireOrganizationAccess
+    public JSONWithPadding executeDelete(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
+
+
+        throw new NotImplementedException("Organization delete is not allowed yet");
     }
 
 }

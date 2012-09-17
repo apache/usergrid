@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -50,6 +51,7 @@ import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.codec.Base64;
@@ -65,10 +67,12 @@ import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.applications.events.EventsResource;
 import org.usergrid.rest.applications.queues.QueueResource;
 import org.usergrid.rest.applications.users.UsersResource;
+import org.usergrid.rest.exceptions.NoOpException;
 import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
+import org.usergrid.services.ServiceAction;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
@@ -440,6 +444,18 @@ public class ApplicationResource extends ServiceResource {
         }
     }
 
+    @DELETE
+    @RequireApplicationAccess
+    @Override
+    public JSONWithPadding executeDelete(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback)
+            throws Exception {
+
+        logger.info("ApplicationResource.executeDelete");
+        
+        throw new NotImplementedException("Application delete is not allowed yet");
+    }
+    
     String errorMsg = "";
     String applicationName;
     String responseType;
