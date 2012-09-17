@@ -24,6 +24,7 @@ import org.usergrid.management.UserInfo;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
+import org.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.utils.UUIDUtils;
 
@@ -193,5 +194,56 @@ public class TokenServiceTest {
 
         assertTrue(invalidTokenException);
     }
+    
+    
+    @Test
+    public void tokenDuration() throws Exception {
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
+                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
+                UUIDUtils.newTimeUUID());
+
+        //2 second token
+        long expirationTime = 2000;
+        
+        String token = tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, expirationTime);
+        
+        long start = System.currentTimeMillis();
+        
+        assertNotNull(token);
+        
+        
+        TokenInfo tokenInfo = tokenService.getTokenInfo(token);
+        assertNotNull(tokenInfo);
+        assertEquals(expirationTime, tokenInfo.getDuration());
+
+        /**
+         * Sleep at least expirationTime millis to allow token to expire 
+         */
+        Thread.sleep(expirationTime-(System.currentTimeMillis()-start)+1000);
+        
+        boolean invalidTokenException = false;
+        
+        try {
+            tokenService.getTokenInfo(token);
+        } catch (InvalidTokenException ite) {
+            invalidTokenException = true;
+        }
+        
+        assertTrue(invalidTokenException);
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void invalidDurationValue() throws Exception{
+        
+        long maxAge = ((TokenServiceImpl)tokenService).getMaxPersistenceTokenAge();
+        
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
+                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
+                UUIDUtils.newTimeUUID());
+
+        tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, maxAge+1);
+       
+    }
+
 
 }
