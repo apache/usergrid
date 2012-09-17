@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.management.organizations;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -25,6 +26,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -36,6 +38,7 @@ import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.management.organizations.applications.ApplicationsResource;
 import org.usergrid.rest.management.organizations.users.UsersResource;
+import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
 import org.usergrid.security.tokens.exceptions.TokenException;
@@ -46,174 +49,153 @@ import com.sun.jersey.api.view.Viewable;
 
 @Component("org.usergrid.rest.management.organizations.OrganizationResource")
 @Scope("prototype")
-@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-		"application/x-javascript", "text/ecmascript",
-		"application/ecmascript", "text/jscript" })
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
+        "application/ecmascript", "text/jscript" })
 public class OrganizationResource extends AbstractContextResource {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(OrganizationsResource.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrganizationsResource.class);
 
-	OrganizationInfo organization;
+    OrganizationInfo organization;
 
-	public OrganizationResource() {
-	}
+    public OrganizationResource() {
+    }
 
-	public OrganizationResource init(OrganizationInfo organization) {
-		this.organization = organization;
-		return this;
-	}
+    public OrganizationResource init(OrganizationInfo organization) {
+        this.organization = organization;
+        return this;
+    }
 
-	@RequireOrganizationAccess
-	@Path("users")
-	public UsersResource getOrganizationUsers(@Context UriInfo ui)
-			throws Exception {
-		return getSubResource(UsersResource.class).init(organization);
-	}
+    @RequireOrganizationAccess
+    @Path("users")
+    public UsersResource getOrganizationUsers(@Context UriInfo ui) throws Exception {
+        return getSubResource(UsersResource.class).init(organization);
+    }
 
-	@RequireOrganizationAccess
-	@Path("applications")
-	public ApplicationsResource getOrganizationApplications(@Context UriInfo ui)
-			throws Exception {
-		return getSubResource(ApplicationsResource.class).init(organization);
-	}
+    @RequireOrganizationAccess
+    @Path("applications")
+    public ApplicationsResource getOrganizationApplications(@Context UriInfo ui) throws Exception {
+        return getSubResource(ApplicationsResource.class).init(organization);
+    }
 
-	@RequireOrganizationAccess
-	@Path("apps")
-	public ApplicationsResource getOrganizationApplications2(@Context UriInfo ui)
-			throws Exception {
-		return getSubResource(ApplicationsResource.class).init(organization);
-	}
+    @RequireOrganizationAccess
+    @Path("apps")
+    public ApplicationsResource getOrganizationApplications2(@Context UriInfo ui) throws Exception {
+        return getSubResource(ApplicationsResource.class).init(organization);
+    }
 
-	@GET
-	public JSONWithPadding getOrganizationDetails(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @GET
+    public JSONWithPadding getOrganizationDetails(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
 
-		logger.info("Get details for organization: " + organization.getUuid());
+        logger.info("Get details for organization: " + organization.getUuid());
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setProperty("organization",
-				management.getOrganizationData(organization));
+        ApiResponse response = new ApiResponse(ui);
+        response.setProperty("organization", management.getOrganizationData(organization));
 
-		return new JSONWithPadding(response, callback);
-	}
+        return new JSONWithPadding(response, callback);
+    }
 
-	@GET
-	@Path("activate")
-	public Viewable activate(@Context UriInfo ui,
-			@QueryParam("token") String token) {
+    @GET
+    @Path("activate")
+    public Viewable activate(@Context UriInfo ui, @QueryParam("token") String token) {
 
-		try {
-			management.handleActivationTokenForOrganization(
-					organization.getUuid(), token);
-			return handleViewable("activate", this);
-		} catch (TokenException e) {
-			return handleViewable("bad_activation_token", this);
-		} catch (RedirectionException e) {
-			throw e;
-		} catch (Exception e) {
-			return handleViewable("error", e);
-		}
-	}
+        try {
+            management.handleActivationTokenForOrganization(organization.getUuid(), token);
+            return handleViewable("activate", this);
+        } catch (TokenException e) {
+            return handleViewable("bad_activation_token", this);
+        } catch (RedirectionException e) {
+            throw e;
+        } catch (Exception e) {
+            return handleViewable("error", e);
+        }
+    }
 
-	@GET
-	@Path("confirm")
-	public Viewable confirm(@Context UriInfo ui,
-			@QueryParam("token") String token) {
+    @GET
+    @Path("confirm")
+    public Viewable confirm(@Context UriInfo ui, @QueryParam("token") String token) {
 
-		try {
-			ActivationState state = management
-					.handleActivationTokenForOrganization(
-							organization.getUuid(), token);
-			if (state == ActivationState.CONFIRMED_AWAITING_ACTIVATION) {
-				return handleViewable("confirm", this);
-			}
-			return handleViewable("activate", this);
-		} catch (TokenException e) {
-			return handleViewable("bad_activation_token", this);
-		} catch (RedirectionException e) {
-			throw e;
-		} catch (Exception e) {
-			return handleViewable("error", e);
-		}
-	}
+        try {
+            ActivationState state = management.handleActivationTokenForOrganization(organization.getUuid(), token);
+            if (state == ActivationState.CONFIRMED_AWAITING_ACTIVATION) {
+                return handleViewable("confirm", this);
+            }
+            return handleViewable("activate", this);
+        } catch (TokenException e) {
+            return handleViewable("bad_activation_token", this);
+        } catch (RedirectionException e) {
+            throw e;
+        } catch (Exception e) {
+            return handleViewable("error", e);
+        }
+    }
 
-	@GET
-	@Path("reactivate")
-	public JSONWithPadding reactivate(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @GET
+    @Path("reactivate")
+    public JSONWithPadding reactivate(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
 
-		logger.info("Send activation email for organization: "
-				+ organization.getUuid());
+        logger.info("Send activation email for organization: " + organization.getUuid());
 
-		ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = new ApiResponse(ui);
 
-		management.startOrganizationActivationFlow(organization);
+        management.startOrganizationActivationFlow(organization);
 
-		response.setAction("reactivate organization");
-		return new JSONWithPadding(response, callback);
-	}
+        response.setAction("reactivate organization");
+        return new JSONWithPadding(response, callback);
+    }
 
-	@RequireOrganizationAccess
-	@GET
-	@Path("feed")
-	public JSONWithPadding getFeed(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @RequireOrganizationAccess
+    @GET
+    @Path("feed")
+    public JSONWithPadding getFeed(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("get organization feed");
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("get organization feed");
 
-		ServiceResults results = management
-				.getOrganizationActivity(organization);
-		response.setEntities(results.getEntities());
-		response.setSuccess();
+        ServiceResults results = management.getOrganizationActivity(organization);
+        response.setEntities(results.getEntities());
+        response.setSuccess();
 
-		return new JSONWithPadding(response, callback);
-	}
+        return new JSONWithPadding(response, callback);
+    }
 
-	@RequireOrganizationAccess
-	@GET
-	@Path("credentials")
-	public JSONWithPadding getCredentials(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @RequireOrganizationAccess
+    @GET
+    @Path("credentials")
+    public JSONWithPadding getCredentials(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("get organization client credentials");
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("get organization client credentials");
 
-		ClientCredentialsInfo keys = new ClientCredentialsInfo(
-				management.getClientIdForOrganization(organization.getUuid()),
-				management.getClientSecretForOrganization(organization
-						.getUuid()));
+        ClientCredentialsInfo keys = new ClientCredentialsInfo(management.getClientIdForOrganization(organization
+                .getUuid()), management.getClientSecretForOrganization(organization.getUuid()));
 
-		response.setCredentials(keys);
-		return new JSONWithPadding(response, callback);
-	}
+        response.setCredentials(keys);
+        return new JSONWithPadding(response, callback);
+    }
 
-	@RequireOrganizationAccess
-	@POST
-	@Path("credentials")
-	public JSONWithPadding generateCredentials(@Context UriInfo ui,
-			@QueryParam("callback") @DefaultValue("callback") String callback)
-			throws Exception {
+    @RequireOrganizationAccess
+    @POST
+    @Path("credentials")
+    public JSONWithPadding generateCredentials(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
-		response.setAction("generate organization client credentials");
+        ApiResponse response = new ApiResponse(ui);
+        response.setAction("generate organization client credentials");
 
-		ClientCredentialsInfo credentials = new ClientCredentialsInfo(
-				management.getClientIdForOrganization(organization.getUuid()),
-				management.newClientSecretForOrganization(organization
-						.getUuid()));
+        ClientCredentialsInfo credentials = new ClientCredentialsInfo(
+                management.getClientIdForOrganization(organization.getUuid()),
+                management.newClientSecretForOrganization(organization.getUuid()));
 
-		response.setCredentials(credentials);
-		return new JSONWithPadding(response, callback);
-	}
+        response.setCredentials(credentials);
+        return new JSONWithPadding(response, callback);
+    }
 
-	public OrganizationInfo getOrganization() {
-		return organization;
-	}
+    public OrganizationInfo getOrganization() {
+        return organization;
+    }
 
 }

@@ -29,6 +29,9 @@ import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.rest.AbstractRestTest;
 
+import com.sun.jersey.api.client.ClientResponse.Status;
+import com.sun.jersey.api.client.UniformInterfaceException;
+
 /**
  * Invokes methods on ApplicationResource
  * 
@@ -130,5 +133,24 @@ public class ApplicationResourceTest extends AbstractRestTest {
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         assertEquals("ok", node.get("status").getTextValue());
         logNode(node);
+    }
+    
+    @Test
+    public void noAppDelete() {
+        String mgmtToken = adminToken();
+
+        Status status = null;
+        JsonNode node = null;
+        
+        try {
+             node = resource().path("/test-organization/test-app")
+                    .queryParam("access_token", mgmtToken).accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).delete(JsonNode.class);
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals(Status.BAD_REQUEST, status);
+//        assertEquals("Application delete is not allowed yet", node.get("error_description").asText());
     }
 }
