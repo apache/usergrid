@@ -30,10 +30,10 @@ import org.junit.BeforeClass;
  * @author tnine
  * 
  */
-public class AbstractShiroTest {
+public class AbstractShiroTestHelper {
     private static ThreadState subjectThreadState;
 
-    public AbstractShiroTest() {
+    public AbstractShiroTestHelper() {
     }
     
     @BeforeClass

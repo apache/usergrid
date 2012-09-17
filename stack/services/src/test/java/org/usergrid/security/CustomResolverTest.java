@@ -33,7 +33,7 @@ import org.usergrid.security.shiro.principals.UserPrincipal;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.utils.UUIDUtils;
 
-public class CustomResolverTest extends AbstractShiroTest {
+public class CustomResolverTest extends AbstractShiroTestHelper {
 
 	public static final Logger logger = LoggerFactory
 			.getLogger(CustomResolverTest.class);
