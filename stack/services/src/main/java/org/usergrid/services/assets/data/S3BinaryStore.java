@@ -46,17 +46,15 @@ public class S3BinaryStore implements BinaryStore {
 
   private Properties overrides;
   private final BlobStoreContext context;
-  private MimeUtil2 mimeUtil;
 
   private static final long FIVE_MB = (FileUtils.ONE_MB * 5);
 
   private String bucketName = "usergrid-test";
 
-  private final AtomicBoolean containerCreated = new AtomicBoolean(false);
-
-  public S3BinaryStore(String accessId, String secretKey) {
+  public S3BinaryStore(String accessId, String secretKey, String bucketName) {
     this.accessId = accessId;
     this.secretKey = secretKey;
+    this.bucketName = bucketName;
     overrides = new Properties();
     //overrides.setProperty("jclouds.mpu.parallel.degree", threadcount);
     overrides.setProperty(S3_PROVIDER + ".identity", accessId);
@@ -64,16 +62,18 @@ public class S3BinaryStore implements BinaryStore {
 
     context = new BlobStoreContextFactory().createContext("s3", MODULES, overrides);
 
-    mimeUtil = new MimeUtil2();
-    mimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.MagicMimeMimeDetector");
-  }
+    // Create Container (the bucket in s3)
+    try {
+      AsyncBlobStore blobStore = context.getAsyncBlobStore(); // it can be changed to sync
+      // BlobStore (returns false if it already exists)
+      ListenableFuture<Boolean> createContainer = blobStore.createContainerInLocation(null, bucketName);
+      createContainer.get();
 
-  /**
-   * Set the base bucket name for this binary store
-   * @param bucketName
-   */
-  public void setBucketName(String bucketName) {
-    this.bucketName = bucketName;
+    } catch(Exception ex) {
+      logger.error("Could not start binary service: {}", ex.getMessage());
+      throw new RuntimeException(ex);
+    }
+
   }
 
   public void destroy() {
@@ -82,17 +82,8 @@ public class S3BinaryStore implements BinaryStore {
 
   @Override
   public void write(UUID appId, Asset asset, InputStream inputStream) {
-    // write(UUID applicationId, Asset asset, InputStream is)
     try {
-      // Create Container (the bucket in s3)
-      AsyncBlobStore blobStore = context.getAsyncBlobStore(); // it can be changed to sync
-      // BlobStore (retruns false if it already exists)
-      if ( !containerCreated.get() ) {
-        ListenableFuture<Boolean> createContainer = blobStore.createContainerInLocation(null, bucketName);
-        containerCreated.set(true);
-      }
-      // bad name will throw ContainerNotFoundException
-
+      AsyncBlobStore blobStore = context.getAsyncBlobStore();
       // Add a Blob
       // objectname will be in the form of org/app/UUID
       // #payload can take an input stream
