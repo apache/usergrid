@@ -129,6 +129,7 @@ public class ManagementResource extends AbstractContextResource {
             @QueryParam("password") String password,
             @QueryParam("client_id") String client_id,
             @QueryParam("client_secret") String client_secret,
+            @QueryParam("ttl") long ttl,
             @QueryParam("callback") @DefaultValue("") String callback)
             throws Exception {
 
@@ -168,7 +169,7 @@ public class ManagementResource extends AbstractContextResource {
             } else if ("client_credentials".equals(grant_type)) {
                 try {
                     AccessInfo access_info = management.authorizeClient(
-                            client_id, client_secret);
+                            client_id, client_secret, ttl);
                     if (access_info != null) {
                         return Response
                                 .status(SC_OK)
@@ -194,7 +195,7 @@ public class ManagementResource extends AbstractContextResource {
             }
 
             String token = management
-                    .getAccessTokenForAdminUser(user.getUuid());
+                    .getAccessTokenForAdminUser(user.getUuid(), ttl);
 
             AccessInfo access_info = new AccessInfo()
                     .withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
@@ -230,6 +231,7 @@ public class ManagementResource extends AbstractContextResource {
             @FormParam("username") String username,
             @FormParam("password") String password,
             @FormParam("client_id") String client_id,
+            @FormParam("ttl") long ttl,
             @FormParam("client_secret") String client_secret,
             @QueryParam("callback") @DefaultValue("") String callback)
             throws Exception {
@@ -237,7 +239,7 @@ public class ManagementResource extends AbstractContextResource {
         logger.info("ManagementResource.getAccessTokenPost");
 
         return getAccessToken(ui, null, grant_type, username, password,
-                client_id, client_secret, callback);
+                client_id, client_secret, ttl, callback);
     }
 
     @POST
@@ -253,9 +255,11 @@ public class ManagementResource extends AbstractContextResource {
         String password = (String) json.get("password");
         String client_id = (String) json.get("client_id");
         String client_secret = (String) json.get("client_secret");
+        long duration = json.get("ttl") == null ? 0 : Long.parseLong(json.get("ttl").toString());
+        
 
         return getAccessToken(ui, null, grant_type, username, password,
-                client_id, client_secret, callback);
+                client_id, client_secret, duration, callback);
     }
 
     @GET
@@ -305,7 +309,7 @@ public class ManagementResource extends AbstractContextResource {
                     redirect_uri += "&";
                 }
                 redirect_uri += "code="
-                        + management.getAccessTokenForAdminUser(user.getUuid());
+                        + management.getAccessTokenForAdminUser(user.getUuid(), 0);
                 if (isNotBlank(state)) {
                     redirect_uri += "&state="
                             + URLEncoder.encode(state, "UTF-8");

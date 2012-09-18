@@ -103,7 +103,7 @@ public class OrganizationTest {
 				.getUuid().toString(), "test");
 		assertNotNull(u);
 
-		String token = management.getAccessTokenForAdminUser(user.getUuid());
+		String token = management.getAccessTokenForAdminUser(user.getUuid(), 0);
 		assertNotNull(token);
 
 		AuthPrincipalInfo principal = ((ManagementServiceImpl) management)

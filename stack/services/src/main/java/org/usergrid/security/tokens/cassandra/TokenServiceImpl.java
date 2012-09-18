@@ -43,7 +43,9 @@ import org.mortbay.log.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
+import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.cassandra.CassandraService;
+import org.usergrid.persistence.entities.Application;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.TokenCategory;
@@ -127,6 +129,8 @@ public class TokenServiceImpl implements TokenService {
 
     protected Properties properties;
 
+    protected EntityManagerFactory emf;
+    
     public TokenServiceImpl() {
 
     }
@@ -171,11 +175,7 @@ public class TokenServiceImpl implements TokenService {
         }
     }
 
-    @Autowired
-    @Qualifier("cassandraService")
-    public void setCassandraService(CassandraService cassandra) {
-        this.cassandra = cassandra;
-    }
+   
 
     @Override
     public String createToken(TokenCategory tokenCategory, String type, Map<String, Object> state) throws Exception {
@@ -200,15 +200,22 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public String createToken(TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
             Map<String, Object> state) throws Exception {
-        return createToken(tokenCategory, type, principal, state, maxPersistenceTokenAge);
+        return createToken(tokenCategory, type, principal, state, 0);
     }
 
     @Override
     public String createToken(TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
             Map<String, Object> state, long duration) throws Exception {
 
-        if(duration > maxPersistenceTokenAge){
-            throw new IllegalArgumentException(String.format("Your token age cannot be more than the maxium age of %d milliseconds", maxPersistenceTokenAge));
+        
+        long maxTokenTtl = getMaxTtl(principal);
+        
+        if(duration > maxTokenTtl){
+            throw new IllegalArgumentException(String.format("Your token age cannot be more than the maxium age of %d milliseconds", maxTokenTtl));
+        }
+        
+        if(duration == 0){
+            duration = maxTokenTtl;
         }
         
         if (principal != null) {
@@ -235,16 +242,18 @@ public class TokenServiceImpl implements TokenService {
             tokenInfo = getTokenInfo(uuid);
             if (tokenInfo != null) {
                 long now = currentTimeMillis();
+                
+                long maxTokenTtl = getMaxTtl(tokenInfo.getPrincipal());
 
                 Mutator<UUID> batch = createMutator(cassandra.getSystemKeyspace(), UUIDSerializer.get());
 
-                HColumn<String, Long> col = createColumn(TOKEN_ACCESSED, now, (int) (tokenInfo.getExpiration(maxPersistenceTokenAge) / 1000),
+                HColumn<String, Long> col = createColumn(TOKEN_ACCESSED, now, (int) (tokenInfo.getExpiration(maxTokenTtl) / 1000),
                         StringSerializer.get(), LongSerializer.get());
                 batch.addInsertion(uuid, TOKENS_CF, col);
 
                 long inactive = now - tokenInfo.getAccessed();
                 if (inactive > tokenInfo.getInactive()) {
-                    col = createColumn(TOKEN_INACTIVE, inactive, (int) (tokenInfo.getExpiration(maxPersistenceTokenAge) / 1000),
+                    col = createColumn(TOKEN_INACTIVE, inactive, (int) (tokenInfo.getExpiration(maxTokenTtl) / 1000),
                             StringSerializer.get(), LongSerializer.get());
                     batch.addInsertion(uuid, TOKENS_CF, col);
                     tokenInfo.setInactive(inactive);
@@ -254,6 +263,40 @@ public class TokenServiceImpl implements TokenService {
             }
         }
         return tokenInfo;
+    }
+    
+    /**
+     * Get the max ttl per app.  This is null safe,and will return the default in the case of missing data
+     * @param principal
+     * @return
+     * @throws Exception
+     */
+    private long getMaxTtl(AuthPrincipalInfo principal) throws Exception{
+        
+        if(principal == null){
+            return maxPersistenceTokenAge;
+        }
+        
+        Application application = emf.getEntityManager(principal.getApplicationId()).getApplication();
+        
+        if(application == null){
+            return maxPersistenceTokenAge;
+        }
+        
+        //set the max to the default
+        long maxTokenTtl = maxPersistenceTokenAge;
+        
+        //it's been defined on the expiration, override it
+        if(application.getAccesstokenttl() != null){
+            maxTokenTtl = application.getAccesstokenttl();
+            
+            //it's set to 0 which equals infinity, set our expiration to LONG.MAX
+            if(maxTokenTtl == 0){
+                maxTokenTtl = Long.MAX_VALUE;
+            }
+        }
+        
+        return maxTokenTtl;
     }
 
     @Override
@@ -464,6 +507,17 @@ public class TokenServiceImpl implements TokenService {
         return maxPersistenceTokenAge;
     }
 
+    @Autowired
+    @Qualifier("cassandraService")
+    public void setCassandraService(CassandraService cassandra) {
+        this.cassandra = cassandra;
+    }
+    
+    @Autowired
+    public void setEntityManagerFactory(EntityManagerFactory emf){
+        this.emf = emf;
+    }
+    
     private String getTokenForUUID(TokenCategory tokenCategory, UUID uuid) {
         int l = 36;
         if (tokenCategory.getExpires()) {

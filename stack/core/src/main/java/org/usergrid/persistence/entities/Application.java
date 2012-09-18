@@ -51,6 +51,9 @@ public class Application extends TypedEntity {
 
 	@EntityProperty(basic = true)
 	protected String title;
+	
+	@EntityProperty(basic = true)
+    protected Long accesstokenttl;
 
 	@EntityProperty
 	protected String description;
@@ -382,7 +385,21 @@ public class Application extends TypedEntity {
         return null;
     }
 
-	@XmlRootElement
+	/**
+     * @return the accesstokenttl 
+     */
+    public Long getAccesstokenttl() {
+        return accesstokenttl;
+    }
+
+    /**
+     * @param accesstokenttl the accesstokenttl to set
+     */
+    public void setAccesstokenttl(Long accesstokenttl) {
+        this.accesstokenttl = accesstokenttl;
+    }
+
+    @XmlRootElement
 	public static class OAuthProvider {
 		String clientId;
 		String clientSecret;
