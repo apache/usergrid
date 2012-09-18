@@ -312,8 +312,16 @@ public class ApplicationResource extends ServiceResource {
         String pin = (String) json.get("pin");
         String code = (String) json.get("code");
         String redirect_uri = (String) json.get("redirect_uri");
-        long ttl = json.get("ttl") == null ? 0 : Long.parseLong(json.get("ttl").toString());
-         
+        long ttl = 0;
+
+        if (json.get("ttl") != null) {
+            try {
+                ttl = Long.parseLong(json.get("ttl").toString());
+            } catch (NumberFormatException nfe) {
+                throw new IllegalArgumentException("ttl must be a number >= 0");
+            }
+        }
+        
         return getAccessToken(ui, null, grant_type, username, password, pin,
                 client_id, client_secret, code, ttl, redirect_uri, callback);
     }

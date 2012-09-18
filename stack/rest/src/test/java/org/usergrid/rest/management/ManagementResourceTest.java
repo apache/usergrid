@@ -18,6 +18,7 @@ package org.usergrid.rest.management;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,12 +27,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.usergrid.java.client.response.ApiResponse;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
-import org.usergrid.management.UserInfo;
 import org.usergrid.rest.AbstractRestTest;
 
 import com.sun.jersey.api.client.ClientResponse.Status;
@@ -41,8 +38,6 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  * @author tnine
  */
 public class ManagementResourceTest extends AbstractRestTest {
-    private static Logger log = LoggerFactory
-            .getLogger(ManagementResourceTest.class);
 
     public ManagementResourceTest() throws Exception {
 
@@ -61,10 +56,8 @@ public class ManagementResourceTest extends AbstractRestTest {
         data.put("oldpassword", "test");
 
         // change the password as admin. The old password isn't required
-        JsonNode node = resource().path("/management/users/test/password")
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, data);
+        JsonNode node = resource().path("/management/users/test/password").accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
 
         assertNull(getError(node));
 
@@ -73,11 +66,8 @@ public class ManagementResourceTest extends AbstractRestTest {
         data.put("oldpassword", newPassword);
         data.put("newpassword", "test");
 
-        node = resource().path("/management/users/test/password")
-                .queryParam("access_token", adminAccessToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, data);
+        node = resource().path("/management/users/test/password").queryParam("access_token", adminAccessToken)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
 
         assertNull(getError(node));
 
@@ -99,10 +89,8 @@ public class ManagementResourceTest extends AbstractRestTest {
         Status responseStatus = null;
 
         try {
-            resource().path("/management/users/test/password")
-                    .accept(MediaType.APPLICATION_JSON)
-                    .type(MediaType.APPLICATION_JSON_TYPE)
-                    .post(JsonNode.class, data);
+            resource().path("/management/users/test/password").accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
         } catch (UniformInterfaceException uie) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
@@ -124,11 +112,8 @@ public class ManagementResourceTest extends AbstractRestTest {
         data.put("newpassword", newPassword);
 
         // change the password as admin. The old password isn't required
-        JsonNode node = resource().path("/management/users/test/password")
-                .queryParam("access_token", superToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, data);
+        JsonNode node = resource().path("/management/users/test/password").queryParam("access_token", superToken)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
 
         assertNull(getError(node));
 
@@ -140,11 +125,8 @@ public class ManagementResourceTest extends AbstractRestTest {
         data.put("newpassword", "test");
 
         // now change the password back
-        node = resource().path("/management/users/test/password")
-                .queryParam("access_token", superToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, data);
+        node = resource().path("/management/users/test/password").queryParam("access_token", superToken)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
 
         assertNull(getError(node));
 
@@ -158,21 +140,16 @@ public class ManagementResourceTest extends AbstractRestTest {
     @Test
     public void crossOrgsNotViewable() throws Exception {
 
-        OrganizationOwnerInfo orgInfo = managementService
-                .createOwnerAndOrganization("crossOrgsNotViewable",
-                        "crossOrgsNotViewable", "TestName",
-                        "crossOrgsNotViewable@usergrid.org", "password");
+        OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("crossOrgsNotViewable",
+                "crossOrgsNotViewable", "TestName", "crossOrgsNotViewable@usergrid.org", "password");
 
         // check that the test admin cannot access the new org info
 
         Status status = null;
 
         try {
-            resource()
-                    .path(String.format("/management/orgs/%s", orgInfo
-                            .getOrganization().getName()))
-                    .queryParam("access_token", adminAccessToken)
-                    .accept(MediaType.APPLICATION_JSON)
+            resource().path(String.format("/management/orgs/%s", orgInfo.getOrganization().getName()))
+                    .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
                     .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getClientResponseStatus();
@@ -184,11 +161,8 @@ public class ManagementResourceTest extends AbstractRestTest {
         status = null;
 
         try {
-            resource()
-                    .path(String.format("/management/orgs/%s", orgInfo
-                            .getOrganization().getUuid()))
-                    .queryParam("access_token", adminAccessToken)
-                    .accept(MediaType.APPLICATION_JSON)
+            resource().path(String.format("/management/orgs/%s", orgInfo.getOrganization().getUuid()))
+                    .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
                     .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getClientResponseStatus();
@@ -200,25 +174,20 @@ public class ManagementResourceTest extends AbstractRestTest {
         // this admin should have access to test org
         status = null;
         try {
-            resource().path("/management/orgs/test-organization")
-                    .queryParam("access_token", adminAccessToken)
-                    .accept(MediaType.APPLICATION_JSON)
-                    .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+            resource().path("/management/orgs/test-organization").queryParam("access_token", adminAccessToken)
+                    .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
         assertNull(status);
 
-        OrganizationInfo org = managementService
-                .getOrganizationByName("test-organization");
+        OrganizationInfo org = managementService.getOrganizationByName("test-organization");
 
         status = null;
         try {
-            resource()
-                    .path(String.format("/management/orgs/%s", org.getUuid()))
-                    .queryParam("access_token", adminAccessToken)
-                    .accept(MediaType.APPLICATION_JSON)
+            resource().path(String.format("/management/orgs/%s", org.getUuid()))
+                    .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
                     .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
         } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getClientResponseStatus();
@@ -227,16 +196,89 @@ public class ManagementResourceTest extends AbstractRestTest {
         assertNull(status);
 
     }
-    
+
+    @Test
+    public void tokenTtl() throws Exception {
+
+        long ttl = 2000;
+
+        JsonNode node = resource().path("/management/token").queryParam("grant_type", "password")
+                .queryParam("username", "test@usergrid.com").queryParam("password", "test")
+                .queryParam("ttl", String.valueOf(ttl)).accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+
+        long startTime = System.currentTimeMillis();
+
+        String token = node.get("access_token").getTextValue();
+
+        assertNotNull(token);
+
+        JsonNode userdata = resource().path("/management/users/test@usergrid.com").queryParam("access_token", token)
+                .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+
+        assertEquals("test@usergrid.com", userdata.get("data").get("email").asText());
+
+        // wait for the token to expire
+        Thread.sleep(ttl - (System.currentTimeMillis() - startTime) + 1000);
+
+        Status responseStatus = null;
+        try {
+            userdata = resource().path("/management/users/test@usergrid.com").accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        } catch (UniformInterfaceException uie) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals(Status.UNAUTHORIZED, responseStatus);
+
+    }
+
+    @Test
+    public void ttlNan() throws Exception {
+
+        Map<String, String> payload = hashMap("grant_type", "password").map("username", "test@usergrid.com")
+                .map("password", "test").map("ttl", "derp");
+
+        Status responseStatus = null;
+        try {
+            resource().path("/management/token").accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
+
+        } catch (UniformInterfaceException uie) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals(Status.BAD_REQUEST, responseStatus);
+
+    }
+
+    @Test
+    public void ttlOverMax() throws Exception {
+
+        Map<String, String> payload = hashMap("grant_type", "password").map("username", "test@usergrid.com")
+                .map("password", "test").map("ttl", Long.MAX_VALUE + "");
+
+        Status responseStatus = null;
+
+        try {
+            resource().path("/management/token").accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
+
+        } catch (UniformInterfaceException uie) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals(Status.BAD_REQUEST, responseStatus);
+
+    }
+
     @Test
     public void revokeToken() throws Exception {
 
         String token1 = super.adminToken();
         String token2 = super.adminToken();
 
-        JsonNode response = resource().path("/management/users/test")
-                .queryParam("access_token", token1).accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        JsonNode response = resource().path("/management/users/test").queryParam("access_token", token1)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
         assertEquals("test@usergrid.com", response.get("data").get("email").asText());
 
@@ -246,29 +288,28 @@ public class ManagementResourceTest extends AbstractRestTest {
         assertEquals("test@usergrid.com", response.get("data").get("email").asText());
 
         // now revoke the tokens
-        response = resource().path("/management/users/test/revoketokens")
-                .queryParam("access_token", superAdminToken()).accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+        response = resource().path("/management/users/test/revoketokens").queryParam("access_token", superAdminToken())
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
 
         // the tokens shouldn't work
-        
+
         Status status = null;
-         
-        try{
+
+        try {
             response = resource().path("/management/users/test").queryParam("access_token", token1)
                     .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        }catch(UniformInterfaceException uie){
+        } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getClientResponseStatus();
         }
 
         assertEquals(Status.UNAUTHORIZED, status);
-        
+
         status = null;
 
-        try{
+        try {
             response = resource().path("/management/users/test").queryParam("access_token", token2)
                     .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        }catch(UniformInterfaceException uie){
+        } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getClientResponseStatus();
         }
 

@@ -64,8 +64,7 @@ import com.sun.jersey.api.view.Viewable;
 @Path("/management")
 @Component
 @Scope("singleton")
-@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-        "application/x-javascript", "text/ecmascript",
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript" })
 public class ManagementResource extends AbstractContextResource {
 
@@ -81,15 +80,13 @@ public class ManagementResource extends AbstractContextResource {
      * 
      */
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(ManagementResource.class);
+    private static final Logger logger = LoggerFactory.getLogger(ManagementResource.class);
 
     public ManagementResource() {
         logger.info("ManagementResource initialized");
     }
 
-    private static String wrapWithCallback(AccessInfo accessInfo,
-            String callback) {
+    private static String wrapWithCallback(AccessInfo accessInfo, String callback) {
         return wrapWithCallback(mapToJsonString(accessInfo), callback);
     }
 
@@ -101,8 +98,7 @@ public class ManagementResource extends AbstractContextResource {
     }
 
     private static MediaType jsonMediaType(String callback) {
-        return isNotBlank(callback) ? new MediaType("application", "javascript")
-                : APPLICATION_JSON_TYPE;
+        return isNotBlank(callback) ? new MediaType("application", "javascript") : APPLICATION_JSON_TYPE;
     }
 
     @Path("organizations")
@@ -122,30 +118,22 @@ public class ManagementResource extends AbstractContextResource {
 
     @GET
     @Path("token")
-    public Response getAccessToken(@Context UriInfo ui,
-            @HeaderParam("Authorization") String authorization,
-            @QueryParam("grant_type") String grant_type,
-            @QueryParam("username") String username,
-            @QueryParam("password") String password,
-            @QueryParam("client_id") String client_id,
-            @QueryParam("client_secret") String client_secret,
-            @QueryParam("ttl") long ttl,
-            @QueryParam("callback") @DefaultValue("") String callback)
-            throws Exception {
+    public Response getAccessToken(@Context UriInfo ui, @HeaderParam("Authorization") String authorization,
+            @QueryParam("grant_type") String grant_type, @QueryParam("username") String username,
+            @QueryParam("password") String password, @QueryParam("client_id") String client_id,
+            @QueryParam("client_secret") String client_secret, @QueryParam("ttl") long ttl,
+            @QueryParam("callback") @DefaultValue("") String callback) throws Exception {
 
-        logger.info("ManagementResource.getAccessToken with username: {}",
-                username);
+        logger.info("ManagementResource.getAccessToken with username: {}", username);
 
         UserInfo user = null;
 
         try {
 
             if (authorization != null) {
-                String type = stringOrSubstringBeforeFirst(authorization, ' ')
-                        .toUpperCase();
+                String type = stringOrSubstringBeforeFirst(authorization, ' ').toUpperCase();
                 if ("BASIC".equals(type)) {
-                    String token = stringOrSubstringAfterFirst(authorization,
-                            ' ');
+                    String token = stringOrSubstringAfterFirst(authorization, ' ');
                     String[] values = Base64.decodeToString(token).split(":");
                     if (values.length >= 2) {
                         client_id = values[0].toLowerCase();
@@ -157,25 +145,19 @@ public class ManagementResource extends AbstractContextResource {
             // do checking for different grant types
             if (GrantType.PASSWORD.toString().equals(grant_type)) {
                 try {
-                    user = management.verifyAdminUserPasswordCredentials(
-                            username, password);
+                    user = management.verifyAdminUserPasswordCredentials(username, password);
                     if (user != null) {
-                        logger.info("found user from verify: {}",
-                                user.getUuid());
+                        logger.info("found user from verify: {}", user.getUuid());
                     }
                 } catch (Exception e1) {
                     logger.error("failed token check", e1);
                 }
             } else if ("client_credentials".equals(grant_type)) {
                 try {
-                    AccessInfo access_info = management.authorizeClient(
-                            client_id, client_secret, ttl);
+                    AccessInfo access_info = management.authorizeClient(client_id, client_secret, ttl);
                     if (access_info != null) {
-                        return Response
-                                .status(SC_OK)
-                                .type(jsonMediaType(callback))
-                                .entity(wrapWithCallback(access_info, callback))
-                                .build();
+                        return Response.status(SC_OK).type(jsonMediaType(callback))
+                                .entity(wrapWithCallback(access_info, callback)).build();
                     }
                 } catch (Exception e1) {
                     logger.error("failed authorizeClient", e1);
@@ -183,91 +165,74 @@ public class ManagementResource extends AbstractContextResource {
             }
 
             if (user == null) {
-                OAuthResponse response = OAuthResponse
-                        .errorResponse(SC_BAD_REQUEST)
+                OAuthResponse response = OAuthResponse.errorResponse(SC_BAD_REQUEST)
                         .setError(OAuthError.TokenResponse.INVALID_GRANT)
-                        .setErrorDescription("invalid username or password")
-                        .buildJSONMessage();
-                return Response.status(response.getResponseStatus())
-                        .type(jsonMediaType(callback))
-                        .entity(wrapWithCallback(response.getBody(), callback))
-                        .build();
+                        .setErrorDescription("invalid username or password").buildJSONMessage();
+                return Response.status(response.getResponseStatus()).type(jsonMediaType(callback))
+                        .entity(wrapWithCallback(response.getBody(), callback)).build();
             }
 
-            String token = management
-                    .getAccessTokenForAdminUser(user.getUuid(), ttl);
+            String token = management.getAccessTokenForAdminUser(user.getUuid(), ttl);
 
-            AccessInfo access_info = new AccessInfo()
-                    .withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
+            AccessInfo access_info = new AccessInfo().withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
                     .withAccessToken(token)
-                    .withProperty(
-                            "user",
-                            management.getAdminUserOrganizationData(user
-                                    .getUuid()));
+                    .withProperty("user", management.getAdminUserOrganizationData(user.getUuid()));
             // increment counters for admin login
             management.countAdminUserAction(user, "login");
 
-            return Response.status(SC_OK).type(jsonMediaType(callback))
-                    .entity(wrapWithCallback(access_info, callback)).build();
+            return Response.status(SC_OK).type(jsonMediaType(callback)).entity(wrapWithCallback(access_info, callback))
+                    .build();
 
         } catch (OAuthProblemException e) {
             logger.error("OAuth Error", e);
-            OAuthResponse res = OAuthResponse.errorResponse(SC_BAD_REQUEST)
-                    .error(e).buildJSONMessage();
-            return Response.status(res.getResponseStatus())
-                    .type(jsonMediaType(callback))
+            OAuthResponse res = OAuthResponse.errorResponse(SC_BAD_REQUEST).error(e).buildJSONMessage();
+            return Response.status(res.getResponseStatus()).type(jsonMediaType(callback))
                     .entity(wrapWithCallback(res.getBody(), callback)).build();
-        } catch (Exception ex) {
-            logger.error("General exception on auth ", ex);
-            return null;
         }
     }
 
     @POST
     @Path("token")
     @Consumes(APPLICATION_FORM_URLENCODED)
-    public Response getAccessTokenPost(@Context UriInfo ui,
-            @FormParam("grant_type") String grant_type,
-            @FormParam("username") String username,
-            @FormParam("password") String password,
-            @FormParam("client_id") String client_id,
-            @FormParam("ttl") long ttl,
-            @FormParam("client_secret") String client_secret,
-            @QueryParam("callback") @DefaultValue("") String callback)
+    public Response getAccessTokenPost(@Context UriInfo ui, @FormParam("grant_type") String grant_type,
+            @FormParam("username") String username, @FormParam("password") String password,
+            @FormParam("client_id") String client_id, @FormParam("ttl") long ttl,
+            @FormParam("client_secret") String client_secret, @QueryParam("callback") @DefaultValue("") String callback)
             throws Exception {
 
         logger.info("ManagementResource.getAccessTokenPost");
 
-        return getAccessToken(ui, null, grant_type, username, password,
-                client_id, client_secret, ttl, callback);
+        return getAccessToken(ui, null, grant_type, username, password, client_id, client_secret, ttl, callback);
     }
 
     @POST
     @Path("token")
     @Consumes(APPLICATION_JSON)
-    public Response getAccessTokenPostJson(@Context UriInfo ui,
-            Map<String, Object> json,
-            @QueryParam("callback") @DefaultValue("") String callback)
-            throws Exception {
+    public Response getAccessTokenPostJson(@Context UriInfo ui, Map<String, Object> json,
+            @QueryParam("callback") @DefaultValue("") String callback) throws Exception {
 
         String grant_type = (String) json.get("grant_type");
         String username = (String) json.get("username");
         String password = (String) json.get("password");
         String client_id = (String) json.get("client_id");
         String client_secret = (String) json.get("client_secret");
-        long duration = json.get("ttl") == null ? 0 : Long.parseLong(json.get("ttl").toString());
-        
+        long ttl = 0;
 
-        return getAccessToken(ui, null, grant_type, username, password,
-                client_id, client_secret, duration, callback);
+        if (json.get("ttl") != null) {
+            try {
+                ttl = Long.parseLong(json.get("ttl").toString());
+            } catch (NumberFormatException nfe) {
+                throw new IllegalArgumentException("ttl must be a number >= 0");
+            }
+        }
+
+        return getAccessToken(ui, null, grant_type, username, password, client_id, client_secret, ttl, callback);
     }
 
     @GET
     @Path("authorize")
-    public Viewable showAuthorizeForm(@Context UriInfo ui,
-            @QueryParam("response_type") String response_type,
-            @QueryParam("client_id") String client_id,
-            @QueryParam("redirect_uri") String redirect_uri,
+    public Viewable showAuthorizeForm(@Context UriInfo ui, @QueryParam("response_type") String response_type,
+            @QueryParam("client_id") String client_id, @QueryParam("redirect_uri") String redirect_uri,
             @QueryParam("scope") String scope, @QueryParam("state") String state) {
 
         responseType = response_type;
@@ -281,12 +246,9 @@ public class ManagementResource extends AbstractContextResource {
 
     @POST
     @Path("authorize")
-    public Viewable handleAuthorizeForm(@Context UriInfo ui,
-            @FormParam("response_type") String response_type,
-            @FormParam("client_id") String client_id,
-            @FormParam("redirect_uri") String redirect_uri,
-            @FormParam("scope") String scope, @FormParam("state") String state,
-            @FormParam("username") String username,
+    public Viewable handleAuthorizeForm(@Context UriInfo ui, @FormParam("response_type") String response_type,
+            @FormParam("client_id") String client_id, @FormParam("redirect_uri") String redirect_uri,
+            @FormParam("scope") String scope, @FormParam("state") String state, @FormParam("username") String username,
             @FormParam("password") String password) {
 
         try {
@@ -298,8 +260,7 @@ public class ManagementResource extends AbstractContextResource {
 
             UserInfo user = null;
             try {
-                user = management.verifyAdminUserPasswordCredentials(username,
-                        password);
+                user = management.verifyAdminUserPasswordCredentials(username, password);
             } catch (Exception e1) {
             }
             if ((user != null) && isNotBlank(redirect_uri)) {
@@ -308,11 +269,9 @@ public class ManagementResource extends AbstractContextResource {
                 } else {
                     redirect_uri += "&";
                 }
-                redirect_uri += "code="
-                        + management.getAccessTokenForAdminUser(user.getUuid(), 0);
+                redirect_uri += "code=" + management.getAccessTokenForAdminUser(user.getUuid(), 0);
                 if (isNotBlank(state)) {
-                    redirect_uri += "&state="
-                            + URLEncoder.encode(state, "UTF-8");
+                    redirect_uri += "&state=" + URLEncoder.encode(state, "UTF-8");
                 }
                 throw new RedirectionException(state);
             } else {
