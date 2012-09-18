@@ -51,6 +51,10 @@
 		<property name="queueCapacity" value="25" />
 	</bean>
 
-
+    <bean id="binaryStore" class="org.usergrid.services.assets.data.S3BinaryStore" destroy-method="destroy">
+        <constructor-arg value="${AWS_ACCESS_KEY_ID}"/>
+        <constructor-arg value="${AWS_ACCESS_KEY_SECRET}"/>
+        <constructor-arg value="${usergrid.binary.bucketname}"/>
+    </bean>
 
 </beans>
