@@ -3603,7 +3603,7 @@ html {
   /* IE6: treaded as min-height*/
 /*TODO:agregar al less*/
   min-width: 640px;
-  max-width: 960px;
+  max-width: 1280px;
 }
 #pages {
   padding: 70px 0 50px 0px;
@@ -3621,15 +3621,9 @@ html {
   min-width: 640px;
 }
 /*TODO agreagar al less*/
-/*
-#console-page {
-  margin: 0 auto;
-  max-width: 960px;
-  min-width: 640px;
-}
-*/
+
 footer {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   width: 100%;
   border-top: 1px solid #c9c9c9;
@@ -3776,6 +3770,8 @@ a:active {
 }
 #application-panel-buttons {
   display: none;
+  /*TODO: add to less*/
+  position:fixed;
 }
 #application-panel-buttons .active > a i {
   background-image: url(../img/glyphicons-halflings-white.png);
@@ -4785,4 +4781,3 @@ table .zebraRows:nth-child(2n) {
 .curl-container .input-append {
   position: relative;
 }
-

@@ -4212,7 +4212,9 @@ function deleteRolePermission(roleName, permission) {
     $('#login-password').val("");
     repositionTitleMenus();
     Pages.ShowPage('console');
+    $(window).resize(repositionTitleMenus);
   }
+
   Usergrid.console.loginOk = loginOk;
 
   function repositionTitleMenus(){
