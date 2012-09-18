@@ -260,9 +260,9 @@ public abstract class AbstractRestTest extends JerseyTest {
                 .queryParam("password", password)
                 .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
         
-        String mgmToken = node.get("access_token").getTextValue();
+        String userToken = node.get("access_token").getTextValue();
          
-        return mgmToken;
+        return userToken;
 
     }
     
