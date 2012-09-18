@@ -70,6 +70,7 @@ import org.usergrid.persistence.query.tree.Property;
 import org.usergrid.persistence.query.tree.QueryFilterLexer;
 import org.usergrid.persistence.query.tree.QueryFilterParser;
 import org.usergrid.persistence.query.tree.QueryVisitor;
+import org.usergrid.persistence.query.tree.StringLiteral;
 import org.usergrid.persistence.query.tree.WithinOperand;
 import org.usergrid.utils.JsonUtils;
 
@@ -782,10 +783,10 @@ public class Query {
      * @return
      */
     public Query addContainsFilter(String propName, String keyword) {
-        ContainsOperand equality = new ContainsOperand(null);
+        ContainsOperand equality = new ContainsOperand(new ClassicToken(0, "contains"));
 
         equality.setProperty(propName);
-        equality.setValue(keyword);
+        equality.setLiteral(keyword);
 
         addClause(equality);
 

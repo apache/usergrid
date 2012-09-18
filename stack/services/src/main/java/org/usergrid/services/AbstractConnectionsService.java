@@ -324,12 +324,6 @@ public class AbstractConnectionsService extends AbstractService {
 
 			String name = query.getSingleNameOrEmailIdentifier();
 
-			String nameProperty = Schema.getDefaultSchema().aliasProperty(
-					query.getEntityType());
-			if (nameProperty == null) {
-				nameProperty = "name";
-			}
-
 			EntityRef ref = em.getAlias(query.getEntityType(), name);
 			if (ref == null) {
 				throw new ServiceResourceNotFoundException(context);

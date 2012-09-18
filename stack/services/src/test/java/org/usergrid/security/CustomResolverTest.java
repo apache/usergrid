@@ -18,12 +18,22 @@ package org.usergrid.security;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.UUID;
+
+import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.apache.shiro.subject.Subject;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.management.UserInfo;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.security.shiro.CustomPermission;
+import org.usergrid.security.shiro.principals.ApplicationUserPrincipal;
+import org.usergrid.security.shiro.principals.UserPrincipal;
+import org.usergrid.security.shiro.utils.SubjectUtils;
+import org.usergrid.utils.UUIDUtils;
 
-public class CustomResolverTest {
+public class CustomResolverTest extends AbstractShiroTestHelper {
 
 	public static final Logger logger = LoggerFactory
 			.getLogger(CustomResolverTest.class);
@@ -74,6 +84,30 @@ public class CustomResolverTest {
 				false,
 				"applications:get:00000000-0000-0000-0000-000000000001:/foo/bar/*/boz/*",
 				"applications:get:00000000-0000-0000-0000-000000000001:/foo/bar/baz/boz/biz/box");
+	}
+	
+	@Test
+	public void userMeSubstitution(){
+	    User fakeUser = new User();
+	    fakeUser.setUuid(UUIDUtils.newTimeUUID());
+	    fakeUser.setUsername("testusername");
+	    
+	    UUID appId = UUIDUtils.newTimeUUID();
+	    
+	    UserInfo info = new UserInfo(appId, fakeUser.getProperties());
+	    
+	    
+	    ApplicationUserPrincipal principal = new ApplicationUserPrincipal(appId, info); 
+	    Subject subject =   new Subject.Builder(getSecurityManager()).principals(new SimplePrincipalCollection(principal, "usergrid")).buildSubject();
+	    
+	    setSubject(subject);
+	    
+	    testImplies(true, "/users/mefake@usergrid.org/**", "/users/mefake@usergrid.org/permissions");
+	    
+	    //test substitution
+	    testImplies(true, "/users/me/**", String.format("/users/%s/permissions", fakeUser.getUsername()));
+	    
+	    testImplies(true, "/users/me/**", String.format("/users/%s/permissions", fakeUser.getUuid()));
 	}
 
 	public void testImplies(boolean expected, String s1, String s2) {

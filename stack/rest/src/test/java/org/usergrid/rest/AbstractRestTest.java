@@ -164,20 +164,8 @@ public abstract class AbstractRestTest extends JerseyTest {
             return;
         }
 
-        adminToken();
         //
-
-        Map<String, String> payload = hashMap("email", "ed@anuff.com")
-                .map("username", "edanuff").map("name", "Ed Anuff")
-                .map("password", "sesame").map("pin", "1234");
-
-        JsonNode node = resource().path("/test-organization/test-app/users")
-                .queryParam("access_token", adminAccessToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, payload);
-
-        // client.setApiUrl(apiUrl);
+        createUser("edanuff", "ed@anuff.com", "sesame", "Ed Anuff");        // client.setApiUrl(apiUrl);
 
         usersSetup = true;
 
@@ -193,18 +181,8 @@ public abstract class AbstractRestTest extends JerseyTest {
         for (int i = 0; i < 10; i++) {
 
             try {
-                Map<String, String> data = new HashMap<String, String>();
-                data.put("newpassword", "sesame");
-                
-                
-                //change the password as admin.  The old password isn't required
-                JsonNode node = resource().path("/test-organization/test-app/users/edanuff/password")
-                        .queryParam("access_token", adminAccessToken)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
-                
-                assertNull(getError(node));
-                
+               
+                setUserPassword("ed@anuff.com", "sesame");
                 
                 client = new Client("test-organization", "test-app").withApiUrl(getBaseURI().toString());
 
@@ -265,20 +243,63 @@ public abstract class AbstractRestTest extends JerseyTest {
 
         managementService = (ManagementService) context.getBean("managementService");
         
-      
-        ApplicationInfo appInfo = managementService
-                .getApplicationInfo("test-organization/test-app");
-
-        User user = managementService.getAppUserByIdentifier(appInfo.getId(),
-                Identifier.from("ed@anuff.com"));
-
-        access_token = managementService.getAccessTokenForAppUser(
-                appInfo.getId(), user.getUuid());
-      
-        adminToken();
+     
+        access_token = userToken("ed@anuff.com", "sesame");
 
         loginClient();
 
+    }
+    
+    protected String userToken(String name, String password) throws Exception{
+       
+        setUserPassword("ed@anuff.com", "sesame");
+        
+        JsonNode node = resource().path("/test-organization/test-app/token")
+                .queryParam("grant_type", "password")
+                .queryParam("username", name)
+                .queryParam("password", password)
+                .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+        
+        String mgmToken = node.get("access_token").getTextValue();
+         
+        return mgmToken;
+
+    }
+    
+    public void createUser(String username, String email, String password, String name){
+
+        if(adminAccessToken == null){
+            adminToken();
+        }
+        
+        Map<String, String> payload = hashMap("email", email)
+                .map("username", username).map("name", name)
+                .map("password", password).map("pin", "1234");
+
+        resource().path("/test-organization/test-app/users")
+                .queryParam("access_token", adminAccessToken)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(JsonNode.class, payload);
+
+    }
+    
+    public void setUserPassword(String username, String password){
+        Map<String, String> data = new HashMap<String, String>();
+        data.put("newpassword", password);
+        
+        if(adminAccessToken == null){
+            adminToken();
+        }
+        
+        //change the password as admin.  The old password isn't required
+        JsonNode node = resource().path(String.format("/test-organization/test-app/users/%s/password", username))
+                .queryParam("access_token", adminAccessToken)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
+        
+        assertNull(getError(node));
+        
     }
     
     

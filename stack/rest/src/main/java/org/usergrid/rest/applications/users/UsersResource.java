@@ -111,9 +111,11 @@ public class UsersResource extends ServiceResource {
 		addParameter(getServiceParameters(), itemName.getPath());
 
 		addMatrixParams(getServiceParameters(), ui, itemName);
-
-		return getSubResource(UserResource.class).init(
-				Identifier.from(itemName.getPath()));
+    Identifier id = Identifier.from(itemName.getPath());
+    if ( id == null ) {
+      throw new IllegalArgumentException("Not a valid user identifier: " + itemName.getPath());
+    }
+		return getSubResource(UserResource.class).init(id);
 	}
 
 	@GET

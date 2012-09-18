@@ -27,7 +27,12 @@ import org.usergrid.security.shiro.utils.SubjectUtils;
 
 public class CustomPermission extends WildcardPermission {
 
-	static AntPathMatcher matcher = new AntPathMatcher();
+	/**
+     * 
+     */
+    private static final String ME = "/me/";
+
+    static AntPathMatcher matcher = new AntPathMatcher();
 
 	private static final long serialVersionUID = 1L;
 
@@ -147,13 +152,13 @@ public class CustomPermission extends WildcardPermission {
 					return true;
 				}
 			}
-		} else if (p1.contains("me")) {
+		} else if (p1.contains(ME)) {
 			UserInfo user = SubjectUtils.getUser();
 			if (user != null) {
-				if (doCompare(p1.replace("me", user.getUsername()), p2)) {
+				if (doCompare(p1.replace(ME, String.format("/%s/", user.getUsername())), p2)) {
 					return true;
 				}
-				if (doCompare(p1.replace("me", user.getUuid().toString()), p2)) {
+				if (doCompare(p1.replace(ME, String.format("/%s/", user.getUuid().toString())), p2)) {
 					return true;
 				}
 			}

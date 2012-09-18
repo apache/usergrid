@@ -1084,6 +1084,30 @@ public class EntityManagerImpl implements EntityManager,
 			logger.error("Unable to increment counter application.entities", e);
 		}
 	}
+	
+	public void decrementEntityCollection(String collection_name) {
+
+		long cassandraTimestamp = cass.createTimestamp();
+		decrementEntityCollection(collection_name, cassandraTimestamp);
+	}
+  
+  	public void decrementEntityCollection(String collection_name,
+			long cassandraTimestamp) {
+		try {
+			incrementAggregateCounters(null, null, null,
+					"application.collection." + collection_name, -1L,
+					cassandraTimestamp);
+		} catch (Exception e) {
+			logger.error("Unable to decrement counter application.collection."
+					+ collection_name, e);
+		}
+		try {
+			incrementAggregateCounters(null, null, null,
+					"application.entities", -1L, cassandraTimestamp);
+		} catch (Exception e) {
+			logger.error("Unable to decrement counter application.entities", e);
+		}
+	}
 
   @Metered(group="core", name="EntityManager_insertEntity")
 	public void insertEntity(String type, UUID entityId) throws Exception {
@@ -1631,6 +1655,12 @@ public class EntityManagerImpl implements EntityManager,
 
 		// find all the containing collections
 		getRelationManager(entity).batchRemoveFromContainers(m, timestampUuid);
+		
+		//decrease entity count
+		if(!TYPE_APPLICATION.equals(entity.getType())) {
+			String collection_name = Schema.defaultCollectionName(entity.getType());
+			decrementEntityCollection(collection_name);
+		}
 
 		batchExecute(m, CassandraService.RETRY_COUNT);
 
@@ -3103,5 +3133,44 @@ public class EntityManagerImpl implements EntityManager,
 	public IndexBucketLocator getIndexBucketLocator() {
 		return indexBucketLocator;
 	}
+
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public Map<String, Role> getGroupRolesWithTitles(UUID groupId) throws Exception {
+    return getRolesWithTitles(
+            (Set<String>) cast(getDictionaryAsSet(groupRef(groupId), DICTIONARY_ROLENAMES)));
+  }
+
+  @Override
+  public void addGroupToRole(UUID groupId, String roleName) throws Exception {
+    roleName = roleName.toLowerCase();
+    addToDictionary(groupRef(groupId), DICTIONARY_ROLENAMES, roleName, roleName);
+    addToCollection(groupRef(groupId), COLLECTION_ROLES, roleRef(roleName));
+  }
+
+  @Override
+  public void removeGroupFromRole(UUID groupId, String roleName) throws Exception {
+    roleName = roleName.toLowerCase();
+    removeFromDictionary(groupRef(groupId), DICTIONARY_ROLENAMES, roleName);
+    removeFromCollection(groupRef(groupId), COLLECTION_ROLES, roleRef(roleName));
+  }
+
+  @Override
+  public Set<String> getGroupPermissions(UUID groupId) throws Exception {
+    return cast(getDictionaryAsSet(groupRef(groupId), Schema.DICTIONARY_PERMISSIONS));
+  }
+
+  @Override
+  public void grantGroupPermission(UUID groupId, String permission) throws Exception {
+    permission = permission.toLowerCase();
+    addToDictionary(groupRef(groupId), DICTIONARY_PERMISSIONS, permission);
+  }
+
+  @Override
+  public void revokeGroupPermission(UUID groupId, String permission) throws Exception {
+    permission = permission.toLowerCase();
+    removeFromDictionary(groupRef(groupId), DICTIONARY_PERMISSIONS, permission);
+  }
 
 }
