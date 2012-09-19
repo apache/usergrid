@@ -562,7 +562,7 @@ public class Server implements ApplicationContextAware {
     public String getAccessTokenForAdminUser(String email) {
         try {
             UserInfo user = management.getAdminUserByEmail(email);
-            return management.getAccessTokenForAdminUser(user.getUuid());
+            return management.getAccessTokenForAdminUser(user.getUuid(), 0);
         } catch (Exception e) {
             logger.error("Unable to get user: " + email);
         }

@@ -43,7 +43,9 @@ import org.mortbay.log.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
+import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.cassandra.CassandraService;
+import org.usergrid.persistence.entities.Application;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.TokenCategory;
@@ -66,6 +68,7 @@ public class TokenServiceImpl implements TokenService {
     private static final String TOKEN_CREATED = "created";
     private static final String TOKEN_ACCESSED = "accessed";
     private static final String TOKEN_INACTIVE = "inactive";
+    private static final String TOKEN_DURATION = "duration";
     private static final String TOKEN_PRINCIPAL_TYPE = "principal";
     private static final String TOKEN_ENTITY = "entity";
     private static final String TOKEN_APPLICATION = "application";
@@ -88,6 +91,7 @@ public class TokenServiceImpl implements TokenService {
         TOKEN_PROPERTIES.add(TOKEN_ENTITY);
         TOKEN_PROPERTIES.add(TOKEN_APPLICATION);
         TOKEN_PROPERTIES.add(TOKEN_STATE);
+        TOKEN_PROPERTIES.add(TOKEN_DURATION);
     }
 
     private static final HashSet<String> REQUIRED_TOKEN_PROPERTIES = new HashSet<String>();
@@ -98,6 +102,7 @@ public class TokenServiceImpl implements TokenService {
         REQUIRED_TOKEN_PROPERTIES.add(TOKEN_CREATED);
         REQUIRED_TOKEN_PROPERTIES.add(TOKEN_ACCESSED);
         REQUIRED_TOKEN_PROPERTIES.add(TOKEN_INACTIVE);
+        REQUIRED_TOKEN_PROPERTIES.add(TOKEN_DURATION);
     }
 
     public static final String TOKEN_SECRET_SALT = "super secret token value";
@@ -124,6 +129,8 @@ public class TokenServiceImpl implements TokenService {
 
     protected Properties properties;
 
+    protected EntityManagerFactory emf;
+    
     public TokenServiceImpl() {
 
     }
@@ -168,11 +175,7 @@ public class TokenServiceImpl implements TokenService {
         }
     }
 
-    @Autowired
-    @Qualifier("cassandraService")
-    public void setCassandraService(CassandraService cassandra) {
-        this.cassandra = cassandra;
-    }
+   
 
     @Override
     public String createToken(TokenCategory tokenCategory, String type, Map<String, Object> state) throws Exception {
@@ -188,11 +191,33 @@ public class TokenServiceImpl implements TokenService {
     public String createToken(AuthPrincipalInfo principal, Map<String, Object> state) throws Exception {
         return createToken(TokenCategory.ACCESS, null, principal, state);
     }
+    
+    
 
+    /* (non-Javadoc)
+     * @see org.usergrid.security.tokens.TokenService#createToken(org.usergrid.security.tokens.TokenCategory, java.lang.String, org.usergrid.security.AuthPrincipalInfo, java.util.Map)
+     */
     @Override
     public String createToken(TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
             Map<String, Object> state) throws Exception {
+        return createToken(tokenCategory, type, principal, state, 0);
+    }
 
+    @Override
+    public String createToken(TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
+            Map<String, Object> state, long duration) throws Exception {
+
+        
+        long maxTokenTtl = getMaxTtl(principal);
+        
+        if(duration > maxTokenTtl){
+            throw new IllegalArgumentException(String.format("Your token age cannot be more than the maxium age of %d milliseconds", maxTokenTtl));
+        }
+        
+        if(duration == 0){
+            duration = maxTokenTtl;
+        }
+        
         if (principal != null) {
             Assert.notNull(principal.getType());
             Assert.notNull(principal.getApplicationId());
@@ -204,7 +229,7 @@ public class TokenServiceImpl implements TokenService {
         if (type == null) {
             type = TOKEN_TYPE_ACCESS;
         }
-        TokenInfo tokenInfo = new TokenInfo(uuid, type, timestamp, timestamp, 0, principal, state);
+        TokenInfo tokenInfo = new TokenInfo(uuid, type, timestamp, timestamp, 0, duration, principal, state);
         putTokenInfo(tokenInfo);
         return getTokenForUUID(tokenCategory, uuid);
     }
@@ -217,16 +242,18 @@ public class TokenServiceImpl implements TokenService {
             tokenInfo = getTokenInfo(uuid);
             if (tokenInfo != null) {
                 long now = currentTimeMillis();
+                
+                long maxTokenTtl = getMaxTtl(tokenInfo.getPrincipal());
 
                 Mutator<UUID> batch = createMutator(cassandra.getSystemKeyspace(), UUIDSerializer.get());
 
-                HColumn<String, Long> col = createColumn(TOKEN_ACCESSED, now, (int) (maxPersistenceTokenAge / 1000),
+                HColumn<String, Long> col = createColumn(TOKEN_ACCESSED, now, (int) (tokenInfo.getExpiration(maxTokenTtl) / 1000),
                         StringSerializer.get(), LongSerializer.get());
                 batch.addInsertion(uuid, TOKENS_CF, col);
 
                 long inactive = now - tokenInfo.getAccessed();
                 if (inactive > tokenInfo.getInactive()) {
-                    col = createColumn(TOKEN_INACTIVE, inactive, (int) (maxPersistenceTokenAge / 1000),
+                    col = createColumn(TOKEN_INACTIVE, inactive, (int) (tokenInfo.getExpiration(maxTokenTtl) / 1000),
                             StringSerializer.get(), LongSerializer.get());
                     batch.addInsertion(uuid, TOKENS_CF, col);
                     tokenInfo.setInactive(inactive);
@@ -236,6 +263,40 @@ public class TokenServiceImpl implements TokenService {
             }
         }
         return tokenInfo;
+    }
+    
+    /**
+     * Get the max ttl per app.  This is null safe,and will return the default in the case of missing data
+     * @param principal
+     * @return
+     * @throws Exception
+     */
+    private long getMaxTtl(AuthPrincipalInfo principal) throws Exception{
+        
+        if(principal == null){
+            return maxPersistenceTokenAge;
+        }
+        
+        Application application = emf.getEntityManager(principal.getApplicationId()).getApplication();
+        
+        if(application == null){
+            return maxPersistenceTokenAge;
+        }
+        
+        //set the max to the default
+        long maxTokenTtl = maxPersistenceTokenAge;
+        
+        //it's been defined on the expiration, override it
+        if(application.getAccesstokenttl() != null){
+            maxTokenTtl = application.getAccesstokenttl();
+            
+            //it's set to 0 which equals infinity, set our expiration to LONG.MAX
+            if(maxTokenTtl == 0){
+                maxTokenTtl = Long.MAX_VALUE;
+            }
+        }
+        
+        return maxTokenTtl;
     }
 
     @Override
@@ -284,6 +345,7 @@ public class TokenServiceImpl implements TokenService {
         long created = getLong(columns.get(TOKEN_CREATED));
         long accessed = getLong(columns.get(TOKEN_ACCESSED));
         long inactive = getLong(columns.get(TOKEN_INACTIVE));
+        long duration = getLong(columns.get(TOKEN_DURATION));
         String principalTypeStr = string(columns.get(TOKEN_PRINCIPAL_TYPE));
         AuthPrincipalType principalType = null;
         if (principalTypeStr != null) {
@@ -300,7 +362,7 @@ public class TokenServiceImpl implements TokenService {
         }
         @SuppressWarnings("unchecked")
         Map<String, Object> state = (Map<String, Object>) JsonUtils.fromByteBuffer(columns.get(TOKEN_STATE));
-        return new TokenInfo(uuid, type, created, accessed, inactive, principal, state);
+        return new TokenInfo(uuid, type, created, accessed, inactive, duration, principal, state);
     }
 
     private void putTokenInfo(TokenInfo tokenInfo) throws Exception {
@@ -311,7 +373,7 @@ public class TokenServiceImpl implements TokenService {
 
         Mutator<ByteBuffer> m = createMutator(ko, BUFF_SER);
 
-        int ttl = (int) (maxPersistenceTokenAge / 1000);
+        int ttl = (int) (tokenInfo.getDuration() / 1000);
 
         m.addInsertion(tokenUUID, TOKENS_CF,
                 createColumn(TOKEN_UUID, bytebuffer(tokenInfo.getUuid()), ttl, STR_SER, BUFF_SER));
@@ -323,6 +385,8 @@ public class TokenServiceImpl implements TokenService {
                 createColumn(TOKEN_ACCESSED, bytebuffer(tokenInfo.getAccessed()), ttl, STR_SER, BUFF_SER));
         m.addInsertion(tokenUUID, TOKENS_CF,
                 createColumn(TOKEN_INACTIVE, bytebuffer(tokenInfo.getInactive()), ttl, STR_SER, BUFF_SER));
+        m.addInsertion(tokenUUID, TOKENS_CF,
+                createColumn(TOKEN_DURATION, bytebuffer(tokenInfo.getDuration()), ttl, STR_SER, BUFF_SER));
 
         if (tokenInfo.getPrincipal() != null) {
 
@@ -435,6 +499,25 @@ public class TokenServiceImpl implements TokenService {
         return Long.MAX_VALUE;
     }
 
+    /**
+     * The maximum age a token can be saved for
+     * @return the maxPersistenceTokenAge
+     */
+    public long getMaxPersistenceTokenAge() {
+        return maxPersistenceTokenAge;
+    }
+
+    @Autowired
+    @Qualifier("cassandraService")
+    public void setCassandraService(CassandraService cassandra) {
+        this.cassandra = cassandra;
+    }
+    
+    @Autowired
+    public void setEntityManagerFactory(EntityManagerFactory emf){
+        this.emf = emf;
+    }
+    
     private String getTokenForUUID(TokenCategory tokenCategory, UUID uuid) {
         int l = 36;
         if (tokenCategory.getExpires()) {

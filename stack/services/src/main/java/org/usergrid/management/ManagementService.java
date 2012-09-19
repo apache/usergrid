@@ -44,7 +44,7 @@ public interface ManagementService {
 	public UUID addApplicationToOrganization(UUID organizationId,
 			UUID applicationId) throws Exception;
 
-	public AccessInfo authorizeClient(String clientId, String clientSecret)
+	public AccessInfo authorizeClient(String clientId, String clientSecret, long ttl)
 			throws Exception;
 
 	public ActivationState handleConfirmationTokenForAdminUser(UUID userId,
@@ -108,7 +108,7 @@ public interface ManagementService {
 
 	public UserInfo findAdminUser(String identifier);
 
-	public String getAccessTokenForAdminUser(UUID userId) throws Exception;
+	public String getAccessTokenForAdminUser(UUID userId, long duration) throws Exception;
 	
 	/**
 	 * Revoke all active access tokens for this admin user
@@ -117,12 +117,12 @@ public interface ManagementService {
 	 */
 	public void revokeAccessTokensForAdminUser(UUID userId) throws Exception;
 
-	public String getActivationTokenForAdminUser(UUID userId) throws Exception;
+	public String getActivationTokenForAdminUser(UUID userId, long ttl) throws Exception;
 
-	public String getConfirmationTokenForAdminUser(UUID userId)
+	public String getConfirmationTokenForAdminUser(UUID userId, long ttl)
 			throws Exception;
 
-	public String getActivationTokenForOrganization(UUID organizationId)
+	public String getActivationTokenForOrganization(UUID organizationId, long ttl)
 			throws Exception;
 
 	public ServiceResults getAdminUserActivities(UserInfo user)
@@ -219,7 +219,7 @@ public interface ManagementService {
 	public BiMap<UUID, String> getOrganizationsForAdminUser(UUID userId)
 			throws Exception;
 
-	public String getPasswordResetTokenForAdminUser(UUID userId)
+	public String getPasswordResetTokenForAdminUser(UUID userId, long ttl)
 			throws Exception;
 
 	public UserInfo getAdminUserByUuid(UUID id) throws Exception;
@@ -307,7 +307,7 @@ public interface ManagementService {
 	public boolean checkPasswordResetTokenForAppUser(UUID applicationId,
 			UUID userId, String token) throws Exception;
 
-	public String getAccessTokenForAppUser(UUID applicationId, UUID userId)
+	public String getAccessTokenForAppUser(UUID applicationId, UUID userId, long duration)
 			throws Exception;
 	
 	/**
