@@ -39,7 +39,8 @@ import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 
-import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
@@ -57,8 +58,11 @@ import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
+
 public class TokenServiceImpl implements TokenService {
 
+    private static final Logger logger = LoggerFactory.getLogger(TokenServiceImpl.class);
+    
     public static final String PROPERTIES_AUTH_TOKEN_SECRET_SALT = "usergrid.auth.token_secret_salt";
     public static final String PROPERTIES_AUTH_TOKEN_EXPIRES_FROM_LAST_USE = "usergrid.auth.token_expires_from_last_use";
     public static final String PROPERTIES_AUTH_TOKEN_REFRESH_REUSES_ID = "usergrid.auth.token_refresh_reuses_id";
@@ -156,7 +160,7 @@ public class TokenServiceImpl implements TokenService {
         if (expires > 0) {
             tokenExpirations.put(tokenCategory, expires);
         }
-        Log.info(name + " token expires after " + getExpirationForTokenType(tokenCategory) / 1000 + " seconds");
+        logger.info("{} token expires after {} seconds", name,  getExpirationForTokenType(tokenCategory) / 1000 );
     }
 
     @Autowired
@@ -330,6 +334,44 @@ public class TokenServiceImpl implements TokenService {
 
         batch.execute();
 
+    }
+
+    
+    
+    /* (non-Javadoc)
+     * @see org.usergrid.security.tokens.TokenService#revokeToken(java.lang.String)
+     */
+    @Override
+    public void revokeToken(String token) {
+        
+        
+        TokenInfo info;
+        
+        try {
+            info = getTokenInfo(token);
+        } catch (Exception e) {
+            logger.error("Unable to find token with the specified value ignoring request.  Value : {}", token);
+            return;
+        }
+        
+        UUID tokenId = info.getUuid();
+        
+      
+        
+        Mutator<ByteBuffer> batch = createMutator(cassandra.getSystemKeyspace(), BUFF_SER);
+
+        //clean up the link in the principal -> token index if the principal is on the token
+        if(info.getPrincipal() != null){
+            batch.addDeletion(principalKey(info.getPrincipal()), PRINCIPAL_TOKEN_CF,   bytebuffer(tokenId), BUFF_SER );
+        }
+        
+        //remove the token from the tokens cf
+        batch.addDeletion(bytebuffer(tokenId), TOKENS_CF);
+        
+
+
+        batch.execute();
+        
     }
 
     private TokenInfo getTokenInfo(UUID uuid) throws Exception {

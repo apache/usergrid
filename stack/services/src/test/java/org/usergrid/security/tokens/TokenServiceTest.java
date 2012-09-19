@@ -327,5 +327,40 @@ public class TokenServiceTest {
         assertTrue(invalidTokenException);
     }
 
+    @Test
+    public void tokenDeletion() throws Exception {
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
+                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
+                UUIDUtils.newTimeUUID());
+
+        String realToken = tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
+         
+        assertNotNull(realToken);
+        
+        
+        TokenInfo tokenInfo = tokenService.getTokenInfo(realToken);
+        assertNotNull(tokenInfo);
+        
+        
+        tokenService.revokeToken(realToken);
+        
+        boolean invalidTokenException = false;
+        
+        try {
+            tokenService.getTokenInfo(realToken);
+        } catch (InvalidTokenException ite) {
+            invalidTokenException = true;
+        }
+        
+        assertTrue(invalidTokenException);
+        
+
+        String fakeToken = "notarealtoken";
+        
+        
+        tokenService.revokeToken(fakeToken);
+        
+    }
+    
 
 }
