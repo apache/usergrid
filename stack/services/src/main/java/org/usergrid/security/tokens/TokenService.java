@@ -31,6 +31,14 @@ public interface TokenService {
 	public String refreshToken(String token) throws Exception;
 
 	public long getMaxTokenAge(String token);
+	
+	/**
+	 * Expire the token.  If the token does not exist, this operation will not throw an error.  Implementations
+	 * should always delete this token, regardless of state.
+	 * 
+	 * @param token
+	 */
+	public void revokeToken(String token);
 
 	/**
 	 * Remove all tokens currently issued for the given AuthPrincipal.  Removes the specified type of token
