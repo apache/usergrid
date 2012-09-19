@@ -154,7 +154,7 @@ public class RelationManagerImpl implements RelationManager,
         ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory
-            .getLogger(EntityManagerImpl.class);
+            .getLogger(RelationManagerImpl.class);
 
     private ApplicationContext applicationContext;
     private EntityManagerImpl em;
