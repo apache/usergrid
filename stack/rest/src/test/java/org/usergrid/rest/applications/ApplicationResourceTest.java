@@ -205,6 +205,5 @@ public class ApplicationResourceTest extends AbstractRestTest {
 
         assertEquals(Status.BAD_REQUEST, responseStatus);
 
-
     }
 }
