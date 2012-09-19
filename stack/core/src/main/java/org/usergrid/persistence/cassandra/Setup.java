@@ -26,7 +26,7 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
 import static org.usergrid.persistence.cassandra.CassandraService.PROPERTIES_CF;
 import static org.usergrid.persistence.cassandra.CassandraService.STATIC_APPLICATION_KEYSPACE;
 import static org.usergrid.persistence.cassandra.CassandraService.SYSTEM_KEYSPACE;
-import static org.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
+import static org.usergrid.persistence.cassandra.CassandraService.*;
 import static org.usergrid.persistence.cassandra.CassandraService.USE_VIRTUAL_KEYSPACES;
 import static org.usergrid.persistence.cassandra.CassandraService.keyspaceForApplication;
 
@@ -105,6 +105,8 @@ public class Setup {
 				PROPERTIES_CF, ComparatorType.BYTESTYPE));
 		cf_defs.add(createColumnFamilyDefinition(SYSTEM_KEYSPACE, TOKENS_CF,
 				ComparatorType.BYTESTYPE));
+		cf_defs.add(createColumnFamilyDefinition(SYSTEM_KEYSPACE, PRINCIPAL_TOKEN_CF,
+                ComparatorType.TIMEUUIDTYPE));
 
 		cass.createKeyspace(SYSTEM_KEYSPACE, cf_defs);
 

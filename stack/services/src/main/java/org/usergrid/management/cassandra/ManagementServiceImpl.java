@@ -617,7 +617,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public OrganizationInfo getOrganizationInfoFromAccessToken(String token)
             throws Exception {
-        Entity entity = geEntityFromAccessToken(token, null, ORGANIZATION);
+        Entity entity = getEntityFromAccessToken(token, null, ORGANIZATION);
         if (entity == null) {
             return null;
         }
@@ -1166,15 +1166,26 @@ public class ManagementServiceImpl implements ManagementService {
     // Map<String, Object> state
     public String getTokenForPrincipal(TokenCategory token_category,
             String token_type, UUID applicationId,
-            AuthPrincipalType principal_type, UUID id) throws Exception {
+            AuthPrincipalType principal_type, UUID id, long duration) throws Exception {
 
         if (anyNull(token_category, applicationId, principal_type, id)) {
             return null;
         }
 
         return tokens.createToken(token_category, token_type,
-                new AuthPrincipalInfo(principal_type, id, applicationId), null);
+                new AuthPrincipalInfo(principal_type, id, applicationId), null, duration);
 
+    }
+    
+    public void revokeTokensForPrincipal( AuthPrincipalType principalType, UUID applicationId,  UUID id) throws Exception  {
+
+        if (anyNull(applicationId, principalType, id)) {
+            throw new IllegalArgumentException("applicationId, principal_type and id are required");
+        }
+
+        AuthPrincipalInfo principal =   new AuthPrincipalInfo(principalType, id, applicationId);
+        
+        tokens.removeTokens(principal);
     }
 
     public AuthPrincipalInfo getPrincipalFromAccessToken(String token,
@@ -1205,7 +1216,7 @@ public class ManagementServiceImpl implements ManagementService {
         return principal;
     }
 
-    public Entity geEntityFromAccessToken(String token,
+    public Entity getEntityFromAccessToken(String token,
             String expected_token_type,
             AuthPrincipalType expected_principal_type) throws Exception {
 
@@ -1215,10 +1226,10 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        return geEntityFromPrincipal(principal);
+        return getEntityFromPrincipal(principal);
     }
 
-    public Entity geEntityFromPrincipal(AuthPrincipalInfo principal)
+    public Entity getEntityFromPrincipal(AuthPrincipalInfo principal)
             throws Exception {
 
         EntityManager em = emf
@@ -1229,17 +1240,25 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public String getAccessTokenForAdminUser(UUID userId) throws Exception {
+    public String getAccessTokenForAdminUser(UUID userId, long duration) throws Exception {
 
         return getTokenForPrincipal(ACCESS, null, MANAGEMENT_APPLICATION_ID,
-                ADMIN_USER, userId);
+                ADMIN_USER, userId, duration);
+    }
+
+    /* (non-Javadoc)
+     * @see org.usergrid.management.ManagementService#revokeAccessTokensForAdminUser(java.util.UUID)
+     */
+    @Override
+    public void revokeAccessTokensForAdminUser(UUID userId) throws Exception {
+        revokeTokensForPrincipal(ADMIN_USER, MANAGEMENT_APPLICATION_ID, userId);
     }
 
     @Override
     public Entity getAdminUserEntityFromAccessToken(String token)
             throws Exception {
 
-        Entity user = geEntityFromAccessToken(token, null, ADMIN_USER);
+        Entity user = getEntityFromAccessToken(token, null, ADMIN_USER);
         return user;
     }
 
@@ -1595,7 +1614,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public ApplicationInfo getApplicationInfoFromAccessToken(String token)
             throws Exception {
-        Entity entity = geEntityFromAccessToken(token, null, APPLICATION);
+        Entity entity = getEntityFromAccessToken(token, null, APPLICATION);
         if (entity == null) {
             throw new TokenException(
                     "Could not find an entity for that access token: " + token);
@@ -1681,7 +1700,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public AccessInfo authorizeClient(String clientId, String clientSecret)
+    public AccessInfo authorizeClient(String clientId, String clientSecret, long ttl)
             throws Exception {
         if ((clientId == null) || (clientSecret == null)) {
             return null;
@@ -1703,7 +1722,7 @@ public class ManagementServiceImpl implements ManagementService {
                         .withExpiresIn(3600)
                         .withAccessToken(
                                 getTokenForPrincipal(ACCESS, null,
-                                        MANAGEMENT_APPLICATION_ID, type, uuid))
+                                        MANAGEMENT_APPLICATION_ID, type, uuid, ttl))
                         .withProperty("application", app.getId());
             } else if (type.equals(AuthPrincipalType.ORGANIZATION)) {
                 OrganizationInfo organization = getOrganizationByUuid(uuid);
@@ -1711,7 +1730,7 @@ public class ManagementServiceImpl implements ManagementService {
                         .withExpiresIn(3600)
                         .withAccessToken(
                                 getTokenForPrincipal(ACCESS, null,
-                                        MANAGEMENT_APPLICATION_ID, type, uuid))
+                                        MANAGEMENT_APPLICATION_ID, type, uuid, ttl))
                         .withProperty("organization",
                                 getOrganizationData(organization));
             }
@@ -1760,10 +1779,10 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public String getPasswordResetTokenForAdminUser(UUID userId)
+    public String getPasswordResetTokenForAdminUser(UUID userId, long ttl)
             throws Exception {
         return getTokenForPrincipal(EMAIL, TOKEN_TYPE_PASSWORD_RESET,
-                MANAGEMENT_APPLICATION_ID, ADMIN_USER, userId);
+                MANAGEMENT_APPLICATION_ID, ADMIN_USER, userId, ttl);
     }
 
     @Override
@@ -1780,16 +1799,16 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public String getActivationTokenForAdminUser(UUID userId) throws Exception {
+    public String getActivationTokenForAdminUser(UUID userId, long ttl) throws Exception {
         return getTokenForPrincipal(EMAIL, TOKEN_TYPE_ACTIVATION,
-                MANAGEMENT_APPLICATION_ID, ADMIN_USER, userId);
+                MANAGEMENT_APPLICATION_ID, ADMIN_USER, userId, ttl);
     }
 
     @Override
-    public String getConfirmationTokenForAdminUser(UUID userId)
+    public String getConfirmationTokenForAdminUser(UUID userId, long ttl)
             throws Exception {
         return getTokenForPrincipal(EMAIL, TOKEN_TYPE_CONFIRM,
-                MANAGEMENT_APPLICATION_ID, ADMIN_USER, userId);
+                MANAGEMENT_APPLICATION_ID, ADMIN_USER, userId, ttl);
     }
 
     @Override
@@ -1813,6 +1832,9 @@ public class ManagementServiceImpl implements ManagementService {
         user.setDeactivated(System.currentTimeMillis());
         
         em.update(user);
+        
+        //revoke all access tokens for the app
+        revokeAccessTokensForAppUser(applicationId, userId);
         
         return user;
     }
@@ -1857,6 +1879,8 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         em.setProperty(new SimpleEntityRef(User.ENTITY_TYPE, userId),
                 "disabled", true);
+        
+        revokeAccessTokensForAdminUser(userId);
     }
 
     @Override
@@ -1877,7 +1901,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public void startAdminUserPasswordResetFlow(UserInfo user) throws Exception {
-        String token = getPasswordResetTokenForAdminUser(user.getUuid());
+        String token = getPasswordResetTokenForAdminUser(user.getUuid(), 0);
         String reset_url = String.format(properties
                 .getProperty(PROPERTIES_ADMIN_RESETPW_URL), user.getUuid()
                 .toString())
@@ -1894,10 +1918,10 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public String getActivationTokenForOrganization(UUID organizationId)
+    public String getActivationTokenForOrganization(UUID organizationId, long ttl)
             throws Exception {
         return getTokenForPrincipal(EMAIL, TOKEN_TYPE_ACTIVATION,
-                MANAGEMENT_APPLICATION_ID, ORGANIZATION, organizationId);
+                MANAGEMENT_APPLICATION_ID, ORGANIZATION, organizationId, ttl);
     }
 
     @Override
@@ -1905,7 +1929,7 @@ public class ManagementServiceImpl implements ManagementService {
             throws Exception {
         try {
             String token = getActivationTokenForOrganization(organization
-                    .getUuid());
+                    .getUuid(), 0);
             String activation_url = String.format(properties
                     .getProperty(PROPERTIES_ORGANIZATION_ACTIVATION_URL),
                     organization.getUuid().toString())
@@ -2084,7 +2108,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     public void sendAdminUserConfirmationEmail(UserInfo user) throws Exception {
-        String token = getConfirmationTokenForAdminUser(user.getUuid());
+        String token = getConfirmationTokenForAdminUser(user.getUuid(), 0);
         String confirmation_url = String.format(properties
                 .getProperty(PROPERTIES_ADMIN_CONFIRMATION_URL), user.getUuid()
                 .toString())
@@ -2101,7 +2125,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     public void sendSysAdminRequestAdminActivationEmail(UserInfo user)
             throws Exception {
-        String token = getActivationTokenForAdminUser(user.getUuid());
+        String token = getActivationTokenForAdminUser(user.getUuid(),  0);
         String activation_url = String.format(properties
                 .getProperty(PROPERTIES_ADMIN_ACTIVATION_URL), user.getUuid()
                 .toString())
@@ -2241,10 +2265,19 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public String getAccessTokenForAppUser(UUID applicationId, UUID userId)
+    public String getAccessTokenForAppUser(UUID applicationId, UUID userId, long duration)
             throws Exception {
         return getTokenForPrincipal(ACCESS, null, applicationId,
-                APPLICATION_USER, userId);
+                APPLICATION_USER, userId, duration);
+    }
+
+    
+    /* (non-Javadoc)
+     * @see org.usergrid.management.ManagementService#revokeAccessTokensForAappUser(java.util.UUID, java.util.UUID)
+     */
+    @Override
+    public void revokeAccessTokensForAppUser(UUID applicationId, UUID userId) throws Exception {
+        revokeTokensForPrincipal(APPLICATION_USER, applicationId, userId);
     }
 
     @Override
@@ -2545,7 +2578,7 @@ public class ManagementServiceImpl implements ManagementService {
     public String getPasswordResetTokenForAppUser(UUID applicationId,
             UUID userId) throws Exception {
         return getTokenForPrincipal(EMAIL, TOKEN_TYPE_PASSWORD_RESET,
-                applicationId, APPLICATION_USER, userId);
+                applicationId, APPLICATION_USER, userId,0);
     }
 
     public void sendAppUserEmail(User user, String subject, String html)
@@ -2559,13 +2592,13 @@ public class ManagementServiceImpl implements ManagementService {
     public String getActivationTokenForAppUser(UUID applicationId, UUID userId)
             throws Exception {
         return getTokenForPrincipal(EMAIL, TOKEN_TYPE_ACTIVATION,
-                applicationId, APPLICATION_USER, userId);
+                applicationId, APPLICATION_USER, userId,0);
     }
 
     public String getConfirmationTokenForAppUser(UUID applicationId, UUID userId)
             throws Exception {
         return getTokenForPrincipal(EMAIL, TOKEN_TYPE_CONFIRM, applicationId,
-                APPLICATION_USER, userId);
+                APPLICATION_USER, userId,0);
     }
 
     @Override

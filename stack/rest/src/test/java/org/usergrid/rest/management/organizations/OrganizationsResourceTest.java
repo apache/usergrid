@@ -29,12 +29,14 @@ import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractRestTest;
 
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.representation.Form;
 
 /**
  * @author zznate
  */
-@Ignore
+//@Ignore
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "/usergrid-rest-context-test.xml")
 public class OrganizationsResourceTest extends AbstractRestTest {
@@ -122,5 +124,26 @@ public class OrganizationsResourceTest extends AbstractRestTest {
 
         assertEquals("ok", node.get("status").asText());
 
+    }
+    
+    @Test
+    public void noOrgDelete() {
+        
+        
+        String mgmtToken = adminToken();
+
+        Status status = null;
+        JsonNode node = null;
+        
+        try {
+             node = resource().path("/test-organization")
+                    .queryParam("access_token", mgmtToken).accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).delete(JsonNode.class);
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals(Status.BAD_REQUEST, status);
+//        assertEquals("Application delete is not allowed yet", node.get("error_description").asText());
     }
 }

@@ -12,11 +12,13 @@ public class TokenInfo {
 	long created;
 	long accessed;
 	long inactive;
+	//total duration, in milliseconds
+	long duration;
 	AuthPrincipalInfo principal;
 	Map<String, Object> state;
 
 	public TokenInfo(UUID uuid, String type, long created, long accessed,
-			long inactive, AuthPrincipalInfo principal,
+			long inactive, long duration, AuthPrincipalInfo principal,
 			Map<String, Object> state) {
 		this.uuid = uuid;
 		this.type = type;
@@ -24,6 +26,7 @@ public class TokenInfo {
 		this.accessed = accessed;
 		this.inactive = inactive;
 		this.principal = principal;
+		this.duration = duration;
 		this.state = state;
 	}
 
@@ -51,7 +54,33 @@ public class TokenInfo {
 		this.created = created;
 	}
 
-	public long getAccessed() {
+	/**
+     * @return the expiration
+     */
+    public long getDuration() {
+        return duration;
+    }
+    
+    /**
+     * If the expiration is undefined, return the default that's been passed in
+     * @param defaultExpiration
+     * @return
+     */
+    public long getExpiration(long defaultExpiration){
+        if(duration == 0){
+            return defaultExpiration;
+        }
+        return duration;
+    }
+
+    /**
+     * @param expiration the expiration to set
+     */
+    public void setDuration(long expiration) {
+        this.duration = expiration;
+    }
+
+    public long getAccessed() {
 		return accessed;
 	}
 

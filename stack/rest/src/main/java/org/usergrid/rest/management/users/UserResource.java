@@ -19,6 +19,7 @@ import static org.usergrid.security.shiro.utils.SubjectUtils.*;
 import static org.usergrid.utils.ConversionUtils.string;
 
 import java.util.Map;
+import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -174,6 +175,7 @@ public class UserResource extends AbstractContextResource {
 	@RequireAdminUserAccess
 	@GET
 	public JSONWithPadding getUserData(@Context UriInfo ui,
+	        @QueryParam("ttl") long ttl,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
@@ -181,7 +183,7 @@ public class UserResource extends AbstractContextResource {
 		response.setAction("get admin user");
 
 		String token = management.getAccessTokenForAdminUser(SubjectUtils
-				.getUser().getUuid());
+				.getUser().getUuid(), ttl);
 		Map<String, Object> userOrganizationData = management
 				.getAdminUserOrganizationData(user.getUuid());
 		userOrganizationData.put("token", token);
@@ -336,5 +338,31 @@ public class UserResource extends AbstractContextResource {
 		response.setAction("reactivate user");
 		return new JSONWithPadding(response, callback);
 	}
+	
+    @POST
+    @Path("revoketokens")
+    public JSONWithPadding revokeTokensPost(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
+
+        UUID adminId = user.getUuid();
+        
+        logger.info("Revoking user tokens for {}", adminId);
+
+        ApiResponse response = new ApiResponse(ui);
+
+        management.revokeAccessTokensForAdminUser(adminId);
+
+        response.setAction("revoked user tokens");
+        return new JSONWithPadding(response, callback);
+
+    }
+
+    @PUT
+    @Path("revoketokens")
+    public JSONWithPadding revokeTokensPut(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
+        return revokeTokensPost(ui, callback);
+
+    }
 
 }

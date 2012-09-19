@@ -26,6 +26,8 @@ import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.TokenCategory;
+import org.usergrid.security.tokens.TokenService;
+import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
@@ -35,6 +37,7 @@ import org.usergrid.utils.UUIDUtils;
 public class ManagementServiceTest {
 	static Logger log = LoggerFactory.getLogger(ManagementServiceTest.class);
 	static ManagementServiceImpl managementService;
+	static TokenService tokenService;
 	static ManagementTestHelper helper;
 	// app-level data generated only once
 	private static UserInfo adminUser;
@@ -46,8 +49,9 @@ public class ManagementServiceTest {
 		log.info("in setup");
 		assertNull(helper);
 		helper = new ManagementTestHelperImpl();
-    helper.setup();
-    managementService = (ManagementServiceImpl) helper.getManagementService();
+        helper.setup();
+        managementService = (ManagementServiceImpl) helper.getManagementService();
+        tokenService = helper.getApplicationContext().getBean(TokenService.class);
 		setupLocal();
 	}
 
@@ -71,13 +75,13 @@ public class ManagementServiceTest {
 	public void testGetTokenForPrincipalAdmin() throws Exception {
 		String token = managementService.getTokenForPrincipal(
 				TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
-				AuthPrincipalType.ADMIN_USER, adminUser.getUuid());
+				AuthPrincipalType.ADMIN_USER, adminUser.getUuid(), 0);
 		// ^ same as:
 		// managementService.getAccessTokenForAdminUser(user.getUuid());
 		assertNotNull(token);
 		token = managementService.getTokenForPrincipal(TokenCategory.ACCESS,
 				null, MANAGEMENT_APPLICATION_ID,
-				AuthPrincipalType.APPLICATION_USER, adminUser.getUuid());
+				AuthPrincipalType.APPLICATION_USER, adminUser.getUuid(), 0);
 		// This works because ManagementService#getSecret takes the same code
 		// path
 		// on an OR for APP._USER as for ADMIN_USER
@@ -102,7 +106,7 @@ public class ManagementServiceTest {
 		assertNotNull(user);
 		String token = managementService.getTokenForPrincipal(
 				TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
-				AuthPrincipalType.APPLICATION_USER, user.getUuid());
+				AuthPrincipalType.APPLICATION_USER, user.getUuid(), 0);
 		assertNotNull(token);
 	}
 
@@ -150,7 +154,13 @@ public class ManagementServiceTest {
         assertTrue(user.activated());
         assertNull(user.getDeactivated());
         
-      
+        //get a couple of tokens.  These shouldn't work after we deactive the user
+        String token1 = managementService.getAccessTokenForAppUser(applicationId, user.getUuid(), 0);
+        String token2 = managementService.getAccessTokenForAppUser(applicationId, user.getUuid(), 0);
+        
+        assertNotNull(tokenService.getTokenInfo(token1));
+        assertNotNull(tokenService.getTokenInfo(token2));
+        
         
         long startTime = System.currentTimeMillis();
 	    
@@ -164,5 +174,167 @@ public class ManagementServiceTest {
         assertNotNull(user.getDeactivated());
         
         assertTrue(startTime <= user.getDeactivated() && user.getDeactivated() <= endTime);
+        
+        boolean invalidTokenExcpetion = false;
+        
+        try{
+            tokenService.getTokenInfo(token1);
+        }catch(InvalidTokenException ite){
+            invalidTokenExcpetion = true;
+        }
+        
+        assertTrue(invalidTokenExcpetion);
+        
+        invalidTokenExcpetion = false;
+        
+        try{
+            tokenService.getTokenInfo(token2);
+        }catch(InvalidTokenException ite){
+            invalidTokenExcpetion = true;
+        }
+        
+        assertTrue(invalidTokenExcpetion);
+
+        
+        
 	}
+	
+	@Test
+    public void disableAdminUser() throws Exception{
+        
+        UUID uuid = UUIDUtils.newTimeUUID();
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "test"+uuid);
+        properties.put("email", String.format("test%s@anuff.com", uuid));
+
+        
+        EntityManager em = helper.getEntityManagerFactory()
+                .getEntityManager(MANAGEMENT_APPLICATION_ID);
+        
+        Entity entity = em.create("user", properties);
+
+        assertNotNull(entity);
+        
+        User user = em.get(entity.getUuid(), User.class);
+        
+        assertFalse(user.activated());
+        assertNull(user.getDeactivated());
+        
+        
+        managementService.activateAdminUser(user.getUuid());
+        
+        user = em.get(entity.getUuid(), User.class);
+        
+        
+        assertTrue(user.activated());
+        assertNull(user.getDeactivated());
+        
+        //get a couple of tokens.  These shouldn't work after we deactive the user
+        String token1 = managementService.getAccessTokenForAdminUser(user.getUuid(), 0);
+        String token2 = managementService.getAccessTokenForAdminUser(user.getUuid(), 0);
+        
+        assertNotNull(tokenService.getTokenInfo(token1));
+        assertNotNull(tokenService.getTokenInfo(token2));
+        
+        
+        
+        managementService.disableAdminUser(user.getUuid());
+        
+        user = em.get(entity.getUuid(), User.class);
+        
+        assertTrue(user.disabled());
+         
+        boolean invalidTokenExcpetion = false;
+        
+        try{
+            tokenService.getTokenInfo(token1);
+        }catch(InvalidTokenException ite){
+            invalidTokenExcpetion = true;
+        }
+        
+        assertTrue(invalidTokenExcpetion);
+        
+        invalidTokenExcpetion = false;
+        
+        try{
+            tokenService.getTokenInfo(token2);
+        }catch(InvalidTokenException ite){
+            invalidTokenExcpetion = true;
+        }
+        
+        assertTrue(invalidTokenExcpetion);
+
+        
+        
+    }
+	
+	@Test
+	public void userTokenRevoke() throws Exception{
+	    UUID userId = UUIDUtils.newTimeUUID();
+	    
+	    String token1 = managementService.getAccessTokenForAppUser(applicationId, userId, 0);
+        String token2 = managementService.getAccessTokenForAppUser(applicationId, userId, 0);
+        
+        assertNotNull(tokenService.getTokenInfo(token1));
+        assertNotNull(tokenService.getTokenInfo(token2));
+        
+        managementService.revokeAccessTokensForAppUser(applicationId, userId);
+        
+        boolean invalidTokenExcpetion = false;
+        
+        try{
+            tokenService.getTokenInfo(token1);
+        }catch(InvalidTokenException ite){
+            invalidTokenExcpetion = true;
+        }
+        
+        assertTrue(invalidTokenExcpetion);
+        
+        invalidTokenExcpetion = false;
+        
+        try{
+            tokenService.getTokenInfo(token2);
+        }catch(InvalidTokenException ite){
+            invalidTokenExcpetion = true;
+        }
+        
+        assertTrue(invalidTokenExcpetion);
+        
+      
+        
+	}
+	
+    @Test
+    public void adminTokenRevoke() throws Exception {
+        UUID userId = UUIDUtils.newTimeUUID();
+
+        String token1 = managementService.getAccessTokenForAdminUser(userId, 0);
+        String token2 = managementService.getAccessTokenForAdminUser(userId, 0);
+
+        assertNotNull(tokenService.getTokenInfo(token1));
+        assertNotNull(tokenService.getTokenInfo(token2));
+
+        managementService.revokeAccessTokensForAdminUser(userId);
+
+        boolean    invalidTokenExcpetion = false;
+        
+        try{
+            tokenService.getTokenInfo(token1);
+        }catch(InvalidTokenException ite){
+            invalidTokenExcpetion = true;
+        }
+        
+        assertTrue(invalidTokenExcpetion);
+        
+        invalidTokenExcpetion = false;
+        
+        try{
+            tokenService.getTokenInfo(token2);
+        }catch(InvalidTokenException ite){
+            invalidTokenExcpetion = true;
+        }
+        
+        assertTrue(invalidTokenExcpetion);
+
+    }
 }
