@@ -69,7 +69,7 @@ public class BasicMongoTest extends AbstractMongoTest {
         UUID id = UUID.fromString(returnedObject.get("uuid").toString());
 
         //this should work.  Appears to be the type of ObjectId getting lost on column serialization
-        ObjectId returnedOid = returnedObject.getObjectId("_id");
+        ObjectId returnedOid = new ObjectId(returnedObject.getString("_id"));
 
         assertEquals("nico", returnedObject.get("name"));
         assertEquals("tabby", returnedObject.get("color"));
@@ -87,7 +87,7 @@ public class BasicMongoTest extends AbstractMongoTest {
         assertEquals("nico", returnedObject.get("name"));
         assertEquals("tabby", returnedObject.get("color"));
 
-        assertEquals(savedOid, returnedObject.getObjectId("_id"));
+        assertEquals(savedOid, new ObjectId(returnedObject.getString("_id")));
         assertEquals(id.toString(), returnedObject.get("uuid"));
 
         // check we can find it when using the native entity manager

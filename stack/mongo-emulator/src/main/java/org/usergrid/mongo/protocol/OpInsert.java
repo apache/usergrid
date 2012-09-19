@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
+import org.bson.types.ObjectId;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -35,6 +36,7 @@ import org.usergrid.mongo.utils.BSONUtils;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.security.shiro.utils.SubjectUtils;
+
 
 public class OpInsert extends OpCrud {
 
@@ -137,7 +139,14 @@ public class OpInsert extends OpCrud {
         
         for(BSONObject document: documents){
             try {
-              em.create(getCollectionName(), document.toMap());
+                //special case to serialize mongo ObjectId if required
+                Object id = document.get("_id");
+                
+                if(id instanceof ObjectId){
+                    document.put("_id", ((ObjectId)id).toStringMongod());
+                }
+                
+                em.create(getCollectionName(), document.toMap());
                
             } catch (Exception e) {
                 logger.error("Unable to insert mongo document {}", document, e);

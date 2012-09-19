@@ -35,6 +35,7 @@ import org.apache.shiro.subject.Subject;
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
 import org.bson.types.BasicBSONList;
+import org.bson.types.ObjectId;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -408,8 +409,24 @@ public class OpQuery extends OpCrud {
             }
             if (!results.isEmpty()) {
                 for (Entity entity : results.getEntities()) {
+                    
+                    Object savedId = entity.getProperty("_id");
+                    Object mongoId = null;
+                    
+                    //try to parse it into an ObjectId
+                    if(savedId == null){
+                        mongoId = entity.getUuid();
+                    }else{
+                        try{
+                            mongoId = new ObjectId(savedId.toString());
+                        //it's not a mongo Id, use it as is
+                        }catch(IllegalArgumentException iae){
+                            mongoId = savedId;
+                        }
+                    }
+                    
                     reply.addDocument(map(
-                            entry("_id", entity.getUuid()),
+                            entry("_id", mongoId),
                             toJsonMap(entity),
                             entry(Schema.PROPERTY_UUID, entity.getUuid()
                                     .toString())));
