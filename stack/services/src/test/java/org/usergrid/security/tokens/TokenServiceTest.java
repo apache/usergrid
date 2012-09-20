@@ -17,15 +17,22 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.ManagementTestHelper;
 import org.usergrid.management.OrganizationInfo;
+import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
+import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.entities.Application;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
+import org.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.utils.UUIDUtils;
+
+import com.sun.xml.bind.v2.schemagen.xmlschema.Appinfo;
 
 public class TokenServiceTest {
 
@@ -193,5 +200,167 @@ public class TokenServiceTest {
 
         assertTrue(invalidTokenException);
     }
+    
+    
+    @Test
+    public void tokenDurationExpiration() throws Exception {
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
+                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
+                UUIDUtils.newTimeUUID());
+
+        //2 second token
+        long expirationTime = 1000;
+        
+        String token = tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, expirationTime);
+        
+        long start = System.currentTimeMillis();
+        
+        assertNotNull(token);
+        
+        
+        TokenInfo tokenInfo = tokenService.getTokenInfo(token);
+        assertNotNull(tokenInfo);
+        assertEquals(expirationTime, tokenInfo.getDuration());
+
+        /**
+         * Sleep at least expirationTime millis to allow token to expire 
+         */
+        Thread.sleep(expirationTime-(System.currentTimeMillis()-start)+1000);
+        
+        boolean invalidTokenException = false;
+        
+        try {
+            tokenService.getTokenInfo(token);
+        } catch (InvalidTokenException ite) {
+            invalidTokenException = true;
+        }
+        
+        assertTrue(invalidTokenException);
+    }
+    
+    
+    @Test
+    public void tokenDefaults() throws Exception {
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
+                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
+                UUIDUtils.newTimeUUID());
+
+        long maxAge = ((TokenServiceImpl)tokenService).getMaxPersistenceTokenAge();
+        
+        String token = tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
+        
+        assertNotNull(token);
+        
+        
+        TokenInfo tokenInfo = tokenService.getTokenInfo(token);
+        assertNotNull(tokenInfo);
+        assertEquals(maxAge, tokenInfo.getDuration());
+    }
+    
+    
+   
+    
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void invalidDurationValue() throws Exception{
+        
+        long maxAge = ((TokenServiceImpl)tokenService).getMaxPersistenceTokenAge();
+        
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
+                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
+                UUIDUtils.newTimeUUID());
+
+        tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, maxAge+1);
+       
+    }
+    
+    @Test
+    public void appExpiration() throws Exception {
+        
+        OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("foo", "foobar", "foobar", "foo@bar.com", "foobar");
+        
+        ApplicationInfo appInfo = managementService.createApplication(orgInfo.getOrganization().getUuid(), "bar");
+       
+        
+        EntityManager em = helper.getEntityManagerFactory().getEntityManager(appInfo.getId());
+        
+        Application app  = em.getApplication();
+        
+        
+        long appTokenAge = 1000;
+        
+        app.setAccesstokenttl(appTokenAge);
+        
+        em.updateApplication(app);
+        
+        AuthPrincipalInfo userPrincipal = new AuthPrincipalInfo(
+                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
+                app.getUuid());
+
+    
+        String token = tokenService.createToken(TokenCategory.ACCESS, null, userPrincipal, null, 0);
+        
+        long start = System.currentTimeMillis();
+        
+        
+        assertNotNull(token);
+        
+        
+        TokenInfo tokenInfo = tokenService.getTokenInfo(token);
+        assertNotNull(tokenInfo);
+        assertEquals(appTokenAge, tokenInfo.getDuration());
+        
+        
+        /**
+         * Sleep at least expirationTime millis to allow token to expire 
+         */
+        Thread.sleep(appTokenAge-(System.currentTimeMillis()-start)+1000);
+        
+        boolean invalidTokenException = false;
+        
+        try {
+            tokenService.getTokenInfo(token);
+        } catch (InvalidTokenException ite) {
+            invalidTokenException = true;
+        }
+        
+        assertTrue(invalidTokenException);
+    }
+
+    @Test
+    public void tokenDeletion() throws Exception {
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
+                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
+                UUIDUtils.newTimeUUID());
+
+        String realToken = tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
+         
+        assertNotNull(realToken);
+        
+        
+        TokenInfo tokenInfo = tokenService.getTokenInfo(realToken);
+        assertNotNull(tokenInfo);
+        
+        
+        tokenService.revokeToken(realToken);
+        
+        boolean invalidTokenException = false;
+        
+        try {
+            tokenService.getTokenInfo(realToken);
+        } catch (InvalidTokenException ite) {
+            invalidTokenException = true;
+        }
+        
+        assertTrue(invalidTokenException);
+        
+
+        String fakeToken = "notarealtoken";
+        
+        
+        tokenService.revokeToken(fakeToken);
+        
+    }
+    
 
 }

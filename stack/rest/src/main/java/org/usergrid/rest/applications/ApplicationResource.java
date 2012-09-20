@@ -213,6 +213,7 @@ public class ApplicationResource extends ServiceResource {
             @QueryParam("client_id") String client_id,
             @QueryParam("client_secret") String client_secret,
             @QueryParam("code") String code,
+            @QueryParam("ttl") long ttl,
             @QueryParam("redirect_uri") String redirect_uri,
             @QueryParam("callback") @DefaultValue("") String callback)
             throws Exception {
@@ -253,7 +254,7 @@ public class ApplicationResource extends ServiceResource {
             } else if ("client_credentials".equals(grant_type)) {
                 try {
                     AccessInfo access_info = management.authorizeClient(
-                            client_id, client_secret);
+                            client_id, client_secret, ttl);
                     if (access_info != null) {
                         return Response
                                 .status(SC_OK)
@@ -284,7 +285,7 @@ public class ApplicationResource extends ServiceResource {
             }
 
             String token = management.getAccessTokenForAppUser(
-                    services.getApplicationId(), user.getUuid());
+                    services.getApplicationId(), user.getUuid(), ttl);
 
             AccessInfo access_info = new AccessInfo()
                     .withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
@@ -314,6 +315,7 @@ public class ApplicationResource extends ServiceResource {
             @FormParam("client_id") String client_id,
             @FormParam("client_secret") String client_secret,
             @FormParam("code") String code,
+            @FormParam("ttl") long ttl,
             @FormParam("redirect_uri") String redirect_uri,
             @QueryParam("callback") @DefaultValue("") String callback)
             throws Exception {
@@ -321,7 +323,7 @@ public class ApplicationResource extends ServiceResource {
         logger.info("ApplicationResource.getAccessTokenPost");
 
         return getAccessToken(ui, null, grant_type, username, password, pin,
-                client_id, client_secret, code, redirect_uri, callback);
+                client_id, client_secret, code, ttl, redirect_uri, callback);
     }
 
     @POST
@@ -340,9 +342,18 @@ public class ApplicationResource extends ServiceResource {
         String pin = (String) json.get("pin");
         String code = (String) json.get("code");
         String redirect_uri = (String) json.get("redirect_uri");
+        long ttl = 0;
 
+        if (json.get("ttl") != null) {
+            try {
+                ttl = Long.parseLong(json.get("ttl").toString());
+            } catch (NumberFormatException nfe) {
+                throw new IllegalArgumentException("ttl must be a number >= 0");
+            }
+        }
+        
         return getAccessToken(ui, null, grant_type, username, password, pin,
-                client_id, client_secret, code, redirect_uri, callback);
+                client_id, client_secret, code, ttl, redirect_uri, callback);
     }
 
     @GET
@@ -449,7 +460,7 @@ public class ApplicationResource extends ServiceResource {
                 }
                 redirect_uri += "code="
                         + management.getAccessTokenForAppUser(
-                                services.getApplicationId(), user.getUuid());
+                                services.getApplicationId(), user.getUuid(), 0);
                 if (isNotBlank(state)) {
                     redirect_uri += "&state="
                             + URLEncoder.encode(state, "UTF-8");

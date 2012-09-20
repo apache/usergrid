@@ -175,6 +175,7 @@ public class UserResource extends AbstractContextResource {
 	@RequireAdminUserAccess
 	@GET
 	public JSONWithPadding getUserData(@Context UriInfo ui,
+	        @QueryParam("ttl") long ttl,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
@@ -182,7 +183,7 @@ public class UserResource extends AbstractContextResource {
 		response.setAction("get admin user");
 
 		String token = management.getAccessTokenForAdminUser(SubjectUtils
-				.getUser().getUuid());
+				.getUser().getUuid(), ttl);
 		Map<String, Object> userOrganizationData = management
 				.getAdminUserOrganizationData(user.getUuid());
 		userOrganizationData.put("token", token);

@@ -75,18 +75,20 @@ public class AuthResource extends AbstractContextResource {
 	@Consumes(APPLICATION_FORM_URLENCODED)
 	public Response authFBPost(@Context UriInfo ui,
 			@FormParam("fb_access_token") String fb_access_token,
+			@QueryParam("ttl") long ttl,
 			@QueryParam("callback") @DefaultValue("") String callback)
 			throws Exception {
 
 		logger.info("AuthResource.authFBPost");
 
-		return authFB(ui, fb_access_token, callback);
+		return authFB(ui, fb_access_token, ttl, callback);
 	}
 
 	@GET
 	@Path("facebook")
 	public Response authFB(@Context UriInfo ui,
 			@QueryParam("fb_access_token") String fb_access_token,
+			@QueryParam("ttl") long ttl,
 			@QueryParam("callback") @DefaultValue("") String callback)
 			throws Exception {
 
@@ -125,7 +127,7 @@ public class AuthResource extends AbstractContextResource {
 			}
 
 			String token = management.getAccessTokenForAppUser(
-					services.getApplicationId(), user.getUuid());
+					services.getApplicationId(), user.getUuid(), ttl);
 
 			AccessInfo access_info = new AccessInfo()
 					.withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
@@ -151,18 +153,20 @@ public class AuthResource extends AbstractContextResource {
 	@Consumes(APPLICATION_FORM_URLENCODED)
 	public Response authFQPost(@Context UriInfo ui,
 			@FormParam("fq_access_token") String fq_access_token,
+			@QueryParam("ttl") long ttl,
 			@QueryParam("callback") @DefaultValue("") String callback)
 			throws Exception {
 
 		logger.info("AuthResource.authFQPost");
 
-		return authFQ(ui, fq_access_token, callback);
+		return authFQ(ui, fq_access_token, ttl, callback);
 	}
 
 	@GET
 	@Path("foursquare")
 	public Response authFQ(@Context UriInfo ui,
 			@QueryParam("fq_access_token") String fq_access_token,
+			@QueryParam("ttl") long ttl,
 			@QueryParam("callback") @DefaultValue("") String callback)
 			throws Exception {
 
@@ -201,7 +205,7 @@ public class AuthResource extends AbstractContextResource {
 			}
 
 			String token = management.getAccessTokenForAppUser(
-					services.getApplicationId(), user.getUuid());
+					services.getApplicationId(), user.getUuid(), ttl);
 
 			AccessInfo access_info = new AccessInfo()
 					.withExpiresIn(tokens.getMaxTokenAge(token) / 1000)

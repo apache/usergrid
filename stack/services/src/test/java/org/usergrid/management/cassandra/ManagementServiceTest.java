@@ -75,13 +75,13 @@ public class ManagementServiceTest {
 	public void testGetTokenForPrincipalAdmin() throws Exception {
 		String token = managementService.getTokenForPrincipal(
 				TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
-				AuthPrincipalType.ADMIN_USER, adminUser.getUuid());
+				AuthPrincipalType.ADMIN_USER, adminUser.getUuid(), 0);
 		// ^ same as:
 		// managementService.getAccessTokenForAdminUser(user.getUuid());
 		assertNotNull(token);
 		token = managementService.getTokenForPrincipal(TokenCategory.ACCESS,
 				null, MANAGEMENT_APPLICATION_ID,
-				AuthPrincipalType.APPLICATION_USER, adminUser.getUuid());
+				AuthPrincipalType.APPLICATION_USER, adminUser.getUuid(), 0);
 		// This works because ManagementService#getSecret takes the same code
 		// path
 		// on an OR for APP._USER as for ADMIN_USER
@@ -106,7 +106,7 @@ public class ManagementServiceTest {
 		assertNotNull(user);
 		String token = managementService.getTokenForPrincipal(
 				TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
-				AuthPrincipalType.APPLICATION_USER, user.getUuid());
+				AuthPrincipalType.APPLICATION_USER, user.getUuid(), 0);
 		assertNotNull(token);
 	}
 
@@ -155,8 +155,8 @@ public class ManagementServiceTest {
         assertNull(user.getDeactivated());
         
         //get a couple of tokens.  These shouldn't work after we deactive the user
-        String token1 = managementService.getAccessTokenForAppUser(applicationId, user.getUuid());
-        String token2 = managementService.getAccessTokenForAppUser(applicationId, user.getUuid());
+        String token1 = managementService.getAccessTokenForAppUser(applicationId, user.getUuid(), 0);
+        String token2 = managementService.getAccessTokenForAppUser(applicationId, user.getUuid(), 0);
         
         assertNotNull(tokenService.getTokenInfo(token1));
         assertNotNull(tokenService.getTokenInfo(token2));
@@ -230,8 +230,8 @@ public class ManagementServiceTest {
         assertNull(user.getDeactivated());
         
         //get a couple of tokens.  These shouldn't work after we deactive the user
-        String token1 = managementService.getAccessTokenForAdminUser(user.getUuid());
-        String token2 = managementService.getAccessTokenForAdminUser(user.getUuid());
+        String token1 = managementService.getAccessTokenForAdminUser(user.getUuid(), 0);
+        String token2 = managementService.getAccessTokenForAdminUser(user.getUuid(), 0);
         
         assertNotNull(tokenService.getTokenInfo(token1));
         assertNotNull(tokenService.getTokenInfo(token2));
@@ -272,8 +272,8 @@ public class ManagementServiceTest {
 	public void userTokenRevoke() throws Exception{
 	    UUID userId = UUIDUtils.newTimeUUID();
 	    
-	    String token1 = managementService.getAccessTokenForAppUser(applicationId, userId);
-        String token2 = managementService.getAccessTokenForAppUser(applicationId, userId);
+	    String token1 = managementService.getAccessTokenForAppUser(applicationId, userId, 0);
+        String token2 = managementService.getAccessTokenForAppUser(applicationId, userId, 0);
         
         assertNotNull(tokenService.getTokenInfo(token1));
         assertNotNull(tokenService.getTokenInfo(token2));
@@ -308,8 +308,8 @@ public class ManagementServiceTest {
     public void adminTokenRevoke() throws Exception {
         UUID userId = UUIDUtils.newTimeUUID();
 
-        String token1 = managementService.getAccessTokenForAdminUser(userId);
-        String token2 = managementService.getAccessTokenForAdminUser(userId);
+        String token1 = managementService.getAccessTokenForAdminUser(userId, 0);
+        String token2 = managementService.getAccessTokenForAdminUser(userId, 0);
 
         assertNotNull(tokenService.getTokenInfo(token1));
         assertNotNull(tokenService.getTokenInfo(token2));

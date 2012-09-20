@@ -91,7 +91,7 @@ public class RoleTest {
 		em.addUserToRole(user.getUuid(), "logged-in");
 
 		String accessToken = management.getAccessTokenForAppUser(applicationId,
-				user.getUuid());
+				user.getUuid(), 0);
 
 		UserInfo user_info = management.getAppUserFromAccessToken(accessToken);
 
