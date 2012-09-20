@@ -2270,10 +2270,6 @@ input[type="submit"].btn.small {
 }
 .nav-tabs {
   border-bottom: 1px solid #ddd;
-
-  /*TODO:poner en el Less*/
-  display: inline-block;
-  width: 100%;
 }
 .nav-tabs > li {
   margin-bottom: -1px;
@@ -3545,7 +3541,7 @@ a.thumbnail:hover {
 html,
 body {
   height: 100%;
-  min-width: 600px;
+  min-width: 640px;
 }
 html {
   border-left: 1px solid #c9c9c9;
@@ -3601,13 +3597,12 @@ html {
 
   height: 100%;
   /* IE6: treaded as min-height*/
-/*TODO:agregar al less*/
+
   min-width: 640px;
   max-width: 1280px;
 }
 #pages {
   padding: 70px 0 50px 0px;
-
 }
 #pages > div {
   display: none;
@@ -3618,10 +3613,7 @@ html {
 #console-panels {
   margin-left: 160px;
   border-left: 1px solid #c9c9c9;
-  min-width: 640px;
 }
-/*TODO agreagar al less*/
-
 footer {
   position: fixed;
   bottom: 0;
@@ -3736,7 +3728,7 @@ a:active {
   font-weight: bold;
 }
 #sidebar-menu {
-  float: left;
+  position: absolute;
   left: 5px;
   width: 155px;
 }
@@ -3770,8 +3762,7 @@ a:active {
 }
 #application-panel-buttons {
   display: none;
-  /*TODO: add to less*/
-  position:fixed;
+  position: fixed;
 }
 #application-panel-buttons .active > a i {
   background-image: url(../img/glyphicons-halflings-white.png);
@@ -3781,6 +3772,10 @@ a:active {
 }
 .icon-black {
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
+}
+.nav-tabs {
+  display: inline-block;
+  width: 100%;
 }
 #login-page,
 #signup-page {
@@ -3856,6 +3851,7 @@ a:active {
   font-size: 12pt;
   padding: 10px;
   line-height: 18px;
+  display: inline-block;
   background: #cccccc;
 }
 .console-section h3 .search {
@@ -3896,15 +3892,13 @@ a:active {
 .console-section h3:after {
   clear: both;
   content: ".";
+  display: inline-block;
   height: 0;
   visibility: hidden;
-  /*TODO: add to less*/
-  display: inline-block;
 }
 .console-section form {
   margin: 0px;
   padding-top: 10px;
-  /*TODO: add to less*/
   display: inline-block;
 }
 .console-section .form-actions {
@@ -3917,8 +3911,7 @@ a:active {
   position: relative;
   padding: 10px;
   line-height: 25px;
-  /*TODO add to less*/
-  display: inline-block;
+  display: block;
 }
 .console-section .console-section-contents .form-actions {
   margin: 20px -10px -10px;
@@ -4411,8 +4404,6 @@ a:active {
 }
 #shell-content * {
   font-family: monospace;
-  /*TODO: add to Less*/
-  width: 90%;
 }
 /* --------- --------------- ------------*/
 #statusbar-placeholder {
