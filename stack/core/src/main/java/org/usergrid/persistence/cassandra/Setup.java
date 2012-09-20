@@ -106,7 +106,7 @@ public class Setup {
 		cf_defs.add(createColumnFamilyDefinition(SYSTEM_KEYSPACE, TOKENS_CF,
 				ComparatorType.BYTESTYPE));
 		cf_defs.add(createColumnFamilyDefinition(SYSTEM_KEYSPACE, PRINCIPAL_TOKEN_CF,
-                ComparatorType.TIMEUUIDTYPE));
+                ComparatorType.UUIDTYPE));
 
 		cass.createKeyspace(SYSTEM_KEYSPACE, cf_defs);
 
