@@ -2447,9 +2447,11 @@ public class RelationManagerImpl implements RelationManager,
                 itemType = singularize(collectionName);
             }
             if (itemType.equals(TYPE_ROLE)) {
-                return em.createRole((String) properties.get(PROPERTY_NAME),
-                        (String) properties.get(PROPERTY_TITLE),
-                        (Long) properties.get(PROPERTY_INACTIVITY));
+                Long inactivity = (Long)properties.get(PROPERTY_INACTIVITY);
+                if (inactivity == null) inactivity = 0L;
+                return em.createRole((String)properties.get(PROPERTY_NAME),
+                                     (String)properties.get(PROPERTY_TITLE),
+                                      inactivity);
             }
             return em.create(itemType, properties);
         } else if (headEntity.getType().equals(Group.ENTITY_TYPE)
