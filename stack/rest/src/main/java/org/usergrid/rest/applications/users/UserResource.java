@@ -349,7 +349,7 @@ public class UserResource extends ServiceResource {
 
             if (!useReCaptcha()) {
                 management.startAppUserPasswordResetFlow(getApplicationId(),
-                        user);
+                		getUser());
                 return handleViewable("resetpw_email_success", this);
             }
 
@@ -362,7 +362,7 @@ public class UserResource extends ServiceResource {
 
             if (reCaptchaResponse.isValid()) {
                 management.startAppUserPasswordResetFlow(getApplicationId(),
-                        user);
+                        getUser());
                 return handleViewable("resetpw_email_success", this);
             } else {
                 errorMsg = "Incorrect Captcha";
