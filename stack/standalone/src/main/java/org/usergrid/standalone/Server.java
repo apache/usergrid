@@ -59,6 +59,10 @@ import org.usergrid.rest.filters.ContentTypeFilter;
 import org.usergrid.services.ServiceManagerFactory;
 import org.usergrid.standalone.cassandra.EmbeddedServerHelper;
 
+import com.sun.jersey.api.core.PackagesResourceConfig;
+import com.sun.jersey.api.core.ResourceConfig;
+import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.spi.container.servlet.ServletContainer;
 import com.sun.jersey.spi.spring.container.servlet.SpringServlet;
 
 public class Server implements ApplicationContextAware {
@@ -141,7 +145,7 @@ public class Server implements ApplicationContextAware {
 
         ServletHandler handler = new ServletHandler();
 
-        handler.addContextParameter("contextConfigLocation",
+        handler.addContextParameter(SpringServlet.CONTEXT_CONFIG_LOCATION,
                 "classpath:/usergrid-standalone-context.xml");
 
         handler.addServletListener(ContextLoaderListener.class.getName());
@@ -149,26 +153,26 @@ public class Server implements ApplicationContextAware {
 
         com.sun.jersey.api.json.JSONConfiguration.badgerFish();
 
-        handler.addInitParameter("com.sun.jersey.config.property.packages",
+        handler.addInitParameter(PackagesResourceConfig.PROPERTY_PACKAGES,
                 "org.usergrid");
-        handler.addInitParameter("com.sun.jersey.api.json.POJOMappingFeature",
+        handler.addInitParameter(JSONConfiguration.FEATURE_POJO_MAPPING,
                 "true");
         handler.addInitParameter(
-                "com.sun.jersey.spi.container.ContainerRequestFilters",
+        		ResourceConfig.PROPERTY_CONTAINER_REQUEST_FILTERS,
                 "org.usergrid.rest.filters.MeteringFilter,org.usergrid.rest.filters.JSONPCallbackFilter,org.usergrid.rest.security.shiro.filters.OAuth2AccessTokenSecurityFilter,org.usergrid.rest.security.shiro.filters.BasicAuthSecurityFilter,org.usergrid.rest.security.shiro.filters.ClientCredentialsSecurityFilter");
         handler.addInitParameter(
-                "com.sun.jersey.spi.container.ContainerResponseFilters",
+        		ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS,
                 "org.usergrid.rest.security.CrossOriginRequestFilter,org.usergrid.rest.filters.MeteringFilter");
         handler.addInitParameter(
-                "com.sun.jersey.spi.container.ResourceFilters",
+        		ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES,
                 "org.usergrid.rest.security.SecuredResourceFilterFactory,com.sun.jersey.api.container.filter.RolesAllowedResourceFilterFactory");
-        handler.addInitParameter("com.sun.jersey.config.feature.DisableWADL",
+        handler.addInitParameter(ResourceConfig.FEATURE_DISABLE_WADL,
                 "true");
         handler.addInitParameter(
-                "com.sun.jersey.config.property.JSPTemplatesBasePath",
+        		ServletContainer.JSP_TEMPLATES_BASE_PATH,
                 "/WEB-INF/jsp");
         handler.addInitParameter(
-                "com.sun.jersey.config.property.WebPageContentRegex",
+        		ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX,
                 "/(((images|css|js|jsp|WEB-INF/jsp)/.*)|(favicon\\.ico))");
 
         handler.setServletInstance(new SpringServlet());
