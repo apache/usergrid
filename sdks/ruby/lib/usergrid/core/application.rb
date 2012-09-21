@@ -1,7 +1,7 @@
 module Usergrid
   class Application < Resource
 
-    def initialize(url, api_url, options)
+    def initialize(url, api_url, options={})
       super url, api_url, options
     end
 

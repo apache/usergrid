@@ -1,7 +1,7 @@
 module Usergrid
   class Management < Resource
 
-    def initialize(api_url, options)
+    def initialize(api_url, options={})
       url = concat_urls(api_url, 'management')
       super url, api_url, options
     end
