@@ -4045,6 +4045,7 @@ a:active {
 }
 .query-result-table-obj tr td {
   line-height: 18px !important;
+  width: auto;
 }
 .query-result-table-obj .query-result-table-obj tr {
   background: transparent;
