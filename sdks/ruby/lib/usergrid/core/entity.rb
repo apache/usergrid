@@ -37,7 +37,7 @@ module Usergrid
     end
 
     def to_s
-      "resource: #{url}\ndata: #{data.pretty_inspect}"
+      "resource: #{url}\ndata: #{data}"
     end
 
     private
