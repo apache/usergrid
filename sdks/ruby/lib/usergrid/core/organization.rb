@@ -2,7 +2,9 @@ require 'uri'
 module Usergrid
   class Organization < Resource
 
-    def initialize(url, api_url, options)
+    def initialize(url, options={})
+      org_name = url.split('/')[-1]
+      api_url = url[0..url.index('management')-2]
       super url, api_url, options
     end
 
@@ -24,7 +26,7 @@ module Usergrid
     end
 
     def application(name_or_uuid)
-      Usergrid::Application.new concat_urls(api_url, "#{name}/#{name_or_uuid}"), api_url, options
+      Usergrid::Application.new concat_urls(api_url, "#{name}/#{name_or_uuid}"), options
     end
 
     def users(query=nil)

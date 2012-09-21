@@ -1,12 +1,17 @@
 module Usergrid
   class Management < Resource
 
-    def initialize(api_url, options={})
-      url = concat_urls(api_url, 'management')
+    def initialize(url, options={})
+      management = url.split('/')[-1]
+      if management == 'management'
+        api_url = url[0..url.index(management)-2]
+      else
+        api_url = url
+        url = concat_urls(api_url, 'management')
+      end
       super url, api_url, options
     end
 
-    # one way: cannot delete organizations
     def create_organization(organization, username, name, email, password)
       data = { organization: organization,
                username: username,
@@ -22,7 +27,7 @@ module Usergrid
 
     def organization(organization)
       url = self["organizations/#{organization}"].url
-      Organization.new url, api_url, options
+      Organization.new url, options
     end
 
     def users

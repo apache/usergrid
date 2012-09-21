@@ -43,7 +43,7 @@ module Usergrid
 
     # application defaults to sandbox if none provided
     def application(organization, application='sandbox')
-      Usergrid::Application.new concat_urls(api_url, "#{organization}/#{application}"), api_url, options
+      Usergrid::Application.new concat_urls(api_url, "#{organization}/#{application}"), options
     end
 
     def query(query=nil, options={})

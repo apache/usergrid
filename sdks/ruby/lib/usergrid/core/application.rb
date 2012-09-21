@@ -1,7 +1,9 @@
 module Usergrid
   class Application < Resource
 
-    def initialize(url, api_url, options={})
+    def initialize(url, options={})
+      org_name = url.split('/')[-2]
+      api_url = url[0..url.index(org_name)-2]
       super url, api_url, options
     end
 
