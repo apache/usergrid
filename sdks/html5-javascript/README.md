@@ -13,6 +13,17 @@ Our docs site is located here:
 
 <http://usergrid.apigee.com/docs>
 
+# Contributing
+
+We welcome your enhancements!
+
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Added some feature'`)
+4. Push your changes to the upstream branch (`git push origin my-new-feature`)
+5. Create new Pull Request (make sure you describe what you did and why your mod is needed)
+
+
 #Getting started
 The SDK consists of just one Javascript file.  It is located in this project here:
 
