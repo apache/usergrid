@@ -30,7 +30,7 @@ Open source: https://github.com/apigee/usergrid-stack
 basic concepts:
 
 <pre>
-  require 'usergrid'
+  require 'usergrid_iron'
 
   # set the Usergrid (or Apigee App Services) URL
   usergrid_api = Usergrid::Resource.new 'http://localhost:8080'
