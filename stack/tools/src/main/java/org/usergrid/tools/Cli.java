@@ -33,6 +33,7 @@ import org.codehaus.jackson.JsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Query;
+import org.usergrid.persistence.exceptions.QueryParseException;
 import org.usergrid.services.ServiceAction;
 import org.usergrid.services.ServiceManager;
 import org.usergrid.services.ServiceParameter;
@@ -74,7 +75,7 @@ public class Cli extends ToolBase {
 		handleInput();
 	}
 
-	public void handleInput() {
+	public void handleInput() throws QueryParseException {
 		BufferedReader d = new BufferedReader(new InputStreamReader(System.in));
 
 		UUID applicationId = DEFAULT_APPLICATION_ID;
