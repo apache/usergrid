@@ -5,8 +5,9 @@ Gem::Specification.new do |gem|
   gem.authors       = ["Scott Ganyo"]
   gem.email         = ["sganyo@apigee.com"]
   gem.description   = %q{Low-level gem to access Usergrid / Apigee App Services}
-  gem.summary       = %q{TODO: Write a gem summary}
-  gem.homepage      = ""
+  gem.summary       = %q{Usergrid_iron enables simple, low-level Ruby access to Apigee's App Services
+                        (aka Usergrid) REST API with minimal dependencies.}
+  gem.homepage      = "https://github.com/scottganyo/usergrid_iron"
 
   gem.files         = `/usr/local/git/bin/git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
