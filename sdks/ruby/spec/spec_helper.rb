@@ -3,7 +3,7 @@ require 'simplecov'
 require 'rspec'
 require 'yaml'
 require 'securerandom'
-require_relative '../lib/usergrid'
+require_relative '../lib/usergrid_iron'
 
 LOG = Logger.new(STDOUT)
 RestClient.log=LOG
