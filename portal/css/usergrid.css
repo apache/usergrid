@@ -4045,7 +4045,6 @@ a:active {
 }
 .query-result-table-obj tr td {
   line-height: 18px !important;
-  width: auto;
 }
 .query-result-table-obj .query-result-table-obj tr {
   background: transparent;
@@ -4742,7 +4741,7 @@ table .zebraRows:nth-child(2n) {
 }
 /* --------------- Collections -------------- */
 .collection-column {
-  width: 100px;
+  width: 80%;
 }
 #button-query-validate {
   margin-left: 20px;
