@@ -2995,19 +2995,16 @@ public class ManagementServiceImpl implements ManagementService {
 
     private CredentialsInfo maybeSaltPassword(UUID applicationId, User user, String password)
             throws Exception {
-        String hashType = null;
-        // need to check both the user and the PASSWORD dictionary for hashType
-        if (user.getProperty(User.PROPERTY_HASHTYPE) != null) {
-            hashType = (String) user.getProperty(User.PROPERTY_HASHTYPE);
-        } else {
-          CredentialsInfo ci = readUserPasswordCredentials(applicationId, user.getUuid());
-          if ( ci != null) {
-            hashType = ci.getHashType();
-          }
-        }
-        return hashedCredentials(
-               saltProvider.getSalt(applicationId, user.getUuid()), password,
-                hashType);
+      String hashType = null;
+
+      CredentialsInfo ci = readUserPasswordCredentials(applicationId, user.getUuid());
+      if ( ci != null) {
+        hashType = ci.getHashType();
+      }
+
+      return hashedCredentials(
+              saltProvider.getSalt(applicationId, user.getUuid()), password,
+              hashType);
     }
 
     /**
