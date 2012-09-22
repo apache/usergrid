@@ -26,65 +26,104 @@ Or install it yourself as:
 Docs: http://apigee.com/docs/usergrid/
 Open source: https://github.com/apigee/usergrid-stack
 
-2. Getting started with the Usergrid_iron SDK is simple! Let's run through some of the
-basic concepts:
+2. Getting started with the Usergrid_iron SDK is simple! Let's start with the basics.
+I'll assume you've already set up an organization, application, and user - just fill in your
+own values in the code below.
+
+<pre>
+require 'usergrid_iron'
+
+# fill in your values here!
+usergrid_api = 'http://localhost:8080'
+organization = ''
+application = ''
+username = ''
+password = ''
+
+application = Usergrid::Application.new "#{usergrid_api}/#{organization}/#{application}"
+application.login username, password
+
+# create and store a dog in the 'dogs' collection on the server
+response = application.create_entity 'dogs', { breed: 'Black Mouth Cur', name: 'Old Yeller' }
+
+# let's get the dog from the response and grab its persistent id
+dog = response.entity
+uuid = dog.uuid
+
+# let's retrieve a dog from the server by UUID
+same_dog = application['dogs'][uuid].entity
+
+# is it our dog? well, he knows his name!
+puts "My dog's name is: #{same_dog.name}"
+</pre>
+
+That was really easy. So let's try something slightly more complex.
+Let's say we've registered for an organization, but we don't have an application yet (or
+want to create a new one to work on). No worries, just fill in your organization and
+superuser credentials below, and follow along! (Better yet: If you used the Usergrid launcher
+and let it initialize your database, you shouldn't need to do anything!)
 
 <pre>
   require 'usergrid_iron'
 
-  # set the Usergrid (or Apigee App Services) URL
-  usergrid_api = Usergrid::Resource.new 'http://localhost:8080'
+  usergrid_api = 'http://localhost:8080'
+  org_name = 'test-organization'
+  username = 'test'
+  password = 'test'
+  app_name = 'dog_sitter'
+
+  ## first, let's get that setup out of the way ##
 
   # get a management context & login the superuser
-  management = usergrid_api.management
-  management.login 'test', 'test'
+  management = Usergrid::Management.new usergrid_api
+  management.login username, password
 
   # get the organization context & create a new application
-  app_name = 'dogs_application'
-  organization = management.organization 'test-organization'
-  application = organization.create_application app_name
+  organization = management.organization org_name
+  new_application = organization.create_application app_name
 
-  # create an application user
-  application.create_user 'app_username', 'app_name', 'app_email@test.com', 'password'
+  # create an user for our application
+  new_application.create_user 'username', 'name', 'email@test.com', 'password'
 
-  # get a new application context and login as the new user
-  application = usergrid_api.application 'test-organization', app_name
-  application.login 'app_username', 'password'
 
-  # create a dog
-  application.create_entity   'dogs', { breed: 'Black Mouth Cur', name: 'Old Yeller' }
+  ## now we can play with the puppies! ##
 
-  # create several more dogs
+  # login to our new application as our new user
+  application = Usergrid::Application.new "#{usergrid_api}/#{org_name}/#{app_name}"
+  application.login 'username', 'password'
+
+  # we can start with our dog again
+  application.create_entity 'dogs', { breed: 'Black Mouth Cur', name: 'Old Yeller' }
+
+  # but this time let's create several more dogs at once
   application.create_entities 'dogs', [{ breed: 'Catalan sheepdog', name: 'Einstein' },
-                                       { breed: 'Cocker Spaniel', name: 'Lady' },
-                                       { breed: 'Mixed', name: 'Benji' }]
+      { breed: 'Cocker Spaniel', name: 'Lady' },
+      { breed: 'Mixed', name: 'Benji' }]
 
-  # retrieves the dogs collection from Usergrid and prints their names
-  dogs = application['dogs'].get.collection
+  # retrieve all the dogs (well, the first 'page' anyway) and tell them hi!
+  dogs = application['dogs'].collection
   dogs.each do |dog|                          # works just like an array
-    pp dog.name                               # entities automatically have attributes
+    puts "Hello, #{dog.name}!"                # entities automatically have attributes
   end
 
-  # query for a dog named Benji
-  dogs.query "select * where name = 'Benji'"  # repopulates the collection
-  benji = dogs.first
+  # "Benji, come!"
+  benji = dogs.query("select * where name = 'Benji'").entity  # shortcut: entity will return the first in the collection
 
   # modify Benji's attributes & save
-  benji.command = 'come home'                     # use attribute access
+  benji.location = 'home'                     # use attribute access
   benji['breed'] = 'American Cocker Spaniel'  # or access it like a Hash
   benji.save
 
-  # get the dog by uuid - the attributes were saved!
-  dog = application["dogs/#{benji.uuid}"].get.entity
-  if dog.command == 'come home'
-    puts "Benji's coming home!"
-  else
-    raise 'Benji is a lost puppy!'
+  # query for the dogs that are home (should just be Benji)
+  dogs = application['dogs'].query("select * where location = 'home'").collection
+  if dogs.size == 1 && dogs.first == 'home'
+    puts "Benji's home!"
   end
 
 </pre>
 
-Looking for a specific feature? Check out the rspecs, there are examples of almost everything!
+Whew. That's enough for now. But looking for a specific feature? Check out the rspecs,
+there are examples of nearly everything!
 
 
 ## Contributing
