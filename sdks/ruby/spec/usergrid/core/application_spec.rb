@@ -258,7 +258,7 @@ describe Usergrid::Application do
     roles.size.should == size
   end
 
-  it "should be able to create a new collection and access it" do # todo
+  it "should be able to create a new collection and access it" do
     entities = (1..4).collect do |i|
       { name: "test_#{i}" }
     end

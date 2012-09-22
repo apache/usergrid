@@ -2,16 +2,15 @@ describe Usergrid::Collection do
 
   before :all do
     @application = create_random_application
+    @user = create_random_user @application, true
 
     @collection = @application['tests'].collection
     @entity_data = []
     (1..10).each do |i|
       test = { name: "test_#{i}" }
       @entity_data << test
-      @collection.create_entity test
     end
-
-    @user = create_random_user @application, true
+    @collection.create_entities @entity_data
   end
 
   after :all do

@@ -35,11 +35,11 @@ module Usergrid
     end
 
     def create_entity(data)
-      response = self.post data
-      response.entity
+      self.post data
     end
+    alias_method :create_entities, :create_entity
 
-    # options: 'reversed', 'start', 'cursor', 'limit', 'permission'
+    ## options: 'reversed', 'start', 'cursor', 'limit', 'permission'
     #def update(new_data, query=nil, options={}) # todo: enable when server is fixed
     #  options = options.symbolize_keys
     #  @query_params = query ? options.merge({ql: query}) : options
