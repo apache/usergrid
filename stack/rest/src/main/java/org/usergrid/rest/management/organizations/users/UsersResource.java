@@ -292,7 +292,7 @@ public class UsersResource extends AbstractContextResource {
 	    if ("me".equals(username)) {
 	        UserInfo user = SubjectUtils.getAdminUser();
 	        if ((user != null) && (user.getUuid() != null)) {
-	            return removeUserFromOrganizationByUsername(ui, user.getUuid()
+	            return removeUserFromOrganizationByUserId(ui, user.getUuid()
 	                    .toString(), callback);
 	        }
 	        throw mappableSecurityException("unauthorized",
