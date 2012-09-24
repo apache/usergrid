@@ -2677,9 +2677,9 @@ public class ManagementServiceImpl implements ManagementService {
         String fb_user_name = (String) fb_user.get("name");
         String fb_user_username = (String) fb_user.get("username");
         String fb_user_email = (String) fb_user.get("email");
-
-        System.out.println(JsonUtils.mapToFormattedJsonString(fb_user));
-
+        if ( logger.isDebugEnabled()) {
+           logger.debug(JsonUtils.mapToFormattedJsonString(fb_user));
+        }
         if (applicationId == null) {
             return null;
         }
@@ -2701,18 +2701,27 @@ public class ManagementServiceImpl implements ManagementService {
                 Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
                 properties.put("facebook", fb_user);
-                properties.put("username",
-                        fb_user_username != null ? fb_user_username : "fb_"
-                                + fb_user_id);
+                properties.put("username","fb_"+ fb_user_id);
                 properties.put("name", fb_user_name);
-                if (fb_user_email != null) {
-                    properties.put("email", fb_user_email);
-                }
                 properties.put("picture", "http://graph.facebook.com/"
-                        + fb_user_id + "/picture");
-                properties.put("activated", true);
+                                      + fb_user_id + "/picture");
 
-                user = em.create("user", User.class, properties);
+              if (fb_user_email != null) {
+                    user = getAppUserByIdentifier(applicationId, Identifier.fromEmail(fb_user_email));
+                    // if we found the user by email, unbind the properties from above that will conflict
+                    // then update the user
+                    if ( user != null ) {
+                      properties.remove("username");
+                      properties.remove("name");
+                      em.updateProperties(user, properties);
+                    } else {
+                      properties.put("email", fb_user_email);
+                    }
+                }
+                if ( user == null ) {
+                  properties.put("activated", true);
+                  user = em.create("user", User.class, properties);
+                }
             } else {
                 user = (User) r.getEntity().toTypedEntity();
                 Map<String, Object> properties = new LinkedHashMap<String, Object>();
