@@ -593,14 +593,15 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public BiMap<UUID, String> getOrganizations() throws Exception {
-
+    public List<OrganizationInfo> getOrganizations(UUID startResult, int count) throws Exception {
+        // still need the bimap to search for existing
         BiMap<UUID, String> organizations = HashBiMap.create();
         EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         Results results = em.getCollection(em.getApplicationRef(), "groups",
-                null, 10000, Level.ALL_PROPERTIES, false);
+                startResult, count, Level.ALL_PROPERTIES, false);
+        List<OrganizationInfo> orgs = new ArrayList<OrganizationInfo>(results.size());
+        OrganizationInfo orgInfo;
         for (Entity entity : results.getEntities()) {
-
             // TODO T.N. temporary hack to deal with duplicate orgs. Revert this
             // commit after migration
             String path = (String) entity.getProperty("path");
@@ -608,8 +609,23 @@ public class ManagementServiceImpl implements ManagementService {
             if (organizations.containsValue(path)) {
                 path += "DUPLICATE";
             }
-
+            orgInfo = new OrganizationInfo(entity.getUuid(), path);
+            orgs.add(orgInfo);
             organizations.put(entity.getUuid(), path);
+        }
+        return orgs;
+    }
+
+    @Override
+    public BiMap<UUID, String> getOrganizations() throws Exception {
+        List<OrganizationInfo> orgs = getOrganizations(null, 10000);
+        return buildOrgBiMap(orgs);
+    }
+
+    private BiMap<UUID, String> buildOrgBiMap(List<OrganizationInfo> orgs) {
+        BiMap<UUID, String> organizations = HashBiMap.create();
+        for (OrganizationInfo orgInfo : orgs) {
+            organizations.put(orgInfo.getUuid(), orgInfo.getName());
         }
         return organizations;
     }
@@ -1329,7 +1345,7 @@ public class ManagementServiceImpl implements ManagementService {
                 .getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
         if (superuser_enabled && (superuser_username != null)
                 && superuser_username.equals(user.getUsername())) {
-            organizations = getOrganizations();
+            organizations = buildOrgBiMap(getOrganizations(null, 10));
         } else {
             organizations = getOrganizationsForAdminUser(user.getUuid());
         }
