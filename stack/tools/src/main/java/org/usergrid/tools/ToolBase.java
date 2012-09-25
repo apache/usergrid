@@ -53,7 +53,7 @@ public abstract class ToolBase {
 
 	boolean isVerboseEnabled = false;
 
-	private static final Logger logger = LoggerFactory
+	static final Logger logger = LoggerFactory
 			.getLogger(ToolBase.class);
 
 	/**

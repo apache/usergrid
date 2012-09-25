@@ -7,10 +7,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
+import com.google.common.collect.BiMap;
 import me.prettyprint.cassandra.utils.TimeUUIDUtils;
 
 import org.junit.AfterClass;
@@ -337,4 +336,21 @@ public class ManagementServiceTest {
         assertTrue(invalidTokenExcpetion);
 
     }
+
+  @Test
+  public void superUserGetOrganizationsPage() throws Exception {
+    // create 15 orgs
+    for ( int x=0; x<15; x++) {
+      managementService.createOrganization("super-user-org-" + x,
+              adminUser, true);
+    }
+    // should be 17 total
+    assertEquals(17, managementService.getOrganizations().size());
+    List<OrganizationInfo> orgs = managementService.getOrganizations(null, 10);
+    assertEquals(10, orgs.size());
+    UUID val = orgs.get(9).getUuid();
+    orgs = managementService.getOrganizations(val, 10);
+    assertEquals(8, orgs.size());
+    assertEquals(val, orgs.get(0).getUuid());
+  }
 }

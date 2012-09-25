@@ -1023,7 +1023,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     public void stringWithSpaces() throws Exception {
         Map<String, Object> props = new HashMap<String, Object>();
 
-        props.put("string", "My simple string");
+        props.put("myString", "My simple string");
         
         UUID applicationId = createApplication("testOrganization",
                 "stringWithSpaces");
@@ -1038,7 +1038,7 @@ public class CollectionTest extends AbstractPersistenceTest {
         
         
         Query query = new Query();
-        query.addEqualityFilter("string","My simple string");
+        query.addEqualityFilter("myString","My simple string");
 
         Results results = em.searchCollection(em.getApplicationRef(), "tests",
                 query);

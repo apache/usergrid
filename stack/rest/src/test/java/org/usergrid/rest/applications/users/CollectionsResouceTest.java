@@ -9,6 +9,7 @@ import org.usergrid.rest.AbstractRestTest;
 import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
@@ -17,6 +18,7 @@ import static org.usergrid.utils.MapUtils.hashMap;
 
 /**
  * @author zznate
+ * @author tnine
  */
 public class CollectionsResouceTest extends AbstractRestTest {
 
@@ -32,6 +34,8 @@ public class CollectionsResouceTest extends AbstractRestTest {
             assertEquals("Should receive a 400 Not Found", 400, e.getResponse().getStatus());
         }
     }
+    
+    
 
     /**
      * emails with "me" in them are causing errors. Test we can post to a
@@ -42,7 +46,7 @@ public class CollectionsResouceTest extends AbstractRestTest {
      * @throws Exception
      */
     @Test
-    public void emailWithMeInString() throws Exception {
+    public void permissionWithMeInString() throws Exception {
         // user is created get a token
         createUser("sumeet.agarwal@usergrid.com", "sumeet.agarwal@usergrid.com", "secret", "Sumeet Agarwal");
 
@@ -77,5 +81,46 @@ public class CollectionsResouceTest extends AbstractRestTest {
 
         assertNotNull(getEntity(response, 0));
 
+    }
+    
+    
+
+    @Test
+    public void stringWithSpaces() {
+        Map<String, String> payload = hashMap("summaryOverview", "My Summary").map("caltype", "personal");
+       
+        JsonNode node = resource().path("/test-organization/test-app/calendarlists")
+                    .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
+        
+        
+        UUID id = getEntityId(node, 0);
+        
+        //post a second entity
+        
+        
+        payload = hashMap("summaryOverview", "Your Summary").map("caltype", "personal");
+        
+        node = resource().path("/test-organization/test-app/calendarlists")
+                .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
+        
+        
+        //query for the first entity 
+        
+        String query = "summaryOverview = 'My Summary'";
+        
+        
+        JsonNode queryResponse = 
+                resource().path("/test-organization/test-app/calendarlists")
+                .queryParam("access_token", access_token).queryParam("ql", query).accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+        
+        UUID returnedId = getEntityId(queryResponse, 0);
+        
+        assertEquals(id, returnedId);
+        
+        assertEquals(1, queryResponse.get("entities").size());
     }
 }

@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
@@ -360,6 +361,16 @@ public abstract class AbstractRestTest extends JerseyTest {
      */
     protected JsonNode getEntity(JsonNode response, String name) {
         return response.get("entities").get(name);
+    }
+    
+    /**
+     * Get the uuid from the entity at the specified index
+     * @param response
+     * @param index
+     * @return
+     */
+    protected UUID getEntityId(JsonNode response, int index){
+        return UUID.fromString(getEntity(response, index).get("uuid").asText());
     }
     
     /**
