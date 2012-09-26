@@ -2894,6 +2894,12 @@ function deleteRolePermission(roleName, permission) {
   }
   window.Usergrid.console.addGroupPermission = addGroupPermission;
 
+  function deleteGroupPermission(){
+
+  }
+
+  window.Usegrid.console.deleteGroupPermission = deleteGroupPermission;
+
   function pageSelectGroupPermissions(groupId) {
     Pages.SelectPanel('group');
     requestGroup(groupId);
