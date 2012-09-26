@@ -78,12 +78,12 @@ module Usergrid
     end
 
     def post(payload, additional_headers={}, &block)
-      payload = payload.to_json if payload.is_a?(Hash) || payload.is_a?(Array)
+      payload = MultiJson.dump(payload) if payload.is_a?(Hash) || payload.is_a?(Array)
       self.response = super payload, additional_headers, &block
     end
 
     def put(payload, additional_headers={}, &block)
-      payload = payload.to_json if payload.is_a?(Hash) || payload.is_a?(Array)
+      payload = MultiJson.dump(payload) if payload.is_a?(Hash) || payload.is_a?(Array)
       self.response = super payload, additional_headers, &block
     end
 

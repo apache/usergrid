@@ -1,5 +1,6 @@
 require 'logger'
-require 'json'
+require 'multi_json'
+
 
 module Usergrid
 

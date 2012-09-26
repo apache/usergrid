@@ -29,7 +29,7 @@ begin
                                  SPEC_SETTINGS[:organization][:password])
   LOG.info "created organization with user #{SPEC_SETTINGS[:organization][:username]}@email.com"
 rescue
-  if JSON($!.response)['error'] == "duplicate_unique_property_exists"
+  if MultiJson.load($!.response)['error'] == "duplicate_unique_property_exists"
     LOG.debug "test organization exists"
   else
     raise $!

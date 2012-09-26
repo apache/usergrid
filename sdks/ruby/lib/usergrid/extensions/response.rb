@@ -10,7 +10,7 @@ module RestClient
     end
 
     def data
-      @data = JSON.parse(self).add_dot_notation! unless @data
+      @data = MultiJson.load(self).add_dot_notation! unless @data
       @data
     end
 

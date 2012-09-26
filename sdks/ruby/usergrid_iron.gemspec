@@ -17,7 +17,7 @@ Gem::Specification.new do |gem|
   gem.version       = Usergrid::VERSION
 
   gem.add_dependency 'rest-client'
-  gem.add_dependency 'json_pure'
+  gem.add_dependency 'multi_json'
 
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'rspec'
