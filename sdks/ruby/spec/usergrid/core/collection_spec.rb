@@ -7,7 +7,7 @@ describe Usergrid::Collection do
     @collection = @application['tests'].collection
     @entity_data = []
     (1..10).each do |i|
-      test = { name: "test_#{i}" }
+      test = { name: "name_#{i}", value: "value_#{i+1}" }
       @entity_data << test
     end
     @collection.create_entities @entity_data
@@ -18,9 +18,27 @@ describe Usergrid::Collection do
     delete_application @application
   end
 
-  it "should be able to query a collection" do
+  it "should be able to do a simple query" do
     @collection.query "select * where name = \'#{@entity_data[0][:name]}\'"
     @collection.size.should eq 1
+  end
+
+  it "should be able to select data elements" do
+    @collection.query "select name, value where name = \'#{@entity_data[0][:name]}\'"
+    @collection.size.should eq 1
+    # note: not Usergrid::Entity objects: it is an Array for this kind of query
+    values = @collection.entities.first
+    values[0].should eq @entity_data[0][:name]
+    values[1].should eq @entity_data[0][:value]
+  end
+
+  it "should be able to select redefined data elements" do
+    @collection.query "select { test1: name, test2 : value } where name = \'#{@entity_data[0][:name]}\'"
+    @collection.size.should eq 1
+    # note: not Usergrid::Entity objects: it is a Hash for this kind of query
+    values = @collection.entities.first
+    values.test1.should eq @entity_data[0][:name]
+    values.test2.should eq @entity_data[0][:value]
   end
 
   it "should be able to find an entity" do

@@ -25,10 +25,10 @@ module RestClient
 
     def entities_data
       return @entities_data if @entities_data
-      entities_data = data['entities'] || data['data'] || data['messages']
+      entities_data = data['entities'] || data['data'] || data['messages'] || data['list']
       raise "unable to determine entities from: #{data}" unless entities_data.is_a?(Array)
       entities_data.each do |e|
-        e['uri'] = resource.concat_urls(data['uri'], e['uuid']) if e['uuid']
+        e['uri'] = resource.concat_urls(data['uri'], e['uuid']) if e.is_a?(Hash) && e['uuid']
       end
       @entities_data = entities_data
     end
@@ -37,7 +37,11 @@ module RestClient
       return @entities if @entities
       index = -1
       @entities = entities_data.collect do |e|
-        Usergrid::Entity.new e['uri'], resource.api_url, resource.options, self, index+=1
+        if e.is_a? Array
+          e
+        else
+          Usergrid::Entity.new e['uri'], resource.api_url, resource.options, self, index+=1
+        end
       end
     end
 
