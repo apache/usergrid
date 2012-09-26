@@ -1049,4 +1049,62 @@ public class CollectionTest extends AbstractPersistenceTest {
         assertNotNull(entity);
         
     }
+
+  @Test
+  public void testSelectTerms() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "testSelectTerms");
+
+    EntityManager em = emf.getEntityManager(applicationId);
+
+    Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    properties.put("username", "edanuff");
+    properties.put("email", "ed@anuff.com");
+
+    em.create("user", properties);
+
+    String s = "select username, email where username = 'edanuff'";
+    Query query = Query.fromQL(s);
+
+    Results r = em.searchCollection(em.getApplicationRef(), "users", query);
+    assertTrue(r.size() == 1);
+
+    // selection results should be a list of lists
+    List<Object> sr = query.getSelectionResults(r);
+    assertTrue(sr.size() == 1);
+
+    List firstResult = (List)sr.get(0);
+    assertTrue("edanuff".equals(firstResult.get(0)));
+    assertTrue("ed@anuff.com".equals(firstResult.get(1)));
+
+  }
+
+  @Test
+  public void testRedefineTerms() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "testRedefineTerms");
+
+    EntityManager em = emf.getEntityManager(applicationId);
+
+    Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    properties.put("username", "edanuff");
+    properties.put("email", "ed@anuff.com");
+
+    em.create("user", properties);
+
+    String s = "select {name: username, email: email} where username = 'edanuff'";
+    Query query = Query.fromQL(s);
+
+    Results r = em.searchCollection(em.getApplicationRef(), "users", query);
+    assertTrue(r.size() == 1);
+
+    // selection results should be a list of lists
+    List<Object> sr = query.getSelectionResults(r);
+    assertTrue(sr.size() == 1);
+
+    Map firstResult = (Map)sr.get(0);
+    assertTrue("edanuff".equals(firstResult.get("name")));
+    assertTrue("ed@anuff.com".equals(firstResult.get("email")));
+  }
+
 }

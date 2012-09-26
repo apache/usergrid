@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.beanutils.PropertyUtils;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
@@ -40,6 +41,7 @@ import org.codehaus.jackson.schema.JsonSchema;
 import org.codehaus.jackson.smile.SmileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.Entity;
 
 /**
  * @author edanuff
@@ -297,6 +299,20 @@ public class JsonUtils {
 			}
 			return null;
 		}
+
+    if (obj instanceof Entity) {
+      Object child = ((Entity)obj).getProperty(segment);
+      Object result = select(child, remaining, buildResultTree);
+      if (result != null) {
+        if (buildResultTree) {
+          Map<Object, Object> results = new LinkedHashMap<Object, Object>();
+          results.put(segment, result);
+          return results;
+        } else {
+          return result;
+        }
+      }
+    }
 
 		return obj;
 	}
