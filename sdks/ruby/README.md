@@ -1,8 +1,7 @@
 # Usergrid_iron
 
-Usergrid_iron enables simple, low-level Ruby access to Apigee's App Services (aka Usergrid) REST API with minimal
-dependencies.
-
+Usergrid_iron enables simple, low-level Ruby access to Apigee's App Services (aka Usergrid)
+REST API with minimal dependencies.
 
 ## Installation
 
@@ -21,16 +20,20 @@ Or install it yourself as:
 
 ## Usage
 
-1. Not familiar with Usergrid / Apigee's App Services? It's great stuff! Check it out, here:
+### Not familiar with Usergrid / Apigee's App Services?
 
-Docs: http://apigee.com/docs/usergrid/
-Open source: https://github.com/apigee/usergrid-stack
+#### It's great stuff! Check it out, here:
 
-2. Getting started with the Usergrid_iron SDK is simple! Let's start with the basics.
-I'll assume you've already set up an organization, application, and user - just fill in your
-own values in the code below.
+  Docs: <http://apigee.com/docs/usergrid/>  
+  Open source: <https://github.com/apigee/usergrid-stack>
 
-<pre>
+### Getting started with the Usergrid_iron SDK is simple! 
+
+#### Let's start with the basics.
+For this example, we'll assume you've already set up an organization, application, and user -
+just fill in your own values in the code below.
+
+```
 require 'usergrid_iron'
 
 # fill in your values here!
@@ -55,15 +58,18 @@ same_dog = application['dogs'][uuid].entity
 
 # is it our dog? well, he knows his name!
 puts "My dog's name is: #{same_dog.name}"
-</pre>
+```
 
-That was really easy. So let's try something slightly more complex.
-Let's say we've registered for an organization, but we don't have an application yet (or
-want to create a new one to work on). No worries, just fill in your organization and
-superuser credentials below, and follow along! (Better yet: If you used the Usergrid launcher
-and let it initialize your database, you shouldn't need to do anything!)
+Well that was really easy. 
 
-<pre>
+#### Let's try something slightly more complex.
+Let's say you've registered for an organization, but you don't have an application yet
+(or want to create a new one to work on). No worries, just fill in your organization and
+superuser credentials below, and follow along!
+(Better yet: If you used the Usergrid launcher and let it initialize your database,
+you shouldn't need to do anything!)
+
+```
   require 'usergrid_iron'
 
   usergrid_api = 'http://localhost:8080'
@@ -83,7 +89,7 @@ and let it initialize your database, you shouldn't need to do anything!)
   new_application = organization.create_application app_name
 
   # create an user for our application
-  new_application.create_user 'username', 'name', 'email@test.com', 'password'
+  new_application.create_user 'username', 'password'
 
 
   ## now we can play with the puppies! ##
@@ -107,7 +113,7 @@ and let it initialize your database, you shouldn't need to do anything!)
   end
 
   # "Benji, come!"
-  benji = dogs.query("select * where name = 'Benji'").entity  # shortcut: entity will return the first in the collection
+  benji = dogs.query("select * where name = 'Benji'").entity  # shortcut: entity() returns the first
 
   # modify Benji's attributes & save
   benji.location = 'home'                     # use attribute access
@@ -120,7 +126,7 @@ and let it initialize your database, you shouldn't need to do anything!)
     puts "Benji's home!"
   end
 
-</pre>
+```
 
 Whew. That's enough for now. But looking for a specific feature? Check out the rspecs,
 there are examples of nearly everything!
@@ -146,6 +152,23 @@ In order to run the tests, check out the Usergrid open source project
 usergrid_iron/spec/spec_settings.yaml to match.)
 
 
+## Release notes
+
+### 0.0.3 
+* New features
+  1. Support for lists returned when making parameterized queries:
+	 <pre>select username, email where…</pre>
+	 or replacement queries:
+	 <pre>select { user:username, email:email } where…
+* Incompatible changes
+  1. Application.create_user parameter change from:
+     <pre>create_user(username, name, email, password, invite=false)</pre>
+     to:
+     <pre>create_user(username, password, email=nil, name=nil, invite=false)</pre>
+* Backend changes
+  1. Replaced json_pure dependency with multi_json
+
+
 ## Notes
 
 The following features are not currently implemented on the server:
@@ -156,17 +179,16 @@ The following features are not currently implemented on the server:
 
 
 ## Copyright
+Copyright (c) 2012 Scott Ganyo 
 
- * Copyright (c) 2012 Scott Ganyo
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use the included files except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use the included files except in compliance with the License.
+
+You may obtain a copy of the License at
+
+  <http://www.apache.org/licenses/LICENSE-2.0>
+  
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
