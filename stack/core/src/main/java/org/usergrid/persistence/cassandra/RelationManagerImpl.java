@@ -1401,6 +1401,43 @@ public class RelationManagerImpl implements RelationManager,
                             connection.getConnectionType()),
                     asList(connection.getConnectingEntityId(),
                             connection.getConnectingEntityType()), timestamp);
+
+            // delete the connection path if there will be no connections left
+            boolean delete = true;
+            for (ConnectionRefImpl c : getConnectionsWithEntity(connection.getConnectingEntityId())) {
+              if (c.getConnectedEntity().getConnectionType().equals(connection.getConnectedEntity().getConnectionType())) {
+                if (!c.getConnectedEntity().getUuid().equals(connection.getConnectedEntity().getUuid())) {
+                  delete = false;
+                  break;
+                }
+              }
+            }
+            if (delete) {
+              addDeleteToMutator(
+                batch,
+                ENTITY_DICTIONARIES,
+                key(connection.getConnectingEntityId(), DICTIONARY_CONNECTED_TYPES),
+                connection.getConnectionType(), timestamp);
+            }
+
+            // delete the connection path if there will be no connections left
+            delete = true;
+            for (ConnectionRefImpl c : getConnectionsWithEntity(connection.getConnectedEntityId())) {
+              if (c.getConnectedEntity().getConnectionType().equals(connection.getConnectedEntity().getConnectionType())) {
+                if (!c.getConnectingEntity().getUuid().equals(connection.getConnectingEntity().getUuid())) {
+                  delete = false;
+                  break;
+                }
+              }
+            }
+            if (delete) {
+              addDeleteToMutator(
+                batch,
+                ENTITY_DICTIONARIES,
+                key(connection.getConnectedEntityId(), DICTIONARY_CONNECTING_TYPES),
+                connection.getConnectionType(), timestamp);
+            }
+
         } else {
             addInsertToMutator(batch, ENTITY_CONNECTIONS, connection_id,
                     columns, timestamp);
