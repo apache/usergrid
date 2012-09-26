@@ -202,7 +202,7 @@ public class BasicMongoTest extends AbstractMongoTest {
         //now update the object and save it
         BasicDBObject object = new BasicDBObject();
         object.put("newprop", "newvalue");
-        object.put("name", "nico2");
+        object.put("color", "black");
         
         db.getCollection("updatetests").update(query, object);
         
@@ -216,17 +216,17 @@ public class BasicMongoTest extends AbstractMongoTest {
         Entity entity = em.get(id);
 
         assertNotNull(entity);
-        assertEquals("nico2", entity.getProperty("name"));
-        assertEquals("tabby", entity.getProperty("color"));
-        assertEquals("newvalue", returnedObject.get("newprop"));
+        assertEquals("nico", entity.getProperty("name"));
+        assertEquals("black", entity.getProperty("color"));
+        assertEquals("newvalue", entity.getProperty("newprop"));
 
         
         //now check it in the client
         returnedObject = new BasicDBObject(db.getCollection("updatetests")
                 .findOne(query).toMap());
 
-        assertEquals("nico2", returnedObject.get("name"));
-        assertEquals("tabby", returnedObject.get("color"));
+        assertEquals("nico", returnedObject.get("name"));
+        assertEquals("black", returnedObject.get("color"));
         assertEquals("newvalue", returnedObject.get("newprop"));
         assertEquals(savedOid, new ObjectId(returnedObject.getString("_id")));
         assertEquals(id.toString(), returnedObject.get("uuid"));
