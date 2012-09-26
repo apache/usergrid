@@ -137,7 +137,7 @@ public class OpUpdate extends OpCrud {
     @Override
     public OpReply doOp(MongoChannelHandler handler, ChannelHandlerContext ctx, MessageEvent messageEvent) {
 
-        ApplicationInfo application = SubjectUtils.getApplication(Identifier.fromName(getDatabaseName()));
+        ApplicationInfo application = SubjectUtils.getApplication(Identifier.from(getDatabaseName()));
 
         if (application == null) {
             ctx.setAttachment(new IllegalArgumentException(String.format("Could not find application with name '%s' ",

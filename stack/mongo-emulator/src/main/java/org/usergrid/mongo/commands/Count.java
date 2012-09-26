@@ -42,7 +42,7 @@ public class Count extends MongoCommand {
 	    OpReply reply = new OpReply(opQuery);
 	    
 		ApplicationInfo application = SubjectUtils.getApplication(Identifier
-				.fromName(opQuery.getDatabaseName()));
+				.from(opQuery.getDatabaseName()));
 		
 		if (application == null) {
 			return reply;

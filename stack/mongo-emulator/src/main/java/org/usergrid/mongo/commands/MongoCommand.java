@@ -49,7 +49,7 @@ public abstract class MongoCommand {
 		} catch (ClassNotFoundException e) {
 			logger.error("Couldn't find command class", e);
 		}
-
+    logger.debug("using MongoCommand class {}", clazz);
 		try {
 			if (cls != null) {
 				command = cls.newInstance();

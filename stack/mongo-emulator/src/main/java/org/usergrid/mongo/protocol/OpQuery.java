@@ -212,7 +212,7 @@ public class OpQuery extends OpCrud {
     @Override
     public OpReply doOp(MongoChannelHandler handler, ChannelHandlerContext ctx,
             MessageEvent messageEvent) {
-
+        logger.debug("In OpQuery.doOp with fullCollectionName: {}", fullCollectionName);
         Subject currentUser = SubjectUtils.getSubject();
 
         String collectionName = getCollectionName();
@@ -237,6 +237,7 @@ public class OpQuery extends OpCrud {
             MongoCommand command = MongoCommand.getCommand(commandName);
 
             if (command != null) {
+                logger.info("found command {} from name {}", command.getClass().getName(), commandName);
                 return command.execute(handler, ctx, messageEvent, this);
             } else {
                 logger.info("No command for " + commandName);
@@ -342,12 +343,12 @@ public class OpQuery extends OpCrud {
             String databaseName) {
         logger.info("Handling list collections for database {} ... ",
                 databaseName);
+        Identifier id = Identifier.from(databaseName);
 
         OpReply reply = new OpReply(this);
         
-        ApplicationInfo application = SubjectUtils.getApplication(Identifier
-                .fromName(databaseName));
-      
+        ApplicationInfo application = SubjectUtils.getApplication(id);
+
         if (application == null) {
             return reply;
         }
@@ -383,7 +384,7 @@ public class OpQuery extends OpCrud {
         OpReply reply = new OpReply(this);
         
         ApplicationInfo application = SubjectUtils.getApplication(Identifier
-                .fromName(getDatabaseName()));
+                .from(getDatabaseName()));
         if (application == null) {
             return reply;
         }

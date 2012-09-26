@@ -133,7 +133,7 @@ public class OpDelete extends OpCrud {
         query.setLimit(BATCH_SIZE);
 
         ApplicationInfo application = SubjectUtils.getApplication(Identifier
-                .fromName(getDatabaseName()));
+                .from(getDatabaseName()));
 
         if (application == null) {
             ctx.setAttachment(new IllegalArgumentException(String.format("Could not find application with name '%s' ", getDatabaseName())));

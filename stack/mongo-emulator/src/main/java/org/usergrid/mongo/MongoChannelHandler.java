@@ -126,7 +126,7 @@ public class MongoChannelHandler extends SimpleChannelUpstreamHandler {
 	}
 
 	public OpReply handleMessage(ChannelHandlerContext ctx, MessageEvent e, Message message) {
-
+    logger.debug("message type: {}", message.getClass().getCanonicalName());
 	    if(message instanceof OpCrud){
 	        return ((OpCrud)message).doOp(this, ctx, e);
 	    }
