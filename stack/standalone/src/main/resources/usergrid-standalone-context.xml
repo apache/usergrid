@@ -28,4 +28,8 @@
 
 	<import resource="classpath:/usergrid-rest-context.xml" />
 
+    <bean id="binaryStore" class="org.usergrid.services.assets.data.LocalFileBinaryStore">
+        <property name="reposLocation" value="${usergrid.temp.files}"/>
+    </bean>
+
 </beans>

@@ -11,7 +11,7 @@
         <appender-ref ref="stdout"/>
     </logger>
     <logger name="org.usergrid.persistence.cassandra.CounterUtils">
-        <level value="debug"/>
+        <level value="warn"/>
     </logger>
     <root>
         <level value="info"/>
