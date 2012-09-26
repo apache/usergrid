@@ -10,18 +10,23 @@ describe Usergrid::Application do
     delete_application @application
   end
 
-  it "should be able to create and delete a user" do
+  it "should be able to create, login, and delete a user" do
     random = SecureRandom.hex
-    response = @application.create_user("username_#{random}", "#{random} name", "#{random}@email.com", random)
+    application = Usergrid::Application.new @application.url # create application resource that's not logged in
+    response = application.create_user "username_#{random}", 'password'
     entity = response.entity
+    application.login "username_#{random}", 'password'
     begin
       response.code.should eq 200
       response.entities.size.should eq 1
       entity.uuid.should_not be_nil
-      response = @application["users/#{entity.uuid}"].get
+      response = application["users/#{entity.uuid}"].get
       response.code.should eq 200
     ensure
       entity.delete
+      # deleted user shouldn't be able to access anything now
+      expect { application["users/#{entity.uuid}"].get }.to raise_error(RestClient::Unauthorized)
+      # use original application - logged in under existing user
       expect { @application["users/#{entity.uuid}"].get }.to raise_error(RestClient::ResourceNotFound)
     end
   end

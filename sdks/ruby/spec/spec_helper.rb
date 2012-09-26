@@ -62,9 +62,9 @@ end
 def create_random_user(application, login=false)
   random = SecureRandom.hex
   user_hash = {username: "username_#{random}",
-               name:     "#{random} name",
+               password: random,
                email:    "#{random}@email.com",
-               password: random}
+               name:     "#{random} name" }
   entity = application['users'].post(user_hash).entity
   application.login user_hash[:username], user_hash[:password] if login
   entity

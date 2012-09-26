@@ -7,13 +7,13 @@ module Usergrid
       super url, api_url, options
     end
 
-    def create_user(username, name, email, password, invite=false)
-      data = { username: username,
-               name: name,
-               email: email,
-               password: password,
-               invite: invite }
-      create_entity 'users', data
+    def create_user(username, password, email=nil, name=nil, invite=false)
+      user_hash = { username: username,
+                    password: password,
+                    email: email,
+                    name: name,
+                    invite: invite }
+      create_entity 'users', user_hash
     end
 
     # note: collection_name s/b plural!
