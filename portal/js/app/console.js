@@ -1362,7 +1362,7 @@
     confirmDelete(function(){
         items.each(function() {
           var roleId = $(this).attr("value");
-          runAppQuery(new Usergrid.Query("DELETE", "/users/" + username + "/rolename/" + roleId, null, null,
+          runAppQuery(new Usergrid.Query("DELETE", "/roles/" + roleId  + "/users/" + username, null, null,
             function() { pageSelectUserPermissions (username); },
             function() { alertModal("Error", "Unable to remove user from role"); }
           ));
@@ -1374,14 +1374,14 @@
   function deleteRoleFromUser(roleId, rolename) {
     var items = $('#role-users input[class^=userRoleItem]:checked');
     if(!items.length){
-      alertModal("Error", "Please, first select the users you want to delete from this role.")
+      alertModal("Error", "Please, first select the users you want to delete from this role.");
         return;
     }
 
     confirmDelete(function(){
         items.each(function() {
           var username = $(this).attr("value");
-          runAppQuery(new Usergrid.Query("DELETE", "/users/" + username + "/roles/" + roleId, null, null,
+          runAppQuery(new Usergrid.Query("DELETE", "/roles/" + roleId + "/users/" + username, null, null,
             function() { pageSelectRoleUsers (roleId, rolename); },
             function() { alertModal("Error", "Unable to remove user from role"); }
           ));
