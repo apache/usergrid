@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.bson.BasicBSONObject;
 import org.bson.types.ObjectId;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -140,6 +141,97 @@ public class BasicMongoTest extends AbstractMongoTest {
         assertNotNull(message);
         assertEquals("command failed [getlasterror]: { \"serverUsed\" : \"localhost/127.0.0.1:27017\" , \"n\" : 0 , \"connectionId\" : 20 , \"wtime\" : 0 , \"err\" : \"Entity users requires that property named username be unique, value of insertduplicate exists\" , \"ok\" : 0.0}", message);
 
+    }
+    
+    @Test
+    public void updateTest() throws Exception {
+
+        DB db = getDb();
+
+        BasicDBObject doc = new BasicDBObject();
+
+        doc.put("name", "nico");
+        doc.put("color", "tabby");
+
+        WriteResult result = db.getCollection("updatetests").insert(doc);
+
+        ObjectId savedOid = doc.getObjectId("_id");
+
+        assertNull(result.getError());
+
+        // check we've created the collection
+        Set<String> colls = db.getCollectionNames();
+
+        assertTrue(colls.contains("updatetests"));
+
+        // iterate the collection to ensure we can retrieve the object
+        DBCollection coll = db.getCollection("updatetests");
+        DBCursor cur = coll.find();
+
+        BasicDBObject returnedObject = null;
+
+        assertTrue(cur.hasNext());
+
+        returnedObject = (BasicDBObject) cur.next();
+
+        assertFalse(cur.hasNext());
+
+        UUID id = UUID.fromString(returnedObject.get("uuid").toString());
+
+        //this should work.  Appears to be the type of ObjectId getting lost on column serialization
+        ObjectId returnedOid = new ObjectId(returnedObject.getString("_id"));
+
+        assertEquals("nico", returnedObject.get("name"));
+        assertEquals("tabby", returnedObject.get("color"));
+        assertEquals(savedOid, returnedOid);
+        assertNotNull(id);
+
+        BasicDBObject query = new BasicDBObject();
+        query.put("_id", savedOid);
+
+        // now load by the mongo Id. Users will use this the most to read data.
+
+        returnedObject = new BasicDBObject(db.getCollection("updatetests")
+                .findOne(query).toMap());
+
+        assertEquals("nico", returnedObject.get("name"));
+        assertEquals("tabby", returnedObject.get("color"));
+        assertEquals(savedOid, new ObjectId(returnedObject.getString("_id")));
+        assertEquals(id.toString(), returnedObject.get("uuid"));
+        
+        //now update the object and save it
+        BasicDBObject object = new BasicDBObject();
+        object.put("newprop", "newvalue");
+        object.put("name", "nico2");
+        
+        db.getCollection("updatetests").update(query, object);
+        
+        // check we can find it when using the native entity manager
+        
+        Thread.sleep(5000);
+
+        UUID appId = emf.lookupApplication("test-organization/test-app");
+        EntityManager em = emf.getEntityManager(appId);
+
+        Entity entity = em.get(id);
+
+        assertNotNull(entity);
+        assertEquals("nico2", entity.getProperty("name"));
+        assertEquals("tabby", entity.getProperty("color"));
+        assertEquals("newvalue", returnedObject.get("newprop"));
+
+        
+        //now check it in the client
+        returnedObject = new BasicDBObject(db.getCollection("updatetests")
+                .findOne(query).toMap());
+
+        assertEquals("nico2", returnedObject.get("name"));
+        assertEquals("tabby", returnedObject.get("color"));
+        assertEquals("newvalue", returnedObject.get("newprop"));
+        assertEquals(savedOid, new ObjectId(returnedObject.getString("_id")));
+        assertEquals(id.toString(), returnedObject.get("uuid"));
+
+    
     }
 
     @Test
