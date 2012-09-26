@@ -18,7 +18,6 @@ package org.usergrid.persistence;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.split;
-import static org.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.usergrid.utils.ClassUtils.cast;
 import static org.usergrid.utils.ConversionUtils.uuid;
@@ -40,7 +39,6 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -51,11 +49,13 @@ import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
+import org.antlr.runtime.Token;
 import org.antlr.runtime.TokenRewriteStream;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Results.Level;
+import org.usergrid.persistence.exceptions.QueryParseException;
 import org.usergrid.persistence.query.tree.AndOperand;
 import org.usergrid.persistence.query.tree.ContainsOperand;
 import org.usergrid.persistence.query.tree.Equal;
@@ -64,13 +64,9 @@ import org.usergrid.persistence.query.tree.GreaterThan;
 import org.usergrid.persistence.query.tree.GreaterThanEqual;
 import org.usergrid.persistence.query.tree.LessThan;
 import org.usergrid.persistence.query.tree.LessThanEqual;
-import org.usergrid.persistence.query.tree.LiteralFactory;
 import org.usergrid.persistence.query.tree.Operand;
-import org.usergrid.persistence.query.tree.Property;
 import org.usergrid.persistence.query.tree.QueryFilterLexer;
 import org.usergrid.persistence.query.tree.QueryFilterParser;
-import org.usergrid.persistence.query.tree.QueryVisitor;
-import org.usergrid.persistence.query.tree.StringLiteral;
 import org.usergrid.persistence.query.tree.WithinOperand;
 import org.usergrid.utils.JsonUtils;
 
@@ -153,7 +149,7 @@ public class Query {
         }
     }
 
-    public static Query fromQL(String ql) {
+    public static Query fromQL(String ql) throws QueryParseException {
         if (ql == null) {
             return null;
         }
@@ -169,17 +165,28 @@ public class Query {
             }
         }
 
+        ANTLRStringStream in = new ANTLRStringStream(ql.trim());
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
+       
         try {
-            ANTLRStringStream in = new ANTLRStringStream(ql.trim());
-            QueryFilterLexer lexer = new QueryFilterLexer(in);
-            CommonTokenStream tokens = new CommonTokenStream(lexer);
-            QueryFilterParser parser = new QueryFilterParser(tokens);
-            Query q = parser.ql().query;
-            return q;
-        } catch (Exception e) {
-            logger.error("Unable to parse \"" + ql + "\"", e);
+            return parser.ql().query;
+        } catch (RecognitionException e) {
+            logger.error("Unable to parse \"{}\"", ql, e);
+            
+            int index = e.index;
+            int lineNumber = e.line;
+            Token token = e.token;
+            
+            String message = String.format("The query cannot be parsed.  The token '%s' at column %d on line %d cannot be parsed", token.getText(), index, lineNumber );
+            
+         
+            throw new QueryParseException(message, e);
         }
-        return null;
+        
+
+        
     }
 
     public static Query newQueryIfNull(Query query) {
@@ -189,7 +196,7 @@ public class Query {
         return query;
     }
 
-    public static Query fromJsonString(String json) {
+    public static Query fromJsonString(String json) throws QueryParseException {
         Object o = JsonUtils.parse(json);
         if (o instanceof Map) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -199,7 +206,7 @@ public class Query {
         return null;
     }
 
-    public static Query fromQueryParams(Map<String, List<String>> params) {
+    public static Query fromQueryParams(Map<String, List<String>> params) throws QueryParseException {
         String type = null;
         Query q = null;
         String ql = null;
@@ -1767,14 +1774,13 @@ public class Query {
                 Map<String, Object> result = new LinkedHashMap<String, Object>();
                 Map<String, String> selects = getSelectAssignments();
                 for (Map.Entry<String, String> select : selects.entrySet()) {
-                    Object obj = JsonUtils.select(entity, select.getKey(),
-                            false);
+                    Object obj = JsonUtils.select(entity, select.getValue(), false);
                     if (obj == null) {
                         obj = "";
                     } else {
                         include = true;
                     }
-                    result.put(select.getValue(), obj);
+                    result.put(select.getKey(), obj);
                 }
                 if (include) {
                     results.add(result);

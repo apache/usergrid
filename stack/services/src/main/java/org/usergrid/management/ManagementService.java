@@ -372,4 +372,5 @@ public interface ManagementService {
 
     public abstract void provisionSuperuser() throws Exception;
 
+  List<OrganizationInfo> getOrganizations(UUID startResult, int count) throws Exception;
 }

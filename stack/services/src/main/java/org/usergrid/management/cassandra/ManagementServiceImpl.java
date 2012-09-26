@@ -593,14 +593,15 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public BiMap<UUID, String> getOrganizations() throws Exception {
-
+    public List<OrganizationInfo> getOrganizations(UUID startResult, int count) throws Exception {
+        // still need the bimap to search for existing
         BiMap<UUID, String> organizations = HashBiMap.create();
         EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         Results results = em.getCollection(em.getApplicationRef(), "groups",
-                null, 10000, Level.ALL_PROPERTIES, false);
+                startResult, count, Level.ALL_PROPERTIES, false);
+        List<OrganizationInfo> orgs = new ArrayList<OrganizationInfo>(results.size());
+        OrganizationInfo orgInfo;
         for (Entity entity : results.getEntities()) {
-
             // TODO T.N. temporary hack to deal with duplicate orgs. Revert this
             // commit after migration
             String path = (String) entity.getProperty("path");
@@ -608,8 +609,23 @@ public class ManagementServiceImpl implements ManagementService {
             if (organizations.containsValue(path)) {
                 path += "DUPLICATE";
             }
-
+            orgInfo = new OrganizationInfo(entity.getUuid(), path);
+            orgs.add(orgInfo);
             organizations.put(entity.getUuid(), path);
+        }
+        return orgs;
+    }
+
+    @Override
+    public BiMap<UUID, String> getOrganizations() throws Exception {
+        List<OrganizationInfo> orgs = getOrganizations(null, 10000);
+        return buildOrgBiMap(orgs);
+    }
+
+    private BiMap<UUID, String> buildOrgBiMap(List<OrganizationInfo> orgs) {
+        BiMap<UUID, String> organizations = HashBiMap.create();
+        for (OrganizationInfo orgInfo : orgs) {
+            organizations.put(orgInfo.getUuid(), orgInfo.getName());
         }
         return organizations;
     }
@@ -1329,7 +1345,7 @@ public class ManagementServiceImpl implements ManagementService {
                 .getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
         if (superuser_enabled && (superuser_username != null)
                 && superuser_username.equals(user.getUsername())) {
-            organizations = getOrganizations();
+            organizations = buildOrgBiMap(getOrganizations(null, 10));
         } else {
             organizations = getOrganizationsForAdminUser(user.getUuid());
         }
@@ -2677,9 +2693,9 @@ public class ManagementServiceImpl implements ManagementService {
         String fb_user_name = (String) fb_user.get("name");
         String fb_user_username = (String) fb_user.get("username");
         String fb_user_email = (String) fb_user.get("email");
-
-        System.out.println(JsonUtils.mapToFormattedJsonString(fb_user));
-
+        if ( logger.isDebugEnabled()) {
+           logger.debug(JsonUtils.mapToFormattedJsonString(fb_user));
+        }
         if (applicationId == null) {
             return null;
         }
@@ -2701,18 +2717,27 @@ public class ManagementServiceImpl implements ManagementService {
                 Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
                 properties.put("facebook", fb_user);
-                properties.put("username",
-                        fb_user_username != null ? fb_user_username : "fb_"
-                                + fb_user_id);
+                properties.put("username","fb_"+ fb_user_id);
                 properties.put("name", fb_user_name);
-                if (fb_user_email != null) {
-                    properties.put("email", fb_user_email);
-                }
                 properties.put("picture", "http://graph.facebook.com/"
-                        + fb_user_id + "/picture");
-                properties.put("activated", true);
+                                      + fb_user_id + "/picture");
 
-                user = em.create("user", User.class, properties);
+              if (fb_user_email != null) {
+                    user = getAppUserByIdentifier(applicationId, Identifier.fromEmail(fb_user_email));
+                    // if we found the user by email, unbind the properties from above that will conflict
+                    // then update the user
+                    if ( user != null ) {
+                      properties.remove("username");
+                      properties.remove("name");
+                      em.updateProperties(user, properties);
+                    } else {
+                      properties.put("email", fb_user_email);
+                    }
+                }
+                if ( user == null ) {
+                  properties.put("activated", true);
+                  user = em.create("user", User.class, properties);
+                }
             } else {
                 user = (User) r.getEntity().toTypedEntity();
                 Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -2995,15 +3020,16 @@ public class ManagementServiceImpl implements ManagementService {
 
     private CredentialsInfo maybeSaltPassword(UUID applicationId, User user, String password)
             throws Exception {
-        String hashType = null;
-        
-        if (user.getProperty(User.PROPERTY_HASHTYPE) != null) {
-            hashType = (String) user.getProperty(User.PROPERTY_HASHTYPE);
-        }
-        
-        return hashedCredentials(
-               saltProvider.getSalt(applicationId, user.getUuid()), password,
-                hashType);
+      String hashType = null;
+
+      CredentialsInfo ci = readUserPasswordCredentials(applicationId, user.getUuid());
+      if ( ci != null) {
+        hashType = ci.getHashType();
+      }
+
+      return hashedCredentials(
+              saltProvider.getSalt(applicationId, user.getUuid()), password,
+              hashType);
     }
 
     /**

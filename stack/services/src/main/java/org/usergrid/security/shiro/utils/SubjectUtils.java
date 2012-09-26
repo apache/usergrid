@@ -310,6 +310,14 @@ public class SubjectUtils {
 		return principal.getUser();
 	}
 	
+	public static UserInfo getAdminUser() {
+	    UserInfo user = getUser();
+	    if (user == null) {
+	        return null;
+	    }
+	    return user.isAdminUser() ? user : null;
+	}
+
 	public static UUID getSubjectUserId(){
 	    
 	    UserInfo info = getUser();

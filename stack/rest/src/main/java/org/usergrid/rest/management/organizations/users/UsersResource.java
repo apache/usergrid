@@ -16,6 +16,7 @@
 package org.usergrid.rest.management.organizations.users;
 
 import static org.apache.commons.collections.MapUtils.getObject;
+import static org.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
 import static org.usergrid.utils.ConversionUtils.getBoolean;
 import static org.usergrid.utils.ConversionUtils.string;
 
@@ -49,6 +50,7 @@ import org.usergrid.management.exceptions.ManagementException;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
+import org.usergrid.security.shiro.utils.SubjectUtils;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
@@ -224,7 +226,17 @@ public class UsersResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+	    if ("me".equals(username)) {
+	        UserInfo user = SubjectUtils.getAdminUser();
+	        if ((user != null) && (user.getUuid() != null)) {
+	            return addUserToOrganization(ui, user.getUuid().toString(),
+	                    callback);
+	        }
+	        throw mappableSecurityException("unauthorized",
+	                "No admin identity for access credentials provided");
+	    }
+
+	    ApiResponse response = new ApiResponse(ui);
 		response.setAction("add user to organization");
 
 		UserInfo user = management.getAdminUserByUsername(username);
@@ -276,6 +288,16 @@ public class UsersResource extends AbstractContextResource {
 			@Context UriInfo ui, @PathParam("username") String username,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
+
+	    if ("me".equals(username)) {
+	        UserInfo user = SubjectUtils.getAdminUser();
+	        if ((user != null) && (user.getUuid() != null)) {
+	            return removeUserFromOrganizationByUserId(ui, user.getUuid()
+	                    .toString(), callback);
+	        }
+	        throw mappableSecurityException("unauthorized",
+	                "No admin identity for access credentials provided");
+	    }
 
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("remove user from organization");
