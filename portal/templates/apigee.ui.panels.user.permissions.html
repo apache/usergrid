@@ -21,7 +21,7 @@
         <tr class="zebraRows">
           <td class="checkboxo"><input type="checkbox" name="${name}" class="userRoleItem" value="${name}" /></td>
           <td>
-            {{if path}}<a href="" onclick="Usergrid.console.pageOpenRole('${name}'); return false;">{{/if}}
+            {{if path}}<a href="" onclick="Usergrid.console.pageOpenRole('${name}', '${title}'); return false;">{{/if}}
               ${title}
               (${name})
             {{if path}}</a>{{/if}}
