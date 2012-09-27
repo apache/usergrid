@@ -74,6 +74,7 @@ $(document).ready(function () {
     Pages.AddPanel('activities', null, null, null, Usergrid.console.pageSelectActivities);
     Pages.AddPanel('collections', null, null, null, Usergrid.console.pageSelectCollections);
     Pages.AddPanel('analytics', null, null, null, Usergrid.console.pageSelectAnalytics);
+    Pages.AddPanel('properties', null, null, null, Usergrid.console.pageSelectProperties);
     Pages.AddPanel('shell', null, null, null, Usergrid.console.pageSelectShell);
     Pages.AddPanel('account', "#account-link", null, null, Usergrid.console.requestAccountSettings);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);

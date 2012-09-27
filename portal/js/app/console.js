@@ -46,6 +46,7 @@
 
   var organizationNameRegex = new RegExp ("^([0-9a-zA-Z.-])+$");
   var organizationNameAllowedCharsMessage = 'Organization name field only allows : A-Z, a-z, 0-9, dot, and dash';
+
   //Regex declared differently from al the others because of the use of ". Functions exacly as if it was called from new RegExp
   var nameRegex = /[0-9a-zA-ZáéíóúÁÉÍÓÚÑñ@#$%\^&!\?;:\.,'\"~\*-=\+_\(\)\[\]\{\}\|\/\\]+/;
   var nameAllowedCharsMessage = "Name field only allows: A-Z, a-z, áéíóúÁÉÍÓÚÑñ, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' \" , . / ? !";
@@ -601,6 +602,7 @@
     Pages.SelectPanel('organization');
     requestApplications();
     requestAdmins();
+    displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
     requestOrganizationCredentials();
     requestAdminFeed();
   }
@@ -1501,7 +1503,6 @@
 
   function pageSelectApplication() {
     pageSelect();
-    requestApplicationCredentials();
     requestApplicationUsage();
   }
   window.Usergrid.console.pageSelectApplication = pageSelectApplication;
@@ -3203,6 +3204,16 @@
 
   /*******************************************************************
    *
+   *Properties
+   *******************************************************************/
+  function pageSelectProperties(){
+    requestApplicationCredentials();
+  }
+
+  Usergrid.console.pageSelectProperties = pageSelectProperties;
+
+  /*******************************************************************
+   *
    * Settings
    *
    ******************************************************************/
@@ -3620,6 +3631,10 @@
     }
   }
 
+  function displayOrganizationName(orgName){
+    $('#organization-name').text(orgName);
+  }
+
   function setupOrganizationsMenu() {
     var organizations = Usergrid.organizations.getList();
     var orgName = Usergrid.ApiClient.getOrganizationName();
@@ -3651,6 +3666,8 @@
     var currentOrg = Usergrid.organizations.getItemByName(orgName);
     Usergrid.ApiClient.setOrganizationName(currentOrg.getName());
     Usergrid.ApiClient.setOrganizationUUID(currentOrg.getUUID());
+    //sets the organization name in the console page.
+    displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
     // make sure there is an application for this org
     var app = currentOrg.getFirstItem();
     if (app) {
