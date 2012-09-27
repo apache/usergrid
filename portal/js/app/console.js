@@ -899,8 +899,10 @@
   $('#dialog-form-add-group-to-user').submit(submitAddGroupToUser);
   $('#dialog-form-add-user-to-group').submit(submitAddUserToGroup);
   $('#dialog-form-add-user-to-role').submit(submitAddUserToRole);
-  $('#dialog-form-add-role-to-user').submit(submitAddRoleToUser);
-  $('#dialog-form-add-group-to-role').submit(submitAddGroupToRole);
+  $('#dialog-form-add-role-to-user').submit(function() {
+    submitAddRoleToUser(current_roleName, current_roleTitle)});
+  $('#dialog-form-add-group-to-role').submit(function() {
+    submitAddGroupToRole(current_roleName, current_roleTitle)});
   $('#dialog-form-add-role-to-group').submit(submitAddRoleToGroup);
   $('#dialog-form-follow-user').submit(submitFollowUser);
 
@@ -1317,15 +1319,15 @@
     }
   }
 
-  function submitAddRoleToUser() {
+    function submitAddRoleToUser(roleName, roleTitle) {
     var form = $(this);
     formClearErrors(form);
     var roleIdField = $('#search-roles-user-name-input');
     var bValid = checkLength2(roleIdField, 1, 80) && checkRegexp2(roleIdField, usernameRegex, usernameAllowedCharsMessage)
     var username = $('#search-roles-user-name-input').val();
     if (bValid) {
-      runAppQuery(new Usergrid.Query("POST", "/roles/" + current_role_id + "/users/" + username, null, null,
-        function() { pageSelectRoleUsers(current_role_id, current_role_name); },
+      runAppQuery(new Usergrid.Query("POST", "/roles/" + roleName + "/users/" + username, null, null,
+        function() { pageSelectRoleUsers(roleName, roleTitle); },
         function() { alertModal("Error", "Unable to add user to role"); }
       ));
       $(this).modal('hide');
@@ -1364,7 +1366,7 @@
     confirmDelete(function(){
         items.each(function() {
           var roleName = $(this).attr("value");
-          runAppQuery(new Usergrid.Query("DELETE", "/users/" + username + "/rolename/" + roleName, null, null,
+          runAppQuery(new Usergrid.Query("DELETE", "/roles/" + roleName + "/users/" + username, null, null,
             function() { pageSelectUserPermissions (username); },
             function() { alertModal("Error", "Unable to remove user from role"); }
           ));
@@ -1461,13 +1463,13 @@
     var roleId = $('#search-groups-role-name-input').val();
     // role may have a preceding or trailing slash, remove it
     roleId = roleId.replace('/','');
+
     if (bValid) {
       runAppQuery(new Usergrid.Query("POST", "/groups/" + groupname + "/roles/" + roleId, null, null,
         function() { pageSelectGroupPermissions(groupname); },
         function() { alertModal("Error", "Unable to add user to role"); }
       ));
-
-      $(this).modal('hide');
+    $(this).modal('hide');
     }
   }
 
@@ -2604,13 +2606,20 @@
    * Role
    *
    ******************************************************************/
-     /*
-  var current_role_name = "";
-  var current_role_id = "";
-        */
+
+  var current_roleName = "";
+  var current_roleTitle = "";
+
+  function updateCurrentRole(roleName, roleTitle) {
+    current_roleName = roleName;
+    current_roleTitle = roleTitle;
+  }
+
   function pageOpenRole(roleName, roleTitle) {
+    updateCurrentRole(roleName, roleTitle);
     requestRole(roleName, roleTitle);
     showPanel('#role-panel');
+    Pages.ActivatePanel('roles');
     $('#role-panel-list').hide();
     selectTabButton('#button-role-settings');
     $('#role-panel-settings').show();
@@ -2618,8 +2627,10 @@
   window.Usergrid.console.pageOpenRole = pageOpenRole;
 
   function pageSelectRoleUsers (roleName, roleTitle){
+    updateCurrentRole(roleName, roleTitle);
     requestRole(roleName, roleTitle);
     showPanel('#role-panel');
+    Pages.ActivatePanel('roles');
     $('#role-panel-list').hide();
     selectTabButton('#button-role-users');
     $('#role-panel-users').show();
@@ -2627,10 +2638,10 @@
   window.Usergrid.console.pageSelectRoleUsers = pageSelectRoleUsers;
 
   function pageSelectRoleGroups(roleName, roleTitle) {
-    current_role_name = roleName;
-    current_role_id = roleId;
-    requestRole();
+    updateCurrentRole(roleName, roleTitle);
+    requestRole(roleName, roleTitle);
     showPanel('#role-panel');
+    Pages.ActivatePanel('roles');
     $('#role-panel-list').hide();
     selectTabButton('#button-role-groups');
     $('#role-panel-groups').show();
@@ -2814,11 +2825,11 @@
 
   function editRoleInactivity() {
     var inactivity = $('#role-inactivity-input').val();
-    var roleId = current_role_id;
+    var roleName = current_roleName;
 
     if (intRegex.test(inactivity)) {
       data = { inactivity: inactivity };
-      runAppQuery(new Usergrid.Query("PUT", "/role/" + roleId, data, null, requestRole, requestRole));
+      runAppQuery(new Usergrid.Query("PUT", "/role/" + roleName, data, null, requestRole, requestRole));
     } else {
       $('#inactivity-integer-message').show()
     }
@@ -2919,7 +2930,7 @@
   }
   window.Usergrid.console.pageSelectGroupPermissions = pageSelectGroupPermissions;
 
-  function submitAddGroupToRole() {
+  function submitAddGroupToRole(roleName, roleTitle) {
     var form = $(this);
     formClearErrors(form);
 
@@ -2928,17 +2939,17 @@
       && checkRegexp2(groupId, nameRegex, nameAllowedCharsMessage);
 
     if (bValid) {
-      runAppQuery(new Usergrid.Query("POST", "/roles/" + current_role_id + "/groups/" + groupId.val(), null, null,
-        function() { pageSelectRoleGroups(current_role_id, current_role_name); },
+      runAppQuery(new Usergrid.Query("POST", "/roles/" + roleName + "/groups/" + groupId.val(), null, null,
+        function() { pageSelectRoleGroups(roleName, roleTitle); },
         function() { alertModal("Error", "Unable to add group to role"); }
       ));
-      $(this).modal('hide');
+      $('#dialog-form-add-group-to-role').modal('hide');
     }
   }
   window.Usergrid.console.submitAddGroupToRole = submitAddGroupToRole;
 
 
-  function removeGroupFromRole() {
+  function removeGroupFromRole(roleName,roleTitle) {
     var items = $('input[class=roleGroupItem]:checked');
     if (!items.length) {
       alertModal("Error", "Please, first select the groups you want to delete for this role.");
@@ -2947,9 +2958,9 @@
     confirmDelete(function(){
       $.each(items, function() {
         var groupId = $(this).val();
-        runAppQuery(new Usergrid.Query("DELETE", "/roles/" + current_role_id + "/groups/" + groupId, null, null,
+        runAppQuery(new Usergrid.Query("DELETE", "/roles/" + roleName + "/groups/" + groupId, null, null,
           function() {
-            pageSelectRoleGroups(current_role_id, current_role_name);
+            pageSelectRoleGroups(roleName, roleTitle);
           },
           function() {
             alertModal("Error","Unable to remove group from role: ");
@@ -2960,7 +2971,8 @@
 
   }
 
-  $('#remove-selected-role-groups').click(removeGroupFromRole);
+  $('#remove-selected-role-groups').click(function () {
+  removeGroupFromRole(current_roleName, current_roleTitle)});
 
   function selectAllRoleGroups(){
     $('[class=roleGroupItem]').attr('checked', true);

@@ -19,7 +19,7 @@
       <table class="table table-bordered users-permissions-response-table">
         {{each roles}}
         <tr class="zebraRows">
-          <td class="checkboxo"><input type="checkbox" name="${name}" class="userRoleItem" value="${name}" /></td>
+          <td class="checkboxo"><input type="checkbox" name="${title}" class="userRoleItem" value="${name}" /></td>
           <td>
             {{if path}}<a href="" onclick="Usergrid.console.pageOpenRole('${name}', '${title}'); return false;">{{/if}}
               ${title}
