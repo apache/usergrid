@@ -64,6 +64,7 @@ import org.usergrid.mq.QueueManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.ApiResponse;
+import org.usergrid.rest.applications.assets.AssetsResource;
 import org.usergrid.rest.applications.events.EventsResource;
 import org.usergrid.rest.applications.queues.QueueResource;
 import org.usergrid.rest.applications.users.UsersResource;
@@ -85,7 +86,7 @@ import com.sun.jersey.api.view.Viewable;
 public class ApplicationResource extends ServiceResource {
 
     public static final Logger logger = LoggerFactory
-            .getLogger(ServiceResource.class);
+            .getLogger(ApplicationResource.class);
 
     UUID applicationId;
     QueueManager queues;
@@ -140,6 +141,31 @@ public class ApplicationResource extends ServiceResource {
             throws Exception {
         return getEventsResource(ui);
     }
+
+  @RequireApplicationAccess
+  @Path("assets")
+  public AssetsResource getAssetsResource(@Context UriInfo ui)
+          throws Exception {
+    logger.info("in assets n applicationResource");
+    addParameter(getServiceParameters(), "assets");
+
+    PathSegment ps = getFirstPathSegment("assets");
+    if (ps != null) {
+      addMatrixParams(getServiceParameters(), ui, ps);
+    }
+
+    return getSubResource(AssetsResource.class);
+  }
+
+
+  @RequireApplicationAccess
+  @Path("asset")
+  public AssetsResource getAssetResource(@Context UriInfo ui)
+          throws Exception {
+    // TODO change to singular
+    logger.info("in asset in applicationResource");
+    return getAssetsResource(ui);
+  }
 
     @Path("users")
     public UsersResource getUsers(@Context UriInfo ui) throws Exception {

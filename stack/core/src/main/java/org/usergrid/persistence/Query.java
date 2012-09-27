@@ -1774,14 +1774,13 @@ public class Query {
                 Map<String, Object> result = new LinkedHashMap<String, Object>();
                 Map<String, String> selects = getSelectAssignments();
                 for (Map.Entry<String, String> select : selects.entrySet()) {
-                    Object obj = JsonUtils.select(entity, select.getKey(),
-                            false);
+                    Object obj = JsonUtils.select(entity, select.getValue(), false);
                     if (obj == null) {
                         obj = "";
                     } else {
                         include = true;
                     }
-                    result.put(select.getValue(), obj);
+                    result.put(select.getKey(), obj);
                 }
                 if (include) {
                     results.add(result);

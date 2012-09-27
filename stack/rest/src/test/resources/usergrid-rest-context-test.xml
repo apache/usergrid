@@ -27,4 +27,6 @@
 
 	<import resource="usergrid-rest-context.xml"/>
 
+    <bean id="binaryStore" class="org.usergrid.services.assets.data.LocalFileBinaryStore"/>
+
 </beans>
