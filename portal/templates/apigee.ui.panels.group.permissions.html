@@ -72,7 +72,7 @@
             <td class="role-permission-op">{{if $value.ops.put}}<i class="icon-ok"></i>{{/if}}</td>
             <td class="role-permission-op">{{if $value.ops.delete}}<i class="icon-ok"></i>{{/if}}</td>
             <td class="role-permission-delete">
-              <a onclick="Usergrid.console.deleteGroupPermission('${groupname}', '${$value.perm}'); return false;" href="#" class="btn btn-danger"><i class="icon-trash icon-white"></i> Remove</a>
+              <a onclick="Usergrid.console.deleteGroupPermission('${name}', '${$value.perm}'); return false;" href="#" class="btn btn-danger"><i class="icon-trash icon-white"></i> Remove</a>
             </td>
           </tr>
           {{/each}}

@@ -2902,6 +2902,17 @@
   }
   window.Usergrid.console.addGroupPermission = addGroupPermission;
 
+  function deleteGroupPermission(groupName, permissions){
+    var data = {"permission": permissions};
+    console.log("DATA" + data.permission);
+    runAppQuery(new Usergrid.Query("DELETE", "/groups/" + groupName + "/permissions/", data, null,
+      function() { pageSelectGroupPermissions(groupName); },
+      function() { alertModal("Error", "Unable to remove Permission"); }
+    ));
+  }
+
+  window.Usergrid.console.deleteGroupPermission = deleteGroupPermission;
+
   function pageSelectGroupPermissions(groupId) {
     Pages.SelectPanel('group');
     requestGroup(groupId);
