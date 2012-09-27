@@ -30,11 +30,11 @@ import java.util.*;
  */
 public class Metrics extends ExportingToolBase {
 
-  private BiMap<UUID, String> organizations;
+  private List<OrganizationInfo> organizations;
   private ListMultimap<UUID, ApplicationInfo> orgApps = ArrayListMultimap.create();
   private ListMultimap<Long, UUID> totalScore = ArrayListMultimap.create();
   private Map<UUID,MetricLine> collector = new HashMap<UUID, MetricLine>();
-  private int reportThreshold = 50;
+  private int reportThreshold = 100;
   private long startDate;
   private long endDate;
 
@@ -57,22 +57,21 @@ public class Metrics extends ExportingToolBase {
     logger.info("Export directory: {}",outputDir.getAbsolutePath());
 
     if ( orgId == null ) {
-      organizations = managementService.getOrganizations();
-      for (Map.Entry<UUID, String> organization : organizations.entrySet()) {
-        logger.info("Org Name: {} key: {}",organization.getValue(), organization.getKey());
-        orgId = organization.getKey();
+      organizations = managementService.getOrganizations(null, 20000);
+      for (OrganizationInfo organization : organizations) {
+        logger.info("Org Name: {} key: {}",organization.getName(), organization.getUuid());
         //List<UserInfo> adminUsers = managementService.getAdminUsersForOrganization(orgId);
-        applicationsFor(orgId);
+        applicationsFor(organization.getUuid());
 
       }
     } else {
       OrganizationInfo orgInfo = managementService.getOrganizationByUuid(orgId);
       applicationsFor(orgInfo.getUuid());
-      organizations = HashBiMap.create(1);
-      organizations.put(orgInfo.getUuid(), orgInfo.getName());
+      organizations = new ArrayList<OrganizationInfo>();
+      organizations.add(orgInfo);
     }
 
-    Iterable<UUID> workingOrgs = applyThreshold();
+    Iterable<OrganizationInfo> workingOrgs = applyThreshold();
 
     printReport(MetricSort.APP_REQ_COUNT, workingOrgs);
   }
@@ -118,33 +117,33 @@ public class Metrics extends ExportingToolBase {
     }
   }
 
-  private Iterable<UUID> applyThreshold() throws Exception {
-    Set<UUID> orgs = new HashSet<UUID>(reportThreshold);
+  private Iterable<OrganizationInfo> applyThreshold() throws Exception {
+    Set<OrganizationInfo> orgs = new HashSet<OrganizationInfo>(reportThreshold);
     for ( Long l : Ordering.natural().greatestOf(totalScore.keys(), reportThreshold) ) {
       List<UUID> apps = totalScore.get(l);
       for ( UUID appId : apps ) {
-        orgs.add(managementService.getOrganizationForApplication(appId).getUuid());
+        orgs.add(managementService.getOrganizationForApplication(appId));
       }
     }
     return orgs;
   }
 
-  private void printReport(MetricSort metricSort, Iterable<UUID> workingOrgs) throws Exception {
+  private void printReport(MetricSort metricSort, Iterable<OrganizationInfo> workingOrgs) throws Exception {
     JsonGenerator jg = getJsonGenerator(createOutputFile("metrics", metricSort.name().toLowerCase()));
     jg.writeStartObject();
     jg.writeStringField("report", metricSort.name());
     jg.writeStringField("date", new Date().toString());
     jg.writeArrayFieldStart("orgs");
-    for ( UUID orgId : workingOrgs ) {
+    for ( OrganizationInfo org : workingOrgs ) {
       jg.writeStartObject();
-      jg.writeStringField("org_id", orgId.toString());
-      jg.writeStringField("org_name",organizations.get(orgId));
+      jg.writeStringField("org_id", org.getUuid().toString());
+      jg.writeStringField("org_name",org.getName());
       jg.writeArrayFieldStart("admins");
-      for (UserInfo userInfo : managementService.getAdminUsersForOrganization(orgId) ) {
+      for (UserInfo userInfo : managementService.getAdminUsersForOrganization(org.getUuid()) ) {
         jg.writeString(userInfo.getEmail());
       }
       jg.writeEndArray();
-      writeAppLines(jg, orgId);
+      writeAppLines(jg, org.getUuid());
       jg.writeEndObject();
     }
     jg.writeEndArray();
