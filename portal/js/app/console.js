@@ -2697,8 +2697,8 @@
         } else {
          inactivity = 0;
         }
-    $('#role-inactivity-input').val(inactivity);
-  },
+        $('#role-inactivity-input').val(inactivity);
+      },
         function() { $('#role-inactivity-form').html('<div class="alert">Unable to load role\'s inactivity value.</div>') }
     ));
   }
@@ -2722,7 +2722,7 @@
 
   function displayRoleGroups(response, curl) {
     $('#role-groups').html('');
-    if(response.entities && response.entities > 0){
+    if(response.entities && (response.entities.length > 0)){
       $.tmpl('apigee.ui.role.groups.table_rows.html', response.entities).appendTo('#role-groups');
     }else {
       var data = [{"message":"No Groups have this Role"}];
