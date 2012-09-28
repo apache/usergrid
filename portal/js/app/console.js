@@ -1330,7 +1330,7 @@
         function() { pageSelectRoleUsers(roleName, roleTitle); },
         function() { alertModal("Error", "Unable to add user to role"); }
       ));
-      $(this).modal('hide');
+      $('#dialog-form-add-role-to-user').modal('hide');
     }
   }
 
@@ -1442,7 +1442,7 @@
       items.each(function() {
         var roleId = $(this).attr("value");
         var groupname = $('#role-form-groupname').val();
-        runAppQuery(new Usergrid.Query("DELETE", "/groups/" + groupname + "/roles/" + roleId, null, null,
+        runAppQuery(new Usergrid.Query("DELETE", "/roles/" + roleId + "/groups/" + groupname, null, null,
           function() { pageSelectGroupPermissions(groupname); },
           function() { alertModal("Error", "Unable to remove role from group"); }
         ));
@@ -1697,14 +1697,14 @@
   }
 
   function showCurlCommand(section, curl, token) {
-  	var data = {
-  		curlData: curl,
-  		sectionName: section
-  	};
-  	var sectionId = $('#'+section+'-curl-container');
-  	sectionId.html("");
-  	$.tmpl('apigee.ui.curl.detail.html', data).appendTo(sectionId);
-   	sectionId.show();
+    var data = {
+      curlData: curl,
+      sectionName: section
+    };
+    var sectionId = $('#'+section+'-curl-container');
+    sectionId.html("");
+    $.tmpl('apigee.ui.curl.detail.html', data).appendTo(sectionId);
+     sectionId.show();
     if (!token) {
       $('#'+section+'-curl-token').hide();
     }
@@ -1944,25 +1944,25 @@
   }
 
   function redrawUserProfile(data, curl){
-  	redrawFormPanel('user-panel-profile', 'apigee.ui.panels.user.profile.html', data);
-  	showCurlCommand('user-panel-profile', curl);
+    redrawFormPanel('user-panel-profile', 'apigee.ui.panels.user.profile.html', data);
+    showCurlCommand('user-panel-profile', curl);
   };
 
   function redrawUserMemberships(data, curl){
-  	redrawPanel('user-panel-memberships', 'apigee.ui.panels.user.memberships.html', data);
-  	showCurlCommand('user-panel-memberships', curl);
-  	updateGroupsAutocomplete();
+    redrawPanel('user-panel-memberships', 'apigee.ui.panels.user.memberships.html', data);
+    showCurlCommand('user-panel-memberships', curl);
+    updateGroupsAutocomplete();
   };
 
   function redrawUserActivities(data, curl){
-  	redrawPanel('user-panel-activities', 'apigee.ui.panels.user.activities.html', data);
-  	showCurlCommand('user-panel-activities', curl);
+    redrawPanel('user-panel-activities', 'apigee.ui.panels.user.activities.html', data);
+    showCurlCommand('user-panel-activities', curl);
   };
 
   function redrawUserGraph(data, curlFollowing, curlFollowers){
-  	redrawPanel('user-panel-graph', 'apigee.ui.panels.user.graph.html', data);
-  	showCurlCommand('user-panel-following', curlFollowing);
-  	showCurlCommand('user-panel-followers', curlFollowers);
+    redrawPanel('user-panel-graph', 'apigee.ui.panels.user.graph.html', data);
+    showCurlCommand('user-panel-following', curlFollowing);
+    showCurlCommand('user-panel-followers', curlFollowers);
     updateFollowUserAutocomplete();
   };
 
@@ -1975,31 +1975,31 @@
   };
 
   function redrawPanel(panelDiv, panelTemplate, data){
-	$("#"+panelDiv).html("");
-	$.tmpl(panelTemplate, data).appendTo($("#"+panelDiv));
+  $("#"+panelDiv).html("");
+  $.tmpl(panelTemplate, data).appendTo($("#"+panelDiv));
   };
 
   function redrawGroupForm(panelDiv, panelTemplate, data){
-  	$("#"+panelDiv).html("");
-  	var details = $.tmpl(panelTemplate, data);
-  	var formDiv = details.find('.query-result-form');
-  	$(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.group_schema, data.entity));
-  	details.appendTo($("#"+panelDiv));
+    $("#"+panelDiv).html("");
+    var details = $.tmpl(panelTemplate, data);
+    var formDiv = details.find('.query-result-form');
+    $(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.group_schema, data.entity));
+    details.appendTo($("#"+panelDiv));
     details.find('.button').button();
   }
 
   function redrawFormPanel(panelDiv, panelTemplate, data){
-	$("#"+panelDiv).html("");
-	var details = $.tmpl(panelTemplate, data);
-	var formDiv = details.find('.query-result-form');
-	$(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.vcard_schema, data.entity));
-	details.appendTo($("#"+panelDiv));
+  $("#"+panelDiv).html("");
+  var details = $.tmpl(panelTemplate, data);
+  var formDiv = details.find('.query-result-form');
+  $(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.vcard_schema, data.entity));
+  details.appendTo($("#"+panelDiv));
   };
 
   function saveUserData(){
     Usergrid.console.ui.jsonSchemaToPayload(schema, obj);
   }
-	//TODO: MARKED for Refactoring
+  //TODO: MARKED for Refactoring
   var user_data = null;
 
   function handleUserResponse(response) {
@@ -2042,24 +2042,24 @@
         picture = entity.picture + "?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png"
       }
 
-	  var data = {
-	  	entity: entity_contents,
-	  	picture: picture,
-	  	name: name,
-	  	username: username,
-	  	path: entity_path,
-	  	collections: collections,
-	  	metadata: metadata,
-	  	uri: (entity.metadata || { }).uri,
-	  	followingCurl: "",
-	  	followersCurl: "",
-	  	rolesCurl: "",
-	  	permissionsCurl: ""
-	  }
+    var data = {
+      entity: entity_contents,
+      picture: picture,
+      name: name,
+      username: username,
+      path: entity_path,
+      collections: collections,
+      metadata: metadata,
+      uri: (entity.metadata || { }).uri,
+      followingCurl: "",
+      followersCurl: "",
+      rolesCurl: "",
+      permissionsCurl: ""
+    }
 
-	  redrawUserProfile(data, this.getCurl());
+    redrawUserProfile(data, this.getCurl());
 
-		//TODO: This block and the subsequent blocks could all be methods of their own
+    //TODO: This block and the subsequent blocks could all be methods of their own
       runAppQuery(new Usergrid.Query("GET", 'users/' + entity.username + '/groups', null, null,
         function(response) {
           if (data && response.entities && (response.entities.length > 0)) {
@@ -2094,64 +2094,64 @@
           }
           data.rolesCurl = this.getCurl();
           //Run Permissions query after roles query has been handled
-	      runAppQuery(new Usergrid.Query("GET", 'users/' + entity.username + '/permissions', null, null,
-	        function(response) {
-	          var permissions = {};
-	          if (data && response.data && (response.data.length > 0)) {
+        runAppQuery(new Usergrid.Query("GET", 'users/' + entity.username + '/permissions', null, null,
+          function(response) {
+            var permissions = {};
+            if (data && response.data && (response.data.length > 0)) {
 
-	            if (response.data) {
-	              var perms = response.data;
-	              var count = 0;
+              if (response.data) {
+                var perms = response.data;
+                var count = 0;
 
-	              for (var i in perms) {
-	                count++;
-	                var perm = perms[i];
-	                var parts = perm.split(':');
-	                var ops_part = "";
-	                var path_part = parts[0];
+                for (var i in perms) {
+                  count++;
+                  var perm = perms[i];
+                  var parts = perm.split(':');
+                  var ops_part = "";
+                  var path_part = parts[0];
 
-	                if (parts.length > 1) {
-	                  ops_part = parts[0];
-	                  path_part = parts[1];
-	                }
+                  if (parts.length > 1) {
+                    ops_part = parts[0];
+                    path_part = parts[1];
+                  }
 
-	                ops_part.replace("*", "get,post,put,delete")
-	                  var ops = ops_part.split(',');
-	                permissions[perm] = {ops : {}, path : path_part, perm : perm};
+                  ops_part.replace("*", "get,post,put,delete")
+                    var ops = ops_part.split(',');
+                  permissions[perm] = {ops : {}, path : path_part, perm : perm};
 
-	                for (var j in ops) {
-	                  permissions[perm].ops[ops[j]] = true;
-	                }
-	              }
+                  for (var j in ops) {
+                    permissions[perm].ops[ops[j]] = true;
+                  }
+                }
 
-	              if (count == 0) {
-	                permissions = null;
-	              }
-	              data.permissions = permissions;
-	            }
-	          }
-	          data.permissionsCurl = this.getCurl();
-	          redrawUserPermissions(data, data.rolesCurl, data.permissionsCurl);
-	        },
-	        function() { alertModal("Error", "Unable to retrieve user's permissions.");}
-	      ));
+                if (count == 0) {
+                  permissions = null;
+                }
+                data.permissions = permissions;
+              }
+            }
+            data.permissionsCurl = this.getCurl();
+            redrawUserPermissions(data, data.rolesCurl, data.permissionsCurl);
+          },
+          function() { alertModal("Error", "Unable to retrieve user's permissions.");}
+        ));
         },
         function() { alertModal("Error", "Unable to retrieve user's roles.");}
       ));
 
-      	runAppQuery(new Usergrid.Query("GET", 'users/' + entity.username + '/following', null, null,
-	        function(response) {
-	          data.followingCurl = this.getCurl();
-	          if (data && response.entities && (response.entities.length > 0)) {
-	            data.following = response.entities;
-	          }
-	          //Requests /Followers after the /following response has been handled.
-	          runAppQuery(new Usergrid.Query("GET", 'users/' + entity.username + '/followers', null, null,
-		        function(response) {
+        runAppQuery(new Usergrid.Query("GET", 'users/' + entity.username + '/following', null, null,
+          function(response) {
+            data.followingCurl = this.getCurl();
+            if (data && response.entities && (response.entities.length > 0)) {
+              data.following = response.entities;
+            }
+            //Requests /Followers after the /following response has been handled.
+            runAppQuery(new Usergrid.Query("GET", 'users/' + entity.username + '/followers', null, null,
+            function(response) {
 
-		          if (data && response.entities && (response.entities.length > 0)) {
-		            data.followers = response.entities;
-		          }
+              if (data && response.entities && (response.entities.length > 0)) {
+                data.followers = response.entities;
+              }
               data.followersCurl = this.getCurl();
               redrawUserGraph(data, data.followingCurl, data.followersCurl);
             },
@@ -2199,7 +2199,7 @@
     //clear out the table before we start
     var output = $('#groups-table');
     output.empty();
-	hideCurlCommand('groups');
+  hideCurlCommand('groups');
     var query = {"ql" : "order by " + groupSortBy};
     if (typeof search == 'string') {
       if (search.length > 0) {
@@ -2420,8 +2420,8 @@
         entity_path = path + "/" + entity.uuid;
       }
 
-	var data = {
-		entity : entity_contents,
+  var data = {
+    entity : entity_contents,
         picture : entity.picture,
         name : name,
         uuid : uuid,
@@ -2429,9 +2429,9 @@
         collections : collections,
         metadata : metadata,
         uri : (entity.metadata || { }).uri
-	}
+  }
 
-	redrawGroupDetails(data, this.getCurl());
+  redrawGroupDetails(data, this.getCurl());
 
       runAppQuery(new Usergrid.Query("GET",'groups/' + entity.path + '/users', null, null,
         function(response) {
@@ -2462,45 +2462,45 @@
           data.groupRolesCurl = this.getCurl();
           //WHEN /Roles is properly handled, get permissions
           runAppQuery(new Usergrid.Query("GET", 'groups/' + entity.path + '/permissions', null, null,
-	        function(response) {
-	          var permissions = {};
-	          if (data && response.data && (response.data.length > 0)) {
+          function(response) {
+            var permissions = {};
+            if (data && response.data && (response.data.length > 0)) {
 
-	            if (response.data) {
-	              var perms = response.data;
-	              var count = 0;
+              if (response.data) {
+                var perms = response.data;
+                var count = 0;
 
-	              for (var i in perms) {
-	                count++;
-	                var perm = perms[i];
-	                var parts = perm.split(':');
-	                var ops_part = "";
-	                var path_part = parts[0];
+                for (var i in perms) {
+                  count++;
+                  var perm = perms[i];
+                  var parts = perm.split(':');
+                  var ops_part = "";
+                  var path_part = parts[0];
 
-	                if (parts.length > 1) {
-	                  ops_part = parts[0];
-	                  path_part = parts[1];
-	                }
+                  if (parts.length > 1) {
+                    ops_part = parts[0];
+                    path_part = parts[1];
+                  }
 
-	                ops_part.replace("*", "get,post,put,delete")
-	                  var ops = ops_part.split(',');
-	                permissions[perm] = {ops : {}, path : path_part, perm : perm};
+                  ops_part.replace("*", "get,post,put,delete")
+                    var ops = ops_part.split(',');
+                  permissions[perm] = {ops : {}, path : path_part, perm : perm};
 
-	                for (var j in ops) {
-	                  permissions[perm].ops[ops[j]] = true;
-	                }
-	              }
-	              if (count == 0) {
-	                permissions = null;
-	              }
-	              data.permissions = permissions;
-	            }
-	          }
-	          data.groupPermissionsCurl = this.getCurl();
-	          redrawGroupPermissions(data,data.groupRolesCurl, data.groupPermissionsCurl);
-	        },
-	        function() { alertModal("Error", "Unable to retrieve group's permissions."); }
-	      ));
+                  for (var j in ops) {
+                    permissions[perm].ops[ops[j]] = true;
+                  }
+                }
+                if (count == 0) {
+                  permissions = null;
+                }
+                data.permissions = permissions;
+              }
+            }
+            data.groupPermissionsCurl = this.getCurl();
+            redrawGroupPermissions(data,data.groupRolesCurl, data.groupPermissionsCurl);
+          },
+          function() { alertModal("Error", "Unable to retrieve group's permissions."); }
+        ));
         },
         function() { alertModal("Error", "Unable to retrieve group's roles."); }
       ));
@@ -2722,7 +2722,12 @@
 
   function displayRoleGroups(response, curl) {
     $('#role-groups').html('');
-    $.tmpl('apigee.ui.role.groups.table_rows.html', response.entities).appendTo('#role-groups');
+    if(response.entities && response.entities > 0){
+      $.tmpl('apigee.ui.role.groups.table_rows.html', response.entities).appendTo('#role-groups');
+    }else {
+      var data = [{"message":"No Groups have this Role"}];
+      $.tmpl('apigee.ui.panels.alert.html', data).appendTo('#role-groups');
+    }
     updateGroupsForRolesAutocomplete();
     showCurlCommand('role-groups', curl);
   }
@@ -2784,9 +2789,10 @@
   function deleteRolePermission(roleName, permission) {
       data = {"permission":permission};
       confirmDelete(function(){
-        runAppQuery(new Usergrid.Query("DELETE", "rolenames/" + roleName, null, data, getRolePermissions(roleName),
-        //TODO: add alert for user
-        getRolePermissions(roleName)));
+        runAppQuery(new Usergrid.Query("DELETE", "rolenames/" + roleName, null, data,
+        function(){getRolePermissions(roleName)},
+        function(){getRolePermissions(roleName)}
+        ));
       });
     }
   window.Usergrid.console.deleteRolePermission = deleteRolePermission;
@@ -2814,9 +2820,9 @@
     var permission = ops + ":" + path;
     var data = {"permission": ops + ":" + path};
     if (ops) {
-      runAppQuery(new Usergrid.Query("POST", "/rolenames/" + roleName, data, null, getRolePermissions(roleName),
-      //TODO: ADD ROLE PERMISIONS ALERT FOR FAILURE
-      getRolePermissions(roleName)));
+      runAppQuery(new Usergrid.Query("POST", "/rolenames/" + roleName, data, null,
+      function(){ getRolePermissions(roleName)},
+      function(){ getRolePermissions(roleName)}));
     } else {
       alertModal("Error", "Please select a verb");
     }
@@ -2829,7 +2835,10 @@
 
     if (intRegex.test(inactivity)) {
       data = { inactivity: inactivity };
-      runAppQuery(new Usergrid.Query("PUT", "/role/" + roleName, data, null, requestRole, requestRole));
+      runAppQuery(new Usergrid.Query("PUT", "/role/" + roleName, data, null,
+      function(){ displayRoleInactivity(current_roleName)},
+      function(){ displayRoleInactivity(current_roleName)}
+      ));
     } else {
       $('#inactivity-integer-message').show()
     }
@@ -2840,8 +2849,8 @@
     var data = {"permission": permission};
     confirmDelete(function(){
       runAppQuery(new Usergrid.Query("DELETE", "/users/" + userName + "/permissions", null, data,
-        function() { pageSelectUserPermissions (userName); },
-        function() { alertModal("Error", "Unable to delete permission"); }
+        function(){ pageSelectUserPermissions (userName); },
+        function(){ alertModal("Error", "Unable to delete permission"); }
       ));
     });
   }
@@ -2913,8 +2922,7 @@
 
   function deleteGroupPermission(groupName, permissions){
     var data = {"permission": permissions};
-    console.log("DATA" + data.permission);
-    runAppQuery(new Usergrid.Query("DELETE", "/groups/" + groupName + "/permissions/", data, null,
+    runAppQuery(new Usergrid.Query("DELETE", "/groups/" + groupName + "/permissions/", null, data,
       function() { pageSelectGroupPermissions(groupName); },
       function() { alertModal("Error", "Unable to remove Permission"); }
     ));
@@ -3422,7 +3430,7 @@
     //clear out the table before we start
     var output = $('#collections-table');
     output.empty();
-	hideCurlCommand('collections');
+  hideCurlCommand('collections');
     var section =$('#application-collections');
     section.empty().html('<div class="alert alert-info">Loading...</div>');
 
@@ -3457,7 +3465,7 @@
         $.tmpl('apigee.ui.collections.table_rows.html', this_data).appendTo('#collections-table');
       }
     }
-	  showCurlCommand('collections', this.getCurl(), this.getToken());
+    showCurlCommand('collections', this.getCurl(), this.getToken());
   }
 
   function selectAllCollections(){
@@ -4287,6 +4295,7 @@
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.activities.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.permissions.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.curl.detail.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.panels.alert.html");
   });
 
   //these templates are used on the front page and should be loaded up front

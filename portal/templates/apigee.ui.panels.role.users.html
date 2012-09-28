@@ -7,7 +7,7 @@
     <a data-toggle="modal" href="#" onclick="Usergrid.console.deleteRoleFromUser('${data.roleName}', '${data.roleTitle}'); return false;"> Remove </a>
   </div>
 </div>
-{{if data.users}}
+{{if data.users > 0}}
 <table class="table">
   {{each data.users}}
   <tr class="zebraRows users-row">

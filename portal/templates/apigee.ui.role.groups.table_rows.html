@@ -1,3 +1,4 @@
+{{if data > 0 }}
 <tr class="zebraRows">
   {{if uuid}}
   <td class="checkboxo">
@@ -10,4 +11,7 @@
     {{/if}}
   </td>
 </tr>
+{{else}}
+<div class="alert">No Groups found</div>
+{{/if}}
 
