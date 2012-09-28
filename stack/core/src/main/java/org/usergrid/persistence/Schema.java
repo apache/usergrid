@@ -1444,6 +1444,7 @@ public class Schema {
         property.setIndexed(true);
         property.setIndexedInConnections(true);
         property.setBasic(true);
+        property.setUnique(true);
         properties.put(PROPERTY_NAME, property);
 
         property = new PropertyInfo();
