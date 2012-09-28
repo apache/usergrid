@@ -62,7 +62,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
      */
     @Test
     public void correctHeaders() throws Exception {
-        Map<String, String> data = hashMap("name", "Solitaire");
+        Map<String, String> data = hashMap("name", "Solitaire1");
 
         String json = JsonUtils.mapToFormattedJsonString(data);
 
@@ -94,7 +94,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
      */
     @Test
     public void textPlainContentType() throws Exception {
-        Map<String, String> data = hashMap("name", "Solitaire");
+        Map<String, String> data = hashMap("name", "Solitaire2");
 
         String json = JsonUtils.mapToFormattedJsonString(data);
 
@@ -207,7 +207,7 @@ public class ContentTypeResourceTest extends AbstractRestTest {
     @Test
     public void missingAcceptAndContent() throws Exception {
 
-        Map<String, String> data = hashMap("name", "Solitaire");
+        Map<String, String> data = hashMap("name", "Solitaire3");
 
         String json = JsonUtils.mapToFormattedJsonString(data);
 
