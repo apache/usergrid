@@ -46,7 +46,7 @@ public class ApplicationsService extends AbstractService {
     public ApplicationsService() {
         super();
         logger.info("/applications");
-        declareEntityDictionary("rolenames");
+//        declareEntityDictionary("rolenames");
         declareEntityDictionary("counters");
         declareEntityCommand("hello");
         declareEntityCommand("resetroles");
@@ -90,24 +90,25 @@ public class ApplicationsService extends AbstractService {
     public ServiceResults getEntityDictionary(ServiceContext context,
             List<EntityRef> refs, String dictionary) throws Exception {
 
-        if ("rolenames".equalsIgnoreCase(dictionary)) {
-            checkPermissionsForPath(context, "/rolenames");
-
-            if (context.parameterCount() == 0) {
-
-                return getApplicationRoles();
-
-            } else if (context.parameterCount() == 1) {
-
-                String roleName = context.getParameters().get(0).getName();
-                if (isBlank(roleName)) {
-                    return null;
-                }
-
-                return getApplicationRolePermissions(roleName);
-            }
-
-        } else if ("counters".equals(dictionary)) {
+//        if ("rolenames".equalsIgnoreCase(dictionary)) {
+//            checkPermissionsForPath(context, "/rolenames");
+//
+//            if (context.parameterCount() == 0) {
+//
+//                return getApplicationRoles();
+//
+//            } else if (context.parameterCount() == 1) {
+//
+//                String roleName = context.getParameters().get(0).getName();
+//                if (isBlank(roleName)) {
+//                    return null;
+//                }
+//
+//                return getApplicationRolePermissions(roleName);
+//            }
+//
+//        } else 
+            if ("counters".equals(dictionary)) {
             checkPermissionsForPath(context, "/counters");
 
             if (context.parameterCount() == 0) {
