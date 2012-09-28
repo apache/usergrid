@@ -349,7 +349,12 @@ public class AbstractCollectionService extends AbstractService {
 
 	}
 
-	@Override
+  @Override
+  public ServiceResults putCollection(ServiceContext context) throws Exception {
+    return postCollection(context);
+  }
+
+    @Override
 	public ServiceResults postItemsByQuery(ServiceContext context, Query query)
 			throws Exception {
 		if (context.moreParameters()) {
