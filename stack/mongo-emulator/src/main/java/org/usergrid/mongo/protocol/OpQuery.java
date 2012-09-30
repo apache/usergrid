@@ -169,6 +169,7 @@ public class OpQuery extends OpCrud {
         if (buffer.readable()) {
             returnFieldSelector = BSONUtils.decoder().readObject(
                     new ChannelBufferInputStream(buffer));
+          logger.info("found fieldSeclector: {}", returnFieldSelector);
         }
     }
 
@@ -399,10 +400,11 @@ public class OpQuery extends OpCrud {
         
         try {
             Results results = null;
-            Query q = MongoQueryParser.toNativeQuery(query, numberToReturn);
+            Query q = MongoQueryParser.toNativeQuery(query, returnFieldSelector, numberToReturn);
             if (q != null) {
                 results = em.searchCollection(em.getApplicationRef(),
                         getCollectionName(), q);
+
             } else {
                 results = em.getCollection(em.getApplicationRef(),
                         getCollectionName(), null, count,

@@ -48,12 +48,24 @@ public class MongoQueryParser {
      * @return The query
      */
     public static Query toNativeQuery(BSONObject query, int numberToReturn) {
-        
+      return toNativeQuery(query, null, numberToReturn);
+    }
+
+    /**
+     * Overloaded form which takes a FieldSelector as the second query argument
+     *
+     * @param query
+     * @param numberToReturn
+     * @return The query
+     */
+    public static Query toNativeQuery(BSONObject query, BSONObject fieldSelector, int numberToReturn) {
+        // TODO overload? or add?
         if (query == null) {
             return null;
         }
 
         BasicBSONObject query_expression = null;
+        BasicBSONObject field_selector = null;
         BasicBSONObject sort_order = null;
 
         Object o = query.get("$query");
@@ -79,6 +91,7 @@ public class MongoQueryParser {
             query_expression.removeField("$min");
         }
 
+
         if ((query_expression == null) && (sort_order == null)) {
             return null;
         }
@@ -102,6 +115,13 @@ public class MongoQueryParser {
             Operand root = eval(query_expression);
             q.setRootOperand(root);
         }
+
+        if (fieldSelector != null ) {
+            for (String field : fieldSelector.keySet() ) {
+                q.addSelect(field,field);
+            }
+        }
+
 
         if (sort_order != null) {
             for (String sort : sort_order.keySet()) {
