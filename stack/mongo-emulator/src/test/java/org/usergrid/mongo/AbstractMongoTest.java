@@ -17,6 +17,7 @@ package org.usergrid.mongo;
 
 import static org.junit.Assert.assertNull;
 
+import java.net.UnknownHostException;
 import java.util.Properties;
 
 import org.junit.AfterClass;
@@ -27,6 +28,11 @@ import org.usergrid.persistence.PersistenceTestHelper;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
 import org.usergrid.persistence.cassandra.PersistenceTestHelperImpl;
 import org.usergrid.services.ServiceManagerFactory;
+
+import com.mongodb.DB;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+import com.mongodb.WriteConcern;
 
 public abstract class AbstractMongoTest {
 
@@ -62,6 +68,23 @@ public abstract class AbstractMongoTest {
 	public static void teardown() throws Exception {
 		logger.info("teardown");
 		helper.teardown();
+	}
+	
+	/**
+	 * Get a db instance for testing
+	 * @return
+	 * @throws UnknownHostException
+	 * @throws MongoException
+	 */
+	public static DB getDb() throws UnknownHostException, MongoException{
+	    Mongo m = new Mongo("localhost", 27017);
+        m.setWriteConcern(WriteConcern.SAFE);
+
+        DB db = m.getDB("test-organization/test-app");
+//        DB db = m.getDB("test-app");
+        db.authenticate("test", "test".toCharArray());
+        
+        return db;
 	}
 
 }

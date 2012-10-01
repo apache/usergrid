@@ -23,14 +23,27 @@ import java.util.Map;
 
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
+import org.bson.types.ObjectId;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.MessageEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.usergrid.management.ApplicationInfo;
+import org.usergrid.mongo.MongoChannelHandler;
 import org.usergrid.mongo.utils.BSONUtils;
+import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.Identifier;
+import org.usergrid.security.shiro.utils.SubjectUtils;
+
 
 public class OpInsert extends OpCrud {
 
-	int flags;
-	List<BSONObject> documents = new ArrayList<BSONObject>();
+    private static final Logger logger = LoggerFactory.getLogger(OpInsert.class);
+    
+	protected int flags;
+	protected List<BSONObject> documents = new ArrayList<BSONObject>();
 
 	public OpInsert() {
 		opCode = OP_INSERT;
@@ -67,7 +80,7 @@ public class OpInsert extends OpCrud {
 
 	@Override
 	public void decode(ChannelBuffer buffer) throws IOException {
-		super.decode(buffer);
+	    super.decode(buffer);
 
 		flags = buffer.readInt();
 		fullCollectionName = readCString(buffer);
@@ -103,10 +116,58 @@ public class OpInsert extends OpCrud {
 		return buffer;
 	}
 
-	@Override
-	public String toString() {
-		return "OpInsert [flags=" + flags + ", fullCollectionName="
-				+ fullCollectionName + ", documents=" + documents + "]";
-	}
+
+    /* (non-Javadoc)
+     * @see org.usergrid.mongo.protocol.OpCrud#doOp(org.usergrid.mongo.MongoChannelHandler, org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.MessageEvent)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public OpReply doOp(MongoChannelHandler handler, ChannelHandlerContext ctx,
+            MessageEvent messageEvent) {
+        
+        ApplicationInfo application = SubjectUtils.getApplication(Identifier
+                .from(getDatabaseName()));
+      
+        if (application == null) {
+            ctx.setAttachment(new IllegalArgumentException(String.format("Could not find application with name '%s' ", getDatabaseName())));
+            return null;
+        }
+        
+       
+        EntityManager em = handler.getEmf().getEntityManager(application.getId());
+        
+        
+        for(BSONObject document: documents){
+            try {
+                //special case to serialize mongo ObjectId if required
+                Object id = document.get("_id");
+                
+                if(id instanceof ObjectId){
+                    document.put("_id", ((ObjectId)id).toStringMongod());
+                }
+                
+                em.create(getCollectionName(), document.toMap());
+               
+            } catch (Exception e) {
+                logger.error("Unable to insert mongo document {}", document, e);
+                ctx.setAttachment(e);
+            }
+        }
+        
+        //insert never returns a response in mongo
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "OpInsert [flags=" + flags + ", documents=" + documents
+                + ", fullCollectionName=" + fullCollectionName
+                + ", messageLength=" + messageLength + ", requestID="
+                + requestID + ", responseTo=" + responseTo + ", opCode="
+                + opCode + "]";
+    }
 
 }
