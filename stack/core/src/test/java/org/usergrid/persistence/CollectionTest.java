@@ -751,7 +751,7 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     for (int i = 0; i < size; i++) {
       Map<String, Object> properties = new LinkedHashMap<String, Object>();
-      properties.put("name", "object" + 1);
+      properties.put("name", "object" + i);
       Entity created = em.create("objects", properties);
 
       entityIds.add(created.getUuid());
