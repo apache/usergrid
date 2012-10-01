@@ -34,7 +34,7 @@ public class Collstats extends MongoCommand {
 	public OpReply execute(MongoChannelHandler handler,
 			ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery) {
 		ApplicationInfo application = SubjectUtils.getApplication(Identifier
-				.fromName(opQuery.getDatabaseName()));
+				.from(opQuery.getDatabaseName()));
 		OpReply reply = new OpReply(opQuery);
 		if (application == null) {
 			return reply;

@@ -451,4 +451,49 @@ public class MongoQueryTest extends AbstractMongoTest {
         assertFalse(cur.hasNext());
 
     }
+
+  @Test
+  public void withFieldSelector() throws Exception {
+    UUID appId = emf.lookupApplication("test-organization/test-app");
+    EntityManager em = emf.getEntityManager(appId);
+
+    Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    properties.put("name", "Kings of Leon");
+    properties.put("genre", "Southern Rock");
+    properties.put("founded", 2000);
+    em.create("testand", properties);
+
+    properties = new LinkedHashMap<String, Object>();
+    properties.put("name", "Stone Temple Pilots");
+    properties.put("genre", "Rock");
+    properties.put("founded", 1986);
+    em.create("testand", properties);
+
+    properties = new LinkedHashMap<String, Object>();
+    properties.put("name", "Journey");
+    properties.put("genre", "Classic Rock");
+    properties.put("founded", 1973);
+    em.create("testand", properties);
+
+    Mongo m = new Mongo("localhost", 27017);
+
+    DB db = m.getDB("test-organization/test-app");
+    db.authenticate("test", "test".toCharArray());
+
+    BasicDBObject queryName = new BasicDBObject();
+    queryName.put("name", "Journey");
+
+    BasicDBObject limitName = new BasicDBObject();
+    limitName.put("name",1);
+
+    //query.put();
+
+    DBCollection coll = db.getCollection("testands");
+    DBCursor cur = coll.find(queryName, limitName);
+
+    assertTrue(cur.hasNext());
+
+
+
+  }
 }

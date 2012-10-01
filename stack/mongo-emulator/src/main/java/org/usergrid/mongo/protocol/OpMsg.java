@@ -58,9 +58,16 @@ public class OpMsg extends Message {
 		return buffer;
 	}
 
-	@Override
-	public String toString() {
-		return "OpMsg [message=" + message + "]";
-	}
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "OpMsg [message=" + message + ", messageLength=" + messageLength
+                + ", requestID=" + requestID + ", responseTo=" + responseTo
+                + ", opCode=" + opCode + "]";
+    }
+
+	
 
 }

@@ -85,9 +85,9 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
 					TokenInfo tokenInfo = tokens.getTokenInfo(accessToken);
 					principal = tokenInfo.getPrincipal();
 				} catch (BadTokenException e1) {
-					e1.printStackTrace();
+					logger.error("bad token", e1);
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.error("excpetion", e);
 				}
 
 				if (principal == null) {

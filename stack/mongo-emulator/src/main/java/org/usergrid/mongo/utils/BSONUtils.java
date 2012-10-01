@@ -17,6 +17,8 @@ package org.usergrid.mongo.utils;
 
 import org.bson.BSONDecoder;
 import org.bson.BSONEncoder;
+import org.bson.BasicBSONDecoder;
+import org.bson.BasicBSONEncoder;
 
 public class BSONUtils {
 
@@ -31,14 +33,14 @@ public class BSONUtils {
 	static ThreadLocal<BSONEncoder> _staticEncoder = new ThreadLocal<BSONEncoder>() {
 		@Override
 		protected BSONEncoder initialValue() {
-			return new BSONEncoder();
+			return new BasicBSONEncoder();
 		}
 	};
 
 	static ThreadLocal<BSONDecoder> _staticDecoder = new ThreadLocal<BSONDecoder>() {
 		@Override
 		protected BSONDecoder initialValue() {
-			return new BSONDecoder();
+			return new BasicBSONDecoder();
 		}
 	};
 

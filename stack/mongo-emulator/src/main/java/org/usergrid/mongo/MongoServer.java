@@ -143,7 +143,7 @@ public class MongoServer {
 		// Set up the pipeline factory.
 		ExecutionHandler executionHandler = new ExecutionHandler(
 				new OrderedMemoryAwareThreadPoolExecutor(16, 1048576, 1048576));
-
+    // TODO if config'ed for SSL, start the SslMSPF instead, change port as well?
 		bootstrap.setPipelineFactory(new MongoServerPipelineFactory(emf, smf,
 				management, securityManager, executionHandler));
 

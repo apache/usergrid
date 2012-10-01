@@ -92,10 +92,17 @@ public class OpKillCursors extends Message {
 		return buffer;
 	}
 
-	@Override
-	public String toString() {
-		return "OpKillCursors [numberOfCursorIDs=" + numberOfCursorIDs
-				+ ", cursorIDs=" + cursorIDs + "]";
-	}
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "OpKillCursors [numberOfCursorIDs=" + numberOfCursorIDs
+                + ", cursorIDs=" + cursorIDs + ", messageLength="
+                + messageLength + ", requestID=" + requestID + ", responseTo="
+                + responseTo + ", opCode=" + opCode + "]";
+    }
+
+	
 
 }

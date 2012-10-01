@@ -1150,8 +1150,8 @@ public class ManagementServiceImpl implements ManagementService {
         if (user == null) {
             return null;
         }
-        String mongo_pwd = readUserMongoPassword(MANAGEMENT_APPLICATION_ID,
-                user.getUuid()).getSecret();
+        
+        String mongo_pwd = readUserMongoPassword(MANAGEMENT_APPLICATION_ID, user.getUuid()).getSecret();
 
         if (mongo_pwd == null) {
             throw new IncorrectPasswordException(

@@ -26,13 +26,24 @@ import org.usergrid.mongo.protocol.OpReply;
 
 public class Getlasterror extends MongoCommand {
 
-	@Override
-	public OpReply execute(MongoChannelHandler handler,
-			ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery) {
-		OpReply reply = new OpReply(opQuery);
-		reply.addDocument(map(entry("n", 0), entry("connectionId", 20),
-				entry("wtime", 0), entry("err", null), entry("ok", 1.0)));
-		return reply;
-	}
+    @Override
+    public OpReply execute(MongoChannelHandler handler,
+            ChannelHandlerContext ctx, MessageEvent e, OpQuery opQuery) {
+        OpReply reply = new OpReply(opQuery);
 
+        // there's an error in the attachment
+        if (ctx.getAttachment() instanceof Exception) {
+            reply.addDocument(map(
+                    entry("n", 0),
+                    entry("connectionId", 20),
+                    entry("wtime", 0),
+                    entry("err", ((Exception) ctx.getAttachment()).getMessage()),
+                    entry("ok", 0.0)));
+        } else {
+            reply.addDocument(map(entry("n", 0), entry("connectionId", 20),
+                    entry("wtime", 0), entry("err", null), entry("ok", 1.0)));
+        }
+
+        return reply;
+    }
 }
