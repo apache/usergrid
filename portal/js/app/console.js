@@ -990,9 +990,10 @@
       runManagementQuery(new Usergrid.Query("POST","organizations/" + Usergrid.ApiClient.getOrganizationUUID()  + "/applications", form.serializeObject(), null,
         function(response) {
           for (var appName in response.data) { break; }
+          var appTitle = appName.split("/")[1];
           var currentOrg = Usergrid.ApiClient.getOrganizationName();
-          Usergrid.organizations.getItemByName(currentOrg).addItem(new Usergrid.Application(appName, response.data[appName]));
-          pageSelect(appName);
+          Usergrid.organizations.getItemByName(currentOrg).addItem(new Usergrid.Application(appTitle, response.data[appName]));
+          pageSelect(appTitle);
           requestApplications();
         },
         function() {
