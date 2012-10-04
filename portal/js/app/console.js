@@ -1378,7 +1378,7 @@
   function deleteRoleFromUser(roleName, roleTitle) {
     var items = $('#role-users input[class^=userRoleItem]:checked');
     if(!items.length){
-      alertModal("Error", "Please, first select the users you want to delete from this role.")
+      alertModal("Error", "Please, first select the users you want to delete from this role.");
         return;
     }
 
