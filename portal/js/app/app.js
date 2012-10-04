@@ -18,6 +18,7 @@ $(document).ready(function () {
     initMenu();
     StatusBar.Init('#statusbar-placeholder');
     toggleableSections();
+
   }
 
   function startApp() {
@@ -58,7 +59,6 @@ $(document).ready(function () {
     Pages.AddPage({name:'forgot-password', menu:publicMenu});
     Pages.AddPage({name:'post-signup', menu:publicMenu});
     Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction:Usergrid.console.pageSelectHome});
-
   }
 
   function initConsole() {
@@ -78,6 +78,19 @@ $(document).ready(function () {
     Pages.AddPanel('shell', null, null, null, Usergrid.console.pageSelectShell);
     Pages.AddPanel('account', "#account-link", null, null, Usergrid.console.requestAccountSettings);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
+  }
+
+  function initCenterPanels(){
+    $(window).resize(centerPanels);
+    $(window).resize();
+  }
+
+  function centerPanels(){
+    var panels = $("#console-page");
+    var freeSpace = $(window).width() - panels.width();
+    console.log("window: " + $(window).width() + " Panels:" + panels.width());
+    console.log("free space: "+freeSpace);
+    panels.css('margin-left',function(){return freeSpace / 2;});
   }
 
 });

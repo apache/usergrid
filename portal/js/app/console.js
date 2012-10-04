@@ -1566,7 +1566,7 @@
           return;
         }
 
-        var graph_width = 400;
+        var graph_width = 350;
         var graph_height = 100;
         var data = new google.visualization.DataTable();
         data.addColumn('date', 'Time');
@@ -4264,9 +4264,26 @@
     $('#login-message').hide();
     $('#login-email').val("");
     $('#login-password').val("");
+    repositionTitleMenus();
     Pages.ShowPage('console');
+    $(window).resize(repositionTitleMenus);
   }
+
   Usergrid.console.loginOk = loginOk;
+
+  function repositionTitleMenus(){
+    var leftMenu = $(".left-header");
+    var rightMenu = $(".right-header");
+    var columnOffset = $("#pages").offset();
+    var columnWidth = $("#pages").width();
+    var windowWidth = $(window).width();
+    leftMenu.css('margin-left', function(){
+      return columnOffset.left;
+    });
+    rightMenu.css('margin-right', function(){
+      return windowWidth - (columnWidth + columnOffset.left);
+    })
+  }
 
   //load the templates only after the rest of the page is
   $(window).bind("load", function() {
@@ -4296,6 +4313,7 @@
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.permissions.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.curl.detail.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.alert.html");
+    $(window).resize();
   });
 
   //these templates are used on the front page and should be loaded up front

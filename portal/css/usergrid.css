@@ -3541,7 +3541,7 @@ a.thumbnail:hover {
 html,
 body {
   height: 100%;
-  min-width: 600px;
+  min-width: 640px;
 }
 html {
   border-left: 1px solid #c9c9c9;
@@ -3598,7 +3598,8 @@ html {
   height: 100%;
   /* IE6: treaded as min-height*/
 
-  min-width: 600px;
+  min-width: 640px;
+  max-width: 1280px;
 }
 #pages {
   padding: 70px 0 50px 0px;
@@ -3614,7 +3615,7 @@ html {
   border-left: 1px solid #c9c9c9;
 }
 footer {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   width: 100%;
   border-top: 1px solid #c9c9c9;
@@ -3761,6 +3762,7 @@ a:active {
 }
 #application-panel-buttons {
   display: none;
+  position: fixed;
 }
 #application-panel-buttons .active > a i {
   background-image: url(../img/glyphicons-halflings-white.png);
@@ -3770,6 +3772,10 @@ a:active {
 }
 .icon-black {
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
+}
+.nav-tabs {
+  display: inline-block;
+  width: 100%;
 }
 #login-page,
 #signup-page {
@@ -3845,6 +3851,7 @@ a:active {
   font-size: 12pt;
   padding: 10px;
   line-height: 18px;
+  display: inline-block;
   background: #cccccc;
 }
 .console-section h3 .search {
@@ -3885,13 +3892,14 @@ a:active {
 .console-section h3:after {
   clear: both;
   content: ".";
-  display: block;
+  display: inline-block;
   height: 0;
   visibility: hidden;
 }
 .console-section form {
   margin: 0px;
   padding-top: 10px;
+  display: inline-block;
 }
 .console-section .form-actions {
   margin-bottom: 0px;
@@ -3903,6 +3911,7 @@ a:active {
   position: relative;
   padding: 10px;
   line-height: 25px;
+  display: block;
 }
 .console-section .console-section-contents .form-actions {
   margin: 20px -10px -10px;
