@@ -4750,7 +4750,7 @@ table .zebraRows:nth-child(2n) {
 }
 /* --------------- Collections -------------- */
 .collection-column {
-  width: 100px;
+  width: 80%;
 }
 #button-query-validate {
   margin-left: 20px;
