@@ -1091,7 +1091,7 @@
       && checkRegexp2(new_user_username, usernameRegex, usernameAllowedCharsMessage)
       && checkLength2(new_user_email, 6, 80)
       && checkRegexp2(new_user_email,emailRegex, emailAllowedCharsMessage)
-      && (checkLength2(new_user_password, 5, 16) || checkLength2(new_user_password,0,0))
+      && ( checkLength2(new_user_password,0,0) || checkLength2(new_user_password, 5, 32) )
       && (new_user_password.text() === "" || checkRegexp2(new_user_password,passwordRegex, passwordAllowedCharsMessage));
 
     if (bValid) {
