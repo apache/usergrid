@@ -22,6 +22,12 @@
   {{html $item.makeObjectTable(collections, $item.tableOpts, "all_collections") }}
 </div>
 {{/if}}
+{{if connections}}
+<div class="query-result-collections query-result-portlet">
+  <div class="query-result-portlet-title">Connections</div>
+  {{html $item.makeObjectTable(connections, $item.tableOpts, "all_collections") }}
+</div>
+{{/if}}
 <div class="query-result-contents query-result-portlet">
   <div class="query-result-portlet-title">Contents</div>
   {{html $item.makeObjectTable(entity, $item.tableOpts)}}
