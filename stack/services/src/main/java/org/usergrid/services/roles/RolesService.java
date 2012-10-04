@@ -21,17 +21,18 @@ import static org.usergrid.services.ServiceResults.genericServiceResults;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.Entity;
+import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.SimpleRoleRef;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.Role;
 import org.usergrid.services.AbstractCollectionService;
 import org.usergrid.services.ServiceContext;
+import org.usergrid.services.ServiceParameter;
+import org.usergrid.services.ServicePayload;
 import org.usergrid.services.ServiceResults;
 
 public class RolesService extends AbstractCollectionService {
@@ -58,242 +59,161 @@ public class RolesService extends AbstractCollectionService {
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.services.AbstractCollectionService#putItemById(org.usergrid
-     * .services.ServiceContext, java.util.UUID)
+     * org.usergrid.services.AbstractService#getEntityDictionary(org.usergrid
+     * .services.ServiceContext, java.util.List, java.lang.String)
      */
     @Override
-    public ServiceResults putItemById(ServiceContext context, UUID id) throws Exception {
-        return super.putItemById(context, id);
-    }
+    public ServiceResults getEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
+            throws Exception {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.services.AbstractCollectionService#putItemByName(org.usergrid
-     * .services.ServiceContext, java.lang.String)
-     */
-    @Override
-    public ServiceResults putItemByName(ServiceContext context, String name) throws Exception {
-        return postItemByName(context, name);
-    }
+        if ("permissions".equalsIgnoreCase(dictionary)) {
+            checkPermissionsForPath(context, "/permissions");
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.services.AbstractCollectionService#putItemsByQuery(org.usergrid
-     * .services.ServiceContext, org.usergrid.persistence.Query)
-     */
-    @Override
-    public ServiceResults putItemsByQuery(ServiceContext context, Query query) throws Exception {
-        return postItemsByQuery(context, query);
-    }
+            if (context.parameterCount() == 0) {
 
-    //
-    // private ServiceResults postRole(ServiceContext context) throws Exception
-    // {
-    // // else if (context.parameterCount() == 1) {
-    //
-    // String roleName = context.getParameters().get(0).getName();
-    // if (isBlank(roleName)) {
-    // return null;
-    // }
-    //
-    // String permission = context.getStringProperty("permission");
-    // if (isBlank(permission)) {
-    // return null;
-    // }
-    //
-    // return grantApplicationRolePermission(roleName, permission);
-    // }
+                return getApplicationRoles();
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.services.AbstractCollectionService#postCollection(org.usergrid
-     * .services.ServiceContext)
-     */
-    @Override
-    public ServiceResults postCollection(ServiceContext context) throws Exception {
-        // invoke the default to add it to the roles collection
+            } else if (context.parameterCount() == 1) {
 
-        String name = context.getStringProperty("name");
+                String roleName = context.getParameters().get(0).getName();
+                if (isBlank(roleName)) {
+                    return null;
+                }
 
-        // now add it to the maps of the application
-
-        String title = context.getStringProperty("title");
-
-        if (isBlank(title)) {
-            title = name;
-        }
-
-        Long inactivity = context.getLongProperty("inactivity");
-
-        if (inactivity == null) {
-            inactivity = 0l;
-        }
-
-        context.getProperties().put("title", title);
-        context.getProperties().put("inactivity", inactivity);
-
-        ServiceResults results = super.postCollection(context);
-
-        return newApplicationRole(name, title, inactivity, results);
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.services.AbstractCollectionService#putCollection(org.usergrid
-     * .services.ServiceContext)
-     */
-    @Override
-    public ServiceResults putCollection(ServiceContext context) throws Exception {
-        return postCollection(context);
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.services.AbstractCollectionService#postItemsByQuery(org.
-     * usergrid.services.ServiceContext, org.usergrid.persistence.Query)
-     */
-    @Override
-    public ServiceResults postItemsByQuery(ServiceContext context, Query query) throws Exception {
-        throw new UnsupportedOperationException("You cannot update roles by query");
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.services.AbstractCollectionService#postItemById(org.usergrid
-     * .services.ServiceContext, java.util.UUID)
-     */
-    @Override
-    public ServiceResults postItemById(ServiceContext context, UUID id) throws Exception {
-        ServiceResults results = super.postItemById(context, id);
-
-        String permission = context.getStringProperty("permission");
-
-        if (!isBlank(permission)) {
-            Role role = em.get(id, Role.class);
-
-            if (role != null) {
-                grantApplicationRolePermission(role.getName(), permission, results);
+                return getApplicationRolePermissions(roleName);
             }
 
         }
 
-        return results;
+        return super.getEntityDictionary(context, refs, dictionary);
     }
 
     /*
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.services.AbstractCollectionService#postItemByName(org.usergrid
-     * .services.ServiceContext, java.lang.String)
+     * org.usergrid.services.AbstractService#putEntityDictionary(org.usergrid
+     * .services.ServiceContext, java.util.List, java.lang.String,
+     * org.usergrid.services.ServicePayload)
      */
     @Override
-    public ServiceResults postItemByName(ServiceContext context, String name) throws Exception {
-        ServiceResults results = super.postItemByName(context, name);
+    public ServiceResults putEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary,
+            ServicePayload payload) throws Exception {
+        return postEntityDictionary(context, refs, dictionary, payload);
+    }
 
-        String permission = context.getStringProperty("permission");
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.services.AbstractService#postEntityDictionary(org.usergrid
+     * .services.ServiceContext, java.util.List, java.lang.String,
+     * org.usergrid.services.ServicePayload)
+     */
+    @Override
+    public ServiceResults postEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary,
+            ServicePayload payload) throws Exception {
 
-        if (!isBlank(permission)) {
-            grantApplicationRolePermission(name, permission, results);
+        if ("permissions".equalsIgnoreCase(dictionary)) {
+            checkPermissionsForPath(context, "/permissions");
+
+            EntityRef ref = refs.get(0);
+
+            String roleName = (String) em.getProperty(ref, "name");
+
+            if (isBlank(roleName)) {
+                throw new IllegalArgumentException(String.format("Could not load role with id '%s'", ref.getUuid()));
+            }
+
+            String permission = payload.getStringProperty("permission");
+
+            if (isBlank(permission)) {
+                throw new IllegalArgumentException("You must supply a 'permission' property");
+            }
+
+            return grantApplicationRolePermission(roleName, permission);
+
         }
 
-        return results;
-
+        return super.postEntityDictionary(context, refs, dictionary, payload);
     }
 
     /*
      * (non-Javadoc)
      * 
      * @see
-     * org.usergrid.services.AbstractCollectionService#deleteItemById(org.usergrid
-     * .services.ServiceContext, java.util.UUID)
+     * org.usergrid.services.AbstractService#deleteEntityDictionary(org.usergrid
+     * .services.ServiceContext, java.util.List, java.lang.String)
      */
     @Override
-    public ServiceResults deleteItemById(ServiceContext context, UUID id) throws Exception {
-
-        ServiceResults results = super.deleteItemById(context, id);
-
-        Entity entity = results.getEntities().get(0);
-
-        if (entity != null) {
-            deleteApplicationRole(entity.getName(), results);
-        }
-
-        return results;
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.services.AbstractCollectionService#deleteItemByName(org.
-     * usergrid.services.ServiceContext, java.lang.String)
-     */
-    @Override
-    public ServiceResults deleteItemByName(ServiceContext context, String name) throws Exception {
-        ServiceResults results = super.deleteItemByName(context, name);
-        return deleteApplicationRole(name, results);
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.services.AbstractCollectionService#deleteItemsByQuery(org
-     * .usergrid.services.ServiceContext, org.usergrid.persistence.Query)
-     */
-    @Override
-    public ServiceResults deleteItemsByQuery(ServiceContext context, Query query) throws Exception {
-        throw new UnsupportedOperationException("You cannot delete roles by query");
-    }
-
-    public ServiceResults newApplicationRole(String roleName, String roleTitle, long inactivity, ServiceResults results)
+    public ServiceResults deleteEntityDictionary(ServiceContext context, List<EntityRef> refs, String dictionary)
             throws Exception {
+
+        if ("permissions".equalsIgnoreCase(dictionary)) {
+            checkPermissionsForPath(context, "/permissions");
+
+            EntityRef ref = refs.get(0);
+
+            String roleName = (String) em.getProperty(ref, "name");
+
+            if (isBlank(roleName)) {
+                throw new IllegalArgumentException(String.format("Could not load role with id '%s'", ref.getUuid()));
+            }
+
+            Query q = context.getParameters().get(0).getQuery();
+            
+            if (q == null) {
+                throw new IllegalArgumentException("You must supply a 'permission' query parameter");
+            }
+
+            List<String> permissions = q.getPermissions();
+            if (permissions == null) {
+                throw new IllegalArgumentException("You must supply a 'permission' query parameter");
+            }
+
+            ServiceResults results = null;
+
+            for (String permission : permissions) {
+
+                results = revokeApplicationRolePermission(roleName, permission);
+            }
+
+            return results;
+
+        }
+
+        return super.deleteEntityDictionary(context, refs, dictionary);
+    }
+
+    public ServiceResults newApplicationRole(String roleName, String roleTitle, long inactivity) throws Exception {
         em.createRole(roleName, roleTitle, inactivity);
-        return getApplicationRoles(results);
+        return getApplicationRoles();
     }
 
-    public ServiceResults deleteApplicationRole(String roleName, ServiceResults results) throws Exception {
+    public ServiceResults deleteApplicationRole(String roleName) throws Exception {
         em.deleteRole(roleName);
-        return getApplicationRoles(results);
+        return getApplicationRolePermissions(roleName);
     }
 
-    public ServiceResults grantApplicationRolePermission(String roleName, String permission, ServiceResults results)
-            throws Exception {
-        em.grantRolePermission(roleName, permission);
-        return getApplicationRolePermissions(roleName, results);
-    }
-
-    public ServiceResults revokeApplicationRolePermission(String roleName, String permission, ServiceResults results)
-            throws Exception {
-        em.revokeRolePermission(roleName, permission);
-        return getApplicationRolePermissions(roleName, results);
-    }
-
-    public ServiceResults getApplicationRolePermissions(String roleName, ServiceResults results) throws Exception {
+    public ServiceResults getApplicationRolePermissions(String roleName) throws Exception {
         Set<String> permissions = em.getRolePermissions(roleName);
-        results.withData(permissions);
+        ServiceResults results = genericServiceResults().withData(permissions);
         return results;
     }
 
-    public ServiceResults getApplicationRoles(ServiceResults results) throws Exception {
+    public ServiceResults grantApplicationRolePermission(String roleName, String permission) throws Exception {
+        em.grantRolePermission(roleName, permission);
+        return getApplicationRolePermissions(roleName);
+    }
+
+    public ServiceResults revokeApplicationRolePermission(String roleName, String permission) throws Exception {
+        em.revokeRolePermission(roleName, permission);
+        return getApplicationRolePermissions(roleName);
+    }
+
+    public ServiceResults getApplicationRoles() throws Exception {
         Map<String, String> roles = em.getRoles();
-        results.withData(roles);
+        ServiceResults results = genericServiceResults().withData(roles);
         return results;
     }
 
