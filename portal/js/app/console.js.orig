@@ -165,7 +165,7 @@
       }]
     );
     var bearerTokenString = encodeURIComponent(bearerTokenJson);
-    var url = 'https://apigee.com/apigeedev/console/usergrid?v=2&embedded=true&auth=' + bearerTokenString;
+    var url = 'https://apigee.com/console/usergrid?v=2&embedded=true&auth=' + bearerTokenString;
     return url;
   }
   Usergrid.console.getAccessTokenURL = getAccessTokenURL;
@@ -1091,7 +1091,7 @@
       && checkRegexp2(new_user_username, usernameRegex, usernameAllowedCharsMessage)
       && checkLength2(new_user_email, 6, 80)
       && checkRegexp2(new_user_email,emailRegex, emailAllowedCharsMessage)
-      && (checkLength2(new_user_password, 5, 16) || checkLength2(new_user_password,0,0))
+      && ( checkLength2(new_user_password,0,0) || checkLength2(new_user_password, 5, 32) )
       && (new_user_password.text() === "" || checkRegexp2(new_user_password,passwordRegex, passwordAllowedCharsMessage));
 
     if (bValid) {
@@ -1365,8 +1365,13 @@
 
     confirmDelete(function(){
         items.each(function() {
+<<<<<<< HEAD
           var roleName = $(this).attr("value");
           runAppQuery(new Usergrid.Query("DELETE", "/roles/" + roleName + "/users/" + username, null, null,
+=======
+          var roleId = $(this).attr("value");
+          runAppQuery(new Usergrid.Query("DELETE", "/roles/" + roleId  + "/users/" + username, null, null,
+>>>>>>> 387-UserGrid
             function() { pageSelectUserPermissions (username); },
             function() { alertModal("Error", "Unable to remove user from role"); }
           ));
@@ -1378,15 +1383,20 @@
   function deleteRoleFromUser(roleName, roleTitle) {
     var items = $('#role-users input[class^=userRoleItem]:checked');
     if(!items.length){
-      alertModal("Error", "Please, first select the users you want to delete from this role.")
+      alertModal("Error", "Please, first select the users you want to delete from this role.");
         return;
     }
 
     confirmDelete(function(){
         items.each(function() {
           var username = $(this).attr("value");
+<<<<<<< HEAD
           runAppQuery(new Usergrid.Query("DELETE", "/roles/" + roleName + "/users/" + username, null, null,
             function() { pageSelectRoleUsers (roleName, roleTitle); },
+=======
+          runAppQuery(new Usergrid.Query("DELETE", "/roles/" + roleId + "/users/" + username, null, null,
+            function() { pageSelectRoleUsers (roleId, rolename); },
+>>>>>>> 387-UserGrid
             function() { alertModal("Error", "Unable to remove user from role"); }
           ));
       });
@@ -1566,7 +1576,7 @@
           return;
         }
 
-        var graph_width = 400;
+        var graph_width = 350;
         var graph_height = 100;
         var data = new google.visualization.DataTable();
         data.addColumn('date', 'Time');
@@ -4034,7 +4044,7 @@
 
   function requestAccountSettings() {
     if (Usergrid.SSO.usingSSO()) {
-      Usergrid.SSO.sendToSSOProfilePage();
+      sendToSSOProfilePage();
     } else {
       $('#update-account-id').text(Usergrid.userSession.getUserUUID());
       $('#update-account-name').val("");
@@ -4264,9 +4274,26 @@
     $('#login-message').hide();
     $('#login-email').val("");
     $('#login-password').val("");
+    repositionTitleMenus();
     Pages.ShowPage('console');
+    $(window).resize(repositionTitleMenus);
   }
+
   Usergrid.console.loginOk = loginOk;
+
+  function repositionTitleMenus(){
+    var leftMenu = $(".left-header");
+    var rightMenu = $(".right-header");
+    var columnOffset = $("#pages").offset();
+    var columnWidth = $("#pages").width();
+    var windowWidth = $(window).width();
+    leftMenu.css('margin-left', function(){
+      return columnOffset.left;
+    });
+    rightMenu.css('margin-right', function(){
+      return windowWidth - (columnWidth + columnOffset.left);
+    })
+  }
 
   //load the templates only after the rest of the page is
   $(window).bind("load", function() {
@@ -4296,6 +4323,7 @@
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.permissions.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.curl.detail.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.alert.html");
+    $(window).resize();
   });
 
   //these templates are used on the front page and should be loaded up front
