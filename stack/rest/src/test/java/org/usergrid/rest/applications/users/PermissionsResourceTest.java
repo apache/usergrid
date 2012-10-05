@@ -16,6 +16,7 @@
 package org.usergrid.rest.applications.users;
 
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.usergrid.utils.MapUtils.hashMap;
@@ -28,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 import org.usergrid.java.client.entities.Group;
+import org.usergrid.persistence.Entity;
 import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.utils.UUIDUtils;
 
@@ -51,7 +53,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
         Map<String, String> data = hashMap("name", ROLE);
 
         JsonNode node = resource()
-                .path("/test-organization/test-app/rolenames")
+                .path("/test-organization/test-app/roles")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE)
@@ -59,7 +61,9 @@ public class PermissionsResourceTest extends AbstractRestTest {
 
         assertNull(node.get("error"));
 
-        assertNotNull(node.get("data").get(ROLE));
+        assertEquals(ROLE, getEntity(node, 0).get("name").asText());
+        
+        
 
         // add the user to the role
         node = resource()
@@ -73,13 +77,14 @@ public class PermissionsResourceTest extends AbstractRestTest {
         // now check the user has the role
         node = resource()
                 .path("/test-organization/test-app/users/" + USER
-                        + "/rolenames")
+                        + "/roles")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
         // check if the role was assigned
-        assertNotNull(node.get("data").get(ROLE));
+        assertEquals(ROLE, getEntity(node, 0).get("name").asText());
+
 
         // now delete the role
         node = resource()
@@ -92,13 +97,14 @@ public class PermissionsResourceTest extends AbstractRestTest {
 
         node = resource()
                 .path("/test-organization/test-app/users/" + USER
-                        + "/rolenames")
+                        + "/roles")
                 .queryParam("access_token", access_token)
                 .accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
         // check if the role was assigned
-        assertNull(node.get("data").get(ROLE));
+        assertNull(getEntity(node, 0));
+
 
     }
 
