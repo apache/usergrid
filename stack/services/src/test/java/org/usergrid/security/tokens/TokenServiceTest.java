@@ -57,13 +57,10 @@ public class TokenServiceTest {
     }
 
     public static void setupLocal() throws Exception {
-        adminUser = managementService.createAdminUser("edanuff", "Ed Anuff",
-                "ed@anuff.com", "test", false, false);
-        organization = managementService.createOrganization("ed-organization",
-                adminUser, true);
+        adminUser = managementService.createAdminUser("edanuff", "Ed Anuff", "ed@anuff.com", "test", false, false);
+        organization = managementService.createOrganization("ed-organization", adminUser, true);
         // TODO update to organizationName/applicationName
-        applicationId = managementService.createApplication(
-                organization.getUuid(), "ed-organization/ed-application")
+        applicationId = managementService.createApplication(organization.getUuid(), "ed-organization/ed-application")
                 .getId();
     }
 
@@ -76,10 +73,8 @@ public class TokenServiceTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testEmailConfirmToken() throws Exception {
-        String tokenStr = tokenService.createToken(TokenCategory.EMAIL,
-                "email_confirm",
-                (Map<String, Object>) cast(hashMap("email", "ed@anuff.com")
-                        .map("username", "edanuff")));
+        String tokenStr = tokenService.createToken(TokenCategory.EMAIL, "email_confirm",
+                (Map<String, Object>) cast(hashMap("email", "ed@anuff.com").map("username", "edanuff")));
 
         log.info("token: " + tokenStr);
 
@@ -98,9 +93,10 @@ public class TokenServiceTest {
 
     @Test
     public void testAdminPrincipalToken() throws Exception {
-        String tokenStr = tokenService.createToken(
-                new AuthPrincipalInfo(AuthPrincipalType.ADMIN_USER, adminUser
-                        .getUuid(), UUIDUtils.newTimeUUID()), null);
+        String tokenStr = tokenService
+                .createToken(
+                        new AuthPrincipalInfo(AuthPrincipalType.ADMIN_USER, adminUser.getUuid(), UUIDUtils
+                                .newTimeUUID()), null);
 
         log.info("token: " + tokenStr);
 
@@ -119,8 +115,7 @@ public class TokenServiceTest {
     @Test
     public void adminPrincipalTokenRevoke() throws Exception {
 
-        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
-                AuthPrincipalType.ADMIN_USER, UUIDUtils.newTimeUUID(),
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.ADMIN_USER, UUIDUtils.newTimeUUID(),
                 UUIDUtils.newTimeUUID());
 
         String firstToken = tokenService.createToken(adminPrincipal);
@@ -161,9 +156,8 @@ public class TokenServiceTest {
 
     @Test
     public void userPrincipalTokenRevoke() throws Exception {
-        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
-                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
-                UUIDUtils.newTimeUUID());
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
+                UUIDUtils.newTimeUUID(), UUIDUtils.newTimeUUID());
 
         String firstToken = tokenService.createToken(adminPrincipal);
         String secondToken = tokenService.createToken(adminPrincipal);
@@ -200,167 +194,198 @@ public class TokenServiceTest {
 
         assertTrue(invalidTokenException);
     }
-    
-    
+
     @Test
     public void tokenDurationExpiration() throws Exception {
-        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
-                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
-                UUIDUtils.newTimeUUID());
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
+                UUIDUtils.newTimeUUID(), UUIDUtils.newTimeUUID());
 
-        //2 second token
+        // 2 second token
         long expirationTime = 1000;
-        
+
         String token = tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, expirationTime);
-        
+
         long start = System.currentTimeMillis();
-        
+
         assertNotNull(token);
-        
-        
+
         TokenInfo tokenInfo = tokenService.getTokenInfo(token);
         assertNotNull(tokenInfo);
         assertEquals(expirationTime, tokenInfo.getDuration());
 
         /**
-         * Sleep at least expirationTime millis to allow token to expire 
+         * Sleep at least expirationTime millis to allow token to expire
          */
-        Thread.sleep(expirationTime-(System.currentTimeMillis()-start)+1000);
-        
+        Thread.sleep(expirationTime - (System.currentTimeMillis() - start) + 1000);
+
         boolean invalidTokenException = false;
-        
+
         try {
             tokenService.getTokenInfo(token);
         } catch (InvalidTokenException ite) {
             invalidTokenException = true;
         }
-        
+
         assertTrue(invalidTokenException);
     }
-    
-    
+
     @Test
     public void tokenDefaults() throws Exception {
-        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
-                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
-                UUIDUtils.newTimeUUID());
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
+                UUIDUtils.newTimeUUID(), UUIDUtils.newTimeUUID());
 
-        long maxAge = ((TokenServiceImpl)tokenService).getMaxPersistenceTokenAge();
-        
+        long maxAge = ((TokenServiceImpl) tokenService).getMaxPersistenceTokenAge();
+
         String token = tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
-        
+
         assertNotNull(token);
-        
-        
+
         TokenInfo tokenInfo = tokenService.getTokenInfo(token);
         assertNotNull(tokenInfo);
         assertEquals(maxAge, tokenInfo.getDuration());
     }
-    
-    
-   
-    
-    
-    @Test(expected=IllegalArgumentException.class)
-    public void invalidDurationValue() throws Exception{
-        
-        long maxAge = ((TokenServiceImpl)tokenService).getMaxPersistenceTokenAge();
-        
-        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
-                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
-                UUIDUtils.newTimeUUID());
 
-        tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, maxAge+1);
-       
+    @Test(expected = IllegalArgumentException.class)
+    public void invalidDurationValue() throws Exception {
+
+        long maxAge = ((TokenServiceImpl) tokenService).getMaxPersistenceTokenAge();
+
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
+                UUIDUtils.newTimeUUID(), UUIDUtils.newTimeUUID());
+
+        tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, maxAge + 1);
+
     }
-    
+
     @Test
     public void appExpiration() throws Exception {
-        
-        OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("foo", "foobar", "foobar", "foo@bar.com", "foobar");
-        
-        ApplicationInfo appInfo = managementService.createApplication(orgInfo.getOrganization().getUuid(), "bar");
-       
-        
-        EntityManager em = helper.getEntityManagerFactory().getEntityManager(appInfo.getId());
-        
-        Application app  = em.getApplication();
-        
-        
-        long appTokenAge = 1000;
-        
-        app.setAccesstokenttl(appTokenAge);
-        
-        em.updateApplication(app);
-        
-        AuthPrincipalInfo userPrincipal = new AuthPrincipalInfo(
-                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
-                app.getUuid());
 
-    
+        OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("foo", "foobar", "foobar",
+                "foo@bar.com", "foobar");
+
+        ApplicationInfo appInfo = managementService.createApplication(orgInfo.getOrganization().getUuid(), "bar");
+
+        EntityManager em = helper.getEntityManagerFactory().getEntityManager(appInfo.getId());
+
+        Application app = em.getApplication();
+
+        long appTokenAge = 1000;
+
+        app.setAccesstokenttl(appTokenAge);
+
+        em.updateApplication(app);
+
+        AuthPrincipalInfo userPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
+                UUIDUtils.newTimeUUID(), app.getUuid());
+
         String token = tokenService.createToken(TokenCategory.ACCESS, null, userPrincipal, null, 0);
-        
+
         long start = System.currentTimeMillis();
-        
-        
+
         assertNotNull(token);
-        
-        
+
         TokenInfo tokenInfo = tokenService.getTokenInfo(token);
         assertNotNull(tokenInfo);
         assertEquals(appTokenAge, tokenInfo.getDuration());
-        
-        
+
         /**
-         * Sleep at least expirationTime millis to allow token to expire 
+         * Sleep at least expirationTime millis to allow token to expire
          */
-        Thread.sleep(appTokenAge-(System.currentTimeMillis()-start)+1000);
-        
+        Thread.sleep(appTokenAge - (System.currentTimeMillis() - start) + 1000);
+
         boolean invalidTokenException = false;
-        
+
         try {
             tokenService.getTokenInfo(token);
         } catch (InvalidTokenException ite) {
             invalidTokenException = true;
         }
-        
+
         assertTrue(invalidTokenException);
     }
 
     @Test
     public void tokenDeletion() throws Exception {
-        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
-                AuthPrincipalType.APPLICATION_USER, UUIDUtils.newTimeUUID(),
-                UUIDUtils.newTimeUUID());
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
+                UUIDUtils.newTimeUUID(), UUIDUtils.newTimeUUID());
 
         String realToken = tokenService.createToken(TokenCategory.ACCESS, null, adminPrincipal, null, 0);
-         
+
         assertNotNull(realToken);
-        
-        
+
         TokenInfo tokenInfo = tokenService.getTokenInfo(realToken);
         assertNotNull(tokenInfo);
-        
-        
+
         tokenService.revokeToken(realToken);
-        
+
         boolean invalidTokenException = false;
-        
+
         try {
             tokenService.getTokenInfo(realToken);
         } catch (InvalidTokenException ite) {
             invalidTokenException = true;
         }
-        
+
         assertTrue(invalidTokenException);
-        
 
         String fakeToken = "notarealtoken";
-        
-        
+
         tokenService.revokeToken(fakeToken);
-        
+
     }
-    
+
+    @Test
+    public void appExpirationInfinite() throws Exception {
+
+        OrganizationOwnerInfo orgInfo = managementService.createOwnerAndOrganization("appExpirationInfinite", "appExpirationInfinite", "foobar",
+                "appExpirationInfinite@bar.com", "foobar");
+
+        ApplicationInfo appInfo = managementService.createApplication(orgInfo.getOrganization().getUuid(), "bar");
+
+        EntityManager em = helper.getEntityManagerFactory().getEntityManager(appInfo.getId());
+
+        Application app = em.getApplication();
+
+        long appTokenAge = 0;
+
+        app.setAccesstokenttl(appTokenAge);
+
+        em.updateApplication(app);
+
+        AuthPrincipalInfo userPrincipal = new AuthPrincipalInfo(AuthPrincipalType.APPLICATION_USER,
+                UUIDUtils.newTimeUUID(), app.getUuid());
+
+        String token = tokenService.createToken(TokenCategory.ACCESS, null, userPrincipal, null, 0);
+
+      
+        assertNotNull(token);
+
+        TokenInfo tokenInfo = tokenService.getTokenInfo(token);
+        assertNotNull(tokenInfo);
+        assertEquals(Long.MAX_VALUE, tokenInfo.getDuration());
+
+        boolean invalidTokenException = false;
+
+        try {
+            tokenService.getTokenInfo(token);
+        } catch (InvalidTokenException ite) {
+            invalidTokenException = true;
+        }
+
+        assertFalse(invalidTokenException);
+
+        tokenService.revokeToken(token);
+
+        invalidTokenException = false;
+
+        try {
+            tokenService.getTokenInfo(token);
+        } catch (InvalidTokenException ite) {
+            invalidTokenException = true;
+        }
+
+        assertTrue(invalidTokenException);
+
+    }
 
 }
