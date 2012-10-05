@@ -469,6 +469,7 @@ public class MongoQueryTest extends AbstractMongoTest {
     properties.put("founded", 1986);
     em.create("withfieldselector", properties);
 
+
     properties = new LinkedHashMap<String, Object>();
     properties.put("name", "Journey");
     properties.put("genre", "Classic Rock");
@@ -487,8 +488,8 @@ public class MongoQueryTest extends AbstractMongoTest {
     limitName.put("name",1);
 
     //query.put();
-
     DBCollection coll = db.getCollection("withfieldselectors");
+
     DBCursor cur = coll.find(queryName, limitName);
 
     assertTrue(cur.hasNext());
