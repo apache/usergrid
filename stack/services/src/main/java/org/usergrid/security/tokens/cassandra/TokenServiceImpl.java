@@ -58,11 +58,10 @@ import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
-
 public class TokenServiceImpl implements TokenService {
 
     private static final Logger logger = LoggerFactory.getLogger(TokenServiceImpl.class);
-    
+
     public static final String PROPERTIES_AUTH_TOKEN_SECRET_SALT = "usergrid.auth.token_secret_salt";
     public static final String PROPERTIES_AUTH_TOKEN_EXPIRES_FROM_LAST_USE = "usergrid.auth.token_expires_from_last_use";
     public static final String PROPERTIES_AUTH_TOKEN_REFRESH_REUSES_ID = "usergrid.auth.token_refresh_reuses_id";
@@ -134,7 +133,7 @@ public class TokenServiceImpl implements TokenService {
     protected Properties properties;
 
     protected EntityManagerFactory emf;
-    
+
     public TokenServiceImpl() {
 
     }
@@ -160,7 +159,7 @@ public class TokenServiceImpl implements TokenService {
         if (expires > 0) {
             tokenExpirations.put(tokenCategory, expires);
         }
-        logger.info("{} token expires after {} seconds", name,  getExpirationForTokenType(tokenCategory) / 1000 );
+        logger.info("{} token expires after {} seconds", name, getExpirationForTokenType(tokenCategory) / 1000);
     }
 
     @Autowired
@@ -179,8 +178,6 @@ public class TokenServiceImpl implements TokenService {
         }
     }
 
-   
-
     @Override
     public String createToken(TokenCategory tokenCategory, String type, Map<String, Object> state) throws Exception {
         return createToken(tokenCategory, type, null, state);
@@ -195,11 +192,14 @@ public class TokenServiceImpl implements TokenService {
     public String createToken(AuthPrincipalInfo principal, Map<String, Object> state) throws Exception {
         return createToken(TokenCategory.ACCESS, null, principal, state);
     }
-    
-    
 
-    /* (non-Javadoc)
-     * @see org.usergrid.security.tokens.TokenService#createToken(org.usergrid.security.tokens.TokenCategory, java.lang.String, org.usergrid.security.AuthPrincipalInfo, java.util.Map)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.security.tokens.TokenService#createToken(org.usergrid.security
+     * .tokens.TokenCategory, java.lang.String,
+     * org.usergrid.security.AuthPrincipalInfo, java.util.Map)
      */
     @Override
     public String createToken(TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
@@ -211,17 +211,17 @@ public class TokenServiceImpl implements TokenService {
     public String createToken(TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
             Map<String, Object> state, long duration) throws Exception {
 
-        
         long maxTokenTtl = getMaxTtl(principal);
-        
-        if(duration > maxTokenTtl){
-            throw new IllegalArgumentException(String.format("Your token age cannot be more than the maxium age of %d milliseconds", maxTokenTtl));
+
+        if (duration > maxTokenTtl) {
+            throw new IllegalArgumentException(String.format(
+                    "Your token age cannot be more than the maxium age of %d milliseconds", maxTokenTtl));
         }
-        
-        if(duration == 0){
+
+        if (duration == 0) {
             duration = maxTokenTtl;
         }
-        
+
         if (principal != null) {
             Assert.notNull(principal.getType());
             Assert.notNull(principal.getApplicationId());
@@ -246,18 +246,19 @@ public class TokenServiceImpl implements TokenService {
             tokenInfo = getTokenInfo(uuid);
             if (tokenInfo != null) {
                 long now = currentTimeMillis();
-                
+
                 long maxTokenTtl = getMaxTtl(tokenInfo.getPrincipal());
 
                 Mutator<UUID> batch = createMutator(cassandra.getSystemKeyspace(), UUIDSerializer.get());
 
-                HColumn<String, Long> col = createColumn(TOKEN_ACCESSED, now, (int) (tokenInfo.getExpiration(maxTokenTtl) / 1000),
-                        StringSerializer.get(), LongSerializer.get());
+                HColumn<String, Long> col = createColumn(TOKEN_ACCESSED, now,
+                        calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)), StringSerializer.get(),
+                        LongSerializer.get());
                 batch.addInsertion(uuid, TOKENS_CF, col);
 
                 long inactive = now - tokenInfo.getAccessed();
                 if (inactive > tokenInfo.getInactive()) {
-                    col = createColumn(TOKEN_INACTIVE, inactive, (int) (tokenInfo.getExpiration(maxTokenTtl) / 1000),
+                    col = createColumn(TOKEN_INACTIVE, inactive, calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)),
                             StringSerializer.get(), LongSerializer.get());
                     batch.addInsertion(uuid, TOKENS_CF, col);
                     tokenInfo.setInactive(inactive);
@@ -268,38 +269,41 @@ public class TokenServiceImpl implements TokenService {
         }
         return tokenInfo;
     }
-    
+
     /**
-     * Get the max ttl per app.  This is null safe,and will return the default in the case of missing data
+     * Get the max ttl per app. This is null safe,and will return the default in
+     * the case of missing data
+     * 
      * @param principal
      * @return
      * @throws Exception
      */
-    private long getMaxTtl(AuthPrincipalInfo principal) throws Exception{
-        
-        if(principal == null){
+    private long getMaxTtl(AuthPrincipalInfo principal) throws Exception {
+
+        if (principal == null) {
             return maxPersistenceTokenAge;
         }
-        
+
         Application application = emf.getEntityManager(principal.getApplicationId()).getApplication();
-        
-        if(application == null){
+
+        if (application == null) {
             return maxPersistenceTokenAge;
         }
-        
-        //set the max to the default
+
+        // set the max to the default
         long maxTokenTtl = maxPersistenceTokenAge;
-        
-        //it's been defined on the expiration, override it
-        if(application.getAccesstokenttl() != null){
+
+        // it's been defined on the expiration, override it
+        if (application.getAccesstokenttl() != null) {
             maxTokenTtl = application.getAccesstokenttl();
-            
-            //it's set to 0 which equals infinity, set our expiration to LONG.MAX
-            if(maxTokenTtl == 0){
+
+            // it's set to 0 which equals infinity, set our expiration to
+            // LONG.MAX
+            if (maxTokenTtl == 0) {
                 maxTokenTtl = Long.MAX_VALUE;
             }
         }
-        
+
         return maxTokenTtl;
     }
 
@@ -336,42 +340,39 @@ public class TokenServiceImpl implements TokenService {
 
     }
 
-    
-    
-    /* (non-Javadoc)
-     * @see org.usergrid.security.tokens.TokenService#revokeToken(java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.security.tokens.TokenService#revokeToken(java.lang.String)
      */
     @Override
     public void revokeToken(String token) {
-        
-        
+
         TokenInfo info;
-        
+
         try {
             info = getTokenInfo(token);
         } catch (Exception e) {
             logger.error("Unable to find token with the specified value ignoring request.  Value : {}", token);
             return;
         }
-        
+
         UUID tokenId = info.getUuid();
-        
-      
-        
+
         Mutator<ByteBuffer> batch = createMutator(cassandra.getSystemKeyspace(), BUFF_SER);
 
-        //clean up the link in the principal -> token index if the principal is on the token
-        if(info.getPrincipal() != null){
-            batch.addDeletion(principalKey(info.getPrincipal()), PRINCIPAL_TOKEN_CF,   bytebuffer(tokenId), BUFF_SER );
+        // clean up the link in the principal -> token index if the principal is
+        // on the token
+        if (info.getPrincipal() != null) {
+            batch.addDeletion(principalKey(info.getPrincipal()), PRINCIPAL_TOKEN_CF, bytebuffer(tokenId), BUFF_SER);
         }
-        
-        //remove the token from the tokens cf
-        batch.addDeletion(bytebuffer(tokenId), TOKENS_CF);
-        
 
+        // remove the token from the tokens cf
+        batch.addDeletion(bytebuffer(tokenId), TOKENS_CF);
 
         batch.execute();
-        
+
     }
 
     private TokenInfo getTokenInfo(UUID uuid) throws Exception {
@@ -415,7 +416,7 @@ public class TokenServiceImpl implements TokenService {
 
         Mutator<ByteBuffer> m = createMutator(ko, BUFF_SER);
 
-        int ttl = (int) (tokenInfo.getDuration() / 1000);
+        int ttl = calcTokenTime(tokenInfo.getDuration());
 
         m.addInsertion(tokenUUID, TOKENS_CF,
                 createColumn(TOKEN_UUID, bytebuffer(tokenInfo.getUuid()), ttl, STR_SER, BUFF_SER));
@@ -543,6 +544,7 @@ public class TokenServiceImpl implements TokenService {
 
     /**
      * The maximum age a token can be saved for
+     * 
      * @return the maxPersistenceTokenAge
      */
     public long getMaxPersistenceTokenAge() {
@@ -554,12 +556,12 @@ public class TokenServiceImpl implements TokenService {
     public void setCassandraService(CassandraService cassandra) {
         this.cassandra = cassandra;
     }
-    
+
     @Autowired
-    public void setEntityManagerFactory(EntityManagerFactory emf){
+    public void setEntityManagerFactory(EntityManagerFactory emf) {
         this.emf = emf;
     }
-    
+
     private String getTokenForUUID(TokenCategory tokenCategory, UUID uuid) {
         int l = 36;
         if (tokenCategory.getExpires()) {
@@ -576,4 +578,35 @@ public class TokenServiceImpl implements TokenService {
         return tokenCategory.getBase64Prefix() + encodeBase64URLSafeString(bytes.array());
     }
 
+    /**
+     * Calculate the column lifetime and account for long truncation to seconds
+     * 
+     * @param time
+     * @return
+     */
+    private int calcTokenTime(long time) {
+
+        long secondsDuration = time / 1000;
+
+        int ttl = (int) secondsDuration;
+
+        // we've had a ttl that's longer than Integer.MAX value
+        if (ttl != secondsDuration) {
+            // Something is up with cassandra... Setting ttl to integer.max
+            // makes the cols disappear..... 
+            
+            //this should be the line below once this issue is fixed.  https://issues.apache.org/jira/browse/CASSANDRA-4771
+            //ttl = Integer.MAX_VALUE
+            
+
+            // take the max value of an int, and substract the system time off
+            // (in seconds) ,then arbitrarily remove another 1200 seconds for good measure.
+            // Cass calcs the expiration time as
+            // "(System.currentTimeMillis() / 1000) + timeToLive);", so we need
+            // to play nice otherwise it blows up on persist
+            ttl = Integer.MAX_VALUE - (int) (System.currentTimeMillis() / 1000) - 120;
+        }
+
+        return ttl;
+    }
 }
