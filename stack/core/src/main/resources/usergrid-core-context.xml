@@ -100,5 +100,7 @@
    <bean id="indexBucketLocator" class="org.usergrid.persistence.cassandra.SimpleIndexBucketLocatorImpl">
     	<constructor-arg value="${usergrid.index.defaultbucketsize}"/>
     </bean>
+    
+    <bean id="mailUtils" class="org.usergrid.utils.MailUtils" />
 
 </beans>

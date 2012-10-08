@@ -50,12 +50,12 @@ public class MailUtils {
 		return "<a href=\"mailto:" + email + "\">";
 	}
 
-	public static void sendMail(String to, String from, String subject,
+	public void sendMail(String to, String from, String subject,
 			String content) {
 		sendMail(null, to, from, subject, content, null);
 	}
 
-	public static void sendMail(Properties props, String to, String from,
+	public void sendMail(Properties props, String to, String from,
 			String subject, String plainText, String htmlText) {
 		try {
 			if (props == null) {
@@ -119,12 +119,12 @@ public class MailUtils {
 		}
 	}
 
-	public static void sendHtmlMail(String to, String from, String subject,
+	public void sendHtmlMail(String to, String from, String subject,
 			String html) {
 		sendMail(null, to, from, subject, null, html);
 	}
 
-	public static void sendHtmlMail(Properties props, String to, String from,
+	public void sendHtmlMail(Properties props, String to, String from,
 			String subject, String html) {
 		sendMail(props, to, from, subject, null, html);
 	}
