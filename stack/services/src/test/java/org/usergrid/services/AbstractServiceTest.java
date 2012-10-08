@@ -27,6 +27,7 @@ import static org.usergrid.utils.InflectionUtils.pluralize;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
 import org.junit.AfterClass;
@@ -48,10 +49,11 @@ public abstract class AbstractServiceTest {
 			.getLogger(AbstractServiceTest.class);
 
 	static PersistenceTestHelper helper;
-
+	@Autowired protected Properties properties;
+	
 	public AbstractServiceTest() {
 		emf = (EntityManagerFactoryImpl) helper.getEntityManagerFactory();
-		smf = new ServiceManagerFactory(emf);
+		smf = new ServiceManagerFactory(emf, properties);
 		smf.setApplicationContext(helper.getApplicationContext());
 	}
 
@@ -76,7 +78,8 @@ public abstract class AbstractServiceTest {
 	public ServiceManagerFactory getServiceManagerFactory() {
 		return smf;
 	}
-
+	
+	@Autowired
 	public void setServiceManagerFactory(ServiceManagerFactory smf) {
 		this.smf = smf;
 	}
