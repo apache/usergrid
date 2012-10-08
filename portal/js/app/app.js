@@ -1,21 +1,18 @@
-
-
-Usergrid.userSession = new Usergrid.userSession();
 Usergrid.organizations = new Usergrid.Organization();
 
 var Pages = new ApigeePages();
 
 $(document).ready(function () {
-  var query_params = getQueryParams();
+  var query_params = Usergrid.Params.queryParams;
   initCore();
   initUI(query_params);
   startApp();
 
   function initCore() {
     prepareLocalStorage();
-    parseParams();    
+    parseParams();
   }
-  
+
   function initUI(query_params) {
     apigee_console_app(Pages, query_params);
     initMenu();
@@ -26,9 +23,9 @@ $(document).ready(function () {
   function startApp() {
     if (!Usergrid.userSession.loggedIn()) {
       // test to see if the Portal is running on apigee, if so, send to SSO, if not, fall through to login screen
-      if ( Usergrid.console.useSSO() ){
+      if (Usergrid.SSO.usingSSO()) {
         Pages.clearPage();
-        Usergrid.console.sendToSSOLoginPage();
+        Usergrid.SSO.sendToSSOLoginPage();
       } else if (query_params.goto_signup) {
         Pages.ShowPage("signup");
       } else {
@@ -36,15 +33,14 @@ $(document).ready(function () {
       }
     } else {
       Usergrid.console.autoLogin(
-        function() {
+        function () {
           Usergrid.console.loginOk();
         },
-        function() {
+        function () {
           Usergrid.console.logout();
         }
       );
     }
-
   }
 
   function initMenu() {
@@ -54,7 +50,7 @@ $(document).ready(function () {
     $('#hideBanner').click(Pages.hideBanner);
 
     var publicMenu = $('#publicMenu');
-    var privateMenu =$('#privateMenu');
+    var privateMenu = $('#privateMenu');
 
     Pages.AddPage({name:'login', menu:publicMenu});
     //Pages.ShowPage('login');
@@ -68,7 +64,7 @@ $(document).ready(function () {
   function initConsole() {
     //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
     Pages.AddPanel('organization', null, null, null, null);
-    Pages.AddPanel('console', null, null, null ,null );
+    Pages.AddPanel('console', null, null, null, null);
     Pages.AddPanel('application', null, null, null, Usergrid.console.pageSelectApplication);
     Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
     Pages.AddPanel('users', null, null, null, Usergrid.console.pageSelectUsers);
@@ -78,6 +74,7 @@ $(document).ready(function () {
     Pages.AddPanel('activities', null, null, null, Usergrid.console.pageSelectActivities);
     Pages.AddPanel('collections', null, null, null, Usergrid.console.pageSelectCollections);
     Pages.AddPanel('analytics', null, null, null, Usergrid.console.pageSelectAnalytics);
+    Pages.AddPanel('properties', null, null, null, Usergrid.console.pageSelectProperties);
     Pages.AddPanel('shell', null, null, null, Usergrid.console.pageSelectShell);
     Pages.AddPanel('account', "#account-link", null, null, Usergrid.console.requestAccountSettings);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);

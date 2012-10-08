@@ -3834,7 +3834,7 @@ a:active {
   min-width: 450px;
   margin: 0 0px 20px;
   border: solid 1px #cccccc;
-  overflow: hidden;
+  overflow: show;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
@@ -3939,6 +3939,10 @@ a:active {
 }
 .form-horizontal .controls span.add-on {
   margin-top: 0px;
+}
+.add-on {
+  cursor: pointer;
+  padding: 4px 5px !important;
 }
 #resolutionSelect-menu {
   display: none;
@@ -4048,6 +4052,9 @@ a:active {
 }
 .query-result-td-checkbox input {
   width: 20px;
+}
+.hidden {
+  visibility: hidden;
 }
 .query-result-td-checkbox {
   background-color: #888;
@@ -4486,7 +4493,7 @@ a:active {
   color: white !important;
 }
 .graph {
-  margin: 5px -25px 5px -15px;
+  margin: 5px -25px 5px 15px;
 }
 #application-panel-text {
   min-width: 340px !important;
@@ -4756,35 +4763,25 @@ table .zebraRows:nth-child(2n) {
 .curl-container .input-append {
   position: relative;
 }
-.curl-container .curl-data {
-  width: 75%;
-  margin-bottom: 0;
+#organization-name {
+  display: inline;
 }
-.curl-container .clippy-btn {
-  margin-left: 10px;
+.panel-title {
+  color: #909090;
+  padding-left: 5px;
 }
-/* ---------------Clippy -----------------------*/
-.global-clippy #global-clippy-data {
-  visibility: hidden;
-}
-.global-clippy #global-clippy-container {
-  position: absolute;
-  left: -9999px;
-  top: -9999px;
-  z-index: 999;
-  width: 112px;
-  height: 30px;
-  margin: 0;
-  border: 0;
-  padding: 0;
-}
-.clippy-btn {
-  width: 112px;
-  height: 30px;
-  background-image: url('../images/btn-copyCurl-up.png');
+.wrench {
+  background-image: url("../images/glyphicons_halflings_135_wrench.png");
   display: inline-block;
-  background-color: transparent;
+  width: 14px;
+  height: 14px;
+  vertical-align: text-top;
   background-repeat: no-repeat;
-  background-position: 0 0;
-  margin: 5px 0 0 5px;
+  margin-right: .3em;
+}
+#application-panel-buttons .active > a i.wrench {
+  background-image: url("../images/glyphicons_halflings_wrench_white.png") !important;
+}
+#application-panel-buttons .active > a:hover i.wrench {
+  background-image: url("../images/glyphicons_halflings_135_wrench.png") !important;
 }

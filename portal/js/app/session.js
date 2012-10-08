@@ -1,7 +1,6 @@
 
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
-
 (function() {
   /**
    *  Application is a class for holding application info
@@ -109,7 +108,7 @@ Usergrid = Usergrid || {};
   };
 
   /**
-    *  Standardized methods for mantianing user and authentication state in the Application
+    *  Standardized methods for maintaining user and authentication state in the Application
     *  @class UserSession
     */
   Usergrid.userSession = function(){};
@@ -136,7 +135,15 @@ Usergrid = Usergrid || {};
     setUserEmail: function (email) {
       localStorage.setItem('userEmail', email);
     },
-
+    hideBanner: function(){
+      localStorage.setItem('showBanner', 'false');
+    },
+    showBanner: function(){
+      localStorage.setItem('showBanner', 'true');
+    },
+    getBannerState: function(){
+      return localStorage.getItem('showBanner');
+    },
     //convenience method to verify if user is logged in
     loggedIn: function () {
       var token = this.getAccessToken();
@@ -159,3 +166,5 @@ Usergrid = Usergrid || {};
     }
   };
 })(Usergrid);
+
+Usergrid.userSession = new Usergrid.userSession();

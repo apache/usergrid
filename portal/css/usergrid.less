@@ -327,7 +327,7 @@ a:active {
   margin: 0 0px 20px;
   border: solid 1px @h3Color;
   //background: #F2F5F7;
-  overflow: hidden;
+  overflow: show;
   .border-radius(5px);
   h3 {
     .search{
@@ -437,6 +437,11 @@ a:active {
     }
   }
 
+}
+
+.add-on{
+  cursor: pointer;
+  padding: 4px 5px !important;
 }
 //-------------------------------------------------------------------------------------
 
@@ -567,6 +572,11 @@ a:active {
 
 .query-result-td-checkbox input {
   width: 20px;
+
+}
+
+.hidden {
+  visibility: hidden;
 }
 
 .query-result-td-checkbox {
@@ -1061,7 +1071,7 @@ a:active {
 }
 
 .graph{
-  margin: 5px -25px 5px -15px
+  margin: 5px -25px 5px 15px
 }
 
 #application-panel-text{
@@ -1313,40 +1323,31 @@ table .zebraRows {
   .input-append{
     position: relative;
   }
-  .curl-data{
-    width: 75%;
-    margin-bottom: 0;
-  }
-  .clippy-btn{
-    margin-left: 10px;    
-  }
- 
 }
-/* ---------------Clippy -----------------------*/
-.global-clippy{
-  #global-clippy-data{
-    visibility: hidden;
-  }
-  #global-clippy-container{
-    position: absolute; 
-    left:-9999px; 
-    top:-9999px; 
-    z-index: 999; 
-    width: 112px; 
-    height: 30px; 
-    margin: 0; 
-    border: 0;
-    padding: 0;
-  }
+#organization-name{
+  display:inline;
 }
 
-  .clippy-btn{
-      width: 112px;
-      height: 30px;
-      background-image: url('../images/btn-copyCurl-up.png');
-      display: inline-block;
-      background-color: transparent;
-      background-repeat:no-repeat;
-      background-position: 0 0;
-      margin: 5px 0 0 5px;
-  } 
+.panel-title{
+  color: #909090;
+  padding-left: 5px;
+}
+
+.wrench{
+  background-image: url("../images/glyphicons_halflings_135_wrench.png");
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  vertical-align: text-top;
+  background-repeat: no-repeat;
+  margin-right: .3em;
+}
+
+#application-panel-buttons .active > a i.wrench{
+  background-image: url("../images/glyphicons_halflings_wrench_white.png") !important;
+}
+
+#application-panel-buttons .active > a:hover i.wrench{
+  background-image: url("../images/glyphicons_halflings_135_wrench.png") !important;
+}
+

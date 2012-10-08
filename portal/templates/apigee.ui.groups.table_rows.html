@@ -3,8 +3,8 @@
     <input class="groupListItem" type="checkbox" value="${uuid}" />
   </td>
   <td>
-    {{if uuid}}
-      <a href="" onclick="Usergrid.console.pageOpenGroupProfile('${uuid}'); return false;">${title}: ${path}</a>
+    {{if path}}
+      <a href="" onclick="Usergrid.console.pageOpenGroupProfile('${path}'); return false;">${title}: ${path}</a>
     {{else}}
       ${title}: ${path}</a>
     {{/if}}
