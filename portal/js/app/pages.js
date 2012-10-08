@@ -88,6 +88,12 @@ function ApigeePages() {
     self.panels[panel.name] = panel;
   };
 
+  self.ActivatePanel = function(panelName){
+    var panel = self.panels[panelName];
+    $("#sidebar-menu li.active").removeClass('active');
+    panel.link.parent().addClass('active');
+  }
+
   self.SelectPanel = function (panelName){
     var panel = self.panels[panelName];
 

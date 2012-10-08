@@ -6,7 +6,8 @@
 @border2: #E5E5E5;
 @modalBar: #F2F2F2;
 @h3Color: #CCCCCC;
-@minScreenWidth: 600px;
+@minScreenWidth: 640px;
+@maxPanelWidth: 1280px;
 @linkHoverBgColor: #E5E5E5;
 @linkColor: #007CDC;
 //@fontMenu:
@@ -72,6 +73,7 @@ html{
   min-height:100%; /* real browsers */
   height:100%; /* IE6: treaded as min-height*/
   min-width: @minScreenWidth;
+  max-width: @maxPanelWidth;
 }
 
 #pages{
@@ -88,7 +90,7 @@ html{
   border-left:1px solid @border;
 }
 footer{
-  position:absolute;
+  position:fixed;
   bottom:0;
   width:100%;
   border-top: 1px solid @border;
@@ -238,6 +240,7 @@ a:active {
 }
 #application-panel-buttons{
   display: none;
+  position:fixed;
   .active > a{
     i{
       .icon-white;
@@ -249,6 +252,11 @@ a:active {
 }
 .icon-black{
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
+}
+
+.nav-tabs{
+  display: inline-block;
+  width: 100%;
 }
 
 
@@ -327,6 +335,7 @@ a:active {
   margin: 0 0px 20px;
   border: solid 1px @h3Color;
   //background: #F2F5F7;
+  //TODO: check if works
   overflow: show;
   .border-radius(5px);
   h3 {
@@ -356,6 +365,7 @@ a:active {
     font-size: 12pt;
     padding: 10px;
     line-height:18px;
+    display: inline-block;
     background: @h3Color;
     .bar{
       float:right;
@@ -372,7 +382,7 @@ a:active {
     &:after{
       clear: both;
       content: ".";
-      display: block;
+      display: inline-block;
       height: 0;
       visibility: hidden;
     }
@@ -380,6 +390,7 @@ a:active {
   form {
     margin:0px;
     padding-top: 10px;
+    display: inline-block;
   }
   .form-actions{
     margin-bottom:0px;
@@ -389,6 +400,7 @@ a:active {
     position: relative;
     padding: 10px;
     line-height: 25px;
+    display: block;
     .form-actions{
       margin: 20px -10px -10px;
     }
@@ -1294,7 +1306,7 @@ table .zebraRows {
 /* --------------- Collections -------------- */
 
 .collection-column {
-  width: 100px;
+  width: 80%;
 }
 
 #button-query-validate {

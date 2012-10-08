@@ -244,18 +244,24 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
     },
 
     getDetails : function() {
-      var entity = this.options.entity;
+      var entity = this.options.entity,
+        name = entity.uuid + " : " + entity.type,
+        collections,
+        connections;
 
-      var name = entity.uuid + " : "
-        + entity.type;
       if (entity.name) {
         name = name + " : " + entity.name;
       } else if (entity.username) {
         name = name + " : " + entity.username;
       }
 
-      var collections = $.extend({ }, (entity.metadata || { }).collections, (entity.metadata || { }).connections);
-      if ($.isEmptyObject(collections)) collections = null;
+      if(entity.metadata.collections){
+        collections = entity.metadata.collections;
+      }
+
+      if(entity.metadata.connections){
+        connections = entity.metadata.connections;
+      }
 
       var entity_contents = $.extend( false, { }, this.options.entity);
       var path = entity_contents['metadata']['path'];
@@ -270,6 +276,7 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
         name : name,
         path : this.options.path,
         collections : collections,
+        connections : connections,
         metadata : metadata,
         uri : (entity.metadata || { }).uri
       }, {

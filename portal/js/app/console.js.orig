@@ -990,10 +990,9 @@
       runManagementQuery(new Usergrid.Query("POST","organizations/" + Usergrid.ApiClient.getOrganizationUUID()  + "/applications", form.serializeObject(), null,
         function(response) {
           for (var appName in response.data) { break; }
-          var appTitle = appName.split("/")[1];
           var currentOrg = Usergrid.ApiClient.getOrganizationName();
-          Usergrid.organizations.getItemByName(currentOrg).addItem(new Usergrid.Application(appTitle, response.data[appName]));
-          pageSelect(appTitle);
+          Usergrid.organizations.getItemByName(currentOrg).addItem(new Usergrid.Application(appName, response.data[appName]));
+          pageSelect(appName);
           requestApplications();
         },
         function() {
@@ -1366,8 +1365,13 @@
 
     confirmDelete(function(){
         items.each(function() {
+<<<<<<< HEAD
           var roleName = $(this).attr("value");
           runAppQuery(new Usergrid.Query("DELETE", "/roles/" + roleName + "/users/" + username, null, null,
+=======
+          var roleId = $(this).attr("value");
+          runAppQuery(new Usergrid.Query("DELETE", "/roles/" + roleId  + "/users/" + username, null, null,
+>>>>>>> 387-UserGrid
             function() { pageSelectUserPermissions (username); },
             function() { alertModal("Error", "Unable to remove user from role"); }
           ));
@@ -1386,8 +1390,13 @@
     confirmDelete(function(){
         items.each(function() {
           var username = $(this).attr("value");
+<<<<<<< HEAD
           runAppQuery(new Usergrid.Query("DELETE", "/roles/" + roleName + "/users/" + username, null, null,
             function() { pageSelectRoleUsers (roleName, roleTitle); },
+=======
+          runAppQuery(new Usergrid.Query("DELETE", "/roles/" + roleId + "/users/" + username, null, null,
+            function() { pageSelectRoleUsers (roleId, rolename); },
+>>>>>>> 387-UserGrid
             function() { alertModal("Error", "Unable to remove user from role"); }
           ));
       });
@@ -4035,7 +4044,7 @@
 
   function requestAccountSettings() {
     if (Usergrid.SSO.usingSSO()) {
-      Usergrid.SSO.sendToSSOProfilePage();
+      sendToSSOProfilePage();
     } else {
       $('#update-account-id').text(Usergrid.userSession.getUserUUID());
       $('#update-account-name').val("");

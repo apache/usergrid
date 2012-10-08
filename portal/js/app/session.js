@@ -72,10 +72,12 @@ Usergrid = Usergrid || {};
     getItemByName: function(name) {
       var count = this._list.length;
       var i=0;
-      for (i=0; i<count; i++) {
-        if (this._list[i].getName() == name) {
-          return this._list[i];
-        }
+      if(name){
+          for (i=0; i<count; i++) {
+            if (this._list[i].getName().toLowerCase() == name.toLowerCase()) {
+              return this._list[i];
+            }
+          }
       }
       return null;
     },
