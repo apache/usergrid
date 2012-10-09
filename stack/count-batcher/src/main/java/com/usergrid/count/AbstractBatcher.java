@@ -30,6 +30,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 /**
  * Base batcher implementation, handles concurrency and locking throughput
@@ -43,6 +46,10 @@ public abstract class AbstractBatcher implements Batcher {
     private int queueSize;
     private Batch batch;
 
+    private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
+    private final ReadLock readLock = readWriteLock.readLock();
+    private final WriteLock writeLock = readWriteLock.writeLock();
+    
     private final AtomicLong opCount = new AtomicLong();
     private final Timer addTimer =
             Metrics.newTimer(AbstractBatcher.class, "add_invocation", TimeUnit.MICROSECONDS, TimeUnit.SECONDS);
@@ -51,6 +58,8 @@ public abstract class AbstractBatcher implements Batcher {
     private final Counter existingCounterHit =
             Metrics.newCounter(AbstractBatcher.class,"counter_existed");
 
+    
+    
     public AbstractBatcher(int queueSize) {
       batch = new Batch();
     }
@@ -68,9 +77,10 @@ public abstract class AbstractBatcher implements Batcher {
         return opCount.get();
     }
 
-    protected abstract boolean maybeSubmit(Batch batch);
+    protected abstract boolean shouldSubmit(Batch batch);
+    protected abstract void submit(Batch batch);
 
-    /**
+  /**
      * Add a count object to this batcher
      * @param count
      * @throws CounterProcessingUnavailableException
@@ -79,15 +89,33 @@ public abstract class AbstractBatcher implements Batcher {
       invocationCounter.inc();
       final TimerContext context = addTimer.time();
 
+      // This should be fairly safe while still avoid locking. Assumptions:
+      // 1) A batch may grow slightly beyond the "shouldSubmit" bounds.
+      // 2) The chance of losing a count by adding it to a copied batch after
+      //    it is stored is approximately zero.
+      
+      //get a "read" lock, since multiple threads can increment to the batch concurrently
+      
+      readLock.lock();
       batch.add(count);
-      synchronized(batch) {
-        boolean wasSubmitted = maybeSubmit(batch);
-        if ( wasSubmitted ) {
-          batch.clear();
-        }
+      readLock.unlock();
+      
+      if (shouldSubmit(batch)) {
+        
+        //get a write lock to block all batch adding while we copy the batch over
+        writeLock.lock();
+          
+        Batch copy = batch;
+        batch = new Batch();
+        
+        writeLock.unlock();
+        
+        submit(copy);
       }
+
       context.stop();
     }
+    
 
     class Batch {
         private final Map<String,Count> counts;
@@ -95,6 +123,12 @@ public abstract class AbstractBatcher implements Batcher {
 
         Batch() {
             counts = new HashMap<String, Count>();
+        }
+
+        /* copy constructor */
+        Batch(Batch batch) {
+            batch.localCallCounter.set(batch.localCallCounter.get());
+            counts = new HashMap<String, Count>(batch.counts);
         }
 
         void clear() {

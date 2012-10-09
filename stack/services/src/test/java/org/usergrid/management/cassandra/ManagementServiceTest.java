@@ -10,6 +10,8 @@ import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APP
 import java.util.*;
 
 import com.google.common.collect.BiMap;
+import com.usergrid.count.SimpleBatcher;
+
 import me.prettyprint.cassandra.utils.TimeUUIDUtils;
 
 import org.junit.AfterClass;
@@ -111,6 +113,10 @@ public class ManagementServiceTest {
 
 	@Test
 	public void testCountAdminUserAction() throws Exception {
+	    SimpleBatcher batcher = helper.getApplicationContext().getBean(SimpleBatcher.class);
+        
+        batcher.setBlockingSubmit(true);
+	    
 	    managementService.countAdminUserAction(adminUser, "login");
 
 		EntityManager em = helper.getEntityManagerFactory().getEntityManager(
