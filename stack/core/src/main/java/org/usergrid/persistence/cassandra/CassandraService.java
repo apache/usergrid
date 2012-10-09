@@ -131,6 +131,8 @@ public class CassandraService {
 
     private Keyspace systemKeyspace;
 
+    private Map<String, String> accessMap;
+
     public static final StringSerializer se = new StringSerializer();
     public static final ByteBufferSerializer be = new ByteBufferSerializer();
     public static final UUIDSerializer ue = new UUIDSerializer();
@@ -157,7 +159,7 @@ public class CassandraService {
             ((ConfigurableConsistencyLevel) consistencyLevelPolicy)
                     .setDefaultReadConsistencyLevel(HConsistencyLevel.ONE);
         }
-        Map<String, String> accessMap = new HashMap<String, String>();
+        accessMap = new HashMap<String, String>(2);
         accessMap.put("username", properties.getProperty("cassandra.username"));
         accessMap.put("password", properties.getProperty("cassandra.password"));
         systemKeyspace = HFactory.createKeyspace(SYSTEM_KEYSPACE, cluster,
@@ -233,9 +235,6 @@ public class CassandraService {
     }
 
     public Keyspace getKeyspace(String keyspace, UUID prefix) {
-        Map<String, String> accessMap = new HashMap<String, String>();
-        accessMap.put("username", properties.getProperty("cassandra.username"));
-        accessMap.put("password", properties.getProperty("cassandra.password"));
         Keyspace ko = null;
         if (USE_VIRTUAL_KEYSPACES && (prefix != null)) {
             ko = createVirtualKeyspace(keyspace, prefix, ue, cluster,

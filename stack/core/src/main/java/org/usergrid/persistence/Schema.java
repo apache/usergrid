@@ -40,7 +40,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.Row;
@@ -167,7 +171,26 @@ public class Schema {
             .map(DICTIONARY_PERMISSIONS, String.class)
             .map(DICTIONARY_ID_SETS, String.class);
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private static LoadingCache<String, String> baseEntityTypes = CacheBuilder.newBuilder()
+        .expireAfterAccess(10, TimeUnit.MINUTES)
+        .build(
+            new CacheLoader<String, String>() {
+              public String load(String key) { // no checked exception
+                return createNormalizedEntityType(key, true);
+              }
+            });
+
+    private static LoadingCache<String, String> nonbaseEntityTypes = CacheBuilder.newBuilder()
+        .expireAfterAccess(10, TimeUnit.MINUTES)
+        .build(
+            new CacheLoader<String, String>() {
+              public String load(String key) { // no checked exception
+                return createNormalizedEntityType(key, false);
+              }
+            });
+
+
+  private final ObjectMapper mapper = new ObjectMapper();
 
     @SuppressWarnings("unused")
     private final SmileFactory smile = new SmileFactory();
@@ -1424,6 +1447,11 @@ public class Schema {
         if (entityType == null) {
             return null;
         }
+        return baseType ? baseEntityTypes.getUnchecked(entityType) : nonbaseEntityTypes.getUnchecked(entityType);
+    }
+
+    /** uncached - use normalizeEntityType() */
+    private static String createNormalizedEntityType(String entityType, boolean baseType) {
         if (baseType) {
             int i = entityType.indexOf(':');
             if (i >= 0) {
