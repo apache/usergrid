@@ -183,8 +183,11 @@ public class EntityManagerImpl implements EntityManager,
 	/** The log4j logger. */
 	private static final Logger logger = LoggerFactory
 			.getLogger(EntityManagerImpl.class);
+    public static final String APPLICATION_COLLECTION = "application.collection.";
+    public static final String APPLICATION_ENTITIES = "application.entities";
+    public static final long ONE_COUNT = 1L;
 
-	private ApplicationContext applicationContext;
+    private ApplicationContext applicationContext;
 
 	@Autowired
 	private QueueManagerFactoryImpl qmf;
@@ -1071,7 +1074,7 @@ public class EntityManagerImpl implements EntityManager,
 			long cassandraTimestamp) {
 		try {
 			incrementAggregateCounters(null, null, null,
-					"application.collection." + collection_name, 1L,
+					new String(APPLICATION_COLLECTION + collection_name), ONE_COUNT,
 					cassandraTimestamp);
 		} catch (Exception e) {
 			logger.error("Unable to increment counter application.collection."
@@ -1079,7 +1082,7 @@ public class EntityManagerImpl implements EntityManager,
 		}
 		try {
 			incrementAggregateCounters(null, null, null,
-					"application.entities", 1L, cassandraTimestamp);
+                    APPLICATION_ENTITIES, ONE_COUNT, cassandraTimestamp);
 		} catch (Exception e) {
 			logger.error("Unable to increment counter application.entities", e);
 		}
@@ -1095,7 +1098,7 @@ public class EntityManagerImpl implements EntityManager,
 			long cassandraTimestamp) {
 		try {
 			incrementAggregateCounters(null, null, null,
-					"application.collection." + collection_name, -1L,
+					APPLICATION_COLLECTION + collection_name, -ONE_COUNT,
 					cassandraTimestamp);
 		} catch (Exception e) {
 			logger.error("Unable to decrement counter application.collection."
@@ -1103,7 +1106,7 @@ public class EntityManagerImpl implements EntityManager,
 		}
 		try {
 			incrementAggregateCounters(null, null, null,
-					"application.entities", -1L, cassandraTimestamp);
+                    APPLICATION_ENTITIES, -ONE_COUNT, cassandraTimestamp);
 		} catch (Exception e) {
 			logger.error("Unable to decrement counter application.entities", e);
 		}
@@ -2345,7 +2348,7 @@ public class EntityManagerImpl implements EntityManager,
 		Long count = null;
 		if (!Schema.isAssociatedEntityType(collectionName)) {
 			Map<String, Long> counts = getApplicationCounters();
-			count = counts.get("application.collection." + collectionName);
+			count = counts.get(new String(APPLICATION_COLLECTION + collectionName));
 		}
 		return count != null ? count : 0;
 	}
@@ -2359,7 +2362,7 @@ public class EntityManagerImpl implements EntityManager,
 		if (collections != null) {
 			for (String collectionName : collections) {
 				if (!Schema.isAssociatedEntityType(collectionName)) {
-					Long count = counts.get("application.collection."
+					Long count = counts.get(APPLICATION_COLLECTION
 							+ collectionName);
 					/*
 					 * int count = emf .countColumns(
