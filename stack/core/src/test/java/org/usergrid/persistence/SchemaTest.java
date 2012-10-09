@@ -17,6 +17,11 @@ package org.usergrid.persistence;
 
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
+import io.baas.Simple;
+
+import java.util.List;
+
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +44,25 @@ public class SchemaTest {
 				+ Schema.getDefaultSchema().getEntityType(SampleEntity.class));
 
 		SampleEntity entity = new SampleEntity();
+		logger.info(entity.getType());
+	}
+	
+	@Test
+	public void testThirdPartyEntityTypes() throws Exception {
+		String thirdPartyPackage = "io.baas";
+		Schema schema = Schema.getDefaultSchema();
+		schema.addEntitiesPackage(thirdPartyPackage);
+		schema.scanEntities();
+		
+		List<String> entitiesPackage = schema.getEntitiesPackage();
+		for( String entityPackage : entitiesPackage ) {
+			logger.info(entityPackage);
+		}
+		
+		Assert.assertEquals(schema.getEntityClass("simple"), Simple.class);
+		Assert.assertEquals(schema.getEntityType(Simple.class), "simple");
+		
+		Simple entity = new Simple();
 		logger.info(entity.getType());
 	}
 
