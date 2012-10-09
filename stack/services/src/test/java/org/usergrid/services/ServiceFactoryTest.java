@@ -15,12 +15,25 @@
  ******************************************************************************/
 package org.usergrid.services;
 
+import java.util.UUID;
+
+import junit.framework.Assert;
+
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.usergrid.management.ApplicationInfo;
+import org.usergrid.management.OrganizationOwnerInfo;
 
-public class ServiceFactoryTest {
+import baas.io.simple.SimpleService;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = "/usergrid-test-context.xml")
+public class ServiceFactoryTest extends AbstractServiceTest {
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(ServiceFactoryTest.class);
@@ -29,5 +42,17 @@ public class ServiceFactoryTest {
 	@Test
 	public void testServiceFactory() throws Exception {
 		logger.info("test service factory");
+	}
+	
+	@Test
+	public void testPackagePrefixes() throws Exception {
+		logger.info("test package prefixes");
+		Assert.assertNotNull(properties);
+		UUID applicationId = emf.createApplication("org", "app");
+		ServiceManager sm = smf.getServiceManager(applicationId);
+		Service service = sm.getService("simple");
+		Assert.assertEquals("/simple", service.getServiceType());
+		Assert.assertNotNull(service);
+		Assert.assertEquals(SimpleService.class, service.getClass());
 	}
 }
