@@ -139,7 +139,7 @@ public class BasicMongoTest extends AbstractMongoTest {
         }
 
         assertNotNull(message);
-        assertEquals("command failed [getlasterror]: { \"serverUsed\" : \"localhost/127.0.0.1:27017\" , \"n\" : 0 , \"connectionId\" : 20 , \"wtime\" : 0 , \"err\" : \"Entity users requires that property named username be unique, value of insertduplicate exists\" , \"ok\" : 0.0}", message);
+        assertTrue(message.contains("Entity users requires that property named username be unique, value of insertduplicate exists"));
 
     }
     
