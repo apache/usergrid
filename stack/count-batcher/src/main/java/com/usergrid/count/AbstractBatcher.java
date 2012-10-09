@@ -68,9 +68,10 @@ public abstract class AbstractBatcher implements Batcher {
         return opCount.get();
     }
 
-    protected abstract boolean maybeSubmit(Batch batch);
+    protected abstract boolean shouldSubmit(Batch batch);
+    protected abstract void submit(Batch batch);
 
-    /**
+  /**
      * Add a count object to this batcher
      * @param count
      * @throws CounterProcessingUnavailableException
@@ -79,13 +80,17 @@ public abstract class AbstractBatcher implements Batcher {
       invocationCounter.inc();
       final TimerContext context = addTimer.time();
 
+      // This should be fairly safe while still avoid locking. Assumptions:
+      // 1) A batch may grow slightly beyond the "shouldSubmit" bounds.
+      // 2) The chance of losing a count by adding it to a copied batch after
+      //    it is stored is approximately zero.
       batch.add(count);
-      synchronized(batch) {
-        boolean wasSubmitted = maybeSubmit(batch);
-        if ( wasSubmitted ) {
-          batch.clear();
-        }
+      if (shouldSubmit(batch)) {
+        Batch copy = batch;
+        batch = new Batch();
+        submit(copy);
       }
+
       context.stop();
     }
 
@@ -95,6 +100,12 @@ public abstract class AbstractBatcher implements Batcher {
 
         Batch() {
             counts = new HashMap<String, Count>();
+        }
+
+        /* copy constructor */
+        Batch(Batch batch) {
+            batch.localCallCounter.set(batch.localCallCounter.get());
+            counts = new HashMap<String, Count>(batch.counts);
         }
 
         void clear() {
