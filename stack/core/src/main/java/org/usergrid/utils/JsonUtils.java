@@ -211,9 +211,11 @@ public class JsonUtils {
 		if (obj instanceof Map) {
 			@SuppressWarnings("unchecked")
 			Map<Object, Object> m = (Map<Object, Object>) obj;
+            Object o;
+            UUID uuid;
 			for (Object k : m.keySet()) {
-				Object o = m.get(k);
-				UUID uuid = tryConvertToUUID(o);
+				o = m.get(k);
+				uuid = tryConvertToUUID(o);
 				if (uuid != null) {
 					m.put(k, uuid);
 				} else if (o instanceof Integer) {
@@ -225,9 +227,11 @@ public class JsonUtils {
 		} else if (obj instanceof List) {
 			@SuppressWarnings("unchecked")
 			List<Object> l = (List<Object>) obj;
+            Object o;
+            UUID uuid;
 			for (int i = 0; i < l.size(); i++) {
-				Object o = l.get(i);
-				UUID uuid = tryConvertToUUID(o);
+				o = l.get(i);
+				uuid = tryConvertToUUID(o);
 				if (uuid != null) {
 					l.set(i, uuid);
 				} else if ((o instanceof Map) || (o instanceof List)) {
