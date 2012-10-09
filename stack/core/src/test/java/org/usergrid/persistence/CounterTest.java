@@ -26,20 +26,35 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.Before;
 import org.junit.Test;
 import org.usergrid.persistence.entities.Event;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.utils.JsonUtils;
 
+import com.usergrid.count.AbstractBatcher;
+import com.usergrid.count.BatchSubmitter;
+import com.usergrid.count.Batcher;
+import com.usergrid.count.CassandraSubmitter;
+import com.usergrid.count.SimpleBatcher;
+
 public class CounterTest extends AbstractPersistenceTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(CounterTest.class);
 
-  long ts = System.currentTimeMillis() - (24 * 60 * 60 * 1000);
-
+	long ts = System.currentTimeMillis() - (24 * 60 * 60 * 1000);
+	
 	public CounterTest() {
 		super();
+	}
+	
+	@Before
+	public void getSubmitter(){
+	    //set the batcher to block the submit so we wait for results when testing
+	    SimpleBatcher batcher = helper.getApplicationContext().getBean(SimpleBatcher.class);
+	    
+	    batcher.setBlockingSubmit(true);
 	}
 	
 	@Test
@@ -64,6 +79,7 @@ public class CounterTest extends AbstractPersistenceTest {
 		User user = (User) em.create(uuid, "user", userProperties).toTypedEntity();
 		logger.debug("user={}", user);
 		
+	
 		counters = em.getEntityCounters(applicationId);
 		assertEquals(new Long(1), counters.get("application.collection.users"));
 		
@@ -145,7 +161,8 @@ public class CounterTest extends AbstractPersistenceTest {
 		logger.info(JsonUtils.mapToJsonString(r.getCounters()));
 
 		logger.info(JsonUtils.mapToJsonString(em.getCounterNames()));
-
+	
+		
 		Map<String, Long> counts = em.getApplicationCounters();
 		logger.info(JsonUtils.mapToJsonString(counts));
 
@@ -216,4 +233,5 @@ public class CounterTest extends AbstractPersistenceTest {
     assertEquals(1, r.getCounters().get(0).getValues().get(0).getValue());
 
   }
+  
 }

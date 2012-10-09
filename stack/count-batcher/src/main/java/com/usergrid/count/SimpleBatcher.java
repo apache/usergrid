@@ -41,27 +41,27 @@ public class SimpleBatcher extends AbstractBatcher {
     }
 
     /**
-     * Submit the batch if we have more than batchSize insertions
-     *
+     * @return true if we have more than batchSize insertions
      */
-    protected boolean maybeSubmit(Batch batch) {
-        int localCallCount = batch.getLocalCallCount();
-        if ( batchSize == 0 || (localCallCount > 0 && localCallCount % batchSize == 0) ) {
-            log.debug("submit triggered...");
-            Future f = batchSubmitter.submit(batch);
-            if ( batchSize == 0) {
-              try {
-                f.get();
-              } catch (InterruptedException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-              } catch (ExecutionException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-              }
-            }
-            batchSubmissionCount.incrementAndGet();
-            return true;
+    protected boolean shouldSubmit(Batch batch) {
+      if (batchSize == 0) return true;
+      int localCallCount = batch.getLocalCallCount();
+      return (localCallCount > 0 && localCallCount % batchSize == 0);
+    }
+
+    protected void submit(Batch batch) {
+      log.debug("submit triggered...");
+      Future f = batchSubmitter.submit(batch);
+      if (blockingSubmit) {
+        try {
+          f.get();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        } catch (ExecutionException e) {
+          e.printStackTrace();
         }
-        return false;
+      }
+      batchSubmissionCount.incrementAndGet();
     }
 
     public void setBatchSize(int batchSize) {
