@@ -39,9 +39,8 @@
 	<bean id="saltProvider" class="org.usergrid.security.salt.NoOpSaltProvider" />
 
 	<bean id="serviceManagerFactory" class="org.usergrid.services.ServiceManagerFactory">
-		<constructor-arg>
-			<ref bean="entityManagerFactory" />
-		</constructor-arg>
+		<constructor-arg ref="entityManagerFactory" />
+		<constructor-arg ref="properties" />
 	</bean>
 
 	<bean id="applicationCreator"

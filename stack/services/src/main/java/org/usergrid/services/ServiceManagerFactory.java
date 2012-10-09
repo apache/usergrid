@@ -16,6 +16,7 @@
 package org.usergrid.services;
 
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 
 import org.springframework.beans.BeansException;
@@ -29,12 +30,18 @@ public class ServiceManagerFactory implements ApplicationContextAware {
 	ApplicationContext applicationContext;
 
 	EntityManagerFactory emf;
+	Properties properties;
 
 	List<ServiceExecutionEventListener> eventListeners;
 	List<ServiceCollectionEventListener> collectionListeners;
-
+	
 	public ServiceManagerFactory(EntityManagerFactory emf) {
 		this.emf = emf;
+	}
+	
+	public ServiceManagerFactory(EntityManagerFactory emf, Properties properties) {
+		this.emf = emf;
+		this.properties = properties;
 	}
 
 	public ServiceManager getServiceManager(UUID applicationId) {
@@ -43,7 +50,7 @@ public class ServiceManagerFactory implements ApplicationContextAware {
 			em = emf.getEntityManager(applicationId);
 		}
 		return applicationContext.getAutowireCapableBeanFactory()
-				.createBean(ServiceManager.class).init(this, em);
+				.createBean(ServiceManager.class).init(this, em, properties);
 	}
 
 	public List<ServiceExecutionEventListener> getExecutionEventListeners() {
