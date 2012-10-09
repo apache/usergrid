@@ -71,7 +71,7 @@
     <bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
         <constructor-arg value="1"/>
         <property name="batchSubmitter" ref="batchSubmitter"/>
-        <property name="batchSize" value="0"/>
+        <property name="batchSize" value="${usergrid.counter.batch.size}"/>
     </bean>
 
     <bean id="batchSubmitter" class="com.usergrid.count.CassandraSubmitter">
@@ -100,5 +100,7 @@
    <bean id="indexBucketLocator" class="org.usergrid.persistence.cassandra.SimpleIndexBucketLocatorImpl">
     	<constructor-arg value="${usergrid.index.defaultbucketsize}"/>
     </bean>
+    
+    <bean id="mailUtils" class="org.usergrid.utils.MailUtils" />
 
 </beans>

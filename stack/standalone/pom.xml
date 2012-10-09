@@ -32,8 +32,8 @@
 				<filtering>true</filtering>
 				<includes>
 					<include>**/*.xml</include>
-                    <include>**/*.yaml</include>
-                    <include>**/*.properties</include>
+					<include>**/*.yaml</include>
+					<include>**/*.properties</include>
 				</includes>
 			</resource>
 		</resources>
@@ -149,21 +149,21 @@
 			<artifactId>usergrid-config</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-        <dependency>
-            <groupId>org.usergrid</groupId>
-            <artifactId>usergrid-count-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.usergrid</groupId>
-            <artifactId>usergrid-count-inserter</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.usergrid</groupId>
-            <artifactId>usergrid-count-batcher</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>org.usergrid</groupId>
+			<artifactId>usergrid-count-common</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.usergrid</groupId>
+			<artifactId>usergrid-count-inserter</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.usergrid</groupId>
+			<artifactId>usergrid-count-batcher</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.usergrid</groupId>
 			<artifactId>usergrid-core</artifactId>
@@ -463,10 +463,9 @@
 			<artifactId>javax.servlet-api</artifactId>
 			<version>3.0.1</version>
 		</dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>12.0</version>
-        </dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
 	</dependencies>
 </project>

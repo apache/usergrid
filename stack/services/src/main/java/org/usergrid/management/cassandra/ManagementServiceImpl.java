@@ -222,7 +222,10 @@ public class ManagementServiceImpl implements ManagementService {
     protected TokenService tokens;
     
     protected SaltProvider saltProvider;
-
+    
+    @Autowired
+    protected MailUtils mailUtils;
+    
     /**
      * Must be constructed with a CassandraClientPool.
      * 
@@ -3008,9 +3011,9 @@ public class ManagementServiceImpl implements ManagementService {
                 || newAdminUsersNeedSysAdminApproval() || newAdminUsersRequireConfirmation());
     }
 
-    private static void sendHtmlMail(AccountCreationProps props, String to,
+    private void sendHtmlMail(AccountCreationProps props, String to,
             String from, String subject, String html) {
-        MailUtils.sendHtmlMail(props.getMailProperties(), to, from, subject,
+    	mailUtils.sendHtmlMail(props.getMailProperties(), to, from, subject,
                 html);
     }
 

@@ -23,9 +23,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Fires up a single-threaded ScheduledExecutor which will invoke
- * {@link BatchSubmitter#submit(com.usergrid.count.AbstractBatcher.Batch)} every batchInterval
- * seconds.
+ * Invokes {@link BatchSubmitter#submit(com.usergrid.count.AbstractBatcher.Batch)}
+ * every batchInterval seconds.
  *
  * @author zznate
  */
@@ -45,20 +44,15 @@ public class ScheduledBatcher extends AbstractBatcher {
         this.currentMillis = System.currentTimeMillis();
     }
 
-    /**
-     * This implementation is synchronized
-     * @param batch
-     * @return
-     */
-    protected boolean maybeSubmit(Batch batch) {
-        long now = System.currentTimeMillis();
-        if ( now > ((1000 * batchInterval) + currentMillis) ) {
-            currentMillis = now;
-            batchSubmitter.submit(batch);
-            batchSubmissionCount.incrementAndGet();
-            return true;
-        }
-        return false;
+    protected boolean shouldSubmit(Batch batch) {
+      long now = System.currentTimeMillis();
+      return (now > ((1000 * batchInterval) + currentMillis));
+    }
+
+    protected void submit(Batch batch) {
+        currentMillis = System.currentTimeMillis();
+        batchSubmitter.submit(batch);
+        batchSubmissionCount.incrementAndGet();
     }
 
     public long getBatchSubmissionCount() {

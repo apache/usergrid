@@ -37,9 +37,9 @@ public class MailUtilsTest {
 		properties.setProperty("mail.smtps.username", "mailer@usergrid.com");
 		properties.setProperty("mail.smtps.password", "ugmail123$");
 		properties.setProperty("mail.smtps.quitwait", "false");
-
-		MailUtils
-				.sendHtmlMail(
+		
+		MailUtils mailUtils = new MailUtils();
+		mailUtils.sendHtmlMail(
 						properties,
 						"Ed Anuff <ed@anuff.com>",
 						"Usergrid Mailer <mailer@usergrid.com>",

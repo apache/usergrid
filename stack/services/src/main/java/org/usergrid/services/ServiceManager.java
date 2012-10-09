@@ -19,12 +19,15 @@ import static org.usergrid.persistence.SimpleEntityRef.ref;
 import static org.usergrid.utils.InflectionUtils.pluralize;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 
 import javax.management.RuntimeErrorException;
 
 import org.apache.cassandra.thrift.Cassandra;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -49,6 +52,7 @@ public class ServiceManager implements ApplicationContextAware {
 	public static final String COLLECTION_SUFFIX = "." + COLLECTION;
 	public static final String OSS_PACKAGE_PREFIX = "org.usergrid.services";
 	public static final String COM_PACKAGE_PREFIX = "com.usergrid.services";
+	public static final String SERVICE_PACKAGE_PREFIXES = "usergird.service.packages";
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(ServiceManager.class);
@@ -62,7 +66,7 @@ public class ServiceManager implements ApplicationContextAware {
 	private EntityManager em;
 
 	private ServiceManagerFactory smf;
-
+	
 	// search for commercial packages first for SaaS version
 	public static String[] package_prefixes = { COM_PACKAGE_PREFIX,
 			OSS_PACKAGE_PREFIX };
@@ -72,9 +76,10 @@ public class ServiceManager implements ApplicationContextAware {
 	public ServiceManager() {
 	}
 
-	public ServiceManager init(ServiceManagerFactory smf, EntityManager em) {
+	public ServiceManager init(ServiceManagerFactory smf, EntityManager em, Properties properties) {
 		this.smf = smf;
 		this.em = em;
+		
 		if (em != null) {
 			try {
                 application = em.getApplication();
@@ -84,7 +89,26 @@ public class ServiceManager implements ApplicationContextAware {
                 throw new RuntimeException(e);
             }
 		}
+		if( properties != null ) {
+			String packages = properties.getProperty(SERVICE_PACKAGE_PREFIXES);
+			if( !StringUtils.isEmpty(packages) ) {
+				setServicePackagePrefixes(packages);
+			}
+		}
 		return this;
+	}
+	
+	private void setServicePackagePrefixes(String packages) {
+		List<String> packagePrefixes = new ArrayList<String>();
+		for(String prefix : package_prefixes)
+			packagePrefixes.add(prefix);
+		
+		String[] prefixes = packages.split(";");
+		for(String prefix : prefixes) {
+			if( !packagePrefixes.contains(prefix) )
+				packagePrefixes.add(prefix);
+		}
+		package_prefixes = packagePrefixes.toArray(new String[packagePrefixes.size()]);
 	}
 
 	public EntityManager getEntityManager() {

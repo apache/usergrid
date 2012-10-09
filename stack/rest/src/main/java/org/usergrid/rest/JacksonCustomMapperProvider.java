@@ -26,10 +26,12 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 @Provider
 @Component
+@Scope("singleton")
 @Produces({ MediaType.APPLICATION_JSON })
 public class JacksonCustomMapperProvider implements
 		ContextResolver<ObjectMapper> {
