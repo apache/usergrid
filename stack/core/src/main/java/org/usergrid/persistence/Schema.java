@@ -84,9 +84,7 @@ public class Schema {
 
     private static final Logger logger = LoggerFactory.getLogger(Schema.class);
 
-    public static final String SCAN_PATH = "org/usergrid/persistence/entities";
-    public static final String ENTITIES_PACKAGE = "org.usergrid.persistence.entities";
-    public static final String ENTITIES_PACKAGE_PREFIX = ENTITIES_PACKAGE + ".";
+    public static final String DEFAULT_ENTITIES_PACKAGE = "org.usergrid.persistence.entities";
 
     public static final String TYPE_APPLICATION = "application";
     public static final String TYPE_ENTITY = "entity";
@@ -148,6 +146,9 @@ public class Schema {
     public static final String DICTIONARY_COUNTERS = "counters";
     public static final String DICTIONARY_GEOCELL = "geocell";
 
+    private static List<String> entitiesPackage = new ArrayList<String>();
+	private static List<String> entitiesScanPath = new ArrayList<String>();
+	
     @SuppressWarnings("rawtypes")
     public static Map<String, Class> DEFAULT_DICTIONARIES = hashMap(
             DICTIONARY_PROPERTIES, (Class) String.class)
@@ -427,26 +428,51 @@ public class Schema {
     public synchronized void init() {
         if (!initialized) {
             initialized = true;
-            ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(
-                    true);
-            provider.addIncludeFilter(new AssignableTypeFilter(
-                    TypedEntity.class));
-
-            Set<BeanDefinition> components = provider
-                    .findCandidateComponents(SCAN_PATH);
-            for (BeanDefinition component : components) {
-                try {
-                    Class<?> cls = Class.forName(component.getBeanClassName());
-                    if (Entity.class.isAssignableFrom(cls)) {
-                        registerEntity((Class<? extends Entity>) cls);
-                    }
-                } catch (ClassNotFoundException e) {
-                    logger.error("Unable to get entity class ", e);
-                }
-            }
-            registerEntity(DynamicEntity.class);
+            addEntitiesPackage(DEFAULT_ENTITIES_PACKAGE);
+        	scanEntities();
         }
+    }
+    
+    public void scanEntities() {
+     	for( String path : entitiesScanPath ) {
+    		ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(
+    		        true);
+    		provider.addIncludeFilter(new AssignableTypeFilter(
+    		        TypedEntity.class));
 
+    		Set<BeanDefinition> components = provider
+    		        .findCandidateComponents(path);
+    		for (BeanDefinition component : components) {
+    		    try {
+    		        Class<?> cls = Class.forName(component.getBeanClassName());
+    		        if (Entity.class.isAssignableFrom(cls)) {
+    		            registerEntity((Class<? extends Entity>) cls);
+    		        }
+    		    } catch (ClassNotFoundException e) {
+    		        logger.error("Unable to get entity class ", e);
+    		    }
+    		}
+    		registerEntity(DynamicEntity.class);
+     	}
+    }
+    
+    public void addEntitiesPackage(String entityPackage) {
+    	if( !entitiesPackage.contains(entityPackage) ) {
+    		entitiesPackage.add(entityPackage);
+    		String path = entityPackage.replaceAll("\\.","/");
+    		entitiesScanPath.add(path);
+    	}
+    }
+     
+    public void removeEntitiesPackage(String entityPackage) {
+    	entitiesPackage.remove(entityPackage);
+    	String path = entityPackage.replaceAll("\\.","/");
+    	entitiesScanPath.remove(path);
+    }
+     
+    @SuppressWarnings("unchecked")
+    public List<String> getEntitiesPackage() {
+    	return (List<String>) ((ArrayList<String>)entitiesPackage).clone();
     }
 
     /**
@@ -538,13 +564,22 @@ public class Schema {
         if (type != null) {
             return type;
         }
+        
         String className = cls.getName();
-        if (className.startsWith(ENTITIES_PACKAGE_PREFIX)) {
-            type = className.substring(ENTITIES_PACKAGE_PREFIX.length());
-            type = InflectionUtils.underscore(type);
-        } else {
-            type = className;
-        }
+        boolean finded = false;
+    	for( String entityPackage : entitiesPackage ) {
+    		String entityPackagePrefix = entityPackage + ".";
+    		if (className.startsWith(entityPackagePrefix)) {
+    			type = className.substring(entityPackagePrefix.length());
+    			type = InflectionUtils.underscore(type);
+    			finded = true;
+    		}
+    	}
+    	
+    	if( !finded ) {
+    		type = className;
+    	}
+    	
         typeToEntityClass.put(type, cls);
         entityClassToType.put(cls, type);
         return type;
@@ -569,17 +604,27 @@ public class Schema {
         if (cls != null) {
             return cls;
         }
-        cls = entityClassForName(ENTITIES_PACKAGE_PREFIX
-                + InflectionUtils.camelCase(type, true));
-        if (cls == null) {
-            cls = entityClassForName(ENTITIES_PACKAGE_PREFIX + type);
+        
+        for( String entityPackage : entitiesPackage ) {
+        	String entityPackagePrefix = entityPackage + ".";
+        	cls = entityClassForName(entityPackagePrefix
+                    + InflectionUtils.camelCase(type, true));
+        	if (cls == null) {
+                cls = entityClassForName(entityPackagePrefix + type);
+            }
+        	
+        	if (cls == null) {
+                cls = entityClassForName(type);
+            }
+        	
+        	if( cls != null )
+        		break;
         }
-        if (cls == null) {
-            cls = entityClassForName(type);
-        }
+
         if (cls == null) {
             return null;
         }
+        
         typeToEntityClass.put(type, cls);
         entityClassToType.put(cls, type);
         return cls;
