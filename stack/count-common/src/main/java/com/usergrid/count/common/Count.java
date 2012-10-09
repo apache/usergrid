@@ -50,6 +50,7 @@ public class Count<K,C> {
 
     private Serializer<K> keySerializer;
     private Serializer<C> columnNameSerializer;
+    private String counterName;
 
 
     @JsonCreator
@@ -79,8 +80,11 @@ public class Count<K,C> {
      */
     @JsonIgnore
     public String getCounterName() {
-        return tableName + ":" + Hex.encodeHexString(getKeyNameBytes().array())
-                + ":" + Hex.encodeHexString(getColumnNameBytes().array());
+        if ( counterName == null ) {
+            counterName = tableName + ":" + Hex.encodeHexString(getKeyNameBytes().array())
+                    + ":" + Hex.encodeHexString(getColumnNameBytes().array());
+        }
+        return counterName;
     }
 
     public long getValue() {

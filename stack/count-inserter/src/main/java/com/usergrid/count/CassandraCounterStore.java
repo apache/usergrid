@@ -51,10 +51,8 @@ public class CassandraCounterStore implements CounterStore {
     public void save(Collection<Count> counts) {
         Mutator<ByteBuffer> mutator = HFactory.createMutator(keyspace, ByteBufferSerializer.get());
         for ( Count count : counts ) {
-            HCounterColumn column =
-                    new HCounterColumnImpl(count.getColumnName(), count.getValue(), count.getColumnNameSerializer());
-            mutator.addCounter(count.getKeyNameBytes(), count.getTableName(), column);
-            log.debug("added counter: {} ", column);
+            mutator.addCounter(count.getKeyNameBytes(), count.getTableName(),
+                    new HCounterColumnImpl(count.getColumnName(), count.getValue(), count.getColumnNameSerializer()));
         }
         try {
           mutator.execute();

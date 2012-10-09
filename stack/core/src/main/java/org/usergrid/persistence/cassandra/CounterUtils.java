@@ -91,7 +91,9 @@ public class CounterUtils {
 	}
 
 	public static class AggregateCounterSelection {
-		String name;
+        public static final String COLON = ":";
+        public static final String STAR = "*";
+        String name;
 		UUID userId;
 		UUID groupId;
 		UUID queueId;
@@ -147,11 +149,20 @@ public class CounterUtils {
 		}
 
 		public String getRow(CounterResolution resolution) {
+            StringBuilder builder = new StringBuilder(name);
+            builder.append(COLON).append((userId != null ? userId.toString() : STAR))
+                    .append(COLON).append(groupId != null ? groupId.toString() : STAR).append(COLON)
+                    .append((queueId != null ? queueId.toString() : STAR)).append(COLON)
+                    .append((category != null ? category : STAR)).append(COLON)
+                    .append(resolution.name());
+            return builder.toString();
+            /*
 			return name + ":" + (userId != null ? userId.toString() : "*")
 					+ ":" + (groupId != null ? groupId.toString() : "*") + ":"
 					+ (queueId != null ? queueId.toString() : "*") + ":"
 					+ (category != null ? category : "*") + ":"
 					+ resolution.name();
+					*/
 		}
 	}
 
