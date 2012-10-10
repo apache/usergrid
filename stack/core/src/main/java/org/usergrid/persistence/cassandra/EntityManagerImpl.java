@@ -159,10 +159,11 @@ import org.usergrid.persistence.entities.Event;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.Role;
 import org.usergrid.persistence.entities.User;
-import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
-import org.usergrid.persistence.exceptions.EntityNotFoundException;
-import org.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
-import org.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
+import org.usergrid.persistence.exceptions.*;
+import org.usergrid.persistence.query.tree.Equal;
+import org.usergrid.persistence.query.tree.EqualityOperand;
+import org.usergrid.persistence.query.tree.OrOperand;
+import org.usergrid.persistence.query.tree.QueryVisitor;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.ClassUtils;
 import org.usergrid.utils.CompositeUtils;
@@ -1770,7 +1771,10 @@ public class EntityManagerImpl implements EntityManager,
 					.searchCollection("users", query);
 			if (r != null) {
 				return r.getRef();
-			}
+			} else {
+                // look-aside as it might be an email in the name field
+                return this.getAlias(null, "user",identifier.getEmail());
+            }
 		}
 		return null;
 	}
@@ -2671,6 +2675,7 @@ public class EntityManagerImpl implements EntityManager,
 	@Override
 	public Map<String, String> getUserGroupRoles(UUID userId, UUID groupId)
 			throws Exception {
+        // TODO this never returs anything - write path not invoked
 		return cast(getDictionaryAsMap(memberRef(groupId, userId),
 				DICTIONARY_ROLENAMES));
 	}
