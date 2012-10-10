@@ -73,8 +73,9 @@ public class RolesService extends AbstractCollectionService {
 
             String roleName = (String) em.getProperty(ref, "name");
             
+            //Should never happen
             if (isBlank(roleName)) {
-                return null;
+                throw new IllegalArgumentException("You must provide a role name");
             }
 
             return getApplicationRolePermissions(roleName);
