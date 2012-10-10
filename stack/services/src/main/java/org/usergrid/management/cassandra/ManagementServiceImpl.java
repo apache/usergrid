@@ -2262,8 +2262,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
         UUID appId = auth_principal.getApplicationId();
         if (appId != null) {
-            EntityManager em = emf.getEntityManager(appId);
-            Entity user = em.get(auth_principal.getUuid());
+            Entity user = getAppUserByIdentifier(appId, Identifier.fromUUID(auth_principal.getUuid()));
             if (user != null) {
                 return new UserInfo(appId, user.getProperties());
             }
