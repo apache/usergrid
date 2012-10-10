@@ -26,6 +26,16 @@ A minified version of the file is located here:
 
 	/sdk/usergrid.appSDK.min.js
 
+# Contributing
+We welcome your enhancements!
+
+Like [Usergrid](https://github.com/apigee/usergrid-stack), the Usergrid Javascript SDK is open source and licensed under the Apache License, Version 2.0.
+
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Added some feature'`)
+4. Push your changes to the upstream branch (`git push origin my-new-feature`)
+5. Create new Pull Request (make sure you describe what you did and why your mod is needed)
 
 ##Sample apps
 The SDK project includes a simple app called Dogs, that creates a list of dogs.  The app uses App Services to retrieve a collection of dog entities. The app illustrates how to page through the results, and how to create a new entity.
@@ -353,6 +363,21 @@ To run a query against the Management endpoint:
 ##More information
 For more information on Apigee App Services, visit <http://apigee.com/about/developers>.
 
+## Copyright
+
+ * Copyright (c) 2012 Apigee, Corp
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use the included files except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.ƒ
 
 
  

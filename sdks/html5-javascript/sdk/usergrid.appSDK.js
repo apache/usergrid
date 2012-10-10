@@ -1610,7 +1610,6 @@ Usergrid.ApiClient = (function () {
 
     //so far so good, so run the query
     var xD = window.XDomainRequest ? true : false;
-    var xM = window.XMLHttpRequest ? true : false;
     var xhr;
 
     if(xD)
@@ -1625,29 +1624,18 @@ Usergrid.ApiClient = (function () {
       }
       xhr.open(method, path, true);
     }
-    else if (xM)
+    else 
     {
       xhr = new XMLHttpRequest();
       xhr.open(method, path, true);
+      //add content type = json if there is a json payload
+      if (jsonObj) {
+        xhr.setRequestHeader("Content-Type", "application/json");
+      }
       if (Usergrid.ApiClient.getToken()) {
         xhr.setRequestHeader("Authorization", "Bearer " + Usergrid.ApiClient.getToken());
         xhr.withCredentials = true;
       }
-    } else {
-      xhr = new ActiveXObject("MSXML2.XMLHTTP.3.0");
-      if (Usergrid.ApiClient.getToken()) {
-        if (path.indexOf("?")) {
-          path += '&access_token='+Usergrid.ApiClient.getToken();
-        } else {
-          path = '?access_token='+Usergrid.ApiClient.getToken();
-        }
-      }
-      xhr.open(method, path, true);
-    }
-
-    //add content type = json if there is a json payload
-    if (jsonObj) {
-      xhr.setRequestHeader("Content-Type", "application/json");
     }
 
     // Handle response.
