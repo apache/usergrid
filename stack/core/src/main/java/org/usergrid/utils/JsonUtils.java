@@ -56,6 +56,8 @@ public class JsonUtils {
 
 	static SmileFactory smile = new SmileFactory();
 
+    static ObjectMapper smileMapper = new ObjectMapper(smile);
+
 	/**
 	 * @param obj
 	 * @return
@@ -125,10 +127,10 @@ public class JsonUtils {
 		if (obj == null) {
 			return null;
 		}
-		ObjectMapper mapper = new ObjectMapper(smile);
+
 		byte[] bytes = null;
 		try {
-			bytes = mapper.writeValueAsBytes(obj);
+			bytes = smileMapper.writeValueAsBytes(obj);
 		} catch (Exception e) {
 			logger.error("Error getting SMILE bytes", e);
 		}
@@ -149,10 +151,10 @@ public class JsonUtils {
 		if (clazz == null) {
 			clazz = Object.class;
 		}
-		ObjectMapper mapper = new ObjectMapper(smile);
+
 		Object obj = null;
 		try {
-			obj = mapper.readValue(byteBuffer.array(), byteBuffer.arrayOffset()
+			obj = smileMapper.readValue(byteBuffer.array(), byteBuffer.arrayOffset()
 					+ byteBuffer.position(), byteBuffer.remaining(), clazz);
 		} catch (Exception e) {
 			logger.error("Error parsing SMILE bytes", e);
@@ -164,10 +166,10 @@ public class JsonUtils {
 		if ((byteBuffer == null) || !byteBuffer.hasRemaining()) {
 			return null;
 		}
-		ObjectMapper mapper = new ObjectMapper(smile);
+
 		JsonNode obj = null;
 		try {
-			obj = mapper.readValue(byteBuffer.array(), byteBuffer.arrayOffset()
+			obj = smileMapper.readValue(byteBuffer.array(), byteBuffer.arrayOffset()
 					+ byteBuffer.position(), byteBuffer.remaining(),
 					JsonNode.class);
 		} catch (Exception e) {
