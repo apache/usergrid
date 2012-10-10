@@ -1160,8 +1160,8 @@ Usergrid.ApiClient = (function () {
    *
    */
   function init(orgName, appName){
-    _orgName = orgName;
-    _appName = appName;
+    this.setOrganizationName(orgName);
+    this.setApplicationName(appName);
   }
 
   /*
@@ -1212,29 +1212,6 @@ Usergrid.ApiClient = (function () {
     */
   function setOrganizationName(orgName) {
     _orgName = orgName;
-  }
-
-  /*
-    *  A public method to get the organization UUID to be used by the client
-    *
-    *  @method getOrganizationUUID
-    *  @public
-    *  @return {string} the organization UUID
-    */
-  function getOrganizationUUID() {
-    return _orgUUID;
-  }
-
-  /*
-    *  A public method to set the organization UUID to be used by the client
-    *
-    *  @method setOrganizationUUID
-    *  @public
-    *  @param orgUUID - the organization UUID
-    *  @return none
-    */
-  function setOrganizationUUID(orgUUID) {
-    _orgUUID = orgUUID;
   }
 
   /*
@@ -1393,7 +1370,7 @@ Usergrid.ApiClient = (function () {
    *  @return none
    */
   function logoutAppUser() {
-    this._loggedInUser = null;
+    this.setLoggedInUser(null);
     this.setToken(null);
   }
 
@@ -1738,8 +1715,6 @@ Usergrid.ApiClient = (function () {
     runManagementQuery:runManagementQuery,
     getOrganizationName:getOrganizationName,
     setOrganizationName:setOrganizationName,
-    getOrganizationUUID:getOrganizationUUID,
-    setOrganizationUUID:setOrganizationUUID,
     getApplicationName:getApplicationName,
     setApplicationName:setApplicationName,
     getToken:getToken,
