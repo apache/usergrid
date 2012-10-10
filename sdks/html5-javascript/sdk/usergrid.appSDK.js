@@ -25,7 +25,7 @@ window.console.log = window.console.log || function() {};
 //Usergrid namespace encapsulates this SDK
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
-Usergrid.SDK_VERSION = '0.9.6';
+Usergrid.SDK_VERSION = '0.9.7';
 
 /**
  *  Usergrid.Query is a class for holding all query information and paging state
@@ -430,7 +430,7 @@ Usergrid.SDK_VERSION = '0.9.6';
   Usergrid.Entity = function(collectionType, uuid) {
     this._collectionType = collectionType;
     this._data = {};
-    this._data['uuid'] = uuid;
+    this._uuid = uuid;
   };
 
   //inherit prototype from Query
@@ -1684,6 +1684,9 @@ Usergrid.ApiClient = (function () {
             //this error type means the user is not authorized. If a logout function is defined, call it
             callLogoutCallback();
             return;
+        } else {
+           Query.callFailureCallback();
+           return;
         }
       }
       //response looks good
