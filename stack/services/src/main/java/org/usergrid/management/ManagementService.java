@@ -200,14 +200,6 @@ public interface ManagementService {
 	public Map<String, Object> getOrganizationData(OrganizationInfo organization)
 			throws Exception;
 
-	public Entity getOrganizationEntityByIdentifier(Identifier id)
-			throws Exception;
-
-	public Entity getOrganizationEntityByName(String organizationName)
-			throws Exception;
-
-	public Entity getOrganizationEntityByUuid(UUID id) throws Exception;
-
 	public OrganizationInfo getOrganizationForApplication(UUID applicationId)
 			throws Exception;
 

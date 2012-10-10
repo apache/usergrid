@@ -644,22 +644,6 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public Entity getOrganizationEntityByName(String organizationName)
-            throws Exception {
-
-        if (organizationName == null) {
-            return null;
-        }
-
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-        EntityRef ref = em.getAlias("group", organizationName);
-        if (ref == null) {
-            return null;
-        }
-        return getOrganizationEntityByUuid(ref.getUuid());
-    }
-
-    @Override
     public OrganizationInfo getOrganizationByName(String organizationName)
             throws Exception {
 
@@ -676,38 +660,16 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
-    public Entity getOrganizationEntityByUuid(UUID id) throws Exception {
-
-        if (id == null) {
-            return null;
-        }
+    public OrganizationInfo getOrganizationByUuid(UUID id) throws Exception {
 
         EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         Entity entity = em.get(new SimpleEntityRef(Group.ENTITY_TYPE, id));
-        return entity;
-    }
-
-    @Override
-    public OrganizationInfo getOrganizationByUuid(UUID id) throws Exception {
-
-        Entity entity = getOrganizationEntityByUuid(id);
         if (entity == null) {
             return null;
         }
         return new OrganizationInfo(entity.getProperties());
     }
 
-    @Override
-    public Entity getOrganizationEntityByIdentifier(Identifier id)
-            throws Exception {
-        if (id.isUUID()) {
-            return getOrganizationEntityByUuid(id.getUUID());
-        }
-        if (id.isName()) {
-            return getOrganizationEntityByName(id.getName());
-        }
-        return null;
-    }
 
     @Override
     public OrganizationInfo getOrganizationByIdentifier(Identifier id)
