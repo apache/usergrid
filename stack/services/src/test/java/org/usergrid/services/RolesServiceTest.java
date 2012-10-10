@@ -348,6 +348,7 @@ public class RolesServiceTest extends AbstractServiceTest {
      * @param grant
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     private void createAndTestPermission(UUID applicationId, ServiceAction action, String roleName, String grant)
             throws Exception {
 
@@ -367,7 +368,6 @@ public class RolesServiceTest extends AbstractServiceTest {
         ServiceResults results = invokeService(sm, action, props, "roles", roleName, "permissions");
 
         // check the results has the data element.
-        @SuppressWarnings("unchecked")
         Set<String> data = (Set<String>) results.getData();
 
         assertTrue(data.contains(grant));
@@ -376,6 +376,16 @@ public class RolesServiceTest extends AbstractServiceTest {
         Set<String> permissions = em.getRolePermissions(roleName);
 
         assertTrue(permissions.contains(grant));
+        
+        
+        //perform a  GET and make sure it's present
+        results = invokeService(sm, ServiceAction.GET, props, "roles", roleName, "permissions");
+
+        // check the results has the data element.
+        data = (Set<String>) results.getData();
+
+        assertTrue(data.contains(grant));
+        
     }
 
 }

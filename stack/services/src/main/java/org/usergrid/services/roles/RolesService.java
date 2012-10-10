@@ -69,19 +69,15 @@ public class RolesService extends AbstractCollectionService {
         if ("permissions".equalsIgnoreCase(dictionary)) {
             checkPermissionsForPath(context, "/permissions");
 
-            if (context.parameterCount() == 0) {
+            EntityRef ref = refs.get(0);
 
-                return getApplicationRoles();
-
-            } else if (context.parameterCount() == 1) {
-
-                String roleName = context.getParameters().get(0).getName();
-                if (isBlank(roleName)) {
-                    return null;
-                }
-
-                return getApplicationRolePermissions(roleName);
+            String roleName = (String) em.getProperty(ref, "name");
+            
+            if (isBlank(roleName)) {
+                return null;
             }
+
+            return getApplicationRolePermissions(roleName);
 
         }
 
@@ -161,7 +157,7 @@ public class RolesService extends AbstractCollectionService {
             }
 
             Query q = context.getParameters().get(0).getQuery();
-            
+
             if (q == null) {
                 throw new IllegalArgumentException("You must supply a 'permission' query parameter");
             }
