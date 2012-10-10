@@ -448,17 +448,19 @@ public class Realm extends AuthorizingRealm {
                 }
 
                 try {
+                    
                     Results r = em.getCollection(new SimpleEntityRef(
                             User.ENTITY_TYPE, user.getUuid()), "groups", null,
                             1000, Level.IDS, false);
                     if (r != null) {
                         for (UUID groupId : r.getIds()) {
-                            Map<String, String> groupRoles = em
-                                    .getUserGroupRoles(user.getUuid(), groupId);
+                            
+                            //TOOD TN. this call isn't right, the code that writes these entities isn't invoked by anything
+                            Map<String, String> groupRoles = em.getGroupRoles(groupId);
+                            
                             for (String roleName : groupRoles.keySet()) {
                                 Set<String> permissions = em
-                                        .getGroupRolePermissions(groupId,
-                                                roleName);
+                                        .getRolePermissions(roleName);
                                 grant(info, principal, applicationId,
                                         permissions);
                             }
