@@ -1175,7 +1175,7 @@ Usergrid.ApiClient = (function () {
   function runAppQuery (Query) {
     var endpoint = "/" + this.getOrganizationName() + "/" + this.getApplicationName() + "/";
     setQueryType(Usergrid.A);
-    run(Query, endpoint, self);
+    run(Query, endpoint);
   }
 
   /*
@@ -1189,7 +1189,7 @@ Usergrid.ApiClient = (function () {
   function runManagementQuery (Query) {
     var endpoint = "/management/";
     setQueryType(Usergrid.M);
-    run(Query, endpoint, self)
+    run(Query, endpoint)
   }
 
   /*
