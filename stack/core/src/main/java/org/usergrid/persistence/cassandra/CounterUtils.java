@@ -108,6 +108,16 @@ public class CounterUtils {
 			this.category = category;
 		}
 
+        public void apply(String name, UUID userId,
+                          UUID groupId, UUID queueId, String category) {
+            this.name = name.toLowerCase();
+            this.userId = userId;
+            this.groupId = groupId;
+            this.queueId = queueId;
+            this.category = category;
+        }
+
+
 		public String getName() {
 			return name;
 		}
@@ -149,21 +159,20 @@ public class CounterUtils {
 		}
 
 		public String getRow(CounterResolution resolution) {
-            StringBuilder builder = new StringBuilder(name);
-            builder.append(COLON).append((userId != null ? userId.toString() : STAR))
-                    .append(COLON).append(groupId != null ? groupId.toString() : STAR).append(COLON)
-                    .append((queueId != null ? queueId.toString() : STAR)).append(COLON)
-                    .append((category != null ? category : STAR)).append(COLON)
-                    .append(resolution.name());
-            return builder.toString();
-            /*
-			return name + ":" + (userId != null ? userId.toString() : "*")
-					+ ":" + (groupId != null ? groupId.toString() : "*") + ":"
-					+ (queueId != null ? queueId.toString() : "*") + ":"
-					+ (category != null ? category : "*") + ":"
-					+ resolution.name();
-					*/
+            return rowBuilder(name, userId, groupId, queueId, category, resolution);
 		}
+
+        public static String rowBuilder(String name, UUID userId,
+                                  UUID groupId, UUID queueId, String category,
+                                  CounterResolution resolution) {
+            StringBuilder builder = new StringBuilder(name);
+                        builder.append(COLON).append((userId != null ? userId.toString() : STAR))
+                                .append(COLON).append(groupId != null ? groupId.toString() : STAR).append(COLON)
+                                .append((queueId != null ? queueId.toString() : STAR)).append(COLON)
+                                .append((category != null ? category : STAR)).append(COLON)
+                                .append(resolution.name());
+                        return builder.toString();
+        }
 	}
 
 	public void addEventCounterMutations(Mutator<ByteBuffer> m,
@@ -249,7 +258,7 @@ public class CounterUtils {
 			// *:*:*:*
 			handleAggregateCounterRow(
 					m,
-					getAggregateCounterRow(name, null, null, null, null,
+					AggregateCounterSelection.rowBuilder(name, null, null, null, null,
 							resolution), resolution.round(counterTimestamp),
 					value, applicationId);
 			String currentRow = null;
@@ -271,7 +280,7 @@ public class CounterUtils {
 						non_null++;
 					}
 				}
-				currentRow = getAggregateCounterRow(name, (UUID) parameters[0],
+				currentRow = AggregateCounterSelection.rowBuilder(name, (UUID) parameters[0],
 						(UUID) parameters[1], (UUID) parameters[2],
 						(String) parameters[3], resolution);
 
@@ -318,8 +327,8 @@ public class CounterUtils {
 	public String getAggregateCounterRow(String name, UUID userId,
 			UUID groupId, UUID queueId, String category,
 			CounterResolution resolution) {
-		return getAggregateCounterSelection(name, userId, groupId, queueId,
-				category).getRow(resolution);
+		return AggregateCounterSelection.rowBuilder(name, userId, groupId, queueId,
+				category,resolution);
 	}
 
 	public List<String> getAggregateCounterRows(
