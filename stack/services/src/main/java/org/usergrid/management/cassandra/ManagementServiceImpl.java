@@ -1609,7 +1609,9 @@ public class ManagementServiceImpl implements ManagementService {
         if (applicationId == null) {
             return null;
         }
-        Entity entity = getApplicationInfoEntityById(applicationId);
+        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        Entity entity = em.get(applicationId);
+
         if (entity != null) {
             return new ApplicationInfo(applicationId, entity.getName());
         }
@@ -1639,16 +1641,6 @@ public class ManagementServiceImpl implements ManagementService {
                     "Could not find an entity for that access token: " + token);
         }
         return new ApplicationInfo(entity.getProperties());
-    }
-
-    public Entity getApplicationInfoEntityById(UUID applicationId)
-            throws Exception {
-        if (applicationId == null) {
-            return null;
-        }
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-        Entity entity = em.get(applicationId);
-        return entity;
     }
 
     public String getSecret(UUID applicationId, AuthPrincipalType type, UUID id)
