@@ -1656,6 +1656,10 @@ Usergrid.ApiClient = (function () {
         xhr.setRequestHeader("Authorization", "Bearer " + Usergrid.ApiClient.getToken());
         xhr.withCredentials = true;
       }
+      //add content type = json if there is a json payload
+      if (jsonObj) {
+        xhr.setRequestHeader("Content-Type", "application/json");
+      }
     } else {
       xhr = new ActiveXObject("MSXML2.XMLHTTP.3.0");
       xhr.open(method, path, true);
@@ -1666,11 +1670,6 @@ Usergrid.ApiClient = (function () {
           path = '?access_token='+Usergrid.ApiClient.getToken();
         }
       }
-    }
-
-    //add content type = json if there is a json payload
-    if (jsonObj) {
-      xhr.setRequestHeader("Content-Type", "application/json");
     }
 
     // Handle response.
