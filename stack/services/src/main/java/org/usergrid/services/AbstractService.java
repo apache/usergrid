@@ -1208,15 +1208,24 @@ public abstract class AbstractService implements Service {
 		String permission = getPermissionFromPath(em.getApplicationRef()
 				.getUuid(), context.getAction().toString().toLowerCase(), path);
 		boolean permitted = currentUser.isPermitted(permission);
-
-		logger.info("---- Check permissions for path -----------------------------------");
-		logger.info("Requested path: " + path);
-		logger.info("Requested action: " + context.getAction());
-		logger.info("Requested permission: " + permission);
-		logger.info("Permitted: " + permitted);
-		logger.info("-------------------------------------------------------------------");
-
+        if ( logger.isInfoEnabled() ){
+            logger.info(PATH_MSG,
+                    new Object[]{
+                            path,
+                            context.getAction(),
+                            permission,
+                            permitted
+                    });
+        }
 		SubjectUtils.checkPermission(permission);
 	}
+
+    private static final String PATH_MSG =
+            "---- Check permissions for path -----------------------------------\n" +
+                    "Requested path: {} \n" +
+                    "Requested action: {} \n" +
+                    "Requested permission: {} \n" +
+                    "Permitted: {} \n" +
+                    "-------------------------------------------------------------------";
 
 }
