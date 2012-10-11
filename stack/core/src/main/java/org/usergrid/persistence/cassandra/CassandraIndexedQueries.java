@@ -114,21 +114,20 @@ public class CassandraIndexedQueries {
 
 			ColumnSlice<String, ByteBuffer> slice = row.getColumnSlice();
 			if (slice == null) {
-				logger.warn("Unable to get slice for row " + row.getKey());
+				logger.warn("Unable to get slice for row {}",  row.getKey());
 				continue;
 			}
 
 			List<HColumn<String, ByteBuffer>> columns = slice.getColumns();
 			if (columns == null) {
-				logger.warn("Unable to get columns for row " + row.getKey());
+				logger.warn("Unable to get columns for row {}" , row.getKey());
 				continue;
 			}
 
 			Map<String, Object> entityProperties = Schema
 					.deserializeEntityProperties(columns);
 			if (entityProperties == null) {
-				logger.warn("Unable to get correct entities properties from row "
-						+ row.getKey());
+				logger.warn("Unable to get correct entities properties from row {}", row.getKey());
 				continue;
 			}
 
@@ -192,7 +191,7 @@ public class CassandraIndexedQueries {
 			ColumnSlice<String, ByteBuffer> slice = row.getColumnSlice();
 			List<HColumn<String, ByteBuffer>> columns = slice.getColumns();
 
-			logger.info("Indexed Entity " + entityId.toString() + " found");
+			logger.info("Indexed Entity {} found",entityId.toString());
 
 			if (outputList != null) {
 				outputList.add(entityId);
@@ -208,7 +207,7 @@ public class CassandraIndexedQueries {
 				UUID id = (UUID) entityProperties.get(PROPERTY_UUID);
 				// EntityInfo entity = new EntityInfo(entityType,
 				// id, entityProperties);
-				logger.info("Entity2 " + id + " found");
+				logger.info("Entity2 {} found",id);
 
 				Entity entity = new DynamicEntity(type, id);
 				for (Map.Entry<String, Object> entry : entityProperties

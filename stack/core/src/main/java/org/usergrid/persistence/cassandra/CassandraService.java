@@ -466,8 +466,7 @@ public class CassandraService {
             if (results == null) {
                 db_logger.info("getColumns returned null");
             } else {
-                db_logger.info("getColumns returned " + results.size()
-                        + " columns");
+                db_logger.info("getColumns returned {} columns",results.size());
             }
         }
 

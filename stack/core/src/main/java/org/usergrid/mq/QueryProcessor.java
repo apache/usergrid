@@ -151,8 +151,7 @@ public class QueryProcessor {
 
 		if ((entities != null) && (sorts.size() > 0)) {
 			// Performing in memory sort
-			logger.info("Performing in-memory sort of " + entities.size()
-					+ " entities");
+			logger.info("Performing in-memory sort of {} entities",  entities.size());
 			ComparatorChain chain = new ComparatorChain();
 			for (SortPredicate sort : sorts) {
 				chain.addComparator(

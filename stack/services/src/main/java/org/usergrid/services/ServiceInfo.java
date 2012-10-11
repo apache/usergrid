@@ -35,6 +35,10 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
+
 import org.usergrid.persistence.Schema;
 
 public class ServiceInfo {
@@ -47,6 +51,11 @@ public class ServiceInfo {
 	private final String itemType;
 	private final List<String> patterns;
 	private final List<String> collections;
+	
+	/**
+	 * Pre calced since we cache this class
+	 */
+	private int hashCode;
 
 	public ServiceInfo(String name, boolean rootService, String rootType,
 			String containerType, String collectionName, String itemType,
@@ -59,6 +68,14 @@ public class ServiceInfo {
 		this.itemType = itemType;
 		this.patterns = patterns;
 		this.collections = collections;
+		
+		Hasher hasher =  Hashing.md5().newHasher();
+		
+		for(String pattern: patterns){
+		    hasher.putString(pattern);
+		}
+		
+		hashCode = hasher.hash().asInt();
 	}
 
 	public static String normalizeServicePattern(String s) {
@@ -401,5 +418,25 @@ public class ServiceInfo {
 	public List<String> getCollections() {
 		return collections;
 	}
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof ServiceInfo){
+            return hashCode == ((ServiceInfo)obj).hashCode;
+        }
+        
+        return false;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        return hashCode;
+    }
 
 }

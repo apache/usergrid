@@ -50,6 +50,11 @@ import org.usergrid.utils.ListUtils;
 
 public class ServiceManager implements ApplicationContextAware {
 
+    /**
+     * A pointer that signals we couldn't find a class
+     */
+    private static final Class<Service>  NOTFOUNDPOINTER = Service.class; 
+    
 	// because one typo can ruin your whole day
 	public static final String ENTITY = "entity";
 	public static final String ENTITY_SUFFIX = "." + ENTITY;
@@ -215,17 +220,50 @@ public class ServiceManager implements ApplicationContextAware {
 		return service;
 	}
 
-    private static LoadingCache<String, Class> serviceClassCache = CacheBuilder.newBuilder()
-            .expireAfterAccess(60, TimeUnit.MINUTES)
+    private static LoadingCache<ServiceInfo, Class<Service> > serviceClassCache = CacheBuilder.newBuilder()
+            .maximumSize(500)
             .build(
-                    new CacheLoader<String, Class>() {
-                        public Class load(String key) { // no checked exception
+                    new CacheLoader<ServiceInfo, Class<Service> >() {
+                        public Class<Service>  load(ServiceInfo key) { // no checked exception
                             return findClass(key);
                         }
                     });
 
-    private static Class findClass(String classname) {
-        Class cls;
+
+    /**
+     * For the service info find the class that this maps 
+     * @param info
+     * @return
+     */
+    private static Class<Service>  findClass(ServiceInfo info){
+        Class<Service>  cls = null;
+        
+        String cname = null;
+        
+        for (String pattern : info.getPatterns()) {
+            for (String prefix : package_prefixes) {
+            
+                cname = prefix.concat(".").concat(ServiceInfo.getClassName(pattern));
+                
+                cls = findClass(cname);
+                
+                if(cls != null){
+                    return cls;
+                }
+              
+               
+            }
+        }
+        
+        //We didn't find anything, return the not found pointer
+        return NOTFOUNDPOINTER;
+    }
+    
+    
+    @SuppressWarnings("unchecked")
+    private static Class<Service>  findClass(String classname) {
+       
+        Class<Service>  cls;
         try {
             logger.info("Attempting to instantiate service class {}", classname);
             cls = (Class<Service>) Class.forName(classname);
@@ -237,28 +275,31 @@ public class ServiceManager implements ApplicationContextAware {
                 return cls;
             }
         } catch (ClassNotFoundException e1) {
-            logger.error("Could not load class", e1);
+            logger.debug("Could not load class", e1);
         }
         return null;
     }
 
 
-	@SuppressWarnings("unchecked")
 	private Class<Service> findServiceClass(ServiceInfo info) {
 		Class<Service> cls = null;
-		for (String pattern : info.getPatterns()) {
-			for (String prefix : package_prefixes) {
-                try {
-                    cls = serviceClassCache.get(prefix.concat(".").concat(ServiceInfo.getClassName(pattern)));
-                } catch (ExecutionException ee) {
-                    logger.error("Could not retrieve from cache", ee);
-                }
-			}
+		
+		try {
+            cls = serviceClassCache.get(info);
+        } catch (ExecutionException e) {
+            //shouldn't happen, just to be safe
+            throw new RuntimeException(e);
+        }
+		
+		//Makes me feel dirty on the inside, but neccessary for the guava cache non null
+		if(cls == NOTFOUNDPOINTER){
+		    return null;
 		}
-		return null;
+		
+                    
+		return cls;
 	}
 
-	@SuppressWarnings("unchecked")
 	private Service getServiceInstance(ServiceInfo info) {
 
 		Class<Service> cls = findServiceClass(info);
@@ -266,20 +307,21 @@ public class ServiceManager implements ApplicationContextAware {
 			Service s = null;
 			try {
 				try {
-					s = applicationContext.getAutowireCapableBeanFactory()
-							.createBean(cls);
+					s = applicationContext.getAutowireCapableBeanFactory().createBean(cls);
 				} catch (Exception e) {
 				}
-				if (s == null) {
-					try {
-						String cname = cls.getName();
-                        cls = serviceClassCache.get(cname.concat(IMPL));
-						s = applicationContext.getAutowireCapableBeanFactory()
-								.createBean(cls);
-					} catch (Exception e) {
-                        e.printStackTrace();
-					}
-				}
+//			TODO TN I don't think this is used anymore	
+//				if (s == null) {
+//					try {
+//						String cname = cls.getName();
+//                        cls = serviceClassCache.get(cname.concat(IMPL));
+//						s = applicationContext.getAutowireCapableBeanFactory()
+//								.createBean(cls);
+//					} catch (Exception e) {
+//					    //we can't find what we're looking for
+//                        return null;
+//					}
+//				}
 			} catch (Exception e) {
                 e.printStackTrace();
 			}
