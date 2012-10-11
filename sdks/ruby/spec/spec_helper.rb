@@ -17,9 +17,14 @@ SimpleCov.start
 
 SPEC_SETTINGS = YAML::load_file(File.join File.dirname(__FILE__), 'spec_settings.yaml')
 
+def login_management
+  management = Usergrid::Resource.new(SPEC_SETTINGS[:api_url]).management
+  management.login SPEC_SETTINGS[:organization][:username], SPEC_SETTINGS[:organization][:password]
+  management
+end
+
 # ensure we are correctly setup (management login & organization)
-management = Usergrid::Resource.new(SPEC_SETTINGS[:api_url]).management
-management.login SPEC_SETTINGS[:management][:username], SPEC_SETTINGS[:management][:password]
+management = login_management
 
 begin
   management.create_organization(SPEC_SETTINGS[:organization][:name],
@@ -36,14 +41,6 @@ rescue
   end
 end
 
-def app_endpoint
-  "#{SPEC_SETTINGS[:organization][:name]}/#{SPEC_SETTINGS[:application][:name]}"
-end
-
-def org_endpoint
-  "#{SPEC_SETTINGS[:organization][:name]}"
-end
-
 def create_random_application
   management = login_management
   organization = management.organization SPEC_SETTINGS[:organization][:name]
@@ -56,7 +53,7 @@ end
 def delete_application(application)
   management = login_management
   application.auth_token = management.auth_token
-  application.delete
+  application.delete rescue nil  # not implemented on server yet
 end
 
 def create_random_user(application, login=false)
@@ -68,10 +65,4 @@ def create_random_user(application, login=false)
   entity = application['users'].post(user_hash).entity
   application.login user_hash[:username], user_hash[:password] if login
   entity
-end
-
-def login_management
-  management = Usergrid::Resource.new(SPEC_SETTINGS[:api_url]).management
-  management.login SPEC_SETTINGS[:organization][:username], SPEC_SETTINGS[:organization][:password]
-  management
 end

@@ -18,6 +18,7 @@ describe Usergrid::Resource do
   end
 
   it "should fail with a 401 when lacking auth" do
+    app_endpoint = "#{SPEC_SETTINGS[:organization][:name]}/#{SPEC_SETTINGS[:application][:name]}"
     expect { @resource[app_endpoint].get }.to raise_error(RestClient::Unauthorized) { |exception|
       exception.response.code.should eq 401
     }
