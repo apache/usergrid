@@ -201,6 +201,28 @@ public class ServiceContext {
 		return payload.getProperty(property);
 	}
 
+
+    public String getStringProperty(String property) {
+        Object obj = getProperty(property);
+        if (obj instanceof String) {
+            return (String) obj;
+        }
+        return null;
+    }
+    
+
+    public Long getLongProperty(String property) {
+        Object obj = getProperty(property);
+
+        if (obj instanceof Long) {
+            return (Long) obj;
+        }
+
+        return null;
+
+    }
+
+    
 	public Map<String, Object> getProperties() {
 		if (payload == null) {
 			return null;
