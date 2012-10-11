@@ -1442,7 +1442,7 @@ public class EntityManagerImpl implements EntityManager,
 						.getValue().slice(), dictionaryCoType);
 			}
 		} else {
-			logger.error("Results of EntityManagerImpl.getDictionaryElementValue is null");
+			logger.info("Results of EntityManagerImpl.getDictionaryElementValue is null");
 		}
 
 		return value;
