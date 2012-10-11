@@ -9,8 +9,8 @@
 		<cassandra-javautils-version>0.7.1</cassandra-javautils-version>
 		<cassandra-version>1.0.6</cassandra-version>
 		<hector-om-version>2.0-01</hector-om-version>
-		<hector-version>1.0-3</hector-version>
-		<hector-test-version>1.0-3</hector-test-version>
+		<hector-version>1.0-5</hector-version>
+		<hector-test-version>1.0-5</hector-test-version>
 		<jackson-version>1.9.9</jackson-version>
 		<jersey-version>1.11</jersey-version>
 		<shiro-version>1.2.0</shiro-version>
