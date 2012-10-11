@@ -241,9 +241,9 @@ public class EntityManagerImpl implements EntityManager,
 
 	@Override
 	public RelationManagerImpl getRelationManager(EntityRef entityRef) {
-		return applicationContext.getAutowireCapableBeanFactory()
-				.createBean(RelationManagerImpl.class)
-				.init(this, cass, applicationId, entityRef, indexBucketLocator);
+		RelationManagerImpl rmi = applicationContext.getBean(RelationManagerImpl.class);
+        rmi.init(this,cass,applicationId,entityRef,indexBucketLocator);
+        return rmi;
 	}
 
 	/**

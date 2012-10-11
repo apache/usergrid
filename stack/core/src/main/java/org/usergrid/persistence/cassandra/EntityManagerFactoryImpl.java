@@ -123,9 +123,9 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
      */
     @Override
     public EntityManager getEntityManager(UUID applicationId) {
-        return applicationContext.getAutowireCapableBeanFactory()
-                .createBean(EntityManagerImpl.class)
-                .init(this, cass, counterUtils, applicationId);
+        EntityManagerImpl em = applicationContext.getBean(EntityManagerImpl.class);
+        em.init(this,cass,counterUtils,applicationId);
+        return em;
     }
 
     /**
