@@ -59,6 +59,10 @@ module Usergrid
       entities.size
     end
 
+    def empty?
+      entities.empty?
+    end
+
     def cursor
       response.data.cursor || nil
     end
