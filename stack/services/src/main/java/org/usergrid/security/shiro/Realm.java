@@ -23,6 +23,7 @@ import static org.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPa
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -53,6 +54,7 @@ import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
+import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.Results;
@@ -421,50 +423,35 @@ public class Realm extends AuthorizingRealm {
 
                 try {
                     Set<String> rolenames = em.getUserRoles(user.getUuid());
-                    Map<String, Role> app_roles = em
-                            .getRolesWithTitles(rolenames);
-
-                    for (String rolename : rolenames) {
-                        if ((app_roles != null) && (token != null)) {
-                            Role role = app_roles.get(rolename);
-                            if ((role != null)
-                                    && (role.getInactivity() > 0)
-                                    && (token.getInactive() > role
-                                            .getInactivity())) {
-                                continue;
-                            }
-                        }
-                        Set<String> permissions = em
-                                .getRolePermissions(rolename);
-                        grant(info, principal, applicationId, permissions);
-                        role(info,
-                                principal,
-                                "application-role:"
-                                        .concat(applicationId.toString())
-                                        .concat(":").concat(rolename));
-                    }
+                    grantAppRoles(info, em, applicationId, token, principal, rolenames);
                 } catch (Exception e) {
                     logger.error("Unable to get user role permissions", e);
                 }
 
                 try {
-                    
+                    //TODO TN.  This is woefully inefficient, but temporary.  Introduce cassandra backed shiro caching so this only ever happens once.
+                    //See USERGRID-779 for details
                     Results r = em.getCollection(new SimpleEntityRef(
                             User.ENTITY_TYPE, user.getUuid()), "groups", null,
                             1000, Level.IDS, false);
                     if (r != null) {
+                        
+                        Set<String> rolenames = new HashSet<String>();
+                        
                         for (UUID groupId : r.getIds()) {
+                          
+                            Results roleResults = em.getCollection(new SimpleEntityRef(
+                                    Role.ENTITY_TYPE, groupId), "roles", null,
+                                    1000, Level.CORE_PROPERTIES, false);
                             
-                            //TOOD TN. this call isn't right, the code that writes these entities isn't invoked by anything
-                            Map<String, String> groupRoles = em.getGroupRoles(groupId);
-                            
-                            for (String roleName : groupRoles.keySet()) {
-                                Set<String> permissions = em
-                                        .getRolePermissions(roleName);
-                                grant(info, principal, applicationId,
-                                        permissions);
+                            for(Entity entity : roleResults.getEntities()){
+                                rolenames.add(entity.getName());
                             }
+
                         }
+                        
+                        
+                        grantAppRoles(info, em, applicationId, token, principal, rolenames);
                     }
 
                 } catch (Exception e) {
@@ -516,6 +503,40 @@ public class Realm extends AuthorizingRealm {
         return info;
     }
 
+    /**
+     * Grant all permissions for the role names on this application
+     * @param info
+     * @param em
+     * @param applicationId
+     * @param token
+     * @param principal
+     * @param rolenames
+     * @throws Exception
+     */
+    private void grantAppRoles( SimpleAuthorizationInfo info, EntityManager em, UUID applicationId,  TokenInfo token, PrincipalIdentifier principal, Set<String> rolenames) throws Exception{
+        Map<String, Role> app_roles = em
+                .getRolesWithTitles(rolenames);
+
+        for (String rolename : rolenames) {
+            if ((app_roles != null) && (token != null)) {
+                Role role = app_roles.get(rolename);
+                if ((role != null)
+                        && (role.getInactivity() > 0)
+                        && (token.getInactive() > role
+                                .getInactivity())) {
+                    continue;
+                }
+            }
+            Set<String> permissions = em
+                    .getRolePermissions(rolename);
+            grant(info, principal, applicationId, permissions);
+            role(info,
+                    principal,
+                    "application-role:"
+                            .concat(applicationId.toString())
+                            .concat(":").concat(rolename));
+        }
+    }
     public static void grant(SimpleAuthorizationInfo info,
             PrincipalIdentifier principal, String permission) {
         logger.info("Principal " + principal + " granted permission: "
