@@ -203,7 +203,7 @@ public class Schema {
 
     private final Map<Class<? extends Entity>, EntityInfo> registeredEntityClasses = new ConcurrentHashMap<Class<? extends Entity>, EntityInfo>();
 
-    Map<String, EntityInfo> entityMap = null;
+    Map<String, EntityInfo> entityMap = new TreeMap<String, EntityInfo>(String.CASE_INSENSITIVE_ORDER);;
 
     Map<String, Map<String, Set<CollectionInfo>>> entityContainerCollections = new TreeMap<String, Map<String, Set<CollectionInfo>>>(
             String.CASE_INSENSITIVE_ORDER);
@@ -357,10 +357,7 @@ public class Schema {
         if (e != null) {
             return;
         }
-        if (entityMap == null) {
-            entityMap = new TreeMap<String, EntityInfo>(
-                    String.CASE_INSENSITIVE_ORDER);
-        }
+    
         Map<String, PropertyDescriptor> propertyDescriptors = entityClassPropertyToDescriptor
                 .get(entityClass);
         if (propertyDescriptors == null) {
