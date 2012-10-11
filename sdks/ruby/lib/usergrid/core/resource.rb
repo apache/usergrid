@@ -6,7 +6,7 @@ module Usergrid
     DEFAULT_API_URL = 'https://api.usergrid.com'
     TYPE_HEADERS = { :content_type => :json, :accept => :json }
 
-    attr_reader :current_user, :auth_token, :api_url
+    attr_reader :current_user, :api_url
 
     def initialize(resource_url=DEFAULT_API_URL, api_url=nil, options={}, response=nil)
       options[:headers] = TYPE_HEADERS.merge options[:headers] || {}
@@ -34,7 +34,7 @@ module Usergrid
     end
 
     def logged_in?
-      !!@auth_token
+      !!auth_token
     end
 
     def management
@@ -87,21 +87,28 @@ module Usergrid
       self.response = super payload, additional_headers, &block
     end
 
+    def auth_token=(auth_token)
+      if auth_token
+        @options[:headers].merge!({ Authorization: "Bearer #{auth_token}" })
+      else
+        @options[:headers].delete :Authorization if @options
+      end
+    end
+
+    def auth_token
+      begin
+        @options[:headers][:Authorization].gsub 'Bearer ', ''
+      rescue
+        nil
+      end
+    end
+
     protected
 
     attr_reader :response
 
     def response=(response)
       @response = response
-    end
-
-    def auth_token=(auth_token)
-      @auth_token = auth_token
-      if auth_token
-        @options[:headers].merge!({ Authorization: "Bearer #{auth_token}" })
-      else
-        @options[:headers].delete :Authorization if @options
-      end
     end
 
     # add verbose debugging of response body
