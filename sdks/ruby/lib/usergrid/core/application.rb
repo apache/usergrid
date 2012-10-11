@@ -54,10 +54,6 @@ module Usergrid
       self[__method__].query(query, options)
     end
 
-    def rolenames(query=nil, options={})
-      self[__method__].query(query, options).data.data.keys
-    end
-
     def counter_names
       self['counters'].get.data.data
     end

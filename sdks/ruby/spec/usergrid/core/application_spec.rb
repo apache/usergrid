@@ -201,20 +201,7 @@ describe Usergrid::Application do
     response = @application.counter 'test'
     counter = response.data.counters.first
     counter.name.should eq 'test'
-    counter.values.last.first.value.should eq 2
-  end
-
-  it "should be able to create, retrieve, and delete roles via rolenames" do
-    size = @application.rolenames.size
-
-    role_name = "test-#{SecureRandom.hex}"
-    @application.create_entity :rolenames, name: role_name
-    role_names = @application.rolenames
-    role_names.size.should eq size+1
-    role_names.should include role_name
-
-    @application['rolenames'][role_name].delete
-    @application.rolenames.size.should eq size
+    counter.values.last.first.value.should be > 0
   end
 
   it "should be able to create, retrieve, and delete roles" do
