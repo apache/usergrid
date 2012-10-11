@@ -315,7 +315,7 @@ public class CassandraPersistenceUtils {
 			return NULL_ID;
 		}
 		UUID uuid = UUID.nameUUIDFromBytes(keyStr.getBytes());
-		logger.info("Key " + keyStr + " equals UUID " + uuid);
+		logger.info("Key {} equals UUID {}", keyStr, uuid);
 		return uuid;
 	}
 
