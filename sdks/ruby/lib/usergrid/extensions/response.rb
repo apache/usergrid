@@ -28,7 +28,7 @@ module RestClient
       entities_data = data['entities'] || data['data'] || data['messages'] || data['list']
       raise "unable to determine entities from: #{data}" unless entities_data.is_a?(Array)
       entities_data.each do |e|
-        e['uri'] = resource.concat_urls(data['uri'], e['uuid']) if e.is_a?(Hash) && e['uuid']
+        e['uri'] = concat_urls(data['uri'], e['uuid']) if e.is_a?(Hash) && e['uuid']
       end
       @entities_data = entities_data
     end
@@ -64,5 +64,18 @@ module RestClient
     def entity
       Usergrid::Entity.new entity_data['uri'], resource.api_url, resource.options, self
     end
+
+    protected
+
+    def concat_urls(url, suburl) # :nodoc:
+      url = url.to_s
+      suburl = suburl.to_s
+      if url.slice(-1, 1) == '/' or suburl.slice(0, 1) == '/'
+        url + suburl
+      else
+        "#{url}/#{suburl}"
+      end
+    end
+
   end
 end
