@@ -23,9 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import javax.management.RuntimeErrorException;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.apache.cassandra.thrift.Cassandra;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -56,8 +61,11 @@ public class ServiceManager implements ApplicationContextAware {
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(ServiceManager.class);
+    public static final String APPLICATION_REQUESTS = "application.requests";
+    public static final String APPLICATION_REQUESTS_PER = APPLICATION_REQUESTS + ".";
+    public static final String IMPL = "Impl";
 
-	private ApplicationContext applicationContext;
+    private ApplicationContext applicationContext;
 
 	private Application application;
 	
@@ -180,7 +188,7 @@ public class ServiceManager implements ApplicationContextAware {
 
 		serviceType = ServiceInfo.normalizeServicePattern(serviceType);
 
-		logger.info("Looking up service pattern: " + serviceType);
+		logger.info("Looking up service pattern: {}", serviceType);
 
 		ServiceInfo info = ServiceInfo.getServiceInfo(serviceType);
 
@@ -191,7 +199,7 @@ public class ServiceManager implements ApplicationContextAware {
 		Service service = getServiceInstance(info);
 
 		if (service != null) {
-			logger.info("Returning service instance: " + service.getClass());
+			logger.info("Returning service instance: {}", service.getClass());
 		}
 
 		/*
@@ -207,28 +215,44 @@ public class ServiceManager implements ApplicationContextAware {
 		return service;
 	}
 
+    private static LoadingCache<String, Class> serviceClassCache = CacheBuilder.newBuilder()
+            .expireAfterAccess(60, TimeUnit.MINUTES)
+            .build(
+                    new CacheLoader<String, Class>() {
+                        public Class load(String key) { // no checked exception
+                            return findClass(key);
+                        }
+                    });
+
+    private static Class findClass(String classname) {
+        Class cls;
+        try {
+            logger.info("Attempting to instantiate service class {}", classname);
+            cls = (Class<Service>) Class.forName(classname);
+            if (cls.isInterface()) {
+                cls = (Class<Service>) Class.forName(classname.concat(IMPL));
+            }
+            if ((cls != null)
+                    && !Modifier.isAbstract(cls.getModifiers())) {
+                return cls;
+            }
+        } catch (ClassNotFoundException e1) {
+            logger.error("Could not load class", e1);
+        }
+        return null;
+    }
+
+
 	@SuppressWarnings("unchecked")
 	private Class<Service> findServiceClass(ServiceInfo info) {
 		Class<Service> cls = null;
 		for (String pattern : info.getPatterns()) {
 			for (String prefix : package_prefixes) {
-				try {
-					String classname = prefix + "."
-							+ ServiceInfo.getClassName(pattern);
-					logger.info("Attempting to instantiate service class "
-							+ classname);
-					cls = (Class<Service>) Class.forName(classname);
-					if (cls.isInterface()) {
-						cls = (Class<Service>) Class
-								.forName(classname + "Impl");
-					}
-					if ((cls != null)
-							&& !Modifier.isAbstract(cls.getModifiers())) {
-						return cls;
-					}
-				} catch (ClassNotFoundException e1) {
-					// logger.info(e1.toString());
-				}
+                try {
+                    cls = serviceClassCache.get(prefix.concat(".").concat(ServiceInfo.getClassName(pattern)));
+                } catch (ExecutionException ee) {
+                    logger.error("Could not retrieve from cache", ee);
+                }
 			}
 		}
 		return null;
@@ -249,20 +273,20 @@ public class ServiceManager implements ApplicationContextAware {
 				if (s == null) {
 					try {
 						String cname = cls.getName();
-						cls = (Class<Service>) Class.forName(cname + "Impl");
+                        cls = serviceClassCache.get(cname.concat(IMPL));
 						s = applicationContext.getAutowireCapableBeanFactory()
 								.createBean(cls);
 					} catch (Exception e) {
+                        e.printStackTrace();
 					}
 				}
 			} catch (Exception e) {
+                e.printStackTrace();
 			}
 			if (s instanceof AbstractService) {
 				AbstractService as = ((AbstractService) s);
 				as.setServiceManager(this);
-
 				as.init(info);
-
 			}
 			if (s != null) {
 				if (s.getEntityType() == null) {
@@ -304,12 +328,11 @@ public class ServiceManager implements ApplicationContextAware {
 
 		if (em != null) {
 			em.incrementAggregateCounters(null, null, null,
-					"application.requests", 1);
+                    APPLICATION_REQUESTS, 1);
 
 			if (action != null) {
 				em.incrementAggregateCounters(null, null, null,
-						"application.requests."
-								+ action.toString().toLowerCase(), 1);
+						APPLICATION_REQUESTS_PER.concat(action.toString().toLowerCase()), 1);
 			}
 		}
 

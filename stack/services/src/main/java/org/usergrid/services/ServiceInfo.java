@@ -29,7 +29,12 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.usergrid.persistence.Schema;
 
 public class ServiceInfo {
@@ -211,7 +216,33 @@ public class ServiceInfo {
 		return containerType;
 	}
 
-	public static String getClassName(String servicePattern) {
+    /**
+     * Hold servicePattern names in a fixed size cache
+     */
+    private static LoadingCache<String, String> servicePatternCache = CacheBuilder.newBuilder()
+            .maximumSize(5000)
+            .build(
+                    new CacheLoader<String, String>() {
+                        public String load(String key) { // no checked exception
+                            return _getClassName(key);
+                        }
+                    });
+
+    /**
+     * Delegates to _getClassName via a CacheLoader due to the expense of path name calculation
+     * @param servicePattern
+     * @return
+     */
+    public static String getClassName(String servicePattern) {
+        try {
+            return servicePatternCache.get(servicePattern);
+        } catch (ExecutionException ee) {
+            ee.printStackTrace();
+        }
+        return _getClassName(servicePattern);
+    }
+
+	private static String _getClassName(String servicePattern) {
 		servicePattern = normalizeServicePattern(servicePattern);
 
 		String[] collections = split(servicePattern, "/*/");
