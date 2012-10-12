@@ -20,27 +20,12 @@
 
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
+/**
+ *  Standardized methods for maintaining user and authentication state in the Application
+ *  @class UserSession
+ *  @author Rod Simpson (rod@apigee.com)
+ */
 (function() {
-
-  if (!Storage.prototype.setObject) {
-    Storage.prototype.setObject = function(key, value) {
-      this.setItem(key, JSON.stringify(value));
-    };
-  }
-  if (!Storage.prototype.getObject) {
-    Storage.prototype.getObject = function(key) {
-      try {
-        return this.getItem(key) && JSON.parse(this.getItem(key));
-      } catch(err) {
-      }
-      return null;
-    };
-  }
-  /**
-    *  Standardized methods for maintaining user and authentication state in the Application
-    *  @class UserSession
-    *  @author Rod Simpson (rod@apigee.com)
-    */
   Usergrid.ApiClient.getOrganizationName = function() {
      return localStorage.getItem('organizationName');
   }
@@ -70,26 +55,15 @@ Usergrid = Usergrid || {};
   }
   Usergrid.ApiClient.setLoggedInUser = function(user) {
     var data = null;
-    if (user) {
-      //get all the data from the object
-      data = user.get();
-    }
-    //and store it
+    if (user) { data = user.get(); }
     localStorage.setItem('user', JSON.stringify(data));
   }
-  Usergrid.ApiClient.getLoggedInUser2 = function() {
-     return localStorage.getObject('user');
+
+  Usergrid.ApiClient.clearSession = function () {
+    localStorage.removeItem('organizationName');
+    localStorage.removeItem('applicationName');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   }
-  Usergrid.ApiClient.setLoggedInUser2 = function(user) {
-     localStorage.setObject('user', user);
-  }
-
-
-
-  Usergrid.ApiClient.clearAll= function () {
-      localStorage.removeItem('userUUID');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('accessToken');
-    }
-
+  
 })(Usergrid);
