@@ -39,13 +39,13 @@ module Usergrid
     end
     alias_method :create_entities, :create_entity
 
-    ## options: 'reversed', 'start', 'cursor', 'limit', 'permission'
-    #def update(new_data, query=nil, options={}) # todo: enable when server is fixed
-    #  options = options.symbolize_keys
-    #  @query_params = query ? options.merge({ql: query}) : options
-    #  self.put({params: @query_params }, new_data)
-    #  self
-    #end
+    # options: 'reversed', 'start', 'cursor', 'limit', 'permission'
+    def update_query(updates, query=nil, options={})
+      options = options.symbolize_keys
+      @query_params = query ? options.merge({ql: query}) : options
+      self.put(updates, {params: @query_params })
+      self
+    end
 
     # options: 'reversed', 'start', 'cursor', 'limit', 'permission'
     def query(query=nil, options={})

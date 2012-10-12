@@ -71,12 +71,12 @@ describe Usergrid::Collection do
     @collection[0].name.should eq @entity_data[2][:name]
   end
 
-  #it "should be able to update based on a query" do # todo: enable when server is fixed
-  #  @collection.update({new_field: 'new_value'}, "select * where name = \'#{@entity_data[4][:name]}\'")
-  #  @collection.query
-  #  entity = @collection.detect { |e| e.new_field == 'new_value' }
-  #  entity.should_not be_nil
-  #  entity.name.should eq @entity_data[4][:name]
-  #end
+  it "should be able to update based on a query" do
+    @collection.update_query({new_field: 'new_value'}, "select * where name = \'#{@entity_data[4][:name]}\'")
+    @collection.query
+    entity = @collection.detect { |e| e['new_field'] == 'new_value' }
+    entity.should_not be_nil
+    entity.name.should eq @entity_data[4][:name]
+  end
 
 end

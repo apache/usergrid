@@ -46,9 +46,16 @@ module Usergrid
       Usergrid::Application.new concat_urls(api_url, "#{organization}/#{application}"), options
     end
 
+    # options: 'reversed', 'start', 'cursor', 'limit', 'permission'
     def query(query=nil, options={})
       options = options.merge({ql: query}) if query
       get({params: options})
+    end
+
+    # options: 'reversed', 'start', 'cursor', 'limit', 'permission'
+    def update_query(updates, query=nil, options={})
+      options = options.merge({ql: query}) if query
+      put(updates, {params: options})
     end
 
     def entity
