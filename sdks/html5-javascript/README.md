@@ -248,12 +248,22 @@ Although the object is deleted from the database, it remains in your program.  D
 
 ##App user log in / log out
 
+##Persistent Storage
+A persistent storage (session) module has been added.  The file is located here:
+
+	/sdk/usergrid.session.js
+
+Include this file at the top of your HTML file - AFTER the SDK file:
+
+  <script src="sdk/usergrid.appSDK.js" type="text/javascript"></script> <!--INCLUDE SDK FIRST-->
+	<script src="sdk/usergrid.session.js" type="text/javascript"></script> <!--INCLUDE session after-->
+
+That is all you have to do.  The session contains methods that will override the storage methods used by the SDK.  Instead of storing the token and currently logged in user in memory, they are now stored in "localstorage", a feature available in most modern browsers.
+
 ###To log a user in
 To log app users in, use the Usergrid.ApiClient.logInAppUser() method.  This method takes the supplied username and password and attempts to acquire an access token from the API.  If the method successfully acquires the token, the token is stored in the Usergrid.ApiClient singleton and will be used for all subsequent calls. You can see an example of using the Usergrid.ApiClent.logInAppUser() method in the Messagee Sample app, which you can find here:
 
 <https://github.com/apigee/usergrid-sample-html5-messagee>
-
-Persistent storage is not used to store the token, so the token is lost if the site is refreshed.  You can use the Local Storage feature of most browsers to cache the token if required.
 
 To get started, build a login form:
 
