@@ -42,4 +42,8 @@ describe Usergrid::Entity do
     empty.data?.should be_false
   end
 
+  it "should return nil if empty result" do
+    @application['foobars'].get.entity.should be_nil
+  end
+
 end

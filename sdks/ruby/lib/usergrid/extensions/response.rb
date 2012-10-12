@@ -62,7 +62,7 @@ module RestClient
     end
 
     def entity
-      Usergrid::Entity.new entity_data['uri'], resource.api_url, resource.options, self
+      Usergrid::Entity.new(entity_data['uri'], resource.api_url, resource.options, self) if entity_data
     end
 
     protected
