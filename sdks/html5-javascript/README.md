@@ -255,8 +255,10 @@ A persistent storage (session) module has been added.  The file is located here:
 
 Include this file at the top of your HTML file - AFTER the SDK file:
 
-  <script src="sdk/usergrid.appSDK.js" type="text/javascript"></script> <!--INCLUDE SDK FIRST-->
-	<script src="sdk/usergrid.session.js" type="text/javascript"></script> <!--INCLUDE session after-->
+	<!--INCLUDE SDK FIRST-->
+	<script src="sdk/usergrid.appSDK.js" type="text/javascript"></script> 
+	<!--INCLUDE session after-->
+	<script src="sdk/usergrid.session.js" type="text/javascript"></script> 
 
 That is all you have to do.  The session contains methods that will override the storage methods used by the SDK.  Instead of storing the token and currently logged in user in memory, they are now stored in "localstorage", a feature available in most modern browsers.
 
