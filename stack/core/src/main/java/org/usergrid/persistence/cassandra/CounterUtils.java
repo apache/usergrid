@@ -246,7 +246,7 @@ public class CounterUtils {
 			UUID userId, UUID groupId, UUID queueId, String category,
 			CounterResolution resolution, String name, long value,
 			long counterTimestamp, UUID applicationId) {
-
+        /*
 		String[] segments = StringUtils.split(name, '.');
 		for (int j = 0; j < segments.length; j++) {
 			name = StringUtils.join(segments, '.', 0, j + 1);
@@ -293,6 +293,7 @@ public class CounterUtils {
 
 			}
 		}
+		*/
 	}
 
 	private void handleAggregateCounterRow(Mutator<ByteBuffer> m, String key,
