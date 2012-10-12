@@ -1138,13 +1138,8 @@ Usergrid.ApiClient = (function () {
   //API endpoint
   var _apiUrl = "https://api.usergrid.com/";
   var _orgName = null;
-  var _orgUUID = null;
   var _appName = null;
   var _token = null;
-  var _appUserUsername = null;
-  var _appUserName = null;
-  var _appUserEmail = null;
-  var _appUserUUID = null;
   var _queryType = null;
   var _loggedInUser = null;
   var _logoutCallback = null;
@@ -1175,7 +1170,7 @@ Usergrid.ApiClient = (function () {
   function runAppQuery (Query) {
     var endpoint = "/" + this.getOrganizationName() + "/" + this.getApplicationName() + "/";
     setQueryType(Usergrid.A);
-    run(Query, endpoint);
+    run(Query, endpoint, self);
   }
 
   /*
@@ -1189,7 +1184,7 @@ Usergrid.ApiClient = (function () {
   function runManagementQuery (Query) {
     var endpoint = "/management/";
     setQueryType(Usergrid.M);
-    run(Query, endpoint)
+    run(Query, endpoint, self)
   }
 
   /*
