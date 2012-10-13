@@ -1,0 +1,5 @@
+:api_url: http://localhost:8080
+:organization:
+  :name: test-organization
+  :username: test
+  :password: test
