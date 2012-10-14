@@ -153,7 +153,6 @@ public class CassandraService {
     }
 
     public void init() throws Exception {
-        HFactory.getOrCreateCluster(cluster.getName(), chc);
         if (consistencyLevelPolicy == null) {
             consistencyLevelPolicy = new ConfigurableConsistencyLevel();
             ((ConfigurableConsistencyLevel) consistencyLevelPolicy)
