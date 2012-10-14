@@ -74,9 +74,12 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory,
 
 	@Override
 	public QueueManager getQueueManager(UUID applicationId) {
-		return applicationContext.getAutowireCapableBeanFactory()
-				.createBean(QueueManagerImpl.class)
-				.init(this, cass, counterUtils, applicationId);
+	    QueueManagerImpl qm = new QueueManagerImpl();
+	    qm.init(this, cass, counterUtils, applicationId);
+	    return qm;
+		//return applicationContext.getAutowireCapableBeanFactory()
+		//		.createBean(QueueManagerImpl.class)
+		//		.init(this, cass, counterUtils, applicationId);
 	}
 
 	@Override
