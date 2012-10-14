@@ -191,6 +191,8 @@ public class EntityManagerImpl implements EntityManager {
 
 	private UUID applicationId;
 
+    private Application application;
+
 	private CassandraService cass;
 
 	private CounterUtils counterUtils;
@@ -212,7 +214,12 @@ public class EntityManagerImpl implements EntityManager {
 		
 		qmf = (QueueManagerFactoryImpl) getApplicationContext().getBean("queueManagerFactory");
 		indexBucketLocator = (IndexBucketLocator) getApplicationContext().getBean("indexBucketLocator");
-		
+        // prime the application entity for the EM
+        try {
+            getApplication();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 		return this;
 	}
 
@@ -227,18 +234,23 @@ public class EntityManagerImpl implements EntityManager {
 
 	@Override
 	public Application getApplication() throws Exception {
-		return get(applicationId, Application.class);
+        if ( application == null) {
+            application = get(applicationId, Application.class);
+        }
+		return application;
 	}
 
 	@Override
 	public void updateApplication(Application app) throws Exception {
 		update(app);
+        this.application = app;
 	}
 
 	@Override
 	public void updateApplication(Map<String, Object> properties)
 			throws Exception {
 		this.updateProperties(applicationId, properties);
+        this.application = get(applicationId, Application.class);
 	}
 
 	@Override

@@ -33,7 +33,11 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
@@ -93,6 +97,15 @@ ApplicationContextAware {
     CassandraService cass;
     CounterUtils counterUtils;
 
+    private LoadingCache<UUID, EntityManager> entityManagers = CacheBuilder.newBuilder()
+            .maximumSize(100)
+            .build(
+                    new CacheLoader<UUID, EntityManager>() {
+                        public EntityManager load(UUID appId) { // no checked exception
+                            return _getEntityManager(appId);
+                        }
+                    });
+
     /**
      * Must be constructed with a CassandraClientPool.
      * 
@@ -123,6 +136,16 @@ ApplicationContextAware {
      */
     @Override
     public EntityManager getEntityManager(UUID applicationId) {
+        try {
+            return entityManagers.get(applicationId);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return _getEntityManager(applicationId);
+    }
+
+
+    private EntityManager _getEntityManager(UUID applicationId) {
         EntityManagerImpl em = new EntityManagerImpl();
         //EntityManagerImpl em = applicationContext.getBean(EntityManagerImpl.class);
         em.init(this,cass,counterUtils,applicationId);
