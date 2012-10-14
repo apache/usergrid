@@ -96,7 +96,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.yammer.metrics.annotation.Metered;
 import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
@@ -121,10 +120,7 @@ import me.prettyprint.hector.api.query.SliceCounterQuery;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.mq.cassandra.QueueManagerFactoryImpl;
@@ -159,11 +155,10 @@ import org.usergrid.persistence.entities.Event;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.Role;
 import org.usergrid.persistence.entities.User;
-import org.usergrid.persistence.exceptions.*;
-import org.usergrid.persistence.query.tree.Equal;
-import org.usergrid.persistence.query.tree.EqualityOperand;
-import org.usergrid.persistence.query.tree.OrOperand;
-import org.usergrid.persistence.query.tree.QueryVisitor;
+import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
+import org.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
+import org.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.ClassUtils;
 import org.usergrid.utils.CompositeUtils;
@@ -171,6 +166,7 @@ import org.usergrid.utils.UUIDUtils;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.yammer.metrics.annotation.Metered;
 
 /**
  * Cassandra-specific implementation of Datastore
@@ -178,8 +174,7 @@ import com.google.common.collect.HashBiMap;
  * @author edanuff
  * 
  */
-public class EntityManagerImpl implements EntityManager,
-		ApplicationContextAware {
+public class EntityManagerImpl implements EntityManager {
 
 	/** The log4j logger. */
 	private static final Logger logger = LoggerFactory
@@ -188,12 +183,10 @@ public class EntityManagerImpl implements EntityManager,
     public static final String APPLICATION_ENTITIES = "application.entities";
     public static final long ONE_COUNT = 1L;
 
-    private ApplicationContext applicationContext;
-
-	@Autowired
+    private EntityManagerFactoryImpl emf;
+    
 	private QueueManagerFactoryImpl qmf;
 
-	@Autowired
 	private IndexBucketLocator indexBucketLocator;
 
 	private UUID applicationId;
@@ -212,11 +205,20 @@ public class EntityManagerImpl implements EntityManager,
 
 	public EntityManagerImpl init(EntityManagerFactoryImpl emf,
 			CassandraService cass, CounterUtils counterUtils, UUID applicationId) {
+	    this.emf = emf;
 		this.cass = cass;
 		this.counterUtils = counterUtils;
 		this.applicationId = applicationId;
+		
+		qmf = (QueueManagerFactoryImpl) getApplicationContext().getBean("queueManagerFactory");
+		indexBucketLocator = (IndexBucketLocator) getApplicationContext().getBean("indexBucketLocator");
+		
 		return this;
 	}
+
+    public ApplicationContext getApplicationContext() {
+        return emf.applicationContext;
+    }
 
 	@Override
 	public EntityRef getApplicationRef() {
@@ -241,7 +243,8 @@ public class EntityManagerImpl implements EntityManager,
 
 	@Override
 	public RelationManagerImpl getRelationManager(EntityRef entityRef) {
-		RelationManagerImpl rmi = applicationContext.getBean(RelationManagerImpl.class);
+        //RelationManagerImpl rmi = applicationContext.getBean(RelationManagerImpl.class);
+		RelationManagerImpl rmi = new RelationManagerImpl();
         rmi.init(this,cass,applicationId,entityRef,indexBucketLocator);
         return rmi;
 	}
@@ -3110,12 +3113,6 @@ public class EntityManagerImpl implements EntityManager,
 
 	}
 
-	@Override
-	public void setApplicationContext(ApplicationContext applicationContext)
-			throws BeansException {
-		this.applicationContext = applicationContext;
-	}
-
 	/**
 	 * @return the applicationId
 	 */
@@ -3131,8 +3128,11 @@ public class EntityManagerImpl implements EntityManager,
 	}
 
 	public GeoIndexManager getGeoIndexManager() {
-		return applicationContext.getAutowireCapableBeanFactory()
-				.createBean(GeoIndexManager.class).init(this);
+	    GeoIndexManager gim = new GeoIndexManager();
+	    gim.init(this);
+	    return gim;
+		//return applicationContext.getAutowireCapableBeanFactory()
+		//		.createBean(GeoIndexManager.class).init(this);
 	}
 
 	/**

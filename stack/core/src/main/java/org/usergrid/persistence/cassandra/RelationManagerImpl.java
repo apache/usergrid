@@ -150,13 +150,11 @@ import org.usergrid.utils.StringUtils;
 
 import com.beoui.geocell.model.Point;
 
-public class RelationManagerImpl implements RelationManager,
-        ApplicationContextAware {
+public class RelationManagerImpl implements RelationManager {
 
     private static final Logger logger = LoggerFactory
             .getLogger(RelationManagerImpl.class);
 
-    private ApplicationContext applicationContext;
     private EntityManagerImpl em;
     private CassandraService cass;
     private UUID applicationId;
@@ -184,10 +182,17 @@ public class RelationManagerImpl implements RelationManager,
         return this;
     }
 
+    public ApplicationContext getApplicationContext() {
+        return em.getApplicationContext();
+    }
+
     RelationManagerImpl getRelationManager(EntityRef headEntity) {
-        return applicationContext.getAutowireCapableBeanFactory()
-                .createBean(RelationManagerImpl.class)
-                .init(em, cass, applicationId, headEntity, indexBucketLocator);
+        RelationManagerImpl rmi = new RelationManagerImpl();
+        rmi.init(em, cass, applicationId, headEntity, indexBucketLocator);
+        return rmi;
+        //return applicationContext.getAutowireCapableBeanFactory()
+        //        .createBean(RelationManagerImpl.class)
+        //        .init(em, cass, applicationId, headEntity, indexBucketLocator);
     }
 
     Entity getHeadEntity() throws Exception {
@@ -3095,12 +3100,6 @@ public class RelationManagerImpl implements RelationManager,
 
         em.setProperty(associatedEntityRef, propertyName, propertyValue);
 
-    }
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext)
-            throws BeansException {
-        this.applicationContext = applicationContext;
     }
 
     /**

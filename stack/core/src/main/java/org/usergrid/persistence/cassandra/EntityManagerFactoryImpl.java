@@ -72,7 +72,7 @@ import com.yammer.metrics.annotation.Metered;
  * 
  */
 public class EntityManagerFactoryImpl implements EntityManagerFactory,
-        ApplicationContextAware {
+ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory
             .getLogger(EntityManagerFactoryImpl.class);
@@ -123,9 +123,14 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
      */
     @Override
     public EntityManager getEntityManager(UUID applicationId) {
-        EntityManagerImpl em = applicationContext.getBean(EntityManagerImpl.class);
+        EntityManagerImpl em = new EntityManagerImpl();
+        //EntityManagerImpl em = applicationContext.getBean(EntityManagerImpl.class);
         em.init(this,cass,counterUtils,applicationId);
         return em;
+    }
+
+    public ApplicationContext getApplicationContext() {
+        return applicationContext;
     }
 
     /**
@@ -197,7 +202,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory,
 
     public UUID initializeApplication(String organizationName,
             UUID applicationId, String name, Map<String, Object> properties)
-            throws Exception {
+                    throws Exception {
 
         String appName = buildAppName(organizationName, name);
 
