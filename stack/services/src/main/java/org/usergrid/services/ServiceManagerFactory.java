@@ -49,8 +49,11 @@ public class ServiceManagerFactory implements ApplicationContextAware {
 		if (emf != null) {
 			em = emf.getEntityManager(applicationId);
 		}
-		return applicationContext.getAutowireCapableBeanFactory()
-				.createBean(ServiceManager.class).init(this, em, properties);
+		ServiceManager sm = new ServiceManager();
+		sm.init(this, em, properties);
+		return sm;
+		//return applicationContext.getAutowireCapableBeanFactory()
+		//		.createBean(ServiceManager.class).init(this, em, properties);
 	}
 
 	public List<ServiceExecutionEventListener> getExecutionEventListeners() {

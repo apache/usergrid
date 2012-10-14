@@ -35,6 +35,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
@@ -92,6 +93,10 @@ public abstract class AbstractService implements Service {
 		em = sm.getEntityManager();
 	}
 
+    public ApplicationContext getApplicationContext() {
+        return sm.getApplicationContext();
+    }
+    
 	public void init(ServiceInfo info) {
 		this.info = info;
 	}

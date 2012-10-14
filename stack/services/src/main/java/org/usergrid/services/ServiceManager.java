@@ -48,7 +48,7 @@ import org.usergrid.services.applications.ApplicationsService;
 import org.usergrid.services.exceptions.UndefinedServiceEntityTypeException;
 import org.usergrid.utils.ListUtils;
 
-public class ServiceManager implements ApplicationContextAware {
+public class ServiceManager {
 
     /**
      * A pointer that signals we couldn't find a class
@@ -69,8 +69,6 @@ public class ServiceManager implements ApplicationContextAware {
     public static final String APPLICATION_REQUESTS = "application.requests";
     public static final String APPLICATION_REQUESTS_PER = APPLICATION_REQUESTS + ".";
     public static final String IMPL = "Impl";
-
-    private ApplicationContext applicationContext;
 
 	private Application application;
 	
@@ -109,6 +107,10 @@ public class ServiceManager implements ApplicationContextAware {
 			}
 		}
 		return this;
+	}
+	
+	public ApplicationContext getApplicationContext() {
+	    return smf.applicationContext;
 	}
 	
 	private void setServicePackagePrefixes(String packages) {
@@ -307,7 +309,8 @@ public class ServiceManager implements ApplicationContextAware {
 			Service s = null;
 			try {
 				try {
-					s = applicationContext.getAutowireCapableBeanFactory().createBean(cls);
+					//s = applicationContext.getAutowireCapableBeanFactory().createBean(cls);
+				    s = cls.newInstance();
 				} catch (Exception e) {
 				}
 //			TODO TN I don't think this is used anymore	
@@ -412,9 +415,4 @@ public class ServiceManager implements ApplicationContextAware {
 		smf.notifyCollectionEventListeners(path, results);
 	}
 
-	@Override
-	public void setApplicationContext(ApplicationContext applicationContext)
-			throws BeansException {
-		this.applicationContext = applicationContext;
-	}
 }
