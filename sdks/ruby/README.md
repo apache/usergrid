@@ -154,7 +154,16 @@ usergrid_iron/spec/spec_settings.yaml to match.)
 
 ## Release notes
 
-### 0.0.3 
+### 0.0.4
+* New features
+  1. empty? check for collection
+  2. update queries (batch update)
+* Backend changes
+  1. Additional data sanity checks
+  2. Additional flexibility in concat_urls
+  3. Cleanup
+
+### 0.0.3
 * New features
   1. Support for lists returned when making parameterized queries:
 	 <pre>select username, email where…</pre>
