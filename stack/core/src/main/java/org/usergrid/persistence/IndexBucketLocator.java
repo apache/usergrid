@@ -29,7 +29,7 @@ import java.util.UUID;
 public interface IndexBucketLocator {
 
     public enum IndexType {
-        COLLECTION("collection"), CONNECTION("connection"), GEO("geo");
+        COLLECTION("collection"), CONNECTION("connection"), GEO("geo"), UNIQUE("unique");
 
         private final String type;
 

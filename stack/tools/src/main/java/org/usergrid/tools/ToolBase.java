@@ -40,6 +40,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.usergrid.management.ManagementService;
 import org.usergrid.persistence.EntityManagerFactory;
+import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
 import org.usergrid.persistence.cassandra.Setup;
 import org.usergrid.services.ServiceManagerFactory;
@@ -61,15 +62,17 @@ public abstract class ToolBase {
      */
     protected static final String PATH_REPLACEMENT = "USERGIRD-PATH-BACKSLASH";
 
-	EmbeddedServerHelper embedded = null;
+	protected EmbeddedServerHelper embedded = null;
 
-	EntityManagerFactory emf;
+	protected EntityManagerFactory emf;
 
-	ServiceManagerFactory smf;
+	protected ServiceManagerFactory smf;
 
-	ManagementService managementService;
+	protected ManagementService managementService;
 
-	Properties properties;
+	protected Properties properties;
+	
+	protected CassandraService cass;
 
 	boolean use_remote = false;
 
@@ -241,6 +244,11 @@ public abstract class ToolBase {
 	@Autowired
 	public void setProperties(Properties properties) {
 		this.properties = properties;
+	}
+	
+	@Autowired
+	public void setCassandraService(CassandraService cass){
+	    this.cass = cass;
 	}
 
 	public abstract void runTool(CommandLine line) throws Exception;

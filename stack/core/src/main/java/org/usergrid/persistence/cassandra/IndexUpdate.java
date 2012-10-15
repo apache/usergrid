@@ -235,6 +235,41 @@ public class IndexUpdate {
 		}
 
 	}
+	
+	public static class UniqueIndexEntry {
+        private final byte code;
+        private String path;
+        private final Object value;
+
+        public UniqueIndexEntry(String path, Object value) {
+            this.path = path;
+            this.value = value;
+            code = indexValueCode(value);
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
+        public byte getValueCode() {
+            return code;
+        }
+
+      
+        public DynamicComposite getIndexComposite() {
+            return new DynamicComposite(code, value);
+        }
+
+
+    }
 
 	private static String prepStringForIndex(String str) {
 		str = str.trim().toLowerCase();
