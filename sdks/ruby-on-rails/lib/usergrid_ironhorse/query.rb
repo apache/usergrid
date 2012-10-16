@@ -45,7 +45,7 @@ module Usergrid
         @records = ids.collect { |id| find_one! id } # todo: can this be optimized in one call?
         #entities = @model_class.resource[ids.join '&'].get.entities
         #raise RecordNotFound unless (entities.size == ids.size)
-        #@records = entities.collect {|entity| @model_class.model_name.constantize.new(entity.data, true) }
+        #@records = entities.collect {|entity| @model_class.model_name.constantize.new(entity.data) }
         @records.size == 1 ? @records.first : @records
       end
 
@@ -812,6 +812,7 @@ module Usergrid
 
       protected
 
+
       def limit_value
         @options[:limit]
       end
@@ -831,7 +832,7 @@ module Usergrid
       def find_one(id_or_name=nil)
         begin
           entity = @model_class.resource[id_or_name].query(nil, limit: 1).entity
-          @model_class.model_name.constantize.new(entity.data, true) if entity
+          @model_class.model_name.constantize.new(entity.data) if entity
         rescue RestClient::ResourceNotFound
           nil
         end
@@ -879,7 +880,7 @@ module Usergrid
         return if loaded?
         begin
           response = run_query
-          @records = response.entities.collect {|r| @model_class.model_name.constantize.new(r.data, true)}
+          @records = response.entities.collect {|r| @model_class.model_name.constantize.new(r.data)}
         rescue RestClient::ResourceNotFound
           @records = []
         end

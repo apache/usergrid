@@ -27,10 +27,50 @@ Or install it yourself as:
   Docs: <http://apigee.com/docs/usergrid/>  
   Open source: <https://github.com/apigee/usergrid-stack>
 
-### Getting started with the Usergrid_ironhorse SDK is super simple!*
+### Getting started with the Usergrid_ironhorse SDK is super simple!
 
-Well, it will be simple, as soon as I get around to documenting how to do it!
-In the mean time, hold off just a bit... I'm not quite ready for you yet.
+* Add 'gem usergrid_ironhorse' to your Gemfile
+* Create a 'config/usergrid.yml' file that looks something like this (the
+auth_token is your application admin token):
+<pre>
+development:
+  :application_url: http://localhost:8080/my-organization/my-application
+  :auth_token: YWMtc4WjqhcbEeK6UhQQn9SVgQAAATpryjMnLy9oFaPbP-0qIxoUx_4vtaOmpmE
+
+development:
+  :application_url: http://localhost:8080/my-organization/my-application
+  :auth_token: YWMtc4WjqhcbEeK6UhQQn9SVgQAAATpryjMnLy9oFaPbP-0qIxoUx_4vtaOmpmE
+
+production:
+  :application_url: http://api.usergrid.com/my-organization/my-application
+  :auth_token: YWMtc4WjqhcbEeK6UhQQn9SVgQAAATpryjMnLy9oFaPbP-0qIxoUx_4vtaOmpmE
+</pre>
+* Your User model should subclass Usergrid::Ironhorse::Base and extend
+Usergrid::Ironhorse::UserContext like so:
+<pre>
+class User < Usergrid::Ironhorse::Base
+  extend Usergrid::Ironhorse::UserContext
+
+end
+</pre>
+* Set up your authentication
+	* Use `User.authenticate(username, password, session)` to login.
+	* Use `User.clear_authentication(session)` to log out.
+* Propogate the authentication in your ApplicationController:
+<pre>
+  before_filter :set_thread_context
+  def set_thread_context
+    User.set_thread_context session
+  end
+</pre>
+* Optionally, if you need to access the User from your view, you may add something
+like the following to your ApplicationController:
+<pre>
+  helper_method :current_user
+  def current_user
+    User.current_user
+  end
+</pre>
 
 
 ## Contributing
@@ -56,6 +96,9 @@ usergrid_ironhorse/spec/spec_settings.yaml to match.)
 
 ## Release notes
 
+### 0.0.2
+* New Features
+  1. Authentication and user propagation features
 ### 0.0.1
 * Initial commit
   1. Support for most ActiveModel stuff including Validations

@@ -19,7 +19,6 @@ module Usergrid
     require usergrid_path('base')
     require usergrid_path('query')
 
-    #require usergrid_path('../extensions', 'hash')
-    #autoload :Management, usergrid_path('core', 'management')
+    autoload :UserContext, usergrid_path('user_context')
   end
 end

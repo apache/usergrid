@@ -41,10 +41,9 @@ module Usergrid
       HashWithIndifferentAccess = ActiveSupport::HashWithIndifferentAccess
       RecordNotSaved = ActiveRecord::RecordNotSaved
 
-      # todo: options?
-      def initialize(attrs=nil, options=nil, persisted=false)
+      def initialize(attrs=nil)
         attrs = HashWithIndifferentAccess.new attrs
-        unless persisted?
+        unless attrs.has_key? :uuid
           assign_attributes attrs
         end
         @attributes = attrs
@@ -110,7 +109,7 @@ module Usergrid
         if attributes.is_a?(Array)
           attributes.collect { |attr| create(attr, options, &block) }
         else
-          object = new(attributes, options, &block)
+          object = new(attributes, &block)
           object.save
           object
         end
@@ -120,7 +119,7 @@ module Usergrid
         if attributes.is_a?(Array)
           attributes.collect {|attr| create!(attr, options, &block)}
         else
-          object = new(attributes, options)
+          object = new(attributes)
           yield(object) if block_given?
           object.save!
           object
@@ -148,7 +147,11 @@ module Usergrid
       # Creates a Usergrid::Resource
       def self.resource
         app = Usergrid::Application.new settings[:application_url]
-        app.auth_token = settings[:auth_token]
+        if Thread.current[:auth_token]
+          app.auth_token = Thread.current[:auth_token]
+        else
+          app.auth_token = settings[:auth_token]
+        end
         app[group]
       end
 
@@ -274,9 +277,6 @@ module Usergrid
       def id; self.uuid end
       def created_at; self.created end
       def updated_at; self.modified end
-
-      #def self.included(base); base.extend(ClassMethods) end
-      #module ClassMethods end
 
 
       protected
