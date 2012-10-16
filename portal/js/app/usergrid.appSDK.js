@@ -1136,7 +1136,7 @@ Usergrid.M = 'ManagementQuery';
 Usergrid.A = 'ApplicationQuery';
 Usergrid.ApiClient = (function () {
   //API endpoint
-  var _apiUrl = "https://api.usergrid.com/";
+  var _apiUrl = "http://ug-developer-testing.elasticbeanstalk.com/";
   var _orgName = null;
   var _orgUUID = null;
   var _appName = null;

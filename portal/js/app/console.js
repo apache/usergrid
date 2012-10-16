@@ -4,7 +4,7 @@
   Usergrid.console = Usergrid.console || {};
 
   // for running Apigee App Services as a local server
-  var LOCAL_STANDALONE_API_URL = "http://localhost:8080";
+  var LOCAL_STANDALONE_API_URL = "http://localhost/usergrid";
   var LOCAL_TOMCAT_API_URL = "http://localhost:8080/ROOT";
   var LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
   var PUBLIC_API_URL = "https://api.usergrid.com/";
@@ -1143,7 +1143,7 @@
 
     if (bValid) {
       var data = form.serializeObject();
-      runAppQuery(new Usergrid.Query("POST", "rolenames", data, null,
+      runAppQuery(new Usergrid.Query("POST", "role", data, null,
         function() {
           getRoles();
           closeErrorMessage = function() {
@@ -2550,7 +2550,7 @@
     var query = {};
     if (roleLetter != "*") query = {"ql" : roleSortBy + "='" + groupLetter + "*'"};
 
-    var queryObj = new Usergrid.Query("GET", "rolenames", null, query, getRolesCallback, function() { alertModal("Error", "Unable to retrieve roles."); });
+    var queryObj = new Usergrid.Query("GET", "roles", null, query, getRolesCallback, function() { alertModal("Error", "Unable to retrieve roles."); });
     runAppQuery(queryObj);
     return false;
   }
