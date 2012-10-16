@@ -14,10 +14,13 @@
  * limitations under the License.
  ******************************************************************************/
 package org.usergrid.tools;
+import static org.apache.commons.codec.digest.DigestUtils.md5;
+import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
 import static org.usergrid.utils.ConversionUtils.bytebuffers;
+import static org.usergrid.utils.ConversionUtils.bytes;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -32,10 +35,10 @@ import java.util.concurrent.TimeUnit;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
 import me.prettyprint.hector.api.beans.DynamicComposite;
+import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.beans.Rows;
 import me.prettyprint.hector.api.factory.HFactory;
@@ -52,8 +55,6 @@ import org.springframework.util.Assert;
 import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.cassandra.EntityManagerImpl;
-import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
-import org.usergrid.persistence.cassandra.IndexUpdate.UniqueIndexEntry;
 
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.MetricPredicate;
@@ -73,7 +74,7 @@ public class EntityReadBenchMark extends ToolBase {
     /**
      * Set to 2x your number of processors
      */
-    private static final int WORKER_SIZE = 1;
+    private static final int WORKER_SIZE = 8;
 
     public static final ByteBufferSerializer be = new ByteBufferSerializer();
 
@@ -133,19 +134,16 @@ public class EntityReadBenchMark extends ToolBase {
                 System.out,
                 MetricPredicate.ALL);
         
+        //print every 30 seconds
+        reporter.start(30, TimeUnit.SECONDS);
         
         Stack<Future<Void>> futures = new Stack<Future<Void>>();
 
                 
-        for (int i = 0; i < WORKER_SIZE; i++) {
-            futures.push(executors.submit(new IndexReadWorker(i, size, appId)));
-        }
+//        for (int i = 0; i < WORKER_SIZE; i++) {
+//            futures.push(executors.submit(new IndexReadWorker(i, size, appId)));
+//        }
         
-        
-        
-        
-//        ConsoleReporter.enable(5, TimeUnit.SECONDS);
-       
     
         System.out.println("Waiting for index read workers to complete");
 
@@ -156,8 +154,7 @@ public class EntityReadBenchMark extends ToolBase {
             futures.pop().get();
         }
         
-        //print the report
-        reporter.run();
+      
        
         
         for (int i = 0; i < WORKER_SIZE; i++) {
@@ -174,10 +171,10 @@ public class EntityReadBenchMark extends ToolBase {
 
         System.out.println("All workers completed reading");
         
+        
+        
+        //print the report
         reporter.run();
-//        
-//        //let our last report print
-//        Thread.sleep(5000);
 
     }
 
@@ -189,19 +186,11 @@ public class EntityReadBenchMark extends ToolBase {
 
         protected UUID appId;
 
-        protected EntityManagerImpl em;
         
         private ReadWorker(int workerNumber, int count, UUID appId) throws Exception {
             this.workerNumber = workerNumber;
             this.count = count;
             this.appId = appId;
-            
-           
-            em = (EntityManagerImpl) emf.getEntityManager(appId);
-            
-            
-            
-
         }
 
         /*
@@ -270,7 +259,7 @@ public class EntityReadBenchMark extends ToolBase {
                     keyspace, be, DynamicCompositeSerializer.get(),
                     ByteBufferSerializer.get());
 
-            multiget.setColumnFamily(ENTITY_UNIQUE.getColumnFamily());
+            multiget.setColumnFamily(ENTITY_INDEX.getColumnFamily());
             multiget.setKeys(bytebuffers(cassKeys));
 
             
@@ -306,14 +295,14 @@ public class EntityReadBenchMark extends ToolBase {
         private DictReadWorker(int workerNumber, int count, UUID appId) throws Exception {
            super(workerNumber, count, appId);
            Keyspace ko = EntityReadBenchMark.this.cass.getApplicationKeyspace(appId);
-           indexer = new UniqueIndexer(em.getIndexBucketLocator(), ko);
+           indexer = new UniqueIndexer(ko);
         }
         
         /* (non-Javadoc)
          * @see org.usergrid.tools.EntityReadBenchMark.ReadWorker#doRead()
          */
         @Override
-        protected void doRead(String value) {
+        protected void doRead(String value) throws Exception {
 
             TimerContext timer = dictReads.time();
             
@@ -330,51 +319,26 @@ public class EntityReadBenchMark extends ToolBase {
 
     private class UniqueIndexer {
 
-        private IndexBucketLocator indexBucketLocator;
         private Keyspace keyspace;
 
         /**
          * @param indexBucketLocator
          * @param mutator
          */
-        public UniqueIndexer(IndexBucketLocator indexBucketLocator, Keyspace keyspace) {
+        public UniqueIndexer(Keyspace keyspace) {
             super();
-            this.indexBucketLocator = indexBucketLocator;
             this.keyspace = keyspace;
         }
 
-        private boolean existsInIndex(UUID applicationId, String collectionName, String propName, Object entityValue) {
-            List<String> buckets = indexBucketLocator.getBuckets(applicationId, IndexType.UNIQUE, collectionName);
+        private boolean existsInIndex(UUID applicationId, String collectionName, String propName, Object entityValue) throws Exception {
+            Object rowKey = key(applicationId, collectionName, propName, md5(bytes(entityValue)));
 
-            List<Object> cassKeys = new ArrayList<Object>(buckets.size());
+            
+            List<HColumn<ByteBuffer, ByteBuffer>> cols = cass.getColumns(keyspace, ENTITY_UNIQUE, rowKey, null, null, 2, false);
+           
+            
+            return cols.size() > 0;
 
-            Object keyPrefix = key(applicationId, collectionName, propName);
-
-            for (String bucket : buckets) {
-                cassKeys.add(key(keyPrefix, bucket));
-            }
-
-            MultigetSliceQuery<ByteBuffer, DynamicComposite, ByteBuffer> multiget = HFactory.createMultigetSliceQuery(
-                    keyspace, be, DynamicCompositeSerializer.get(),
-                    ByteBufferSerializer.get());
-
-            multiget.setColumnFamily(ENTITY_UNIQUE.getColumnFamily());
-            multiget.setKeys(bytebuffers(cassKeys));
-
-            UniqueIndexEntry entry = new UniqueIndexEntry(propName, entityValue);
-
-            multiget.setColumnNames(entry.getIndexComposite());
-
-            QueryResult<Rows<ByteBuffer, DynamicComposite, ByteBuffer>> results = multiget.execute();
-
-            // search for a column, if one exists, we've found the entity
-            for (Row<ByteBuffer, DynamicComposite, ByteBuffer> row : results.get()) {
-                if (row.getColumnSlice().getColumns().size() > 0) {
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 }

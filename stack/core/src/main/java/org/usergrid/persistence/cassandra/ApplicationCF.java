@@ -78,8 +78,7 @@ public enum ApplicationCF implements CFEnum {
 	/**
 	 * Unique index for properties that must remain the same 		
 	 */
-    ENTITY_UNIQUE("Entity_Unique",
-            "DynamicCompositeType(a=>AsciiType,b=>BytesType,i=>IntegerType,x=>LexicalUUIDType,l=>LongType,t=>TimeUUIDType,s=>UTF8Type,u=>UUIDType,A=>AsciiType(reversed=true),B=>BytesType(reversed=true),I=>IntegerType(reversed=true),X=>LexicalUUIDType(reversed=true),L=>LongType(reversed=true),T=>TimeUUIDType(reversed=true),S=>UTF8Type(reversed=true),U=>UUIDType(reversed=true))"),
+    ENTITY_UNIQUE("Entity_Unique", "UUIDType"),
 
 	/**
 	 * Contains all properties that have ever been indexed for an entity

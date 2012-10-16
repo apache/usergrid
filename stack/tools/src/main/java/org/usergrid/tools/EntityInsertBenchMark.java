@@ -16,11 +16,13 @@
 package org.usergrid.tools;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import static org.apache.commons.codec.digest.DigestUtils.md5;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
+import static org.usergrid.utils.ConversionUtils.bytes;
 
 import java.nio.ByteBuffer;
 import java.util.Stack;
@@ -45,7 +47,6 @@ import org.usergrid.persistence.DynamicEntity;
 import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.cassandra.EntityManagerImpl;
-import org.usergrid.persistence.cassandra.IndexUpdate.UniqueIndexEntry;
 import org.usergrid.utils.UUIDUtils;
 
 /**
@@ -174,7 +175,7 @@ public class EntityInsertBenchMark extends ToolBase {
                 addInsertToMutator(m, ENTITY_INDEX, index_name, entry.getIndexComposite(), null,
                         System.currentTimeMillis());
 
-                UniqueIndexer indexer = new UniqueIndexer(em.getIndexBucketLocator(), m);
+                UniqueIndexer indexer = new UniqueIndexer(m);
                 indexer.writeIndex(appId, "tests", dynEntity.getUuid(), "test", value);
                 // write this to the direct collection index
 
@@ -193,31 +194,23 @@ public class EntityInsertBenchMark extends ToolBase {
 
     private class UniqueIndexer {
 
-        private IndexBucketLocator indexBucketLocator;
-        private Mutator<ByteBuffer> mutator;
+         private Mutator<ByteBuffer> mutator;
 
         /**
          * @param indexBucketLocator
          * @param mutator
          */
-        public UniqueIndexer(IndexBucketLocator indexBucketLocator, Mutator<ByteBuffer> mutator) {
+        public UniqueIndexer(Mutator<ByteBuffer> mutator) {
             super();
-            this.indexBucketLocator = indexBucketLocator;
             this.mutator = mutator;
         }
 
         private void writeIndex(UUID applicationId, String collectionName, UUID entityId, String propName,
                 Object entityValue) {
 
-            String bucketId = indexBucketLocator.getBucket(applicationId, IndexType.UNIQUE, entityId, collectionName);
+            Object rowKey = key(applicationId, collectionName, propName, md5(bytes(entityValue)));
 
-            Object index_name = key(applicationId, collectionName, propName, bucketId);
-
-            // int i = 0;
-
-            UniqueIndexEntry entry = new UniqueIndexEntry(propName, entityValue);
-
-            addInsertToMutator(mutator, ENTITY_UNIQUE, index_name, entry.getIndexComposite(), null,
+            addInsertToMutator(mutator, ENTITY_UNIQUE, rowKey, entityId, null,
                     System.currentTimeMillis());
 
         }
