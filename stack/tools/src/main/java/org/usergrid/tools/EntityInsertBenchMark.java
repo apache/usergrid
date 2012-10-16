@@ -58,12 +58,7 @@ import org.usergrid.utils.UUIDUtils;
  */
 public class EntityInsertBenchMark extends ToolBase {
 
-    /**
-     * Set to 2x your number of processors
-     */
-    private static final int WORKER_SIZE = 8;
-
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
+   public static final ByteBufferSerializer be = new ByteBufferSerializer();
 
     private static final Logger logger = LoggerFactory.getLogger(EntityInsertBenchMark.class);
 
@@ -80,10 +75,16 @@ public class EntityInsertBenchMark extends ToolBase {
         Option appIdOption = OptionBuilder.withArgName("appId").hasArg().isRequired(true)
                 .withDescription("Application Id to use").create("appId");
 
+        Option workerOption = OptionBuilder.withArgName("workers").hasArg().isRequired(true)
+                .withDescription("Number of workers to use").create("workers");
+       
+    
+        
         Options options = new Options();
         options.addOption(hostOption);
         options.addOption(countOption);
         options.addOption(appIdOption);
+        options.addOption(workerOption);
 
         return options;
     }
@@ -99,18 +100,21 @@ public class EntityInsertBenchMark extends ToolBase {
         startSpring();
 
         logger.info("Starting entity cleanup");
+        
+        int workerSize = Integer.parseInt(line.getOptionValue("workers"));
 
-        ExecutorService executors = Executors.newFixedThreadPool(WORKER_SIZE);
+
+        ExecutorService executors = Executors.newFixedThreadPool(workerSize);
 
         int count = Integer.parseInt(line.getOptionValue("count"));
 
-        int size = count / WORKER_SIZE;
+        int size = count / workerSize;
 
         UUID appId = UUID.fromString(line.getOptionValue("appId"));
 
         Stack<Future<Void>> futures = new Stack<Future<Void>>();
 
-        for (int i = 0; i < WORKER_SIZE; i++) {
+        for (int i = 0; i < workerSize; i++) {
             futures.push(executors.submit(new InsertWorker(i, size, appId)));
         }
 
