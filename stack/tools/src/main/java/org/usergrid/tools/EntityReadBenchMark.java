@@ -56,6 +56,7 @@ import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.cassandra.IndexUpdate.UniqueIndexEntry;
 
 import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.MetricPredicate;
 import com.yammer.metrics.core.Timer;
 import com.yammer.metrics.core.TimerContext;
 import com.yammer.metrics.reporting.ConsoleReporter;
@@ -127,6 +128,12 @@ public class EntityReadBenchMark extends ToolBase {
 
         System.out.println("Querying unique properties in the search index");
 
+        
+        final ConsoleReporter reporter = new ConsoleReporter(Metrics.defaultRegistry(),
+                System.out,
+                MetricPredicate.ALL);
+        
+        
         Stack<Future<Void>> futures = new Stack<Future<Void>>();
 
                 
@@ -136,7 +143,8 @@ public class EntityReadBenchMark extends ToolBase {
         
         
         
-        ConsoleReporter.enable(5, TimeUnit.SECONDS);
+        
+//        ConsoleReporter.enable(5, TimeUnit.SECONDS);
        
     
         System.out.println("Waiting for index read workers to complete");
@@ -147,6 +155,10 @@ public class EntityReadBenchMark extends ToolBase {
         while (!futures.isEmpty()) {
             futures.pop().get();
         }
+        
+        //print the report
+        reporter.run();
+       
         
         for (int i = 0; i < WORKER_SIZE; i++) {
             futures.push(executors.submit(new DictReadWorker(i, size, appId)));
@@ -160,10 +172,12 @@ public class EntityReadBenchMark extends ToolBase {
         }
         
 
-        System.out.println("All workers completed insertion");
+        System.out.println("All workers completed reading");
         
-        //let our last report print
-        Thread.sleep(5000);
+        reporter.run();
+//        
+//        //let our last report print
+//        Thread.sleep(5000);
 
     }
 
@@ -303,7 +317,7 @@ public class EntityReadBenchMark extends ToolBase {
 
             TimerContext timer = dictReads.time();
             
-            Assert.isTrue(indexer.existsInIndex(appId, "test", "test", value));
+            Assert.isTrue(indexer.existsInIndex(appId, "tests", "test", value));
             
             timer.stop();
             
