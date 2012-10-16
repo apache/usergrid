@@ -16,30 +16,23 @@
 package org.usergrid.tools;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static org.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
-import static org.usergrid.persistence.Schema.getDefaultSchema;
-import static org.usergrid.persistence.cassandra.ApplicationCF.*;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
-import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
+import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
-import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
-import static org.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
 
 import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.Stack;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.mutation.Mutator;
 
 import org.apache.commons.cli.CommandLine;
@@ -49,21 +42,10 @@ import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.DynamicEntity;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
-import org.usergrid.persistence.Query;
-import org.usergrid.persistence.Results;
-import org.usergrid.persistence.Schema;
-import org.usergrid.persistence.SimpleEntityRef;
-import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.EntityManagerImpl;
-import org.usergrid.persistence.cassandra.IndexUpdate;
 import org.usergrid.persistence.cassandra.IndexUpdate.UniqueIndexEntry;
-import org.usergrid.persistence.cassandra.RelationManagerImpl;
-import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
-import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.UUIDUtils;
 
 /**
@@ -122,30 +104,25 @@ public class EntityInsertBenchMark extends ToolBase {
         int count = Integer.parseInt(line.getOptionValue("count"));
 
         int size = count / WORKER_SIZE;
-        
-        int orphanced = count % WORKER_SIZE;
 
         UUID appId = UUID.fromString(line.getOptionValue("appId"));
 
         Stack<Future<Void>> futures = new Stack<Future<Void>>();
 
-        for (int i = 0; i < WORKER_SIZE -1; i++) {
+        for (int i = 0; i < WORKER_SIZE; i++) {
             futures.push(executors.submit(new InsertWorker(i, size, appId)));
         }
-        
-        //push a last executor with orphanced count
-        futures.push(executors.submit(new InsertWorker(WORKER_SIZE-1, size+orphanced, appId)));
 
         System.out.println("Waiting for workers to complete insertion");
 
-         /**
+        /**
          * Wait for all tasks to complete
          */
-         while(!futures.isEmpty()){
-             futures.pop().get();
-         }
-         
-         System.out.println("All workers completed insertion");
+        while (!futures.isEmpty()) {
+            futures.pop().get();
+        }
+
+        System.out.println("All workers completed insertion");
 
     }
 
@@ -174,10 +151,7 @@ public class EntityInsertBenchMark extends ToolBase {
 
             Keyspace ko = EntityInsertBenchMark.this.cass.getApplicationKeyspace(appId);
             EntityManagerImpl em = (EntityManagerImpl) emf.getEntityManager(appId);
-
-            SimpleEntityRef application = new SimpleEntityRef("application", appId);
-
-            RelationManagerImpl relationManager = em.getRelationManager(application);
+            IndexBucketLocator indexBucketLocator = em.getIndexBucketLocator();
 
             for (int i = 0; i < count; i++) {
 
@@ -189,16 +163,27 @@ public class EntityInsertBenchMark extends ToolBase {
 
                 String value = new StringBuilder().append(workerNumber).append("-").append(i).toString();
 
-                IndexUpdate update = new IndexUpdate(m, dynEntity, "test", value, false, false, false,
-                        UUIDUtils.newTimeUUID());
+             
+                String bucketId = indexBucketLocator
+                        .getBucket(appId, IndexType.COLLECTION, dynEntity.getUuid(), "test");
 
-                relationManager.batchUpdateCollectionIndex(update, application, "test");
+                Object index_name = key(appId, "tests", "test", bucketId);
+
+                IndexEntry entry = new IndexEntry(dynEntity.getUuid(), "test", value, UUIDUtils.newTimeUUID());
+
+                addInsertToMutator(m, ENTITY_INDEX, index_name, entry.getIndexComposite(), null,
+                        System.currentTimeMillis());
 
                 UniqueIndexer indexer = new UniqueIndexer(em.getIndexBucketLocator(), m);
-                indexer.writeIndex(appId, "test", dynEntity.getUuid(), "test", value);
+                indexer.writeIndex(appId, "tests", dynEntity.getUuid(), "test", value);
                 // write this to the direct collection index
 
                 m.execute();
+
+                if (i % 100 == 0) {
+                    System.out.println(String.format("%s : Written %d of %d", Thread.currentThread().getName(), i,
+                            count));
+                }
             }
 
             return null;
@@ -238,4 +223,50 @@ public class EntityInsertBenchMark extends ToolBase {
         }
 
     }
+    
+
+    public static class IndexEntry {
+        private final byte code;
+        private String path;
+        private final Object value;
+        private final UUID timestampUuid;
+        private final UUID entityId;
+
+        public IndexEntry(UUID entityId, String path, Object value, UUID timestampUuid) {
+            this.entityId = entityId;
+            this.path = path;
+            this.value = value;
+            code = indexValueCode(value);
+            this.timestampUuid = timestampUuid;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
+        public byte getValueCode() {
+            return code;
+        }
+
+        public UUID getTimestampUuid() {
+            return timestampUuid;
+        }
+
+        public DynamicComposite getIndexComposite() {
+            return new DynamicComposite(code, value, entityId, timestampUuid);
+        }
+
+      
+
+    }
+    
+    
 }
