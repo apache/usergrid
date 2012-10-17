@@ -2569,13 +2569,13 @@
     hidePagination('roles');
     var output = $('#roles-table')
     output.empty();
-    if (response.data < 1) {
+    if (response.entities < 1) {
       output.html('<div class="group-panel-section-message">No roles found.</div>');
     } else {
-      $.each (response.data, function(index, value) {
+      $.each (response.entities, function(index, value) {
         var data = [
-          {name: index,
-           title: value}]
+          {name: value.name,
+           title: value.title}]
         $.tmpl('apigee.ui.roles.table_rows.html', data).appendTo('#roles-table');
       });
     }
@@ -2595,7 +2595,7 @@
     confirmDelete(function(){
       items.each(function() {
         var roleName = $(this).attr("value");
-        runAppQuery(new Usergrid.Query("DELETE", "rolenames/" + roleName, null, null, getRoles,
+        runAppQuery(new Usergrid.Query("DELETE", "roles/" + roleName, null, null, getRoles,
           function() { alertModal("Error", "Unable to delete role"); }
         ));
       });
@@ -2657,6 +2657,7 @@
     var t = "";
     var m = "";
     permissions = {};
+    var localPermission = {};
     if (response.data) {
       var perms = response.data;
       var count = 0;
@@ -2689,7 +2690,7 @@
     displayRoleInactivity(roleName);
   }
 
-  function displayRoleInactivity(roleName, response) {
+  function displayRoleInactivity(roleName) {
     //requestRole & displayInactivity
     runAppQuery(new Usergrid.Query("GET", "roles/" + roleName, null, null,
       function(response) {
@@ -2767,7 +2768,7 @@
   }
 
   function getRolePermissions(roleName){
-    runAppQuery(new Usergrid.Query("GET", "rolenames/" + roleName, null, null,
+    runAppQuery(new Usergrid.Query("GET", "roles/" + roleName + "/permissions", null, null,
       function(response) { displayPermissions(roleName, response, this.getCurl()); },
       function() { $('#application-roles').html('<div class="alert">Unable to retrieve ' + roleName + ' role permissions.</div>'); }
     ));
@@ -2790,7 +2791,7 @@
   function deleteRolePermission(roleName, permission) {
       data = {"permission":permission};
       confirmDelete(function(){
-        runAppQuery(new Usergrid.Query("DELETE", "rolenames/" + roleName, null, data,
+        runAppQuery(new Usergrid.Query("DELETE", "roles/" + roleName + "/permissions", null, data,
         function(){getRolePermissions(roleName)},
         function(){getRolePermissions(roleName)}
         ));
@@ -2821,7 +2822,7 @@
     var permission = ops + ":" + path;
     var data = {"permission": ops + ":" + path};
     if (ops) {
-      runAppQuery(new Usergrid.Query("POST", "/rolenames/" + roleName, data, null,
+      runAppQuery(new Usergrid.Query("POST", "/roles/" + roleName + "/permissions", data, null,
       function(){ getRolePermissions(roleName)},
       function(){ getRolePermissions(roleName)}));
     } else {
