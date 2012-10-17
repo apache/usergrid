@@ -20,7 +20,7 @@ import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
 import static org.usergrid.utils.ConversionUtils.bytebuffers;
-import static org.usergrid.utils.ConversionUtils.bytes;
+import static org.usergrid.utils.ConversionUtils.*;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -49,6 +49,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -343,7 +344,7 @@ public class EntityReadBenchMark extends ToolBase {
         }
 
         private boolean existsInIndex(UUID applicationId, String collectionName, String propName, Object entityValue) throws Exception {
-            Object rowKey = key(applicationId, collectionName, propName, md5(bytes(entityValue)));
+            Object rowKey = key(applicationId, collectionName, propName, Base64.encodeBase64String(md5(bytes(entityValue))));
 
             
             List<HColumn<ByteBuffer, ByteBuffer>> cols = cass.getColumns(keyspace, ENTITY_UNIQUE, rowKey, null, null, 2, false);

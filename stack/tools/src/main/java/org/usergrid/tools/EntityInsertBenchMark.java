@@ -41,6 +41,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.DynamicEntity;
@@ -212,7 +213,7 @@ public class EntityInsertBenchMark extends ToolBase {
         private void writeIndex(UUID applicationId, String collectionName, UUID entityId, String propName,
                 Object entityValue) {
 
-            Object rowKey = key(applicationId, collectionName, propName, md5(bytes(entityValue)));
+            Object rowKey = key(applicationId, collectionName, propName, Base64.encodeBase64String(md5(bytes(entityValue))));
 
             addInsertToMutator(mutator, ENTITY_UNIQUE, rowKey, entityId, null,
                     System.currentTimeMillis());
