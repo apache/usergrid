@@ -364,7 +364,7 @@ public abstract class AbstractService implements Service {
 			for (Entity entity : entities) {
 				Entity imported = importEntity(request, entity);
 				if (imported != entity) {
-					logger.info(
+					logger.debug(
 							"Import returned new entity instace for {} replacing in results set",
 							entity.getUuid());
 					results.replace(imported);
@@ -1213,8 +1213,8 @@ public abstract class AbstractService implements Service {
 		String permission = getPermissionFromPath(em.getApplicationRef()
 				.getUuid(), context.getAction().toString().toLowerCase(), path);
 		boolean permitted = currentUser.isPermitted(permission);
-        if ( logger.isInfoEnabled() ){
-            logger.info(PATH_MSG,
+        if ( logger.isDebugEnabled() ){
+            logger.debug(PATH_MSG,
                     new Object[]{
                             path,
                             context.getAction(),

@@ -100,7 +100,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.yammer.metrics.annotation.Metered;
 import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
@@ -119,9 +118,7 @@ import me.prettyprint.hector.api.query.QueryResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.usergrid.persistence.AssociatedEntityRef;
 import org.usergrid.persistence.CollectionRef;
 import org.usergrid.persistence.ConnectedEntityRef;
@@ -142,13 +139,18 @@ import org.usergrid.persistence.SimpleRoleRef;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.entities.Group;
-import org.usergrid.persistence.query.ir.*;
+import org.usergrid.persistence.query.ir.AllNode;
+import org.usergrid.persistence.query.ir.QuerySlice;
+import org.usergrid.persistence.query.ir.SearchVisitor;
+import org.usergrid.persistence.query.ir.SliceNode;
+import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.IndexUtils;
 import org.usergrid.utils.MapUtils;
 import org.usergrid.utils.StringUtils;
 
 import com.beoui.geocell.model.Point;
+import com.yammer.metrics.annotation.Metered;
 
 public class RelationManagerImpl implements RelationManager {
 
@@ -229,11 +231,11 @@ public class RelationManagerImpl implements RelationManager {
         QueryResult<OrderedRows<UUID, String, ByteBuffer>> r = q.execute();
         OrderedRows<UUID, String, ByteBuffer> rows = r.get();
         List<ConnectionRefImpl> connections = new ArrayList<ConnectionRefImpl>();
-        logger.info(rows.getCount() + " indexed connection row(s) retrieved");
+        logger.debug("{} indexed connection row(s) retrieved", rows.getCount() );
         for (Row<UUID, String, ByteBuffer> row : rows) {
             UUID entityId = row.getKey();
 
-            logger.info("Indexed connection " + entityId.toString() + " found");
+            logger.debug("Indexed connection {} found", entityId.toString());
 
             ConnectionRefImpl c = ConnectionRefImpl.loadFromColumns(row
                     .getColumnSlice().getColumns());
@@ -241,14 +243,13 @@ public class RelationManagerImpl implements RelationManager {
             String entityType = c.getConnectedEntityType();
             if (!includeConnectionEntities
                     && TYPE_CONNECTION.equalsIgnoreCase(entityType)) {
-                logger.info("Skipping loopback connection "
-                        + entityId.toString());
+                logger.debug("Skipping loopback connection {}", entityId.toString());
                 continue;
             }
             connections.add(c);
         }
 
-        logger.info("Returing " + connections.size() + " connection(s)");
+        logger.debug("Returing {} connection(s)", connections.size());
         return connections;
     }
 
@@ -270,8 +271,7 @@ public class RelationManagerImpl implements RelationManager {
             for (Row<UUID, String, ByteBuffer> row : rows) {
                 UUID entityId = row.getKey();
 
-                logger.info("Indexed Connection " + entityId.toString()
-                        + " found");
+                logger.debug("Indexed Connection {} found",entityId.toString());
 
                 ConnectionRefImpl c = ConnectionRefImpl.loadFromColumns(row
                         .getColumnSlice().getColumns());
@@ -426,7 +426,7 @@ public class RelationManagerImpl implements RelationManager {
     public IndexUpdate batchUpdateCollectionIndex(IndexUpdate indexUpdate,
             EntityRef owner, String collectionName) throws Exception {
 
-        logger.info("batchUpdateCollectionIndex");
+        logger.debug("batchUpdateCollectionIndex");
 
         Entity indexedEntity = indexUpdate.getEntity();
 
@@ -626,9 +626,9 @@ public class RelationManagerImpl implements RelationManager {
                     UUID ownerId = (UUID) composite.get(2);
                     addMapSet(results, new SimpleEntityRef(ownerType, ownerId),
                             collectionName);
-                    logger.info(headEntity.getType() + "("
-                            + headEntity.getUuid() + ") is in collection "
-                            + ownerType + "(" + ownerId + ")." + collectionName);
+                    if(logger.isDebugEnabled()){
+                        logger.debug( " {} ( {} ) is in collection {} ( {} )." , new Object[]{headEntity.getType(), headEntity.getUuid(),ownerType,collectionName, ownerId });
+                    }
                 }
             }
         }
@@ -1291,7 +1291,7 @@ public class RelationManagerImpl implements RelationManager {
     public IndexUpdate batchUpdateBackwardConnectionsPropertyIndexes(
             IndexUpdate indexUpdate) throws Exception {
 
-        logger.info("batchUpdateBackwordConnectionsPropertyIndexes");
+        logger.debug("batchUpdateBackwordConnectionsPropertyIndexes");
 
         boolean entitySchemaHasProperty = indexUpdate.isSchemaHasProperty();
 
@@ -1344,7 +1344,7 @@ public class RelationManagerImpl implements RelationManager {
     public IndexUpdate batchUpdateBackwardConnectionsDictionaryIndexes(
             IndexUpdate indexUpdate) throws Exception {
 
-        logger.info("batchUpdateBackwardConnectionsListIndexes");
+        logger.debug("batchUpdateBackwardConnectionsListIndexes");
 
         boolean entityHasDictionary = getDefaultSchema()
                 .isDictionaryIndexedInConnections(
@@ -1647,9 +1647,9 @@ public class RelationManagerImpl implements RelationManager {
                                 entryName)), INDEX_ENTRY_LIST_COUNT, false);
             }
 
-            logger.info("Found " + entries.size()
-                    + " previous index entries for " + entryName
-                    + " of entity " + entity.getUuid());
+            if(logger.isDebugEnabled()){
+                logger.debug("Found {} previous index entries for {} of entity {}" , new Object[]{entries.size(),entryName, entity.getUuid() });
+            }
 
             // Delete all matching entries from entry list
             for (HColumn<ByteBuffer, ByteBuffer> entry : entries) {
@@ -1774,10 +1774,9 @@ public class RelationManagerImpl implements RelationManager {
                 associatedId = (UUID) item;
                 associatedType = string(entity.getProperty(PROPERTY_ITEM_TYPE));
                 String entryName = TYPE_MEMBER + "." + propertyName;
-                logger.info("Extended property " + entity.getType() + "("
-                        + entity.getUuid() + ")." + propertyName
-                        + " indexed as " + associatedType + "(" + associatedId
-                        + ")." + entryName);
+                if(logger.isDebugEnabled()){
+                    logger.debug("Extended property {} ( {} ).{} indexed as {} ({})." + entryName, new Object[]{entity.getType(), entity.getUuid(),propertyName, associatedType ,associatedId });
+                }
                 propertyName = entryName;
             }
         }
@@ -1838,8 +1837,7 @@ public class RelationManagerImpl implements RelationManager {
             for (EntityRef containerEntity : containerEntities.keySet()) {
                 if (containerEntity.getType().equals(TYPE_APPLICATION)
                         && Schema.isAssociatedEntityType(entity.getType())) {
-                    logger.info("Extended properties for " + entity.getType()
-                            + " not indexed by application");
+                    logger.debug("Extended properties for {} not indexed by application", entity.getType());
                     continue;
                 }
                 Set<String> collectionNames = containerEntities
@@ -1885,8 +1883,7 @@ public class RelationManagerImpl implements RelationManager {
             for (EntityRef containerEntity : containerEntities.keySet()) {
                 if (containerEntity.getType().equals(TYPE_APPLICATION)
                         && Schema.isAssociatedEntityType(entity.getType())) {
-                    logger.info("Extended properties for " + entity.getType()
-                            + " not indexed by application");
+                    logger.debug("Extended properties for {} not indexed by application", entity.getType());
                     continue;
                 }
                 Set<String> collectionNames = containerEntities
@@ -2003,9 +2000,7 @@ public class RelationManagerImpl implements RelationManager {
                     ids.add(connectedEntityId);
                     idSet.add(connectedEntityId);
                 } else {
-                    logger.error("Duplicate entity uuid ("
-                            + connectedEntityId
-                            + ") found in index results, discarding but index appears inconsistent...");
+                    logger.error("Duplicate entity uuid ({}) found in index results, discarding but index appears inconsistent...", connectedEntityId);
                 }
             }
 
@@ -2728,7 +2723,7 @@ public class RelationManagerImpl implements RelationManager {
         // now we need to set the cursor from our tree evaluation for return
         results.setCursor(qp.getCursor());
 
-        logger.info("Query cursor: " + results.getCursor());
+        logger.debug("Query cursor: {}", results.getCursor());
 
         return results;
     }

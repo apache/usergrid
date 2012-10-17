@@ -42,9 +42,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.Row;
@@ -75,6 +72,10 @@ import org.usergrid.persistence.schema.PropertyInfo;
 import org.usergrid.utils.InflectionUtils;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.MapUtils;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 /**
  * The controller class for determining Entity relationships as well as
@@ -444,7 +445,6 @@ public class Schema {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public synchronized void init() {
         if (!initialized) {
             initialized = true;
@@ -453,6 +453,7 @@ public class Schema {
         }
     }
     
+    @SuppressWarnings("unchecked")
     public void scanEntities() {
      	for( String path : entitiesScanPath ) {
     		ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(
@@ -1880,12 +1881,11 @@ public class Schema {
 
         String entityType = string(columns.get(PROPERTY_TYPE));
         if (entityType == null) {
-            logger.warn("deserializeEntityProperties(): No type for entity found, entity probably doesn't exist");
+            logger.debug("deserializeEntityProperties(): No type for entity found, entity probably doesn't exist");
             return null;
         }
         if (checkId && !columns.containsKey(PROPERTY_UUID)) {
-            logger.error("No id for entity (" + entityType + ") found!",
-                    new Throwable());
+            logger.error("No id for entity ( {} ) found!", entityType);
             return null;
         }
 

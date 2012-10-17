@@ -68,12 +68,10 @@ import org.usergrid.rest.applications.assets.AssetsResource;
 import org.usergrid.rest.applications.events.EventsResource;
 import org.usergrid.rest.applications.queues.QueueResource;
 import org.usergrid.rest.applications.users.UsersResource;
-import org.usergrid.rest.exceptions.NoOpException;
 import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
-import org.usergrid.services.ServiceAction;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
@@ -146,7 +144,7 @@ public class ApplicationResource extends ServiceResource {
   @Path("assets")
   public AssetsResource getAssetsResource(@Context UriInfo ui)
           throws Exception {
-    logger.info("in assets n applicationResource");
+    logger.debug("in assets n applicationResource");
     addParameter(getServiceParameters(), "assets");
 
     PathSegment ps = getFirstPathSegment("assets");
@@ -163,13 +161,13 @@ public class ApplicationResource extends ServiceResource {
   public AssetsResource getAssetResource(@Context UriInfo ui)
           throws Exception {
     // TODO change to singular
-    logger.info("in asset in applicationResource");
+    logger.debug("in asset in applicationResource");
     return getAssetsResource(ui);
   }
 
     @Path("users")
     public UsersResource getUsers(@Context UriInfo ui) throws Exception {
-        logger.info("ApplicationResource.getUsers");
+        logger.debug("ApplicationResource.getUsers");
         addParameter(getServiceParameters(), "users");
 
         PathSegment ps = getFirstPathSegment("users");
@@ -218,7 +216,7 @@ public class ApplicationResource extends ServiceResource {
             @QueryParam("callback") @DefaultValue("") String callback)
             throws Exception {
 
-        logger.info("ApplicationResource.getAccessToken");
+        logger.debug("ApplicationResource.getAccessToken");
 
         User user = null;
 
@@ -320,7 +318,7 @@ public class ApplicationResource extends ServiceResource {
             @QueryParam("callback") @DefaultValue("") String callback)
             throws Exception {
 
-        logger.info("ApplicationResource.getAccessTokenPost");
+        logger.debug("ApplicationResource.getAccessTokenPost");
 
         return getAccessToken(ui, null, grant_type, username, password, pin,
                 client_id, client_secret, code, ttl, redirect_uri, callback);
@@ -363,7 +361,7 @@ public class ApplicationResource extends ServiceResource {
             @QueryParam("callback") @DefaultValue("callback") String callback)
             throws Exception {
 
-        logger.info("AuthResource.keys");
+        logger.debug("AuthResource.keys");
 
         if (!isApplicationAdmin(Identifier.fromUUID(applicationId))) {
             throw new UnauthorizedException();
@@ -386,7 +384,7 @@ public class ApplicationResource extends ServiceResource {
             @QueryParam("callback") @DefaultValue("callback") String callback)
             throws Exception {
 
-        logger.info("AuthResource.keys");
+        logger.debug("AuthResource.keys");
 
         if (!isApplicationAdmin(Identifier.fromUUID(applicationId))) {
             throw new UnauthorizedException();
@@ -488,7 +486,7 @@ public class ApplicationResource extends ServiceResource {
             @QueryParam("callback") @DefaultValue("callback") String callback)
             throws Exception {
 
-        logger.info("ApplicationResource.executeDelete");
+        logger.debug("ApplicationResource.executeDelete");
         
         throw new NotImplementedException("Application delete is not allowed yet");
     }

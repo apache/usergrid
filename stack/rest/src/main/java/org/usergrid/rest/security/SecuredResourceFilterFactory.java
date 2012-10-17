@@ -139,16 +139,16 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
 
         @Override
         public ContainerRequest filter(ContainerRequest request) {
-            logger.info("Filtering {}", request.getRequestUri().toString());
+            logger.debug("Filtering {}", request.getRequestUri().toString());
 
             if (request.getMethod().equalsIgnoreCase("OPTIONS")) {
-                logger.info("Skipping option request");
+                logger.debug("Skipping option request");
                 return request;
             }
 
             MultivaluedMap<java.lang.String, java.lang.String> params = uriInfo
                     .getPathParameters();
-            logger.info("Params: {}", params.keySet());
+            logger.debug("Params: {}", params.keySet());
 
             authorize(request);
             return request;
@@ -222,7 +222,7 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
 
         @Override
         public void authorize(ContainerRequest request) {
-            logger.info("OrganizationFilter.authorize");
+            logger.debug("OrganizationFilter.authorize");
 
             if (!isPermittedAccessToOrganization(getOrganizationIdentifier())) {
                 throw mappableSecurityException("unauthorized",
@@ -239,7 +239,7 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
 
         @Override
         public void authorize(ContainerRequest request) {
-            logger.info("ApplicationFilter.authorize");
+            logger.debug("ApplicationFilter.authorize");
             if (SubjectUtils.isAnonymous()) {
                 ApplicationInfo application = null;
                 try {
@@ -253,7 +253,7 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
                 Map<String, String> roles = null;
                 try {
                     roles = em.getRoles();
-                    logger.info("found roles {}", roles);
+                    logger.debug("found roles {}", roles);
                 } catch (Exception e) {
                     logger.error("Unable retrieve roles", e);
                 }
@@ -278,7 +278,7 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
 
         @Override
         public void authorize(ContainerRequest request) {
-            logger.info("SystemFilter.authorize");
+            logger.debug("SystemFilter.authorize");
             try {
                 if (!request.isUserInRole("sysadmin")) {
                     throw mappableSecurityException("unauthorized",
@@ -304,7 +304,7 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
 
         @Override
         public void authorize(ContainerRequest request) {
-            logger.info("AdminUserFilter.authorize");
+            logger.debug("AdminUserFilter.authorize");
             if (!isUser(getUserIdentifier())) {
                 throw mappableSecurityException("unauthorized",
                         "No admin user access authorized");
