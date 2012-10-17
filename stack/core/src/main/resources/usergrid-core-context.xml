@@ -59,7 +59,7 @@
 		class="org.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
 		<constructor-arg ref="cassandraService" />
         <constructor-arg ref="counterUtils"/>
-
+        <constructor-arg value="${usergrid.counter.skipAggregate : false}"/>
     </bean>
 
     <bean id="queueManagerFactory"

@@ -341,7 +341,7 @@ public class CounterUtils {
 		return keys;
 	}
 
-	public Mutator<ByteBuffer> batchIncrementEntityCounter(
+	private Mutator<ByteBuffer> batchIncrementEntityCounter(
 			Mutator<ByteBuffer> m, UUID entityId, String name, Long value,
 			long timestamp, UUID applicationId) {
 		if (logger.isDebugEnabled()) {
@@ -364,25 +364,6 @@ public class CounterUtils {
 		return m;
 	}
 
-	public Mutator<ByteBuffer> batchIncrementEntityCounters(
-			Mutator<ByteBuffer> m, UUID entityId, Map<String, Long> values,
-			long timestamp, UUID applicationId) {
-		for (Entry<String, Long> entry : values.entrySet()) {
-			batchIncrementEntityCounter(m, entityId, entry.getKey(),
-					entry.getValue(), timestamp, applicationId);
-		}
-		return m;
-	}
-
-	public Mutator<ByteBuffer> batchIncrementEntityCounters(
-			Mutator<ByteBuffer> m, Map<UUID, Map<String, Long>> values,
-			long timestamp, UUID applicationId) {
-		for (Entry<UUID, Map<String, Long>> entry : values.entrySet()) {
-			batchIncrementEntityCounters(m, entry.getKey(), entry.getValue(),
-					timestamp, applicationId);
-		}
-		return m;
-	}
 
 	public Mutator<ByteBuffer> batchIncrementQueueCounter(
 			Mutator<ByteBuffer> m, UUID queueId, String name, long value,

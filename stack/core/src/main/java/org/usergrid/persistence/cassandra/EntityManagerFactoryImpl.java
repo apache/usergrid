@@ -97,6 +97,8 @@ ApplicationContextAware {
     CassandraService cass;
     CounterUtils counterUtils;
 
+    private boolean skipAggregateCounters;
+
     private LoadingCache<UUID, EntityManager> entityManagers = CacheBuilder.newBuilder()
             .maximumSize(100)
             .build(
@@ -113,9 +115,14 @@ ApplicationContextAware {
      *            the cassandraService instance
      */
     public EntityManagerFactoryImpl(CassandraService cass,
-            CounterUtils counterUtils) {
+            CounterUtils counterUtils,
+            boolean skipAggregateCounters) {
         this.cass = cass;
         this.counterUtils = counterUtils;
+        this.skipAggregateCounters = skipAggregateCounters;
+        if ( skipAggregateCounters ) {
+            logger.warn("NOTE: Counters have been disabled by configuration...");
+        }
     }
 
     /*
@@ -148,7 +155,7 @@ ApplicationContextAware {
     private EntityManager _getEntityManager(UUID applicationId) {
         EntityManagerImpl em = new EntityManagerImpl();
         //EntityManagerImpl em = applicationContext.getBean(EntityManagerImpl.class);
-        em.init(this,cass,counterUtils,applicationId);
+        em.init(this,cass,counterUtils,applicationId, skipAggregateCounters);
         return em;
     }
 

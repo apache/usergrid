@@ -834,16 +834,6 @@ public interface EntityManager {
 
     public Set<String> getCounterNames() throws Exception;
 
-    public void incrementApplicationCounters(Map<String, Long> counts);
-
-    public void incrementApplicationCounter(String name, long value);
-
-    public void incrementEntitiesCounters(Map<UUID, Map<String, Long>> counts);
-
-    public void incrementEntityCounters(UUID entityId, Map<String, Long> counts);
-
-    public void incrementEntityCounter(UUID entityId, String name, long value);
-
     public Map<String, Long> getEntityCounters(UUID entityId) throws Exception;
 
     public Map<String, Long> getApplicationCounters() throws Exception;
