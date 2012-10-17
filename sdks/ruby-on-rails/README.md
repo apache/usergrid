@@ -99,6 +99,7 @@ usergrid_ironhorse/spec/spec_settings.yaml to match.)
 ### 0.0.2
 * New Features
   1. Authentication and user propagation features
+
 ### 0.0.1
 * Initial commit
   1. Support for most ActiveModel stuff including Validations
