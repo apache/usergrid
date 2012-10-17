@@ -344,7 +344,7 @@ public class EntityReadBenchMark extends ToolBase {
         }
 
         private boolean existsInIndex(UUID applicationId, String collectionName, String propName, Object entityValue) throws Exception {
-            Object rowKey = key(applicationId, collectionName, propName, Base64.encodeBase64String(md5(bytes(entityValue))));
+            Object rowKey = key(applicationId, collectionName, propName, entityValue);
 
             
             List<HColumn<ByteBuffer, ByteBuffer>> cols = cass.getColumns(keyspace, ENTITY_UNIQUE, rowKey, null, null, 2, false);

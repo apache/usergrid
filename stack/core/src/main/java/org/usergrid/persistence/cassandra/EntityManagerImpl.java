@@ -15,9 +15,6 @@
  ******************************************************************************/
 package org.usergrid.persistence.cassandra;
 
-import static org.apache.commons.codec.digest.DigestUtils.md5;
-import static org.usergrid.utils.ConversionUtils.*;
-
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
 import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
@@ -26,7 +23,6 @@ import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.usergrid.persistence.Results.fromEntities;
-import static org.usergrid.persistence.Results.Level.IDS;
 import static org.usergrid.persistence.Results.Level.REFS;
 import static org.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.usergrid.persistence.Schema.COLLECTION_USERS;
@@ -62,7 +58,8 @@ import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
-import static org.usergrid.persistence.cassandra.ApplicationCF.*;
+import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_PROPERTIES;
+import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addPropertyToMutator;
@@ -77,7 +74,6 @@ import static org.usergrid.utils.ConversionUtils.getLong;
 import static org.usergrid.utils.ConversionUtils.object;
 import static org.usergrid.utils.ConversionUtils.string;
 import static org.usergrid.utils.ConversionUtils.uuid;
-import static org.usergrid.utils.InflectionUtils.pluralize;
 import static org.usergrid.utils.InflectionUtils.singularize;
 import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.usergrid.utils.UUIDUtils.getTimestampInMillis;
@@ -165,7 +161,6 @@ import org.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.usergrid.persistence.schema.CollectionInfo;
-import org.usergrid.persistence.schema.EntityInfo;
 import org.usergrid.utils.ClassUtils;
 import org.usergrid.utils.CompositeUtils;
 import org.usergrid.utils.UUIDUtils;
@@ -674,7 +669,7 @@ public class EntityManagerImpl implements EntityManager {
 	 * @return
 	 */
 	private Object createUniqueIndexKey(String collectionName, String propertyName, Object value){
-	    return key(applicationId, collectionName, propertyName, Base64.encodeBase64String(md5(bytes(value))));
+	    return key(applicationId, collectionName, propertyName, value);
 	}
 
 

@@ -213,7 +213,7 @@ public class EntityInsertBenchMark extends ToolBase {
         private void writeIndex(UUID applicationId, String collectionName, UUID entityId, String propName,
                 Object entityValue) {
 
-            Object rowKey = key(applicationId, collectionName, propName, Base64.encodeBase64String(md5(bytes(entityValue))));
+            Object rowKey = key(applicationId, collectionName, propName, entityValue);
 
             addInsertToMutator(mutator, ENTITY_UNIQUE, rowKey, entityId, null,
                     System.currentTimeMillis());
