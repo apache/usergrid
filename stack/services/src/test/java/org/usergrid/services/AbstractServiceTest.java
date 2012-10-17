@@ -115,16 +115,24 @@ public abstract class AbstractServiceTest {
 	public ServiceResults testRequest(ServiceManager sm, ServiceAction action,
 			int expectedCount, Map<String, Object> properties, Object... params)
 			throws Exception {
-		ServiceRequest request = sm.newRequest(action, parameters(params),
-				payload(properties));
-		logger.info("Request: " + action + " " + request.toString());
-		dumpProperties(properties);
-		ServiceResults results = request.execute();
+		ServiceResults results = invokeService(sm, action, properties, params);
 		assertNotNull(results);
 		assertEquals(expectedCount, results.getEntities().size());
 		dumpResults(results);
 		return results;
 	}
+	
+	public ServiceResults invokeService(ServiceManager sm, ServiceAction action, Map<String, Object> properties, Object... params)
+            throws Exception {
+        ServiceRequest request = sm.newRequest(action, parameters(params),
+                payload(properties));
+        logger.info("Request: " + action + " " + request.toString());
+        dumpProperties(properties);
+        ServiceResults results = request.execute();
+        assertNotNull(results);
+        dumpResults(results);
+        return results;
+    }
 
 	public ServiceResults testBatchRequest(ServiceManager sm,
 			ServiceAction action, int expectedCount,

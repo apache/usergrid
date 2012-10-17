@@ -17,6 +17,7 @@ package org.usergrid.persistence;
 
 import java.util.UUID;
 
+import org.springframework.util.Assert;
 import org.usergrid.persistence.cassandra.CassandraPersistenceUtils;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.utils.StringUtils;
@@ -33,6 +34,7 @@ public class SimpleRoleRef implements RoleRef {
 	}
 
 	public SimpleRoleRef(UUID groupId, String roleName) {
+	    Assert.notNull(roleName);
 		if (groupId != null) {
 			this.groupId = groupId;
 		} else {
