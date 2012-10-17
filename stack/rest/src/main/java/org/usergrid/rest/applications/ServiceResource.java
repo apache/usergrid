@@ -157,7 +157,7 @@ public class ServiceResource extends AbstractContextResource {
 	public AbstractContextResource addIdParameter(@Context UriInfo ui,
 			@PathParam("entityId") PathSegment entityId) throws Exception {
 
-		logger.info("ServiceResource.addIdParameter");
+		logger.debug("ServiceResource.addIdParameter");
 
 		UUID itemId = UUID.fromString(entityId.getPath());
 
@@ -172,9 +172,9 @@ public class ServiceResource extends AbstractContextResource {
 	public AbstractContextResource addNameParameter(@Context UriInfo ui,
 			@PathParam("itemName") PathSegment itemName) throws Exception {
 
-		logger.info("ServiceResource.addNameParameter");
+		logger.debug("ServiceResource.addNameParameter");
 
-		logger.info("Current segment is " + itemName.getPath());
+		logger.debug("Current segment is {}",  itemName.getPath());
 
 		if (itemName.getPath().startsWith("{")) {
 			Query query = Query.fromJsonString(itemName.getPath());
@@ -194,7 +194,7 @@ public class ServiceResource extends AbstractContextResource {
 			ApiResponse response, ServiceAction action, ServicePayload payload)
 			throws Exception {
 
-		logger.info("ServiceResource.executeServiceRequest");
+		logger.debug("ServiceResource.executeServiceRequest");
 
 		boolean tree = "true".equalsIgnoreCase(ui.getQueryParameters()
 				.getFirst("tree"));
@@ -238,7 +238,7 @@ public class ServiceResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		logger.info("ServiceResource.executeGet");
+		logger.debug("ServiceResource.executeGet");
 
 		ApiResponse response = new ApiResponse(ui);
 		
@@ -282,7 +282,7 @@ public class ServiceResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		logger.info("ServiceResource.executePost");
+		logger.debug("ServiceResource.executePost");
 
 		Object json = body.getEntity();
        
@@ -308,7 +308,7 @@ public class ServiceResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		logger.info("ServiceResource.executePut");
+		logger.debug("ServiceResource.executePut");
 
 		
 		ApiResponse response = new ApiResponse(ui);
@@ -331,7 +331,7 @@ public class ServiceResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		logger.info("ServiceResource.executeDelete");
+		logger.debug("ServiceResource.executeDelete");
 	
 		ApiResponse response = new ApiResponse(ui);
 		response.setAction("delete");

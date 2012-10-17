@@ -50,6 +50,10 @@ import org.usergrid.utils.ListUtils;
 
 public class ServiceManager {
 
+
+    private static final Logger logger = LoggerFactory
+            .getLogger(ServiceManager.class);
+    
     /**
      * A pointer that signals we couldn't find a class
      */
@@ -64,8 +68,6 @@ public class ServiceManager {
 	public static final String COM_PACKAGE_PREFIX = "com.usergrid.services";
 	public static final String SERVICE_PACKAGE_PREFIXES = "usergird.service.packages";
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(ServiceManager.class);
     public static final String APPLICATION_REQUESTS = "application.requests";
     public static final String APPLICATION_REQUESTS_PER = APPLICATION_REQUESTS + ".";
     public static final String IMPL = "Impl";
@@ -195,7 +197,7 @@ public class ServiceManager {
 
 		serviceType = ServiceInfo.normalizeServicePattern(serviceType);
 
-		logger.info("Looking up service pattern: {}", serviceType);
+		logger.debug("Looking up service pattern: {}", serviceType);
 
 		ServiceInfo info = ServiceInfo.getServiceInfo(serviceType);
 
@@ -206,7 +208,7 @@ public class ServiceManager {
 		Service service = getServiceInstance(info);
 
 		if (service != null) {
-			logger.info("Returning service instance: {}", service.getClass());
+			logger.debug("Returning service instance: {}", service.getClass());
 		}
 
 		/*
@@ -216,7 +218,7 @@ public class ServiceManager {
 		 */
 
 		if (service == null) {
-			logger.info("Service " + serviceType + " not found");
+			logger.info("Service {} not found", serviceType);
 		}
 
 		return service;
@@ -267,7 +269,7 @@ public class ServiceManager {
        
         Class<Service>  cls;
         try {
-            logger.info("Attempting to instantiate service class {}", classname);
+            logger.debug("Attempting to instantiate service class {}", classname);
             cls = (Class<Service>) Class.forName(classname);
             if (cls.isInterface()) {
                 cls = (Class<Service>) Class.forName(classname.concat(IMPL));

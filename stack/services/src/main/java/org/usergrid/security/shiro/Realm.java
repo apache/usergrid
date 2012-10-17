@@ -122,8 +122,7 @@ public class Realm extends AuthorizingRealm {
     @Override
     public void setCredentialsMatcher(CredentialsMatcher credentialsMatcher) {
         if (!(credentialsMatcher instanceof AllowAllCredentialsMatcher)) {
-            logger.info("Replacing " + credentialsMatcher
-                    + " with AllowAllCredentialsMatcher");
+            logger.debug("Replacing {} with AllowAllCredentialsMatcher", credentialsMatcher);
             credentialsMatcher = new AllowAllCredentialsMatcher();
         }
         super.setCredentialsMatcher(credentialsMatcher);
@@ -132,8 +131,7 @@ public class Realm extends AuthorizingRealm {
     @Override
     public void setPermissionResolver(PermissionResolver permissionResolver) {
         if (!(permissionResolver instanceof CustomPermissionResolver)) {
-            logger.info("Replacing " + permissionResolver
-                    + " with AllowAllCredentialsMatcher");
+            logger.debug("Replacing {} with AllowAllCredentialsMatcher", permissionResolver);
             permissionResolver = new CustomPermissionResolver();
         }
         super.setPermissionResolver(permissionResolver);
@@ -199,7 +197,8 @@ public class Realm extends AuthorizingRealm {
         if (!authenticated) {
             throw new AuthenticationException("Unable to authenticate");
         }
-        logger.info("Authenticated: " + principal);
+        
+        logger.debug("Authenticated: {}",  principal);
 
         SimpleAuthenticationInfo info = new SimpleAuthenticationInfo(
                 pcToken.getPrincipal(), pcToken.getCredentials(), getName());
@@ -378,7 +377,7 @@ public class Realm extends AuthorizingRealm {
                     } catch (Exception e) {
                         logger.error("Unable to retrieve token info", e);
                     }
-                    logger.info("Token: " + token);
+                    logger.debug("Token: {}", token);
                 }
 
                 grant(info, principal,
@@ -516,14 +515,14 @@ public class Realm extends AuthorizingRealm {
 
     public static void grant(SimpleAuthorizationInfo info,
             PrincipalIdentifier principal, String permission) {
-        logger.info("Principal " + principal + " granted permission: "
-                + permission);
+        logger.debug("Principal {} granted permission: {}",
+                principal, permission);
         info.addStringPermission(permission);
     }
 
     public static void role(SimpleAuthorizationInfo info,
             PrincipalIdentifier principal, String role) {
-        logger.info("Principal " + principal + " added to role: " + role);
+        logger.debug("Principal {} added to role: {}", principal, role);
         info.addRole(role);
     }
 
