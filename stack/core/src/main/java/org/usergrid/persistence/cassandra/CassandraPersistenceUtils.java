@@ -180,6 +180,23 @@ public class CassandraPersistenceUtils {
 
 	}
 
+	/**
+	 * Delete the row
+	 * @param m
+	 * @param columnFamily
+	 * @param key
+	 * @param timestamp
+	 * @throws Exception
+	 */
+	public static void addDeleteToMutator(Mutator<ByteBuffer> m,
+            Object columnFamily, Object key, long timestamp)
+            throws Exception {
+
+        logBatchOperation("Delete", columnFamily, key, null, null, timestamp);
+
+        m.addDeletion(bytebuffer(key), columnFamily.toString(), timestamp);
+    }
+	
 	public static void addDeleteToMutator(Mutator<ByteBuffer> m,
 			Object columnFamily, Object key, Object columnName, long timestamp)
 			throws Exception {

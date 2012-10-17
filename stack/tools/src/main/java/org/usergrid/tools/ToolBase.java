@@ -74,8 +74,6 @@ public abstract class ToolBase {
 	
 	protected CassandraService cass;
 
-	boolean use_remote = false;
-
 	public void startTool(String[] args) {
 		CommandLineParser parser = new GnuParser();
 		CommandLine line = null;
@@ -89,23 +87,12 @@ public abstract class ToolBase {
 			return;
 		}
 
-		if (line.hasOption("remote")) {
-			use_remote = true;
-		}
 
 		if (line.hasOption("host")) {
-			use_remote = true;
-			System.setProperty("cassandra.remote.url",
+			System.setProperty("cassandra.url",
 					line.getOptionValue("host"));
 		}
-		System.setProperty("cassandra.use_remote", Boolean.toString(use_remote));
-
-		if (use_remote) {
-			logger.info("Using remote Cassandra instance");
-		} else {
-			logger.info("Using local Cassandra instance");
-		}
-
+		
 		try {
 			runTool(line);
 		} catch (Exception e) {

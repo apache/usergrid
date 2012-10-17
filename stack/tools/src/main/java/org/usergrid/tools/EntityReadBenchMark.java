@@ -20,7 +20,7 @@ import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
 import static org.usergrid.utils.ConversionUtils.bytebuffers;
-import static org.usergrid.utils.ConversionUtils.bytes;
+import static org.usergrid.utils.ConversionUtils.*;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -49,6 +49,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -71,11 +72,7 @@ import com.yammer.metrics.reporting.ConsoleReporter;
  */
 public class EntityReadBenchMark extends ToolBase {
 
-    /**
-     * Set to 2x your number of processors
-     */
-    private static final int WORKER_SIZE = 8;
-
+  
     public static final ByteBufferSerializer be = new ByteBufferSerializer();
 
     private static final Logger logger = LoggerFactory.getLogger(EntityReadBenchMark.class);
@@ -85,6 +82,9 @@ public class EntityReadBenchMark extends ToolBase {
 
     private final Timer dictReads = Metrics
             .newTimer(ReadWorker.class, "dictionary", TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
+    
+    private static final String TYPE_DICTIONARY = "dict";
+    private static final String TYPE_ENTITY = "entity";
 
     @Override
     @SuppressWarnings("static-access")
@@ -98,11 +98,20 @@ public class EntityReadBenchMark extends ToolBase {
 
         Option appIdOption = OptionBuilder.withArgName("appId").hasArg().isRequired(true)
                 .withDescription("Application Id to use").create("appId");
+        
+        Option workerOption = OptionBuilder.withArgName("workers").hasArg().isRequired(true)
+                .withDescription("Number of workers to use").create("workers");
+       
+        
+        Option typeOption = OptionBuilder.withArgName("type").hasArg().isRequired(true)
+                .withDescription("Read type to use, 'dict' or 'entity'").create("type");
 
         Options options = new Options();
         options.addOption(hostOption);
         options.addOption(countOption);
         options.addOption(appIdOption);
+        options.addOption(workerOption);
+        options.addOption(typeOption);
 
         return options;
     }
@@ -118,12 +127,14 @@ public class EntityReadBenchMark extends ToolBase {
         startSpring();
 
         logger.info("Starting entity cleanup");
+        
+        int workerSize = Integer.parseInt(line.getOptionValue("workers"));
 
-        ExecutorService executors = Executors.newFixedThreadPool(WORKER_SIZE);
+        ExecutorService executors = Executors.newFixedThreadPool(workerSize);
 
         int count = Integer.parseInt(line.getOptionValue("count"));
 
-        int size = count / WORKER_SIZE;
+        int size = count / workerSize;
 
         UUID appId = UUID.fromString(line.getOptionValue("appId"));
 
@@ -139,10 +150,25 @@ public class EntityReadBenchMark extends ToolBase {
         
         Stack<Future<Void>> futures = new Stack<Future<Void>>();
 
+        
+        String type = line.getOptionValue("type");
                 
-//        for (int i = 0; i < WORKER_SIZE; i++) {
-//            futures.push(executors.submit(new IndexReadWorker(i, size, appId)));
-//        }
+        for (int i = 0; i < workerSize; i++) {
+            
+            ReadWorker worker = null;
+            
+            
+            
+            if(TYPE_ENTITY.equals(type)){
+                worker = new IndexReadWorker(i, size, appId);
+            }else if(TYPE_DICTIONARY.equals(type)){
+                worker = new DictReadWorker(i, size, appId);
+            }else{
+                throw new IllegalArgumentException("You must specifiy the 'type' option");
+            }
+            
+            futures.push(executors.submit(worker));
+        }
         
     
         System.out.println("Waiting for index read workers to complete");
@@ -156,19 +182,6 @@ public class EntityReadBenchMark extends ToolBase {
         
       
        
-        
-        for (int i = 0; i < WORKER_SIZE; i++) {
-            futures.push(executors.submit(new DictReadWorker(i, size, appId)));
-        }
-        
-        /**
-         * Wait for all tasks to complete
-         */
-        while (!futures.isEmpty()) {
-            futures.pop().get();
-        }
-        
-
         System.out.println("All workers completed reading");
         
         
@@ -331,7 +344,7 @@ public class EntityReadBenchMark extends ToolBase {
         }
 
         private boolean existsInIndex(UUID applicationId, String collectionName, String propName, Object entityValue) throws Exception {
-            Object rowKey = key(applicationId, collectionName, propName, md5(bytes(entityValue)));
+            Object rowKey = key(applicationId, collectionName, propName, entityValue);
 
             
             List<HColumn<ByteBuffer, ByteBuffer>> cols = cass.getColumns(keyspace, ENTITY_UNIQUE, rowKey, null, null, 2, false);

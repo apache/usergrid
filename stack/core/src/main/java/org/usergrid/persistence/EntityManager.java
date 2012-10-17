@@ -96,14 +96,14 @@ public interface EntityManager {
 
     public void createApplicationCollection(String entityType) throws Exception;
 
-    public UUID createAlias(UUID id, String aliasType, String alias)
-            throws Exception;
+//    public UUID createAlias(UUID id, String aliasType, String alias)
+//            throws Exception;
+//
+//    public UUID createAlias(EntityRef ref, String aliasType, String alias)
+//            throws Exception;
 
-    public UUID createAlias(EntityRef ref, String aliasType, String alias)
-            throws Exception;
-
-    public UUID createAlias(UUID ownerId, EntityRef ref, String aliasType,
-            String alias) throws Exception;
+//    public UUID createAlias(UUID ownerId, EntityRef ref, String aliasType,
+//            String alias) throws Exception;
 
     public void deleteAlias(String aliasType, String alias) throws Exception;
 
