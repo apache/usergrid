@@ -50,6 +50,10 @@ public class GroupsService extends AbstractPathBasedColllectionService {
 			throws Exception {
 
     String path = (String)context.getProperty("path");
+    
+    if(path == null){
+        throw new IllegalArgumentException("You must provide a 'path' property when creating a group");
+    }
 
     logger.info("Creating group with path {}", path);
 

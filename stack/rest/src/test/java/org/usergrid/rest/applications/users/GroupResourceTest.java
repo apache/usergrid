@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
+import java.util.HashMap;
 import java.util.UUID;
 
 import org.codehaus.jackson.JsonNode;
@@ -62,10 +63,11 @@ public class GroupResourceTest extends AbstractRestTest {
         groupCreated = true;
     }
 
-    @Ignore
+//    @Ignore
+    @Test
     public void failGroupNameValidation() {
       ApiResponse response = client.createGroup("groupName/withslash");
-      assertNotNull(response.getError());
+      assertNull(response.getError());
 
       response = client.createGroup("groupName withspace");
       assertNotNull(response.getError());
@@ -204,7 +206,7 @@ public class GroupResourceTest extends AbstractRestTest {
 
     String json = "{\"title\":\"" + roleName + "\",\"name\":\"" + roleName + "\"}";
     JsonNode node = resource()
-            .path("/test-organization/test-app/rolenames")
+            .path("/test-organization/test-app/roles")
             .queryParam("access_token", access_token)
             .accept(MediaType.APPLICATION_JSON)
             .type(MediaType.APPLICATION_JSON_TYPE)
@@ -215,7 +217,7 @@ public class GroupResourceTest extends AbstractRestTest {
 
 
     // add Role
-
+    
     node = resource()
             .path("/test-organization/test-app/groups/" + createdId + "/roles/" + roleName)
             .queryParam("access_token", access_token)

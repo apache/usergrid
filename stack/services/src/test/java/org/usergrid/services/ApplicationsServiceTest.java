@@ -49,7 +49,6 @@ public class ApplicationsServiceTest extends AbstractServiceTest {
 
         ServiceManager sm = smf.getServiceManager(applicationId);
 
-        testDataRequest(sm, ServiceAction.GET, null, "rolenames");
 
         testDataRequest(sm, ServiceAction.GET, null, "roles", "admin",
                 "permissions");

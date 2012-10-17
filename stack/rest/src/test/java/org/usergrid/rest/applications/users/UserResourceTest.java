@@ -822,7 +822,7 @@ public class UserResourceTest extends AbstractRestTest {
 
     String json = "{\"title\":\"" + roleName + "\",\"name\":\"" + roleName + "\"}";
     JsonNode node = resource()
-        .path("/test-organization/test-app/rolenames")
+        .path("/test-organization/test-app/roles")
         .queryParam("access_token", access_token)
         .accept(MediaType.APPLICATION_JSON)
         .type(MediaType.APPLICATION_JSON_TYPE)

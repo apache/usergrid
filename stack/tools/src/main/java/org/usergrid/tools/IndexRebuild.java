@@ -37,6 +37,7 @@ import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
+import org.usergrid.utils.UUIDUtils;
 
 /**
  * This is a utility to load all entities in an application and re-save them,
@@ -46,6 +47,16 @@ import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsExceptio
  * 
  */
 public class IndexRebuild extends ToolBase {
+
+    /**
+     * 
+     */
+    private static final String APPLICATION_ARG = "app";
+
+    /**
+     * 
+     */
+    private static final String COLLECTION_ARG = "col";
 
     /**
      * 
@@ -65,13 +76,13 @@ public class IndexRebuild extends ToolBase {
                 .isRequired(true).withDescription("Cassandra host")
                 .create("host");
 
-        Option appOption = OptionBuilder.withArgName("appid").hasArg()
-                .isRequired(false).withDescription("application id")
-                .create("appid");
+        Option appOption = OptionBuilder.withArgName(APPLICATION_ARG).hasArg()
+                .isRequired(false).withDescription("application id or app name")
+                .create(APPLICATION_ARG);
 
-        Option collectionOption = OptionBuilder.withArgName("colname").hasArg()
+        Option collectionOption = OptionBuilder.withArgName(COLLECTION_ARG).hasArg()
                 .isRequired(false).withDescription("colleciton name")
-                .create("colname");
+                .create(COLLECTION_ARG);
 
         Options options = new Options();
         options.addOption(hostOption);
@@ -121,10 +132,17 @@ public class IndexRebuild extends ToolBase {
      * @throws Exception
      */
     private Collection<UUID> getAppIds(CommandLine line) throws Exception {
-        String appId = line.getOptionValue("appid");
+        String appId = line.getOptionValue(APPLICATION_ARG);
 
         if (appId != null) {
-            return Collections.singleton(UUID.fromString(appId));
+            
+            UUID id = UUIDUtils.tryExtractUUID(appId);
+            
+            if(id == null){
+                id = emf.getApplications().get(appId);
+            }
+            
+            return Collections.singleton(id);
         }
 
         return emf.getApplications().values();
@@ -142,7 +160,7 @@ public class IndexRebuild extends ToolBase {
     private Set<String> getCollections(CommandLine line, UUID appId)
             throws Exception {
 
-        String passedName = line.getOptionValue("colname");
+        String passedName = line.getOptionValue(COLLECTION_ARG);
 
         if (passedName != null) {
             return Collections.singleton(passedName);
