@@ -1814,7 +1814,9 @@
           this_data.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user_profile.png"
         } else {
           this_data.picture = this_data.picture.replace(/^http:\/\/www.gravatar/i, 'https://secure.gravatar');
-          this_data.picture = this_data.picture + "?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png"
+          //note: changing this to use the image on apigee.com - since the gravatar default won't work on any non-public domains such as localhost
+          //this_data.picture = this_data.picture + encodeURI("?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png");
+          this_data.picture = this_data.picture + encodeURI("?d=http://apigee.com/usergrid/images/user_profile.png");
         }
         $.tmpl('apigee.ui.users.table_rows.html', this_data).appendTo('#users-table');
       }
