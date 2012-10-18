@@ -58,6 +58,12 @@ public class JsonUtils {
 
     static ObjectMapper smileMapper = new ObjectMapper(smile);
 
+    private static ObjectMapper indentObjectMapper = new ObjectMapper();
+
+    static {
+        indentObjectMapper.getSerializationConfig().set(Feature.INDENT_OUTPUT, true);
+    }
+
 	/**
 	 * @param obj
 	 * @return
@@ -75,9 +81,7 @@ public class JsonUtils {
 
 	public static String mapToFormattedJsonString(Object obj) {
 		try {
-			ObjectMapper m = new ObjectMapper();
-			m.getSerializationConfig().set(Feature.INDENT_OUTPUT, true);
-			return m.writeValueAsString(obj);
+			return indentObjectMapper.writeValueAsString(obj);
 		} catch (JsonGenerationException e) {
 		} catch (JsonMappingException e) {
 		} catch (IOException e) {
