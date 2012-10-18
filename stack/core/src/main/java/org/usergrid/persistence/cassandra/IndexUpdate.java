@@ -157,7 +157,7 @@ public class IndexUpdate {
 	}
 
 	public void addIndex(String index) {
-		logger.info("Indexing {}",  index);
+		logger.debug("Indexing {}",  index);
 		indexesSet.add(index);
 	}
 

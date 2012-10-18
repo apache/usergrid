@@ -15,12 +15,10 @@
  ******************************************************************************/
 package com.usergrid.count;
 
-import com.usergrid.count.common.Count;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Invokes {@link BatchSubmitter#submit(com.usergrid.count.AbstractBatcher.Batch)}
@@ -30,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class ScheduledBatcher extends AbstractBatcher {
 
+    private static final Logger logger = LoggerFactory.getLogger(ScheduledBatcher.class);
     private int batchInterval;
     private volatile long currentMillis;
     private AtomicLong batchSubmissionCount = new AtomicLong();
@@ -51,6 +50,9 @@ public class ScheduledBatcher extends AbstractBatcher {
 
     protected void submit(Batch batch) {
         currentMillis = System.currentTimeMillis();
+        
+        logger.info("Submitting batch counter payload. Resetting now to: {}", currentMillis);
+        
         batchSubmitter.submit(batch);
         batchSubmissionCount.incrementAndGet();
     }
