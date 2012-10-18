@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import me.prettyprint.hector.api.beans.ColumnSlice;
@@ -190,6 +191,14 @@ public class Schema {
               }
             });
 
+    private static LoadingCache<String, String> collectionNameCache = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .build(
+                    new CacheLoader<String, String>() {
+                        public String load(String key) { // no checked exception
+                            return _defaultCollectionName(key);
+                        }
+                    });
 
   private final ObjectMapper mapper = new ObjectMapper();
 
@@ -1425,6 +1434,15 @@ public class Schema {
     }
 
     public static String defaultCollectionName(String entityType) {
+        try {
+            return collectionNameCache.get(entityType);
+        } catch (ExecutionException ex) {
+            ex.printStackTrace();
+        }
+        return _defaultCollectionName(entityType);
+    }
+
+    private static String _defaultCollectionName(String entityType) {
         entityType = normalizeEntityType(entityType);
         return pluralize(entityType);
     }
