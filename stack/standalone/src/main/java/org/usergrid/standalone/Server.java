@@ -16,6 +16,7 @@
 package org.usergrid.standalone;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +38,10 @@ import org.apache.jasper.runtime.JspFactoryImpl;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.util.ClassLoaderUtil;
+import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
+import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder;
 import org.glassfish.grizzly.servlet.ServletHandler;
+import org.glassfish.grizzly.threadpool.ThreadPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -204,6 +208,8 @@ public class Server implements ApplicationContextAware {
 
         httpServer.getServerConfiguration().setJmxEnabled(true);
 
+		setThreadSize();
+		
         try {
             httpServer.start();
         } catch (IOException e) {
@@ -221,6 +227,50 @@ public class Server implements ApplicationContextAware {
         }
     }
 
+	private int getThreadSizeFromSystemProperties() {
+		// the default value is number of cpu core * 2. 
+		// see org.glassfich.grizzly.strategies.AbstractIOStrategy.createDefaultWorkerPoolconfig()
+		int threadSize = Runtime.getRuntime().availableProcessors() * 2;
+		
+		String threadSizeString = System.getProperty("server.threadSize");
+		if(threadSizeString!=null) {
+			try {
+				threadSize = Integer.parseInt(threadSizeString);
+			} catch(Exception e) {
+				// ignore all Exception
+			}
+		}
+		else {
+			try {
+				threadSize = Integer.parseInt(System.getProperty("server.threadSizeScale")) * Runtime.getRuntime().availableProcessors();
+			} catch(Exception e) {
+				// ignore all Exception
+			}
+		}
+		
+		return threadSize;
+		
+	}
+	
+	private void setThreadSize() {
+
+		int threadSize = getThreadSizeFromSystemProperties();
+		
+		Collection<NetworkListener> listeners = httpServer.getListeners();
+		for(NetworkListener listener : listeners) {
+			listener.getTransport().getKernelThreadPoolConfig();
+			TCPNIOTransportBuilder builder = TCPNIOTransportBuilder.newInstance(); 
+			ThreadPoolConfig config = builder.getWorkerThreadPoolConfig(); 
+			config.setCorePoolSize(threadSize);
+			config.setMaxPoolSize(threadSize);
+			TCPNIOTransport transport = builder.build(); 
+			listener.setTransport(transport);
+		}
+		
+		logger.info("thread size set as {}", threadSize);
+		
+	}
+	
     private void setupJspMappings() {
         if (!INSTALL_JSP_SERVLETS) {
             return;
