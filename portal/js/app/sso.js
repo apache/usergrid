@@ -11,12 +11,12 @@
 
   Usergrid.SSO.prototype = {
     default : {
-    top_level_domain:"apigee.com",
-    use_sso:true, // flag to override use SSO if needed set to ?use_sso=no
-    login_url:"https://accounts.apigee.com/accounts/sign_in",
-    profile_url:"https://accounts.apigee.com/accounts/my_account",
-    logout_url:"https://accounts.apigee.com/accounts/sign_out",
-    api_url:"https://api.usergrid.com/"
+    top_level_domain: "apigee.com",
+    use_sso: true, // flag to override use SSO if needed set to ?use_sso=no
+    login_url: "https://accounts.apigee.com/accounts/sign_in",
+    profile_url: "https://accounts.apigee.com/accounts/my_account",
+    logout_url: "https://accounts.apigee.com/accounts/sign_out",
+    api_url: "https://api.usergrid.com/"
     },
     isTopLevelDomain:function () {
       return window.location.host === this.default.top_level_domain;
