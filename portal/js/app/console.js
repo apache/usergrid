@@ -671,7 +671,7 @@
   function requestApplications() {
     var sectionApps = $('#organization-applications-table');
     sectionApps.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
-    runManagementQuery(new Usergrid.Query("GET","organizations/" + Usergrid.ApiClient.getOrganizationUUID() + "/applications", null, null,
+    runManagementQuery(new Usergrid.Query("GET","organizations/" + Usergrid.ApiClient.getOrganizationName() + "/applications", null, null,
       displayApplications,
       function() { sectionApps.html('<div class="alert user-panel-section">Unable to retrieve application list.</div>'); }
     ));
@@ -720,7 +720,7 @@
   function requestAdmins() {
     var sectionAdmins =$('#organization-admins-table');
     sectionAdmins.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
-    runManagementQuery(new Usergrid.Query("GET","organizations/" + Usergrid.ApiClient.getOrganizationUUID()  + "/users", null, null,
+    runManagementQuery(new Usergrid.Query("GET","organizations/" + Usergrid.ApiClient.getOrganizationName()  + "/users", null, null,
       displayAdmins,
       function() {sectionAdmins.html('<div class="alert user-panel-section">Unable to retrieve admin list</div>');
     }));
@@ -766,7 +766,7 @@
   function requestAdminFeed() {
     var section =$('#organization-activities');
     section.empty().html('<div class="alert alert-info">Loading...</div>');
-    runManagementQuery(new Usergrid.Query("GET","orgs/" + Usergrid.ApiClient.getOrganizationUUID()  + "/feed", null, null, displayAdminFeed,
+    runManagementQuery(new Usergrid.Query("GET","orgs/" + Usergrid.ApiClient.getOrganizationName()  + "/feed", null, null, displayAdminFeed,
       function() { section.html('<div class="alert">Unable to retrieve feed.</div>'); }));
   }
   window.Usergrid.console.requestAdminFeed = requestAdminFeed;
@@ -776,7 +776,7 @@
   function requestOrganizationCredentials() {
     $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
     $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
-    runManagementQuery(new Usergrid.Query("GET",'organizations/'+ Usergrid.ApiClient.getOrganizationUUID()  + "/credentials", null, null,
+    runManagementQuery(new Usergrid.Query("GET",'organizations/'+ Usergrid.ApiClient.getOrganizationName()  + "/credentials", null, null,
       function(response) {
         $('#organization-panel-key').html(response.credentials.client_id);
         $('#organization-panel-secret').html(response.credentials.client_secret);
@@ -791,7 +791,7 @@
   function newOrganizationCredentials() {
     $('#organization-panel-key').html('<div class="alert alert-info marginless">Loading...</div>');
     $('#organization-panel-secret').html('<div class="alert alert-info marginless">Loading...</div>');
-    runManagementQuery(new Usergrid.Query("POST",'organizations/' + Usergrid.ApiClient.getOrganizationUUID()   + "/credentials",null, null,
+    runManagementQuery(new Usergrid.Query("POST",'organizations/' + Usergrid.ApiClient.getOrganizationName()   + "/credentials",null, null,
       function(response) {
         $('#organization-panel-key').html(response.credentials.client_id);
         $('#organization-panel-secret').html(response.credentials.client_secret);
@@ -987,7 +987,7 @@
       && checkRegexp2(new_application_name, usernameRegex, usernameAllowedCharsMessage);
 
     if (bValid) {
-      runManagementQuery(new Usergrid.Query("POST","organizations/" + Usergrid.ApiClient.getOrganizationUUID()  + "/applications", form.serializeObject(), null,
+      runManagementQuery(new Usergrid.Query("POST","organizations/" + Usergrid.ApiClient.getOrganizationName()  + "/applications", form.serializeObject(), null,
         function(response) {
           for (var appName in response.data) { break; }
           var appTitle = appName.split("/")[1];
@@ -1016,7 +1016,7 @@
       && checkRegexp2(new_admin_email,emailRegex, emailAllowedCharsMessage);
     if (bValid) {
       var data = form.serializeObject();
-      runManagementQuery(new Usergrid.Query("POST","organizations/" + Usergrid.ApiClient.getOrganizationUUID() + "/users", data, null,
+      runManagementQuery(new Usergrid.Query("POST","organizations/" + Usergrid.ApiClient.getOrganizationName() + "/users", data, null,
         requestAdmins,
         function () { alertModal("Error", "Unable to create admin"); }
       ));
@@ -1814,7 +1814,9 @@
           this_data.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user_profile.png"
         } else {
           this_data.picture = this_data.picture.replace(/^http:\/\/www.gravatar/i, 'https://secure.gravatar');
-          this_data.picture = this_data.picture + "?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png"
+          //note: changing this to use the image on apigee.com - since the gravatar default won't work on any non-public domains such as localhost
+          //this_data.picture = this_data.picture + encodeURI("?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png");
+          this_data.picture = this_data.picture + encodeURI("?d=http://apigee.com/usergrid/images/user_profile.png");
         }
         $.tmpl('apigee.ui.users.table_rows.html', this_data).appendTo('#users-table');
       }
@@ -3686,7 +3688,6 @@
     var orgName = link.text();
     var currentOrg = Usergrid.organizations.getItemByName(orgName);
     Usergrid.ApiClient.setOrganizationName(currentOrg.getName());
-    Usergrid.ApiClient.setOrganizationUUID(currentOrg.getUUID());
     //sets the organization name in the console page.
     displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
     // make sure there is an application for this org
@@ -3771,7 +3772,6 @@
         var firstOrg = Usergrid.organizations.getFirstItem();
         //save the first org in the client
         Usergrid.ApiClient.setOrganizationName(firstOrg.getName());
-        Usergrid.ApiClient.setOrganizationUUID(firstOrg.getUUID());
 
         //store user data in local storage
         Usergrid.userSession.saveAll(response.user.uuid, response.user.email, response.access_token);
@@ -3833,7 +3833,6 @@
         var firstOrg = Usergrid.organizations.getFirstItem();
         //save the first org in the client
         Usergrid.ApiClient.setOrganizationName(firstOrg.getName());
-        Usergrid.ApiClient.setOrganizationUUID(firstOrg.getUUID());
 
         //store user data in local storage
         Usergrid.userSession.saveAll(response.data.uuid, response.data.email, response.data.token);
