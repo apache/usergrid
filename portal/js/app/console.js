@@ -1764,6 +1764,8 @@
   var userSortBy = "username";
 
   function pageSelectUsers() {
+    //Hide old Alert Messages
+    hideModal('#users-messages');
     //make a new query object
     queryObj = new Usergrid.Query(null);
     //bind events for previous and next buttons
@@ -1778,6 +1780,10 @@
     $('#search-user-username').val(''); //reset the search box
   }
   window.Usergrid.console.pageSelectUsers = pageSelectUsers;
+
+  function hideModal(id){
+    $(id).hide();
+  }
 
   function getUsers(search, searchType) {
     //clear out the table before we start
