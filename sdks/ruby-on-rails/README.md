@@ -133,6 +133,10 @@ usergrid_ironhorse/spec/spec_settings.yaml to match.)
 
 ## Release notes
 
+### 0.0.3
+* Internal
+  1. Improve authentication and user propagation
+
 ### 0.0.2
 * New Features
   1. Authentication and user propagation features
