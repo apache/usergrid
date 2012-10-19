@@ -54,7 +54,6 @@ end
 def create_random_application
   management = login_management
   organization = management.organization SPEC_SETTINGS[:organization][:name]
-
   app_name = "_test_app_#{SecureRandom.hex}"
   organization.create_application app_name
   management.application SPEC_SETTINGS[:organization][:name], app_name

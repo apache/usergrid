@@ -147,11 +147,7 @@ module Usergrid
       # Creates a Usergrid::Resource
       def self.resource
         app = Usergrid::Application.new settings[:application_url]
-        if Thread.current[:auth_token]
-          app.auth_token = Thread.current[:auth_token]
-        else
-          app.auth_token = settings[:auth_token]
-        end
+        #app.auth_token = Thread.current[:usergrid_auth_token]
         app[group]
       end
 

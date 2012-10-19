@@ -2,6 +2,10 @@ describe Usergrid::Ironhorse::Base do
 
   it_should_behave_like 'ActiveModel'
 
+  class User < Usergrid::Ironhorse::Base
+    extend Usergrid::Ironhorse::UserContext
+  end
+
   before :all do
     @application = create_random_application
     Foo.configure!(@application.url, @application.auth_token)
@@ -21,6 +25,20 @@ describe Usergrid::Ironhorse::Base do
   class Bar < Usergrid::Ironhorse::Base; end
 
   describe 'subclasses should be able to' do
+
+    it "do tasks as admin when requested" do
+      organization = @foo.management.organization SPEC_SETTINGS[:organization][:name]
+
+      # should fail under current user's context
+      expect {
+        organization.create_application "_test_app_#{SecureRandom.hex}"
+      }.to raise_error RestClient::Unauthorized
+
+      # should succeed under admin context
+      User.as_admin do
+        organization.create_application "_test_app_#{SecureRandom.hex}"
+      end
+    end
 
     it 'be created and destroyed' do
       foo = Foo.create name: 'foo2'

@@ -32,18 +32,12 @@ module Usergrid
 
       # allows admin actions to be done in a block
       def as_admin(&block)
-        save_user_id = Thread.current[:usergrid_user_id]
         save_auth_token = Thread.current[:usergrid_auth_token]
-        save_user = Thread.current[:usergrid_current_user]
         begin
-          Thread.current[:usergrid_user_id] = nil
           Thread.current[:usergrid_auth_token] = Base.settings[:auth_token]
-          Thread.current[:usergrid_current_user] = nil
           yield block
         ensure
-          Thread.current[:usergrid_user_id] = save_user_id
           Thread.current[:usergrid_auth_token] = save_auth_token
-          Thread.current[:usergrid_current_user] = save_user
         end
       end
 
