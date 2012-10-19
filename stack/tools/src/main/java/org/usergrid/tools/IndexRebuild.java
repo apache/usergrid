@@ -17,6 +17,8 @@ package org.usergrid.tools;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -84,6 +86,7 @@ public class IndexRebuild extends ToolBase {
                 .isRequired(false).withDescription("colleciton name")
                 .create(COLLECTION_ARG);
 
+        
         Options options = new Options();
         options.addOption(hostOption);
         options.addOption(appOption);
@@ -145,7 +148,15 @@ public class IndexRebuild extends ToolBase {
             return Collections.singleton(id);
         }
 
-        return emf.getApplications().values();
+        Map<String, UUID> ids =  emf.getApplications();
+      
+        System.out.println("Printing all apps");
+      
+        for(Entry<String, UUID> entry: ids.entrySet()){
+            System.out.println(entry.getKey());
+        }
+        
+        return ids.values();
 
     }
 
