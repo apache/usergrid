@@ -1263,7 +1263,7 @@ Usergrid.ApiClient = (function () {
    *  @return {string} the API url
    */
   function getApiUrl() {
-    return _apiUrl
+    return _apiUrl;
   }
 
   /*
@@ -1285,7 +1285,7 @@ Usergrid.ApiClient = (function () {
    *  @return {string} the api rul of the reset password endpoint
    */
   function getResetPasswordUrl() {
-    getApiUrl() + "/management/users/resetpw"
+    return getApiUrl() + "/management/users/resetpw"
   }
 
   /*
@@ -1405,7 +1405,7 @@ Usergrid.ApiClient = (function () {
    *  @return none
    */
   function setLogoutCallback(logoutCallback) {
-    _logoutCallback = logoutCallback
+    _logoutCallback = logoutCallback;
   }
 
   /*
@@ -1531,7 +1531,7 @@ Usergrid.ApiClient = (function () {
       }
 
       //params - make sure we have a valid json object
-      _params = JSON.stringify(params)
+      _params = JSON.stringify(params);
       if (!JSON.parse(_params)) {
         throw(new Error('Params object is not valid.'));
       }
