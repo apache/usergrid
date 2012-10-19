@@ -68,7 +68,7 @@ public class QueryProcessor {
             .getLogger(QueryProcessor.class);
 
     private Operand rootOperand;
-    private SortCache sortCache;
+    private List<SortPredicate> sorts;
     private CursorCache cursorCache;
     private QueryNode rootNode;
     private String entityType;
@@ -76,7 +76,7 @@ public class QueryProcessor {
 
     public QueryProcessor(Query query, CollectionInfo collectionInfo)
             throws PersistenceException {
-        sortCache = new SortCache(query.getSortPredicates());
+        sorts = query.getSortPredicates();
         cursorCache = new CursorCache(query.getCursor());
         rootOperand = query.getRootOperand();
         entityType = query.getEntityType();
@@ -101,8 +101,8 @@ public class QueryProcessor {
 
         // see if we have sorts, if so, we can add them all as a single node at
         // the root
-        if (sortCache.hasSorts()) {
-            rootNode = sortCache.generateSorts();
+        if (sorts.size() > 0) {
+            rootNode = generateSorts();
         }
 
     }
@@ -120,12 +120,12 @@ public class QueryProcessor {
     @SuppressWarnings("unchecked")
     public List<Entity> sort(List<Entity> entities) {
 
-        if ((entities != null) && (sortCache.sorts.size() > 0)) {
+        if ((entities != null) && (sorts.size() > 0)) {
             // Performing in memory sort
             logger.info("Performing in-memory sort of " + entities.size()
                     + " entities");
             ComparatorChain chain = new ComparatorChain();
-            for (SortPredicate sort : sortCache.sorts.values()) {
+            for (SortPredicate sort : sorts) {
                 chain.addComparator(
                         new EntityPropertyComparator(sort.getPropertyName()),
                         sort.getDirection() == SortDirection.DESCENDING);
@@ -144,7 +144,7 @@ public class QueryProcessor {
      */
     public void applyCursorAndSort(QuerySlice slice) {
         // apply the sort first, since this can change the hash code
-        SortPredicate sort = sortCache.getSort(slice.getPropertyName());
+        SortPredicate sort = getSort(slice.getPropertyName());
 
         if (sort != null) {
             slice.setReversed(sort.getDirection() == SortDirection.DESCENDING);
@@ -156,6 +156,13 @@ public class QueryProcessor {
             slice.setCursor(cursor);
         }
 
+    }
+
+    private SortPredicate getSort(String propertyName) {
+        for (SortPredicate sort : sorts) {
+            if (sort.getPropertyName().equals(propertyName)) return sort;
+        }
+        return null;
     }
 
     /**
@@ -658,54 +665,23 @@ public class QueryProcessor {
     }
 
     /**
-     * The sort cache
-     * 
-     * @author tnine
-     * 
+     * Generate a slice node with scan ranges for all the properties in our
+     * sort cache
+     *
+     * @return
      */
-    public static class SortCache {
-        private Map<String, SortPredicate> sorts = new HashMap<String, SortPredicate>();
-        private List<SortPredicate> originalValue;
+    public SliceNode generateSorts() {
 
-        private SortCache(List<SortPredicate> sortPredicates) {
-            originalValue = sortPredicates;
-            for (SortPredicate sort : sortPredicates) {
-                sorts.put(sort.getPropertyName(), sort);
-            }
+        // the value is irrelevant since we'll only ever have 1 slice node
+        // if this is called
+        SliceNode node = new SliceNode(0);
+
+        for (SortPredicate predicate : sorts) {
+            node.setStart(predicate.getPropertyName(), null, true);
+            node.setFinish(predicate.getPropertyName(), null, true);
         }
 
-        public SortPredicate getSort(String fieldName) {
-            return sorts.get(fieldName);
-        }
-
-        /**
-         * Return true if we have sorts
-         * 
-         * @return
-         */
-        public boolean hasSorts() {
-            return sorts.size() > 0;
-        }
-
-        /**
-         * Generate a slice node with scan ranges for all the properties in our
-         * sort cache
-         * 
-         * @return
-         */
-        public SliceNode generateSorts() {
-
-            // the value is irrelevant since we'll only ever have 1 slice node
-            // if this is called
-            SliceNode node = new SliceNode(0);
-
-            for (SortPredicate predicate : originalValue) {
-                node.setStart(predicate.getPropertyName(), null, true);
-                node.setFinish(predicate.getPropertyName(), null, true);
-            }
-
-            return node;
-        }
+        return node;
     }
 
 }
