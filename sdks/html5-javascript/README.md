@@ -38,7 +38,11 @@ Like [Usergrid](https://github.com/apigee/usergrid-stack), the Usergrid Javascri
 5. Create new Pull Request (make sure you describe what you did and why your mod is needed)
 
 ##Sample apps
-The SDK project includes a simple app called Dogs, that creates a list of dogs.  The app uses App Services to retrieve a collection of dog entities. The app illustrates how to page through the results, and how to create a new entity.
+The SDK project includes two simple apps.  
+
+The first is a simple app called Dogs that creates a list of dogs.   The app uses App Services to retrieve a collection of dog entities. The app illustrates how to page through the results, and how to create a new entity.
+
+The second is an app that exercises the 4 REST methods of the api: GET, POST, PUT, and DELETE.  These two apps provide different functionality and will help you learn how to use the Javascript SDK to make your own amazing apps!
 
 For a more complex sample app, check out the Messagee app:
 
@@ -317,6 +321,8 @@ This destroys their token in the ApiClient singleton.
 
 ##Direct API calls to the Application and Management endpoints
 Creating and managing Entity and Collection objects is sufficient for most purposes.  However, there are times when it is necessary to make a direct call to the API.  The following sections describe how to do this against the Application endpoint as well as the Management endpoint.
+
+**Note:** This method is used in the All Calls sample app.
 
 ###The Query object
 Calls to both the Application endpoint as well as the Management endpoint require a Query object. The Query object stores information about the API call you want to make.  To get started, create a new Query object, and pass in the relevant data.  In the following example, we simply want to query the list of users:
