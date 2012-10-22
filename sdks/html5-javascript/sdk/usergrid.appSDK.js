@@ -1605,34 +1605,72 @@ Usergrid.ApiClient = (function () {
 
     //so far so good, so run the query
     var xD = window.XDomainRequest ? true : false;
-    var xhr;
-
-    if(xD)
-    {
-      xhr = new window.XDomainRequest();
-      if (Usergrid.ApiClient.getToken()) {
-        if (path.indexOf("?")) {
-          path += '&access_token='+Usergrid.ApiClient.getToken();
-        } else {
-          path = '?access_token='+Usergrid.ApiClient.getToken();
-        }
-      }
-      xhr.open(method, path, true);
-    }
-    else 
-    {
-      xhr = new XMLHttpRequest();
-      xhr.open(method, path, true);
-      //add content type = json if there is a json payload
-      if (jsonObj) {
-        xhr.setRequestHeader("Content-Type", "application/json");
-      }
-      if (Usergrid.ApiClient.getToken()) {
-        xhr.setRequestHeader("Authorization", "Bearer " + Usergrid.ApiClient.getToken());
-        xhr.withCredentials = true;
-      }
-    }
-
+    var xhr = getXHR(method, path, jsonObj);
+   
+    // Handle response.
+    xhr.onerror = function() {
+      //for timing, call end
+      Query.setQueryEndTime();
+      //for timing, log the total call time
+      console.log(Query.getQueryTotalTime());
+      //network error
+      clearTimeout(timeout);
+      console.log('API call failed at the network level.');
+      //send back an error (best we can do with what ie gives back)
+      Query.callFailureCallback(response.innerText);
+    };
+    xhr.xdomainOnload = function (response) {
+      //for timing, call end
+      Query.setQueryEndTime();
+      //for timing, log the total call time
+      console.log('Call timing: ' + Query.getQueryTotalTime());
+      //call completed
+      clearTimeout(timeout);
+      //decode the response
+      response = JSON.parse(xhr.responseText);
+      //if a cursor was present, grab it
+      try {
+        var cursor = response.cursor || null;
+        Query.saveCursor(cursor);
+      }catch(e) {}
+      Query.callSuccessCallback(response);
+    };
+    xhr.onload = function(response) {
+      //for timing, call end
+      Query.setQueryEndTime();
+      //for timing, log the total call time
+      console.log('Call timing: ' + Query.getQueryTotalTime());
+      //call completed
+      clearTimeout(timeout);
+      //decode the response
+      response = JSON.parse(xhr.responseText);
+      if (xhr.status != 200 && !xD)   {
+        //there was an api error
+        try {
+          var error = response.error;
+          console.log('API call failed: (status: '+xhr.status+').' + error.type);
+          if ( (error.type == "auth_expired_session_token") ||
+               (error.type == "unauthorized")   ||
+               (error.type == "auth_missing_credentials")   ||
+               (error.type == "auth_invalid")) {
+            //this error type means the user is not authorized. If a logout function is defined, call it
+            callLogoutCallback();
+        }} catch(e){}
+        //otherwise, just call the failure callback
+        Query.callFailureCallback(response.error_description);
+        return;
+      } else {
+        //query completed succesfully, so store cursor
+        var cursor = response.cursor || null;
+        Query.saveCursor(cursor);
+        //then call the original callback
+        Query.callSuccessCallback(response);
+     }
+    };
+   
+   
+   
+   /*
     // Handle response.
     xhr.ontimeout = xhr.onerror = function() {
       //for timing, call end
@@ -1644,7 +1682,6 @@ Usergrid.ApiClient = (function () {
       console.log('API call failed at the network level.');
       Query.callFailureCallback({'error':'error'});
     };
-    xhr.onprogress = function() {};
     xhr.onload = function() {
       //for timing, call end
       Query.setQueryEndTime();
@@ -1690,9 +1727,45 @@ Usergrid.ApiClient = (function () {
         Query.callFailureCallback();
       }
     };
+    */
+    
+    
+    
+    
+    
     var timeout = setTimeout(function() { xhr.abort(); }, 15000);
 
     xhr.send(jsonObj);
+  }
+  
+  function getXHR(method, path, jsonObj) {
+    var xhr;
+    if(window.XDomainRequest)
+    {
+      xhr = new window.XDomainRequest();
+      if (Usergrid.ApiClient.getToken()) {
+        if (path.indexOf("?")) {
+          path += '&access_token='+Usergrid.ApiClient.getToken();
+        } else {
+          path = '?access_token='+Usergrid.ApiClient.getToken();
+        }
+      }
+      xhr.open(method, path, true);
+    }
+    else 
+    {
+      xhr = new XMLHttpRequest();
+      xhr.open(method, path, true);
+      //add content type = json if there is a json payload
+      if (jsonObj) {
+        xhr.setRequestHeader("Content-Type", "application/json");
+      }
+      if (Usergrid.ApiClient.getToken()) {
+        xhr.setRequestHeader("Authorization", "Bearer " + Usergrid.ApiClient.getToken());
+        xhr.withCredentials = true;
+      }
+    }
+    return xhr;
   }
 
   return {
