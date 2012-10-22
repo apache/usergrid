@@ -16,25 +16,33 @@
       </div>
       <button class="btn btn-primary main-menu-button" id="main-menu">&lt;&lt; Main Menu</button>
       <div id="main" class="main">
-         <h2>TEST</h2>
+         <h2>Select method to test:</h2>
          <button class="btn btn-primary" id="show-get" style="width: 90px;">GET</button>
          <button class="btn btn-primary" id="show-post" style="width: 90px;">POST</button>
          <button class="btn btn-primary" id="show-put" style="width: 90px;">PUT</button>
          <button class="btn btn-primary" id="show-delete" style="width: 90px;">DELETE</button>
          <div id="output"></div>
       </div>
+
       <div id="get-page" class="form-block">
-         <h2>GET</h2>          
+         <h2>GET</h2>
          <form name="get-form" id="get-form">
             <div id="name-control" class="control-group">
                <label class="control-label" for="get-path">Path</label>
                <div class="controls">
                   <input type="text" name="get-path" id="get-path" class="span4" value="users/fred" />
-
                </div>
             </div>
          </form>
-         <button class="btn btn-primary" id="run-get" style="width: 90px;">Run Query</button>         
+         <button class="btn btn-primary" id="run-get" style="width: 90px;">Run Query</button>
+         <br/>
+         <br/>
+         <p>
+            To run a GET query against the API, enter the path you want to query, then push the "Run Query" button.  By default, the value is
+            "users/fred", which will translate to a call to: https://api.usergrid.com/your-org/your-app/users/fred, and will retrieve the record for fred.
+            <br/><br/>
+            Hint: if you get an error here, it probably means "fred" doesn't exist.  Go to back to the main menu and choose "POST" to create a new "fred".
+         </p>
       </div>
 
       <div id="post-page" class="form-block">
@@ -45,15 +53,22 @@
                <div class="controls">
                   <input type="text" name="post-path" id="post-path" class="span4" value="users" />
                </div>
-
-               <label class="control-label" for="post-data">Data</label>
+               <label class="control-label" for="post-data">Json Request Body</label>
                <div class="controls">
                   <input type="text" name="post-data" id="post-data" class="span4" value='{"username":"fred"}' />
                </div>
-
             </div>
          </form>
          <button class="btn btn-primary" id="run-post" style="width: 90px;">Run Query</button>
+         <br/>
+         <br/>
+         <p>
+            To run a POST query against the API, enter the path you want to call and the Json you want to send to the server, then push the "Run Query" button.
+            By default, the path of users, and the Json request body of, "{"username":"fred"}" will create a new user called "fred".
+            <br/><br/>
+            Hint: if you get an error here, it probably means "fred" already exists.  Go to back to the main menu and choose "DELETE" to delete the "fred"
+            entity, then come. back to this page to try again.
+         </p>
       </div>
 
       <div id="put-page" class="form-block">
@@ -64,15 +79,21 @@
                <div class="controls">
                   <input type="text" name="put-path" id="put-path" class="span4" value="users/fred" />
                </div>
-
-               <label class="control-label" for="put-data">Data</label>
+               <label class="control-label" for="put-data">Json Request Body</label>
                <div class="controls">
                   <input type="text" name="put-data" id="put-data" class="span4" value='{"othervalue":"12345"}' />
                </div>
-
             </div>
          </form>
          <button class="btn btn-primary" id="run-put" style="width: 90px;">Run Query</button>
+         <br/>
+         <br/>
+         <p>
+            To run a PUT query against the API, enter the path you want to update and the Json you want to send to the server, then push the "Run Query" button.
+            By default, the path of users, and the Json request body of, "{"username":"fred"}" will create a new user called "fred".
+            <br/><br/>
+            Hint: if you get an error here, it probably means "fred" doesn't exist.  Go to back to the main menu and choose "POST" to create a new "fred".
+         </p>
       </div>
 
       <div id="delete-page" class="form-block">
@@ -86,10 +107,17 @@
             </div>
          </form>
          <button class="btn btn-primary" id="run-delete" style="width: 90px;">Run Query</button>
+         <br/>
+         <br/>
+         <p>
+            To run a DELETE query against the API, enter the path you want to delete, then push the "Run Query" button.  By default, the value is
+            "users/fred", which will delete the entity located at: https://api.usergrid.com/your-org/your-app/users/fred .
+            <br/><br/>
+            Hint: if you get an error here, it probably means "fred" doesn't exist.  Go to back to the main menu and choose "POST" to create a new "fred".
+         </p>
       </div>
       <div class="response-box">API RESPONSE:
       <div id="response"></div>
       </div>
-          
     </body>
 </html>
