@@ -7,8 +7,49 @@
 */
 
 body {
-  background-color: #eee;
+  background-image:url('../images/wood_pattern.png');
 }
 
 /* buttons ================================================================= */
 .btn-primary{background-color:#146cab;background-image:-moz-linear-gradient(top, #147bab, #1455ab);background-image:-ms-linear-gradient(top, #147bab, #1455ab);background-image:-webkit-gradient(linear, 0 0, 0 100%, from(#147bab), to(#1455ab));background-image:-webkit-linear-gradient(top, #147bab, #1455ab);background-image:-o-linear-gradient(top, #147bab, #1455ab);background-image:linear-gradient(top, #147bab, #1455ab);background-repeat:repeat-x;filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#147bab', endColorstr='#1455ab', GradientType=0);border-color:#1455ab #1455ab #0c3367;border-color:rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);filter:progid:dximagetransform.microsoft.gradient(enabled=false);}.btn-primary:hover,.btn-primary:active,.btn-primary.active,.btn-primary.disabled,.btn-primary[disabled]{background-color:#1455ab;}
+
+.header{
+   width: 100%;
+   height: 40px;
+   background-color: #ff4200;
+   color: #fff;
+   text-align: center;
+   padding-top: 30px;
+   font-size: 20px;
+}
+.main-menu-button{
+   display: none;
+   float: left;
+   width: 120px;
+   margin:20px 0px 0px 20px;
+}
+.main{
+   width: 600px;
+   min-height: 210px;
+   margin: auto;
+   display: block;
+   background-color: #fff;
+   padding: 30px;
+}
+.form-block{
+  width: 600px;
+  min-height: 210px;
+  margin: auto;
+  display: block;
+  background-color: #fff;
+  padding: 30px;
+  display: none; 
+}
+.response-box{
+   width: 640px;
+   padding: 10px;
+   margin: 0 auto;
+   font-weight: bold;
+   border: 1px solid silver;
+   background-color: #ddd;
+}

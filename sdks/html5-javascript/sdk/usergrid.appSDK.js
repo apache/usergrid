@@ -1666,73 +1666,8 @@ Usergrid.ApiClient = (function () {
         //then call the original callback
         Query.callSuccessCallback(response);
      }
-    };
-   
-   
-   
-   /*
-    // Handle response.
-    xhr.ontimeout = xhr.onerror = function() {
-      //for timing, call end
-      Query.setQueryEndTime();
-      //for timing, log the total call time
-      console.log(Query.getQueryTotalTime());
-      //network error
-      clearTimeout(timeout);
-      console.log('API call failed at the network level.');
-      Query.callFailureCallback({'error':'error'});
-    };
-    xhr.onload = function() {
-      //for timing, call end
-      Query.setQueryEndTime();
-      //for timing, log the total call time
-      console.log('Call timing: ' + Query.getQueryTotalTime());
-      //call completed
-      clearTimeout(timeout);
-      if (xhr.status != 200 && !xD)   {
-        //there was an api error
-        var error = '';
-        try{
-          error = xhr.statusText;
-          error = error.toLowerCase();
-        } catch(e){}
-        console.log('API call failed: (status: '+xhr.status+') - ' + error);
-        if ( (error == "auth_expired_session_token") ||
-             (error == "unauthorized")   ||
-             (error == "auth_missing_credentials")   ||
-             (error == "auth_invalid")) {
-            //this error type means the user is not authorized. If a logout function is defined, call it
-            callLogoutCallback();
-            return;
-        } else {
-           Query.callFailureCallback();
-           return;
-        }
-      }
-      //response looks good
-      try {
-        response = JSON.parse(xhr.responseText);
-      } catch (e) {
-        //otherwise, just call the failure callback
-        Query.callFailureCallback(response);
-        return;
-      }
-      if (response) {
-        //query completed succesfully, so store cursor
-        var cursor = response.cursor || null;
-        Query.saveCursor(cursor);
-        //then call the original callback
-        Query.callSuccessCallback(response);
-      } else {
-        Query.callFailureCallback();
-      }
-    };
-    */
-    
-    
-    
-    
-    
+    }; 
+        
     var timeout = setTimeout(function() { xhr.abort(); }, 15000);
 
     xhr.send(jsonObj);

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title></title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      <link rel="stylesheet" href="css/bootstrap-combined.min.css" />
+      <link rel="stylesheet" href="css/styles.css" />
+      <script src="js/jquery.min.js" type="text/javascript"></script>
+      <script src="js/json2.js" type="text/javascript"></script>
+      <script src="sdk/usergrid.appSDK.js" type="text/javascript"></script>
+      <script src="js/all_calls_app.js" type="text/javascript"></script>
+   </head>
+   <body>
+      <div class="header">
+         App Services (Usergrid) jQuery Example
+      </div>
+      <button class="btn btn-primary main-menu-button" id="main-menu">&lt;&lt; Main Menu</button>
+      <div id="main" class="main">
+         <h2>TEST</h2>
+         <button class="btn btn-primary" id="show-get" style="width: 90px;">GET</button>
+         <button class="btn btn-primary" id="show-post" style="width: 90px;">POST</button>
+         <button class="btn btn-primary" id="show-put" style="width: 90px;">PUT</button>
+         <button class="btn btn-primary" id="show-delete" style="width: 90px;">DELETE</button>
+         <div id="output"></div>
+      </div>
+      <div id="get-page" class="form-block">
+         <h2>GET</h2>          
+         <form name="get-form" id="get-form">
+            <div id="name-control" class="control-group">
+               <label class="control-label" for="get-path">Path</label>
+               <div class="controls">
+                  <input type="text" name="get-path" id="get-path" class="span4" value="users/fred" />
+
+               </div>
+            </div>
+         </form>
+         <button class="btn btn-primary" id="run-get" style="width: 90px;">Run Query</button>         
+      </div>
+
+      <div id="post-page" class="form-block">
+         <h2>POST</h2>
+         <form name="post-form" id="post-form">
+            <div id="name-control" class="control-group">
+               <label class="control-label" for="post-path">Path</label>
+               <div class="controls">
+                  <input type="text" name="post-path" id="post-path" class="span4" value="users" />
+               </div>
+
+               <label class="control-label" for="post-data">Data</label>
+               <div class="controls">
+                  <input type="text" name="post-data" id="post-data" class="span4" value='{"username":"fred"}' />
+               </div>
+
+            </div>
+         </form>
+         <button class="btn btn-primary" id="run-post" style="width: 90px;">Run Query</button>
+      </div>
+
+      <div id="put-page" class="form-block">
+         <h2>PUT</h2>
+         <form name="put-form" id="put-form">
+            <div id="name-control" class="control-group">
+               <label class="control-label" for="put-path">Path</label>
+               <div class="controls">
+                  <input type="text" name="put-path" id="put-path" class="span4" value="users/fred" />
+               </div>
+
+               <label class="control-label" for="put-data">Data</label>
+               <div class="controls">
+                  <input type="text" name="put-data" id="put-data" class="span4" value='{"othervalue":"12345"}' />
+               </div>
+
+            </div>
+         </form>
+         <button class="btn btn-primary" id="run-put" style="width: 90px;">Run Query</button>
+      </div>
+
+      <div id="delete-page" class="form-block">
+         <h2>DELETE</h2>
+         <form name="delete-form" id="delete-form">
+            <div id="name-control" class="control-group">
+               <label class="control-label" for="delete-path">Path</label>
+               <div class="controls">
+                  <input type="text" name="delete-path" id="delete-path" class="span4" value="users/fred" />
+               </div>
+            </div>
+         </form>
+         <button class="btn btn-primary" id="run-delete" style="width: 90px;">Run Query</button>
+      </div>
+      <div class="response-box">API RESPONSE:
+      <div id="response"></div>
+      </div>
+          
+    </body>
+</html>
