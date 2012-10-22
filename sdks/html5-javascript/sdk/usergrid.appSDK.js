@@ -1673,6 +1673,15 @@ Usergrid.ApiClient = (function () {
     xhr.send(jsonObj);
   }
   
+   /**
+   *  A private method to return the XHR object
+   *
+   *  @method getXHR
+   *  @private
+   *  @params {string} method (GET,POST,PUT,DELETE)
+   *  @params {string} path - api endpoint to call
+   *  @return {object} jsonObj - the json object if there is one
+   */
   function getXHR(method, path, jsonObj) {
     var xhr;
     if(window.XDomainRequest)
