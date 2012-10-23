@@ -1,5 +1,5 @@
 @import "../bootstrap/less/bootstrap.less";
-@apigee-logo: url(../images/apigee-logo.png);
+@apigee-logo: url("..\images\logo-white.png");
 @redApigee: #FF3B00;
 @grayApigee: #575560;
 @border: #C9C9C9;
@@ -10,6 +10,10 @@
 @maxPanelWidth: 1280px;
 @linkHoverBgColor: #E5E5E5;
 @linkColor: #007CDC;
+@apigeeOrange: #FF4300;
+@apigeeNavSelection: #FF0303;
+@apigeeBlue: #0099FF;
+@white: #FFFFFF;
 //@fontMenu:
 
 
@@ -124,7 +128,7 @@ a:visited {
 }
 
 a:hover {
-  color: @redApigee !important;
+  color: @redApigee ;
   text-decoration: none;
 }
 
@@ -143,24 +147,32 @@ a:active {
 
 //----------Header ------------------------------------------------------------
 .navbar{
-  height:46px;
+  height:50px;
   min-width: 700px;
-  #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+  background-color: @apigeeOrange;
   &:before {
-    content: '';
-    height: 6px;
     display: block;
-    background: @redApigee;
+    background: @apigeeOrange;
   }
   margin: 0px 1px 20px 1px;
-  border-top: 1px solid #C9C9C9;
-  border-bottom: 3px solid @grayApigee;
   .navbar-inner{
     display: none;
+    b.caret{
+      position: relative;
+      display: inline-block;
+      float: left;
+      top: 50px;
+      left: -83px;
+      border-top: 8px solid @apigeeOrange;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      opacity: 1;
+    }
   }
   h1, h2{
     display: inline;
     float:left;
+    color: @white;
   }
   h1 {
     height: 32px;
@@ -169,12 +181,21 @@ a:active {
     position: relative;
     color: transparent !important;
     margin: 0 15px;
+    padding-top: 8px;
   }
   h2{
-    color:@grayApigee;
     font-size:14px;
-    margin: 10px;
-    line-height: 20px;
+    padding: 5px;
+    line-height: 37px;
+    padding-top: 8px;
+    color: @white;
+    a{
+      color: @white;
+    }
+    &:hover{
+      color: @white;
+      background-color: @apigeeNavSelection;
+    }
   }
   .secondary-nav{
     float:right;
@@ -183,19 +204,40 @@ a:active {
     li{
       a{
         text-shadow: 0 0px 0 white;
+        padding: 13px 10px 11px !important;
         font-weight: normal;
-        color: @grayApigee;
+        color: @white;
+        line-height: 26px;
         &:hover{
-          color: @redApigee !important;
-          background: @linkHoverBgColor !important;
+          color: @white;
+          background-color: @apigeeNavSelection;
+        }
+      }
+    }
+    .dropdown-menu{
+      a{
+        color: #000000;
+        &:hover{
+          color: @white;
+          background-color: @apigeeBlue;
         }
       }
     }
     .active{
       &>a{
         //background: url('../images/menuActiveTriangle.png') no-repeat center top;
-                                color:@redApigee;
-                                font-weight: bold;
+        color:@white;
+        &:hover{
+          background-color: @apigeeNavSelection;
+        }
+        &:open{
+          background-color: @apigeeNavSelection;
+        }
+      }
+    }
+    .open{
+      a.dropdown-toggle{
+        background-color: @apigeeNavSelection !important;
       }
     }
   }
@@ -216,13 +258,18 @@ a:active {
   }
   .active > a{
     background-color:@redApigee;
+    color: @white;
+    &:hover{
+      color: @redApigee;
+      background: @linkHoverBgColor !important;
+    }
   }
   .dropdown-menu a{
     text-shadow: 0 0px 0 white;
     font-weight: normal;
     color: @grayApigee;
     &:hover{
-      color: @redApigee !important;
+      color: @redApigee;
       background: @linkHoverBgColor !important;
     }
   }
@@ -469,7 +516,7 @@ a:active {
 }
 
 .dropdown.open .dropdown-toggle{
-  color: black;
+  color: @white;
 }
 
 
