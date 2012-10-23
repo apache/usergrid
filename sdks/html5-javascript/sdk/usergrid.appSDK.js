@@ -25,7 +25,7 @@ window.console.log = window.console.log || function() {};
 //Usergrid namespace encapsulates this SDK
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
-Usergrid.SDK_VERSION = '0.9.8';
+Usergrid.SDK_VERSION = '0.9.9';
 
 /**
  *  Usergrid.Query is a class for holding all query information and paging state
