@@ -1140,6 +1140,7 @@ Usergrid.ApiClient = (function () {
   var _orgName = null;
   var _appName = null;
   var _token = null;
+  var _callTimeout = 30000;
   var _queryType = null;
   var _loggedInUser = null;
   var _logoutCallback = null;
@@ -1275,6 +1276,28 @@ Usergrid.ApiClient = (function () {
    */
   function setApiUrl(apiUrl) {
     _apiUrl = apiUrl;
+  }
+  
+  /*
+   *  A public method to return the call timeout amount
+   *
+   *  @method getCallTimeout
+   *  @public
+   *  @return {string} the timeout value (an integer) 30000 = 30 seconds
+   */
+  function getCallTimeout() {
+    return _callTimeout;
+  }
+
+  /*
+   *  A public method to override the call timeout amount
+   *
+   *  @method setCallTimeout
+   *  @public
+   *  @return none
+   */
+  function setCallTimeout(callTimeout) {
+    _callTimeout = callTimeout;
   }
 
   /*
@@ -1668,7 +1691,11 @@ Usergrid.ApiClient = (function () {
      }
     }; 
         
-    var timeout = setTimeout(function() { xhr.abort(); }, 30000);
+    var timeout = setTimeout(
+      function() { 
+        xhr.abort(); 
+        Query.callFailureCallback('API CALL TIMEOUT');
+      }, Usergrid.ApiClient.getCallTimeout()); //set for 30 seconds
 
     xhr.send(jsonObj);
   }
@@ -1722,6 +1749,8 @@ Usergrid.ApiClient = (function () {
     setApplicationName:setApplicationName,
     getToken:getToken,
     setToken:setToken,
+    getCallTimeout:getCallTimeout,
+    setCallTimeout:setCallTimeout,
     getApiUrl:getApiUrl,
     setApiUrl:setApiUrl,
     getResetPasswordUrl:getResetPasswordUrl,
