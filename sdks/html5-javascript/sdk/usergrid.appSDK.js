@@ -1668,7 +1668,7 @@ Usergrid.ApiClient = (function () {
      }
     }; 
         
-    var timeout = setTimeout(function() { xhr.abort(); }, 15000);
+    var timeout = setTimeout(function() { xhr.abort(); }, 30000);
 
     xhr.send(jsonObj);
   }
