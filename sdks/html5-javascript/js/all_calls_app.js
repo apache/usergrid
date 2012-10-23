@@ -1,8 +1,7 @@
 /**
-*  dogs is a sample app  that is powered by Usergrid
-*  This app shows how to use the Usergrid SDK to connect
-*  to Usergrid, how to add entities, and how to page through
-*  a result set of entities
+*  All Calls is a sample app  that is powered by Usergrid
+*  This app shows how to make the 4 REST calls (GET, POST,
+*  PUT, DELETE) against the usergrid API.  
 *
 *  Learn more at http://Usergrid.com/docs
 *
