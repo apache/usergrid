@@ -43,8 +43,9 @@
         <div class="header-menus">
           <div id="publicMenu" class="navbar-inner">
             <div class="left-header">
-              <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img src="images/apigee-logo.png">apigee</a></h1>
-              <h2 id="ActualPage1">Apigee App Services Admin Portal</h2>
+              <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img src="images/logo-white.png">apigee</a></h1>
+              <b class="caret"></b>
+              <h2 id="ActualPage1">Admin Portal</h2>
             </div>
             <div class="right-header">
               <ul id="loginMenu" class="nav secondary-nav">
@@ -56,27 +57,44 @@
           </div>
           <div id="privateMenu" class="navbar-inner">
             <div class="left-header">
-              <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img src="images/apigee-logo.png">apigee</a></h1>
-              <h2 id="ActualPage1">Apigee App Services Admin Portal</h2>
-            </div>
-            <div class="right-header">
-              <ul id="profileMenu" class="nav secondary-nav">
-                <li id="organizations-menu" class="dropdown">
-                  <a id="console-link" class="dropdown-toggle" data-toggle="dropdown" href="#"><span>Organizations</span> &#9660;</a>
-                  <ul class="dropdown-menu">
-                    <li><a href="#">loading...</a></li>
-                  </ul>
-                </li>
+              <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img src="images/logo-white.png">apigee</a></h1>
+              <b class="caret"></b>
+              <h2 ><a href="#organization" class="go-home">Admin Portal</a></h2>
+              <ul class="nav">
                 <li id="more-menu" class="dropdown">
-                  <a class="dropdown-toggle" data-toggle="dropdown" href="#">More &#9660;</a>
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">More &#9660;</a>
+                <ul class="dropdown-menu">
+                  <li><a href="http://apigee.com/about/products/usergrid" target="_blank"> Product Page</a></li>
+                  <li><a href="http://apigee.com/docs/usergrid/codesamples" target="_blank"> SDKs</a></li>
+                  <li><a href="http://apigee.com/docs/app_services" target="_blank"> Docs</a></li>
+                </ul>
+                </li>
+                <li id="help-menu" class="dropdown">
+                  <a class="dropdown-toggle" data-toggle="dropdown" href="#">Help &#9660;</a>
                   <ul class="dropdown-menu">
-                    <li><a href="http://apigee.com/about/products/usergrid" target="_blank"> Product Page</a></li>
-                    <li><a href="http://apigee.com/docs/usergrid/codesamples" target="_blank"> SDKs</a></li>
-                    <li><a href="http://apigee.com/docs/app_services" target="_blank"> Docs</a></li>
                     <li><a href="http://support.apigee.com/apigee" target="_blank"> Support</a></li>
                     <li><a href="https://groups.google.com/forum/?fromgroups#!forum/usergrid" target="_blank"> Google Group</a></li>
                   </ul>
                 </li>
+              </ul>
+            </div>
+            <div class="right-header">
+              <ul id="profileMenu" class="nav secondary-nav">
+                <li id="switchTo-menu" class="dropdown">
+                  <a id="switchTo-link" class="dropdown-toggle" data-toggle="dropdown" href="#"><span>Switch To...
+                  </span> &#9660;</a>
+                  <ul class="dropdown-menu">
+                    <li><a href="http://support.apigee.com/apigee" target="_blank"> App Services</a></li>
+                    <li><a href="http://support.apigee.com/apigee" target="_blank"> Mobile Analytics</a></li>
+                    <li><a href="http://support.apigee.com/apigee" target="_blank"> API Consoles</a></li>
+                  </ul>
+                </li>
+                <li id="organizations-menu" class="dropdown">
+                <a id="console-link" class="dropdown-toggle" data-toggle="dropdown" href="#"><span>Organizations</span> &#9660;</a>
+                <ul class="dropdown-menu">
+                  <li><a href="#">loading...</a></li>
+                </ul>
+              </li>
                 <li class="dropdown">
                   <a id="account-link1" class="dropdown-toggle" data-toggle="dropdown" href="#"><span id="userEmail">test</span> &#9660;</a>
                   <ul class="dropdown-menu">
@@ -214,7 +232,7 @@
                 <h4 class="panel-title">
                   ORGANIZATION
                 </h4>
-                <li><a href="#organization" id="go-home">
+                <li><a href="#organization" class="go-home">
                   <i class="icon-home"></i>
                   <div id="organization-name">Home</div>
                 </a></li>
@@ -1214,30 +1232,29 @@
           <input type="reset" class="btn btn-usergrid" value="OK" data-dismiss="modal"/>
         </div>
       </form>
-	  <form id="dialog-form-new-application" class="modal hide fade" action="#">
-	      <div class="modal-header">
-	        <a class="close" data-dismiss="modal">&times</a>
-	        <h4>Create new application</h4>
-	      </div>
-	      <div class="modal-body">
-	        <p class="validateTips">All form fields are required.</p>
-	        <fieldset>
-	          <div class="control-group">
-	            <label for="new-application-name">Name</label>
-	            <div class="controls">
-	              <input type="text" name="name" id="" value="" class="input-xlarge new-application-name"/>
-	              <p class="help-block">Length of name must be between 4 and 80</p>
-	            </div>
-	          </div>
-	        </fieldset>
-	      </div>
-	      <div class="modal-footer">
-	        <input type="submit" class="btn btn-usergrid" value="Create"/>
-	        <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
-	      </div>
-	  </form>
+      <form id="dialog-form-new-application" class="modal hide fade" action="#">
+      <div class="modal-header">
+        <a class="close" data-dismiss="modal">&times</a>
+        <h4>Create new application</h4>
+      </div>
+      <div class="modal-body">
+        <p class="validateTips">All form fields are required.</p>
+        <fieldset>
+          <div class="control-group">
+            <label for="new-application-name">Name</label>
+            <div class="controls">
+              <input type="text" name="name" id="" value="" class="input-xlarge new-application-name"/>
+              <p class="help-block">Length of name must be between 4 and 80</p>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+      <div class="modal-footer">
+        <input type="submit" class="btn btn-usergrid" value="Create"/>
+        <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+      </div>
+    </form>
       <div class="clear"></div>
-
     </div>
     <footer>
       <div class="container-fluid">

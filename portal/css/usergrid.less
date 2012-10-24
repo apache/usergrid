@@ -1,6 +1,6 @@
 @import "../bootstrap/less/bootstrap.less";
 @apigee-logo: url("..\images\logo-white.png");
-@redApigee: #FF3B00;
+@redApigee: #EF4B23;
 @grayApigee: #575560;
 @border: #C9C9C9;
 @border2: #E5E5E5;
@@ -9,10 +9,10 @@
 @minScreenWidth: 640px;
 @maxPanelWidth: 1280px;
 @linkHoverBgColor: #E5E5E5;
-@linkColor: #007CDC;
-@apigeeOrange: #FF4300;
-@apigeeNavSelection: #FF0303;
-@apigeeBlue: #0099FF;
+@linkColor: #1b97d1;
+@apigeeOrange: #EF4B23;
+@apigeeNavSelection: #DE3326;
+@apigeeBlue: #1b97d1;
 @white: #FFFFFF;
 //@fontMenu:
 
@@ -225,13 +225,13 @@ a:active {
     }
     .active{
       &>a{
-        //background: url('../images/menuActiveTriangle.png') no-repeat center top;
         color:@white;
+        background-color: @apigeeOrange;
         &:hover{
-          background-color: @apigeeNavSelection;
+          background-color: @apigeeNavSelection !important;
         }
-        &:open{
-          background-color: @apigeeNavSelection;
+        .active{
+          background-color: @apigeeNavSelection !important;
         }
       }
     }
@@ -382,7 +382,6 @@ a:active {
   margin: 0 0px 20px;
   border: solid 1px @h3Color;
   //background: #F2F5F7;
-  //TODO: check if works
   overflow: show;
   .border-radius(5px);
   h3 {
@@ -865,15 +864,15 @@ a:active {
 }
 
 .btn-usergrid {
-  background-color: #F17221;
-  background-image: -moz-linear-gradient(top, #F17221, #C84B27);
-  background-image: -ms-linear-gradient(top, #F17221, #C84B27);
-  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#F17221), to(#C84B27));
-  background-image: -webkit-linear-gradient(top, #F17221, #C84B27);
-  background-image: -o-linear-gradient(top, #F17221, #C84B27);
-  background-image: linear-gradient(top, #F17221, #C84B27);
+  background-color: @apigeeOrange;
+  background-image: -moz-linear-gradient(top, @apigeeOrange, @apigeeNavSelection);
+  background-image: -ms-linear-gradient(top, @apigeeOrange, @apigeeNavSelection);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(@apigeeOrange), to(@apigeeNavSelection));
+  background-image: -webkit-linear-gradient(top, @apigeeOrange, @apigeeNavSelection);
+  background-image: -o-linear-gradient(top, @apigeeOrange, @apigeeNavSelection);
+  background-image: linear-gradient(top, @apigeeOrange, @apigeeNavSelection);
   background-repeat: repeat-x;
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#F17221', endColorstr='#C84B27', GradientType=0);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='@apigeeOrange', endColorstr='@apigeeNavSelection', GradientType=0);
   border-color: #C84B27 #C84B27 #ad6704;
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
