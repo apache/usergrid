@@ -608,7 +608,7 @@
   }
   window.Usergrid.console.pageSelectHome = pageSelectHome;
 
-  $(document).on('click','#go-home', pageSelectHome);
+  $(document).on('click','.go-home', pageSelectHome);
 
   function displayApplications(response) {
     var t = "";
