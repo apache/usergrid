@@ -157,7 +157,11 @@ public class RolesService extends AbstractCollectionService {
                 throw new IllegalArgumentException(String.format("Could not load role with id '%s'", ref.getUuid()));
             }
 
-            Query q = context.getParameters().get(0).getQuery();
+            Query q = null;
+
+            if (context.getParameters().size() > 0) {
+                q = context.getParameters().get(0).getQuery();
+            }
 
             if (q == null) {
                 throw new IllegalArgumentException("You must supply a 'permission' query parameter");

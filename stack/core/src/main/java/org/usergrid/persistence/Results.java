@@ -748,6 +748,7 @@ public class Results implements Iterable<Entity> {
             refsMap = newMap;
             refs = new ArrayList<EntityRef>(refsMap.values());
             level = Level.REFS;
+            ids = null;
             return;
         }
 
