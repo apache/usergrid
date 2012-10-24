@@ -856,6 +856,10 @@
     $('#alertModal').modal('show');
   }
 
+  function hideModal(id){
+    $(id).hide();
+  }
+
   function confirmAction(header, message, callback){
     var form = $('#confirmAction');
 
@@ -1764,6 +1768,8 @@
   var userSortBy = "username";
 
   function pageSelectUsers() {
+    //Hide old Alert Messages
+    hideModal('#users-messages');
     //make a new query object
     queryObj = new Usergrid.Query(null);
     //bind events for previous and next buttons
@@ -1890,6 +1896,7 @@
    ******************************************************************/
 
   function pageOpenUserProfile(userName) {
+    hideModal('.messages');
     Pages.SelectPanel('user');
     requestUser(userName);
     selectTabButton('#button-user-profile');
@@ -2183,6 +2190,8 @@
   var groupLetter = "*";
   var groupSortBy = "path";
   function pageSelectGroups() {
+    //Hide old messages
+    hideModal('#groups-messages');
     //make a new query object
     queryObj = new Usergrid.Query(null);
     //bind events for previous and next buttons
@@ -2527,6 +2536,8 @@
   var roleSortBy = 'title';
 
   function pageSelectRoles(uuid) {
+    //Hide old information modal
+    hideModal('#roles-messages');
     //make a new query object
     queryObj = new Usergrid.Query(null);
     //bind events for previous and next buttons
@@ -3426,6 +3437,7 @@
    ******************************************************************/
 
   function pageSelectCollections(uuid) {
+    hideModal(' #collections-messages')
     getCollections();
   }
   window.Usergrid.console.pageSelectCollections = pageSelectCollections;
