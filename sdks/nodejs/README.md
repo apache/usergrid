@@ -11,6 +11,15 @@ To view the Apigee App Services documentation, see:
 
 <http://apigee.com/docs/usergrid/>
 
+
+##Standard Javascript SDK
+Are you looking for our Standard Javascript SDK?  Find the repo here:
+
+<https://github.com/apigee/usergrid-javascript-sdk>
+
+Use the Javacript SDK if you are building an HTML5 / Javascript app that runs client-side (in a browser or on a platform like PhoneGap or Trigger.io).
+
+
 ##Getting started
 After installing Node on your system, navigate to the directory where you put the code repo and run the following command:
 
