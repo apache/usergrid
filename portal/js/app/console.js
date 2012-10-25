@@ -272,7 +272,6 @@
     }
   }
 
-
   function getCollectionCallback(response) {
     hidePagination('query-response');
 
@@ -287,6 +286,8 @@
       path = "" + path.match(/[^?]*/);
 
       if (response.entities.length > 1) {
+        //Update Query Explorer autocomplete
+        updateQueryTypeahead(response, 'query-path');
         for (i in query_entities) {
           var entity = query_entities[i];
           query_entities_by_id[entity.uuid] = entity;
@@ -332,8 +333,6 @@
     }else{
       $("#query-response-table").html("<div class='group-panel-section-message'>No Collection Entities Found</div>");
     }
-
-
   }
 
   function pushQuery(queryObj) {
@@ -3531,7 +3530,6 @@
     }
     var pathInput = $('#'+inputId);
     var list = [];
-    //TODO: Check if putting name is enough or need to add more logic to add the title also.
     $.each(roles, function(name, title){
       list.push(name);
     })
@@ -3564,6 +3562,29 @@
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
   }
+
+  function updateQueryTypeahead(response, inputId){
+    var pathInput = $("#" + inputId);
+    var list = [];
+    list.push(response.path);
+
+    $.each(response.entities, function(entityKey, entityValue){
+      list.push(response.path + entityValue.name );
+      //Fill collection names
+      $.each(entityValue.metadata.collections, function(key, value){
+          list.push(response.path + '/' + entityValue.name + '/' + key);
+        });
+      //Fill Sets
+      $.each(entityValue.metadata.sets, function(key, value){
+        list.push(response.path + '/' + entityValue.name + '/' + key);
+      })
+    });
+
+
+    pathInput.typeahead({source:list, items: 10, minLenght: 2});
+    pathInput.data('typeahead').source = list;
+  }
+
 
   function updateUsersAutocomplete(){
     updateAutocomplete('users/', updateUsersAutocompleteCallback, "Unable to retrieve Users.");
