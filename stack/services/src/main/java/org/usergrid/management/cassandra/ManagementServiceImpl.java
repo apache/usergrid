@@ -800,7 +800,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         if (!em.isPropertyValueUniqueForEntity("user", "email", email)) {
             throw new DuplicateUniquePropertyExistsException("user",
-                    "email", username);
+                    "email", email);
         }
 
         User user = new User();
