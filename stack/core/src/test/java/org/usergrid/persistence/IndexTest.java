@@ -276,5 +276,54 @@ public class IndexTest extends AbstractPersistenceTest {
 		assertEquals(3, i);
 
 	}
+	
+
+  @Test
+  public void testPropertyUpdateWithConnection() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "testPropertyUpdateWithConnection");
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    
+
+    Map<String, Object> entity1 = new LinkedHashMap<String, Object>();
+    entity1.put("name", "name_1");
+    entity1.put("status", "pickled");    
+    
+
+    Map<String, Object> entity2 = new LinkedHashMap<String, Object>();
+    entity2.put("name", "name_2");
+    entity2.put("status", "foo"); 
+    
+    
+
+    Entity entity1Ref =  em.create("names", entity1);
+    Entity entity2Ref = em.create("names", entity2);
+    
+    
+
+    em.createConnection(entity2Ref, "connecting", entity1Ref);
+    
+    //now update the first entity
+    
+    entity1Ref.setProperty("status", "herring");
+    
+    em.update(entity1Ref);
+    
+    //query and check the status has been updated 
+    
+
+    Query query = Query.fromQL("select * where status = 'pickled'");
+
+    Results r = em.searchCollection(em.getApplicationRef(), "names", query);
+    assertEquals(0, r.size());
+
+    query = Query.fromQL("select * where status = 'herring'");
+
+    r = em.searchCollection(em.getApplicationRef(), "names", query);
+    assertEquals(1, r.size());
+    
+    assertEquals(entity1Ref.getUuid(), r.getEntity().getUuid());
+  }
 
 }
