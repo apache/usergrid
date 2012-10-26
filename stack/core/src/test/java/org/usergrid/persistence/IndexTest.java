@@ -301,28 +301,51 @@ public class IndexTest extends AbstractPersistenceTest {
     Entity entity2Ref = em.create("names", entity2);
     
     
-
     em.createConnection(entity2Ref, "connecting", entity1Ref);
     
-    //now update the first entity
+    //should return valid values
+    Query query = Query.fromQL("select * where status = 'pickled'");
+
+    Results r = em.searchCollection(em.getApplicationRef(), "names", query);
+    assertEquals(1, r.size());
+    assertEquals(entity1Ref.getUuid(), r.getEntity().getUuid());
+
     
+    em.searchConnections(entity2Ref, query);
+    r = em.searchCollection(em.getApplicationRef(), "names", query);
+    assertEquals(1, r.size());
+    assertEquals(entity1Ref.getUuid(), r.getEntity().getUuid());
+    
+    //now update the first entity, this causes the failure after connections
     entity1Ref.setProperty("status", "herring");
     
     em.update(entity1Ref);
     
-    //query and check the status has been updated 
+    //query and check the status has been updated, shouldn't return results
+    query = Query.fromQL("select * where status = 'pickled'");
+
+    r = em.searchCollection(em.getApplicationRef(), "names", query);
+    assertEquals(0, r.size());
     
-
-    Query query = Query.fromQL("select * where status = 'pickled'");
-
-    Results r = em.searchCollection(em.getApplicationRef(), "names", query);
+    //search connections
+    em.searchConnections(entity2Ref, query);
+    r = em.searchCollection(em.getApplicationRef(), "names", query);
     assertEquals(0, r.size());
 
+    
+    //should return results
     query = Query.fromQL("select * where status = 'herring'");
 
     r = em.searchCollection(em.getApplicationRef(), "names", query);
     assertEquals(1, r.size());
     
+    assertEquals(entity1Ref.getUuid(), r.getEntity().getUuid());
+    
+    
+    //search connections
+    em.searchConnections(entity2Ref, query);
+    r = em.searchCollection(em.getApplicationRef(), "names", query);
+    assertEquals(1, r.size());
     assertEquals(entity1Ref.getUuid(), r.getEntity().getUuid());
   }
 
