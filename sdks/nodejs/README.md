@@ -21,9 +21,28 @@ Use the Javacript SDK if you are building an HTML5 / Javascript app that runs cl
 
 
 ##Getting started
-After installing Node on your system, navigate to the directory where you put the code repo and run the following command:
+To get you started, please note that the SDK consists of one main JavaScript file, located in the project at:
 
-  node index.js
+  /lib/usergrid.appSDK.js
+  
+With a dependency on:
+  
+  /lib/XMLHttpRequest.js
+  
+Simply include the SDK to begin to use it:
+
+  var sdk = require("lib/usergrid.appSDK");
+  
+Then initialize it with your app and org id:
+
+  sdk.Usergrid.ApiClient.init('apigee', 'sandbox');
+  
+You are now ready to use the sdk handle to make calls against the API.  See the sample app for more example usage.
+
+##Sample / Test app
+After installing Node on your system, navigate to the directory where you put the code repo and run the following command to start the sample app:
+
+  node test/server.js
   
 This will start the node server. If it was successful, you should see the following on the command line:
 
@@ -38,15 +57,7 @@ This will bring up the All Calls app, which presents you with the option to run 
 
 The best way to learn how the code works is to spend some time reviewing the sample project.  Node.js presents a wide array of options when deciding how to set up your application.  We have tried to make this example as simple and clear as possible. 
 
-To get you started, please note that the SDK consists of one primary JavaScript file, located in the project at:
-
-  /sdk/usergrid.appSDK.js
-  
-With a dependency on:
-  
-  /SDK/XMLHttpRequest.js
-
-In the root directory, you will see the `index.js` file.  This is the main entry point of the application.  From there, calls go to the `server.js` file, and are then routed through the `router.js` file to the `controller.js` file, and finally the `view.js` file is called (whew!).  So the call order is like this:
+In the test directory, you will see the `index.js` file.  This is the main entry point of the application.  From there, calls go to the `server.js` file, and are then routed through the `router.js` file to the `controller.js` file, and finally the `view.js` file is called (whew!).  So the call order is like this:
 
 	1. index.js
 	2. server.js
@@ -61,7 +72,7 @@ There are several methods for making aTo make API calls, and the next few sectio
 
 In the example app, we include the SDK like so:
 
-	var sdk = require("./SDK/usergrid.appSDK");
+	var sdk = require("../lib/usergrid.appSDK");
 	
 So all subsequent calls to the SDK should use the "sdk" handle like so:
 

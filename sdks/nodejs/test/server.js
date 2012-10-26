@@ -29,7 +29,6 @@ var sys = require('util');
 //include local files
 var router = require("./router");
 var controller = require("./controller");
-var sdk = require("../lib/usergrid.appSDK");
 
 //routing info
 var handle = {}
@@ -37,6 +36,7 @@ handle["/"] = controller.main;
 handle["/main"] = controller.main;
 
 //initialze the SDK
+var sdk = require("../lib/usergrid.appSDK");
 sdk.Usergrid.ApiClient.init('apigee', 'sandbox');
 
 //main server
