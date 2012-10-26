@@ -54,7 +54,7 @@ Usergrid.SDK_VERSION = '0.9.1';
 
     //paging vars
     this._cursor = null;
-    this._next = null
+    this._next = null;
     this._previous = [];
     this._start = 0;
     this._end = 0;
@@ -230,7 +230,7 @@ Usergrid.SDK_VERSION = '0.9.1';
     * @return {boolean} Returns true or false based on if there was a callback to call
     */
     callSuccessCallback: function(response) {
-      if (this._successCallback && typeof(this._successCallback ) == "function") {
+      if (this._successCallback && typeof(this._successCallback ) === "function") {
         this._successCallback(response);
         return true;
       } else {
@@ -268,7 +268,7 @@ Usergrid.SDK_VERSION = '0.9.1';
     * @return {boolean} Returns true or false based on if there was a callback to call
     */
     callFailureCallback: function(response) {
-      if (this._failureCallback && typeof(this._failureCallback) == "function") {
+      if (this._failureCallback && typeof(this._failureCallback) === "function") {
         this._failureCallback(response);
         return true;
       } else {
@@ -388,7 +388,7 @@ Usergrid.SDK_VERSION = '0.9.1';
     */
     saveCursor: function(cursor) {
       //if current cursor is different, grab it for next cursor
-      if (this._next != cursor) {
+      if (this._next !== cursor) {
         this._next = cursor;
       }
     },
@@ -476,11 +476,11 @@ Usergrid.SDK_VERSION = '0.9.1';
    *  @return none
    */
   Usergrid.Entity.prototype.set = function (item, value){
-    if (typeof item == 'object') {
-      for(field in item) {
+    if (typeof item === 'object') {
+      for(var field in item) {
         this._data[field] = item[field];
       }
-    } else if (typeof item == 'string') {
+    } else if (typeof item === 'string') {
       this._data[item] = value;
     } else {
       this._data = null;
@@ -511,7 +511,7 @@ Usergrid.SDK_VERSION = '0.9.1';
 
     //if this is a user, update the password if it has been specified
     var data = {};
-    if (path == 'users') {
+    if (path === 'users') {
       data = this.get();
       var pwdata = {};
       //Note: we have a ticket in to change PUT calls to /users to accept the password change
@@ -541,8 +541,8 @@ Usergrid.SDK_VERSION = '0.9.1';
     var entityData = this.get();
     //remove system specific properties
     for (var item in entityData) {
-      if (item == 'metadata' || item == 'created' || item == 'modified' ||
-          item == 'type' || item == 'activatted' ) { continue; }
+      if (item === 'metadata' || item === 'created' || item === 'modified' ||
+          item === 'type' || item === 'activatted' ) { continue; }
       data[item] = entityData[item];
     }
 
