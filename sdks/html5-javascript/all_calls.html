@@ -21,6 +21,7 @@
          <button class="btn btn-primary" id="show-post" style="width: 90px;">POST</button>
          <button class="btn btn-primary" id="show-put" style="width: 90px;">PUT</button>
          <button class="btn btn-primary" id="show-delete" style="width: 90px;">DELETE</button>
+         <button class="btn btn-primary" id="show-login" style="width: 90px;">LOG IN</button>
          <div id="output"></div>
       </div>
 
@@ -116,6 +117,33 @@
             Hint: if you get an error here, it probably means "fred" doesn't exist.  Go to back to the main menu and choose "POST" to create a new "fred".
          </p>
       </div>
+      
+      <div id="login-page" class="form-block">
+         <h2>Log In</h2>
+         <form name="login-form" id="login-form">
+            <input name="action_type" type="hidden" value="login">
+            <div id="name-control" class="control-group">
+               <label class="control-label" for="username">Username</label>
+               <div class="controls">
+                  <input type="text" name="username" id="username" class="span4" value="fred"/>
+               </div> 
+               <label class="control-label" for="password">Password</label>
+               <div class="controls">
+                  <input type="text" name="password" id="password" class="span4" value="barney"/>
+               </div>
+            </div>
+         </form>
+         <button class="btn btn-primary" id="run-login" style="width: 90px;">Run Query</button>
+         <br/>
+         <br/>
+         <p>
+            To run a login query against the API, enter the username and password, then push the "Run Query" button. 
+            <br/><br/>
+            Hint: if you get an error here, it probably means either the user doesn\'t exist, or hasn\'t had the password set properly.  Go to back to the main menu and choose "POST" to create a new "fred".
+         </p>
+      </div>
+  
+  
       <div class="response-box">API RESPONSE:
       <div id="response"></div>
       </div>

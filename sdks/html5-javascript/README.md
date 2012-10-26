@@ -26,7 +26,7 @@ A minified version of the file is located here:
 
 	/sdk/usergrid.appSDK.min.js
 
-# Contributing
+## Contributing
 We welcome your enhancements!
 
 Like [Usergrid](https://github.com/apigee/usergrid-stack), the Usergrid Javascript SDK is open source and licensed under the Apache License, Version 2.0.

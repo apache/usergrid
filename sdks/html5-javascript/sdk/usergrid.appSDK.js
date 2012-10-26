@@ -60,7 +60,7 @@ Usergrid.SDK_VERSION = '0.9.9';
 
     //paging vars
     this._cursor = null;
-    this._next = null
+    this._next = null;
     this._previous = [];
     this._start = 0;
     this._end = 0;
@@ -236,7 +236,7 @@ Usergrid.SDK_VERSION = '0.9.9';
     * @return {boolean} Returns true or false based on if there was a callback to call
     */
     callSuccessCallback: function(response) {
-      if (this._successCallback && typeof(this._successCallback ) == "function") {
+      if (this._successCallback && typeof(this._successCallback ) === "function") {
         this._successCallback(response);
         return true;
       } else {
@@ -274,7 +274,7 @@ Usergrid.SDK_VERSION = '0.9.9';
     * @return {boolean} Returns true or false based on if there was a callback to call
     */
     callFailureCallback: function(response) {
-      if (this._failureCallback && typeof(this._failureCallback) == "function") {
+      if (this._failureCallback && typeof(this._failureCallback) === "function") {
         this._failureCallback(response);
         return true;
       } else {
@@ -394,7 +394,7 @@ Usergrid.SDK_VERSION = '0.9.9';
     */
     saveCursor: function(cursor) {
       //if current cursor is different, grab it for next cursor
-      if (this._next != cursor) {
+      if (this._next !== cursor) {
         this._next = cursor;
       }
     },
@@ -482,11 +482,11 @@ Usergrid.SDK_VERSION = '0.9.9';
    *  @return none
    */
   Usergrid.Entity.prototype.set = function (item, value){
-    if (typeof item == 'object') {
+    if (typeof item === 'object') {
       for(field in item) {
         this._data[field] = item[field];
       }
-    } else if (typeof item == 'string') {
+    } else if (typeof item === 'string') {
       this._data[item] = value;
     } else {
       this._data = null;
@@ -557,17 +557,17 @@ Usergrid.SDK_VERSION = '0.9.9';
         try {
           var entity = response.entities[0];
           self.set(entity);
-          if (typeof(successCallback) == "function"){
+          if (typeof(successCallback) === "function"){
             successCallback(response);
           }
         } catch (e) {
-          if (typeof(errorCallback) == "function"){
+          if (typeof(errorCallback) === "function"){
             errorCallback(response);
           }
         }
       },
       function(response) {
-        if (typeof(errorCallback) == "function"){
+        if (typeof(errorCallback) === "function"){
           errorCallback(response);
         }
       }
@@ -595,7 +595,7 @@ Usergrid.SDK_VERSION = '0.9.9';
           path += "/" + this.get("username");
         } else {
           console.log('no username specified');
-          if (typeof(errorCallback) == "function"){
+          if (typeof(errorCallback) === "function"){
             console.log('no username specified');
           }
         }
@@ -604,7 +604,7 @@ Usergrid.SDK_VERSION = '0.9.9';
           path += "/" + this.get();
         } else {
           console.log('no entity identifier specified');
-          if (typeof(errorCallback) == "function"){
+          if (typeof(errorCallback) === "function"){
             console.log('no entity identifier specified');
           }
         }
@@ -619,17 +619,17 @@ Usergrid.SDK_VERSION = '0.9.9';
           }
           var entity = response.entities[0];
           self.set(entity);
-          if (typeof(successCallback) == "function"){
+          if (typeof(successCallback) === "function"){
             successCallback(response);
           }
         } catch (e) {
-          if (typeof(errorCallback) == "function"){
+          if (typeof(errorCallback) === "function"){
             errorCallback(response);
           }
         }
       },
       function(response) {
-        if (typeof(errorCallback) == "function"){
+        if (typeof(errorCallback) === "function"){
             errorCallback(response);
         }
       }
@@ -654,7 +654,7 @@ Usergrid.SDK_VERSION = '0.9.9';
       path += "/" + this.get('uuid');
     } else {
       console.log('Error trying to delete object - no uuid specified.');
-      if (typeof(errorCallback) == "function"){
+      if (typeof(errorCallback) === "function"){
         errorCallback('Error trying to delete object - no uuid specified.');
       }
     }
@@ -663,12 +663,12 @@ Usergrid.SDK_VERSION = '0.9.9';
       function(response) {
         //clear out this object
         self.set(null);
-        if (typeof(successCallback) == "function"){
+        if (typeof(successCallback) === "function"){
           successCallback(response);
         }
       },
       function(response) {
-        if (typeof(errorCallback) == "function"){
+        if (typeof(errorCallback) === "function"){
             errorCallback(response);
         }
       }
@@ -1059,17 +1059,17 @@ Usergrid.SDK_VERSION = '0.9.9';
               self.addEntity(entity);
             }
           }
-          if (typeof(successCallback) == "function"){
+          if (typeof(successCallback) === "function"){
             successCallback(response);
           }
         } else {
-          if (typeof(errorCallback) == "function"){
+          if (typeof(errorCallback) === "function"){
               errorCallback(response);
           }
         }
       },
       function(response) {
-        if (typeof(errorCallback) == "function"){
+        if (typeof(errorCallback) === "function"){
             errorCallback(response);
         }
       }
@@ -1171,7 +1171,7 @@ Usergrid.ApiClient = (function () {
   function runAppQuery (Query) {
     var endpoint = "/" + this.getOrganizationName() + "/" + this.getApplicationName() + "/";
     setQueryType(Usergrid.A);
-    run(Query, endpoint, self);
+    run(Query, endpoint);
   }
 
   /*
@@ -1185,7 +1185,7 @@ Usergrid.ApiClient = (function () {
   function runManagementQuery (Query) {
     var endpoint = "/management/";
     setQueryType(Usergrid.M);
-    run(Query, endpoint, self)
+    run(Query, endpoint)
   }
 
   /*
@@ -1357,12 +1357,12 @@ Usergrid.ApiClient = (function () {
         user.set('uuid', response.user.uuid);
         self.setLoggedInUser(user);
         self.setToken(response.access_token);
-        if (successCallback && typeof(successCallback) == "function") {
+        if (successCallback && typeof(successCallback) === "function") {
           successCallback(response);
         }
       },
       function (response) {
-        if (failureCallback && typeof(failureCallback) == "function") {
+        if (failureCallback && typeof(failureCallback) === "function") {
           failureCallback(response);
         }
       }
@@ -1440,7 +1440,7 @@ Usergrid.ApiClient = (function () {
    *  @return none
    */
   function callLogoutCallback() {
-    if (_logoutCallback && typeof(_logoutCallback ) == "function") {
+    if (_logoutCallback && typeof(_logoutCallback ) === "function") {
       _logoutCallback();
       return true;
     } else {
@@ -1794,7 +1794,7 @@ Usergrid.validation = (function () {
     if (usernameRegex.test(username) && checkLength(username, 4, 80)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
+      if (failureCallback && typeof(failureCallback) === "function") {
         failureCallback(this.getUsernameAllowedChars());
       }
       return false;
@@ -1825,7 +1825,7 @@ Usergrid.validation = (function () {
     if (nameRegex.test(name) && checkLength(name, 4, 16)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
+      if (failureCallback && typeof(failureCallback) === "function") {
         failureCallback(this.getNameAllowedChars());
       }
       return false;
@@ -1856,7 +1856,7 @@ Usergrid.validation = (function () {
     if (passwordRegex.test(password) && checkLength(password, 5, 16)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
+      if (failureCallback && typeof(failureCallback) === "function") {
         failureCallback(this.getPasswordAllowedChars());
       }
       return false;
@@ -1887,7 +1887,7 @@ Usergrid.validation = (function () {
     if (emailRegex.test(email) && checkLength(email, 4, 80)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
+      if (failureCallback && typeof(failureCallback) === "function") {
         failureCallback(this.getEmailAllowedChars());
       }
       return false;
@@ -1918,7 +1918,7 @@ Usergrid.validation = (function () {
     if (pathRegex.test(path) && checkLength(path, 4, 80)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
+      if (failureCallback && typeof(failureCallback) === "function") {
         failureCallback(this.getPathAllowedChars());
       }
       return false;
@@ -1949,7 +1949,7 @@ Usergrid.validation = (function () {
     if (titleRegex.test(title) && checkLength(title, 4, 80)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
+      if (failureCallback && typeof(failureCallback) === "function") {
         failureCallback(this.getTitleAllowedChars());
       }
       return false;

@@ -57,6 +57,12 @@ $(document).ready(function () {
       $('#delete-page').show();
    });
 
+   $('#show-login').bind('click', function() {
+      $('#main').hide();
+      $('#main-menu').show();
+      $('#login-page').show();
+   });
+
    $('#run-get').bind('click', function() {
       _get();
    });
@@ -72,6 +78,10 @@ $(document).ready(function () {
    $('#run-delete').bind('click', function() {
       _delete();
    });
+   
+   $('#run-login').bind('click', function() {
+      _login();
+   });
 
    
 
@@ -81,6 +91,7 @@ $(document).ready(function () {
       $('#post-page').hide();
       $('#put-page').hide();
       $('#delete-page').hide();
+      $('#login-page').hide();
       $('#main').show();
       $("#response").html('');
    });
@@ -90,7 +101,7 @@ $(document).ready(function () {
       var path = $("#get-path").val();
       Usergrid.ApiClient.runAppQuery (new Usergrid.Query('GET', path, null, null,
          function(response) {
-           var output = JSON.stringify(response);
+           var output = JSON.stringify(response, null, 2);
            $("#response").html('<pre>'+output+'</pre>');
          },
          function (response) {
@@ -105,7 +116,7 @@ $(document).ready(function () {
       data = JSON.parse(data);
       Usergrid.ApiClient.runAppQuery (new Usergrid.Query('POST', path, data, null,
          function(response) {
-           var output = JSON.stringify(response);
+           var output = JSON.stringify(response, null, 2);
            $("#response").html('<pre>'+output+'</pre>');
          },
          function (response) {
@@ -120,7 +131,7 @@ $(document).ready(function () {
       data = JSON.parse(data);
       Usergrid.ApiClient.runAppQuery (new Usergrid.Query('PUT', path, data, null,
          function(response) {
-           var output = JSON.stringify(response);
+           var output = JSON.stringify(response, null, 2);
            $("#response").html('<pre>'+output+'</pre>');
          },
          function (response) {
@@ -133,7 +144,7 @@ $(document).ready(function () {
       var path = $("#delete-path").val();
       Usergrid.ApiClient.runAppQuery (new Usergrid.Query('DELETE', path, null, null,
          function(response) {
-           var output = JSON.stringify(response);
+           var output = JSON.stringify(response, null, 2);
            $("#response").html('<pre>'+output+'</pre>');
          },
          function (response) {
@@ -141,5 +152,19 @@ $(document).ready(function () {
          }
       ));
    }
+   
+   function _login() {
+      var username = $("#username").val();
+      var password = $("#password").val();
+      Usergrid.ApiClient.logInAppUser(username, password,
+         function (response, user) {
+            var output = JSON.stringify(response, null, 2);
+           $("#response").html('<pre>'+output+'</pre>');     
+         },
+         function (response) {
+            $("#response").html('<pre>ERROR: '+response+'</pre>'); 
+         }
+      );   
+  }
 
 });
