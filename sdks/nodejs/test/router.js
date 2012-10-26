@@ -22,7 +22,6 @@
 *  Some code patterns were pulled from http://www.nodebeginner.org/.  Thank you!
 */
 function route(handle,pathname,querydata,response, sdk) {
-  console.log("About to route a request for " + pathname);
   if (typeof handle[pathname] === 'function') {
     handle[pathname](querydata, response, sdk);
   } else {

@@ -36,7 +36,7 @@ handle["/"] = controller.main;
 handle["/main"] = controller.main;
 
 //initialze the SDK
-var sdk = require("../lib/usergrid.appSDK");
+var sdk = require("../lib/usergrid-sdk");
 sdk.Usergrid.ApiClient.init('apigee', 'sandbox');
 
 //main server
@@ -45,7 +45,7 @@ function start(route, handle) {
     var pathname = url.parse(request.url).pathname;
     var querydata = url.parse(request.url, true).query;
     console.log("Request for " + pathname + " received.");
-    sdk.Usergrid.session.start_session(request, response);               
+                  
       
     var filePath = '.' + request.url;
     if (filePath == './')
@@ -60,14 +60,15 @@ function start(route, handle) {
         contentType = 'text/css';
         serveAsset(response, filePath, contentType);
         break;
+      case '.ico':
+        //do nothing
+        break;
       default:
-        //response.writeHead(200, {"Content-Type": "text/html"});    
+        sdk.Usergrid.session.start_session(request, response);     
         route(handle, pathname, querydata, response, sdk);      
-        //response.end();
+        sdk.Usergrid.session.save_session();
         break;
     }
-     
-    sdk.Usergrid.session.save_session();
   }
 
   //http.createServer(onRequest).listen(8888, '127.0.0.1');
