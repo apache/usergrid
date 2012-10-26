@@ -32,6 +32,7 @@ $(document).ready(function () {
    $('#show-get').bind('click', showGet);
    function showGet() {
       $('#main').hide();
+      $("#response").html('');
       $('#main-menu').show();
       $('#get-page').show();
    }
@@ -39,6 +40,7 @@ $(document).ready(function () {
    $('#show-post').bind('click', showPost);
    function showPost() {
       $('#main').hide();
+      $("#response").html('');
       $('#main-menu').show();
       $('#post-page').show();
    }
@@ -46,6 +48,7 @@ $(document).ready(function () {
    $('#show-put').bind('click', showPut);
    function showPut() {
       $('#main').hide();
+      $("#response").html('');
       $('#main-menu').show();
       $('#put-page').show();
    }
@@ -53,6 +56,7 @@ $(document).ready(function () {
    $('#show-delete').bind('click', showDelete);
    function showDelete() {
       $('#main').hide();
+      $("#response").html('');
       $('#main-menu').show();
       $('#delete-page').show();
    }
@@ -60,6 +64,7 @@ $(document).ready(function () {
    $('#show-login').bind('click', showLogin);
    function showLogin() {
       $('#main').hide();
+      $("#response").html('');
       $('#main-menu').show();
       $('#login-page').show();
    }

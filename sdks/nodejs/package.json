@@ -2,7 +2,7 @@
   "name": "usergrid-node-js-sdk",
   "version": "0.9.1",
   "description": "An SDK for making API calls to App Services (Usergrid) from within Node.js",
-  "main": "index.js",
+  "main": "test/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"

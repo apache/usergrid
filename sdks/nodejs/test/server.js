@@ -21,14 +21,25 @@
 * 
 *  Some code patterns were pulled from http://www.nodebeginner.org/.  Thank you!
 */
-
 var http = require("http");
 var path = require('path');
 var url = require("url");
 var fs = require('fs');
+var sys = require('util');
+//include local files
+var router = require("./router");
+var controller = require("./controller");
 var sdk = require("../lib/usergrid.appSDK");
+
+//routing info
+var handle = {}
+handle["/"] = controller.main;
+handle["/main"] = controller.main;
+
+//initialze the SDK
 sdk.Usergrid.ApiClient.init('apigee', 'sandbox');
 
+//main server
 function start(route, handle) {
   function onRequest(request, response) {
     var pathname = url.parse(request.url).pathname;
@@ -85,4 +96,4 @@ function serveAsset(response, filePath, contentType) {
   });
 }
 
-exports.start = start;
+start(router.route, handle);
