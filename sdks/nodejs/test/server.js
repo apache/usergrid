@@ -26,7 +26,7 @@ var http = require("http");
 var path = require('path');
 var url = require("url");
 var fs = require('fs');
-var sdk = require("./SDK/usergrid.appSDK");
+var sdk = require("../lib/usergrid.appSDK");
 sdk.Usergrid.ApiClient.init('apigee', 'sandbox');
 
 function start(route, handle) {

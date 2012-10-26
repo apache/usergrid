@@ -2060,7 +2060,7 @@ Usergrid.session = {
       var file_contents = fs.readFileSync(filename);
       sessionData = JSON.parse(file_contents);
     } else {
-      session.write(); 
+      Usergrid.session.write(); 
     }                                                 
     return sessionData;
   },

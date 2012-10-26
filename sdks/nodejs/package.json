@@ -1,0 +1,23 @@
+{
+  "name": "usergrid-node-js-sdk",
+  "version": "0.9.1",
+  "description": "An SDK for making API calls to App Services (Usergrid) from within Node.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/apigee/usergrid-node-js-sdk.git"
+  },
+  "keywords": [
+    "Node",
+    "Usergrid",
+    "Apigee",
+    "API",
+    "SDK"
+  ],
+  "author": "Rod Simpson",
+  "license": "Apache 2.0"
+}
