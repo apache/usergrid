@@ -42,7 +42,7 @@ The SDK project includes two simple apps.
 
 The first is a simple app called Dogs that creates a list of dogs.   The app uses App Services to retrieve a collection of dog entities. The app illustrates how to page through the results, and how to create a new entity.
 
-The second is an app that exercises the 4 REST methods of the api: GET, POST, PUT, and DELETE.  These two apps provide different functionality and will help you learn how to use the Javascript SDK to make your own amazing apps!
+The second is an app that exercises the 4 REST methods of the api: GET, POST, PUT, and DELETE, plus a login example.  These two apps provide different functionality and will help you learn how to use the Javascript SDK to make your own amazing apps!
 
 For a more complex sample app, check out the Messagee app:
 
