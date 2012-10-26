@@ -137,8 +137,8 @@ public class IndexUpdate {
 		return prevEntries;
 	}
 
-	public void addPrevEntry(String path, Object value, UUID timestamp) {
-		IndexEntry entry = new IndexEntry(path, value, timestamp);
+	public void addPrevEntry(String path, Object value, UUID timestamp, ByteBuffer ledgerValue) {
+		IndexEntry entry = new IndexEntry(path, value, timestamp, ledgerValue);
 		prevEntries.add(entry);
 
 	}
@@ -148,7 +148,7 @@ public class IndexUpdate {
 	}
 
 	public void addNewEntry(String path, Object value) {
-		IndexEntry entry = new IndexEntry(path, value, timestampUuid);
+		IndexEntry entry = new IndexEntry(path, value, timestampUuid, null);
 		newEntries.add(entry);
 	}
 
@@ -198,12 +198,14 @@ public class IndexUpdate {
 		private String path;
 		private final Object value;
 		private final UUID timestampUuid;
+		private final ByteBuffer ledgerColumn;
 
-		public IndexEntry(String path, Object value, UUID timestampUuid) {
+		public IndexEntry(String path, Object value, UUID timestampUuid, ByteBuffer ledgerColumn) {
 			this.path = path;
 			this.value = value;
 			code = indexValueCode(value);
 			this.timestampUuid = timestampUuid;
+			this.ledgerColumn = ledgerColumn;
 		}
 
 		public String getPath() {
@@ -232,6 +234,10 @@ public class IndexUpdate {
 
 		public DynamicComposite getIndexComposite(Object... ids) {
 			return new DynamicComposite(code, value, asList(ids), timestampUuid);
+		}
+		
+		public ByteBuffer getLedgerColumn(){
+		  return this.ledgerColumn;
 		}
 
 	}

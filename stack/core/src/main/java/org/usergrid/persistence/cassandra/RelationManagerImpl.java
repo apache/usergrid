@@ -575,7 +575,7 @@ public class RelationManagerImpl implements RelationManager {
                             Schema.DICTIONARY_INDEXES), index, null,
                     indexUpdate.getTimestamp());
         }
-
+        
         return indexUpdate;
     }
 
@@ -1605,6 +1605,8 @@ public class RelationManagerImpl implements RelationManager {
                 timestampUuid, schemaHasProperty, isMultiValue,
                 removeListEntry, fulltextIndexed, false);
     }
+    
+  
 
     @Metered(group="core",name="RelationManager_batchStartIndexUpdate")
     public IndexUpdate batchStartIndexUpdate(Mutator<ByteBuffer> batch,
@@ -1675,12 +1677,11 @@ public class RelationManagerImpl implements RelationManager {
                         entryPath = entryName + "." + prev_obj_path;
                     }
 
-                    indexUpdate.addPrevEntry(entryPath, prev_value,
-                            prev_timestamp);
+                    indexUpdate.addPrevEntry(entryPath, prev_value,prev_timestamp, entry.getName().duplicate());
 
                     // composite(property_value,connected_entity_id,entry_timestamp)
-                    addDeleteToMutator(batch, ENTITY_INDEX_ENTRIES,
-                            entity.getUuid(), entry.getName(), timestamp);
+//                    addDeleteToMutator(batch, ENTITY_INDEX_ENTRIES,
+//                            entity.getUuid(), entry.getName(), timestamp);
 
                 } else {
                     logger.error("Unexpected condition - deserialized property value is null");
@@ -1860,6 +1861,15 @@ public class RelationManagerImpl implements RelationManager {
             batchUpdateBackwardConnectionsPropertyIndexes(indexUpdate);
         }
 
+        
+        /**
+         * We've updated the properties, add the deletes to the ledger
+         * 
+         */
+        
+        for(IndexEntry entry: indexUpdate.getPrevEntries()){
+          addDeleteToMutator(batch, ENTITY_INDEX_ENTRIES, entity.getUuid(), entry.getLedgerColumn(), indexUpdate.getTimestamp());
+        }
     }
 
     public void batchUpdateSetIndexes(Mutator<ByteBuffer> batch,
