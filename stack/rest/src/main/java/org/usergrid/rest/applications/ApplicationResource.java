@@ -19,11 +19,9 @@ import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.usergrid.security.shiro.utils.SubjectUtils.isApplicationAdmin;
 import static org.usergrid.services.ServiceParameter.addParameter;
-import static org.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
@@ -52,7 +50,6 @@ import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.codec.Base64;
 import org.slf4j.Logger;
@@ -79,8 +76,8 @@ import com.sun.jersey.api.view.Viewable;
 @Component("org.usergrid.rest.applications.ApplicationResource")
 @Scope("prototype")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-        "application/x-javascript", "text/ecmascript",
-        "application/ecmascript", "text/jscript" })
+    "application/x-javascript", "text/ecmascript",
+    "application/ecmascript", "text/jscript" })
 public class ApplicationResource extends ServiceResource {
 
     public static final Logger logger = LoggerFactory
@@ -140,30 +137,30 @@ public class ApplicationResource extends ServiceResource {
         return getEventsResource(ui);
     }
 
-  @RequireApplicationAccess
-  @Path("assets")
-  public AssetsResource getAssetsResource(@Context UriInfo ui)
-          throws Exception {
-    logger.debug("in assets n applicationResource");
-    addParameter(getServiceParameters(), "assets");
+    @RequireApplicationAccess
+    @Path("assets")
+    public AssetsResource getAssetsResource(@Context UriInfo ui)
+            throws Exception {
+        logger.debug("in assets n applicationResource");
+        addParameter(getServiceParameters(), "assets");
 
-    PathSegment ps = getFirstPathSegment("assets");
-    if (ps != null) {
-      addMatrixParams(getServiceParameters(), ui, ps);
+        PathSegment ps = getFirstPathSegment("assets");
+        if (ps != null) {
+            addMatrixParams(getServiceParameters(), ui, ps);
+        }
+
+        return getSubResource(AssetsResource.class);
     }
 
-    return getSubResource(AssetsResource.class);
-  }
 
-
-  @RequireApplicationAccess
-  @Path("asset")
-  public AssetsResource getAssetResource(@Context UriInfo ui)
-          throws Exception {
-    // TODO change to singular
-    logger.debug("in asset in applicationResource");
-    return getAssetsResource(ui);
-  }
+    @RequireApplicationAccess
+    @Path("asset")
+    public AssetsResource getAssetResource(@Context UriInfo ui)
+            throws Exception {
+        // TODO change to singular
+        logger.debug("in asset in applicationResource");
+        return getAssetsResource(ui);
+    }
 
     @Path("users")
     public UsersResource getUsers(@Context UriInfo ui) throws Exception {
@@ -183,23 +180,6 @@ public class ApplicationResource extends ServiceResource {
         return getUsers(ui);
     }
 
-    private static String wrapWithCallback(AccessInfo accessInfo,
-            String callback) {
-        return wrapWithCallback(mapToJsonString(accessInfo), callback);
-    }
-
-    private static String wrapWithCallback(String json, String callback) {
-        if (StringUtils.isNotBlank(callback)) {
-            json = callback + "(" + json + ")";
-        }
-        return json;
-    }
-
-    private static MediaType jsonMediaType(String callback) {
-        return isNotBlank(callback) ? new MediaType("application", "javascript")
-                : APPLICATION_JSON_TYPE;
-    }
-
     @GET
     @Path("token")
     public Response getAccessToken(@Context UriInfo ui,
@@ -214,7 +194,7 @@ public class ApplicationResource extends ServiceResource {
             @QueryParam("ttl") long ttl,
             @QueryParam("redirect_uri") String redirect_uri,
             @QueryParam("callback") @DefaultValue("") String callback)
-            throws Exception {
+                    throws Exception {
 
         logger.debug("ApplicationResource.getAccessToken");
 
@@ -286,8 +266,8 @@ public class ApplicationResource extends ServiceResource {
                     services.getApplicationId(), user.getUuid(), ttl);
 
             AccessInfo access_info = new AccessInfo()
-                    .withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
-                    .withAccessToken(token).withProperty("user", user);
+            .withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
+            .withAccessToken(token).withProperty("user", user);
 
             return Response.status(SC_OK).type(jsonMediaType(callback))
                     .entity(wrapWithCallback(access_info, callback)).build();
@@ -316,7 +296,7 @@ public class ApplicationResource extends ServiceResource {
             @FormParam("ttl") long ttl,
             @FormParam("redirect_uri") String redirect_uri,
             @QueryParam("callback") @DefaultValue("") String callback)
-            throws Exception {
+                    throws Exception {
 
         logger.debug("ApplicationResource.getAccessTokenPost");
 
@@ -330,7 +310,7 @@ public class ApplicationResource extends ServiceResource {
     public Response getAccessTokenPostJson(@Context UriInfo ui,
             Map<String, Object> json,
             @QueryParam("callback") @DefaultValue("") String callback)
-            throws Exception {
+                    throws Exception {
 
         String grant_type = (String) json.get("grant_type");
         String username = (String) json.get("username");
@@ -349,7 +329,7 @@ public class ApplicationResource extends ServiceResource {
                 throw new IllegalArgumentException("ttl must be a number >= 0");
             }
         }
-        
+
         return getAccessToken(ui, null, grant_type, username, password, pin,
                 client_id, client_secret, code, ttl, redirect_uri, callback);
     }
@@ -359,7 +339,7 @@ public class ApplicationResource extends ServiceResource {
     @RequireApplicationAccess
     public JSONWithPadding getKeys(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+                    throws Exception {
 
         logger.debug("AuthResource.keys");
 
@@ -370,8 +350,8 @@ public class ApplicationResource extends ServiceResource {
         ClientCredentialsInfo kp = new ClientCredentialsInfo(
                 management.getClientIdForApplication(services
                         .getApplicationId()),
-                management.getClientSecretForApplication(services
-                        .getApplicationId()));
+                        management.getClientSecretForApplication(services
+                                .getApplicationId()));
 
         return new JSONWithPadding(new ApiResponse(ui).withCredentials(kp)
                 .withAction("get application keys").withSuccess(), callback);
@@ -382,7 +362,7 @@ public class ApplicationResource extends ServiceResource {
     @RequireApplicationAccess
     public JSONWithPadding generateKeys(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+                    throws Exception {
 
         logger.debug("AuthResource.keys");
 
@@ -393,8 +373,8 @@ public class ApplicationResource extends ServiceResource {
         ClientCredentialsInfo kp = new ClientCredentialsInfo(
                 management.getClientIdForApplication(services
                         .getApplicationId()),
-                management.newClientSecretForApplication(services
-                        .getApplicationId()));
+                        management.newClientSecretForApplication(services
+                                .getApplicationId()));
 
         return new JSONWithPadding(new ApiResponse(ui).withCredentials(kp)
                 .withAction("generate application keys").withSuccess(),
@@ -484,13 +464,13 @@ public class ApplicationResource extends ServiceResource {
     @Override
     public JSONWithPadding executeDelete(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+                    throws Exception {
 
         logger.debug("ApplicationResource.executeDelete");
-        
+
         throw new NotImplementedException("Application delete is not allowed yet");
     }
-    
+
     String errorMsg = "";
     String applicationName;
     String responseType;
