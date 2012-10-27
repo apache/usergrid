@@ -1,5 +1,5 @@
 ##Overview
-Apigee provides a Node.js SDK that simplifies the process of making API calls to App Services from within Node.js. The Apigee App Services Node.js SDK is available as an open-source project in github and we welcome your contributions and suggestions. The repository is located at:
+Apigee provides this Node.js SDK, which simplifies the process of making API calls to App Services from within Node.js. The Apigee App Services Node.js SDK is available as an open-source project in github and we welcome your contributions and suggestions. The repository is located at:
 
 <https://github.com/apigee/usergrid-node-js-sdk>
 
@@ -23,7 +23,7 @@ Use the Javacript SDK if you are building an HTML5 / Javascript app that runs cl
 ##Getting started
 To get you started, please note that the SDK consists of one main JavaScript file, located in the project at:
 
-  /lib/usergrid.appSDK.js
+  /lib/usergrid-sdk.js
   
 With a dependency on:
   
@@ -31,11 +31,11 @@ With a dependency on:
   
 Simply include the SDK to begin to use it:
 
-  var sdk = require("lib/usergrid.appSDK");
+  var sdk = require('usergrid-sdk')
   
 Then initialize it with your app and org id:
 
-  sdk.Usergrid.ApiClient.init('apigee', 'sandbox');
+  sdk.ApiClient.init('apigee', 'sandbox')
   
 You are now ready to use the sdk handle to make calls against the API.  See the sample app for more example usage.
 
@@ -76,7 +76,7 @@ In the example app, we include the SDK like so:
 	
 So all subsequent calls to the SDK should use the "sdk" handle like so:
 
-	sdk.Usergrid.ApiClient.init('apigee', 'sandbox');
+	sdk.ApiClient.init('apigee', 'sandbox');
 
 
 ##Direct API calls to the Application and Management endpoints
@@ -87,7 +87,7 @@ See examples of this in the `controller.js` file
 ###The Query object
 Calls to both the Application endpoint as well as the Management endpoint require a Query object. The Query object stores information about the API call you want to make.  To get started, create a new Query object, and pass in the relevant data.  In the following example, we simply want to query the list of users:
 
-	queryObj = new sdk.Usergrid.Query(
+	queryObj = new sdk.Query(
 		"GET",
 		"users",
 		null,
@@ -131,17 +131,17 @@ The failure callback function - will be invoked if the API call fails.
 ###Application endpoint
 After the query object is ready, pass it as an argument to the appropriate endpoint. To run a query against the Application endpoint:
 
-	sdk.Usergrid.ApiClient.runAppQuery(queryObj);
+	sdk.ApiClient.runAppQuery(queryObj);
 
 ###Management endpoint
 To run a query against the Management endpoint:
 
-	sdk.Usergrid.ApiClient.runManagementQuery(queryObj);
+	sdk.ApiClient.runManagementQuery(queryObj);
 
 ###Putting it all together
 Both the API call and the Query object can be made in the same call:
 
- 	sdk.Usergrid.ApiClient.runAppQuery (new sdk.Usergrid.Query('GET', 'users', null, null,
+ 	sdk.ApiClient.runAppQuery (new sdk.Query('GET', 'users', null, null,
     	function(output) {
        		//do something with the return value "output" here  
      	},
@@ -155,7 +155,7 @@ The above call will make a GET call to get all the users in the application.
 ###To log a user in
 To log app users in, use the Usergrid.ApiClient.logInAppUser() method.  This method takes the supplied username and password and attempts to acquire an access token from the API.  If the method successfully acquires the token, the token is stored in the Usergrid.ApiClient singleton and will be used for all subsequent calls. 
 
-	sdk.Usergrid.ApiClient.logInAppUser(username, password,
+	sdk.ApiClient.logInAppUser(username, password,
     	function (output, user) {
       		//do something with the return value "output" here       
     	},
@@ -171,7 +171,7 @@ After the user is successfully logged in, you can make calls to the API on their
 ###To log a user out
 To log the user out, call:
 
-	sdk.Usergrid.ApiClient.logoutAppUser();
+	sdk.ApiClient.logoutAppUser();
 
 This destroys their token in the ApiClient singleton.
 
@@ -182,7 +182,7 @@ Entities and Collections are used to model the custom data you need to store in 
 ##The Entity Object
 Start by creating a new Entity object, where the argument is the name of the collection that the entity will be part of. In the Dogs sample app, here is how a new dogs entity is created in a collection named dogs:
 
-	var dog = new sdk.Usergrid.Entity("dogs");
+	var dog = new sdk.Entity("dogs");
 
 Next, add any needed custom fields. For example:
 
@@ -222,7 +222,7 @@ The Collection Object models the custom collections you create using the API.  C
 
 To get started, create a new Collection object, where the argument is the type of collection you intend to model. For example:
 
-	var dogs = new sdk.Usergrid.Collection('dogs'); //makes a new 'dogs' collection object
+	var dogs = new sdk.Collection('dogs'); //makes a new 'dogs' collection object
 
 If your collection already exists on the server, call the get() method to populate your new object with data from the server. For example:
 
@@ -230,7 +230,7 @@ If your collection already exists on the server, call the get() method to popula
 
 By default, the dogs.get() method uses the API to retrieve the first 10 dog entities and loads them into the dogs Collection object. If you want to add a new entity to the collection, simply create it. For example:
 
-	var dog = new sdk.Usergrid.Entity("dogs");
+	var dog = new sdk.Entity("dogs");
 	dog.set("name","fido");
 
 Then add it to the collection (and save it to the API):
@@ -241,13 +241,13 @@ Note:  The addNewEntity() method adds the entity to the collection and *also* sa
 
 So this:
 
-	var dog = new sdk.Usergrid.Entity("dogs");
+	var dog = new sdk.Entity("dogs");
 	dog.save();
 	dogs.addEntity(dog); //entity is added only
 
 Is equivalent to this:
 
-	var dog = new sdk.Usergrid.Entity("dogs");
+	var dog = new sdk.Entity("dogs");
 	dogs.addNewEntity(dog); //entity is added and saved
 
 
@@ -287,7 +287,7 @@ There is no specific User object in the SDK.  Instead, you simply need to use th
 
  First, create a new user:
 
-	var marty = new sdk.Usergrid.Entity("users");
+	var marty = new sdk.Entity("users");
 
  Next, add more data if needed:
 

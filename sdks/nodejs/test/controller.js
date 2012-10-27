@@ -52,12 +52,12 @@ function main(querydata, response, sdk) {
 }
 
 function _get(response, sdk, view, path) {
-  sdk.Usergrid.ApiClient.runAppQuery (new sdk.Usergrid.Query('GET', path, null, null,
+  sdk.ApiClient.runAppQuery(new sdk.Query('GET', path, null, null,
      function(output) {
-       var output = '<pre>'+JSON.stringify(output)+'</pre>';
+       var output = '<pre>'+JSON.stringify(output, null, 2)+'</pre>';
        view.getBody(response, output);  
      },
-     function (outpot) {
+     function (output) {
        var output = JSON.stringify(output);
        view.getBody(response, output);
      }
@@ -66,12 +66,12 @@ function _get(response, sdk, view, path) {
 
 function _post(response, sdk, view, path, data) {
   data = JSON.parse(data);
-  sdk.Usergrid.ApiClient.runAppQuery (new sdk.Usergrid.Query('POST', path, data, null,
+  sdk.ApiClient.runAppQuery(new sdk.Query('POST', path, data, null,
      function(output) {
-       var output = '<pre>'+JSON.stringify(output)+'</pre>';
+       var output = '<pre>'+JSON.stringify(output, null, 2)+'</pre>';
        view.getBody(response, output);  
      },
-     function (outpot) {
+     function (output) {
        var output = JSON.stringify(output);
        view.getBody(response, output);
      }
@@ -80,12 +80,12 @@ function _post(response, sdk, view, path, data) {
 
 function _put(response, sdk, view, path, data) {
   data = JSON.parse(data);
-  sdk.Usergrid.ApiClient.runAppQuery (new sdk.Usergrid.Query('PUT', path, data, null,
+  sdk.ApiClient.runAppQuery(new sdk.Query('PUT', path, data, null,
     function(output) {
-      var output = '<pre>'+JSON.stringify(output)+'</pre>';
+      var output = '<pre>'+JSON.stringify(output, null, 2)+'</pre>';
       view.getBody(response, output);  
     },
-    function (outpot) {
+    function (output) {
       var output = JSON.stringify(output);
       view.getBody(response, output);
     }
@@ -93,12 +93,12 @@ function _put(response, sdk, view, path, data) {
 }
 
 function _delete(response, sdk, view, path) {
-  sdk.Usergrid.ApiClient.runAppQuery (new sdk.Usergrid.Query('DELETE', path, null, null,
+  sdk.ApiClient.runAppQuery(new sdk.Query('DELETE', path, null, null,
     function(output) {
-      var output = '<pre>'+JSON.stringify(output)+'</pre>';
+      var output = '<pre>'+JSON.stringify(output, null, 2)+'</pre>';
       view.getBody(response, output);  
     },
-    function (outpot) {
+    function (output) {
       var output = JSON.stringify(output);
       view.getBody(response, output);
     }
@@ -106,9 +106,9 @@ function _delete(response, sdk, view, path) {
 }
 
 function _login(response, sdk, view, username, password) {
-  sdk.Usergrid.ApiClient.logInAppUser(username, password,
+  sdk.ApiClient.logInAppUser(username, password,
     function (output, user) {
-      var output = '<pre>'+JSON.stringify(output)+'</pre>';
+      var output = '<pre>'+JSON.stringify(output, null, 2)+'</pre>';
       view.getBody(response, output);      
     },
     function (output) {

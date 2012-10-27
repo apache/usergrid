@@ -40,7 +40,8 @@ body {
    background-color: #ff4200;
    color: #fff;
    text-align: center;
-   font-size: 20px;
+   font-size: 24px;
+   font-weight: 800;
 }
 .main-menu-button{
    display: none;

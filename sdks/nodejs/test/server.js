@@ -37,7 +37,7 @@ handle["/main"] = controller.main;
 
 //initialze the SDK
 var sdk = require("../lib/usergrid-sdk");
-sdk.Usergrid.ApiClient.init('apigee', 'sandbox');
+sdk.ApiClient.init('apigee', 'sandbox');
 
 //main server
 function start(route, handle) {
@@ -64,17 +64,16 @@ function start(route, handle) {
         //do nothing
         break;
       default:
-        sdk.Usergrid.session.start_session(request, response);     
+        sdk.session.start_session(request, response);     
         route(handle, pathname, querydata, response, sdk);      
-        sdk.Usergrid.session.save_session();
+        sdk.session.save_session();
         break;
     }
   }
 
-  //http.createServer(onRequest).listen(8888, '127.0.0.1');
   http.createServer(onRequest).listen(8888);
   console.log("Server has started.");
-  console.log('Server running at port 8888');
+  console.log('Server running at port 8888, try http://localhost:8888');
 }
 
 function serveAsset(response, filePath, contentType) {
