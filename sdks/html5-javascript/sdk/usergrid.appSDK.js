@@ -1025,6 +1025,12 @@ Usergrid.SDK_VERSION = '0.9.9';
     this.clearAll();
   }
 
+  //The get() function is deprecated.  Including here for backwards compatibility  
+  //with previous versions of the SDK
+  Usergrid.Collection.prototype.get = function (successCallback, errorCallback){
+    Usergrid.Collection.fetch(successCallback, errorCallback);
+  } 
+    
   /**
    *  A method to get all items in the collection, as dictated by the
    *  cursor and the query.  By default, the API returns 10 items in
@@ -1037,7 +1043,7 @@ Usergrid.SDK_VERSION = '0.9.9';
    *  @param {function} errorCallback
    *  @return none
    */
-  Usergrid.Collection.prototype.get = function (successCallback, errorCallback){
+  Usergrid.Collection.prototype.fetch = function (successCallback, errorCallback){
     var self = this;
     var queryParams = this.getQueryParams();
     //empty the list

@@ -81,6 +81,10 @@ If you need to get a property from the object, call the get() method and provide
 
 	var state = dog.get("state");
 
+If you want to get the entire data object (all properties), use the get method, but pass no arguments:
+
+  var data = dog.get();
+
 If you no longer need the object, call the destroy() method. This deletes the object from database. For example:
 
 	dog.destroy(); //no real dogs were harmed!
@@ -96,11 +100,11 @@ To get started, create a new Collection object, where the argument is the type o
 
 	var dogs = new Usergrid.Collection('dogs'); //makes a new 'dogs' collection object
 
-If your collection already exists on the server, call the get() method to populate your new object with data from the server. For example:
+If your collection already exists on the server, call the fetch() method to populate your new object with data from the server. For example:
 
-	dogs.get();
+	dogs.fetch();
 
-By default, the dogs.get() method uses the API to retrieve the first 10 dog entities and loads them into the dogs Collection object. If you want to add a new entity to the collection, simply create it. For example:
+By default, the dogs.fetch() method uses the API to retrieve the first 10 dog entities and loads them into the dogs Collection object. If you want to add a new entity to the collection, simply create it. For example:
 
 	var dog = new Usergrid.Entity("dogs");
 	dog.set("name","fido");
@@ -126,6 +130,8 @@ Is equivalent to this:
 ###Displaying Results
 After you populate your Collection object, you can display a list of all the entities currently stored in the Collection object. Here's how it's done in the Dogs app:
 
+  //populate the collection
+  dogs.fetch();
 	//iterate through all the items in this "page" of data
 	while(dogs.hasNextEntity()) {
 		//get a reference to the dog
@@ -156,10 +162,10 @@ Next, bind the previous and next buttons to the getNextPage and getPreviousPage 
 	});
 
 
-Finally, call the get() method to pull down results from the API.  In the success callback function, loop through the results, adding checks to determine if the previous or next buttons should be displayed. For example:
+Finally, call the fetch() method to pull down results from the API.  In the success callback function, loop through the results, adding checks to determine if the previous or next buttons should be displayed. For example:
 
 
-	dogs.get(
+	dogs.fetch(
 		function() {
 			//first empty out all the current dogs in the list
 			$('#mydoglist').empty();
@@ -257,9 +263,7 @@ A persistent storage (session) module has been added.  The file is located here:
 
 Include this file at the top of your HTML file - AFTER the SDK file:
 
-	<!--INCLUDE SDK FIRST-->
 	<script src="sdk/usergrid.appSDK.js" type="text/javascript"></script> 
-	<!--INCLUDE session after-->
 	<script src="sdk/usergrid.session.js" type="text/javascript"></script> 
 
 That is all you have to do.  The session contains methods that will override the storage methods used by the SDK.  Instead of storing the token and currently logged in user in memory, they are now stored in "localstorage", a feature available in most modern browsers.
