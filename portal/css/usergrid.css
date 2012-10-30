@@ -3723,7 +3723,7 @@ a:active {
 }
 .navbar .nav li a {
   text-shadow: 0 0px 0 white;
-  padding: 13px 10px 11px !important;
+  padding: 13px 10px 11px;
   font-weight: normal;
   color: #ffffff;
   line-height: 26px;
@@ -3733,8 +3733,9 @@ a:active {
   background-color: #ff0303;
 }
 .navbar .nav .dropdown-menu a {
-  line-height: 13px;
+  line-height: 18px;
   color: #000000;
+  padding: 3px 15px;
 }
 .navbar .nav .dropdown-menu a:hover {
   color: #ffffff;
