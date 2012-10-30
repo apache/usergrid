@@ -3694,6 +3694,7 @@ a:active {
   display: inline;
   float: left;
   color: #ffffff;
+  font-weight: normal;
 }
 .navbar h1 {
   height: 32px;
