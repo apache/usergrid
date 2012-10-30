@@ -192,7 +192,7 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>me.prettyprint</groupId>
+			<groupId>org.hectorclient</groupId>
 			<artifactId>hector-test</artifactId>
 			<scope>compile</scope>
 		</dependency>
@@ -232,11 +232,6 @@
 					<groupId>commons-logging</groupId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.cassandra</groupId>
-			<artifactId>cassandra-javautils</artifactId>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>

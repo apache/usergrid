@@ -40,7 +40,7 @@
             <artifactId>jackson-mapper-asl</artifactId>
         </dependency>
         <dependency>
-            <groupId>me.prettyprint</groupId>
+            <groupId>org.hectorclient</groupId>
             <artifactId>hector-core</artifactId>
         </dependency>
 

@@ -6,11 +6,11 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<bundle.symbolicName>org.usergrid</bundle.symbolicName>
 		<bundle.namespace>org.usergrid</bundle.namespace>
-		<cassandra-javautils-version>0.7.1</cassandra-javautils-version>
-		<cassandra-version>1.0.6</cassandra-version>
+		<!-- <cassandra-javautils-version>1.1.6</cassandra-javautils-version> -->
+		<cassandra-version>1.1.6</cassandra-version>
 		<hector-om-version>2.0-01</hector-om-version>
-		<hector-version>1.0-5</hector-version>
-		<hector-test-version>1.0-5</hector-test-version>
+		<hector-version>1.1-0</hector-version>
+		<hector-test-version>1.1-0</hector-test-version>
 		<jackson-version>1.9.9</jackson-version>
 		<jersey-version>1.11</jersey-version>
 		<shiro-version>1.2.0</shiro-version>
@@ -231,17 +231,17 @@
 				<version>${log4j-version}</version>
 			</dependency>
 			<dependency>
-				<groupId>me.prettyprint</groupId>
+				<groupId>org.hectorclient</groupId>
 				<artifactId>hector-core</artifactId>
 				<version>${hector-version}</version>
 			</dependency>
 			<dependency>
-				<groupId>me.prettyprint</groupId>
+				<groupId>org.hectorclient</groupId>
 				<artifactId>hector-test</artifactId>
 				<version>${hector-test-version}</version>
 			</dependency>
 			<dependency>
-				<groupId>me.prettyprint</groupId>
+				<groupId>org.hectorclient</groupId>
 				<artifactId>hector-object-mapper</artifactId>
 				<version>${hector-om-version}</version>
 			</dependency>
@@ -293,12 +293,6 @@
 				<artifactId>cassandra-all</artifactId>
 				<version>${cassandra-version}</version>
 				<scope>compile</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.cassandra</groupId>
-				<artifactId>cassandra-javautils</artifactId>
-				<version>${cassandra-javautils-version}</version>
-				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.lucene</groupId>

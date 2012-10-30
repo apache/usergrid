@@ -465,7 +465,7 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>me.prettyprint</groupId>
+			<groupId>org.hectorclient</groupId>
 			<artifactId>hector-test</artifactId>
 			<scope>test</scope>
 		</dependency>
