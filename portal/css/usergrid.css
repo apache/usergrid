@@ -3732,6 +3732,9 @@ a:active {
   color: #ffffff;
   background-color: #ff0303;
 }
+.navbar .nav .dropdown-toggle .caret {
+  margin-top: 13px;
+}
 .navbar .nav .dropdown-menu a {
   line-height: 13px;
   color: #000000;
@@ -3744,8 +3747,14 @@ a:active {
   color: #ffffff;
   background-color: #ff4300;
 }
+.navbar .nav .active > a .caret {
+  opacity: 0.3;
+}
 .navbar .nav .active > a:hover {
   background-color: #ff0303 !important;
+}
+.navbar .nav .active > a:hover .caret {
+  opacity: 1;
 }
 .navbar .nav .active > a .active {
   background-color: #ff0303 !important;
