@@ -3666,7 +3666,7 @@ a:active {
   margin: 0 !important;
 }
 .navbar {
-  height: 50px;
+  height: 48px;
   min-width: 700px;
   background-color: #ff4300;
   margin: 0px 1px 20px 1px;
@@ -3682,7 +3682,7 @@ a:active {
   position: relative;
   display: inline-block;
   float: left;
-  top: 50px;
+  top: 48px;
   left: -83px;
   border-top: 8px solid #ff4300;
   border-left: 8px solid transparent;
@@ -3707,7 +3707,7 @@ a:active {
 .navbar h2 {
   font-size: 13px;
   padding: 5px;
-  line-height: 37px;
+  line-height: 35px;
   padding-top: 8px;
   color: #ffffff;
 }
@@ -3726,7 +3726,7 @@ a:active {
   padding: 13px 10px 11px !important;
   font-weight: normal;
   color: #ffffff;
-  line-height: 26px;
+  line-height: 24px;
 }
 .navbar .nav li a:hover {
   color: #ffffff;
