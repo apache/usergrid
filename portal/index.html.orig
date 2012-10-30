@@ -57,9 +57,9 @@
           </div>
           <div id="privateMenu" class="navbar-inner">
             <div class="left-header">
-              <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img class="logo"src="images/logo-white.png">apigee</a></h1>
+              <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img src="images/logo-white.png">apigee</a></h1>
               <b class="caret"></b>
-              <h2 class="portal-name" ><a href="#organization" class="go-home open">Admin Portal</a></h2>
+              <h2 ><a href="#organization" class="go-home">Admin Portal</a></h2>
               <ul class="nav">
                 <li id="more-menu" class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#">More <span class="caret"></span></a>
@@ -81,9 +81,15 @@
             <div class="right-header">
               <ul id="profileMenu" class="nav secondary-nav">
                 <li id="switchTo-menu" class="dropdown">
+<<<<<<< HEAD
                   <a id="switchTo-link" class="dropdown-toggle" data-toggle="dropdown" href="#"><span>Switch to...
+                  </span> &#9660;</a>
+=======
+                  <a id="switchTo-link" class="dropdown-toggle" data-toggle="dropdown" href="#"><span>Switch To...
                   </span> <span class="caret"></span></a>
+>>>>>>> 888-UserGrid
                   <ul class="dropdown-menu">
+                    <li><a href="http://apigee.com/usergrid/" target="_blank"> App Services</a></li>
                     <li><a href="http://mobileanalytics.apigee.com/pages/signin.seam " target="_blank"> Mobile Analytics</a></li>
                     <li><a href="http://apigee.com/console/others" target="_blank"> API Consoles</a></li>
                   </ul>

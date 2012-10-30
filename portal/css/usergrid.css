@@ -4837,3 +4837,6 @@ table .zebraRows:nth-child(2n) {
 #application-panel-buttons .active > a:hover i.wrench {
   background-image: url("../images/glyphicons_halflings_135_wrench.png") !important;
 }
+.apigee .logo {
+  width: 57px;
+}
