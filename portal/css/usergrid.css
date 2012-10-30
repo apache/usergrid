@@ -3732,6 +3732,10 @@ a:active {
   color: #ffffff;
   background-color: #ff0303;
 }
+.navbar .nav .dropdown-toggle .caret {
+  margin-top: 13px;
+  opacity: 1;
+}
 .navbar .nav .dropdown-menu a {
   line-height: 13px;
   color: #000000;
