@@ -26,9 +26,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>me.prettyprint</groupId>
+            <groupId>org.hectorclient</groupId>
             <artifactId>hector-test</artifactId>
-            <version>1.0-3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -43,9 +42,8 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.prettyprint</groupId>
+            <groupId>org.hectorclient</groupId>
             <artifactId>hector-core</artifactId>
-            <version>1.0-3</version>
         </dependency>
         <dependency>
             <groupId>log4j</groupId>

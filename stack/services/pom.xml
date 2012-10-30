@@ -171,16 +171,11 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.cassandra</groupId>
-			<artifactId>cassandra-javautils</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>me.prettyprint</groupId>
+			<groupId>org.hectorclient</groupId>
 			<artifactId>hector-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>me.prettyprint</groupId>
+			<groupId>org.hectorclient</groupId>
 			<artifactId>hector-test</artifactId>
 			<scope>test</scope>
 		</dependency>
