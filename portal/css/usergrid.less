@@ -147,7 +147,7 @@ a:active {
 
 //----------Header ------------------------------------------------------------
 .navbar{
-  height:50px;
+  height:48px;
   min-width: 700px;
   background-color: @apigeeOrange;
   &:before {
@@ -161,7 +161,7 @@ a:active {
       position: relative;
       display: inline-block;
       float: left;
-      top: 50px;
+      top: 48px;
       left: -83px;
       border-top: 8px solid @apigeeOrange;
       border-left: 8px solid transparent;
@@ -173,6 +173,7 @@ a:active {
     display: inline;
     float:left;
     color: @white;
+    font-weight: normal;
   }
   h1 {
     height: 32px;
@@ -184,11 +185,12 @@ a:active {
     padding-top: 8px;
   }
   h2{
-    font-size:14px;
+    font-size:13px;
     padding: 5px;
-    line-height: 37px;
+    line-height: 35px;
     padding-top: 8px;
     color: @white;
+    background-color: @apigeeNavSelection;
     a{
       color: @white;
     }
@@ -204,32 +206,45 @@ a:active {
     li{
       a{
         text-shadow: 0 0px 0 white;
-        padding: 13px 10px 11px !important;
+        padding: 13px 10px 11px;
         font-weight: normal;
         color: @white;
-        line-height: 26px;
+        line-height: 24px;
         &:hover{
           color: @white;
           background-color: @apigeeNavSelection;
         }
       }
     }
+    .dropdown-toggle{
+      .caret{
+        margin-top: 13px;
+      }
+    }
     .dropdown-menu{
       a{
-        line-height: 13px;
+        line-height: 18px;
         color: #000000;
+        padding: 3px 15px;
         &:hover{
           color: @white;
           background-color: @apigeeBlue;
         }
       }
+
     }
     .active{
       &>a{
         color:@white;
         background-color: @apigeeOrange;
+        .caret{
+          opacity: 0.3;
+        }
         &:hover{
           background-color: @apigeeNavSelection !important;
+          .caret{
+            opacity: 1;
+          }
         }
         .active{
           background-color: @apigeeNavSelection !important;
@@ -1408,5 +1423,13 @@ table .zebraRows {
 
 #application-panel-buttons .active > a:hover i.wrench{
   background-image: url("../images/glyphicons_halflings_135_wrench.png") !important;
+}
+
+//Apigee Specific data
+
+.apigee{
+  .logo{
+    width: 57px;
+  }
 }
 

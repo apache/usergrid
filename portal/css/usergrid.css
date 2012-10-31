@@ -3668,7 +3668,7 @@ a:active {
   margin: 0 !important;
 }
 .navbar {
-  height: 50px;
+  height: 48px;
   min-width: 700px;
   background-color: #ff4300;
   margin: 0px 1px 20px 1px;
@@ -3684,7 +3684,7 @@ a:active {
   position: relative;
   display: inline-block;
   float: left;
-  top: 50px;
+  top: 48px;
   left: -83px;
   border-top: 8px solid #ff4300;
   border-left: 8px solid transparent;
@@ -3696,6 +3696,7 @@ a:active {
   display: inline;
   float: left;
   color: #ffffff;
+  font-weight: normal;
 }
 .navbar h1 {
   height: 32px;
@@ -3707,11 +3708,12 @@ a:active {
   padding-top: 8px;
 }
 .navbar h2 {
-  font-size: 14px;
+  font-size: 13px;
   padding: 5px;
-  line-height: 37px;
+  line-height: 35px;
   padding-top: 8px;
   color: #ffffff;
+  background-color: #ff0303;
 }
 .navbar h2 a {
   color: #ffffff;
@@ -3725,18 +3727,22 @@ a:active {
 }
 .navbar .nav li a {
   text-shadow: 0 0px 0 white;
-  padding: 13px 10px 11px !important;
+  padding: 13px 10px 11px;
   font-weight: normal;
   color: #ffffff;
-  line-height: 26px;
+  line-height: 24px;
 }
 .navbar .nav li a:hover {
   color: #ffffff;
   background-color: #ff0303;
 }
+.navbar .nav .dropdown-toggle .caret {
+  margin-top: 13px;
+}
 .navbar .nav .dropdown-menu a {
-  line-height: 13px;
+  line-height: 18px;
   color: #000000;
+  padding: 3px 15px;
 }
 .navbar .nav .dropdown-menu a:hover {
   color: #ffffff;
@@ -3746,8 +3752,14 @@ a:active {
   color: #ffffff;
   background-color: #ff4300;
 }
+.navbar .nav .active > a .caret {
+  opacity: 0.3;
+}
 .navbar .nav .active > a:hover {
   background-color: #ff0303 !important;
+}
+.navbar .nav .active > a:hover .caret {
+  opacity: 1;
 }
 .navbar .nav .active > a .active {
   background-color: #ff0303 !important;
@@ -4826,4 +4838,7 @@ table .zebraRows:nth-child(2n) {
 }
 #application-panel-buttons .active > a:hover i.wrench {
   background-image: url("../images/glyphicons_halflings_135_wrench.png") !important;
+}
+.apigee .logo {
+  width: 57px;
 }
