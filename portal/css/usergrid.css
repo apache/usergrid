@@ -3667,15 +3667,28 @@ a:active {
 .marginless {
   margin: 0 !important;
 }
+.navbar.navbar-fixed-top:before {
+  content: " ";
+  display: block;
+  background: #F93F00;
+  overflow: hidden;
+  width: 100%;
+  height: 8px;
+  margin-bottom: -8px;
+  position: absolute;
+  background-image: -moz-linear-gradient(top, #ff4300, #f03800);
+  background-image: -ms-linear-gradient(top, #ff4300, #f03800);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ff4300), to(#f03800));
+  background-image: -webkit-linear-gradient(top, #ff4300, #f03800);
+  background-repeat: repeat-x;
+  bottom: 8px;
+  left: 0px;
+}
 .navbar {
   height: 48px;
   min-width: 700px;
   background-color: #ff4300;
   margin: 0px 1px 20px 1px;
-}
-.navbar:before {
-  display: block;
-  background: #ff4300;
 }
 .navbar .navbar-inner {
   display: none;
