@@ -225,7 +225,8 @@ public class ServiceManager {
 	}
 
     private static LoadingCache<ServiceInfo, Class<Service> > serviceClassCache = CacheBuilder.newBuilder()
-            .maximumSize(500)
+            .maximumSize(100)
+            .expireAfterAccess(5, TimeUnit.MINUTES)
             .build(
                     new CacheLoader<ServiceInfo, Class<Service> >() {
                         public Class<Service>  load(ServiceInfo key) { // no checked exception
