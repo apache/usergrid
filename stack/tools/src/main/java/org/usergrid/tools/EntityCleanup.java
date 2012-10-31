@@ -46,13 +46,12 @@ import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Schema;
-import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.EntityManagerImpl;
 import org.usergrid.persistence.schema.CollectionInfo;
 
 /**
- * This is a untiltiy to audit all available entity ids for existing target rows
+ * This is a utility to audit all available entity ids for existing target rows
  * If an entity Id exists in the collection index with no target entity, the id
  * is removed from the index. This is a cleanup tool as a result of the issue in
  * USERGRID-323
