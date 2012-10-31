@@ -180,7 +180,7 @@ a:active {
       float: left;
       top: 48px;
       left: -83px;
-      border-top: 8px solid @apigeeOrange;
+      border-top: 8px solid @apigeeGradient;
       border-left: 8px solid transparent;
       border-right: 8px solid transparent;
       opacity: 1;
@@ -250,10 +250,13 @@ a:active {
       }
 
     }
+    .always-active{
+      background-color: @apigeeNavSelection !important;
+    }
     .active{
       &>a{
         color:@white;
-        background-color: @apigeeOrange;
+        background-color: @apigeeNavSelection;
         .caret{
           opacity: 0.7;
         }
