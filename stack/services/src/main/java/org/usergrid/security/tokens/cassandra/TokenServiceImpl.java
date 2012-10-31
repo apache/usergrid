@@ -39,6 +39,7 @@ import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 
+import org.apache.cassandra.db.IColumn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -605,8 +606,15 @@ public class TokenServiceImpl implements TokenService {
             // "(System.currentTimeMillis() / 1000) + timeToLive);", so we need
             // to play nice otherwise it blows up on persist
             ttl = Integer.MAX_VALUE - (int) (System.currentTimeMillis() / 1000) - 120;
+            
+        }
+        // hard cap at the max in o.a.c.db.IColumn
+        if ( ttl >  MAX_TTL) {
+        	ttl = MAX_TTL;
         }
 
         return ttl;
     }
+    
+    private static final int MAX_TTL = 20 * 365 * 24 * 60 * 60;
 }

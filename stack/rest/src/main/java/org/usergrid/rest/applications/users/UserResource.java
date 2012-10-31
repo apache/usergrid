@@ -53,7 +53,12 @@ package org.usergrid.rest.applications.users;
  * for Usergrid Stack and the licenses of the other code concerned, provided that
  ******************************************************************************/
 
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static org.usergrid.security.shiro.utils.SubjectUtils.getSubjectUserId;
 import static org.usergrid.security.shiro.utils.SubjectUtils.isApplicationAdmin;
+import static org.usergrid.security.shiro.utils.SubjectUtils.isApplicationUser;
 import static org.usergrid.utils.ConversionUtils.string;
 
 import java.util.Map;
@@ -72,11 +77,14 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 
+import org.apache.amber.oauth2.common.exception.OAuthProblemException;
+import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
@@ -92,6 +100,7 @@ import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.applications.ServiceResource;
 import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
+import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.security.tokens.exceptions.TokenException;
 
 import com.sun.jersey.api.json.JSONWithPadding;
@@ -128,7 +137,7 @@ public class UserResource extends ServiceResource {
     public JSONWithPadding setUserPasswordPut(@Context UriInfo ui,
             Map<String, Object> json,
             @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+                    throws Exception {
 
         logger.info("UserResource.setUserPassword");
 
@@ -175,7 +184,7 @@ public class UserResource extends ServiceResource {
     public JSONWithPadding setUserPasswordPost(@Context UriInfo ui,
             Map<String, Object> json,
             @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+                    throws Exception {
         return setUserPasswordPut(ui, json, callback);
     }
 
@@ -184,7 +193,7 @@ public class UserResource extends ServiceResource {
     public JSONWithPadding deactivate(@Context UriInfo ui,
             Map<String, Object> json,
             @QueryParam("callback") @DefaultValue("") String callback)
-            throws Exception {
+                    throws Exception {
 
         ApiResponse response = new ApiResponse();
         response.setAction("Deactivate user");
@@ -202,7 +211,7 @@ public class UserResource extends ServiceResource {
     @Path("sendpin")
     public JSONWithPadding sendPin(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+                    throws Exception {
 
         logger.info("UserResource.sendPin");
 
@@ -222,7 +231,7 @@ public class UserResource extends ServiceResource {
     @Path("sendpin")
     public JSONWithPadding postSendPin(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+                    throws Exception {
         return sendPin(ui, callback);
     }
 
@@ -232,7 +241,7 @@ public class UserResource extends ServiceResource {
     public JSONWithPadding setPin(@Context UriInfo ui,
             @QueryParam("pin") String pin,
             @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+                    throws Exception {
 
         logger.info("UserResource.setPin");
 
@@ -255,7 +264,7 @@ public class UserResource extends ServiceResource {
     public JSONWithPadding postPin(@Context UriInfo ui,
             @FormParam("pin") String pin,
             @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+                    throws Exception {
 
         logger.info("UserResource.postPin");
 
@@ -277,7 +286,7 @@ public class UserResource extends ServiceResource {
     @RequireApplicationAccess
     public JSONWithPadding jsonPin(@Context UriInfo ui, JsonNode json,
             @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+                    throws Exception {
 
         logger.info("UserResource.jsonPin");
         ApiResponse response = new ApiResponse(ui);
@@ -349,7 +358,7 @@ public class UserResource extends ServiceResource {
 
             if (!useReCaptcha()) {
                 management.startAppUserPasswordResetFlow(getApplicationId(),
-                		getUser());
+                        getUser());
                 return handleViewable("resetpw_email_success", this);
             }
 
@@ -450,7 +459,7 @@ public class UserResource extends ServiceResource {
     @Path("reactivate")
     public JSONWithPadding reactivate(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+                    throws Exception {
 
         logger.info("Send activation email for user: " + getUserUuid());
 
@@ -461,12 +470,12 @@ public class UserResource extends ServiceResource {
         response.setAction("reactivate user");
         return new JSONWithPadding(response, callback);
     }
-    
+
     @POST
     @Path("revoketokens")
     public JSONWithPadding revokeTokensPost(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+                    throws Exception {
 
         logger.info("Revoking user tokens for " + getUserUuid());
 
@@ -476,16 +485,56 @@ public class UserResource extends ServiceResource {
 
         response.setAction("revoked user tokens");
         return new JSONWithPadding(response, callback);
-        
+
     }
-    
+
     @PUT
     @Path("revoketokens")
     public JSONWithPadding revokeTokensPut(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback)
-            throws Exception {
+                    throws Exception {
         return revokeTokensPost(ui, callback);
-        
+
+    }
+
+    @GET
+    @Path("token")
+    @RequireApplicationAccess
+    public Response getAccessToken(@Context UriInfo ui,
+            @QueryParam("ttl") long ttl,
+            @QueryParam("callback") @DefaultValue("") String callback)
+                    throws Exception {
+
+        logger.debug("UserResource.getAccessToken");
+
+        try {
+
+            if (isApplicationUser() && !getUserUuid().equals(getSubjectUserId())) {
+                OAuthResponse res = OAuthResponse.errorResponse(SC_FORBIDDEN)
+                        .buildJSONMessage();
+                return Response.status(res.getResponseStatus())
+                        .type(jsonMediaType(callback))
+                        .entity(wrapWithCallback(res.getBody(), callback)).build();
+            }
+
+            String token = management.getAccessTokenForAppUser(
+                    services.getApplicationId(), getUserUuid(), ttl);
+
+            AccessInfo access_info = new AccessInfo()
+            .withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
+            .withAccessToken(token).withProperty("user", getUser());
+
+            return Response.status(SC_OK).type(jsonMediaType(callback))
+                    .entity(wrapWithCallback(access_info, callback)).build();
+
+        } catch (OAuthProblemException e) {
+            logger.error("OAuth Error", e);
+            OAuthResponse res = OAuthResponse.errorResponse(SC_BAD_REQUEST)
+                    .error(e).buildJSONMessage();
+            return Response.status(res.getResponseStatus())
+                    .type(jsonMediaType(callback))
+                    .entity(wrapWithCallback(res.getBody(), callback)).build();
+        }
     }
 
     @Override
@@ -500,7 +549,7 @@ public class UserResource extends ServiceResource {
         try {
             @SuppressWarnings("unchecked")
             Class<AbstractUserExtensionResource> extensionCls = (Class<AbstractUserExtensionResource>) Class
-                    .forName(resourceClass);
+            .forName(resourceClass);
             extensionResource = getSubResource(extensionCls);
         } catch (Exception e) {
         }
