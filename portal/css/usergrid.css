@@ -3724,14 +3724,9 @@ a:active {
   line-height: 35px;
   padding-top: 8px;
   color: #ffffff;
-  background-color: #ff0303;
 }
 .navbar h2 a {
   color: #ffffff;
-}
-.navbar h2:hover {
-  color: #ffffff;
-  background-color: #ff0303;
 }
 .navbar .secondary-nav {
   float: right;
@@ -3743,9 +3738,8 @@ a:active {
   color: #ffffff;
   line-height: 24px;
 }
-.navbar .nav li a:hover {
-  color: #ffffff;
-  background-color: #ff0303;
+.navbar .nav li #console-link:hover {
+  background-color: transparent;
 }
 .navbar .nav .dropdown-toggle .caret {
   margin-top: 13px;
@@ -3760,26 +3754,13 @@ a:active {
   background-color: #1b97d1;
 }
 .navbar .nav .always-active {
-  background-color: #ff0303 !important;
+  background-color: #e02e03 !important;
 }
 .navbar .nav .active > a {
   color: #ffffff;
-  background-color: #ff0303;
 }
 .navbar .nav .active > a .caret {
   opacity: 0.3;
-}
-.navbar .nav .active > a:hover {
-  background-color: #ff0303 !important;
-}
-.navbar .nav .active > a:hover .caret {
-  opacity: 1;
-}
-.navbar .nav .active > a .active {
-  background-color: #ff0303 !important;
-}
-.navbar .nav .open a.dropdown-toggle {
-  background-color: #ff0303 !important;
 }
 #sidebar-menu {
   position: absolute;

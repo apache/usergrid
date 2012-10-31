@@ -11,7 +11,8 @@
 @linkHoverBgColor: #E5E5E5;
 @linkColor: #1b97d1;
 @apigeeOrange: #FF4300;
-@apigeeNavSelection: #FF0303 ;
+@apigeeNavSelection: #FF0303;
+@apigeeApplicationName: #E02E03;
 @apigeeGradient: #F03800;
 @apigeeBlue: #1B97D1 ;
 @white: #FFFFFF;
@@ -207,13 +208,8 @@ a:active {
     line-height: 35px;
     padding-top: 8px;
     color: @white;
-    background-color: @apigeeNavSelection;
     a{
       color: @white;
-    }
-    &:hover{
-      color: @white;
-      background-color: @apigeeNavSelection;
     }
   }
   .secondary-nav{
@@ -227,9 +223,10 @@ a:active {
         font-weight: normal;
         color: @white;
         line-height: 24px;
+      }
+      #console-link{
         &:hover{
-          color: @white;
-          background-color: @apigeeNavSelection;
+          background-color: transparent;
         }
       }
     }
@@ -251,29 +248,14 @@ a:active {
 
     }
     .always-active{
-      background-color: @apigeeNavSelection !important;
+      background-color: @apigeeApplicationName !important;
     }
     .active{
       &>a{
         color:@white;
-        background-color: @apigeeNavSelection;
         .caret{
           opacity: 0.3;
         }
-        &:hover{
-          background-color: @apigeeNavSelection !important;
-          .caret{
-            opacity: 1;
-          }
-        }
-        .active{
-          background-color: @apigeeNavSelection !important;
-        }
-      }
-    }
-    .open{
-      a.dropdown-toggle{
-        background-color: @apigeeNavSelection !important;
       }
     }
   }
