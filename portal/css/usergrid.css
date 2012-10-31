@@ -3697,7 +3697,7 @@ a:active {
   float: left;
   top: 48px;
   left: -83px;
-  border-top: 8px solid #ff4300;
+  border-top: 8px solid #f03800;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
   opacity: 1;
@@ -3759,9 +3759,12 @@ a:active {
   color: #ffffff;
   background-color: #1b97d1;
 }
+.navbar .nav .always-active {
+  background-color: #ff0303 !important;
+}
 .navbar .nav .active > a {
   color: #ffffff;
-  background-color: #ff4300;
+  background-color: #ff0303;
 }
 .navbar .nav .active > a .caret {
   opacity: 0.3;
