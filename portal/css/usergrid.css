@@ -1610,7 +1610,7 @@ table .span12 {
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
   border-top: 4px solid #000000;
-  opacity: 0.3;
+  opacity: 0.7;
   filter: alpha(opacity=30);
   content: "\2193";
 }
@@ -3760,7 +3760,7 @@ a:active {
   color: #ffffff;
 }
 .navbar .nav .active > a .caret {
-  opacity: 0.3;
+  opacity: 0.7;
 }
 #sidebar-menu {
   position: absolute;
