@@ -1610,7 +1610,7 @@ table .span12 {
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
   border-top: 4px solid #000000;
-  opacity: 0.3;
+  opacity: 0.7;
   filter: alpha(opacity=30);
   content: "\2193";
 }
@@ -3665,15 +3665,28 @@ a:active {
 .marginless {
   margin: 0 !important;
 }
+.navbar.navbar-fixed-top:before {
+  content: " ";
+  display: block;
+  background: #F93F00;
+  overflow: hidden;
+  width: 100%;
+  height: 8px;
+  margin-bottom: -8px;
+  position: absolute;
+  background-image: -moz-linear-gradient(top, #ff4300, #f03800);
+  background-image: -ms-linear-gradient(top, #ff4300, #f03800);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ff4300), to(#f03800));
+  background-image: -webkit-linear-gradient(top, #ff4300, #f03800);
+  background-repeat: repeat-x;
+  bottom: 8px;
+  left: 0px;
+}
 .navbar {
-  height: 50px;
+  height: 48px;
   min-width: 700px;
   background-color: #ff4300;
   margin: 0px 1px 20px 1px;
-}
-.navbar:before {
-  display: block;
-  background: #ff4300;
 }
 .navbar .navbar-inner {
   display: none;
@@ -3682,9 +3695,9 @@ a:active {
   position: relative;
   display: inline-block;
   float: left;
-  top: 50px;
+  top: 48px;
   left: -83px;
-  border-top: 8px solid #ff4300;
+  border-top: 8px solid #f03800;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
   opacity: 1;
@@ -3694,6 +3707,7 @@ a:active {
   display: inline;
   float: left;
   color: #ffffff;
+  font-weight: normal;
 }
 .navbar h1 {
   height: 32px;
@@ -3705,53 +3719,48 @@ a:active {
   padding-top: 8px;
 }
 .navbar h2 {
-  font-size: 14px;
+  font-size: 13px;
   padding: 5px;
-  line-height: 37px;
+  line-height: 35px;
   padding-top: 8px;
   color: #ffffff;
 }
 .navbar h2 a {
   color: #ffffff;
 }
-.navbar h2:hover {
-  color: #ffffff;
-  background-color: #ff0303;
-}
 .navbar .secondary-nav {
   float: right;
 }
 .navbar .nav li a {
   text-shadow: 0 0px 0 white;
-  padding: 13px 10px 11px !important;
+  padding: 13px 10px 11px;
   font-weight: normal;
   color: #ffffff;
-  line-height: 26px;
+  line-height: 24px;
 }
-.navbar .nav li a:hover {
-  color: #ffffff;
-  background-color: #ff0303;
+.navbar .nav li #console-link:hover {
+  background-color: transparent;
+}
+.navbar .nav .dropdown-toggle .caret {
+  margin-top: 13px;
 }
 .navbar .nav .dropdown-menu a {
-  line-height: 13px;
+  line-height: 18px;
   color: #000000;
+  padding: 3px 15px;
 }
 .navbar .nav .dropdown-menu a:hover {
   color: #ffffff;
   background-color: #1b97d1;
 }
+.navbar .nav .always-active {
+  background-color: #e02e03 !important;
+}
 .navbar .nav .active > a {
   color: #ffffff;
-  background-color: #ff4300;
 }
-.navbar .nav .active > a:hover {
-  background-color: #ff0303 !important;
-}
-.navbar .nav .active > a .active {
-  background-color: #ff0303 !important;
-}
-.navbar .nav .open a.dropdown-toggle {
-  background-color: #ff0303 !important;
+.navbar .nav .active > a .caret {
+  opacity: 0.7;
 }
 #sidebar-menu {
   position: absolute;
@@ -4824,4 +4833,7 @@ table .zebraRows:nth-child(2n) {
 }
 #application-panel-buttons .active > a:hover i.wrench {
   background-image: url("../images/glyphicons_halflings_135_wrench.png") !important;
+}
+.apigee .logo {
+  width: 57px;
 }

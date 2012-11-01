@@ -11,7 +11,9 @@
 @linkHoverBgColor: #E5E5E5;
 @linkColor: #1b97d1;
 @apigeeOrange: #FF4300;
-@apigeeNavSelection: #FF0303 ;
+@apigeeNavSelection: #FF0303;
+@apigeeApplicationName: #E02E03;
+@apigeeGradient: #F03800;
 @apigeeBlue: #1B97D1 ;
 @white: #FFFFFF;
 //@fontMenu:
@@ -146,14 +148,30 @@ a:active {
 }
 
 //----------Header ------------------------------------------------------------
+.navbar.navbar-fixed-top:before{
+  content: " ";
+  display: block;
+  background: #F93F00;
+  overflow: hidden;
+  width: 100%;
+  height: 8px;
+  margin-bottom: -8px;
+  position: absolute;
+  background-image: -moz-linear-gradient(top, @apigeeOrange, @apigeeGradient);
+  background-image: -ms-linear-gradient(top, @apigeeOrange, @apigeeGradient);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(@apigeeOrange), to(@apigeeGradient));
+  background-image: -webkit-linear-gradient(top, @apigeeOrange, @apigeeGradient);
+  background-repeat: repeat-x;
+  bottom: 8px;
+  left: 0px;
+}
+
+
 .navbar{
-  height:50px;
+  height:48px;
   min-width: 700px;
   background-color: @apigeeOrange;
-  &:before {
-    display: block;
-    background: @apigeeOrange;
-  }
+
   margin: 0px 1px 20px 1px;
   .navbar-inner{
     display: none;
@@ -161,9 +179,9 @@ a:active {
       position: relative;
       display: inline-block;
       float: left;
-      top: 50px;
+      top: 48px;
       left: -83px;
-      border-top: 8px solid @apigeeOrange;
+      border-top: 8px solid @apigeeGradient;
       border-left: 8px solid transparent;
       border-right: 8px solid transparent;
       opacity: 1;
@@ -173,6 +191,7 @@ a:active {
     display: inline;
     float:left;
     color: @white;
+    font-weight: normal;
   }
   h1 {
     height: 32px;
@@ -184,17 +203,13 @@ a:active {
     padding-top: 8px;
   }
   h2{
-    font-size:14px;
+    font-size:13px;
     padding: 5px;
-    line-height: 37px;
+    line-height: 35px;
     padding-top: 8px;
     color: @white;
     a{
       color: @white;
-    }
-    &:hover{
-      color: @white;
-      background-color: @apigeeNavSelection;
     }
   }
   .secondary-nav{
@@ -204,41 +219,43 @@ a:active {
     li{
       a{
         text-shadow: 0 0px 0 white;
-        padding: 13px 10px 11px !important;
+        padding: 13px 10px 11px;
         font-weight: normal;
         color: @white;
-        line-height: 26px;
+        line-height: 24px;
+      }
+      #console-link{
         &:hover{
-          color: @white;
-          background-color: @apigeeNavSelection;
+          background-color: transparent;
         }
+      }
+    }
+    .dropdown-toggle{
+      .caret{
+        margin-top: 13px;
       }
     }
     .dropdown-menu{
       a{
-        line-height: 13px;
+        line-height: 18px;
         color: #000000;
+        padding: 3px 15px;
         &:hover{
           color: @white;
           background-color: @apigeeBlue;
         }
       }
+
+    }
+    .always-active{
+      background-color: @apigeeApplicationName !important;
     }
     .active{
       &>a{
         color:@white;
-        background-color: @apigeeOrange;
-        &:hover{
-          background-color: @apigeeNavSelection !important;
+        .caret{
+          opacity: 0.7;
         }
-        .active{
-          background-color: @apigeeNavSelection !important;
-        }
-      }
-    }
-    .open{
-      a.dropdown-toggle{
-        background-color: @apigeeNavSelection !important;
       }
     }
   }
@@ -1408,5 +1425,13 @@ table .zebraRows {
 
 #application-panel-buttons .active > a:hover i.wrench{
   background-image: url("../images/glyphicons_halflings_135_wrench.png") !important;
+}
+
+//Apigee Specific data
+
+.apigee{
+  .logo{
+    width: 57px;
+  }
 }
 

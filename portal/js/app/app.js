@@ -55,6 +55,7 @@ $(document).ready(function () {
 
     Pages.AddPage({name:'login', menu:publicMenu});
     //Pages.ShowPage('login');
+    Pages.AddPage({name:'message', menu:publicMenu});
     Pages.AddPage({name:'signup', menu:publicMenu});
     Pages.AddPage({name:'forgot-password', menu:publicMenu});
     Pages.AddPage({name:'post-signup', menu:publicMenu});

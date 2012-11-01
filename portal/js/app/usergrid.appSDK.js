@@ -25,7 +25,7 @@ window.console.log = window.console.log || function() {};
 //Usergrid namespace encapsulates this SDK
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
-Usergrid.SDK_VERSION = '0.9.7';
+Usergrid.SDK_VERSION = '0.9.9';
 
 /**
  *  Usergrid.Query is a class for holding all query information and paging state
@@ -60,7 +60,7 @@ Usergrid.SDK_VERSION = '0.9.7';
 
     //paging vars
     this._cursor = null;
-    this._next = null
+    this._next = null;
     this._previous = [];
     this._start = 0;
     this._end = 0;
@@ -236,7 +236,7 @@ Usergrid.SDK_VERSION = '0.9.7';
     * @return {boolean} Returns true or false based on if there was a callback to call
     */
     callSuccessCallback: function(response) {
-      if (this._successCallback && typeof(this._successCallback ) == "function") {
+      if (this._successCallback && typeof(this._successCallback ) === "function") {
         this._successCallback(response);
         return true;
       } else {
@@ -274,7 +274,7 @@ Usergrid.SDK_VERSION = '0.9.7';
     * @return {boolean} Returns true or false based on if there was a callback to call
     */
     callFailureCallback: function(response) {
-      if (this._failureCallback && typeof(this._failureCallback) == "function") {
+      if (this._failureCallback && typeof(this._failureCallback) === "function") {
         this._failureCallback(response);
         return true;
       } else {
@@ -394,7 +394,7 @@ Usergrid.SDK_VERSION = '0.9.7';
     */
     saveCursor: function(cursor) {
       //if current cursor is different, grab it for next cursor
-      if (this._next != cursor) {
+      if (this._next !== cursor) {
         this._next = cursor;
       }
     },
@@ -482,11 +482,11 @@ Usergrid.SDK_VERSION = '0.9.7';
    *  @return none
    */
   Usergrid.Entity.prototype.set = function (item, value){
-    if (typeof item == 'object') {
+    if (typeof item === 'object') {
       for(field in item) {
         this._data[field] = item[field];
       }
-    } else if (typeof item == 'string') {
+    } else if (typeof item === 'string') {
       this._data[item] = value;
     } else {
       this._data = null;
@@ -557,17 +557,17 @@ Usergrid.SDK_VERSION = '0.9.7';
         try {
           var entity = response.entities[0];
           self.set(entity);
-          if (typeof(successCallback) == "function"){
+          if (typeof(successCallback) === "function"){
             successCallback(response);
           }
         } catch (e) {
-          if (typeof(errorCallback) == "function"){
+          if (typeof(errorCallback) === "function"){
             errorCallback(response);
           }
         }
       },
       function(response) {
-        if (typeof(errorCallback) == "function"){
+        if (typeof(errorCallback) === "function"){
           errorCallback(response);
         }
       }
@@ -595,7 +595,7 @@ Usergrid.SDK_VERSION = '0.9.7';
           path += "/" + this.get("username");
         } else {
           console.log('no username specified');
-          if (typeof(errorCallback) == "function"){
+          if (typeof(errorCallback) === "function"){
             console.log('no username specified');
           }
         }
@@ -604,7 +604,7 @@ Usergrid.SDK_VERSION = '0.9.7';
           path += "/" + this.get();
         } else {
           console.log('no entity identifier specified');
-          if (typeof(errorCallback) == "function"){
+          if (typeof(errorCallback) === "function"){
             console.log('no entity identifier specified');
           }
         }
@@ -619,17 +619,17 @@ Usergrid.SDK_VERSION = '0.9.7';
           }
           var entity = response.entities[0];
           self.set(entity);
-          if (typeof(successCallback) == "function"){
+          if (typeof(successCallback) === "function"){
             successCallback(response);
           }
         } catch (e) {
-          if (typeof(errorCallback) == "function"){
+          if (typeof(errorCallback) === "function"){
             errorCallback(response);
           }
         }
       },
       function(response) {
-        if (typeof(errorCallback) == "function"){
+        if (typeof(errorCallback) === "function"){
             errorCallback(response);
         }
       }
@@ -654,7 +654,7 @@ Usergrid.SDK_VERSION = '0.9.7';
       path += "/" + this.get('uuid');
     } else {
       console.log('Error trying to delete object - no uuid specified.');
-      if (typeof(errorCallback) == "function"){
+      if (typeof(errorCallback) === "function"){
         errorCallback('Error trying to delete object - no uuid specified.');
       }
     }
@@ -663,12 +663,12 @@ Usergrid.SDK_VERSION = '0.9.7';
       function(response) {
         //clear out this object
         self.set(null);
-        if (typeof(successCallback) == "function"){
+        if (typeof(successCallback) === "function"){
           successCallback(response);
         }
       },
       function(response) {
-        if (typeof(errorCallback) == "function"){
+        if (typeof(errorCallback) === "function"){
             errorCallback(response);
         }
       }
@@ -1025,6 +1025,12 @@ Usergrid.SDK_VERSION = '0.9.7';
     this.clearAll();
   }
 
+  //The get() function is deprecated.  Including here for backwards compatibility  
+  //with previous versions of the SDK
+  Usergrid.Collection.prototype.get = function (successCallback, errorCallback){
+    Usergrid.Collection.fetch(successCallback, errorCallback);
+  } 
+    
   /**
    *  A method to get all items in the collection, as dictated by the
    *  cursor and the query.  By default, the API returns 10 items in
@@ -1037,7 +1043,7 @@ Usergrid.SDK_VERSION = '0.9.7';
    *  @param {function} errorCallback
    *  @return none
    */
-  Usergrid.Collection.prototype.get = function (successCallback, errorCallback){
+  Usergrid.Collection.prototype.fetch = function (successCallback, errorCallback){
     var self = this;
     var queryParams = this.getQueryParams();
     //empty the list
@@ -1059,17 +1065,17 @@ Usergrid.SDK_VERSION = '0.9.7';
               self.addEntity(entity);
             }
           }
-          if (typeof(successCallback) == "function"){
+          if (typeof(successCallback) === "function"){
             successCallback(response);
           }
         } else {
-          if (typeof(errorCallback) == "function"){
+          if (typeof(errorCallback) === "function"){
               errorCallback(response);
           }
         }
       },
       function(response) {
-        if (typeof(errorCallback) == "function"){
+        if (typeof(errorCallback) === "function"){
             errorCallback(response);
         }
       }
@@ -1138,17 +1144,14 @@ Usergrid.ApiClient = (function () {
   //API endpoint
   var _apiUrl = "https://api.usergrid.com/";
   var _orgName = null;
-  var _orgUUID = null;
   var _appName = null;
   var _token = null;
-  var _appUserUsername = null;
-  var _appUserName = null;
-  var _appUserEmail = null;
-  var _appUserUUID = null;
+  var _callTimeout = 30000;
   var _queryType = null;
   var _loggedInUser = null;
   var _logoutCallback = null;
-
+  var _callTimeoutCallback = null;
+  
   /*
    *  A method to set up the ApiClient with orgname and appname
    *
@@ -1268,7 +1271,7 @@ Usergrid.ApiClient = (function () {
    *  @return {string} the API url
    */
   function getApiUrl() {
-    return _apiUrl
+    return _apiUrl;
   }
 
   /*
@@ -1281,6 +1284,66 @@ Usergrid.ApiClient = (function () {
   function setApiUrl(apiUrl) {
     _apiUrl = apiUrl;
   }
+  
+  /*
+   *  A public method to return the call timeout amount
+   *
+   *  @method getCallTimeout
+   *  @public
+   *  @return {string} the timeout value (an integer) 30000 = 30 seconds
+   */
+  function getCallTimeout() {
+    return _callTimeout;
+  }
+
+  /*
+   *  A public method to override the call timeout amount
+   *
+   *  @method setCallTimeout
+   *  @public
+   *  @return none
+   */
+  function setCallTimeout(callTimeout) {
+    _callTimeout = callTimeout;
+  }
+  
+  /*
+   * Returns the call timeout callback function
+   *
+   * @public
+   * @method setCallTimeoutCallback
+   * @return none
+   */ 
+  function setCallTimeoutCallback(callback) {
+    _callTimeoutCallback = callback; 
+  }
+  
+  /*
+   * Returns the call timeout callback function
+   *
+   * @public
+   * @method getCallTimeoutCallback
+   * @return {function} Returns the callTimeoutCallback
+   */
+  function getCallTimeoutCallback() {
+    return _callTimeoutCallback; 
+  }
+  
+  /*
+   * Calls the call timeout callback function
+   *
+   * @public
+   * @method callTimeoutCallback
+   * @return {boolean} Returns true or false based on if there was a callback to call
+   */
+  function callTimeoutCallback(response) {
+    if (_callTimeoutCallback && typeof(_callTimeoutCallback) === "function") {
+      _callTimeoutCallback(response);
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   /*
    *  A public method to get the api url of the reset pasword endpoint
@@ -1290,7 +1353,7 @@ Usergrid.ApiClient = (function () {
    *  @return {string} the api rul of the reset password endpoint
    */
   function getResetPasswordUrl() {
-    getApiUrl() + "/management/users/resetpw"
+    return getApiUrl() + "/management/users/resetpw"
   }
 
   /*
@@ -1339,12 +1402,12 @@ Usergrid.ApiClient = (function () {
         user.set('uuid', response.user.uuid);
         self.setLoggedInUser(user);
         self.setToken(response.access_token);
-        if (successCallback && typeof(successCallback) == "function") {
+        if (successCallback && typeof(successCallback) === "function") {
           successCallback(response);
         }
       },
       function (response) {
-        if (failureCallback && typeof(failureCallback) == "function") {
+        if (failureCallback && typeof(failureCallback) === "function") {
           failureCallback(response);
         }
       }
@@ -1410,7 +1473,7 @@ Usergrid.ApiClient = (function () {
    *  @return none
    */
   function setLogoutCallback(logoutCallback) {
-    _logoutCallback = logoutCallback
+    _logoutCallback = logoutCallback;
   }
 
   /*
@@ -1422,7 +1485,7 @@ Usergrid.ApiClient = (function () {
    *  @return none
    */
   function callLogoutCallback() {
-    if (_logoutCallback && typeof(_logoutCallback ) == "function") {
+    if (_logoutCallback && typeof(_logoutCallback ) === "function") {
       _logoutCallback();
       return true;
     } else {
@@ -1536,7 +1599,7 @@ Usergrid.ApiClient = (function () {
       }
 
       //params - make sure we have a valid json object
-      _params = JSON.stringify(params)
+      _params = JSON.stringify(params);
       if (!JSON.parse(_params)) {
         throw(new Error('Params object is not valid.'));
       }
@@ -1610,9 +1673,96 @@ Usergrid.ApiClient = (function () {
 
     //so far so good, so run the query
     var xD = window.XDomainRequest ? true : false;
-    var xhr;
+    var xhr = getXHR(method, path, jsonObj);
+   
+    // Handle response.
+    /*
+    xhr.onerror = function() {
+      //for timing, call end
+      Query.setQueryEndTime();
+      //for timing, log the total call time
+      console.log(Query.getQueryTotalTime());
+      //network error
+      clearTimeout(timeout);
+      console.log('API call failed at the network level.');
+      //send back an error (best we can do with what ie gives back)
+      Query.callFailureCallback(response.innerText);
+    };*/
+    xhr.xdomainOnload = function (response) {
+      //for timing, call end
+      Query.setQueryEndTime();
+      //for timing, log the total call time
+      console.log('Call timing: ' + Query.getQueryTotalTime());
+      //call completed
+      clearTimeout(timeout);
+      //decode the response
+      response = JSON.parse(xhr.responseText);
+      //if a cursor was present, grab it
+      try {
+        var cursor = response.cursor || null;
+        Query.saveCursor(cursor);
+      }catch(e) {}
+      Query.callSuccessCallback(response);
+    };
+    xhr.onload = function(response) {
+      //for timing, call end
+      Query.setQueryEndTime();
+      //for timing, log the total call time
+      console.log('Call timing: ' + Query.getQueryTotalTime());
+      //call completed
+      clearTimeout(timeout);
+      //decode the response
+      response = JSON.parse(xhr.responseText);
+      if (xhr.status != 200 && !xD)   {
+        //there was an api error
+        try {
+          var error = response.error;
+          console.log('API call failed: (status: '+xhr.status+').' + error.type);
+          if ( (error.type == "auth_expired_session_token") ||
+               (error.type == "unauthorized")   ||
+               (error.type == "auth_missing_credentials")   ||
+               (error.type == "auth_invalid")) {
+            //this error type means the user is not authorized. If a logout function is defined, call it
+            callLogoutCallback();
+        }} catch(e){}
+        //otherwise, just call the failure callback
+        Query.callFailureCallback(response.error_description);
+        return;
+      } else {
+        //query completed succesfully, so store cursor
+        var cursor = response.cursor || null;
+        Query.saveCursor(cursor);
+        //then call the original callback
+        Query.callSuccessCallback(response);
+     }
+    }; 
+        
+    var timeout = setTimeout(
+      function() { 
+        xhr.abort(); 
+        if ( typeof(Usergrid.ApiClient.getCallTimeoutCallback()) === 'function') {
+          Usergrid.ApiClient.callTimeoutCallback('API CALL TIMEOUT');
+        } else if (typeof(Query.getFailureCallback()) === 'function'){
+          Query.callFailureCallback('API CALL TIMEOUT');
+        }        
+      }, 
+      Usergrid.ApiClient.getCallTimeout()); //set for 30 seconds
 
-    if(xD)
+    xhr.send(jsonObj);
+  }
+  
+   /**
+   *  A private method to return the XHR object
+   *
+   *  @method getXHR
+   *  @private
+   *  @params {string} method (GET,POST,PUT,DELETE)
+   *  @params {string} path - api endpoint to call
+   *  @return {object} jsonObj - the json object if there is one
+   */
+  function getXHR(method, path, jsonObj) {
+    var xhr;
+    if(window.XDomainRequest)
     {
       xhr = new window.XDomainRequest();
       if (Usergrid.ApiClient.getToken()) {
@@ -1624,7 +1774,7 @@ Usergrid.ApiClient = (function () {
       }
       xhr.open(method, path, true);
     }
-    else
+    else 
     {
       xhr = new XMLHttpRequest();
       xhr.open(method, path, true);
@@ -1637,67 +1787,7 @@ Usergrid.ApiClient = (function () {
         xhr.withCredentials = true;
       }
     }
-
-    // Handle response.
-    xhr.ontimeout = xhr.onerror = function() {
-      //for timing, call end
-      Query.setQueryEndTime();
-      //for timing, log the total call time
-      console.log(Query.getQueryTotalTime());
-      //network error
-      clearTimeout(timeout);
-      console.log('API call failed at the network level.');
-      Query.callFailureCallback({'error':'error'});
-    };
-    xhr.onprogress = function() {};
-    xhr.onload = function() {
-      //for timing, call end
-      Query.setQueryEndTime();
-      //for timing, log the total call time
-      console.log('Call timing: ' + Query.getQueryTotalTime());
-      //call completed
-      clearTimeout(timeout);
-      if (xhr.status != 200 && !xD)   {
-        //there was an api error
-        var error = '';
-        try{
-          error = xhr.statusText;
-          error = error.toLowerCase();
-        } catch(e){}
-        console.log('API call failed: (status: '+xhr.status+') - ' + error);
-        if ( (error == "auth_expired_session_token") ||
-             (error == "unauthorized")   ||
-             (error == "auth_missing_credentials")   ||
-             (error == "auth_invalid")) {
-            //this error type means the user is not authorized. If a logout function is defined, call it
-            callLogoutCallback();
-            return;
-        } else {
-           Query.callFailureCallback();
-           return;
-        }
-      }
-      //response looks good
-      try {
-        response = JSON.parse(xhr.responseText);
-      } catch (e) {
-        //otherwise, just call the failure callback
-        Query.callFailureCallback(response);
-        return;
-      }
-      if (response) {
-        //query completed succesfully, so store cursor
-        var cursor = response.cursor || null;
-        Query.saveCursor(cursor);
-        //then call the original callback
-        Query.callSuccessCallback(response);
-      } else {
-        Query.callFailureCallback();
-      }
-    };
-    var timeout = setTimeout(function() { xhr.abort(); }, 15000);
-
-    xhr.send(jsonObj);
+    return xhr;
   }
 
   return {
@@ -1710,6 +1800,11 @@ Usergrid.ApiClient = (function () {
     setApplicationName:setApplicationName,
     getToken:getToken,
     setToken:setToken,
+    getCallTimeout:getCallTimeout,
+    setCallTimeout:setCallTimeout,
+    getCallTimeoutCallback:getCallTimeoutCallback,
+    setCallTimeoutCallback:setCallTimeoutCallback,
+    callTimeoutCallback:callTimeoutCallback,
     getApiUrl:getApiUrl,
     setApiUrl:setApiUrl,
     getResetPasswordUrl:getResetPasswordUrl,
@@ -1753,7 +1848,7 @@ Usergrid.validation = (function () {
     if (usernameRegex.test(username) && checkLength(username, 4, 80)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
+      if (failureCallback && typeof(failureCallback) === "function") {
         failureCallback(this.getUsernameAllowedChars());
       }
       return false;
@@ -1784,7 +1879,7 @@ Usergrid.validation = (function () {
     if (nameRegex.test(name) && checkLength(name, 4, 16)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
+      if (failureCallback && typeof(failureCallback) === "function") {
         failureCallback(this.getNameAllowedChars());
       }
       return false;
@@ -1815,7 +1910,7 @@ Usergrid.validation = (function () {
     if (passwordRegex.test(password) && checkLength(password, 5, 16)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
+      if (failureCallback && typeof(failureCallback) === "function") {
         failureCallback(this.getPasswordAllowedChars());
       }
       return false;
@@ -1846,7 +1941,7 @@ Usergrid.validation = (function () {
     if (emailRegex.test(email) && checkLength(email, 4, 80)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
+      if (failureCallback && typeof(failureCallback) === "function") {
         failureCallback(this.getEmailAllowedChars());
       }
       return false;
@@ -1877,7 +1972,7 @@ Usergrid.validation = (function () {
     if (pathRegex.test(path) && checkLength(path, 4, 80)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
+      if (failureCallback && typeof(failureCallback) === "function") {
         failureCallback(this.getPathAllowedChars());
       }
       return false;
@@ -1908,7 +2003,7 @@ Usergrid.validation = (function () {
     if (titleRegex.test(title) && checkLength(title, 4, 80)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
+      if (failureCallback && typeof(failureCallback) === "function") {
         failureCallback(this.getTitleAllowedChars());
       }
       return false;

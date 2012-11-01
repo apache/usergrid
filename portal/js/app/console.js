@@ -1,4 +1,4 @@
-﻿function apigee_console_app(Pages, query_params) {
+function apigee_console_app(Pages, query_params) {
   //This code block *WILL NOT* load before the document is complete
   window.Usergrid = window.Usergrid || {};
   Usergrid.console = Usergrid.console || {};
@@ -255,7 +255,7 @@
         "You are attempting to run a PUT (update) command, but it appears that you have not given a specific entity to act on.  This action may update all entities in this colleciton.  Are you sure you want to proceed?",
         function() {
           //make a new query object
-          queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
+          queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function(response) { alertModal("Error", response) });
           //store the query object on the stack
           pushQuery(queryObj);
           //then run the query
@@ -264,7 +264,7 @@
       );
     } else {
       //make a new query object
-      queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function() { alertModal("Error", "Unable to retrieve collection data.") });
+      queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function(response) { alertModal("Error", response) });
       //store the query object on the stack
       pushQuery(queryObj);
       //then run the query
@@ -732,7 +732,15 @@
 
   function get_gravatar(email, size) {
     var size = size || 50;
-    return 'https://secure.gravatar.com/avatar/' + MD5(email) + '?d=identicon&s=' + size;
+    return 'https://secure.gravatar.com/avatar/' + MD5(email) + '?s=' + size + encodeURI("&d=http://apigee.com/usergrid/images/user_profile.png");
+  }
+  
+  function get_replacementGravatar(picture) {
+    picture = picture.replace(/^http:\/\/www.gravatar/i, 'https://secure.gravatar');
+    //note: changing this to use the image on apigee.com - since the gravatar default won't work on any non-public domains such as localhost
+    //this_data.picture = this_data.picture + encodeURI("?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png");
+    picture = picture + encodeURI("?d=http://apigee.com/usergrid/images/user_profile.png");
+    return picture;
   }
 
   function displayAdminFeed(response) {
@@ -1818,10 +1826,7 @@
         if (!this_data.picture) {
           this_data.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user_profile.png"
         } else {
-          this_data.picture = this_data.picture.replace(/^http:\/\/www.gravatar/i, 'https://secure.gravatar');
-          //note: changing this to use the image on apigee.com - since the gravatar default won't work on any non-public domains such as localhost
-          //this_data.picture = this_data.picture + encodeURI("?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png");
-          this_data.picture = this_data.picture + encodeURI("?d=http://apigee.com/usergrid/images/user_profile.png");
+          this_data.picture = get_replacementGravatar(this_data.picture);          
         }
         $.tmpl('apigee.ui.users.table_rows.html', this_data).appendTo('#users-table');
       }
@@ -2048,7 +2053,9 @@
       var picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user_profile.png";
       if (entity.picture) {
         entity.picture = entity.picture.replace(/^http:\/\/www.gravatar/i, 'https://secure.gravatar');
-        picture = entity.picture + "?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png"
+        //note: changing this to use the image on apigee.com - since the gravatar default won't work on any non-public domains such as localhost
+        //this_data.picture = this_data.picture + encodeURI("?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png");
+        picture = entity.picture + encodeURI("?d=http://apigee.com/usergrid/images/user_profile.png");
       }
 
     var data = {
@@ -3073,6 +3080,9 @@
           this_data.actor.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user_profile.png"
         } else {
           this_data.actor.picture = this_data.actor.picture.replace(/^http:\/\/www.gravatar/i, 'https://secure.gravatar');
+          //note: changing this to use the image on apigee.com - since the gravatar default won't work on any non-public domains such as localhost
+          //this_data.picture = this_data.picture + encodeURI("?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png");
+          this_data.actor.picture = this_data.actor.picture + encodeURI("?d=http://apigee.com/usergrid/images/user_profile.png");
         }
 
         $.tmpl('apigee.ui.activities.table_rows.html', this_data).appendTo('#activities-table');
@@ -3671,9 +3681,11 @@
 
   $('#login-organization').focus();
 
-  function displayLoginError() {
+  function displayLoginError(message) {
+    var message = message || '<strong>ERROR</strong>: Your details were incorrect.<br/>';
     logout();
     $('#login-area .box').effect('shake', {times: 2},100);
+    $('#login-message').html(message);
     $('#login-message').show();
   }
 
@@ -3817,10 +3829,8 @@
         loginOk(response);
       },
       function(response) {
-        //empty local storage
-        Usergrid.userSession.clearAll();
         //call the error function
-        displayLoginError(response);
+        displayLoginError();
       }
     ));
   }
@@ -3879,10 +3889,10 @@
         }
       },
       function(response) {
-        //empty local storage
-        Usergrid.userSession.clearAll();
-        if (errorCallback) {
-          errorCallback(response);
+        if (response == 'API CALL TIMEOUT') {
+          showMessagePage();
+        } else {
+          displayLoginError();
         }
       }
     ));
@@ -3890,13 +3900,20 @@
   }
   window.Usergrid.console.autoLogin = autoLogin;
 
+  function showMessagePage(message) {
+    Pages.ShowPage('message');
+    if (message) {
+      $('#message-area').html(message);
+    }
+  }
+  window.Usergrid.console.showMessagePage = showMessagePage;
 
   /*******************************************************************
    *
    * Signup
    *
    ******************************************************************/
-
+   
   $('#signup-cancel').click(function() {
     Pages.ShowPage('login');
     clearSignupError();
