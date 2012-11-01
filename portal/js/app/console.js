@@ -294,7 +294,7 @@ function apigee_console_app(Pages, query_params) {
 
           var entity_path = (entity.metadata || {}).path;
           if ($.isEmptyObject(entity_path)) {
-            entity_path = path + "/" + entity.uuid;
+            entity_path = path + "/";
           }
 
           t += "<div class=\"query-result-row entity_list_item\" id=\"query-result-row-"
@@ -314,7 +314,7 @@ function apigee_console_app(Pages, query_params) {
 
         var entity_path = (entity.metadata || {}).path;
         if ($.isEmptyObject(entity_path)) {
-          entity_path = path + "/" + entity.uuid;
+          entity_path = path + "/";
         }
 
         $("#query-path").val(entity_path);
@@ -3577,9 +3577,8 @@ function apigee_console_app(Pages, query_params) {
     var pathInput = $("#" + inputId);
     var list = [];
     list.push(response.path);
-
     $.each(response.entities, function(entityKey, entityValue){
-      list.push(response.path + entityValue.name );
+      list.push(response.path + '/' + entityValue.name );
       //Fill collection names
       $.each(entityValue.metadata.collections, function(key, value){
           list.push(response.path + '/' + entityValue.name + '/' + key);
@@ -3589,12 +3588,14 @@ function apigee_console_app(Pages, query_params) {
         list.push(response.path + '/' + entityValue.name + '/' + key);
       })
     });
-
-
-    pathInput.typeahead({source:list, items: 10, minLenght: 2});
+    //TODO: Possible cleanup here, could not set the options via pathInput.typeahead.options, so overriding variables directly
     pathInput.data('typeahead').source = list;
+    pathInput.data('typeahead').options.items = 10;
+    pathInput.data('typeahead').matcher = function (item) {
+      var checker = new RegExp('^' + this.query + '[a-zA-Z0-9\.-]*$');
+      return checker.test(item);
+    }
   }
-
 
   function updateUsersAutocomplete(){
     updateAutocomplete('users/', updateUsersAutocompleteCallback, "Unable to retrieve Users.");
