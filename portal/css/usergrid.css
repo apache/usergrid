@@ -1610,7 +1610,7 @@ table .span12 {
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
   border-top: 4px solid #000000;
-  opacity: 0.7;
+  opacity: 0.3;
   filter: alpha(opacity=30);
   content: "\2193";
 }
@@ -4002,6 +4002,12 @@ a:active {
 #applicationSelect-menu {
   display: none;
 }
+#applications-menu a {
+  z-index: 300;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .dropdown.open .dropdown-toggle {
   color: #ffffff;
 }
@@ -4011,6 +4017,10 @@ a:active {
 }
 #application-panel-table table tr > * {
   text-align: left;
+  width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 #application-panel-table table th {
   font-weight: bold;
@@ -4543,6 +4553,7 @@ a:active {
 }
 .graph {
   margin: 5px -25px 5px 15px;
+  z-index: -1;
 }
 #application-panel-text {
   min-width: 340px !important;
@@ -4836,4 +4847,10 @@ table .zebraRows:nth-child(2n) {
 }
 .apigee .logo {
   width: 57px;
+}
+.app-menu {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 90%;
+  float: left;
 }

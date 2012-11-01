@@ -418,7 +418,6 @@ a:active {
       .border-radius(0px 14px 14px 0px);
     }
     .title{
-
       cursor:pointer;
       &:hover{
         //color: white;
@@ -521,7 +520,6 @@ a:active {
 }
 //-------------------------------------------------------------------------------------
 
-//TODO: Controles
 #resolutionSelect-menu{
   display:none;
 }
@@ -530,6 +528,15 @@ a:active {
 }
 #applicationSelect-menu{
   display:none;
+}
+
+#applications-menu {
+  a {
+    z-index: 300;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .dropdown.open .dropdown-toggle{
@@ -547,6 +554,10 @@ a:active {
     margin-left: 10px;
     tr > *{
       text-align: left;
+      width: 90%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     th{
       font-weight: bold;
@@ -1147,7 +1158,8 @@ a:active {
 }
 
 .graph{
-  margin: 5px -25px 5px 15px
+  margin: 5px -25px 5px 15px;
+  z-index: -1;
 }
 
 #application-panel-text{
@@ -1434,4 +1446,15 @@ table .zebraRows {
     width: 57px;
   }
 }
+
+//Application Menu text
+.app-menu{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 90%;
+  float: left;
+}
+
+
+
 
