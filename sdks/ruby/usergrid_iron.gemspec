@@ -9,7 +9,7 @@ Gem::Specification.new do |gem|
                         (aka Usergrid) REST API with minimal dependencies.}
   gem.homepage      = "https://github.com/scottganyo/usergrid_iron"
 
-  gem.files         = `/usr/local/git/bin/git ls-files`.split($\)
+  gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(spec|spec|features)/})
   gem.name          = "usergrid_iron"
