@@ -54,40 +54,38 @@ function main(querydata, response, sdk) {
 function _get(response, sdk, view, path) {
   sdk.ApiClient.runAppQuery(new sdk.Query('GET', path, null, null,
      function(output) {
-       var output = '<pre>'+JSON.stringify(output, null, 2)+'</pre>';
-       view.getBody(response, output);  
+       view.getBody(response, prepareOutput(output));  
      },
      function (output) {
-       var output = JSON.stringify(output);
-       view.getBody(response, output);
+       view.getBody(response, prepareOutput(output));
      }
   ));
 }
 
 function _post(response, sdk, view, path, data) {
-  data = JSON.parse(data);
+  if (data) { 
+    data = JSON.parse(data); 
+  }
   sdk.ApiClient.runAppQuery(new sdk.Query('POST', path, data, null,
      function(output) {
-       var output = '<pre>'+JSON.stringify(output, null, 2)+'</pre>';
-       view.getBody(response, output);  
+       view.getBody(response, prepareOutput(output));  
      },
      function (output) {
-       var output = JSON.stringify(output);
-       view.getBody(response, output);
+       view.getBody(response, prepareOutput(output));
      }
   ));
 }
 
 function _put(response, sdk, view, path, data) {
-  data = JSON.parse(data);
+  if (data) { 
+    data = JSON.parse(data); 
+  }
   sdk.ApiClient.runAppQuery(new sdk.Query('PUT', path, data, null,
     function(output) {
-      var output = '<pre>'+JSON.stringify(output, null, 2)+'</pre>';
-      view.getBody(response, output);  
+      view.getBody(response, prepareOutput(output));  
     },
     function (output) {
-      var output = JSON.stringify(output);
-      view.getBody(response, output);
+      view.getBody(response, prepareOutput(output));
     }
   ));
 }
@@ -95,12 +93,10 @@ function _put(response, sdk, view, path, data) {
 function _delete(response, sdk, view, path) {
   sdk.ApiClient.runAppQuery(new sdk.Query('DELETE', path, null, null,
     function(output) {
-      var output = '<pre>'+JSON.stringify(output, null, 2)+'</pre>';
-      view.getBody(response, output);  
+      view.getBody(response, prepareOutput(output));  
     },
     function (output) {
-      var output = JSON.stringify(output);
-      view.getBody(response, output);
+      view.getBody(response, prepareOutput(output));
     }
   ));
 }
@@ -108,13 +104,15 @@ function _delete(response, sdk, view, path) {
 function _login(response, sdk, view, username, password) {
   sdk.ApiClient.logInAppUser(username, password,
     function (output, user) {
-      var output = '<pre>'+JSON.stringify(output, null, 2)+'</pre>';
-      view.getBody(response, output);      
+      view.getBody(response, prepareOutput(output));      
     },
     function (output) {
-      view.getBody(response, 'Error:' + output); 
+      view.getBody(response, prepareOutput(output)); 
     }
   );   
 }
 
+function prepareOutput(output){
+  return '<pre>'+JSON.stringify(output, null, 2)+'</pre>'; 
+}
 exports.main = main;

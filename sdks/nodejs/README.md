@@ -35,7 +35,7 @@ Simply include the SDK to begin to use it:
   
 Then initialize it with your app and org id:
 
-  sdk.ApiClient.init('apigee', 'sandbox')
+  sdk.ApiClient.init('apigee', 'nodejs')
   
 You are now ready to use the sdk handle to make calls against the API.  See the sample app for more example usage.
 
@@ -76,7 +76,7 @@ In the example app, we include the SDK like so:
 	
 So all subsequent calls to the SDK should use the "sdk" handle like so:
 
-	sdk.ApiClient.init('apigee', 'sandbox');
+	sdk.ApiClient.init('apigee', 'nodejs');
 
 
 ##Direct API calls to the Application and Management endpoints

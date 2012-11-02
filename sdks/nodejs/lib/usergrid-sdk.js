@@ -1118,18 +1118,26 @@ Collection.prototype.save = function (successCallback, errorCallback){
  *  @author Rod Simpson (rod@apigee.com)
  *
  */
-M = 'ManagementQuery';
-A = 'ApplicationQuery';
+var M = 'ManagementQuery';
+var A = 'ApplicationQuery'
+var USER = 'USER_AUTH';
+var CSID = 'CLIENT_SECRET';
 ApiClient = (function () {
   //API endpoint
-  var _apiUrl = "https://api.usergrid.com/";
+  var _apiUrl = "api.usergrid.com";
   var _orgName = null;
   var _appName = null;
+  
+  var _authType = USER;
   var _token = null;
+  var _clientId = null;
+  var _clientSecret = null;
+  
   var _callTimeout = 30000;
   var _queryType = null;
   var _loggedInUser = null;
   var _logoutCallback = null;
+  var _callTimeoutCallback = null;
 
   /*
    *  A method to set up the ApiClient with orgname and appname
@@ -1146,6 +1154,16 @@ ApiClient = (function () {
     this.setApplicationName(appName);   
   }
 
+  function setClientSecretCombo(clientId, clientSecret){
+     _clientId = clientId;
+     _clientSecret = clientSecret;
+  }  
+  function enableClientSecretAuth() {
+    _authType = CSID;
+  }
+  function enableUserAuth(){
+    _authType = USER;
+  }
   /*
   *  Public method to run calls against the app endpoint
   *
@@ -1286,7 +1304,45 @@ ApiClient = (function () {
   function setCallTimeout(callTimeout) {
     _callTimeout = callTimeout;
   }
-
+  
+  /*
+   * Returns the call timeout callback function
+   *
+   * @public
+   * @method setCallTimeoutCallback
+   * @return none
+   */ 
+  function setCallTimeoutCallback(callback) {
+    _callTimeoutCallback = callback; 
+  }
+  
+  /*
+   * Returns the call timeout callback function
+   *
+   * @public
+   * @method getCallTimeoutCallback
+   * @return {function} Returns the callTimeoutCallback
+   */
+  function getCallTimeoutCallback() {
+    return _callTimeoutCallback; 
+  }
+  
+  /*
+   * Calls the call timeout callback function
+   *
+   * @public
+   * @method callTimeoutCallback
+   * @return {boolean} Returns true or false based on if there was a callback to call
+   */
+  function callTimeoutCallback(response) {
+    if (_callTimeoutCallback && typeof(_callTimeoutCallback) === "function") {
+      _callTimeoutCallback(response);
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
   /*
    *  A public method to get the api url of the reset pasword endpoint
    *
@@ -1505,6 +1561,58 @@ ApiClient = (function () {
     _queryType = type;
   }
 
+  function buildCurlCall(Query, endpoint) {
+    var curl = 'curl';
+    try {
+      //peel the data out of the query object
+      var method = Query.getMethod().toUpperCase();
+      var path = Query.getResource();
+      var jsonObj = Query.getJsonObj() || {};
+      var params = Query.getQueryParams() || {};
+      
+      //curl - add the method to the command (no need to add anything for GET)
+      if (method == "POST") {curl += " -X POST"; }
+      else if (method == "PUT") { curl += " -X PUT"; }
+      else if (method == "DELETE") { curl += " -X DELETE"; }
+      else { curl += " -X GET"; }
+      
+      //curl - append the bearer token if this is not the sandbox app
+      var application_name = ApiClient.getApplicationName();
+      if (application_name) {
+        application_name = application_name.toUpperCase();
+      }
+      if ( _authType == USER && ((application_name != 'SANDBOX' && ApiClient.getToken()) || (getQueryType() == M && ApiClient.getToken())) ) {
+        curl += ' -i -H "Authorization: Bearer ' + ApiClient.getToken() + '"';
+        Query.setToken(true);
+      }
+      
+      //curl - append the path
+      curl += ' "http://' +  ApiClient.getApiUrl() + path;
+
+      //curl - append params to the path for curl prior to adding the timestamp
+      var curl_encoded_params = encodeParams(params);
+      if (curl_encoded_params) {
+        curl += "?" + curl_encoded_params;
+      }
+      curl += '"';
+      
+      jsonObj = JSON.stringify(jsonObj)
+      if (jsonObj && jsonObj != '{}') {
+        //curl - add in the json obj
+        curl += " -d '" + jsonObj + "'";
+      }
+      
+    } catch(e) {
+     console.log('Unable to build curl call:' + e);
+    }
+    //log the curl command to the console
+    console.log(curl);
+    //store the curl command back in the object
+    Query.setCurl(curl);
+    
+    return curl; 
+  }
+  
   /**
    *  A private method to validate, prepare,, and make the calls to the API
    *  Use runAppQuery or runManagementQuery to make your calls!
@@ -1516,53 +1624,44 @@ ApiClient = (function () {
    *  @return {response} callback functions return API response object
    */
   function run (Query, endpoint) {
-    var curl = "curl";
     //validate parameters
     try {
       //for timing, call start
       Query.setQueryStartTime();
+      
       //peel the data out of the query object
       var method = Query.getMethod().toUpperCase();
       var path = Query.getResource();
       var jsonObj = Query.getJsonObj() || {};
+      
+      //add the client secret and id to the params if available
       var params = Query.getQueryParams() || {};
-
-      //method - should be GET, POST, PUT, or DELETE only
-      if (method != 'GET' && method != 'POST' && method != 'PUT' && method != 'DELETE') {
-        throw(new Error('Invalid method - should be GET, POST, PUT, or DELETE.'));
-      }
-      //curl - add the method to the command (no need to add anything for GET)
-      if (method == "POST") {curl += " -X POST"; }
-      else if (method == "PUT") { curl += " -X PUT"; }
-      else if (method == "DELETE") { curl += " -X DELETE"; }
-      else { curl += " -X GET"; }
-
-      //curl - append the bearer token if this is not the sandbox app
-      var application_name = ApiClient.getApplicationName();
-      if (application_name) {
-        application_name = application_name.toUpperCase();
-      }
-      //if (application_name != 'SANDBOX' && ApiClient.getToken()) {
-      if ( (application_name != 'SANDBOX' && ApiClient.getToken()) || (getQueryType() == M && ApiClient.getToken())) {
-        curl += ' -i -H "Authorization: Bearer ' + ApiClient.getToken() + '"';
-        Query.setToken(true);
-      }
-
-      //params - make sure we have a valid json object
-      _params = JSON.stringify(params);
-      if (!JSON.parse(_params)) {
-        throw(new Error('Params object is not valid.'));
-      }
-
+      if (_authType == CSID && (_clientId != null && _clientSecret != null)) {
+        params['client_id'] = _clientId;
+        params['client_secret'] = _clientSecret;
+      }     
       //add in the cursor if one is available
       if (Query.getCursor()) {
         params.cursor = Query.getCursor();
       } else {
         delete params.cursor;
-      }
+      } 
+      Query.setQueryParams(params); 
 
-      //strip off the leading slash of the endpoint if there is one
-      endpoint = endpoint.indexOf('/') == 0 ? endpoint.substring(1) : endpoint;
+      //method - should be GET, POST, PUT, or DELETE only
+      if (method != 'GET' && method != 'POST' && method != 'PUT' && method != 'DELETE') {
+        throw(new Error('Invalid method - should be GET, POST, PUT, or DELETE.'));
+      }
+      
+      //params - make sure we have a valid json object
+      _params = JSON.stringify(params);
+      if (!JSON.parse(_params)) {
+        throw(new Error('Params object is not valid.'));
+      }
+      
+      //add a leading slash to the endpoint just to make sure    
+      endpoint = '/' + endpoint 
+      path = '/' + path 
 
       //add the endpoint to the path
       path = endpoint + path;
@@ -1574,25 +1673,12 @@ ApiClient = (function () {
           path = path.replace('//', '/');
         }
       }
-
-      //add the http:// bit on the front
-      path = ApiClient.getApiUrl() + path;
-
-      //curl - append the path
-      curl += ' "' + path;
-
-      //curl - append params to the path for curl prior to adding the timestamp
-      var curl_encoded_params = encodeParams(params);
-      if (curl_encoded_params) {
-        curl += "?" + curl_encoded_params;
-      }
-      curl += '"';
-
+      
       //add in a timestamp for gets and deletes - to avoid caching by the browser
       if ((method == "GET") || (method == "DELETE")) {
         params['_'] = new Date().getTime();
       }
-
+    
       //append params to the path
       var encoded_params = encodeParams(params);
       if (encoded_params) {
@@ -1604,11 +1690,9 @@ ApiClient = (function () {
       if (!JSON.parse(jsonObj)) {
         throw(new Error('JSON object is not valid.'));
       }
+      //but clear it out if it is empty
       if (jsonObj == '{}') {
         jsonObj = null;
-      } else {
-        //curl - add in the json obj
-        curl += " -d '" + jsonObj + "'";
       }
 
     } catch (e) {
@@ -1616,97 +1700,116 @@ ApiClient = (function () {
       console.log('error occured running query -' + e.message);
       return false;
     }
-    //log the curl command to the console
-    console.log(curl);
-    //store the curl command back in the object
-    Query.setCurl(curl);
-
-    //so far so good, so run the query
-    var XMLHttpRequest = require("./xmlhttprequest").XMLHttpRequest;
-    xhr = new XMLHttpRequest();
-    xhr.open(method, path, true);
+    //build the curl call
+    buildCurlCall(Query, endpoint);
     
-    //add content type = json if there is a json payload
-    if (jsonObj) {
-      xhr.setRequestHeader("Content-Type", "application/json");
+    //make the call to the API
+    var http = require('http');
+
+    //params for the call
+    var options = {
+      host: ApiClient.getApiUrl(),
+      path: path,
+      method: method
+    };
+    
+    var headers = {};
+    
+    //add a header with the oauth token if needed
+    if (_authType == USER && ApiClient.getToken()) {
+      headers['Authorization'] = "Bearer " + ApiClient.getToken();
     }
-    if (ApiClient.getToken()) {
-      xhr.setRequestHeader("Authorization", "Bearer " + ApiClient.getToken());
-      xhr.withCredentials = true;
-    }       
-   
-    // Handle response.
-    xhr.onerror = function() {
+    
+    //add a header for content type if we have a request body
+    if (jsonObj) {
+      headers['Content-Type'] = "application/json";
+    }
+    
+    //add the headers
+    options['headers'] = headers;
+     
+    //make the call    
+    var response = '';
+    var req = http.request(options, function(res) {
+      res.setEncoding('utf8');
+      //capture the data as it comes back  
+      res.on('data', function (chunk) {
+        response += chunk;
+      });
+     
+      res.on('end', function () {
+        //for timing, call end
+        Query.setQueryEndTime();
+        //for timing, log the total call time
+        console.log(Query.getQueryTotalTime());
+        //convert the response to an object if possible
+        try {response = JSON.parse(response);} catch (e) {}
+        if (res.statusCode != 200) {          
+          if ( (response.error == "auth_expired_session_token") ||
+               (response.error == "unauthorized")   ||
+               (response.error == "auth_missing_credentials")   ||
+               (response.error == "auth_invalid")) {
+            //this error type means the user is not authorized. If a logout function is defined, call it
+            console.log(response.error);
+            callLogoutCallback();
+          }else {          
+            Query.callFailureCallback(response);
+          }
+        } else {
+          //query completed succesfully, so store cursor
+          var cursor = response.cursor || null;
+          Query.saveCursor(cursor);
+          console.log(res.statusCode);
+          Query.callSuccessCallback(response); 
+        }
+      });
+    });
+
+    //add the request body if there is one
+    if (method == 'POST' || method == 'PUT') {
+      if (jsonObj) {
+        req.write(jsonObj);
+      } 
+    }
+    
+    //deal with any errors (usually network errors) 
+    req.on('error', function(e) {
       //for timing, call end
       Query.setQueryEndTime();
       //for timing, log the total call time
       console.log(Query.getQueryTotalTime());
-      //network error
-      clearTimeout(timeout);
-      console.log('API call failed at the network level.');
-      //send back an error (best we can do with what ie gives back)
-      Query.callFailureCallback(response.innerText);
-    };
-    xhr.xdomainOnload = function (response) {
-      //for timing, call end
-      Query.setQueryEndTime();
-      //for timing, log the total call time
-      console.log('Call timing: ' + Query.getQueryTotalTime());
-      //call completed
-      clearTimeout(timeout);
-      //decode the response
-      response = JSON.parse(xhr.responseText);
-      //if a cursor was present, grab it
-      try {
-        var cursor = response.cursor || null;
-        Query.saveCursor(cursor);
-      }catch(e) {}
-      Query.callSuccessCallback(response);
-    };
-    xhr.onload = function(response) {
-      //for timing, call end
-      Query.setQueryEndTime();
-      //for timing, log the total call time
-      console.log('Call timing: ' + Query.getQueryTotalTime());
-      //call completed
-      clearTimeout(timeout);
-      //decode the response
-      response = JSON.parse(xhr.responseText);
-      if (xhr.status != 200)   {
-        //there was an api error
-        try {
-          var error = response.error;
-          console.log('API call failed: (status: '+xhr.status+').' + error.type);
-          if ( (error.type == "auth_expired_session_token") ||
-               (error.type == "unauthorized")   ||
-               (error.type == "auth_missing_credentials")   ||
-               (error.type == "auth_invalid")) {
-            //this error type means the user is not authorized. If a logout function is defined, call it
-            callLogoutCallback();
-        }} catch(e){}
-        //otherwise, just call the failure callback
-        Query.callFailureCallback(response.error_description);
-        return;
+      //clear the timeout
+      var response = '';
+      console.log('API call error: ' + e.message);
+      if (e.code == 'ENOTFOUND') {
+        response = 'Could not connect to the API';
       } else {
-        //query completed succesfully, so store cursor
-        var cursor = response.cursor || null;
-        Query.saveCursor(cursor);
-        //then call the original callback
-        Query.callSuccessCallback(response);
-     }
-    }; 
-        
-    var timeout = setTimeout(
-      function() { 
-        xhr.abort(); 
-        Query.callFailureCallback('API CALL TIMEOUT');
-      }, ApiClient.getCallTimeout()); //set for 30 seconds
-
-    xhr.send(jsonObj);
+        response = e.message;
+      }
+      Query.callFailureCallback(response);
+    });
+   
+    //set up the timeout, just in case the meeting runs long
+    req.setTimeout(  ApiClient.getCallTimeout(),
+      function() {  
+        console.log('API call timed out');
+        if (ApiClient.getCallTimeoutCallback() === 'function') {
+          ApiClient.callTimeoutCallback('API CALL TIMEOUT');
+        } else {
+          Query.callFailureCallback('API CALL TIMEOUT');
+        } 
+      }
+    );
+    
+    //signal the end of the request
+    req.end();
   }
 
   return {
     init:init,
+    setClientSecretCombo:setClientSecretCombo,
+    enableClientSecretAuth:enableClientSecretAuth,
+    enableUserAuth:enableUserAuth,
     runAppQuery:runAppQuery,
     runManagementQuery:runManagementQuery,
     getOrganizationName:getOrganizationName,
@@ -1717,6 +1820,9 @@ ApiClient = (function () {
     setToken:setToken,
     getCallTimeout:getCallTimeout,
     setCallTimeout:setCallTimeout,
+    getCallTimeoutCallback:getCallTimeoutCallback,
+    setCallTimeoutCallback:setCallTimeoutCallback,
+    callTimeoutCallback:callTimeoutCallback,
     getApiUrl:getApiUrl,
     setApiUrl:setApiUrl,
     getResetPasswordUrl:getResetPasswordUrl,
@@ -1989,7 +2095,28 @@ session = {
   set_session_dir: function(dir){
     sessiondir = dir; 
   },
-  start_session: function(request, response) {    
+  start_session: function(request, response) { 
+  /* 
+    var cookies = {};
+    request.headers.cookie && request.headers.cookie.split(';').forEach(function( cookie ) {
+      var parts = cookie.split('=');
+      cookies[ parts[ 0 ].trim() ] = ( parts[ 1 ] || '' ).trim();
+    });
+    //get our coookie
+    sessionId = cookies['session'];
+    
+    sdk.ApiClient.runAppQuery(new sdk.Query('GET', 'sessions', null, null,
+    function(output) {
+      var output = '<pre>'+JSON.stringify(output, null, 2)+'</pre>';
+      view.getBody(response, output);  
+    },
+    function (output) {
+      var output = JSON.stringify(output);
+      view.getBody(response, output);
+    }
+  ));
+    
+   */  
     //read cookies to see if there is already a session
     var cookies = {};
     request.headers.cookie && request.headers.cookie.split(';').forEach(function( cookie ) {
@@ -2008,7 +2135,7 @@ session = {
     }
     console.log("Starting session with id:" + sessionId );
     //store the value for the cookie 
-    response.setHeader('Set-Cookie', "session="+sessionId);
+    response.setHeader('Set-Cookie', "session="+sessionId);    
   },  
   save_session: function(response) {
     //save the session to a file on disk
