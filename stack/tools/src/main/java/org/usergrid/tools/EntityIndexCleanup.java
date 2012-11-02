@@ -31,14 +31,22 @@ import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
+import me.prettyprint.cassandra.serializers.BytesArraySerializer;
+import me.prettyprint.cassandra.serializers.LongSerializer;
+import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.AbstractComposite;
 import me.prettyprint.hector.api.beans.DynamicComposite;
+import me.prettyprint.hector.api.beans.AbstractComposite.Component;
 import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
@@ -59,8 +67,10 @@ import org.usergrid.persistence.cassandra.ApplicationCF;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.EntityManagerImpl;
 import org.usergrid.persistence.cassandra.IndexBucketScanner;
+import org.usergrid.persistence.cassandra.IndexUpdate;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.schema.CollectionInfo;
+import org.usergrid.utils.UUIDUtils;
 
 /**
  * This is a utility to audit all available entity ids in the secondary index.
@@ -153,13 +163,12 @@ public class EntityIndexCleanup extends ToolBase {
           tempResults.trim(query.getLimit());
           lastCursor = tempResults.getCursor();
           
-      
-
+          //We shouldn't have to do this, but otherwise the cursor won't work
           Set<String> indexed = collection.getPropertiesIndexed();
 
           // what's left needs deleted, do so
 
-          logger.info("Auditing {} entities for app {}", ids.size(), app.getValue());
+          logger.info("Auditing {} entities for collection {} in app {}", new Object[]{ids.size(), collectionName, app.getValue()});
 
           for (UUID id : ids) {
             boolean reIndex = false;
@@ -169,16 +178,8 @@ public class EntityIndexCleanup extends ToolBase {
             for (String prop : indexed) {
 
               Object key = key(applicationId, collection.getName(), prop);
-
-              DynamicComposite start = new DynamicComposite(null, null, id);
-
-              DynamicComposite finish = new DynamicComposite(null, null, id);
-              setEqualityFlag(finish, ComponentEquality.GREATER_THAN_EQUAL);
-
-              IndexBucketScanner scanner = new IndexBucketScanner(cass, indexBucketLocator, ApplicationCF.ENTITY_INDEX,
-                  applicationId, IndexType.COLLECTION, key, start, finish, false, 10000, prop);
-
-              List<HColumn<ByteBuffer, ByteBuffer>> indexCols = scanner.load();
+              
+              List<HColumn<ByteBuffer, ByteBuffer>> indexCols = scanIndexForAllTypes(ko, indexBucketLocator, applicationId, key, id, prop);
 
               // loop through the indexed values and verify them as present in
               // our entity_index_entries. If they aren't, we need to delete the
@@ -188,7 +189,7 @@ public class EntityIndexCleanup extends ToolBase {
 
                 DynamicComposite secondaryIndexValue = DynamicComposite.fromByteBuffer(index.getName().duplicate());
 
-                byte code = (Byte) secondaryIndexValue.get(0);
+                Object code = secondaryIndexValue.get(0);
                 Object propValue = secondaryIndexValue.get(1);
                 UUID timestampId = (UUID) secondaryIndexValue.get(3);
 
@@ -213,6 +214,10 @@ public class EntityIndexCleanup extends ToolBase {
                 
                   addDeleteToMutator(m, ENTITY_INDEX, key, index.getName().duplicate(), timestamp);
                   
+                  reIndex = true;
+                }
+                
+                if(entries.size() > 1){
                   reIndex = true;
                 }
 
@@ -242,6 +247,44 @@ public class EntityIndexCleanup extends ToolBase {
       }
 
     }
+
+  }
+
+  private List<HColumn<ByteBuffer, ByteBuffer>> scanIndexForAllTypes( Keyspace ko, IndexBucketLocator indexBucketLocator,
+      UUID applicationId, Object key, UUID entityId, String prop) throws Exception {
+
+    //TODO Determine the index bucket.  Scan the entire index for properties with this entityId.
+    
+    String bucket = indexBucketLocator.getBucket(applicationId, IndexType.COLLECTION, entityId, prop);
+    
+    Object rowKey = key(key, bucket);
+   
+    DynamicComposite start = null;
+    
+    List<HColumn<ByteBuffer, ByteBuffer>> cols;
+    
+    List<HColumn<ByteBuffer, ByteBuffer>> results = new ArrayList<HColumn<ByteBuffer,ByteBuffer>>();
+    
+   
+    do{
+      cols = cass.getColumns(ko, ENTITY_INDEX, rowKey, start, null, 100, false);
+      
+      for(HColumn<ByteBuffer, ByteBuffer> col: cols){
+        DynamicComposite secondaryIndexValue = DynamicComposite.fromByteBuffer(col.getName().duplicate());
+
+        UUID storedId = (UUID) secondaryIndexValue.get(2);
+        
+        //add it to the set.  We can't short circuit due to property ordering
+        if(entityId.equals(storedId)){
+          results.add(col);
+        }
+        
+        start = secondaryIndexValue;
+        
+      }
+    }while(cols.size() == 100);
+   
+    return results;
 
   }
 }
