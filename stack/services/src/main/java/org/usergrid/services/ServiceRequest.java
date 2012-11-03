@@ -24,6 +24,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.shiro.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.EntityRef;
@@ -172,8 +173,29 @@ public class ServiceRequest {
 	}
 
 	public ServiceResults execute() throws Exception {
-		return execute(null);
+        try {
+		    return execute(null);
+        }
+        catch (RuntimeException e) {
+            logger.error(debugString());
+            throw e;
+        }
 	}
+
+    private String debugString() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("request details:\n  ");
+        sb.append(action);
+        sb.append(" ");
+        sb.append(this);
+        sb.append("\n  payload: ");
+        sb.append(payload);
+        sb.append("\n  owner: ");
+        sb.append(owner);
+        sb.append("\n  principal: ");
+        sb.append(SecurityUtils.getSubject().getPrincipal());
+        return sb.toString();
+    }
 
 	public ServiceResults execute(ServiceResults previousResults)
 			throws Exception {
