@@ -214,7 +214,7 @@ function apigee_console_app(Pages, query_params) {
     showPanel("#query-panel");
     hideMoreQueryOptions();
     //reset the form fields
-    $("#query-path").val(collection);
+    $("#query-path").val("");
     $("#query-source").val("{ }");
     $("#query-ql").val("");
     query_history = [];
@@ -227,14 +227,16 @@ function apigee_console_app(Pages, query_params) {
     output.empty();
     //if a collection was provided, go ahead and get the default data
     if (collection) {
-      getCollection('GET');
+      getCollection('GET', collection);
     }
   }
   window.Usergrid.console.pageOpenQueryExplorer = pageOpenQueryExplorer;
 
-  function getCollection(method){
+  function getCollection(method, path){
     //get the data to run the query
-    var path = $("#query-path").val();
+    if(!path){
+      var path = $("#query-path").val();
+    }
     if(method.toUpperCase() !== 'GET'){
       var data = $("#query-source").val();
       try{
@@ -305,7 +307,7 @@ function apigee_console_app(Pages, query_params) {
             + entity_path
             + "\"></div>";
         }
-
+        $("#query-path").val(response.path + '/');
         $("#query-response-table").html(t);
         $(".entity_list_item").loadEntityCollectionsListWidget();
       } else {
@@ -314,11 +316,9 @@ function apigee_console_app(Pages, query_params) {
 
         var entity_path = (entity.metadata || {}).path;
         if ($.isEmptyObject(entity_path)) {
-          entity_path = path + "/";
+          entity_path = path + "/" ;
         }
-
-        $("#query-path").val(entity_path);
-
+        $("#query-path").val(response.path + '/' + entity.name + '/');
         t = '<div class="query-result-row entity_detail" id="query-result-detail" data-entity-type="'
           + entity.type
           + '" data-entity-id="' + entity.uuid + '" data-collection-path="'
@@ -328,6 +328,7 @@ function apigee_console_app(Pages, query_params) {
         $("#query-response-table").html(t);
         $('#query-result-detail').loadEntityCollectionsDetailWidget();
       }
+
       showBackButton();
       showPagination('query-response');
     }else{
