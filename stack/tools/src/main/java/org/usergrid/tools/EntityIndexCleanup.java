@@ -69,6 +69,7 @@ import org.usergrid.persistence.cassandra.EntityManagerImpl;
 import org.usergrid.persistence.cassandra.IndexBucketScanner;
 import org.usergrid.persistence.cassandra.IndexUpdate;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
+import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.schema.CollectionInfo;
 import org.usergrid.utils.UUIDUtils;
 
@@ -130,6 +131,14 @@ public class EntityIndexCleanup extends ToolBase {
 
       UUID applicationId = app.getValue();
       EntityManagerImpl em = (EntityManagerImpl) emf.getEntityManager(applicationId);
+      
+      //sanity check for corrupt apps
+      Application appEntity = em.getApplication();
+      
+      if(appEntity == null){
+        logger.warn("Application does not exist in data. {}", app.getKey());
+        continue;
+      }
 
       CassandraService cass = em.getCass();
       IndexBucketLocator indexBucketLocator = em.getIndexBucketLocator();
@@ -177,9 +186,11 @@ public class EntityIndexCleanup extends ToolBase {
 
             for (String prop : indexed) {
 
-              Object key = key(applicationId, collection.getName(), prop);
+              String bucket = indexBucketLocator.getBucket(applicationId, IndexType.COLLECTION, id, prop);
               
-              List<HColumn<ByteBuffer, ByteBuffer>> indexCols = scanIndexForAllTypes(ko, indexBucketLocator, applicationId, key, id, prop);
+              Object rowKey = key(applicationId, collection.getName(), prop, bucket);
+              
+              List<HColumn<ByteBuffer, ByteBuffer>> indexCols = scanIndexForAllTypes(ko, indexBucketLocator, applicationId, rowKey, id, prop);
 
               // loop through the indexed values and verify them as present in
               // our entity_index_entries. If they aren't, we need to delete the
@@ -209,10 +220,10 @@ public class EntityIndexCleanup extends ToolBase {
                 if (entries.size() == 0) {
                   logger
                       .info(
-                          "Could not find reference to value {} for property {} on entity {} in collection{}.  Forcing reindex",
+                          "Could not find reference to value '{}' for property '{}' on entity {} in collection {}.  Forcing reindex",
                           new Object[] { propValue, prop, id, collectionName });
                 
-                  addDeleteToMutator(m, ENTITY_INDEX, key, index.getName().duplicate(), timestamp);
+                  addDeleteToMutator(m, ENTITY_INDEX, rowKey, index.getName().duplicate(), timestamp);
                   
                   reIndex = true;
                 }
@@ -226,9 +237,16 @@ public class EntityIndexCleanup extends ToolBase {
             }
 
             //force this entity to be updated
-            
             if(reIndex){
               Entity entity = em.get(id);
+              
+              //entity may not exist, but we should have deleted rows from the index
+              if(entity == null){
+                logger.warn("Entity with id {} did not exist in app {}", id, applicationId);
+                //now execute the cleanup. In this case the entity is gone, so we'll want to remove references from the secondary index
+                m.execute();
+                continue;
+              }
               
               em.update(entity);
               
@@ -250,14 +268,12 @@ public class EntityIndexCleanup extends ToolBase {
 
   }
 
-  private List<HColumn<ByteBuffer, ByteBuffer>> scanIndexForAllTypes( Keyspace ko, IndexBucketLocator indexBucketLocator,
-      UUID applicationId, Object key, UUID entityId, String prop) throws Exception {
+  private List<HColumn<ByteBuffer, ByteBuffer>> scanIndexForAllTypes(Keyspace ko, IndexBucketLocator indexBucketLocator,
+      UUID applicationId, Object rowKey, UUID entityId, String prop) throws Exception {
 
     //TODO Determine the index bucket.  Scan the entire index for properties with this entityId.
     
-    String bucket = indexBucketLocator.getBucket(applicationId, IndexType.COLLECTION, entityId, prop);
-    
-    Object rowKey = key(key, bucket);
+  
    
     DynamicComposite start = null;
     
