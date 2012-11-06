@@ -3803,6 +3803,7 @@ a:active {
 #application-panel-buttons {
   display: none;
   position: fixed;
+  z-index: 10;
 }
 #application-panel-buttons .active > a i {
   background-image: url(../img/glyphicons-halflings-white.png);
@@ -4553,7 +4554,6 @@ a:active {
 }
 .graph {
   margin: 5px -25px 5px 15px;
-  z-index: -1;
 }
 #application-panel-text {
   min-width: 340px !important;
