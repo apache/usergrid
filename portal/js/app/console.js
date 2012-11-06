@@ -3583,9 +3583,6 @@ function apigee_console_app(Pages, query_params) {
     var list = [];
     var name;
     list.push(response.path);
-
-
-
     $.each(response.entities, function(entityKey, entityValue){
       if ( entityValue.type === 'user'){
         name = entityValue.username;
@@ -3593,6 +3590,7 @@ function apigee_console_app(Pages, query_params) {
         name = entityValue.name;
       }
       //Fill collection names
+      list.push(response.path + '/' + name + '/');
       $.each(entityValue.metadata.collections, function(key, value){
           list.push(response.path + '/' + name + '/' + key);
         });
@@ -3605,7 +3603,7 @@ function apigee_console_app(Pages, query_params) {
     pathInput.data('typeahead').source = list;
     pathInput.data('typeahead').options.items = 10;
     pathInput.data('typeahead').matcher = function (item) {
-      var checker = new RegExp('^' + this.query + '[a-zA-Z0-9\.-]*$');
+      var checker = new RegExp('^' + this.query + '[a-z0-9.-]*\/?$', "i");
       return checker.test(item);
     }
   }
