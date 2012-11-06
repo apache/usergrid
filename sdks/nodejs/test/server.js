@@ -38,16 +38,22 @@ handle["/main"] = controller.main;
 //initialze the SDK
 var sdk = require("../lib/usergrid-sdk");
 sdk.ApiClient.init('1hotrod', 'nodejs');
-sdk.ApiClient.setClientSecretCombo('b3U63hpBOGoXEeGJkRIxOAcFfg', 'b3U6gfY1xhTbAzLO-VFIyo33a5vLtvI');
+sdk.ApiClient.setClientSecretCombo('b3U6y6hRJufDEeGW9hIxOwbREg', 'b3U6ZOaOexFiy6Jh61H4M7p2uFI3h18');
 sdk.ApiClient.enableClientSecretAuth();
+sdk.session.garbage_collection(
+  function(){
+    //do something here
+    console.log('Garbage collection completed'); 
+  },function(error){
+    //could not perform garbage collection
+    console.log('Error: Garbage collection failed, or nothing to delete'); 
+  });
 
 //main server
 function start(route, handle) {
   function onRequest(request, response) {
     var pathname = url.parse(request.url).pathname;
-    var querydata = url.parse(request.url, true).query;
-    console.log("Request for " + pathname + " received.");
-                  
+    var querydata = url.parse(request.url, true).query;              
       
     var filePath = '.' + request.url;
     if (filePath == './')
@@ -66,9 +72,36 @@ function start(route, handle) {
         //do nothing
         break;
       default:
-        sdk.session.start_session(request, response);     
-        route(handle, pathname, querydata, response, sdk);      
-        sdk.session.save_session();
+        console.log("Request for " + pathname + " received.");
+        //try to start the session
+        sdk.session.start_session(request, response, 
+          function () {
+            //session was started successfully
+            console.log("Session started, routing...");
+            //process the request
+            route(handle, pathname, querydata, response, sdk);  
+            
+            sdk.session.save_session(request, response, 
+              function(){
+                console.log("Session saved...");
+                response.end();
+              }, 
+              function(){
+                console.log("Could not save session..."); 
+                response.end();
+              })
+            
+            console.log("route finished");  
+          },
+          function () {
+            //no session availble
+            console.log("No session available and none could be started.");
+            //let the user know that no session was available and none could be created
+            //either the API was down or there were not adequate permissions to create the session
+            response.writeHead(200, {"Content-Type": "text/text"});
+            response.write('No Session could be established.  Please refresh to try again');  
+            response.end(); 
+          });
         break;
     }
   }

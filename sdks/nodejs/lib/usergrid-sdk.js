@@ -419,7 +419,9 @@ Query.prototype = {
 Entity = function(collectionType, uuid) {
   this._collectionType = collectionType;
   this._data = {};
-  this._uuid = uuid;
+  if (uuid) {
+    this._data['uuid'] = uuid;
+  }
 };
 
 //inherit prototype from Query
@@ -476,7 +478,11 @@ Entity.prototype.set = function (item, value){
       this._data[field] = item[field];
     }
   } else if (typeof item === 'string') {
-    this._data[item] = value;
+    if (value === null) {
+      delete this._data[item];
+    } else {
+      this._data[item] = value;
+    }
   } else {
     this._data = null;
   }
@@ -1200,7 +1206,7 @@ ApiClient = (function () {
     *  @return {string} the organization name
     */
   function getOrganizationName() {
-     return session.getItem('organizationName');
+     return _orgName;
   }
 
   /*
@@ -1211,7 +1217,7 @@ ApiClient = (function () {
     *  @return none
     */
   function setOrganizationName(organizationName) {
-     session.setItem('organizationName', organizationName);
+     _orgName = organizationName;
   }
 
   /*
@@ -1222,7 +1228,7 @@ ApiClient = (function () {
   *  @return {string} the application name
   */  
   function getApplicationName() {
-     return session.getItem('applicationName');
+     return _appName;
   }
 
 
@@ -1235,7 +1241,7 @@ ApiClient = (function () {
   *  @return none
   */
    function setApplicationName(applicationName) {
-     session.setItem('applicationName', applicationName);
+     _appName = applicationName;
   }
 
   /*
@@ -1586,8 +1592,18 @@ ApiClient = (function () {
         Query.setToken(true);
       }
       
+      path = ApiClient.getApiUrl() + '/' + endpoint + '/' + path;
+      
+      //make sure path never has more than one / together
+      if (path) {
+        //regex to strip multiple slashes
+        while(path.indexOf('//') != -1){
+          path = path.replace('//', '/');
+        }
+      }
+      
       //curl - append the path
-      curl += ' "http://' +  ApiClient.getApiUrl() + path;
+      curl += ' "http://' + path;
 
       //curl - append params to the path for curl prior to adding the timestamp
       var curl_encoded_params = encodeParams(params);
@@ -1658,13 +1674,9 @@ ApiClient = (function () {
       if (!JSON.parse(_params)) {
         throw(new Error('Params object is not valid.'));
       }
-      
-      //add a leading slash to the endpoint just to make sure    
-      endpoint = '/' + endpoint 
-      path = '/' + path 
-
+    
       //add the endpoint to the path
-      path = endpoint + path;
+      path = '/' + endpoint + '/' + path;
 
       //make sure path never has more than one / together
       if (path) {
@@ -2087,16 +2099,9 @@ validation = (function () {
   }
 })();
 
-var sessiondir = "tmp"
-var sessionId = null;
-var sessionData = {};
-var fs = require('fs');
+var sessionEntity = new Entity('session');
 session = {
-  set_session_dir: function(dir){
-    sessiondir = dir; 
-  },
-  start_session: function(request, response) { 
-  /* 
+  get_session_id: function(request){
     var cookies = {};
     request.headers.cookie && request.headers.cookie.split(';').forEach(function( cookie ) {
       var parts = cookie.split('=');
@@ -2104,90 +2109,80 @@ session = {
     });
     //get our coookie
     sessionId = cookies['session'];
-    
-    sdk.ApiClient.runAppQuery(new sdk.Query('GET', 'sessions', null, null,
-    function(output) {
-      var output = '<pre>'+JSON.stringify(output, null, 2)+'</pre>';
-      view.getBody(response, output);  
-    },
-    function (output) {
-      var output = JSON.stringify(output);
-      view.getBody(response, output);
-    }
-  ));
-    
-   */  
-    //read cookies to see if there is already a session
-    var cookies = {};
-    request.headers.cookie && request.headers.cookie.split(';').forEach(function( cookie ) {
-      var parts = cookie.split('=');
-      cookies[ parts[ 0 ].trim() ] = ( parts[ 1 ] || '' ).trim();
-    });
-    //get our coookie
-    sessionId = cookies['session'];
-    //see if we have a valid session id
-    if (sessionId) {         
-      //we do, so read the session and pull the data into memory
-      sessionData = session.read();
-    } else {
-      //else, make a new session
-      sessionId = session.write();
-    }
-    console.log("Starting session with id:" + sessionId );
-    //store the value for the cookie 
-    response.setHeader('Set-Cookie', "session="+sessionId);    
-  },  
-  save_session: function(response) {
-    //save the session to a file on disk
-    session.write();     
-    console.log("Closing session:" + sessionId);
-  },            
-  getItem: function(key) {
-    return sessionData[key];
-  },       
-  setItem: function(key, value) {
-    if (value) {
-      sessionData[key] = value;
-    } else {
-      delete sessionData[key];  
-    }
-  },
-  removeItem: function(key) {
-    delete sessionData[key];
-  }, 
-  write: function() {
-    if (!sessionId) {
-      var d = new Date();
-      sessionId = d.getTime(); //number of milliseconds since the epoch
-    }
-    var filename = sessiondir+"/"+sessionId;
-    var serialized_data = JSON.stringify(sessionData); 
-    fs.writeFileSync(filename, serialized_data)
     return sessionId;
   },
-  read: function() {   
-    if (!sessionId) {
-      return null;
-    }
-    var filename = sessiondir+"/"+sessionId;
-    //check to see if the file exists
-    if (fs.existsSync(filename)) {
-      var file_contents = fs.readFileSync(filename);
-      sessionData = JSON.parse(file_contents);
+  start_session: function(request, response, successCallback, failureCallback) { 
+    var sessionId = session.get_session_id(request)  
+    if (sessionId) {
+      sessionEntity.set('uuid', sessionId);
+      sessionEntity.fetch(
+        function(output) {
+          //got the session so store the value for the cookie
+          sessionId = sessionEntity.get('uuid'); 
+          console.log("Starting session with id:" + sessionId );
+          response.setHeader('Set-Cookie', "session="+sessionId); 
+          successCallback(output);            
+        },
+        function (output) {
+          //didn't get one back, so try to make a new one
+          sessionEntity.set('uuid',null);//wipe out the previous uuid
+          session.save_session(request, response, successCallback, failureCallback, true);              
+        }
+      );
     } else {
-      session.write(); 
-    }                                                 
-    return sessionData;
+      //make a new session 
+      session.save_session(request, response, successCallback, failureCallback, true);   
+    }
+  },  
+  save_session: function (request, response, successCallback, failureCallback, startSession) {
+    sessionEntity.save( 
+        function(output) {
+          //got the session so store the value for the cookie 
+          sessionId = sessionEntity.get('uuid');
+          console.log("Saved session with id:" + sessionId );
+          if (startSession) {
+            response.setHeader('Set-Cookie', "session="+sessionId); 
+          }
+          successCallback(output);            
+        },
+        function (output) {
+          //failureCallback(output);
+        }
+      );
+  },            
+  getItem: function(key) {
+    return sessionEntity.get(key);
+  },       
+  setItem: function(key, value) {
+    console.log('Adding to sesssion...'+key);
+    sessionEntity.set(key, value);  
   },
-  remove: function(sessionId) {
-    var filename = sessiondir+"/"+sessionId;
-    fs.unlink(filename, function(err) {
-      if(err) {
-        console.log(err);
-      } else {
-        console.log("Session deleted: " + sessionId);
-      }
-    });
+  removeItem: function(key) {
+    sessionEntity.set(key, null);
+  }, 
+  kill_session: function() {
+    sessionEntity.destroy(
+      function(output) {
+        successCallback();  
+      },
+      function (output) {
+        failureCallback();    
+      }    
+    );
+  },
+  garbage_collection: function(successCallback, failureCallback){
+    //our goal is to delete any sessions that are older than 24 hours
+    //how we calculate our value:
+    var minutes=1000*60;
+    var hours=minutes*60;
+    var one_day=hours*24;
+    timestamp  = (new Date()).getTime()- one_day; //24 hours ago
+    //we want to delete any sessions older than one day:
+    params = {"filter":"modified lt "+timestamp}; 
+    ApiClient.runAppQuery(new Query('DELETE', 'sessions', null, params,
+      successCallback,
+      failureCallback
+    ));
   }
 };
 

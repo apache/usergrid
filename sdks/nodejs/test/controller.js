@@ -104,7 +104,8 @@ function _delete(response, sdk, view, path) {
 function _login(response, sdk, view, username, password) {
   sdk.ApiClient.logInAppUser(username, password,
     function (output, user) {
-      view.getBody(response, prepareOutput(output));      
+      //the sdk automatically saves the user to the session, so not much to do here
+      view.getBody(response, prepareOutput(output));                 
     },
     function (output) {
       view.getBody(response, prepareOutput(output)); 
