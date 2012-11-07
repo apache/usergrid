@@ -16,7 +16,9 @@
     {{each memberships}}
     <tr class="zebraRows">
       <td class="checkboxo"><input type="checkbox" name="${name}" id="userGroupItem" value="${$value.uuid}" /></td>
-      <td>${$value.username}: ${$value.name}</td>
+      <td class="user-details">
+        <a href="" onclick="Usergrid.console.pageOpenUserProfile('${username}'); return false;">${username}:${name}</a>
+      </td>
     </tr>
     {{/each}}
   </table>

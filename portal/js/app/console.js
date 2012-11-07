@@ -197,7 +197,7 @@ function apigee_console_app(Pages, query_params) {
     if(!name) {
       name = "Select an Application";
     }
-    $('#current-app-name').html(name + '  <span style="float: right">&#9660;</span>');
+    $('#current-app-name').html('<div class="app-menu">' + name + '</div>  <span class="caret"></span>');
     $('.thingy span.title span.app_title').text(" - " + name);
   }
 
@@ -214,7 +214,7 @@ function apigee_console_app(Pages, query_params) {
     showPanel("#query-panel");
     hideMoreQueryOptions();
     //reset the form fields
-    $("#query-path").val(collection);
+    $("#query-path").val("");
     $("#query-source").val("{ }");
     $("#query-ql").val("");
     query_history = [];
@@ -227,14 +227,16 @@ function apigee_console_app(Pages, query_params) {
     output.empty();
     //if a collection was provided, go ahead and get the default data
     if (collection) {
-      getCollection('GET');
+      getCollection('GET', collection);
     }
   }
   window.Usergrid.console.pageOpenQueryExplorer = pageOpenQueryExplorer;
 
-  function getCollection(method){
+  function getCollection(method, path){
     //get the data to run the query
-    var path = $("#query-path").val();
+    if(!path){
+      var path = $("#query-path").val();
+    }
     if(method.toUpperCase() !== 'GET'){
       var data = $("#query-source").val();
       try{
@@ -272,7 +274,6 @@ function apigee_console_app(Pages, query_params) {
     }
   }
 
-
   function getCollectionCallback(response) {
     hidePagination('query-response');
 
@@ -287,13 +288,15 @@ function apigee_console_app(Pages, query_params) {
       path = "" + path.match(/[^?]*/);
 
       if (response.entities.length > 1) {
+        //Update Query Explorer autocomplete
+        updateQueryTypeahead(response, 'query-path');
         for (i in query_entities) {
           var entity = query_entities[i];
           query_entities_by_id[entity.uuid] = entity;
 
           var entity_path = (entity.metadata || {}).path;
           if ($.isEmptyObject(entity_path)) {
-            entity_path = path + "/" + entity.uuid;
+            entity_path = path + "/";
           }
 
           t += "<div class=\"query-result-row entity_list_item\" id=\"query-result-row-"
@@ -304,7 +307,7 @@ function apigee_console_app(Pages, query_params) {
             + entity_path
             + "\"></div>";
         }
-
+        $("#query-path").val(response.path + '/');
         $("#query-response-table").html(t);
         $(".entity_list_item").loadEntityCollectionsListWidget();
       } else {
@@ -313,11 +316,13 @@ function apigee_console_app(Pages, query_params) {
 
         var entity_path = (entity.metadata || {}).path;
         if ($.isEmptyObject(entity_path)) {
-          entity_path = path + "/" + entity.uuid;
+          entity_path = path + "/" ;
         }
-
-        $("#query-path").val(entity_path);
-
+        if(entity.type === "user"){
+          $('#query-path').val(response.path + '/' + entity.username + '/');
+        } else {
+          $("#query-path").val(response.path + '/' + entity.name + '/');
+        }
         t = '<div class="query-result-row entity_detail" id="query-result-detail" data-entity-type="'
           + entity.type
           + '" data-entity-id="' + entity.uuid + '" data-collection-path="'
@@ -327,13 +332,12 @@ function apigee_console_app(Pages, query_params) {
         $("#query-response-table").html(t);
         $('#query-result-detail').loadEntityCollectionsDetailWidget();
       }
+
       showBackButton();
       showPagination('query-response');
     }else{
       $("#query-response-table").html("<div class='group-panel-section-message'>No Collection Entities Found</div>");
     }
-
-
   }
 
   function pushQuery(queryObj) {
@@ -3541,7 +3545,6 @@ function apigee_console_app(Pages, query_params) {
     }
     var pathInput = $('#'+inputId);
     var list = [];
-    //TODO: Check if putting name is enough or need to add more logic to add the title also.
     $.each(roles, function(name, title){
       list.push(name);
     })
@@ -3573,6 +3576,36 @@ function apigee_console_app(Pages, query_params) {
 
     pathInput.typeahead({source:list});
     pathInput.data('typeahead').source = list;
+  }
+
+  function updateQueryTypeahead(response, inputId){
+    var pathInput = $("#" + inputId);
+    var list = [];
+    var name;
+    list.push(response.path);
+    $.each(response.entities, function(entityKey, entityValue){
+      if ( entityValue.type === 'user'){
+        name = entityValue.username;
+      } else {
+        name = entityValue.name;
+      }
+      //Fill collection names
+      list.push(response.path + '/' + name + '/');
+      $.each(entityValue.metadata.collections, function(key, value){
+          list.push(response.path + '/' + name + '/' + key);
+        });
+      //Fill Sets
+      $.each(entityValue.metadata.sets, function(key, value){
+        list.push(response.path + '/' + name + '/' + key);
+      })
+    });
+    //TODO: Possible cleanup here, could not set the options via pathInput.typeahead.options, so overriding variables directly
+    pathInput.data('typeahead').source = list;
+    pathInput.data('typeahead').options.items = 10;
+    pathInput.data('typeahead').matcher = function (item) {
+      var checker = new RegExp('^' + this.query + '[a-z0-9.-]*\/?$', "i");
+      return checker.test(item);
+    }
   }
 
   function updateUsersAutocomplete(){
