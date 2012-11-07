@@ -265,6 +265,8 @@ public class EntityIndexCleanup extends ToolBase {
       }
 
     }
+    
+    logger.info("Completed audit of apps");
 
   }
 
