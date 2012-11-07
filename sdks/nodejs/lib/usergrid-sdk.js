@@ -672,6 +672,7 @@ Entity.prototype.destroy = function (successCallback, errorCallback){
 }
 
 
+
 /**
  *  The Collection class models Usergrid Collections.  It essentially
  *  acts as a container for holding Entity objects, while providing
@@ -767,6 +768,13 @@ Collection.prototype.addNewEntity = function (entity,successCallback, errorCallb
   entity.save(successCallback, errorCallback);
 }
 
+/**
+ *  Removes the Entity from the collection, then destroys the object on the server
+ * 
+ *  @method destroyEntity
+ *  @param {object} entity
+ *  @return none
+ */
 Collection.prototype.destroyEntity = function (entity) {
   //first get the entities uuid
   var uuid = entity.get('uuid');
@@ -1160,16 +1168,53 @@ ApiClient = (function () {
     this.setApplicationName(appName);   
   }
 
+  /*
+  *  Public method to set the credentials for the client id and secret
+  *
+  *  @method setClientSecretCombo
+  *  @public
+  *  @param {string} clientId
+  *  @param {string} clientSecret
+  *  @return none
+  */
   function setClientSecretCombo(clientId, clientSecret){
      _clientId = clientId;
      _clientSecret = clientSecret;
-  }  
+  } 
+  
+  /*
+  *  Public method to enable client authentication
+  *
+  *  @method enableClientSecretAuth
+  *  @public
+  *  @return none
+  */
   function enableClientSecretAuth() {
     _authType = CSID;
   }
+  
+  /*
+  *  Public method to enable user authentication
+  *
+  *  @method enableUserAuth
+  *  @public
+  *  @return none
+  */
   function enableUserAuth(){
     _authType = USER;
   }
+  
+  /*
+  *  Public method to disable authentication
+  *
+  *  @method enableNoAuth
+  *  @public
+  *  @return none
+  */
+  function enableNoAuth(){
+    _authType = null;
+  }
+  
   /*
   *  Public method to run calls against the app endpoint
   *
@@ -1231,7 +1276,6 @@ ApiClient = (function () {
      return _appName;
   }
 
-
   /*
   *  A public method to set the application name to be used by the client
   *
@@ -1240,7 +1284,7 @@ ApiClient = (function () {
   *  @param appName - the application name
   *  @return none
   */
-   function setApplicationName(applicationName) {
+  function setApplicationName(applicationName) {
      _appName = applicationName;
   }
 
@@ -1288,7 +1332,7 @@ ApiClient = (function () {
   function setApiUrl(apiUrl) {
     _apiUrl = apiUrl;
   }
-  
+
   /*
    *  A public method to return the call timeout amount
    *
@@ -1310,7 +1354,7 @@ ApiClient = (function () {
   function setCallTimeout(callTimeout) {
     _callTimeout = callTimeout;
   }
-  
+
   /*
    * Returns the call timeout callback function
    *
@@ -1321,7 +1365,7 @@ ApiClient = (function () {
   function setCallTimeoutCallback(callback) {
     _callTimeoutCallback = callback; 
   }
-  
+
   /*
    * Returns the call timeout callback function
    *
@@ -1332,7 +1376,7 @@ ApiClient = (function () {
   function getCallTimeoutCallback() {
     return _callTimeoutCallback; 
   }
-  
+
   /*
    * Calls the call timeout callback function
    *
@@ -1348,7 +1392,7 @@ ApiClient = (function () {
       return false;
     }
   }
-  
+
   /*
    *  A public method to get the api url of the reset pasword endpoint
    *
@@ -1373,7 +1417,7 @@ ApiClient = (function () {
      user.set(data);
      return user;
   }
-  
+
   /*
    *  A public method to set an Entity object for the current logged in user
    *
@@ -1386,13 +1430,6 @@ ApiClient = (function () {
     var data = null;
     if (user) { data = user.get(); }
     session.setItem('user', JSON.stringify(data));
-  }
-
-  function clearSession() {
-    session.removeItem('organizationName');
-    session.removeItem('applicationName');
-    session.removeItem('token');
-    session.removeItem('user');
   }
 
   /*
@@ -1555,6 +1592,7 @@ ApiClient = (function () {
   function getQueryType() {
     return _queryType;
   }
+
   /*
    *  A private method to set the type of the current api call - (Management or Application)
    *
@@ -1567,6 +1605,15 @@ ApiClient = (function () {
     _queryType = type;
   }
 
+  /*
+   *  A private method to build the curl call to display on the command line
+   *
+   *  @method buildCurlCall
+   *  @private
+   *  @param {object} Query
+   *  @param {string} endpoint
+   *  @return none
+   */
   function buildCurlCall(Query, endpoint) {
     var curl = 'curl';
     try {
@@ -1628,7 +1675,7 @@ ApiClient = (function () {
     
     return curl; 
   }
-  
+
   /**
    *  A private method to validate, prepare,, and make the calls to the API
    *  Use runAppQuery or runManagementQuery to make your calls!
@@ -2101,6 +2148,15 @@ validation = (function () {
 
 var sessionEntity = new Entity('session');
 session = {
+	
+	/**
+   *  A public function to return the session id (pulls from the cookie)
+   *
+   *  @method get_session_id
+   *  @public
+   *  @params {object} request
+   *  @return {string} sessionId
+   */
   get_session_id: function(request){
     var cookies = {};
     request.headers.cookie && request.headers.cookie.split(';').forEach(function( cookie ) {
@@ -2111,6 +2167,19 @@ session = {
     sessionId = cookies['session'];
     return sessionId;
   },
+
+  /**
+   *  A public function to start the session.  Tries to get the session data from the database.
+   *  If the session object can be retrieved, use it.  If not, then try to create a new one
+   *
+   *  @method start_session
+   *  @public
+   *  @params {object} request
+   *  @params {object} response
+   *  @params {function} successCallback
+   *  @params {function} failureCallback
+   *  @return none
+   */
   start_session: function(request, response, successCallback, failureCallback) { 
     var sessionId = session.get_session_id(request)  
     if (sessionId) {
@@ -2133,7 +2202,20 @@ session = {
       //make a new session 
       session.save_session(request, response, successCallback, failureCallback, true);   
     }
-  },  
+  },
+
+  /**
+   *  A public function to save the session.
+   *
+   *  @method save_session
+   *  @public
+   *  @params {object} request
+   *  @params {object} response
+   *  @params {function} successCallback
+   *  @params {function} failureCallback
+   *  @params {bool} startSession
+   *  @return none
+   */
   save_session: function (request, response, successCallback, failureCallback, startSession) {
     sessionEntity.save( 
         function(output) {
@@ -2149,10 +2231,30 @@ session = {
           //failureCallback(output);
         }
       );
-  },            
+  },
+
+  /**
+   *  A public function to get a single item from the session.  Pulls from local storage, not the database.
+   *
+   *  @method getItem
+   *  @public
+   *  @params {string} key
+   *  @return the data for the specified key key
+   */
   getItem: function(key) {
     return sessionEntity.get(key);
-  },       
+  },
+
+  /**
+   *  A public function to set a single item in the session.  Writes to local storage, not the database. 
+   *  Must call save_session to save the session to the database
+   *
+   *  @method setItem
+   *  @public
+   *  @params {string} key
+   *  @params {data} value
+   *  @return none
+   */
   setItem: function(key, value) {
     console.log('Adding to sesssion...'+key);
     sessionEntity.set(key, value);  

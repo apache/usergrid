@@ -19,40 +19,63 @@ Are you looking for our Standard Javascript SDK?  Find the repo here:
 
 Use the Javacript SDK if you are building an HTML5 / Javascript app that runs client-side (in a browser or on a platform like PhoneGap or Trigger.io).
 
+##Installing
+To install the Usergrid Node.js SDK, use the NPM:
+
+	node install usergrid-sdk
+
+Or visit the github repo:
+
+<https://github.com/apigee/usergrid-node-js-sdk>
+
 
 ##Getting started
 To get you started, please note that the SDK consists of one main JavaScript file, located in the project at:
 
-  /lib/usergrid-sdk.js
-  
-With a dependency on:
-  
-  /lib/XMLHttpRequest.js
-  
+	/lib/usergrid-sdk.js
+
 Simply include the SDK to begin to use it:
 
-  var sdk = require('usergrid-sdk')
-  
+	var sdk = require('usergrid-sdk');
+
 Then initialize it with your app and org id:
 
-  sdk.ApiClient.init('apigee', 'nodejs')
-  
-You are now ready to use the sdk handle to make calls against the API.  See the sample app for more example usage.
+	sdk.ApiClient.init('apigee', 'nodejs');
+
+You are now ready to use the sdk handle to make calls against the API.  For example, you may want to set your client id and Secret:
+
+	sdk.ApiClient.setClientSecretCombo('b3U6y6hRJufDEeGW9hIxOwbREg', 'b3U6ZOaOexFiy6Jh61H4M7p2uFI3h18');
+
+If you are using the client secret and id, you will also want to enable that (client) authentication method:
+
+	sdk.ApiClient.enableClientSecretAuth();
+
+Now calls made against the API will pass the client secret and id combo for authentication on each request.  This is secure since it is happening server-side.
+
+See the sample app for more example usage.
 
 ##Sample / Test app
 After installing Node on your system, navigate to the directory where you put the code repo and run the following command to start the sample app:
 
-  node test/server.js
-  
+	cd path/to/my/repo
+
+Then, make sure you navigate into the test directory:
+
+	cd test
+
+And run the command to start the server:
+
+	node server.js
+
 This will start the node server. If it was successful, you should see the following on the command line:
 
-  Server has started.
-  Server running at http://127.0.0.1:8888/
+ 	Server has started.
+ 	Server running at port 8888, try http://127.0.0.1:8888
 
 If you do, you will then be able to enter the URL into a browser:
 
-  http://127.0.0.1:8888/
-  
+	http://127.0.0.1:8888/
+
 This will bring up the All Calls app, which presents you with the option to run any of the standard calls, GET, POST, PUT, or DELETE, as well as make a sample login call.  Default values have been specified for the form fields under each call.
 
 The best way to learn how the code works is to spend some time reviewing the sample project.  Node.js presents a wide array of options when deciding how to set up your application.  We have tried to make this example as simple and clear as possible. 
@@ -66,18 +89,6 @@ In the test directory, you will see the `index.js` file.  This is the main entry
 	5. view.js
 
 The API calls are all triggered in the `controller.js` file, in the "main" function.  Depending on the querydata parameter, the appropriate function will be called.
-
-##Making API calls
-There are several methods for making aTo make API calls, and the next few sections describe ways they can be made.  However, in all cases, the calls to the SDK should be prefaced with the handle to the SDK.  
-
-In the example app, we include the SDK like so:
-
-	var sdk = require("../lib/usergrid.appSDK");
-	
-So all subsequent calls to the SDK should use the "sdk" handle like so:
-
-	sdk.ApiClient.init('apigee', 'nodejs');
-
 
 ##Direct API calls to the Application and Management endpoints
 Creating and managing Entity and Collection objects is sufficient for most purposes.  However, there are times when it is necessary to make a direct call to the API.  The following sections describe how to do this against the Application endpoint as well as the Management endpoint.
@@ -141,14 +152,14 @@ To run a query against the Management endpoint:
 ###Putting it all together
 Both the API call and the Query object can be made in the same call:
 
- 	sdk.ApiClient.runAppQuery (new sdk.Query('GET', 'users', null, null,
-    	function(output) {
-       		//do something with the return value "output" here  
-     	},
-     	function (outpot) {
-       		//do something with the return error value "output" here 
-     	}
-  	));
+	sdk.ApiClient.runAppQuery (new sdk.Query('GET', 'users', null, null,
+		function(output) {
+			//do something with the return value "output" here  
+		},
+		function (output) {
+			//do something with the return error value "output" here 
+		}
+	));
 
 The above call will make a GET call to get all the users in the application.
 
@@ -156,16 +167,29 @@ The above call will make a GET call to get all the users in the application.
 To log app users in, use the Usergrid.ApiClient.logInAppUser() method.  This method takes the supplied username and password and attempts to acquire an access token from the API.  If the method successfully acquires the token, the token is stored in the Usergrid.ApiClient singleton and will be used for all subsequent calls. 
 
 	sdk.ApiClient.logInAppUser(username, password,
-    	function (output, user) {
-      		//do something with the return value "output" here       
-    	},
-    	function (output) {
-      		//do something with the return error value "output" here 
-    	}
-  	);   
-  
+		function (output, user) {
+			//token has been automatically saved by the SDK
+			//do something with the return value "output" here       
+		},
+		function (output) {
+			//do something with the return error value "output" here 
+		}
+	);
 
-After the user is successfully logged in, you can make calls to the API on their behalf.  Their access token will be stored and used for all future calls.
+
+After the user is successfully logged in, their access token will be stored and can used for future calls. To do this, first set the access method:
+
+	sdk.ApiClient.enableUserAuth();
+
+After this statement is called, any future calls will attempt to use the user token instead of the client secret / id combo (application level).  If you need to make an application level call using the secret/id combo, simply enable that type of authentication instead:
+
+	sdk.ApiClient.enableClientSecretAuth();
+
+To use no authentication, for example, if you are using the default Sandbox app that was automatically created when your account was set up, disable auth:
+
+	sdk.ApiClient.enableNoAuth();
+
+With this setting enabled, no authentication will be provided to the SDK.
 
 
 ###To log a user out
@@ -173,7 +197,7 @@ To log the user out, call:
 
 	sdk.ApiClient.logoutAppUser();
 
-This destroys their token in the ApiClient singleton.
+This destroys the token and user object in the session, effectively logging the user out.
 
 
 ##Entities and Collections
@@ -186,13 +210,13 @@ Start by creating a new Entity object, where the argument is the name of the col
 
 Next, add any needed custom fields. For example:
 
- 	dog.set("name","Dino");
- 	dog.set("owner","Fred");
- 	dog.set("state","hungry");
+	dog.set("name","Dino");
+	dog.set("owner","Fred");
+	dog.set("state","hungry");
 
 After the object is complete, save it back to the API, for example:
 
-  	dog.save();
+	dog.save();
 
 When the entity is saved, the API gives it a UUID that uniquely identifies the entity in the database.  This UUID is stored in the Entity object and will be used for any future calls to the API.  This ensures that the correct entity is updated.  For example, the UUID is used if the object is updated and needs to be saved again:
 
@@ -285,61 +309,63 @@ You can find more information on custom queries here:
 ###Making a user object
 There is no specific User object in the SDK.  Instead, you simply need to use the Entity object, specifying a type of "users".  Here are some examples:
 
- First, create a new user:
+First, create a new user:
 
 	var marty = new sdk.Entity("users");
 
  Next, add more data if needed:
 
- 	marty.set("username", "marty");
- 	marty.set("name", "Marty McFly");
- 	marty.set("City", "Hill Valley");
- 	marty.set("State", "California");
+	marty.set("username", "marty");
+	marty.set("name", "Marty McFly");
+	marty.set("City", "Hill Valley");
+	marty.set("State", "California");
 
- Finally, save the user to the database:
-
- 	marty.save();
-
- If the user is modified:
-
- 	marty.set("girlfriend","Jennifer");
-
- Just call save on the user:
+Finally, save the user to the database:
 
 	marty.save();
 
- To refresh the user's information in the database:
+If the user is modified:
+
+	marty.set("girlfriend","Jennifer");
+
+Just call save on the user:
+
+	marty.save();
+
+To refresh the user's information in the database:
 
 	marty.fetch();
 
- To get properties from the user object:
+To get properties from the user object:
 
- 	var city = marty.getField("city");
+	var city = marty.getField("city");
 
 If you no longer need the object, call the delete() method and the object will be deleted from database:
 
- 	marty.destroy();
+	marty.destroy();
 
 Although the object is deleted from the database, it remains in your program.  Destroy it if needed by calling:
 
- 	marty = null;
+	marty = null;
 
 
 ##Session Management
-One of the first key features of this SDK is session management. Node.js does not implement any type of session management out of the box.  To over come this, we added session management similar to what is used in PHP.  
+Session management is key for persistance across page loads.  We have implemented session storage using the Usergrid engine.  For each new request, a session object is created in the database and the key is stored as a cookie.
 
-The SDK uses a combination of local file storage and cookies to keep user data safe, yet highly available.  Each new user is given a new session id, and a file of the same name is created for them.  By default, these files are stored in the /tmp directory.  This value can be overridden if needed:
+Garbage collection has also been implemented to clean up old sessions.  You can see an example of how to call this in the server.js file:
 
-	sdk.Usergrid.session.set_session_dir('/path/to/your/session/directory');
+		//call garbage collection
+		sdk.session.garbage_collection(
+		function(){
+			//do something here
+			console.log('Garbage collection completed'); 
+		},function(error){
+			//could not perform garbage collection
+			console.log('Error: Garbage collection failed, or nothing to delete'); 
+		}
+	);
 	
-Currently there is no garbage collection for session files (see next section).  We welcome any contributions!
-
-##Possible enhancements
-There are a few items that would likely be needed in a production environment:
-
-1.  Cron job to remove old session files. 
-2.  Greater precision on filenames of session files.  Using the epoch time to get the millisecond value works great for a demo, but on a high traffic site, it is possible that there could be name collisions.
-
+In the sample app, this method is called on every page load.  However, in a production environment this wouldn't make sense. Your app should likely only call garbage collection once per hour.
 
 ## Contributing
 We welcome your enhancements!

@@ -40,6 +40,8 @@ var sdk = require("../lib/usergrid-sdk");
 sdk.ApiClient.init('1hotrod', 'nodejs');
 sdk.ApiClient.setClientSecretCombo('b3U6y6hRJufDEeGW9hIxOwbREg', 'b3U6ZOaOexFiy6Jh61H4M7p2uFI3h18');
 sdk.ApiClient.enableClientSecretAuth();
+
+//call garbage collection
 sdk.session.garbage_collection(
   function(){
     //do something here
@@ -47,7 +49,8 @@ sdk.session.garbage_collection(
   },function(error){
     //could not perform garbage collection
     console.log('Error: Garbage collection failed, or nothing to delete'); 
-  });
+  }
+);
 
 //main server
 function start(route, handle) {
@@ -108,7 +111,7 @@ function start(route, handle) {
 
   http.createServer(onRequest).listen(8888);
   console.log("Server has started.");
-  console.log('Server running at port 8888, try http://localhost:8888');
+  console.log('Server running at port 8888, try http://127.0.0.1:8888');
 }
 
 function serveAsset(response, filePath, contentType) {
