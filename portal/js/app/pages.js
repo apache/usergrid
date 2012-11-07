@@ -20,7 +20,6 @@ function ApigeePages() {
     if(page.link.parent().parent().hasClass("dropdown-menu")) {
       page.link.parent().parent().parent().addClass('active');
     } else {
-      page.link.parent().addClass('active');
       page.menu.show();
     }
 
