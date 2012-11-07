@@ -45,8 +45,8 @@ function apigee_console_app(Pages, query_params) {
   var passwordRegex = new RegExp("^([0-9a-zA-Z@#$%^&!?<>;:.,'\"~*-=+_\[\\](){}/\\ |])+$");
   var passwordAllowedCharsMessage = 'Password field only allows: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . < > / ? !';
 
-  var usernameRegex = new RegExp("^([0-9a-zA-Z\.\-])+$");
-  var usernameAllowedCharsMessage = 'Username field only allows : A-Z, a-z, 0-9, dot, and dash';
+  var usernameRegex = new RegExp("^([0-9a-zA-Z\.\-_])+$");
+  var usernameAllowedCharsMessage = 'Username field only allows : A-Z, a-z, 0-9, dot, underscore and dash';
 
   var organizationNameRegex = new RegExp ("^([0-9a-zA-Z.-])+$");
   var organizationNameAllowedCharsMessage = 'Organization name field only allows : A-Z, a-z, 0-9, dot, and dash';
