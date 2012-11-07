@@ -570,12 +570,18 @@ public class QueryProcessor {
          */
         private CursorCache(String cursorString) {
 
+            if(cursorString == null){
+              return;
+            }
+            
+            String decoded = new String(decodeBase64(cursorString));
+            
             // nothing to do
-            if (cursorString == null || cursorString.indexOf(':') < 0) {
+            if (decoded.indexOf(':') < 0) {
                 return;
             }
 
-            String[] cursorTokens = split(cursorString, '|');
+            String[] cursorTokens = split(decoded, '|');
 
             for (String c : cursorTokens) {
 
@@ -660,7 +666,9 @@ public class QueryProcessor {
             // trim off the last pipe
             buff.setLength(buff.length() - 1);
 
-            return buff.toString();
+            
+            
+            return encodeBase64URLSafeString(buff.toString().getBytes());
         }
     }
 
