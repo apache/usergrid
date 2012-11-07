@@ -18,7 +18,6 @@ $(document).ready(function () {
     initMenu();
     StatusBar.Init('#statusbar-placeholder');
     toggleableSections();
-
   }
 
   function startApp() {

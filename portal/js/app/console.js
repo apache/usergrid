@@ -23,6 +23,10 @@ function apigee_console_app(Pages, query_params) {
       }
       Usergrid.ApiClient.setApiUrl(query_params.api_url);
   }
+  //Display message page in case there is a a timeout to the API
+  Usergrid.ApiClient.setCallTimeoutCallback(function(){
+    showMessagePage();
+  });
 
   var HIDE_CONSOLE = query_params.hide_console || "";
 
