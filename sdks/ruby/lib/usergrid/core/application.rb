@@ -16,11 +16,22 @@ module Usergrid
       create_entity 'users', user_hash
     end
 
-    # note: collection_name s/b plural!
+    # note: collection_name s/b plural, but the server will change it if not
     def create_entity(collection_name, entity_data)
       self[collection_name].post entity_data
     end
     alias_method :create_entities, :create_entity
+
+    # allow create_something(hash_or_array) method
+    def method_missing(method, *args, &block)
+      method_s = method.to_s
+      if method_s.start_with? 'create_'
+        entity = method_s.split('_')[1]
+        create_entity entity, *args
+      else
+        super method, args, block
+      end
+    end
 
     def users(query=nil, options={})
       self[__method__].query(query, options)
