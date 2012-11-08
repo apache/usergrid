@@ -34,7 +34,8 @@ Or install it yourself as:
 * Add 'gem usergrid_ironhorse' to your Gemfile
 * Create a 'config/usergrid.yml' file that looks something like this (the
 auth_token is your application admin token):
-<pre>
+
+```
 development:
   application_url: http://localhost:8080/my-organization/my-application
   auth_token: YWMtc4WjqhcbEeK6UhQQn9SVgQAAATpryjMnLy9oFaPbP-0qIxoUx_4vtaOmpmE
@@ -46,33 +47,39 @@ development:
 production:
   application_url: http://api.usergrid.com/my-organization/my-application
   auth_token: YWMtc4WjqhcbEeK6UhQQn9SVgQAAATpryjMnLy9oFaPbP-0qIxoUx_4vtaOmpmE
-</pre>
-* Your User model should subclass Usergrid::Ironhorse::Base and extend
-Usergrid::Ironhorse::UserContext like so:
-<pre>
+```
+
+* Your User model should subclass `Usergrid::Ironhorse::Base` and `extend
+Usergrid::Ironhorse::UserContext` like so:
+
+```
 class User < Usergrid::Ironhorse::Base
   extend Usergrid::Ironhorse::UserContext
-
+  ...
 end
-</pre>
+```
+
 * Set up your authentication
 	* Use `User.authenticate(username, password, session)` to login.
 	* Use `User.clear_authentication(session)` to log out.
 * Propogate the authentication in your ApplicationController:
-<pre>
+
+```
 before_filter :set_thread_context
 def set_thread_context
   User.set_thread_context session
 end
-</pre>
+```
+
 * Optionally, if you need to access the User from your view, you may add something
 like the following to your ApplicationController:
-<pre>
+
+```
 helper_method :current_user
 def current_user
   User.current_user
 end
-</pre>
+```
 
 #### Get going!
 
@@ -81,14 +88,16 @@ Your models will automatically be stored in a collection according to the name o
 class as defined by Rails' ActiveModel::Naming module. (Which you may override by
 implementing model_name if desired.)
 
-<pre>
+```
 class Developer < Usergrid::Ironhorse::Base
   validates :name, :presence => true  # Yes, of course you can use validation
 
 end
-</pre>
+```
+
 * Now just use the Rails methods you're already familiar with:
-<pre>
+
+```
 
     dev = Developer.new language: 'Ruby'
     dev.valid? # nope!
@@ -100,15 +109,16 @@ end
     dev.favorite_color = 'green' # assign new attributes automatically
 
     dev = Developer.find_by_name 'Scott'
-</pre>
+```
+
 * BTW: If you need to do management tasks, wrapping the work in an as_admin block
 will use the auth_token from your settings:
 
-<pre>
+```
 User.as_admin do
   # do protected task
 end
-</pre>
+```
 
 ## Contributing
 
