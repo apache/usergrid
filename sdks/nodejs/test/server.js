@@ -37,7 +37,7 @@ handle["/main"] = controller.main;
 
 //initialze the SDK
 var sdk = require("../lib/usergrid-sdk");
-sdk.ApiClient.init('1hotrod', 'nodejs');
+sdk.ApiClient.init('apigee', 'nodejs');
 sdk.ApiClient.setClientSecretCombo('b3U6y6hRJufDEeGW9hIxOwbREg', 'b3U6ZOaOexFiy6Jh61H4M7p2uFI3h18');
 sdk.ApiClient.enableClientSecretAuth();
 
