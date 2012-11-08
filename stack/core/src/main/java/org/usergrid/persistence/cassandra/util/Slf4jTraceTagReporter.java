@@ -13,14 +13,18 @@ public class Slf4jTraceTagReporter implements TraceTagReporter {
     private Logger logger = LoggerFactory.getLogger(Slf4jTraceTagReporter.class);
 
     @Override
-    public void report(TimedOpTag timedOpTag) {
-        logger.info("TraceTag: {} opId: {} opName: {} startTime: {} elapsed: {}",
-                new Object[]{
-                        timedOpTag.getTraceTag().get(),
-                        timedOpTag.getOpTag(),
-                        timedOpTag.getTagName(),
-                        new Date(timedOpTag.getStart()),
-                        timedOpTag.getElapsed()
-                });
+    public void report(TraceTag traceTag) {
+        logger.info("TraceTag: {}", traceTag.getTraceName());
+        for ( TimedOpTag timedOpTag : traceTag ) {
+            logger.info("----opId: {} opName: {} startTime: {} elapsed: {}",
+                            new Object[]{
+                                    timedOpTag.getOpTag(),
+                                    timedOpTag.getTagName(),
+                                    new Date(timedOpTag.getStart()),
+                                    timedOpTag.getElapsed()
+                            });
+        }
+        logger.info("------");
+
     }
 }

@@ -11,20 +11,15 @@ import me.prettyprint.cassandra.connection.HOpTimer;
 public class TaggedOpTimer implements HOpTimer {
 
     private TraceTagManager traceTagManager;
-    private TraceTagReporter traceTagReporter;
 
-    public TaggedOpTimer(TraceTagManager traceTagManager,
-                         TraceTagReporter traceTagReporter) {
+    public TaggedOpTimer(TraceTagManager traceTagManager) {
         this.traceTagManager = traceTagManager;
-        this.traceTagReporter = traceTagReporter;
     }
 
     @Override
     public Object start() {
         // look for our threadLocal. if not present, return this.
-        TraceTag tag = traceTagManager.acquire();
-        // if present, start timer and attach
-        return TimedOpTag.instance(tag);
+        return traceTagManager.timerInstance();
     }
 
     @Override
@@ -32,9 +27,8 @@ public class TaggedOpTimer implements HOpTimer {
         if ( timedOpTag instanceof TimedOpTag ) {
             TimedOpTag t = ((TimedOpTag)timedOpTag);
             t.stopAndApply(opTagName, success);
-            traceTagReporter.report(t);
+            traceTagManager.addTimer(t);
         }
-
     }
 
 

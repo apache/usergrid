@@ -5,6 +5,6 @@ package org.usergrid.persistence.cassandra.util;
  */
 public interface TraceTagReporter {
 
-    void report(TimedOpTag timedOpTag);
+    void report(TraceTag traceTag);
 
 }

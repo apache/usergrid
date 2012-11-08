@@ -25,10 +25,18 @@
 	<bean id="microsecondsTimeResolution"
 		class="me.prettyprint.cassandra.service.clock.MicrosecondsClockResolution" />
 
+    <bean id="traceTagManager" class="org.usergrid.persistence.cassandra.util.TraceTagManager"/>
+    <bean id="traceTagReporter" class="org.usergrid.persistence.cassandra.util.Slf4jTraceTagReporter"/>
+
+    <bean id="taggedOpTimer" class="org.usergrid.persistence.cassandra.util.TaggedOpTimer">
+        <constructor-arg ref="traceTagManager"/>
+    </bean>
+
 	<bean id="cassandraHostConfigurator"
 		class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
 		<constructor-arg value="${cassandra.url}" />
 		<property name="clockResolution" ref="microsecondsTimeResolution" />
+        <property name="opTimer" ref="taggedOpTimer"/>
 	</bean>
 
 	<bean id="cassandraCluster" class="me.prettyprint.cassandra.service.ThriftCluster">

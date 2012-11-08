@@ -13,14 +13,14 @@ import java.util.UUID;
 public class TimedOpTag {
 
     private final UUID opTag;
-    private final TraceTag traceTag;
+    private final String traceTagName;
     private String tagName;
     private long elapsed = 0;
     private boolean status;
 
-    private TimedOpTag(TraceTag traceTag) {
+    private TimedOpTag(TraceTag trace) {
         this.opTag = UUIDUtils.newTimeUUID();
-        this.traceTag = traceTag;
+        this.traceTagName = (trace != null ? trace.getTraceName() : "-NONE-");
     }
 
     /**
@@ -35,15 +35,15 @@ public class TimedOpTag {
 
     /**
      * Apply tagName only if not already applied
-     * @param tagName
+     * @param tName
      */
-    public void stopAndApply(String tagName, boolean opStatus) {
+    public void stopAndApply(String tName, boolean opStatus) {
         if (elapsed == 0) {
             // extract from uuid and calculate
             elapsed = System.currentTimeMillis() - UUIDUtils.getTimestampInMillis(opTag);
         }
-        if ( tagName == null ) {
-            this.tagName = tagName;
+        if ( tName != null ) {
+            this.tagName = tName;
             this.status = opStatus;
         }
 
@@ -78,8 +78,8 @@ public class TimedOpTag {
      * A tag which may span 0 or more operations
      * @return
      */
-    public TraceTag getTraceTag() {
-        return traceTag;
+    public String getTraceTagName() {
+        return traceTagName;
     }
 
     /**

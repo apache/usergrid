@@ -50,7 +50,7 @@ import com.sun.jersey.spi.container.ContainerResponseWriter;
 
 @Component
 public class MeteringFilter implements ContainerRequestFilter,
-		ContainerResponseFilter {
+        ContainerResponseFilter {
 
 	@Context
 	protected HttpServletRequest httpServletRequest;

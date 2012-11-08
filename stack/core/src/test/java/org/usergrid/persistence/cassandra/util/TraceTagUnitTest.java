@@ -19,7 +19,7 @@ public class TraceTagUnitTest {
     public void setup() {
         traceTagManager = new TraceTagManager();
         traceTagReporter = new Slf4jTraceTagReporter();
-        taggedOpTimer = new TaggedOpTimer(traceTagManager,traceTagReporter);
+        taggedOpTimer = new TaggedOpTimer(traceTagManager);
     }
 
     @Test
@@ -30,6 +30,7 @@ public class TraceTagUnitTest {
         Thread.currentThread().sleep(500);
         taggedOpTimer.stop(timedOpTag,"op-tag-name",true);
         assertTrue(timedOpTag.getElapsed() >= 500);
-        assertEquals(traceTag, timedOpTag.getTraceTag());
+        assertEquals(timedOpTag, traceTag.iterator().next());
+
     }
 }
