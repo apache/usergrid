@@ -1,5 +1,6 @@
 package org.usergrid.persistence.cassandra.util;
 
+import com.google.common.base.Objects;
 import org.usergrid.utils.UUIDUtils;
 
 import java.util.UUID;
@@ -98,5 +99,16 @@ public class TimedOpTag {
      */
     public boolean getOpSuccessful() {
         return status;
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("traceTag",traceTagName)
+                .add("opTag",opTag.toString())
+                .add("tagName",tagName)
+                .add("start", getStart())
+                .add("elapsed",elapsed)
+                .toString();
     }
 }

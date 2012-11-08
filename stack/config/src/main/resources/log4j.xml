@@ -6,6 +6,11 @@
             <param value="%d %p (%t) [%c] - %m%n" name="ConversionPattern"/>
         </layout>
     </appender>
+    <appender class="org.apache.log4j.ConsoleAppender" name="tracer">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param value="%m%n" name="ConversionPattern"/>
+        </layout>
+    </appender>
     <logger name="org.apache">
         <level value="error"/>
         <appender-ref ref="stdout"/>
@@ -45,6 +50,10 @@
     <logger name="org.usergrid.rest.security.AllowAjaxFilter">
         <level value="warn"/>
         <appender-ref ref="stdout"/>
+    </logger>
+    <logger name="TraceTagReporter">
+        <level value="info"/>
+        <appender-ref ref="tracer"/>
     </logger>
     <root>
         <level value="info"/>

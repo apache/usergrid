@@ -14,6 +14,16 @@ public class TraceTagManager {
 
     private static ThreadLocal<TraceTag> localTraceTag = new ThreadLocal<TraceTag>();
 
+    private boolean reportAllTags;
+
+    /**
+     * If set to true we log all TimedOpTag objects not attached to a Trace
+     * @param reportAllTags
+     */
+    public void setReportAllTags(boolean reportAllTags) {
+        this.reportAllTags = reportAllTags;
+    }
+
     /**
      * Get the tag from a ThreadLocal. Will return null if no tag is attached.
      * @return
@@ -26,11 +36,18 @@ public class TraceTagManager {
         return TimedOpTag.instance(acquire());
     }
 
+    /**
+     * Add this TimedOpTag to the underlying trace if there is one. Optionally
+     * log it's contents if no trace is active
+     * @param timedOpTag
+     */
     public void addTimer(TimedOpTag timedOpTag) {
-        if ( acquire() != null ) {
+        if ( isActive() ) {
             acquire().add(timedOpTag);
         } else {
-            logger.info("Added TimedOpTag {} but no Trace in progress", timedOpTag);
+            if ( reportAllTags ) {
+                logger.info("Unattached TimedOpTag: {} ", timedOpTag);
+            }
         }
     }
 
@@ -56,9 +73,6 @@ public class TraceTagManager {
         TraceTag traceTag = localTraceTag.get();
         Preconditions.checkState(traceTag != null,"Attempt to detach on no active trace");
         localTraceTag.remove();
-
-
-
         logger.debug("Detached TraceTag {} from thread", traceTag);
         return traceTag;
     }

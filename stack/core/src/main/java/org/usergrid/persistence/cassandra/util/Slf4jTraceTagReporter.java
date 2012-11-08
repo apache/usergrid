@@ -10,7 +10,14 @@ import java.util.Date;
  * @author zznate
  */
 public class Slf4jTraceTagReporter implements TraceTagReporter {
-    private Logger logger = LoggerFactory.getLogger(Slf4jTraceTagReporter.class);
+    private Logger logger;
+
+    public Slf4jTraceTagReporter() {
+        logger = LoggerFactory.getLogger("TraceTagReporter");
+        if ( logger == null ) {
+            logger = LoggerFactory.getLogger(Slf4jTraceTagReporter.class);
+        }
+    }
 
     @Override
     public void report(TraceTag traceTag) {
