@@ -27,6 +27,7 @@
 *  This file contains the main display code for the UI
 */
 function getBody(response, output) {
+  console.log('getting view...');
   response.writeHead(200, {"Content-Type": "text/html"});
   var content = '<!DOCTYPE html>'+
   '<html>'+

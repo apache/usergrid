@@ -2195,12 +2195,12 @@ session = {
         function (output) {
           //didn't get one back, so try to make a new one
           sessionEntity.set('uuid',null);//wipe out the previous uuid
-          session.save_session(request, response, successCallback, failureCallback, true);              
+          session.save_session(response, successCallback, failureCallback, true);              
         }
       );
     } else {
       //make a new session 
-      session.save_session(request, response, successCallback, failureCallback, true);   
+      session.save_session(response, successCallback, failureCallback, true);   
     }
   },
 
@@ -2216,7 +2216,7 @@ session = {
    *  @params {bool} startSession
    *  @return none
    */
-  save_session: function (request, response, successCallback, failureCallback, startSession) {
+  save_session: function (response, successCallback, failureCallback, startSession) {
     sessionEntity.save( 
         function(output) {
           //got the session so store the value for the cookie 

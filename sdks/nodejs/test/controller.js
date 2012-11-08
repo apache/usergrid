@@ -104,8 +104,21 @@ function _delete(response, sdk, view, path) {
 function _login(response, sdk, view, username, password) {
   sdk.ApiClient.logInAppUser(username, password,
     function (output, user) {
-      //the sdk automatically saves the user to the session, so not much to do here
-      view.getBody(response, prepareOutput(output));                 
+      //call was good, so populate the view
+      view.getBody(response, prepareOutput(output));  
+      
+      //just for kicks, we will save a timestamp in the session, so you can see how to do it
+      var timestamp = new Date().getTime()
+      sdk.session.setItem('useless_timestamp', timestamp);
+      
+      //this login call pulled back a user object and a token, so we need to save the session
+      sdk.session.save_session(response, 
+        function(){
+          console.log("Session saved...");
+        }, 
+        function(){
+          console.log("Could not save session..."); 
+        })               
     },
     function (output) {
       view.getBody(response, prepareOutput(output)); 

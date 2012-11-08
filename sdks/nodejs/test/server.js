@@ -83,17 +83,7 @@ function start(route, handle) {
             console.log("Session started, routing...");
             //process the request
             route(handle, pathname, querydata, response, sdk);  
-            
-            sdk.session.save_session(request, response, 
-              function(){
-                console.log("Session saved...");
-                response.end();
-              }, 
-              function(){
-                console.log("Could not save session..."); 
-                response.end();
-              })
-            
+                     
             console.log("route finished");  
           },
           function () {
