@@ -22,7 +22,7 @@ Use the Javacript SDK if you are building an HTML5 / Javascript app that runs cl
 ##Installing
 To install the Usergrid Node.js SDK, use the NPM:
 
-	node install usergrid-sdk
+	$ npm install usergrid-sdk
 
 Or visit the github repo:
 
