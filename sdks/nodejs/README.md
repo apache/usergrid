@@ -65,7 +65,7 @@ Then, make sure you navigate into the test directory:
 
 And run the command to start the server:
 
-	node server.js
+	$ node server.js
 
 This will start the node server. If it was successful, you should see the following on the command line:
 
@@ -370,7 +370,7 @@ In the sample app, this method is called on every page load.  However, in a prod
 ## Contributing
 We welcome your enhancements!
 
-Like [Usergrid](https://github.com/apigee/usergrid-stack), the Usergrid Javascript SDK is open source and licensed under the Apache License, Version 2.0.
+Like [Usergrid](https://github.com/apigee/usergrid-stack), the Usergrid Node SDK is open source and licensed under the Apache License, Version 2.0.
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
