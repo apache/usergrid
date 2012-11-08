@@ -2556,7 +2556,7 @@ function apigee_console_app(Pages, query_params) {
     //make a new query object
     queryObj = new Usergrid.Query(null);
     //bind events for previous and next buttons
-    bindPagingEvents('roles', getPreviousRoles, getNextRoles);
+    bindPagingEvents('roles');
     //reset paging so we start at the first page
     queryObj.resetPaging();
     //the method to get the compile and call the query
@@ -2578,7 +2578,7 @@ function apigee_console_app(Pages, query_params) {
     var query = {};
     if (roleLetter != "*") query = {"ql" : roleSortBy + "='" + groupLetter + "*'"};
 
-    var queryObj = new Usergrid.Query("GET", "roles", null, query, getRolesCallback, function() { alertModal("Error", "Unable to retrieve roles."); });
+    queryObj = new Usergrid.Query("GET", "roles", null, query, getRolesCallback, function() { alertModal("Error", "Unable to retrieve roles."); });
     runAppQuery(queryObj);
     return false;
   }
