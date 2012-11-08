@@ -14,14 +14,46 @@ public class TraceTagManager {
 
     private static ThreadLocal<TraceTag> localTraceTag = new ThreadLocal<TraceTag>();
 
-    private boolean reportAllTags;
+    private boolean traceEnabled;
+
+    private boolean reportUnattached;
+
+    private boolean explicitOnly;
+
+    /**
+     * Enable tracing. Off by default.
+     * @param traceEnabled
+     */
+    public void setTraceEnabled(boolean traceEnabled) {
+        this.traceEnabled = traceEnabled;
+    }
+
+    public boolean getTraceEnabled() {
+        return traceEnabled;
+    }
 
     /**
      * If set to true we log all TimedOpTag objects not attached to a Trace
-     * @param reportAllTags
+     * @param reportUnattached
      */
-    public void setReportAllTags(boolean reportAllTags) {
-        this.reportAllTags = reportAllTags;
+    public void setReportUnattached(boolean reportUnattached) {
+        this.reportUnattached = reportUnattached;
+    }
+
+    /**
+     * Allow for/check against traces in piecemeal. Use this when
+     * {@link #setTraceEnabled(boolean)} is set to false and you want callers
+     * to control whether or not to initiate a trace. An example would be
+     * initiating traces in a ServletFilter by looking for a header or parameter
+     * as tracing all requests would be expensive.
+     * @return
+     */
+    public boolean getExplicitOnly() {
+        return explicitOnly;
+    }
+
+    public void setExplicitOnly(boolean explicitOnly) {
+        this.explicitOnly = explicitOnly;
     }
 
     /**
@@ -45,7 +77,7 @@ public class TraceTagManager {
         if ( isActive() ) {
             acquire().add(timedOpTag);
         } else {
-            if ( reportAllTags ) {
+            if (reportUnattached) {
                 logger.info("Unattached TimedOpTag: {} ", timedOpTag);
             }
         }
