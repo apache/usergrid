@@ -40,6 +40,12 @@ module Usergrid
       "resource: #{url}\ndata: #{data}"
     end
 
+    def to_json(*args)
+      data.except(RESERVED).to_json *args
+    end
+    alias :encode :to_json
+    alias :dump :to_json
+
     private
 
     def method_missing(method, *args, &block)

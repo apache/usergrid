@@ -3,8 +3,9 @@ require 'rest_client'
 module Usergrid
   class Resource < RestClient::Resource
 
+    RESERVED = %w( created modified metadata uri )
     DEFAULT_API_URL = 'https://api.usergrid.com'
-    TYPE_HEADERS = { :content_type => :json, :accept => :json }
+    TYPE_HEADERS = { content_type: :json, accept: :json }
 
     attr_reader :current_user, :api_url
 
@@ -92,12 +93,12 @@ module Usergrid
     end
 
     def post(payload, additional_headers={}, &block)
-      payload = MultiJson.dump(payload) if payload.is_a?(Hash) || payload.is_a?(Array)
+      payload = MultiJson.dump(payload) unless payload.is_a? String
       self.response = super payload, additional_headers, &block
     end
 
     def put(payload, additional_headers={}, &block)
-      payload = MultiJson.dump(payload) if payload.is_a?(Hash) || payload.is_a?(Array)
+      payload = MultiJson.dump(payload) unless payload.is_a? String
       self.response = super payload, additional_headers, &block
     end
 

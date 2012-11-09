@@ -46,4 +46,10 @@ describe Usergrid::Entity do
     @application['foobars'].get.entity.should be_nil
   end
 
+  it "should not serialize reserved attributes" do
+    dump = MultiJson.dump @user
+    hash = MultiJson.load dump
+    Usergrid::Resource::RESERVED.each { |a| hash.should_not have_key(a) }
+  end
+
 end
