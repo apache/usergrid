@@ -158,8 +158,10 @@ usergrid_iron/spec/spec_settings.yaml to match.)
 ### 0.0.5
 * New features
   1. added create_* method for application
+* Backend changes
+  1. eliminated serialization of reserved attributes
 * Incompatible changes
-  1. deprecated (Application::create_user username, password, ...) method
+  1. deprecated `Application::create_user username, password, ...`, use `create_user username: 'user', password: 'password'`
 
 ### 0.0.4
 * New features
