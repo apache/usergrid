@@ -101,7 +101,7 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
         uri : (entity.metadata || { }).uri
       }
 
-      if(entity.type === 'user'){
+      if(entity.type === 'user' || entity.picture){
         if (!entity.picture) {
           entity.picture = "/images/user_profile.png"
         } else {
