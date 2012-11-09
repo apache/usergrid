@@ -93,20 +93,25 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
         name = name + " : " + entity.username;
       }
 
-      if (!entity.picture) {
-        entity.picture = "/images/user_profile.png"
-      } else {
-        entity.picture = entity.picture + "?d=http://" + window.location.host + window.location.pathname + "images/user_profile.png"
-      }
-
-      return $.tmpl("apigee.ui.collections.entity.header.html", {
+      var collections = {
         entity : entity,
         name : name,
-        picture: entity.picture,
         path : this.options.path,
         collections : !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections),
         uri : (entity.metadata || { }).uri
-      });
+      }
+
+      if(entity.type === 'user'){
+        if (!entity.picture) {
+          entity.picture = "/images/user_profile.png"
+        } else {
+          entity.picture = entity.picture + "?d=http://" + window.location.host + window.location.pathname + "images/user_profile.png"
+        }
+        collections['picture'] = entity.picture;
+      }
+
+      return $.tmpl("apigee.ui.collections.entity.header.html",
+        collections);
 
     },
 
