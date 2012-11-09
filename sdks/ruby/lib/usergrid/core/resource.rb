@@ -59,10 +59,17 @@ module Usergrid
     end
 
     def entity
+      get unless response
       response.entity
     end
 
+    def entities
+      get unless response
+      response.entities
+    end
+
     def collection
+      get unless response
       Collection.new url, api_url, options, response
     end
 

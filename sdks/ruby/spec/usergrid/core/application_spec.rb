@@ -10,10 +10,16 @@ describe Usergrid::Application do
     delete_application @application
   end
 
+  it "should be able to create a user using deprecated syntax" do
+    random = SecureRandom.hex
+    response = @application.create_user "username_#{random}", 'password'
+    response.entity.uuid.should_not be_nil
+  end
+
   it "should be able to create, login, and delete a user" do
     random = SecureRandom.hex
     application = Usergrid::Application.new @application.url # create application resource that's not logged in
-    response = application.create_user "username_#{random}", 'password'
+    response = application.create_user username: "username_#{random}", password: 'password'
     entity = response.entity
     application.login "username_#{random}", 'password'
     begin
@@ -252,9 +258,7 @@ describe Usergrid::Application do
   end
 
   it "should be able to create a new collection and access it" do
-    entities = (1..4).collect do |i|
-      { name: "test_#{i}" }
-    end
+    entities = (1..4).collect { |i| { name: "test_#{i}" } }
     @application.create_entities 'tests', entities
     response = @application['tests'].get
     collection = response.collection
@@ -262,13 +266,32 @@ describe Usergrid::Application do
   end
 
   it "should be able to create a new collection via create_ method and access it" do
-    entities = (1..4).collect do |i|
-      { name: "test_#{i}" }
-    end
+    entities = (1..4).collect { |i| { name: "test_#{i}" } }
     @application.create_moretests entities
-    response = @application['moretests'].get
+    response = @application['tests'].get
     collection = response.collection
     collection.size.should eq 4
+  end
+
+  it "should be able to access a collection without calling get" do
+    entities = (1..4).collect { |i| { name: "test_#{i}" } }
+    @application.create_entities 'tests', entities
+    collection = @application['tests'].collection
+    collection.size.should eq 4
+  end
+
+  it "should be able to access entities without calling get" do
+    entities = (1..4).collect { |i| { name: "test_#{i}" } }
+    @application.create_entities 'tests', entities
+    entities = @application['tests'].entities
+    entities.size.should eq 4
+  end
+
+  it "should be able to query using dot notation" do
+    entities = (1..4).collect { |i| { name: "test_#{i}" } }
+    @application.create_btests entities
+    entities = @application.btests("name = 'test_1'").entities
+    entities.size.should eq 1
   end
 
 end

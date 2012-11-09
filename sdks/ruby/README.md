@@ -47,7 +47,7 @@ application = Usergrid::Application.new "#{usergrid_api}/#{organization}/#{appli
 application.login username, password
 
 # create and store a dog in the 'dogs' collection on the server
-response = application.create_entity 'dogs', { breed: 'Black Mouth Cur', name: 'Old Yeller' }
+response = application.create_dog breed: 'Black Mouth Cur', name: 'Old Yeller'
 
 # let's get the dog from the response and grab its persistent id
 dog = response.entity
@@ -89,7 +89,7 @@ you shouldn't need to do anything!)
   new_application = organization.create_application app_name
 
   # create an user for our application
-  new_application.create_user 'username', 'password'
+  new_application.create_user username: 'username', password: 'password'
 
 
   ## now we can play with the puppies! ##
@@ -99,10 +99,11 @@ you shouldn't need to do anything!)
   application.login 'username', 'password'
 
   # we can start with our dog again
-  application.create_entity 'dogs', { breed: 'Black Mouth Cur', name: 'Old Yeller' }
+  application.create_dog breed: 'Black Mouth Cur', name: 'Old Yeller'
 
   # but this time let's create several more dogs at once
-  application.create_entities 'dogs', [{ breed: 'Catalan sheepdog', name: 'Einstein' },
+  application.create_dogs [
+      { breed: 'Catalan sheepdog', name: 'Einstein' },
       { breed: 'Cocker Spaniel', name: 'Lady' },
       { breed: 'Mixed', name: 'Benji' }]
 
@@ -122,7 +123,7 @@ you shouldn't need to do anything!)
 
   # query for the dogs that are home (should just be Benji)
   dogs = application['dogs'].query("select * where location = 'home'").collection
-  if dogs.size == 1 && dogs.first == 'home'
+  if dogs.size == 1 && dogs.first.location == 'home'
     puts "Benji's home!"
   end
 
@@ -153,6 +154,12 @@ usergrid_iron/spec/spec_settings.yaml to match.)
 
 
 ## Release notes
+
+### 0.0.5
+* New features
+  1. added create_* method for application
+* Incompatible changes
+  1. deprecated (Application::create_user username, password, ...) method
 
 ### 0.0.4
 * New features
