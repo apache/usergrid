@@ -1037,7 +1037,7 @@ Collection.prototype.clearQuery = function (){
  *  @param {function} errorCallback
  *  @return none
  */
-Collection.prototype.get = function (successCallback, errorCallback){
+Collection.prototype.fetch = function (successCallback, errorCallback){
   var self = this;
   var queryParams = this.getQueryParams();
   //empty the list
