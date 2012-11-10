@@ -48,7 +48,7 @@ sdk.session.garbage_collection(
     console.log('Garbage collection completed'); 
   },function(error){
     //could not perform garbage collection
-    console.log('Error: Garbage collection failed, or nothing to delete'); 
+    console.log('Garbage collection - nothing to delete'); 
   }
 );
 
