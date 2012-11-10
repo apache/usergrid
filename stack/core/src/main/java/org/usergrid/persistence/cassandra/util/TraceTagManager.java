@@ -76,6 +76,7 @@ public class TraceTagManager {
     public void addTimer(TimedOpTag timedOpTag) {
         if ( isActive() ) {
             acquire().add(timedOpTag);
+            // if TraceTag#metered, send to meter by tag name
         } else {
             if (reportUnattached) {
                 logger.info("Unattached TimedOpTag: {} ", timedOpTag);
@@ -115,5 +116,9 @@ public class TraceTagManager {
      */
     public TraceTag create(String tagName) {
         return TraceTag.getInstance(UUIDUtils.newTimeUUID(), tagName);
+    }
+
+    public TraceTag createMetered(String tagName) {
+        return TraceTag.getMeteredInstance(UUIDUtils.newTimeUUID(), tagName);
     }
 }
