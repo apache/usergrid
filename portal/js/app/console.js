@@ -4331,26 +4331,10 @@ function apigee_console_app(Pages, query_params) {
     $('#login-message').hide();
     $('#login-email').val("");
     $('#login-password').val("");
-    repositionTitleMenus();
     Pages.ShowPage('console');
-    $(window).resize(repositionTitleMenus);
   }
 
   Usergrid.console.loginOk = loginOk;
-
-  function repositionTitleMenus(){
-    var leftMenu = $(".left-header");
-    var rightMenu = $(".right-header");
-    var columnOffset = $("#pages").offset();
-    var columnWidth = $("#pages").width();
-    var windowWidth = $(window).width();
-    leftMenu.css('margin-left', function(){
-      return columnOffset.left;
-    });
-    rightMenu.css('margin-right', function(){
-      return windowWidth - (columnWidth + columnOffset.left);
-    })
-  }
 
   //load the templates only after the rest of the page is
   $(window).bind("load", function() {
