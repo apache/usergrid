@@ -430,7 +430,9 @@ Usergrid.SDK_VERSION = '0.9.9';
   Usergrid.Entity = function(collectionType, uuid) {
     this._collectionType = collectionType;
     this._data = {};
-    this._uuid = uuid;
+    if (uuid) {
+      this._data['uuid'] = uuid;
+    }
   };
 
   //inherit prototype from Query
@@ -483,11 +485,15 @@ Usergrid.SDK_VERSION = '0.9.9';
    */
   Usergrid.Entity.prototype.set = function (item, value){
     if (typeof item === 'object') {
-      for(field in item) {
+      for(var field in item) {
         this._data[field] = item[field];
       }
     } else if (typeof item === 'string') {
-      this._data[item] = value;
+      if (value === null) {
+        delete this._data[item];
+      } else {
+        this._data[item] = value;
+      }
     } else {
       this._data = null;
     }
@@ -1150,6 +1156,7 @@ Usergrid.ApiClient = (function () {
   var _queryType = null;
   var _loggedInUser = null;
   var _logoutCallback = null;
+  var _callTimeoutCallback = null;
 
   /*
    *  A method to set up the ApiClient with orgname and appname
@@ -1304,6 +1311,44 @@ Usergrid.ApiClient = (function () {
    */
   function setCallTimeout(callTimeout) {
     _callTimeout = callTimeout;
+  }
+  
+  /*
+   * Returns the call timeout callback function
+   *
+   * @public
+   * @method setCallTimeoutCallback
+   * @return none
+   */ 
+  function setCallTimeoutCallback(callback) {
+    _callTimeoutCallback = callback; 
+  }
+  
+  /*
+   * Returns the call timeout callback function
+   *
+   * @public
+   * @method getCallTimeoutCallback
+   * @return {function} Returns the callTimeoutCallback
+   */
+  function getCallTimeoutCallback() {
+    return _callTimeoutCallback; 
+  }
+  
+  /*
+   * Calls the call timeout callback function
+   *
+   * @public
+   * @method callTimeoutCallback
+   * @return {boolean} Returns true or false based on if there was a callback to call
+   */
+  function callTimeoutCallback(response) {
+    if (_callTimeoutCallback && typeof(_callTimeoutCallback) === "function") {
+      _callTimeoutCallback(response);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /*
@@ -1700,8 +1745,13 @@ Usergrid.ApiClient = (function () {
     var timeout = setTimeout(
       function() { 
         xhr.abort(); 
-        Query.callFailureCallback('API CALL TIMEOUT');
-      }, Usergrid.ApiClient.getCallTimeout()); //set for 30 seconds
+        if (Usergrid.ApiClient.getCallTimeoutCallback() === 'function') {
+          Usergrid.ApiClient.callTimeoutCallback('API CALL TIMEOUT');
+        } else {
+          Query.callFailureCallback('API CALL TIMEOUT');
+        }        
+      }, 
+      Usergrid.ApiClient.getCallTimeout()); //set for 30 seconds
 
     xhr.send(jsonObj);
   }
@@ -1757,6 +1807,9 @@ Usergrid.ApiClient = (function () {
     setToken:setToken,
     getCallTimeout:getCallTimeout,
     setCallTimeout:setCallTimeout,
+    getCallTimeoutCallback:getCallTimeoutCallback,
+    setCallTimeoutCallback:setCallTimeoutCallback,
+    callTimeoutCallback:callTimeoutCallback,
     getApiUrl:getApiUrl,
     setApiUrl:setApiUrl,
     getResetPasswordUrl:getResetPasswordUrl,
