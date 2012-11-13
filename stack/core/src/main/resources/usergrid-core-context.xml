@@ -119,19 +119,15 @@
     <bean id="traceTagAspect" class="org.usergrid.persistence.cassandra.util.TraceTagAspect"/>
 
     <aop:config>
-
-      <aop:aspect id="traceBatchCreate" ref="traceTagAspect">
-
-        <aop:pointcut id="emBatchCreate"
+      <aop:aspect id="traceParticipant" ref="traceTagAspect">
+        <!-- pointcut on the prescense of the TraceParticipant annotation only -->
+        <aop:pointcut id="emTraceParticipant"
             expression="execution(* org.usergrid.persistence.cassandra.EntityManagerImpl.*(..)) and
             @annotation(org.usergrid.persistence.cassandra.util.TraceParticipant)"/>
-
         <aop:around
-           pointcut-ref="emBatchCreate"
+           pointcut-ref="emTraceParticipant"
            method="applyTrace"/>
-
       </aop:aspect>
-
     </aop:config>
 
 </beans>

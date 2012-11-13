@@ -19,7 +19,7 @@ public class TraceTagAspect {
 
     public Object applyTrace(ProceedingJoinPoint pjp) throws Throwable {
         String tagName = pjp.toLongString();
-        logger.debug("Applyng trace on {}", tagName);
+        logger.info("Applyng trace on {}", tagName);
         TimedOpTag timedOpTag = traceTagManager.timerInstance();
         boolean success = true;
         try {
@@ -30,7 +30,7 @@ public class TraceTagAspect {
         } finally {
             timedOpTag.stopAndApply(tagName,success);
             traceTagManager.addTimer(timedOpTag);
-            logger.debug("TimedOpTag added in Aspect on {}", tagName);
+            logger.info("TimedOpTag added in Aspect on {}", tagName);
         }
 
     }
