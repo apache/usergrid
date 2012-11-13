@@ -322,10 +322,12 @@ function apigee_console_app(Pages, query_params) {
         if ($.isEmptyObject(entity_path)) {
           entity_path = path + "/" ;
         }
-        if(entity.type === "user"){
+        if(entity.type === "user") {
           $('#query-path').val(response.path + '/' + entity.username + '/');
-        } else {
+        } else if (entity.name) {
           $("#query-path").val(response.path + '/' + entity.name + '/');
+        } else {
+          $('#query-path').val(response.path + '/');
         }
         t = '<div class="query-result-row entity_detail" id="query-result-detail" data-entity-type="'
           + entity.type
@@ -3589,18 +3591,20 @@ function apigee_console_app(Pages, query_params) {
     list.push(response.path);
     $.each(response.entities, function(entityKey, entityValue){
       if ( entityValue.type === 'user'){
-        name = entityValue.username;
+        name = entityValue.username + '/';
+      } else if (entityValue.name) {
+        name = entityValue.name + '/';
       } else {
-        name = entityValue.name;
+        name = entityValue.uuid + '/';
       }
       //Fill collection names
-      list.push(response.path + '/' + name + '/');
+      list.push(response.path + '/' + name);
       $.each(entityValue.metadata.collections, function(key, value){
-          list.push(response.path + '/' + name + '/' + key);
+          list.push(response.path + '/' + name + key);
         });
       //Fill Sets
       $.each(entityValue.metadata.sets, function(key, value){
-        list.push(response.path + '/' + name + '/' + key);
+        list.push(response.path + '/' + name + key);
       })
     });
     //TODO: Possible cleanup here, could not set the options via pathInput.typeahead.options, so overriding variables directly
