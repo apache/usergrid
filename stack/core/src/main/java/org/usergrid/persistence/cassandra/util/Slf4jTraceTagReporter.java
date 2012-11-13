@@ -6,7 +6,12 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 
 /**
- * Simple reporter which dumps to class logger at info level
+ * Simple reporter which dumps to class logger at info level.
+ *
+ * You can configure a logger with the name "TraceTagReporter"
+ * explicitly which, if not in a logging context, then the
+ * class level logger will be used.
+ *
  * @author zznate
  */
 public class Slf4jTraceTagReporter implements TraceTagReporter {
@@ -33,5 +38,10 @@ public class Slf4jTraceTagReporter implements TraceTagReporter {
         }
         logger.info("------");
 
+    }
+
+    @Override
+    public void reportUnattached(TimedOpTag timedOpTag) {
+        logger.info("--[unattached]-- {}", timedOpTag);
     }
 }

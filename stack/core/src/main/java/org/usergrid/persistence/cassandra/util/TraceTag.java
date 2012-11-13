@@ -55,4 +55,19 @@ public class TraceTag implements Iterable<TimedOpTag> {
     public Iterator iterator() {
         return timedOps.iterator();
     }
+
+    /**
+     * The number of {@link TimedOpTag} instances currently held
+     * @return
+     */
+    public int getOpCount() {
+        return timedOps.size();
+    }
+
+    /**
+     * Remove the currently held {@link TimedOpTag} instances
+     */
+    public void removeOps() {
+        timedOps.clear();
+    }
 }

@@ -7,4 +7,6 @@ public interface TraceTagReporter {
 
     void report(TraceTag traceTag);
 
+    void reportUnattached(TimedOpTag timedOpTag);
+
 }
