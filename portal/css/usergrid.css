@@ -3590,8 +3590,6 @@ html {
   /* center, not in IE5 */
 
   height: auto !important;
-  /* real browsers */
-
   min-height: 100%;
   /* real browsers */
 
@@ -3773,7 +3771,7 @@ a:active {
   left: 5px;
   width: 155px;
 }
-.nav-list  > li > a {
+.nav-list > li > a {
   text-align: left;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -4325,10 +4323,10 @@ a:active {
   background-image: -o-linear-gradient(top, #ff4300, #ff0303);
   background-image: linear-gradient(top, #ff4300, #ff0303);
   background-repeat: repeat-x;
-  filter: progid:dximagetransform.microsoft.gradient(startColorstr='@apigeeOrange', endColorstr='@apigeeNavSelection', GradientType=0);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='@apigeeOrange', endColorstr='@apigeeNavSelection', GradientType=0);
   border-color: #C84B27 #C84B27 #ad6704;
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-  filter: progid:dximagetransform.microsoft.gradient(enabled=false);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
 }
 .btn-usergrid:hover,
 .btn-usergrid:active,
@@ -4874,4 +4872,7 @@ table .zebraRows:nth-child(2n) {
   text-overflow: ellipsis;
   white-space: nowrap;
   margin-left: 5px;
+}
+.dropdown-menu {
+  max-width: 700px;
 }
