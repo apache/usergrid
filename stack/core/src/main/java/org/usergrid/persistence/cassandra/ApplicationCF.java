@@ -78,7 +78,7 @@ public enum ApplicationCF implements CFEnum {
 	/**
 	 * Unique index for properties that must remain the same 		
 	 */
-    ENTITY_UNIQUE("Entity_Unique", "UUIDType"),
+   ENTITY_UNIQUE("Entity_Unique", "UUIDType"),
 
 	/**
 	 * Contains all properties that have ever been indexed for an entity
