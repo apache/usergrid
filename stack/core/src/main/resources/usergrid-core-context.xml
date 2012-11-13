@@ -123,7 +123,8 @@
       <aop:aspect id="traceBatchCreate" ref="traceTagAspect">
 
         <aop:pointcut id="emBatchCreate"
-            expression="execution(* org.usergrid.persistence.cassandra.EntityManagerImpl.*(..))"/>
+            expression="execution(* org.usergrid.persistence.cassandra.EntityManagerImpl.*(..)) and
+            @annotation(org.usergrid.persistence.cassandra.util.TraceParticipant)"/>
 
         <aop:around
            pointcut-ref="emBatchCreate"

@@ -151,6 +151,7 @@ import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.SimpleRoleRef;
 import org.usergrid.persistence.TypedEntity;
 import org.usergrid.persistence.cassandra.CounterUtils.AggregateCounterSelection;
+import org.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.entities.Event;
 import org.usergrid.persistence.entities.Group;
@@ -906,6 +907,7 @@ public class EntityManagerImpl implements EntityManager {
 	}
 
 	@Override
+    @TraceParticipant
 	public Entity create(String entityType, Map<String, Object> properties)
 			throws Exception {
 		return create(entityType, null, properties);
@@ -931,6 +933,7 @@ public class EntityManagerImpl implements EntityManager {
 	 *             the exception
 	 */
   @Metered(group="core",name="EntityManager_create")
+  @TraceParticipant
 	public <A extends Entity> A create(String entityType, Class<A> entityClass,
 			Map<String, Object> properties, UUID importId) throws Exception {
 
