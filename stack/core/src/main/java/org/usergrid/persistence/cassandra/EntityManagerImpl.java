@@ -169,6 +169,8 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.yammer.metrics.annotation.Metered;
 
+import javax.annotation.Resource;
+
 /**
  * Cassandra-specific implementation of Datastore
  * 
@@ -183,19 +185,19 @@ public class EntityManagerImpl implements EntityManager {
     public static final String APPLICATION_COLLECTION = "application.collection.";
     public static final String APPLICATION_ENTITIES = "application.entities";
     public static final long ONE_COUNT = 1L;
-
+    @Resource
     private EntityManagerFactoryImpl emf;
-    
+    @Resource
 	private QueueManagerFactoryImpl qmf;
-
+    @Resource
 	private IndexBucketLocator indexBucketLocator;
 
 	private UUID applicationId;
 
     private Application application;
-
+    @Resource
 	private CassandraService cass;
-
+    @Resource
 	private CounterUtils counterUtils;
 
     private boolean skipAggregateCounters;
@@ -226,6 +228,10 @@ public class EntityManagerImpl implements EntityManager {
         }
 		return this;
 	}
+
+    public void setApplicationId(UUID applicationId) {
+        this.applicationId = applicationId;
+    }
 
     public ApplicationContext getApplicationContext() {
         return emf.applicationContext;

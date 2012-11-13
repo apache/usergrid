@@ -2,8 +2,9 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
 	xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
-	xmlns:hz="http://www.hazelcast.com/schema/config"
+	xmlns:hz="http://www.hazelcast.com/schema/config" xmlns:aop="http://www.springframework.org/schema/aop"
 	xsi:schemaLocation="
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
@@ -114,5 +115,22 @@
     <bean id="entityManager" class="org.usergrid.persistence.cassandra.EntityManagerImpl" scope="prototype"/>
 
     <bean id="relationManager" class="org.usergrid.persistence.cassandra.RelationManagerImpl" scope="prototype"/>
+
+    <bean id="traceTagAspect" class="org.usergrid.persistence.cassandra.util.TraceTagAspect"/>
+
+    <aop:config>
+
+      <aop:aspect id="traceBatchCreate" ref="traceTagAspect">
+
+        <aop:pointcut id="emBatchCreate"
+            expression="execution(* org.usergrid.persistence.cassandra.EntityManagerImpl.*(..))"/>
+
+        <aop:around
+           pointcut-ref="emBatchCreate"
+           method="applyTrace"/>
+
+      </aop:aspect>
+
+    </aop:config>
 
 </beans>

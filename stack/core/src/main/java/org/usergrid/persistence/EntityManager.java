@@ -31,6 +31,8 @@ import org.usergrid.persistence.entities.Role;
  */
 public interface EntityManager {
 
+    public void setApplicationId(UUID applicationId);
+
     public EntityRef getApplicationRef();
 
     public Application getApplication() throws Exception;
