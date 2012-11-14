@@ -35,14 +35,14 @@ var handle = {}
 handle["/"] = controller.main;
 handle["/main"] = controller.main;
 
-//initialze the SDK
-var sdk = require("../lib/usergrid-sdk");
-sdk.ApiClient.init('apigee', 'nodejs');
-sdk.ApiClient.setClientSecretCombo('b3U6y6hRJufDEeGW9hIxOwbREg', 'b3U6ZOaOexFiy6Jh61H4M7p2uFI3h18');
-sdk.ApiClient.enableClientSecretAuth();
+//initialze the Module
+var usergrid = require("../lib/usergrid");
+usergrid.ApiClient.init('apigee', 'nodejs');
+usergrid.ApiClient.setClientSecretCombo('b3U6y6hRJufDEeGW9hIxOwbREg', 'b3U6ZOaOexFiy6Jh61H4M7p2uFI3h18');
+usergrid.ApiClient.enableClientSecretAuth();
 
 //call garbage collection
-sdk.session.garbage_collection(
+usergrid.session.garbage_collection(
   function(){
     //do something here
     console.log('Garbage collection completed'); 
@@ -77,12 +77,12 @@ function start(route, handle) {
       default:
         console.log("Request for " + pathname + " received.");
         //try to start the session
-        sdk.session.start_session(request, response, 
+        usergrid.session.start_session(request, response, 
           function () {
             //session was started successfully
             console.log("Session started, routing...");
             //process the request
-            route(handle, pathname, querydata, response, sdk);  
+            route(handle, pathname, querydata, response, usergrid);  
                      
             console.log("route finished");  
           },

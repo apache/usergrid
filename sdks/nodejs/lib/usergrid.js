@@ -1,5 +1,5 @@
 /**
- *  App SDK is a collection of classes designed to make working with
+ *  This package is a collection of classes designed to make working with
  *  the Appigee App Services API as easy as possible.
  *  Learn more at http://apigee.com/docs/usergrid
  *

@@ -1,7 +1,7 @@
 ##Overview
-Apigee provides this Node.js SDK, which simplifies the process of making API calls to App Services from within Node.js. The Apigee App Services Node.js SDK is available as an open-source project in github and we welcome your contributions and suggestions. The repository is located at:
+Apigee provides this Node.js package, which simplifies the process of making API calls to App Services from within Node.js. The Apigee App Services Node.js package is available as an open-source project in github and we welcome your contributions and suggestions. The repository is located at:
 
-<https://github.com/apigee/usergrid-node-js-sdk>
+<https://github.com/apigee/usergrid-node-package>
 
 To find out more about Apigee App Services, see:
 
@@ -12,43 +12,36 @@ To view the Apigee App Services documentation, see:
 <http://apigee.com/docs/usergrid/>
 
 
-##Standard Javascript SDK
-Are you looking for our Standard Javascript SDK?  Find the repo here:
-
-<https://github.com/apigee/usergrid-javascript-sdk>
-
-Use the Javacript SDK if you are building an HTML5 / Javascript app that runs client-side (in a browser or on a platform like PhoneGap or Trigger.io).
-
 ##Installing
-To install the Usergrid Node.js SDK, use the NPM:
+To install the Usergrid Node.js package, use the Node Package Manager:
 
-	$ npm install usergrid-sdk
+	$ npm install usergrid
 
 Or visit the github repo:
 
-<https://github.com/apigee/usergrid-node-js-sdk>
+<https://github.com/apigee/usergrid-node-package>
 
 
 ##Getting started
-To get you started, please note that the SDK consists of one main JavaScript file, located in the project at:
+To get you started, please note that the package consists of one main JavaScript file, located in the project at:
 
-	/lib/usergrid-sdk.js
+	/lib/usergrid.js
 
-Simply include the SDK to begin to use it:
+Simply include the package to begin to use it:
 
-	var sdk = require('usergrid-sdk');
+	var usergrid = require('usergrid');
 
 Then initialize it with your app and org id:
 
-	sdk.ApiClient.init('apigee', 'nodejs');
+	usergrid.ApiClient.init('apigee', 'nodejs');
 
-You are now ready to use the sdk handle to make calls against the API.  For example, you may want to set your client id and Secret:
+You are now ready to use the usergrid handle to make calls against the API.  For example, you may want to set your client id and Secret:
 
-	sdk.ApiClient.setClientSecretCombo('b3U6y6hRJufDEeGW9hIxOwbREg', 'b3U6ZOaOexFiy6Jh61H4M7p2uFI3h18');
+	usergrid.ApiClient.setClientSecretCombo('b3U6y6hRJufDEeGW9hIxOwbREg', 'b3U6ZOaOexFiy6Jh61H4M7p2uFI3h18');
 
 If you are using the client secret and id, you will also want to enable that (client) authentication method:
 
-	sdk.ApiClient.enableClientSecretAuth();
+	usergrid.ApiClient.enableClientSecretAuth();
 
 Now calls made against the API will pass the client secret and id combo for authentication on each request.  This is secure since it is happening server-side.
 
@@ -94,9 +87,9 @@ The API calls are all triggered in the `controller.js` file, in the "main" funct
 ###To log a user in
 To log app users in, use the Usergrid.ApiClient.logInAppUser() method.  This method takes the supplied username and password and attempts to acquire an access token from the API.  If the method successfully acquires the token, the token is stored in the Usergrid.ApiClient singleton and will be used for all subsequent calls. 
 
-	sdk.ApiClient.logInAppUser(username, password,
+	usergrid.ApiClient.logInAppUser(username, password,
 		function (output, user) {
-			//token has been automatically saved by the SDK
+			//token has been automatically saved by the usergrid
 			//do something with the return value "output" here       
 		},
 		function (output) {
@@ -107,34 +100,34 @@ To log app users in, use the Usergrid.ApiClient.logInAppUser() method.  This met
 
 After the user is successfully logged in, their access token will be stored and can used for future calls. To do this, first set the access method:
 
-	sdk.ApiClient.enableUserAuth();
+	usergrid.ApiClient.enableUserAuth();
 
 After this statement is called, any future calls will attempt to use the user token instead of the client secret / id combo (application level).  If you need to make an application level call using the secret/id combo, simply enable that type of authentication instead:
 
-	sdk.ApiClient.enableClientSecretAuth();
+	usergrid.ApiClient.enableClientSecretAuth();
 
 To use no authentication, for example, if you are using the default Sandbox app that was automatically created when your account was set up, disable auth:
 
-	sdk.ApiClient.enableNoAuth();
+	usergrid.ApiClient.enableNoAuth();
 
-With this setting enabled, no authentication will be provided to the SDK.
+With this setting enabled, no authentication will be provided to the package.
 
 
 ###To log a user out
 To log the user out, call:
 
-	sdk.ApiClient.logoutAppUser();
+	usergrid.ApiClient.logoutAppUser();
 
 This destroys the token and user object in the session, effectively logging the user out.
 
 
 ##Entities and Collections
-Entities and Collections are used to model the custom data you need to store in your app.  To enable you to use these in your app, the SDK provides the Entity and the Collection objects. The following sections describe how to create and use these objects and show a few examples.
+Entities and Collections are used to model the custom data you need to store in your app.  To enable you to use these in your app, the package provides the Entity and the Collection objects. The following sections describe how to create and use these objects and show a few examples.
 
 ##The Entity Object
 Start by creating a new Entity object, where the argument is the name of the collection that the entity will be part of. For example, to create an entity of type dogs:
 
-	var dog = new sdk.Entity("dogs");
+	var dog = new usergrid.Entity("dogs");
 
 Next, add any needed custom fields. For example:
 
@@ -174,7 +167,7 @@ The Collection Object models the custom collections you create using the API.  C
 
 To get started, create a new Collection object, where the argument is the type of collection you intend to model. For example:
 
-	var dogs = new sdk.Collection('dogs'); //makes a new 'dogs' collection object
+	var dogs = new usergrid.Collection('dogs'); //makes a new 'dogs' collection object
 
 If your collection already exists on the server, call the fetch() method to populate your new object with data from the server. For example:
 
@@ -182,7 +175,7 @@ If your collection already exists on the server, call the fetch() method to popu
 
 By default, the dogs.fetch() method uses the API to retrieve the first 10 dog entities and loads them into the dogs Collection object. If you want to add a new entity to the collection, simply create it. For example:
 
-	var dog = new sdk.Entity("dogs");
+	var dog = new usergrid.Entity("dogs");
 	dog.set("name","fido");
 
 Then add it to the collection (and save it to the API):
@@ -193,13 +186,13 @@ Note:  The addNewEntity() method adds the entity to the collection and *also* sa
 
 So this:
 
-	var dog = new sdk.Entity("dogs");
+	var dog = new usergrid.Entity("dogs");
 	dog.save();
 	dogs.addEntity(dog); //entity is added only
 
 Is equivalent to this:
 
-	var dog = new sdk.Entity("dogs");
+	var dog = new usergrid.Entity("dogs");
 	dogs.addNewEntity(dog); //entity is added and saved
 
 
@@ -235,11 +228,11 @@ You can find more information on custom queries here:
 ##Modeling users with the Entity object
 
 ###Making a user object
-There is no specific User object in the SDK.  Instead, you simply need to use the Entity object, specifying a type of "users".  Here are some examples:
+There is no specific User object in the package.  Instead, you simply need to use the Entity object, specifying a type of "users".  Here are some examples:
 
 First, create a new user:
 
-	var marty = new sdk.Entity("users");
+	var marty = new usergrid.Entity("users");
 
  Next, add more data if needed:
 
@@ -284,7 +277,7 @@ See examples of this in the `controller.js` file
 ###The Query object
 Calls to both the Application endpoint as well as the Management endpoint require a Query object. The Query object stores information about the API call you want to make.  To get started, create a new Query object, and pass in the relevant data.  In the following example, we simply want to query the list of users:
 
-	queryObj = new sdk.Query(
+	queryObj = new usergrid.Query(
 		"GET",
 		"users",
 		null,
@@ -328,17 +321,17 @@ The failure callback function - will be invoked if the API call fails.
 ###Application endpoint
 After the query object is ready, pass it as an argument to the appropriate endpoint. To run a query against the Application endpoint:
 
-	sdk.ApiClient.runAppQuery(queryObj);
+	usergrid.ApiClient.runAppQuery(queryObj);
 
 ###Management endpoint
 To run a query against the Management endpoint:
 
-	sdk.ApiClient.runManagementQuery(queryObj);
+	usergrid.ApiClient.runManagementQuery(queryObj);
 
 ###Putting it all together
 Both the API call and the Query object can be made in the same call:
 
-	sdk.ApiClient.runAppQuery (new sdk.Query('GET', 'users', null, null,
+	usergrid.ApiClient.runAppQuery (new usergrid.Query('GET', 'users', null, null,
 		function(output) {
 			//do something with the return value "output" here  
 		},
@@ -355,7 +348,7 @@ Session management is key for persistance across page loads.  We have implemente
 Garbage collection has also been implemented to clean up old sessions.  You can see an example of how to call this in the server.js file:
 
 		//call garbage collection
-		sdk.session.garbage_collection(
+		usergrid.session.garbage_collection(
 		function(){
 			//do something here
 			console.log('Garbage collection completed'); 
@@ -370,7 +363,7 @@ In the sample app, this method is called on every page load.  However, in a prod
 ## Contributing
 We welcome your enhancements!
 
-Like [Usergrid](https://github.com/apigee/usergrid-stack), the Usergrid Node SDK is open source and licensed under the Apache License, Version 2.0.
+Like [Usergrid](https://github.com/apigee/usergrid-stack), the Usergrid Node package is open source and licensed under the Apache License, Version 2.0.
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)

@@ -1,15 +1,15 @@
 {
-  "name": "usergrid-sdk",
+  "name": "usergrid",
   "version": "0.9.1",
-  "description": "An SDK for making API calls to App Services (Usergrid) from within Node.js",
-  "main": "./lib/usergrid-sdk.js",
+  "description": "An package for making API calls to App Services (Usergrid) from within Node.js",
+  "main": "./lib/usergrid.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node test/server.js"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/apigee/usergrid-node-js-sdk.git"
+    "url": "git://github.com/apigee/usergrid-node-package.git"
   },
   "keywords": [
     "Node",

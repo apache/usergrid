@@ -26,24 +26,24 @@
 *
 *  This file contains the handlers that make calls to the API
 */
-function main(querydata, response, sdk) {            
+function main(querydata, response, usergrid) {            
   var view = require("./view"); 
   
   switch (querydata.action_type) {
     case 'get':
-      _get(response, sdk, view, querydata.path);
+      _get(response, usergrid, view, querydata.path);
       break;
     case 'post':
-      _post(response, sdk, view, querydata.path, querydata.data);
+      _post(response, usergrid, view, querydata.path, querydata.data);
       break;
     case 'put':
-      _put(response, sdk, view, querydata.path, querydata.data);
+      _put(response, usergrid, view, querydata.path, querydata.data);
       break;
     case 'delete':
-      _delete(response, sdk, view, querydata.path);
+      _delete(response, usergrid, view, querydata.path);
       break;
     case 'login':
-      _login(response, sdk, view, querydata.username, querydata.password);
+      _login(response, usergrid, view, querydata.username, querydata.password);
       break;
     default:
       view.getBody(response, '');     
@@ -51,8 +51,8 @@ function main(querydata, response, sdk) {
   }
 }
 
-function _get(response, sdk, view, path) {
-  sdk.ApiClient.runAppQuery(new sdk.Query('GET', path, null, null,
+function _get(response, usergrid, view, path) {
+  usergrid.ApiClient.runAppQuery(new usergrid.Query('GET', path, null, null,
      function(output) {
        view.getBody(response, prepareOutput(output));  
      },
@@ -62,11 +62,11 @@ function _get(response, sdk, view, path) {
   ));
 }
 
-function _post(response, sdk, view, path, data) {
+function _post(response, usergrid, view, path, data) {
   if (data) { 
     data = JSON.parse(data); 
   }
-  sdk.ApiClient.runAppQuery(new sdk.Query('POST', path, data, null,
+  usergrid.ApiClient.runAppQuery(new usergrid.Query('POST', path, data, null,
      function(output) {
        view.getBody(response, prepareOutput(output));  
      },
@@ -76,11 +76,11 @@ function _post(response, sdk, view, path, data) {
   ));
 }
 
-function _put(response, sdk, view, path, data) {
+function _put(response, usergrid, view, path, data) {
   if (data) { 
     data = JSON.parse(data); 
   }
-  sdk.ApiClient.runAppQuery(new sdk.Query('PUT', path, data, null,
+  usergrid.ApiClient.runAppQuery(new usergrid.Query('PUT', path, data, null,
     function(output) {
       view.getBody(response, prepareOutput(output));  
     },
@@ -90,8 +90,8 @@ function _put(response, sdk, view, path, data) {
   ));
 }
 
-function _delete(response, sdk, view, path) {
-  sdk.ApiClient.runAppQuery(new sdk.Query('DELETE', path, null, null,
+function _delete(response, usergrid, view, path) {
+  usergrid.ApiClient.runAppQuery(new usergrid.Query('DELETE', path, null, null,
     function(output) {
       view.getBody(response, prepareOutput(output));  
     },
@@ -101,18 +101,18 @@ function _delete(response, sdk, view, path) {
   ));
 }
 
-function _login(response, sdk, view, username, password) {
-  sdk.ApiClient.logInAppUser(username, password,
+function _login(response, usergrid, view, username, password) {
+  usergrid.ApiClient.logInAppUser(username, password,
     function (output, user) {
       //call was good, so populate the view
       view.getBody(response, prepareOutput(output));  
       
       //just for kicks, we will save a timestamp in the session, so you can see how to do it
       var timestamp = new Date().getTime()
-      sdk.session.setItem('useless_timestamp', timestamp);
+      usergrid.session.setItem('useless_timestamp', timestamp);
       
       //this login call pulled back a user object and a token, so we need to save the session
-      sdk.session.save_session(response, 
+      usergrid.session.save_session(response, 
         function(){
           console.log("Session saved...");
         }, 
