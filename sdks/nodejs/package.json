@@ -15,9 +15,9 @@
     "Node",
     "Usergrid",
     "Apigee",
-    "API",
-    "SDK"
+    "API"
   ],
   "author": "Rod Simpson",
   "license": "Apache 2.0"
 }
+

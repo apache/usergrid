@@ -1,5 +1,5 @@
 ##Overview
-Apigee provides this Node.js package, which simplifies the process of making API calls to App Services from within Node.js. The Apigee App Services Node.js package is available as an open-source project in github and we welcome your contributions and suggestions. The repository is located at:
+This Node.js package, which simplifies the process of making API calls to App Services from within Node.js, is provided by [Apigee](http://apigee.com) and is available as an open-source project on github.  We welcome your contributions and suggestions. The repository is located here:
 
 <https://github.com/apigee/usergrid-node-package>
 
