@@ -1,7 +1,7 @@
 {
   "name": "usergrid",
   "version": "0.9.1",
-  "description": "An package for making API calls to App Services (Usergrid) from within Node.js",
+  "description": "A Node.js module for making API calls to App Services (Usergrid) from within Node.js",
   "main": "./lib/usergrid.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/apigee/usergrid-node-package.git"
+    "url": "git://github.com/apigee/usergrid-node-module.git"
   },
   "keywords": [
     "Node",
