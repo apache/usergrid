@@ -2193,6 +2193,7 @@ session = {
           successCallback(output);            
         },
         function (output) {
+          console.log("No sesssion found, so making new one");
           //didn't get one back, so try to make a new one
           sessionEntity.set('uuid',null);//wipe out the previous uuid
           session.save_session(response, successCallback, failureCallback, true);              
@@ -2228,6 +2229,7 @@ session = {
           successCallback(output);            
         },
         function (output) {
+          console.log("Failed to start session.  Did you remember to set your client secret and id in server.js?" );
           //failureCallback(output);
         }
       );

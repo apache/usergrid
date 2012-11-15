@@ -39,7 +39,9 @@ You are now ready to use the usergrid handle to make calls against the API.  For
 
 	usergrid.ApiClient.setClientSecretCombo('b3U6y6hRJufDEeGW9hIxOwbREg', 'b3U6ZOaOexFiy6Jh61H4M7p2uFI3h18');
 
-If you are using the client secret and id, you will also want to enable that (client) authentication method:
+**Note:** This function currently only works with oganization level credentials.  These are found at the bottom of the main organization page in the [App Services Admin Portal](http://apigee.com/usergrid)
+
+If you are using the client secret and id, you will also need to enable the client secret authentication method:
 
 	usergrid.ApiClient.enableClientSecretAuth();
 
