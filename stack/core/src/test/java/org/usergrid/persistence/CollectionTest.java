@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.MapUtils.hashMap;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1016,6 +1018,84 @@ public class CollectionTest extends AbstractPersistenceTest {
         entity = results.getEntitiesMap().get(saved.getUuid());
 
         assertNotNull(entity);
+    }
+    
+    @Test
+    public void arrayQuerying() throws Exception {
+      
+        Map<String, Object> root = new HashMap<String, Object>();
+
+      
+        root.put("intprop", 10);
+        root.put("array",new String[]{"val1", "val2", "val3 with spaces"} );
+        
+        
+        Map<String, Object> jsonData = (Map<String, Object>) JsonUtils.parse(JsonUtils.mapToJsonString(root));
+        
+
+        UUID applicationId = createApplication("testOrganization",
+                "arrayQuerying");
+        assertNotNull(applicationId);
+
+       
+        EntityManager em = emf.getEntityManager(applicationId);
+        assertNotNull(em);
+
+        Entity saved = em.create("test", jsonData);
+
+        
+        
+        Query query = new Query();
+        query.addEqualityFilter("intprop", 10);
+
+        Results results = em.searchCollection(em.getApplicationRef(), "tests",
+                query);
+        
+        
+        Entity entity = results.getEntitiesMap().get(saved.getUuid());
+
+        assertNotNull(entity);
+        
+        
+        //query on the nested int value
+        query = new Query();
+        query.addEqualityFilter("array", "val1");
+
+        results = em.searchCollection(em.getApplicationRef(), "tests",
+                query);
+
+        entity = results.getEntitiesMap().get(saved.getUuid());
+
+        assertNotNull(entity);
+
+        //query on the nexted tokenized value
+        query = new Query();
+        query.addEqualityFilter("array", "val2");
+
+        results = em.searchCollection(em.getApplicationRef(), "tests", query);
+
+        entity = results.getEntitiesMap().get(saved.getUuid());
+
+        assertNotNull(entity);
+        
+        query = new Query();
+        query.addEqualityFilter("array", "val3");
+
+        results = em.searchCollection(em.getApplicationRef(), "tests", query);
+
+        entity = results.getEntitiesMap().get(saved.getUuid());
+
+        assertNull(entity);
+        
+        query = new Query();
+        query.addContainsFilter("array", "spaces");
+        results = em.searchCollection(em.getApplicationRef(), "tests", query);
+
+        entity = results.getEntitiesMap().get(saved.getUuid());
+
+        assertNotNull(entity);
+        
+        
     }
 
 
