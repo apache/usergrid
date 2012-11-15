@@ -1,7 +1,7 @@
 ##Overview
-This Node.js package, which simplifies the process of making API calls to App Services from within Node.js, is provided by [Apigee](http://apigee.com) and is available as an open-source project on github.  We welcome your contributions and suggestions. The repository is located here:
+This Node.js module, which simplifies the process of making API calls to App Services from within Node.js, is provided by [Apigee](http://apigee.com) and is available as an open-source project on github.  We welcome your contributions and suggestions. The repository is located here:
 
-<https://github.com/apigee/usergrid-node-package>
+<https://github.com/apigee/usergrid-node-module>
 
 To find out more about Apigee App Services, see:
 
@@ -13,21 +13,21 @@ To view the Apigee App Services documentation, see:
 
 
 ##Installing
-To install the Usergrid Node.js package, use the Node Package Manager:
+To install the Usergrid Node.js module, use npm:
 
 	$ npm install usergrid
 
 Or visit the github repo:
 
-<https://github.com/apigee/usergrid-node-package>
+<https://github.com/apigee/usergrid-node-module>
 
 
 ##Getting started
-To get you started, please note that the package consists of one main JavaScript file, located in the project at:
+To get you started, please note that the module consists of one main JavaScript file, located in the project at:
 
 	/lib/usergrid.js
 
-Simply include the package to begin to use it:
+Simply include the module to begin to use it:
 
 	var usergrid = require('usergrid');
 
@@ -112,7 +112,7 @@ To use no authentication, for example, if you are using the default Sandbox app 
 
 	usergrid.ApiClient.enableNoAuth();
 
-With this setting enabled, no authentication will be provided to the package.
+With this setting enabled, no authentication will be provided to the module.
 
 
 ###To log a user out
@@ -124,7 +124,7 @@ This destroys the token and user object in the session, effectively logging the 
 
 
 ##Entities and Collections
-Entities and Collections are used to model the custom data you need to store in your app.  To enable you to use these in your app, the package provides the Entity and the Collection objects. The following sections describe how to create and use these objects and show a few examples.
+Entities and Collections are used to model the custom data you need to store in your app.  To enable you to use these in your app, the module provides the Entity and the Collection objects. The following sections describe how to create and use these objects and show a few examples.
 
 ##The Entity Object
 Start by creating a new Entity object, where the argument is the name of the collection that the entity will be part of. For example, to create an entity of type dogs:
@@ -230,7 +230,7 @@ You can find more information on custom queries here:
 ##Modeling users with the Entity object
 
 ###Making a user object
-There is no specific User object in the package.  Instead, you simply need to use the Entity object, specifying a type of "users".  Here are some examples:
+There is no specific User object in the module.  Instead, you simply need to use the Entity object, specifying a type of "users".  Here are some examples:
 
 First, create a new user:
 
@@ -365,7 +365,7 @@ In the sample app, this method is called on every page load.  However, in a prod
 ## Contributing
 We welcome your enhancements!
 
-Like [Usergrid](https://github.com/apigee/usergrid-stack), the Usergrid Node package is open source and licensed under the Apache License, Version 2.0.
+Like [Usergrid](https://github.com/apigee/usergrid-stack), the Usergrid Node module is open source and licensed under the Apache License, Version 2.0.
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
