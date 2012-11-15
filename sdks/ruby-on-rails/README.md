@@ -40,7 +40,7 @@ development:
   application_url: http://localhost:8080/my-organization/my-application
   auth_token: YWMtc4WjqhcbEeK6UhQQn9SVgQAAATpryjMnLy9oFaPbP-0qIxoUx_4vtaOmpmE
 
-development:
+test:
   application_url: http://localhost:8080/my-organization/my-application
   auth_token: YWMtc4WjqhcbEeK6UhQQn9SVgQAAATpryjMnLy9oFaPbP-0qIxoUx_4vtaOmpmE
 
