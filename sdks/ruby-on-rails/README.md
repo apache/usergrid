@@ -33,52 +33,23 @@ Or install it yourself as:
 
 * Add 'gem usergrid_ironhorse' to your Gemfile
 * Create a 'config/usergrid.yml' file that looks something like this (the
-auth_token is your application admin token):
+auth_token is your application token):
 
 ```
 development:
   application_url: http://localhost:8080/my-organization/my-application
   auth_token: YWMtc4WjqhcbEeK6UhQQn9SVgQAAATpryjMnLy9oFaPbP-0qIxoUx_4vtaOmpmE
+  require_login: false
 
 test:
   application_url: http://localhost:8080/my-organization/my-application
   auth_token: YWMtc4WjqhcbEeK6UhQQn9SVgQAAATpryjMnLy9oFaPbP-0qIxoUx_4vtaOmpmE
+  require_login: false
 
 production:
   application_url: http://api.usergrid.com/my-organization/my-application
   auth_token: YWMtc4WjqhcbEeK6UhQQn9SVgQAAATpryjMnLy9oFaPbP-0qIxoUx_4vtaOmpmE
-```
-
-* Your User model should subclass `Usergrid::Ironhorse::Base` and `extend
-Usergrid::Ironhorse::UserContext` like so:
-
-```
-class User < Usergrid::Ironhorse::Base
-  extend Usergrid::Ironhorse::UserContext
-  ...
-end
-```
-
-* Set up your authentication
-	* Use `User.authenticate(username, password, session)` to login.
-	* Use `User.clear_authentication(session)` to log out.
-* Propogate the authentication in your ApplicationController:
-
-```
-before_filter :set_thread_context
-def set_thread_context
-  User.set_thread_context session
-end
-```
-
-* Optionally, if you need to access the User from your view, you may add something
-like the following to your ApplicationController:
-
-```
-helper_method :current_user
-def current_user
-  User.current_user
-end
+  require_login: false
 ```
 
 #### Get going!
@@ -120,6 +91,41 @@ User.as_admin do
 end
 ```
 
+
+#### (Optional) Need to have user-specific logins to UserGrid?
+
+* Create a User model and subclass `Usergrid::Ironhorse::Base` and `extend
+Usergrid::Ironhorse::UserContext` like so:
+
+```
+class User < Usergrid::Ironhorse::Base
+  extend Usergrid::Ironhorse::UserContext
+  ...
+end
+```
+
+* Set up your authentication
+	* Use `User.authenticate(username, password, session)` to login.
+	* Use `User.clear_authentication(session)` to log out.
+* Propogate the authentication in your ApplicationController:
+
+```
+before_filter :set_user_context
+def set_user_context
+  User.set_context session
+end
+```
+
+* Optionally, if you need to access the User from your view, you may add something
+like the following to your ApplicationController:
+
+```
+helper_method :current_user
+def current_user
+  User.current_user
+end
+```
+
 ## Contributing
 
 We welcome your enhancements!
@@ -142,6 +148,10 @@ usergrid_ironhorse/spec/spec_settings.yaml to match.)
 
 
 ## Release notes
+
+### 0.0.4
+* New Features
+  1. add require_login to config (with ability to skip individual logins)
 
 ### 0.0.3
 * Internal

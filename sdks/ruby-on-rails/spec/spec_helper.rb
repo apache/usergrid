@@ -26,6 +26,7 @@ SimpleCov.start
 
 
 SPEC_SETTINGS = YAML::load_file(File.join File.dirname(__FILE__), 'spec_settings.yaml')
+Usergrid::Ironhorse::Base.configure! nil, nil
 
 def login_management
   management = Usergrid::Resource.new(SPEC_SETTINGS[:api_url]).management

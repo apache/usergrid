@@ -47,6 +47,7 @@ module Usergrid
         Thread.current[:usergrid_auth_token] = session[:usergrid_auth_token]
         Thread.current[:usergrid_current_user] = nil
       end
+      alias_method :set_context, :set_thread_context
 
       # clears auth from current thread
       def clear_thread_context(session)
@@ -54,6 +55,7 @@ module Usergrid
         Thread.current[:usergrid_auth_token] = nil
         Thread.current[:usergrid_current_user] = nil
       end
+      alias_method :clear_context, :clear_thread_context
 
       # returns the auth token for the current thread
       def current_auth_token

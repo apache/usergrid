@@ -3,7 +3,8 @@ module Usergrid
   class Resource
     def options
       options = @options.clone
-      auth_token = Thread.current[:usergrid_auth_token]
+      require_login = Usergrid::Ironhorse::Base.settings[:require_login] != false
+      auth_token = require_login ? Thread.current[:usergrid_auth_token] : Usergrid::Ironhorse::Base.settings[:auth_token]
       options[:headers].delete :Authorization
       options[:headers][:Authorization] = "Bearer #{auth_token}" if auth_token
       options

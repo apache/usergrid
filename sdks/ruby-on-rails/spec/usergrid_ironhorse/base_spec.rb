@@ -40,6 +40,19 @@ describe Usergrid::Ironhorse::Base do
       end
     end
 
+    it "do tasks as admin if require_login is false" do
+      organization = @foo.management.organization SPEC_SETTINGS[:organization][:name]
+
+      # should fail under current user's context
+      expect {
+        organization.create_application "_test_app_#{SecureRandom.hex}"
+      }.to raise_error RestClient::Unauthorized
+
+      # should succeed once require_login is false
+      User.settings[:require_login] = false
+      organization.create_application "_test_app_#{SecureRandom.hex}"
+    end
+
     it 'be created and destroyed' do
       foo = Foo.create name: 'foo2'
       foo.persisted?.should be_true
