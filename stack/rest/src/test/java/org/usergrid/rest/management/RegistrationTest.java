@@ -1,8 +1,6 @@
 package org.usergrid.rest.management;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
@@ -20,12 +18,14 @@ import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.rest.AbstractRestTest;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -66,6 +66,37 @@ public class RegistrationTest extends AbstractRestTest {
 
         String token = getTokenFromMessage(account_confirmation_message);
         logger.info(token);
+
+
+        managementService.disableAdminUser(owner_uuid);
+        try{
+            resource().path("/management/token")
+                .queryParam("grant_type", "password")
+                .queryParam("username", "test-user-1")
+                .queryParam("password", "testpassword")
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+            fail("request for disabled user should fail");
+        } catch(UniformInterfaceException uie) {
+            ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
+            JsonNode body = uie.getResponse().getEntity(JsonNode.class);
+            assertEquals("user disabled", body.findPath("error_description").getTextValue());
+        }
+
+
+        managementService.deactivateUser(CassandraService.MANAGEMENT_APPLICATION_ID, owner_uuid);
+        try{
+            resource().path("/management/token")
+                .queryParam("grant_type", "password")
+                .queryParam("username", "test-user-1")
+                .queryParam("password", "testpassword")
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+            fail("request for deactivated user should fail");
+        } catch(UniformInterfaceException uie) {
+            ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
+            JsonNode body = uie.getResponse().getEntity(JsonNode.class);
+            assertEquals("user not activated", body.findPath("error_description").getTextValue());
+        }
+
 
         // assertEquals(ActivationState.ACTIVATED,
         // managementService.handleConfirmationTokenForAdminUser(

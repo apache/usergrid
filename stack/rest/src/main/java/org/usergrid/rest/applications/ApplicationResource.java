@@ -57,6 +57,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationInfo;
+import org.usergrid.management.exceptions.DisabledAdminUserException;
+import org.usergrid.management.exceptions.UnactivatedAdminUserException;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
@@ -217,10 +219,15 @@ public class ApplicationResource extends ServiceResource {
             }
 
             // do checking for different grant types
+            String errorDescription = "invalid username or password";
             if (GrantType.PASSWORD.toString().equals(grant_type)) {
                 try {
                     user = management.verifyAppUserPasswordCredentials(
                             services.getApplicationId(), username, password);
+                } catch (UnactivatedAdminUserException uaue) {
+                    errorDescription = "user not activated";
+                } catch (DisabledAdminUserException daue) {
+                    errorDescription = "user disabled";
                 } catch (Exception e1) {
                 }
             } else if ("pin".equals(grant_type)) {
@@ -254,7 +261,7 @@ public class ApplicationResource extends ServiceResource {
                 OAuthResponse response = OAuthResponse
                         .errorResponse(SC_BAD_REQUEST)
                         .setError(OAuthError.TokenResponse.INVALID_GRANT)
-                        .setErrorDescription("invalid username or password")
+                        .setErrorDescription(errorDescription)
                         .buildJSONMessage();
                 return Response.status(response.getResponseStatus())
                         .type(jsonMediaType(callback))
@@ -425,9 +432,14 @@ public class ApplicationResource extends ServiceResource {
             this.state = state;
 
             User user = null;
+            String errorDescription = "Username or password do not match";
             try {
                 user = management.verifyAppUserPasswordCredentials(
                         services.getApplicationId(), username, password);
+            } catch (UnactivatedAdminUserException uaue) {
+                errorDescription = "user not activated";
+            } catch (DisabledAdminUserException daue) {
+                errorDescription = "user disabled";
             } catch (Exception e1) {
             }
             if ((user != null) && isNotBlank(redirect_uri)) {
@@ -445,7 +457,7 @@ public class ApplicationResource extends ServiceResource {
                 }
                 throw new RedirectionException(state);
             } else {
-                errorMsg = "Username or password do not match";
+                errorMsg = errorDescription;
             }
 
             ApplicationInfo app = management.getApplicationInfo(applicationId);

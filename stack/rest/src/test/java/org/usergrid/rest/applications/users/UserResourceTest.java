@@ -15,11 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.usergrid.rest.applications.utils.TestUtils.getIdFromSearchResults;
 import static org.usergrid.utils.MapUtils.hashMap;
 
@@ -949,6 +945,7 @@ public class UserResourceTest extends AbstractRestTest {
 
         Status status = null;
 
+        // bad access token
         try{
             resource().path("/test-organization/test-app/users/test_1/token").queryParam("access_token", "blah")
             .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
@@ -983,6 +980,21 @@ public class UserResourceTest extends AbstractRestTest {
 
         assertNotNull(getEntity(response, 0));
 
+        managementService.deactivateUser(appInfo.getId(), userId);
+        try {
+            resource().path("/test-organization/test-app/token")
+                .queryParam("grant_type", "password")
+                .queryParam("username", "test_1")
+                .queryParam("password", "test123")
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .get(JsonNode.class);
+            fail("request for deactivated user should fail");
+        } catch(UniformInterfaceException uie){
+            status = uie.getResponse().getClientResponseStatus();
+            JsonNode body = uie.getResponse().getEntity(JsonNode.class);
+            assertEquals("user not activated", body.findPath("error_description").getTextValue());
+        }
     }
 
 
