@@ -83,14 +83,15 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
     },
 
     getHeader : function() {
-      var entity = this.options.entity;
+      var entity = this.options.entity,
+         name = entity.uuid + " : " + entity.type;
 
-      var name = entity.uuid + " : "
-        + entity.type;
       if (entity.name) {
         name = name + " : " + entity.name;
       } else if (entity.username) {
         name = name + " : " + entity.username;
+      } else if (entity.title) {
+        name = name + " : " + entity.title;
       }
 
       var collections = {
@@ -258,6 +259,8 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
         name = name + " : " + entity.name;
       } else if (entity.username) {
         name = name + " : " + entity.username;
+      } else if (entity.title) {
+        name = name + " : " + entity.title;
       }
 
       if(entity.metadata.collections){

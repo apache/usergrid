@@ -3584,28 +3584,27 @@ function apigee_console_app(Pages, query_params) {
     pathInput.data('typeahead').source = list;
   }
 
-  function updateQueryTypeahead(response, inputId){
-    var pathInput = $("#" + inputId);
-    var list = [];
-    var name;
-    list.push(response.path);
-    $.each(response.entities, function(entityKey, entityValue){
-      if ( entityValue.type === 'user'){
-        name = entityValue.username + '/';
-      } else if (entityValue.name) {
-        name = entityValue.name + '/';
-      } else {
-        name = entityValue.uuid + '/';
-      }
+  function updateQueryTypeahead(response, inputId) {
+    var pathInput = $("#" + inputId),
+      list = [],
+      name,
+      path = response.path + '/';
+    list.push(path);
+    $.each(response.entities, function(entityKey, entityValue) {
+      name = getEntityName(entityValue) + '/';
+      list.push(path + name);
       //Fill collection names
-      list.push(response.path + '/' + name);
-      $.each(entityValue.metadata.collections, function(key, value){
-          list.push(response.path + '/' + name + key);
+      if (entityValue.metadata.collections) {
+        $.each(entityValue.metadata.collections, function(key){
+          list.push(path + name + key);
         });
+      }
       //Fill Sets
-      $.each(entityValue.metadata.sets, function(key, value){
-        list.push(response.path + '/' + name + key);
-      })
+      if (entityValue.metadata.sets) {
+        $.each(entityValue.metadata.sets, function(key, value) {
+          list.push(response.path + '/' + name + key);
+        })
+      }
     });
     //TODO: Possible cleanup here, could not set the options via pathInput.typeahead.options, so overriding variables directly
     pathInput.data('typeahead').source = list;
@@ -3614,6 +3613,24 @@ function apigee_console_app(Pages, query_params) {
       var checker = new RegExp('^' + this.query + '[a-z0-9.-]*\/?$', "i");
       return checker.test(item);
     }
+  }
+  //TODO: find a nice place to store this function
+  function getEntityName(entity) {
+    var name;
+    switch(entity.type) {
+      case 'user':
+        name = entity.username;
+        break;
+      case 'group':
+        name = entity.path;
+        break;
+      case 'role':
+        name = entity.name;
+        break;
+      default:
+        name = entity.uuid;
+    }
+    return name;
   }
 
   function updateUsersAutocomplete(){
