@@ -53,6 +53,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.UserInfo;
+import org.usergrid.management.exceptions.DisabledAdminUserException;
+import org.usergrid.management.exceptions.UnactivatedAdminUserException;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.management.organizations.OrganizationsResource;
@@ -142,6 +144,7 @@ public class ManagementResource extends AbstractContextResource {
                 }
             }
 
+            String errorDescription = "invalid username or password";
             // do checking for different grant types
             if (GrantType.PASSWORD.toString().equals(grant_type)) {
                 try {
@@ -149,6 +152,12 @@ public class ManagementResource extends AbstractContextResource {
                     if (user != null) {
                         logger.info("found user from verify: {}", user.getUuid());
                     }
+                } catch (UnactivatedAdminUserException uaue) {
+                    errorDescription = "user not activated";
+                    logger.error("failed token check", uaue);
+                } catch (DisabledAdminUserException daue) {
+                    errorDescription = "user disabled";
+                    logger.error("failed token check", daue);
                 } catch (Exception e1) {
                     logger.error("failed token check", e1);
                 }
@@ -167,7 +176,7 @@ public class ManagementResource extends AbstractContextResource {
             if (user == null) {
                 OAuthResponse response = OAuthResponse.errorResponse(SC_BAD_REQUEST)
                         .setError(OAuthError.TokenResponse.INVALID_GRANT)
-                        .setErrorDescription("invalid username or password").buildJSONMessage();
+                        .setErrorDescription(errorDescription).buildJSONMessage();
                 return Response.status(response.getResponseStatus()).type(jsonMediaType(callback))
                         .entity(wrapWithCallback(response.getBody(), callback)).build();
             }
