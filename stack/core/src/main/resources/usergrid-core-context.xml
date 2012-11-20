@@ -2,8 +2,9 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
 	xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
-	xmlns:hz="http://www.hazelcast.com/schema/config"
+	xmlns:hz="http://www.hazelcast.com/schema/config" xmlns:aop="http://www.springframework.org/schema/aop"
 	xsi:schemaLocation="
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
@@ -25,10 +26,18 @@
 	<bean id="microsecondsTimeResolution"
 		class="me.prettyprint.cassandra.service.clock.MicrosecondsClockResolution" />
 
+    <bean id="traceTagManager" class="org.usergrid.persistence.cassandra.util.TraceTagManager"/>
+    <bean id="traceTagReporter" class="org.usergrid.persistence.cassandra.util.Slf4jTraceTagReporter"/>
+
+    <bean id="taggedOpTimer" class="org.usergrid.persistence.cassandra.util.TaggedOpTimer">
+        <constructor-arg ref="traceTagManager"/>
+    </bean>
+
 	<bean id="cassandraHostConfigurator"
 		class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
 		<constructor-arg value="${cassandra.url}" />
 		<property name="clockResolution" ref="microsecondsTimeResolution" />
+        <property name="opTimer" ref="taggedOpTimer"/>
 	</bean>
 
 	<bean id="cassandraCluster" class="me.prettyprint.cassandra.service.ThriftCluster">
@@ -106,5 +115,19 @@
     <bean id="entityManager" class="org.usergrid.persistence.cassandra.EntityManagerImpl" scope="prototype"/>
 
     <bean id="relationManager" class="org.usergrid.persistence.cassandra.RelationManagerImpl" scope="prototype"/>
+
+    <bean id="traceTagAspect" class="org.usergrid.persistence.cassandra.util.TraceTagAspect"/>
+
+    <aop:config>
+      <aop:aspect id="traceParticipant" ref="traceTagAspect">
+        <!-- pointcut on the prescense of the TraceParticipant annotation only -->
+        <aop:pointcut id="emTraceParticipant"
+            expression="execution(* org.usergrid.persistence.cassandra.EntityManagerImpl.*(..)) and
+            @annotation(org.usergrid.persistence.cassandra.util.TraceParticipant)"/>
+        <aop:around
+           pointcut-ref="emTraceParticipant"
+           method="applyTrace"/>
+      </aop:aspect>
+    </aop:config>
 
 </beans>

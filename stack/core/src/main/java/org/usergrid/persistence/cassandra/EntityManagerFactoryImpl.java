@@ -153,9 +153,10 @@ ApplicationContextAware {
 
 
     private EntityManager _getEntityManager(UUID applicationId) {
-        EntityManagerImpl em = new EntityManagerImpl();
-        //EntityManagerImpl em = applicationContext.getBean(EntityManagerImpl.class);
-        em.init(this,cass,counterUtils,applicationId, skipAggregateCounters);
+        //EntityManagerImpl em = new EntityManagerImpl();
+        EntityManager em = applicationContext.getBean("entityManager",EntityManager.class);
+        //em.init(this,cass,counterUtils,applicationId, skipAggregateCounters);
+        em.setApplicationId(applicationId);
         return em;
     }
 
@@ -259,7 +260,7 @@ ApplicationContextAware {
         batchExecute(m, RETRY_COUNT);
 
         EntityManager em = getEntityManager(applicationId);
-        ((EntityManagerImpl) em).create(TYPE_APPLICATION,
+        em.create(TYPE_APPLICATION,
                 APPLICATION_ENTITY_CLASS, properties);
 
         em.resetRoles();

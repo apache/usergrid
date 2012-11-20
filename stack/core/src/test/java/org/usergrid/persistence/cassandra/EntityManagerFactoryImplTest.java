@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -38,6 +39,11 @@ import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.PersistenceTestHelper;
 import org.usergrid.persistence.Results;
+import org.usergrid.persistence.cassandra.util.TraceTag;
+import org.usergrid.persistence.cassandra.util.TraceTagManager;
+import org.usergrid.persistence.cassandra.util.TraceTagReporter;
+
+import javax.annotation.Resource;
 
 public class EntityManagerFactoryImplTest {
 
@@ -68,6 +74,8 @@ public class EntityManagerFactoryImplTest {
 	}
 
 	EntityManagerFactoryImpl emf;
+    TraceTagManager traceTagManager;
+    TraceTagReporter traceTagReporter;
 
 	@Autowired
 	public void setEntityManagerFactory(EntityManagerFactory emf) {
@@ -85,8 +93,16 @@ public class EntityManagerFactoryImplTest {
 		return emf.createApplication(organizationName, applicationName);
 	}
 
+    @Before
+    public void initTracing() {
+        traceTagManager = helper.getApplicationContext().getBean("traceTagManager",TraceTagManager.class);
+        traceTagReporter = helper.getApplicationContext().getBean("traceTagReporter", TraceTagReporter.class);
+    }
+
 	@Test
 	public void testCreateAndGet() throws Exception {
+        TraceTag traceTag = traceTagManager.create("testCreateAndGet");
+        traceTagManager.attach(traceTag);
 		logger.info("EntityDaoTest.testCreateAndGet");
 
 		UUID applicationId = createApplication("testOrganization","testCreateAndGet");
@@ -168,7 +184,7 @@ public class EntityManagerFactoryImplTest {
 		 * entities); assertEquals("entities count incorrect", 10,
 		 * entities.size());
 		 */
-
+        traceTagReporter.report(traceTagManager.detach());
 	}
 
 }
