@@ -16,6 +16,7 @@
 package org.usergrid.rest.applications.users;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 import org.codehaus.jackson.JsonNode;
@@ -238,6 +239,15 @@ public class GroupResourceTest extends AbstractRestTest {
     assertNull(node.get("errors"));
     assertEquals(node.get("entities").get(0).get("name").asText(), roleName);
 
+    // check root roles
+    node = resource()
+        .path("/test-organization/test-app/roles")
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .get(JsonNode.class);
+    assertNull(node.get("errors"));
+    assertTrue(node.get("entities").findValuesAsText("name").contains(roleName));
 
     // remove Role
 
@@ -247,8 +257,6 @@ public class GroupResourceTest extends AbstractRestTest {
             .accept(MediaType.APPLICATION_JSON)
             .type(MediaType.APPLICATION_JSON_TYPE)
             .delete(JsonNode.class);
-
-    // check it
     assertNull(node.get("errors"));
 
     node = resource()
@@ -259,6 +267,35 @@ public class GroupResourceTest extends AbstractRestTest {
             .get(JsonNode.class);
     assertNull(node.get("errors"));
     assertTrue(node.get("entities").size() == 0);
+
+    // check root roles - role should remain
+    node = resource()
+        .path("/test-organization/test-app/roles")
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .get(JsonNode.class);
+    assertNull(node.get("errors"));
+    assertTrue(node.get("entities").findValuesAsText("name").contains(roleName));
+
+    // now kill the root role
+    node = resource()
+        .path("/test-organization/test-app/roles/" + roleName)
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .delete(JsonNode.class);
+    assertNull(node.get("errors"));
+
+    // now it should be gone
+    node = resource()
+        .path("/test-organization/test-app/roles")
+        .queryParam("access_token", access_token)
+        .accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .get(JsonNode.class);
+    assertNull(node.get("errors"));
+    assertFalse(node.get("entities").findValuesAsText("name").contains(roleName));
   }
 
 }

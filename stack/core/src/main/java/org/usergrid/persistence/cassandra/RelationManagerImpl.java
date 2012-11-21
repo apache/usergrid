@@ -119,23 +119,9 @@ import me.prettyprint.hector.api.query.QueryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.usergrid.persistence.AssociatedEntityRef;
-import org.usergrid.persistence.CollectionRef;
-import org.usergrid.persistence.ConnectedEntityRef;
-import org.usergrid.persistence.ConnectionRef;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.EntityRef;
-import org.usergrid.persistence.IndexBucketLocator;
+import org.usergrid.persistence.*;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
-import org.usergrid.persistence.Query;
-import org.usergrid.persistence.RelationManager;
-import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
-import org.usergrid.persistence.RoleRef;
-import org.usergrid.persistence.Schema;
-import org.usergrid.persistence.SimpleCollectionRef;
-import org.usergrid.persistence.SimpleEntityRef;
-import org.usergrid.persistence.SimpleRoleRef;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.entities.Group;
@@ -2592,8 +2578,11 @@ public class RelationManagerImpl implements RelationManager {
 
         if (headEntity.getType().equals(Group.ENTITY_TYPE)) {
             if (collectionName.equals(COLLECTION_ROLES)) {
-                RoleRef roleRef = SimpleRoleRef.forRoleEntity(itemEntity);
-                em.deleteRole(roleRef.getApplicationRoleName());
+                String path = (String)((DynamicEntity)itemRef).getMetadata("path");
+                if (path.startsWith("/roles/")) {
+                    RoleRef roleRef = SimpleRoleRef.forRoleEntity(itemEntity);
+                    em.deleteRole(roleRef.getApplicationRoleName());
+                }
             }
         }
     }
@@ -2628,7 +2617,7 @@ public class RelationManagerImpl implements RelationManager {
                 headEntity.getType(), srcRelationName);
 
         CollectionInfo dstCollection = getDefaultSchema().getCollection(
-                dstEntityRef.getType(), dstRelationName);
+            dstEntityRef.getType(), dstRelationName);
 
         Results results = null;
         do {
