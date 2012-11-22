@@ -616,9 +616,30 @@ function apigee_console_app(Pages, query_params) {
     requestOrganizationCredentials();
     requestAdminFeed();
   }
+
+  function goHome() {
+    $.address.value('home');
+  }
+
+  $.address.change(function(event) {
+    console.log(event);
+    //PSEUDOCODE
+    /*
+    address like: /usergrid/myOrganization/panel
+    if organization != current org, then switch org
+    switch (panel)
+       panel: pageSelectPanel
+     */
+    switch(event.pathNames[0]){
+      case 'home':
+        pageSelectHome();
+        break;
+    }
+  });
+
   window.Usergrid.console.pageSelectHome = pageSelectHome;
 
-  $(document).on('click','.go-home', pageSelectHome);
+  $(document).on('click','.go-home', goHome);
 
   function displayApplications(response) {
     var t = "";
