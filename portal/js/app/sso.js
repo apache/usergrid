@@ -72,18 +72,6 @@
       } else if (sso === ('no' || 'false')) {
         this.default.use_sso = false;
       }
-    },
-
-    setLoginUrl:function (url) {
-      this.default.login_url = url;
-    },
-
-    setLogoutUrl:function (url) {
-      this.default.logout_url = url;
-    },
-
-    setProfileUrl:function (url) {
-      this.default.profile_url = url;
     }
   };
 })(Usergrid);
