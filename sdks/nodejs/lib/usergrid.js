@@ -1412,7 +1412,7 @@ ApiClient = (function () {
    *  @return {object} user - Entity object of type user
    */
   function getLoggedInUser() {
-     var data = JSON.parse(_session.getItem('user'));
+     var data = JSON.parse(session.getItem('user'));
      var user = new Entity('user');
      user.set(data);
      return user;
