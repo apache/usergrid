@@ -2,8 +2,12 @@ Usergrid.organizations = new Usergrid.Organization();
 
 var Pages = new ApigeePages();
 
+
+
 $(document).ready(function () {
-  var query_params = Usergrid.Params.queryParams;
+
+  var query_params = Usergrid.Params.queryParams,
+    router;
   initCore();
   initUI(query_params);
   startApp();
@@ -15,6 +19,7 @@ $(document).ready(function () {
 
   function initUI(query_params) {
     apigee_console_app(Pages, query_params);
+    initNavigation();
     initMenu();
     StatusBar.Init('#statusbar-placeholder');
     toggleableSections();
@@ -58,12 +63,15 @@ $(document).ready(function () {
     Pages.AddPage({name:'signup', menu:publicMenu});
     Pages.AddPage({name:'forgot-password', menu:publicMenu});
     Pages.AddPage({name:'post-signup', menu:publicMenu});
-    Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction:Usergrid.console.pageSelectHome});
+    Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction: function() {
+      Pages.SelectPanel('organization');
+      Backbone.history.start();
+    }});
   }
 
   function initConsole() {
     //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
-    Pages.AddPanel('organization', null, null, null, null);
+    Pages.AddPanel('organization', null, null, null, navigateToHome);
     Pages.AddPanel('console', null, null, null, null);
     Pages.AddPanel('application', null, null, null, Usergrid.console.pageSelectApplication);
     Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
@@ -78,6 +86,25 @@ $(document).ready(function () {
     Pages.AddPanel('shell', null, null, null, Usergrid.console.pageSelectShell);
     Pages.AddPanel('account', "#account-link", null, null, Usergrid.console.requestAccountSettings);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
+  }
+
+  function initNavigation() {
+    var Router = Backbone.Router.extend({
+      routes: {
+        "home/:organization/:application": "home",
+        "": "home"
+      },
+      home: function(organization, application) {
+        console.log("ORG:" + organization);
+        console.log(application);
+        Usergrid.console.pageSelectHome();
+      }
+    });
+    router = new Router();
+  }
+
+  function navigateToHome() {
+    router.navigate("home/myOrg/myApp", {trigger: true});
   }
 
   function initCenterPanels(){

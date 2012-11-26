@@ -607,9 +607,9 @@ function apigee_console_app(Pages, query_params) {
    *
    ******************************************************************/
 
+
   function pageSelectHome() {
     setupMenu();
-    Pages.SelectPanel('organization');
     requestApplications();
     requestAdmins();
     displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
@@ -618,24 +618,8 @@ function apigee_console_app(Pages, query_params) {
   }
 
   function goHome() {
-    $.address.value('home');
+    Pages.SelectPanel('organization');
   }
-
-  $.address.change(function(event) {
-    console.log(event);
-    //PSEUDOCODE
-    /*
-    address like: /usergrid/myOrganization/panel
-    if organization != current org, then switch org
-    switch (panel)
-       panel: pageSelectPanel
-     */
-    switch(event.pathNames[0]){
-      case 'home':
-        pageSelectHome();
-        break;
-    }
-  });
 
   window.Usergrid.console.pageSelectHome = pageSelectHome;
 
@@ -3764,7 +3748,7 @@ function apigee_console_app(Pages, query_params) {
 
   function setupOrganizationsMenu() {
     var organizations = Usergrid.organizations.getList();
-    var orgName = Usergrid.ApiClient.getOrganizationName();
+      var orgName = Usergrid.ApiClient.getOrganizationName();
     if (!organizations) {
       return;
     }

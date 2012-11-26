@@ -3,7 +3,8 @@ function ApigeePages() {
     pages: {},
     panels: {},
     resetPasswordUrl: ''
-  };
+    },
+    router;
 
   self.clearPage = function(){
     $("#pages > div").hide();
