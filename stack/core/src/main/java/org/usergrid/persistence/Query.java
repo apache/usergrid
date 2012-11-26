@@ -1208,54 +1208,56 @@ public class Query {
 
     @Override
     public String toString() {
-        return "";
-        // if (selectSubjects.isEmpty() && filterPredicates.isEmpty()) {
-        // return "";
-        // }
-        //
-        // StringBuilder s = new StringBuilder("select ");
-        // if (type == null) {
-        // if (selectSubjects.isEmpty()) {
-        // s.append("*");
-        // } else {
-        // if (mergeSelectResults) {
-        // s.append("{ ");
-        // boolean first = true;
-        // for (Map.Entry<String, String> select : selectSubjects
-        // .entrySet()) {
-        // if (!first) {
-        // s.append(", ");
-        // }
-        // s.append(select.getValue() + " : " + select.getKey());
-        // first = false;
-        // }
-        // s.append(" }");
-        // } else {
-        // boolean first = true;
-        // for (String select : selectSubjects.keySet()) {
-        // if (!first) {
-        // s.append(", ");
-        // }
-        // s.append(select);
-        // first = false;
-        // }
-        // }
-        // }
-        // } else {
-        // s.append(type);
-        // }
-        // if (!filterPredicates.isEmpty()) {
-        // s.append(" where ");
-        // boolean first = true;
-        // for (FilterPredicate f : filterPredicates) {
-        // if (!first) {
-        // s.append(" and ");
-        // }
-        // s.append(f.toString());
-        // first = false;
-        // }
-        // }
-        // return s.toString();
+      StringBuilder s = new StringBuilder("select ");
+      if (selectSubjects.isEmpty()) {
+        s.append("*");
+      } else {
+        if (mergeSelectResults) {
+          s.append("{ ");
+          boolean first = true;
+          for (Map.Entry<String, String> select : selectSubjects
+              .entrySet()) {
+            if (!first) {
+              s.append(", ");
+            }
+            s.append(select.getValue() + " : " + select.getKey());
+            first = false;
+          }
+          s.append(" }");
+        } else {
+          boolean first = true;
+          for (String select : selectSubjects.keySet()) {
+            if (!first) {
+              s.append(", ");
+            }
+            s.append(select);
+            first = false;
+          }
+        }
+      }
+      s.append(" from ");
+      s.append(type);
+      if (!sortPredicates.isEmpty()) {
+        boolean first = true;
+        s.append(" order by ");
+        for (SortPredicate sp : sortPredicates) {
+          if (!first) s.append(", ");
+          s.append(sp);
+          first = false;
+        }
+      }
+//      if (!filterPredicates.isEmpty()) {
+//        s.append(" where ");
+//        boolean first = true;
+//        for (FilterPredicate f : filterPredicates) {
+//          if (!first) {
+//            s.append(" and ");
+//          }
+//          s.append(f.toString());
+//          first = false;
+//        }
+//      }
+      return s.toString();
     }
 
     public static enum FilterOperator {

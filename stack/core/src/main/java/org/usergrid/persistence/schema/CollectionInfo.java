@@ -239,7 +239,7 @@ public class CollectionInfo {
 
 	@Override
 	public String toString() {
-		return "CollectionInfo [name=" + name + ", container=" + container
+		return "CollectionInfo [name=" + name //+ ", container=" + container
 				+ ", indexingDynamicProperties=" + indexingDynamicProperties
 				+ ", indexingDynamicDictionaries="
 				+ indexingDynamicDictionaries + ", linkedCollection="
