@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,8 +71,8 @@ public class AbstractConnectionsService extends AbstractService {
 	 * <cType>/<eType>/<id> <br>
 	 * <cType>/<eType>/<name> <br>
 	 * <cType>/<eType>/<query> <br>
-	 * 
-	 * 
+	 *
+	 *
 	 */
 	@Override
 	public ServiceContext getContext(ServiceAction action,
@@ -344,6 +344,61 @@ public class AbstractConnectionsService extends AbstractService {
 
 		return getItemsByQuery(context, query);
 	}
+
+	@Override
+	public ServiceResults putItemById(ServiceContext context, UUID id)
+			throws Exception {
+
+		if (context.moreParameters()) {
+			return getItemById(context, id);
+		}
+
+		checkPermissionsForEntity(context, id);
+
+		Entity item = em.get(id);
+		if (item != null) {
+			updateEntity(context, item, context.getPayload());
+			item = importEntity(context, item);
+		} else {
+			String entityType = getEntityType();
+			item = em.create(id, entityType, context.getPayload()
+					.getProperties());
+		}
+		return new ServiceResults(this, context, Type.CONNECTION,
+				Results.fromEntity(item), null, null);
+	}
+
+	@Override
+	public ServiceResults putItemByName(ServiceContext context, String name)
+			throws Exception {
+
+		return putItemsByQuery(context, context.getQuery());
+	}
+
+	@Override
+	public ServiceResults putItemsByQuery(ServiceContext context, Query query)
+			throws Exception {
+
+		checkPermissionsForCollection(context);
+
+		if (context.moreParameters()) {
+			return getItemsByQuery(context, query);
+		}
+
+		query = new Query(query);
+		query.setResultsLevel(Level.ALL_PROPERTIES);
+		query.setLimit(1000);
+
+		Results r = em.searchConnectedEntities(context.getOwner(), query);
+		if (r.isEmpty()) {
+			throw new ServiceResourceNotFoundException(context);
+		}
+
+		updateEntities(context, r);
+
+		return new ServiceResults(this, context, Type.CONNECTION, r, null, null);
+	}
+
 
 	@Override
 	public ServiceResults deleteItemById(ServiceContext context, UUID id)

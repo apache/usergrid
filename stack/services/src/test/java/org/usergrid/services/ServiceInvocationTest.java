@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -120,6 +120,25 @@ public class ServiceInvocationTest extends AbstractServiceTest {
 
 		testRequest(sm, ServiceAction.GET, 1, null, "entities", cat.getUuid(),
 				"connecting");
+
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("color", "blacknwhite");
+
+		testRequest(sm, ServiceAction.PUT, 1, properties, "users", "edanuff",
+				"likes", cat.getUuid());
+
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("eats", "petfood");
+
+		testRequest(sm, ServiceAction.PUT, 1, properties, "users", "edanuff",
+				"likes", "cats", "dylan");
+
+		properties = new LinkedHashMap<String, Object>();
+		properties.put("Todays special", "Coffee");
+
+		testRequest(sm, ServiceAction.PUT, 1, properties, "users", "edanuff",
+				"likes", "restaurants",
+				Query.fromQL("select * where name='Brickhouse'"));
 
 		testRequest(sm, ServiceAction.DELETE, 1, null, "users", user.getUuid(),
 				"connections", "likes", restaurant.getUuid());
