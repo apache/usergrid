@@ -65,13 +65,15 @@ $(document).ready(function () {
     Pages.AddPage({name:'post-signup', menu:publicMenu});
     Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction: function() {
       Pages.SelectPanel('organization');
-      Backbone.history.start();
+      if(!Backbone.History.started){
+        Backbone.history.start();
+      }
     }});
   }
 
   function initConsole() {
     //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
-    Pages.AddPanel('organization', null, null, null, navigateToHome);
+    Pages.AddPanel('organization', '.go-home', null, null, navigateToHome);
     Pages.AddPanel('console', null, null, null, null);
     Pages.AddPanel('application', null, null, null, Usergrid.console.pageSelectApplication);
     Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
@@ -91,20 +93,67 @@ $(document).ready(function () {
   function initNavigation() {
     var Router = Backbone.Router.extend({
       routes: {
+        "home/:organization": "home",
         "home/:organization/:application": "home",
+        "dashboard/:organization/:application": "dashboard",
         "": "home"
       },
+      //Router Methods
       home: function(organization, application) {
-        console.log("ORG:" + organization);
-        console.log(application);
-        Usergrid.console.pageSelectHome();
+        console.log("Home");
+        if(!organization) {
+          organization = Usergrid.ApiClient.getOrganizationName();
+        }
+        if(isActiveOrganization(organization)) {
+          if(isActiveApplication(application)) {
+            Usergrid.console.pageSelectHome();
+          } else { // Not active App, we must first load that app
+            if(application){
+              Usergrid.console.pageSelect(application);
+            }
+            Usergrid.console.pageSelectHome();
+          }
+        } else { //Not active organization, we must first load that org
+          Usergrid.console.selectOrganization(organization);
+          Usergrid.console.pageSelectHome();
+        }
+      },
+      dashboard: function(organization,application) {
+        console.log("dashboard");
       }
     });
     router = new Router();
   }
 
   function navigateToHome() {
-    router.navigate("home/myOrg/myApp", {trigger: true});
+    navigateTo('home');
+  }
+
+  function isActiveOrganization(org) {
+    console.log("ORG: " + org);
+    if(org) {
+      if(Usergrid.ApiClient.getOrganizationName() === org ) {
+        return true
+      }
+    }
+    return false
+  }
+
+  function isActiveApplication(app) {
+    console.log("App " + app)
+    if(app) {
+      if(Usergrid.ApiClient.getApplicationName() === app) {
+        return true
+      }
+    }
+    return false
+  }
+
+  function navigateTo(address) {
+    var url = address;
+    url += "/" + Usergrid.ApiClient.getOrganizationName();
+    url += "/" + Usergrid.ApiClient.getApplicationName();
+    router.navigate(url, {trigger: true});
   }
 
   function initCenterPanels(){
