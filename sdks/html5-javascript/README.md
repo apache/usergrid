@@ -3,6 +3,12 @@ Apigee provides an SDK that simplifies writing HTML5 (that is, JavaScript) appli
 
 <https://github.com/apigee/usergrid-javascript-sdk>
 
+You can download the SDK at:
+
+* Download as a zip file: <https://github.com/apigee/usergrid-javascript-sdk/archive/master.zip>
+* Download as a tar.gz file: <https://github.com/apigee/usergrid-javascript-sdk/archive/master.tar.gz>
+
+
 To find out more about Apigee App Services, see:
 
 <http://apigee.com/about/developers>
@@ -130,8 +136,8 @@ Is equivalent to this:
 ###Displaying Results
 After you populate your Collection object, you can display a list of all the entities currently stored in the Collection object. Here's how it's done in the Dogs app:
 
-  //populate the collection
-  dogs.fetch();
+	//populate the collection
+	dogs.fetch();
 	//iterate through all the items in this "page" of data
 	while(dogs.hasNextEntity()) {
 		//get a reference to the dog
@@ -198,15 +204,27 @@ Now, when the user clicks on either the #next-button or the #previous buttons, t
 
 
 ###Custom Queries
-A custom query allows you to tell the API that you want your results filtered or altered in some way.  The following example specifies that the query results should be ordered by creation date:
+The system supports custom queries similar to those used in traditional SQL.  This format allows you to specify filters based on many fields and also allows you to order the results as needed. Add a params object to any entity prior to doing a fetch.  For example, to search for dogs that have a color of brown, do this:
 
-	dogs.setQueryParams({'ql':'order by created DESC'});
+	dogs.setQueryParams({"ql":"select * where color='brown'"});
 
-If you also wanted to get more entities in the result set than the default 10, say 100, you can specify a query similar to the the following (the limit can be a maximum of 999):
+There may be a lot of brown dogs, so you can also order them by the entity creation date:
 
-	dogs.setQueryParams({'ql':'order by created DESC','limit':'100'});
+	dogs.setQueryParams({"ql":"select * where color='brown' order by created DESC"});
 
-There are many cases where expanding the result set is useful.  But be careful - the more results you get back in a single call, the longer it will take to transmit the data back to your app.
+By default, the system will return 10 entities in a result set, even if there are more that match the query. You can specify a larger (or smaller) number, up to a maximum of 999. The limit parameter needs to be separate from the query.  So continuing with the example above, there may be many brown dogs, and we want to get a maximum of 100:
+
+	dogs.setQueryParams({"ql":"select * where color='brown' order by created DESC", "limit":"100"});
+	
+You may also want to just get 100 entities, but you don't want to filter by any fields:
+
+	dogs.setQueryParams({"limit":"100"});
+	
+Or, to get all dogs, but make sure they are ordered:
+
+	dogs.setQueryParams({"ql":"order by created DESC"});
+
+There are many cases where expanding the result set is useful.  But be careful: the more results you get back in a single call, the longer it will take to transmit the data back to your app.
 
 You can find more information on custom queries here:
 
