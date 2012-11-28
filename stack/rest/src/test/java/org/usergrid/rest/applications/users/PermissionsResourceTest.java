@@ -15,16 +15,15 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
-
-import javatests.Foo;
 
 import javax.ws.rs.core.MediaType;
 
@@ -34,7 +33,6 @@ import org.junit.Test;
 import org.usergrid.java.client.entities.Group;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
-import org.usergrid.persistence.Entity;
 import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.utils.UUIDUtils;
 
@@ -140,6 +138,68 @@ public class PermissionsResourceTest extends AbstractRestTest {
 
     }
 
+    @Test
+    public void dictionaryPermissions() throws Exception{
+      UUID id = UUIDUtils.newTimeUUID();
+
+      String applicationName = "testapp";
+      String orgname = "dictionaryPermissions";
+      String username = "permissionadmin" + id;
+      String password = "password";
+      String email = String.format("email%s@usergrid.com", id);
+
+      OrganizationOwnerInfo orgs = managementService.createOwnerAndOrganization(orgname, username, "noname", email,
+              password, true, false);
+
+      // create the app
+      ApplicationInfo appInfo = managementService
+              .createApplication(orgs.getOrganization().getUuid(), applicationName);
+      
+      String adminToken = managementService.getAccessTokenForAdminUser(orgs.getOwner().getUuid(), 0);
+      
+      // now create the new role
+      Map<String, String> data = hashMap("name", "roleadmin");
+
+      
+      JsonNode node = resource().path(String.format("/%s/%s/roles", orgname, applicationName))
+          .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
+          .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
+      
+      assertNull(getError(node));
+
+      // add the perms to the roleadmin to allow users in the role to create roles themselves
+      addPermission(orgname, applicationName, adminToken, "roleadmin", "get,put,post:/roles/**");
+      
+
+      //create an application user
+      UUID userId = createRoleUser(orgs.getOrganization().getUuid(), appInfo.getId(), adminToken, "roleadminuser",
+              "roleadminuser@usergrid.com");
+
+      // grant this application user the "roleadmin" role
+      node = resource().path(String.format("/%s/%s/users/roleadminuser/roles/roleadmin", orgname, applicationName))
+              .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
+              .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+
+      assertNull(getError(node));
+
+      //get the app users token
+      String reviewer1Token = managementService.getAccessTokenForAppUser(appInfo.getId(), userId, 0);
+      
+
+      data = hashMap("name", "usercreatedrole");
+
+      //create a role as the user
+      node = resource().path(String.format("/%s/%s/roles", orgname, applicationName))
+          .queryParam("access_token", reviewer1Token).accept(MediaType.APPLICATION_JSON)
+          .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
+      
+      assertNull(getError(node));
+      
+      //now try to add permission as the user, this should work
+      addPermission(orgname, applicationName, reviewer1Token, "usercreatedrole", "get,put,post:/foo/**");
+
+    }
+    
     /**
      * Tests a real world example with the following steps. Creates an
      * application.
