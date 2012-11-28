@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -293,12 +293,12 @@ public class QueueManagerImpl implements QueueManager {
 		/*
 		 * long timestamp = createTimestamp(); Mutator<ByteBuffer> batch =
 		 * createMutator( getApplicationKeyspace(applicationId), be);
-		 * 
+		 *
 		 * queuePath = normalizeQueuePath(queuePath);
-		 * 
+		 *
 		 * for (Message message : messages) { batchPostToQueue(batch,
 		 * applicationId, queuePath, message, timestamp); }
-		 * 
+		 *
 		 * batchExecute(batch, RETRY_COUNT);
 		 */
 
@@ -831,7 +831,7 @@ public class QueueManagerImpl implements QueueManager {
 
 		}
 
-		if (skip_first) {
+		if (skip_first && query.isUpdate()) {
 			uuid_set.remove(start_uuid);
 		}
 
@@ -866,7 +866,7 @@ public class QueueManagerImpl implements QueueManager {
 			lastUUID = start_uuid;
 		}
 
-		if (lastUUID != null) {
+		if (lastUUID != null && query.isUpdate()) {
 			Mutator<UUID> batch = createMutator(ko, ue);
 
 			if (query.getPosition() == QueuePosition.LAST) {
