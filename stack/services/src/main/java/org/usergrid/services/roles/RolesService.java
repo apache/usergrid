@@ -67,9 +67,9 @@ public class RolesService extends AbstractCollectionService {
             throws Exception {
 
         if ("permissions".equalsIgnoreCase(dictionary)) {
-            checkPermissionsForPath(context, "/permissions");
-
             EntityRef ref = refs.get(0);
+            
+            checkPermissionsForEntitySubPath(context, ref, "/permissions");
 
             String roleName = (String) em.getProperty(ref, "name");
             
@@ -112,9 +112,10 @@ public class RolesService extends AbstractCollectionService {
             ServicePayload payload) throws Exception {
 
         if ("permissions".equalsIgnoreCase(dictionary)) {
-            checkPermissionsForPath(context, "/permissions");
 
             EntityRef ref = refs.get(0);
+            
+            checkPermissionsForEntitySubPath(context, ref, "/permissions");
 
             String roleName = (String) em.getProperty(ref, "name");
 
@@ -147,9 +148,11 @@ public class RolesService extends AbstractCollectionService {
             throws Exception {
 
         if ("permissions".equalsIgnoreCase(dictionary)) {
-            checkPermissionsForPath(context, "/permissions");
+          
 
             EntityRef ref = refs.get(0);
+            
+            checkPermissionsForEntitySubPath(context, ref, "/permissions");
 
             String roleName = (String) em.getProperty(ref, "name");
 
