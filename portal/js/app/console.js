@@ -607,22 +607,25 @@ function apigee_console_app(Pages, query_params) {
    *
    ******************************************************************/
 
+
   function pageSelectHome() {
     setupMenu();
-    Pages.SelectPanel('organization');
     requestApplications();
     requestAdmins();
     displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
     requestOrganizationCredentials();
     requestAdminFeed();
   }
-  window.Usergrid.console.pageSelectHome = pageSelectHome;
+/* TODO: REMOVE
+  function goHome() {
+    Pages.SelectPanel('organization');
+  }*/
 
-  $(document).on('click','.go-home', pageSelectHome);
+  window.Usergrid.console.pageSelectHome = pageSelectHome;
+//
+//  $(document).on('click','.go-home', goHome);
 
   function displayApplications(response) {
-    var t = "";
-    var m2 = "";
     applications = {};
     applications_by_id = {};
     var appMenu = $('#applications-menu');
@@ -635,7 +638,7 @@ function apigee_console_app(Pages, query_params) {
       var count = 0;
       var applicationNames = keys(applications).sort();
       var data = [];
-      var appMenuTmpl = $('<li><a href="#">${name}</a></li>');
+      var appMenuTmpl = $('<li><a >${name}</a></li>');
 
       for (var i in applicationNames) {
         var name = applicationNames[i];
@@ -651,14 +654,14 @@ function apigee_console_app(Pages, query_params) {
         appMenu.find("a").click(function selectApp(e) {
           var link = $(this);
           pageSelect(link.tmplItem().data.name);
-          Pages.SelectPanel('application');
+          Usergrid.Navigation.router.navigateTo('dashboard');
         });
 
         appList.find("a").click(function selectApp(e) {
           e.preventDefault();
           var link = $(this);
           pageSelect(link.tmplItem().data.name);
-          Pages.SelectPanel('application');
+          Usergrid.Navigation.router.navigateTo('dashboard');
         });
         enableApplicationPanelButtons();
       }
@@ -713,8 +716,7 @@ function apigee_console_app(Pages, query_params) {
     var sectionAdmins = $('#organization-admins-table');
     sectionAdmins.empty();
     if (response.data) {
-      var admins = {};
-      admins = response.data;
+      var admins = response.data;
       admins = admins.sort();
       for (var i in admins) {
         var admin = admins[i];
@@ -1562,7 +1564,7 @@ function apigee_console_app(Pages, query_params) {
       }
     );
 
-    $('#application-panel #application-panel-text').html(t);
+    $('#dashboard-panel #application-panel-text').html(t);
   }
 
   function requestApplicationUsage() {
@@ -3587,28 +3589,27 @@ function apigee_console_app(Pages, query_params) {
     pathInput.data('typeahead').source = list;
   }
 
-  function updateQueryTypeahead(response, inputId){
-    var pathInput = $("#" + inputId);
-    var list = [];
-    var name;
-    list.push(response.path);
-    $.each(response.entities, function(entityKey, entityValue){
-      if ( entityValue.type === 'user'){
-        name = entityValue.username + '/';
-      } else if (entityValue.name) {
-        name = entityValue.name + '/';
-      } else {
-        name = entityValue.uuid + '/';
-      }
+  function updateQueryTypeahead(response, inputId) {
+    var pathInput = $("#" + inputId),
+      list = [],
+      name,
+      path = response.path + '/';
+    list.push(path);
+    $.each(response.entities, function(entityKey, entityValue) {
+      name = getEntityName(entityValue) + '/';
+      list.push(path + name);
       //Fill collection names
-      list.push(response.path + '/' + name);
-      $.each(entityValue.metadata.collections, function(key, value){
-          list.push(response.path + '/' + name + key);
+      if (entityValue.metadata.collections) {
+        $.each(entityValue.metadata.collections, function(key){
+          list.push(path + name + key);
         });
+      }
       //Fill Sets
-      $.each(entityValue.metadata.sets, function(key, value){
-        list.push(response.path + '/' + name + key);
-      })
+      if (entityValue.metadata.sets) {
+        $.each(entityValue.metadata.sets, function(key, value) {
+          list.push(response.path + '/' + name + key);
+        })
+      }
     });
     //TODO: Possible cleanup here, could not set the options via pathInput.typeahead.options, so overriding variables directly
     pathInput.data('typeahead').source = list;
@@ -3617,6 +3618,24 @@ function apigee_console_app(Pages, query_params) {
       var checker = new RegExp('^' + this.query + '[a-z0-9.-]*\/?$', "i");
       return checker.test(item);
     }
+  }
+  //TODO: find a nice place to store this function
+  function getEntityName(entity) {
+    var name;
+    switch(entity.type) {
+      case 'user':
+        name = entity.username;
+        break;
+      case 'group':
+        name = entity.path;
+        break;
+      case 'role':
+        name = entity.name;
+        break;
+      default:
+        name = entity.uuid;
+    }
+    return name;
   }
 
   function updateUsersAutocomplete(){
@@ -3729,7 +3748,7 @@ function apigee_console_app(Pages, query_params) {
 
   function setupOrganizationsMenu() {
     var organizations = Usergrid.organizations.getList();
-    var orgName = Usergrid.ApiClient.getOrganizationName();
+      var orgName = Usergrid.ApiClient.getOrganizationName();
     if (!organizations) {
       return;
     }
@@ -3738,7 +3757,7 @@ function apigee_console_app(Pages, query_params) {
     $('#selectedOrg').text(orgName);
 
     var orgMenu = $('#organizations-menu ul');
-    var orgTmpl = $('<li><a href="#">${name}</a></li>');
+    var orgTmpl = $('<li><a>${name}</a></li>');
     var data = [];
     var count = organizations.length;
     var i=0;
@@ -3748,26 +3767,34 @@ function apigee_console_app(Pages, query_params) {
     }
     orgMenu.empty();
     orgTmpl.tmpl(data).appendTo(orgMenu);
-    orgMenu.find('a').click(selectOrganization);
+    orgMenu.find('a').click(selectOrganizationDropdownHandler);
     displayCurrentOrg();
   }
 
-  function selectOrganization(e) {
+  function selectOrganization(orgName) {
+    if(orgName){
+      var currentOrg = Usergrid.organizations.getItemByName(orgName);
+      Usergrid.ApiClient.setOrganizationName(currentOrg.getName());
+      //sets the organization name in the console page.
+      displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
+      // make sure there is an application for this org
+      var app = currentOrg.getFirstItem();
+      if (app) {
+        Usergrid.ApiClient.setApplicationName(app.getName());
+        setNavApplicationText();
+      } else {
+        forceNewApp();
+      }
+      Pages.SelectPanel('organization');
+    }
+  }
+
+  Usergrid.console.selectOrganization = selectOrganization;
+
+  function selectOrganizationDropdownHandler(e) {
     var link = $(this);
     var orgName = link.text();
-    var currentOrg = Usergrid.organizations.getItemByName(orgName);
-    Usergrid.ApiClient.setOrganizationName(currentOrg.getName());
-    //sets the organization name in the console page.
-    displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
-    // make sure there is an application for this org
-    var app = currentOrg.getFirstItem();
-    if (app) {
-      Usergrid.ApiClient.setApplicationName(app.getName());
-      setNavApplicationText();
-    } else {
-      forceNewApp();
-    }
-    Pages.ShowPage('console');
+    selectOrganization(orgName);
   }
 
   function logout() {

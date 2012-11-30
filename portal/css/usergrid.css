@@ -3538,6 +3538,9 @@ a.thumbnail:hover {
 .invisible {
   visibility: hidden;
 }
+a {
+  color: #000000;
+}
 html,
 body {
   height: 100%;
@@ -3757,8 +3760,11 @@ a:active {
   color: #ffffff;
   background-color: #1b97d1;
 }
-.navbar .nav .always-active {
+.navbar .nav .active {
   background-color: #e02e03 !important;
+}
+.navbar .nav .active .go-home {
+  background-color: transparent;
 }
 .navbar .nav .active > a {
   color: #ffffff;

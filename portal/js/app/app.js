@@ -2,7 +2,10 @@ Usergrid.organizations = new Usergrid.Organization();
 
 var Pages = new ApigeePages();
 
+
+
 $(document).ready(function () {
+
   var query_params = Usergrid.Params.queryParams;
   initCore();
   initUI(query_params);
@@ -53,19 +56,23 @@ $(document).ready(function () {
     var privateMenu = $('#privateMenu');
 
     Pages.AddPage({name:'login', menu:publicMenu});
-    //Pages.ShowPage('login');
     Pages.AddPage({name:'message', menu:publicMenu});
     Pages.AddPage({name:'signup', menu:publicMenu});
     Pages.AddPage({name:'forgot-password', menu:publicMenu});
     Pages.AddPage({name:'post-signup', menu:publicMenu});
-    Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction:Usergrid.console.pageSelectHome});
+    Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction: function() {
+      Pages.SelectPanel('organization');
+      if(!Backbone.History.started){
+        Backbone.history.start();
+      }
+    }});
   }
 
   function initConsole() {
     //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
-    Pages.AddPanel('organization', null, null, null, null);
+    Pages.AddPanel('organization', '.go-home', null, null, Usergrid.console.pageSelectHome);
     Pages.AddPanel('console', null, null, null, null);
-    Pages.AddPanel('application', null, null, null, Usergrid.console.pageSelectApplication);
+    Pages.AddPanel('dashboard', null, null, null, Usergrid.console.pageSelectApplication);
     Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
     Pages.AddPanel('users', null, null, null, Usergrid.console.pageSelectUsers);
     Pages.AddPanel('group', "#sidebar-menu a[href='#groups']", null, null, null);
@@ -78,6 +85,7 @@ $(document).ready(function () {
     Pages.AddPanel('shell', null, null, null, Usergrid.console.pageSelectShell);
     Pages.AddPanel('account', "#account-link", null, null, Usergrid.console.requestAccountSettings);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
+
   }
 
   function initCenterPanels(){
@@ -92,5 +100,4 @@ $(document).ready(function () {
     console.log("free space: "+freeSpace);
     panels.css('margin-left',function(){return freeSpace / 2;});
   }
-
 });

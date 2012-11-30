@@ -24,6 +24,8 @@
 
     </script>
     <script src="js/lib/jquery-1.7.2.min.js" type="text/javascript"></script>
+    <script src="js/lib/underscore-min.js" type="text/javascript"></script>
+    <script src="js/lib/backbone.js" type="text/javascript"></script>
     <script src="js/lib/jquery-ui-1.8.18.min.js" type="text/javascript"></script>
     <script src="js/lib/jquery.jsonp-2.3.1.min.js" type="text/javascript"></script>
     <script src="js/lib/jquery.dataset.min.js" type="text/javascript"></script>
@@ -33,6 +35,7 @@
     <script src="js/lib/jquery.ui.statusbar.min.js" type="text/javascript"></script>
     <script src="js/lib/date.min.js" type="text/javascript"></script>
     <script src="js/app/helpers.js" type="text/javascript"></script>
+    <script src="js/app/navigation.js" type="text/javascript"></script>
     <script src="js/app/console.js" type="text/javascript"></script>
     <script src="js/app/ui/ui.js" type="text/javascript"></script>
 
@@ -60,7 +63,7 @@
               <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img class="logo" src="images/logo-white.png">apigee</a></h1>
               <b class="caret"></b>
               <ul class="nav">
-                <li class="portal-name always-active" ><a href="#organization" class="go-home">Admin Portal</a></li>
+                <li class="portal-name" ><a class="go-home">Admin Portal</a></li>
                 <li id="more-menu" class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#">More <span class="caret"></span></a>
                 <ul class="dropdown-menu">
@@ -89,9 +92,9 @@
                   </ul>
                 </li>
                 <li id="organizations-menu" class="dropdown">
-                <a id="console-link" class="dropdown-toggle" data-toggle="dropdown" href="#"><span>Organizations</span> <span class="caret"></span></a>
+                <a id="console-link" class="dropdown-toggle" data-toggle="dropdown"><span>Organizations</span> <span class="caret"></span></a>
                 <ul class="dropdown-menu">
-                  <li><a href="#">loading...</a></li>
+                  <li><a href="">loading...</a></li>
                 </ul>
               </li>
                 <li class="dropdown">
@@ -238,7 +241,7 @@
                 <h4 class="panel-title">
                   ORGANIZATION
                 </h4>
-                <li><a href="#organization" class="go-home">
+                <li><a class="go-home">
                   <i class="icon-home"></i>
                   <div id="organization-name">Home</div>
                 </a></li>
@@ -256,7 +259,7 @@
                     </ul>
                   </div>
                 </li>
-                <li id="application-panel-button-dashboard"><a href="#application"><i class="icon-th"></i> Dashboard</a></li>
+                <li id="application-panel-button-dashboard"><a href="#dashboard"><i class="icon-th"></i> Dashboard</a></li>
                 <li><a href="#users"><i class="icon-user"></i> Users</a></li>
                 <li><a href="#groups"><i class="icon-user"></i> Groups</a></li>
                 <li><a href="#roles" id="application-panel-button-roles"><i class="icon-user"></i> Roles</a></li>
@@ -382,7 +385,7 @@
               <div id="console-panel" class="container">
                 <iframe class="container" src="loading.html" scrolling="no"></iframe>
               </div>
-              <div id="application-panel" style="display: none">
+              <div id="dashboard-panel" style="display: none">
                 <div class="console-section">
                   <div class="well thingy">
                     <span class="title"> Application Dashboard <span class="app_title"></span> </span>
@@ -1305,5 +1308,6 @@
   <script src="js/app/status.js" type="text/javascript"></script>
   <script src="js/lib/prettify.js" type="text/javascript"></script>
   <script type="text/javascript" charset="utf-8">prettyPrint();</script>
+
 
 </html>

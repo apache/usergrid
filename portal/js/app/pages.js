@@ -3,7 +3,7 @@ function ApigeePages() {
     pages: {},
     panels: {},
     resetPasswordUrl: ''
-  };
+    };
 
   self.clearPage = function(){
     $("#pages > div").hide();
@@ -75,16 +75,18 @@ function ApigeePages() {
       showFunction: showFunction
     };
 
+    if( !(panel.name === 'user' || panel.name === 'group')) {
+      panel.link.click(function(e) {
+        e.preventDefault();
+        Usergrid.Navigation.router.navigateTo(panel.name);
+      });
+    }
+
+    self.panels[panel.name] = panel;
+
     if (panel.initFunction) {
       panel.initFunction();
     }
-
-    panel.link.click(function(e) {
-      e.preventDefault();
-      self.SelectPanel(panel.name);
-    });
-
-    self.panels[panel.name] = panel;
   };
 
   self.ActivatePanel = function(panelName){
