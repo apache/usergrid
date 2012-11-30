@@ -270,11 +270,10 @@ public class ManagementResourceTest extends AbstractRestTest {
         assertEquals(Status.BAD_REQUEST, responseStatus);
 
     }
-
+    
     @Test
     public void revokeToken() throws Exception {
-
-        String token1 = super.adminToken();
+    	String token1 = super.adminToken();
         String token2 = super.adminToken();
 
         JsonNode response = resource().path("/management/users/test").queryParam("access_token", token1)
@@ -314,7 +313,60 @@ public class ManagementResourceTest extends AbstractRestTest {
         }
 
         assertEquals(Status.UNAUTHORIZED, status);
+        
+        String token3 = super.adminToken();
+        String token4 = super.adminToken();
+        
+        response = resource().path("/management/users/test").queryParam("access_token", token3)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
+        assertEquals("test@usergrid.com", response.get("data").get("email").asText());
+
+        response = resource().path("/management/users/test").queryParam("access_token", token4)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+        assertEquals("test@usergrid.com", response.get("data").get("email").asText());
+
+        // now revoke the token3
+        response = resource()
+        		.path("/management/users/test/revoketoken")
+        		.queryParam("access_token", token3)
+        		.queryParam("token", token3)
+        		.accept(MediaType.APPLICATION_JSON)
+        		.type(MediaType.APPLICATION_JSON_TYPE)
+        		.post(JsonNode.class);
+
+        // the token3 shouldn't work
+
+        status = null;
+
+        try {
+            response = resource()
+            		.path("/management/users/test")
+            		.queryParam("access_token", token3)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE)
+                    .get(JsonNode.class);
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals(Status.UNAUTHORIZED, status);
+
+        status = null;
+
+        try {
+            response = resource().path("/management/users/test")
+            		.queryParam("access_token", token4)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE)
+                    .get(JsonNode.class);
+            
+            status = Status.OK;
+        } catch (UniformInterfaceException uie) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals(Status.OK, status);
     }
-
 }
