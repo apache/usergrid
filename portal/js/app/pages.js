@@ -3,8 +3,7 @@ function ApigeePages() {
     pages: {},
     panels: {},
     resetPasswordUrl: ''
-    },
-    router;
+    };
 
   self.clearPage = function(){
     $("#pages > div").hide();
@@ -76,10 +75,12 @@ function ApigeePages() {
       showFunction: showFunction
     };
 
-    panel.link.click(function(e) {
-      e.preventDefault();
-      Usergrid.Navigation.router.navigateTo(panel.name);
-    });
+    if( !(panel.name === 'user' || panel.name === 'group')) {
+      panel.link.click(function(e) {
+        e.preventDefault();
+        Usergrid.Navigation.router.navigateTo(panel.name);
+      });
+    }
 
     self.panels[panel.name] = panel;
 

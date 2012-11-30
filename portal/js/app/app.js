@@ -6,8 +6,7 @@ var Pages = new ApigeePages();
 
 $(document).ready(function () {
 
-  var query_params = Usergrid.Params.queryParams,
-    router;
+  var query_params = Usergrid.Params.queryParams;
   initCore();
   initUI(query_params);
   startApp();
