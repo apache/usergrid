@@ -616,7 +616,7 @@ function apigee_console_app(Pages, query_params) {
     requestOrganizationCredentials();
     requestAdminFeed();
   }
-/*
+/* TODO: REMOVE
   function goHome() {
     Pages.SelectPanel('organization');
   }*/
@@ -638,7 +638,7 @@ function apigee_console_app(Pages, query_params) {
       var count = 0;
       var applicationNames = keys(applications).sort();
       var data = [];
-      var appMenuTmpl = $('<li><a href="#">${name}</a></li>');
+      var appMenuTmpl = $('<li><a >${name}</a></li>');
 
       for (var i in applicationNames) {
         var name = applicationNames[i];

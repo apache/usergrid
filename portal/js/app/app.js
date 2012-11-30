@@ -19,7 +19,6 @@ $(document).ready(function () {
 
   function initUI(query_params) {
     apigee_console_app(Pages, query_params);
-    initNavigation();
     initMenu();
     StatusBar.Init('#statusbar-placeholder');
     toggleableSections();
@@ -58,13 +57,11 @@ $(document).ready(function () {
     var privateMenu = $('#privateMenu');
 
     Pages.AddPage({name:'login', menu:publicMenu});
-    //Pages.ShowPage('login');
     Pages.AddPage({name:'message', menu:publicMenu});
     Pages.AddPage({name:'signup', menu:publicMenu});
     Pages.AddPage({name:'forgot-password', menu:publicMenu});
     Pages.AddPage({name:'post-signup', menu:publicMenu});
     Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction: function() {
-      Pages.SelectPanel('organization');
       if(!Backbone.History.started){
         Backbone.history.start();
       }
@@ -73,7 +70,7 @@ $(document).ready(function () {
 
   function initConsole() {
     //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
-    Pages.AddPanel('organization', '.go-home', null, null, navigateToHome);
+    Pages.AddPanel('organization', '.go-home', null, null, Usergrid.console.pageSelectHome);
     Pages.AddPanel('console', null, null, null, null);
     Pages.AddPanel('application', null, null, null, Usergrid.console.pageSelectApplication);
     Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
@@ -88,72 +85,7 @@ $(document).ready(function () {
     Pages.AddPanel('shell', null, null, null, Usergrid.console.pageSelectShell);
     Pages.AddPanel('account', "#account-link", null, null, Usergrid.console.requestAccountSettings);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
-  }
 
-  function initNavigation() {
-    var Router = Backbone.Router.extend({
-      routes: {
-        "home/:organization": "home",
-        "home/:organization/:application": "home",
-        "dashboard/:organization/:application": "dashboard",
-        "": "home"
-      },
-      //Router Methods
-      home: function(organization, application) {
-        console.log("Home");
-        if(!organization) {
-          organization = Usergrid.ApiClient.getOrganizationName();
-        }
-        if(isActiveOrganization(organization)) {
-          if(isActiveApplication(application)) {
-            Usergrid.console.pageSelectHome();
-          } else { // Not active App, we must first load that app
-            if(application){
-              Usergrid.console.pageSelect(application);
-            }
-            Usergrid.console.pageSelectHome();
-          }
-        } else { //Not active organization, we must first load that org
-          Usergrid.console.selectOrganization(organization);
-          Usergrid.console.pageSelectHome();
-        }
-      },
-      dashboard: function(organization,application) {
-        console.log("dashboard");
-      }
-    });
-    router = new Router();
-  }
-
-  function navigateToHome() {
-    navigateTo('home');
-  }
-
-  function isActiveOrganization(org) {
-    console.log("ORG: " + org);
-    if(org) {
-      if(Usergrid.ApiClient.getOrganizationName() === org ) {
-        return true
-      }
-    }
-    return false
-  }
-
-  function isActiveApplication(app) {
-    console.log("App " + app)
-    if(app) {
-      if(Usergrid.ApiClient.getApplicationName() === app) {
-        return true
-      }
-    }
-    return false
-  }
-
-  function navigateTo(address) {
-    var url = address;
-    url += "/" + Usergrid.ApiClient.getOrganizationName();
-    url += "/" + Usergrid.ApiClient.getApplicationName();
-    router.navigate(url, {trigger: true});
   }
 
   function initCenterPanels(){
@@ -168,5 +100,4 @@ $(document).ready(function () {
     console.log("free space: "+freeSpace);
     panels.css('margin-left',function(){return freeSpace / 2;});
   }
-
 });

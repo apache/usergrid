@@ -76,16 +76,16 @@ function ApigeePages() {
       showFunction: showFunction
     };
 
-    if (panel.initFunction) {
-      panel.initFunction();
-    }
-
     panel.link.click(function(e) {
       e.preventDefault();
-      self.SelectPanel(panel.name);
+      Usergrid.Navigation.router.navigateTo(panel.name);
     });
 
     self.panels[panel.name] = panel;
+
+    if (panel.initFunction) {
+      panel.initFunction();
+    }
   };
 
   self.ActivatePanel = function(panelName){
