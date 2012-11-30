@@ -2871,8 +2871,11 @@ function apigee_console_app(Pages, query_params) {
       data = { inactivity: inactivity };
       runAppQuery(new Usergrid.Query("PUT", "/role/" + roleName, data, null,
       function(){
-        var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
-        $('#roles-messages').text('Inactivity time has been set').prepend(closebutton).show();
+        closeErrorMessage = function () {
+          $('#role-permissions-messages').hide();
+        }
+        var closebutton = '<a onclick="closeErrorMessage();" class="close">&times;</a>'
+        $('#role-permissions-messages').text('Inactivity time has been set').prepend(closebutton).show();
         displayRoleInactivity(current_roleName)},
       function(){ displayRoleInactivity(current_roleName)}
       ));
