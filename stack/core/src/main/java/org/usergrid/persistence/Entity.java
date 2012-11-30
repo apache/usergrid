@@ -40,13 +40,13 @@ import org.usergrid.persistence.annotations.EntityProperty;
 public interface Entity extends EntityRef, Comparable<Entity> {
 
 	@Override
-	@EntityProperty(required = true, mutable = false, basic = true)
+	@EntityProperty(required = true, mutable = false, basic = true, indexed = false)
 	public UUID getUuid();
 
 	public void setUuid(UUID id);
 
 	@Override
-	@EntityProperty(required = true, mutable = false, basic = true)
+	@EntityProperty(required = true, mutable = false, basic = true, indexed = true)
 	public String getType();
 
 	public void setType(String type);

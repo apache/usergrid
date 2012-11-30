@@ -56,7 +56,7 @@ public abstract class AbstractEntity implements Entity {
 			String.CASE_INSENSITIVE_ORDER);
 
 	@Override
-	@EntityProperty(required = true, mutable = false, basic = true)
+	@EntityProperty(required = true, mutable = false, basic = true, indexed = false)
 	@JsonSerialize(include = Inclusion.NON_NULL)
 	public UUID getUuid() {
 		return uuid;
@@ -68,7 +68,7 @@ public abstract class AbstractEntity implements Entity {
 	}
 
 	@Override
-	@EntityProperty(required = true, mutable = false, basic = true)
+	@EntityProperty(required = true, mutable = false, basic = true, indexed = false)
 	public String getType() {
 		return Schema.getDefaultSchema().getEntityType(this.getClass());
 	}

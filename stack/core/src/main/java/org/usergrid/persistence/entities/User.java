@@ -60,13 +60,13 @@ public class User extends TypedEntity {
 	@EntityProperty(indexed = true, fulltextIndexed = true)
 	protected String name;
 
-	@EntityProperty(indexed = false)
+	@EntityProperty(indexed = true)
 	protected Boolean activated;
 
-	@EntityProperty(indexed = false)
+	@EntityProperty(indexed = true)
 	protected Boolean confirmed;
 
-	@EntityProperty(indexed = false)
+	@EntityProperty(indexed = true)
 	protected Boolean disabled;
 
 	@EntityProperty(indexed = true)

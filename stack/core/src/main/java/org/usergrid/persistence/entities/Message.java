@@ -36,25 +36,25 @@ public class Message extends TypedEntity {
 
 	public static final String ENTITY_TYPE = "message";
 
-	@EntityProperty(name = "correlation_id", indexed = false, mutable = false)
+	@EntityProperty(name = "correlation_id", indexed = true, mutable = false)
 	protected String correlationId;
 
-	@EntityProperty(indexed = false, mutable = false)
+	@EntityProperty(indexed = true, mutable = false)
 	protected String destination;
 
-	@EntityProperty(name = "reply_to", indexed = false, mutable = false)
+	@EntityProperty(name = "reply_to", indexed = true, mutable = false)
 	protected String replyTo;
 
-	@EntityProperty(fulltextIndexed = false, required = true, mutable = false)
+	@EntityProperty(fulltextIndexed = false, required = true, mutable = false, indexed = true)
 	String category;
 
-	@EntityProperty(indexed = false, mutable = false)
+	@EntityProperty(indexed = true, mutable = false)
 	protected Boolean indexed;
 
-	@EntityProperty(indexed = false, mutable = false)
+	@EntityProperty(indexed = true, mutable = false)
 	protected Boolean persistent;
 
-	@EntityProperty(indexed = false, mutable = false)
+	@EntityProperty(indexed = true, mutable = false)
 	protected Long timestamp;
 
 	@EntityDictionary(keyType = java.lang.String.class)

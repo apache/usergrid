@@ -39,13 +39,13 @@ public class Role extends TypedEntity {
     @EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = false, aliasProperty = true, mutable = false, unique = true)
     protected String name;
 
-    @EntityProperty(mutable = true)
+    @EntityProperty(mutable = true, indexed = true)
     protected String roleName;
 
-    @EntityProperty(mutable = true)
+    @EntityProperty(mutable = true, indexed = true)
     protected String title;
 
-    @EntityProperty(mutable = true)
+    @EntityProperty(mutable = true, indexed = true)
     protected Long inactivity;
 
     @EntityDictionary(keyType = java.lang.String.class)

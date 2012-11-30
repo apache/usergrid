@@ -130,7 +130,7 @@ public class Activity extends TypedEntity {
 	@EntityProperty(fulltextIndexed = false, required = false, mutable = false, indexed = true)
 	String category;
 
-	@EntityProperty(fulltextIndexed = false, required = true, mutable = false)
+	@EntityProperty(fulltextIndexed = false, required = true, mutable = false, indexed = true)
 	String verb;
 
 	@EntityProperty(indexed = true, required = true, mutable = false, timestamp = true)

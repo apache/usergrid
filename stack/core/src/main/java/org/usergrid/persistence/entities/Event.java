@@ -45,13 +45,13 @@ public class Event extends TypedEntity {
 	@EntityProperty(required = false, indexed = true, mutable = false)
 	UUID group;
 
-	@EntityProperty(fulltextIndexed = false, required = false, mutable = false)
+	@EntityProperty(fulltextIndexed = false, required = false, mutable = false, indexed = true)
 	String category;
 
 	@EntityProperty(indexed = false, required = false, mutable = false)
 	Map<String, Integer> counters;
 
-	@EntityProperty(indexed = false, required = false, mutable = false)
+	@EntityProperty(indexed = true, required = false, mutable = false)
 	String message;
 
 	@EntityDictionary(keyType = java.lang.String.class)

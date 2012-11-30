@@ -49,13 +49,13 @@ public class Application extends TypedEntity {
 	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, mutable = false, aliasProperty = true, basic = true)
 	protected String name;
 
-	@EntityProperty(basic = true)
+	@EntityProperty(basic = true, indexed = false)
 	protected String title;
 	
-	@EntityProperty(basic = true)
-    protected Long accesstokenttl;
+	@EntityProperty(basic = true, indexed = false)
+  protected Long accesstokenttl;
 
-	@EntityProperty
+	@EntityProperty(indexed = false)
 	protected String description;
 
 	@EntityDictionary(keyType = java.lang.String.class)

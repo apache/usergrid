@@ -77,7 +77,7 @@ public class DynamicEntity extends AbstractEntity {
 	}
 
 	@Override
-	@EntityProperty(required = true, mutable = false, basic = true)
+	@EntityProperty(required = true, mutable = false, basic = true, indexed = false)
 	public String getType() {
 		return type;
 	}
