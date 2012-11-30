@@ -10,7 +10,7 @@
   */
 Usergrid.Navigation = Backbone.Router.extend({
     routes: {
-      ":organization/:application/home": "home",
+      ":organization/:application/organization": "home",
       ":organization/:application/dashboard": "dashboard",
       ":organization/:application/users": "users",
       ":organization/:application/groups": "groups",
@@ -25,12 +25,7 @@ Usergrid.Navigation = Backbone.Router.extend({
       "": "home"
     },
     //Router Methods
-    initAddress: function() {
-      this.navigateToHome();
-    },
     home: function(organization, application) {
-      //TODO: for debug only
-      console.log("Home");
       if(organization) {
         this.checkOrganization(organization);
       }
@@ -41,51 +36,52 @@ Usergrid.Navigation = Backbone.Router.extend({
       this.checkOrganization(organization);
       this.checkApplication(application);
       Usergrid.console.pageSelect(application);
-      Usergrid.console.pageSelectApplication();
+      Pages.SelectPanel('dashboard');
     },
     users: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
-      Usergrid.console.pageSelectUsers();
+      Pages.SelectPanel('users');
     },
     groups: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
-      Usergrid.console.pageSelectGroups();
+      Pages.SelectPanel('groups');
     },
     roles: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
-      Usergrid.console.pageSelectRoles();
+      Pages.SelectPanel('roles')
     },
     activities: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
-      Usergrid.console.pageSelectActivities();
+      Pages.SelectPanel('activities');
     },
     collections: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
-      Usergrid.console.pageSelectCollections();
+      Pages.SelectPanel('collections');
     },
     analytics: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
-      Usergrid.console.pageSelectAnalytics();
+      Pages.SelectPanel('analytics');
     },
     properties: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
-      Usergrid.console.pageSelectProperties();
+      Pages.SelectPanel('properties');
     },
     shell: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
-      Usergrid.console.pageSelectShell();
+      Pages.SelectPanel('shell');
     },
     console: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
+      Pages.SelectPanel('console');
     },
     //Utils
     checkOrganization: function(org) {
@@ -94,7 +90,6 @@ Usergrid.Navigation = Backbone.Router.extend({
       }
     },
     isActiveOrganization: function(org) {
-      console.log("ORG: " + org); //TODO: REMOVE AFTER DEBUG
       if(org) {
         if(Usergrid.ApiClient.getOrganizationName() === org ) {
           return true
@@ -110,7 +105,6 @@ Usergrid.Navigation = Backbone.Router.extend({
       }
     },
     isActiveApplication: function(app) {
-      console.log("App " + app) // TODO: REMOVE AFTER DEBUG
       if(app) {
         if(Usergrid.ApiClient.getApplicationName() === app) {
           return true
@@ -118,45 +112,13 @@ Usergrid.Navigation = Backbone.Router.extend({
       }
       return false
     },
-    navigateToHome: function() {
-      this.navigateTo('home');
-    },
-    navigateToDashboard: function() {
-      this.navigateTo('dashboard');
-    },
-    navigateToUsers: function() {
-      this.navigateTo('users');
-    },
-    navigateToGroups: function() {
-      this.navigateTo('groups');
-    },
-    navigateToRoles: function() {
-      this.navigateTo('roles');
-    },
-    navigateToActivities: function() {
-      this.navigateTo('activities');
-    },
-    navigateToCollections: function() {
-      this.navigateTo('collections');
-    },
-    navigateToAnalytics: function() {
-      this.navigateTo('analytics');
-    },
-    navigateToProperties: function() {
-      this.navigateTo('properties');
-    },
-    navigateToShell: function() {
-      this.navigateTo('shell');
-    },
-    navigateToConsole: function() {
-      this.navigateTo('console');
-    },
+
     navigateTo: function(address) {
       var url;
-      url = "/" + Usergrid.ApiClient.getOrganizationName();
+      url = Usergrid.ApiClient.getOrganizationName();
       url += "/" + Usergrid.ApiClient.getApplicationName();
       url += "/" + address;
-      this.navigate(url, {trigger: true});
+      this.navigate(url, true);
     }
   });
 

@@ -62,6 +62,7 @@ $(document).ready(function () {
     Pages.AddPage({name:'forgot-password', menu:publicMenu});
     Pages.AddPage({name:'post-signup', menu:publicMenu});
     Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction: function() {
+      Pages.SelectPanel('organization');
       if(!Backbone.History.started){
         Backbone.history.start();
       }
@@ -72,7 +73,7 @@ $(document).ready(function () {
     //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
     Pages.AddPanel('organization', '.go-home', null, null, Usergrid.console.pageSelectHome);
     Pages.AddPanel('console', null, null, null, null);
-    Pages.AddPanel('application', null, null, null, Usergrid.console.pageSelectApplication);
+    Pages.AddPanel('dashboard', null, null, null, Usergrid.console.pageSelectApplication);
     Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
     Pages.AddPanel('users', null, null, null, Usergrid.console.pageSelectUsers);
     Pages.AddPanel('group', "#sidebar-menu a[href='#groups']", null, null, null);

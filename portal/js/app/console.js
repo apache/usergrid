@@ -654,14 +654,14 @@ function apigee_console_app(Pages, query_params) {
         appMenu.find("a").click(function selectApp(e) {
           var link = $(this);
           pageSelect(link.tmplItem().data.name);
-          Pages.SelectPanel('application');
+          Usergrid.Navigation.router.navigateTo('dashboard');
         });
 
         appList.find("a").click(function selectApp(e) {
           e.preventDefault();
           var link = $(this);
           pageSelect(link.tmplItem().data.name);
-          Pages.SelectPanel('application');
+          Usergrid.Navigation.router.navigateTo('dashboard');
         });
         enableApplicationPanelButtons();
       }
@@ -1564,7 +1564,7 @@ function apigee_console_app(Pages, query_params) {
       }
     );
 
-    $('#application-panel #application-panel-text').html(t);
+    $('#dashboard-panel #application-panel-text').html(t);
   }
 
   function requestApplicationUsage() {
