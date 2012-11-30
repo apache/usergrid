@@ -95,11 +95,11 @@ public class Application extends TypedEntity {
 	protected Map<String, WebHook> webhooks;
 
 	@EntityCollection(type = "activity", propertiesIndexed = { "created",
-			"modified", "published", "content" }, subkeys = "verb", reversed = true, sort = "published desc")
+			"modified", "published", "content", "verb" },reversed = true, sort = "published desc")
 	protected List<UUID> activities;
 
-	@EntityCollection(type = "asset", subkeys = { "owner" }, propertiesIndexed = {
-			"created", "modified", "path" })
+	@EntityCollection(type = "asset", propertiesIndexed = {
+			"created", "modified", "path", "owner" })
 	protected List<UUID> assets;
 
 	@EntityCollection(type = "event", propertiesIndexed = { "created",

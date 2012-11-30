@@ -106,11 +106,11 @@ public class User extends TypedEntity {
 	protected List<UUID> devices;
 
 	@EntityCollection(type = "activity", propertiesIndexed = { "created",
-			"published", "content" }, subkeys = { "verb" }, reversed = true, sort = "published desc")
+			"published", "content", "verb" }, reversed = true, sort = "published desc")
 	protected List<UUID> activities;
 
 	@EntityCollection(type = "activity", propertiesIndexed = { "created",
-			"published", "content" }, subkeys = { "verb" }, reversed = true, sort = "published desc")
+			"published", "content", "verb" }, reversed = true, sort = "published desc")
 	protected List<UUID> feed;
 
 	@EntityCollection(type = "role", linkedCollection = "users")
