@@ -20,6 +20,10 @@
 
 
 //--------------General ------------------------------------------------------------
+a {
+  color: #000000;
+}
+
 html, body{
   height: 100%;
   min-width: @minScreenWidth;
@@ -250,7 +254,10 @@ a:active {
       }
 
     }
-    .always-active{
+    .active{
+      .go-home{
+        background-color: transparent;
+      }
       background-color: @apigeeApplicationName !important;
     }
     .active{
