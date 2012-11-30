@@ -743,8 +743,8 @@ public class RelationManagerImpl implements RelationManager {
 
         }
         // Insert in subkeyed collections
-
-        CollectionInfo collection = getDefaultSchema().getCollection(ownerType,
+        Schema schema = getDefaultSchema();
+        CollectionInfo collection = schema.getCollection(ownerType,
                 collectionName);
         if (collection != null) {
             if (collection.hasSubkeys()) {
@@ -773,26 +773,17 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         // Add property indexes
-
         for (String propertyName : entity.getProperties().keySet()) {
-            boolean indexed_property = getDefaultSchema().isPropertyIndexed(
-                    entity.getType(), propertyName);
+            boolean indexed_property = schema.isPropertyIndexed(entity.getType(), propertyName);
             if (indexed_property) {
-                boolean collection_indexes_property = getDefaultSchema()
+                boolean collection_indexes_property = schema
                         .isPropertyIndexedInCollection(ownerType,
                                 collectionName, propertyName);
-                boolean item_schema_has_property = getDefaultSchema()
+                boolean item_schema_has_property = schema
                         .hasProperty(entity.getType(), propertyName);
-                boolean collection_indexes_dynamic_properties = getDefaultSchema()
-                        .hasProperty(entity.getType(), propertyName)
-                        && getDefaultSchema()
-                                .isCollectionIndexingDynamicProperties(
-                                        ownerType, collectionName);
-                boolean fulltext_indexed = getDefaultSchema()
-                        .isPropertyFulltextIndexed(entity.getType(),
-                                propertyName);
-                if (collection_indexes_property
-                        || (!item_schema_has_property && collection_indexes_dynamic_properties)) {
+                boolean fulltext_indexed = schema
+                        .isPropertyFulltextIndexed(entity.getType(), propertyName);
+                if (collection_indexes_property || !item_schema_has_property) {
                     Object propertyValue = entity.getProperty(propertyName);
                     IndexUpdate indexUpdate = batchStartIndexUpdate(batch,
                             entity, propertyName, propertyValue, timestampUuid,
@@ -813,9 +804,9 @@ public class RelationManagerImpl implements RelationManager {
         Set<String> dictionaryNames = em.getDictionaryNames(entity);
 
         for (String dictionaryName : dictionaryNames) {
-            boolean has_dictionary = getDefaultSchema().hasDictionary(
+            boolean has_dictionary = schema.hasDictionary(
                     entity.getType(), dictionaryName);
-            boolean dictionary_indexed = getDefaultSchema()
+            boolean dictionary_indexed = schema
                     .isDictionaryIndexedInCollection(ownerType, collectionName,
                             dictionaryName);
 
@@ -898,21 +889,16 @@ public class RelationManagerImpl implements RelationManager {
 
         // Remove property indexes
 
+        Schema schema = getDefaultSchema();
         for (String propertyName : entity.getProperties().keySet()) {
-            boolean collection_indexes_property = getDefaultSchema()
+            boolean collection_indexes_property = schema
                     .isPropertyIndexedInCollection(headEntity.getType(),
                             collectionName, propertyName);
-            boolean item_schema_has_property = getDefaultSchema().hasProperty(
+            boolean item_schema_has_property = schema.hasProperty(
                     entity.getType(), propertyName);
-            boolean collection_indexes_dynamic_properties = getDefaultSchema()
-                    .hasProperty(entity.getType(), propertyName)
-                    && getDefaultSchema()
-                            .isCollectionIndexingDynamicProperties(
-                                    headEntity.getType(), collectionName);
-            boolean fulltext_indexed = getDefaultSchema()
+            boolean fulltext_indexed = schema
                     .isPropertyFulltextIndexed(entity.getType(), propertyName);
-            if (collection_indexes_property
-                    || (!item_schema_has_property && collection_indexes_dynamic_properties)) {
+            if (collection_indexes_property || !item_schema_has_property) {
                 IndexUpdate indexUpdate = batchStartIndexUpdate(batch, entity,
                         propertyName, null, timestampUuid,
                         item_schema_has_property, false, false,
@@ -927,9 +913,9 @@ public class RelationManagerImpl implements RelationManager {
         Set<String> dictionaryNames = em.getDictionaryNames(entity);
 
         for (String dictionaryName : dictionaryNames) {
-            boolean has_dictionary = getDefaultSchema().hasDictionary(
+            boolean has_dictionary = schema.hasDictionary(
                     entity.getType(), dictionaryName);
-            boolean dictionary_indexed = getDefaultSchema()
+            boolean dictionary_indexed = schema
                     .isDictionaryIndexedInCollection(headEntity.getType(),
                             collectionName, dictionaryName);
 
@@ -953,7 +939,7 @@ public class RelationManagerImpl implements RelationManager {
 
         // Delete from subkeyed collections
 
-        CollectionInfo collection = getDefaultSchema().getCollection(
+        CollectionInfo collection = schema.getCollection(
                 headEntity.getType(), collectionName);
         if (collection != null) {
             if (collection.hasSubkeys()) {
@@ -1474,19 +1460,20 @@ public class RelationManagerImpl implements RelationManager {
 
         // Iterate though all the properties of the connected entity
 
+        Schema schema = getDefaultSchema();
         for (String propertyName : connectedEntity.getProperties().keySet()) {
             Object propertyValue = connectedEntity.getProperties().get(
                     propertyName);
 
-            boolean indexed = getDefaultSchema().isPropertyIndexed(
+            boolean indexed = schema.isPropertyIndexed(
                     connectedEntity.getType(), propertyName);
 
-            boolean connection_indexes_property = getDefaultSchema()
+            boolean connection_indexes_property = schema
                     .isPropertyIndexedInConnections(connectedEntity.getType(),
                             propertyName);
-            boolean item_schema_has_property = getDefaultSchema().hasProperty(
+            boolean item_schema_has_property = schema.hasProperty(
                     connectedEntity.getType(), propertyName);
-            boolean fulltext_indexed = getDefaultSchema()
+            boolean fulltext_indexed = schema
                     .isPropertyFulltextIndexed(connectedEntity.getType(),
                             propertyName);
             // For each property, if the schema says it's indexed, update its
@@ -1512,9 +1499,9 @@ public class RelationManagerImpl implements RelationManager {
         // update the index with those values
 
         for (String dictionaryName : dictionaryNames) {
-            boolean has_dictionary = getDefaultSchema().hasDictionary(
+            boolean has_dictionary = schema.hasDictionary(
                     connectedEntity.getType(), dictionaryName);
-            boolean dictionary_indexed = getDefaultSchema()
+            boolean dictionary_indexed = schema
                     .isDictionaryIndexedInConnections(
                             connectedEntity.getType(), dictionaryName);
 
@@ -1788,26 +1775,7 @@ public class RelationManagerImpl implements RelationManager {
             effectiveType = associatedType;
         }
 
-        Map<String, Set<CollectionInfo>> containers = getDefaultSchema()
-                .getContainersIndexingProperty(effectiveType, propertyName);
-
-        Map<String, java.util.Set<CollectionInfo>> containersIndexDynamicProperties = null;
-
-        if (!entitySchemaHasProperty) {
-            containersIndexDynamicProperties = getDefaultSchema()
-                    .getContainersIndexingDynamicProperties(effectiveType);
-        }
-
-        Map<String, java.util.Set<CollectionInfo>> copy = new TreeMap<String, java.util.Set<CollectionInfo>>(
-                CASE_INSENSITIVE_ORDER);
-        if (containers != null) {
-            copy.putAll(containers);
-        }
-        if (containersIndexDynamicProperties != null) {
-            copy.putAll(containersIndexDynamicProperties);
-        }
-        containers = copy;
-
+        Map<String, Set<CollectionInfo>> containers = getDefaultSchema().getContainers(effectiveType);
         if (containers != null) {
 
             Map<EntityRef, Set<String>> containerEntities = null;
@@ -2450,8 +2418,9 @@ public class RelationManagerImpl implements RelationManager {
         Mutator<ByteBuffer> batch = createMutator(
                 cass.getApplicationKeyspace(applicationId), be);
 
+        Schema schema = getDefaultSchema();
         for (Entry<String, List<UUID>> entry : collectionsByType.entrySet()) {
-            CollectionInfo collection = getDefaultSchema().getCollection(
+            CollectionInfo collection = schema.getCollection(
                     entry.getKey(), collectionName);
             if ((collection != null)
                     && !collection.getType().equals(headEntity.getType())) {

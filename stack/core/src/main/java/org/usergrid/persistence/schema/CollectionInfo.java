@@ -29,7 +29,6 @@ public class CollectionInfo {
 	private String name;
 	private EntityInfo container;
 
-	private boolean indexingDynamicProperties;
 	private boolean indexingDynamicDictionaries;
 	private String linkedCollection;
 	private Set<String> propertiesIndexed = new TreeSet<String>(
@@ -47,8 +46,6 @@ public class CollectionInfo {
 	}
 
 	public CollectionInfo(EntityCollection collectionAnnotation) {
-		setIndexingDynamicProperties(collectionAnnotation
-				.indexingDynamicProperties());
 		setIndexingDynamicDictionaries(collectionAnnotation
 				.indexingDynamicDictionaries());
 		setLinkedCollection(collectionAnnotation.linkedCollection());
@@ -104,14 +101,6 @@ public class CollectionInfo {
 	public void setDictionariesIndexed(Set<String> dictionariesIndexed) {
 		dictionariesIndexed = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 		dictionariesIndexed.addAll(dictionariesIndexed);
-	}
-
-	public boolean isIndexingDynamicProperties() {
-		return indexingDynamicProperties;
-	}
-
-	public void setIndexingDynamicProperties(boolean indexingProperties) {
-		indexingDynamicProperties = indexingProperties;
 	}
 
 	public boolean isIndexingDynamicDictionaries() {
@@ -239,8 +228,7 @@ public class CollectionInfo {
 
 	@Override
 	public String toString() {
-		return "CollectionInfo [name=" + name //+ ", container=" + container
-				+ ", indexingDynamicProperties=" + indexingDynamicProperties
+		return "CollectionInfo [name=" + name
 				+ ", indexingDynamicDictionaries="
 				+ indexingDynamicDictionaries + ", linkedCollection="
 				+ linkedCollection + ", propertiesIndexed=" + propertiesIndexed
