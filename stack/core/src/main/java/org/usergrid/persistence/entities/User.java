@@ -99,21 +99,21 @@ public class User extends TypedEntity {
 	@EntityDictionary(keyType = java.lang.String.class, valueType = CredentialsInfo.class)
 	protected Map<String, CredentialsInfo> credentials;
 
-	@EntityCollection(type = "group", linkedCollection = "users", propertiesIndexed = { "path" }, indexingDynamicProperties = true)
+	@EntityCollection(type = "group", linkedCollection = "users", propertiesIndexed = { "path" })
 	protected List<UUID> groups;
 
-	@EntityCollection(type = "device", linkedCollection = "users", propertiesIndexed = {}, indexingDynamicProperties = false)
+	@EntityCollection(type = "device", linkedCollection = "users", propertiesIndexed = {})
 	protected List<UUID> devices;
 
 	@EntityCollection(type = "activity", propertiesIndexed = { "created",
-			"published", "content", "verb" }, reversed = true, sort = "published desc")
+			"published", "content", "verb" }, reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
 	protected List<UUID> activities;
 
 	@EntityCollection(type = "activity", propertiesIndexed = { "created",
-			"published", "content", "verb" }, reversed = true, sort = "published desc")
+			"published", "content", "verb" }, reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
 	protected List<UUID> feed;
 
-	@EntityCollection(type = "role", linkedCollection = "users")
+	@EntityCollection(type = "role", linkedCollection = "users", indexingDynamicDictionaries = true)
 	protected List<UUID> roles;
 
 	public User() {

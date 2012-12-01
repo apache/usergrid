@@ -51,10 +51,10 @@ public class Role extends TypedEntity {
     @EntityDictionary(keyType = java.lang.String.class)
     protected Set<String> permissions;
 
-    @EntityCollection(type = "user", linkedCollection = "roles")
+    @EntityCollection(type = "user", linkedCollection = "roles", indexingDynamicDictionaries = true)
     protected List<UUID> users;
 
-    @EntityCollection(type = "group", linkedCollection = "roles")
+    @EntityCollection(type = "group", linkedCollection = "roles", indexingDynamicDictionaries = true)
     protected List<UUID> groups;
 
     public Role() {

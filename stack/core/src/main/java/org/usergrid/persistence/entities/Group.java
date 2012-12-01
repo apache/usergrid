@@ -58,18 +58,18 @@ public class Group extends TypedEntity {
   @EntityDictionary(keyType = java.lang.String.class, valueType = CredentialsInfo.class)
 	protected Map<String, CredentialsInfo> credentials;
 
-	@EntityCollection(type = "user", propertiesIndexed = { "username", "email" }, linkedCollection = "groups", indexingDynamicProperties = true)
+	@EntityCollection(type = "user", propertiesIndexed = { "username", "email" }, linkedCollection = "groups")
 	protected List<UUID> users;
 
 	@EntityCollection(type = "activity", propertiesIndexed = { "created",
-			"published", "content", "verb" }, reversed = true, sort = "published desc")
+			"published", "content", "verb" }, reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
 	protected List<UUID> activities;
 
 	@EntityCollection(type = "activity", propertiesIndexed = { "created",
-			"published", "content", "verb" }, reversed = true, sort = "published desc")
+			"published", "content", "verb" }, reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
 	protected List<UUID> feed;
 
-	@EntityCollection(type = "role", linkedCollection = "groups")
+	@EntityCollection(type = "role", linkedCollection = "groups", indexingDynamicDictionaries = true)
 	protected List<UUID> roles;
 
 	public Group() {

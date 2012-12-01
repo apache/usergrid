@@ -29,8 +29,6 @@ public @interface EntityCollection {
 
 	String[] dictionariesIndexed() default {};
 
-	boolean indexingDynamicProperties() default false;
-
 	boolean indexingDynamicDictionaries() default false;
 
 	String[] subkeys() default {};
