@@ -78,22 +78,22 @@ function start(route, handle) {
         console.log("Request for " + pathname + " received.");
         //try to start the session
         usergrid.session.start_session(request, response, 
-          function () {
-            //session was started successfully
-            console.log("Session started, routing...");
-            //process the request
-            route(handle, pathname, querydata, response, usergrid);  
-                     
-            console.log("route finished");  
-          },
-          function () {
-            //no session availble
-            console.log("No session available and none could be started.");
-            //let the user know that no session was available and none could be created
-            //either the API was down or there were not adequate permissions to create the session
-            response.writeHead(200, {"Content-Type": "text/text"});
-            response.write('No Session could be established.  Please refresh to try again');  
-            response.end(); 
+          function (err, result) {
+            if (err) {
+              //no session availble
+              console.log("No session available and none could be started.");
+              //let the user know that no session was available and none could be created
+              //either the API was down or there were not adequate permissions to create the session
+              response.writeHead(200, {"Content-Type": "text/text"});
+              response.write('No Session could be established.  Please refresh to try again');  
+              response.end();               
+            } else {
+              //session was started successfully
+              console.log("Session started, routing...");
+              //process the request
+              route(handle, pathname, querydata, response, usergrid);         
+              console.log("route finished");  
+            }
           });
         break;
     }

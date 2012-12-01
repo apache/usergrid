@@ -53,11 +53,10 @@ function main(querydata, response, usergrid) {
 
 function _get(response, usergrid, view, path) {
   usergrid.ApiClient.runAppQuery(new usergrid.Query('GET', path, null, null,
-     function(output) {
-       view.getBody(response, prepareOutput(output));  
-     },
-     function (output) {
-       view.getBody(response, prepareOutput(output));
+     function(err, result) {
+        //since the point of this app is to display the result that is given back
+        //by the API, we want to do the same thing regardless of the err
+        view.getBody(response, prepareOutput(result));  
      }
   ));
 }
@@ -67,11 +66,10 @@ function _post(response, usergrid, view, path, data) {
     data = JSON.parse(data); 
   }
   usergrid.ApiClient.runAppQuery(new usergrid.Query('POST', path, data, null,
-     function(output) {
-       view.getBody(response, prepareOutput(output));  
-     },
-     function (output) {
-       view.getBody(response, prepareOutput(output));
+     function(err, result) {
+       //since the point of this app is to display the result that is given back
+        //by the API, we want to do the same thing regardless of the err
+       view.getBody(response, prepareOutput(result));  
      }
   ));
 }
@@ -81,31 +79,30 @@ function _put(response, usergrid, view, path, data) {
     data = JSON.parse(data); 
   }
   usergrid.ApiClient.runAppQuery(new usergrid.Query('PUT', path, data, null,
-    function(output) {
-      view.getBody(response, prepareOutput(output));  
-    },
-    function (output) {
-      view.getBody(response, prepareOutput(output));
-    }
+    function(err, result) {
+       //since the point of this app is to display the result that is given back
+        //by the API, we want to do the same thing regardless of the err
+       view.getBody(response, prepareOutput(result));  
+     }
   ));
 }
 
 function _delete(response, usergrid, view, path) {
   usergrid.ApiClient.runAppQuery(new usergrid.Query('DELETE', path, null, null,
-    function(output) {
-      view.getBody(response, prepareOutput(output));  
-    },
-    function (output) {
-      view.getBody(response, prepareOutput(output));
-    }
+    function(err, result) {
+       //since the point of this app is to display the result that is given back
+        //by the API, we want to do the same thing regardless of the err
+       view.getBody(response, prepareOutput(result));  
+     } 
   ));
 }
 
 function _login(response, usergrid, view, username, password) {
   usergrid.ApiClient.logInAppUser(username, password,
-    function (output, user) {
-      //call was good, so populate the view
-      view.getBody(response, prepareOutput(output));  
+    function (err, result, user) {
+      //since the point of this app is to display the result that is given back
+      //by the API, we want to do the same thing regardless of the err
+      view.getBody(response, prepareOutput(result));  
       
       //just for kicks, we will save a timestamp in the session, so you can see how to do it
       var timestamp = new Date().getTime()
@@ -113,15 +110,13 @@ function _login(response, usergrid, view, username, password) {
       
       //this login call pulled back a user object and a token, so we need to save the session
       usergrid.session.save_session(response, 
-        function(){
-          console.log("Session saved...");
-        }, 
-        function(){
-          console.log("Could not save session..."); 
+        function(err, result){
+          if (err) {
+            console.log("Could not save session...");
+          } else {
+            console.log("Session saved...");
+          }
         })               
-    },
-    function (output) {
-      view.getBody(response, prepareOutput(output)); 
     }
   );   
 }

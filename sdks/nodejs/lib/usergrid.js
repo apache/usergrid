@@ -31,17 +31,15 @@
  *  @param {string} path
  *  @param {object} jsonObj
  *  @param {object} paramsObj
- *  @param {function} successCallback
- *  @param {function} failureCallback
+ *  @param {function} callback
  */
-Query = function(method, resource, jsonObj, paramsObj, successCallback, failureCallback) {
+Query = function(method, resource, jsonObj, paramsObj, callback) {
   //query vars
   this._method = method;
   this._resource = resource;
   this._jsonObj = jsonObj;
   this._paramsObj = paramsObj;
-  this._successCallback = successCallback;
-  this._failureCallback = failureCallback;
+  this._callback = callback;
 
   //curl command - will be populated by runQuery function
   this._curl = '';
@@ -85,13 +83,12 @@ Query.prototype = {
    *  @param {function} failureCallback
    *  @return none
    */
-  setAllQueryParams: function(method, resource, jsonObj, paramsObj, successCallback, failureCallback) {
+  setAllQueryParams: function(method, resource, jsonObj, paramsObj, callback) {
     this._method = method;
     this._resource = resource;
     this._jsonObj = jsonObj;
     this._paramsObj = paramsObj;
-    this._successCallback = successCallback;
-    this._failureCallback = failureCallback;
+    this._callback = callback;
   },
 
   /**
@@ -105,8 +102,7 @@ Query.prototype = {
     this._resource = null;
     this._jsonObj = {};
     this._paramsObj = {};
-    this._successCallback = null;
-    this._failureCallback = null;
+    this._callback = null;
   },
   /**
   * Returns the method
@@ -202,8 +198,8 @@ Query.prototype = {
   * @method getSuccessCallback
   * @return {function} Returns the successCallback
   */
-  getSuccessCallback: function() {
-    return this._successCallback;
+  getCallback: function() {
+    return this._callback;
   },
 
   /**
@@ -213,8 +209,8 @@ Query.prototype = {
   * @method setSuccessCallback
   * @return none
   */
-  setSuccessCallback: function(successCallback) {
-    this._successCallback = successCallback;
+  setCallback: function(callback) {
+    this._callback = callback;
   },
 
   /**
@@ -224,47 +220,9 @@ Query.prototype = {
   * @method callSuccessCallback
   * @return {boolean} Returns true or false based on if there was a callback to call
   */
-  callSuccessCallback: function(response) {
-    if (this._successCallback && typeof(this._successCallback ) === "function") {
-      this._successCallback(response);
-      return true;
-    } else {
-      return false;
-    }
-  },
-
-  /**
-  * Returns the failure callback function
-  *
-  * @public
-  * @method getFailureCallback
-  * @return {function} Returns the failureCallback
-  */
-  getFailureCallback: function() {
-    return this._failureCallback;
-  },
-
-  /**
-  * sets the failure callback function
-  *
-  * @public
-  * @method setFailureCallback
-  * @return none
-  */
-  setFailureCallback: function(failureCallback) {
-    this._failureCallback = failureCallback;
-  },
-
-  /**
-  * Calls the failure callback function
-  *
-  * @public
-  * @method callFailureCallback
-  * @return {boolean} Returns true or false based on if there was a callback to call
-  */
-  callFailureCallback: function(response) {
-    if (this._failureCallback && typeof(this._failureCallback) === "function") {
-      this._failureCallback(response);
+  callCallback: function(err, response) {
+    if (this._callback && typeof(this._callback ) === "function") {
+      this._callback(err, response);
       return true;
     } else {
       return false;
@@ -497,7 +455,7 @@ Entity.prototype.set = function (item, value){
  *  @param {function} errorCallback
  *  @return none
  */
-Entity.prototype.save = function (successCallback, errorCallback){
+Entity.prototype.save = function (callback){
   var path = this.getCollectionType();
   //TODO:  API will be changed soon to accomodate PUTs via name which create new entities
   //       This function should be changed to PUT only at that time, and updated to use
@@ -521,12 +479,9 @@ Entity.prototype.save = function (successCallback, errorCallback){
       pwdata.oldpassword = data.oldpassword;
       pwdata.newpassword = data.newpassword;
       this.runAppQuery(new Query('PUT', 'users/'+uuid+'/password', pwdata, null,
-        function (response) {
+        function (err, response) {
           //not calling any callbacks - this section will be merged as soon as API supports
           //   updating passwords in general PUT call
-        },
-        function (response) {
-
         }
       ));
     }
@@ -548,22 +503,21 @@ Entity.prototype.save = function (successCallback, errorCallback){
   }
 
   this.setAllQueryParams(method, path, data, null,
-    function(response) {
-      try {
-        var entity = response.entities[0];
-        self.set(entity);
-        if (typeof(successCallback) == "function"){
-          successCallback(response);
+    function(err, response) {
+      if (err===true) {
+        if (typeof(callback) === "function"){
+          callback(err, response);
         }
-      } catch (e) {
-        if (typeof(errorCallback) == "function"){
-          errorCallback(response);
-        }
-      }
-    },
-    function(response) {
-      if (typeof(errorCallback) == "function"){
-        errorCallback(response);
+      } else {
+        try {
+          var entity = response.entities[0];
+          self.set(entity);
+        } catch (e) {
+          err = true;
+        } 
+        if (typeof(callback) === "function"){
+          callback(err, response);
+        }        
       }
     }
   );
@@ -579,7 +533,7 @@ Entity.prototype.save = function (successCallback, errorCallback){
  *  @param {function} errorCallback
  *  @return none
  */
-Entity.prototype.fetch = function (successCallback, errorCallback){
+Entity.prototype.fetch = function (callback){
   var path = this.getCollectionType();
   //if a uuid is available, use that, otherwise, use the name
   if (this.get('uuid')) {
@@ -590,8 +544,10 @@ Entity.prototype.fetch = function (successCallback, errorCallback){
         path += "/" + this.get("username");
       } else {
         console.log('no username specified');
-        if (typeof(errorCallback) == "function"){
-          console.log('no username specified');
+        if (typeof(errorCallback) === "function"){
+          var error = 'no username specified';
+          console.log(error); 
+          callback(true, error)
         }
       }
     } else {
@@ -599,34 +555,35 @@ Entity.prototype.fetch = function (successCallback, errorCallback){
         path += "/" + this.get();
       } else {
         console.log('no entity identifier specified');
-        if (typeof(errorCallback) == "function"){
-          console.log('no entity identifier specified');
+        if (typeof(callback) === "function"){
+          var error = 'no entity identifier specified'; 
+          console.log(error); 
+          callback(true, error);
         }
       }
     }
   }
   var self = this;
   this.setAllQueryParams('GET', path, null, null,
-    function(response) {
-      try {
-        if (response.user) {
-          self.set(response.user);
+    function(err, response) {
+      if (err) {
+        if (typeof(callback) === "function"){
+          callback(err, response);
         }
-        var entity = response.entities[0];
-        self.set(entity);
-        if (typeof(successCallback) == "function"){
-          successCallback(response);
+      } else {
+        try {
+          if (response.user) {
+            self.set(response.user);
+          }
+          var entity = response.entities[0];
+          self.set(entity);
+        } catch (e) {
+          err = true;
         }
-      } catch (e) {
-        if (typeof(errorCallback) == "function"){
-          errorCallback(response);
+        if (typeof(callback) === "function"){
+          callback(err, response);
         }
-      }
-    },
-    function(response) {
-      if (typeof(errorCallback) == "function"){
-          errorCallback(response);
-      }
+      }  
     }
   );
   ApiClient.runAppQuery(this);
@@ -643,28 +600,29 @@ Entity.prototype.fetch = function (successCallback, errorCallback){
  *  @return none
  *
  */
-Entity.prototype.destroy = function (successCallback, errorCallback){
+Entity.prototype.destroy = function (callback){
   var path = this.getCollectionType();
   if (this.get('uuid')) {
     path += "/" + this.get('uuid');
   } else {
-    console.log('Error trying to delete object - no uuid specified.');
-    if (typeof(errorCallback) == "function"){
-      errorCallback('Error trying to delete object - no uuid specified.');
+    if (typeof(callback) == "function"){
+      var error = 'Error trying to delete object - no uuid specified.';
+      console.log(error); 
+      callback(true, error);
     }
   }
   var self = this;
   this.setAllQueryParams('DELETE', path, null, null,
-    function(response) {
+    function(err, response) {
       //clear out this object
       self.set(null);
       if (typeof(successCallback) == "function"){
-        successCallback(response);
+        callback(err, response);
       }
     },
     function(response) {
       if (typeof(errorCallback) == "function"){
-          errorCallback(response);
+        callback(err, response);
       }
     }
   );
@@ -761,11 +719,11 @@ Collection.prototype.addEntity = function (entity){
  *  @param {object} entity
  *  @return none
  */
-Collection.prototype.addNewEntity = function (entity,successCallback, errorCallback) {
+Collection.prototype.addNewEntity = function (entity, callback) {
   //add the entity to the list
   this.addEntity(entity);
   //then save the entity
-  entity.save(successCallback, errorCallback);
+  entity.save(callback);
 }
 
 /**
@@ -775,7 +733,7 @@ Collection.prototype.addNewEntity = function (entity,successCallback, errorCallb
  *  @param {object} entity
  *  @return none
  */
-Collection.prototype.destroyEntity = function (entity) {
+Collection.prototype.destroyEntity = function (entity, callback) {
   //first get the entities uuid
   var uuid = entity.get('uuid');
   //if the entity has a uuid, delete it
@@ -796,7 +754,7 @@ Collection.prototype.destroyEntity = function (entity) {
     }
   }
   //first destroy the entity on the server
-  entity.destroy();
+  entity.destroy(callback);
 }
 
 /**
@@ -1037,13 +995,13 @@ Collection.prototype.clearQuery = function (){
  *  @param {function} errorCallback
  *  @return none
  */
-Collection.prototype.fetch = function (successCallback, errorCallback){
+Collection.prototype.fetch = function (callback){
   var self = this;
   var queryParams = this.getQueryParams();
   //empty the list
   this.setEntityList([]);
   this.setAllQueryParams('GET', this.getPath(), null, queryParams,
-    function(response) {
+    function(err, response) {
       if (response.entities) {
         this.resetEntityPointer();
         var count = response.entities.length;
@@ -1060,17 +1018,13 @@ Collection.prototype.fetch = function (successCallback, errorCallback){
           }
         }
         if (typeof(successCallback) == "function"){
-          successCallback(response);
+          callback(err, response);
         }
       } else {
+        var err = true;
         if (typeof(errorCallback) == "function"){
-            errorCallback(response);
+          callback(err, response);
         }
-      }
-    },
-    function(response) {
-      if (typeof(errorCallback) == "function"){
-          errorCallback(response);
       }
     }
   );
@@ -1087,7 +1041,7 @@ Collection.prototype.fetch = function (successCallback, errorCallback){
  *  @param {function} errorCallback
  *  @return none
  */
-Collection.prototype.save = function (successCallback, errorCallback){
+Collection.prototype.save = function (callback){
   //loop across all entities and save each one
   var entities = this.getEntityList();
   var count = entities.length;
@@ -1101,7 +1055,7 @@ Collection.prototype.save = function (successCallback, errorCallback){
     }
     entity.save();
   }
-  this.setAllQueryParams('PUT', this.getPath(), jsonObj, null,successCallback, errorCallback);
+  this.setAllQueryParams('PUT', this.getPath(), jsonObj, null,callback);
   ApiClient.runAppQuery(this);
 }
 
@@ -1384,9 +1338,9 @@ ApiClient = (function () {
    * @method callTimeoutCallback
    * @return {boolean} Returns true or false based on if there was a callback to call
    */
-  function callTimeoutCallback(response) {
+  function callTimeoutCallback(err, response) {
     if (_callTimeoutCallback && typeof(_callTimeoutCallback) === "function") {
-      _callTimeoutCallback(response);
+      _callTimeoutCallback(err, response);
       return true;
     } else {
       return false;
@@ -1443,11 +1397,11 @@ ApiClient = (function () {
   *  @params {function} failureCallback
   *  @return {response} callback functions return API response object
   */
-  function logInAppUser (username, password, successCallback, failureCallback) {
+  function logInAppUser (username, password, callback) {
     var self = this;
     var data = {"username": username, "password": password, "grant_type": "password"};
     this.runAppQuery(new Query('GET', 'token', null, data,
-      function (response) {
+      function (err, response) {
         var user = new Entity('users');
         user.set('username', response.user.username);
         user.set('name', response.user.name);
@@ -1455,13 +1409,8 @@ ApiClient = (function () {
         user.set('uuid', response.user.uuid);
         self.setLoggedInUser(user);
         self.setToken(response.access_token);
-        if (successCallback && typeof(successCallback) == "function") {
-          successCallback(response);
-        }
-      },
-      function (response) {
-        if (failureCallback && typeof(failureCallback) == "function") {
-          failureCallback(response);
+        if (typeof(callback) == "function") {
+          callback(err, response, user);
         }
       }
      ));
@@ -1537,9 +1486,9 @@ ApiClient = (function () {
    *  @public
    *  @return none
    */
-  function callLogoutCallback() {
+  function callLogoutCallback(err, response) {
     if (_logoutCallback && typeof(_logoutCallback ) == "function") {
-      _logoutCallback();
+      _logoutCallback(err, response);
       return true;
     } else {
       return false;
@@ -1699,7 +1648,7 @@ ApiClient = (function () {
       
       //add the client secret and id to the params if available
       var params = Query.getQueryParams() || {};
-      if (_authType == CSID && (_clientId != null && _clientSecret != null)) {
+      if (_authType === CSID && (_clientId != null && _clientSecret != null)) {
         params['client_id'] = _clientId;
         params['client_secret'] = _clientSecret;
       }     
@@ -1734,7 +1683,7 @@ ApiClient = (function () {
       }
       
       //add in a timestamp for gets and deletes - to avoid caching by the browser
-      if ((method == "GET") || (method == "DELETE")) {
+      if ((method === "GET") || (method === "DELETE")) {
         params['_'] = new Date().getTime();
       }
     
@@ -1750,7 +1699,7 @@ ApiClient = (function () {
         throw(new Error('JSON object is not valid.'));
       }
       //but clear it out if it is empty
-      if (jsonObj == '{}') {
+      if (jsonObj === '{}') {
         jsonObj = null;
       }
 
@@ -1775,7 +1724,7 @@ ApiClient = (function () {
     var headers = {};
     
     //add a header with the oauth token if needed
-    if (_authType == USER && ApiClient.getToken()) {
+    if (_authType === USER && ApiClient.getToken()) {
       headers['Authorization'] = "Bearer " + ApiClient.getToken();
     }
     
@@ -1797,29 +1746,37 @@ ApiClient = (function () {
       });
      
       res.on('end', function () {
+        console.log(res.statusCode);
+        var err = false;
         //for timing, call end
         Query.setQueryEndTime();
         //for timing, log the total call time
         console.log(Query.getQueryTotalTime());
         //convert the response to an object if possible
-        try {response = JSON.parse(response);} catch (e) {}
-        if (res.statusCode != 200) {          
-          if ( (response.error == "auth_expired_session_token") ||
-               (response.error == "unauthorized")   ||
-               (response.error == "auth_missing_credentials")   ||
-               (response.error == "auth_invalid")) {
+        try {
+          //console.log('response was:' + response);
+          response = JSON.parse(response);
+        } 
+        catch (e) { 
+          console.log('failed to parse response from server');          
+        }
+        if (res.statusCode != 200) { 
+          err = true;         
+          if ( (response.error === "auth_expired_session_token") ||
+               (response.error === "unauthorized")   ||
+               (response.error === "auth_missing_credentials")   ||
+               (response.error === "auth_invalid")) {
             //this error type means the user is not authorized. If a logout function is defined, call it
             console.log(response.error);
-            callLogoutCallback();
-          }else {          
-            Query.callFailureCallback(response);
+            callLogoutCallback(err, response);
+          }else { 
+            Query.callCallback(err, response);
           }
         } else {
           //query completed succesfully, so store cursor
           var cursor = response.cursor || null;
           Query.saveCursor(cursor);
-          console.log(res.statusCode);
-          Query.callSuccessCallback(response); 
+          Query.callCallback(err, response); 
         }
       });
     });
@@ -1845,17 +1802,19 @@ ApiClient = (function () {
       } else {
         response = e.message;
       }
-      Query.callFailureCallback(response);
+      var err = true;
+      Query.callCallback(err, response);
     });
    
     //set up the timeout, just in case the meeting runs long
     req.setTimeout(  ApiClient.getCallTimeout(),
-      function() {  
+      function() {
+        var err = true;  
         console.log('API call timed out');
         if (ApiClient.getCallTimeoutCallback() === 'function') {
-          ApiClient.callTimeoutCallback('API CALL TIMEOUT');
+          ApiClient.callTimeoutCallback(err, 'API CALL TIMEOUT');
         } else {
-          Query.callFailureCallback('API CALL TIMEOUT');
+          Query.callCallback(err, 'API CALL TIMEOUT');
         } 
       }
     );
@@ -1921,12 +1880,13 @@ validation = (function () {
     * @param {function} failureCallback - (optional), the function to call on a failure
     * @return {boolean} Returns true if string passes regex, false if not
     */
-  function validateUsername(username, failureCallback) {
+  function validateUsername(username, callback) {
     if (usernameRegex.test(username) && checkLength(username, 4, 80)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
-        failureCallback(this.getUsernameAllowedChars());
+      var err = true;
+      if (typeof(callback) === "function") {
+        callback(err, this.getUsernameAllowedChars());
       }
       return false;
     }
@@ -1952,12 +1912,13 @@ validation = (function () {
     * @param {function} failureCallback - (optional), the function to call on a failure
     * @return {boolean} Returns true if string passes regex, false if not
     */
-  function validateName(name, failureCallback) {
+  function validateName(name, callback) {
     if (nameRegex.test(name) && checkLength(name, 4, 16)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
-        failureCallback(this.getNameAllowedChars());
+      var err = true;
+      if (typeof(callback) === "function") {
+        callback(err, this.getNameAllowedChars());
       }
       return false;
     }
@@ -1983,12 +1944,13 @@ validation = (function () {
     * @param {function} failureCallback - (optional), the function to call on a failure
     * @return {boolean} Returns true if string passes regex, false if not
     */
-  function validatePassword(password, failureCallback) {
+  function validatePassword(password, callback) {
     if (passwordRegex.test(password) && checkLength(password, 5, 16)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
-        failureCallback(this.getPasswordAllowedChars());
+      var err = true;
+      if (typeof(callback) == "function") {
+        callback(err, this.getPasswordAllowedChars());
       }
       return false;
     }
@@ -2014,12 +1976,13 @@ validation = (function () {
     * @param {function} failureCallback - (optional), the function to call on a failure
     * @return {boolean} Returns true if string passes regex, false if not
     */
-  function validateEmail(email, failureCallback) {
+  function validateEmail(email, callback) {
     if (emailRegex.test(email) && checkLength(email, 4, 80)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
-        failureCallback(this.getEmailAllowedChars());
+      var err = true;
+      if (typeof(failureCallback) == "function") {
+        callback(err, this.getEmailAllowedChars());
       }
       return false;
     }
@@ -2045,12 +2008,13 @@ validation = (function () {
     * @param {function} failureCallback - (optional), the function to call on a failure
     * @return {boolean} Returns true if string passes regex, false if not
     */
-  function validatePath(path, failureCallback) {
+  function validatePath(path, callback) {
     if (pathRegex.test(path) && checkLength(path, 4, 80)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
-        failureCallback(this.getPathAllowedChars());
+      var err = true;
+      if (typeof(callback) == "function") {
+        callback(err, this.getPathAllowedChars());
       }
       return false;
     }
@@ -2076,12 +2040,13 @@ validation = (function () {
     * @param {function} failureCallback - (optional), the function to call on a failure
     * @return {boolean} Returns true if string passes regex, false if not
     */
-  function validateTitle(title, failureCallback) {
+  function validateTitle(title, callback) {
     if (titleRegex.test(title) && checkLength(title, 4, 80)) {
       return true;
     } else {
-      if (failureCallback && typeof(failureCallback) == "function") {
-        failureCallback(this.getTitleAllowedChars());
+      var err = true;
+      if (callback && typeof(callback) == "function") {
+        callback(err, this.getTitleAllowedChars());
       }
       return false;
     }
@@ -2180,28 +2145,29 @@ session = {
    *  @params {function} failureCallback
    *  @return none
    */
-  start_session: function(request, response, successCallback, failureCallback) { 
+  start_session: function(request, response, callback) { 
     var sessionId = session.get_session_id(request)  
     if (sessionId) {
       sessionEntity.set('uuid', sessionId);
       sessionEntity.fetch(
-        function(output) {
-          //got the session so store the value for the cookie
-          sessionId = sessionEntity.get('uuid'); 
-          console.log("Starting session with id:" + sessionId );
-          response.setHeader('Set-Cookie', "session="+sessionId); 
-          successCallback(output);            
-        },
-        function (output) {
-          console.log("No sesssion found, so making new one");
-          //didn't get one back, so try to make a new one
-          sessionEntity.set('uuid',null);//wipe out the previous uuid
-          session.save_session(response, successCallback, failureCallback, true);              
+        function(err, result) {
+          if (err) {
+            console.log("No sesssion found, so making new one");
+            //didn't get one back, so try to make a new one
+            sessionEntity.set('uuid',null);//wipe out the previous uuid
+            session.save_session(response, true, callback); 
+          } else {
+            //got the session so store the value for the cookie
+            sessionId = sessionEntity.get('uuid'); 
+            console.log("Starting session with id:" + sessionId );
+            response.setHeader('Set-Cookie', "session="+sessionId); 
+            callback(err, result);            
+          }
         }
       );
     } else {
       //make a new session 
-      session.save_session(response, successCallback, failureCallback, true);   
+      session.save_session(response, true, callback);   
     }
   },
 
@@ -2217,20 +2183,20 @@ session = {
    *  @params {bool} startSession
    *  @return none
    */
-  save_session: function (response, successCallback, failureCallback, startSession) {
+  save_session: function (response, startSession, callback) {
     sessionEntity.save( 
-        function(output) {
-          //got the session so store the value for the cookie 
-          sessionId = sessionEntity.get('uuid');
-          console.log("Saved session with id:" + sessionId );
-          if (startSession) {
-            response.setHeader('Set-Cookie', "session="+sessionId); 
+        function(err, output) {
+          if (err===true) {
+            console.log("Failed to start session.  Did you remember to set your client secret and id in server.js?" );
+          } else {
+            //got the session so store the value for the cookie 
+            sessionId = sessionEntity.get('uuid');
+            console.log("Saved session with id:" + sessionId );
+            if (startSession) {
+              response.setHeader('Set-Cookie', "session="+sessionId); 
+            }
           }
-          successCallback(output);            
-        },
-        function (output) {
-          console.log("Failed to start session.  Did you remember to set your client secret and id in server.js?" );
-          //failureCallback(output);
+          callback(err, output);            
         }
       );
   },
@@ -2264,17 +2230,14 @@ session = {
   removeItem: function(key) {
     sessionEntity.set(key, null);
   }, 
-  kill_session: function() {
+  kill_session: function(callback) {
     sessionEntity.destroy(
-      function(output) {
-        successCallback();  
-      },
-      function (output) {
-        failureCallback();    
+      function(err, result) {
+        callback(err, result);  
       }    
     );
   },
-  garbage_collection: function(successCallback, failureCallback){
+  garbage_collection: function(callback){
     //our goal is to delete any sessions that are older than 24 hours
     //how we calculate our value:
     var minutes=1000*60;
@@ -2283,10 +2246,7 @@ session = {
     timestamp  = (new Date()).getTime()- one_day; //24 hours ago
     //we want to delete any sessions older than one day:
     params = {"filter":"modified lt "+timestamp}; 
-    ApiClient.runAppQuery(new Query('DELETE', 'sessions', null, params,
-      successCallback,
-      failureCallback
-    ));
+    ApiClient.runAppQuery(new Query('DELETE', 'sessions', null, params, callback));
   }
 };
 
