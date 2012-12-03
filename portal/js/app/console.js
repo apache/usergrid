@@ -3788,7 +3788,7 @@ function apigee_console_app(Pages, query_params) {
       } else {
         forceNewApp();
       }
-      Pages.SelectPanel('organization');
+      Usergrid.Navigation.router.navigateTo('organization');
     }
   }
 
