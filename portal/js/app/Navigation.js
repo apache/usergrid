@@ -21,6 +21,7 @@ Usergrid.Navigation = Backbone.Router.extend({
       ":organization/:application/properties": "properties",
       ":organization/:application/shell": "shell",
       ":organization/:application/console": "console",
+      ":organization/:application/account": "account",
       ":organization/home": "home",
       "": "home"
     },
@@ -82,6 +83,9 @@ Usergrid.Navigation = Backbone.Router.extend({
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('console');
+    },
+    account: function(organization, application) {
+      Pages.SelectPanel('account');
     },
     //Utils
     checkOrganization: function(org) {
