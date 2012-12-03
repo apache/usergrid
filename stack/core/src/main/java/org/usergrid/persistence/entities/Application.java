@@ -94,32 +94,25 @@ public class Application extends TypedEntity {
 	@EntityDictionary(keyType = java.lang.String.class, valueType = WebHook.class)
 	protected Map<String, WebHook> webhooks;
 
-	@EntityCollection(type = "activity", propertiesIndexed = { "created",
-			"modified", "published", "content", "verb" },reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
+	@EntityCollection(type = "activity", reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
 	protected List<UUID> activities;
 
-	@EntityCollection(type = "asset", propertiesIndexed = {
-			"created", "modified", "path", "owner" }, indexingDynamicDictionaries = true)
+	@EntityCollection(type = "asset", indexingDynamicDictionaries = true)
 	protected List<UUID> assets;
 
-	@EntityCollection(type = "event", propertiesIndexed = { "created",
-			"modified", "content" }, indexingDynamicDictionaries = true)
+	@EntityCollection(type = "event", indexingDynamicDictionaries = true)
 	protected List<UUID> events;
 
-	@EntityCollection(type = "folder", propertiesIndexed = { "created",
-			"modified", "path" }, indexingDynamicDictionaries = true)
+	@EntityCollection(type = "folder", indexingDynamicDictionaries = true)
 	protected List<UUID> folders;
 
-	@EntityCollection(type = "group", propertiesIndexed = { "created",
-			"modified", "path", "name", "title" })
+	@EntityCollection(type = "group")
 	protected List<UUID> groups;
 
-	@EntityCollection(type = "user", propertiesIndexed = { "created",
-			"modified", "username", "email", "firstname", "middlename",
-			"lastname" }, dictionariesIndexed = { "aliases" })
+	@EntityCollection(type = "user", dictionariesIndexed = { "aliases" })
 	protected List<UUID> users;
 
-	@EntityCollection(type = "device", propertiesIndexed = {})
+	@EntityCollection(type = "device")
 	protected List<UUID> devices;
 
 

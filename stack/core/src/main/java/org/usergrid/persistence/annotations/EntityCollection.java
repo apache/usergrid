@@ -25,8 +25,6 @@ import java.lang.annotation.Target;
 public @interface EntityCollection {
 	String type();
 
-	String[] propertiesIndexed() default {};
-
 	String[] dictionariesIndexed() default {};
 
 	boolean indexingDynamicDictionaries() default false;

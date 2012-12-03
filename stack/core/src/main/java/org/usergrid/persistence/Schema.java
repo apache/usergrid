@@ -348,7 +348,7 @@ public class Schema {
                 }
             }
         } catch (Exception e) {
-            logger.error("Could not retrive the annotations", e);
+            logger.error("Could not retrieve the annotations", e);
         }
         return null;
     }
