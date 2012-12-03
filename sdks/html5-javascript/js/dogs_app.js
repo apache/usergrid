@@ -65,7 +65,7 @@ $(document).ready(function () {
    function getdogs() {
       //add an additional parameter so last created item is shown first
       dogs.setQueryParams({'ql':'order by created DESC'});
-      dogs.get(
+      dogs.fetch(
          function() {
             //first empty out all the current dogs in the list
             $('#mydoglist').empty();
