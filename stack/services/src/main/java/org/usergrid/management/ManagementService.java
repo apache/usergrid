@@ -116,6 +116,8 @@ public interface ManagementService {
 	 * @throws Exception 
 	 */
 	public void revokeAccessTokensForAdminUser(UUID userId) throws Exception;
+	
+	public void revokeAccessTokenForAdminUser(UUID userId, String token) throws Exception;
 
 	public String getActivationTokenForAdminUser(UUID userId, long ttl) throws Exception;
 
@@ -308,6 +310,8 @@ public interface ManagementService {
 	 * @throws Exception 
      */
     public void revokeAccessTokensForAppUser(UUID applicationId, UUID userId) throws Exception;
+    
+    public void revokeAccessTokenForAppUser(String token) throws Exception;
 
 	public User getAppUserByIdentifier(UUID applicationId, Identifier identifier)
 			throws Exception;

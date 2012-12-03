@@ -1168,7 +1168,7 @@ public class ManagementServiceImpl implements ManagementService {
         
         tokens.removeTokens(principal);
     }
-
+    
     public AuthPrincipalInfo getPrincipalFromAccessToken(String token,
             String expected_token_type,
             AuthPrincipalType expected_principal_type) throws Exception {
@@ -1233,6 +1233,21 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public void revokeAccessTokensForAdminUser(UUID userId) throws Exception {
         revokeTokensForPrincipal(ADMIN_USER, MANAGEMENT_APPLICATION_ID, userId);
+    }
+    
+    @Override
+    public void revokeAccessTokenForAdminUser(UUID userId, String token) throws Exception {
+    	if (anyNull(userId, token)) {
+            throw new IllegalArgumentException("token is required");
+        }
+    	
+    	Entity user = getAdminUserEntityFromAccessToken(token);
+    	if( ! user.getUuid().equals(userId) ) {
+    		throw new TokenException(
+                    "Could not match token : " + token ); 
+    	}
+    	
+    	tokens.revokeToken(token);
     }
 
     @Override
@@ -2252,6 +2267,21 @@ public class ManagementServiceImpl implements ManagementService {
     public void revokeAccessTokensForAppUser(UUID applicationId, UUID userId) throws Exception {
         revokeTokensForPrincipal(APPLICATION_USER, applicationId, userId);
     }
+    
+	@Override
+	public void revokeAccessTokenForAppUser(String token) throws Exception {
+		if (anyNull(token)) {
+            throw new IllegalArgumentException("token is required");
+        }
+		
+    	UserInfo userInfo = getAppUserFromAccessToken(token);
+    	if( userInfo == null ) {
+    		throw new TokenException(
+                    "Could not match token : " + token ); 
+    	}
+    	
+    	tokens.revokeToken(token);    	
+	}
 
     @Override
     public UserInfo getAppUserFromAccessToken(String token) throws Exception {
