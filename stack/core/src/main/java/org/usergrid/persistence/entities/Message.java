@@ -36,26 +36,8 @@ public class Message extends TypedEntity {
 
 	public static final String ENTITY_TYPE = "message";
 
-	@EntityProperty(name = "correlation_id", indexed = true, mutable = false)
-	protected String correlationId;
-
-	@EntityProperty(indexed = true, mutable = false)
-	protected String destination;
-
-	@EntityProperty(name = "reply_to", indexed = true, mutable = false)
-	protected String replyTo;
-
 	@EntityProperty(fulltextIndexed = false, required = true, mutable = false, indexed = true)
 	String category;
-
-	@EntityProperty(indexed = true, mutable = false)
-	protected Boolean indexed;
-
-	@EntityProperty(indexed = true, mutable = false)
-	protected Boolean persistent;
-
-	@EntityProperty(indexed = true, mutable = false)
-	protected Long timestamp;
 
 	@EntityDictionary(keyType = java.lang.String.class)
 	protected Set<String> connections;
@@ -75,64 +57,6 @@ public class Message extends TypedEntity {
 
 	public void setCategory(String category) {
 		this.category = category;
-	}
-
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	@JsonProperty("correlation_id")
-	public String getCorrelationId() {
-		return correlationId;
-	}
-
-	@JsonProperty("correlation_id")
-	public void setCorrelationId(String correlationId) {
-		this.correlationId = correlationId;
-	}
-
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public String getDestination() {
-		return destination;
-	}
-
-	public void setDestination(String destination) {
-		this.destination = destination;
-	}
-
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	@JsonProperty("reply_to")
-	public String getReplyTo() {
-		return replyTo;
-	}
-
-	@JsonProperty("reply_to")
-	public void setReplyTo(String replyTo) {
-		this.replyTo = replyTo;
-	}
-
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public Boolean getIndexed() {
-		return indexed;
-	}
-
-	public void setIndexed(Boolean indexed) {
-		this.indexed = indexed;
-	}
-
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public Boolean getPersistent() {
-		return persistent;
-	}
-
-	public void setPersistent(Boolean persistent) {
-		this.persistent = persistent;
-	}
-
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public Long getTimestamp() {
-		return timestamp;
-	}
-
-	public void setTimestamp(Long timestamp) {
-		this.timestamp = timestamp;
 	}
 
 	@JsonSerialize(include = Inclusion.NON_NULL)

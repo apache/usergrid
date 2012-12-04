@@ -123,10 +123,6 @@ public class Activity extends TypedEntity {
 	@EntityProperty(indexed = false, fulltextIndexed = false, required = false, mutable = false)
 	protected MediaLink icon;
 
-	// @EntityProperty(fulltextIndexed = false, required = true, mutable =
-	// false)
-	// String actorName;
-
 	@EntityProperty(fulltextIndexed = false, required = false, mutable = false, indexed = true)
 	String category;
 
@@ -138,15 +134,6 @@ public class Activity extends TypedEntity {
 
 	@EntityProperty(indexed = false, required = false, mutable = false)
 	ActivityObject object;
-
-	// @EntityProperty(indexed = false, required = false, mutable = false)
-	// String objectType;
-
-	// @EntityProperty(indexed = false, required = false, mutable = false)
-	// String objectEntityType;
-
-	// @EntityProperty(indexed = false, required = false, mutable = false)
-	// String objectName;
 
 	@EntityProperty(indexed = true, fulltextIndexed = true, required = false, mutable = false)
 	protected String title;
@@ -217,13 +204,6 @@ public class Activity extends TypedEntity {
 		this.generator = generator;
 	}
 
-	/*
-	 * @JsonSerialize(include = Inclusion.NON_NULL) public String getActorName()
-	 * { return actorName; }
-	 * 
-	 * public void setActorName(String actorName) { this.actorName = actorName;
-	 * }
-	 */
 	@JsonSerialize(include = Inclusion.NON_NULL)
 	public String getCategory() {
 		return category;
@@ -260,25 +240,6 @@ public class Activity extends TypedEntity {
 		this.object = object;
 	}
 
-	/*
-	 * @JsonSerialize(include = Inclusion.NON_NULL) public String
-	 * getObjectType() { return objectType; }
-	 * 
-	 * public void setObjectType(String objectType) { this.objectType =
-	 * objectType; }
-	 * 
-	 * @JsonSerialize(include = Inclusion.NON_NULL) public String
-	 * getObjectEntityType() { return objectEntityType; }
-	 * 
-	 * public void setObjectEntityType(String objectEntityType) {
-	 * this.objectEntityType = objectEntityType; }
-	 * 
-	 * @JsonSerialize(include = Inclusion.NON_NULL) public String
-	 * getObjectName() { return objectName; }
-	 * 
-	 * public void setObjectName(String objectName) { this.objectName =
-	 * objectName; }
-	 */
 	@JsonSerialize(include = Inclusion.NON_NULL)
 	public String getTitle() {
 		return title;

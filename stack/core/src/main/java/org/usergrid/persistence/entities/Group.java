@@ -43,9 +43,6 @@ public class Group extends TypedEntity {
 	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = true, aliasProperty = true, pathBasedName = true, mutable = true, unique = true, basic = true)
 	protected String path;
 
-	@EntityProperty(indexed=true, basic = true, fulltextIndexed = true)
-	protected String title;
-
 	@EntityDictionary(keyType = java.lang.String.class)
 	protected Set<String> connections;
 
@@ -85,15 +82,6 @@ public class Group extends TypedEntity {
 
 	public void setPath(String path) {
 		this.path = path;
-	}
-
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public String getTitle() {
-		return title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
 	}
 
 	@JsonSerialize(include = Inclusion.NON_NULL)
