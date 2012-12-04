@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -621,6 +621,8 @@ public class UserResourceTest extends AbstractRestTest {
 
         userEntity.setProperty("name", newName);
         userEntity.setProperty("email", newEmail);
+        userEntity.setProperty("password", "newp2ssword");
+        userEntity.setProperty("pin", "newp1n");
 
         node = resource().path(String.format("/test-organization/test-app/users/%s", username))
                 .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
@@ -634,11 +636,12 @@ public class UserResourceTest extends AbstractRestTest {
         assertEquals(username, node.get("user").get("username").asText());
         assertEquals(newName, node.get("user").get("name").asText());
         assertEquals(newEmail, node.get("user").get("email").asText());
-
+        assertNull(newEmail, node.get("user").get("password"));
+        assertNull(newEmail, node.get("user").get("pin"));
     }
 
     /**
-     * 
+     *
      * @return
      */
     public JsonNode getActor(Entity entity) {
