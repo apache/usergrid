@@ -32,14 +32,24 @@
       return this.default.use_sso;
     },
 
-    getSSOCallback:function () {
-      var callbackUrl = this.buildBaseUrl();
-      var separatorMark = '?';
-      if (Usergrid.ApiClient.getApiUrl() !== undefined && (Usergrid.ApiClient.getApiUrl() !== this.default.api_url)) {
-        separatorMark = '&';
-        callbackUrl = callbackUrl + separatorMark + 'api_url=' + Usergrid.ApiClient.getApiUrl();
+    getSSOCallback:function (urlCallback) {
+
+       var url = this.buildBaseUrl();
+/*
+      var url = 'https://apigee.com/usergrid/';
+ */
+      if(urlCallback) {
+        url += "#" + urlCallback;
       }
-      return encodeURIComponent(callbackUrl);
+
+
+      if (Usergrid.ApiClient.getApiUrl() !== undefined && (Usergrid.ApiClient.getApiUrl() !== this.default.api_url)) {
+        var separatorMark = '&';
+        url += separatorMark + 'api_url=' + Usergrid.ApiClient.getApiUrl();
+      }
+      console.log(url);
+      url = encodeURIComponent(url);
+      return'?callback=' + url;
     },
 
     buildBaseUrl:function () {
@@ -48,11 +58,13 @@
     },
 
     //Private
-    sendToPage:function (url) {
-      var newPage = url + '?callback=' + this.getSSOCallback();
+    sendToPage:function (url, urlCallback) {
+      var newPage = url;
+        newPage += this.getSSOCallback(urlCallback);
+      //TODO: remove debug
       console.log(newPage);
       window.location = newPage;
-    },
+  },
 
     sendToSSOLogoutPage:function () {
       this.sendToPage(this.default.logout_url);
@@ -62,8 +74,8 @@
       this.sendToPage(this.default.login_url);
     },
 
-    sendToSSOProfilePage:function () {
-      this.sendToPage(this.default.profile_url);
+    sendToSSOProfilePage:function (callbackUrl) {
+      this.sendToPage(this.default.profile_url, callbackUrl);
     },
 
     setUseSSO:function (sso) {

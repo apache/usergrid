@@ -58,7 +58,7 @@ function ApigeePages() {
     self.pages[page.name] = page;
   };
 
-  self.AddPanel = function(panelName, linkSelector,boxSelector,initFunction,showFunction) {
+  self.AddPanel = function(panelName, linkSelector,boxSelector,initFunction,showFunction, buttonHandler) {
     if (!linkSelector) {
       linkSelector = "#sidebar-menu a[href='#" + panelName + "']";
     }
@@ -75,12 +75,13 @@ function ApigeePages() {
       showFunction: showFunction
     };
 
-    if( !(panel.name === 'user' || panel.name === 'group')) {
-      panel.link.click(function(e) {
+    if(!buttonHandler) {
+      buttonHandler = function(e) {
         e.preventDefault();
         Usergrid.Navigation.router.navigateTo(panel.name);
-      });
+      }
     }
+    panel.link.click(buttonHandler);
 
     self.panels[panel.name] = panel;
 
