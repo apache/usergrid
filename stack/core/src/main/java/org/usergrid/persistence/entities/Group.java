@@ -43,9 +43,6 @@ public class Group extends TypedEntity {
 	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = true, aliasProperty = true, pathBasedName = true, mutable = true, unique = true, basic = true)
 	protected String path;
 
-	@EntityProperty(indexed=true, basic = true, fulltextIndexed = true)
-	protected String title;
-
 	@EntityDictionary(keyType = java.lang.String.class)
 	protected Set<String> connections;
 
@@ -58,18 +55,16 @@ public class Group extends TypedEntity {
   @EntityDictionary(keyType = java.lang.String.class, valueType = CredentialsInfo.class)
 	protected Map<String, CredentialsInfo> credentials;
 
-	@EntityCollection(type = "user", propertiesIndexed = { "username", "email" }, linkedCollection = "groups", indexingDynamicProperties = true)
+	@EntityCollection(type = "user", linkedCollection = "groups")
 	protected List<UUID> users;
 
-	@EntityCollection(type = "activity", propertiesIndexed = { "created",
-			"published", "content" }, subkeys = { "verb" }, reversed = true, sort = "published desc")
+	@EntityCollection(type = "activity", reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
 	protected List<UUID> activities;
 
-	@EntityCollection(type = "activity", propertiesIndexed = { "created",
-			"published", "content" }, subkeys = { "verb" }, reversed = true, sort = "published desc")
+	@EntityCollection(type = "activity", reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
 	protected List<UUID> feed;
 
-	@EntityCollection(type = "role", linkedCollection = "groups")
+	@EntityCollection(type = "role", linkedCollection = "groups", indexingDynamicDictionaries = true)
 	protected List<UUID> roles;
 
 	public Group() {
@@ -87,15 +82,6 @@ public class Group extends TypedEntity {
 
 	public void setPath(String path) {
 		this.path = path;
-	}
-
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public String getTitle() {
-		return title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
 	}
 
 	@JsonSerialize(include = Inclusion.NON_NULL)

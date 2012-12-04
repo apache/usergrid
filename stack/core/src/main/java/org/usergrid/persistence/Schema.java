@@ -222,8 +222,6 @@ public class Schema {
             String.CASE_INSENSITIVE_ORDER);
     Map<String, Map<String, Set<CollectionInfo>>> entityContainerCollectionsIndexingDictionaries = new TreeMap<String, Map<String, Set<CollectionInfo>>>(
             String.CASE_INSENSITIVE_ORDER);
-    Map<String, Map<String, Set<CollectionInfo>>> entityContainerCollectionsIndexingDynamicProperties = new TreeMap<String, Map<String, Set<CollectionInfo>>>(
-            String.CASE_INSENSITIVE_ORDER);
     Map<String, Map<String, Set<CollectionInfo>>> entityContainerCollectionsIndexingDynamicDictionaries = new TreeMap<String, Map<String, Set<CollectionInfo>>>(
             String.CASE_INSENSITIVE_ORDER);
     Map<String, Map<String, Set<CollectionInfo>>> entityContainerCollectionsSubkeyedOnProperties = new TreeMap<String, Map<String, Set<CollectionInfo>>>(
@@ -306,12 +304,6 @@ public class Schema {
             }
         }
 
-        if (collection.isIndexingDynamicProperties()) {
-            MapUtils.addMapMapSet(
-                    entityContainerCollectionsIndexingDynamicProperties, true,
-                    entityType, containerType, collection);
-        }
-
         if (collection.isIndexingDynamicDictionaries()) {
             MapUtils.addMapMapSet(
                     entityContainerCollectionsIndexingDynamicDictionaries,
@@ -356,7 +348,7 @@ public class Schema {
                 }
             }
         } catch (Exception e) {
-            logger.error("Could not retrive the annotations", e);
+            logger.error("Could not retrieve the annotations", e);
         }
         return null;
     }
@@ -917,22 +909,6 @@ public class Schema {
         return collection.isSubkeyProperty(propertyName);
     }
 
-    /**
-     * @param containerType
-     * @param collectionName
-     * @return value
-     */
-    public boolean isCollectionIndexingDynamicProperties(String containerType,
-            String collectionName) {
-
-        CollectionInfo collection = getCollection(containerType, collectionName);
-        if (collection == null) {
-            return false;
-        }
-
-        return collection.isIndexingDynamicProperties();
-    }
-
     public Set<String> getBasicProperties(String entityType) {
         EntityInfo entity = getEntityInfo(entityType);
         if (entity == null) {
@@ -1158,7 +1134,6 @@ public class Schema {
         properties.add(PROPERTY_CREATED);
         properties.add(PROPERTY_MODIFIED);
         collection.setPropertiesIndexed(properties);
-        collection.setIndexingDynamicProperties(true);
         // entity.getCollections().put(collectionName, collection);
         // mapCollector(collection.getType(), Application.ENTITY_TYPE,
         // collectionName, collection);
@@ -1306,23 +1281,6 @@ public class Schema {
 
         // Application does index any sets by default
         return entityContainerCollectionsIndexingDictionaries.get(entityType);
-    }
-
-    /**
-     * @param entityType
-     * @return value
-     */
-    public Map<String, Set<CollectionInfo>> getContainersIndexingDynamicProperties(
-            String entityType) {
-
-        entityType = normalizeEntityType(entityType);
-
-        // Add the application as a container indexing dynamic properties by
-        // default
-        return addDynamicApplicationCollectionAsContainer(
-                entityContainerCollectionsIndexingDynamicProperties
-                        .get(entityType),
-                entityType);
     }
 
     /**

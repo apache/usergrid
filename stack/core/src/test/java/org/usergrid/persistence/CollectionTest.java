@@ -65,6 +65,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     });
     properties.put("verb", "tweet");
     properties.put("content", "I ate a sammich");
+    properties.put("ordinal", 3);
 
     Entity activity = em.create("activity", properties);
     assertNotNull(activity);
@@ -79,6 +80,97 @@ public class CollectionTest extends AbstractPersistenceTest {
 
     em.addToCollection(user, "activities", activity);
 
+    // test queries on the collection
+
+    properties = new LinkedHashMap<String, Object>();
+    properties.put("actor", new LinkedHashMap<String, Object>() {{
+        put("displayName", "Ed Anuff");
+        put("objectType", "person");
+      }});
+    properties.put("verb", "tweet2");
+    properties.put("content", "I ate a pickle");
+    properties.put("ordinal", 2);
+    Entity activity2 = em.create("activity", properties);
+    activity2 = em.get(activity2.getUuid());
+    em.addToCollection(user, "activities", activity2);
+
+    properties = new LinkedHashMap<String, Object>();
+    properties.put("actor", new LinkedHashMap<String, Object>() {{
+      put("displayName", "Ed Anuff");
+      put("objectType", "person");
+    }});
+    properties.put("verb", "tweet2");
+    properties.put("content", "I ate an apple");
+    properties.put("ordinal", 1);
+    Entity activity3 = em.create("activity", properties);
+    activity3 = em.get(activity3.getUuid());
+    em.addToCollection(user, "activities", activity3);
+
+    // empty query
+    Query query = new Query();
+    Results r = em.searchCollection(user, "activities", query);
+    assertEquals(3, r.size()); // success
+
+    // query verb
+    query = new Query().addEqualityFilter("verb", "tweet2");
+    r = em.searchCollection(user, "activities", query);
+    assertEquals(2, r.size());
+
+    // query verb, sort created
+    query = new Query().addEqualityFilter("verb", "tweet2");
+    query.addSort("created");
+    r = em.searchCollection(user, "activities", query);
+    assertEquals(2, r.size());
+    List<Entity> entities = r.getEntities();
+    assertEquals(entities.get(0).getUuid(), activity2.getUuid());
+    assertEquals(entities.get(1).getUuid(), activity3.getUuid());
+
+    // query verb, sort ordinal
+    query = new Query().addEqualityFilter("verb", "tweet2");
+    query.addSort("ordinal");
+    r = em.searchCollection(user, "activities", query);
+    assertEquals(2, r.size());
+    entities = r.getEntities();
+    assertEquals(entities.get(0).getUuid(), activity3.getUuid());
+    assertEquals(entities.get(1).getUuid(), activity2.getUuid());
+
+    // empty query, sort content
+    query = new Query();
+    query.addSort("content");
+    r = em.searchCollection(user, "activities", query);
+    assertEquals(3, r.size());
+    entities = r.getEntities();
+    logger.info(JsonUtils.mapToFormattedJsonString(entities));
+    assertEquals(entities.get(0).getUuid(), activity2.getUuid());
+    assertEquals(entities.get(1).getUuid(), activity.getUuid());
+    assertEquals(entities.get(2).getUuid(), activity3.getUuid());
+
+    // empty query, sort verb
+    query = new Query();
+    query.addSort("verb");
+    r = em.searchCollection(user, "activities", query);
+    assertEquals(3, r.size());
+
+    // empty query, sort ordinal
+    query = new Query();
+    query.addSort("ordinal");
+    r = em.searchCollection(user, "activities", query);
+    assertEquals(3, r.size());
+    entities = r.getEntities();
+    assertEquals(entities.get(0).getUuid(), activity3.getUuid());
+    assertEquals(entities.get(1).getUuid(), activity2.getUuid());
+    assertEquals(entities.get(2).getUuid(), activity.getUuid());
+
+    // query ordinal
+    query = new Query().addEqualityFilter("ordinal", 2);
+    r = em.searchCollection(user, "activities", query);
+    assertEquals(1, r.size());
+
+    // query ordinal and sort ordinal
+    query = new Query().addEqualityFilter("ordinal", 2);
+    query.addSort("ordinal");
+    r = em.searchCollection(user, "activities", query);
+    assertEquals(1, r.size());
   }
 
   @Test

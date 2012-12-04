@@ -49,13 +49,13 @@ public class Application extends TypedEntity {
 	@EntityProperty(indexed = true, fulltextIndexed = false, required = true, mutable = false, aliasProperty = true, basic = true)
 	protected String name;
 
-	@EntityProperty(basic = true)
+	@EntityProperty(basic = true, indexed = false)
 	protected String title;
 	
-	@EntityProperty(basic = true)
-    protected Long accesstokenttl;
+	@EntityProperty(basic = true, indexed = false)
+  protected Long accesstokenttl;
 
-	@EntityProperty
+	@EntityProperty(indexed = false)
 	protected String description;
 
 	@EntityDictionary(keyType = java.lang.String.class)
@@ -94,32 +94,25 @@ public class Application extends TypedEntity {
 	@EntityDictionary(keyType = java.lang.String.class, valueType = WebHook.class)
 	protected Map<String, WebHook> webhooks;
 
-	@EntityCollection(type = "activity", propertiesIndexed = { "created",
-			"modified", "published", "content" }, subkeys = "verb", reversed = true, sort = "published desc")
+	@EntityCollection(type = "activity", reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
 	protected List<UUID> activities;
 
-	@EntityCollection(type = "asset", subkeys = { "owner" }, propertiesIndexed = {
-			"created", "modified", "path" })
+	@EntityCollection(type = "asset", indexingDynamicDictionaries = true)
 	protected List<UUID> assets;
 
-	@EntityCollection(type = "event", propertiesIndexed = { "created",
-			"modified", "content" })
+	@EntityCollection(type = "event", indexingDynamicDictionaries = true)
 	protected List<UUID> events;
 
-	@EntityCollection(type = "folder", propertiesIndexed = { "created",
-			"modified", "path" })
+	@EntityCollection(type = "folder", indexingDynamicDictionaries = true)
 	protected List<UUID> folders;
 
-	@EntityCollection(type = "group", propertiesIndexed = { "created",
-			"modified", "path", "name", "title" }, indexingDynamicProperties = true)
+	@EntityCollection(type = "group")
 	protected List<UUID> groups;
 
-	@EntityCollection(type = "user", propertiesIndexed = { "created",
-			"modified", "username", "email", "firstname", "middlename",
-			"lastname" }, dictionariesIndexed = { "aliases" }, indexingDynamicProperties = true)
+	@EntityCollection(type = "user", dictionariesIndexed = { "aliases" })
 	protected List<UUID> users;
 
-	@EntityCollection(type = "device", propertiesIndexed = {}, indexingDynamicProperties = false)
+	@EntityCollection(type = "device")
 	protected List<UUID> devices;
 
 

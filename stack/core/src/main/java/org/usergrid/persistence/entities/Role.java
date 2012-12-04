@@ -39,22 +39,22 @@ public class Role extends TypedEntity {
     @EntityProperty(indexed = true, fulltextIndexed = false, required = true, indexedInConnections = false, aliasProperty = true, mutable = false, unique = true)
     protected String name;
 
-    @EntityProperty(mutable = true)
+    @EntityProperty(mutable = true, indexed = true)
     protected String roleName;
 
-    @EntityProperty(mutable = true)
+    @EntityProperty(mutable = true, indexed = true)
     protected String title;
 
-    @EntityProperty(mutable = true)
+    @EntityProperty(mutable = true, indexed = true)
     protected Long inactivity;
 
     @EntityDictionary(keyType = java.lang.String.class)
     protected Set<String> permissions;
 
-    @EntityCollection(type = "user", linkedCollection = "roles")
+    @EntityCollection(type = "user", linkedCollection = "roles", indexingDynamicDictionaries = true)
     protected List<UUID> users;
 
-    @EntityCollection(type = "group", linkedCollection = "roles")
+    @EntityCollection(type = "group", linkedCollection = "roles", indexingDynamicDictionaries = true)
     protected List<UUID> groups;
 
     public Role() {

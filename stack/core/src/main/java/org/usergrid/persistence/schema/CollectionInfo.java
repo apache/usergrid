@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.annotations.EntityCollection;
 
 public class CollectionInfo {
@@ -29,11 +30,9 @@ public class CollectionInfo {
 	private String name;
 	private EntityInfo container;
 
-	private boolean indexingDynamicProperties;
 	private boolean indexingDynamicDictionaries;
 	private String linkedCollection;
-	private Set<String> propertiesIndexed = new TreeSet<String>(
-			String.CASE_INSENSITIVE_ORDER);
+	private Set<String> propertiesIndexed = null;
 	private boolean publicVisible = true;
 	private final Set<String> dictionariesIndexed = new TreeSet<String>(
 			String.CASE_INSENSITIVE_ORDER);
@@ -47,13 +46,9 @@ public class CollectionInfo {
 	}
 
 	public CollectionInfo(EntityCollection collectionAnnotation) {
-		setIndexingDynamicProperties(collectionAnnotation
-				.indexingDynamicProperties());
 		setIndexingDynamicDictionaries(collectionAnnotation
 				.indexingDynamicDictionaries());
 		setLinkedCollection(collectionAnnotation.linkedCollection());
-		setPropertiesIndexed(new LinkedHashSet<String>(
-				Arrays.asList(collectionAnnotation.propertiesIndexed())));
 		setPublic(collectionAnnotation.publicVisible());
 		setDictionariesIndexed(new LinkedHashSet<String>(
 				Arrays.asList(collectionAnnotation.dictionariesIndexed())));
@@ -76,20 +71,20 @@ public class CollectionInfo {
 	}
 
 	public boolean isPropertyIndexed(String propertyName) {
-		return propertiesIndexed.contains(propertyName);
+		return getPropertiesIndexed().contains(propertyName);
 	}
 
 	public boolean hasIndexedProperties() {
-		return !propertiesIndexed.isEmpty();
+    return !getPropertiesIndexed().isEmpty();
 	}
 
 	public Set<String> getPropertiesIndexed() {
-		return propertiesIndexed;
+    if (propertiesIndexed != null) return propertiesIndexed;
+    return Schema.getDefaultSchema().getEntityInfo(getType()).getIndexedProperties();
 	}
 
 	public void setPropertiesIndexed(Set<String> propertiesIndexed) {
-		this.propertiesIndexed = new TreeSet<String>(
-				String.CASE_INSENSITIVE_ORDER);
+		this.propertiesIndexed = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 		this.propertiesIndexed.addAll(propertiesIndexed);
 	}
 
@@ -104,14 +99,6 @@ public class CollectionInfo {
 	public void setDictionariesIndexed(Set<String> dictionariesIndexed) {
 		dictionariesIndexed = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 		dictionariesIndexed.addAll(dictionariesIndexed);
-	}
-
-	public boolean isIndexingDynamicProperties() {
-		return indexingDynamicProperties;
-	}
-
-	public void setIndexingDynamicProperties(boolean indexingProperties) {
-		indexingDynamicProperties = indexingProperties;
 	}
 
 	public boolean isIndexingDynamicDictionaries() {
@@ -239,8 +226,7 @@ public class CollectionInfo {
 
 	@Override
 	public String toString() {
-		return "CollectionInfo [name=" + name //+ ", container=" + container
-				+ ", indexingDynamicProperties=" + indexingDynamicProperties
+		return "CollectionInfo [name=" + name
 				+ ", indexingDynamicDictionaries="
 				+ indexingDynamicDictionaries + ", linkedCollection="
 				+ linkedCollection + ", propertiesIndexed=" + propertiesIndexed

@@ -60,27 +60,18 @@ public class User extends TypedEntity {
 	@EntityProperty(indexed = true, fulltextIndexed = true)
 	protected String name;
 
-	@EntityProperty(indexed = false)
+	@EntityProperty(indexed = true)
 	protected Boolean activated;
 
-	@EntityProperty(indexed = false)
+	@EntityProperty(indexed = true)
 	protected Boolean confirmed;
 
-	@EntityProperty(indexed = false)
+	@EntityProperty(indexed = true)
 	protected Boolean disabled;
-
-	@EntityProperty(indexed = true)
-	protected String firstname;
-
-	@EntityProperty(indexed = true)
-	protected String middlename;
-
-	@EntityProperty(indexed = true)
-	protected String lastname;
 
 	@EntityProperty(indexed = false)
 	protected String picture;
-	
+
 	/**
 	 * The time this user was deactivated
 	 */
@@ -99,21 +90,19 @@ public class User extends TypedEntity {
 	@EntityDictionary(keyType = java.lang.String.class, valueType = CredentialsInfo.class)
 	protected Map<String, CredentialsInfo> credentials;
 
-	@EntityCollection(type = "group", linkedCollection = "users", propertiesIndexed = { "path" }, indexingDynamicProperties = true)
+	@EntityCollection(type = "group", linkedCollection = "users")
 	protected List<UUID> groups;
 
-	@EntityCollection(type = "device", linkedCollection = "users", propertiesIndexed = {}, indexingDynamicProperties = false)
+	@EntityCollection(type = "device", linkedCollection = "users")
 	protected List<UUID> devices;
 
-	@EntityCollection(type = "activity", propertiesIndexed = { "created",
-			"published", "content" }, subkeys = { "verb" }, reversed = true, sort = "published desc")
+	@EntityCollection(type = "activity", reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
 	protected List<UUID> activities;
 
-	@EntityCollection(type = "activity", propertiesIndexed = { "created",
-			"published", "content" }, subkeys = { "verb" }, reversed = true, sort = "published desc")
+	@EntityCollection(type = "activity", reversed = true, sort = "published desc", indexingDynamicDictionaries = true)
 	protected List<UUID> feed;
 
-	@EntityCollection(type = "role", linkedCollection = "users")
+	@EntityCollection(type = "role", linkedCollection = "users", indexingDynamicDictionaries = true)
 	protected List<UUID> roles;
 
 	public User() {
@@ -218,33 +207,6 @@ public class User extends TypedEntity {
 
 	public void setDisabled(Boolean disabled) {
 		this.disabled = disabled;
-	}
-
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public String getFirstname() {
-		return firstname;
-	}
-
-	public void setFirstname(String firstname) {
-		this.firstname = firstname;
-	}
-
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public String getMiddlename() {
-		return middlename;
-	}
-
-	public void setMiddlename(String middlename) {
-		this.middlename = middlename;
-	}
-
-	@JsonSerialize(include = Inclusion.NON_NULL)
-	public String getLastname() {
-		return lastname;
-	}
-
-	public void setLastname(String lastname) {
-		this.lastname = lastname;
 	}
 
 	@JsonSerialize(include = Inclusion.NON_NULL)

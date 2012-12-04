@@ -26,7 +26,7 @@ public @interface EntityProperty {
 
 	String name() default "";
 
-	boolean indexed() default false;
+	boolean indexed() default true;
 
 	boolean basic() default false;
 
