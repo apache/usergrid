@@ -23,6 +23,7 @@ Usergrid.Navigation = Backbone.Router.extend({
       ":organization/:application/console": "console",
       ":organization/:application/account": "account",
       ":organization/home": "home",
+      ":organization": "home",
       "": "home"
     },
     //Router Methods

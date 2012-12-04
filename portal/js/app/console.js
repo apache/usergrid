@@ -4136,9 +4136,9 @@ function apigee_console_app(Pages, query_params) {
     return false;
   });
 
-  function requestAccountSettings() {
+  function requestAccountSettings(urlCallback) {
     if (Usergrid.SSO.usingSSO()) {
-      Usergrid.SSO.sendToSSOProfilePage();
+      Usergrid.SSO.sendToSSOProfilePage(urlCallback);
     } else {
       $('#update-account-id').text(Usergrid.userSession.getUserUUID());
       $('#update-account-name').val("");

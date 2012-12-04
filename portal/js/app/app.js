@@ -69,23 +69,28 @@ $(document).ready(function () {
   }
 
   function initConsole() {
-    //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
-    Pages.AddPanel('organization', '.go-home', null, null, Usergrid.console.pageSelectHome);
-    Pages.AddPanel('console', null, null, null, null);
-    Pages.AddPanel('dashboard', null, null, null, Usergrid.console.pageSelectApplication);
-    Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
-    Pages.AddPanel('users', null, null, null, Usergrid.console.pageSelectUsers);
-    Pages.AddPanel('group', "#sidebar-menu a[href='#groups']", null, null, null);
-    Pages.AddPanel('groups', null, null, null, Usergrid.console.pageSelectGroups);
-    Pages.AddPanel('roles', null, null, null, Usergrid.console.pageSelectRoles);
-    Pages.AddPanel('activities', null, null, null, Usergrid.console.pageSelectActivities);
-    Pages.AddPanel('collections', null, null, null, Usergrid.console.pageSelectCollections);
-    Pages.AddPanel('analytics', null, null, null, Usergrid.console.pageSelectAnalytics);
-    Pages.AddPanel('properties', null, null, null, Usergrid.console.pageSelectProperties);
-    Pages.AddPanel('shell', null, null, null, Usergrid.console.pageSelectShell);
-    Pages.AddPanel('account', "#account-link", null, null, Usergrid.console.requestAccountSettings);
+    //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc,buttonHandlerFunction);
+    Pages.AddPanel('organization', '.go-home', null, null, Usergrid.console.pageSelectHome,null);
+    Pages.AddPanel('console', null, null, null, null, null);
+    Pages.AddPanel('dashboard', null, null, null, Usergrid.console.pageSelectApplication,null);
+    Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null, function() {});
+    Pages.AddPanel('users', null, null, null, Usergrid.console.pageSelectUsers, null);
+    Pages.AddPanel('group', "#sidebar-menu a[href='#groups']", null, null, null, function() {});
+    Pages.AddPanel('groups', null, null, null, Usergrid.console.pageSelectGroups, null);
+    Pages.AddPanel('roles', null, null, null, Usergrid.console.pageSelectRoles, null);
+    Pages.AddPanel('activities', null, null, null, Usergrid.console.pageSelectActivities, null);
+    Pages.AddPanel('collections', null, null, null, Usergrid.console.pageSelectCollections, null);
+    Pages.AddPanel('analytics', null, null, null, Usergrid.console.pageSelectAnalytics, null);
+    Pages.AddPanel('properties', null, null, null, Usergrid.console.pageSelectProperties, null);
+    Pages.AddPanel('shell', null, null, null, Usergrid.console.pageSelectShell, null);
+    Pages.AddPanel('account', "#account-link", null, null, Usergrid.console.requestAccountSettings, accountRedirect);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
 
+  }
+
+  function accountRedirect(e) {
+    e.preventDefault();
+    Usergrid.console.requestAccountSettings(Backbone.history.getHash(window));
   }
 
   function initCenterPanels(){
