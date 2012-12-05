@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,6 +31,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Map.Entry;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -47,7 +48,7 @@ import org.usergrid.utils.StringUtils;
 public class Results implements Iterable<Entity> {
 
     private static final String EMPTY = "";
-    
+
     public enum Level {
         IDS, REFS, CORE_PROPERTIES, ALL_PROPERTIES, LINKED_PROPERTIES
     }
@@ -663,7 +664,7 @@ public class Results implements Iterable<Entity> {
 
     /**
      * Remove the passed in results from the current results
-     * 
+     *
      * @param results
      */
     public void subtract(Results results) {
@@ -716,7 +717,7 @@ public class Results implements Iterable<Entity> {
 
     /**
      * Perform an intersection of the 2 results
-     * 
+     *
      * @param results
      */
     public void and(Results results) {
@@ -1028,6 +1029,17 @@ public class Results implements Iterable<Entity> {
         return nextResult;
     }
 
+    public Results excludeCursorMetadataAttribute() {
+        if (metadata != null) {
+			for (Entry<UUID, Map<String, Object>> entry : metadata.entrySet()) {
+				Map<String, Object> map = entry.getValue();
+				if(map!=null) {
+					map.remove(Schema.PROPERTY_CURSOR);
+				}
+			}
+        }
+    	return new Results(this);
+    }
     public Results trim(int count) {
         if (count == 0) {
             return this;

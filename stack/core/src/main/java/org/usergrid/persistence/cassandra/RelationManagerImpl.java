@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -196,7 +196,7 @@ public class RelationManagerImpl implements RelationManager {
 
     /**
      * Gets the connections.
-     * 
+     *
      * @param applicationId
      *            the application id
      * @param connection
@@ -303,7 +303,7 @@ public class RelationManagerImpl implements RelationManager {
 
     /**
      * Gets the cF key for subkey.
-     * 
+     *
      * @param collection
      *            the collection
      * @param properties
@@ -375,7 +375,7 @@ public class RelationManagerImpl implements RelationManager {
 
     /**
      * Batch update collection index.
-     * 
+     *
      * @param batch
      *            the batch
      * @param applicationId
@@ -561,7 +561,7 @@ public class RelationManagerImpl implements RelationManager {
                             Schema.DICTIONARY_INDEXES), index, null,
                     indexUpdate.getTimestamp());
         }
-        
+
         return indexUpdate;
     }
 
@@ -664,7 +664,7 @@ public class RelationManagerImpl implements RelationManager {
 
     /**
      * Batch add to collection.
-     * 
+     *
      * @param batch
      *            the batch
      * @param applicationId
@@ -839,7 +839,7 @@ public class RelationManagerImpl implements RelationManager {
 
     /**
      * Batch remove from collection.
-     * 
+     *
      * @param batch
      *            the batch
      * @param applicationId
@@ -1125,7 +1125,7 @@ public class RelationManagerImpl implements RelationManager {
 
     /**
      * Batch update connection index.
-     * 
+     *
      * @param batch
      *            the batch
      * @param applicationId
@@ -1201,7 +1201,7 @@ public class RelationManagerImpl implements RelationManager {
              * addInsertToMutator(batch, EntityCF.SETS, key(connection_id,
              * Schema.INDEXES_SET), indexEntry.getKey(), null, false,
              * timestamp); }
-             * 
+             *
              * addInsertToMutator(batch, EntityCF.SETS, key(connection_id,
              * Schema.INDEXES_SET), entryName, null, false, timestamp);
              */
@@ -1240,7 +1240,7 @@ public class RelationManagerImpl implements RelationManager {
 
     /**
      * Batch update backword connections property indexes.
-     * 
+     *
      * @param batch
      *            the batch
      * @param applicationId
@@ -1289,7 +1289,7 @@ public class RelationManagerImpl implements RelationManager {
 
     /**
      * Batch update backword connections set indexes.
-     * 
+     *
      * @param batch
      *            the batch
      * @param applicationId
@@ -1578,8 +1578,8 @@ public class RelationManagerImpl implements RelationManager {
                 timestampUuid, schemaHasProperty, isMultiValue,
                 removeListEntry, fulltextIndexed, false);
     }
-    
-  
+
+
 
     @Metered(group="core",name="RelationManager_batchStartIndexUpdate")
     public IndexUpdate batchStartIndexUpdate(Mutator<ByteBuffer> batch,
@@ -1815,12 +1815,12 @@ public class RelationManagerImpl implements RelationManager {
             batchUpdateBackwardConnectionsPropertyIndexes(indexUpdate);
         }
 
-        
+
         /**
          * We've updated the properties, add the deletes to the ledger
-         * 
+         *
          */
-        
+
         for(IndexEntry entry: indexUpdate.getPrevEntries()){
           addDeleteToMutator(batch, ENTITY_INDEX_ENTRIES, entity.getUuid(), entry.getLedgerColumn(), indexUpdate.getTimestamp());
         }
@@ -1874,7 +1874,7 @@ public class RelationManagerImpl implements RelationManager {
 
     /**
      * Process index results.
-     * 
+     *
      * @param results
      *            the results
      * @param compositeResults
@@ -2005,7 +2005,7 @@ public class RelationManagerImpl implements RelationManager {
 
     /**
      * Search index.
-     * 
+     *
      * @param applicationId
      *            the application id
      * @param indexKey
@@ -2165,7 +2165,7 @@ public class RelationManagerImpl implements RelationManager {
     /**
      * Search the collection index using all the buckets for the given
      * collection
-     * 
+     *
      * @param indexKey
      * @param slice
      * @param count
@@ -3067,9 +3067,9 @@ public class RelationManagerImpl implements RelationManager {
 
     /**
      * Simple search visitor that performs all the joining
-     * 
+     *
      * @author tnine
-     * 
+     *
      */
     private class SearchCollectionVisitor extends SearchVisitor {
 
@@ -3087,7 +3087,7 @@ public class RelationManagerImpl implements RelationManager {
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see
          * org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.
          * persistence.query.ir.SliceNode)
@@ -3148,6 +3148,8 @@ public class RelationManagerImpl implements RelationManager {
 
                 queryProcessor.updateCursor(slice, r.getCursor());
 
+                r = r.excludeCursorMetadataAttribute();
+
                 if (results != null) {
                     results.and(r);
                 } else {
@@ -3181,7 +3183,7 @@ public class RelationManagerImpl implements RelationManager {
 
       /*
          * (non-Javadoc)
-         * 
+         *
          * @see
          * org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.
          * persistence.query.ir.WithinNode)
@@ -3203,9 +3205,9 @@ public class RelationManagerImpl implements RelationManager {
 
     /**
      * Simple search visitor that performs all the joining
-     * 
+     *
      * @author tnine
-     * 
+     *
      */
     private class SearchConnectionVisitor extends SearchVisitor {
 
@@ -3223,7 +3225,7 @@ public class RelationManagerImpl implements RelationManager {
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see
          * org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.
          * persistence.query.ir.SliceNode)
@@ -3260,6 +3262,8 @@ public class RelationManagerImpl implements RelationManager {
                     // queryProcessor.updateCursor(slice, r.getCursor());
                 }
 
+                r = r.excludeCursorMetadataAttribute();
+
                 if (results != null) {
                     results.and(r);
                 } else {
@@ -3294,7 +3298,7 @@ public class RelationManagerImpl implements RelationManager {
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see
          * org.usergrid.persistence.query.ir.NodeVisitor#visit(org.usergrid.
          * persistence.query.ir.WithinNode)
