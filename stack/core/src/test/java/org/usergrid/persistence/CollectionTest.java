@@ -16,6 +16,7 @@
 package org.usergrid.persistence;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -28,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Map.Entry;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
@@ -842,6 +844,13 @@ public class CollectionTest extends AbstractPersistenceTest {
 
       r = em.searchCollection(em.getApplicationRef(), "pages", query);
 
+		for (Entry<UUID, Map<String, Object>> entry : r.metadata.entrySet()) {
+			Map<String, Object> map = entry.getValue();
+			if(map!=null) {
+				assertFalse(map.containsKey(Schema.PROPERTY_CURSOR));
+			}
+		}
+
       logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
       assertEquals(pageSize, r.size());
@@ -958,7 +967,7 @@ public class CollectionTest extends AbstractPersistenceTest {
 
 
   }
-  
+
 
     @Test
     public void subpropertyQuerying() throws Exception {
@@ -977,26 +986,26 @@ public class CollectionTest extends AbstractPersistenceTest {
                 "subpropertyQuerying");
         assertNotNull(applicationId);
 
-       
+
         EntityManager em = emf.getEntityManager(applicationId);
         assertNotNull(em);
 
         Entity saved = em.create("test", root);
 
-        
-        
+
+
         Query query = new Query();
         query.addEqualityFilter("rootprop1","simpleprop");
 
         Results results = em.searchCollection(em.getApplicationRef(), "tests",
                 query);
-        
-        
+
+
         Entity entity = results.getEntitiesMap().get(saved.getUuid());
 
         assertNotNull(entity);
-        
-        
+
+
         //query on the nested int value
         query = new Query();
         query.addEqualityFilter("subentity.intprop", 10);
@@ -1019,44 +1028,44 @@ public class CollectionTest extends AbstractPersistenceTest {
 
         assertNotNull(entity);
     }
-    
+
     @Test
     public void arrayQuerying() throws Exception {
-      
+
         Map<String, Object> root = new HashMap<String, Object>();
 
-      
+
         root.put("intprop", 10);
         root.put("array",new String[]{"val1", "val2", "val3 with spaces"} );
-        
-        
+
+
         Map<String, Object> jsonData = (Map<String, Object>) JsonUtils.parse(JsonUtils.mapToJsonString(root));
-        
+
 
         UUID applicationId = createApplication("testOrganization",
                 "arrayQuerying");
         assertNotNull(applicationId);
 
-       
+
         EntityManager em = emf.getEntityManager(applicationId);
         assertNotNull(em);
 
         Entity saved = em.create("test", jsonData);
 
-        
-        
+
+
         Query query = new Query();
         query.addEqualityFilter("intprop", 10);
 
         Results results = em.searchCollection(em.getApplicationRef(), "tests",
                 query);
-        
-        
+
+
         Entity entity = results.getEntitiesMap().get(saved.getUuid());
 
         assertNotNull(entity);
-        
-        
+
+
         //query on the nested int value
         query = new Query();
         query.addEqualityFilter("array", "val1");
@@ -1077,7 +1086,7 @@ public class CollectionTest extends AbstractPersistenceTest {
         entity = results.getEntitiesMap().get(saved.getUuid());
 
         assertNotNull(entity);
-        
+
         query = new Query();
         query.addEqualityFilter("array", "val3");
 
@@ -1086,7 +1095,7 @@ public class CollectionTest extends AbstractPersistenceTest {
         entity = results.getEntitiesMap().get(saved.getUuid());
 
         assertNull(entity);
-        
+
         query = new Query();
         query.addContainsFilter("array", "spaces");
         results = em.searchCollection(em.getApplicationRef(), "tests", query);
@@ -1094,8 +1103,8 @@ public class CollectionTest extends AbstractPersistenceTest {
         entity = results.getEntitiesMap().get(saved.getUuid());
 
         assertNotNull(entity);
-        
-        
+
+
     }
 
 
@@ -1104,30 +1113,30 @@ public class CollectionTest extends AbstractPersistenceTest {
         Map<String, Object> props = new HashMap<String, Object>();
 
         props.put("myString", "My simple string");
-        
+
         UUID applicationId = createApplication("testOrganization",
                 "stringWithSpaces");
         assertNotNull(applicationId);
 
-       
+
         EntityManager em = emf.getEntityManager(applicationId);
         assertNotNull(em);
 
         Entity saved = em.create("test", props);
 
-        
-        
+
+
         Query query = new Query();
         query.addEqualityFilter("myString","My simple string");
 
         Results results = em.searchCollection(em.getApplicationRef(), "tests",
                 query);
-        
-        
+
+
         Entity entity = results.getEntitiesMap().get(saved.getUuid());
 
         assertNotNull(entity);
-        
+
     }
 
   @Test
