@@ -28,42 +28,48 @@
 
 body {
   background-color: #fff;
+  min-height: 800px;
 }
 
 /* buttons ================================================================= */
 .btn-primary{border-color:#1455ab #1455ab #0c3367;border-color:rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);background-color:#146cab;background-image:-moz-linear-gradient(top, #147bab, #1455ab);background-image:-ms-linear-gradient(top, #147bab, #1455ab);background-image:-webkit-gradient(linear, 0 0, 0 100%, from(#147bab), to(#1455ab));background-image:-webkit-linear-gradient(top, #147bab, #1455ab);background-image:-o-linear-gradient(top, #147bab, #1455ab);background-image:linear-gradient(top, #147bab, #1455ab);background-repeat:repeat-x;filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#147bab', endColorstr='#1455ab', GradientType=0);filter:progid:dximagetransform.microsoft.gradient(enabled=false);}.btn-primary:hover,.btn-primary:active,.btn-primary.active,.btn-primary.disabled,.btn-primary[disabled]{background-color:#1455ab;}
 
 .header{
-   padding-top: 30px;
+   padding: 10px;
    width: 100%;
    height: 40px;
    background-color: #ff4200;
    color: #fff;
-   text-align: center;
-   font-size: 24px;
+   text-align: left;
+   font-size: 16px;
    font-weight: 800;
 }
-.main-menu-button{
-   display: none;
-   float: left;
-   margin:20px 0px 0px 20px;
-   width: 120px;
+.info{
+  padding: 40px 30px 30px 30px;  
+  font-size: 16px;
+}
+h3{ 
+ padding-bottom: 20px; 
 }
 .main{
    display: block;
-   margin: auto;
-   padding: 30px;
-   width: 600px;
+   padding: 0 30px 30px 30px ;
    background-color: #fff;
 }
 .form-block{
   display: block;
   display: none;
-  margin: auto;
-  padding: 30px;
+  padding: 10px 0;
   min-height: 210px;
-  width: 600px;
   background-color: #fff; 
+}
+.section-header{
+  font-size: 20px;
+  font-weight: 200; 
+  padding-bottom: 20px; 
+}
+.note {
+   padding-bottom: 20px;
 }
 .response-box{
    margin: 0 auto;
@@ -72,4 +78,11 @@ body {
    border: 1px solid silver;
    background-color: #ddd;
    font-weight: bold;
+}
+pre{
+   border: none;
+   padding: 0;
+}
+.left{
+   float: left;  
 }

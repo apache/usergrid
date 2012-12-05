@@ -31,35 +31,51 @@ $(document).ready(function () {
    Usergrid.ApiClient.init('Apigee', 'sandbox');
 
    //Usergrid.ApiClient.setApiUrl('http://api.usergrid.com/');
-   
+   function hideAllSections(){
+      $('#get-page').hide();
+      $('#get-nav').removeClass('active');
+      $('#post-page').hide();
+      $('#post-nav').removeClass('active');
+      $('#put-page').hide(); 
+      $('#put-nav').removeClass('active');
+      $('#delete-page').hide(); 
+      $('#delete-nav').removeClass('active');
+      $('#login-page').hide();
+      $('#login-nav').removeClass('active');
+   }
    //bind the show buttons
    $('#show-get').bind('click', function() {
-      $('#main').hide();
-      $('#main-menu').show();
+      hideAllSections();
+      $('#get-nav').addClass('active');
+      $('#get-response').html("// Press 'Run Query' to send the API call.");
       $('#get-page').show();
    });
 
    $('#show-post').bind('click', function() {
-      $('#main').hide();
-      $('#main-menu').show();
+      hideAllSections();
+      $('#post-nav').addClass('active');
+      $('#post-response').html("// Press 'Run Query' to send the API call.");
       $('#post-page').show();
    });
 
    $('#show-put').bind('click', function() {
-      $('#main').hide();
-      $('#main-menu').show();
+      hideAllSections();
+      $('#put-nav').addClass('active');
+      $('#put-response').html("// Press 'Run Query' to send the API call.");
       $('#put-page').show();
    });
 
    $('#show-delete').bind('click', function() {
-      $('#main').hide();
-      $('#main-menu').show();
+      hideAllSections();
+      $('#delete-nav').addClass('active');
+      $('#delete-response').html("// Press 'Run Query' to send the API call.");
       $('#delete-page').show();
    });
 
    $('#show-login').bind('click', function() {
-      $('#main').hide();
-      $('#main-menu').show();
+      hideAllSections();
+      $('#login-nav').addClass('active');
+      $('#login-response').html("// Press 'Run Query' to send the API call.");
       $('#login-page').show();
    });
 
@@ -82,8 +98,9 @@ $(document).ready(function () {
    $('#run-login').bind('click', function() {
       _login();
    });
-
    
+   //start with the get page showing by default
+   $('#get-page').show();
 
    //bind the create new dog button
    $('#main-menu').bind('click', function() {
@@ -102,10 +119,10 @@ $(document).ready(function () {
       Usergrid.ApiClient.runAppQuery (new Usergrid.Query('GET', path, null, null,
          function(response) {
            var output = JSON.stringify(response, null, 2);
-           $("#response").html('<pre>'+output+'</pre>');
+           $("#get-response").html('<pre>'+output+'</pre>');
          },
          function (response) {
-           $("#response").html('<pre>ERROR: '+response+'</pre>');
+           $("#get-response").html('<pre>ERROR: '+response+'</pre>');
          }
       ));
    }
@@ -117,10 +134,10 @@ $(document).ready(function () {
       Usergrid.ApiClient.runAppQuery (new Usergrid.Query('POST', path, data, null,
          function(response) {
            var output = JSON.stringify(response, null, 2);
-           $("#response").html('<pre>'+output+'</pre>');
+           $("#post-response").html('<pre>'+output+'</pre>');
          },
          function (response) {
-           $("#response").html('<pre>ERROR: '+response+'</pre>');
+           $("#post-response").html('<pre>ERROR: '+response+'</pre>');
          }
       ));
    }
@@ -132,10 +149,10 @@ $(document).ready(function () {
       Usergrid.ApiClient.runAppQuery (new Usergrid.Query('PUT', path, data, null,
          function(response) {
            var output = JSON.stringify(response, null, 2);
-           $("#response").html('<pre>'+output+'</pre>');
+           $("#put-response").html('<pre>'+output+'</pre>');
          },
          function (response) {
-           $("#response").html('<pre>ERROR: '+response+'</pre>');
+           $("#put-response").html('<pre>ERROR: '+response+'</pre>');
          }
       ));
    }
@@ -145,10 +162,10 @@ $(document).ready(function () {
       Usergrid.ApiClient.runAppQuery (new Usergrid.Query('DELETE', path, null, null,
          function(response) {
            var output = JSON.stringify(response, null, 2);
-           $("#response").html('<pre>'+output+'</pre>');
+           $("#delete-response").html('<pre>'+output+'</pre>');
          },
          function (response) {
-           $("#response").html('<pre>ERROR: '+response+'</pre>');
+           $("#delete-response").html('<pre>ERROR: '+response+'</pre>');
          }
       ));
    }
@@ -158,11 +175,16 @@ $(document).ready(function () {
       var password = $("#password").val();
       Usergrid.ApiClient.logInAppUser(username, password,
          function (response, user) {
+            //at this point, the user has been logged in succesfully and the OAuth token for the user has been stored
+            //however, in this example, we don't want to use that token for the rest of the API calls, so we will now
+            //reset it.  In your app, you will most likely not want to do this, as you are effectively logging the user 
+            //out.  Our calls work because we are going against the Sandbox app, which has no restrictions on permissions.
+            Usergrid.ApiClient.setToken(null); //passing null deletes the user's token
             var output = JSON.stringify(response, null, 2);
-           $("#response").html('<pre>'+output+'</pre>');     
+           $("#login-response").html('<pre>'+output+'</pre>');     
          },
          function (response) {
-            $("#response").html('<pre>ERROR: '+response+'</pre>'); 
+            $("#login-response").html('<pre>ERROR: '+response+'</pre>'); 
          }
       );   
   }
