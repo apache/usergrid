@@ -118,8 +118,8 @@ public class ServiceInvocationTest extends AbstractServiceTest {
 		testRequest(sm, ServiceAction.GET, 3, null, "users", "edanuff",
 				"connections");
 
-		testRequest(sm, ServiceAction.GET, 1, null, "entities", cat.getUuid(),
-				"connecting");
+//		testRequest(sm, ServiceAction.GET, 1, null, "entities", cat.getUuid(),
+//				"connecting");
 
 		properties = new LinkedHashMap<String, Object>();
 		properties.put("color", "blacknwhite");
