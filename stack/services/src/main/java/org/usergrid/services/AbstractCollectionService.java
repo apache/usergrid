@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.*;
 import org.usergrid.persistence.Results.Level;
+import org.usergrid.persistence.cassandra.EntityManagerImpl;
 import org.usergrid.persistence.entities.User;
+import org.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.usergrid.services.ServiceResults.Type;
 import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
@@ -96,6 +98,12 @@ public class AbstractCollectionService extends AbstractService {
 			throw new ServiceResourceNotFoundException(context);
 		}
 
+		if(!getEntityType().equalsIgnoreCase(entity.getType())){
+			throw new UnexpectedEntityTypeException("Entity " + id
+					+ " is not the expected type, expected " + getEntityType()
+					+ ", found " + entity.getType());
+		}
+
 		checkPermissionsForEntity(context, entity);
 
 		// TODO check that entity is in fact in the collection
@@ -133,7 +141,7 @@ public class AbstractCollectionService extends AbstractService {
 		/*
 		 * Results.Level level = Results.Level.REFS; if (isEmpty(parameters)) {
 		 * level = Results.Level.ALL_PROPERTIES; }
-		 * 
+		 *
 		 * Results results = em.searchCollectionForProperty(owner,
 		 * getCollectionName(), null, nameProperty, name, null, null, 1, level);
 		 * EntityRef entity = results.getRef();
@@ -229,6 +237,12 @@ public class AbstractCollectionService extends AbstractService {
 
 		Entity item = em.get(id);
 		if (item != null) {
+			if(!getEntityType().equalsIgnoreCase(item.getType())){
+				throw new UnexpectedEntityTypeException("Entity " + id
+						+ " is not the expected type, expected " + getEntityType()
+						+ ", found " + item.getType());
+			}
+
 			updateEntity(context, item, context.getPayload());
 			item = importEntity(context, item);
 		} else {
@@ -377,6 +391,12 @@ public class AbstractCollectionService extends AbstractService {
 		if (entity == null) {
 			throw new ServiceResourceNotFoundException(context);
 		}
+
+		if(!getEntityType().equalsIgnoreCase(entity.getType())){
+			throw new UnexpectedEntityTypeException("Entity " + id
+					+ " is not the expected type, expected " + getEntityType()
+					+ ", found " + entity.getType());
+		}
 		entity = importEntity(context, entity);
 
 		em.addToCollection(context.getOwner(), context.getCollectionName(),
@@ -416,6 +436,13 @@ public class AbstractCollectionService extends AbstractService {
 		if (item == null) {
 			throw new ServiceResourceNotFoundException(context);
 		}
+
+		if(!getEntityType().equalsIgnoreCase(item.getType())){
+			throw new UnexpectedEntityTypeException("Entity " + id
+					+ " is not the expected type, expected " + getEntityType()
+					+ ", found " + item.getType());
+		}
+
 		item = importEntity(context, item);
 
 		em.removeFromCollection(context.getOwner(),
