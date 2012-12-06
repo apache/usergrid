@@ -27,8 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.*;
 import org.usergrid.persistence.Results.Level;
-import org.usergrid.persistence.cassandra.EntityManagerImpl;
-import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.usergrid.services.ServiceResults.Type;
 import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
@@ -98,11 +96,7 @@ public class AbstractCollectionService extends AbstractService {
 			throw new ServiceResourceNotFoundException(context);
 		}
 
-		if(!getEntityType().equalsIgnoreCase(entity.getType())){
-			throw new UnexpectedEntityTypeException("Entity " + id
-					+ " is not the expected type, expected " + getEntityType()
-					+ ", found " + entity.getType());
-		}
+		validateEntityType(entity,id);
 
 		checkPermissionsForEntity(context, entity);
 
@@ -237,12 +231,7 @@ public class AbstractCollectionService extends AbstractService {
 
 		Entity item = em.get(id);
 		if (item != null) {
-			if(!getEntityType().equalsIgnoreCase(item.getType())){
-				throw new UnexpectedEntityTypeException("Entity " + id
-						+ " is not the expected type, expected " + getEntityType()
-						+ ", found " + item.getType());
-			}
-
+			validateEntityType(item,id);
 			updateEntity(context, item, context.getPayload());
 			item = importEntity(context, item);
 		} else {
@@ -392,11 +381,8 @@ public class AbstractCollectionService extends AbstractService {
 			throw new ServiceResourceNotFoundException(context);
 		}
 
-		if(!getEntityType().equalsIgnoreCase(entity.getType())){
-			throw new UnexpectedEntityTypeException("Entity " + id
-					+ " is not the expected type, expected " + getEntityType()
-					+ ", found " + entity.getType());
-		}
+		validateEntityType(entity,id);
+
 		entity = importEntity(context, entity);
 
 		em.addToCollection(context.getOwner(), context.getCollectionName(),
@@ -437,11 +423,7 @@ public class AbstractCollectionService extends AbstractService {
 			throw new ServiceResourceNotFoundException(context);
 		}
 
-		if(!getEntityType().equalsIgnoreCase(item.getType())){
-			throw new UnexpectedEntityTypeException("Entity " + id
-					+ " is not the expected type, expected " + getEntityType()
-					+ ", found " + item.getType());
-		}
+		validateEntityType(item,id);
 
 		item = importEntity(context, item);
 
@@ -529,6 +511,15 @@ public class AbstractCollectionService extends AbstractService {
 					Type.GENERIC, Results.fromData(indexes), null, null);
 		}
 		return null;
+
+	}
+
+	private void validateEntityType(EntityRef item, UUID id) throws UnexpectedEntityTypeException {
+		if(!getEntityType().equalsIgnoreCase(item.getType())){
+			throw new UnexpectedEntityTypeException("Entity " + id
+					+ " is not the expected type, expected " + getEntityType()
+					+ ", found " + item.getType());
+		}
 
 	}
 
