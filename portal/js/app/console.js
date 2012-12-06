@@ -3788,7 +3788,6 @@ function apigee_console_app(Pages, query_params) {
       } else {
         forceNewApp();
       }
-      Usergrid.Navigation.router.navigateTo('organization');
     }
   }
 
@@ -3798,6 +3797,7 @@ function apigee_console_app(Pages, query_params) {
     var link = $(this);
     var orgName = link.text();
     selectOrganization(orgName);
+    Usergrid.Navigation.router.navigateTo('organization');
   }
 
   function logout() {
