@@ -1,3 +1,11 @@
+##Version
+
+Current version: **0.9.10**
+
+See change log: 
+
+<https://github.com/apigee/usergrid-javascript-sdk/blob/master/changelog.md>
+
 ##Overview
 This open source SDK simplifies writing JavaScript / HTML5 applications that connect to App Services. The repo is locatedhere:
 
