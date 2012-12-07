@@ -28,8 +28,8 @@
 */
 $(document).ready(function () {
    //first set the org / app path (must be orgname / appname or org id / app id - can't mix names and uuids!!)
-   Usergrid.ApiClient.init('Apigee', 'sandbox');
-
+   Usergrid.ApiClient.init('Apigee', 'Sandbox');
+   
    //Usergrid.ApiClient.setApiUrl('http://api.usergrid.com/');
    function hideAllSections(){
       $('#get-page').hide();
@@ -112,7 +112,6 @@ $(document).ready(function () {
       $('#main').show();
       $("#response").html('');
    });
-
 
    function _get() {
       var path = $("#get-path").val();
