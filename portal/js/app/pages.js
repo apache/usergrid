@@ -78,6 +78,7 @@ function ApigeePages() {
     if(!buttonHandler) {
       buttonHandler = function(e) {
         e.preventDefault();
+        redrawBox(panel.box);
         Usergrid.Navigation.router.navigateTo(panel.name);
       }
     }
@@ -111,8 +112,7 @@ function ApigeePages() {
       $("#console-panel iframe").attr("src", url);
     }
 
-    $("#console-panels > div").hide();
-    panel.box.show();
+    redrawBox(panel.box);
 
   };
 
@@ -131,6 +131,12 @@ function ApigeePages() {
         page.initFunction();
       }
     }
+  }
+
+  function redrawBox(box) {
+    $("#console-panels > div").hide();
+    box.show();
+
   }
   return self;
 }

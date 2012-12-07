@@ -123,7 +123,13 @@ Usergrid.Navigation = Backbone.Router.extend({
       url = Usergrid.ApiClient.getOrganizationName();
       url += "/" + Usergrid.ApiClient.getApplicationName();
       url += "/" + address;
-      this.navigate(url, true);
+      // Backbone navigate only triggers page loading if url changes
+      // loading manually if the url hasn't changed is necessary.
+      if(Backbone.history.fragment === url) {
+        Backbone.history.loadUrl(url);
+      } else {
+        this.navigate(url, {trigger: true});
+      }
     }
   });
 

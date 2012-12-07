@@ -3766,6 +3766,9 @@ a:active {
 .navbar .nav .active .go-home {
   background-color: transparent;
 }
+.navbar .nav .active .go-home:hover {
+  background-color: transparent;
+}
 .navbar .nav .active > a {
   color: #ffffff;
 }
