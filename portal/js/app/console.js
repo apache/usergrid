@@ -323,13 +323,7 @@ function apigee_console_app(Pages, query_params) {
           entity_path = path + "/" ;
         }
         $('#query-path').val(response.path + '/');
-/*        if(entity.type === "user") {
-          $('#query-path').val(response.path + '/' + entity.username + '/');
-        } else if (entity.name) {
-          $("#query-path").val(response.path + '/' + entity.name + '/');
-        } else {
-          $('#query-path').val(response.path + '/');
-        }*/
+
         t = '<div class="query-result-row entity_detail" id="query-result-detail" data-entity-type="'
           + entity.type
           + '" data-entity-id="' + entity.uuid + '" data-collection-path="'
@@ -343,7 +337,12 @@ function apigee_console_app(Pages, query_params) {
       showBackButton();
       showPagination('query-response');
     }else{
-      $('#query-path').val(response.path + '/');
+      // events collection returns like:  /events/
+      if(response.path === '/events/') {
+        $('#query-path').val(response.path);
+      } else {
+        $('#query-path').val(response.path + '/');
+      }
       $("#query-response-table").html("<div class='group-panel-section-message'>No Collection Entities Found</div>");
     }
   }
