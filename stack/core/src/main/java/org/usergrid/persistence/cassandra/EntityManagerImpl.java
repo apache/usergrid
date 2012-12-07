@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -174,9 +174,9 @@ import javax.annotation.Resource;
 
 /**
  * Cassandra-specific implementation of Datastore
- * 
+ *
  * @author edanuff
- * 
+ *
  */
 public class EntityManagerImpl implements EntityManager {
 
@@ -274,7 +274,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Batch dictionary property.
-	 * 
+	 *
 	 * @param batch
 	 *            the batch
 	 * @param applicationId
@@ -317,7 +317,7 @@ public class EntityManagerImpl implements EntityManager {
 				entity.getType(), propertyName, propertyValue);
 
 		Schema defaultSchema = Schema.getDefaultSchema();
-		
+
 		if (PROPERTY_TYPE.equalsIgnoreCase(propertyName)
 				&& (propertyValue != null)) {
 			if ("entity".equalsIgnoreCase(propertyValue.toString())
@@ -363,19 +363,19 @@ public class EntityManagerImpl implements EntityManager {
 				cass.getLockManager().unlockProperty(applicationId,
 						entity.getType(), propertyName);
 			}
-			
+
 			/**
 			 * Unique property, load the old value and remove it, check if it's not a duplicate
 			 */
 			if(defaultSchema.getEntityInfo(entity.getType()).isPropertyUnique(propertyName)){
 			    cass.getLockManager().lockProperty(applicationId,
                         entity.getType(), propertyName);
-			    
+
 			    String collectionName = Schema.defaultCollectionName(entity.getType());
-			    
+
 			    uniquePropertyDelete(batch, collectionName, entity.getType(), propertyName, propertyValue, entity.getUuid(), timestamp-1);
 			    uniquePropertyWrite(batch, collectionName, propertyName, propertyValue, entity.getUuid(), timestamp);
-			    
+
 			    cass.getLockManager().unlockProperty(applicationId,
                         entity.getType(), propertyName);
 			}
@@ -388,8 +388,8 @@ public class EntityManagerImpl implements EntityManager {
 					noRead, timestampUuid);
 		}
 
-		
-		
+
+
 		if (propertyValue != null) {
 			// Set the new value
 			addPropertyToMutator(batch, key(entity.getUuid()),
@@ -412,7 +412,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Batch update properties.
-	 * 
+	 *
 	 * @param batch
 	 *            the batch
 	 * @param applicationId
@@ -447,7 +447,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Batch update properties.
-	 * 
+	 *
 	 * @param batch
 	 *            the batch
 	 * @param applicationId
@@ -483,7 +483,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Batch update set.
-	 * 
+	 *
 	 * @param batch
 	 *            the batch
 	 * @param applicationId
@@ -570,7 +570,7 @@ public class EntityManagerImpl implements EntityManager {
 	}
 
 	/**
-	 * Returns true if the property is unique, and the entity can be saved.  If it's not unique, false is returned 
+	 * Returns true if the property is unique, and the entity can be saved.  If it's not unique, false is returned
 	 * @param thisEntity
 	 * @param entityType
 	 * @param propertyName
@@ -590,18 +590,18 @@ public class EntityManagerImpl implements EntityManager {
 		if (propertyValue == null) {
 			return true;
 		}
-		
+
 		String collectionName = defaultCollectionName(entityType);
 
-		
+
 		cass.getLockManager().lockProperty(applicationId, entityType, propertyName);
 
-		
+
 		Object key = createUniqueIndexKey(collectionName, propertyName, propertyValue);
-		
+
 		List<HColumn<ByteBuffer, ByteBuffer>> cols = cass.getColumns(cass.getApplicationKeyspace(applicationId), ENTITY_UNIQUE, key, null, null, 2, false);
-	
-		
+
+
 		cass.getLockManager().unlockProperty(applicationId, entityType, propertyName);
 
 		//No columns at all, it's unique
@@ -620,17 +620,17 @@ public class EntityManagerImpl implements EntityManager {
 		 */
 		for(HColumn<ByteBuffer, ByteBuffer> col: cols){
 		    UUID id = ue.fromByteBuffer(col.getName());
-		    
+
 		    if(thisEntity.equals(id)){
 		        return true;
 		    }
-		    
-		    
+
+
 		}
-		
+
 		return false;
 	}
-	
+
 	/**
 	 * Add this unique index to the delete
 	 * @param m
@@ -643,17 +643,17 @@ public class EntityManagerImpl implements EntityManager {
 	 */
 	private void uniquePropertyDelete(Mutator<ByteBuffer> m, String collectionName, String entityType, String propertyName, Object propertyValue, UUID entityId, long timestamp) throws Exception{
 	    //read the old value and delete it
-	    
+
 	    Object oldValue = getProperty(new SimpleEntityRef(entityType, entityId), propertyName);
-	    
+
 	    //we have an old value.  If the new value is empty, we want to delete the old value.  If the new value is different we want to delete, otherwise we don't issue the delete
 	    if(oldValue != null && (propertyValue == null || !oldValue.equals(propertyValue))){
 	        Object key = createUniqueIndexKey(collectionName, propertyName, oldValue);
-	    
+
 	        addDeleteToMutator(m, ENTITY_UNIQUE, key, timestamp, entityId);
 	    }
 	}
-	
+
 	/**
      * Add this unique index to the delete
      * @param m
@@ -666,7 +666,7 @@ public class EntityManagerImpl implements EntityManager {
      */
     private void uniquePropertyWrite(Mutator<ByteBuffer> m, String collectionName, String propertyName, Object propertyValue, UUID entityId, long timestamp) throws Exception{
         Object key = createUniqueIndexKey(collectionName, propertyName, propertyValue);
-       
+
         addInsertToMutator(m, ENTITY_UNIQUE, key, entityId, null, timestamp);
     }
 
@@ -707,8 +707,8 @@ public class EntityManagerImpl implements EntityManager {
 		alias = alias.toLowerCase().trim();
 		UUID keyId = CassandraPersistenceUtils.aliasID(ownerId, aliasType,
 				alias);
-	
-		
+
+
 		addInsertToMutator(mutator, ENTITY_ALIASES, keyId, "entityId", entityId,
 				timestamp);
 		addInsertToMutator(mutator, ENTITY_ALIASES, keyId, "entityType", entityType,
@@ -865,11 +865,11 @@ public class EntityManagerImpl implements EntityManager {
 	public void deleteAliasesForEntity(Mutator<ByteBuffer> mutator, UUID entityId, long timestamp)
 			throws Exception {
 		List<UUID> aliases = getAliases(entityId);
-		
+
 		for (UUID alias : aliases) {
-		    
+
 		    addDeleteToMutator(mutator, ENTITY_ALIASES, alias, timestamp);
-			
+
 		}
 
 	}
@@ -915,7 +915,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Creates a new entity.
-	 * 
+	 *
 	 * @param <A>
 	 *            the generic type
 	 * @param applicationId
@@ -959,7 +959,7 @@ public class EntityManagerImpl implements EntityManager {
 		String eType = Schema.normalizeEntityType(entityType);
 
 		Schema schema = getDefaultSchema();
-		
+
 		boolean is_application = TYPE_APPLICATION.equals(eType);
 
 		if (((applicationId == null) || applicationId
@@ -977,9 +977,12 @@ public class EntityManagerImpl implements EntityManager {
 		if (importId != null) {
 			itemId = importId;
 		}
-
+		boolean emptyPropertyMap = false;
 		if (properties == null) {
 			properties = new TreeMap<String, Object>(CASE_INSENSITIVE_ORDER);
+		}
+		if(properties.isEmpty()) {
+			emptyPropertyMap = true;
 		}
 
 		if (importId != null) {
@@ -1041,9 +1044,10 @@ public class EntityManagerImpl implements EntityManager {
 
 			collection = schema.getCollection(TYPE_APPLICATION,
 					collection_name);
-
-			addInsertToMutator(m, ENTITY_ID_SETS, collection_key, itemId, null,
+			if(!emptyPropertyMap) {
+				addInsertToMutator(m, ENTITY_ID_SETS, collection_key, itemId, null,
 					timestamp);
+			}
 
 			// Add name of collection to dictionary property
 			// Application.collections
@@ -1072,15 +1076,19 @@ public class EntityManagerImpl implements EntityManager {
 							subkey_props.add(subkey_value);
 						}
 						Object subkey_key = key(subkey_props.toArray());
-
-						addInsertToMutator(m, ENTITY_ID_SETS,
-								key(collection_key, subkey_key), itemId, null,
-								timestamp);
+						if(!emptyPropertyMap) {
+							addInsertToMutator(m, ENTITY_ID_SETS,
+									key(collection_key, subkey_key), itemId, null,
+									timestamp);
+						}
 					}
 				}
 			}
 		}
 
+		if(emptyPropertyMap){
+			return null;
+		}
 		properties.put(PROPERTY_UUID, itemId);
 		properties.put(PROPERTY_TYPE,
 				Schema.normalizeEntityType(entityType, false));
@@ -1159,17 +1167,17 @@ public class EntityManagerImpl implements EntityManager {
 				createAlias(m, applicationId, ref(entityType, itemId), entityType,
 						aliasValue, timestamp);
 			}
-			
+
 			 /**
              * Unique property, load the old value and remove it, check if it's not a duplicate
              */
             if(schema.getEntityInfo(entity.getType()).isPropertyUnique(prop_name)){
                 cass.getLockManager().lockProperty(applicationId, entityType, prop_name);
-                
+
                 String collectionName = Schema.defaultCollectionName(entityType);
-                
+
                 uniquePropertyWrite(m, collectionName, prop_name, propertyValue, itemId, timestamp);
-                
+
                 cass.getLockManager().unlockProperty(applicationId, entity.getType(), prop_name);
             }
 
@@ -1204,13 +1212,13 @@ public class EntityManagerImpl implements EntityManager {
 			logger.error("Unable to increment counter application.entities", e);
 		}
 	}
-	
+
 	public void decrementEntityCollection(String collection_name) {
 
 		long cassandraTimestamp = cass.createTimestamp();
 		decrementEntityCollection(collection_name, cassandraTimestamp);
 	}
-  
+
   	public void decrementEntityCollection(String collection_name,
 			long cassandraTimestamp) {
 		try {
@@ -1267,7 +1275,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Gets the type.
-	 * 
+	 *
 	 * @param applicationId
 	 *            the application id
 	 * @param entityId
@@ -1290,7 +1298,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Gets the entity info.
-	 * 
+	 *
 	 * @param applicationId
 	 *            the application id
 	 * @param entityId
@@ -1339,7 +1347,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Gets the specified entity.
-	 * 
+	 *
 	 * @param <A>
 	 *            the generic type
 	 * @param applicationId
@@ -1395,7 +1403,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Gets the specified list of entities.
-	 * 
+	 *
 	 * @param <A>
 	 *            the generic type
 	 * @param applicationId
@@ -1618,7 +1626,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Gets the set.
-	 * 
+	 *
 	 * @param applicationId
 	 *            the application id
 	 * @param entityType
@@ -1695,7 +1703,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Update properties.
-	 * 
+	 *
 	 * @param applicationId
 	 *            the application id
 	 * @param entityId
@@ -1775,31 +1783,31 @@ public class EntityManagerImpl implements EntityManager {
 
 		// find all the containing collections
 		getRelationManager(entity).batchRemoveFromContainers(m, timestampUuid);
-		
+
 		//decrease entity count
 		if(!TYPE_APPLICATION.equals(entity.getType())) {
 			String collection_name = Schema.defaultCollectionName(entity.getType());
 			decrementEntityCollection(collection_name);
 		}
 
-		
+
 		timestamp += 1;
 
 		if (dictionaries != null) {
 			for (String dictionary : dictionaries) {
-			    
+
 			    ApplicationCF cf = getDefaultSchema().hasDictionary(entity.getType(),
                         dictionary) ? ENTITY_DICTIONARIES
                         : ENTITY_COMPOSITE_DICTIONARIES;
-                        
+
 			    addDeleteToMutator(m, cf, key(entity.getUuid(), dictionary), timestamp);
 			}
 		}
 
 		addDeleteToMutator(m, ENTITY_PROPERTIES, key(entityId), timestamp);
-		
+
 		deleteAliasesForEntity(m, entityId, timestamp);
-		
+
 		batchExecute(m, CassandraService.RETRY_COUNT);
 
 	}
@@ -2086,7 +2094,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	}
 
-	
+
 
 	@Override
 	public void deleteAlias(String aliasType, String alias) throws Exception {
@@ -2271,11 +2279,11 @@ public class EntityManagerImpl implements EntityManager {
 	public Object getProperty(EntityRef entityRef, String propertyName)
 			throws Exception {
 		Entity entity = loadPartialEntity(entityRef.getUuid(), propertyName);
-		
+
 		if(entity == null){
 		    return null;
 		}
-		
+
 		return entity.getProperty(propertyName);
 	}
 
