@@ -34,15 +34,24 @@ public class CollectionsResouceTest extends AbstractRestTest {
             assertEquals("Should receive a 400 Not Found", 400, e.getResponse().getStatus());
         }
     }
-    
-    
+
+    @Test
+    public void postToEmptyCollection() {
+        Map<String, String> payload = new HashMap<String, String>();
+
+        JsonNode node = resource().path("/test-organization/test-app/cities")
+                    .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
+        assertNull(getEntity(node, 0));
+    }
+
 
     /**
      * emails with "me" in them are causing errors. Test we can post to a
      * colleciton after creating a user with this email
-     * 
+     *
      * USERGRID-689
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -52,26 +61,26 @@ public class CollectionsResouceTest extends AbstractRestTest {
 
         String token = userToken("sumeet.agarwal@usergrid.com", "secret");
 
-   
+
         //create a permission with the path "me" in it
         Map<String, String> data = new HashMap<String, String>();
-        
+
         data.put("permission", "get,post,put,delete:/users/sumeet.agarwal@usergrid.com/**");
-    
+
         JsonNode posted = resource().path("/test-organization/test-app/users/sumeet.agarwal@usergrid.com/permissions").queryParam("access_token", token)
                 .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
 
-        
+
         //now post data
         data = new HashMap<String, String>();
-                
+
         data.put("name", "profile-sumeet");
         data.put("firstname", "sumeet");
         data.put("lastname", "agarwal");
         data.put("mobile", "122");
 
-        
-        
+
+
         posted = resource().path("/test-organization/test-app/nestprofiles").queryParam("access_token", token)
                 .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
 
@@ -82,45 +91,45 @@ public class CollectionsResouceTest extends AbstractRestTest {
         assertNotNull(getEntity(response, 0));
 
     }
-    
-    
+
+
 
     @Test
     public void stringWithSpaces() {
         Map<String, String> payload = hashMap("summaryOverview", "My Summary").map("caltype", "personal");
-       
+
         JsonNode node = resource().path("/test-organization/test-app/calendarlists")
                     .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                     .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
-        
-        
+
+
         UUID id = getEntityId(node, 0);
-        
+
         //post a second entity
-        
-        
+
+
         payload = hashMap("summaryOverview", "Your Summary").map("caltype", "personal");
-        
+
         node = resource().path("/test-organization/test-app/calendarlists")
                 .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
-        
-        
-        //query for the first entity 
-        
+
+
+        //query for the first entity
+
         String query = "summaryOverview = 'My Summary'";
-        
-        
-        JsonNode queryResponse = 
+
+
+        JsonNode queryResponse =
                 resource().path("/test-organization/test-app/calendarlists")
                 .queryParam("access_token", access_token).queryParam("ql", query).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
-        
+
         UUID returnedId = getEntityId(queryResponse, 0);
-        
+
         assertEquals(id, returnedId);
-        
+
         assertEquals(1, queryResponse.get("entities").size());
     }
 }
