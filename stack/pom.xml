@@ -21,14 +21,55 @@
 		<snakeyaml-version>1.8</snakeyaml-version>
 		<usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
 		<usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
-                <metrics-version>2.1.2</metrics-version>
+        <metrics-version>2.1.2</metrics-version>
 	</properties>
+	
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
 	<groupId>org.usergrid</groupId>
 	<artifactId>usergrid</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>${bundle.symbolicName} [${bundle.namespace}]</name>
 	<description>Usergrid Project</description>
 	<packaging>pom</packaging>
+	
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<id>eanuff</id>
+			<name>Ed Anuff</name>
+		</developer>
+		<developer>
+			<id>tnine</id>
+			<name>Todd Nine</name>
+		</developer>
+		<developer>
+			<id>zznate</id>
+			<name>Nate McCall</name>
+		</developer>
+		<developer>
+			<id>scottganyo</id>
+			<name>Scott Ganyo</name>
+		</developer>
+		<developer>
+			<id>chakrayel</id>
+			<name>Chakra Yeleswarapu</name>
+		</developer>
+	</developers>
+	<scm>
+		<connection>scm:git:git@github.com:apigee/usergrid-stack-internal.git</connection>
+		<developerConnection>scm:git:git@github.com:apigee/usergrid-stack-internal.git</developerConnection>
+		<url>git@github.com:apigee/usergrid-stack-internal.git</url>
+	</scm>
 	<modules>
 		<module>config</module>
 		<module>core</module>
