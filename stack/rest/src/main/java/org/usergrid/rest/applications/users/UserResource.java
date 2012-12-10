@@ -498,7 +498,7 @@ public class UserResource extends ServiceResource {
     }
     
     @POST
-    @Path("revoketokens")
+    @Path("revoketoken")
     public JSONWithPadding revokeTokenPost(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback,
             @QueryParam("token") String token ) throws Exception {
@@ -515,7 +515,7 @@ public class UserResource extends ServiceResource {
     }
 
     @PUT
-    @Path("revoketokens")
+    @Path("revoketoken")
     public JSONWithPadding revokeTokenPut(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback,
     		@QueryParam("token") String token ) throws Exception {
