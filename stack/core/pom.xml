@@ -185,14 +185,6 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.scale7</groupId>
-			<artifactId>scale7-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.scale7</groupId>
-			<artifactId>scale7-cages</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.antlr</groupId>
 			<artifactId>antlr-runtime</artifactId>
 		</dependency>

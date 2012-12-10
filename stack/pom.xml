@@ -316,18 +316,18 @@
 			</dependency>
 			<dependency>
 				<groupId>org.apache.amber</groupId>
-				<artifactId>oauth2-common</artifactId>
-				<version>0.2-ug-SNAPSHOT</version>
+				<artifactId>amber-oauth2-common</artifactId>
+				<version>0.22-incubating</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.amber</groupId>
-				<artifactId>oauth2-authzserver</artifactId>
-				<version>0.2-ug-SNAPSHOT</version>
+				<artifactId>amber-oauth2-authzserver</artifactId>
+				<version>0.22-incubating</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.amber</groupId>
-				<artifactId>oauth2-resourceserver</artifactId>
-				<version>0.2-ug-SNAPSHOT</version>
+				<artifactId>amber-oauth2-resourceserver</artifactId>
+				<version>0.22-incubating</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.cassandra</groupId>
@@ -422,16 +422,7 @@
 				<artifactId>jython</artifactId>
 				<version>2.5.0</version>
 			</dependency>
-			<dependency>
-				<groupId>org.scale7</groupId>
-				<artifactId>scale7-core</artifactId>
-				<version>1.4-SNAPSHOT</version>
-			</dependency>
-			<dependency>
-				<groupId>org.scale7</groupId>
-				<artifactId>scale7-cages</artifactId>
-				<version>0.8-SNAPSHOT</version>
-			</dependency>
+	
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>

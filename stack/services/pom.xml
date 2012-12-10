@@ -280,18 +280,18 @@
 			<groupId>org.apache.shiro</groupId>
 			<artifactId>shiro-web</artifactId>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.apache.amber</groupId>
-			<artifactId>oauth2-common</artifactId>
+			<artifactId>amber-oauth2-common</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.amber</groupId>
-			<artifactId>oauth2-authzserver</artifactId>
+			<artifactId>amber-oauth2-authzserver</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.amber</groupId>
-			<artifactId>oauth2-resourceserver</artifactId>
-		</dependency>
+			<artifactId>amber-oauth2-resourceserver</artifactId>
+		</dependency> -->
 		<dependency>
 			<groupId>org.jvnet.mock-javamail</groupId>
 			<artifactId>mock-javamail</artifactId>
