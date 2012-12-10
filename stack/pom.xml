@@ -22,6 +22,7 @@
 		<usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
 		<usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
         <metrics-version>2.1.2</metrics-version>
+        <amber-version>0.22-incubating</amber-version>
 	</properties>
 	
 	<parent>
@@ -316,18 +317,18 @@
 			</dependency>
 			<dependency>
 				<groupId>org.apache.amber</groupId>
-				<artifactId>oauth2-common</artifactId>
-				<version>0.2-ug-SNAPSHOT</version>
+				<artifactId>amber-oauth2-common</artifactId>
+				<version>${amber-version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.amber</groupId>
-				<artifactId>oauth2-authzserver</artifactId>
-				<version>0.2-ug-SNAPSHOT</version>
+				<artifactId>amber-oauth2-authzserver</artifactId>
+				<version>${amber-version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.amber</groupId>
-				<artifactId>oauth2-resourceserver</artifactId>
-				<version>0.2-ug-SNAPSHOT</version>
+				<artifactId>amber-oauth2-resourceserver</artifactId>
+				<version>${amber-version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.cassandra</groupId>
