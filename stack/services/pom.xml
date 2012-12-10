@@ -280,7 +280,7 @@
 			<groupId>org.apache.shiro</groupId>
 			<artifactId>shiro-web</artifactId>
 		</dependency>
-		<dependency>
+		 <dependency>
 			<groupId>org.apache.amber</groupId>
 			<artifactId>amber-oauth2-common</artifactId>
 		</dependency>
