@@ -38,7 +38,7 @@ Include this file at the top of your HTML file (in between the head tags):
 
 Next, specify the Org name and App name you want to use.  You can find this information in the [Admin Portal](http://apigee.com/usergrid). By default, every Org comes with a test App called "Sandbox":
 
-	Usergrid.ApiClient.init('Apigee', 'Sandbox'); //<=put your info here
+	Usergrid.ApiClient.init('Apigee', 'Sandbox'); //<=put your info here ('orgname', 'appname');
 	
 You are now ready to make calls against the API.  The simplest way is to use the following format:
 
@@ -107,11 +107,7 @@ For a more complex Javascript/HTML5 sample app that also uses this Javascript SD
 <https://github.com/apigee/usergrid-sample-html5-messagee>
 
 ##Entities and Collections
-This SDK also provides object abstraction, in the form of the Entity and Collection extensions, to make interfacing with the API easier.   To get started, simply include the extension you want to use **after** you have included the SDK:
-
-	<script src="usergrid.SDK.js" type="text/javascript"></script>
-	<script src="extensions/usergrid.entity-collection.js" type="text/javascript"></script>
-
+This SDK also provides object abstraction, in the form of the Entity and Collection extensions, to make interfacing with the API easier. 
 
 ##The Entity Object
 The Entity object models entities stored in the database. It offers an easy-to-use wrapper for creating, reading, updating, and deleting entities.
