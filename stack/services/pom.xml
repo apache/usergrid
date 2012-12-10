@@ -292,7 +292,7 @@
 			<groupId>org.apache.amber</groupId>
 			<artifactId>amber-oauth2-resourceserver</artifactId>
 		</dependency>
-		<dependency>
+			<dependency>
 			<groupId>org.jvnet.mock-javamail</groupId>
 			<artifactId>mock-javamail</artifactId>
 			<scope>test</scope>
