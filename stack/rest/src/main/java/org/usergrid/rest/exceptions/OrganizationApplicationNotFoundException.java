@@ -1,6 +1,7 @@
 package org.usergrid.rest.exceptions;
 
 import org.usergrid.rest.ApiResponse;
+import org.usergrid.rest.ServerEnvironmentProperties;
 
 import javax.ws.rs.core.UriInfo;
 
@@ -12,9 +13,9 @@ import static org.usergrid.utils.JsonUtils.mapToJsonString;
 public class OrganizationApplicationNotFoundException extends RuntimeException {
     private ApiResponse apiResponse;
 
-  	public OrganizationApplicationNotFoundException(String orgAppName, UriInfo uriInfo) {
+  	public OrganizationApplicationNotFoundException(String orgAppName, UriInfo uriInfo, ServerEnvironmentProperties properties) {
       super("Could not find application for " + orgAppName + " from URI: " + uriInfo.getPath());
-      apiResponse = new ApiResponse(uriInfo);
+      apiResponse = new ApiResponse(properties);
 
       apiResponse.setError(this);
   	}

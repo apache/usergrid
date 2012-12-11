@@ -97,7 +97,7 @@ public class OrganizationsResource extends AbstractContextResource {
             Map<String, Object> json,
             @QueryParam("callback") @DefaultValue("") String callback)
             throws Exception {
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("new organization");
 
         String organizationName = (String) json.get("organization");
@@ -159,7 +159,7 @@ public class OrganizationsResource extends AbstractContextResource {
 
         logger.info("New organization: " + organizationName);
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("new organization");
 
         OrganizationOwnerInfo organizationOwner = management

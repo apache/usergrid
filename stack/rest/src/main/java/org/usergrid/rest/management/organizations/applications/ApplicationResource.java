@@ -75,7 +75,7 @@ public class ApplicationResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("delete application from organization");
 
 		management.deleteOrganizationApplication(organization.getUuid(),
@@ -91,7 +91,7 @@ public class ApplicationResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("get application client credentials");
 
 		ClientCredentialsInfo credentials = new ClientCredentialsInfo(
@@ -109,7 +109,7 @@ public class ApplicationResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("generate application client credentials");
 
 		ClientCredentialsInfo credentials = new ClientCredentialsInfo(

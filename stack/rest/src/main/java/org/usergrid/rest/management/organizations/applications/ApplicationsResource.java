@@ -69,7 +69,7 @@ public class ApplicationsResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("get organization application");
 
 		BiMap<UUID, String> applications = management
@@ -100,7 +100,7 @@ public class ApplicationsResource extends AbstractContextResource {
     Preconditions.checkArgument(!isEmpty(applicationName),
             "The 'name' parameter is required and cannot be empty: " + applicationName);
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("new application for organization");
 
 		ApplicationInfo applicationInfo = management.createApplication(

@@ -70,7 +70,7 @@ public class OrganizationsResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("get user management");
 
 		BiMap<UUID, String> userOrganizations = SubjectUtils.getOrganizations();
@@ -86,7 +86,7 @@ public class OrganizationsResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("new organization for user");
 
 		String organizationName = (String) json.get("organization");
@@ -108,7 +108,7 @@ public class OrganizationsResource extends AbstractContextResource {
 			@FormParam("organization") String organizationName)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("new organization for user");
 
 		if (organizationName == null) {
@@ -133,7 +133,7 @@ public class OrganizationsResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("add user to organization");
 
 		OrganizationInfo organization = management
@@ -152,7 +152,7 @@ public class OrganizationsResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("add user to organization");
 
 		OrganizationInfo organization = management.getOrganizationByUuid(UUID
@@ -171,7 +171,7 @@ public class OrganizationsResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("remove user from organization");
 
 		OrganizationInfo organization = management.getOrganizationByUuid(UUID
@@ -191,7 +191,7 @@ public class OrganizationsResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("remove user from organization");
 		OrganizationInfo organization = management
 				.getOrganizationByName(organizationName);

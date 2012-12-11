@@ -29,7 +29,7 @@ public class MetricsResource extends AbstractContextResource {
   @Path("all")
   public JSONWithPadding getDeveloperMetrics(@Context UriInfo ui) {
 
-    ApiResponse response = new ApiResponse(ui);
+    ApiResponse response = createApiResponse();
     response.setAction("get developer metrics");
 
     return new JSONWithPadding(response);

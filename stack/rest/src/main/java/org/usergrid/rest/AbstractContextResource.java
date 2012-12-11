@@ -79,7 +79,7 @@ public abstract class AbstractContextResource {
 	protected ManagementService management;
 
 	@Autowired
-	protected Properties properties;
+	protected ServerEnvironmentProperties properties;
 
 	@Autowired
 	protected QueueManagerFactory qmf;
@@ -118,9 +118,8 @@ public abstract class AbstractContextResource {
 	}
 
 	public boolean useReCaptcha() {
-		return isNotBlank(properties.getProperty("usergrid.recaptcha.public"))
-				&& isNotBlank(properties
-						.getProperty("usergrid.recaptcha.private"));
+		return isNotBlank(properties.getRecaptchaPublic())
+				&& isNotBlank(properties.getRecaptchaPrivate());
 	}
 
 	public String getReCaptchaHtml() {
@@ -128,8 +127,8 @@ public abstract class AbstractContextResource {
 			return "";
 		}
 		ReCaptcha c = ReCaptchaFactory.newSecureReCaptcha(
-				properties.getProperty("usergrid.recaptcha.public"),
-				properties.getProperty("usergrid.recaptcha.private"), false);
+        properties.getRecaptchaPublic(),
+        properties.getRecaptchaPrivate(), false);
 		return c.createRecaptchaHtml(null, null);
 	}
 
@@ -153,4 +152,8 @@ public abstract class AbstractContextResource {
 		System.out.println(this.getClass());
 		return new Viewable(template, model, this.getClass());
 	}
+
+  protected ApiResponse createApiResponse() {
+    return new ApiResponse(properties);
+  }
 }

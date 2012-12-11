@@ -134,8 +134,7 @@ public class UsersResource extends ServiceResource {
 
 		try {
 			ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-			reCaptcha.setPrivateKey(properties
-					.getProperty("usergrid.recaptcha.private"));
+			reCaptcha.setPrivateKey(properties.getRecaptchaPrivate());
 
 			ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
 					httpServletRequest.getRemoteAddr(), challenge, uresponse);

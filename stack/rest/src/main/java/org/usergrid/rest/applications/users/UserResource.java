@@ -163,7 +163,7 @@ public class UserResource extends ServiceResource {
             return null;
         }
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("set user password");
         String oldPassword = string(json.get("oldpassword"));
         String newPassword = string(json.get("newpassword"));
@@ -213,7 +213,7 @@ public class UserResource extends ServiceResource {
             @QueryParam("callback") @DefaultValue("") String callback)
                     throws Exception {
 
-        ApiResponse response = new ApiResponse();
+        ApiResponse response = createApiResponse();
         response.setAction("Deactivate user");
 
         User user = management
@@ -233,7 +233,7 @@ public class UserResource extends ServiceResource {
 
         logger.info("UserResource.sendPin");
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("retrieve user pin");
 
         if (getUser() != null) {
@@ -263,7 +263,7 @@ public class UserResource extends ServiceResource {
 
         logger.info("UserResource.setPin");
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("set user pin");
 
         if (getUser() != null) {
@@ -286,7 +286,7 @@ public class UserResource extends ServiceResource {
 
         logger.info("UserResource.postPin");
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("set user pin");
 
         if (getUser() != null) {
@@ -307,7 +307,7 @@ public class UserResource extends ServiceResource {
                     throws Exception {
 
         logger.info("UserResource.jsonPin");
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("set user pin");
 
         if (getUser() != null) {
@@ -381,8 +381,7 @@ public class UserResource extends ServiceResource {
             }
 
             ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-            reCaptcha.setPrivateKey(properties
-                    .getProperty("usergrid.recaptcha.private"));
+            reCaptcha.setPrivateKey(properties.getRecaptchaPrivate());
 
             ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
                     httpServletRequest.getRemoteAddr(), challenge, uresponse);
@@ -481,7 +480,7 @@ public class UserResource extends ServiceResource {
 
         logger.info("Send activation email for user: " + getUserUuid());
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
 
         management.startAppUserActivationFlow(getApplicationId(), user);
 
@@ -497,7 +496,7 @@ public class UserResource extends ServiceResource {
 
         logger.info("Revoking user tokens for " + getUserUuid());
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
 
         management.revokeAccessTokensForAppUser(getApplicationId(), getUserUuid());
 

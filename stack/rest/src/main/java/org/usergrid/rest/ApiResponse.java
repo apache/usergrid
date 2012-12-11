@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -36,6 +35,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.persistence.AggregateCounterSet;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.entities.Application;
@@ -50,7 +50,6 @@ import org.usergrid.utils.InflectionUtils;
 @XmlRootElement
 public class ApiResponse {
 
-	private UriInfo ui;
 	private ServiceRequest esp;
 
 	private String error;
@@ -81,16 +80,20 @@ public class ApiResponse {
 	protected Map<String, Object> properties = new TreeMap<String, Object>(
 			String.CASE_INSENSITIVE_ORDER);
 
-	public ApiResponse() {
+  @Autowired
+  protected ServerEnvironmentProperties serverEnvironmentProperties;
+
+
+  public ApiResponse() {
 		timestamp = System.currentTimeMillis();
 	}
 
-	public ApiResponse(UriInfo ui) {
-		this.ui = ui;
-		timestamp = System.currentTimeMillis();
-	}
+  public ApiResponse(ServerEnvironmentProperties properties) {
+    this.serverEnvironmentProperties = properties;
+    timestamp = System.currentTimeMillis();
+  }
 
-	@JsonSerialize(include = Inclusion.NON_NULL)
+  @JsonSerialize(include = Inclusion.NON_NULL)
 	public String getCallback() {
 		return callback;
 	}
@@ -288,8 +291,6 @@ public class ApiResponse {
 
     /**
      * Set the application and organization information
-     * @param organization The organization name
-     * @param application The application name
      */
     public void setApplication(Application app){
         this.organization = app.getOrganizationName();
@@ -304,7 +305,6 @@ public class ApiResponse {
 	@JsonSerialize(include = Inclusion.NON_NULL)
 	@XmlAnyElement
 	public List<Entity> getEntities() {
-		// prepareEntities();
 		return entities;
 	}
 
@@ -472,7 +472,7 @@ public class ApiResponse {
 
 	public void prepareEntities() {
 		if (uri != null) {
-			String url_base = ui.getBaseUri().toString();
+			String url_base = serverEnvironmentProperties.getApiBase();
 			if (entities != null) {
 				for (Entity entity : entities) {
 					String entity_uri = getEntityPath(url_base, entity);
@@ -495,15 +495,18 @@ public class ApiResponse {
 	
 	/**
 	 * Create a path 
-	 * @param suffix
-	 * @return
+	 * @param suffixes
+	 * @return                         `
 	 */
 	private String createPath(String... suffixes){
 	    
 	    StringBuilder builder = new StringBuilder();
-	    
-	    builder.append(ui.getBaseUri());
-	    builder.append(organization);
+
+	    builder.append(serverEnvironmentProperties.getApiBase());
+      if(!serverEnvironmentProperties.getApiBase().endsWith("/")) {
+        builder.append("/");
+      }
+      builder.append(organization);
 	    builder.append("/");
 	    builder.append(applicationName);
 	    

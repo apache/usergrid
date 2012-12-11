@@ -89,7 +89,7 @@ public class OrganizationResource extends AbstractContextResource {
 
         logger.info("Get details for organization: " + organization.getUuid());
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setProperty("organization", management.getOrganizationData(organization));
 
         return new JSONWithPadding(response, callback);
@@ -137,7 +137,7 @@ public class OrganizationResource extends AbstractContextResource {
 
         logger.info("Send activation email for organization: " + organization.getUuid());
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
 
         management.startOrganizationActivationFlow(organization);
 
@@ -151,7 +151,7 @@ public class OrganizationResource extends AbstractContextResource {
     public JSONWithPadding getFeed(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("get organization feed");
 
         ServiceResults results = management.getOrganizationActivity(organization);
@@ -167,7 +167,7 @@ public class OrganizationResource extends AbstractContextResource {
     public JSONWithPadding getCredentials(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("get organization client credentials");
 
         ClientCredentialsInfo keys = new ClientCredentialsInfo(management.getClientIdForOrganization(organization
@@ -183,7 +183,7 @@ public class OrganizationResource extends AbstractContextResource {
     public JSONWithPadding generateCredentials(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("generate organization client credentials");
 
         ClientCredentialsInfo credentials = new ClientCredentialsInfo(
