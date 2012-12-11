@@ -522,7 +522,7 @@ public class UserResource extends ServiceResource {
 
         logger.info("Revoking user token for " + getUserUuid());
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
 
         management.revokeAccessTokenForAppUser(token);
 
