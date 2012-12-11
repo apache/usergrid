@@ -2314,7 +2314,7 @@ public class ManagementServiceImpl implements ManagementService {
                 user.getUuid());
         String reset_url = buildUserAppUrl(applicationId,
                 properties.getProperty(PROPERTIES_USER_RESETPW_URL),
-                user);
+                user, token);
 
       /*String reset_url = String.format(
                 properties.getProperty(PROPERTIES_USER_RESETPW_URL),
@@ -2425,7 +2425,7 @@ public class ManagementServiceImpl implements ManagementService {
                 user.getUuid());
         String confirmation_url = buildUserAppUrl(applicationId,
                 properties.getProperty(PROPERTIES_USER_CONFIRMATION_URL),
-                user);
+                user, token);
         /*String confirmation_url = String.format(
                 properties.getProperty(PROPERTIES_USER_CONFIRMATION_URL),
                 applicationId.toString(), user.getUuid().toString())
@@ -2439,15 +2439,14 @@ public class ManagementServiceImpl implements ManagementService {
 
     }
 
-    private String buildUserAppUrl(UUID applicationId, String url, User user) throws Exception {
+    private String buildUserAppUrl(UUID applicationId, String url, User user, String token) throws Exception {
       ApplicationInfo ai = getApplicationInfo(applicationId);
       OrganizationInfo oi = getOrganizationForApplication(applicationId);
       return String.format(url,
               oi.getName(),
-              ai.getName(),
+              ai.getId(),
               user.getUuid().toString())
-              + "?token="+getActivationTokenForAppUser(applicationId,
-                              user.getUuid());
+              + "?token="+token;
     }
 
     public void sendAdminRequestAppUserActivationEmail(UUID applicationId,
@@ -2456,7 +2455,7 @@ public class ManagementServiceImpl implements ManagementService {
                 user.getUuid());
         String activation_url = buildUserAppUrl(applicationId,
                 properties.getProperty(PROPERTIES_USER_ACTIVATION_URL),
-                user);
+                user, token);
         /*
         String activation_url = String.format(
                 properties.getProperty(PROPERTIES_USER_ACTIVATION_URL),
