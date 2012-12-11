@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -21,14 +20,56 @@
 		<snakeyaml-version>1.8</snakeyaml-version>
 		<usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
 		<usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
-                <metrics-version>2.1.2</metrics-version>
+        <metrics-version>2.1.2</metrics-version>
+        <amber-version>0.22-incubating</amber-version>
 	</properties>
+	
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
 	<groupId>org.usergrid</groupId>
 	<artifactId>usergrid</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.13-SNAPSHOT</version>
 	<name>${bundle.symbolicName} [${bundle.namespace}]</name>
 	<description>Usergrid Project</description>
 	<packaging>pom</packaging>
+	
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<id>eanuff</id>
+			<name>Ed Anuff</name>
+		</developer>
+		<developer>
+			<id>tnine</id>
+			<name>Todd Nine</name>
+		</developer>
+		<developer>
+			<id>zznate</id>
+			<name>Nate McCall</name>
+		</developer>
+		<developer>
+			<id>scottganyo</id>
+			<name>Scott Ganyo</name>
+		</developer>
+		<developer>
+			<id>chakrayel</id>
+			<name>Chakra Yeleswarapu</name>
+		</developer>
+	</developers>
+	<scm>
+		<connection>scm:git:git@github.com:apigee/usergrid-stack-internal.git</connection>
+		<developerConnection>scm:git:git@github.com:apigee/usergrid-stack-internal.git</developerConnection>
+		<url>git@github.com:apigee/usergrid-stack-internal.git</url>
+	</scm>
 	<modules>
 		<module>config</module>
 		<module>core</module>
@@ -275,18 +316,18 @@
 			</dependency>
 			<dependency>
 				<groupId>org.apache.amber</groupId>
-				<artifactId>oauth2-common</artifactId>
-				<version>0.2-ug-SNAPSHOT</version>
+				<artifactId>amber-oauth2-common</artifactId>
+				<version>${amber-version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.amber</groupId>
-				<artifactId>oauth2-authzserver</artifactId>
-				<version>0.2-ug-SNAPSHOT</version>
+				<artifactId>amber-oauth2-authzserver</artifactId>
+				<version>${amber-version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.amber</groupId>
-				<artifactId>oauth2-resourceserver</artifactId>
-				<version>0.2-ug-SNAPSHOT</version>
+				<artifactId>amber-oauth2-resourceserver</artifactId>
+				<version>${amber-version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.cassandra</groupId>
@@ -381,16 +422,7 @@
 				<artifactId>jython</artifactId>
 				<version>2.5.0</version>
 			</dependency>
-			<dependency>
-				<groupId>org.scale7</groupId>
-				<artifactId>scale7-core</artifactId>
-				<version>1.4-SNAPSHOT</version>
-			</dependency>
-			<dependency>
-				<groupId>org.scale7</groupId>
-				<artifactId>scale7-cages</artifactId>
-				<version>0.8-SNAPSHOT</version>
-			</dependency>
+	
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
