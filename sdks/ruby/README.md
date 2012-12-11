@@ -5,27 +5,30 @@ REST API with minimal dependencies.
 
 ## Installation
 
-Add this line to your application's Gemfile:
+### Project
+Add the gem to your project's Gemfile:
 
     gem 'usergrid_iron'
 
-And then execute:
+Then rebuild your bundle:
 
     $ bundle
 
-Or install it yourself as:
+### Stand-alone script
+Just manually install the gem:
 
     $ gem install usergrid_iron
 
 
 ## Usage
 
-### Not familiar with Usergrid / Apigee's App Services?
+### Prerequisite
+You'll want to be at least a little bit familiar with Usergrid / Apigee's App Services before you jump in here - but it easy and it's great! Start here:
 
-#### It's great stuff! Check it out, here:
+  App Services docs: <http://apigee.com/docs/usergrid/>  
+  Open source stack: <https://github.com/apigee/usergrid-stack>
 
-  Docs: <http://apigee.com/docs/usergrid/>  
-  Open source: <https://github.com/apigee/usergrid-stack>
+Awesome. Let's go!
 
 ### Getting started with the Usergrid_iron SDK is simple! 
 
@@ -43,24 +46,40 @@ application = ''
 username = ''
 password = ''
 
+# create the base application resource
+# (this is a RestClient.resource)
 application = Usergrid::Application.new "#{usergrid_api}/#{organization}/#{application}"
+
+# login (note: not required for sandbox)
 application.login username, password
 
-# create and store a dog in the 'dogs' collection on the server
+# create and store a new dog on the server
+# (the "response" is an enhanced RestClient.response)
 response = application.create_dog breed: 'Black Mouth Cur', name: 'Old Yeller'
 
-# let's get the dog from the response and grab its persistent id
+# the response has returned the entity data
+# response.entity wraps it in an easy-to-use object
 dog = response.entity
+
+# it's persistent now, so it has a unique id
 uuid = dog.uuid
 
-# let's retrieve a dog from the server by UUID
-same_dog = application['dogs'][uuid].entity
+# we can retrieve the dog by UUID using Hash syntax and calling get()
+# (all dogs are stored in the "dogs" collection)
+response = application["dogs"][uuid].get
+same_dog = response.entity
+
+# we could also retrieve the dog by name
+# we could also use path ('/') syntax instead of nested Hash
+# and we can even skip get() - entity() will do it for us
+same_dog = application["dogs/#{dog.name}"].entity
 
 # is it our dog? well, he knows his name!
-puts "My dog's name is: #{same_dog.name}"
+# (and we can retrieve its values by dot or Hash)
+puts "My dog's name is: #{same_dog.name} and his breed is #{same_dog['breed']}"
 ```
 
-Well that was really easy. 
+Well that was really easy. More comments than code! :)
 
 #### Let's try something slightly more complex.
 Let's say you've registered for an organization, but you don't have an application yet
@@ -78,7 +97,7 @@ you shouldn't need to do anything!)
   password = 'test'
   app_name = 'dog_sitter'
 
-  ## first, let's get that setup out of the way ##
+  ## first, let's get that setup out of the way... ##
 
   # get a management context & login the superuser
   management = Usergrid::Management.new usergrid_api
@@ -91,37 +110,44 @@ you shouldn't need to do anything!)
   # create an user for our application
   new_application.create_user username: 'username', password: 'password'
 
+  # login to our new application as our new user
+  application = organization.application app_name
+  application.login 'username', 'password'
+
 
   ## now we can play with the puppies! ##
-
-  # login to our new application as our new user
-  application = Usergrid::Application.new "#{usergrid_api}/#{org_name}/#{app_name}"
-  application.login 'username', 'password'
 
   # we can start with our dog again
   application.create_dog breed: 'Black Mouth Cur', name: 'Old Yeller'
 
-  # but this time let's create several more dogs at once
+  # but this time let's create several more dogs all at once
   application.create_dogs [
       { breed: 'Catalan sheepdog', name: 'Einstein' },
       { breed: 'Cocker Spaniel', name: 'Lady' },
       { breed: 'Mixed', name: 'Benji' }]
 
   # retrieve all the dogs (well, the first 'page' anyway) and tell them hi!
+  # note: we're calling collection() instead of entity() because we have several
   dogs = application['dogs'].collection
-  dogs.each do |dog|                          # works just like an array
-    puts "Hello, #{dog.name}!"                # entities automatically have attributes
+  
+  # you can iterate a collection just like an array
+  dogs.each do |dog|                        
+    puts "Hello, #{dog.name}!"
   end
 
-  # "Benji, come!"
-  benji = dogs.query("select * where name = 'Benji'").entity  # shortcut: entity() returns the first
+  # Let's get Benji ("Benji, come!"), but this time we'll retrieve by query
+  response = dogs.query "select * where name = 'Benji'"
+  
+  # we could call "response.collection.first"
+  # but there's a shortcut: entity() will also return the first
+  benji = response.entity
 
-  # modify Benji's attributes & save
+  # modify Benji's attributes & save to the server
   benji.location = 'home'                     # use attribute access
-  benji['breed'] = 'American Cocker Spaniel'  # or access it like a Hash
+  benji['breed'] = 'American Cocker Spaniel'  # or access attributes like a Hash
   benji.save
 
-  # query for the dogs that are home (should just be Benji)
+  # now query for the dogs that are home (should just be Benji)
   dogs = application['dogs'].query("select * where location = 'home'").collection
   if dogs.size == 1 && dogs.first.location == 'home'
     puts "Benji's home!"
