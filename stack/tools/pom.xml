@@ -153,11 +153,13 @@
 			<artifactId>usergrid-services</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-        <dependency>
-      			<groupId>org.usergrid</groupId>
-      			<artifactId>usergrid-rest</artifactId>
-      			<version>${project.version}</version>
-      		</dependency>
+		<dependency>
+			<groupId>org.usergrid</groupId>
+			<artifactId>usergrid-rest</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>classes</classifier>
+		</dependency>
 		<dependency>
 			<groupId>javax.persistence</groupId>
 			<artifactId>persistence-api</artifactId>

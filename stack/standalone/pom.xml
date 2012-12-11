@@ -184,6 +184,7 @@
 			<artifactId>usergrid-rest</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
+			<classifier>classes</classifier>
 			<exclusions>
 				<exclusion>
 					<artifactId>servlet-api</artifactId>
