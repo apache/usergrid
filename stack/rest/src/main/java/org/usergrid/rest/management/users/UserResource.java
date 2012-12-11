@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.management.users;
 
-import static org.usergrid.security.shiro.utils.SubjectUtils.*;
+import static org.usergrid.security.shiro.utils.SubjectUtils.isServiceAdmin;
 import static org.usergrid.utils.ConversionUtils.string;
 
 import java.util.Map;
@@ -37,10 +37,8 @@ import javax.ws.rs.core.UriInfo;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 
-import org.apache.shiro.authz.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ActivationState;
@@ -362,6 +360,35 @@ public class UserResource extends AbstractContextResource {
             @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
         return revokeTokensPost(ui, callback);
 
+    }
+    
+    
+    @POST
+    @Path("revoketoken")
+    public JSONWithPadding revokeTokenPost(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback,
+            @QueryParam("token") String token) throws Exception {
+
+        UUID adminId = user.getUuid();
+        this.token = token;
+        
+        logger.info("Revoking user tokens for {}", adminId);
+
+        ApiResponse response = new ApiResponse(ui);
+
+        management.revokeAccessTokenForAdminUser(adminId, token);
+
+        response.setAction("revoked user tokens");
+        return new JSONWithPadding(response, callback);
+
+    }
+
+    @PUT
+    @Path("revoketoken")
+    public JSONWithPadding revokeTokenPut(@Context UriInfo ui,
+            @QueryParam("callback") @DefaultValue("callback") String callback,
+            @QueryParam("token") String token) throws Exception {
+        return revokeTokenPost(ui, callback, token);
     }
 
 }

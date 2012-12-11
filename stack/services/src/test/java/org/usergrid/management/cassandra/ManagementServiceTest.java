@@ -24,6 +24,7 @@ import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.TokenCategory;
@@ -40,10 +41,13 @@ public class ManagementServiceTest {
 	static ManagementServiceImpl managementService;
 	static TokenService tokenService;
 	static ManagementTestHelper helper;
+	static EntityManagerFactory emf;
+	
 	// app-level data generated only once
 	private static UserInfo adminUser;
 	private static OrganizationInfo organization;
 	private static UUID applicationId;
+	
 
 	@BeforeClass
 	public static void setup() throws Exception {
@@ -53,6 +57,7 @@ public class ManagementServiceTest {
         helper.setup();
         managementService = (ManagementServiceImpl) helper.getManagementService();
         tokenService = helper.getApplicationContext().getBean(TokenService.class);
+        emf = helper.getEntityManagerFactory();
 		setupLocal();
 	}
 
@@ -274,7 +279,7 @@ public class ManagementServiceTest {
     }
 	
 	@Test
-	public void userTokenRevoke() throws Exception{
+	public void userTokensRevoke() throws Exception{
 	    UUID userId = UUIDUtils.newTimeUUID();
 	    
 	    String token1 = managementService.getAccessTokenForAppUser(applicationId, userId, 0);
@@ -304,13 +309,52 @@ public class ManagementServiceTest {
         }
         
         assertTrue(invalidTokenExcpetion);
+	}
+	
+	@Test
+	public void userTokenRevoke() throws Exception{
+		EntityManager em = emf.getEntityManager(applicationId);
+		
+		Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "realbeast");
+        properties.put("email", "sungju@softwaregeeks.org");
+
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
         
-      
+        UUID userId = user.getUuid();
         
+	    String token1 = managementService.getAccessTokenForAppUser(applicationId, userId, 0);
+        String token2 = managementService.getAccessTokenForAppUser(applicationId, userId, 0);
+        
+        assertNotNull(tokenService.getTokenInfo(token1));
+        assertNotNull(tokenService.getTokenInfo(token2));
+        
+        managementService.revokeAccessTokenForAppUser(token1);
+        
+        boolean invalidToken1Excpetion = false;
+        
+        try{
+            tokenService.getTokenInfo(token1);
+        }catch(InvalidTokenException ite){
+            invalidToken1Excpetion = true;
+        }
+        
+        assertTrue(invalidToken1Excpetion);
+        
+        boolean invalidToken2Excpetion = true;
+        
+        try{
+            tokenService.getTokenInfo(token2);
+        }catch(InvalidTokenException ite){
+        	invalidToken2Excpetion = false;
+        }
+        
+        assertTrue(invalidToken2Excpetion);
 	}
 	
     @Test
-    public void adminTokenRevoke() throws Exception {
+    public void adminTokensRevoke() throws Exception {
         UUID userId = UUIDUtils.newTimeUUID();
 
         String token1 = managementService.getAccessTokenForAdminUser(userId, 0);
@@ -340,7 +384,39 @@ public class ManagementServiceTest {
         }
         
         assertTrue(invalidTokenExcpetion);
+    }
+    
+    @Test
+    public void adminTokenRevoke() throws Exception {
+        UUID userId = adminUser.getUuid();
 
+        String token1 = managementService.getAccessTokenForAdminUser(userId, 0);
+        String token2 = managementService.getAccessTokenForAdminUser(userId, 0);
+
+        assertNotNull(tokenService.getTokenInfo(token1));
+        assertNotNull(tokenService.getTokenInfo(token2));
+
+        managementService.revokeAccessTokenForAdminUser(userId, token1);
+
+        boolean invalidToken1Excpetion = false;
+        
+        try{
+            tokenService.getTokenInfo(token1);
+        }catch(InvalidTokenException ite){
+        	invalidToken1Excpetion = true;
+        }
+        
+        assertTrue(invalidToken1Excpetion);
+        
+        boolean invalidToken2Excpetion = true;
+        
+        try{
+            tokenService.getTokenInfo(token2);
+        }catch(InvalidTokenException ite){
+        	invalidToken2Excpetion = false;
+        }
+        
+        assertTrue(invalidToken2Excpetion);
     }
 
   @Test

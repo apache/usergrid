@@ -919,7 +919,70 @@ public class UserResourceTest extends AbstractRestTest {
         }
 
         assertEquals(Status.UNAUTHORIZED, status);
+        
+        String token3 = super.userToken("edanuff", "sesame");
+        String token4 = super.userToken("edanuff", "sesame");
 
+        response = resource()
+        		.path("/test-organization/test-app/users/edanuff")
+                .queryParam("access_token", token3)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .get(JsonNode.class);
+
+        assertNotNull(getEntity(response, 0));
+
+        response = resource()
+        		.path("/test-organization/test-app/users/edanuff")
+        		.queryParam("access_token", token4)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .get(JsonNode.class);
+
+        assertNotNull(getEntity(response, 0));
+
+        // now revoke the token3
+        response = resource()
+        		.path("/test-organization/test-app/users/edanuff/revoketoken")
+                .queryParam("access_token", token3)
+                .queryParam("token", token3)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(JsonNode.class);
+
+        // the token3 shouldn't work
+
+        status = null;
+
+        try{
+            response = resource()
+            		.path("/test-organization/test-app/users/edanuff")
+            		.queryParam("access_token", token3)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE)
+                    .get(JsonNode.class);
+        }catch(UniformInterfaceException uie){
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals(Status.UNAUTHORIZED, status);
+
+        status = null;
+
+        try{
+            response = resource()
+            		.path("/test-organization/test-app/users/edanuff")
+            		.queryParam("access_token", token4)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE)
+                    .get(JsonNode.class);
+            
+            status = Status.OK;
+        }catch(UniformInterfaceException uie){
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals(Status.OK, status);
     }
 
     @Test
