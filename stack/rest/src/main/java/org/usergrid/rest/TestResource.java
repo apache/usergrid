@@ -85,7 +85,7 @@ public class TestResource extends AbstractContextResource {
             @QueryParam("callback") @DefaultValue("callback") String callback)
             throws Exception {
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("loading users");
 
         Map<String, String> properties = emf.getServiceProperties();
@@ -133,7 +133,7 @@ public class TestResource extends AbstractContextResource {
             @QueryParam("callback") @DefaultValue("callback") String callback)
             throws Exception {
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("loading sxsw data");
 
         Map<String, String> properties = emf.getServiceProperties();
@@ -271,7 +271,7 @@ public class TestResource extends AbstractContextResource {
 
         logger.info("Saying hello");
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("hello world!");
         response.setSuccess();
 
@@ -293,7 +293,7 @@ public class TestResource extends AbstractContextResource {
             @QueryParam("callback") @DefaultValue("callback") String callback)
             throws Exception {
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("test json");
         response.setSuccess();
 
@@ -308,7 +308,7 @@ public class TestResource extends AbstractContextResource {
             @QueryParam("callback") @DefaultValue("callback") String callback)
             throws Exception {
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("test connection");
 
         UUID applicationId = DEFAULT_APPLICATION_ID;

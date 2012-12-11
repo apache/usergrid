@@ -243,7 +243,7 @@ public class ServiceResource extends AbstractContextResource {
 
         logger.debug("ServiceResource.executeGet");
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
 
         response.setAction("get");
         response.setApplication(services.getApplication());
@@ -289,7 +289,7 @@ public class ServiceResource extends AbstractContextResource {
 
         Object json = body.getEntity();
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
 
 
         response.setAction("post");
@@ -314,7 +314,7 @@ public class ServiceResource extends AbstractContextResource {
         logger.debug("ServiceResource.executePut");
 
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("put");
 
         services.getApplicationRef();
@@ -336,7 +336,7 @@ public class ServiceResource extends AbstractContextResource {
 
         logger.debug("ServiceResource.executeDelete");
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("delete");
         response.setApplication(services.getApplication());
         response.setParams(ui.getQueryParameters());

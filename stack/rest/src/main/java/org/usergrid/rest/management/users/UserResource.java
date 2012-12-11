@@ -113,7 +113,7 @@ public class UserResource extends AbstractContextResource {
 
 		management.updateAdminUser(user, username, name, email);
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("update user info");
 
 		return new JSONWithPadding(response, callback);
@@ -140,7 +140,7 @@ public class UserResource extends AbstractContextResource {
                     newPassword);
         }
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("set user password");
 
         return new JSONWithPadding(response, callback);
@@ -162,7 +162,7 @@ public class UserResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("get admin user feed");
 
 		ServiceResults results = management.getAdminUserActivity(user);
@@ -179,7 +179,7 @@ public class UserResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("get admin user");
 
 		String token = management.getAccessTokenForAdminUser(SubjectUtils
@@ -251,8 +251,7 @@ public class UserResource extends AbstractContextResource {
 			}
 
 			ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-			reCaptcha.setPrivateKey(properties
-					.getProperty("usergrid.recaptcha.private"));
+			reCaptcha.setPrivateKey(properties.getRecaptchaPrivate());
 
 			ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
 					httpServletRequest.getRemoteAddr(), challenge, uresponse);
@@ -331,7 +330,7 @@ public class UserResource extends AbstractContextResource {
 
 		logger.info("Send activation email for user: " + user.getUuid());
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 
 		management.startAdminUserActivationFlow(user);
 
@@ -348,7 +347,7 @@ public class UserResource extends AbstractContextResource {
         
         logger.info("Revoking user tokens for {}", adminId);
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
 
         management.revokeAccessTokensForAdminUser(adminId);
 

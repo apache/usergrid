@@ -80,7 +80,7 @@ public class UsersResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("get organization users");
 
 		List<UserInfo> users = management
@@ -120,7 +120,7 @@ public class UsersResource extends AbstractContextResource {
 
 		logger.info("New user for organization: " + username);
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("create user");
 
 		UserInfo user = null;
@@ -175,7 +175,7 @@ public class UsersResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("add user to organization");
 
 		UserInfo user = management.getAdminUserByUuid(UUID
@@ -201,7 +201,7 @@ public class UsersResource extends AbstractContextResource {
  			@QueryParam("callback") @DefaultValue("callback") String callback)
  			throws Exception {
 
- 		ApiResponse response = new ApiResponse(ui);
+ 		ApiResponse response = createApiResponse();
  		response.setAction("add user to organization");
 
  		UserInfo user = management.getAdminUserByEmail(email);
@@ -236,7 +236,7 @@ public class UsersResource extends AbstractContextResource {
 	                "No admin identity for access credentials provided");
 	    }
 
-	    ApiResponse response = new ApiResponse(ui);
+	    ApiResponse response = createApiResponse();
 		response.setAction("add user to organization");
 
 		UserInfo user = management.getAdminUserByUsername(username);
@@ -262,7 +262,7 @@ public class UsersResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("remove user from organization");
 
 		UserInfo user = management.getAdminUserByUuid(UUID
@@ -299,7 +299,7 @@ public class UsersResource extends AbstractContextResource {
 	                "No admin identity for access credentials provided");
 	    }
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("remove user from organization");
 
 		UserInfo user = management.getAdminUserByUsername(username);
@@ -325,7 +325,7 @@ public class UsersResource extends AbstractContextResource {
 			@QueryParam("callback") @DefaultValue("callback") String callback)
 			throws Exception {
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("remove user from organization");
 
 		UserInfo user = management.getAdminUserByEmail(email);

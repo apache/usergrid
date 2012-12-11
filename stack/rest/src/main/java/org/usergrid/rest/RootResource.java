@@ -112,7 +112,7 @@ public class RootResource extends AbstractContextResource implements
 
         logger.info("RootResource.getAllApplications");
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("get applications");
 
         Map<String, UUID> applications = null;
@@ -140,7 +140,7 @@ public class RootResource extends AbstractContextResource implements
     @GET
     public Response getRoot(@Context UriInfo ui) throws URISyntaxException {
 
-        String redirect_root = properties.getProperty("usergrid.redirect_root");
+        String redirect_root = properties.getRedirectRoot();
         if (StringUtils.isNotBlank(redirect_root)) {
             ResponseBuilder response = Response.temporaryRedirect(new URI(
                     redirect_root));
@@ -156,7 +156,7 @@ public class RootResource extends AbstractContextResource implements
     @Path("status")
     public JSONWithPadding getStatus(
             @QueryParam("callback") @DefaultValue("callback") String callback) {
-        ApiResponse response = new ApiResponse();
+        ApiResponse response = createApiResponse();
 
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put("started", started);

@@ -10,11 +10,15 @@
 	<import resource="classpath:/usergrid-services-context.xml" />
 	
 	<context:component-scan base-package="org.usergrid.rest" />
-	
 
-	
 
-	<bean
+    <bean id="serverEnvironmentProperties" class="org.usergrid.rest.ServerEnvironmentProperties">
+        <constructor-arg ref="properties" />
+    </bean>
+
+    <bean id="apiResponse" class="org.usergrid.rest.ApiResponse"/>
+
+    <bean
 		class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
 		depends-on="lifecycleBeanPostProcessor" />
 

@@ -56,7 +56,7 @@ public class SystemResource extends AbstractContextResource {
             @QueryParam("callback") @DefaultValue("callback") String callback)
             throws Exception {
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("cassandra setup");
 
         logger.info("Setting up Cassandra");
@@ -96,7 +96,7 @@ public class SystemResource extends AbstractContextResource {
             throws Exception {
         logger.info("Saying hello");
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("Greetings Professor Falken");
         response.setSuccess();
 
@@ -110,7 +110,7 @@ public class SystemResource extends AbstractContextResource {
             @QueryParam("callback") @DefaultValue("callback") String callback)
             throws Exception {
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
         response.setAction("superuser setup");
 
         logger.info("Setting up Superuser");

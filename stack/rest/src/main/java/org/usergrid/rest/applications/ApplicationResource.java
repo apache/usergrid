@@ -360,7 +360,7 @@ public class ApplicationResource extends ServiceResource {
                         management.getClientSecretForApplication(services
                                 .getApplicationId()));
 
-        return new JSONWithPadding(new ApiResponse(ui).withCredentials(kp)
+        return new JSONWithPadding(createApiResponse().withCredentials(kp)
                 .withAction("get application keys").withSuccess(), callback);
     }
 
@@ -383,7 +383,7 @@ public class ApplicationResource extends ServiceResource {
                         management.newClientSecretForApplication(services
                                 .getApplicationId()));
 
-        return new JSONWithPadding(new ApiResponse(ui).withCredentials(kp)
+        return new JSONWithPadding(createApiResponse().withCredentials(kp)
                 .withAction("generate application keys").withSuccess(),
                 callback);
     }

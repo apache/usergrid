@@ -112,7 +112,7 @@ public class UsersResource extends AbstractContextResource {
 
 		logger.info("Create user: " + username);
 
-		ApiResponse response = new ApiResponse(ui);
+		ApiResponse response = createApiResponse();
 		response.setAction("create user");
 
 		UserInfo user = management.createAdminUser(username, name, email,
@@ -167,8 +167,7 @@ public class UsersResource extends AbstractContextResource {
 			}
 
 			ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-			reCaptcha.setPrivateKey(properties
-					.getProperty("usergrid.recaptcha.private"));
+			reCaptcha.setPrivateKey(properties.getRecaptchaPrivate());
 
 			ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(
 					httpServletRequest.getRemoteAddr(), challenge, uresponse);

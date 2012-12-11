@@ -115,8 +115,8 @@ public class OrganizationResource extends AbstractContextResource {
                 applicationName);
         UUID applicationId = emf.lookupApplication(orgAppName);
         if (applicationId == null) {
-            throw new OrganizationApplicationNotFoundException(orgAppName,
-                    uriInfo);
+            throw new OrganizationApplicationNotFoundException(orgAppName, uriInfo,
+                    properties);
         }
 
         return appResourceFor(applicationId);

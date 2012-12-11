@@ -101,7 +101,25 @@ public class ApplicationResourceTest extends AbstractRestTest {
 
     }
 
-    @Test
+  @Test
+  public void rootApplicationWithOrgCredentials() throws Exception {
+
+    OrganizationInfo orgInfo = managementService.getOrganizationByName("test-organization");
+    ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
+
+    String clientId = managementService.getClientIdForOrganization(orgInfo.getUuid());
+    String clientSecret = managementService.getClientSecretForOrganization(orgInfo.getUuid());
+
+    JsonNode node = resource().path("/" + appInfo.getId()).queryParam("client_id", clientId)
+        .queryParam("client_secret", clientSecret).accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+    // ensure the URI uses the properties file as a base
+    assertEquals(node.get("uri").getTextValue(), "http://sometestvalue/test-organization/test-app");
+  }
+
+
+  @Test
     public void test_GET_credentials_ok() {
         String mgmtToken = adminToken();
 
