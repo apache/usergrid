@@ -155,7 +155,7 @@ you shouldn't need to do anything!)
 
 ```
 
-Whew. That's enough for now. But looking for a specific feature? Check out the rspecs,
+Whew. That's enough for now. But looking for a specific feature? Check out the [rspecs](http://github.com/scottganyo/usergrid_iron/tree/master/spec/usergrid/core),
 there are examples of nearly everything!
 
 
