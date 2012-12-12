@@ -424,6 +424,12 @@ public class AbstractConnectionsService extends AbstractService {
 	}
 
 	@Override
+	public ServiceResults deleteItemByName(ServiceContext context, String name)
+			throws Exception {
+		return deleteItemsByQuery(context, context.getQuery());
+	}
+
+	@Override
 	public ServiceResults deleteItemsByQuery(ServiceContext context, Query query)
 			throws Exception {
 
