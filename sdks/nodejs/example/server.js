@@ -24,13 +24,15 @@
 var http = require("http");
 var path = require('path');
 var url = require("url");
-var fs = require('fs');
-var sys = require('util');
+var fs = require("fs");
+var sys = require("util");
+
+//initialze the usergrid module
+var usergrid = require("usergrid");
+
 //include local files
 var router = require("./router");
 var controller = require("./controller");
-//initialze the Module
-var usergrid = require("../lib/usergrid");
 
 //routing info
 var handle = {}
