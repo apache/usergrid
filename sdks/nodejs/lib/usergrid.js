@@ -57,7 +57,7 @@ Client = function(options) {
  */
 Client.prototype.request = function (options, callback){
   var self = this;
-  var method = options.method; 
+  var method = options.method || 'GET'; 
   var endpoint = options.endpoint; 
   var body = options.body || {};
   var qs = options.qs || {};

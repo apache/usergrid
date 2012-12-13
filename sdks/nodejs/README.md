@@ -11,7 +11,7 @@ To view the Apigee App Services documentation, see:
 
 <http://apigee.com/docs/usergrid/>
 
-
+ 
 ##Installing
 To install the Usergrid Node.js module, use npm:
 
@@ -23,31 +23,123 @@ Or visit the github repo:
 
 
 ##Getting started
-To get you started, please note that the module consists of one main JavaScript file, located in the project at:
-
-	/lib/usergrid.js
-
 Simply include the module to begin to use it:
 
 	var usergrid = require('usergrid');
 
-Then initialize it with your app and org id:
+Then create a new client:
 
-	usergrid.ApiClient.init('apigee', 'nodejs');
+	var client = new usergrid.client(
+		{ 
+		  orgName:"yourorgname"
+		, appName:"sandbox"
+  		} 
+	);
 
-You are now ready to use the usergrid handle to make calls against the API.  For example, you may want to set your client id and Secret:
+The preceding example shows how to use the "Sandbox" testing app, which does not require any authentication.  The "Sandbox" comes with all new App Services accounts.  
 
-	usergrid.ApiClient.setClientSecretCombo('b3U6y6hRJufDEeGW9hIxOwbREg', 'b3U6ZOaOexFiy6Jh61H4M7p2uFI3h18');
+If you are ready to use authentication, then create your client this way:
 
-**Note:** This function currently only works with oganization level credentials.  These are found at the bottom of the main organization page in the [App Services Admin Portal](http://apigee.com/usergrid)
+	var client = new usergrid.client(
+		{ 
+		orgName:"yourorgname"
+		, appName:"yourappname"
+		, authType:"CLIENT_ID"
+  		, clientId:"b3U6y6hRJufDEeGW9hIxOwbREg"
+  		, clientSecret:"b3U6X__fN2l9vd1HVi1kM9nJvgc-h5k"
+  		} 
+	);
+	
+**Note:** you can find your client secret and client id on the "Properties" page of the [Admin Portal](http://apigee.com/usergrid).
 
-If you are using the client secret and id, you will also need to enable the client secret authentication method:
+You are now ready to use the usergrid handle to make calls against the API.  
 
-	usergrid.ApiClient.enableClientSecretAuth();
+##Make some calls
+This module uses the [request](https://github.com/mikeal/request) module by [mikeal](https://github.com/mikeal/request).  The request uses similar syntax although only the subset of options that is relevant to making calls against the App Services API.  To make basic calls against the API, use the following format:
 
-Now calls made against the API will pass the client secret and id combo for authentication on each request.  This is secure since it is happening server-side.
+	request(options, callback);
+	
+For example, to get a list of users:
 
-See the sample app for more example usage.
+	var options = {method:"GET", endpoint:"users"};
+	client.request(options, function (err, data) {
+		if (err) {
+			console.log('error');
+		} else {
+			//data will contain raw results from API call
+		}		
+	});
+
+Or, to create a new user:
+
+	var options = {method:"POST", endpoint:"users", body:{username:"fred", password:"secret"}};
+	client.request(options, function (err, data) {
+		if (err) {
+			console.log('error');
+		} else {
+			//data will contain raw results from API call
+		}		
+	});
+
+Or, to update the new user:
+
+	var options = {method:"PUT", endpoint:"users/fred", body:{newkey:"newvalue"};
+	client.request(options, function (err, data) {
+		if (err) {
+			console.log('error');
+		} else {
+			//data will contain raw results from API call
+		}		
+	});
+
+Or to delete the new user:
+
+	var options = {method:"DELETE", endpoint:"users/fred"};
+	client.request(options, function (err, data) {
+		if (err) {
+			console.log('error');
+		} else {
+			//data will contain raw results from API call
+		}		
+	});
+
+
+The Options Object:
+
+* `method` - http method (GET, POST, PUT, or DELETE), defaults to GET
+* `qs` - object containing querystring values to be appended to the uri
+* `body` - object containing entity body for POST and PUT requests
+* `endpoint` - API endpoint, for example "users/fred"
+* `mQuery` - boolean, set to true if running management query, defaults to false
+
+You can make any call to the API using the format above.  However, in practice using the higher level Entity and Collection objects will make life much easier as they take care of much of the heavy lifting.
+
+
+##Entities and Collections
+Usergrid stores its data as "Entities" in "Collections".  Entities are essentially JSON objects and Collections are just containers for storing these objects. To access Entities and Collections, start by creating a new Collection.  In this case, we are creating a collection of dogs:
+
+	var options = {
+		type:"dogs"
+		, client:client
+	}
+	var dogs = new usergrid.collection(options, function(err) {	
+		if (err) { 
+			console.log('error'); 
+		} else {
+		
+			//we got the dogs, now display the Entities:
+			while(dogs.hasNextEntity()) {
+				//get a reference to the dog
+				var dog = dogs.getNextEntity();
+				var name = dog.get('name');
+				console.log('dog is called ' + name);
+			}
+			  
+			//do more things with the collection  
+		}
+	});   
+
+Remember that all calls to the API will be executed asynchronously, so it is important that you add code to operate on the collection in the callback.
 
 ##Sample / Test app
 After installing Node on your system, navigate to the directory where you put the code repo and run the following command to start the sample app:
@@ -56,7 +148,7 @@ After installing Node on your system, navigate to the directory where you put th
 
 Then, make sure you navigate into the test directory:
 
-	cd test
+	cd example
 
 And run the command to start the server:
 
