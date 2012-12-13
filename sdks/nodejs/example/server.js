@@ -37,8 +37,29 @@ handle["/main"] = controller.main;
 
 //initialze the Module
 var usergrid = require("../lib/usergrid");
-usergrid.ApiClient.init('apigee', 'nodejs');
-usergrid.ApiClient.setClientSecretCombo('b3U6y6hRJufDEeGW9hIxOwbREg', 'b3U6ZOaOexFiy6Jh61H4M7p2uFI3h18');
+
+usergrid.client.start( 
+  {
+    orgName:"apigee",
+    appName:"sandbox",
+    clientId:"b3U63hpBOGoXEeGJkRIxOAcFfg",
+    clientSecret:"b3U6gfY1xhTbAzLO-VFIyo33a5vLtvI",
+    callTimeout:30000,
+    callTimeoutCallback: function(){},   
+    logoutCallback: function(){}
+  }, 
+  function(err, response){
+    if (err) {
+      console.log('could not start client');
+    } else {
+      //all was well, continue   
+      
+    }
+  }
+);
+
+//usergrid.ApiClient.init('apigee', 'nodejs'); //(your-org-name, your-app-name)
+//usergrid.ApiClient.setClientSecretCombo('b3U63hpBOGoXEeGJkRIxOAcFfg', 'b3U6gfY1xhTbAzLO-VFIyo33a5vLtvI');
 usergrid.ApiClient.enableClientSecretAuth();
 
 //call garbage collection
