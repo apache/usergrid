@@ -52,9 +52,9 @@
             </div>
             <div class="right-header">
               <ul id="loginMenu" class="nav secondary-nav">
-                <li><a id="login-link" href="#"><i class="icon-user"></i> Login</a></li>
-                <li><a id="signup-link" href="#"> Sign Up</a></li>
-                <li><a id="forgot-password-link" href="#"><i class="icon-lock"></i> Forgot Password</a></li>
+                <li><a id="login-link" ><i class="icon-user"></i> Login</a></li>
+                <li><a id="signup-link" > Sign Up</a></li>
+                <li><a id="forgot-password-link" ><i class="icon-lock"></i> Forgot Password</a></li>
               </ul>
             </div>
           </div>
@@ -65,7 +65,7 @@
               <ul class="nav">
                 <li class="portal-name" ><a class="go-home">Admin Portal</a></li>
                 <li id="help-menu" class="dropdown">
-                  <a class="dropdown-toggle" data-toggle="dropdown" href="#">Help <span class="caret"></span></a>
+                  <a class="dropdown-toggle" data-toggle="dropdown" >Help <span class="caret"></span></a>
                   <ul class="dropdown-menu">
                     <li><a href="http://support.apigee.com/apigee" target="_blank"> Support</a></li>
                     <li><a href="http://apigee.com/docs/app_services" target="_blank"> Docs</a></li>
@@ -79,7 +79,7 @@
             <div class="right-header">
               <ul id="profileMenu" class="nav secondary-nav">
                 <li id="switchTo-menu" class="dropdown">
-                  <a id="switchTo-link" class="dropdown-toggle" data-toggle="dropdown" href="#"><span>Switch to...
+                  <a id="switchTo-link" class="dropdown-toggle" data-toggle="dropdown" ><span>Switch to...
                   </span> <span class="caret"></span></a>
                   <ul class="dropdown-menu">
                     <li><a href="http://mobileanalytics.apigee.com/pages/signin.seam " target="_blank"> Mobile Analytics</a></li>
@@ -89,14 +89,14 @@
                 <li id="organizations-menu" class="dropdown">
                 <a id="console-link" class="dropdown-toggle" data-toggle="dropdown"><span>Organizations</span> <span class="caret"></span></a>
                 <ul class="dropdown-menu">
-                  <li><a href="">loading...</a></li>
+                  <li><a >loading...</a></li>
                 </ul>
               </li>
                 <li class="dropdown">
-                  <a id="account-link1" class="dropdown-toggle" data-toggle="dropdown" href="#"><span id="userEmail">test</span> <span class="caret"></span></a>
+                  <a id="account-link1" class="dropdown-toggle" data-toggle="dropdown" ><span id="userEmail">test</span> <span class="caret"></span></a>
                   <ul class="dropdown-menu">
-                    <li><a id="account-link" href=""><i class="icon-user"></i> Profile</a></li>
-                    <li><a id="logout-link" href=""><i class="icon-off"></i> Sign Out</a></li>
+                    <li><a id="account-link" ><i class="icon-user"></i> Profile</a></li>
+                    <li><a id="logout-link" ><i class="icon-off"></i> Sign Out</a></li>
                   </ul>
                 </li>
               </ul>
@@ -112,7 +112,7 @@
                   Welcome to Apigee App Services. Find more on how to <a style="color: #007CDC;" 
                   href="http://apigee.com/docs/usergrid/content/quick-start">get started</a>
                   or <a style="color: #007CDC;" href="mailto:feedback@apigee.com">contact us</a> if you need help!
-                  <a style="float: right; color: #007CDC;" href="#" id="hideBanner">Dismiss</a>
+                  <a style="float: right; color: #007CDC;"  id="hideBanner">Dismiss</a>
               </div>
               <div>&nbsp;</div>
           </div>
@@ -246,11 +246,11 @@
                 </h4>
                 <li>
                   <div class="btn-group">
-                    <a id="current-app-name" class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="width: 109px; text-align: left;">
+                    <a id="current-app-name" class="btn dropdown-toggle" data-toggle="dropdown"  style="width: 109px; text-align: left;">
                       App Name
                     </a>
                     <ul class="dropdown-menu" id="applications-menu">
-                      <li><a href="#">loading apps...</a></li>
+                      <li><a >loading apps...</a></li>
                     </ul>
                   </div>
                 </li>
@@ -308,7 +308,7 @@
                 <div class="console-section">
                   <div class="well thingy"><span class="title"> Organization API Credentials </span>
                     <div class="bar">
-                      <a href="" onclick="Usergrid.console.newOrganizationCredentials(); return false;"> Regenerate Credentials</a>
+                      <a  onclick="Usergrid.console.newOrganizationCredentials(); return false;"> Regenerate Credentials</a>
                     </div>
                   </div>
                   <table class="hideable table">
@@ -519,7 +519,7 @@
               </div>
               <div id="users-panel" style="display: none">
                 <ul id="users-panel-tab-bar" class="nav nav-tabs">
-                  <li class="active"><a id="button-users-list" href="#">List</a></li>
+                  <li class="active"><a id="button-users-list" >List</a></li>
                 </ul>
                 <div id="users-panel-list" class="panel-content">
                   <div id="users-messages" class="alert" style="display: none;"></div>
@@ -531,18 +531,18 @@
                           <option value="username">Username</option>
                           <option value="name">Full Name</option>
                         </select>
-                        <a id="selectAllUsers" class="" href="#" onclick="Usergrid.console.selectAllUsers();"> Select All </a>
-                        <a id="deselectAllUsers" style="display: none;" class="" href="#" onclick="Usergrid.console.deselectAllUsers();"> Deselect All </a>
+                        <a id="selectAllUsers" class=""  onclick="Usergrid.console.selectAllUsers();"> Select All </a>
+                        <a id="deselectAllUsers" style="display: none;" class=""  onclick="Usergrid.console.deselectAllUsers();"> Deselect All </a>
                         <a class="" data-toggle="modal" href="#dialog-form-new-user"> Add</a>
-                        <a id="delete-users-link" href="#"> Delete</a>
+                        <a id="delete-users-link" > Delete</a>
                       </div>
                     </div>
                     <table id="users-table" class="table">
                       <tbody></tbody>
                     </table>
                     <ul id="users-pagination" class="pager">
-                      <li id="users-previous" class="previous"><a href="#">&larr; Previous</a></li>
-                      <li id="users-next" class="next"><a href="#">Next &rarr;</a></li>
+                      <li id="users-previous" class="previous"><a >&larr; Previous</a></li>
+                      <li id="users-next" class="next"><a >Next &rarr;</a></li>
                     </ul>
                   </div>
                   <div id="users-curl-container" class="row-fluid curl-container ">
@@ -594,12 +594,12 @@
               </div>
               <div id="user-panel" style="display: none">
                 <ul id="user-panel-tab-bar" class="nav nav-tabs">
-                  <li><a id="button-user-list" href="#">List</a></li>
-                  <li><a id="button-user-profile" href="#">Profile</a></li>
-                  <li><a id="button-user-memberships" href="#">Groups</a></li>
-                  <li><a id="button-user-activities" href="#">Activities</a></li>
-                  <li><a id="button-user-graph" href="#">Graph</a></li>
-                  <li><a id="button-user-permissions" href="#">Roles & Permissions</a></li>
+                  <li><a id="button-user-list" >List</a></li>
+                  <li><a id="button-user-profile" >Profile</a></li>
+                  <li><a id="button-user-memberships" >Groups</a></li>
+                  <li><a id="button-user-activities" >Activities</a></li>
+                  <li><a id="button-user-graph" >Graph</a></li>
+                  <li><a id="button-user-permissions" >Roles & Permissions</a></li>
                 </ul>
                 <div id="user-panel-profile" class="panel-content"></div>
                 <div id="user-panel-memberships" class="panel-content" style="display: none;"></div>
@@ -677,7 +677,7 @@
               <div id="groups-panel" style="display: none">
                 <div id="groups-panel-tab-bar" class="">
                   <ul class="nav nav-tabs">
-                    <li class="active"><a id="button-groups-list" href="#">List</a></li>
+                    <li class="active"><a id="button-groups-list" >List</a></li>
                   </ul>
                 </div>
                 <div id="groups-panel-list" class="panel-content">
@@ -690,18 +690,18 @@
                           <option value="path">Path</option>
                           <option value="title">Group Name</option>
                         </select>
-                        <a id="selectAllGroups" class="" href="#" onclick="Usergrid.console.selectAllGroups();"> Select All </a>
-                        <a id="deselectAllGroups" style="display: none;" class="" href="#" onclick="Usergrid.console.deselectAllGroups();"> Deselect All </a>
+                        <a id="selectAllGroups" class=""  onclick="Usergrid.console.selectAllGroups();"> Select All </a>
+                        <a id="deselectAllGroups" style="display: none;" class=""  onclick="Usergrid.console.deselectAllGroups();"> Deselect All </a>
                         <a class="" data-toggle="modal" href="#dialog-form-new-group"> Add </a>
-                        <a id="delete-groups-link" href="#"> Delete </a>
+                        <a id="delete-groups-link" > Delete </a>
                       </div>
                     </div>
                     <table id="groups-table" class="table">
                       <tbody></tbody>
                     </table>
                     <ul id="groups-pagination" class="pager">
-                      <li id="groups-previous" class="previous"><a href="#">&larr; Previous</a></li>
-                      <li id="groups-next" class="next"><a href="#">Next &rarr;</a></li>
+                      <li id="groups-previous" class="previous"><a >&larr; Previous</a></li>
+                      <li id="groups-next" class="next"><a >Next &rarr;</a></li>
                     </ul>
                   </div>
                   <div id="groups-curl-container" class="row-fluid curl-container ">
@@ -739,11 +739,11 @@
               </div>
               <div id="group-panel" style="display: none">
                 <ul id="group-panel-tab-bar" class="nav nav-tabs">
-                  <li><a id="button-group-list" href="#">List</a></li>
-                  <li><a id="button-group-details" href="#">Details</a></li>
-                  <li><a id="button-group-memberships" href="#">Members</a></li>
-                  <li><a id="button-group-activities" href="#">Activities</a></li>
-                  <li><a id="button-group-permissions" href="#">Roles & Permissions</a></li>
+                  <li><a id="button-group-list" >List</a></li>
+                  <li><a id="button-group-details" >Details</a></li>
+                  <li><a id="button-group-memberships" >Members</a></li>
+                  <li><a id="button-group-activities" >Activities</a></li>
+                  <li><a id="button-group-permissions" >Roles & Permissions</a></li>
                 </ul>
                 <div id="group-panel-details" class="panel-content"></div>
                 <div id="group-panel-memberships" class="panel-content" style="display: none;"></div>
@@ -796,7 +796,7 @@
               </div>
               <div id="roles-panel" style="display: none">
                 <ul id="roles-panel-tab-bar" class="nav nav-tabs">
-                  <li class="active"><a id="button-roles-list" href="#">List</a></li>
+                  <li class="active"><a id="button-roles-list" >List</a></li>
                 </ul>
                 <div id="roles-panel-list" class="panel-content">
                   <div id="roles-messages" class="alert" style="display: none;"></div>
@@ -804,15 +804,15 @@
                     <div class="well thingy"><span class="title"> Roles <span class="app_title"></span></span>
                       <div class="bar">
                         <a data-toggle="modal" href="#dialog-form-new-role"> Add </a>
-                        <a id="delete-roles-link" href=""> Delete </a>
+                        <a id="delete-roles-link" > Delete </a>
                       </div>
                     </div>
                     <table id="roles-table" class="table">
                       <tbody></tbody>
                     </table>
                     <ul id="roles-pagination" class="pager">
-                      <li id="roles-previous" class="previous"><a href="#">&larr; Previous</a></li>
-                      <li id="roles-next" class="next"><a href="#">Next &rarr;</a></li>
+                      <li id="roles-previous" class="previous"><a >&larr; Previous</a></li>
+                      <li id="roles-next" class="next"><a >Next &rarr;</a></li>
                     </ul>
                   </div>
                   <div id="roles-curl-container" class="row-fluid curl-container ">
@@ -860,10 +860,10 @@
               </div>
               <div id="role-panel" style="display: none">
                 <ul id="role-panel-tab-bar" class="nav nav-tabs">
-                  <li class="active"><a id="button-role-list" href="#">List</a></li>
-                  <li><a id="button-role-settings" href="#">Settings</a></li>
-                  <li><a id="button-role-users" href="#">Users</a></li>
-                  <li><a id="button-role-groups" href="#">Groups</a></li>
+                  <li class="active"><a id="button-role-list" >List</a></li>
+                  <li><a id="button-role-settings" >Settings</a></li>
+                  <li><a id="button-role-users" >Users</a></li>
+                  <li><a id="button-role-groups" >Groups</a></li>
                 </ul>
                 <div id="role-panel-settings" class="panel-content">
                   <div class="console-section">
@@ -889,9 +889,9 @@
                       <span class="title">Groups</span>
                       <div class="bar">
                         <a data-toggle="modal" href="#dialog-form-add-group-to-role"> Add </a>
-                        <a id="remove-selected-role-groups" href="#"> Remove </a>
-                        <a id="selectAllRoleGroups" class="" href="#" onclick="Usergrid.console.selectAllRoleGroups();"> Select All </a>
-                        <a id="deselectAllRoleGroups" style="display: none;" class="" href="#" onclick="Usergrid.console.deselectAllRoleGroups();"> Deselect All </a>
+                        <a id="remove-selected-role-groups" > Remove </a>
+                        <a id="selectAllRoleGroups" class=""  onclick="Usergrid.console.selectAllRoleGroups();"> Select All </a>
+                        <a id="deselectAllRoleGroups" style="display: none;" class=""  onclick="Usergrid.console.deselectAllRoleGroups();"> Deselect All </a>
                       </div>
                     </div>
                     <table id="role-groups" class="table">
@@ -963,8 +963,8 @@
                       <tbody></tbody>
                     </table>
                     <ul id="activities-pagination" class="pager">
-                      <li id="activities-previous" class="previous"><a href="#">&larr; Previous</a></li>
-                      <li id="activities-next" class="next"><a href="#">Next &rarr;</a></li>
+                      <li id="activities-previous" class="previous"><a >&larr; Previous</a></li>
+                      <li id="activities-next" class="next"><a >Next &rarr;</a></li>
                     </ul>
                   </div>
                 </div>
@@ -1035,7 +1035,7 @@
                   <div class="well thingy"><span class="title"> Application
                     Properties <span class="app_title"></span></span>
                     <div class="bar">
-                      <a class="" href="" onclick="Usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
+                      <a class=""  onclick="Usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
                     </div>
                   </div>
                   <div class="console-section-contents">
@@ -1082,15 +1082,15 @@
                     <div class="well thingy"><span class="title"> Collections <span class="app_title"></span></span>
                       <div class="bar">
                         <a class="" data-toggle="modal" href="#dialog-form-new-collection"> Add </a>
-                        <a href="" onclick="Usergrid.console.pageOpenQueryExplorer(); return false;">Query Explorer</a>
+                        <a  onclick="Usergrid.console.pageOpenQueryExplorer(); return false;">Query Explorer</a>
                       </div>
                     </div>
                     <table id="collections-table" class="table">
                       <tbody></tbody>
                     </table>
                     <ul id="collections-pagination" class="pager">
-                      <li id="collections-previous" class="previous"><a href="#">&larr; Previous</a></li>
-                      <li id="collections-next" class="next"><a href="#">Next &rarr;</a></li>
+                      <li id="collections-previous" class="previous"><a >&larr; Previous</a></li>
+                      <li id="collections-next" class="next"><a >Next &rarr;</a></li>
                     </ul>
                   </div>
                   <div id="collections-curl-container" class="row-fluid curl-container ">
@@ -1155,7 +1155,7 @@
                           <div class="input-append">
                             <textarea id="query-source" class="span6 pull-left"></textarea>
                               <span id="button-clear-query-source" class="add-on">&#215;</span>
-                            <a class="btn" id="button-query-validate" href="#">Validate Json</a>
+                            <a class="btn" id="button-query-validate" >Validate Json</a>
                           </div>
                         </div>
                       </div>
@@ -1174,7 +1174,7 @@
                   <div class="well thingy" id="query-received-header">
                     <span class="title"> Received <span class="app_title"></span></span>
                     <div class="bar">
-                      <a id="delete-entity-link" href="" > Delete Entity</a>
+                      <a id="delete-entity-link"  > Delete Entity</a>
                       <a id="selectAllCollections" onclick="Usergrid.console.selectAllCollections();"> Select All </a>
                       <a id="deselectAllCollections" style="display: none;" onclick="Usergrid.console.deselectAllCollections();"> Deselect All </a>
                     </div>
@@ -1184,8 +1184,8 @@
                       <pre class="query-response-json">{ }</pre>
                     </div>
                     <ul id="query-response-pagination" class="pager">
-                      <li id="query-response-previous" class="previous"><a href="#">&larr; Previous</a></li>
-                      <li id="query-response-next" class="next"><a href="#">Next &rarr;</a></li>
+                      <li id="query-response-previous" class="previous"><a >&larr; Previous</a></li>
+                      <li id="query-response-next" class="next"><a >Next &rarr;</a></li>
                     </ul>
                   </div>
                 </div>
