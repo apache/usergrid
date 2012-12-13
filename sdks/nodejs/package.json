@@ -4,7 +4,7 @@
   "description": "A Node.js module for making API calls to App Services (Usergrid) from within Node.js",
   "main": "./lib/usergrid.js",
   "dependencies": {
-    "request": "2.12.x",
+    "request": "2.12.x"
   },
   "devDependencies": {
     "mocha": "1.7.x",
@@ -35,7 +35,7 @@
   "author": {
     "name": "Rod Simpson",
     "email": "rod@rodsimpson.com",
-    "url" : "http://rodsimpson.com/"
+    "url" : "http://rodsimpson.com"
   },
   "license": "Apache 2.0"
 }
