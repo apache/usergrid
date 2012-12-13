@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -68,6 +68,7 @@ public class ApiResponse {
 	private List<Entity> entities;
 	private UUID next;
 	private String cursor;
+	private Integer count;
 	private String action;
 	private List<Object> list;
 	private Object data;
@@ -274,12 +275,12 @@ public class ApiResponse {
 	public UUID getApplication() {
 		return application;
 	}
-	
+
 	@JsonSerialize(include = Inclusion.NON_NULL)
 	public String applicationName(){
 	    return applicationName;
 	}
-    
+
     /**
      * @return the orgId
      */
@@ -296,7 +297,7 @@ public class ApiResponse {
         this.organization = app.getOrganizationName();
         this.applicationName = app.getApplicationName();
         this.application = app.getUuid();
-        
+
         if (esp != null) {
             uri = createPath(esp.toString());
         }
@@ -338,6 +339,14 @@ public class ApiResponse {
 		return this;
 	}
 
+	public ApiResponse withResultsCount(ServiceResults results) {
+		setResults(results);
+		if(results!=null) {
+			count = results.size();
+		}
+		return this;
+	}
+
 	@JsonSerialize(include = Inclusion.NON_NULL)
 	public UUID getNext() {
 		return next;
@@ -354,6 +363,15 @@ public class ApiResponse {
 
 	public void setCursor(String cursor) {
 		this.cursor = cursor;
+	}
+
+	@JsonSerialize(include = Inclusion.NON_NULL)
+	public Integer getCount() {
+		return count;
+	}
+
+	public void setCount(Integer count) {
+		this.count = count;
 	}
 
 	public ApiResponse withEntity(Entity entity) {
@@ -377,6 +395,14 @@ public class ApiResponse {
 
 	public ApiResponse withList(List<Object> list) {
 		setList(list);
+		return this;
+	}
+
+	public ApiResponse withListCount(List<Object> list) {
+		setList(list);
+		if (!list.isEmpty()) {
+			this.count = list.size();
+		}
 		return this;
 	}
 
@@ -492,14 +518,14 @@ public class ApiResponse {
 	public void setProperty(String key, Object value) {
 		properties.put(key, value);
 	}
-	
+
 	/**
-	 * Create a path 
+	 * Create a path
 	 * @param suffixes
 	 * @return                         `
 	 */
 	private String createPath(String... suffixes){
-	    
+
 	    StringBuilder builder = new StringBuilder();
 
 	    builder.append(serverEnvironmentProperties.getApiBase());
@@ -509,24 +535,24 @@ public class ApiResponse {
       builder.append(organization);
 	    builder.append("/");
 	    builder.append(applicationName);
-	    
+
 	    if(suffixes.length == 0){
 	        return builder.toString();
 	    }
-	    
-	    
+
+
 	    for(String current: suffixes){
 	        if(current == null){
 	            continue;
 	        }
-	        
+
 	        if(!current.startsWith("/")){
 	            builder.append("/");
 	        }
 	        builder.append(current);
-	        
+
 	    }
-	    
+
 	    return builder.toString();
 	}
 
