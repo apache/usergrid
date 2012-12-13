@@ -28,7 +28,7 @@ var fs = require("fs");
 var sys = require("util");
 
 //initialze the usergrid module
-var usergrid = require("usergrid");
+var usergrid = require("../lib/usergrid");
 
 //include local files
 var router = require("./router");
@@ -48,18 +48,7 @@ var client = new usergrid.client(
   , clientSecret:"b3U6X__fN2l9vd1HVi1kM9nJvgc-h5k"
   } 
 );
-/*
-//call garbage collection
-usergrid.session.garbage_collection(
-  function(){
-    //do something here
-    console.log('Garbage collection completed'); 
-  },function(error){
-    //could not perform garbage collection
-    console.log('Garbage collection - nothing to delete'); 
-  }
-);
-*/
+
 //main server
 function start(route, handle) {
   function onRequest(request, response) {
