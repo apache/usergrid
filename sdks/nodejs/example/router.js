@@ -21,9 +21,9 @@
 * 
 *  Some code patterns were pulled from http://www.nodebeginner.org/.  Thank you!
 */
-function route(handle,pathname,querydata,response, usergrid) {
+function route(handle,pathname,querydata,response, client) {
   if (typeof handle[pathname] === 'function') {
-    handle[pathname](querydata, response, usergrid);
+    handle[pathname](querydata, response, client);
   } else {
     console.log("No request handler found for " + pathname);
     response.writeHead(404, {"Content-Type": "text/plain"});

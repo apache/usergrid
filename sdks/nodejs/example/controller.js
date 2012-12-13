@@ -26,24 +26,24 @@
 *
 *  This file contains the handlers that make calls to the API
 */
-function main(querydata, response, usergrid) {            
+function main(querydata, response, client) {            
   var view = require("./view"); 
   
   switch (querydata.action_type) {
     case 'get':
-      _get(response, usergrid, view, querydata.path);
+      _get(response, client, view, querydata.path);
       break;
     case 'post':
-      _post(response, usergrid, view, querydata.path, querydata.data);
+      _post(response, client, view, querydata.path, querydata.data);
       break;
     case 'put':
-      _put(response, usergrid, view, querydata.path, querydata.data);
+      _put(response, client, view, querydata.path, querydata.data);
       break;
     case 'delete':
-      _delete(response, usergrid, view, querydata.path);
+      _delete(response, client, view, querydata.path);
       break;
     case 'login':
-      _login(response, usergrid, view, querydata.username, querydata.password);
+      _login(response, client, view, querydata.username, querydata.password);
       break;
     default:
       view.getBody(response, '');     
@@ -51,74 +51,74 @@ function main(querydata, response, usergrid) {
   }
 }
 
-function _get(response, usergrid, view, path) {
-  usergrid.ApiClient.runAppQuery(new usergrid.Query('GET', path, null, null,
-     function(err, result) {
-        //since the point of this app is to display the result that is given back
-        //by the API, we want to do the same thing regardless of the err
-        view.getBody(response, prepareOutput(result));  
-     }
-  ));
-}
-
-function _post(response, usergrid, view, path, data) {
-  if (data) { 
-    data = JSON.parse(data); 
-  }
-  usergrid.ApiClient.runAppQuery(new usergrid.Query('POST', path, data, null,
-     function(err, result) {
-       //since the point of this app is to display the result that is given back
-        //by the API, we want to do the same thing regardless of the err
-       view.getBody(response, prepareOutput(result));  
-     }
-  ));
-}
-
-function _put(response, usergrid, view, path, data) {
-  if (data) { 
-    data = JSON.parse(data); 
-  }
-  usergrid.ApiClient.runAppQuery(new usergrid.Query('PUT', path, data, null,
-    function(err, result) {
-       //since the point of this app is to display the result that is given back
-        //by the API, we want to do the same thing regardless of the err
-       view.getBody(response, prepareOutput(result));  
-     }
-  ));
-}
-
-function _delete(response, usergrid, view, path) {
-  usergrid.ApiClient.runAppQuery(new usergrid.Query('DELETE', path, null, null,
-    function(err, result) {
-       //since the point of this app is to display the result that is given back
-        //by the API, we want to do the same thing regardless of the err
-       view.getBody(response, prepareOutput(result));  
-     } 
-  ));
-}
-
-function _login(response, usergrid, view, username, password) {
-  usergrid.ApiClient.logInAppUser(username, password,
-    function (err, result, user) {
+function _get(response, client, view, path) {
+  client.request(
+    { method:"GET"
+    , endpoint:path
+    } ,
+    function(err, data){
       //since the point of this app is to display the result that is given back
       //by the API, we want to do the same thing regardless of the err
-      view.getBody(response, prepareOutput(result));  
-      
-      //just for kicks, we will save a timestamp in the session, so you can see how to do it
-      var timestamp = new Date().getTime()
-      usergrid.session.setItem('useless_timestamp', timestamp);
-      
-      //this login call pulled back a user object and a token, so we need to save the session
-      usergrid.session.save_session(response, 
-        function(err, result){
-          if (err) {
-            console.log("Could not save session...");
-          } else {
-            console.log("Session saved...");
-          }
-        })               
-    }
-  );   
+      view.getBody(response, prepareOutput(data));
+    }    
+  );
+}
+
+function _post(response, client, view, path, data) {
+  if (data) { 
+    data = JSON.parse(data); 
+  }
+  client.request(
+    { method:"POST"
+    , endpoint:path
+    , body:data
+    } ,
+    function(err, data){
+      //since the point of this app is to display the result that is given back
+      //by the API, we want to do the same thing regardless of the err
+      view.getBody(response, prepareOutput(data));
+    }    
+  );
+}
+
+function _put(response, client, view, path, data) {
+  if (data) { 
+    data = JSON.parse(data); 
+  }
+  client.request(
+    { method:"PUT"
+    , endpoint:path
+    , body:data
+    } ,
+    function(err, data){
+      //since the point of this app is to display the result that is given back
+      //by the API, we want to do the same thing regardless of the err
+      view.getBody(response, prepareOutput(data));
+    }    
+  );
+}
+
+function _delete(response, client, view, path) {
+  client.request(
+    { method:"DELETE"
+    , endpoint:path
+    } ,
+    function(err, data){
+      //since the point of this app is to display the result that is given back
+      //by the API, we want to do the same thing regardless of the err
+      view.getBody(response, prepareOutput(data));
+    }    
+  );
+}
+
+function _login(response, client, view, username, password) {
+  client.login(username, password,
+    function(err, data){
+      //since the point of this app is to display the result that is given back
+      //by the API, we want to do the same thing regardless of the err
+      view.getBody(response, prepareOutput(data));
+    }    
+  );
 }
 
 function prepareOutput(output){

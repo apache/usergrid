@@ -156,13 +156,18 @@ Client.prototype.login = function (username, password, callback){
   var options = {
     method:'GET'
     , endpoint:'token' 
-    , body:{"username": username, "password": password, "grant_type": "password"}
+    , qs:{"username": username, "password": password, "grant_type": "password"}
   };
   this.request(options, function(err, data) {
-    var user = new Entity('users');
-    user.set(data.user);
-    self.setLoggedInUser(user);
-    self.setToken(data.access_token);
+    var user = {};
+    if (err) {
+      console.log('error trying to log user in'); 
+    } else {
+      user = new Entity('users');
+      user.set(data.user);
+      self.setLoggedInUser(user);
+      self.setToken(data.access_token);
+    }
     if (typeof(callback) === "function") {
       callback(err, data, user);
     }
@@ -180,7 +185,13 @@ Client.prototype.login = function (username, password, callback){
 */
 Client.prototype.isLoggedInAppUser = function (){
   var user = this.getLoggedInUser();
-  return (this.getToken() && isUUID(user.get('uuid')));
+  if (this.getToken()) {
+    if (user) { 
+      if (isUUID(user.get('uuid'))) {
+        return true;
+      }
+    }
+  }
 }
 
 /*

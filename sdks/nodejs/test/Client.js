@@ -3,18 +3,12 @@
 *  
 * TODO: need to add coverage for the following methods:
 * 
-* login
-* isLoggedInAppUser
 * buildCurlCall
-* getToken
-* setToken
-* getLoggedInUser
-* setLoggedInUser
-* logoutAppUser
 * 
 * @author rod simpson (rod@apigee.com)
 */
-require("assert");
+//require('assert');
+require('should');
 var usergrid = require('../lib/usergrid.js');
   
 //first set up the client
@@ -42,7 +36,7 @@ describe('Standard Requests', function(){
       client.request(
         { method:"POST"
         , endpoint:"users"
-        , body:{'username':'aaaaaa'}
+        , body:{'username':'aaaaaa', 'password':'abcd1234'}
         } ,done);
     })
   })
@@ -63,5 +57,48 @@ describe('Standard Requests', function(){
         } ,done);
     });
   });
+  describe('Login Method', function(){
+    it('should Login without error and get token', function(done){
+      client.login('aaaaaa', 'abcd1234', function(err){
+        if (err) throw err;
+        
+        //test the token first
+        var token = client.getToken();
+        client.should.have.property('_token');
+        
+        //make sure we get a user back
+        var user = client.getLoggedInUser(); 
+        var data = user.get();
+        data.should.have.property('username');
+        
+        //test for logged in user
+        if (!client.isLoggedInAppUser()) throw err;
+        
+        //erase the token
+        client.setToken(null);
+        if (client.isLoggedInAppUser()) throw err;
+        
+        //reset the token
+        client.setToken(token);
+        if (!client.isLoggedInAppUser()) throw err;
+        
+        //clear the logged in user
+        client.setLoggedInUser(null);
+        if (client.isLoggedInAppUser()) throw err;
+        
+        //replace the logged in user
+        client.setLoggedInUser(user);
+        if (!client.isLoggedInAppUser()) throw err;
+        
+        //log the user out
+        client.logoutAppUser();
+        if (client.isLoggedInAppUser()) throw err;
+        
+        //tests finished
+        done();
+      });
+    });
+  })
+
 });
 

@@ -29,39 +29,24 @@ var sys = require('util');
 //include local files
 var router = require("./router");
 var controller = require("./controller");
+//initialze the Module
+var usergrid = require("../lib/usergrid");
 
 //routing info
 var handle = {}
 handle["/"] = controller.main;
 handle["/main"] = controller.main;
 
-//initialze the Module
-var usergrid = require("../lib/usergrid");
-
-usergrid.client.start( 
-  {
-    orgName:"apigee",
-    appName:"sandbox",
-    clientId:"b3U63hpBOGoXEeGJkRIxOAcFfg",
-    clientSecret:"b3U6gfY1xhTbAzLO-VFIyo33a5vLtvI",
-    callTimeout:30000,
-    callTimeoutCallback: function(){},   
-    logoutCallback: function(){}
-  }, 
-  function(err, response){
-    if (err) {
-      console.log('could not start client');
-    } else {
-      //all was well, continue   
-      
-    }
-  }
+var client = new usergrid.client(
+  { 
+    orgName:"1hotrod"
+  , appName:"sandbox"
+  , authType:"CLIENT_ID"
+  , clientId:"b3U6y6hRJufDEeGW9hIxOwbREg"
+  , clientSecret:"b3U6X__fN2l9vd1HVi1kM9nJvgc-h5k"
+  } 
 );
-
-//usergrid.ApiClient.init('apigee', 'nodejs'); //(your-org-name, your-app-name)
-//usergrid.ApiClient.setClientSecretCombo('b3U63hpBOGoXEeGJkRIxOAcFfg', 'b3U6gfY1xhTbAzLO-VFIyo33a5vLtvI');
-usergrid.ApiClient.enableClientSecretAuth();
-
+/*
 //call garbage collection
 usergrid.session.garbage_collection(
   function(){
@@ -72,7 +57,7 @@ usergrid.session.garbage_collection(
     console.log('Garbage collection - nothing to delete'); 
   }
 );
-
+*/
 //main server
 function start(route, handle) {
   function onRequest(request, response) {
@@ -98,24 +83,10 @@ function start(route, handle) {
       default:
         console.log("Request for " + pathname + " received.");
         //try to start the session
-        usergrid.session.start_session(request, response, 
-          function (err, result) {
-            if (err) {
-              //no session availble
-              console.log("No session available and none could be started.");
-              //let the user know that no session was available and none could be created
-              //either the API was down or there were not adequate permissions to create the session
-              response.writeHead(200, {"Content-Type": "text/text"});
-              response.write('No Session could be established.  Please refresh to try again');  
-              response.end();               
-            } else {
-              //session was started successfully
-              console.log("Session started, routing...");
-              //process the request
-              route(handle, pathname, querydata, response, usergrid);         
-              console.log("route finished");  
-            }
-          });
+        console.log("Session started, routing...");
+        //process the request
+        route(handle, pathname, querydata, response, client);         
+        console.log("route finished");  
         break;
     }
   }
