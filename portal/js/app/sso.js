@@ -66,8 +66,8 @@
       window.location = newPage;
   },
 
-    sendToSSOLogoutPage:function () {
-      this.sendToPage(this.default.logout_url);
+    sendToSSOLogoutPage:function (callbackUrl) {
+      this.sendToPage(this.default.logout_url, callbackUrl);
     },
 
     sendToSSOLoginPage:function () {

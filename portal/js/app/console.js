@@ -3811,7 +3811,7 @@ function apigee_console_app(Pages, query_params) {
     Usergrid.userSession.clearAll();
     if (Usergrid.SSO.usingSSO()) {
       Pages.clearPage();
-      Usergrid.SSO.sendToSSOLogoutPage();
+      Usergrid.SSO.sendToSSOLogoutPage(Backbone.history.getHash(window));
     } else {
       Pages.ShowPage("login");
     }
