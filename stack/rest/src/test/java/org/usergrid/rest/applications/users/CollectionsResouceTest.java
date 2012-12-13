@@ -43,6 +43,7 @@ public class CollectionsResouceTest extends AbstractRestTest {
                     .queryParam("access_token", access_token).accept(MediaType.APPLICATION_JSON)
                     .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
         assertNull(getEntity(node, 0));
+        assertNull(node.get("count"));
     }
 
 
@@ -89,6 +90,7 @@ public class CollectionsResouceTest extends AbstractRestTest {
                 .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
         assertNotNull(getEntity(response, 0));
+        assertNotNull(response.get("count"));
 
     }
 
