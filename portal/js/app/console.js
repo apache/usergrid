@@ -1025,7 +1025,7 @@ function apigee_console_app(Pages, query_params) {
           closeErrorMessage = function() {
             $('#home-messages').hide();
           };
-          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+          var closebutton = '<a  onclick="closeErrorMessage();" class="close">&times;</a>'
           $('#home-messages').text("Unable to create application: ").prepend(closebutton).addClass('alert-error').show();
       }));
       $(this).modal('hide');
@@ -1128,7 +1128,7 @@ function apigee_console_app(Pages, query_params) {
           closeErrorMessage = function() {
             $('#users-messages').hide();
           };
-          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>';
+          var closebutton = '<a  onclick="closeErrorMessage();" class="close">&times;</a>';
           $('#users-messages')
             .text("User created successfully.")
             .prepend(closebutton)
@@ -1140,7 +1140,7 @@ function apigee_console_app(Pages, query_params) {
           closeErrorMessage = function() {
             $('#users-messages').hide();
           };
-          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+          var closebutton = '<a  onclick="closeErrorMessage();" class="close">&times;</a>'
           $('#users-messages')
           .text("Unable to create user")
           .prepend(closebutton)
@@ -1174,7 +1174,7 @@ function apigee_console_app(Pages, query_params) {
           closeErrorMessage = function() {
             $('#roles-messages').hide();
           };
-          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+          var closebutton = '<a  onclick="closeErrorMessage();" class="close">&times;</a>'
           $('#roles-messages')
             .text("Role created successfully.")
             .prepend(closebutton)
@@ -1186,7 +1186,7 @@ function apigee_console_app(Pages, query_params) {
             closeErrorMessage = function() {
             $('#roles-messages').hide();
           };
-          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+          var closebutton = '<a  onclick="closeErrorMessage();" class="close">&times;</a>'
           $('#roles-messages')
             .text("Unable to create user")
             .prepend(closebutton)
@@ -1224,7 +1224,7 @@ function apigee_console_app(Pages, query_params) {
           closeErrorMessage = function() {
             $('#collections-messages').hide();
           };
-          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+          var closebutton = '<a  onclick="closeErrorMessage();" class="close">&times;</a>'
           $('#collections-messages')
             .text("Collection created successfully.")
             .prepend(closebutton)
@@ -1236,7 +1236,7 @@ function apigee_console_app(Pages, query_params) {
           closeErrorMessage = function() {
             $('#collections-messages').hide();
           };
-          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+          var closebutton = '<a  onclick="closeErrorMessage();" class="close">&times;</a>'
           $('#collections-messages')
             .text("Unable to create user")
             .prepend(closebutton)
@@ -1270,7 +1270,7 @@ function apigee_console_app(Pages, query_params) {
           closeErrorMessage = function() {
           $('#groups-messages').hide();
         };
-        var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+        var closebutton = '<a  onclick="closeErrorMessage();" class="close">&times;</a>'
         $('#groups-messages')
           .text("Group created successfully.")
           .prepend(closebutton)
@@ -1282,7 +1282,7 @@ function apigee_console_app(Pages, query_params) {
           closeErrorMessage = function() {
             $('#groups-messages').hide();
           };
-          var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+          var closebutton = '<a  onclick="closeErrorMessage();" class="close">&times;</a>'
           $('#groups-messages').text("Unable to create group").prepend(closebutton).addClass('alert-error').show();
         }
       ));
@@ -1967,7 +1967,7 @@ function apigee_console_app(Pages, query_params) {
     closeMessage = function() {
       $('.messages').hide();
     };
-    var closebutton = '<a href="#" onclick="closeMessage();" class="close">&times;</a>'
+    var closebutton = '<a  onclick="closeMessage();" class="close">&times;</a>'
     $('.messages').text("Information Saved.").prepend(closebutton).show();
   }
 
@@ -2394,7 +2394,7 @@ function apigee_console_app(Pages, query_params) {
         closeErrorMessage = function() {
           $('#group-messages').hide();
         };
-        var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
+        var closebutton = '<a  onclick="closeErrorMessage();" class="close">&times;</a>'
         $('#group-messages').text("Unable to update Group").prepend(closebutton).addClass('alert-error').show();
       }
     ));
