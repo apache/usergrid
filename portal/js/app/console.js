@@ -44,6 +44,7 @@ function apigee_console_app(Pages, query_params) {
 
   var passwordRegex = new RegExp("^([0-9a-zA-Z@#$%^&!?<>;:.,'\"~*-=+_\[\\](){}/\\ |])+$");
   var passwordAllowedCharsMessage = 'Password field only allows: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . < > / ? !';
+  var passwordMismatchMessage = 'Password must match';
 
   var usernameRegex = new RegExp("^([0-9a-zA-Z\.\-_])+$");
   var usernameAllowedCharsMessage = 'Username field only allows : A-Z, a-z, 0-9, dot, underscore and dash';
@@ -1106,19 +1107,24 @@ function apigee_console_app(Pages, query_params) {
     var form = $(this);
     formClearErrors(form);
 
-    var new_user_email = $('#new-user-email');
-    var new_user_username = $('#new-user-username');
-    var new_user_fullname = $('#new-user-fullname');
-    var new_user_password = $('#new-user-password');
+    var email = $('#new-user-email');
+    var username = $('#new-user-username');
+    var fullname = $('#new-user-fullname');
+    var password = $('#new-user-password');
+    var validate_password = $('#new-user-validate-password');
 
     var bValid =
-      checkLength2(new_user_fullname, 1, 80)
-      && checkRegexp2(new_user_fullname, nameRegex, nameAllowedCharsMessage)
-      && checkRegexp2(new_user_username, usernameRegex, usernameAllowedCharsMessage)
-      && checkLength2(new_user_email, 6, 80)
-      && checkRegexp2(new_user_email,emailRegex, emailAllowedCharsMessage)
-      && ( checkLength2(new_user_password,0,0) || checkLength2(new_user_password, 5, 32) )
-      && (new_user_password.text() === "" || checkRegexp2(new_user_password,passwordRegex, passwordAllowedCharsMessage));
+      //Fullname can is not required.
+      checkLength2(fullname , 0, 80)
+      && ( fullname.val() === "" || checkRegexp2(fullname, nameRegex, nameAllowedCharsMessage) )
+      //Username IS required
+      && checkRegexp2(username, usernameRegex, usernameAllowedCharsMessage)
+      //Email is NOT required
+      && ( checkLength2(email, 6, 80) )
+      && ( email.val() === "" || checkRegexp2(email,emailRegex, emailAllowedCharsMessage) )
+      && ( checkLength2(password ,0 ,0) || checkLength2(password, 5, 32) )
+      && ( password.val() === "" || checkRegexp2(password,passwordRegex, passwordAllowedCharsMessage) )
+      && ( checkTrue2(password, (password.val() === validate_password.val()), passwordMismatchMessage));
 
     if (bValid) {
       var data = form.serializeObject();

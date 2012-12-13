@@ -554,7 +554,7 @@
                     <h4>Create new user</h4>
                   </div>
                   <div class="modal-body">
-                    <p class="validateTips">All form fields are required.</p>
+                    <p class="validateTips">Username is required.</p>
                     <fieldset>
                       <div class="control-group">
                         <label for="new-user-username">Username</label>
@@ -581,6 +581,13 @@
                         <label for="new-user-password">Password</label>
                         <div class="controls">
                           <input type="password" name="password" id="new-user-password" class="input-xlarge"/>
+                          <p class="help-block hide"></p>
+                        </div>
+                      </div>
+                      <div class="control-group">
+                        <label for="new-user-validate-password">Confirm password</label>
+                        <div class="controls">
+                          <input type="password" name="validate-password" id="new-user-validate-password" class="input-xlarge"/>
                           <p class="help-block hide"></p>
                         </div>
                       </div>
