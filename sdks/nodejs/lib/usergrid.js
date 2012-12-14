@@ -30,17 +30,20 @@ Client = function(options) {
   this._orgName = options.orgName;
   this._appName = options.appName;
   
-  //authentication info
+  //authentication types
   this._AUTH_CLIENT_ID = 'CLIENT_ID';
   this._AUTH_APP_USER = 'APP_USER'; 
   this._AUTH_NONE = 'NONE';
 
+  //authentication data
   this._authType = options.authType || this._AUTH_NONE;
   this._clientId = options.clientId;
   this._clientSecret = options.clientSecret;
-  this._token = null; //given out by the server
+  this._token = options.token || null;
   this._user = null;
   
+  //other options
+  this._buildCurl = options.buildCurl || false;
   
   //timeout and callbacks
   this._callTimeout =  options.callTimeout || 30000; //default to 30 seconds
@@ -50,11 +53,20 @@ Client = function(options) {
 };
 
 /**
- *  
- *
- *  @method 
- *  @return 
- */
+*  Main function for making requests to the API.  Can be called directly.
+* 
+*  options object:
+*  `method` - http method (GET, POST, PUT, or DELETE), defaults to GET
+*  `qs` - object containing querystring values to be appended to the uri
+*  `body` - object containing entity body for POST and PUT requests
+*  `endpoint` - API endpoint, for example "users/fred"
+*  `mQuery` - boolean, set to true if running management query, defaults to false
+*
+*  @method request
+*  @public
+*  @params {object} options
+*  @return callback(err, data)
+*/
 Client.prototype.request = function (options, callback){
   var self = this;
   var method = options.method || 'GET'; 
@@ -86,6 +98,10 @@ Client.prototype.request = function (options, callback){
     , qs: qs
     }
     , function (err, r, data) {
+      if (self._buildCurl) {
+        options.uri = r.request.uri.href;
+        self.buildCurlCall(options);
+      }
       self.setQueryEndTime();
       if(r.statusCode === 200){
         console.log('success (time: ' + self.getQueryTotalTime() + '): ' + method + ' ' + uri); 
@@ -113,7 +129,19 @@ Client.prototype.request = function (options, callback){
       }
     }
   )
-}    
+} 
+
+/*
+*  A public method to set the auth type
+*
+*  @method setAuthType
+*  @public
+*  @param {string} authType ('CLIENT_ID', 'APP_USER', or 'NONE');
+*  @return none
+*/   
+Client.prototype.setAuthType = function (authType){
+ this._authType = authType;
+}
 
 /**
 *  A private method to start call timing
@@ -148,8 +176,7 @@ Client.prototype.getQueryTotalTime = function (){
 *  @public
 *  @params {string} username
 *  @params {string} password
-*  @params {function} callback
-*  @return {response} callback functions return API response object
+*  callback(err, data, user)
 */
 Client.prototype.login = function (username, password, callback){
   var self = this;
@@ -205,62 +232,31 @@ Client.prototype.isLoggedInAppUser = function (){
 */
 Client.prototype.buildCurlCall = function (options) {
   var curl = 'curl';
-  try {
-    //peel the data out of the query object
-    var method = Query.getMethod().toUpperCase();
-    var path = Query.getResource();
-    var jsonObj = Query.getJsonObj() || {};
-    var params = Query.getQueryParams() || {};
-    
-    //curl - add the method to the command (no need to add anything for GET)
-    if (method === "POST") {curl += " -X POST"; }
-    else if (method === "PUT") { curl += " -X PUT"; }
-    else if (method === "DELETE") { curl += " -X DELETE"; }
-    else { curl += " -X GET"; }
-    
-    //curl - append the bearer token if this is not the sandbox app
-    var application_name = ApiClient.getApplicationName();
-    if (application_name) {
-      application_name = application_name.toUpperCase();
-    }
-    if ( _authType === USER && ((application_name != 'SANDBOX' && ApiClient.getToken()) || (getQueryType() === M && ApiClient.getToken())) ) {
-      curl += ' -i -H "Authorization: Bearer ' + ApiClient.getToken() + '"';
-      Query.setToken(true);
-    }
-    
-    path = ApiClient.getApiUrl() + '/' + endpoint + '/' + path;
-    
-    //make sure path never has more than one / together
-    if (path) {
-      //regex to strip multiple slashes
-      while(path.indexOf('//') != -1){
-        path = path.replace('//', '/');
-      }
-    }
-    
-    //curl - append the path
-    curl += ' "http://' + path;
+  var method = (options.method || 'GET').toUpperCase();
+  var endpoint = options.endpoint; 
+  var body = options.body || {};
+  var qs = options.qs || {};
+  var mQuery = options.mQuery || false; 
+  var uri = options.uri; 
+  
+  //curl - add the method to the command (no need to add anything for GET)
+  if (method === "POST") {curl += " -X POST"; }
+  else if (method === "PUT") { curl += " -X PUT"; }
+  else if (method === "DELETE") { curl += " -X DELETE"; }
+  else { curl += " -X GET"; }
 
-    //curl - append params to the path for curl prior to adding the timestamp
-    var curl_encoded_params = encodeParams(params);
-    if (curl_encoded_params) {
-      curl += "?" + curl_encoded_params;
-    }
-    curl += '"';
-    
-    jsonObj = JSON.stringify(jsonObj)
-    if (jsonObj && jsonObj != '{}') {
-      //curl - add in the json obj
-      curl += " -d '" + jsonObj + "'";
-    }
-    
-  } catch(e) {
-   console.log('Unable to build curl call:' + e);
+  //curl - append the path
+  curl += ' ' + uri;
+   
+  // 
+  body = JSON.stringify(body)
+  if (body !== '{}') {
+    //curl - add in the json obj
+    curl += " -d '" + body + "'";
   }
+
   //log the curl command to the console
   console.log(curl);
-  //store the curl command back in the object
-  Query.setCurl(curl);
   
   return curl; 
 }
