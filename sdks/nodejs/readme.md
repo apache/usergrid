@@ -415,7 +415,7 @@ Another way to approach the two types of calls would be to pull the token out of
 	{ 
 		orgName:"myorg"
 		, appName:"myapp"
-		, authType:"APP_USER"
+		, authType:usergrid.APP_USER
 		, token:token
   	});
 
@@ -423,7 +423,9 @@ Now, you can use the client object to make calls with the client secret / client
 
 To test if a user is logged in:
 
-	client.isAppUserLoggedIn();
+	if (client.isAppUserLoggedIn()) {
+		//do somethng
+	}
 
 
 To recap, either use the same client object and change auth types before each call, or, make a new client object for user calls.  Either method will work.
