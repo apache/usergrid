@@ -1,9 +1,5 @@
 /**
 * Test suite for Client object
-*  
-* TODO: need to add coverage for the following methods:
-* 
-* buildCurlCall
 * 
 * @author rod simpson (rod@apigee.com)
 */
@@ -31,6 +27,18 @@ describe('Standard Requests', function(){
         } ,done);
     });
   });
+  describe('cURL DELETE Method', function(){
+    it('should create a valid cURL calll for the DELETE without error', function(){
+      var options = {
+        method:"DELETE"
+        , uri:"https://api.usergrid.com/1hotrod/sandbox/users/aaaaaa"
+      }
+      var curl = client.buildCurlCall(options);
+      curl.should.equal('curl -X DELETE https://api.usergrid.com/1hotrod/sandbox/users/aaaaaa');
+    });
+  });
+  
+  
   describe('POST Method', function(){
     it('should POST without error', function(done){
       client.request(
@@ -39,7 +47,20 @@ describe('Standard Requests', function(){
         , body:{'username':'aaaaaa', 'password':'abcd1234'}
         } ,done);
     })
-  })
+  });
+  describe('cURL POST Method', function(){
+    it('should create a valid cURL calll for the POST without error', function(){
+      var options = {
+        method:"POST"
+        , uri:"https://api.usergrid.com/1hotrod/sandbox/users"
+        , body:{'username':'aaaaaa', 'password':'abcd1234'}
+      }
+      var curl = client.buildCurlCall(options);
+      curl.should.equal("curl -X POST https://api.usergrid.com/1hotrod/sandbox/users -d '{\"username\":\"aaaaaa\",\"password\":\"abcd1234\"}'");
+    });
+  });
+  
+  
   describe('PUT Method', function(){
     it('should PUT without error', function(done){
       client.request(
@@ -49,6 +70,19 @@ describe('Standard Requests', function(){
         } ,done);
     });
   });
+  describe('cURL PUT Method', function(){
+    it('should create a valid cURL calll for the PUT without error', function(){
+      var options = {
+        method:"PUT"
+        , uri:"https://api.usergrid.com/1hotrod/sandbox/users"
+        , body:{'fred':'value'}
+      }
+      var curl = client.buildCurlCall(options);
+      curl.should.equal("curl -X PUT https://api.usergrid.com/1hotrod/sandbox/users -d '{\"fred\":\"value\"}'");
+    });
+  });
+  
+  
   describe('GET Method', function(){
     it('should GET without error', function(done){
       client.request(
@@ -57,6 +91,17 @@ describe('Standard Requests', function(){
         } ,done);
     });
   });
+  describe('cURL GET Method', function(){
+    it('should create a valid cURL calll for the GET without error', function(){
+      var options = {
+        method:"GET"
+        , uri:"https://api.usergrid.com/1hotrod/sandbox/users/aaaaaa"
+      }
+      var curl = client.buildCurlCall(options);
+      curl.should.equal('curl -X GET https://api.usergrid.com/1hotrod/sandbox/users/aaaaaa');
+    });
+  });
+  
   describe('Login Method', function(){
     it('should Login without error and get token', function(done){
       client.login('aaaaaa', 'abcd1234', function(err){

@@ -59,7 +59,7 @@ Client = function(options) {
 *  `method` - http method (GET, POST, PUT, or DELETE), defaults to GET
 *  `qs` - object containing querystring values to be appended to the uri
 *  `body` - object containing entity body for POST and PUT requests
-*  `endpoint` - API endpoint, for example "users/fred"
+*  `endpoint` - API endpoint, for example 'users/fred'
 *  `mQuery` - boolean, set to true if running management query, defaults to false
 *
 *  @method request
@@ -91,44 +91,47 @@ Client.prototype.request = function (options, callback){
   }  
   console.log('calling: ' + method + ' ' + uri); 
   this.setQueryStartTime();
-  request(
-    { method: method
-    , uri: uri
-    , json: body
-    , qs: qs
+  var callOptions = { 
+    method: method, 
+    uri: uri, 
+    json: body, 
+    qs: qs
+  };    
+  request(callOptions, function (err, r, data) {
+    if (self._buildCurl) {
+      options.uri = r.request.uri.href;
+      self.buildCurlCall(options);
     }
-    , function (err, r, data) {
-      if (self._buildCurl) {
-        options.uri = r.request.uri.href;
-        self.buildCurlCall(options);
-      }
-      self.setQueryEndTime();
-      if(r.statusCode === 200){
-        console.log('success (time: ' + self.getQueryTotalTime() + '): ' + method + ' ' + uri); 
-        callback(err, data);        
+    self.setQueryEndTime();
+    if(r.statusCode === 200){
+      console.log('success (time: ' + self.getQueryTotalTime() + '): ' + method + ' ' + uri); 
+      callback(err, data);        
+    } else {
+      err = true;         
+      if ((r.error === 'auth_expired_session_token') ||
+        (r.error === 'unauthorized')   ||
+        (r.error === 'auth_missing_credentials')   ||
+        (r.error === 'auth_invalid')) {
+        //this error type means the user is not authorized. If a logout function is defined, call it
+        var error = r.body.error;
+        var errorDesc = r.body.error_description;
+        console.log('Error ('+ r.statusCode+')(' + error + '): ' + errorDesc)
+        //if the user has specified a logout callback:
+        if (typeof(self._logoutCallback) === 'function') {
+          self._logoutCallback(err, data);
+        } else  if (typeof(callback) === 'function') {
+          callback(err, data);            
+        } 
       } else {
-        err = true;         
-        if ( (r.error === "auth_expired_session_token") ||
-          (r.error === "unauthorized")   ||
-          (r.error === "auth_missing_credentials")   ||
-          (r.error === "auth_invalid")) {
-          //this error type means the user is not authorized. If a logout function is defined, call it
-          console.log(r.error);
-          //if the user has specified a logout callback:
-          if (typeof(self._logoutCallback) === "function") {
-            self._logoutCallback(err, data);
-          } else  if (typeof(callback) === "function") {
-            callback(err, data);            
-          } 
-        } else {
-          console.log('error: '+ r.statusCode);
-          if (typeof(callback) === "function") {
-            callback(err, data);            
-          }   
-        }        
-      }
+        var error = r.body.error;
+        var errorDesc = r.body.error_description;
+        console.log('Error ('+ r.statusCode +')(' + error + '): ' + errorDesc);
+        if (typeof(callback) === 'function') {
+          callback(err, data);            
+        }   
+      }        
     }
-  )
+  });
 } 
 
 /*
@@ -181,9 +184,13 @@ Client.prototype.getQueryTotalTime = function (){
 Client.prototype.login = function (username, password, callback){
   var self = this;
   var options = {
-    method:'GET'
-    , endpoint:'token' 
-    , qs:{"username": username, "password": password, "grant_type": "password"}
+    method:'GET', 
+    endpoint:'token', 
+    qs:{
+      username: username, 
+      password: password, 
+      grant_type: 'password'
+    }
   };
   this.request(options, function(err, data) {
     var user = {};
@@ -195,7 +202,7 @@ Client.prototype.login = function (username, password, callback){
       self.setLoggedInUser(user);
       self.setToken(data.access_token);
     }
-    if (typeof(callback) === "function") {
+    if (typeof(callback) === 'function') {
       callback(err, data, user);
     }
   });
@@ -212,13 +219,14 @@ Client.prototype.login = function (username, password, callback){
 */
 Client.prototype.isLoggedInAppUser = function (){
   var user = this.getLoggedInUser();
-  if (this.getToken()) {
-    if (user) { 
-      if (isUUID(user.get('uuid'))) {
-        return true;
-      }
-    }
+  var haveUser = (user && this.getToken());
+  if (!haveUser) {
+    return false; 
   }
+  if (!isUUID(user.get('uuid'))) {
+    return false; 
+  }
+  return true;
 }
 
 /*
@@ -233,22 +241,19 @@ Client.prototype.isLoggedInAppUser = function (){
 Client.prototype.buildCurlCall = function (options) {
   var curl = 'curl';
   var method = (options.method || 'GET').toUpperCase();
-  var endpoint = options.endpoint; 
   var body = options.body || {};
-  var qs = options.qs || {};
-  var mQuery = options.mQuery || false; 
   var uri = options.uri; 
   
   //curl - add the method to the command (no need to add anything for GET)
-  if (method === "POST") {curl += " -X POST"; }
-  else if (method === "PUT") { curl += " -X PUT"; }
-  else if (method === "DELETE") { curl += " -X DELETE"; }
-  else { curl += " -X GET"; }
+  if (method === 'POST') {curl += ' -X POST'; }
+  else if (method === 'PUT') { curl += ' -X PUT'; }
+  else if (method === 'DELETE') { curl += ' -X DELETE'; }
+  else { curl += ' -X GET'; }
 
   //curl - append the path
   curl += ' ' + uri;
-   
-  // 
+  
+  //curl - add the body 
   body = JSON.stringify(body)
   if (body !== '{}') {
     //curl - add in the json obj
@@ -360,7 +365,7 @@ Entity.prototype.get = function (field){
   } else {
     return this._data;
   }
-},
+}
 
 /**
  *  adds a specific key value pair or object to the Entity's data
@@ -415,55 +420,53 @@ Entity.prototype.save = function (callback){
         item === 'type' || item === 'activatted' ) { continue; }
     data[item] = entityData[item];
   }
-
-  this._client.request(
-    { 
-      method:method
-    , endpoint:path
-    , body:data
-    } ,
-    function (err, retdata) {
-      if (err) {
-        console.log('could not save entity');
-        if (typeof(callback) === 'function'){
-          return callback(err);
-        }
-      } else {
-        if (retdata.entities.length) {
-          var entity = retdata.entities[0];
-          self.set(entity);  
-        }
-        //if this is a user, update the password if it has been specified;
-        if (path === 'users' && entityData.oldpassword && entityData.newpassword) {
-          //Note: we have a ticket in to change PUT calls to /users to accept the password change
-          //      once that is done, we will remove this call and merge it all into one
-          var pwdata = {};
-          pwdata.oldpassword = entityData.oldpassword;
-          pwdata.newpassword = entityData.newpassword;
-          this._client.request(
-            { 
-              method:'PUT'
-            , endpoint:path
-            , body:pwdata
-            } ,
-            function (err, data) {
-              if (err) {
-                console.log('could not update user'); 
-              }
-              //remove old and new password fields so they don't end up as part of the entity object
-              self.set('oldpassword', null);
-              self.set('newpassword', null);
-              if (typeof(callback) === 'function'){
-                callback(err);
-              }
+  var options =  { 
+    method:method, 
+    endpoint:path, 
+    body:data
+  };
+  this._client.request(options, function (err, retdata) {
+    if (err) {
+      console.log('could not save entity');
+      if (typeof(callback) === 'function'){
+        return callback(err, retdata);
+      }
+    } else {
+      if (retdata.entities.length) {
+        var entity = retdata.entities[0];
+        self.set(entity);  
+      }
+      //if this is a user, update the password if it has been specified;
+      var needPasswordChange = (path === 'users' && entityData.oldpassword && entityData.newpassword); 
+      if (needPasswordChange) {
+        //Note: we have a ticket in to change PUT calls to /users to accept the password change
+        //      once that is done, we will remove this call and merge it all into one
+        var pwdata = {};
+        pwdata.oldpassword = entityData.oldpassword;
+        pwdata.newpassword = entityData.newpassword;
+        this._client.request(
+          { 
+            method:'PUT', 
+            endpoint:path, 
+            body:pwdata
+          },
+          function (err, data) {
+            if (err) {
+              console.log('could not update user'); 
             }
-          );     
-        } else if (typeof(callback) === 'function'){
-          callback(err);
-        }
-      }      
-    }
-  );
+            //remove old and new password fields so they don't end up as part of the entity object
+            self.set('oldpassword', null);
+            self.set('newpassword', null);
+            if (typeof(callback) === 'function'){
+              callback(err, data);
+            }
+          }
+        );     
+      } else if (typeof(callback) === 'function'){
+        callback(err, retdata);
+      }
+    }      
+  });
 }
 
 /**
@@ -476,59 +479,53 @@ Entity.prototype.save = function (callback){
  */
 Entity.prototype.fetch = function (callback){
   var path = this._type;
+  var self = this;
+  
   //if a uuid is available, use that, otherwise, use the name
-  if (isUUID(this.get('uuid'))) {
+  if (this.get('uuid')) {
     path += '/' + this.get('uuid');
   } else {
-    if (path === "users") {
-      if (this.get("username")) {
-        path += '/' + this.get("username");
+    if (path === 'users') {
+      if (this.get('username')) {
+        path += '/' + this.get('username');
       } else {
-        console.log('no username specified');
-        if (typeof(callback) === "function"){
-          var error = 'no username specified';
+        if (typeof(callback) === 'function'){
+          var error = 'cannot fetch entity, no username specified';
           console.log(error); 
-          callback(true, error)
+          return callback(true, error, self)
         }
       }
     } else {
-      if (isUUID(this.get('uuid'))) {
-        path += '/' + this.get('uuid');
-      } else if (this.get('name')) {
+      if (this.get('name')) {
         path += '/' + this.get('name');
-      }else {
-        console.log('no entity identifier specified');
-        if (typeof(callback) === "function"){
-          var error = 'no entity identifier specified'; 
+      } else {
+        if (typeof(callback) === 'function'){
+          var error = 'cannot fetch entity, no name specified';
           console.log(error); 
-          callback(true, error);
+          return callback(true, error, self)
         }
       }
-    }
+    }    
   }
-  var self = this;
-  
-  this._client.request(
-    { 
-      method:'GET'
-    , endpoint:path
-    } ,
-    function (err, data) {
-      if (err) {
-        console.log('could not get entity');
-      } else {
-        if (data.user) {
-          self.set(data.user);
-        } else if (data.entities.length) {
-          var entity = data.entities[0];
-          self.set(entity);  
-        }  
-      }
-      if (typeof(callback) === "function"){
-        callback(err, data);
-      }
+  var options = { 
+    method:'GET', 
+    endpoint:path
+  };
+  this._client.request(options, function (err, data) {
+    if (err) {
+      console.log('could not get entity');
+    } else {
+      if (data.user) {
+        self.set(data.user);
+      } else if (data.entities.length) {
+        var entity = data.entities[0];
+        self.set(entity);  
+      }  
     }
-  );
+    if (typeof(callback) === 'function'){
+      callback(err, data, self);
+    }
+  });
 }
 
 /**
@@ -544,31 +541,29 @@ Entity.prototype.fetch = function (callback){
 Entity.prototype.destroy = function (callback){
   var path = this._type;
   if (isUUID(this.get('uuid'))) {
-    path += "/" + this.get('uuid');
+    path += '/' + this.get('uuid');
   } else {
-    if (typeof(callback) === "function"){
+    if (typeof(callback) === 'function'){
       var error = 'Error trying to delete object - no uuid specified.';
       console.log(error); 
       callback(true, error);
     }
   }
   var self = this;
-  
-  this._client.request(
-    { method:"DELETE"
-    , endpoint:path
-    } ,
-    function (err, data) {
-      if (err) {
-        console.log('entity could not be deleted');
-      } else {
-        self.set(null); 
-      }
-      if (typeof(callback) === "function"){
-        callback(err, data);
-      } 
+  var options = { 
+    method:'DELETE', 
+    endpoint:path
+  };
+  this._client.request(options, function (err, data) {
+    if (err) {
+      console.log('entity could not be deleted');
+    } else {
+      self.set(null); 
     }
-  );
+    if (typeof(callback) === 'function'){
+      callback(err, data);
+    } 
+  });
 }
 
 
@@ -607,42 +602,48 @@ Collection = function(options, callback) {
   var self = this;
   
   //get list of collections, see if this one exists
-  this._client.request(
-    { method:"GET"
-    , endpoint:""
-    } ,
-    function (err, body) {
-      if (err) {
-        console.log('error getting collections - check options passed to client');  
-        return callback(err);      
+  var callOptions = { 
+    method:'GET', 
+    endpoint:''
+  };
+  this._client.request(callOptions, function (err, data) {
+    if (err) {
+      console.log('error getting collections - check options passed to client');  
+      if (typeof(callback) === 'function') {
+        return callback(err, data);      
+      }
+    } else {
+      //store collection list
+      var collections = data.entities[0].metadata.collections;
+      if ( collections.hasOwnProperty(self._type) ) {
+        //collection exists, so just fetch
+        self.fetch(function(err){
+          if (typeof(callback) === 'function') {
+            return callback(err, data);
+          }
+        });
       } else {
-        //store collection list
-        var collections = body.entities[0].metadata.collections;
-        if ( collections.hasOwnProperty(self._type) ) {
-          //collection exists, so just fetch
-          self.fetch(function(err){
-            return callback(err);
-          });
-        } else {
-          //collection doesn't exist, post first
-          self._client.request(
-            { method:"POST"
-            , endpoint:self._type
-            , json:{}
-            , qs:self._qs
-            } ,
-            function (err, body) {
-              if (!err) {
-                console.log('collection created'); 
-              }
-              callback(err, body);
+        //collection doesn't exist, post first
+        self._client.request(
+          { 
+            method:'POST', 
+            endpoint:self._type, 
+            json:{}, 
+            qs:self._qs
+          },
+          function (err, data) {
+            if (!err) {
+              console.log('collection created'); 
             }
-          );
-        }
+            if (typeof(callback) === 'function') {
+              callback(err, data);
+            }
+          }
+        );
       }
     }
-  );
-};
+  });
+}
 
 /**
  *  
@@ -661,44 +662,43 @@ Collection.prototype.fetch = function (callback){
   } else {
     delete qs.cursor; 
   }
-  this._client.request(
-    { method:"GET"
-    , endpoint:this._type
-    , qs:this._qs
-    } ,
-    function (err, data) {
-      if(err) {
-       console.log('error getting collection'); 
-      } else {
-        //save the cursor if there is one
-        var cursor = data.cursor || null;
-        self.saveCursor(cursor);
-        if (data.entities) {
-          self.resetEntityPointer();
-          var count = data.entities.length;
-          //save entities locally
-          for (var i=0;i<count;i++) {
-            var uuid = data.entities[i].uuid;
-            if (uuid) {      
-              var entityData = data.entities[i] || {};
-              var options = {
-                type:self._type
-                , client:self._client
-                , uuid:uuid
-                , data:entityData
-              }
-              var ent = new Entity(options);
-              var ct = self._list.length;
-              self._list[ct] = ent;
-            }
+  var options = { 
+    method:'GET', 
+    endpoint:this._type, 
+    qs:this._qs
+  };
+  this._client.request(options, function (err, data) {
+    if(err) {
+     console.log('error getting collection'); 
+    } else {
+      //save the cursor if there is one
+      var cursor = data.cursor || null;
+      self.saveCursor(cursor);
+      if (data.entities) {
+        self.resetEntityPointer();
+        var count = data.entities.length;
+        //save entities locally
+        for (var i=0;i<count;i++) {
+          var uuid = data.entities[i].uuid;
+          if (uuid) {      
+            var entityData = data.entities[i] || {};
+            var entityOptions = {
+              type:self._type, 
+              client:self._client, 
+              uuid:uuid, 
+              data:entityData
+            };
+            var ent = new Entity(entityOptions);
+            var ct = self._list.length;
+            self._list[ct] = ent;
           }
-        } 
-      }
-      if (typeof(callback) === "function"){
-        callback(err, data);
-      }
+        }
+      } 
     }
-  );
+    if (typeof(callback) === 'function'){
+      callback(err, data);
+    }
+  });
 }
 
 /**
@@ -709,29 +709,37 @@ Collection.prototype.fetch = function (callback){
  *  @return none
  */
 Collection.prototype.addEntity = function (entity, callback) {
-  //add the entity to the list
-  var count = this._list.length;
-  this._list[count] = entity;
-  //then save the entity
-  entity.save(callback);
+  var self = this;
+  //save the entity
+  entity.save(function(err, data){
+    if (!err) {
+      //then add the entity to the list
+      var count = self._list.length;
+      self._list[count] = entity; 
+    } 
+    if (typeof(callback) === 'function'){
+      callback(err, data, entity);
+    }
+  });
 }
 
 /**
- *  Looks up an Entity by UUID
+ *  Looks up an Entity by UUID, tries to find it in the local collection first
+ *  if not found, will go to the server
  *
  *  @method getEntityByUUID
  *  @param {string} UUID
- *  @return {object} returns an entity object, or null if it is not found
+ *  @return {callback} callback(err, data, entity)
  */
-Collection.prototype.getEntityByUUID = function (uuid){
-  var count = this._list.length;
-  var i=0;
-  for (i=0; i<count; i++) {
-    if (this._list[i].get('uuid') === uuid) {
-      return this._list[i];
-    }
+Collection.prototype.getEntityByUUID = function (uuid, callback){
+  //get the entity from the database
+  var options = {
+    data: {uuid:uuid}, 
+    type: this._type, 
+    client: this._client
   }
-  return null;
+  var entity = new Entity(options);
+  entity.fetch(callback);
 }
 
 /**
@@ -742,10 +750,10 @@ Collection.prototype.getEntityByUUID = function (uuid){
  */
 Collection.prototype.getFirstEntity = function (){
   var count = this._list.length;
-    if (count > 0) {
-      return this._list[0];
-    }
-    return null;
+  if (count > 0) {
+    return this._list[0];
+  }
+  return null;
 }
 
 /**
@@ -756,10 +764,10 @@ Collection.prototype.getFirstEntity = function (){
  */
 Collection.prototype.getLastEntity = function (){
   var count = this._list.length;
-    if (count > 0) {
-      return this._list[count-1];
-    }
-    return null;
+  if (count > 0) {
+    return this._list[count-1];
+  }
+  return null;
 }
 
 /**
@@ -773,7 +781,8 @@ Collection.prototype.getLastEntity = function (){
  */
 Collection.prototype.hasNextEntity = function (){
   var next = this._iterator + 1;
-  if(next >=0 && next < this._list.length) {
+  var hasNextElement = (next >=0 && next < this._list.length);
+  if(hasNextElement) {
     return true;
   }
   return false;
@@ -790,7 +799,8 @@ Collection.prototype.hasNextEntity = function (){
  */
 Collection.prototype.getNextEntity = function (){
   this._iterator++;
-  if(this._iterator >= 0 && this._iterator <= this._list.length) {
+  var hasNextElement = (this._iterator >= 0 && this._iterator <= this._list.length);
+  if(hasNextElement) {
     return this._list[this._iterator];
   }
   return false;
@@ -805,10 +815,11 @@ Collection.prototype.getNextEntity = function (){
  */
 Collection.prototype.hasPreviousEntity = function (){
   var previous = this._iterator - 1;
-    if(previous >=0 && previous < this._list.length) {
-      return true;
-    }
-    return false;
+  var hasPreviousElement = (previous >=0 && previous < this._list.length);
+  if(hasPreviousElement) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -819,10 +830,11 @@ Collection.prototype.hasPreviousEntity = function (){
  */
 Collection.prototype.getPreviousEntity = function (){
    this._iterator--;
-    if(this._iterator >= 0 && this._iterator <= this._list.length) {
-      return this.list[this._iterator];
-    }
-    return false;
+   var hasPreviousElement = (this._iterator >= 0 && this._iterator <= this._list.length);
+   if(hasPreviousElement) {
+    return this.list[this._iterator];
+   }
+   return false;
 }
 
 /**
@@ -846,10 +858,12 @@ Collection.prototype.resetEntityPointer = function (){
  */
 Collection.prototype.destroyEntity = function (entity, callback) {
   var self = this;
-  entity.destroy(function(err){
+  entity.destroy(function(err, data){
     if (err) {
-      console.log('could not destroy entity'); 
-      callback(err);
+      console.log('could not destroy entity');
+      if (typeof(callback) === 'function') { 
+        callback(err, data);
+      }
     } else {
       //destroy was good, so repopulate the collection
       self.fetch(callback);
