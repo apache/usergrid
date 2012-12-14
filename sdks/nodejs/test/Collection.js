@@ -3,12 +3,12 @@
 *  
 * TODO: need to add coverage for the following methods:
 * 
-* getEntityByUUID
 * getFirstEntity
 * getLastEntity
 * resetEntityPointer
-* destroyEntity
 * resetPaging
+* 
+* Need to add sample data for paging, check actual results
 * 
 * @author rod simpson (rod@apigee.com)
 */
