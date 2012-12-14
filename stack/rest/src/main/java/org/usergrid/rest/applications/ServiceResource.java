@@ -66,6 +66,7 @@ import org.usergrid.services.ServiceParameter;
 import org.usergrid.services.ServicePayload;
 import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
+import org.usergrid.utils.InflectionUtils;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.core.provider.EntityHolder;
@@ -201,7 +202,10 @@ public class ServiceResource extends AbstractContextResource {
 
         boolean tree = "true".equalsIgnoreCase(ui.getQueryParameters()
                 .getFirst("tree"));
-
+        boolean collectionGet = false;
+        if(action==ServiceAction.GET) {
+        	collectionGet = (getServiceParameters().size()==1 && InflectionUtils.isPlural(getServiceParameters().get(0)))? true : false;
+        }
         addQueryParams(getServiceParameters(), ui);
         ServiceRequest r = services.newRequest(action, tree,
                 getServiceParameters(), payload);
@@ -220,11 +224,16 @@ public class ServiceResource extends AbstractContextResource {
                 query.setIdsOnly(false);
                 if (query.hasSelectSubjects()) {
                     response.setList(query.getSelectionResults(results));
+                    response.setCount(response.getList().size());
                     response.setNext(results.getNextResult());
                     response.setPath(results.getPath());
                     return results;
                 }
             }
+            if(collectionGet) {
+            	response.setCount(results.size());
+            }
+
             response.setResults(results);
 
         }
