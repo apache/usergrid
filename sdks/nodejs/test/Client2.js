@@ -108,8 +108,8 @@ describe('Standard Requests', function(){
         if (err) throw err;
         
         //test the token first
-        var token = client.getToken();
-        client.should.have.property('_token');
+        var token = client.token;
+        client.should.have.property('token');
         
         //make sure we get a user back
         var user = client.getLoggedInUser(); 
@@ -120,19 +120,19 @@ describe('Standard Requests', function(){
         if (!client.isLoggedInAppUser()) throw err;
         
         //erase the token
-        client.setToken(null);
+        client.token = null;
         if (client.isLoggedInAppUser()) throw err;
         
         //reset the token
-        client.setToken(token);
+        client.token = token;
         if (!client.isLoggedInAppUser()) throw err;
         
         //clear the logged in user
-        client.setLoggedInUser(null);
+        client._user = null;
         if (client.isLoggedInAppUser()) throw err;
         
         //replace the logged in user
-        client.setLoggedInUser(user);
+        client._user = user;
         if (!client.isLoggedInAppUser()) throw err;
         
         //log the user out

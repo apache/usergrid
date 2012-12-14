@@ -22,24 +22,31 @@
 
 var request = require('request');
 
+//authentication types
+var AUTH_CLIENT_ID = 'CLIENT_ID';
+var AUTH_APP_USER = 'APP_USER'; 
+var AUTH_NONE = 'NONE';
+  
 Client = function(options) {
   //usergrid enpoint
-  this._uri = 'https://api.usergrid.com';
-  
-  //Find your Orgname and Appname in the Admin portal (http://apigee.com/usergrid)
-  this._orgName = options.orgName;
-  this._appName = options.appName;
+  this.URI = 'https://api.usergrid.com';
   
   //authentication types
   this._AUTH_CLIENT_ID = 'CLIENT_ID';
   this._AUTH_APP_USER = 'APP_USER'; 
   this._AUTH_NONE = 'NONE';
+  
+  //Find your Orgname and Appname in the Admin portal (http://apigee.com/usergrid)
+  this.orgName = options.orgName;
+  this.appName = options.appName;
+  
+  this.options = options;
 
   //authentication data
   this._authType = options.authType || this._AUTH_NONE;
   this._clientId = options.clientId;
   this._clientSecret = options.clientSecret;
-  this._token = options.token || null;
+  this.token = options.token || null;
   this._user = null;
   
   //other options
@@ -75,22 +82,22 @@ Client.prototype.request = function (options, callback){
   var qs = options.qs || {};
   var mQuery = options.mQuery || false; //is this a query to the management endpoint?
   if (mQuery) {
-    var uri = this._uri + '/' + endpoint;
+    var uri = this.URI + '/' + endpoint;
   } else {
-    var uri = this._uri + '/' + this._orgName + '/' + this._appName + '/' + endpoint;
+    var uri = this.URI + '/' + this.orgName + '/' + this.appName + '/' + endpoint;
   }
   
-  if (this._authType === this._AUTH_CLIENT_ID) {
+  if (this._authType === AUTH_CLIENT_ID) {
     qs['client_id'] = this._clientId;
     qs['client_secret'] = this._clientSecret;
-  } else if (this._authType === this._AUTH_APP_USER) {
-    qs['access_token'] = this._token;     
+  } else if (this._authType === AUTH_APP_USER) {
+    qs['access_token'] = this.token;     
   } else {
     //fine if only hitting sandbox app, where no credentials are required
     console.log('no authType specified'); 
   }  
   console.log('calling: ' + method + ' ' + uri); 
-  this.setQueryStartTime();
+  this._start = new Date().getTime();
   var callOptions = { 
     method: method, 
     uri: uri, 
@@ -102,9 +109,9 @@ Client.prototype.request = function (options, callback){
       options.uri = r.request.uri.href;
       self.buildCurlCall(options);
     }
-    self.setQueryEndTime();
+    self._end = new Date().getTime();
     if(r.statusCode === 200){
-      console.log('success (time: ' + self.getQueryTotalTime() + '): ' + method + ' ' + uri); 
+      console.log('success (time: ' + self.calcTimeDiff() + '): ' + method + ' ' + uri); 
       callback(err, data);        
     } else {
       err = true;         
@@ -135,7 +142,7 @@ Client.prototype.request = function (options, callback){
 } 
 
 /*
-*  A public method to set the auth type
+*  A public method to enable client authorization
 *
 *  @method setAuthType
 *  @public
@@ -146,24 +153,11 @@ Client.prototype.setAuthType = function (authType){
  this._authType = authType;
 }
 
-/**
-*  A private method to start call timing
-*/
-Client.prototype.setQueryStartTime = function (){
- this._start = new Date().getTime();
-}
-
-/**
-*  A private method to stop call timing
-*/
-Client.prototype.setQueryEndTime = function (){
- this._end = new Date().getTime();
-}
 
 /**
 *  A private method to get call timing of last call
 */
-Client.prototype.getQueryTotalTime = function (){
+Client.prototype.calcTimeDiff = function (){
  var seconds = 0;
  var time = this._end - this._start;
  try {
@@ -199,7 +193,7 @@ Client.prototype.login = function (username, password, callback){
     } else {
       user = new Entity('users');
       user.set(data.user);
-      self.setLoggedInUser(user);
+      self._user = user;
       self.setToken(data.access_token);
     }
     if (typeof(callback) === 'function') {
@@ -278,7 +272,7 @@ Client.prototype.buildCurlCall = function (options) {
 *  @return {string} the current token
 */
 Client.prototype.getToken = function (){
-  return this._token;
+  return this.token;
 }
 
 /*
@@ -290,7 +284,7 @@ Client.prototype.getToken = function (){
 *  @return none
 */
 Client.prototype.setToken = function (token){
-  this._token=token;
+  this.token=token;
 }
 
 /*
@@ -304,18 +298,6 @@ Client.prototype.getLoggedInUser = function (){
   return this._user;
 }
 
-/*
- *  A public method to set an Entity object for the current logged in user
- *
- *  @method setLoggedInUser
- *  @public
- *  @param {object} user - Entity object of type user
- *  @return none
- */
-Client.prototype.setLoggedInUser = function (user){
-  this._user = user;
-}
-
 /**
  *  A public method to log out an app user - clears all user fields from client
  *
@@ -324,7 +306,7 @@ Client.prototype.setLoggedInUser = function (user){
  *  @return none
  */
 Client.prototype.logoutAppUser = function (){
-  this.setLoggedInUser(null);
+  this._user = null;
   this.setToken(null);
 }
 
@@ -973,3 +955,6 @@ function isUUID (uuid) {
 exports.client = Client;
 exports.entity = Entity;
 exports.collection = Collection;
+exports.AUTH_CLIENT_ID = AUTH_CLIENT_ID;
+exports.AUTH_APP_USER = AUTH_APP_USER; 
+exports.AUTH_NONE = AUTH_NONE;
