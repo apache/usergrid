@@ -876,7 +876,6 @@ public class EntityManagerImpl implements EntityManager {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	@Metered(group="core",name="EntityManager_createEntityProperties")
 	public <A extends Entity> A create(String entityType, Class<A> entityClass,
 			Map<String, Object> properties) throws Exception {
 		if ((entityType != null)
@@ -902,15 +901,13 @@ public class EntityManagerImpl implements EntityManager {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	@Metered(group="core",name="EntityManager_createEntity")
 	public <A extends TypedEntity> A create(A entity) throws Exception {
 		return (A) create(entity.getType(), entity.getClass(),
 				entity.getProperties());
 	}
 
 	@Override
-  @TraceParticipant
-  @Metered(group="core",name="EntityManager_createMap")
+    @TraceParticipant
 	public Entity create(String entityType, Map<String, Object> properties)
 			throws Exception {
 		return create(entityType, null, properties);
@@ -935,8 +932,9 @@ public class EntityManagerImpl implements EntityManager {
 	 * @throws Exception
 	 *             the exception
 	 */
+  @Metered(group="core",name="EntityManager_create")
   @TraceParticipant
-	private <A extends Entity> A create(String entityType, Class<A> entityClass,
+	public <A extends Entity> A create(String entityType, Class<A> entityClass,
 			Map<String, Object> properties, UUID importId) throws Exception {
 
 		UUID timestampUuid = newTimeUUID();
@@ -1715,7 +1713,8 @@ public class EntityManagerImpl implements EntityManager {
 	 * @throws Exception
 	 *             the exception
 	 */
-	private void updateProperties(UUID entityId, Map<String, Object> properties)
+  @Metered(group="core",name="EntityManager_updateProperties")
+	public void updateProperties(UUID entityId, Map<String, Object> properties)
 			throws Exception {
 
 		DynamicEntity entity = loadPartialEntity(entityId);
@@ -2272,7 +2271,6 @@ public class EntityManagerImpl implements EntityManager {
 	}
 
 	@Override
-	@Metered(group="core",name="EntityManager_update")
 	public void update(Entity entity) throws Exception {
 		updateProperties(entity.getUuid(), entity.getProperties());
 	}
@@ -2331,7 +2329,6 @@ public class EntityManagerImpl implements EntityManager {
 	}
 
 	@Override
-	@Metered(group="core",name="EntityManager_updateProperties")
 	public void updateProperties(EntityRef entityRef,
 			Map<String, Object> properties) throws Exception {
 		entityRef = validate(entityRef);
