@@ -22,7 +22,7 @@
 
 var request = require('request');
 
-//authentication types
+//authentication type constants
 var AUTH_CLIENT_ID = 'CLIENT_ID';
 var AUTH_APP_USER = 'APP_USER'; 
 var AUTH_NONE = 'NONE';
@@ -31,31 +31,24 @@ Client = function(options) {
   //usergrid enpoint
   this.URI = 'https://api.usergrid.com';
   
-  //authentication types
-  this._AUTH_CLIENT_ID = 'CLIENT_ID';
-  this._AUTH_APP_USER = 'APP_USER'; 
-  this._AUTH_NONE = 'NONE';
-  
   //Find your Orgname and Appname in the Admin portal (http://apigee.com/usergrid)
   this.orgName = options.orgName;
   this.appName = options.appName;
-  
-  this.options = options;
 
   //authentication data
-  this._authType = options.authType || this._AUTH_NONE;
-  this._clientId = options.clientId;
-  this._clientSecret = options.clientSecret;
+  this.authType = options.authType || AUTH_NONE;
+  this.clientId = options.clientId;
+  this.clientSecret = options.clientSecret;
   this.token = options.token || null;
-  this._user = null;
+  this.user = null;
   
   //other options
-  this._buildCurl = options.buildCurl || false;
+  this.buildCurl = options.buildCurl || false;
   
   //timeout and callbacks
   this._callTimeout =  options.callTimeout || 30000; //default to 30 seconds
   this._callTimeoutCallback =  options.callTimeoutCallback || null;
-  this._logoutCallback =  options.logoutCallback || null;
+  this.logoutCallback =  options.logoutCallback || null;
    
 };
 
@@ -87,10 +80,10 @@ Client.prototype.request = function (options, callback){
     var uri = this.URI + '/' + this.orgName + '/' + this.appName + '/' + endpoint;
   }
   
-  if (this._authType === AUTH_CLIENT_ID) {
-    qs['client_id'] = this._clientId;
-    qs['client_secret'] = this._clientSecret;
-  } else if (this._authType === AUTH_APP_USER) {
+  if (this.authType === AUTH_CLIENT_ID) {
+    qs['client_id'] = this.clientId;
+    qs['client_secret'] = this.clientSecret;
+  } else if (this.authType === AUTH_APP_USER) {
     qs['access_token'] = this.token;     
   } else {
     //fine if only hitting sandbox app, where no credentials are required
@@ -105,7 +98,7 @@ Client.prototype.request = function (options, callback){
     qs: qs
   };    
   request(callOptions, function (err, r, data) {
-    if (self._buildCurl) {
+    if (self.buildCurl) {
       options.uri = r.request.uri.href;
       self.buildCurlCall(options);
     }
@@ -124,8 +117,8 @@ Client.prototype.request = function (options, callback){
         var errorDesc = r.body.error_description;
         console.log('Error ('+ r.statusCode+')(' + error + '): ' + errorDesc)
         //if the user has specified a logout callback:
-        if (typeof(self._logoutCallback) === 'function') {
-          self._logoutCallback(err, data);
+        if (typeof(self.logoutCallback) === 'function') {
+          self.logoutCallback(err, data);
         } else  if (typeof(callback) === 'function') {
           callback(err, data);            
         } 
@@ -140,19 +133,6 @@ Client.prototype.request = function (options, callback){
     }
   });
 } 
-
-/*
-*  A public method to enable client authorization
-*
-*  @method setAuthType
-*  @public
-*  @param {string} authType ('CLIENT_ID', 'APP_USER', or 'NONE');
-*  @return none
-*/   
-Client.prototype.setAuthType = function (authType){
- this._authType = authType;
-}
-
 
 /**
 *  A private method to get call timing of last call
@@ -193,8 +173,8 @@ Client.prototype.login = function (username, password, callback){
     } else {
       user = new Entity('users');
       user.set(data.user);
-      self._user = user;
-      self.setToken(data.access_token);
+      self.user = user;
+      self.token = data.access_token;
     }
     if (typeof(callback) === 'function') {
       callback(err, data, user);
@@ -206,14 +186,13 @@ Client.prototype.login = function (username, password, callback){
 *  A public method to test if a user is logged in - does not guarantee that the token is still valid,
 *  but rather that one exists, and that there is a valid UUID
 *
-*  @method isLoggedInAppUser
+*  @method isAppUserLoggedIn
 *  @public
-*  @params {object} Query - {method, path, jsonObj, params, successCallback, failureCallback}
 *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
 */
-Client.prototype.isLoggedInAppUser = function (){
-  var user = this.getLoggedInUser();
-  var haveUser = (user && this.getToken());
+Client.prototype.isAppUserLoggedIn = function (){
+  var user = this.user;
+  var haveUser = (user && this.token);
   if (!haveUser) {
     return false; 
   }
@@ -260,44 +239,6 @@ Client.prototype.buildCurlCall = function (options) {
   return curl; 
 }
 
-/****************************************************************
-* The following functions should be overriden for session storage
-*/
-
-/*
-*  A public method to get current OAuth token
-*
-*  @method getToken
-*  @public
-*  @return {string} the current token
-*/
-Client.prototype.getToken = function (){
-  return this.token;
-}
-
-/*
-*  A public method to set the current Oauth token
-*
-*  @method setToken
-*  @public
-*  @param token - the bearer token
-*  @return none
-*/
-Client.prototype.setToken = function (token){
-  this.token=token;
-}
-
-/*
- *  A public method to get an Entity object for the current logged in user
- *
- *  @method getLoggedInUser
- *  @public
- *  @return {object} user - Entity object of type user
- */
-Client.prototype.getLoggedInUser = function (){
-  return this._user;
-}
-
 /**
  *  A public method to log out an app user - clears all user fields from client
  *
@@ -306,12 +247,9 @@ Client.prototype.getLoggedInUser = function (){
  *  @return none
  */
 Client.prototype.logoutAppUser = function (){
-  this._user = null;
-  this.setToken(null);
+  this.user = null;
+  this.token = null;
 }
-
-
-
 
 /**
  *  A class to Model a Usergrid Entity.
@@ -516,8 +454,7 @@ Entity.prototype.fetch = function (callback){
  *
  *  @method destroy
  *  @public
- *  @param {function} callback
- *  @return none
+ *  @param {function} callback(err, data)
  *
  */ 
 Entity.prototype.destroy = function (callback){
@@ -557,13 +494,10 @@ Entity.prototype.destroy = function (callback){
  *
  *  @class Collection
  *  @author Rod Simpson (rod@apigee.com)
- */
-/**
- *  Collection is a container class for holding entities
  *
  *  @constructor
- *  @param {string} collectionPath - the type of collection to model
- *  @param {uuid} uuid - (optional), the UUID of the collection if it is known
+ *  @param {string} options - configuration object
+ *  @param {uuid} callback(err, data)
  */
 Collection = function(options, callback) {
   this._client = options.client;
@@ -706,6 +640,29 @@ Collection.prototype.addEntity = function (entity, callback) {
 }
 
 /**
+ *  Removes the Entity from the collection, then destroys the object on the server
+ * 
+ *  @method destroyEntity
+ *  @param {object} entity
+ *  @param {callback} callback
+ *  @return none
+ */
+Collection.prototype.destroyEntity = function (entity, callback) {
+  var self = this;
+  entity.destroy(function(err, data){
+    if (err) {
+      console.log('could not destroy entity');
+      if (typeof(callback) === 'function') { 
+        callback(err, data);
+      }
+    } else {
+      //destroy was good, so repopulate the collection
+      self.fetch(callback);
+    }
+  });  
+}
+
+/**
  *  Looks up an Entity by UUID, tries to find it in the local collection first
  *  if not found, will go to the server
  *
@@ -792,10 +749,10 @@ Collection.prototype.getNextEntity = function (){
  *  Entity iteration - Checks to see if there is a "previous"
  *  entity in the list.
  *
- *  @method hasPreviousEntity
+ *  @method hasPrevEntity
  *  @return {boolean} true if there is a previous entity, false if not
  */
-Collection.prototype.hasPreviousEntity = function (){
+Collection.prototype.hasPrevEntity = function (){
   var previous = this._iterator - 1;
   var hasPreviousElement = (previous >=0 && previous < this._list.length);
   if(hasPreviousElement) {
@@ -807,10 +764,10 @@ Collection.prototype.hasPreviousEntity = function (){
 /**
  *  Entity iteration - Gets the "previous" entity in the list.
  *
- *  @method getPreviousEntity
+ *  @method getPrevEntity
  *  @return {object} entity
  */
-Collection.prototype.getPreviousEntity = function (){
+Collection.prototype.getPrevEntity = function (){
    this._iterator--;
    var hasPreviousElement = (this._iterator >= 0 && this._iterator <= this._list.length);
    if(hasPreviousElement) {
@@ -828,29 +785,6 @@ Collection.prototype.getPreviousEntity = function (){
  */
 Collection.prototype.resetEntityPointer = function (){
    this._iterator  = -1;
-}
-
-/**
- *  Removes the Entity from the collection, then destroys the object on the server
- * 
- *  @method destroyEntity
- *  @param {object} entity
- *  @param {callback} callback
- *  @return none
- */
-Collection.prototype.destroyEntity = function (entity, callback) {
-  var self = this;
-  entity.destroy(function(err, data){
-    if (err) {
-      console.log('could not destroy entity');
-      if (typeof(callback) === 'function') { 
-        callback(err, data);
-      }
-    } else {
-      //destroy was good, so repopulate the collection
-      self.fetch(callback);
-    }
-  });  
 }
 
 /**

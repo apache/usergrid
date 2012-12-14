@@ -112,32 +112,48 @@ describe('Standard Requests', function(){
         client.should.have.property('token');
         
         //make sure we get a user back
-        var user = client.getLoggedInUser(); 
+        var user = client.user; 
         var data = user.get();
         data.should.have.property('username');
-        
+  
         //test for logged in user
-        if (!client.isLoggedInAppUser()) throw err;
+        if (!client.isAppUserLoggedIn()) throw err;
+        
+        //make a query with the app users token
+        client.authType = usergrid.APP_USER;
+        
+        //do a get on /users
+        describe('GET Method', function(){
+          it('should GET without error', function(done){
+            client.request(
+              { method:"GET"
+              , endpoint:"users"
+              } ,done);
+          });
+        });
+        
+        //go back to the 
+        client.authType = usergrid.AUTH_CLIENT_ID;
         
         //erase the token
         client.token = null;
-        if (client.isLoggedInAppUser()) throw err;
+        if (client.isAppUserLoggedIn()) throw err;
         
         //reset the token
         client.token = token;
-        if (!client.isLoggedInAppUser()) throw err;
+        if (!client.isAppUserLoggedIn()) throw err;
         
         //clear the logged in user
-        client._user = null;
-        if (client.isLoggedInAppUser()) throw err;
+        client.user = null;
+        if (client.isAppUserLoggedIn()) throw err;
         
         //replace the logged in user
-        client._user = user;
-        if (!client.isLoggedInAppUser()) throw err;
+        client.user = user;
+        if (!client.isAppUserLoggedIn()) throw err;
         
         //log the user out
         client.logoutAppUser();
-        if (client.isLoggedInAppUser()) throw err;
+        if (client.isAppUserLoggedIn()) throw err;
         
         //tests finished
         done();

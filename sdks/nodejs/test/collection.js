@@ -5,6 +5,8 @@
 * 
 * getFirstEntity
 * getLastEntity
+* hasPrevEntity
+* getPrevEntity
 * resetEntityPointer
 * resetPaging
 * 

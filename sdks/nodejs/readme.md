@@ -384,9 +384,9 @@ To log app users in, use the logInAppUser() method:
 				
 				
 				//to get the currently logged in user:
-				var user = client.getLoggedInUser();
+				var user = client.user;
 				//to get their username: 
-        		var username = user.get('username');      
+				var username = client.user.get('username');      
 			}
 		}
 	);
@@ -394,15 +394,15 @@ To log app users in, use the logInAppUser() method:
 
 After the user is successfully logged in, their access token will be stored in the client object and can used for future calls. To do this, first set the authorization type:
 
-	client.setAuthType('APP_USER');
+	client.authType = usergrid.APP_USER;
 
 After this statement is called, any future calls will attempt to use the user token instead of the client secret / id combo (application level).  If you need to make an application level call using the secret/id combo, simply enable that type of authentication instead:
 
-	client.setAuthType('CLIENT_ID');
+	client.authType = usergrid.AUTH_CLIENT_ID;
 
 In contrast, to use no authentication, for example, if you are using the default Sandbox app that was automatically created when your account was set up, disable auth:
 
-	client.setAuthType('NONE');
+	client.authType = usergrid.AUTH_NONE;
 
 With this setting enabled, no authentication will be provided to the database. You will likely only ever use this setting if you are testing with the Sandbox app.
 
@@ -420,6 +420,11 @@ Another way to approach the two types of calls would be to pull the token out of
   	});
 
 Now, you can use the client object to make calls with the client secret / client id, and then use the appUserClient object to make calls on behalf of the user.  
+
+To test if a user is logged in:
+
+	client.isAppUserLoggedIn();
+
 
 To recap, either use the same client object and change auth types before each call, or, make a new client object for user calls.  Either method will work.
 
