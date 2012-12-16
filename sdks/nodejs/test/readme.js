@@ -1,38 +1,38 @@
 /**
 * Test suite for all the examples in the readme
-* 
+*
 * NOTE: No, this test suite doesn't use the traditional format for
 * a mocha test suite.  This is because the goal is to require as little
 * alteration as possible during the copy / paste operation from this test
 * suite to the readme file.
-* 
+*
 * Run with mocha v. 1.7.x
 * http://visionmedia.github.com/mocha/
-* 
+*
 * @author rod simpson (rod@apigee.com)
 */
 
 
 var usergrid = require('../lib/usergrid');
 
-var logSuccess = false;
+var logSuccess = true;
 var successCount = 0;
-var logError = false;
+var logError = true;
 var errorCount = 0;
-var logNotice = false;
+var logNotice = true;
 
-	var client = new usergrid.client({ 
-		orgName:'yourorgname', 
-		appName:'yourappname', 
-		authType:usergrid.AUTH_CLIENT_ID, 
-		clientId:'YXA6Us6Rg0b0EeKuRALoGsWhew', 
-		clientSecret:'YXA6OYsTy6ENwwnbvjtvsbLpjw5mF40',
+	var client = new usergrid.client({
+		orgName:'yourorgname',
+		appName:'yourappname',
+		authType:usergrid.AUTH_CLIENT_ID,
+		clientId:'<your client id>',
+		clientSecret:'<your client secret>',
 		logging: false, //optional - turn on logging, off by default
 		buildCurl: false //optional - turn on curl commands, off by default
 	});
 
-	var client = new usergrid.client({ 
-		orgName:'yourorgname', 
+	var client = new usergrid.client({
+		orgName:'yourorgname',
 		appName:'sandbox',
 		logging: true, //optional - turn on logging, off by default
 	});
@@ -149,7 +149,7 @@ function notice(message){
 //tests
 function testGET(step) {
 	var options = {
-		method:'GET', 
+		method:'GET',
 		endpoint:'users'
 	};
 	client.request(options, function (err, data) {
@@ -165,8 +165,8 @@ function testGET(step) {
 
 function testPOST(step) {
 	var options = {
-		method:'POST', 
-		endpoint:'users', 
+		method:'POST',
+		endpoint:'users',
 		body:{ username:'fred', password:'secret' }
 	};
 	client.request(options, function (err, data) {
@@ -182,8 +182,8 @@ function testPOST(step) {
 
 function testPUT(step) {
 	var options = {
-		method:'PUT', 
-		endpoint:'users/fred', 
+		method:'PUT',
+		endpoint:'users/fred',
 		body:{ newkey:'newvalue' }
 	};
 	client.request(options, function (err, data) {
@@ -198,8 +198,8 @@ function testPUT(step) {
 }
 
 function testDELETE(step) {
-	var options = {  
-		method:'DELETE', 
+	var options = {
+		method:'DELETE',
 		endpoint:'users/fred'
 	};
 	client.request(options, function (err, data) {
@@ -209,26 +209,30 @@ function testDELETE(step) {
 			//data will contain raw results from API call
 			success('DELETE worked');
 			runner(step);
-		}    
+		}
 	});
 }
 
 function makeNewDog(step) {
-	
+
 	var options = {
 		client:client,
-		type:'dogs'					
-	}				
-	dog = new usergrid.entity(options);
-	
-	dog.set('name','Dino');
-	var data = {
-			master:'Fred',
-			state:'hungry'
+		data:{type:'dogs'}
 	}
-	
-	dog.set(data); //set is cumulative
-	
+	dog = new usergrid.entity(options);
+
+	//once the dog is created, you can set single properties:
+	dog.set('name','Dino');
+
+	//the set function can also take a JSON object:
+	var data = {
+		master:'Fred',
+		state:'hungry'
+	}
+	//set is additive, so previously set properties are not overwritten
+	dog.set(data);
+
+	//finally, call save on the object to save it back to the database
 	dog.save(function(err){
 		if (err){
 			error('dog not saved');
@@ -237,10 +241,14 @@ function makeNewDog(step) {
 			runner(step, dog);
 		}
 	});
+
 }
 
 function updateDog(step, dog) {
+
+	//change a property in the object
 	dog.set("state", "fed");
+	//and save back to the database
 	dog.save(function(err){
 		if (err){
 			error('dog not saved');
@@ -249,9 +257,12 @@ function updateDog(step, dog) {
 			runner(step, dog);
 		}
 	});
+
 }
 
 function refreshDog(step, dog){
+
+	//call fetch to refresh the data from the server
 	dog.fetch(function(err){
 		if (err){
 			error('dog not refreshed from database');
@@ -259,14 +270,15 @@ function refreshDog(step, dog){
 			//dog has been refreshed from the database
 			//will only work if the UUID for the entity is in the dog object
 			success('dog entity refreshed from database');
-			var state = dog.get("state");
-			notice('dog state: ' + state);
 			runner(step, dog);
 		}
-	}); 
+	});
+
 }
 
 function removeDogFromDatabase(step, dog){
+
+	//the destroy method will delete the entity from the database
 	dog.destroy(function(err){
 		if (err){
 			error('dog not removed from database');
@@ -275,16 +287,16 @@ function removeDogFromDatabase(step, dog){
 			dog = null; //no real dogs were harmed!
 			runner(step, 1);
 		}
-	});		
+	});
+
 }
 
 function makeSampleData(step, i) {
 	notice('making dog '+i);
 	var options = {
 		client:client,
-		type:'dogs',
-		data:{'name':'dog'+i, index:i}				
-	}	
+		data:{type:'dogs', 'name':'dog'+i, index:i}
+	}
 	dog = new usergrid.entity(options);
 	dog.save(function(err, data) {
 		if (err) {
@@ -300,23 +312,24 @@ function makeSampleData(step, i) {
 				makeSampleData(step, ++i);
 			}
 		}
-	});		
+	});
 }
 
 function testDogsCollection(step) {
-	
+
+	//options object needs to have the type and the client
 	var options = {
-		type:'dogs',
-		qs:{ql:'order by index'},
-		client:client
+		client:client,
+		path:'dogs',
+		qs:{ql:'order by index'}
 	}
-	dogs = new usergrid.collection(options, function(err) {  
-		if (err) { 
-			error('could not make collection'); 
+	dogs = new usergrid.collection(options, function(err) {
+		if (err) {
+			error('could not make collection');
 		} else {
-	  
+
 			success('new Collection worked');
-			
+
 			//we got the dogs, now display the Entities:
 			while(dogs.hasNextEntity()) {
 				//get a reference to the dog
@@ -324,17 +337,18 @@ function testDogsCollection(step) {
 				var name = dog.get('name');
 				notice('dog is called ' + name);
 			}
-			
+
 			success('looped through dogs');
-			
-			//do more things with the collection 	 
+
+			//create a new dog and add it to the collection
 			var options = {
-				type:'dogs',
-				data:{name:'extra-dog'},
-				client:client
+				client:client,
+				data:{type:'dogs', name:'extra-dog'}
 			}
 			dog = new usergrid.entity(options);
 
+			//no need to call save, just add the new entity
+			//to the collection and it is saved automatically
 			dogs.addEntity(dog, function(err, data) {
 				if (err) {
 					error('extra dog not saved or added to collection');
@@ -342,24 +356,21 @@ function testDogsCollection(step) {
 					success('extra dog saved and added to collection');
 					runner(step, dogs);
 				}
-			}); 
-
-			
+			});
 		}
 	});
+
 }
 
 function getNextDogsPage(step, dogs) {
-	//we got the dogs, now display the Entities:
 
 	if (dogs.hasNextPage()) {
+		//there is a next page, so get it from the server
 		dogs.getNextPage(function(err){
 			if (err) {
 				error('could not get next page of dogs');
 			} else {
-				
 				success('got next page of dogs');
-				
 				//we got the next page of data, so do something with it:
 				var i = 11;
 				while(dogs.hasNextEntity()) {
@@ -372,9 +383,7 @@ function getNextDogsPage(step, dogs) {
 					notice('got dog ' + i);
 					i++
 				}
-				
-				success('looped through dogs');
-				
+				success('looped through dogs')
 				runner(step, dogs);
 			}
 		});
@@ -387,13 +396,12 @@ function getNextDogsPage(step, dogs) {
 function getPreviousDogsPage(step, dogs) {
 
 	if (dogs.hasPreviousPage()) {
+		//there is a previous page, so get it from the server
 		dogs.getPreviousPage(function(err){
 			if(err) {
 				error('could not get previous page of dogs');
 			} else {
-				
 				success('got next page of dogs');
-				
 				//we got the previous page of data, so do something with it:
 				var i = 1;
 				while(dogs.hasNextEntity()) {
@@ -406,9 +414,7 @@ function getPreviousDogsPage(step, dogs) {
 					notice('got dog ' + i);
 					i++
 				}
-				
 				success('looped through dogs');
-				
 				runner(step);
 			}
 		});
@@ -420,15 +426,15 @@ function getPreviousDogsPage(step, dogs) {
 function cleanupAllDogs(step){
 
 	var options = {
-		type:'dogs',
 		client:client,
+		path:'dogs',
 		qs:{limit:50} //limit statement set to 50
 	}
-	var dogs = new usergrid.collection(options, function(err) {  
-		if (err) { 
-			error('could not get all dogs'); 
+	var dogs = new usergrid.collection(options, function(err) {
+		if (err) {
+			error('could not get all dogs');
 		} else {
-
+			success('got at most 50 dogs');
 			//we got 50 dogs, now display the Entities:
 			while(dogs.hasNextEntity()) {
 				//get a reference to the dog
@@ -436,68 +442,40 @@ function cleanupAllDogs(step){
 				var name = dog.get('name');
 				notice('dog is called ' + name);
 			}
-			
 			dogs.resetEntityPointer();
-			
 			//do doggy cleanup
 			while(dogs.hasNextEntity()) {
 				//get a reference to the dog
 				var dog = dogs.getNextEntity();
-				var name = dog.get('name'); 
+				var name = dog.get('name');
 				notice('removing dog ' + name + ' from database');
 				dog.destroy(function(err, data) {
 					if (err) {
-						error('dog ' + name + ' not removed'); 
+						error('dog ' + name + ' not removed');
 					} else {
-						success('dog ' + name + ' removed'); 
+						success('dog ' + name + ' removed');
 					}
 				});
 			}
-			
-			//no need to wait around for dogs to be removed, so go on to next test				
+
+			//no need to wait around for dogs to be removed, so go on to next test
 			runner(step);
 		}
 	});
 }
 
-	/*
-
-	var options = {
-		type:'dogs',
-		client:client,
-		qs:{ql:'order by created DESC'}
-	}
-
-	var options = {
-		type:'dogs'
-		client:client,
-		qs:{ql:'order by created DESC',limit:'100'}
-	}
-
-	var options = {
-		type:'dogs',
-		client:client,
-		qs:{ql:"select * where color='brown'"}
-	}
-
-	var options = {
-		type:'dogs',
-		client:client,
-		qs:{'ql':"select name, age where color='brown'"}
-	}
-
-
-*/
 function createUser(step) {
-	
+
+	//type is 'users'
 	var options = {
-			client:client,
-			type:'users'
+		client:client,
+		data:{type:'users'}
 	}
-	
 	var marty = new usergrid.entity(options);
+
 	//set properties individually
 	marty.set('username', 'marty');
+
 	//or use one data object
 	var data = {
 		password:'mysecurepassword',
@@ -507,15 +485,17 @@ function createUser(step) {
 	}
 	marty.set(data); //adds properties cumulatively
 
+	//then save the user to the database
 	marty.save(function(err){
 		if (err){
 			error('user not saved');
 		} else {
 			success('user saved');
-			
+
 			runner(step, marty);
 		}
 	});
+
 }
 
 function updateUser(step, marty) {
@@ -526,12 +506,14 @@ function updateUser(step, marty) {
 			error('user not updated');
 		} else {
 			success('user updated');
-			runner(step, marty)
+			runner(step, marty);s
 		}
 	});
+
 }
 
 function refreshUser(step, marty) {
+
 	marty.fetch(function(err){
 		if (err){
 			error('not refreshed');
@@ -540,6 +522,7 @@ function refreshUser(step, marty) {
 			runner(step, marty);
 		}
 	});
+
 }
 
 function loginUser(step, marty) {
@@ -550,62 +533,59 @@ function loginUser(step, marty) {
 			if (err) {
 				error('could not log user in');
 			} else {
-				//token has been automatically saved by the client 
-				// object and can be used for the next call if
-				// the authType has been set to 'APP_USER' (see below)
-				
-				
-				//to get the currently logged in user:
+				//once a user has logged in, thier user object is stored
+				//in the client and you can access it this way:
 				var user = client.user;
-				//to get their username: 
-				var username = client.user.get('username');      
-				
+
+				//so you can then get their username (or other info):
+				var username = user.get('username');
+
+				//you can also detect if the user is logged in:
 				if (client.isLoggedIn()) {
 					success('user has been logged in');
 				}
-				
 
-				//first get the token from the original client (after the user is logged in)
+				//the login call will return an OAuth token, which is saved
+				//in the client object for later use.  Access it this way:
 				var token = client.token;
-				
+
 				//then make a new client just for the app user
-				var appUserClient = new usergrid.client({ 
-					orgName:'myorg', 
-					appName:'myapp', 
-					authType:usergrid.APP_USER, 
+				var appUserClient = new usergrid.client({
+					orgName:'yourorgname',
+					appName:'yourappname',
+					authType:usergrid.APP_USER,
 					token:token
 				});
 
-				appUserClient.logout();  
+				//then use this client to make calls against the API
 
-
-				//log the user out
+				//to log the user out, call the logout() method
+				appUserClient.logout();
 				client.logout();
-				
+
 				//verify the logout worked
 				if (client.isLoggedIn()) {
 					error('logout failed');
 				} else {
 					success('user has been logged out');
 				}
-				
+
 				runner(step, marty);
-				
 			}
 		}
 	);
 }
 
 function destroyUser(step, marty) {
-	var city = marty.get("city");
+
 	marty.destroy(function(err){
 		if (err){
 			error('user not deleted from database');
 		} else {
 			success('user deleted from database');
-			marty = null;
+			marty = null; //blow away the local object
 			runner(step);
 		}
 	});
+
 }
-	
