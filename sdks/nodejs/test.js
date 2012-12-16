@@ -2,12 +2,9 @@
 * Test suite for all the examples in the readme
 *
 * NOTE: No, this test suite doesn't use the traditional format for
-* a mocha test suite.  This is because the goal is to require as little
+* a test suite.  This is because the goal is to require as little
 * alteration as possible during the copy / paste operation from this test
 * suite to the readme file.
-*
-* Run with mocha v. 1.7.x
-* http://visionmedia.github.com/mocha/
 *
 * @author rod simpson (rod@apigee.com)
 */
