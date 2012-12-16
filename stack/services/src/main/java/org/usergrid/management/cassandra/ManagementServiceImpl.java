@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -165,6 +165,7 @@ import org.usergrid.services.ServiceResults;
 import org.usergrid.utils.ConversionUtils;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.MailUtils;
+import org.usergrid.utils.StringUtils;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -220,15 +221,15 @@ public class ManagementServiceImpl implements ManagementService {
     protected LockManager lockManager;
 
     protected TokenService tokens;
-    
+
     protected SaltProvider saltProvider;
-    
+
     @Autowired
     protected MailUtils mailUtils;
-    
+
     /**
      * Must be constructed with a CassandraClientPool.
-     * 
+     *
      */
     public ManagementServiceImpl() {
     }
@@ -286,14 +287,14 @@ public class ManagementServiceImpl implements ManagementService {
                 logger.warn("Missing values for test app, check properties.  Skipping test app setup...");
                 return;
             }
-            
+
             OrganizationOwnerInfo created = createOwnerAndOrganization(test_organization_name,
                       test_admin_username, test_admin_name, test_admin_email,
                       test_admin_password, true, false);
-            
-            
-              
-              
+
+
+
+
               OrganizationInfo organization = created.getOrganization();
               createApplication(organization.getUuid(), test_app_name);
 
@@ -584,7 +585,7 @@ public class ManagementServiceImpl implements ManagementService {
      * Test if the applicationName contains a '/' character, prepend with
      * orgName if it does not, assume it is complete (and that organization is
      * needed) if so.
-     * 
+     *
      * @param applicationName
      * @param organization
      * @return
@@ -1115,7 +1116,7 @@ public class ManagementServiceImpl implements ManagementService {
         if (user == null) {
             return null;
         }
-        
+
         String mongo_pwd = readUserMongoPassword(MANAGEMENT_APPLICATION_ID, user.getUuid()).getSecret();
 
         if (mongo_pwd == null) {
@@ -1157,7 +1158,7 @@ public class ManagementServiceImpl implements ManagementService {
                 new AuthPrincipalInfo(principal_type, id, applicationId), null, duration);
 
     }
-    
+
     public void revokeTokensForPrincipal( AuthPrincipalType principalType, UUID applicationId,  UUID id) throws Exception  {
 
         if (anyNull(applicationId, principalType, id)) {
@@ -1165,7 +1166,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         AuthPrincipalInfo principal =   new AuthPrincipalInfo(principalType, id, applicationId);
-        
+
         tokens.removeTokens(principal);
     }
 
@@ -1794,21 +1795,21 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public User deactivateUser(UUID applicationId, UUID userId) throws Exception {
         EntityManager em = emf.getEntityManager(applicationId);
-        
+
         User user = em.get(userId, User.class);
-        
+
         if(user == null){
             throw new ManagementException(String.format("User with id %s does not exist in app %s", userId, applicationId));
         }
-        
+
         user.setActivated(false);
         user.setDeactivated(System.currentTimeMillis());
-        
+
         em.update(user);
-        
+
         //revoke all access tokens for the app
         revokeAccessTokensForAppUser(applicationId, userId);
-        
+
         return user;
     }
 
@@ -1852,7 +1853,7 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         em.setProperty(new SimpleEntityRef(User.ENTITY_TYPE, userId),
                 "disabled", true);
-        
+
         revokeAccessTokensForAdminUser(userId);
     }
 
@@ -2244,7 +2245,7 @@ public class ManagementServiceImpl implements ManagementService {
                 APPLICATION_USER, userId, duration);
     }
 
-    
+
     /* (non-Javadoc)
      * @see org.usergrid.management.ManagementService#revokeAccessTokensForAappUser(java.util.UUID, java.util.UUID)
      */
@@ -2284,7 +2285,7 @@ public class ManagementServiceImpl implements ManagementService {
                 user.getUuid());
         String reset_url = buildUserAppUrl(applicationId,
                 properties.getProperty(PROPERTIES_USER_RESETPW_URL),
-                user);
+                user)+"?token="+token;
 
       /*String reset_url = String.format(
                 properties.getProperty(PROPERTIES_USER_RESETPW_URL),
@@ -2395,7 +2396,7 @@ public class ManagementServiceImpl implements ManagementService {
                 user.getUuid());
         String confirmation_url = buildUserAppUrl(applicationId,
                 properties.getProperty(PROPERTIES_USER_CONFIRMATION_URL),
-                user);
+                user)+ "?token="+token;
         /*String confirmation_url = String.format(
                 properties.getProperty(PROPERTIES_USER_CONFIRMATION_URL),
                 applicationId.toString(), user.getUuid().toString())
@@ -2404,7 +2405,7 @@ public class ManagementServiceImpl implements ManagementService {
         sendAppUserEmail(
                 user,
                 "User Account Confirmation: " + user.getEmail(),
-                emailMsg(hashMap("activation_url", confirmation_url),
+                emailMsg(hashMap("confirmation_url", confirmation_url),
                         PROPERTIES_EMAIL_USER_CONFIRMATION));
 
     }
@@ -2414,10 +2415,8 @@ public class ManagementServiceImpl implements ManagementService {
       OrganizationInfo oi = getOrganizationForApplication(applicationId);
       return String.format(url,
               oi.getName(),
-              ai.getName(),
-              user.getUuid().toString())
-              + "?token="+getActivationTokenForAppUser(applicationId,
-                              user.getUuid());
+              StringUtils.stringOrSubstringAfterFirst(ai.getName(),'/'),
+              user.getUuid().toString());
     }
 
     public void sendAdminRequestAppUserActivationEmail(UUID applicationId,
@@ -2426,7 +2425,7 @@ public class ManagementServiceImpl implements ManagementService {
                 user.getUuid());
         String activation_url = buildUserAppUrl(applicationId,
                 properties.getProperty(PROPERTIES_USER_ACTIVATION_URL),
-                user);
+                user)+ "?token="+token;
         /*
         String activation_url = String.format(
                 properties.getProperty(PROPERTIES_USER_ACTIVATION_URL),
@@ -2824,7 +2823,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /**
      * Persist the user's password credentials info
-     * 
+     *
      * @param appId
      * @param owner
      * @param creds
@@ -2837,7 +2836,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /**
      * read the user password credential's info
-     * 
+     *
      * @param appId
      * @param ownerId
      * @return
@@ -2850,7 +2849,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /**
      * Write the user's token
-     * 
+     *
      * @param appId
      * @param owner
      * @param token
@@ -2863,7 +2862,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /**
      * Read the credentials info for the user's token
-     * 
+     *
      * @param appId
      * @param ownerId
      * @return
@@ -2876,7 +2875,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /**
      * Write the mongo password
-     * 
+     *
      * @param appId
      * @param owner
      * @param password
@@ -2889,7 +2888,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /**
      * Read the mongo password
-     * 
+     *
      * @param appId
      * @param ownerId
      * @return
@@ -2902,7 +2901,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /**
      * Write the user's pin
-     * 
+     *
      * @param appId
      * @param owner
      * @param pin
@@ -2915,7 +2914,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /**
      * Read the user's pin
-     * 
+     *
      * @param appId
      * @param ownerId
      * @return
@@ -2955,8 +2954,8 @@ public class ManagementServiceImpl implements ManagementService {
     public boolean newOrganizationsNeedSysAdminApproval() {
         return properties.newOrganizationsNeedSysAdminApproval();
     }
-    
-    
+
+
 
     private boolean areActivationChecksDisabled() {
         return !(newOrganizationsNeedSysAdminApproval()

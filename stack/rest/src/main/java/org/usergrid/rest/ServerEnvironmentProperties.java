@@ -7,7 +7,7 @@ public class ServerEnvironmentProperties {
   public static final String API_BASE = "swagger.basepath";
 
   public static final String RECAPTCHA_PUBLIC = "usergrid.recaptcha.public";
-  public static final String RECAPTCHA_PRIVATE = "usergrid.recaptcha.public";
+  public static final String RECAPTCHA_PRIVATE = "usergrid.recaptcha.private";
 
   public static final String REDIRECT_ROOT = "usergrid.redirect_root";
 
