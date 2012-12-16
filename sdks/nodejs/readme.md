@@ -18,7 +18,7 @@ To view the Apigee App Services documentation, see:
 
 <http://apigee.com/docs/usergrid/>
 
- 
+
 ##Installing
 Use npm:
 
@@ -33,51 +33,51 @@ Include the module:
 
 Then create a new client:
 
-	var client = new usergrid.client({ 
-		orgName:'yourorgname', 
+	var client = new usergrid.client({
+		orgName:'yourorgname',
 		appName:'sandbox',
 		logging: true, //optional - turn on logging, off by default
 	});
 
-The preceding example shows how to use the "Sandbox" testing app, which does not require any authentication.  The "Sandbox" comes with all new App Services accounts.  
+The preceding example shows how to use the "Sandbox" testing app, which does not require any authentication.  The "Sandbox" comes with all new App Services accounts.
 
 If you are ready to use authentication, then create your client this way:
 
-	var client = new usergrid.client({ 
-		orgName:'yourorgname', 
-		appName:'yourappname', 
-		authType:usergrid.AUTH_CLIENT_ID, 
-		clientId:'<your client id>', 
+	var client = new usergrid.client({
+		orgName:'yourorgname',
+		appName:'yourappname',
+		authType:usergrid.AUTH_CLIENT_ID,
+		clientId:'<your client id>',
 		clientSecret:'<your client secret>',
 		logging: false, //optional - turn on logging, off by default
 		buildCurl: false //optional - turn on curl commands, off by default
 	});
-	
+
 The last two items are optional. The **logging** option will enable console.log output from the client.  The **buildCurl** option will cause cURL equivalent commands of all calls to the API to be displayed in the console.log output.
-	
+
 **Note:** you can find your client secret and client id on the "Properties" page of the [Admin Portal](http://apigee.com/usergrid).
 
-You are now ready to use the usergrid handle to make calls against the API.  
+You are now ready to use the usergrid handle to make calls against the API.
 
 ##About the samples
-All of the samples provided in this readme file come from unit tests in the readme.js which is located in the root of this project.
+All of the samples provided in this readme file come from unit tests in the test.js which is located in the root of this project.
 
 To run this file, first do the following:
 
 1. Change the org-name and app-name to point to your Usergrid account.  Log into the [Admin Portal](http://apigee.com/usergrid) to see this information.
-2. Change the client secret and client id 
-	
+2. Change the client secret and client id
+
 Then run the code:
 
-	$ node readme.js
-	
+	$ node test.js
+
 Read through the samples in this file as they show many examples of how to use this module.
 
 ##Make some calls
 This Usergrid module uses the [request](https://github.com/mikeal/request) module by [mikeal](https://github.com/mikeal).  We expose a similar request function and a subset of the options available. This allows you to make basic calls against the API using this format:
 
 	client.request(options, callback);
-	
+
 This client.request method uses similar syntax although only the subset of options that is relevant to making calls against the App Services API. For example, to get a list of users:
 
 	client.request(options, function (err, data) {
@@ -92,8 +92,8 @@ This client.request method uses similar syntax although only the subset of optio
 Or, to create a new user:
 
 	var options = {
-		method:'POST', 
-		endpoint:'users', 
+		method:'POST',
+		endpoint:'users',
 		body:{ username:'fred', password:'secret' }
 	};
 	client.request(options, function (err, data) {
@@ -108,8 +108,8 @@ Or, to create a new user:
 Or, to update the new user:
 
 	var options = {
-		method:'PUT', 
-		endpoint:'users/fred', 
+		method:'PUT',
+		endpoint:'users/fred',
 		body:{ newkey:'newvalue' }
 	};
 	client.request(options, function (err, data) {
@@ -123,8 +123,8 @@ Or, to update the new user:
 
 Or to delete the new user:
 
-	var options = {  
-		method:'DELETE', 
+	var options = {
+		method:'DELETE',
 		endpoint:'users/fred'
 	};
 	client.request(options, function (err, data) {
@@ -133,7 +133,7 @@ Or to delete the new user:
 		} else {
 			//data will contain raw results from API call
 			success('DELETE worked');
-		}    
+		}
 	});
 
 
@@ -160,21 +160,21 @@ Use the entity object to create new entities.  It can be used by itself, or in c
 
 	var options = {
 		client:client,
-		data:{type:'dogs'}				
-	}				
+		data:{type:'dogs'}
+	}
 	var dog = new usergrid.entity(options);
-	
+
 	//once the dog is created, you can set single properties:
 	dog.set('name','Dino');
-	
+
 	//the set function can also take a JSON object:
 	var data = {
 		master:'Fred',
 		state:'hungry'
-	}	
+	}
 	//set is additive, so previously set properties are not overwritten
-	dog.set(data); 
-	
+	dog.set(data);
+
 	//finally, call save on the object to save it back to the database
 	dog.save(function(err){
 		if (err){
@@ -210,7 +210,7 @@ You can also refresh the object from the database if needed (in case the data ha
 			//will only work if the UUID for the entity is in the dog object
 			success('dog entity refreshed from database');
 		}
-	}); 
+	});
 
 To remove the entity from the database:
 
@@ -233,13 +233,13 @@ The Collection object models Collections in the database.  Once you start progra
 		client:client,
 		path:'dogs'
 	}
-	var dogs = new usergrid.collection(options, function(err) {  
-		if (err) { 
-			error('could not make collection'); 
+	var dogs = new usergrid.collection(options, function(err) {
+		if (err) {
+			error('could not make collection');
 		} else {
-	  
+
 			success('new Collection worked');
-		
+
 			//we got the dogs, now display the Entities:
 			while(dogs.hasNextEntity()) {
 				//get a reference to the dog
@@ -247,31 +247,31 @@ The Collection object models Collections in the database.  Once you start progra
 				var name = dog.get('name');
 				notice('dog is called ' + name);
 			}
-			
+
 			success('looped through dogs');
-			
+
 		}
 	});
 
 
 You can also create a new entity of the same type, and add it to the collection:
 
-	//create a new dog and add it to the collection  	 
+	//create a new dog and add it to the collection
 	var options = {
 		client:client,
 		data:{type:'dogs', name:'extra-dog'}
 	}
 	var dog = new usergrid.entity(options);
-			
+
 	//no need to call save, just add the new entity
-	//to the collection and it is saved automatically	
+	//to the collection and it is saved automatically
 	dogs.addEntity(dog, function(err, data) {
 		if (err) {
 			error('extra dog not saved or added to collection');
 		} else {
 			success('extra dog saved and added to collection');
 		}
-	}); 
+	});
 
 
 ##Collection iteration and paging
@@ -284,9 +284,9 @@ The Collection object works in Pages of data.  This means that at any given time
 		var name = dog.get('name');
 		notice('dog is called ' + name);
 	}
-	
+
 To get the next page of data from the server, use the following pattern:
-	
+
 	if (dogs.hasNextPage()) {
 		//there is a next page, so get it from the server
 		dogs.getNextPage(function(err){
@@ -329,15 +329,15 @@ You can use the same pattern to get a previous page of data:
 
 By default, the database will return 10 entities per page.  You can change that amount by setting a limit:
 
-	
+
 	var options = {
 		client:client,
 		path:'dogs',
 		qs:{limit:50} //limit statement set to 50
-	}  
-	var dogs = new usergrid.collection(options, function(err) {  
-		if (err) { 
-			error('could not get all dogs'); 
+	}
+	var dogs = new usergrid.collection(options, function(err) {
+		if (err) {
+			error('could not get all dogs');
 		} else {
 			success('got at most 50 dogs');
 		}
@@ -372,7 +372,7 @@ If you also wanted to get more entities in the result set than the default 10, s
 **Note**: there are many cases where expanding the result set is useful.  But be careful - the more results you get back in a single call, the longer it will take to transmit the data back to your app.
 
 Another common requirement is to limit the results to a specific query.  For example, to get all brown dogs, use the following syntax:
-	
+
 	dogs.qs = {ql:"select * where color='brown'"};
 
 You can also limit the results returned such that only the fields you specify are returned:
@@ -395,10 +395,10 @@ There is no specific User object in the module.  Instead, you simply need to use
 		data:{type:'users'}
 	}
 	var marty = new usergrid.entity(options);
-	
+
 	//set properties individually
 	marty.set('username', 'marty');
-	
+
 	//or use one data object
 	var data = {
 		password:'mysecurepassword',
@@ -526,20 +526,20 @@ To recap, once a user has been logged in, and an OAuth token has been acquired, 
 To log the user out, call:
 
 	client.logout();
-	
+
 Or, if you made a new client object specifically for the app user:
 
-	appUserClient.logout();	
+	appUserClient.logout();
 
 This destroys the token and user object in the client object, effectively logging the user out.
 
 
 ##Samples / Tests
-There is significant coverage of this Usergrid module in the test directory. These files are coded to run under the mocha. 
+There is significant coverage of this Usergrid module in the test directory. These files are coded to run under the mocha.
 
-For runnable samples, please see the readme.js file in the root of the project.  This file covers all the sample code in this readme file and should be run under node:
+For runnable samples, please see the test.js file in the root of the project.  This file covers all the sample code in this readme file and should be run under node:
 
-	$node readme.js
+	$node test.js
 
 
 
