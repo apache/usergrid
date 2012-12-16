@@ -66,7 +66,8 @@ Client = function(options) {
 *  @method request
 *  @public
 *  @params {object} options
-*  @return callback(err, data)
+*  @param {function} callback
+*  @return {callback} callback(err, data)
 */
 Client.prototype.request = function (options, callback) {
   var self = this;
@@ -160,7 +161,8 @@ Client.prototype.calcTimeDiff = function () {
 *  @public
 *  @params {string} username
 *  @params {string} password
-*  callback(err, data, user)
+*  @param {function} callback
+*  @return {callback} callback(err, data)
 */
 Client.prototype.login = function (username, password, callback) {
   var self = this;
@@ -193,7 +195,7 @@ Client.prototype.login = function (username, password, callback) {
 *  A public method to test if a user is logged in - does not guarantee that the token is still valid,
 *  but rather that one exists, and that there is a valid UUID
 *
-*  @method isAppUserLoggedIn
+*  @method isLoggedIn
 *  @public
 *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
 */
@@ -214,9 +216,8 @@ Client.prototype.isLoggedIn = function () {
 *
 *  @method buildCurlCall
 *  @private
-*  @param {object} Query
-*  @param {string} endpoint
-*  @return none
+*  @param {object} options
+*  @return {string} curl
 */
 Client.prototype.buildCurlCall = function (options) {
   var curl = 'curl';
@@ -247,44 +248,37 @@ Client.prototype.buildCurlCall = function (options) {
 }
 
 /**
- *  A public method to log out an app user - clears all user fields from client
- *
- *  @method logoutAppUser
- *  @public
- *  @return none
- */
+*  A public method to log out an app user - clears all user fields from client
+*
+*  @method logout
+*  @public
+*  @return none
+*/
 Client.prototype.logout = function () {
   this.user = null;
   this.token = null;
 }
 
 /**
- *  A class to Model a Usergrid Entity.
- *
- *  @class Entity
- *  @author Rod Simpson (rod@apigee.com)
- */
-
-/**
- *  Constructor for initializing an entity
- *
- *  @constructor
- *  @param {string} options - options object: {client:client, data:{'type':'collection_type'}, uuid:uuid}}
- *  @param {uuid} callback
- */
+*  A class to Model a Usergrid Entity.
+*  Set the type of entity in the 'data' json object
+*
+*  @constructor
+*  @param {object} options {client:client, data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
+*/
 Entity = function(options) {
   this._client = options.client;
   this._data = options.data || {};
 };
 
 /**
- *  gets a specific field or the entire data object. If null or no argument
- *  passed, will return all data, else, will return a specific field
- *
- *  @method get
- *  @param {string} field
- *  @return {string} || {object} data
- */
+*  gets a specific field or the entire data object. If null or no argument
+*  passed, will return all data, else, will return a specific field
+*
+*  @method get
+*  @param {string} field
+*  @return {string} || {object} data
+*/
 Entity.prototype.get = function (field) {
   if (field) {
     return this._data[field];
@@ -294,13 +288,15 @@ Entity.prototype.get = function (field) {
 }
 
 /**
- *  adds a specific key value pair or object to the Entity's data
- *
- *  @method set
- *  @param {string} key || {object}
- *  @param {string} value
- *  @return none
- */
+*  adds a specific key value pair or object to the Entity's data
+*  is additive - will not overwrite existing values unless they
+*  are explicitly specified
+*
+*  @method set
+*  @param {string} key || {object}
+*  @param {string} value
+*  @return none
+*/
 Entity.prototype.set = function (key, value) {
   if (typeof key === 'object') {
     for(var field in key) {
@@ -318,13 +314,13 @@ Entity.prototype.set = function (key, value) {
 }
 
 /**
- *  Saves the entity back to the database
- *
- *  @method save
- *  @public
- *  @param {function} callback
- *  @return none
- */
+*  Saves the entity back to the database
+*
+*  @method save
+*  @public
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
 Entity.prototype.save = function (callback) {
   //TODO:  API will be changed soon to accomodate PUTs via name which create new entities
   //       This function should be changed to PUT only at that time, and updated to use
@@ -396,13 +392,13 @@ Entity.prototype.save = function (callback) {
 }
 
 /**
- *  refreshes the entity by making a GET call back to the database
- *
- *  @method fetch
- *  @public
- *  @param {function} callback
- *  @return none
- */
+*  refreshes the entity by making a GET call back to the database
+*
+*  @method fetch
+*  @public
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
 Entity.prototype.fetch = function (callback) {
   var type = this.get('type');
   var self = this;
@@ -459,14 +455,15 @@ Entity.prototype.fetch = function (callback) {
 }
 
 /**
- *  deletes the entity from the database - will only delete
- *  if the object has a valid uuid
- *
- *  @method destroy
- *  @public
- *  @param {function} callback(err, data)
- *
- */
+*  deletes the entity from the database - will only delete
+*  if the object has a valid uuid
+*
+*  @method destroy
+*  @public
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*
+*/
 Entity.prototype.destroy = function (callback) {
   var type = this.get('type');
   if (isUUID(this.get('uuid'))) {
@@ -500,17 +497,15 @@ Entity.prototype.destroy = function (callback) {
 
 
 /**
- *  The Collection class models Usergrid Collections.  It essentially
- *  acts as a container for holding Entity objects, while providing
- *  additional funcitonality such as paging, and saving
- *
- *  @class Collection
- *  @author Rod Simpson (rod@apigee.com)
- *
- *  @constructor
- *  @param {string} options - configuration object
- *  @param {uuid} callback(err, data)
- */
+*  The Collection class models Usergrid Collections.  It essentially
+*  acts as a container for holding Entity objects, while providing
+*  additional funcitonality such as paging, and saving
+*
+*  @constructor
+*  @param {string} options - configuration object
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
 Collection = function(options, callback) {
   this._client = options.client;
   this._path = options.path;
@@ -574,11 +569,12 @@ Collection = function(options, callback) {
 }
 
 /**
- *
- *
- *  @method
- *  @return
- */
+*  Populates the collection from the server
+*
+*  @method fetch
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
 Collection.prototype.fetch = function (callback) {
   var self = this;
   var qs = this.qs;
@@ -629,12 +625,13 @@ Collection.prototype.fetch = function (callback) {
 }
 
 /**
- *  Adds a new Entity to the collection (saves, then adds to the local object)
- *
- *  @method addNewEntity
- *  @param {object} entity
- *  @return none
- */
+*  Adds a new Entity to the collection (saves, then adds to the local object)
+*
+*  @method addNewEntity
+*  @param {object} entity
+*  @param {function} callback
+*  @return {callback} callback(err, data, entity)
+*/
 Collection.prototype.addEntity = function (entity, callback) {
   var self = this;
   if (entity.get('type') !== this._path) {
@@ -657,13 +654,13 @@ Collection.prototype.addEntity = function (entity, callback) {
 }
 
 /**
- *  Removes the Entity from the collection, then destroys the object on the server
- *
- *  @method destroyEntity
- *  @param {object} entity
- *  @param {callback} callback
- *  @return none
- */
+*  Removes the Entity from the collection, then destroys the object on the server
+*
+*  @method destroyEntity
+*  @param {object} entity
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
 Collection.prototype.destroyEntity = function (entity, callback) {
   var self = this;
   entity.destroy(function(err, data) {
@@ -682,13 +679,13 @@ Collection.prototype.destroyEntity = function (entity, callback) {
 }
 
 /**
- *  Looks up an Entity by UUID, tries to find it in the local collection first
- *  if not found, will go to the server
- *
- *  @method getEntityByUUID
- *  @param {string} UUID
- *  @return {callback} callback(err, data, entity)
- */
+*  Looks up an Entity by UUID
+*
+*  @method getEntityByUUID
+*  @param {string} UUID
+*  @param {function} callback
+*  @return {callback} callback(err, data, entity)
+*/
 Collection.prototype.getEntityByUUID = function (uuid, callback) {
   //get the entity from the database
   var options = {
@@ -703,11 +700,11 @@ Collection.prototype.getEntityByUUID = function (uuid, callback) {
 }
 
 /**
- *  Returns the first Entity of the Entity list - does not affect the iterator
- *
- *  @method getFirstEntity
- *  @return {object} returns an entity object
- */
+*  Returns the first Entity of the Entity list - does not affect the iterator
+*
+*  @method getFirstEntity
+*  @return {object} returns an entity object
+*/
 Collection.prototype.getFirstEntity = function () {
   var count = this._list.length;
   if (count > 0) {
@@ -717,11 +714,11 @@ Collection.prototype.getFirstEntity = function () {
 }
 
 /**
- *  Returns the last Entity of the Entity list - does not affect the iterator
- *
- *  @method getLastEntity
- *  @return {object} returns an entity object
- */
+*  Returns the last Entity of the Entity list - does not affect the iterator
+*
+*  @method getLastEntity
+*  @return {object} returns an entity object
+*/
 Collection.prototype.getLastEntity = function () {
   var count = this._list.length;
   if (count > 0) {
@@ -731,14 +728,14 @@ Collection.prototype.getLastEntity = function () {
 }
 
 /**
- *  Entity iteration -Checks to see if there is a "next" entity
- *  in the list.  The first time this method is called on an entity
- *  list, or after the resetEntityPointer method is called, it will
- *  return true referencing the first entity in the list
- *
- *  @method hasNextEntity
- *  @return {boolean} true if there is a next entity, false if not
- */
+*  Entity iteration -Checks to see if there is a "next" entity
+*  in the list.  The first time this method is called on an entity
+*  list, or after the resetEntityPointer method is called, it will
+*  return true referencing the first entity in the list
+*
+*  @method hasNextEntity
+*  @return {boolean} true if there is a next entity, false if not
+*/
 Collection.prototype.hasNextEntity = function () {
   var next = this._iterator + 1;
   var hasNextElement = (next >=0 && next < this._list.length);
@@ -749,14 +746,14 @@ Collection.prototype.hasNextEntity = function () {
 }
 
 /**
- *  Entity iteration - Gets the "next" entity in the list.  The first
- *  time this method is called on an entity list, or after the method
- *  resetEntityPointer is called, it will return the,
- *  first entity in the list
- *
- *  @method hasNextEntity
- *  @return {object} entity
- */
+*  Entity iteration - Gets the "next" entity in the list.  The first
+*  time this method is called on an entity list, or after the method
+*  resetEntityPointer is called, it will return the,
+*  first entity in the list
+*
+*  @method hasNextEntity
+*  @return {object} entity
+*/
 Collection.prototype.getNextEntity = function () {
   this._iterator++;
   var hasNextElement = (this._iterator >= 0 && this._iterator <= this._list.length);
@@ -767,12 +764,12 @@ Collection.prototype.getNextEntity = function () {
 }
 
 /**
- *  Entity iteration - Checks to see if there is a "previous"
- *  entity in the list.
- *
- *  @method hasPrevEntity
- *  @return {boolean} true if there is a previous entity, false if not
- */
+*  Entity iteration - Checks to see if there is a "previous"
+*  entity in the list.
+*
+*  @method hasPrevEntity
+*  @return {boolean} true if there is a previous entity, false if not
+*/
 Collection.prototype.hasPrevEntity = function () {
   var previous = this._iterator - 1;
   var hasPreviousElement = (previous >=0 && previous < this._list.length);
@@ -783,11 +780,11 @@ Collection.prototype.hasPrevEntity = function () {
 }
 
 /**
- *  Entity iteration - Gets the "previous" entity in the list.
- *
- *  @method getPrevEntity
- *  @return {object} entity
- */
+*  Entity iteration - Gets the "previous" entity in the list.
+*
+*  @method getPrevEntity
+*  @return {object} entity
+*/
 Collection.prototype.getPrevEntity = function () {
    this._iterator--;
    var hasPreviousElement = (this._iterator >= 0 && this._iterator <= this._list.length);
@@ -798,12 +795,12 @@ Collection.prototype.getPrevEntity = function () {
 }
 
 /**
- *  Entity iteration - Resets the iterator back to the beginning
- *  of the list
- *
- *  @method resetEntityPointer
- *  @return none
- */
+*  Entity iteration - Resets the iterator back to the beginning
+*  of the list
+*
+*  @method resetEntityPointer
+*  @return none
+*/
 Collection.prototype.resetEntityPointer = function () {
    this._iterator  = -1;
 }
@@ -836,23 +833,24 @@ Collection.prototype.resetPaging = function() {
 }
 
 /**
- *  Paging -  checks to see if there is a next page od data
- *
- *  @method hasNextPage
- *  @return {boolean} returns true if there is a next page of data, false otherwise
- */
+*  Paging -  checks to see if there is a next page od data
+*
+*  @method hasNextPage
+*  @return {boolean} returns true if there is a next page of data, false otherwise
+*/
 Collection.prototype.hasNextPage = function () {
   return (this._next);
 }
 
 /**
- *  Paging - advances the cursor and gets the next
- *  page of data from the API.  Stores returned entities
- *  in the Entity list.
- *
- *  @method getNextPage
- *  @return none
- */
+*  Paging - advances the cursor and gets the next
+*  page of data from the API.  Stores returned entities
+*  in the Entity list.
+*
+*  @method getNextPage
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
 Collection.prototype.getNextPage = function (callback) {
   if (this.hasNextPage()) {
     //set the cursor to the next page of data
@@ -865,23 +863,24 @@ Collection.prototype.getNextPage = function (callback) {
 }
 
 /**
- *  Paging -  checks to see if there is a previous page od data
- *
- *  @method hasPreviousPage
- *  @return {boolean} returns true if there is a previous page of data, false otherwise
- */
+*  Paging -  checks to see if there is a previous page od data
+*
+*  @method hasPreviousPage
+*  @return {boolean} returns true if there is a previous page of data, false otherwise
+*/
 Collection.prototype.hasPreviousPage = function () {
   return (this._previous.length > 0);
 }
 
 /**
- *  Paging - reverts the cursor and gets the previous
- *  page of data from the API.  Stores returned entities
- *  in the Entity list.
- *
- *  @method getPreviousPage
- *  @return none
- */
+*  Paging - reverts the cursor and gets the previous
+*  page of data from the API.  Stores returned entities
+*  in the Entity list.
+*
+*  @method getPreviousPage
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
 Collection.prototype.getPreviousPage = function (callback) {
   if (this.hasPreviousPage()) {
     this._next=null; //clear out next so the comparison will find the next item
@@ -892,15 +891,14 @@ Collection.prototype.getPreviousPage = function (callback) {
   }
 }
 
-
 /**
-  * Tests if the string is a uuid
-  *
-  * @public
-  * @method isUUID
-  * @param {string} uuid The string to test
-  * @returns {Boolean} true if string is uuid
-  */
+* Tests if the string is a uuid
+*
+* @public
+* @method isUUID
+* @param {string} uuid The string to test
+* @returns {Boolean} true if string is uuid
+*/
 function isUUID (uuid) {
   var uuidValueRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
   if (!uuid) return false;

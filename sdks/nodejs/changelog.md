@@ -4,3 +4,5 @@
 - Complete refactor of the entire module
 
 - Added Mocha based test suite
+
+- Added full coverage of all sample code in the readme file
