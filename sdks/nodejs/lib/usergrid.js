@@ -44,11 +44,12 @@ Client = function(options) {
   
   //other options
   this.buildCurl = options.buildCurl || false;
+  this.logging = options.logging || false;
   
   //timeout and callbacks
   this._callTimeout =  options.callTimeout || 30000; //default to 30 seconds
   this._callTimeoutCallback =  options.callTimeoutCallback || null;
-  this.logoutCallback =  options.logoutCallback || null;
+  this.loggingoutCallback =  options.logoutCallback || null;
    
 };
 
@@ -85,11 +86,11 @@ Client.prototype.request = function (options, callback){
     qs['client_secret'] = this.clientSecret;
   } else if (this.authType === AUTH_APP_USER) {
     qs['access_token'] = this.token;     
-  } else {
-    //fine if only hitting sandbox app, where no credentials are required
-    console.log('no authType specified'); 
-  }  
-  console.log('calling: ' + method + ' ' + uri); 
+  } 
+
+  if (this.logging) {  
+  	console.log('calling: ' + method + ' ' + uri); 
+	}
   this._start = new Date().getTime();
   var callOptions = { 
     method: method, 
@@ -104,7 +105,9 @@ Client.prototype.request = function (options, callback){
     }
     self._end = new Date().getTime();
     if(r.statusCode === 200){
-      console.log('success (time: ' + self.calcTimeDiff() + '): ' + method + ' ' + uri); 
+    	if (self.logging) {
+      	console.log('success (time: ' + self.calcTimeDiff() + '): ' + method + ' ' + uri); 
+			}
       callback(err, data);        
     } else {
       err = true;         
@@ -115,17 +118,21 @@ Client.prototype.request = function (options, callback){
         //this error type means the user is not authorized. If a logout function is defined, call it
         var error = r.body.error;
         var errorDesc = r.body.error_description;
-        console.log('Error ('+ r.statusCode+')(' + error + '): ' + errorDesc)
+        if (self.logging) {
+        	console.log('Error ('+ r.statusCode+')(' + error + '): ' + errorDesc)
+				}
         //if the user has specified a logout callback:
-        if (typeof(self.logoutCallback) === 'function') {
-          self.logoutCallback(err, data);
+        if (typeof(self.loggingoutCallback) === 'function') {
+          self.loggingoutCallback(err, data);
         } else  if (typeof(callback) === 'function') {
           callback(err, data);            
         } 
       } else {
         var error = r.body.error;
         var errorDesc = r.body.error_description;
-        console.log('Error ('+ r.statusCode +')(' + error + '): ' + errorDesc);
+        if (self.logging) {
+        	console.log('Error ('+ r.statusCode +')(' + error + '): ' + errorDesc);
+				}
         if (typeof(callback) === 'function') {
           callback(err, data);            
         }   
@@ -168,7 +175,7 @@ Client.prototype.login = function (username, password, callback){
   };
   this.request(options, function(err, data) {
     var user = {};
-    if (err) {
+    if (err && self.logging) {
       console.log('error trying to log user in'); 
     } else {
       user = new Entity('users');
@@ -190,7 +197,7 @@ Client.prototype.login = function (username, password, callback){
 *  @public
 *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
 */
-Client.prototype.isAppUserLoggedIn = function (){
+Client.prototype.isLoggedIn = function (){
   var user = this.user;
   var haveUser = (user && this.token);
   if (!haveUser) {
@@ -246,7 +253,7 @@ Client.prototype.buildCurlCall = function (options) {
  *  @public
  *  @return none
  */
-Client.prototype.logoutAppUser = function (){
+Client.prototype.logout = function (){
   this.user = null;
   this.token = null;
 }
@@ -346,7 +353,7 @@ Entity.prototype.save = function (callback){
     body:data
   };
   this._client.request(options, function (err, retdata) {
-    if (err) {
+    if (err && self.client.log) {
       console.log('could not save entity');
       if (typeof(callback) === 'function'){
         return callback(err, retdata);
@@ -371,7 +378,7 @@ Entity.prototype.save = function (callback){
             body:pwdata
           },
           function (err, data) {
-            if (err) {
+            if (err && self.client.log) {
               console.log('could not update user'); 
             }
             //remove old and new password fields so they don't end up as part of the entity object
@@ -411,7 +418,9 @@ Entity.prototype.fetch = function (callback){
       } else {
         if (typeof(callback) === 'function'){
           var error = 'cannot fetch entity, no username specified';
-          console.log(error); 
+          if (self.client.log) {
+          	console.log(error); 
+					}
           return callback(true, error, self)
         }
       }
@@ -421,7 +430,9 @@ Entity.prototype.fetch = function (callback){
       } else {
         if (typeof(callback) === 'function'){
           var error = 'cannot fetch entity, no name specified';
-          console.log(error); 
+          if (self.client.log) {
+          	console.log(error); 
+					}
           return callback(true, error, self)
         }
       }
@@ -432,7 +443,7 @@ Entity.prototype.fetch = function (callback){
     endpoint:path
   };
   this._client.request(options, function (err, data) {
-    if (err) {
+    if (err && self.client.log) {
       console.log('could not get entity');
     } else {
       if (data.user) {
@@ -464,7 +475,9 @@ Entity.prototype.destroy = function (callback){
   } else {
     if (typeof(callback) === 'function'){
       var error = 'Error trying to delete object - no uuid specified.';
-      console.log(error); 
+      if (self.client.log) {
+      	console.log(error); 
+			}
       callback(true, error);
     }
   }
@@ -474,7 +487,7 @@ Entity.prototype.destroy = function (callback){
     endpoint:path
   };
   this._client.request(options, function (err, data) {
-    if (err) {
+    if (err && self.client.log) {
       console.log('entity could not be deleted');
     } else {
       self.set(null); 
@@ -523,7 +536,7 @@ Collection = function(options, callback) {
     endpoint:''
   };
   this._client.request(callOptions, function (err, data) {
-    if (err) {
+    if (err && self.client.log) {
       console.log('error getting collections - check options passed to client');  
       if (typeof(callback) === 'function') {
         return callback(err, data);      
@@ -548,8 +561,8 @@ Collection = function(options, callback) {
             qs:self._qs
           },
           function (err, data) {
-            if (!err) {
-              console.log('collection created'); 
+            if (err && self.client.log) {
+              console.log('error: collection not created'); 
             }
             if (typeof(callback) === 'function') {
               callback(err, data);
@@ -570,7 +583,6 @@ Collection = function(options, callback) {
 Collection.prototype.fetch = function (callback){
   var self = this;
   var qs = this._qs;
-  console.log('fetching');
   
   //add in the cursor if one is available
   if (this._cursor) {
@@ -584,7 +596,7 @@ Collection.prototype.fetch = function (callback){
     qs:this._qs
   };
   this._client.request(options, function (err, data) {
-    if(err) {
+    if(err && self.client.log) {
      console.log('error getting collection'); 
     } else {
       //save the cursor if there is one
@@ -651,7 +663,9 @@ Collection.prototype.destroyEntity = function (entity, callback) {
   var self = this;
   entity.destroy(function(err, data){
     if (err) {
-      console.log('could not destroy entity');
+    	if (self.client.log) {
+      	console.log('could not destroy entity');
+			}
       if (typeof(callback) === 'function') { 
         callback(err, data);
       }
