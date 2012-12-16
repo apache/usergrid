@@ -352,7 +352,7 @@ Entity.prototype.save = function (callback) {
     body:data
   };
   this._client.request(options, function (err, retdata) {
-    if (err && self.client.log) {
+    if (err && self._client.logging) {
       console.log('could not save entity');
       if (typeof(callback) === 'function') {
         return callback(err, retdata);
@@ -377,7 +377,7 @@ Entity.prototype.save = function (callback) {
             body:pwdata
           },
           function (err, data) {
-            if (err && self.client.log) {
+            if (err && self._client.logging) {
               console.log('could not update user');
             }
             //remove old and new password fields so they don't end up as part of the entity object
@@ -417,7 +417,7 @@ Entity.prototype.fetch = function (callback) {
       } else {
         if (typeof(callback) === 'function') {
           var error = 'cannot fetch entity, no username specified';
-          if (self.client.log) {
+          if (self._client.logging) {
           	console.log(error);
 					}
           return callback(true, error, self)
@@ -429,7 +429,7 @@ Entity.prototype.fetch = function (callback) {
       } else {
         if (typeof(callback) === 'function') {
           var error = 'cannot fetch entity, no name specified';
-          if (self.client.log) {
+          if (self._client.logging) {
           	console.log(error);
 					}
           return callback(true, error, self)
@@ -442,7 +442,7 @@ Entity.prototype.fetch = function (callback) {
     endpoint:type
   };
   this._client.request(options, function (err, data) {
-    if (err && self.client.log) {
+    if (err && self._client.logging) {
       console.log('could not get entity');
     } else {
       if (data.user) {
@@ -474,7 +474,7 @@ Entity.prototype.destroy = function (callback) {
   } else {
     if (typeof(callback) === 'function') {
       var error = 'Error trying to delete object - no uuid specified.';
-      if (self.client.log) {
+      if (self._client.logging) {
       	console.log(error);
 			}
       callback(true, error);
@@ -486,7 +486,7 @@ Entity.prototype.destroy = function (callback) {
     endpoint:type
   };
   this._client.request(options, function (err, data) {
-    if (err && self.client.log) {
+    if (err && self._client.logging) {
       console.log('entity could not be deleted');
     } else {
       self.set(null);
@@ -535,7 +535,7 @@ Collection = function(options, callback) {
     endpoint:''
   };
   this._client.request(callOptions, function (err, data) {
-    if (err && self.client.log) {
+    if (err && self._client.logging) {
       console.log('error getting collections - check options passed to client');
       if (typeof(callback) === 'function') {
         return callback(err, data);
@@ -560,7 +560,7 @@ Collection = function(options, callback) {
             qs:self.qs
           },
           function (err, data) {
-            if (err && self.client.log) {
+            if (err && self._client.logging) {
               console.log('error: collection not created');
             }
             if (typeof(callback) === 'function') {
@@ -595,7 +595,7 @@ Collection.prototype.fetch = function (callback) {
     qs:this.qs
   };
   this._client.request(options, function (err, data) {
-    if(err && self.client.log) {
+    if(err && self._client.logging) {
      console.log('error getting collection');
     } else {
       //save the cursor if there is one
@@ -668,7 +668,7 @@ Collection.prototype.destroyEntity = function (entity, callback) {
   var self = this;
   entity.destroy(function(err, data) {
     if (err) {
-    	if (self.client.log) {
+    	if (self._client.logging) {
       	console.log('could not destroy entity');
 			}
       if (typeof(callback) === 'function') {

@@ -1,27 +1,27 @@
 /**
 * Test suite for Client object
-* 
+*
 * @author rod simpson (rod@apigee.com)
 */
 //require('assert');
 require('should');
 var usergrid = require('../lib/usergrid.js');
-  
+
 //first set up the client
-var client = new usergrid.client(
-  { 
+var myclient = new usergrid.client(
+  {
     orgName:"1hotrod"
   , appName:"sandbox"
   , authType:"CLIENT_ID"
   , clientId:"b3U6y6hRJufDEeGW9hIxOwbREg"
   , clientSecret:"b3U6X__fN2l9vd1HVi1kM9nJvgc-h5k"
-  } 
+  }
 );
 
 describe('Standard Requests', function(){
   describe('DELETE Method', function(){
     it('should DELETE without error', function(done){
-      client.request(
+      myclient.request(
         { method:"DELETE"
         , endpoint:"users/aaaaaa"
         } ,done);
@@ -33,15 +33,15 @@ describe('Standard Requests', function(){
         method:"DELETE"
         , uri:"https://api.usergrid.com/1hotrod/sandbox/users/aaaaaa"
       }
-      var curl = client.buildCurlCall(options);
+      var curl = myclient.buildCurlCall(options);
       curl.should.equal('curl -X DELETE https://api.usergrid.com/1hotrod/sandbox/users/aaaaaa');
     });
   });
-  
-  
+
+
   describe('POST Method', function(){
     it('should POST without error', function(done){
-      client.request(
+      myclient.request(
         { method:"POST"
         , endpoint:"users"
         , body:{'username':'aaaaaa', 'password':'abcd1234'}
@@ -55,15 +55,15 @@ describe('Standard Requests', function(){
         , uri:"https://api.usergrid.com/1hotrod/sandbox/users"
         , body:{'username':'aaaaaa', 'password':'abcd1234'}
       }
-      var curl = client.buildCurlCall(options);
+      var curl = myclient.buildCurlCall(options);
       curl.should.equal("curl -X POST https://api.usergrid.com/1hotrod/sandbox/users -d '{\"username\":\"aaaaaa\",\"password\":\"abcd1234\"}'");
     });
   });
-  
-  
+
+
   describe('PUT Method', function(){
     it('should PUT without error', function(done){
-      client.request(
+      myclient.request(
         { method:"PUT"
         , endpoint:"users/aaaaaa"
         , body:{'fred':'value'}
@@ -77,15 +77,15 @@ describe('Standard Requests', function(){
         , uri:"https://api.usergrid.com/1hotrod/sandbox/users"
         , body:{'fred':'value'}
       }
-      var curl = client.buildCurlCall(options);
+      var curl = myclient.buildCurlCall(options);
       curl.should.equal("curl -X PUT https://api.usergrid.com/1hotrod/sandbox/users -d '{\"fred\":\"value\"}'");
     });
   });
-  
-  
+
+
   describe('GET Method', function(){
     it('should GET without error', function(done){
-      client.request(
+      myclient.request(
         { method:"GET"
         , endpoint:"users/aaaaaa"
         } ,done);
@@ -97,64 +97,64 @@ describe('Standard Requests', function(){
         method:"GET"
         , uri:"https://api.usergrid.com/1hotrod/sandbox/users/aaaaaa"
       }
-      var curl = client.buildCurlCall(options);
+      var curl = myclient.buildCurlCall(options);
       curl.should.equal('curl -X GET https://api.usergrid.com/1hotrod/sandbox/users/aaaaaa');
     });
   });
-  
+
   describe('Login Method', function(){
     it('should Login without error and get token', function(done){
-      client.login('aaaaaa', 'abcd1234', function(err){
+      myclient.login('aaaaaa', 'abcd1234', function(err){
         if (err) throw err;
-        
+
         //test the token first
-        var token = client.token;
-        client.should.have.property('token');
-        
+        var token = myclient.token;
+        myclient.should.have.property('token');
+
         //make sure we get a user back
-        var user = client.user; 
+        var user = myclient.user;
         var data = user.get();
         data.should.have.property('username');
-  
+
         //test for logged in user
-        if (!client.isAppUserLoggedIn()) throw err;
-        
+        if (!myclient.isLoggedIn()) throw err;
+
         //make a query with the app users token
-        client.authType = usergrid.APP_USER;
-        
+        myclient.authType = usergrid.APP_USER;
+
         //do a get on /users
         describe('GET Method', function(){
           it('should GET without error', function(done){
-            client.request(
+            myclient.request(
               { method:"GET"
               , endpoint:"users"
               } ,done);
           });
         });
-        
-        //go back to the 
-        client.authType = usergrid.AUTH_CLIENT_ID;
-        
+
+        //go back to the
+        myclient.authType = usergrid.AUTH_CLIENT_ID;
+
         //erase the token
-        client.token = null;
-        if (client.isAppUserLoggedIn()) throw err;
-        
+        myclient.token = null;
+        if (myclient.isLoggedIn()) throw err;
+
         //reset the token
-        client.token = token;
-        if (!client.isAppUserLoggedIn()) throw err;
-        
+        myclient.token = token;
+        if (!myclient.isLoggedIn()) throw err;
+
         //clear the logged in user
-        client.user = null;
-        if (client.isAppUserLoggedIn()) throw err;
-        
+        myclient.user = null;
+        if (myclient.isLoggedIn()) throw err;
+
         //replace the logged in user
-        client.user = user;
-        if (!client.isAppUserLoggedIn()) throw err;
-        
+        myclient.user = user;
+        if (!myclient.isLoggedIn()) throw err;
+
         //log the user out
-        client.logoutAppUser();
-        if (client.isAppUserLoggedIn()) throw err;
-        
+        myclient.logout();
+        if (myclient.isLoggedIn()) throw err;
+
         //tests finished
         done();
       });

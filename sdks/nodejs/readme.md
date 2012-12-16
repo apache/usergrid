@@ -60,19 +60,19 @@ The last two items are optional. The **logging** option will enable console.log 
 You are now ready to use the usergrid handle to make calls against the API.  
 
 ##About the samples
-All of the samples provided in this file come from unit tests located in this file:
+All of the samples provided in this readme file come from unit tests in the readme.js which is located in the root of this project.
 
-	test/readme.js 
-
-Review and run this file to see Usergrid in action.  Make sure you do the following first:
+To run this file, first do the following:
 
 1. Change the org-name and app-name to point to your Usergrid account.  Log into the [Admin Portal](http://apigee.com/usergrid) to see this information.
 2. Change the client secret and client id 
 	
 Then run the code:
 
-	$ node test/readme.js
+	$ node readme.js
 	
+Read through the samples in this file as they show many examples of how to use this module.
+
 ##Make some calls
 This Usergrid module uses the [request](https://github.com/mikeal/request) module by [mikeal](https://github.com/mikeal).  We expose a similar request function and a subset of the options available. This allows you to make basic calls against the API using this format:
 
@@ -162,7 +162,7 @@ Use the entity object to create new entities.  It can be used by itself, or in c
 		client:client,
 		data:{type:'dogs'}				
 	}				
-	dog = new usergrid.entity(options);
+	var dog = new usergrid.entity(options);
 	
 	//once the dog is created, you can set single properties:
 	dog.set('name','Dino');
@@ -233,7 +233,7 @@ The Collection object models Collections in the database.  Once you start progra
 		client:client,
 		path:'dogs'
 	}
-	dogs = new usergrid.collection(options, function(err) {  
+	var dogs = new usergrid.collection(options, function(err) {  
 		if (err) { 
 			error('could not make collection'); 
 		} else {
@@ -261,7 +261,7 @@ You can also create a new entity of the same type, and add it to the collection:
 		client:client,
 		data:{type:'dogs', name:'extra-dog'}
 	}
-	dog = new usergrid.entity(options);
+	var dog = new usergrid.entity(options);
 			
 	//no need to call save, just add the new entity
 	//to the collection and it is saved automatically	
@@ -519,7 +519,7 @@ After this statement is called, all calls will use the user token instead of the
 
 With this setting enabled, no authentication will be provided to the database. You will likely only use this setting if you are testing with the Sandbox app.
 
-To recap, once a user has been logged in, and an OAuth token has been aquired, use one of the two methods to make calls to the API: 1.) use the same client object and change auth types before each call, or, 2.) make a new client object for user calls.  Either method will work.
+To recap, once a user has been logged in, and an OAuth token has been acquired, use one of the two methods to make calls to the API: 1.) use the same client object and change auth types before each call, or, 2.) make a new client object for user calls.  Either method will work.
 
 
 ###To log a user out
@@ -535,11 +535,12 @@ This destroys the token and user object in the client object, effectively loggin
 
 
 ##Samples / Tests
-There is significant coverage of this Usergrid module in the test directory. These files are coded to run under the mocha. Of specific interest is the test/readme.js file, which is designed to be run under node:
+There is significant coverage of this Usergrid module in the test directory. These files are coded to run under the mocha. 
 
-	$node test/readme.js
+For runnable samples, please see the readme.js file in the root of the project.  This file covers all the sample code in this readme file and should be run under node:
 
-This file contains all the examples shown in this readme file in a test format.  Read these to learn more about using the Usergrid Node.js module.
+	$node readme.js
+
 
 
 ## Contributing

@@ -13,7 +13,7 @@
 */
 
 
-var usergrid = require('../lib/usergrid');
+var usergrid = require('./lib/usergrid');
 
 var logSuccess = true;
 var successCount = 0;
@@ -219,7 +219,7 @@ function makeNewDog(step) {
 		client:client,
 		data:{type:'dogs'}
 	}
-	dog = new usergrid.entity(options);
+	var dog = new usergrid.entity(options);
 
 	//once the dog is created, you can set single properties:
 	dog.set('name','Dino');
@@ -297,7 +297,7 @@ function makeSampleData(step, i) {
 		client:client,
 		data:{type:'dogs', 'name':'dog'+i, index:i}
 	}
-	dog = new usergrid.entity(options);
+	var dog = new usergrid.entity(options);
 	dog.save(function(err, data) {
 		if (err) {
 			error('sample data not loaded on ');
@@ -345,7 +345,7 @@ function testDogsCollection(step) {
 				client:client,
 				data:{type:'dogs', name:'extra-dog'}
 			}
-			dog = new usergrid.entity(options);
+			var dog = new usergrid.entity(options);
 
 			//no need to call save, just add the new entity
 			//to the collection and it is saved automatically
@@ -506,7 +506,7 @@ function updateUser(step, marty) {
 			error('user not updated');
 		} else {
 			success('user updated');
-			runner(step, marty);s
+			runner(step, marty);
 		}
 	});
 
