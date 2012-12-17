@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,25 +26,39 @@ import static org.usergrid.management.AccountCreationProps.*;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
+import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Store;
 import javax.mail.internet.MimeMultipart;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
+import org.codehaus.jackson.JsonNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.Identifier;
+import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.CassandraService;
+import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
+import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.entities.User;
+
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class EmailFlowTest {
 
@@ -259,4 +273,115 @@ public class EmailFlowTest {
 			assertNotSame(propertyValue, resolvedString);
 		}
 	}
+
+    @Test
+    public void testAppUserActivationResetpwdMail() throws Exception {
+
+
+    	ApplicationInfo appInfo = management.getApplicationInfo("test-organization/test-app");
+		User user = setupAppUser(appInfo.getId(),"registration_requires_admin_approval", Boolean.TRUE,
+				"testAppUserMailUrl", "testAppUserMailUrl@test.com", false);
+
+		String subject = "Request For User Account Activation testAppUserMailUrl@test.com";
+		String activation_url = String.format(properties.getProperty(PROPERTIES_USER_ACTIVATION_URL), "test-organization", "test-app", user.getUuid().toString());
+		//Activation
+		management.startAppUserActivationFlow(appInfo.getId(), user);
+
+		List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get("test@usergrid.com");
+		assertFalse(inbox.isEmpty());
+		MockImapClient client = new MockImapClient("usergrid.com","test", "somepassword");
+		client.processMail();
+
+		// subject ok
+		Message account_activation_message = inbox.get(0);
+		assertEquals(subject, account_activation_message.getSubject());
+
+		// activation url ok
+		String mailContent = (String)((MimeMultipart)account_activation_message.getContent()).getBodyPart(1).getContent();
+	    logger.info(mailContent);
+	    assertTrue(StringUtils.contains(mailContent, activation_url));
+
+	    // token ok
+	    String token = getTokenFromMessage(account_activation_message);
+		logger.info(token);
+		ActivationState activeState = management.handleActivationTokenForAppUser(appInfo.getId(), user.getUuid(), token);
+		assertEquals(ActivationState.ACTIVATED, activeState);
+
+	    subject = "Password Reset";
+	    String reset_url = String.format(properties.getProperty(PROPERTIES_USER_RESETPW_URL), "test-organization", "test-app", user.getUuid().toString());
+	    // reset_pwd
+	    management.startAppUserPasswordResetFlow(appInfo.getId(), user);
+
+
+		inbox = org.jvnet.mock_javamail.Mailbox.get("testAppUserMailUrl@test.com");
+		assertFalse(inbox.isEmpty());
+		client = new MockImapClient("test.com",	"testAppUserMailUrl", "somepassword");
+		client.processMail();
+
+		// subject ok
+		Message password_reset_message = inbox.get(1);
+		assertEquals(subject, password_reset_message.getSubject());
+
+		// resetpwd url ok
+		mailContent = (String)((MimeMultipart)password_reset_message.getContent()).getBodyPart(1).getContent();
+	    logger.info(mailContent);
+	    assertTrue(StringUtils.contains(mailContent, reset_url));
+
+	    // token ok
+	    token = getTokenFromMessage(password_reset_message);
+		logger.info(token);
+	    assertTrue(management.checkPasswordResetTokenForAppUser(appInfo.getId(), user.getUuid(), token));
+
+    }
+
+    @Test
+    public void testAppUserConfirmationMail() throws Exception {
+
+    	ApplicationInfo appInfo = management.getApplicationInfo("test-organization/test-app");
+		User user = setupAppUser(appInfo.getId(),"registration_requires_email_confirmation", Boolean.TRUE,
+						"testAppUserConfMail", "testAppUserConfMail@test.com",true);
+
+		String subject = "User Account Confirmation: testAppUserConfMail@test.com";
+		String confirmation_url = String.format(properties.getProperty(PROPERTIES_USER_CONFIRMATION_URL), "test-organization", "test-app", user.getUuid().toString());
+		// confirmation
+		management.startAppUserActivationFlow(appInfo.getId(), user);
+
+		List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get("testAppUserConfMail@test.com");
+		assertFalse(inbox.isEmpty());
+		MockImapClient client = new MockImapClient("test.com","testAppUserConfMail", "somepassword");
+		client.processMail();
+
+		// subject ok
+		Message account_confirmation_message = inbox.get(0);
+		assertEquals(subject, account_confirmation_message.getSubject());
+
+		// confirmation url ok
+		String mailContent = (String)((MimeMultipart)account_confirmation_message.getContent()).getBodyPart(1).getContent();
+	    logger.info(mailContent);
+	    assertTrue(StringUtils.contains(mailContent, confirmation_url));
+
+	    // token ok
+	    String token = getTokenFromMessage(account_confirmation_message);
+		logger.info(token);
+		ActivationState activeState = management.handleConfirmationTokenForAppUser(appInfo.getId(), user.getUuid(), token);
+        assertEquals(ActivationState.CONFIRMED_AWAITING_ACTIVATION, activeState);
+
+    }
+
+    private User setupAppUser(UUID appId, String property, Object value , String username, String email, boolean activated) throws Exception {
+    	org.jvnet.mock_javamail.Mailbox.clearAll();
+    	EntityManagerFactoryImpl emf = (EntityManagerFactoryImpl) helper.getEntityManagerFactory();
+    	EntityManager em = emf.getEntityManager(appId);
+
+        em.setProperty(new SimpleEntityRef(Application.ENTITY_TYPE, appId), property, value);
+
+        Map<String, Object> userProps = new LinkedHashMap<String, Object>();
+		userProps.put("username", username);
+		userProps.put("email", email);
+		userProps.put("activated", activated);
+		User user = em.create(User.ENTITY_TYPE, User.class, userProps);
+
+        return user;
+
+    }
 }
