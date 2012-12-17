@@ -1,6 +1,6 @@
 {
   "name": "usergrid",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "A Node.js module for making API calls to App Services (Usergrid) from within Node.js",
   "main": "./lib/usergrid.js",
   "dependencies": {
