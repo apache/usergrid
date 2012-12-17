@@ -80,6 +80,10 @@ This Usergrid module uses the [request](https://github.com/mikeal/request) modul
 
 This client.request method uses similar syntax although only the subset of options that is relevant to making calls against the App Services API. For example, to get a list of users:
 
+	var options = {
+		method:'GET',
+		endpoint:'users'
+	};
 	client.request(options, function (err, data) {
 		if (err) {
 			error('GET failed');
