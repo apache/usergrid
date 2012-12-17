@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
  *
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1237,6 +1238,21 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
     @Override
+    public void revokeAccessTokenForAdminUser(UUID userId, String token) throws Exception {
+    	if (anyNull(userId, token)) {
+            throw new IllegalArgumentException("token is required");
+        }
+
+    	Entity user = getAdminUserEntityFromAccessToken(token);
+    	if( ! user.getUuid().equals(userId) ) {
+    		throw new TokenException(
+                    "Could not match token : " + token );
+    	}
+
+    	tokens.revokeToken(token);
+    }
+
+    @Override
     public Entity getAdminUserEntityFromAccessToken(String token)
             throws Exception {
 
@@ -2254,6 +2270,21 @@ public class ManagementServiceImpl implements ManagementService {
         revokeTokensForPrincipal(APPLICATION_USER, applicationId, userId);
     }
 
+	@Override
+	public void revokeAccessTokenForAppUser(String token) throws Exception {
+		if (anyNull(token)) {
+            throw new IllegalArgumentException("token is required");
+        }
+
+    	UserInfo userInfo = getAppUserFromAccessToken(token);
+    	if( userInfo == null ) {
+    		throw new TokenException(
+                    "Could not match token : " + token );
+    	}
+
+    	tokens.revokeToken(token);
+	}
+
     @Override
     public UserInfo getAppUserFromAccessToken(String token) throws Exception {
         AuthPrincipalInfo auth_principal = getPrincipalFromAccessToken(token,
@@ -2285,8 +2316,7 @@ public class ManagementServiceImpl implements ManagementService {
                 user.getUuid());
         String reset_url = buildUserAppUrl(applicationId,
                 properties.getProperty(PROPERTIES_USER_RESETPW_URL),
-                user)+"?token="+token;
-
+                user, token);
       /*String reset_url = String.format(
                 properties.getProperty(PROPERTIES_USER_RESETPW_URL),
                 oi.getName(),
@@ -2396,7 +2426,8 @@ public class ManagementServiceImpl implements ManagementService {
                 user.getUuid());
         String confirmation_url = buildUserAppUrl(applicationId,
                 properties.getProperty(PROPERTIES_USER_CONFIRMATION_URL),
-                user)+ "?token="+token;
+                user, token);
+
         /*String confirmation_url = String.format(
                 properties.getProperty(PROPERTIES_USER_CONFIRMATION_URL),
                 applicationId.toString(), user.getUuid().toString())
@@ -2410,13 +2441,14 @@ public class ManagementServiceImpl implements ManagementService {
 
     }
 
-    private String buildUserAppUrl(UUID applicationId, String url, User user) throws Exception {
+    private String buildUserAppUrl(UUID applicationId, String url, User user, String token) throws Exception {
       ApplicationInfo ai = getApplicationInfo(applicationId);
       OrganizationInfo oi = getOrganizationForApplication(applicationId);
       return String.format(url,
               oi.getName(),
               StringUtils.stringOrSubstringAfterFirst(ai.getName(),'/'),
-              user.getUuid().toString());
+              user.getUuid().toString())
+              + "?token="+token;
     }
 
     public void sendAdminRequestAppUserActivationEmail(UUID applicationId,
@@ -2425,8 +2457,8 @@ public class ManagementServiceImpl implements ManagementService {
                 user.getUuid());
         String activation_url = buildUserAppUrl(applicationId,
                 properties.getProperty(PROPERTIES_USER_ACTIVATION_URL),
-                user)+ "?token="+token;
-        /*
+                user, token);
+       /*
         String activation_url = String.format(
                 properties.getProperty(PROPERTIES_USER_ACTIVATION_URL),
                 applicationId.toString(), user.getUuid().toString())

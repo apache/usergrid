@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.usergrid</groupId>
 		<artifactId>usergrid</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.0.13-SNAPSHOT</version>
 	</parent>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -58,7 +57,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>2.1.1</version>
+				<version>2.3</version>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo.jspc</groupId>
@@ -94,10 +93,13 @@
 				<executions>
 					<execution>
 						<id>make-a-jar</id>
-						<phase>compile</phase>
+						<phase>package</phase>
 						<goals>
 							<goal>jar</goal>
 						</goals>
+						<configuration>
+							<classifier>classes</classifier>
+						</configuration>
 					</execution>
 					<execution>
 						<id>jsp-jar-execution</id>
@@ -176,7 +178,7 @@
 										</goals>
 									</pluginExecutionFilter>
 									<action>
-										<ignore></ignore>
+										<ignore />
 									</action>
 								</pluginExecution>
 							</pluginExecutions>
@@ -380,15 +382,15 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.amber</groupId>
-			<artifactId>oauth2-common</artifactId>
+			<artifactId>amber-oauth2-common</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.amber</groupId>
-			<artifactId>oauth2-authzserver</artifactId>
+			<artifactId>amber-oauth2-authzserver</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.amber</groupId>
-			<artifactId>oauth2-resourceserver</artifactId>
+			<artifactId>amber-oauth2-resourceserver</artifactId>
 		</dependency>
 		<dependency>
             <groupId>com.yammer.metrics</groupId>
