@@ -213,29 +213,36 @@ function testDELETE(step) {
 function makeNewDog(step) {
 
 	var options = {
-		client:client,
-		data:{type:'dogs'}
+		type:'dogs',
+		name:'Dino'
 	}
-	var dog = new usergrid.entity(options);
 
-	//once the dog is created, you can set single properties:
-	dog.set('name','Dino');
-
-	//the set function can also take a JSON object:
-	var data = {
-		master:'Fred',
-		state:'hungry'
-	}
-	//set is additive, so previously set properties are not overwritten
-	dog.set(data);
-
-	//finally, call save on the object to save it back to the database
-	dog.save(function(err){
-		if (err){
-			error('dog not saved');
+	client.createEntity(options, function (err, dog) {
+		if (err) {
+			error('dog not created');
 		} else {
-			success('new dog is saved');
-			runner(step, dog);
+			success('dog is created');
+
+			//once the dog is created, you can set single properties:
+			dog.set('breed','Dinosaur');
+
+			//the set function can also take a JSON object:
+			var data = {
+				master:'Fred',
+				state:'hungry'
+			}
+			//set is additive, so previously set properties are not overwritten
+			dog.set(data);
+
+			//finally, call save on the object to save it back to the database
+			dog.save(function(err){
+				if (err){
+					error('dog not saved');
+				} else {
+					success('new dog is saved');
+					runner(step, dog);
+				}
+			});
 		}
 	});
 
@@ -290,21 +297,23 @@ function removeDogFromDatabase(step, dog){
 
 function makeSampleData(step, i) {
 	notice('making dog '+i);
+
 	var options = {
-		client:client,
-		data:{type:'dogs', 'name':'dog'+i, index:i}
+		type:'dogs',
+		name:'dog'+i,
+		index:i
 	}
-	var dog = new usergrid.entity(options);
-	dog.save(function(err, data) {
+
+	client.createEntity(options, function (err, dog) {
 		if (err) {
-			error('sample data not loaded on ');
+			error('dog ' + i + ' not created');
 		} else {
 			if (i >= 30) {
 				//data made, ready to go
-				success('dog ' + i + ' made');
+				success('all dogs made');
 				runner(step);
 			} else {
-				success('all dogs made');
+				success('dog ' + i + ' made');
 				//keep making dogs
 				makeSampleData(step, ++i);
 			}
@@ -314,18 +323,17 @@ function makeSampleData(step, i) {
 
 function testDogsCollection(step) {
 
-	//options object needs to have the type and the client
 	var options = {
-		client:client,
-		path:'dogs',
+		type:'dogs',
 		qs:{ql:'order by index'}
 	}
-	dogs = new usergrid.collection(options, function(err) {
+
+	client.createCollection(options, function (err, dogs) {
 		if (err) {
 			error('could not make collection');
 		} else {
 
-			success('new Collection worked');
+			success('new Collection created');
 
 			//we got the dogs, now display the Entities:
 			while(dogs.hasNextEntity()) {
@@ -339,14 +347,12 @@ function testDogsCollection(step) {
 
 			//create a new dog and add it to the collection
 			var options = {
-				client:client,
-				data:{type:'dogs', name:'extra-dog'}
+				name:'extra-dog',
+				fur:'shedding'
 			}
-			var dog = new usergrid.entity(options);
-
-			//no need to call save, just add the new entity
+			//just pass the options to the addEntity method
 			//to the collection and it is saved automatically
-			dogs.addEntity(dog, function(err, data) {
+			dogs.addEntity(options, function(err, dog, data) {
 				if (err) {
 					error('extra dog not saved or added to collection');
 				} else {
@@ -423,11 +429,11 @@ function getPreviousDogsPage(step, dogs) {
 function cleanupAllDogs(step){
 
 	var options = {
-		client:client,
-		path:'dogs',
+		type:'dogs',
 		qs:{limit:50} //limit statement set to 50
 	}
-	var dogs = new usergrid.collection(options, function(err) {
+
+	client.createCollection(options, function (err, dogs) {
 		if (err) {
 			error('could not get all dogs');
 		} else {
@@ -463,32 +469,20 @@ function cleanupAllDogs(step){
 
 function createUser(step) {
 
-	//type is 'users'
+	//type is 'users', set additional paramaters as needed
 	var options = {
-		client:client,
-		data:{type:'users'}
-	}
-	var marty = new usergrid.entity(options);
-
-	//set properties individually
-	marty.set('username', 'marty');
-
-	//or use one data object
-	var data = {
+		type:'users',
+		username:'marty',
 		password:'mysecurepassword',
 		name:'Marty McFly',
-		city:'Hill Valley',
-		state: 'California'
+		city:'Hill Valley'
 	}
-	marty.set(data); //adds properties cumulatively
 
-	//then save the user to the database
-	marty.save(function(err){
+	client.createEntity(options, function (err, marty) {
 		if (err){
 			error('user not saved');
 		} else {
 			success('user saved');
-
 			runner(step, marty);
 		}
 	});
@@ -497,6 +491,8 @@ function createUser(step) {
 
 function updateUser(step, marty) {
 
+	//add properties cumulatively
+	marty.set('state', 'California');
 	marty.set("girlfriend","Jennifer");
 	marty.save(function(err){
 		if (err){

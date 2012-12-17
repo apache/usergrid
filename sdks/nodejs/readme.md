@@ -155,49 +155,43 @@ Usergrid stores its data as "Entities" in "Collections".  Entities are essential
 <http://apigee.com/docs/usergrid/content/data-model>
 
 
-##The Entity object
-Use the entity object to create new entities.  It can be used by itself, or in conjunction with the Collection object.  Here is a simple example that shows how to create a new object of type "dogs":
+##Entities
+This module provides an easy way to make new entities. Here is a simple example that shows how to create a new object of type "dogs":
 
 	var options = {
-		client:client,
-		data:{type:'dogs'}
+		type:'dogs',
+		name:'Dino'
 	}
-	var dog = new usergrid.entity(options);
-
-	//once the dog is created, you can set single properties:
-	dog.set('name','Dino');
-
-	//the set function can also take a JSON object:
-	var data = {
-		master:'Fred',
-		state:'hungry'
-	}
-	//set is additive, so previously set properties are not overwritten
-	dog.set(data);
-
-	//finally, call save on the object to save it back to the database
-	dog.save(function(err){
-		if (err){
-			error('dog not saved');
+	client.createEntity(options, function (err, dog) {
+		if (err) {
+			error('dog not created');
 		} else {
-			success('new dog is saved');
+			success('dog is created');
+
+			//once the dog is created, you can set single properties:
+			dog.set('breed','Dinosaur');
+
+			//or a JSON object:
+			var data = {
+				master:'Fred',
+				state:'hungry'
+			}
+			//set is additive, so previously set properties are not overwritten
+			dog.set(data);
+
+			//finally, call save on the object to save it back to the database
+			dog.save(function(err){
+				if (err){
+					error('dog not saved');
+				} else {
+					success('new dog is saved');
+				}
+			});
 		}
 	});
 
 **note:** all calls to the API will be executed asynchronously, so it is important that you use a callback.
 
-Once the dog object has been saved, you can update it:
-
-	//change a property in the object
-	dog.set("state", "fed");
-	//and save back to the database
-	dog.save(function(err){
-		if (err){
-			error('dog not saved');
-		} else {
-			success('dog is saved');
-		}
-	});
 
 You can also refresh the object from the database if needed (in case the data has been updated by a different client or device):
 
@@ -228,12 +222,13 @@ To remove the entity from the database:
 ##The Collection object
 The Collection object models Collections in the database.  Once you start programming your app, you will likely find that this is the most useful method of interacting with the database.  Creating a collection will automatically populate the object with entities from the collection. The following example shows how to create a Collection object, then how to use entities once the Collection has been populated with entities from the server:
 
-	//options object needs to have the type and the client
+	//options object needs to have the type (which is the collection type)
 	var options = {
-		client:client,
-		path:'dogs'
+		type:'dogs',
+		qs:{ql:'order by index'}
 	}
-	var dogs = new usergrid.collection(options, function(err) {
+
+	client.createCollection(options, function (err, dogs) {
 		if (err) {
 			error('could not make collection');
 		} else {
@@ -254,18 +249,16 @@ The Collection object models Collections in the database.  Once you start progra
 	});
 
 
-You can also create a new entity of the same type, and add it to the collection:
+You can also add a new entity of the same type to the collection:
 
 	//create a new dog and add it to the collection
 	var options = {
-		client:client,
-		data:{type:'dogs', name:'extra-dog'}
+		name:'extra-dog',
+		fur:'shedding'
 	}
-	var dog = new usergrid.entity(options);
-
-	//no need to call save, just add the new entity
+	//just pass the options to the addEntity method
 	//to the collection and it is saved automatically
-	dogs.addEntity(dog, function(err, data) {
+	dogs.addEntity(options, function(err, dog, data) {
 		if (err) {
 			error('extra dog not saved or added to collection');
 		} else {
@@ -331,11 +324,11 @@ By default, the database will return 10 entities per page.  You can change that 
 
 
 	var options = {
-		client:client,
-		path:'dogs',
+		type:'dogs',
 		qs:{limit:50} //limit statement set to 50
 	}
-	var dogs = new usergrid.collection(options, function(err) {
+
+	client.createCollection(options, function (err, dogs) {
 		if (err) {
 			error('could not get all dogs');
 		} else {
@@ -355,8 +348,7 @@ Several other convenience methods exist to make working with pages of data easie
 A custom query allows you to tell the API that you want your results filtered or altered in some way.  To specify that the query results should be ordered by creation date, add the qs parameter to the options object:
 
 	var options = {
-		client:client,
-		path:'dogs',
+		type:'dogs',
 		qs:{ql:'order by created DESC'}
 	};
 
@@ -389,27 +381,16 @@ You can find more information on custom queries here:
 ##Modeling users with the Entity object
 There is no specific User object in the module.  Instead, you simply need to use the Entity object, specifying a type of "users".  Here is an example:
 
-	//type is 'users'
+	//type is 'users', set additional paramaters as needed
 	var options = {
-		client:client,
-		data:{type:'users'}
-	}
-	var marty = new usergrid.entity(options);
-
-	//set properties individually
-	marty.set('username', 'marty');
-
-	//or use one data object
-	var data = {
+		type:'users',
+		username:'marty',
 		password:'mysecurepassword',
 		name:'Marty McFly',
-		city:'Hill Valley',
-		state: 'California'
+		city:'Hill Valley'
 	}
-	marty.set(data); //adds properties cumulatively
 
-	//then save the user to the database
-	marty.save(function(err){
+  	client.createEntity(options, function (err, marty) {
 		if (err){
 			error('user not saved');
 		} else {
@@ -420,6 +401,8 @@ There is no specific User object in the module.  Instead, you simply need to use
 
 If the user is modified, just call save on the user again:
 
+	//add properties cumulatively
+	marty.set('state', 'California');
 	marty.set("girlfriend","Jennifer");
 	marty.save(function(err){
 		if (err){

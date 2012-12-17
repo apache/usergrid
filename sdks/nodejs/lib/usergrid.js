@@ -90,8 +90,8 @@ Client.prototype.request = function (options, callback) {
   }
 
   if (this.logging) {
-  	console.log('calling: ' + method + ' ' + uri);
-	}
+    console.log('calling: ' + method + ' ' + uri);
+  }
   this._start = new Date().getTime();
   var callOptions = {
     method: method,
@@ -106,9 +106,9 @@ Client.prototype.request = function (options, callback) {
     }
     self._end = new Date().getTime();
     if(r.statusCode === 200) {
-    	if (self.logging) {
-      	console.log('success (time: ' + self.calcTimeDiff() + '): ' + method + ' ' + uri);
-			}
+      if (self.logging) {
+        console.log('success (time: ' + self.calcTimeDiff() + '): ' + method + ' ' + uri);
+      }
       callback(err, data);
     } else {
       err = true;
@@ -120,8 +120,8 @@ Client.prototype.request = function (options, callback) {
         var error = r.body.error;
         var errorDesc = r.body.error_description;
         if (self.logging) {
-        	console.log('Error ('+ r.statusCode+')(' + error + '): ' + errorDesc)
-				}
+          console.log('Error ('+ r.statusCode+')(' + error + '): ' + errorDesc)
+        }
         //if the user has specified a logout callback:
         if (typeof(self.loggingoutCallback) === 'function') {
           self.loggingoutCallback(err, data);
@@ -132,8 +132,8 @@ Client.prototype.request = function (options, callback) {
         var error = r.body.error;
         var errorDesc = r.body.error_description;
         if (self.logging) {
-        	console.log('Error ('+ r.statusCode +')(' + error + '): ' + errorDesc);
-				}
+          console.log('Error ('+ r.statusCode +')(' + error + '): ' + errorDesc);
+        }
         if (typeof(callback) === 'function') {
           callback(err, data);
         }
@@ -141,6 +141,31 @@ Client.prototype.request = function (options, callback) {
     }
   });
 }
+
+Client.prototype.createEntity = function (data, callback) {
+  var options = {
+    client:this,
+    data:data
+  }
+  var entity = new Entity(options);
+  entity.save(function(err, data) {
+    if (typeof(callback) === 'function') {
+      callback(err, entity);
+    }
+  });
+}
+
+
+Client.prototype.createCollection = function (options, callback) {
+  options.client = this;
+  var collection = new Collection(options, function(err, data) {
+    if (typeof(callback) === 'function') {
+      callback(err, collection);
+    }
+  });
+
+}
+
 
 /**
 *  A private method to get call timing of last call
@@ -347,11 +372,12 @@ Entity.prototype.save = function (callback) {
     endpoint:type,
     body:data
   };
+  //save the entity first
   this._client.request(options, function (err, retdata) {
     if (err && self._client.logging) {
       console.log('could not save entity');
       if (typeof(callback) === 'function') {
-        return callback(err, retdata);
+        return callback(err, retdata, self);
       }
     } else {
       if (retdata.entities.length) {
@@ -380,12 +406,12 @@ Entity.prototype.save = function (callback) {
             self.set('oldpassword', null);
             self.set('newpassword', null);
             if (typeof(callback) === 'function') {
-              callback(err, data);
+              callback(err, data, self);
             }
           }
         );
       } else if (typeof(callback) === 'function') {
-        callback(err, retdata);
+        callback(err, retdata, self);
       }
     }
   });
@@ -414,8 +440,8 @@ Entity.prototype.fetch = function (callback) {
         if (typeof(callback) === 'function') {
           var error = 'cannot fetch entity, no username specified';
           if (self._client.logging) {
-          	console.log(error);
-					}
+            console.log(error);
+          }
           return callback(true, error, self)
         }
       }
@@ -426,8 +452,8 @@ Entity.prototype.fetch = function (callback) {
         if (typeof(callback) === 'function') {
           var error = 'cannot fetch entity, no name specified';
           if (self._client.logging) {
-          	console.log(error);
-					}
+            console.log(error);
+          }
           return callback(true, error, self)
         }
       }
@@ -472,8 +498,8 @@ Entity.prototype.destroy = function (callback) {
     if (typeof(callback) === 'function') {
       var error = 'Error trying to delete object - no uuid specified.';
       if (self._client.logging) {
-      	console.log(error);
-			}
+        console.log(error);
+      }
       callback(true, error);
     }
   }
@@ -508,7 +534,7 @@ Entity.prototype.destroy = function (callback) {
 */
 Collection = function(options, callback) {
   this._client = options.client;
-  this._path = options.path;
+  this._type = options.type;
   this._uuid = options.uuid;
   this.qs = options.qs || {};
 
@@ -538,7 +564,7 @@ Collection = function(options, callback) {
     } else {
       //store collection list
       var collections = data.entities[0].metadata.collections;
-      if ( collections.hasOwnProperty(self._path) ) {
+      if ( collections.hasOwnProperty(self._type) ) {
         //collection exists, so just fetch
         self.fetch(function(err) {
           if (typeof(callback) === 'function') {
@@ -550,7 +576,7 @@ Collection = function(options, callback) {
         self._client.request(
           {
             method:'POST',
-            endpoint:self._path,
+            endpoint:self._type,
             json:{},
             qs:self.qs
           },
@@ -587,7 +613,7 @@ Collection.prototype.fetch = function (callback) {
   }
   var options = {
     method:'GET',
-    endpoint:this._path,
+    endpoint:this._type,
     qs:this.qs
   };
   this._client.request(options, function (err, data) {
@@ -606,7 +632,7 @@ Collection.prototype.fetch = function (callback) {
           if (uuid) {
             var entityData = data.entities[i] || {};
             var entityOptions = {
-              type:self._path,
+              type:self._type,
               client:self._client,
               uuid:uuid,
               data:entityData
@@ -632,25 +658,21 @@ Collection.prototype.fetch = function (callback) {
 *  @param {function} callback
 *  @return {callback} callback(err, data, entity)
 */
-Collection.prototype.addEntity = function (entity, callback) {
+Collection.prototype.addEntity = function (options, callback) {
   var self = this;
-  if (entity.get('type') !== this._path) {
-  	if (typeof(callback) === 'function') {
-      callback(true, null, null);
+  options.type = this._type;
+
+  //create the new entity
+  this._client.createEntity(options, function (err, entity) {
+    if (!err) {
+      //then add the entity to the list
+      var count = self._list.length;
+      self._list[count] = entity;
     }
-	} else {
-	  //save the entity
-	  entity.save(function(err, data) {
-	    if (!err) {
-	      //then add the entity to the list
-	      var count = self._list.length;
-	      self._list[count] = entity;
-	    }
-	    if (typeof(callback) === 'function') {
-	      callback(err, data, entity);
-	    }
-	  });
-	}
+    if (typeof(callback) === 'function') {
+      callback(err, entity);
+    }
+  });
 }
 
 /**
@@ -665,9 +687,9 @@ Collection.prototype.destroyEntity = function (entity, callback) {
   var self = this;
   entity.destroy(function(err, data) {
     if (err) {
-    	if (self._client.logging) {
-      	console.log('could not destroy entity');
-			}
+      if (self._client.logging) {
+        console.log('could not destroy entity');
+      }
       if (typeof(callback) === 'function') {
         callback(err, data);
       }
@@ -690,7 +712,7 @@ Collection.prototype.getEntityByUUID = function (uuid, callback) {
   //get the entity from the database
   var options = {
     data: {
-    	type: this._path,
+    	type: this._type,
     	uuid:uuid
     },
     client: this._client
