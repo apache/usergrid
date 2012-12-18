@@ -149,6 +149,10 @@ usergrid_ironhorse/spec/spec_settings.yaml to match.)
 
 ## Release notes
 
+### 0.0.5
+* New Features
+  1. support MassAssignmentSecurity (attr_accessible & attr_protected)
+
 ### 0.0.4
 * New Features
   1. add require_login to config (with ability to skip individual logins)
