@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -131,6 +131,7 @@ public class UsersResource extends AbstractContextResource {
 		if (user == null) {
 			user = management.createAdminUser(email, email, email, password,
 					false, false);
+			management.startAdminUserPasswordResetFlow(user);
 		}
 
 		if (user == null) {
@@ -149,20 +150,20 @@ public class UsersResource extends AbstractContextResource {
 
 	/*
 	 * @RequireOrganizationAccess
-	 * 
+	 *
 	 * @POST
-	 * 
+	 *
 	 * @Consumes(MediaType.MULTIPART_FORM_DATA) public JSONWithPadding
 	 * newUserForOrganizationFromMultipart(
-	 * 
+	 *
 	 * @Context UriInfo ui, @FormDataParam("username") String username,
-	 * 
+	 *
 	 * @FormDataParam("name") String name,
-	 * 
+	 *
 	 * @FormDataParam("email") String email,
-	 * 
+	 *
 	 * @FormDataParam("password") String password) throws Exception {
-	 * 
+	 *
 	 * return newUserForOrganizationFromForm(ui, username, name, email,
 	 * password); }
 	 */

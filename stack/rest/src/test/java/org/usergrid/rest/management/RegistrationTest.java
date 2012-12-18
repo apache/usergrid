@@ -1,6 +1,7 @@
 package org.usergrid.rest.management;
 
 import static org.junit.Assert.*;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_RESETPW_URL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
@@ -10,10 +11,15 @@ import static org.usergrid.utils.MapUtils.hashMap;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
+import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.NoSuchProviderException;
+import javax.mail.Session;
+import javax.mail.Store;
 import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -23,9 +29,12 @@ import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.cassandra.CassandraService;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractRestTest;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -194,6 +203,7 @@ public class RegistrationTest extends AbstractRestTest {
     @Test
     public void postAddToOrganization() throws Exception {
 
+
         properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
                 "false");
         properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
@@ -206,6 +216,110 @@ public class RegistrationTest extends AbstractRestTest {
         String t = adminToken();
         postAddAdminToOrg("test-organization", "test-admin@mockserver.com",
                 "password", t);
+
+    }
+
+    @Test
+    public void addNewAdminUserWithNoPwdToOrganization() throws Exception {
+
+    	Mailbox.clearAll();
+        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
+                "false");
+        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
+                "false");
+        properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
+                "false");
+        properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
+                "sysadmin-1@mockserver.com");
+
+        // this should send resetpwd  link in email to newly added org admin user(that did not exist in usergrid)
+        // and "User Invited To Organization" email
+    	String adminToken = adminToken();
+        JsonNode node = postAddAdminToOrg("test-organization", "test-admin-nopwd@mockserver.com","", adminToken);
+        String uuid = node.get("data").get("user").get("uuid").getTextValue();
+        UUID userId = UUID.fromString(uuid);
+
+        String subject = "Password Reset";
+        String reset_url = String.format(properties.getProperty(PROPERTIES_ADMIN_RESETPW_URL), uuid);
+        String invited = "User Invited To Organization";
+
+	    Message[] msgs = getMessages("mockserver.com","test-admin-nopwd",  "password");
+
+	    // 1 Invite and 1 resetpwd
+	    assertTrue(msgs.length == 2);
+
+	    //email subject
+	    assertEquals(subject, msgs[0].getSubject());
+	    assertEquals(invited, msgs[1].getSubject());
+
+	    // reseturl
+	    String mailContent = (String)((MimeMultipart)msgs[0].getContent()).getBodyPart(1).getContent();
+	    logger.info(mailContent);
+	    assertTrue(StringUtils.contains(mailContent, reset_url));
+
+	    //token
+	    String token = getTokenFromMessage(msgs[0]);
+	    assertTrue(managementService.checkPasswordResetTokenForAdminUser(userId, token));
+    }
+
+    @Test
+    public void addExistingAdminUserToOrganization() throws Exception {
+
+    	Mailbox.clearAll();
+        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS,
+                "false");
+        properties.setProperty(PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS,
+                "false");
+        properties.setProperty(PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION,
+                "false");
+        properties.setProperty(PROPERTIES_SYSADMIN_EMAIL,
+                "sysadmin-1@mockserver.com");
+
+        // setup an admin user
+        String adminUserEmail = "AdminUserFromOtherOrg@otherorg.com";
+		UserInfo adminUser = managementService.createAdminUser(adminUserEmail, adminUserEmail, adminUserEmail, "password1",
+				true, false);
+		assertNotNull(adminUser);
+
+		// add existing admin user to org
+        // this should NOT send resetpwd  link in email to newly added org admin user(that already exists in usergrid)
+		// only "User Invited To Organization" email
+    	String adminToken = adminToken();
+        JsonNode node = postAddAdminToOrg("test-organization", "AdminUserFromOtherOrg@otherorg.com", "password1", adminToken);
+        String uuid = node.get("data").get("user").get("uuid").getTextValue();
+        UUID userId = UUID.fromString(uuid);
+
+        assertEquals(adminUser.getUuid(), userId);
+
+        String resetpwd = "Password Reset";
+        String invited = "User Invited To Organization";
+
+        Message[] msgs = getMessages("otherorg.com","AdminUserFromOtherOrg",  "password");
+
+	    // only 1 invited msg
+	    assertTrue(msgs.length == 1);
+
+	    //email subject
+	    assertNotSame(resetpwd, msgs[0].getSubject());
+	    assertEquals(invited, msgs[0].getSubject());
+    }
+
+    private Message[] getMessages(String host, String user, String password) throws MessagingException, IOException {
+
+    	Session session = Session.getDefaultInstance(new Properties());
+	    Store store = session.getStore("imap");
+	    store.connect(host,user,  password);
+
+	    Folder folder = store.getFolder("inbox");
+	    folder.open(Folder.READ_ONLY);
+	    Message[] msgs = folder.getMessages();
+
+		for (Message m : msgs) {
+			logger.info("Subject: " + m.getSubject());
+			logger.info("Body content 0 " +(String)((MimeMultipart)m.getContent()).getBodyPart(0).getContent());
+			logger.info("Body content 1 " +(String)((MimeMultipart)m.getContent()).getBodyPart(1).getContent());
+		}
+		return msgs;
 
     }
 
