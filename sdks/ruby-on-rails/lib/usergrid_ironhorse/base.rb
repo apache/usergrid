@@ -11,6 +11,7 @@ module Usergrid
       include ActiveModel::Validations
       include ActiveModel::Dirty
       include ActiveModel::Serialization
+      include ActiveModel::MassAssignmentSecurity
       extend  ActiveModel::Naming
       extend  ActiveModel::Callbacks
 
@@ -42,11 +43,8 @@ module Usergrid
       RecordNotSaved = ActiveRecord::RecordNotSaved
 
       def initialize(attrs=nil)
-        attrs = HashWithIndifferentAccess.new attrs
-        unless attrs.has_key? :uuid
-          assign_attributes attrs
-        end
-        @attributes = attrs
+        @attributes = HashWithIndifferentAccess.new
+        assign_attributes attrs if attrs
       end
 
       def self.configure!(application_url, auth_token)
@@ -279,6 +277,7 @@ module Usergrid
 
 
       def assign_attributes(attrs)
+        attrs = sanitize_for_mass_assignment(attrs)
         attrs.each do |attr,value|
           attr = attr.to_s
           unless attributes[attr] == value

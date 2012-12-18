@@ -310,5 +310,25 @@ describe Usergrid::Ironhorse::Base do
       foo.destroy
     end
 
+    it "should fail on unaccessible mass assignment" do
+      Foo.attr_accessible :name
+      foo = Foo.create! name: 'foo', number: 43
+      foo.number.should_not eq 43
+      foo.update_attributes number: 44, foo: 'bar'
+      foo.number.should_not eq 44
+      foo.destroy
+      Foo._accessible_attributes = nil
+    end
+
+    it "should fail on protected mass assignment" do
+      Foo.attr_protected :number
+      foo = Foo.create! name: 'foo', number: 43
+      foo.number.should_not eq 43
+      foo.update_attributes number: 44, foo: 'bar'
+      foo.number.should_not eq 44
+      foo.destroy
+      Foo._protected_attributes = nil
+    end
+
   end
 end
