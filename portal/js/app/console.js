@@ -3592,7 +3592,7 @@ function apigee_console_app(Pages, query_params) {
     var list = [];
 
     for (var i in applicationData.Collections) {
-      list.push( '/' + applicationData.Collections[i].name );
+      list.push('/' + applicationData.Collections[i].name);
     }
 
     pathInput.typeahead({source:list});
