@@ -16,7 +16,7 @@ describe Usergrid::Ironhorse::Base do
   after :all do
     @foo.delete
     @user.delete
-    #delete_application @application
+    #delete_application @application # not supported on server yet
   end
 
   class Foo < Usergrid::Ironhorse::Base; end
@@ -330,5 +330,47 @@ describe Usergrid::Ironhorse::Base do
       Foo._protected_attributes = nil
     end
 
+    it "should be able to page through results" do
+      bars = (1..15).collect do |i|
+        Bar.create! name: "name_#{i}", value: "value_#{i+1}"
+      end
+      query = Bar.all
+      page = query.to_a # first page
+      page.count.should eq 10
+      page = query.next_page # second page
+      count = 10
+      page.each do |bar|
+        bars[count].name.should eq bar.name
+        count += 1
+      end
+      count.should eq bars.count
+      bars.each {|bar| bar.delete}
+    end
+
+    it "should iterate past page boundaries" do
+      bars = (1..15).collect do |i|
+        Bar.create! name: "name_#{i}", value: "value_#{i+1}"
+      end
+      count = 0
+      Bar.all.each do |bar|
+        bars[count].name.should eq bar.name
+        count += 1
+      end
+      count.should eq bars.count
+      bars.each {|bar| bar.delete}
+    end
+
+    it "should honor limit" do
+      bars = (1..15).collect do |i|
+        Bar.create! name: "name_#{i}", value: "value_#{i+1}"
+      end
+      count = 0
+      Bar.limit(13).each do |bar|
+        bars[count].name.should eq bar.name
+        count += 1
+      end
+      count.should eq 13
+      bars.each {|bar| bar.delete}
+    end
   end
 end

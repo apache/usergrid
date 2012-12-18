@@ -128,6 +128,17 @@ module Usergrid
 
       def each
         to_a.each { |*block_args| yield(*block_args) }
+        while @response.data['cursor'] && !limit_value
+          next_page
+          to_a.each { |*block_args| yield(*block_args) }
+        end
+      end
+
+      def next_page
+        @options[:cursor] = @response.data['cursor']
+        @records = nil
+        load
+        self
       end
 
       # Returns +true+ if a record exists in the table that matches the +id+ or
@@ -859,6 +870,7 @@ module Usergrid
         options.merge!({:skip => @options[:skip].to_json}) if @options[:skip]
         options.merge!({:reversed => reversed?.to_json}) if reversed?
         options.merge!({:order => @options[:order]}) if @options[:order]
+        options.merge!({:cursor => @options[:cursor]}) if @options[:cursor]
         options
       end
 
@@ -879,8 +891,8 @@ module Usergrid
       def load
         return if loaded?
         begin
-          response = run_query
-          @records = response.entities.collect {|r| @model_class.model_name.constantize.new(r.data)}
+          @response = run_query
+          @records = @response.entities.collect {|r| @model_class.model_name.constantize.new(r.data)}
         rescue RestClient::ResourceNotFound
           @records = []
         end

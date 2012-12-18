@@ -149,6 +149,15 @@ usergrid_ironhorse/spec/spec_settings.yaml to match.)
 
 ## Release notes
 
+### 0.1.0
+* New Features
+  1. next_page() added to return the next page of results from the server. An example of this used in conjunction
+     with to_a() is in base_spec.rb (see "should be able to page through results").
+* Incompatible changes
+  1. each() iteration will now transparently cross page boundaries (as generally expected by Rails users).
+     You may use limit(n) to restrict the result set, but note that limit will retrieve the number of entities
+     specified as a single batch (no paging).
+
 ### 0.0.5
 * New Features
   1. support MassAssignmentSecurity (attr_accessible & attr_protected)
