@@ -499,9 +499,22 @@ function apigee_console_app(Pages, query_params) {
     return false;
   });
 
-  $('#query-source').keypress(function(event) {
-    if (event.keyCode == 13) {
+  $('#query-source').keydown(function(e) {
+    var key = e.keyCode || e.which;
+
+    if (key == 13) {
       validateJson();
+    } else if (key == 9) {
+      e.preventDefault();
+      //Get cursor position
+      var start = this.selectionStart;
+      var end = this.selectionEnd;
+      var field = $(this);
+      var value = field.val();
+      //insert Text and indentation
+      field.val(value.substring(0, start) + '\r  ' + value.substring(end));
+      //return cursor to its position
+      this.selectionStart = this.selectionEnd = start + 1;
     }
   });
 
