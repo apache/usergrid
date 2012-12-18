@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 
 /**
  * Invokes methods on ApplicationResource
- * 
+ *
  * @author zznate
  */
 public class ApplicationResourceTest extends AbstractRestTest {
@@ -129,14 +129,14 @@ public class ApplicationResourceTest extends AbstractRestTest {
         assertEquals("ok", node.get("status").getTextValue());
         logNode(node);
     }
-    
+
     @Test
     public void noAppDelete() {
         String mgmtToken = adminToken();
 
         Status status = null;
         JsonNode node = null;
-        
+
         try {
              node = resource().path("/test-organization/test-app")
                     .queryParam("access_token", mgmtToken).accept(MediaType.APPLICATION_JSON)
@@ -157,8 +157,8 @@ public class ApplicationResourceTest extends AbstractRestTest {
                 .map("password", "test").map("ttl", Long.MAX_VALUE+"");
 
         Status responseStatus = null;
-        
-        
+
+
         try {
             resource().path("/test-organization/test-app/token").accept(MediaType.APPLICATION_JSON)
                     .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
@@ -185,6 +185,9 @@ public class ApplicationResourceTest extends AbstractRestTest {
         String token = node.get("access_token").getTextValue();
 
         assertNotNull(token);
+
+        long expires_in = node.get("expires_in").getLongValue();
+        assertEquals(ttl, expires_in * 1000);
 
         JsonNode userdata = resource().path("/test-organization/test-app/users/ed@anuff.com")
                 .queryParam("access_token", token).accept(MediaType.APPLICATION_JSON).get(JsonNode.class);

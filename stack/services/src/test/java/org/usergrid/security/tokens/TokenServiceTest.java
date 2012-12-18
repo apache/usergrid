@@ -212,6 +212,18 @@ public class TokenServiceTest {
         TokenInfo tokenInfo = tokenService.getTokenInfo(token);
         assertNotNull(tokenInfo);
         assertEquals(expirationTime, tokenInfo.getDuration());
+        long maxTokenAge = tokenService.getMaxTokenAge(token);
+        assertEquals(expirationTime, maxTokenAge);
+
+        token = tokenService.refreshToken(token);
+        assertNotNull(token);
+
+        tokenInfo = tokenService.getTokenInfo(token);
+        assertNotNull(tokenInfo);
+        assertEquals(expirationTime, tokenInfo.getDuration());
+
+        maxTokenAge = tokenService.getMaxTokenAge(token);
+        assertEquals(expirationTime, maxTokenAge);
 
         /**
          * Sleep at least expirationTime millis to allow token to expire
@@ -357,7 +369,7 @@ public class TokenServiceTest {
 
         String token = tokenService.createToken(TokenCategory.ACCESS, null, userPrincipal, null, 0);
 
-      
+
         assertNotNull(token);
 
         TokenInfo tokenInfo = tokenService.getTokenInfo(token);

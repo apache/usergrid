@@ -196,7 +196,7 @@ public class TokenServiceImpl implements TokenService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.usergrid.security.tokens.TokenService#createToken(org.usergrid.security
      * .tokens.TokenCategory, java.lang.String,
@@ -236,7 +236,7 @@ public class TokenServiceImpl implements TokenService {
         }
         TokenInfo tokenInfo = new TokenInfo(uuid, type, timestamp, timestamp, 0, duration, principal, state);
         putTokenInfo(tokenInfo);
-        return getTokenForUUID(tokenCategory, uuid);
+        return getTokenForUUID(tokenInfo, tokenCategory, uuid);
     }
 
     @Override
@@ -274,7 +274,7 @@ public class TokenServiceImpl implements TokenService {
     /**
      * Get the max ttl per app. This is null safe,and will return the default in
      * the case of missing data
-     * 
+     *
      * @param principal
      * @return
      * @throws Exception
@@ -313,14 +313,14 @@ public class TokenServiceImpl implements TokenService {
         TokenInfo tokenInfo = getTokenInfo(getUUIDForToken(token));
         if (tokenInfo != null) {
             putTokenInfo(tokenInfo);
-            return getTokenForUUID(TokenCategory.ACCESS, tokenInfo.getUuid());
+            return getTokenForUUID(tokenInfo, TokenCategory.ACCESS, tokenInfo.getUuid());
         }
         throw new InvalidTokenException("Token not found in database");
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.usergrid.security.tokens.TokenService#removeTokens(org.usergrid.security
      * .AuthPrincipalInfo)
@@ -343,7 +343,7 @@ public class TokenServiceImpl implements TokenService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.usergrid.security.tokens.TokenService#revokeToken(java.lang.String)
      */
@@ -451,7 +451,7 @@ public class TokenServiceImpl implements TokenService {
 
             /*
              * write to the PRINCIPAL+TOKEN The format is as follow
-             * 
+             *
              * appid+principalId+principalType :{ tokenuuid: 0x00}
              */
 
@@ -469,7 +469,7 @@ public class TokenServiceImpl implements TokenService {
 
     /**
      * Load all the token uuids for a principal info
-     * 
+     *
      * @param principal
      * @return
      * @throws Exception
@@ -545,7 +545,7 @@ public class TokenServiceImpl implements TokenService {
 
     /**
      * The maximum age a token can be saved for
-     * 
+     *
      * @return the maxPersistenceTokenAge
      */
     public long getMaxPersistenceTokenAge() {
@@ -563,7 +563,7 @@ public class TokenServiceImpl implements TokenService {
         this.emf = emf;
     }
 
-    private String getTokenForUUID(TokenCategory tokenCategory, UUID uuid) {
+    private String getTokenForUUID(TokenInfo tokenInfo, TokenCategory tokenCategory, UUID uuid) {
         int l = 36;
         if (tokenCategory.getExpires()) {
             l += 8;
@@ -572,7 +572,8 @@ public class TokenServiceImpl implements TokenService {
         bytes.put(bytes(uuid));
         long expires = Long.MAX_VALUE;
         if (tokenCategory.getExpires()) {
-            expires = UUIDUtils.getTimestampInMillis(uuid) + getExpirationForTokenType(tokenCategory);
+           	expires = (tokenInfo.getDuration() > 0) ? UUIDUtils.getTimestampInMillis(uuid) + (tokenInfo.getDuration())
+           			: UUIDUtils.getTimestampInMillis(uuid) + getExpirationForTokenType(tokenCategory);
             bytes.putLong(expires);
         }
         bytes.put(sha(tokenCategory.getPrefix() + uuid + tokenSecretSalt + expires));
@@ -581,7 +582,7 @@ public class TokenServiceImpl implements TokenService {
 
     /**
      * Calculate the column lifetime and account for long truncation to seconds
-     * 
+     *
      * @param time
      * @return
      */
@@ -594,11 +595,11 @@ public class TokenServiceImpl implements TokenService {
         // we've had a ttl that's longer than Integer.MAX value
         if (ttl != secondsDuration) {
             // Something is up with cassandra... Setting ttl to integer.max
-            // makes the cols disappear..... 
-            
+            // makes the cols disappear.....
+
             //this should be the line below once this issue is fixed.  https://issues.apache.org/jira/browse/CASSANDRA-4771
             //ttl = Integer.MAX_VALUE
-            
+
 
             // take the max value of an int, and substract the system time off
             // (in seconds) ,then arbitrarily remove another 1200 seconds for good measure.
@@ -606,7 +607,7 @@ public class TokenServiceImpl implements TokenService {
             // "(System.currentTimeMillis() / 1000) + timeToLive);", so we need
             // to play nice otherwise it blows up on persist
             ttl = Integer.MAX_VALUE - (int) (System.currentTimeMillis() / 1000) - 120;
-            
+
         }
         // hard cap at the max in o.a.c.db.IColumn
         if ( ttl >  MAX_TTL) {
@@ -615,6 +616,6 @@ public class TokenServiceImpl implements TokenService {
 
         return ttl;
     }
-    
+
     private static final int MAX_TTL = 20 * 365 * 24 * 60 * 60;
 }
