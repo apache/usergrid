@@ -374,7 +374,7 @@ public class UserResource extends AbstractContextResource {
         
         logger.info("Revoking user tokens for {}", adminId);
 
-        ApiResponse response = new ApiResponse(ui);
+        ApiResponse response = createApiResponse();
 
         management.revokeAccessTokenForAdminUser(adminId, token);
 
