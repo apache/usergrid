@@ -15,24 +15,15 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
-import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.usergrid.utils.AESUtils.decrypt;
-import static org.usergrid.utils.PasswordUtils.computeHash;
-import static org.usergrid.utils.PasswordUtils.mongoPassword;
-
 import java.util.Map;
 import java.util.TreeMap;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.codehaus.jackson.annotate.JsonAnyGetter;
 import org.codehaus.jackson.annotate.JsonAnySetter;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-import org.usergrid.utils.AESUtils;
-import org.usergrid.utils.BCrypt;
 
 @XmlRootElement
 public class CredentialsInfo {
@@ -43,6 +34,11 @@ public class CredentialsInfo {
 	String key;
 	String secret;
 	String hashType;
+	
+	/**
+	 * A list of crypto algorithms to apply to unecrypted input for comparison. Note that cipher and hashtype should be deprecated
+	 */
+	private String[] cryptoChain;
 
 	protected Map<String, Object> properties = new TreeMap<String, Object>(
 			String.CASE_INSENSITIVE_ORDER);
@@ -50,35 +46,35 @@ public class CredentialsInfo {
 	public CredentialsInfo() {
 	}
 
-	public static CredentialsInfo plainTextCredentials(String secret) {
-		CredentialsInfo credentials = new CredentialsInfo();
-		credentials.setRecoverable(true);
-		credentials.setSecret(secret);
-		return credentials;
-	}
+//	public static CredentialsInfo plainTextCredentials(String secret) {
+//		CredentialsInfo credentials = new CredentialsInfo();
+//		credentials.setRecoverable(true);
+//		credentials.setSecret(secret);
+//		return credentials;
+//	}
+//
+//	public static CredentialsInfo encryptedCredentials(String salt,
+//			String secret) {
+//		CredentialsInfo credentials = new CredentialsInfo();
+//		credentials.setRecoverable(true);
+//		credentials.setCipher("aes");
+//		credentials.setEncryptedSecret("aes", salt, secret);
+//		return credentials;
+//	}
+//
+//	public static CredentialsInfo hashedCredentials(String salt, String secret, String hashType) {
+//		CredentialsInfo credentials = new CredentialsInfo();
+//		credentials.setRecoverable(false);
+//		credentials.setCipher("sha-1");
+//    credentials.setHashType(hashType);
+//		credentials.setEncryptedSecret("sha-1", salt, secret);
+//		return credentials;
+//	}
 
-	public static CredentialsInfo encryptedCredentials(String salt,
-			String secret) {
-		CredentialsInfo credentials = new CredentialsInfo();
-		credentials.setRecoverable(true);
-		credentials.setCipher("aes");
-		credentials.setEncryptedSecret("aes", salt, secret);
-		return credentials;
-	}
-
-	public static CredentialsInfo hashedCredentials(String salt, String secret, String hashType) {
-		CredentialsInfo credentials = new CredentialsInfo();
-		credentials.setRecoverable(false);
-		credentials.setCipher("sha-1");
-    credentials.setHashType(hashType);
-		credentials.setEncryptedSecret("sha-1", salt, secret);
-		return credentials;
-	}
-
-	public static CredentialsInfo mongoPasswordCredentials(String username,
-			String password) {
-		return plainTextCredentials(mongoPassword(username, password));
-	}
+//	public static CredentialsInfo mongoPasswordCredentials(String username,
+//			String password) {
+//		return plainTextCredentials(mongoPassword(username, password));
+//	}
 
 	public boolean getRecoverable() {
 		return recoverable;
@@ -156,63 +152,77 @@ public class CredentialsInfo {
 		this.hashType = hashType;
 	}
 
-	public String getUnencryptedSecret(String salt) {
-		if (!recoverable) {
-			return null;
-		}
-		if (!encrypted) {
-			return secret;
-		}
-		if (isBlank(cipher)) {
-			return secret;
-		}
-		if ("plaintext".equals(cipher)) {
-			return secret;
-		} else if ("bcrypt".equals(cipher)) {
-			return null;
-		} else if ("md5".equals(cipher)) {
-			return null;
-		} else if ("sha-1".equals(cipher)) {
-			return null;
-		} else if ("aes".equals(cipher)) {
-			return decrypt(salt, secret);
-		}
-		return null;
-	}
+//	public String getUnencryptedSecret(String salt) {
+//		if (!recoverable) {
+//			return null;
+//		}
+//		if (!encrypted) {
+//			return secret;
+//		}
+//		if (isBlank(cipher)) {
+//			return secret;
+//		}
+//		if ("plaintext".equals(cipher)) {
+//			return secret;
+//		} else if ("bcrypt".equals(cipher)) {
+//			return null;
+//		} else if ("md5".equals(cipher)) {
+//			return null;
+//		} else if ("sha-1".equals(cipher)) {
+//			return null;
+//		} else if ("aes".equals(cipher)) {
+//			return decrypt(salt, secret);
+//		}
+//		return null;
+//	}
 
 
   /**
-   * If hashType on this object is set, we will do a first-pass call to {@link #encrypt(String, String, String)}
-   * with that hashType. The primary use case is to support imported legacy data with weaker password hashing
-   * such as vanilla md5.
-   * @param cipher
-   * @param salt
-   * @param secret
+   * @return the cryptoChain
    */
-	public void setEncryptedSecret(String cipher, String salt, String secret) {
-		encrypted = true;
-		recoverable = ("aes".equals(cipher) || "plaintext".equals(cipher) || (cipher == null));
-		this.cipher = cipher;
-    if ( this.hashType != null ) {
-      secret = encrypt(this.hashType, "", secret);
-    }
-		this.secret = encrypt(cipher, salt, secret);
-	}
+  public String[] getCryptoChain() {
+    return cryptoChain;
+  }
 
-	public String encrypt(String cipher, String salt, String secret) {
-		if ("plaintext".equals(cipher)) {
-			return secret;
-		} else if ("bcrypt".equals(cipher)) {
-			return BCrypt.hashpw(secret, BCrypt.gensalt());
-		} else if ("sha-1".equals(cipher)) {
-			return encodeBase64URLSafeString(computeHash((isBlank(salt) ? secret : salt + secret)));
-		} else if ("md5".equals(cipher)) {
-			return DigestUtils.md5Hex(secret);
-		} else if ("aes".equals(cipher)) {
-			return AESUtils.encrypt(salt, secret);
-		}
-		return secret;
-	}
+  /**
+   * @param cryptoChain the cryptoChain to set
+   */
+  public void setCryptoChain(String[] cryptoChain) {
+    this.cryptoChain = cryptoChain;
+  }
+
+//  /**
+//   * If hashType on this object is set, we will do a first-pass call to {@link #encrypt(String, String, String)}
+//   * with that hashType. The primary use case is to support imported legacy data with weaker password hashing
+//   * such as vanilla md5.
+//   * @param cipher
+//   * @param salt
+//   * @param secret
+//   */
+//	public void setEncryptedSecret(String cipher, String salt, String secret) {
+//		encrypted = true;
+//		recoverable = ("aes".equals(cipher) || "plaintext".equals(cipher) || (cipher == null));
+//		this.cipher = cipher;
+//    if ( this.hashType != null ) {
+//      secret = encrypt(this.hashType, "", secret);
+//    }
+//		this.secret = encrypt(cipher, salt, secret);
+//	}
+
+//	public String encrypt(String cipher, String salt, String secret) {
+//		if ("plaintext".equals(cipher)) {
+//			return secret;
+//		} else if ("bcrypt".equals(cipher)) {
+//			return BCrypt.hashpw(secret, BCrypt.gensalt());
+//		} else if ("sha-1".equals(cipher)) {
+//			return encodeBase64URLSafeString(computeHash((isBlank(salt) ? secret : salt + secret)));
+//		} else if ("md5".equals(cipher)) {
+//			return DigestUtils.md5Hex(secret);
+//		} else if ("aes".equals(cipher)) {
+//			return AESUtils.encrypt(salt, secret);
+//		}
+//		return secret;
+//	}
 
   /**
    * Main entry point for password equivalency comparrison. Compares the output

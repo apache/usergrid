@@ -25,38 +25,38 @@ public class PasswordUtils {
 
 	public static boolean USE_BCRYPT = false;
 
-	public static byte[] computeHash(String x) {
-		java.security.MessageDigest d = null;
-		try {
-			d = java.security.MessageDigest.getInstance("SHA-1");
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-			return null;
-		}
-		d.reset();
-		d.update(x.getBytes());
-		return d.digest();
-	}
+//	public static byte[] computeHash(String x) {
+//		java.security.MessageDigest d = null;
+//		try {
+//			d = java.security.MessageDigest.getInstance("SHA-1");
+//		} catch (NoSuchAlgorithmException e) {
+//			e.printStackTrace();
+//			return null;
+//		}
+//		d.reset();
+//		d.update(x.getBytes());
+//		return d.digest();
+//	}
 
-	public static String hashPassword(String password) throws Exception {
-		if (USE_BCRYPT) {
-			return BCrypt.hashpw(password, BCrypt.gensalt());
-		} else {
-			return encodeBase64URLSafeString(computeHash(password));
-		}
-	}
+//	public static String hashPassword(String password) throws Exception {
+//		if (USE_BCRYPT) {
+//			return BCrypt.hashpw(password, BCrypt.gensalt());
+//		} else {
+//			return encodeBase64URLSafeString(computeHash(password));
+//		}
+//	}
 
 	public static String mongoPassword(String username, String password) {
 		return DigestUtils.md5Hex(username + ":mongo:" + password);
 	}
 
-	public static boolean checkPassword(String password, String hash)
-			throws Exception {
-		if (USE_BCRYPT) {
-			return BCrypt.checkpw(password, hash);
-		} else {
-			return hashPassword(password).equals(hash);
-		}
-	}
+//	public static boolean checkPassword(String password, String hash)
+//			throws Exception {
+//		if (USE_BCRYPT) {
+//			return BCrypt.checkpw(password, hash);
+//		} else {
+//			return hashPassword(password).equals(hash);
+//		}
+//	}
 
 }
