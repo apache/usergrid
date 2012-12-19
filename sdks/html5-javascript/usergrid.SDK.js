@@ -409,7 +409,7 @@ Usergrid.SDK_VERSION = '0.9.10';
     getCursor: function() {
       return this._cursor;
     },
-    
+
     isUUID: function(uuid) {
       var uuidValueRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
       if (!uuid) return false;
@@ -457,6 +457,21 @@ Usergrid.ApiClient = (function () {
   var _loggedInUser = null;
   var _logoutCallback = null;
   var _callTimeoutCallback = null;
+
+
+
+
+  function start(properties){
+    if (properties.orgName) {
+      this.setOrganizationName(properties.orgName);
+    }
+    if (properties.appName) {
+      this.setApplicationName(properties.appName);
+    }
+    if (properties.timeoutValue) {
+      this.setCallTimeout(properties.timeoutValue);
+    }
+  }
 
   /*
    *  A method to set up the ApiClient with orgname and appname
@@ -590,7 +605,7 @@ Usergrid.ApiClient = (function () {
   function setApiUrl(apiUrl) {
     _apiUrl = apiUrl;
   }
-  
+
   /*
    *  A public method to return the call timeout amount
    *
@@ -612,18 +627,18 @@ Usergrid.ApiClient = (function () {
   function setCallTimeout(callTimeout) {
     _callTimeout = callTimeout;
   }
-  
+
   /*
    * Returns the call timeout callback function
    *
    * @public
    * @method setCallTimeoutCallback
    * @return none
-   */ 
+   */
   function setCallTimeoutCallback(callback) {
-    _callTimeoutCallback = callback; 
+    _callTimeoutCallback = callback;
   }
-  
+
   /*
    * Returns the call timeout callback function
    *
@@ -632,9 +647,9 @@ Usergrid.ApiClient = (function () {
    * @return {function} Returns the callTimeoutCallback
    */
   function getCallTimeoutCallback() {
-    return _callTimeoutCallback; 
+    return _callTimeoutCallback;
   }
-  
+
   /*
    * Calls the call timeout callback function
    *
@@ -698,8 +713,32 @@ Usergrid.ApiClient = (function () {
   */
   function logInAppUser (username, password, successCallback, failureCallback) {
     var self = this;
-    var data = {"username": username, "password": password, "grant_type": "password"};
-    this.runAppQuery(new Usergrid.Query('GET', 'token', null, data,
+    var params = {"username": username, "password": password, "grant_type": "password"};
+    this.runAppQuery(new Usergrid.Query('GET', 'token', null, params,
+      function (response) {
+        var user = new Usergrid.Entity('users');
+        user.set('username', response.user.username);
+        user.set('name', response.user.name);
+        user.set('email', response.user.email);
+        user.set('uuid', response.user.uuid);
+        self.setLoggedInUser(user);
+        self.setToken(response.access_token);
+        if (successCallback && typeof(successCallback) === "function") {
+          successCallback(response);
+        }
+      },
+      function (response) {
+        if (failureCallback && typeof(failureCallback) === "function") {
+          failureCallback(response);
+        }
+      }
+     ));
+  }
+
+  function logInWithFacebook (facebookToken, successCallback, failureCallback) {
+    var self = this;
+    var params = {fb_access_token: facebookToken};
+    this.runAppQuery(new Usergrid.Query('GET', 'auth/facebook', null, params,
       function (response) {
         var user = new Usergrid.Entity('users');
         user.set('username', response.user.username);
@@ -856,8 +895,8 @@ Usergrid.ApiClient = (function () {
   function setQueryType(type) {
     _queryType = type;
   }
-  
-  
+
+
 
   /**
    *  A private method to validate, prepare,, and make the calls to the API
@@ -888,7 +927,7 @@ Usergrid.ApiClient = (function () {
       if (method != 'GET' && method != 'POST' && method != 'PUT' && method != 'DELETE') {
         throw(new Error('Invalid method - should be GET, POST, PUT, or DELETE.'));
       }
-    
+
       //curl - append the bearer token if this is not the sandbox app
       var application_name = Usergrid.ApiClient.getApplicationName();
       if (application_name) {
@@ -954,7 +993,7 @@ Usergrid.ApiClient = (function () {
       console.log('error occured running query -' + e.message);
       return false;
     }
-    
+
     try {
       curl = Usergrid.Curl.buildCurlCall(Query, endpoint);
       //log the curl call
@@ -968,7 +1007,7 @@ Usergrid.ApiClient = (function () {
     //so far so good, so run the query
     var xD = window.XDomainRequest ? true : false;
     var xhr = getXHR(method, path, jsonObj);
-   
+
     // Handle response.
     xhr.onerror = function() {
       //for timing, call end
@@ -1028,22 +1067,22 @@ Usergrid.ApiClient = (function () {
         //then call the original callback
         Query.callSuccessCallback(response);
      }
-    }; 
-        
+    };
+
     var timeout = setTimeout(
-      function() { 
-        xhr.abort(); 
+      function() {
+        xhr.abort();
         if (Usergrid.ApiClient.getCallTimeoutCallback() === 'function') {
           Usergrid.ApiClient.callTimeoutCallback('API CALL TIMEOUT');
         } else {
           Query.callFailureCallback('API CALL TIMEOUT');
-        }        
-      }, 
+        }
+      },
       Usergrid.ApiClient.getCallTimeout()); //set for 30 seconds
 
     xhr.send(jsonObj);
   }
-  
+
    /**
    *  A private method to return the XHR object
    *
@@ -1067,7 +1106,7 @@ Usergrid.ApiClient = (function () {
       }
       xhr.open(method, path, true);
     }
-    else 
+    else
     {
       xhr = new XMLHttpRequest();
       xhr.open(method, path, true);
@@ -1105,6 +1144,7 @@ Usergrid.ApiClient = (function () {
     getLoggedInUser:getLoggedInUser,
     setLoggedInUser:setLoggedInUser,
     logInAppUser:logInAppUser,
+    logInWithFacebook:logInWithFacebook,
     renewAppUserToken:renewAppUserToken,
     logoutAppUser:logoutAppUser,
     encodeParams:encodeParams,

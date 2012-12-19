@@ -32,10 +32,13 @@ $(document).ready(function () {
  //  Usergrid.ApiClient.init('Apigee', 'sandbox');
 
  
-  usergrid.client.init( 
+  usergrid.client.start( 
     {
-      "org":"apigee",
-      "app":"sandbox"   
+      "orgName":"apigee",
+      "appName":"sandbox",
+      "callTimeout":30000,
+      "callTimeoutCallback": function(){},   
+      "logoutCallback": function(){}
     }, 
     function(){
       //success! 
