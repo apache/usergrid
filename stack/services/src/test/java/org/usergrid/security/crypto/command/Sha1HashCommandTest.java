@@ -18,8 +18,11 @@ package org.usergrid.security.crypto.command;
 import static org.junit.Assert.*;
 
 import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.junit.Test;
 import org.usergrid.persistence.CredentialsInfo;
@@ -30,13 +33,12 @@ import org.usergrid.persistence.entities.User;
  *
  */
 public class Sha1HashCommandTest {
-
   @Test
-  public void hashAndAuthCorrect() throws UnsupportedEncodingException {
+  public void hashAndAuthCorrect() throws UnsupportedEncodingException, NoSuchAlgorithmException {
     
-    String test = "I'm a test password";
+    String test = "I'm a  test password";
     
-    byte[] hashed = Md5Hash.toBytes(test);
+    byte[] hashed = digest(test.getBytes("UTF-8"));
     
     Sha1HashCommand command = new  Sha1HashCommand();
     
@@ -48,12 +50,16 @@ public class Sha1HashCommandTest {
     
     byte[] results = command.hash(test.getBytes("UTF-8"), info, user, applicationId);
     
-    assertEquals(hashed, results);
+    assertArrayEquals(hashed, results);
     
     byte[] authed = command.auth(test.getBytes("UTF-8"), info, user, applicationId);
     
     assertArrayEquals(results, authed);
     
   }
-
+  
+  private byte[] digest(byte[] input) throws NoSuchAlgorithmException{
+    MessageDigest md = MessageDigest.getInstance("SHA-1"); 
+    return md.digest(input);
+  }
 }

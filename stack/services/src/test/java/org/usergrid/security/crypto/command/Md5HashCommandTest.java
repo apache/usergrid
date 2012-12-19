@@ -49,7 +49,7 @@ public class Md5HashCommandTest {
     
     byte[] results = command.hash(test.getBytes("UTF-8"), info, user, applicationId);
     
-    assertEquals(hashed, results);
+    assertArrayEquals(hashed, results);
     
     byte[] authed = command.auth(test.getBytes("UTF-8"), info, user, applicationId);
     
