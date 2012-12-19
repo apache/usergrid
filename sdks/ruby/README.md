@@ -181,6 +181,10 @@ usergrid_iron/spec/spec_settings.yaml to match.)
 
 ## Release notes
 
+### 0.0.6 (unreleased)
+* New features
+  1. iterators can now optionally cross page boundaries, use `collection.follow_cursor.each`
+
 ### 0.0.5
 * New features
   1. added create_* method for application

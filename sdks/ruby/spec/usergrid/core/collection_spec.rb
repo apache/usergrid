@@ -5,10 +5,8 @@ describe Usergrid::Collection do
     @user = create_random_user @application, true
 
     @collection = @application['tests'].collection
-    @entity_data = []
-    (1..10).each do |i|
-      test = { name: "name_#{i}", value: "value_#{i+1}" }
-      @entity_data << test
+    @entity_data = (1..25).collect do |i|
+      { name: "name_#{i}", value: "value_#{i+1}" }
     end
     @collection.create_entities @entity_data
   end
@@ -51,8 +49,8 @@ describe Usergrid::Collection do
   it "should be able to respect query reversal and limits" do
     @collection.query nil, reversed: true, start: 5, cursor: nil, limit: 2, permission: nil
     @collection.size.should eq 2
-    @collection[0].name.should eq @entity_data[9][:name]
-    @collection[1].name.should eq @entity_data[8][:name]
+    @collection[0].name.should eq @entity_data[@entity_data.size-1][:name]
+    @collection[1].name.should eq @entity_data[@entity_data.size-2][:name]
   end
 
   it "should be able to select the start by uuid" do
@@ -77,6 +75,23 @@ describe Usergrid::Collection do
     entity = @collection.detect { |e| e['new_field'] == 'new_value' }
     entity.should_not be_nil
     entity.name.should eq @entity_data[4][:name]
+  end
+
+  it "should be able to iterate within the page" do
+    @collection.query
+    @collection.cursor.should_not be_nil
+    count = 0
+    page_size = @collection.count
+    @collection.each {|e| count += 1 }
+    count.should eq page_size
+  end
+
+  it "should be able to iterate over pages" do
+    @collection.query
+    @collection.cursor.should_not be_nil
+    count = 0
+    @collection.follow_cursor.each {|e| count += 1 }
+    count.should eq @entity_data.size
   end
 
 end

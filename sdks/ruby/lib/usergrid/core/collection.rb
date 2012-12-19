@@ -2,10 +2,12 @@ module Usergrid
   class Collection < Entity
     include Enumerable
 
+    attr_accessor :iterator_follows_cursor
     attr_reader :query_params
 
     def initialize(url, api_url, options={}, response=nil)
       super url, api_url, options, response
+      @iterator_follows_cursor = false
     end
 
     def collection
@@ -32,6 +34,17 @@ module Usergrid
 
     def each(&block)
       entities.each &block
+      while cursor
+        next_page
+        entities.each &block
+      end if iterator_follows_cursor
+    end
+
+    # use in conjunction with each() like: collection.follow_cursor.each {|e| }
+    def follow_cursor
+      my_clone = self.clone
+      my_clone.iterator_follows_cursor = true
+      my_clone
     end
 
     def create_entity(data)
@@ -64,12 +77,11 @@ module Usergrid
     end
 
     def cursor
-      response.data.cursor || nil
+      response.data['cursor']
     end
 
     def next_page
       query(nil, @query_params.merge({cursor: cursor}))
     end
-
   end
 end
