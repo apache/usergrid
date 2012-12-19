@@ -177,39 +177,39 @@ describe Usergrid::Application do
     response.entities.size.should eq size+1
   end
 
-  it "should be able to create and retrieve events and retrieve counters" do
-    # clear events
-    {} while @application.events.entities.size > 0
-
-    events_in = []
-    events_in  << {timestamp: 0, category: 'test', counters: { test: 1 }}
-    events_in  << {timestamp: 0, category: 'testme', counters: { testme: 1 }}
-    events_in  << {timestamp: 0, counters: { test: 1 }}
-    events_in.each {|e| @application.create_entity :events, e }
-
-    events_out = []
-    events_out << @application.events.entity
-    events_out << @application.events.entity
-    events_out << @application.events.entity
-
-    (0..2).each do |i|
-      events_in[i][:category].should eq events_out[i]['category']
-    end
-
-    response = @application.events
-    response.entities.size.should eq 0
-
-    # get and test counters
-    counter_names = @application.counter_names
-    counter_names.should include 'test'
-    counter_names.should include 'testme'
-
-    response = @application.counter 'test'
-    counter = response.data.counters.first
-    counter.name.should eq 'test'
-    # can't reliably test this - counters are batched on server
-    #counter.values.last.first.value.should be > 0
-  end
+  # can't reliably test this - counters are batched on server
+  #it "should be able to create and retrieve events and retrieve counters" do
+  #  # clear events
+  #  {} while @application.events.entities.size > 0
+  #
+  #  events_in = []
+  #  events_in  << {timestamp: 0, category: 'test', counters: { test: 1 }}
+  #  events_in  << {timestamp: 0, category: 'testme', counters: { testme: 1 }}
+  #  events_in  << {timestamp: 0, counters: { test: 1 }}
+  #  events_in.each {|e| @application.create_entity :events, e }
+  #
+  #  events_out = []
+  #  events_out << @application.events.entity
+  #  events_out << @application.events.entity
+  #  events_out << @application.events.entity
+  #
+  #  (0..2).each do |i|
+  #    events_in[i][:category].should eq events_out[i]['category']
+  #  end
+  #
+  #  response = @application.events
+  #  response.entities.size.should eq 0
+  #
+  #  # get and test counters
+  #  counter_names = @application.counter_names
+  #  counter_names.should include 'test'
+  #  counter_names.should include 'testme'
+  #
+  #  response = @application.counter 'test'
+  #  counter = response.data.counters.first
+  #  counter.name.should eq 'test'
+  #  counter.values.last.first.value.should be > 0
+  #end
 
   it "should be able to create, retrieve, and delete roles" do
     size = @application.roles.collection.size
