@@ -37,6 +37,15 @@ public class Md5HashCommand extends SaltedHasherCommand {
      return DigestUtils.md5(data);
   
   }
+  
+  /* (non-Javadoc)
+   * @see org.usergrid.security.crypto.command.EncryptionCommand#auth(byte[], org.usergrid.persistence.CredentialsInfo, org.usergrid.persistence.entities.User, java.util.UUID)
+   */
+  @Override
+  public byte[] auth(byte[] input, CredentialsInfo info, User user, UUID applicationId) {
+    return hash(input, info, user, applicationId);
+  }
+
 
   /* (non-Javadoc)
    * @see org.usergrid.security.crypto.command.EncryptionCommand#getName()
@@ -46,4 +55,5 @@ public class Md5HashCommand extends SaltedHasherCommand {
     return MD5;
   }
 
+ 
 }

@@ -35,8 +35,10 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
  */
 public class EncryptionServiceImpl implements EncryptionService {
 
+  private static final String DEFAULT_COMMAND = EncryptionCommand.BCRYPT;
   private static final Charset UTF8 = Charset.forName("UTF-8");
   private Map<String, EncryptionCommand> commands;
+  private EncryptionCommand defaultCommand;
 
   /*
    * (non-Javadoc)
@@ -82,7 +84,7 @@ public class EncryptionServiceImpl implements EncryptionService {
       encrypted = command.hash(encrypted, creds, user, applicationId);
     }
 
-    return encodeBase64URLSafeString(encrypted);
+    return encode(encrypted);
 
   }
 
@@ -109,17 +111,20 @@ public class EncryptionServiceImpl implements EncryptionService {
 
       commands.put(name, command);
     }
+    
+    defaultCommand = commands.get(DEFAULT_COMMAND);
+    
+    Assert.notNull(defaultCommand, "Encryption command for type "+ DEFAULT_COMMAND +" must be present");
+    
+    
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.usergrid.security.crypto.EncryptionService#plainTextCredentials(java
-   * .lang.String)
+
+  /* (non-Javadoc)
+   * @see org.usergrid.security.crypto.EncryptionService#plainTextCredentials(java.lang.String, org.usergrid.persistence.entities.User, java.util.UUID)
    */
   @Override
-  public CredentialsInfo plainTextCredentials(String secret) {
+  public CredentialsInfo plainTextCredentials(String secret, User user, UUID applicationId) {
 
     CredentialsInfo credentials = new CredentialsInfo();
     credentials.setRecoverable(true);
@@ -129,16 +134,25 @@ public class EncryptionServiceImpl implements EncryptionService {
 
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.usergrid.security.crypto.EncryptionService#defaultEncryptedCredentials
-   * (java.lang.String)
+
+  /* (non-Javadoc)
+   * @see org.usergrid.security.crypto.EncryptionService#defaultEncryptedCredentials(java.lang.String, org.usergrid.persistence.entities.User, java.util.UUID)
    */
   @Override
-  public CredentialsInfo defaultEncryptedCredentials(String input) {
-    return null;
+  public CredentialsInfo defaultEncryptedCredentials(String input, User user, UUID applicationId) {
+    CredentialsInfo credentials = new CredentialsInfo();
+    credentials.setRecoverable(false);
+    credentials.setEncrypted(true);
+    credentials.setCryptoChain(new String[]{defaultCommand.getName()});
+    
+    credentials.setSecret(encode(defaultCommand.hash(input.getBytes(UTF8), credentials, user, applicationId)));
+    
+    return credentials;
+
+  }
+  
+  protected String encode(byte[] bytes){
+    return encodeBase64URLSafeString(bytes);
   }
 
 }

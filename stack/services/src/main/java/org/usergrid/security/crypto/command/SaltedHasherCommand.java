@@ -44,6 +44,10 @@ public abstract class SaltedHasherCommand extends EncryptionCommand {
    * @return
    */
   protected byte[] maybeSalt(byte[] input, UUID applicationId, UUID userId) {
+    if(provider == null){
+      return input;
+    }
+    
     String salt = provider.getSalt(applicationId, userId);
 
     /**

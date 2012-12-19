@@ -42,14 +42,14 @@ public interface EncryptionService {
    * @param text
    * @return
    */
-  public CredentialsInfo plainTextCredentials(String secret);
+  public CredentialsInfo plainTextCredentials(String secret,  User user, UUID applicationId);
   
   /**
    * Generate credentials info using the system default encryption command.  Used for passwords and other types
    * @param input
    * @return
    */
-  public CredentialsInfo defaultEncryptedCredentials(String secret);
+  public CredentialsInfo defaultEncryptedCredentials(String secret,  User user, UUID applicationId);
   
   
   

@@ -1,0 +1,197 @@
+/*******************************************************************************
+ * Copyright 2012 Apigee Corporation
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+package org.usergrid.security.crypto.command;
+
+import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
+import static org.junit.Assert.assertArrayEquals;
+
+import java.io.UnsupportedEncodingException;
+import java.util.UUID;
+
+import org.junit.Test;
+import org.usergrid.persistence.CredentialsInfo;
+import org.usergrid.persistence.entities.User;
+
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.MetricPredicate;
+import com.yammer.metrics.core.Timer;
+import com.yammer.metrics.core.TimerContext;
+import com.yammer.metrics.reporting.ConsoleReporter;
+
+/**
+ * @author tnine
+ * 
+ */
+public class BcryptCommandTest {
+
+  /**
+   * Tests bcrypt hashing with a default number of rounds
+   * 
+   * @throws UnsupportedEncodingException
+   */
+  @Test
+  public void hashWithNoExistingImpl() throws UnsupportedEncodingException {
+
+    int cryptIterations = 2^4;
+
+    BcryptCommand command = new BcryptCommand();
+    command.setDefaultIterations(cryptIterations);
+
+    String baseString = "I am a test password for hashing";
+
+    CredentialsInfo info = new CredentialsInfo();
+  
+    
+    User user = new User();
+    UUID applicationId = UUID.randomUUID();
+
+    byte[] result = command.hash( baseString.getBytes("UTF-8"), info, user, applicationId);
+ 
+
+    String stringResults = encodeBase64URLSafeString(result);
+    
+    
+    info.setSecret(stringResults);
+    
+    //now check we can auth with the same phrase
+    byte[] authed = command.auth(baseString.getBytes("UTF-8"), info, user, applicationId);
+    
+    
+    assertArrayEquals(result, authed);
+
+  }
+  
+  
+  /**
+   * Tests bcrypt hashing then auth.  This should fail if there's no secret.
+   * 
+   * @throws UnsupportedEncodingException
+   */
+  @Test(expected=IllegalArgumentException.class)
+  public void authNoSecret() throws UnsupportedEncodingException {
+
+    int cryptIterations = 2^4;
+
+    BcryptCommand command = new BcryptCommand();
+    command.setDefaultIterations(cryptIterations);
+
+    String baseString = "I am a test password for hashing";
+
+    CredentialsInfo info = new CredentialsInfo();
+  
+    
+    User user = new User();
+    UUID applicationId = UUID.randomUUID();
+
+    command.hash( baseString.getBytes("UTF-8"), info, user, applicationId);
+
+    
+    //now check we can't auth since the CI doesn't have any secret on it
+    command.auth(baseString.getBytes("UTF-8"), info, user, applicationId);
+    
+
+  }
+  
+
+  /**
+   * Tests bcrypt hashing fails when the existing secret is wrong
+   * 
+   * @throws UnsupportedEncodingException
+   */
+  @Test(expected=IllegalArgumentException.class)
+  public void authInvalidSecret() throws UnsupportedEncodingException {
+
+    int cryptIterations = 2^4;
+
+    BcryptCommand command = new BcryptCommand();
+    command.setDefaultIterations(cryptIterations);
+
+    String baseString = "I am a test password for hashing";
+
+    CredentialsInfo info = new CredentialsInfo();
+  
+    
+    User user = new User();
+    UUID applicationId = UUID.randomUUID();
+
+    byte[] result = command.hash( baseString.getBytes("UTF-8"), info, user, applicationId);
+
+    info.setSecret("I'm a junk secret that's not bcrypted");
+    
+    //now check we can auth with the same phrase
+    byte[] authed = command.auth(baseString.getBytes("UTF-8"), info, user, applicationId);
+    
+    
+    assertArrayEquals(result, authed);
+
+  }
+
+  /**
+   * Tests bcrypt hashing with a default number of rounds.  Note that via the console output, 
+   * this test should take about 5 seconds to run since we want to force 500 ms per authentication 
+   * attempt with bcrypt
+   * 
+   * @throws UnsupportedEncodingException
+   */
+  @Test
+  public void testHashRoundSpeed() throws UnsupportedEncodingException {
+
+    int cryptIterations = 2^11;
+    int numberOfTests = 10;
+
+    BcryptCommand command = new BcryptCommand();
+    command.setDefaultIterations(cryptIterations);
+
+    String baseString = "I am a test password for hashing";
+
+    CredentialsInfo info = new CredentialsInfo();
+  
+    
+    User user = new User();
+    UUID applicationId = UUID.randomUUID();
+
+    byte[] result = command.hash( baseString.getBytes("UTF-8"), info, user, applicationId);
+ 
+
+    String stringResults = encodeBase64URLSafeString(result);
+    
+    info.setSecret(stringResults);
+
+    Timer timer = Metrics.newTimer(BcryptCommandTest.class, "hashtimer");
+
+    for (int i = 0; i < numberOfTests; i++) {
+      TimerContext timerCtx = timer.time();
+
+      //now check we can auth with the same phrase
+      byte[] authed = command.auth(baseString.getBytes("UTF-8"), info, user, applicationId);
+      
+      timerCtx.stop();
+
+      
+      assertArrayEquals(result, authed);
+
+    }
+    
+    /**
+     * Print out the data
+     */
+    ConsoleReporter reporter = new ConsoleReporter(Metrics.defaultRegistry(),
+        System.out,
+        MetricPredicate.ALL);
+
+    reporter.run();
+  }
+}

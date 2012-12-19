@@ -15,42 +15,46 @@
  ******************************************************************************/
 package org.usergrid.security.crypto.command;
 
+import static org.junit.Assert.*;
+
+import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
-import org.springframework.stereotype.Component;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.shiro.crypto.hash.Md5Hash;
+import org.junit.Test;
 import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.entities.User;
 
 /**
- * A no-op provider
  * @author tnine
- * 
+ *
  */
-@Component
-public class PlainTextCommand extends SaltedHasherCommand {
+public class Md5HashCommandTest {
 
-  @Override
-  public byte[] hash(byte[] input, CredentialsInfo info, User user, UUID applicationId) {
-    return input;
+  @Test
+  public void hashAndAuthCorrect() throws UnsupportedEncodingException {
+    
+    String test = "I'm a  test password";
+    
+    byte[] hashed = DigestUtils.md5(test.getBytes("UTF-8"));
+    
+    Md5HashCommand command = new  Md5HashCommand();
+    
+    CredentialsInfo info = new CredentialsInfo();
+    
+    User user = new User();
+    
+    UUID applicationId = UUID.randomUUID();
+    
+    byte[] results = command.hash(test.getBytes("UTF-8"), info, user, applicationId);
+    
+    assertEquals(hashed, results);
+    
+    byte[] authed = command.auth(test.getBytes("UTF-8"), info, user, applicationId);
+    
+    assertArrayEquals(results, authed);
+    
   }
-  
-  
-  /* (non-Javadoc)
-   * @see org.usergrid.security.crypto.command.EncryptionCommand#auth(byte[], org.usergrid.persistence.CredentialsInfo, org.usergrid.persistence.entities.User, java.util.UUID)
-   */
-  @Override
-  public byte[] auth(byte[] input, CredentialsInfo info, User user, UUID applicationId) {
-    return input;
-  }
-
-  /* (non-Javadoc)
-   * @see org.usergrid.security.crypto.command.EncryptionCommand#getName()
-   */
-  @Override
-  public String getName() {
-    return PLAINTEXT;
-  }
-
-
 
 }

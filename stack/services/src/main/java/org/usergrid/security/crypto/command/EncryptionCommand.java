@@ -49,6 +49,16 @@ public abstract class EncryptionCommand {
   public abstract byte[] hash(byte[] input, CredentialsInfo info, User user, UUID applicationId);
   
   /**
+   * Perform authentication from the given input bytes.  Return the bytes that should be used for comparison
+   * @param input
+   * @param info
+   * @param user
+   * @param applicationId
+   * @return
+   */
+  public abstract byte[] auth(byte[] input, CredentialsInfo info, User user, UUID applicationId);
+  
+  /**
    * Get the name of this encryption command
    * @return
    */
