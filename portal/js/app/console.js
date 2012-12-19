@@ -203,7 +203,7 @@ function apigee_console_app(Pages, query_params) {
       name = "Select an Application";
     }
     $('#current-app-name').html('<div class="app-menu">' + name + '</div>  <span class="caret"></span>');
-    $('.thingy span.title span.app_title').text(" - " + name);
+    $('.thingy span.title span.app_title').text(" " + name);
   }
 
   /*******************************************************************
