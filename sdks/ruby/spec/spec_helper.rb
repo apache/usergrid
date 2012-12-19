@@ -53,7 +53,7 @@ end
 def delete_application(application)
   management = login_management
   application.auth_token = management.auth_token
-  application.delete rescue nil  # not implemented on server yet
+  # application.delete rescue nil  # not implemented on server yet
 end
 
 def create_random_user(application, login=false)
