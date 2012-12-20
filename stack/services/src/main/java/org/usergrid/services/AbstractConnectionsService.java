@@ -318,20 +318,23 @@ public class AbstractConnectionsService extends AbstractService {
 			throws Exception {
 
 		checkPermissionsForCollection(context);
+    if (!query.hasQueryPredicates() && (query.getEntityType() != null)) {
 
-		if (!query.hasQueryPredicates() && (query.getEntityType() != null)
-				&& query.containsSingleNameOrEmailIdentifier()) {
+      Entity entity;
+      if (query.containsSingleNameOrEmailIdentifier()) {
+        String name = query.getSingleNameOrEmailIdentifier();
 
-			String name = query.getSingleNameOrEmailIdentifier();
-
-			EntityRef ref = em.getAlias(query.getEntityType(), name);
-			if (ref == null) {
-				throw new ServiceResourceNotFoundException(context);
-			}
-			Entity entity = em.get(ref);
-			if (entity == null) {
-				throw new ServiceResourceNotFoundException(context);
-			}
+        EntityRef ref = em.getAlias(query.getEntityType(), name);
+        if (ref == null) {
+          throw new ServiceResourceNotFoundException(context);
+        }
+        entity = em.get(ref);
+        if (entity == null) {
+          throw new ServiceResourceNotFoundException(context);
+        }
+      } else {
+        entity = em.create(query.getEntityType(), context.getProperties());
+      }
 			entity = importEntity(context, entity);
 
 			createConnection(context.getOwner(), query.getConnectionType(),
