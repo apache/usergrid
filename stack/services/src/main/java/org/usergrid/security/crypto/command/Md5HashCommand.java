@@ -20,30 +20,33 @@ import java.util.UUID;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Component;
 import org.usergrid.persistence.CredentialsInfo;
-import org.usergrid.persistence.entities.User;
 
 /**
  * @author tnine
  *
  */
-@Component
+@Component("org.usergrid.security.crypto.command.Md5HashCommand")
 public class Md5HashCommand extends SaltedHasherCommand {
 
   
+  /* (non-Javadoc)
+   * @see org.usergrid.security.crypto.command.EncryptionCommand#hash(byte[], org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
+   */
   @Override
-  public byte[] hash(byte[] input, CredentialsInfo info, User user, UUID applicationId) {
-     byte[]  data = maybeSalt(input, applicationId, user.getUuid());
+  public byte[] hash(byte[] input, CredentialsInfo info,  UUID userId, UUID applicationId) {
+     byte[]  data = maybeSalt(input, applicationId, userId);
      
      return DigestUtils.md5(data);
   
   }
   
+
   /* (non-Javadoc)
-   * @see org.usergrid.security.crypto.command.EncryptionCommand#auth(byte[], org.usergrid.persistence.CredentialsInfo, org.usergrid.persistence.entities.User, java.util.UUID)
+   * @see org.usergrid.security.crypto.command.EncryptionCommand#auth(byte[], org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
    */
   @Override
-  public byte[] auth(byte[] input, CredentialsInfo info, User user, UUID applicationId) {
-    return hash(input, info, user, applicationId);
+  public byte[] auth(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
+    return hash(input, info, userId, applicationId);
   }
 
 

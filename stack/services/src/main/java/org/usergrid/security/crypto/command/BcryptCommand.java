@@ -23,7 +23,6 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.usergrid.persistence.CredentialsInfo;
-import org.usergrid.persistence.entities.User;
 import org.usergrid.utils.BCrypt;
 
 /**
@@ -31,7 +30,7 @@ import org.usergrid.utils.BCrypt;
  * @author tnine
  *
  */
-@Component
+@Component("org.usergrid.security.crypto.command.BcryptCommand")
 public class BcryptCommand extends EncryptionCommand {
 
   private static final Charset UTF8 = Charset.forName("UTF-8");
@@ -42,17 +41,21 @@ public class BcryptCommand extends EncryptionCommand {
   private int defaultIterations = 2^11;
   
   
+  /* (non-Javadoc)
+   * @see org.usergrid.security.crypto.command.EncryptionCommand#hash(byte[], org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
+   */
   @Override
-  public byte[] hash(byte[] input, CredentialsInfo info, User user, UUID applicationId) {
+  public byte[] hash(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
     return  BCrypt.hashpw(new String(input, UTF8), BCrypt.gensalt(defaultIterations)).getBytes();
   }
 
 
  
+
   /* (non-Javadoc)
-   * @see org.usergrid.security.crypto.command.EncryptionCommand#auth(byte[], org.usergrid.persistence.CredentialsInfo, org.usergrid.persistence.entities.User, java.util.UUID)
+   * @see org.usergrid.security.crypto.command.EncryptionCommand#auth(byte[], org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
    */
-  public byte[] auth(byte[] input, CredentialsInfo info, User user, UUID applicationId){
+  public byte[] auth(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId){
     //our existing has the salt in it, extract it and re-use it
     
     String infoSecret = info.getSecret();

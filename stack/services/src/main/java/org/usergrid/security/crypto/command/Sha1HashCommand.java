@@ -22,20 +22,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.usergrid.persistence.CredentialsInfo;
-import org.usergrid.persistence.entities.User;
 
 /**
  * @author tnine
  *
  */
-@Component
+@Component("org.usergrid.security.crypto.command.Sha1HashCommand")
 public class Sha1HashCommand extends SaltedHasherCommand {
 
   private static final Logger logger = LoggerFactory.getLogger(Sha1HashCommand.class);
   
   
+  /* (non-Javadoc)
+   * @see org.usergrid.security.crypto.command.EncryptionCommand#hash(byte[], org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
+   */
   @Override
-  public byte[] hash(byte[] input, CredentialsInfo info, User user, UUID applicationId) {
+  public byte[] hash(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
       java.security.MessageDigest d = null;
       try {
         d = java.security.MessageDigest.getInstance("SHA-1");
@@ -45,18 +47,18 @@ public class Sha1HashCommand extends SaltedHasherCommand {
       }
       d.reset();
       
-      d.update(maybeSalt(input, applicationId, user.getUuid()));
+      d.update(maybeSalt(input, applicationId, userId));
       return d.digest();
   
   }
   
-  
+
   /* (non-Javadoc)
-   * @see org.usergrid.security.crypto.command.EncryptionCommand#auth(byte[], org.usergrid.persistence.CredentialsInfo, org.usergrid.persistence.entities.User, java.util.UUID)
+   * @see org.usergrid.security.crypto.command.EncryptionCommand#auth(byte[], org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
    */
   @Override
-  public byte[] auth(byte[] input, CredentialsInfo info, User user, UUID applicationId) {
-    return hash(input, info, user, applicationId);
+  public byte[] auth(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
+    return hash(input, info, userId, applicationId);
   }
 
 

@@ -15,16 +15,13 @@
  ******************************************************************************/
 package org.usergrid.security.crypto.command;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
 import java.io.UnsupportedEncodingException;
-import java.util.UUID;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.shiro.crypto.hash.Md5Hash;
 import org.junit.Test;
 import org.usergrid.persistence.CredentialsInfo;
-import org.usergrid.persistence.entities.User;
 
 /**
  * @author tnine
@@ -43,15 +40,12 @@ public class Md5HashCommandTest {
     
     CredentialsInfo info = new CredentialsInfo();
     
-    User user = new User();
     
-    UUID applicationId = UUID.randomUUID();
-    
-    byte[] results = command.hash(test.getBytes("UTF-8"), info, user, applicationId);
+    byte[] results = command.hash(test.getBytes("UTF-8"), info, null, null);
     
     assertArrayEquals(hashed, results);
     
-    byte[] authed = command.auth(test.getBytes("UTF-8"), info, user, applicationId);
+    byte[] authed = command.auth(test.getBytes("UTF-8"), info, null, null);
     
     assertArrayEquals(results, authed);
     

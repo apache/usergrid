@@ -54,11 +54,8 @@ public class BcryptCommandTest {
 
     CredentialsInfo info = new CredentialsInfo();
   
-    
-    User user = new User();
-    UUID applicationId = UUID.randomUUID();
 
-    byte[] result = command.hash( baseString.getBytes("UTF-8"), info, user, applicationId);
+    byte[] result = command.hash( baseString.getBytes("UTF-8"), info, null, null);
  
 
     String stringResults = encodeBase64URLSafeString(result);
@@ -67,7 +64,7 @@ public class BcryptCommandTest {
     info.setSecret(stringResults);
     
     //now check we can auth with the same phrase
-    byte[] authed = command.auth(baseString.getBytes("UTF-8"), info, user, applicationId);
+    byte[] authed = command.auth(baseString.getBytes("UTF-8"), info, null, null);
     
     
     assertArrayEquals(result, authed);
@@ -92,15 +89,12 @@ public class BcryptCommandTest {
 
     CredentialsInfo info = new CredentialsInfo();
   
-    
-    User user = new User();
-    UUID applicationId = UUID.randomUUID();
 
-    command.hash( baseString.getBytes("UTF-8"), info, user, applicationId);
+    command.hash( baseString.getBytes("UTF-8"), info, null, null);
 
     
     //now check we can't auth since the CI doesn't have any secret on it
-    command.auth(baseString.getBytes("UTF-8"), info, user, applicationId);
+    command.auth(baseString.getBytes("UTF-8"), info, null, null);
     
 
   }
@@ -123,16 +117,13 @@ public class BcryptCommandTest {
 
     CredentialsInfo info = new CredentialsInfo();
   
-    
-    User user = new User();
-    UUID applicationId = UUID.randomUUID();
 
-    byte[] result = command.hash( baseString.getBytes("UTF-8"), info, user, applicationId);
+    byte[] result = command.hash( baseString.getBytes("UTF-8"), info, null, null);
 
     info.setSecret("I'm a junk secret that's not bcrypted");
     
     //now check we can auth with the same phrase
-    byte[] authed = command.auth(baseString.getBytes("UTF-8"), info, user, applicationId);
+    byte[] authed = command.auth(baseString.getBytes("UTF-8"), info, null, null);
     
     
     assertArrayEquals(result, authed);
@@ -160,7 +151,7 @@ public class BcryptCommandTest {
     CredentialsInfo info = new CredentialsInfo();
   
     
-    User user = new User();
+    UUID user = UUID.randomUUID();
     UUID applicationId = UUID.randomUUID();
 
     byte[] result = command.hash( baseString.getBytes("UTF-8"), info, user, applicationId);

@@ -19,18 +19,20 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 import org.usergrid.persistence.CredentialsInfo;
-import org.usergrid.persistence.entities.User;
 
 /**
  * A no-op provider
  * @author tnine
  * 
  */
-@Component
+@Component("org.usergrid.security.crypto.command.PlainTextCommand")
 public class PlainTextCommand extends SaltedHasherCommand {
 
+  /* (non-Javadoc)
+   * @see org.usergrid.security.crypto.command.EncryptionCommand#hash(byte[], org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
+   */
   @Override
-  public byte[] hash(byte[] input, CredentialsInfo info, User user, UUID applicationId) {
+  public byte[] hash(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
     return input;
   }
   
@@ -38,8 +40,11 @@ public class PlainTextCommand extends SaltedHasherCommand {
   /* (non-Javadoc)
    * @see org.usergrid.security.crypto.command.EncryptionCommand#auth(byte[], org.usergrid.persistence.CredentialsInfo, org.usergrid.persistence.entities.User, java.util.UUID)
    */
+  /* (non-Javadoc)
+   * @see org.usergrid.security.crypto.command.EncryptionCommand#auth(byte[], org.usergrid.persistence.CredentialsInfo, java.util.UUID, java.util.UUID)
+   */
   @Override
-  public byte[] auth(byte[] input, CredentialsInfo info, User user, UUID applicationId) {
+  public byte[] auth(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId) {
     return input;
   }
 

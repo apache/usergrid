@@ -15,10 +15,9 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -38,6 +37,7 @@ public class EntityDictionaryTest extends AbstractPersistenceTest {
 	public EntityDictionaryTest() {
 		super();
 	}
+	
 
 	@Test
 	public void testApplicationDictionaries() throws Exception {
@@ -87,8 +87,11 @@ public class EntityDictionaryTest extends AbstractPersistenceTest {
 
 		// test plaintext
 
-		CredentialsInfo credentials = CredentialsInfo
-				.plainTextCredentials("test");
+		CredentialsInfo credentials = new CredentialsInfo();
+		credentials.setSecret("test");
+		credentials.setEncrypted(false);
+		credentials.setRecoverable(true);
+    credentials.setCryptoChain(new String[]{"plaintext"});
 
 		em.addToDictionary(user, "credentials", "plaintext", credentials);
 
@@ -97,10 +100,21 @@ public class EntityDictionaryTest extends AbstractPersistenceTest {
 		logger.info(JsonUtils.mapToFormattedJsonString(o));
 
 		assertEquals(CredentialsInfo.class, o.getClass());
+		
+		CredentialsInfo returned = (CredentialsInfo) o;
+		
+		assertEquals(credentials.getSecret(), returned.getSecret());
+		assertEquals(credentials.getEncrypted(), returned.getEncrypted());
+		assertEquals(credentials.getRecoverable(), returned.getRecoverable());
+		assertArrayEquals(credentials.getCryptoChain(), returned.getCryptoChain());
 
 		// test encrypted but recoverable
 
-		credentials = CredentialsInfo.encryptedCredentials("salt", "test");
+		credentials = new CredentialsInfo();
+		credentials.setEncrypted(true);
+		credentials.setRecoverable(false);
+		credentials.setSecret("salt");
+		credentials.setCryptoChain(new String[]{"sha-1"});
 
 		em.addToDictionary(user, "credentials", "encrypted", credentials);
 
@@ -108,40 +122,15 @@ public class EntityDictionaryTest extends AbstractPersistenceTest {
 		logger.info(JsonUtils.mapToFormattedJsonString(o));
 
 		assertEquals(CredentialsInfo.class, o.getClass());
-		CredentialsInfo c = (CredentialsInfo) o;
+		returned = (CredentialsInfo) o;
 
-		assertNotSame("test", c.getSecret());
-		assertEquals("test", c.getUnencryptedSecret("salt"));
+		
+	  assertEquals(credentials.getSecret(), returned.getSecret());
+    assertEquals(credentials.getEncrypted(), returned.getEncrypted());
+    assertEquals(credentials.getRecoverable(), returned.getRecoverable());
+    assertArrayEquals(credentials.getCryptoChain(), returned.getCryptoChain());
 
-		// test encrypted and unrecoverable
 
-		credentials = CredentialsInfo.hashedCredentials("salt", "test",null);
-
-		em.addToDictionary(user, "credentials", "hashed", credentials);
-
-		o = em.getDictionaryElementValue(user, "credentials", "hashed");
-		logger.info(JsonUtils.mapToFormattedJsonString(o));
-
-		assertEquals(CredentialsInfo.class, o.getClass());
-		c = (CredentialsInfo) o;
-
-		assertNotSame("test", c.getSecret());
-
-		assertTrue(credentials.compare(c));
-
-    // test pre-hashed legacy
-    credentials = CredentialsInfo.hashedCredentials("salt", "test","md5");
-
-    em.addToDictionary(user, "credentials", "hashed", credentials);
-
-    o = em.getDictionaryElementValue(user, "credentials", "hashed");
-    logger.info(JsonUtils.mapToFormattedJsonString(o));
-
-    assertEquals(CredentialsInfo.class, o.getClass());
-    c = (CredentialsInfo) o;
-
-    assertNotSame("test", c.getSecret());
-    assertTrue(credentials.compare(CredentialsInfo.hashedCredentials("salt","test","md5")));
 
 	}
 

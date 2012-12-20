@@ -44,15 +44,12 @@ public class Sha1HashCommandTest {
     
     CredentialsInfo info = new CredentialsInfo();
     
-    User user = new User();
     
-    UUID applicationId = UUID.randomUUID();
-    
-    byte[] results = command.hash(test.getBytes("UTF-8"), info, user, applicationId);
+    byte[] results = command.hash(test.getBytes("UTF-8"), info, null, null);
     
     assertArrayEquals(hashed, results);
     
-    byte[] authed = command.auth(test.getBytes("UTF-8"), info, user, applicationId);
+    byte[] authed = command.auth(test.getBytes("UTF-8"), info, null, null);
     
     assertArrayEquals(results, authed);
     

@@ -18,7 +18,6 @@ package org.usergrid.security.crypto.command;
 import java.util.UUID;
 
 import org.usergrid.persistence.CredentialsInfo;
-import org.usergrid.persistence.entities.User;
 
 /**
  * Simple chain of responsibility algorithm for password cryptography.  
@@ -43,20 +42,21 @@ public abstract class EncryptionCommand {
    * 
    * @param input
    * @param info
-   * @param user
+   * @param userId
+   * @param applicationId
    * @return
    */
-  public abstract byte[] hash(byte[] input, CredentialsInfo info, User user, UUID applicationId);
+  public abstract byte[] hash(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId);
   
   /**
    * Perform authentication from the given input bytes.  Return the bytes that should be used for comparison
    * @param input
    * @param info
-   * @param user
+   * @param userId
    * @param applicationId
    * @return
    */
-  public abstract byte[] auth(byte[] input, CredentialsInfo info, User user, UUID applicationId);
+  public abstract byte[] auth(byte[] input, CredentialsInfo info, UUID userId, UUID applicationId);
   
   /**
    * Get the name of this encryption command

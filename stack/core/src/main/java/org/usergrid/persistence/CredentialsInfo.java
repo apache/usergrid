@@ -198,51 +198,14 @@ public class CredentialsInfo {
     this.cryptoChain = cryptoChain;
   }
 
-  // /**
-  // * If hashType on this object is set, we will do a first-pass call to {@link
-  // #encrypt(String, String, String)}
-  // * with that hashType. The primary use case is to support imported legacy
-  // data with weaker password hashing
-  // * such as vanilla md5.
-  // * @param cipher
-  // * @param salt
-  // * @param secret
-  // */
-  // public void setEncryptedSecret(String cipher, String salt, String secret) {
-  // encrypted = true;
-  // recoverable = ("aes".equals(cipher) || "plaintext".equals(cipher) ||
-  // (cipher == null));
-  // this.cipher = cipher;
-  // if ( this.hashType != null ) {
-  // secret = encrypt(this.hashType, "", secret);
-  // }
-  // this.secret = encrypt(cipher, salt, secret);
-  // }
-
-  // public String encrypt(String cipher, String salt, String secret) {
-  // if ("plaintext".equals(cipher)) {
-  // return secret;
-  // } else if ("bcrypt".equals(cipher)) {
-  // return BCrypt.hashpw(secret, BCrypt.gensalt());
-  // } else if ("sha-1".equals(cipher)) {
-  // return encodeBase64URLSafeString(computeHash((isBlank(salt) ? secret : salt
-  // + secret)));
-  // } else if ("md5".equals(cipher)) {
-  // return DigestUtils.md5Hex(secret);
-  // } else if ("aes".equals(cipher)) {
-  // return AESUtils.encrypt(salt, secret);
-  // }
-  // return secret;
-  // }
-
-  /**
-   * Main entry point for password equivalency comparrison. Compares the output
-   * of {@link #getSecret()} for this object and the provided object.
-   * 
-   * @param other
-   * @return
-   */
-  public boolean compare(CredentialsInfo other) {
-    return this.getSecret().equals(other.getSecret());
-  }
+//  /**
+//   * Main entry point for password equivalency comparrison. Compares the output
+//   * of {@link #getSecret()} for this object and the provided object.
+//   * 
+//   * @param other
+//   * @return
+//   */
+//  public boolean compare(CredentialsInfo other) {
+//    return this.getSecret().equals(other.getSecret());
+//  }
 }
