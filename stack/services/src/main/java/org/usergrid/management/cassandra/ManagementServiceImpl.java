@@ -3023,19 +3023,6 @@ public class ManagementServiceImpl implements ManagementService {
       
       return encryptionService.verify(password, ci, userId, applicationId);
     }
-//    private CredentialsInfo maybeSaltPassword(UUID applicationId, User user, String password)
-//            throws Exception {
-//      String hashType = null;
-//
-//      CredentialsInfo ci = readUserPasswordCredentials(applicationId, user.getUuid());
-//      if ( ci != null) {
-//        hashType = ci.getHashType();
-//      }
-//
-//      return hashedCredentials(
-//              saltProvider.getSalt(applicationId, user.getUuid()), password,
-//              hashType);
-//    }
 
     /**
      * @return the saltProvider

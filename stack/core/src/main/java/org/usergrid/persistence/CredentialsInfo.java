@@ -46,36 +46,7 @@ public class CredentialsInfo {
   public CredentialsInfo() {
   }
 
-  // public static CredentialsInfo plainTextCredentials(String secret) {
-  // CredentialsInfo credentials = new CredentialsInfo();
-  // credentials.setRecoverable(true);
-  // credentials.setSecret(secret);
-  // return credentials;
-  // }
-  //
-  // public static CredentialsInfo encryptedCredentials(String salt,
-  // String secret) {
-  // CredentialsInfo credentials = new CredentialsInfo();
-  // credentials.setRecoverable(true);
-  // credentials.setCipher("aes");
-  // credentials.setEncryptedSecret("aes", salt, secret);
-  // return credentials;
-  // }
-  //
-  // public static CredentialsInfo hashedCredentials(String salt, String secret,
-  // String hashType) {
-  // CredentialsInfo credentials = new CredentialsInfo();
-  // credentials.setRecoverable(false);
-  // credentials.setCipher("sha-1");
-  // credentials.setHashType(hashType);
-  // credentials.setEncryptedSecret("sha-1", salt, secret);
-  // return credentials;
-  // }
-
-  // public static CredentialsInfo mongoPasswordCredentials(String username,
-  // String password) {
-  // return plainTextCredentials(mongoPassword(username, password));
-  // }
+  
 
   public boolean getRecoverable() {
     return recoverable;
@@ -159,29 +130,6 @@ public class CredentialsInfo {
     this.hashType = hashType;
   }
 
-  // public String getUnencryptedSecret(String salt) {
-  // if (!recoverable) {
-  // return null;
-  // }
-  // if (!encrypted) {
-  // return secret;
-  // }
-  // if (isBlank(cipher)) {
-  // return secret;
-  // }
-  // if ("plaintext".equals(cipher)) {
-  // return secret;
-  // } else if ("bcrypt".equals(cipher)) {
-  // return null;
-  // } else if ("md5".equals(cipher)) {
-  // return null;
-  // } else if ("sha-1".equals(cipher)) {
-  // return null;
-  // } else if ("aes".equals(cipher)) {
-  // return decrypt(salt, secret);
-  // }
-  // return null;
-  // }
 
   /**
    * @return the cryptoChain
@@ -198,14 +146,4 @@ public class CredentialsInfo {
     this.cryptoChain = cryptoChain;
   }
 
-//  /**
-//   * Main entry point for password equivalency comparrison. Compares the output
-//   * of {@link #getSecret()} for this object and the provided object.
-//   * 
-//   * @param other
-//   * @return
-//   */
-//  public boolean compare(CredentialsInfo other) {
-//    return this.getSecret().equals(other.getSecret());
-//  }
 }
