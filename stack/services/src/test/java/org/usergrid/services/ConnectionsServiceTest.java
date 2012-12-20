@@ -92,5 +92,10 @@ public class ConnectionsServiceTest extends AbstractServiceTest {
         assertTrue(((Map)user2.getMetadata("connecting")).containsKey("reports"));
 
 
+    // POST users/conn-user1/manages/user2/user
+    properties = new LinkedHashMap<String, Object>();
+    properties.put("username", "conn-user3");
+    properties.put("email", "conn-user3@apigee.com");
+    testRequest(sm, ServiceAction.POST, 1, properties, "users", "conn-user1", "manages", "user");
 	}
 }
