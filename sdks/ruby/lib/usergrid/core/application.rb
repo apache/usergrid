@@ -37,6 +37,18 @@ module Usergrid
       self['counters'].get({params: options})
     end
 
+    # login with Facebook token. matching user will be created in usergrid as needed.
+    # usergrid auth token automatically set in auth header for future requests
+    def facebook_login(access_token)
+      params = { fb_access_token: access_token }
+      response = self['auth/facebook'].get({ params: params })
+      self.auth_token = response.data['access_token']
+      user_uuid = response.data['user']['uuid']
+      @current_user = self["/users/#{user_uuid}"].get.entity
+      response
+    end
+
+
     private
 
     def _create_user(username, password, email=nil, name=nil, invite=false)

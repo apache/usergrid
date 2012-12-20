@@ -181,9 +181,10 @@ usergrid_iron/spec/spec_settings.yaml to match.)
 
 ## Release notes
 
-### 0.0.6 (unreleased)
+### 0.0.6
 * New features
-  1. iterators can now optionally cross page boundaries, use `collection.follow_cursor.each`
+  1. iterators can now optionally cross page boundaries, eg. `collection.follow_cursor.each`
+  2. added facebook_login(fb_access_token) method to application
 
 ### 0.0.5
 * New features
