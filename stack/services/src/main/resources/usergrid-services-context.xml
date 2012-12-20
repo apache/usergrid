@@ -7,8 +7,13 @@
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
-	<context:component-scan base-package="org.usergrid.services" />
+	<context:component-scan base-package="org.usergrid.services"  />
+	
+	
 	<import resource="classpath:/usergrid-core-context.xml" />
+
+	<!--  scan for security -->
+	<context:component-scan base-package="org.usergrid.security.crypto"  />
 
 	<bean id="realm" class="org.usergrid.security.shiro.Realm">
 		<property name="name" value="realm" />
