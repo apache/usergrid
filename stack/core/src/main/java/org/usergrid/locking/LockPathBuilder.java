@@ -19,6 +19,7 @@ import java.util.UUID;
 
 /**
  * Helper class that contains the logic to build a lock path
+ * @author eanuff
  */
 public class LockPathBuilder {
 
@@ -41,6 +42,34 @@ public class LockPathBuilder {
 		}
 		return builder.toString();
 	}
+	
+	/**
+   * Build a string path for this lock
+   * @param The binary value to append to the end of the lock path
+   * @param path The values to prepend to build path
+   * @return
+   */
+  public static String buildPath(String binaryValue, String... path) {
+    
+    StringBuilder builder = new StringBuilder();
+    
+    for(String element: path){
+      builder.append(SLASH);
+      builder.append(element);
+    }
+    
+    builder.append(SLASH);
+    builder.append(binaryValue);
+    
+    builder.deleteCharAt(0);
+    
+    return builder.toString();
+  }
+	
+	
+
+  
+  
 
 
 }

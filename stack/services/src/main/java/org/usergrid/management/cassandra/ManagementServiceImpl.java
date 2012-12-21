@@ -17,6 +17,7 @@
 package org.usergrid.management.cassandra;
 
 import static java.lang.Boolean.parseBoolean;
+import static org.usergrid.locking.LockHelper.*;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -455,13 +456,16 @@ public class ManagementServiceImpl implements ManagementService {
             String email, String password, boolean activated, boolean disabled)
             throws Exception {
 
-        Lock groupLock = lockManager.createLock(MANAGEMENT_APPLICATION_ID, "groups", "path");
+        /**
+         * Only lock on the target values.  We don't want lock contention if another node is trying to set the property do a different value
+         */
+        Lock groupLock = getUnqiueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID,organizationName,  "groups", "path");
         groupLock.lock();
         
-        Lock userLock = lockManager.createLock(MANAGEMENT_APPLICATION_ID, "users","username");
+        Lock userLock = getUnqiueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, username, "users","username");
         userLock.lock();
         
-        Lock emailLock = lockManager.createLock(MANAGEMENT_APPLICATION_ID, "users", "email");
+        Lock emailLock = getUnqiueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, email,  "users", "email");
         emailLock.lock();
         
         UserInfo user = null;
@@ -883,11 +887,14 @@ public class ManagementServiceImpl implements ManagementService {
     public UserInfo updateAdminUser(UserInfo user, String username,
             String name, String email) throws Exception {
       
-      Lock usernameLock = lockManager.createLock(MANAGEMENT_APPLICATION_ID, "users", "username");
+      /**
+       * Only lock on the target values.  We don't want lock contention if another node is trying to set the property do a different value
+       */
+      Lock usernameLock = getUnqiueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, username,  "users", "username");
       usernameLock.lock();
       
       
-      Lock emailLock = lockManager.createLock(MANAGEMENT_APPLICATION_ID, "users", "email");
+      Lock emailLock = getUnqiueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID,email,  "users", "email");
       emailLock.lock();
       
         try {

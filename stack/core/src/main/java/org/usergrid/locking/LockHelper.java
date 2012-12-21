@@ -15,26 +15,40 @@
  ******************************************************************************/
 package org.usergrid.locking;
 
+import static org.usergrid.locking.LockPathBuilder.buildPath;
+import static org.usergrid.utils.ConversionUtils.bytes;
+
 import java.util.UUID;
 
+import org.apache.commons.codec.binary.Hex;
 import org.usergrid.locking.exception.UGLockException;
+import org.usergrid.locking.noop.NoOpLockImpl;
 
 /**
- * This Interface to a class responsible for distributed lock across system.
  * @author tnine
+ *
  */
-public interface LockManager {
+public class LockHelper {
+
 
   /**
-   * Acquires a lock on a particular path.
+   * Build a string path for this lock.  Since it's specifically for updating a property, the property
+   * needs appended to the path.  If the property is null, it's getting deleted, so a lock on it isn't
+   * neccessary.  In that case, a no op lock is returned
    * 
    * @param applicationId
-   *          application UUID
    * @param path
-   *          a unique path
-   * @throws UGLockException
-   *           if the lock cannot be acquired
+   * @return
+   * @throws UGLockException 
    */
-  public Lock createLock(final UUID applicationId, final String... path) throws UGLockException;
+  public static Lock getUnqiueUpdateLock(LockManager manager, UUID applicationId, Object value , String... path) throws UGLockException {
+    //we have no value, therefore there's nothing to lock
+    if(value == null){
+      return new NoOpLockImpl();
+    }
+    
+    return manager.createLock(applicationId, buildPath(Hex.encodeHexString( bytes(value)), path));
+    
+  }
 
 }
