@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.locking.zookeeper;
+package org.usergrid.locking.noop;
 
 import java.util.concurrent.TimeUnit;
 
