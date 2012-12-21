@@ -112,6 +112,7 @@ import org.apache.shiro.UnavailableSecurityManagerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.usergrid.locking.Lock;
 import org.usergrid.locking.LockManager;
 import org.usergrid.management.AccountCreationProps;
 import org.usergrid.management.ActivationState;
@@ -454,10 +455,15 @@ public class ManagementServiceImpl implements ManagementService {
             String email, String password, boolean activated, boolean disabled)
             throws Exception {
 
-        lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "groups", "path");
-        lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "users",
-                "username", "email");
-
+        Lock groupLock = lockManager.createLock(MANAGEMENT_APPLICATION_ID, "groups", "path");
+        groupLock.lock();
+        
+        Lock userLock = lockManager.createLock(MANAGEMENT_APPLICATION_ID, "users","username");
+        userLock.lock();
+        
+        Lock emailLock = lockManager.createLock(MANAGEMENT_APPLICATION_ID, "users", "email");
+        emailLock.lock();
+        
         UserInfo user = null;
         OrganizationInfo organization = null;
 
@@ -473,10 +479,9 @@ public class ManagementServiceImpl implements ManagementService {
             organization = createOrganization(organizationName, user, true);
 
         } finally {
-            lockManager.unlockProperty(MANAGEMENT_APPLICATION_ID, "groups",
-                    "path");
-            lockManager.unlockProperty(MANAGEMENT_APPLICATION_ID, "users",
-                    "username", "email");
+          emailLock.unlock();
+          userLock.unlock();
+          groupLock.unlock();
         }
 
         return new OrganizationOwnerInfo(user, organization);
@@ -877,9 +882,14 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo updateAdminUser(UserInfo user, String username,
             String name, String email) throws Exception {
-
-        lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "users",
-                "username", "email");
+      
+      Lock usernameLock = lockManager.createLock(MANAGEMENT_APPLICATION_ID, "users", "username");
+      usernameLock.lock();
+      
+      
+      Lock emailLock = lockManager.createLock(MANAGEMENT_APPLICATION_ID, "users", "email");
+      emailLock.lock();
+      
         try {
             EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
@@ -903,8 +913,8 @@ public class ManagementServiceImpl implements ManagementService {
 
             user = getAdminUserByUuid(user.getUuid());
         } finally {
-            lockManager.unlockProperty(MANAGEMENT_APPLICATION_ID, "users",
-                    "username", "email");
+           emailLock.unlock();
+           usernameLock.unlock();
         }
 
         return user;

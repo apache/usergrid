@@ -15,32 +15,32 @@
  ******************************************************************************/
 package org.usergrid.locking;
 
-import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import org.usergrid.locking.exception.UGLockException;
 
 /**
- * Helper class that contains the logic to build a lock path
+ * The lock object to acquire
+ * @author tnine
+ *
  */
-public class LockPathBuilder {
+public interface Lock {
 
-	private static final String SLASH = "/";
-
-	/**
-	 * Build a string path for this lock
-	 * @param applicationId
-	 * @param path
-	 * @return
-	 */
-	public static String buildPath(UUID applicationId, String... path) {
-		StringBuilder builder = new StringBuilder();
-		builder.append(SLASH);
-		builder.append(applicationId.toString());
-		
-		for(String element: path){
-  		builder.append(SLASH);
-  		builder.append(element);
-		}
-		return builder.toString();
-	}
-
-
+  /**
+   * Acquire the lock.  Wait the specified amount of time before giving up
+   * @param timeout The amount of time to wait
+   * @param time the units of time to wait
+   */
+  public boolean tryLock(long timeout, TimeUnit time) throws UGLockException;
+  
+  /**
+   * Block until a lock is available 
+   * @throws UGLockException
+   */
+  public void lock() throws UGLockException;
+  
+  /**
+   * Release the lock
+   */
+  public void unlock() throws UGLockException;
 }

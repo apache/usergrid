@@ -8,8 +8,8 @@
 		<!-- <cassandra-javautils-version>1.1.6</cassandra-javautils-version> -->
 		<cassandra-version>1.1.6</cassandra-version>
 		<hector-om-version>2.0-01</hector-om-version>
-		<hector-version>1.1-0</hector-version>
-		<hector-test-version>1.1-0</hector-test-version>
+		<hector-version>1.1-2</hector-version>
+		<hector-test-version>1.1-2</hector-test-version>
 		<jackson-version>1.9.9</jackson-version>
 		<jersey-version>1.11</jersey-version>
 		<shiro-version>1.2.0</shiro-version>

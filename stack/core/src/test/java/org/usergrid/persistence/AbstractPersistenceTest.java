@@ -87,6 +87,7 @@ public abstract class AbstractPersistenceTest {
 	public void setQueyeManagerFactory(QueueManagerFactory qmf) {
 		this.qmf = qmf;
 	}
+	
 
 	UUID dId = null;
 

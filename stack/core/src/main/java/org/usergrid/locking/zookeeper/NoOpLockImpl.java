@@ -15,30 +15,46 @@
  ******************************************************************************/
 package org.usergrid.locking.zookeeper;
 
-import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.usergrid.locking.Lock;
-import org.usergrid.locking.LockManager;
 import org.usergrid.locking.exception.UGLockException;
 
 /**
- * This is a no-op manager used for testing.
- * 
+ * @author tnine
+ *
  */
-public class NoOpLockManagerImpl implements LockManager {
+public class NoOpLockImpl implements Lock {
 
-	public NoOpLockManagerImpl() {
-
-	}
-
-  /* (non-Javadoc)
-   * @see org.usergrid.locking.LockManager#createLock(java.util.UUID, java.lang.String[])
+  /**
+   * 
    */
-  @Override
-  public Lock createLock(UUID applicationId, String... path) throws UGLockException {
-    return new NoOpLockImpl();
+  public NoOpLockImpl() {
   }
 
+  /* (non-Javadoc)
+   * @see org.usergrid.locking.Lock#acquire(long, java.util.concurrent.TimeUnit)
+   */
+  @Override
+  public boolean tryLock(long timeout, TimeUnit time) throws UGLockException {
+    //no op
+    return true;
+  }
 
+  /* (non-Javadoc)
+   * @see org.usergrid.locking.Lock#lock()
+   */
+  @Override
+  public void lock() throws UGLockException {
+    //no op
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.locking.Lock#release()
+   */
+  @Override
+  public void unlock() throws UGLockException {
+    //no op
+  }
 
 }
