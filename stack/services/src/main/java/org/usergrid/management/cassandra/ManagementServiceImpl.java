@@ -64,6 +64,7 @@ import static org.usergrid.persistence.CredentialsInfo.hashedCredentials;
 import static org.usergrid.persistence.CredentialsInfo.mongoPasswordCredentials;
 import static org.usergrid.persistence.CredentialsInfo.plainTextCredentials;
 import static org.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
+import static org.usergrid.persistence.Schema.PROPERTY_MODIFIED;
 import static org.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.usergrid.persistence.Schema.PROPERTY_PATH;
 import static org.usergrid.persistence.Schema.PROPERTY_SECRET;
@@ -2717,6 +2718,7 @@ public class ManagementServiceImpl implements ManagementService {
                       properties.remove("username");
                       properties.remove("name");
                       em.updateProperties(user, properties);
+                      user.setProperty(PROPERTY_MODIFIED, properties.get(PROPERTY_MODIFIED));
                     } else {
                       properties.put("email", fb_user_email);
                     }
@@ -2733,7 +2735,7 @@ public class ManagementServiceImpl implements ManagementService {
                 properties.put("picture", "http://graph.facebook.com/"
                         + fb_user_id + "/picture");
                 em.updateProperties(user, properties);
-
+                user.setProperty(PROPERTY_MODIFIED, properties.get(PROPERTY_MODIFIED));
                 user.setProperty("facebook", fb_user);
                 user.setProperty("picture", "http://graph.facebook.com/"
                         + fb_user_id + "/picture");
