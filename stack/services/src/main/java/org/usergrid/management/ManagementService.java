@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Identifier;
@@ -64,8 +65,7 @@ public interface ManagementService {
 
 	public UserInfo createAdminFrom(User user, String password) throws Exception;
 
-	public UserInfo createAdminFromPrexistingPassword(User user,
-			String precypheredPassword, String hashType) throws Exception;
+	public UserInfo createAdminFromPrexistingPassword(User user, CredentialsInfo ci) throws Exception;
 
 	public ApplicationInfo createApplication(UUID organizationId, String applicationName)
 			throws Exception;

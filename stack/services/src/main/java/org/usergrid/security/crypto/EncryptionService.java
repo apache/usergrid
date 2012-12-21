@@ -18,6 +18,7 @@ package org.usergrid.security.crypto;
 import java.util.UUID;
 
 import org.usergrid.persistence.CredentialsInfo;
+import org.usergrid.security.crypto.command.EncryptionCommand;
 
 /**
  * 
@@ -55,6 +56,20 @@ public interface EncryptionService {
    * @return
    */
   public CredentialsInfo defaultEncryptedCredentials(String secret,  UUID userId, UUID applicationId);
+  
+    
+  /**
+   * Get the command supplied by name.  Could return null.  Should only be used by tools that are VERY sure what they're doing
+   * @param name
+   * @return
+   */
+  public EncryptionCommand getCommand(String name);
+  
+  /**
+   * Return the default encryption name
+   * @return
+   */
+  public EncryptionCommand getDefaultCommand();
   
   
   

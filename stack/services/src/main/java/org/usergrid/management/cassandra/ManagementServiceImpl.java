@@ -759,21 +759,16 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public UserInfo createAdminFromPrexistingPassword(User user,
-            String precypheredPassword, String hashType) throws Exception {
+            CredentialsInfo ci) throws Exception {
 
-        CredentialsInfo ci = new CredentialsInfo();
-        ci.setRecoverable(false);
-        ci.setCipher("sha-1");
-        ci.setSecret(precypheredPassword);
-        ci.setRecoverable(false);
-        ci.setEncrypted(true);
-        ci.setHashType(hashType);
+     
 
         return doCreateAdmin(
                 user,
                 ci,
+                //we can't actually set the mongo password.  We never have the plain text in this path
                 encryptionService.plainTextCredentials(mongoPassword(user.getUsername(),
-                        precypheredPassword), user.getUuid(), MANAGEMENT_APPLICATION_ID));
+                        ""), user.getUuid(), MANAGEMENT_APPLICATION_ID));
 
     }
 
