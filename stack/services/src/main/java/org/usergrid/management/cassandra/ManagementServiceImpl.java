@@ -60,9 +60,6 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_ACTIV
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
 import static org.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
-import static org.usergrid.persistence.CredentialsInfo.hashedCredentials;
-import static org.usergrid.persistence.CredentialsInfo.mongoPasswordCredentials;
-import static org.usergrid.persistence.CredentialsInfo.plainTextCredentials;
 import static org.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
 import static org.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.usergrid.persistence.Schema.PROPERTY_PATH;
@@ -144,6 +141,7 @@ import org.usergrid.persistence.entities.User;
 import org.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
+import org.usergrid.security.crypto.EncryptionService;
 import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
 import org.usergrid.security.salt.SaltProvider;
@@ -175,6 +173,8 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
+
+import static org.usergrid.utils.PasswordUtils.*;
 
 public class ManagementServiceImpl implements ManagementService {
 
@@ -227,6 +227,8 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Autowired
     protected MailUtils mailUtils;
+    
+    protected EncryptionService encryptionService;
 
     /**
      * Must be constructed with a CassandraClientPool.
@@ -263,6 +265,14 @@ public class ManagementServiceImpl implements ManagementService {
     @Autowired
     public void setLockManager(LockManager lockManager) {
         this.lockManager = lockManager;
+    }
+
+    /**
+     * @param encryptionService the encryptionService to set
+     */
+    @Autowired
+    public void setEncryptionService(EncryptionService encryptionService) {
+      this.encryptionService = encryptionService;
     }
 
     @Override
@@ -496,7 +506,7 @@ public class ManagementServiceImpl implements ManagementService {
         writeUserToken(
                 MANAGEMENT_APPLICATION_ID,
                 organizationEntity,
-                plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION)));
+                encryptionService.plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION), user.getUuid(), MANAGEMENT_APPLICATION_ID));
 
         OrganizationInfo organization = new OrganizationInfo(
                 organizationEntity.getUuid(), organizationName);
@@ -576,7 +586,7 @@ public class ManagementServiceImpl implements ManagementService {
         writeUserToken(
                 MANAGEMENT_APPLICATION_ID,
                 app,
-                plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.APPLICATION)));
+                encryptionService.plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.APPLICATION), null, applicationId));
 
         addApplicationToOrganization(organizationId, applicationId);
         return applicationId;
@@ -728,7 +738,7 @@ public class ManagementServiceImpl implements ManagementService {
         writeUserToken(
                 MANAGEMENT_APPLICATION_ID,
                 user,
-                plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER)));
+                encryptionService.plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.ADMIN_USER), user.getUuid(),MANAGEMENT_APPLICATION_ID ));
 
         writeUserPassword(MANAGEMENT_APPLICATION_ID, user, userPassword);
 
@@ -762,16 +772,16 @@ public class ManagementServiceImpl implements ManagementService {
         return doCreateAdmin(
                 user,
                 ci,
-                mongoPasswordCredentials(user.getUsername(),
-                        precypheredPassword));
+                encryptionService.plainTextCredentials(mongoPassword(user.getUsername(),
+                        precypheredPassword), user.getUuid(), MANAGEMENT_APPLICATION_ID));
 
     }
 
     @Override
     public UserInfo createAdminFrom(User user, String password)
             throws Exception {
-        return doCreateAdmin(user, maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, password),
-                mongoPasswordCredentials(user.getUsername(), password));
+        return doCreateAdmin(user, encryptionService.defaultEncryptedCredentials(password, user.getUuid(), MANAGEMENT_APPLICATION_ID),
+            encryptionService.plainTextCredentials(mongoPassword(user.getUsername(), password), user.getUuid(), MANAGEMENT_APPLICATION_ID));
     }
 
     @Override
@@ -1040,8 +1050,9 @@ public class ManagementServiceImpl implements ManagementService {
         }
         User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId,
                 User.class);
-        if (!maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, oldPassword).compare(
-                readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId))) {
+        
+        
+        if (!verify(MANAGEMENT_APPLICATION_ID, user.getUuid(), oldPassword)) {
             logger.info("Old password doesn't match");
             throw new IncorrectPasswordException("Old password does not match");
         }
@@ -1061,12 +1072,12 @@ public class ManagementServiceImpl implements ManagementService {
                 User.class);
 
         writeUserPassword(MANAGEMENT_APPLICATION_ID, user,
-                maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, newPassword));
+                encryptionService.defaultEncryptedCredentials(newPassword, user.getUuid(), MANAGEMENT_APPLICATION_ID));
         writeUserMongoPassword(
                 MANAGEMENT_APPLICATION_ID,
                 user,
-                mongoPasswordCredentials((String) user.getProperty("username"),
-                        newPassword));
+                encryptionService.plainTextCredentials(mongoPassword((String) user.getProperty("username"),
+                        newPassword), user.getUuid(), MANAGEMENT_APPLICATION_ID));
     }
 
     @Override
@@ -1077,8 +1088,8 @@ public class ManagementServiceImpl implements ManagementService {
         }
         User user = emf.getEntityManager(MANAGEMENT_APPLICATION_ID).get(userId,
                 User.class);
-        return maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, password).compare(
-                readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID, userId));
+        
+        return verify(MANAGEMENT_APPLICATION_ID, user.getUuid(), password);
     }
 
     @Override
@@ -1091,9 +1102,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        if (maybeSaltPassword(MANAGEMENT_APPLICATION_ID, user, password).compare(
-                readUserPasswordCredentials(MANAGEMENT_APPLICATION_ID,
-                        user.getUuid()))) {
+        if (verify(MANAGEMENT_APPLICATION_ID, user.getUuid(), password)) {
             userInfo = getUserInfo(MANAGEMENT_APPLICATION_ID, user);
             if (!userInfo.isActivated()) {
                 throw new UnactivatedAdminUserException();
@@ -1455,7 +1464,7 @@ public class ManagementServiceImpl implements ManagementService {
         writeUserToken(
                 MANAGEMENT_APPLICATION_ID,
                 applicationEntity,
-                plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.APPLICATION)));
+                encryptionService.plainTextCredentials(generateOAuthSecretKey(AuthPrincipalType.APPLICATION), null, MANAGEMENT_APPLICATION_ID));
         addApplicationToOrganization(organizationId, applicationId);
 
         UserInfo user = null;
@@ -1672,7 +1681,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         writeUserToken(MANAGEMENT_APPLICATION_ID,
                 new SimpleEntityRef(type.getEntityType(), id),
-                plainTextCredentials(secret));
+                encryptionService.plainTextCredentials(secret, id, MANAGEMENT_APPLICATION_ID));
 
         return secret;
     }
@@ -2528,9 +2537,10 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager(applicationId);
         User user = em.get(userId, User.class);
+        
 
         writeUserPassword(applicationId, user,
-                maybeSaltPassword(applicationId, user, newPassword));
+            encryptionService.defaultEncryptedCredentials(newPassword, user.getUuid(), applicationId));
 
     }
 
@@ -2546,8 +2556,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
         // TODO load the user, send the hashType down to maybeSaltPassword
         User user = emf.getEntityManager(applicationId).get(userId, User.class);
-        if (!maybeSaltPassword(applicationId, user, oldPassword).compare(
-                readUserPasswordCredentials(applicationId, userId))) {
+        if (!verify(applicationId, user.getUuid(), oldPassword)) {
             throw new IncorrectPasswordException("Old password does not match");
         }
 
@@ -2564,8 +2573,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        if (maybeSaltPassword(applicationId, user, password).compare(
-                readUserPasswordCredentials(applicationId, user.getUuid()))) {
+        if (verify(applicationId, user.getUuid(), password)) {
             if (!user.activated()) {
                 throw new UnactivatedAdminUserException();
             }
@@ -2612,7 +2620,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         writeUserPin(applicationId, new SimpleEntityRef(User.ENTITY_TYPE,
-                userId), plainTextCredentials(newPin));
+                userId), encryptionService.plainTextCredentials(newPin, userId, applicationId));
     }
 
     @Override
@@ -3005,18 +3013,15 @@ public class ManagementServiceImpl implements ManagementService {
         return properties;
     }
 
-    private CredentialsInfo maybeSaltPassword(UUID applicationId, User user, String password)
-            throws Exception {
-      String hashType = null;
-
-      CredentialsInfo ci = readUserPasswordCredentials(applicationId, user.getUuid());
-      if ( ci != null) {
-        hashType = ci.getHashType();
+    
+    private boolean verify(UUID applicationId, UUID userId, String password) throws Exception{
+      CredentialsInfo ci = readUserPasswordCredentials(applicationId, userId);
+      
+      if(ci == null){
+        return false;
       }
-
-      return hashedCredentials(
-              saltProvider.getSalt(applicationId, user.getUuid()), password,
-              hashType);
+      
+      return encryptionService.verify(password, ci, userId, applicationId);
     }
 
     /**
