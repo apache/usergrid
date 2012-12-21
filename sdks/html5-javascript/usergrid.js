@@ -20,6 +20,15 @@
 *  @author rod simpson (rod@apigee.com)
 */
 
+//define the console.log for IE
+window.console = window.console || {};
+window.console.log = window.console.log || function() {};
+
+//Usergrid namespace encapsulates this SDK
+window.Usergrid = window.Usergrid || {};
+Usergrid = Usergrid || {};
+Usergrid.SDK_VERSION = '0.10.01';
+
 //authentication type constants
 var AUTH_CLIENT_ID = 'CLIENT_ID';
 var AUTH_APP_USER = 'APP_USER';
