@@ -6,8 +6,7 @@
       <link rel="stylesheet" href="../resources/css/bootstrap-combined.min.css" />
       <link rel="stylesheet" href="../resources/css/styles.css" />
       <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js" type="text/javascript"></script>
-      <script src="../../usergrid.SDK.js" type="text/javascript"></script>
-      <script src="../../extensions/usergrid.curl.js" type="text/javascript"></script>
+      <script src="../../usergrid.js" type="text/javascript"></script>
       <script src="app.js" type="text/javascript"></script>
    </head>
    <body>
@@ -15,7 +14,7 @@
          <img src="../resources/images/apigee.png"> App Services (Usergrid) Javascript SDK Example
       </div>
       <div class="info">
-        This sample application is a quick example to show how to make App Services (Usergrid) calls - GET, POST, PUT, DELETE - with our Javascript SDK. 
+        This sample application is a quick example to show how to make App Services (Usergrid) calls - GET, POST, PUT, DELETE - with our Javascript SDK.
         Also included is a login example. For more information on App Services, see our <a href="http://apigee.com/docs/app_services">docs</a>.
       </div>
       <div id="main" class="main">
@@ -27,7 +26,7 @@
           <li id="delete-nav"><a id="show-delete" href="javascript:void(0);">DELETE</a></li>
           <li id="login-nav"><a id="show-login" href="javascript:void(0);">LOG IN</a></li>
         </ul>
-         
+
         <div id="get-page" class="form-block">
            <div class="section-header">Method: <b>GET</b></div>
            <div class="well">
@@ -42,15 +41,13 @@
               </div>
            </div>
            <p class="note">
-              To run a <b>GET</b> query against the API, enter the path you want to query, then push the "Run Query" button. By default, the value is "users/fred", which will translate to a call 
+              To run a <b>GET</b> query against the API, enter the path you want to query, then push the "Run Query" button. By default, the value is "users/fred", which will translate to a call
               to: https://api.usergrid.com/your-org/your-app/users/fred, and will retrieve the record for fred.
               <br/><br/>
               <b>Note:</b> If you get an error here, it probably means "fred" doesn't exist. Choose "POST" to create a new "fred".
            </p>
            <div class="section-header"><b>GET</b> API Response</div>
-           <div class="well" id="get-response">
-              // Press 'Run Query' to send the API call.
-           </div>
+
         </div>
 
         <div id="post-page" class="form-block">
@@ -60,7 +57,7 @@
                  <div class="controls">
                     <label class="control-label" for="post-path">Path</label>
                     <input type="text" name="post-path" id="post-path" class="span4" value="users" />
-                    
+
                     <label class="control-label" for="post-data" style="padding-top: 10px;">Json Request Body</label>
                     <input type="text" name="post-data" id="post-data" class="span4" style="float: left" value='{"username":"fred", "password":"barney"}' />
                     <span style="width: 10px; float: left;">&nbsp;</span>
@@ -70,15 +67,12 @@
               </div>
            </div>
            <p class="note">
-              To run a <b>POST</b> query against the API, enter the path you want to call and the JSON you want to send to the server, then push the "Run Query" button. By default, the path 
+              To run a <b>POST</b> query against the API, enter the path you want to call and the JSON you want to send to the server, then push the "Run Query" button. By default, the path
               of users, and the JSON request body of, "{"username":"fred"}" will create a new user called "fred".
               <br/><br/>
               <b>Note:</b> If you get an error here, it probably means "fred" already exists. Choose "DELETE", run the DELETE query to delete the "fred" entity, then try the POST query again
            </p>
            <div class="section-header"><b>POST</b> API Response</div>
-           <div class="well" id="post-response">
-              // Press 'Run Query' to send the API call.
-           </div>
         </div>
 
         <div id="put-page" class="form-block">
@@ -88,7 +82,7 @@
                  <div class="controls">
                     <label class="control-label" for="put-path">Path</label>
                     <input type="text" name="put-path" id="put-path" class="span4" value="users/fred" />
-                    
+
                     <label class="control-label" for="put-data" style="padding-top: 10px;">Json Request Body</label>
                     <input type="text" name="put-data" id="put-data" class="span4" style="float: left" value='{"othervalue":"12345"}' />
                     <span style="width: 10px; float: left;">&nbsp;</span>
@@ -98,15 +92,12 @@
               </div>
            </div>
            <p class="note">
-              To run a <b>PUT</b> query against the API, enter the path you want to update and the JSON you want to send to the server, then push the "Run Query" button. By default, the 
+              To run a <b>PUT</b> query against the API, enter the path you want to update and the JSON you want to send to the server, then push the "Run Query" button. By default, the
               path of users/fred, and the JSON Request Body of "{"othervalue":"12345"}" will update the "fred" entity with the JSON Request Body.
               <br/><br/>
               <b>Note:</b> If you get an error here, it probably means "fred" doesn't exist. Choose "POST" to create a new "fred".
            </p>
            <div class="section-header"><b>PUT</b> API Response</div>
-           <div class="well" id="put-response">
-              // Press 'Run Query' to send the API call.
-           </div>
         </div>
 
         <div id="delete-page" class="form-block">
@@ -123,17 +114,14 @@
               </div>
            </div>
            <p class="note">
-              To run a <b>DELETE</b> query against the API, enter the path you want to update and the JSON you want to send to the server, then push the "Run Query" button. By default, the 
+              To run a <b>DELETE</b> query against the API, enter the path you want to update and the JSON you want to send to the server, then push the "Run Query" button. By default, the
               path of users/fred, and the JSON Request Body of "{"othervalue":"12345"}" will update the "fred" entity with the JSON Request Body.
               <br/><br/>
               <b>Note:</b> If you get an error here, it probably means "fred" doesn't exist. Choose "POST" to create a new "fred".
            </p>
            <div class="section-header"><b>DELETE</b> API Response</div>
-           <div class="well" id="delete-response">
-              // Press 'Run Query' to send the API call.
-           </div>
         </div>
-        
+
         <div id="login-page" class="form-block">
            <div class="section-header">Method: <b>Log In</b></div>
            <div class="well">
@@ -141,7 +129,7 @@
                  <div class="controls">
                     <label class="control-label" for="username">Username</label>
                     <input type="text" name="username" id="username" class="span4" value="fred"/>
-                    
+
                     <label class="control-label" for="password" style="padding-top: 10px;">Password</label>
                     <!-- note: normally the password field would be of type password so the input is hidden.  For this demo
                          we have left it in the clear so that it is easier to use.  Please use type password for production apps! -->
@@ -153,18 +141,17 @@
               </div>
            </div>
            <p class="note">
-              To test a <b>login</b> against the API, enter the username and password, then push the "Run Query" button. By default, the username is set to "fred" and the password is set to 
+              To test a <b>login</b> against the API, enter the username and password, then push the "Run Query" button. By default, the username is set to "fred" and the password is set to
               "barney", as created in the default "POST" method.
               <br/><br/>
               <b>Note:</b> If you get an error here, it probably means either the user doesn't exist, or hasn't had the password set properly. Choose "POST" to create a new "fred".
            </p>
            <div class="section-header"><b>Log In</b> API Response</div>
-           <div class="well" id="login-response">
-              // Press 'Run Query' to send the API call.
-           </div>
         </div>
-  
-        <div id="output"></div>
+
+        <div class="well" id="response">
+          // Press 'Run Query' to send the API call.
+       </div>
       </div>
     </body>
 </html>

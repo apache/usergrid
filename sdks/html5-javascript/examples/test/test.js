@@ -13,9 +13,9 @@ $(document).ready(function () {
 
 //call the runner function to start the process
 $('#start-button').bind('click', function() {
-  $('#start-button').attr("disabled", "disabled");
-  $('#test-output').html('');
-  runner(0);
+	$('#start-button').attr("disabled", "disabled");
+	$('#test-output').html('');
+	runner(0);
 });
 
 var logSuccess = true;
@@ -24,21 +24,12 @@ var logError = true;
 var errorCount = 0;
 var logNotice = true;
 
-	var client = new Client({
-		orgName:'yourorgname',
-		appName:'yourappname',
-		authType:AUTH_CLIENT_ID,
-		clientId:'<your client id>',
-		clientSecret:'<your client secret>',
-		logging: true, //optional - turn on logging, off by default
-		buildCurl: false //optional - turn on curl commands, off by default
-	});
-
-	var client = new Client({
-		orgName:'yourorgname',
-		appName:'sandbox',
-		logging: true, //optional - turn on logging, off by default
-	});
+var client = new Usergrid.Client({
+	orgName:'yourorgname',
+	appName:'sandbox',
+	logging: true, //optional - turn on logging, off by default
+	buildCurl: true //optional - turn on curl commands, off by default
+});
 
 function runner(step, arg){
 	step++;
@@ -121,7 +112,7 @@ function runner(step, arg){
 		console.log('Success count= ' + successCount);
 		console.log('Error count= ' + errorCount);
 		console.log('-----thank you for playing!-----');
-    $('#start-button').removeAttr("disabled");
+		$('#start-button').removeAttr("disabled");
 	}
 }
 
@@ -129,10 +120,10 @@ function runner(step, arg){
 function success(message){
 	successCount++;
 	if (logSuccess) {
-    console.log('SUCCESS: ' + message);
+		console.log('SUCCESS: ' + message);
 		var html = $('#test-output').html();
-    html += ('SUCCESS: ' + message + '\r\n');
-    $('#test-output').html(html);
+		html += ('SUCCESS: ' + message + '\r\n');
+		$('#test-output').html(html);
 	}
 }
 
@@ -140,18 +131,18 @@ function error(message){
 	errorCount++
 	if (logError) {
 		console.log('ERROR: ' + message);
-    var html = $('#test-output').html();
-    html += ('ERROR: ' + message + '\r\n');
-    $('#test-output').html(html);
+		var html = $('#test-output').html();
+		html += ('ERROR: ' + message + '\r\n');
+		$('#test-output').html(html);
 	}
 }
 
 function notice(message){
 	if (logNotice) {
 		console.log('NOTICE: ' + message);
-    var html = $('#test-output').html();
-    html += ('NOTICE: ' + message + '\r\n');
-    $('#test-output').html(html);
+		var html = $('#test-output').html();
+		html += ('NOTICE: ' + message + '\r\n');
+		$('#test-output').html(html);
 	}
 }
 
@@ -538,6 +529,8 @@ function loginUser(step, marty) {
 			if (err) {
 				error('could not log user in');
 			} else {
+				//the user has been logged in and the token has been stored
+				//in the client. any calls made now will use the token.
 				//once a user has logged in, thier user object is stored
 				//in the client and you can access it this way:
 				var user = client.user;
@@ -550,22 +543,7 @@ function loginUser(step, marty) {
 					success('user has been logged in');
 				}
 
-				//the login call will return an OAuth token, which is saved
-				//in the client object for later use.  Access it this way:
-				var token = client.token;
-
-				//then make a new client just for the app user
-				var appUserClient = new Client({
-					orgName:'yourorgname',
-					appName:'yourappname',
-					authType:AUTH_APP_USER,
-					token:token
-				});
-
-				//then use this client to make calls against the API
-
-				//to log the user out, call the logout() method
-				appUserClient.logout();
+				//to log a user out:
 				client.logout();
 
 				//verify the logout worked
