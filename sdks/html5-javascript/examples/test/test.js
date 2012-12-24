@@ -36,82 +36,90 @@ function runner(step, arg){
 	switch(step)
 	{
 	case 1:
-		console.log('-----running step 1: GET test');
+		notice('-----running step '+step+': GET test');
 		testGET(step);
 		break;
 	case 2:
-		console.log('-----running step 2: POST test');
+		notice('-----running step '+step+': POST test');
 		testPOST(step);
 		break;
 	case 3:
-		console.log('-----running step 3: PUT test');
+		notice('-----running step '+step+': PUT test');
 		testPUT(step);
 		break;
 	case 4:
-		console.log('-----running step 4: DELETE test');
+		notice('-----running step '+step+': DELETE test');
 		testDELETE(step);
 		break;
 	case 5:
-		console.log('-----running step 5: make a new dog');
-		makeNewDog(step);
-		break;
-	case 6:
-		console.log('-----running step 6: update our dog');
-		updateDog(step, arg);
-		break;
-	case 7:
-		console.log('-----running step 7: refresh our dog');
-		refreshDog(step, arg);
-		break;
-	case 8:
-		console.log('-----running step 8: remove our dog from database (no real dogs harmed here!!)');
-		removeDogFromDatabase(step, arg);
-		break;
-	case 9:
-		console.log('-----running step 9: make lots of dogs!');
-		makeSampleData(step, arg);
-		break;
-	case 10:
-		console.log('-----running step 10: make a dogs collection and show each dog');
-		testDogsCollection(step);
-		break;
-	case 11:
-		console.log('-----running step 11: get the next page of the dogs collection and show each dog');
-		getNextDogsPage(step, arg);
-		break;
-	case 12:
-		console.log('-----running step 12: get the previous page of the dogs collection and show each dog');
-		getPreviousDogsPage(step, arg);
-		break;
-	case 13:
-		console.log('-----running step 13: remove all dogs from the database (no real dogs harmed here!!)');
+		notice('-----running step '+step+': prepare database - remove all dogs (no real dogs harmed here!!)');
 		cleanupAllDogs(step);
 		break;
+	case 6:
+		notice('-----running step '+step+': make a new dog');
+		makeNewDog(step);
+		break;
+	case 7:
+		notice('-----running step '+step+': update our dog');
+		updateDog(step, arg);
+		break;
+	case 8:
+		notice('-----running step '+step+': refresh our dog');
+		refreshDog(step, arg);
+		break;
+	case 9:
+		notice('-----running step '+step+': remove our dog from database (no real dogs harmed here!!)');
+		removeDogFromDatabase(step, arg);
+		break;
+	case 10:
+		notice('-----running step '+step+': make lots of dogs!');
+		makeSampleData(step, arg);
+		break;
+	case 11:
+		notice('-----running step '+step+': make a dogs collection and show each dog');
+		testDogsCollection(step);
+		break;
+	case 12:
+		notice('-----running step '+step+': get the next page of the dogs collection and show each dog');
+		getNextDogsPage(step, arg);
+		break;
+	case 13:
+		notice('-----running step '+step+': get the previous page of the dogs collection and show each dog');
+		getPreviousDogsPage(step, arg);
+		break;
 	case 14:
-		console.log('-----running step 14: create a new user');
-		createUser(step);
+		notice('-----running step '+step+': remove all dogs from the database (no real dogs harmed here!!)');
+		cleanupAllDogs(step);
 		break;
 	case 15:
-		console.log('-----running step 15: update the user');
-		updateUser(step, arg);
+		notice('-----running step '+step+': prepare database (remove existing user if present)');
+		prepareDatabaseForNewUser(step);
 		break;
 	case 16:
-		console.log('-----running step 16: refresh the user from the database');
-		refreshUser(step, arg);
+		notice('-----running step '+step+': create a new user');
+		createUser(step);
 		break;
 	case 17:
-		console.log('-----running step 17: refresh the user from the database');
-		loginUser(step, arg);
+		notice('-----running step '+step+': update the user');
+		updateUser(step, arg);
 		break;
 	case 18:
-		console.log('-----running step 18: remove the user from the database');
+		notice('-----running step '+step+': refresh the user from the database');
+		refreshUser(step, arg);
+		break;
+	case 19:
+		notice('-----running step '+step+': refresh the user from the database');
+		loginUser(step, arg);
+		break;
+	case 20:
+		notice('-----running step '+step+': remove the user from the database');
 		destroyUser(step, arg);
 		break;
 	default:
-		console.log('-----test complete!-----');
-		console.log('Success count= ' + successCount);
-		console.log('Error count= ' + errorCount);
-		console.log('-----thank you for playing!-----');
+		notice('-----test complete!-----');
+		notice('Success count= ' + successCount);
+		notice('Error count= ' + errorCount);
+		notice('-----thank you for playing!-----');
 		$('#start-button').removeAttr("disabled");
 	}
 }
@@ -141,7 +149,7 @@ function notice(message){
 	if (logNotice) {
 		console.log('NOTICE: ' + message);
 		var html = $('#test-output').html();
-		html += ('NOTICE: ' + message + '\r\n');
+		html += (message + '\r\n');
 		$('#test-output').html(html);
 	}
 }
@@ -470,6 +478,23 @@ function cleanupAllDogs(step){
 	});
 }
 
+function prepareDatabaseForNewUser(step) {
+	var options = {
+		method:'DELETE',
+		endpoint:'users/marty'
+	};
+	client.request(options, function (err, data) {
+		if (err) {
+			notice('database ready - no user to delete');
+		runner(step);
+		} else {
+			//data will contain raw results from API call
+			success('database ready - user deleted worked');
+			runner(step);
+		}
+	});
+}
+
 function createUser(step) {
 
 	//type is 'users', set additional paramaters as needed
@@ -484,6 +509,7 @@ function createUser(step) {
 	client.createEntity(options, function (err, marty) {
 		if (err){
 			error('user not saved');
+			runner(step, marty);
 		} else {
 			success('user saved');
 			runner(step, marty);
