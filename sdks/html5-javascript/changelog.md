@@ -1,5 +1,18 @@
 ##Change log
 
+###0.10.1
+
+- Complete refactor of the SDK to bring congruity with the App services Node module
+
+- Client object is now main entry point - all objects are created from the client, and all calls are run from the client
+
+- Removed Curl extension - now just use boolean in options object when creating client
+
+- Added full test coverage for all sample code in the readme file
+
+- Renamed SDK file to usergrid.js
+
+
 ###0.9.10
 
 - Refactored directory structure.  SDK file now at root, extensions in their own directory, examples in their own directory.
