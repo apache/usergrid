@@ -1,7 +1,7 @@
 /**
 *  All Calls is a Node.js sample app that is powered by Usergrid
 *  This app shows how to make the 4 REST calls (GET, POST,
-*  PUT, DELETE) against the usergrid API.  
+*  PUT, DELETE) against the usergrid API.
 *
 *  Learn more at http://Usergrid.com/docs
 *
@@ -44,12 +44,15 @@ body {
    font-size: 16px;
    font-weight: 800;
 }
-.info{
-  padding: 40px 30px 30px 30px;  
+.breadcrumb{
   font-size: 16px;
 }
-h3{ 
- padding-bottom: 20px; 
+.info{
+  padding: 0px 30px 30px 30px;
+  font-size: 16px;
+}
+h3{
+ padding-bottom: 20px;
 }
 .main{
    display: block;
@@ -61,12 +64,12 @@ h3{
   display: none;
   padding: 10px 0;
   min-height: 210px;
-  background-color: #fff; 
+  background-color: #fff;
 }
 .section-header{
   font-size: 20px;
-  font-weight: 200; 
-  padding-bottom: 20px; 
+  font-weight: 200;
+  padding-bottom: 20px;
 }
 .note {
    padding-bottom: 20px;
@@ -84,5 +87,5 @@ pre{
    padding: 0;
 }
 .left{
-   float: left;  
+   float: left;
 }

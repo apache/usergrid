@@ -29,50 +29,82 @@
 */
 $(document).ready(function () {
    //first set the org / app path (must be orgname / appname or org id / app id - can't mix names and uuids!!)
-   Usergrid.ApiClient.init('Apigee', 'dogs');
+   var client = new Usergrid.Client({
+    orgName:'yourorgname',
+    appName:'dogs',
+    logging: true, //optional - turn on logging, off by default
+    buildCurl: true //optional - turn on curl commands, off by default
+  });
 
-   //make a new "dogs" Collection
-   dogs = new Usergrid.Collection('dogs');
+  //make a new "dogs" Collection
+  var options = {
+    type:'dogs',
+    qs:{ql:'order by created DESC'}
+  }
 
-   //bind the next button to the proper method in the collection object
-   $('#next-button').bind('click', function() {
-      dogs.getNextPage();
-   });
+  var dogs;
 
-   //bind the previous button to the proper method in the collection object
-   $('#previous-button').bind('click', function() {
-      dogs.getPreviousPage();
-   });
+  client.createCollection(options, function (err, dogs) {
+    if (err) {
+      $('#mydoglist').html('could not load dogs');
+    } else {
 
-   //bind the new button to show the "create new dog" form
-   $('#new-dog-button').bind('click', function() {
-      $('#dogs-list').hide();
-      $('#new-dog').show();
-   });
+      //bind the next button to the proper method in the collection object
+      $('#next-button').bind('click', function() {
+        $('#message').html('');
+        dogs.getNextPage(function(err, data){
+          if (err) {
+            alert('could not get next page of dogs');
+          } else {
+            drawDogs();
+          }
+        });
+      });
 
-   //bind the create new dog button
-   $('#create-dog').bind('click', function() {
-      newdog();
-   });
+      //bind the previous button to the proper method in the collection object
+      $('#previous-button').bind('click', function() {
+        $('#message').html('');
+        dogs.getPreviousPage(function(err, data){
+          if (err) {
+            alert('could not get previous page of dogs');
+          } else {
+            drawDogs();
+          }
+        });
+      });
 
-   //bind the create new dog button
-   $('#cancel-create-dog').bind('click', function() {
-      $('#new-dog').hide();
-      $('#dogs-list').show();
-      getdogs();
-   });
+      //bind the new button to show the "create new dog" form
+      $('#new-dog-button').bind('click', function() {
+         $('#dogs-list').hide();
+         $('#new-dog').show();
+      });
 
-   function getdogs() {
-      //add an additional parameter so last created item is shown first
-      dogs.setQueryParams({'ql':'order by created DESC'});
-      dogs.fetch(
-         function() {
+      //bind the create new dog button
+      $('#create-dog').bind('click', function() {
+        newdog();
+      });
+
+      //bind the create new dog button
+      $('#cancel-create-dog').bind('click', function() {
+        $('#new-dog').hide();
+        $('#dogs-list').show();
+        drawDogs();
+      });
+
+      drawDogs()
+      function drawDogs() {
+        dogs.fetch(function(err, data) {
+          if(err) {
+            alert('there was an error getting the dogs');
+          } else {
             //first empty out all the current dogs in the list
             $('#mydoglist').empty();
             //then hide the next / previous buttons
             $('#next-button').hide();
             $('#previous-button').hide();
             //iterate through all the items in this "page" of data
+            //make sure we reset the pointer so we start at the beginning
+            dogs.resetEntityPointer();
             while(dogs.hasNextEntity()) {
                //get a reference to the dog
                var dog = dogs.getNextEntity();
@@ -89,59 +121,57 @@ $(document).ready(function () {
                //show the button
                $('#previous-button').show();
             }
-         },
-         function () { alert('error'); }
-      );
-   }
-
-   function newdog() {
-      $('#create-dog').addClass("disabled");
-      //get the values from the form
-      var name = $("#name").val();
-
-      //make turn off all hints and errors
-      $("#name-help").hide();
-      $("#name-control").removeClass('error');
-
-      //make sure the input was valid
-      if (Usergrid.validation.validateName(name, function (){
-            $("#name").focus();
-            $("#name-help").show();
-            $("#name-control").addClass('error');
-            $("#name-help").html(Usergrid.validation.getNameAllowedChars());
-            $('#create-dog').removeClass("disabled");})
-         ) {
-         //all is well, so make the new dog
-         var dog = new Usergrid.Entity('dogs');
-         //set its name
-         dog.set('name', name);
-         //save it to the database
-         dogs.addNewEntity(
-            //the new entity
-            dog,
-            //success callback function
-            function() {
-               //the save worked, so hide the new dog form
-               $('#new-dog').hide();
-               //then show the dogs list
-               $('#dogs-list').show();
-               //then call the function to get the list again
-               getdogs();
-               //finally enable the button so the form will be ready for next time
-               $('#create-dog').removeClass("disabled");
-            },
-            //error callback function
-            function() {
-               //let the user know there was a problem
-               alert('Oops! There was an error creating the dog.');
-               //enable the button so the form will be ready for next time
-               $('#create-dog').removeClass("disabled");
-            }
-         );
+          }
+        });
       }
 
-   }
+      function newdog() {
+        $('#create-dog').addClass("disabled");
+        //get the values from the form
+        var name = $("#name").val();
 
-   //call the getdogs function to populate the list initially
-   getdogs();
+        //make turn off all hints and errors
+        $("#name-help").hide();
+        $("#name-control").removeClass('error');
+
+        //make sure the input was valid
+        if (Usergrid.validation.validateName(name, function (){
+          $("#name").focus();
+          $("#name-help").show();
+          $("#name-control").addClass('error');
+          $("#name-help").html(Usergrid.validation.getNameAllowedChars());
+          $('#create-dog').removeClass("disabled");})
+        ) {
+
+          //all is well, so make the new dog
+          //create a new dog and add it to the collection
+          var options = {
+            name:name
+          }
+          //just pass the options to the addEntity method
+          //to the collection and it is saved automatically
+          dogs.addEntity(options, function(err, dog, data) {
+            if (err) {
+              //let the user know there was a problem
+              alert('Oops! There was an error creating the dog.');
+              //enable the button so the form will be ready for next time
+              $('#create-dog').removeClass("disabled");
+            } else {
+              $('#message').html('New dog created!');
+              //the save worked, so hide the new dog form
+              $('#new-dog').hide();
+              //then show the dogs list
+              $('#dogs-list').show();
+              //then call the function to get the list again
+              drawDogs();
+              //finally enable the button so the form will be ready for next time
+              $('#create-dog').removeClass("disabled");
+            }
+          });
+        }
+      }
+
+    }
+  });
+
 });
