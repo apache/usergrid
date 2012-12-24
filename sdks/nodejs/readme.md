@@ -18,6 +18,12 @@ To view the Apigee App Services documentation, see:
 
 <http://apigee.com/docs/usergrid/>
 
+##Client side Javascript
+Want to make calls to App Services (Usergrid) client-side? No problem - just head over to the Usergrid Javascript SDK:
+
+<https://github.com/apigee/usergrid-javascript-sdk>
+
+The syntax for this Node module and the Javascript SDK are almost exactly the same so you can easily transition between them.
 
 ##Installing
 Use npm:
@@ -528,7 +534,7 @@ For runnable samples, please see the test.js file in the root of the project.  T
 
 	$node test.js
 
-
+d
 
 ## Contributing
 We welcome your enhancements!

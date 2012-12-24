@@ -454,9 +454,9 @@ function cleanupAllDogs(step){
 				notice('removing dog ' + name + ' from database');
 				dog.destroy(function(err, data) {
 					if (err) {
-						error('dog ' + name + ' not removed');
+						error('dog not removed');
 					} else {
-						success('dog ' + name + ' removed');
+						success('dog removed');
 					}
 				});
 			}

@@ -47,9 +47,9 @@ Client = function(options) {
   this.logging = options.logging || false;
 
   //timeout and callbacks
-  this._callTimeout =  options.callTimeout || 30000; //default to 30 seconds
-  this._callTimeoutCallback =  options.callTimeoutCallback || null;
-  this.loggingoutCallback =  options.logoutCallback || null;
+  this._callTimeout = options.callTimeout || 30000; //default to 30 seconds
+  this._callTimeoutCallback = options.callTimeoutCallback || null;
+  this.logoutCallback = options.logoutCallback || null;
 
 };
 
@@ -120,11 +120,11 @@ Client.prototype.request = function (options, callback) {
         var error = r.body.error;
         var errorDesc = r.body.error_description;
         if (self.logging) {
-          console.log('Error ('+ r.statusCode+')(' + error + '): ' + errorDesc)
+          console.log('Error (' + r.statusCode + ')(' + error + '): ' + errorDesc)
         }
         //if the user has specified a logout callback:
-        if (typeof(self.loggingoutCallback) === 'function') {
-          self.loggingoutCallback(err, data);
+        if (typeof(self.logoutCallback) === 'function') {
+          self.logoutCallback(err, data);
         } else  if (typeof(callback) === 'function') {
           callback(err, data);
         }
@@ -132,7 +132,7 @@ Client.prototype.request = function (options, callback) {
         var error = r.body.error;
         var errorDesc = r.body.error_description;
         if (self.logging) {
-          console.log('Error ('+ r.statusCode +')(' + error + '): ' + errorDesc);
+          console.log('Error (' + r.statusCode + ')(' + error + '): ' + errorDesc);
         }
         if (typeof(callback) === 'function') {
           callback(err, data);
@@ -535,7 +535,6 @@ Entity.prototype.destroy = function (callback) {
 Collection = function(options, callback) {
   this._client = options.client;
   this._type = options.type;
-  this._uuid = options.uuid;
   this.qs = options.qs || {};
 
   //iteration
@@ -627,6 +626,7 @@ Collection.prototype.fetch = function (callback) {
         self.resetEntityPointer();
         var count = data.entities.length;
         //save entities locally
+        self._list = []; //clear the local list first
         for (var i=0;i<count;i++) {
           var uuid = data.entities[i].uuid;
           if (uuid) {
