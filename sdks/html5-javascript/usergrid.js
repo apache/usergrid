@@ -713,6 +713,7 @@ Usergrid.Collection.prototype.fetch = function (callback) {
         self.resetEntityPointer();
         var count = data.entities.length;
         //save entities locally
+        self._list = [];
         for (var i=0;i<count;i++) {
           var uuid = data.entities[i].uuid;
           if (uuid) {
