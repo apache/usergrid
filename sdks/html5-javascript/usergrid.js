@@ -194,10 +194,21 @@ Usergrid.Client.prototype.request = function (options, callback) {
   xhr.send(body);
 }
 
-Usergrid.Client.prototype.createEntity = function (data, callback) {
+/**
+*  Main function for creating new entities - should be called directly.
+*
+*  options object: options {client:client, data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
+*
+*  @method createEntity
+*  @public
+*  @params {object} options
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
+Usergrid.Client.prototype.createEntity = function (options, callback) {
   var options = {
     client:this,
-    data:data
+    data:options
   }
   var entity = new Usergrid.Entity(options);
   entity.save(function(err, data) {
@@ -207,7 +218,17 @@ Usergrid.Client.prototype.createEntity = function (data, callback) {
   });
 }
 
-
+/**
+*  Main function for creating new collections - should be called directly.
+*
+*  options object: options {client:client, type: type, qs:qs}
+*
+*  @method createCollection
+*  @public
+*  @params {object} options
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
 Usergrid.Client.prototype.createCollection = function (options, callback) {
   options.client = this;
   var collection = new Usergrid.Collection(options, function(err, data) {
@@ -369,6 +390,8 @@ Usergrid.Client.prototype.logout = function () {
   this.user = null;
   this.token = null;
 }
+
+
 
 /**
 *  A class to Model a Usergrid Entity.
@@ -621,7 +644,6 @@ Usergrid.Entity.prototype.destroy = function (callback) {
 Usergrid.Collection = function(options, callback) {
   this._client = options.client;
   this._type = options.type;
-  this._uuid = options.uuid;
   this.qs = options.qs || {};
 
   //iteration
