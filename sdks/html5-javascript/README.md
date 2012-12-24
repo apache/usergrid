@@ -26,6 +26,13 @@ To view the Apigee App Services documentation, see:
 <http://apigee.com/docs/app_services>
 
 
+##Node.js
+Want to use Node.js? No problem - just head over to the Usergrid Node Module repo:
+
+<https://github.com/apigee/usergrid-node-module>
+
+The syntax for this Javascript SDK and the Usergrid Node module are almost exactly the same so you can easily transition between them.
+
 
 ##Installing
 Once you have downloaded the SDK, add the usergrid.js file to your project.  This file is located in the root of the SDK. Then include it in the top of your HTML file (in between the head tags):
