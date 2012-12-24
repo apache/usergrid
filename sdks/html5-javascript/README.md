@@ -1,8 +1,8 @@
 ##Version
 
-Current version: **0.9.10**
+Current Version: **0.10.1**
 
-See change log: 
+Change log:
 
 <https://github.com/apigee/usergrid-javascript-sdk/blob/master/changelog.md>
 
@@ -27,387 +27,482 @@ To view the Apigee App Services documentation, see:
 
 
 
+##Installing
+Once you have downloaded the SDK, add the usergrid.js file to your project.  This file is located in the root of the SDK. Then include it in the top of your HTML file (in between the head tags):
+
+	<script src="path/to/usergrid.js" type="text/javascript"></script>
+
 ##Getting started
-The SDK consists of one JavaScript file, located in the root of the project:
+You are now ready to create a new client, which is the main entry point to the SDK:
 
-	usergrid.SDK.js
+	var client = new Usergrid.Client({
+		orgName:'yourorgname',
+		appName:'sandbox',
+		logging: true, //optional - turn on logging, off by default
+		buildCurl: true //optional - turn on curl commands, off by default
+	});
 
-Include this file at the top of your HTML file (in between the head tags):
+The last two items are optional. The **logging** option will enable console.log output from the client.  The **buildCurl** option will cause cURL equivalent commands of all calls to the API to be displayed in the console.log output (see more about this below).
 
-	<script src="usergrid.SDK.js" type="text/javascript"></script>
+**Note:** you can find your client secret and client id on the "Properties" page of the [Admin Portal](http://apigee.com/usergrid).
 
-Next, specify the Org name and App name you want to use.  You can find this information in the [Admin Portal](http://apigee.com/usergrid). By default, every Org comes with a test App called "Sandbox":
+You are now ready to use the usergrid handle to make calls against the API.
 
-	Usergrid.ApiClient.init('Apigee', 'Sandbox'); //<=put your info here ('orgname', 'appname');
-	
-You are now ready to make calls against the API.  The simplest way is to use the following format:
+##About the samples
+This SDK comes with a variety of samples that you can use to learn how to connect your project to App Services (Usergrid). See these examples running live now:
 
-	var method = "POST";
-	var path = "users";
-	var data = {"username":"myuser", "password":"mypass"};
-	var params = null;
-	var query = new Usergrid.Query(method, path, data, params,
-		function(response) {
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		});
-	Usergrid.ApiClient.runAppQuery (query);
+<http://apigee.github.com/usergrid-javascript-sdk/>
 
-The preceding example will get create a new user in the users collection.  To see all the users in the database, use this format:
+Also note that all the examples provided in this readme file can be seen running in the test app:
 
-	var method = "GET";
-	var path = "users";
-	var data = null;
-	var params = null;
-	var query = new Usergrid.Query(method, path, data, params,
-		function(response) {
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		};
-	Usergrid.ApiClient.runAppQuery (query);
+<http://apigee.github.com/usergrid-javascript-sdk/examples/test/test.html> 
 
-You can also add query parameters to help narrow your search results.  For example, to get all the dogs from the dogs collection that have a color of brown:
 
-	var method = "GET";
-	var path = "dogs";
-	var data = null;
-	var params = {"ql":"select * where color='brown' order by created DESC"};
-	var query = new Usergrid.Query(method, path, data, params,
-		function(response) {
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		});
-	Usergrid.ApiClient.runAppQuery (query);
+##Make some calls
+The simplest way to make basic calls against the API is to use this format:
 
-Note: See the Custom queries section below for more information.
+	client.request(options, callback);
 
-The preceding patterns can be used for all four query types (GET, POST, PUT, DELETE).  Take a look at the example app included with this SDK for more comprehensive examples.
+This format allows you to make almost any call against the App Services (Usergrid) API. For example, to get a list of users:
 
-##Sample apps
-This SDK project includes an example app that exercises the 4 REST methods of the api: GET, POST, PUT, and DELETE, plus a login example.  This app will help you learn how to use the Javascript SDK to get up and running quickly.  It is located in the example directory:
+	var options = {
+		method:'GET',
+		endpoint:'users'
+	};
+	client.request(options, function (err, data) {
+		if (err) {
+			error('GET failed');
+		} else {
+			//data will contain raw results from API call
+			success('GET worked');
+		}
+	});
 
-	example/example.html
-	
-The javascript that powers the app is located in the app.js file:
+Or, to create a new user:
 
-	example/app.js
-	
-You can see the sample running live here:
+	var options = {
+		method:'POST',
+		endpoint:'users',
+		body:{ username:'fred', password:'secret' }
+	};
+	client.request(options, function (err, data) {
+		if (err) {
+			error('POST failed');
+		} else {
+			//data will contain raw results from API call
+			success('POST worked');
+		}
+	});
 
-<http://apigee.github.com/usergrid-javascript-sdk/example/example.html>
+Or, to update the new user:
 
-For a more complex Javascript/HTML5 sample app that also uses this Javascript SDK, check out Messagee:
+	var options = {
+		method:'PUT',
+		endpoint:'users/fred',
+		body:{ newkey:'newvalue' }
+	};
+	client.request(options, function (err, data) {
+		if (err) {
+			error('PUT failed');
+		} else {
+			//data will contain raw results from API call
+			success('PUT worked');
+		}
+	});
 
-<https://github.com/apigee/usergrid-sample-html5-messagee>
+Or to delete the new user:
+
+	var options = {
+		method:'DELETE',
+		endpoint:'users/fred'
+	};
+	client.request(options, function (err, data) {
+		if (err) {
+			error('DELETE failed');
+		} else {
+			//data will contain raw results from API call
+			success('DELETE worked');
+		}
+	});
+
+
+The Options Object for the client.request fuction:
+
+* `method` - http method (GET, POST, PUT, or DELETE), defaults to GET
+* `qs` - object containing querystring values to be appended to the uri
+* `body` - object containing entity body for POST and PUT requests
+* `endpoint` - API endpoint, for example "users/fred"
+* `mQuery` - boolean, set to true if running management query, defaults to false
+* `buildCurl` - boolean, set to true if you want to see equivalent curl commands in console.log, defaults to false
+
+You can make any call to the API using the format above.  However, in practice using the higher level Entity and Collection objects will make life easier as they take care of much of the heavy lifting.
+
 
 ##Entities and Collections
-This SDK also provides object abstraction, in the form of the Entity and Collection extensions, to make interfacing with the API easier. 
+Usergrid stores its data as "Entities" in "Collections".  Entities are essentially JSON objects and Collections are just like folders for storing these objects. You can learn more about Entities and Collections in the App Services docs:
 
-##The Entity Object
-The Entity object models entities stored in the database. It offers an easy-to-use wrapper for creating, reading, updating, and deleting entities.
-
-Start by creating a new Entity object, where the argument is the name of the collection that the entity will be part of. In the Dogs sample app, here is how a new dogs entity is created in a collection named dogs:
-
-	var dog = new Usergrid.Entity("dogs");
-
-Next, add any needed custom fields. For example:
-
- 	dog.set("name","Dino");
- 	dog.set("master","Fred");
- 	dog.set("state","hungry");
-
-After the object is complete, save it back to the API, for example:
-
-  	dog.save( function(response) {
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		});
-
-When the entity is saved, the API gives it a UUID that uniquely identifies the entity in the database.  This UUID is stored in the Entity object and will be used for any future calls to the API.  This ensures that the correct entity is updated.  For example, the UUID is used if the object is updated and needs to be saved again:
-
-	dog.set("state", "fed");
-	dog.save(function(response) { //updates the same dog entity as before
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		}); 
-
-Or, if the entity is changed in the database (perhaps by another user of your app), and needs to be refreshed:
-
-	dog.fetch( function(response) {
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		}); //will only work if the UUID for the entity is in the dog object
-
-In this way, multiple clients can update the same object in the database.
-
-If you need to get a property from the object, call the get() method and provide the property as an argument to the method, for example:
-
-	var state = dog.get("state");
-
-If you want to get the entire data object (all properties), use the get method, but pass no arguments:
-
-  var data = dog.get();
-
-If you no longer need the object, call the destroy() method. This deletes the object from database. For example:
-
-	dog.destroy( function(response) { //no real dogs were harmed! 
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		}); 
-
-Although the object is deleted from the database, it remains in your program.  Destroy it if needed by setting it to a null value, for example:
-
-	dog = null; //no real dogs were harmed!
-
-##The Collection Object
-The Collection Object models the custom collections you create using the API.  Collections organize entities.  For example, you could create a collection called "dogs".  Then, you can add "dog" entities to it.
-
-To get started, create a new Collection object, where the argument is the type of collection you intend to model. For example:
-
-	var dogs = new Usergrid.Collection('dogs'); //makes a new 'dogs' collection object
-
-If your collection already exists on the server, call the fetch() method to populate your new object with data from the server. For example:
-
-	dogs.fetch( function(response) {
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		});
-
-By default, the dogs.fetch() method uses the API to retrieve the first 10 dog entities and loads them into the dogs Collection object. If you want to add a new entity to the collection, simply create it. For example:
-
-	var dog = new Usergrid.Entity("dogs");
-	dog.set("name","fido");
-
-Then add it to the collection (and save it to the API):
-
-	dog.addNewEntity(dog);
-
-Note:  The addNewEntity() method adds the entity to the collection and *also* saves it to the API.  If you have already saved an entity, you can simply call the addEntity() method.
-
-So this:
-
-	var dog = new Usergrid.Entity("dogs");
-	dogs.addEntity(dog); //entity is added only
-	dog.save( function(response) {
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		});
-
-Is equivalent to this:
-
-	var dog = new Usergrid.Entity("dogs");
-	dogs.addNewEntity(dog, function(response) {
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		}); //entity is added and saved
+<http://apigee.com/docs/usergrid/content/data-model>
 
 
-###Displaying Results
-After you populate your Collection object, you can display a list of all the entities currently stored in the Collection object. Here's how it's done in the Dogs app:
+##Entities
+This module provides an easy way to make new entities. Here is a simple example that shows how to create a new object of type "dogs":
 
-	//populate the collection
-	dogs.fetch( function(response) {
-			//iterate through all the items in this "page" of data
-			while(dogs.hasNextEntity()) {
-				//get a reference to the dog
-				var dog = dogs.getNextEntity();
-				//display the dog in the list
-				$('#mydoglist').append('<li>'+ dog.get('name') + '</li>');
+	var options = {
+		type:'dogs',
+		name:'Dino'
+	}
+	client.createEntity(options, function (err, dog) {
+		if (err) {
+			error('dog not created');
+		} else {
+			success('dog is created');
+
+			//once the dog is created, you can set single properties:
+			dog.set('breed','Dinosaur');
+
+			//or a JSON object:
+			var data = {
+				master:'Fred',
+				state:'hungry'
 			}
-		},
-		function (response) {
-			//oops!  call didn't work
-		});
-	
+			//set is additive, so previously set properties are not overwritten
+			dog.set(data);
 
-Note: This code snippet only loops through the items currently stored in the Collection object.  If there are more entities in the database that you want to display, either use paging, or a custom query.
-
-###Collection Paging
-As your collections grow larger, you may want to use paging to display smaller blocks of data for the user, with "next" and "previous" buttons. The Collection object provides this functionality and it can be seen in the Dogs sample app included with the SDK.
-
-To get started, create a new Collection object. For example:
-
-	var dogs = new Usergrid.Collection('dogs');
-
-Next, bind the previous and next buttons to the getNextPage and getPreviousPage buttons in the new Collection object. For example:
-
-	//bind the next button to the proper method in the collection object
-	$('#next-button').bind('click', function() {
-		dogs.getNextPage();
-	});
-
-	//bind the previous button to the proper method in the collection object
-	$('#previous-button').bind('click', function() {
-		dogs.getPreviousPage();
-	});
-
-
-Finally, call the fetch() method to pull down results from the API.  In the success callback function, loop through the results, adding checks to determine if the previous or next buttons should be displayed. For example:
-
-
-	dogs.fetch(
-		function() {
-			//first empty out all the current dogs in the list
-			$('#mydoglist').empty();
-			//then hide the next / previous buttons
-			$('#next-button').hide();
-			$('#previous-button').hide();
-			//iterate through all the items in this "page" of data
-			while(dogs.hasNextEntity()) {
-				//get a reference to the dog
-				var dog = dogs.getNextEntity();
-				//display the dog in the list
-				$('#mydoglist').append('<li>'+ dog.get('name') + '</li>');
-			}
-			//if there is more data, display a "next" button
-			if (dogs.hasNextPage()) {
-				//show the button
-				$('#next-button').show();
-			}
-			//if there are previous pages, show a "previous" button
-			if (dogs.hasPreviousPage()) {
-				//show the button
-				$('#previous-button').show();
-			}
-		},
-		function () { 
-			//oops! call didn't work 
+			//finally, call save on the object to save it back to the database
+			dog.save(function(err){
+				if (err){
+					error('dog not saved');
+				} else {
+					success('new dog is saved');
+				}
+			});
 		}
-	);
+	});
+
+**note:** all calls to the API will be executed asynchronously, so it is important that you use a callback.
 
 
-Now, when the user clicks on either the #next-button or the #previous buttons, the click event will call the appropriate method in the collection. The Collection object stores the callback methods that are passed into the get() method, so the same success callback method will be called every time.
+You can also refresh the object from the database if needed (in case the data has been updated by a different client or device):
+
+	//call fetch to refresh the data from the server
+	dog.fetch(function(err){
+		if (err){
+			error('dog not refreshed from database');
+		} else {
+			//dog has been refreshed from the database
+			//will only work if the UUID for the entity is in the dog object
+			success('dog entity refreshed from database');
+		}
+	});
+
+To remove the entity from the database:
+
+	//the destroy method will delete the entity from the database
+	dog.destroy(function(err){
+		if (err){
+			error('dog not removed from database');
+		} else {
+			success('dog removed from database'); // no real dogs were harmed!
+			dog = null; //no real dogs were harmed!
+		}
+	});
+
+
+##The Collection object
+The Collection object models Collections in the database.  Once you start programming your app, you will likely find that this is the most useful method of interacting with the database.  Creating a collection will automatically populate the object with entities from the collection. The following example shows how to create a Collection object, then how to use entities once the Collection has been populated with entities from the server:
+
+	//options object needs to have the type (which is the collection type)
+	var options = {
+		type:'dogs',
+		qs:{ql:'order by index'}
+	}
+
+	client.createCollection(options, function (err, dogs) {
+		if (err) {
+			error('could not make collection');
+		} else {
+
+			success('new Collection worked');
+
+			//we got the dogs, now display the Entities:
+			while(dogs.hasNextEntity()) {
+				//get a reference to the dog
+				dog = dogs.getNextEntity();
+				var name = dog.get('name');
+				notice('dog is called ' + name);
+			}
+
+			success('looped through dogs');
+
+		}
+	});
+
+
+You can also add a new entity of the same type to the collection:
+
+	//create a new dog and add it to the collection
+	var options = {
+		name:'extra-dog',
+		fur:'shedding'
+	}
+	//just pass the options to the addEntity method
+	//to the collection and it is saved automatically
+	dogs.addEntity(options, function(err, dog, data) {
+		if (err) {
+			error('extra dog not saved or added to collection');
+		} else {
+			success('extra dog saved and added to collection');
+		}
+	});
+
+
+##Collection iteration and paging
+The Collection object works in Pages of data.  This means that at any given time, the Collection object will have one page of data loaded.  You can iterate across all the entities in the current page of data by using the following pattern:
+
+	//we got the dogs, now display the Entities:
+	while(dogs.hasNextEntity()) {
+		//get a reference to the dog
+		dog = dogs.getNextEntity();
+		var name = dog.get('name');
+		notice('dog is called ' + name);
+	}
+
+To get the next page of data from the server, use the following pattern:
+
+	if (dogs.hasNextPage()) {
+		//there is a next page, so get it from the server
+		dogs.getNextPage(function(err){
+			if (err) {
+				error('could not get next page of dogs');
+			} else {
+				success('got next page of dogs');
+				//we got the dogs, now display the Entities:
+				while(dogs.hasNextEntity()) {
+					//get a reference to the dog
+					dog = dogs.getNextEntity();
+					var name = dog.get('name');
+					notice('dog is called ' + name);
+				}
+				success('looped through dogs');
+			}
+		});
+	}
+
+You can use the same pattern to get a previous page of data:
+
+	if (dogs.hasPreviousPage()) {
+		//there is a previous page, so get it from the server
+		dogs.getPreviousPage(function(err){
+			if(err) {
+				error('could not get previous page of dogs');
+			} else {
+				success('got next page of dogs');
+				//we got the dogs, now display the Entities:
+				while(dogs.hasNextEntity()) {
+					//get a reference to the dog
+					dog = dogs.getNextEntity();
+					var name = dog.get('name');
+					notice('dog is called ' + name);
+				}
+				success('looped through dogs');
+			}
+		});
+	}
+
+By default, the database will return 10 entities per page.  You can change that amount by setting a limit:
+
+
+	var options = {
+		type:'dogs',
+		qs:{limit:50} //limit statement set to 50
+	}
+
+	client.createCollection(options, function (err, dogs) {
+		if (err) {
+			error('could not get all dogs');
+		} else {
+			success('got at most 50 dogs');
+		}
+	}
+
+Several other convenience methods exist to make working with pages of data easier:
+
+* getFirstEntity - gets the first entity of a page
+* getLastEntity - gets the last entity of a page
+* resetEntityPointer - sets the internal pointer back to the first element of the page
+* getEntityByUUID - returns the entity if it is in the current page
 
 
 ###Custom Queries
-The system supports custom queries similar to those used in traditional SQL.  This format allows you to specify filters based on many fields and also allows you to order the results as needed. Add a params object to any entity prior to doing a fetch.  For example, to search for dogs that have a color of brown, do this:
+A custom query allows you to tell the API that you want your results filtered or altered in some way.  To specify that the query results should be ordered by creation date, add the qs parameter to the options object:
 
-	var params = {"ql":"select * where color='brown'"};
-	dogs.setQueryParams(params);
+	var options = {
+		type:'dogs',
+		qs:{ql:'order by created DESC'}
+	};
 
-There may be a lot of brown dogs, so you can also order them by the entity creation date:
+You may find that you need to change the query on an existing object.  Simply access the qs property directly:
 
-	var params = {"ql":"select * where color='brown' order by created DESC"};
-	dogs.setQueryParams(params);
+	dogs.qs = {ql:'order by created DESC'};
 
-By default, the system will return 10 entities in a result set, even if there are more that match the query. You can specify a larger (or smaller) number, up to a maximum of 999. The limit parameter needs to be separate from the query.  So continuing with the example above, there may be many brown dogs, and we want to get a maximum of 100:
 
-	var params = {"ql":"select * where color='brown' order by created DESC", "limit":"100"}
-	dogs.setQueryParams(params);
-	
-You may also want to just get 100 entities, but you don't want to filter by any fields:
+If you also wanted to get more entities in the result set than the default 10, say 100, you can specify a query similar to the following (the limit can be a maximum of 999):
 
-	var params = {"limit":"100"};
-	dogs.setQueryParams(params);
-	
-Or, to get all dogs, but make sure they are ordered:
+	dogs.qs = {ql:'order by created DESC',limit:'100'};
 
-	var params = {"ql":"order by created DESC"}
-	dogs.setQueryParams(params);
+**Note**: there are many cases where expanding the result set is useful.  But be careful - the more results you get back in a single call, the longer it will take to transmit the data back to your app.
 
-There are many cases where expanding the result set is useful.  But be careful: the more results you get back in a single call, the longer it will take to transmit the data back to your app.
+Another common requirement is to limit the results to a specific query.  For example, to get all brown dogs, use the following syntax:
+
+	dogs.qs = {ql:"select * where color='brown'"};
+
+You can also limit the results returned such that only the fields you specify are returned:
+
+	dogs.qs = {'ql':"select name, age where color='brown'"};
+
+**Note:** in the two preceding examples that we put single quotes around 'brown', so it will be searched as a string.
 
 You can find more information on custom queries here:
 
 <http://apigee.com/docs/usergrid/content/queries-and-parameters>
 
+
 ##Modeling users with the Entity object
+There is no specific User object in the module.  Instead, you simply need to use the Entity object, specifying a type of "users".  Here is an example:
 
-###Making a user object
-There is no specific User object in the SDK.  Instead, you simply need to use the Entity object, specifying a type of "users".  Here are some examples:
+	//type is 'users', set additional paramaters as needed
+	var options = {
+		type:'users',
+		username:'marty',
+		password:'mysecurepassword',
+		name:'Marty McFly',
+		city:'Hill Valley'
+	}
 
- First, create a new user:
+  	client.createEntity(options, function (err, marty) {
+		if (err){
+			error('user not saved');
+		} else {
+			success('user saved');
+		}
+	});
 
-	var marty = new Entity("users");
 
- Next, add more data if needed:
+If the user is modified, just call save on the user again:
 
- 	marty.set("username", "marty");
- 	marty.set("name", "Marty McFly");
- 	marty.set("City", "Hill Valley");
- 	marty.set("State", "California");
+	//add properties cumulatively
+	marty.set('state', 'California');
+	marty.set("girlfriend","Jennifer");
+	marty.save(function(err){
+		if (err){
+			error('user not updated');
+		} else {
+			success('user updated');
+		}
+	});
 
- Finally, save the user to the database:
+To refresh the user's information in the database:
 
- 	marty.save(function(response) {
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		});
-
- If the user is modified:
-
- 	marty.set("girlfriend","Jennifer");
-
- Just call save on the user:
-
-	marty.save(function(response) {
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		});
-
- To refresh the user's information in the database:
-
-	marty.fetch(function(response) {
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		});
-
- To get properties from the user object:
-
- 	var city = marty.getField("city");
+	marty.fetch(function(err){
+		if (err){
+			error('not refreshed');
+		} else {
+			success('user refreshed');
+		}
+	});
 
 If you no longer need the object, call the delete() method and the object will be deleted from database:
 
- 	marty.destroy(function(response) {
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		});
+	marty.destroy(function(err){
+		if (err){
+			error('user not deleted from database');
+		} else {
+			success('user deleted from database');
+			marty = null; //blow away the local object
+		}
+	});
 
-Although the object is deleted from the database, it remains in your program.  Destroy it if needed by calling:
 
- 	marty = null;
+###To log a user in
+Up to this point, we have shown how you can use the client secret / client id combination to authenticate your calls against the API.  For a server-side Node.js app, this may be all you need.  However, if you do find that your app requires that you authenticate an individual user, this section shows you how.
 
-##Extensions
+Logging a user in means sending the user's username and password to the server, and getting back an access (OAuth) token.  You can then use this token to make calls to the API on the User's behalf. The following example shows how to log a user in and log them out:
 
-###cURL
-[cURL](http://curl.haxx.se/) is an excellent way to make calls directly against the API.  If you would like to see all the cURL equivalent of all the calls your app is making, you can include the cURL extension located here:
+	username = 'marty';
+	password = 'mysecurepassword';
+	client.login(username, password,
+		function (err) {
+			if (err) {
+				error('could not log user in');
+			} else {
+				//the user has been logged in and the token has been stored
+				//in the client. any calls made now will use the token.
+				//once a user has logged in, thier user object is stored
+				//in the client and you can access it this way:
+				var user = client.user;
 
-	/extensions/usergrid.curl.js
+				//so you can then get their username (or other info):
+				var username = user.get('username');
+
+				//you can also detect if the user is logged in:
+				if (client.isLoggedIn()) {
+					success('user has been logged in');
+				}
+
+				//to log a user out:
+				client.logout();
+
+				//verify the logout worked
+				if (client.isLoggedIn()) {
+					error('logout failed');
+				} else {
+					success('user has been logged out');
+				}
+
+				runner(step, marty);
+			}
+		}
+	);
+
+To recap, once a user has been logged in, and an OAuth token has been acquired, any subsequent calls to the API will use the token.
+
+
+###To log a user out
+To log the user out, call:
+
+	client.logout();
+
+Or, if you made a new client object specifically for the app user:
+
+	appUserClient.logout();
+
+This destroys the token and user object in the client object, effectively logging the user out.
+
+
+###Validation
+An extension for validation is provided for you to use in your apps.  The file is located here:
+
+	/extensions/usergrid.session.js
 
 Include this file at the top of your HTML file - AFTER the SDK file:
 
-	<script src="sdk/usergrid.SDK.js" type="text/javascript"></script> 
-	<script src="extensions/usergrid.curl.js" type="text/javascript"></script> 
+	<script src="path/to/usergrid.js" type="text/javascript"></script>
+	<script src="path/to/extensions/usergrid.validation.js" type="text/javascript"></script>
 
-Now, when you run your app in a browser, the cURL calls will be generated and logged to the console.  For more information about how to see these calls in the console of your browser, see this article in the Apigee docs:
+A variety of functions are provided for verification of many common types such as usernames, passwords, etc.  Feel free to copy and modify these functions for use in your own projects.
+
+
+###cURL
+[cURL](http://curl.haxx.se/) is an excellent way to make calls directly against the API. As mentioned in the **Getting started** section of this guide, one of the parameters you can add to the new client options object is **buildCurl**:  
+
+	var client = new Usergrid.Client({
+		orgName:'yourorgname',
+		appName:'sandbox',
+		logging: true, //optional - turn on logging, off by default
+		buildCurl: true //optional - turn on curl commands, off by default
+	});
+
+If you set this parameter to true, the SDK will build equivalent curl commands and send them to the console.log window. To learn how to see the console log, see this page:
 
 <http://apigee.com/docs/usergrid/content/displaying-app-services-api-calls-curl-commands>
 
@@ -415,120 +510,11 @@ More information on cURL can be found here:
 
 <http://curl.haxx.se/>
 
-###Entity and Collection Objects
-The Entity and Collection objects, discussed earlier in this file, are available in the extensions directory:
-
-	/extensions/usergrid.entity-collections.js
-	
-Include this file at the top of your HTML file - AFTER the SDK file:
-
-	<script src="usergrid.SDK.js" type="text/javascript"></script>
-	<script src="extensions/usergrid.entity-collection.js" type="text/javascript"></script>
-
-
-###Persistent Storage
-A persistent storage (session) extension has been added.  The file is located here:
-
-	/extensions/usergrid.session.js
-
-Include this file at the top of your HTML file - AFTER the SDK file:
-
-	<script src="sdk/usergrid.SDK.js" type="text/javascript"></script> 
-	<script src="extensions/usergrid.session.js" type="text/javascript"></script> 
-
-That is all you have to do.  The session contains methods that will override the storage methods used by the SDK.  Instead of storing the token and currently logged in user in memory, they are now stored in "localstorage", a feature available in most modern browsers.
-
-###Validation
-An extension for validation is also provided.  The file is located here:
-
-	/extensions/usergrid.session.js
-
-Include this file at the top of your HTML file - AFTER the SDK file:
-
-	<script src="sdk/usergrid.SDK.js" type="text/javascript"></script> 
-	<script src="extensions/usergrid.validation.js" type="text/javascript"></script> 
-
-A variety of functions are provided for verification of many common types such as usernames, passwords, etc.  Feel free to copy and modify these functions for use in your own projects.
-
-##App user log in / log out
-
-###To log a user in
-To log app users in, use the Usergrid.ApiClient.logInAppUser() method.  This method takes the supplied username and password and attempts to acquire an access token from the API.  If the method successfully acquires the token, the token is stored in the Usergrid.ApiClient singleton and will be used for all subsequent calls. You can see an example of using the Usergrid.ApiClent.logInAppUser() method in the Messagee Sample app, which you can find here:
-
-<https://github.com/apigee/usergrid-sample-html5-messagee>
-
-To get started, build a login form:
-
-	<form name="form-login" id="form-login">
-		<label for="username">Username</label>
-		<input type="text" name="username" id="username" class="span4" />
-		<label for="password">Password</label>
-		<input type="password" name="password" id="password" class="span4" />
-	</form>
-	<div>
-		<a href="#login" id="btn-login" data-role="button">Login</a>
-	</div>
-
-Next, bind a click event to the login button:
-
-	$('#btn-login').bind('click', function() {
-		login();
-	});
-
-Finally, create the login method:
-
-	function login() {
-		$('#login-section-error').html('');
-		var username = $("#username").val();
-		var password = $("#password").val();
-		Usergrid.ApiClient.logInAppUser(username, password,
-			function (response, user) {
-				//login succeeded, so get a reference to the newly create user
-				appUser = Usergrid.ApiClient.getLoggedInUser();
-
-				//take more action here
-			},
-			function () {
-				$('#login-section-error').html('There was an error.');
-			}
-		);
-	}
-
-After the user is successfully logged in, you can make calls to the API on their behalf.  Their access token will be stored and used for all future calls.
-
-
-###To log a user out
-To log the user out, call:
-
-	Usergrid.ApiClient.logoutAppUser( function(response) {
-			//call was good, do something with the response
-		},
-		function (response) {
-			//oops!  call didn't work
-		});
-
-This destroys their token in the ApiClient singleton.
-
-
-##Application endpoint
-In the first part of this file, we showed you how to make calls against the application endpoint using the Query object and the runAppQuery method:
-
-	Usergrid.ApiClient.runAppQuery(query);
-
-##Management endpoint
-There is an equivalent endpoint that can be used to run queries against the Management endpoint:
-
-	Usergrid.ApiClient.runManagementQuery(query);
-	
-
-
-##More information
-For more information on Apigee App Services, visit <http://apigee.com/about/developers>.
 
 ## Contributing
 We welcome your enhancements!
 
-Like [Usergrid](https://github.com/apigee/usergrid-stack), the Usergrid Javascript SDK is open source and licensed under the Apache License, Version 2.0.
+Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid Node module is open source and licensed under the Apache License, Version 2.0.
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
@@ -536,6 +522,8 @@ Like [Usergrid](https://github.com/apigee/usergrid-stack), the Usergrid Javascri
 4. Push your changes to the upstream branch (`git push origin my-new-feature`)
 5. Create new Pull Request (make sure you describe what you did and why your mod is needed)
 
+##More information
+For more information on Apigee App Services, visit <http://apigee.com/about/developers>.
 
 ## Copyright
 Copyright 2012 Apigee Corporation
@@ -551,6 +539,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-
- 
