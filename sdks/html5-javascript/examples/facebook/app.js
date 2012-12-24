@@ -72,12 +72,16 @@ $(document).ready(function () {
   }
 
   function login(facebookAccessToken) {
-    Usergrid.ApiClient.logInWithFacebook(facebookAccessToken, function(response){
+    client.loginFacebook(facebookAccessToken, function(err, response){
       var output = JSON.stringify(response, null, 2);
-      var html = '<pre>Hurray!  You have been logged in. \r\n\r\n';
-      html += 'Facebook Token: ' + '\r\n' + facebookAccessToken + '\r\n\r\n';
-      html += 'Facebook Profile data stored in Usergrid: \r\n' + output+'</pre>';
-
+      if (err) {
+        var html = '<pre>Oops!  There was an error logging you in. \r\n\r\n';
+        html += 'Error: \r\n' + output+'</pre>';
+      } else {
+        var html = '<pre>Hurray!  You have been logged in. \r\n\r\n';
+        html += 'Facebook Token: ' + '\r\n' + facebookAccessToken + '\r\n\r\n';
+        html += 'Facebook Profile data stored in Usergrid: \r\n' + output+'</pre>';
+      }
       $('#facebook-status').html(html);
     })
   }
