@@ -6,6 +6,23 @@ Change log:
 
 <https://github.com/apigee/usergrid-javascript-sdk/blob/master/changelog.md>
 
+**About this version:** 
+I revved this version of the SDK to 0.10.x because it is a complete rework of the code.  Not only is the code new, but also the way that you use it (more about that below).  I know that many of you have already built apps on the SDK and reworking them to use this new format will likely be a pain.  I apologize for that.  
+
+Hopefully that you will find it is worth the upgrade. I think this new version is more streamlined and has better structure.  I also made it consistent syntactically with the new [Node.js Module](https://github.com/apigee/usergrid-node-module).  The idea here is that developers may want to make client-side calls in their Node.js applications, so why not use the same syntax for both.
+
+Please feel free to send comments:
+
+	twitter: @rockerston
+	email: rod at apigee.com
+	
+Or just open github issues.  I truly want to know what you think, and will address all suggestions / comments / concerns.
+
+Thank you!
+
+Rod
+
+
 ##Overview
 This open source SDK simplifies writing JavaScript / HTML5 applications that connect to App Services. The repo is locatedhere:
 
