@@ -1,5 +1,5 @@
 ##Version
-Current Version: **0.10.1**
+Current Version: **0.10.2**
 
 See change log:
 
@@ -463,24 +463,6 @@ The other method is to log the user in server-side. When you log a user in, the 
 			} else {
 				success('user has been logged in');
 
-				//you can check if a user is logged in this way:
-				if (client.isLoggedIn()) {
-					success('user has been logged in');
-					//get the logged in user entity by calling for it:
-					client.getLoggedInUser(function(err, data, user) {
-						if(err) {
-							error('could not get logged in user');
-						} else {
-							success('got logged in user');
-							//you can then info from the user entity object:
-							var username = user.get('username');
-							notice('logged in user was: ' + username);
-						}
-					})
-				} else {
-					error('user is not logged in');
-				}
-
 				//the login call will return an OAuth token, which is saved
 				//in the client object for later use.  Access it this way:
 				var token = client.token;
@@ -490,42 +472,56 @@ The other method is to log the user in server-side. When you log a user in, the 
 				var appUserClient = new usergrid.client({
 					orgName:'yourorgname',
 					appName:'yourappname',
-					authType:usergrid.APP_USER,
+					authType:usergrid.AUTH_APP_USER,
 					token:token
 				});
 
-				//to log the user out, call the logout() method
-				appUserClient.logout();
-				client.logout();
+				//alternitavely, you can change the authtype of the client:
+				client.authType = usergrid.AUTH_APP_USER;
 
-				//verify the logout worked
-				if (client.isLoggedIn()) {
-					error('logout failed');
-				} else {
-					success('user has been logged out');
-				}
+				//Then make calls against the API.  For example, you can
+				//get the user entity this way:
+				client.getLoggedInUser(function(err, data, user) {
+					if(err) {
+						error('could not get logged in user');
+					} else {
+						success('got logged in user');
 
-				runner(step, marty);
+						//you can then get info from the user entity object:
+						var username = user.get('username');
+						notice('logged in user was: ' + username);
+
+						//to log the user out, call the logout() method
+						appUserClient.logout();
+						client.logout();
+
+						//verify the logout worked
+						if (client.isLoggedIn()) {
+							error('logout failed');
+						} else {
+							success('user has been logged out');
+						}
+
+						//since we don't need to App User level calls anymore,
+						//set the authtype back to client:
+						client.authType = usergrid.AUTH_CLIENT_ID;
+
+						runner(step, marty);
+					}
+				});
+
 			}
 		}
 	);
 
 
-Another way to make calls for the app user is to simply change the auth method on the existing client object:
+To recap, once a user has been logged in, and an OAuth token has been acquired, use one of the two methods to make calls to the API: 
 
-	client.authType = usergrid.APP_USER;
+1. Use the same client object and change auth types before each call 
 
-Since the token is already stored in the client, any calls made to the API will use the user's OAuth token instead of the client secret / id combo (application level).  To switch back, just enable the client secret/id combo instead:
+2. Grab the token and make a new client object specifically for user calls.  
 
-	client.authType = usergrid.AUTH_CLIENT_ID;
-
-**Note:** you can also set the client to use no authentication.  You would use this method if you are using the default Sandbox app that was automatically created when your account was set up:
-
-	client.authType = usergrid.AUTH_NONE;
-
-With this setting enabled, no authentication will be provided to the database. You will likely only use this setting if you are testing with the Sandbox app.
-
-To recap, once a user has been logged in, and an OAuth token has been acquired, use one of the two methods to make calls to the API: 1.) use the same client object and change auth types before each call, or, 2.) make a new client object for user calls.  Either method will work.
+Either method will work.
 
 
 ###To log a user out
@@ -546,8 +542,6 @@ There is significant coverage of this Usergrid module in the test directory. The
 For runnable samples, please see the test.js file in the root of the project.  This file covers all the sample code in this readme file and should be run under node:
 
 	$node test.js
-
-d
 
 ## Contributing
 We welcome your enhancements!

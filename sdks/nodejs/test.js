@@ -554,24 +554,6 @@ function loginUser(step, marty) {
 			} else {
 				success('user has been logged in');
 
-				//you can check if a user is logged in this way:
-				if (client.isLoggedIn()) {
-					success('user has been logged in');
-					//get the logged in user entity by calling for it:
-					client.getLoggedInUser(function(err, data, user) {
-						if(err) {
-							error('could not get logged in user');
-						} else {
-							success('got logged in user');
-							//you can then info from the user entity object:
-							var username = user.get('username');
-							notice('logged in user was: ' + username);
-						}
-					})
-				} else {
-					error('user is not logged in');
-				}
-
 				//the login call will return an OAuth token, which is saved
 				//in the client object for later use.  Access it this way:
 				var token = client.token;
@@ -581,22 +563,44 @@ function loginUser(step, marty) {
 				var appUserClient = new usergrid.client({
 					orgName:'yourorgname',
 					appName:'yourappname',
-					authType:usergrid.APP_USER,
+					authType:usergrid.AUTH_APP_USER,
 					token:token
 				});
 
-				//to log the user out, call the logout() method
-				appUserClient.logout();
-				client.logout();
+				//alternitavely, you can change the authtype of the client:
+				client.authType = usergrid.AUTH_APP_USER;
 
-				//verify the logout worked
-				if (client.isLoggedIn()) {
-					error('logout failed');
-				} else {
-					success('user has been logged out');
-				}
+				//Then make calls against the API.  For example, you can
+				//get the user entity this way:
+				client.getLoggedInUser(function(err, data, user) {
+					if(err) {
+						error('could not get logged in user');
+					} else {
+						success('got logged in user');
 
-				runner(step, marty);
+						//you can then get info from the user entity object:
+						var username = user.get('username');
+						notice('logged in user was: ' + username);
+
+						//to log the user out, call the logout() method
+						appUserClient.logout();
+						client.logout();
+
+						//verify the logout worked
+						if (client.isLoggedIn()) {
+							error('logout failed');
+						} else {
+							success('user has been logged out');
+						}
+
+						//since we don't need to App User level calls anymore,
+						//set the authtype back to client:
+						client.authType = usergrid.AUTH_CLIENT_ID;
+
+						runner(step, marty);
+					}
+				});
+
 			}
 		}
 	);
