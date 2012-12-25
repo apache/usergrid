@@ -272,6 +272,41 @@ Usergrid.Client.prototype.loginFacebook = function (facebookToken, callback) {
   });
 }
 
+/*
+*  A public method to get the currently logged in user entity
+*
+*  @method getLoggedInUser 
+*  @public
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
+Usergrid.Client.prototype.getLoggedInUser = function (callback) {
+  if (!this.token) {
+    callback(true, null, null);
+  } else {
+    var self = this;
+    var options = {
+      method:'GET',
+      endpoint:'users/me',
+    };
+    this.request(options, function(err, data) {
+      if (err) {
+        if (self.logging) {
+          console.log('error trying to log user in');
+        }
+        if (typeof(callback) === 'function') {
+          callback(err, data, null);
+        }
+      } else {
+        var user = new Usergrid.Entity('users', data.user);
+        if (typeof(callback) === 'function') {
+          callback(err, data, user);
+        }
+      }
+    });
+  }
+}
+
 /**
 *  A public method to test if a user is logged in - does not guarantee that the token is still valid,
 *  but rather that one exists, and that there is a valid UUID

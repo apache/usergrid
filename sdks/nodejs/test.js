@@ -552,31 +552,38 @@ function loginUser(step, marty) {
 			if (err) {
 				error('could not log user in');
 			} else {
-				//once a user has logged in, thier user object is stored
-				//in the client and you can access it this way:
-				var user = client.user;
+				success('user has been logged in');
 
-				//so you can then get their username (or other info):
-				var username = user.get('username');
-
-				//you can also detect if the user is logged in:
+				//you can check if a user is logged in this way:
 				if (client.isLoggedIn()) {
 					success('user has been logged in');
+					//get the logged in user entity by calling for it:
+					client.getLoggedInUser(function(err, data, user) {
+						if(err) {
+							error('could not get logged in user');
+						} else {
+							success('got logged in user');
+							//you can then info from the user entity object:
+							var username = user.get('username');
+							notice('logged in user was: ' + username);
+						}
+					})
+				} else {
+					error('user is not logged in');
 				}
 
 				//the login call will return an OAuth token, which is saved
 				//in the client object for later use.  Access it this way:
 				var token = client.token;
 
-				//then make a new client just for the app user
+				//then make a new client just for the app user, then use this
+				//client to make calls against the API
 				var appUserClient = new usergrid.client({
 					orgName:'yourorgname',
 					appName:'yourappname',
 					authType:usergrid.APP_USER,
 					token:token
 				});
-
-				//then use this client to make calls against the API
 
 				//to log the user out, call the logout() method
 				appUserClient.logout();
