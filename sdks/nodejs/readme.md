@@ -120,7 +120,7 @@ Or, to update the new user:
 	var options = {
 		method:'PUT',
 		endpoint:'users/fred',
-		body:{ newkey:'newvalue' }
+		body:{ newkey:'newvalue' }		
 	};
 	client.request(options, function (err, data) {
 		if (err) {

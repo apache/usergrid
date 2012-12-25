@@ -21,13 +21,15 @@
 */
 
 var request = require('request');
+var Usergrid = {};
+Usergrid.SDK_VERSION = '0.10.01';
 
 //authentication type constants
 var AUTH_CLIENT_ID = 'CLIENT_ID';
 var AUTH_APP_USER = 'APP_USER';
 var AUTH_NONE = 'NONE';
 
-Client = function(options) {
+Usergrid.Client = function(options) {
   //usergrid enpoint
   this.URI = 'https://api.usergrid.com';
 
@@ -69,7 +71,7 @@ Client = function(options) {
 *  @param {function} callback
 *  @return {callback} callback(err, data)
 */
-Client.prototype.request = function (options, callback) {
+Usergrid.Client.prototype.request = function (options, callback) {
   var self = this;
   var method = options.method || 'GET';
   var endpoint = options.endpoint;
@@ -142,12 +144,23 @@ Client.prototype.request = function (options, callback) {
   });
 }
 
-Client.prototype.createEntity = function (data, callback) {
+/**
+*  Main function for creating new entities - should be called directly.
+*
+*  options object: options {client:client, data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
+*
+*  @method createEntity
+*  @public
+*  @params {object} options
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
+Usergrid.Client.prototype.createEntity = function (options, callback) {
   var options = {
     client:this,
-    data:data
+    data:options
   }
-  var entity = new Entity(options);
+  var entity = new Usergrid.Entity(options);
   entity.save(function(err, data) {
     if (typeof(callback) === 'function') {
       callback(err, entity);
@@ -155,22 +168,30 @@ Client.prototype.createEntity = function (data, callback) {
   });
 }
 
-
-Client.prototype.createCollection = function (options, callback) {
+/**
+*  Main function for creating new collections - should be called directly.
+*
+*  options object: options {client:client, type: type, qs:qs}
+*
+*  @method createCollection
+*  @public
+*  @params {object} options
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
+Usergrid.Client.prototype.createCollection = function (options, callback) {
   options.client = this;
-  var collection = new Collection(options, function(err, data) {
+  var collection = new Usergrid.Collection(options, function(err, data) {
     if (typeof(callback) === 'function') {
       callback(err, collection);
     }
   });
-
 }
-
 
 /**
 *  A private method to get call timing of last call
 */
-Client.prototype.calcTimeDiff = function () {
+Usergrid.Client.prototype.calcTimeDiff = function () {
  var seconds = 0;
  var time = this._end - this._start;
  try {
@@ -189,7 +210,7 @@ Client.prototype.calcTimeDiff = function () {
 *  @param {function} callback
 *  @return {callback} callback(err, data)
 */
-Client.prototype.login = function (username, password, callback) {
+Usergrid.Client.prototype.login = function (username, password, callback) {
   var self = this;
   var options = {
     method:'GET',
@@ -205,7 +226,42 @@ Client.prototype.login = function (username, password, callback) {
     if (err && self.logging) {
       console.log('error trying to log user in');
     } else {
-      user = new Entity('users');
+      user = new Usergrid.Entity('users');
+      user.set(data.user);
+      self.user = user;
+      self.token = data.access_token;
+    }
+    if (typeof(callback) === 'function') {
+      callback(err, data, user);
+    }
+  });
+}
+
+/*
+*  A public method to log in an app user with facebook - stores the token for later use
+*
+*  @method loginFacebook
+*  @public
+*  @params {string} username
+*  @params {string} password
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
+Usergrid.Client.prototype.loginFacebook = function (facebookToken, callback) {
+  var self = this;
+  var options = {
+    method:'GET',
+    endpoint:'auth/facebook',
+    qs:{
+      fb_access_token: facebookToken
+    }
+  };
+  this.request(options, function(err, data) {
+    var user = {};
+    if (err && self.logging) {
+      console.log('error trying to log user in');
+    } else {
+      user = new Usergrid.Entity('users');
       user.set(data.user);
       self.user = user;
       self.token = data.access_token;
@@ -224,7 +280,7 @@ Client.prototype.login = function (username, password, callback) {
 *  @public
 *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
 */
-Client.prototype.isLoggedIn = function () {
+Usergrid.Client.prototype.isLoggedIn = function () {
   var user = this.user;
   var haveUser = (user && this.token);
   if (!haveUser) {
@@ -244,7 +300,7 @@ Client.prototype.isLoggedIn = function () {
 *  @param {object} options
 *  @return {string} curl
 */
-Client.prototype.buildCurlCall = function (options) {
+Usergrid.Client.prototype.buildCurlCall = function (options) {
   var curl = 'curl';
   var method = (options.method || 'GET').toUpperCase();
   var body = options.body || {};
@@ -261,7 +317,7 @@ Client.prototype.buildCurlCall = function (options) {
 
   //curl - add the body
   body = JSON.stringify(body)
-  if (body !== '{}') {
+  if (body !== '"{}"' && method !== 'GET' && method !== 'DELETE') {
     //curl - add in the json obj
     curl += " -d '" + body + "'";
   }
@@ -279,10 +335,12 @@ Client.prototype.buildCurlCall = function (options) {
 *  @public
 *  @return none
 */
-Client.prototype.logout = function () {
+Usergrid.Client.prototype.logout = function () {
   this.user = null;
   this.token = null;
 }
+
+
 
 /**
 *  A class to Model a Usergrid Entity.
@@ -291,7 +349,7 @@ Client.prototype.logout = function () {
 *  @constructor
 *  @param {object} options {client:client, data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
 */
-Entity = function(options) {
+Usergrid.Entity = function(options) {
   this._client = options.client;
   this._data = options.data || {};
 };
@@ -304,7 +362,7 @@ Entity = function(options) {
 *  @param {string} field
 *  @return {string} || {object} data
 */
-Entity.prototype.get = function (field) {
+Usergrid.Entity.prototype.get = function (field) {
   if (field) {
     return this._data[field];
   } else {
@@ -322,7 +380,7 @@ Entity.prototype.get = function (field) {
 *  @param {string} value
 *  @return none
 */
-Entity.prototype.set = function (key, value) {
+Usergrid.Entity.prototype.set = function (key, value) {
   if (typeof key === 'object') {
     for(var field in key) {
       this._data[field] = key[field];
@@ -346,7 +404,7 @@ Entity.prototype.set = function (key, value) {
 *  @param {function} callback
 *  @return {callback} callback(err, data)
 */
-Entity.prototype.save = function (callback) {
+Usergrid.Entity.prototype.save = function (callback) {
   //TODO:  API will be changed soon to accomodate PUTs via name which create new entities
   //       This function should be changed to PUT only at that time, and updated to use
   //       either uuid or name
@@ -425,7 +483,7 @@ Entity.prototype.save = function (callback) {
 *  @param {function} callback
 *  @return {callback} callback(err, data)
 */
-Entity.prototype.fetch = function (callback) {
+Usergrid.Entity.prototype.fetch = function (callback) {
   var type = this.get('type');
   var self = this;
 
@@ -490,7 +548,7 @@ Entity.prototype.fetch = function (callback) {
 *  @return {callback} callback(err, data)
 *
 */
-Entity.prototype.destroy = function (callback) {
+Usergrid.Entity.prototype.destroy = function (callback) {
   var type = this.get('type');
   if (isUUID(this.get('uuid'))) {
     type += '/' + this.get('uuid');
@@ -532,7 +590,7 @@ Entity.prototype.destroy = function (callback) {
 *  @param {function} callback
 *  @return {callback} callback(err, data)
 */
-Collection = function(options, callback) {
+Usergrid.Collection = function(options, callback) {
   this._client = options.client;
   this._type = options.type;
   this.qs = options.qs || {};
@@ -600,7 +658,7 @@ Collection = function(options, callback) {
 *  @param {function} callback
 *  @return {callback} callback(err, data)
 */
-Collection.prototype.fetch = function (callback) {
+Usergrid.Collection.prototype.fetch = function (callback) {
   var self = this;
   var qs = this.qs;
 
@@ -637,7 +695,7 @@ Collection.prototype.fetch = function (callback) {
               uuid:uuid,
               data:entityData
             };
-            var ent = new Entity(entityOptions);
+            var ent = new Usergrid.Entity(entityOptions);
             var ct = self._list.length;
             self._list[ct] = ent;
           }
@@ -658,7 +716,7 @@ Collection.prototype.fetch = function (callback) {
 *  @param {function} callback
 *  @return {callback} callback(err, data, entity)
 */
-Collection.prototype.addEntity = function (options, callback) {
+Usergrid.Collection.prototype.addEntity = function (options, callback) {
   var self = this;
   options.type = this._type;
 
@@ -683,7 +741,7 @@ Collection.prototype.addEntity = function (options, callback) {
 *  @param {function} callback
 *  @return {callback} callback(err, data)
 */
-Collection.prototype.destroyEntity = function (entity, callback) {
+Usergrid.Collection.prototype.destroyEntity = function (entity, callback) {
   var self = this;
   entity.destroy(function(err, data) {
     if (err) {
@@ -708,7 +766,7 @@ Collection.prototype.destroyEntity = function (entity, callback) {
 *  @param {function} callback
 *  @return {callback} callback(err, data, entity)
 */
-Collection.prototype.getEntityByUUID = function (uuid, callback) {
+Usergrid.Collection.prototype.getEntityByUUID = function (uuid, callback) {
   //get the entity from the database
   var options = {
     data: {
@@ -717,7 +775,7 @@ Collection.prototype.getEntityByUUID = function (uuid, callback) {
     },
     client: this._client
   }
-  var entity = new Entity(options);
+  var entity = new Usergrid.Entity(options);
   entity.fetch(callback);
 }
 
@@ -727,7 +785,7 @@ Collection.prototype.getEntityByUUID = function (uuid, callback) {
 *  @method getFirstEntity
 *  @return {object} returns an entity object
 */
-Collection.prototype.getFirstEntity = function () {
+Usergrid.Collection.prototype.getFirstEntity = function () {
   var count = this._list.length;
   if (count > 0) {
     return this._list[0];
@@ -741,7 +799,7 @@ Collection.prototype.getFirstEntity = function () {
 *  @method getLastEntity
 *  @return {object} returns an entity object
 */
-Collection.prototype.getLastEntity = function () {
+Usergrid.Collection.prototype.getLastEntity = function () {
   var count = this._list.length;
   if (count > 0) {
     return this._list[count-1];
@@ -758,7 +816,7 @@ Collection.prototype.getLastEntity = function () {
 *  @method hasNextEntity
 *  @return {boolean} true if there is a next entity, false if not
 */
-Collection.prototype.hasNextEntity = function () {
+Usergrid.Collection.prototype.hasNextEntity = function () {
   var next = this._iterator + 1;
   var hasNextElement = (next >=0 && next < this._list.length);
   if(hasNextElement) {
@@ -776,7 +834,7 @@ Collection.prototype.hasNextEntity = function () {
 *  @method hasNextEntity
 *  @return {object} entity
 */
-Collection.prototype.getNextEntity = function () {
+Usergrid.Collection.prototype.getNextEntity = function () {
   this._iterator++;
   var hasNextElement = (this._iterator >= 0 && this._iterator <= this._list.length);
   if(hasNextElement) {
@@ -792,7 +850,7 @@ Collection.prototype.getNextEntity = function () {
 *  @method hasPrevEntity
 *  @return {boolean} true if there is a previous entity, false if not
 */
-Collection.prototype.hasPrevEntity = function () {
+Usergrid.Collection.prototype.hasPrevEntity = function () {
   var previous = this._iterator - 1;
   var hasPreviousElement = (previous >=0 && previous < this._list.length);
   if(hasPreviousElement) {
@@ -807,7 +865,7 @@ Collection.prototype.hasPrevEntity = function () {
 *  @method getPrevEntity
 *  @return {object} entity
 */
-Collection.prototype.getPrevEntity = function () {
+Usergrid.Collection.prototype.getPrevEntity = function () {
    this._iterator--;
    var hasPreviousElement = (this._iterator >= 0 && this._iterator <= this._list.length);
    if(hasPreviousElement) {
@@ -823,7 +881,7 @@ Collection.prototype.getPrevEntity = function () {
 *  @method resetEntityPointer
 *  @return none
 */
-Collection.prototype.resetEntityPointer = function () {
+Usergrid.Collection.prototype.resetEntityPointer = function () {
    this._iterator  = -1;
 }
 
@@ -834,7 +892,7 @@ Collection.prototype.resetEntityPointer = function () {
 * @method saveCursor
 * @return none
 */
-Collection.prototype.saveCursor = function(cursor) {
+Usergrid.Collection.prototype.saveCursor = function(cursor) {
   //if current cursor is different, grab it for next cursor
   if (this._next !== cursor) {
     this._next = cursor;
@@ -848,7 +906,7 @@ Collection.prototype.saveCursor = function(cursor) {
 * @method resetPaging
 * @return none
 */
-Collection.prototype.resetPaging = function() {
+Usergrid.Collection.prototype.resetPaging = function() {
   this._previous = [];
   this._next = null;
   this._cursor = null;
@@ -860,7 +918,7 @@ Collection.prototype.resetPaging = function() {
 *  @method hasNextPage
 *  @return {boolean} returns true if there is a next page of data, false otherwise
 */
-Collection.prototype.hasNextPage = function () {
+Usergrid.Collection.prototype.hasNextPage = function () {
   return (this._next);
 }
 
@@ -873,7 +931,7 @@ Collection.prototype.hasNextPage = function () {
 *  @param {function} callback
 *  @return {callback} callback(err, data)
 */
-Collection.prototype.getNextPage = function (callback) {
+Usergrid.Collection.prototype.getNextPage = function (callback) {
   if (this.hasNextPage()) {
     //set the cursor to the next page of data
     this._previous.push(this._cursor);
@@ -890,7 +948,7 @@ Collection.prototype.getNextPage = function (callback) {
 *  @method hasPreviousPage
 *  @return {boolean} returns true if there is a previous page of data, false otherwise
 */
-Collection.prototype.hasPreviousPage = function () {
+Usergrid.Collection.prototype.hasPreviousPage = function () {
   return (this._previous.length > 0);
 }
 
@@ -903,7 +961,7 @@ Collection.prototype.hasPreviousPage = function () {
 *  @param {function} callback
 *  @return {callback} callback(err, data)
 */
-Collection.prototype.getPreviousPage = function (callback) {
+Usergrid.Collection.prototype.getPreviousPage = function (callback) {
   if (this.hasPreviousPage()) {
     this._next=null; //clear out next so the comparison will find the next item
     this._cursor = this._previous.pop();
@@ -927,9 +985,9 @@ function isUUID (uuid) {
   return uuidValueRegex.test(uuid);
 }
 
-exports.client = Client;
-exports.entity = Entity;
-exports.collection = Collection;
+exports.client = Usergrid.Client;
+exports.entity = Usergrid.Entity;
+exports.collection = Usergrid.Collection;
 exports.AUTH_CLIENT_ID = AUTH_CLIENT_ID;
 exports.AUTH_APP_USER = AUTH_APP_USER;
 exports.AUTH_NONE = AUTH_NONE;
