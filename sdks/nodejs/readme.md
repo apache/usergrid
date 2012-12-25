@@ -445,9 +445,14 @@ If you no longer need the object, call the delete() method and the object will b
 
 
 ###To log a user in
-Up to this point, we have shown how you can use the client secret / client id combination to authenticate your calls against the API.  For a server-side Node.js app, this may be all you need.  However, if you do find that your app requires that you authenticate an individual user, this section shows you how.
+Up to this point, we have shown how you can use the client secret / client id combination to authenticate your calls against the API.  For a server-side Node.js app, this may be all you need.  However, if you do find that your app requires that you authenticate an individual user, you have several options.  
 
-Logging a user in means sending the user's username and password to the server, and getting back an access (OAuth) token.  You can then use this token to make calls to the API on the User's behalf. The following example shows how to log a user in, then how to make a new client object to use for the app user's calls:
+The first is to use client-side authentication with Ajax.  If you want to opt for this method, take a look at our Javascript SDK.  The syntax for usage is the same as this Node.js module, so it will be easy to pick up:
+
+<https://github.com/apigee/usergrid-javascript-sdk>
+
+The other method is to log the user in server-side. When you log a user in, the API will return an OAuth token for you to use for calls to the API on the user's behalf.  Once that token is returned, you can either make a new client just for the user, or change the auth method on the existing client.  These methods are described below: 
+
 
 	username = 'marty';
 	password = 'mysecurepassword';
@@ -456,31 +461,38 @@ Logging a user in means sending the user's username and password to the server, 
 			if (err) {
 				error('could not log user in');
 			} else {
-				//once a user has logged in, thier user object is stored
-				//in the client and you can access it this way:
-				var user = client.user;
+				success('user has been logged in');
 
-				//so you can then get their username (or other info):
-				var username = user.get('username');
-
-				//you can also detect if the user is logged in:
+				//you can check if a user is logged in this way:
 				if (client.isLoggedIn()) {
 					success('user has been logged in');
+					//get the logged in user entity by calling for it:
+					client.getLoggedInUser(function(err, data, user) {
+						if(err) {
+							error('could not get logged in user');
+						} else {
+							success('got logged in user');
+							//you can then info from the user entity object:
+							var username = user.get('username');
+							notice('logged in user was: ' + username);
+						}
+					})
+				} else {
+					error('user is not logged in');
 				}
 
 				//the login call will return an OAuth token, which is saved
 				//in the client object for later use.  Access it this way:
 				var token = client.token;
 
-				//then make a new client just for the app user
+				//then make a new client just for the app user, then use this
+				//client to make calls against the API
 				var appUserClient = new usergrid.client({
 					orgName:'yourorgname',
 					appName:'yourappname',
 					authType:usergrid.APP_USER,
 					token:token
 				});
-
-				//then use this client to make calls against the API
 
 				//to log the user out, call the logout() method
 				appUserClient.logout();
@@ -493,6 +505,7 @@ Logging a user in means sending the user's username and password to the server, 
 					success('user has been logged out');
 				}
 
+				runner(step, marty);
 			}
 		}
 	);
@@ -502,7 +515,7 @@ Another way to make calls for the app user is to simply change the auth method o
 
 	client.authType = usergrid.APP_USER;
 
-After this statement is called, all calls will use the user token instead of the client secret / id combo (application level).  To switch back, just enable the client secret/id combo instead:
+Since the token is already stored in the client, any calls made to the API will use the user's OAuth token instead of the client secret / id combo (application level).  To switch back, just enable the client secret/id combo instead:
 
 	client.authType = usergrid.AUTH_CLIENT_ID;
 
