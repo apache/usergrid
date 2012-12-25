@@ -28,7 +28,7 @@ window.console.log = window.console.log || function() {};
 //Usergrid namespace encapsulates this SDK
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
-Usergrid.SDK_VERSION = '0.10.01';
+Usergrid.SDK_VERSION = '0.10.02';
 
 Usergrid.Client = function(options) {
   //usergrid enpoint
@@ -40,7 +40,6 @@ Usergrid.Client = function(options) {
 
   //authentication
   this.token = options.token || null;
-  this.user = null;
 
   //other options
   this.buildCurl = options.buildCurl || false;
@@ -269,9 +268,7 @@ Usergrid.Client.prototype.login = function (username, password, callback) {
     if (err && self.logging) {
       console.log('error trying to log user in');
     } else {
-      user = new Usergrid.Entity('users');
-      user.set(data.user);
-      self.user = user;
+      user = new Usergrid.Entity('users', data.user);
       self.token = data.access_token;
     }
     if (typeof(callback) === 'function') {
@@ -304,9 +301,7 @@ Usergrid.Client.prototype.loginFacebook = function (facebookToken, callback) {
     if (err && self.logging) {
       console.log('error trying to log user in');
     } else {
-      user = new Usergrid.Entity('users');
-      user.set(data.user);
-      self.user = user;
+      user = new Usergrid.Entity('users', data.user);
       self.token = data.access_token;
     }
     if (typeof(callback) === 'function') {
@@ -315,24 +310,65 @@ Usergrid.Client.prototype.loginFacebook = function (facebookToken, callback) {
   });
 }
 
+/*
+*  A public method to get the currently logged in user entity
+*
+*  @method getLoggedInUser
+*  @public
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
+Usergrid.Client.prototype.getLoggedInUser = function (callback) {
+  if (!this.token) {
+    callback(true, null, null);
+  } else {
+    var self = this;
+    var options = {
+      method:'GET',
+      endpoint:'users/me',
+    };
+    this.request(options, function(err, data) {
+      if (err) {
+        if (self.logging) {
+          console.log('error trying to log user in');
+        }
+        if (typeof(callback) === 'function') {
+          callback(err, data, null);
+        }
+      } else {
+        var user = new Usergrid.Entity('users', data.user);
+        if (typeof(callback) === 'function') {
+          callback(err, data, user);
+        }
+      }
+    });
+  }
+}
+
 /**
 *  A public method to test if a user is logged in - does not guarantee that the token is still valid,
-*  but rather that one exists, and that there is a valid UUID
+*  but rather that one exists
 *
 *  @method isLoggedIn
 *  @public
 *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
 */
 Usergrid.Client.prototype.isLoggedIn = function () {
-  var user = this.user;
-  var haveUser = (user && this.token);
-  if (!haveUser) {
-    return false;
+  if (this.token) {
+    return true;
   }
-  if (!isUUID(user.get('uuid'))) {
-    return false;
-  }
-  return true;
+  return false;
+}
+
+/**
+*  A public method to log out an app user - clears all user fields from client
+*
+*  @method logout
+*  @public
+*  @return none
+*/
+Usergrid.Client.prototype.logout = function () {
+  this.token = null;
 }
 
 /*
@@ -370,19 +406,6 @@ Usergrid.Client.prototype.buildCurlCall = function (options) {
 
   return curl;
 }
-
-/**
-*  A public method to log out an app user - clears all user fields from client
-*
-*  @method logout
-*  @public
-*  @return none
-*/
-Usergrid.Client.prototype.logout = function () {
-  this.user = null;
-  this.token = null;
-}
-
 
 
 /**

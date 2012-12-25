@@ -559,27 +559,35 @@ function loginUser(step, marty) {
 				//in the client. any calls made now will use the token.
 				//once a user has logged in, thier user object is stored
 				//in the client and you can access it this way:
-				var user = client.user;
-
-				//so you can then get their username (or other info):
-				var username = user.get('username');
+				var token = client.token;
 
 				//you can also detect if the user is logged in:
 				if (client.isLoggedIn()) {
 					success('user has been logged in');
+					//get the logged in user entity by calling for it:
+					client.getLoggedInUser(function(err, data, user) {
+						if(err) {
+							error('could not get logged in user');
+						} else {
+							success('got logged in user');
+							//you can then info from the user entity object:
+							var username = user.get('username');
+							notice('logged in user was: ' + username);
+
+							//to log a user out:
+							client.logout();
+
+							//verify the logout worked
+							if (client.isLoggedIn()) {
+								error('logout failed');
+							} else {
+								success('user has been logged out');
+							}
+
+							runner(step, marty);
+						}
+					});
 				}
-
-				//to log a user out:
-				client.logout();
-
-				//verify the logout worked
-				if (client.isLoggedIn()) {
-					error('logout failed');
-				} else {
-					success('user has been logged out');
-				}
-
-				runner(step, marty);
 			}
 		}
 	);

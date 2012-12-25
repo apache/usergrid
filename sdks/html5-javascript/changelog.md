@@ -1,5 +1,10 @@
 ##Change log
 
+###0.10.2
+
+- Removed local caching of user object in client
+
+
 ###0.10.1
 
 - Complete refactor of the SDK to bring congruity with the App services Node module
