@@ -22,7 +22,7 @@
 
 var request = require('request');
 var Usergrid = {};
-Usergrid.SDK_VERSION = '0.10.01';
+Usergrid.SDK_VERSION = '0.10.02';
 
 //authentication type constants
 var AUTH_CLIENT_ID = 'CLIENT_ID';

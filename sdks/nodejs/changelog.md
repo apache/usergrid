@@ -1,5 +1,13 @@
 ##Change log
 
+###0.10.2
+
+- Removed local caching of user object in client
+
+###0.10.1
+
+- Minor refactor of the SDK to bring congruity with the App services Javascript SDK
+
 ###0.10.0
 - Complete refactor of the entire module
 
