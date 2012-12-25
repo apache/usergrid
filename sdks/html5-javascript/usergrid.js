@@ -30,10 +30,6 @@ window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
 Usergrid.SDK_VERSION = '0.10.01';
 
-//authentication type constants
-var AUTH_APP_USER = 'APP_USER';
-var AUTH_NONE = 'NONE';
-
 Usergrid.Client = function(options) {
   //usergrid enpoint
   this.URI = 'https://api.usergrid.com';
@@ -42,10 +38,7 @@ Usergrid.Client = function(options) {
   this.orgName = options.orgName;
   this.appName = options.appName;
 
-  //authentication data
-  this.authType = options.authType || AUTH_NONE;
-  this.clientId = options.clientId;
-  this.clientSecret = options.clientSecret;
+  //authentication
   this.token = options.token || null;
   this.user = null;
 
@@ -89,7 +82,7 @@ Usergrid.Client.prototype.request = function (options, callback) {
     var uri = this.URI + '/' + this.orgName + '/' + this.appName + '/' + endpoint;
   }
 
-  if (self.authType === AUTH_APP_USER) {
+  if (self.token) {
     qs['access_token'] = self.token;
     /*
     xhr.setRequestHeader("Authorization", "Bearer " + self.token);
@@ -236,7 +229,6 @@ Usergrid.Client.prototype.createCollection = function (options, callback) {
       callback(err, collection);
     }
   });
-
 }
 
 /**
@@ -289,9 +281,9 @@ Usergrid.Client.prototype.login = function (username, password, callback) {
 }
 
 /*
-*  A public method to log in an app user - stores the token for later use
+*  A public method to log in an app user with facebook - stores the token for later use
 *
-*  @method login
+*  @method loginFacebook
 *  @public
 *  @params {string} username
 *  @params {string} password
@@ -735,7 +727,7 @@ Usergrid.Collection.prototype.fetch = function (callback) {
         self.resetEntityPointer();
         var count = data.entities.length;
         //save entities locally
-        self._list = [];
+        self._list = []; //clear the local list first
         for (var i=0;i<count;i++) {
           var uuid = data.entities[i].uuid;
           if (uuid) {
