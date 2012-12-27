@@ -1892,7 +1892,7 @@ public class EntityManagerImpl implements EntityManager {
 
 			Results r = getRelationManager(ref(applicationId))
 					.searchCollection("users", query);
-			if (r != null) {
+			if (r != null && r.getRef()!=null) {
 				return r.getRef();
 			} else {
                 // look-aside as it might be an email in the name field
