@@ -321,6 +321,39 @@ public class UserResourceTest extends AbstractRestTest {
 
     }
 
+    @Test
+    public void getUserWIthEmailUsername() {
+        UUID id = UUIDUtils.newTimeUUID();
+
+        String username = "username-email" + "@usergrid.org";
+        String name = "name" + id;
+        String email = "email" + id + "@usergrid.org";
+
+        ApiResponse response = client.createUser(username, name, email, "password");
+
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
+
+        Entity userEntity = response.getEntities().get(0);
+
+        // get the user with username property that has an email value
+        JsonNode node = resource().path("/test-organization/test-app/users/"+username)
+        		.queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+        assertEquals(username, node.get("entities").get(0).get("username").asText());
+        assertEquals(name, node.get("entities").get(0).get("name").asText());
+        assertEquals(email, node.get("entities").get(0).get("email").asText());
+
+       // get the user with email property value
+        node = resource().path("/test-organization/test-app/users/"+email)
+        		.queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+
+        assertEquals(username, node.get("entities").get(0).get("username").asText());
+        assertEquals(name, node.get("entities").get(0).get("name").asText());
+        assertEquals(email, node.get("entities").get(0).get("email").asText());
+    }
+
     /**
      * Tests that when querying all users, we get the same result size when
      * using "order by"
@@ -919,7 +952,7 @@ public class UserResourceTest extends AbstractRestTest {
         }
 
         assertEquals(Status.UNAUTHORIZED, status);
-        
+
         String token3 = super.userToken("edanuff", "sesame");
         String token4 = super.userToken("edanuff", "sesame");
 
@@ -976,7 +1009,7 @@ public class UserResourceTest extends AbstractRestTest {
                     .accept(MediaType.APPLICATION_JSON)
                     .type(MediaType.APPLICATION_JSON_TYPE)
                     .get(JsonNode.class);
-            
+
             status = Status.OK;
         }catch(UniformInterfaceException uie){
             status = uie.getResponse().getClientResponseStatus();
