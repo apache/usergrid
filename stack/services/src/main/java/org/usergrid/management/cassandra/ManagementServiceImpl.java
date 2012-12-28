@@ -513,7 +513,7 @@ public class ManagementServiceImpl implements ManagementService {
                 organizationEntity.getUuid(), organizationName);
         postOrganizationActivity(organization.getUuid(), user, "create",
                 organizationEntity, "Organization", organization.getName(),
-                "<a mailto=\"" + user.getEmail() + "\">" + user.getName()
+                "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName()
                         + " (" + user.getEmail()
                         + ")</a> created a new organization account named "
                         + organizationName, null);
@@ -1478,7 +1478,7 @@ public class ManagementServiceImpl implements ManagementService {
         if ((user != null) && user.isAdminUser()) {
             postOrganizationActivity(organizationId, user, "create",
                     applicationEntity, "Application", applicationName,
-                    "<a mailto=\"" + user.getEmail() + "\">" + user.getName()
+                    "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName()
                             + " (" + user.getEmail()
                             + ")</a> created a new application named "
                             + applicationName, null);
