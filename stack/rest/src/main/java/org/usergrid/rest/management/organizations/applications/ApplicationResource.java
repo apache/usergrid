@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,6 +36,7 @@ import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
+import org.usergrid.services.ServiceManager;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
@@ -81,6 +82,20 @@ public class ApplicationResource extends AbstractContextResource {
 		management.deleteOrganizationApplication(organization.getUuid(),
 				applicationId);
 
+		return new JSONWithPadding(response, callback);
+	}
+
+	@RequireOrganizationAccess
+	@GET
+	public JSONWithPadding getApplication(@Context UriInfo ui,
+			@QueryParam("callback") @DefaultValue("callback") String callback)
+			throws Exception {
+
+		ApiResponse response = createApiResponse();
+		ServiceManager sm = smf.getServiceManager(applicationId);
+        response.setAction("get");
+        response.setApplication(sm.getApplication());
+        response.setResults(management.getApplicationMetadata(applicationId));
 		return new JSONWithPadding(response, callback);
 	}
 

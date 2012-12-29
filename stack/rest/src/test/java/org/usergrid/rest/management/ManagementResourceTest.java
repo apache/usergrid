@@ -207,6 +207,42 @@ public class ManagementResourceTest extends AbstractRestTest {
     }
 
     @Test
+    public void mgmtCreateAndGetApplication() throws Exception {
+
+    	OrganizationInfo orgInfo = managementService.getOrganizationByName("test-organization");
+        Map<String, String> data = new HashMap<String, String>();
+        data.put("name", "mgmt-org-app");
+
+        // POST /applications
+        JsonNode appdata = resource().path("/management/orgs/"+orgInfo.getUuid()+"/applications")
+        		.queryParam("access_token", adminToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class,data);
+        logNode(appdata);
+        appdata = getEntity(appdata, 0);
+
+        assertEquals("test-organization/mgmt-org-app", appdata.get("name").asText());
+        assertEquals("Roles", appdata.get("metadata").get("collections").get("roles").get("title").asText());
+        assertEquals(3, appdata.get("metadata").get("collections").get("roles").get("count").asInt());
+
+        // GET /applications/mgmt-org-app
+        appdata = resource().path("/management/orgs/"+orgInfo.getUuid()+"/applications/mgmt-org-app")
+        		.queryParam("access_token", adminToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        logNode(appdata);
+
+        assertEquals("test-organization", appdata.get("organization").asText());
+        assertEquals("mgmt-org-app", appdata.get("applicationName").asText());
+
+        appdata = getEntity(appdata, 0);
+
+        assertEquals("test-organization/mgmt-org-app", appdata.get("name").asText());
+        assertEquals("Roles", appdata.get("metadata").get("collections").get("roles").get("title").asText());
+        assertEquals(3, appdata.get("metadata").get("collections").get("roles").get("count").asInt());
+    }
+
+    @Test
     public void tokenTtl() throws Exception {
 
         long ttl = 2000;

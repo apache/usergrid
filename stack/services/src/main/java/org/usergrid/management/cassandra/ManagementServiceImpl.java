@@ -92,6 +92,7 @@ import static org.usergrid.security.tokens.TokenCategory.ACCESS;
 import static org.usergrid.security.tokens.TokenCategory.EMAIL;
 import static org.usergrid.services.ServiceParameter.parameters;
 import static org.usergrid.services.ServicePayload.payload;
+import static org.usergrid.services.ServiceResults.genericServiceResults;
 import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.ListUtils.anyNull;
@@ -1622,6 +1623,27 @@ public class ManagementServiceImpl implements ManagementService {
         }
         return new ApplicationInfo(entity.getProperties());
     }
+
+    @Override
+	public ServiceResults getApplicationMetadata(UUID applicationId)
+			throws Exception {
+
+		if(applicationId==null){
+		 return ServiceResults.genericServiceResults();
+		}
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        Entity entity = em.get(em.getApplicationRef());
+
+        Results r = Results.fromEntity(entity);
+
+        Map<String, Object> collections = em.getApplicationCollectionMetadata();
+        if (collections.size() > 0) {
+            r.setMetadata(em.getApplicationRef().getUuid(), "collections",
+                    collections);
+        }
+        return genericServiceResults(r);
+	}
 
     public String getSecret(UUID applicationId, AuthPrincipalType type, UUID id)
             throws Exception {

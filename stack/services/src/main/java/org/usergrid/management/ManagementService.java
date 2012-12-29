@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -109,14 +109,14 @@ public interface ManagementService {
 	public UserInfo findAdminUser(String identifier);
 
 	public String getAccessTokenForAdminUser(UUID userId, long duration) throws Exception;
-	
+
 	/**
 	 * Revoke all active access tokens for this admin user
 	 * @param userId
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public void revokeAccessTokensForAdminUser(UUID userId) throws Exception;
-	
+
 	public void revokeAccessTokenForAdminUser(UUID userId, String token) throws Exception;
 
 	public String getActivationTokenForAdminUser(UUID userId, long ttl) throws Exception;
@@ -167,6 +167,9 @@ public interface ManagementService {
 	public ApplicationInfo getApplicationInfo(Identifier id) throws Exception;
 
 	public ApplicationInfo getApplicationInfoFromAccessToken(String token)
+			throws Exception;
+
+	public ServiceResults getApplicationMetadata(UUID applicationId)
 			throws Exception;
 
 	public BiMap<UUID, String> getApplicationsForOrganization(
@@ -303,14 +306,14 @@ public interface ManagementService {
 
 	public String getAccessTokenForAppUser(UUID applicationId, UUID userId, long duration)
 			throws Exception;
-	
+
 	/**
      * Revoke all active access tokens for this admin user
      * @param userId
-	 * @throws Exception 
+	 * @throws Exception
      */
     public void revokeAccessTokensForAppUser(UUID applicationId, UUID userId) throws Exception;
-    
+
     public void revokeAccessTokenForAppUser(String token) throws Exception;
 
 	public User getAppUserByIdentifier(UUID applicationId, Identifier identifier)
