@@ -23,6 +23,9 @@ NSString *g_deviceUUID = nil;
     // the appID for the specific app
     NSString *m_appID;
     
+    // the appID for the specific app
+    NSString *m_orgID;
+    
     // the cached auth token
     UGUser *m_loggedInUser;
     
@@ -71,7 +74,7 @@ NSString *g_deviceUUID = nil;
     return nil;
 }
 
--(id) initWithApplicationID:(NSString *)applicationID
+-(id) initWithOrganizationId: (NSString *)organizationID withApplicationID:(NSString *)applicationID
 {
     self = [super init];
     if ( self )
@@ -80,6 +83,7 @@ NSString *g_deviceUUID = nil;
         m_httpManagerPool = [NSMutableArray new];
         m_delegateLock = [NSRecursiveLock new];
         m_appID = applicationID;
+        m_orgID = organizationID;
         m_baseURL = @"http://api.usergrid.com";
         m_pendingMultiStepActions = [NSMutableArray new];
         m_loggedInUser = nil;
@@ -88,7 +92,7 @@ NSString *g_deviceUUID = nil;
     return self;
 }
 
--(id) initWithApplicationID:(NSString *)applicationID baseURL:(NSString *)baseURL
+-(id) initWithOrganizationId: (NSString *)organizationID withApplicationID:(NSString *)applicationID baseURL:(NSString *)baseURL
 {
     self = [super init];
     if ( self )
@@ -97,6 +101,7 @@ NSString *g_deviceUUID = nil;
         m_httpManagerPool = [NSMutableArray new];
         m_delegateLock = [NSRecursiveLock new];
         m_appID = applicationID;
+        m_orgID = organizationID;
         m_baseURL = baseURL;
     }
     return self;
@@ -375,35 +380,35 @@ NSString *g_deviceUUID = nil;
 -(NSMutableString *)createURL:(NSString *)append1
 {
     NSMutableString *ret = [NSMutableString new];
-    [ret appendFormat:@"%@/%@/%@", m_baseURL, m_appID, append1];
+    [ret appendFormat:@"%@/%@/%@/%@", m_baseURL, m_orgID, m_appID, append1];
     return ret;
 }
 
 -(NSMutableString *)createURL:(NSString *)append1 append2:(NSString *)append2
 {
     NSMutableString *ret = [NSMutableString new];
-    [ret appendFormat:@"%@/%@/%@/%@", m_baseURL, m_appID, append1, append2];
+    [ret appendFormat:@"%@/%@/%@/%@/%@", m_baseURL, m_orgID, m_appID, append1, append2];
     return ret;
 }
 
 -(NSMutableString *)createURL:(NSString *)append1 append2:(NSString *)append2 append3:(NSString *)append3
 {
     NSMutableString *ret = [NSMutableString new];
-    [ret appendFormat:@"%@/%@/%@/%@/%@", m_baseURL, m_appID, append1, append2, append3];
+    [ret appendFormat:@"%@/%@/%@/%@/%@/%@", m_baseURL, m_orgID, m_appID, append1, append2, append3];
     return ret;
 }
 
 -(NSMutableString *)createURL:(NSString *)append1 append2:(NSString *)append2 append3:(NSString *)append3 append4:(NSString *)append4
 {
     NSMutableString *ret = [NSMutableString new];
-    [ret appendFormat:@"%@/%@/%@/%@/%@/%@", m_baseURL, m_appID, append1, append2, append3, append4];
+    [ret appendFormat:@"%@/%@/%@/%@/%@/%@/%@", m_baseURL, m_orgID, m_appID, append1, append2, append3, append4];
     return ret;
 }
 
 -(NSMutableString *)createURL:(NSString *)append1 append2:(NSString *)append2 append3:(NSString *)append3 append4:(NSString *)append4 append5:(NSString *)append5
 {
     NSMutableString *ret = [NSMutableString new];
-    [ret appendFormat:@"%@/%@/%@/%@/%@/%@/%@", m_baseURL, m_appID, append1, append2, append3, append4, append5];
+    [ret appendFormat:@"%@/%@/%@/%@/%@/%@/%@/%@", m_baseURL, m_orgID, m_appID, append1, append2, append3, append4, append5];
     return ret;
 }
 

@@ -41,14 +41,14 @@ set the response limit in UGQuery as well.
 
 /********************* INIT AND SETUP *********************/
 // init with an app ID
--(id) initWithApplicationID:(NSString *)applicationID;
+-(id) initWithOrganizationId: (NSString *)organizationID withApplicationID:(NSString *)applicationID;
 
 // init with an app ID and a base UserGrid URL. This is useful if you
 // are running a local UG server or your company has its own public
 // UG server. The default URL is http://api.usergrid.com. The base URL
 // must be a fully formated http link, including the "http://" at the
 // beginning.
--(id) initWithApplicationID:(NSString *)applicationID baseURL:(NSString *)baseURL;
+-(id) initWithOrganizationId: (NSString *)organizationID withApplicationID:(NSString *)applicationID baseURL:(NSString *)baseURL;
 
 // set the delegate. See "A WORD ON NETWORK COMMUNICATION CALLS"
 // at the top of the file for a detailed explanation. The function
