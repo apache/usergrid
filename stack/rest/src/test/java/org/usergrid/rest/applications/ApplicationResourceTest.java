@@ -116,6 +116,12 @@ public class ApplicationResourceTest extends AbstractRestTest {
 
     // ensure the URI uses the properties file as a base
     assertEquals(node.get("uri").getTextValue(), "http://sometestvalue/test-organization/test-app");
+
+    node = getEntity(node, 0);
+    assertEquals("test-organization/test-app", node.get("name").asText());
+    assertEquals("Roles", node.get("metadata").get("collections").get("roles").get("title").asText());
+    assertEquals(3, node.get("metadata").get("collections").get("roles").get("count").asInt());
+
   }
 
 
