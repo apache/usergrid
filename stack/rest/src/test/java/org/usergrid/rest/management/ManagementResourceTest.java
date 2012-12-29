@@ -234,7 +234,7 @@ public class ManagementResourceTest extends AbstractRestTest {
 
         assertEquals("test-organization", appdata.get("organization").asText());
         assertEquals("mgmt-org-app", appdata.get("applicationName").asText());
-
+        assertEquals("http://sometestvalue/test-organization/mgmt-org-app", appdata.get("uri").getTextValue());
         appdata = getEntity(appdata, 0);
 
         assertEquals("test-organization/mgmt-org-app", appdata.get("name").asText());

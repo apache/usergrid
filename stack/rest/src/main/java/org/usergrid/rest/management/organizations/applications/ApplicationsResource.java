@@ -49,9 +49,10 @@ import com.sun.jersey.api.json.JSONWithPadding;
 @Component("org.usergrid.rest.management.organizations.applications.ApplicationsResource")
 @Scope("prototype")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-		"application/x-javascript", "text/ecmascript",
-		"application/ecmascript", "text/jscript" })
+        "application/x-javascript", "text/ecmascript",
+        "application/ecmascript", "text/jscript" })
 public class ApplicationsResource extends AbstractContextResource {
+
 
 	OrganizationInfo organization;
 
@@ -140,5 +141,4 @@ public class ApplicationsResource extends AbstractContextResource {
 		return getSubResource(ApplicationResource.class).init(organization,
 				application);
 	}
-
 }

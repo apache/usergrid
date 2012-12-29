@@ -95,6 +95,7 @@ public class ApplicationResource extends AbstractContextResource {
 		ServiceManager sm = smf.getServiceManager(applicationId);
         response.setAction("get");
         response.setApplication(sm.getApplication());
+        response.setParams(ui.getQueryParameters());
         response.setResults(management.getApplicationMetadata(applicationId));
 		return new JSONWithPadding(response, callback);
 	}
