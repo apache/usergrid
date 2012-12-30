@@ -596,7 +596,7 @@ NSString *g_deviceUUID = nil;
         // advance ourselves to the next step
         [action setNextAction:kMultiStepPostActivity];
     }
-    if ( [action nextAction] == kMultiStepCreateGroupActivity )
+    else if ( [action nextAction] == kMultiStepCreateGroupActivity )
     {
         // create the activity
         result = [self createActivity:[action activity]];
