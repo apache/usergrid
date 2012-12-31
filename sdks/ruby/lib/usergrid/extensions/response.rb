@@ -19,7 +19,7 @@ module RestClient
     end
 
     def multiple_entities?
-      entities_data = data['entities'] || data['data'] || data['messages']
+      entities_data = data['entities'] || data['data'] || data['messages'] || data['list']
       entities_data.is_a? Array
     end
 

@@ -181,6 +181,10 @@ usergrid_iron/spec/spec_settings.yaml to match.)
 
 ## Release notes
 
+### 0.0.7
+* Bug fixes
+  1. multiple_entities? should check data['list']
+
 ### 0.0.6
 * New features
   1. iterators can now optionally cross page boundaries, eg. `collection.follow_cursor.each`
