@@ -67,9 +67,9 @@ NSString *g_deviceUUID = nil;
 /******************************* INIT *************************************/
 -(id)init
 {
-    // you are not allowed to init without an application id
+    // you are not allowed to init without an organization id and application id
     // you can't init with [UGClient new]. You must call
-    // [[UGClient alloc] initWithApplicationID:<your UG app's id>]
+    // [[UGClient alloc] initWithOrganizationId: <your UG org id> withApplicationId:<your UG app id>]
     assert(0); 
     return nil;
 }
