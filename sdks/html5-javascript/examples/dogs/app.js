@@ -91,7 +91,6 @@ $(document).ready(function () {
         drawDogs();
       });
 
-      drawDogs()
       function drawDogs() {
         dogs.fetch(function(err, data) {
           if(err) {
@@ -170,6 +169,7 @@ $(document).ready(function () {
           });
         }
       }
+      drawDogs();
 
     }
   });
