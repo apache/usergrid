@@ -1,0 +1,70 @@
+#!/usr/bin/env ruby
+
+require 'gli'
+require 'yaml'
+require 'usergrid_iron'
+require 'highline/import'
+require 'command_line_reporter'
+include CommandLineReporter
+require 'ugc'
+include GLI::App
+
+program_desc 'Usergrid Command Line'
+version Ugc::VERSION
+
+desc 'verbose'
+switch [:v,:verbose]
+
+desc 'settings directory'
+arg_name 'settings directory'
+default_value File.join(ENV['HOME'], '.ugc')
+flag [:s,:settings]
+
+# load helpers && commands
+commands_from '../lib/ugc/helpers'
+commands_from '../lib/ugc/commands'
+
+pre_login = [:info, :target, :profile]
+
+pre do |global_options,command,options,args|
+  if global_options[:verbose]
+    RestClient.log=Logger.new(STDOUT)
+  else
+    Usergrid::LOG.level = Logger::WARN
+  end
+
+  $settings = Ugc::Settings.new global_options[:settings]
+  if pre_login.include? command.name
+    true
+  elsif command.name == :login && $settings.configured?
+    true
+  else
+    if $settings.configured? && $settings.logged_in?
+      $application = Ugc::Application.new
+      true
+    else
+      if $settings.configured?
+        puts "not logged in"
+      else
+        puts "not configured"
+      end
+      false
+    end
+  end
+end
+
+post do |global_options,command,options,args|
+  # post-run logic here
+end
+
+on_error do |e|
+  # return false to skip default error handling
+  if e.is_a? RestClient::Exception
+    puts e.response.data['error_description']
+    false
+  else
+    true
+  end
+end
+
+exit run(ARGV)
