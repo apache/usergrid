@@ -41,7 +41,7 @@ $(document).ready(function () {
   $('#login-button').bind('click', function() {
     //get the
     var apiKey = $("#api-key").val();
-    var location = window.location.origin;
+    var location = window.location.protocol + '//' + window.location.host;
     var path = window.location.pathname;
 
     var link = "https://www.facebook.com/dialog/oauth?client_id=";
