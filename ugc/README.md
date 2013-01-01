@@ -28,4 +28,4 @@ Connect to an Apigee administrator account:
 
 ### Examples
 
-![image](https://github.com/scottganyo/ugc/blob/master/examples.jpeg)
+![image](https://github.com/scottganyo/ugc/raw/master/examples.jpeg)
