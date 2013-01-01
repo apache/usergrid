@@ -7,13 +7,8 @@ spec = Gem::Specification.new do |s|
   s.email = 'scott@ganyo.com'
   s.homepage = 'http://ganyo.com'
   s.platform = Gem::Platform::RUBY
-  s.summary = 'Usergrid Explorer'
-# Add your other files here if you make them
-  s.files = %w(
-bin/ugc
-lib/ugc/version.rb
-lib/ugc.rb
-  )
+  s.summary = 'Usergrid Command Line'
+  s.files = `git ls-files`.split($\)
   s.require_paths << 'lib'
   s.has_rdoc = true
   s.extra_rdoc_files = ['README.rdoc','ugc.rdoc']
