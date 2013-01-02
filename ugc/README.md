@@ -2,6 +2,14 @@
 
 ugc enables convenient terminal access to Apigee's App Services (aka Usergrid).
 
+## Features
+
+* Multiple connection/login profiles
+* Simple syntax
+* Use relative (or absolute) URLs
+* Easy-to-read tabular output
+* Optionally also emits raw output (--verbose switch)
+
 ## Installation
 
     $ gem install ugc
@@ -21,7 +29,7 @@ Connect to an Apigee administrator account:
 	organization = scottganyo
 	$ ugc target app messagee
 	application = messagee
-	$ ugc login -a scott@ganyo.com
+	$ ugc login --admin scott@ganyo.com
 	password: **********
 	logged in user: scott@ganyo.com
 	
