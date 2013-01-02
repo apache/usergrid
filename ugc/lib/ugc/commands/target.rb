@@ -13,6 +13,8 @@ command :target do |c|
   c.desc 'set organization'
   c.command [:org,:organization] do |ep|
     ep.action do |global_options,options,args|
+      help_now! unless args[0]
+
       $settings.organization = args[0]
       puts "organization = #{$settings.organization}"
     end
@@ -21,6 +23,8 @@ command :target do |c|
   c.desc 'set application'
   c.command [:app,:application] do |ep|
     ep.action do |global_options,options,args|
+      help_now! unless args[0]
+
       $settings.application = args[0]
       puts "application = #{$settings.application}"
     end

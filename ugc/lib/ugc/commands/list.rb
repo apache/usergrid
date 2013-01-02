@@ -37,6 +37,8 @@ command :ls,:list do |c|
   c.desc 'whatevers'
   c.command [:whatevers] do |c2|
     c2.action do |global_options,options,args|
+      help_now! unless args[0]
+
       whatevers = $application[args[0]].collection
       format_collection(whatevers)
     end
