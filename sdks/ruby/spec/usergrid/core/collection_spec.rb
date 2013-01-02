@@ -8,6 +8,7 @@ describe Usergrid::Collection do
     @entity_data = (1..25).collect do |i|
       { name: "name_#{i}", value: "value_#{i+1}" }
     end
+    (1..3).each {|i| @entity_data[i]['three'] = 3}
     @collection.create_entities @entity_data
   end
 
@@ -63,10 +64,10 @@ describe Usergrid::Collection do
   end
 
   it "should be able to page forward by cursor" do
-    @collection.query nil, limit: 2
+    @collection.query 'select * where three = 3', limit: 2
     @collection.next_page
-    @collection.size.should eq 2
-    @collection[0].name.should eq @entity_data[2][:name]
+    @collection.size.should eq 1
+    @collection[0].name.should eq @entity_data[3][:name]
   end
 
   it "should be able to update based on a query" do

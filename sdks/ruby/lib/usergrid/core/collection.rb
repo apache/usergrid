@@ -3,7 +3,6 @@ module Usergrid
     include Enumerable
 
     attr_accessor :iterator_follows_cursor
-    attr_reader :query_params
 
     def initialize(url, api_url, options={}, response=nil)
       super url, api_url, options, response
@@ -55,16 +54,16 @@ module Usergrid
     # options: 'reversed', 'start', 'cursor', 'limit', 'permission'
     def update_query(updates, query=nil, options={})
       options = options.symbolize_keys
-      @query_params = query ? options.merge({ql: query}) : options
-      self.put(updates, {params: @query_params })
+      query_params = query ? options.merge({ql: query}) : options
+      self.put(updates, {params: query_params })
       self
     end
 
     # options: 'reversed', 'start', 'cursor', 'limit', 'permission'
     def query(query=nil, options={})
       options = options.symbolize_keys
-      @query_params = query ? options.merge({ql: query}) : options
-      self.get({params: @query_params })
+      query_params = query ? options.merge({ql: query}) : options
+      self.get({params: query_params })
       self
     end
 
@@ -81,7 +80,19 @@ module Usergrid
     end
 
     def next_page
-      query(nil, @query_params.merge({cursor: cursor}))
+      query(nil, query_params.merge({cursor: cursor}))
+    end
+
+    protected
+
+    def query_params
+      params = {}
+      if response.data['params']
+        response.data['params'].each do |k,v|
+          params[k] = v[0]
+        end
+      end
+      params
     end
   end
 end
