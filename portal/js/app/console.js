@@ -303,7 +303,7 @@ function apigee_console_app(Pages, query_params) {
           if ($.isEmptyObject(entity_path)) {
             entity_path = path + "/";
           }
-
+          $("#query-path").val(path)
           t += "<div class=\"query-result-row entity_list_item\" id=\"query-result-row-"
             + i
             + "\" data-entity-type=\""
@@ -312,7 +312,6 @@ function apigee_console_app(Pages, query_params) {
             + entity_path
             + "\"></div>";
         }
-        $("#query-path").val(response.path + '/');
         $("#query-response-table").html(t);
         $(".entity_list_item").loadEntityCollectionsListWidget();
       } else {
@@ -323,7 +322,7 @@ function apigee_console_app(Pages, query_params) {
         if ($.isEmptyObject(entity_path)) {
           entity_path = path + "/" ;
         }
-        $('#query-path').val(response.path + '/');
+        $('#query-path').val(entity_path);
 
         t = '<div class="query-result-row entity_detail" id="query-result-detail" data-entity-type="'
           + entity.type
@@ -532,22 +531,22 @@ function apigee_console_app(Pages, query_params) {
     }
     return false;
   };
-
-  $('#button-clear-query-source').click(function(event) {
-    shrinkQueryInput();
-    $('#query-source').val("{ }");
-    return false;
-  });
-
-  $('#button-clear-path').click(function(event) {
-    $('#query-path').val("");
-    return false;
-  });
-
-  $('#button-clear-ql').click(function(event) {
-    $('#query-ql').val("");
-    return false;
-  });
+//TODO: Delete after tests
+//  $('#button-clear-query-source').click(function(event) {
+//    shrinkQueryInput();
+//    $('#query-source').val("{ }");
+//    return false;
+//  });
+//
+//  $('#button-clear-path').click(function(event) {
+//    $('#query-path').val("");
+//    return false;
+//  });
+//
+//  $('#button-clear-ql').click(function(event) {
+//    $('#query-ql').val("");
+//    return false;
+//  });
 
   window.Usergrid.console.doChildClick = function(event) {
     var path = new String($('#query-path').val());
@@ -3616,21 +3615,21 @@ function apigee_console_app(Pages, query_params) {
     var pathInput = $("#" + inputId),
       list = [],
       name,
-      path = response.path + '/';
+      path = response.path ;
     list.push(path);
     $.each(response.entities, function(entityKey, entityValue) {
-      name = getEntityName(entityValue) + '/';
-      list.push(path + name);
+      name = getEntityName(entityValue);
+      list.push(path + '/' + name);
       //Fill collection names
       if (entityValue.metadata.collections) {
         $.each(entityValue.metadata.collections, function(key){
-          list.push(path + name + key);
+          list.push(path + '/' + name + '/' + key);
         });
       }
       //Fill Sets
       if (entityValue.metadata.sets) {
         $.each(entityValue.metadata.sets, function(key, value) {
-          list.push(response.path + '/' + name + key);
+          list.push(response.path + '/' + name + '/'+ key);
         })
       }
     });

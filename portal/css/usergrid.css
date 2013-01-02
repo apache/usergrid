@@ -4483,7 +4483,6 @@ a:active {
 }
 #statusbar-placeholder .alert {
   display: none;
-  margin: 5px;
   padding: 4px 35px 4px 14px;
 }
 /*----------- Roles ----------------*/
@@ -4817,9 +4816,6 @@ table .zebraRows:nth-child(2n) {
 .collection-column {
   width: 80%;
 }
-#button-query-validate {
-  margin-left: 20px;
-}
 /* ---------------- Account Panel ------------ */
 .leave-org-row td {
   line-height: 25px !important;
@@ -4836,6 +4832,20 @@ table .zebraRows:nth-child(2n) {
 }
 .curl-container .input-append {
   position: relative;
+}
+.side-label {
+  display: inline;
+}
+.alert .close {
+  top: 2px;
+}
+.horizontal {
+  display: inline;
+  float: left;
+  padding: 5px;
+}
+#query-collections-caret {
+  margin-top: 6px;
 }
 #organization-name {
   display: inline;

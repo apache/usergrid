@@ -1129,50 +1129,58 @@
                 <div id="query-path-area" class="console-section">
                   <div class="well thingy"><span class="title"> Query Explorer: <span class="app_title"></span></span></div>
                   <div class="console-section-contents">
-                    <form id="query-inputs" class="row">
-                      <div class="control-group">
-                        <label class="control-label" for="query-path"><strong>Path: </strong></label>
-                        <div class="controls">
-                          <div class="input-append">
-                            <input id="query-path" type="text" name="path" class="span5" autocomplete="off"/>
-                            <span id="button-clear-path" class="add-on">&#215;</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="control-group">
-                        <label class="control-label" for="query-ql">Query: </label>
-                        <div class="controls">
-                          <div class="input-append">
-                            <input id="query-ql" type="text" name="query" class="span5"/>
-                            <div class="btn-group pull-left">
-                                <span class="add-on dropdown-toggle" data-toggle="dropdown">
-                                  <span class="caret"></span>
-                                </span>
-                              <ul id="query-collections-indexes-list"  class="dropdown-menu ">
-                              </ul>
+                    <div class="row span6">
+                      <form id="query-inputs" class="row">
+                        <div class="control-group">
+                          <label class="control-label" for="query-path"><strong>Path </strong></label>
+                          <div class="controls">
+                            <div class="input-append">
+                              <input id="query-path" type="text" name="path" class="span6" autocomplete="off" placeholder="ex: /users"/>
                             </div>
-                            <span id="button-clear-ql" class="add-on">&#215;</span>
                           </div>
                         </div>
-                      </div>
-                      <div class="control-group">
-                        <label class="control-label" for="query-source">Json Input: </label>
-                        <div class="controls">
-                          <div class="input-append">
-                            <textarea id="query-source" class="span5 pull-left" rows="4"></textarea>
-                              <span id="button-clear-query-source" class="add-on">&#215;</span>
-                            <a class="btn pull-left " id="button-query-validate" >Validate Json</a>
+                        <div class="control-group">
+                          <label class="control-label" for="query-ql"><strong>Query </strong></label>
+                          <div class="controls">
+                            <div class="input-append">
+                              <label class="horizontal"> <strong>ql=</strong>
+                              </label>
+                              <input id="query-ql" type="text" name="query" class="span5" placeholder="ex: order by username asc"/>
+                              <div class="btn-group pull-right">
+                                <a class="btn dropdown-toggle " data-toggle="dropdown">
+                                  <span id='query-collections-caret' class="caret"></span>
+                                </a>
+                                <ul id="query-collections-indexes-list"  class="dropdown-menu ">
+                                </ul>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div id="statusbar-placeholder"></div>
-                    </form>
-                    <div class="form-actions btn-toolbar">
-                      <!--a class="btn" id="button-query-back">&#9664; Back</a-->
-                      <a class="btn" id="button-query-get">Get</a>
-                      <a class="btn" id="button-query-post">Post</a>
-                      <a class="btn" id="button-query-put">Put</a>
-                      <a class="btn" id="button-query-delete">Delete</a>
+                        <div class="control-group">
+                          <label class="control-label" for="query-source"><strong>Json Body </strong></label>
+                          <div class="controls">
+                            <div class="input-append">
+                              <textarea id="query-source" class="span6 pull-left" rows="4" placeholder="{ 'name':'value' }"></textarea>
+                              <a class="btn pull-left " id="button-query-validate" >Validate Json</a>
+                              <div id="statusbar-placeholder" class=" pull-left span4"></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="" data-toggle="buttons-radio">
+                          <!--a class="btn" id="button-query-back">&#9664; Back</a-->
+                          <!--Added disabled class to change the way button looks but their functionality is as usual -->
+                          <label class="control-label"><strong>Method </strong></label>
+                          <button type="button" class="btn disabled" id="button-query-get">Get</button>
+                          <button type="button" class="btn disabled" id="button-query-post">Post</button>
+                          <button type="button" class="btn disabled" id="button-query-put">Put</button>
+                          <button type="button" class="btn disabled" id="button-query-delete">Delete</button>
+                        </div>
+                      </form>
+
+                    </div>
+                    <div class="row span6">
+
                     </div>
                   </div>
                 </div>
