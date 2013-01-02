@@ -181,6 +181,10 @@ usergrid_iron/spec/spec_settings.yaml to match.)
 
 ## Release notes
 
+### 0.0.8
+* Bug fixes
+  1. better handling of paging
+
 ### 0.0.7
 * Bug fixes
   1. multiple_entities? should check data['list']
