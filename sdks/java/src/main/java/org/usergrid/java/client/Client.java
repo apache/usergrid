@@ -373,6 +373,8 @@ public class Client {
      *         "invalid_grant" to see if access is denied.
      */
     public ApiResponse authorizeAppUser(String email, String password) {
+        validateNonEmptyParam(email, "email");
+        validateNonEmptyParam(password,"password");
         assertValidApplicationId();
         loggedInUser = null;
         accessToken = null;
@@ -427,6 +429,8 @@ public class Client {
      *         "invalid_grant" to see if access is denied.
      */
     public ApiResponse authorizeAppUserViaPin(String email, String pin) {
+        validateNonEmptyParam(email, "email");
+        validateNonEmptyParam(pin, "pin");
         assertValidApplicationId();
         loggedInUser = null;
         accessToken = null;
@@ -461,6 +465,7 @@ public class Client {
      *         "invalid_grant" to see if access is denied.
      */
     public ApiResponse authorizeAppUserViaFacebook(String fb_access_token) {
+        validateNonEmptyParam(fb_access_token, "Facebook token");
         assertValidApplicationId();
         loggedInUser = null;
         accessToken = null;
@@ -495,6 +500,8 @@ public class Client {
      *         "invalid_grant" to see if access is denied.
      */
     public ApiResponse authorizeAppClient(String clientId, String clientSecret) {
+        validateNonEmptyParam(clientId, "client identifier");
+        validateNonEmptyParam(clientSecret, "client secret");
         assertValidApplicationId();
         loggedInUser = null;
         accessToken = null;
@@ -518,6 +525,12 @@ public class Client {
             log.info("Client.authorizeAppClient(): Response: " + response);
         }
         return response;
+    }
+
+    private void validateNonEmptyParam(Object param, String paramName) {
+        if ( isEmpty(param) ) {
+            throw new IllegalArgumentException(paramName + " cannot be null or empty");
+        }
     }
 
     /**
