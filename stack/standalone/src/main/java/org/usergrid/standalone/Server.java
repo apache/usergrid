@@ -83,6 +83,7 @@ public class Server implements ApplicationContextAware {
     boolean startDatabaseWithServer = false;
 
     HttpServer httpServer;
+    ServletHandler handler;
     EmbeddedServerHelper embeddedCassandra = null;
 
     protected EntityManagerFactory emf;
@@ -147,7 +148,7 @@ public class Server implements ApplicationContextAware {
 
         httpServer = HttpServer.createSimpleServer(".", port);
 
-        ServletHandler handler = new ServletHandler();
+        handler = new ServletHandler();
 
         handler.addContextParameter(SpringServlet.CONTEXT_CONFIG_LOCATION,
                 "classpath:/usergrid-standalone-context.xml");
@@ -416,10 +417,20 @@ public class Server implements ApplicationContextAware {
     }
 
     public synchronized void stopServer() {
+        Collection<NetworkListener> listeners = httpServer.getListeners();
+        for(NetworkListener listener : listeners) {
+            try {
+                listener.stop();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         if (httpServer != null) {
             httpServer.stop();
             httpServer = null;
         }
+
         stopCassandra();
         if (ctx instanceof XmlWebApplicationContext) {
             ((XmlWebApplicationContext) ctx).close();
@@ -480,22 +491,20 @@ public class Server implements ApplicationContextAware {
                 }
             }
 
-            logger.info("Starting Cassandra");
-            try {
-                embeddedCassandra.start();
-            } catch (Exception e) {
-                logger.error("Unable to start Cassandra", e);
-                System.exit(0);
-            }
-        } else {
-            logger.info("Can only start Cassandra once per JVM process");
+        }
+        logger.info("Starting Cassandra");
+        try {
+            embeddedCassandra.start();
+        } catch (Exception e) {
+            logger.error("Unable to start Cassandra", e);
+            System.exit(0);
         }
 
     }
 
     public synchronized void stopCassandra() {
-        // logger.info("Stopping Cassandra");
-        // EmbeddedServerHelper.teardown();
+        logger.info("Stopping Cassandra");
+        embeddedCassandra.stop();
     }
 
     public EntityManagerFactory getEntityManagerFactory() {
