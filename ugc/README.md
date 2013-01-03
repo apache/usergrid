@@ -50,8 +50,11 @@ Connect to an Apigee administrator account:
 ## Release notes
 
 ### 0.0.5
+* New features
+  1. smart column widths
 * Bug fixes
   1. fixed issue with selecting a single column
+  1. fixed formatting of entities with heterogeneous attributes
 
 ### 0.0.4
 * Bug fixes
