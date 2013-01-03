@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
+<meta charset="utf-8" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
 <html>
   <head>
 
@@ -1128,7 +1128,7 @@
               <div id="query-panel" style="display: none">
                 <div id="query-path-area" class="console-section">
                   <div class="well thingy"><span class="title"> Query Explorer: <span class="app_title"></span></span></div>
-                  <div class="console-section-contents">
+                  <div class="console-section-contents query-console">
                     <div class="row span6">
                       <form id="query-inputs" class="row">
                         <div class="control-group">
@@ -1160,27 +1160,41 @@
                           <label class="control-label" for="query-source"><strong>Json Body </strong></label>
                           <div class="controls">
                             <div class="input-append">
-                              <textarea id="query-source" class="span6 pull-left" rows="4" placeholder="{ 'name':'value' }"></textarea>
+                              <textarea id="query-source" class="span6 pull-left" rows="4"
+                                        placeholder="{&quot;name&quot;:&quot;value&quot;}"></textarea>
                               <a class="btn pull-left " id="button-query-validate" >Validate Json</a>
                               <div id="statusbar-placeholder" class=" pull-left span4"></div>
                             </div>
                           </div>
                         </div>
-
-                        <div class="" data-toggle="buttons-radio">
-                          <!--a class="btn" id="button-query-back">&#9664; Back</a-->
-                          <!--Added disabled class to change the way button looks but their functionality is as usual -->
-                          <label class="control-label"><strong>Method </strong></label>
-                          <button type="button" class="btn disabled" id="button-query-get">Get</button>
-                          <button type="button" class="btn disabled" id="button-query-post">Post</button>
-                          <button type="button" class="btn disabled" id="button-query-put">Put</button>
-                          <button type="button" class="btn disabled" id="button-query-delete">Delete</button>
+                        <div class="control-group">
+                          <div class="" data-toggle="buttons-radio">
+                            <!--a class="btn" id="button-query-back">&#9664; Back</a-->
+                            <!--Added disabled class to change the way button looks but their functionality is as usual -->
+                            <label class="control-label"><strong>Method </strong></label>
+                            <button type="button" class="btn btn-small disabled query-button" id="button-query-get">GET</button>
+                            <button type="button" class="btn btn-small disabled query-button" id="button-query-post">POST</button>
+                            <button type="button" class="btn btn-small disabled query-button" id="button-query-put">PUT</button>
+                            <button type="button" class="btn btn-small disabled query-button" id="button-query-delete">DELETE</button>
+                          </div>
+                        </div>
+                        <div class="control-group">
+                           <button type="button" class="btn btn-primary" id="button-query">Run Query</button>
                         </div>
                       </form>
-
                     </div>
-                    <div class="row span6">
-
+                    <div class="left-column row span6">
+                      </br>
+                      <p><strong>Queries</strong><p>
+                      <p>For issuing queries against your application's data, App Services supports much of the standard SQL syntax.</p>
+                      <a target="_blank" href="http://apigee.com/docs/usergrid/content/queries-and-parameters">Learn more about Queries and Parameters.</a>
+                      </br>
+                      </br>
+                      <p><strong>Example Queries</strong></p>
+                      <p>Select all users whose name starts with <strong>fred</strong>:</p>
+                      <pre>select * where name = 'fred*'</pre>
+                      <p>Select all activities where a category is <strong>usermessage</strong> and content contains the word <strong>hello</strong> in a string:</p>
+                      <pre class="code-para">select * where category = 'usermessage' and content contains 'hello'</pre>
                     </div>
                   </div>
                 </div>

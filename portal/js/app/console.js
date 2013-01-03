@@ -237,6 +237,10 @@ function apigee_console_app(Pages, query_params) {
   }
   window.Usergrid.console.pageOpenQueryExplorer = pageOpenQueryExplorer;
 
+  function runCollectionQuery(){
+
+  }
+
   function getCollection(method, path){
     //get the data to run the query
     if(!path){
@@ -460,11 +464,12 @@ function apigee_console_app(Pages, query_params) {
 
     $('#button-query-back').click(function() {popQuery();return false;} );
 
-    $('#button-query-get').click(function() {getCollection('GET');return false;} );
+/*    $('#button-query-get').click(function() {getCollection('GET');return false;} );
     $('#button-query-post').click(function() {getCollection('POST');return false;} );
     $('#button-query-put').click(function() {getCollection('PUT');return false;} );
-    $('#button-query-delete').click(function() {getCollection('DELETE');return false;} );
+    $('#button-query-delete').click(function() {getCollection('DELETE');return false;} );*/
     $('#button-query-validate').click(function() {validateJson();return false;});
+    $('#button-query').click(function(){runCollectionQuery(); return false;})
   }
 
   function showMoreQueryOptions() {
