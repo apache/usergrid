@@ -26,9 +26,7 @@ def format_collection(collection, headers=nil)
           if entity.is_a? Array
             entity.each {|v| column v }
           else
-            headers.each do |header|
-              column entity[header]
-            end
+            headers.each {|header| column entity[header]}
           end
         end
       end
@@ -60,7 +58,7 @@ def format_entity(entity)
   end
 end
 
-# return hash { column_name: { max_size: 12, values: [] }  }
+# return hash { column_name: { max_size: 12, size: 12 }  }
 def collection_metadata(collection, headers=nil)
   result = {}
   collection.each do |entity|
@@ -80,7 +78,7 @@ def collection_metadata(collection, headers=nil)
   end
   total_size = result.inject(0) do |total, (col,meta)|
     meta[:max_size] = [col.size, meta[:max_size]].max
-    total += meta[:max_size]
+    total + meta[:max_size]
   end
   terminal_columns = HighLine.new.output_cols
   overhead = (result.keys.size + 2) * COL_OVERHEAD + INDEX_COL_WIDTH
