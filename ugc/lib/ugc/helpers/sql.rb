@@ -1,6 +1,6 @@
 def parse_sql(query)
   result = {}
-  keywords = %w(select from where)
+  keywords = %w(select from where limit)
   current = nil
   query.downcase.split(/[\s,*]/).each do |ea|
     next if ea == ''

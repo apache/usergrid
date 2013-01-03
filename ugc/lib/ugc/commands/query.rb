@@ -22,7 +22,14 @@ command :query do |c|
       query.gsub! /from\s+#{type}/i, ''
     end
 
-    response = $application[type].query query
+    params = {}
+    if parsed_query['limit']
+      limit = parsed_query['limit']
+      query.gsub! /limit\s+#{limit}/i, ''
+      params[:limit] = limit
+    end
+
+    response = $application[type].query query, params
 
     format_collection response.collection, parsed_query['select']
   end

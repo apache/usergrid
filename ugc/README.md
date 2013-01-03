@@ -52,6 +52,7 @@ Connect to an Apigee administrator account:
 ### 0.0.5
 * New features
   1. smart column widths
+  1. add "limit" keyword to sql syntax
 * Bug fixes
   1. fixed issue with selecting a single column
   1. fixed formatting of entities with heterogeneous attributes
