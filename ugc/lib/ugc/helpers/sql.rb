@@ -14,7 +14,7 @@ def parse_sql(query)
           result[current] = [result[current]] << ea
         end
       else
-        result[current] = ea
+        result[current] = (current == 'select') ? [ea] : ea
       end
     end
   end

@@ -49,6 +49,10 @@ Connect to an Apigee administrator account:
 
 ## Release notes
 
+### 0.0.5
+* Bug fixes
+  1. fixed issue with selecting a single column
+
 ### 0.0.4
 * Bug fixes
   1. include Gemfile.lock to ensure correct version of usergrid_iron is used
