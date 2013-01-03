@@ -1,10 +1,10 @@
 SKIP_ATTRS = %w(metadata uri type)
 
-def format_result(result)
-  if result.multiple_entities? && result.collection.size > 1
-    format_collection(result.collection)
+def format_result(response)
+  if response.multiple_entities? && response.collection.size > 1
+    format_collection(response.collection)
   else
-    format_entity(result.entity)
+    format_entity(response.entity)
   end
 end
 
@@ -23,7 +23,7 @@ def format_collection(collection, headers=nil)
       end
       collection.each_with_index do |entity, index|
         row do
-          column index
+          column index+1
           if entity.is_a? Array
             entity.each do |v|
               column v
@@ -35,6 +35,9 @@ def format_collection(collection, headers=nil)
           end
         end
       end
+    end
+    if collection.cursor && agree('Next Page? (Y/N)') {|q| q.default = 'Y'}
+      format_collection(collection.next_page, headers)
     end
   else
     puts "0 results"
@@ -65,27 +68,5 @@ def equal_column_size(num_cols)
 end
 
 def terminal_columns
-  size = detect_terminal_size
-  size ? size[0] : 80
-end
-
-# Returns [width, height] of terminal when detected, nil if not detected.
-# Think of this as a simpler version of Highline's Highline::SystemExtensions.terminal_size()
-def detect_terminal_size
-  if (ENV['COLUMNS'] =~ /^\d+$/) && (ENV['LINES'] =~ /^\d+$/)
-    [ENV['COLUMNS'].to_i, ENV['LINES'].to_i]
-  elsif (RUBY_PLATFORM =~ /java/ || (!STDIN.tty? && ENV['TERM'])) && command_exists?('tput')
-    [`tput cols`.to_i, `tput lines`.to_i]
-  elsif STDIN.tty? && command_exists?('stty')
-    `stty size`.scan(/\d+/).map { |s| s.to_i }.reverse
-  else
-    nil
-  end
-rescue
-  nil
-end
-
-# Determines if a shell command exists by searching for it in ENV['PATH'].
-def command_exists?(command)
-  ENV['PATH'].split(File::PATH_SEPARATOR).any? {|d| File.exists? File.join(d, command) }
+  HighLine.new.output_cols
 end
