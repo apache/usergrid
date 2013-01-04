@@ -1,4 +1,4 @@
-desc 'http delete'
+desc 'delete an entity'
 arg_name 'url'
 
 command :delete do |c|
