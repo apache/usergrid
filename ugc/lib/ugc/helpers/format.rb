@@ -41,10 +41,15 @@ end
 
 def format_entity(entity)
   if entity
+    name_cols = value_cols = 0
+    entity.data.reject{|k,v| SKIP_ATTRS.include? k}.each do |k,v|
+      name_cols = [name_cols, k.size].max
+      value_cols = [value_cols, v.to_s.size].max
+    end
     table border: true do
       row header: true do
-        column 'name', width: 20
-        column 'value', width: (terminal_columns - 28)
+        column 'name', width: [name_cols, 20].min
+        column 'value', width: [value_cols, HighLine.new.output_cols - 28].min
       end
       entity.data.reject{|k,v| SKIP_ATTRS.include? k}.each do |k,v|
         row do
