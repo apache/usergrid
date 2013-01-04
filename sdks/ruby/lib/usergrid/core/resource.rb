@@ -7,7 +7,7 @@ module Usergrid
     DEFAULT_API_URL = 'https://api.usergrid.com'
     TYPE_HEADERS = { content_type: :json, accept: :json }
 
-    attr_reader :current_user, :api_url
+    attr_reader :current_user, :api_url, :response
 
     def initialize(resource_url=DEFAULT_API_URL, api_url=nil, options={}, response=nil)
       options[:headers] = TYPE_HEADERS.merge options[:headers] || {}
@@ -119,8 +119,6 @@ module Usergrid
     end
 
     protected
-
-    attr_reader :response
 
     def response=(response)
       @response = response

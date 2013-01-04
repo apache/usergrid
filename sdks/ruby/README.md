@@ -181,6 +181,10 @@ usergrid_iron/spec/spec_settings.yaml to match.)
 
 ## Release notes
 
+### 0.0.9
+* Backend changes
+  1. made Resource::response accessor public to support ugc
+
 ### 0.0.8
 * Bug fixes
   1. better handling of paging
