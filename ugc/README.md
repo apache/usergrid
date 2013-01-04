@@ -49,13 +49,22 @@ Connect to an Apigee administrator account:
 
 ## Release notes
 
+### 0.0.6
+* New features
+  1. Ruby eval of data in put and post commands
+     * eg. may now use "key: 'value'" for json instead of '{"key": "value"}'
+  2. Added alias: 'show' for 'get'
+  3. Made 'list' an alias of 'get' and updated get to include 'list' functionality
+  4. smart column width for entities
+  5. Added aliases 'create' and 'update' for 'post' and 'put' (yes, I am aware this isn't technically correct)
+
 ### 0.0.5
 * New features
-  1. smart column widths
-  1. add "limit" keyword to sql syntax
+  1. smart column widths for collections
+  2. add "limit" keyword to sql syntax
 * Bug fixes
   1. fixed issue with selecting a single column
-  1. fixed formatting of entities with heterogeneous attributes
+  2. fixed formatting of entities with heterogeneous attributes
 
 ### 0.0.4
 * Bug fixes
