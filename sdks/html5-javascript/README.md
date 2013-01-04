@@ -82,86 +82,6 @@ Also note that all the examples provided in this readme file can be seen running
 <http://apigee.github.com/usergrid-javascript-sdk/examples/test/test.html> 
 
 
-##Make some calls
-The simplest way to make basic calls against the API is to use this format:
-
-	client.request(options, callback);
-
-This format allows you to make almost any call against the App Services (Usergrid) API. For example, to get a list of users:
-
-	var options = {
-		method:'GET',
-		endpoint:'users'
-	};
-	client.request(options, function (err, data) {
-		if (err) {
-			error('GET failed');
-		} else {
-			//data will contain raw results from API call
-			success('GET worked');
-		}
-	});
-
-Or, to create a new user:
-
-	var options = {
-		method:'POST',
-		endpoint:'users',
-		body:{ username:'fred', password:'secret' }
-	};
-	client.request(options, function (err, data) {
-		if (err) {
-			error('POST failed');
-		} else {
-			//data will contain raw results from API call
-			success('POST worked');
-		}
-	});
-
-Or, to update the new user:
-
-	var options = {
-		method:'PUT',
-		endpoint:'users/fred',
-		body:{ newkey:'newvalue' }
-	};
-	client.request(options, function (err, data) {
-		if (err) {
-			error('PUT failed');
-		} else {
-			//data will contain raw results from API call
-			success('PUT worked');
-		}
-	});
-
-Or to delete the new user:
-
-	var options = {
-		method:'DELETE',
-		endpoint:'users/fred'
-	};
-	client.request(options, function (err, data) {
-		if (err) {
-			error('DELETE failed');
-		} else {
-			//data will contain raw results from API call
-			success('DELETE worked');
-		}
-	});
-
-
-The Options Object for the client.request fuction:
-
-* `method` - http method (GET, POST, PUT, or DELETE), defaults to GET
-* `qs` - object containing querystring values to be appended to the uri
-* `body` - object containing entity body for POST and PUT requests
-* `endpoint` - API endpoint, for example "users/fred"
-* `mQuery` - boolean, set to true if running management query, defaults to false
-* `buildCurl` - boolean, set to true if you want to see equivalent curl commands in console.log, defaults to false
-
-You can make any call to the API using the format above.  However, in practice using the higher level Entity and Collection objects will make life easier as they take care of much of the heavy lifting.
-
-
 ##Entities and Collections
 Usergrid stores its data as "Entities" in "Collections".  Entities are essentially JSON objects and Collections are just like folders for storing these objects. You can learn more about Entities and Collections in the App Services docs:
 
@@ -177,9 +97,9 @@ This module provides an easy way to make new entities. Here is a simple example 
 	}
 	client.createEntity(options, function (err, dog) {
 		if (err) {
-			error('dog not created');
+			//error - dog not created;
 		} else {
-			success('dog is created');
+			//success -dog is created;
 
 			//once the dog is created, you can set single properties:
 			dog.set('breed','Dinosaur');
@@ -195,9 +115,9 @@ This module provides an easy way to make new entities. Here is a simple example 
 			//finally, call save on the object to save it back to the database
 			dog.save(function(err){
 				if (err){
-					error('dog not saved');
+					//error - dog not saved
 				} else {
-					success('new dog is saved');
+					//success - new dog is saved
 				}
 			});
 		}
@@ -211,11 +131,11 @@ You can also refresh the object from the database if needed (in case the data ha
 	//call fetch to refresh the data from the server
 	dog.fetch(function(err){
 		if (err){
-			error('dog not refreshed from database');
+			// error - dog not refreshed from database;
 		} else {
 			//dog has been refreshed from the database
 			//will only work if the UUID for the entity is in the dog object
-			success('dog entity refreshed from database');
+			//success - dog entity refreshed from database;
 		}
 	});
 
@@ -224,9 +144,9 @@ To remove the entity from the database:
 	//the destroy method will delete the entity from the database
 	dog.destroy(function(err){
 		if (err){
-			error('dog not removed from database');
+			//error - dog not removed from database
 		} else {
-			success('dog removed from database'); // no real dogs were harmed!
+			//success - dog removed from database (no real dogs were harmed!)
 			dog = null; //no real dogs were harmed!
 		}
 	});
@@ -243,10 +163,10 @@ The Collection object models Collections in the database.  Once you start progra
 
 	client.createCollection(options, function (err, dogs) {
 		if (err) {
-			error('could not make collection');
+			//error - could not make collection
 		} else {
 
-			success('new Collection worked');
+			//success - new Collection worked
 
 			//we got the dogs, now display the Entities:
 			while(dogs.hasNextEntity()) {
@@ -256,7 +176,7 @@ The Collection object models Collections in the database.  Once you start progra
 				notice('dog is called ' + name);
 			}
 
-			success('looped through dogs');
+			//success - looped through dogs
 
 		}
 	});
@@ -273,9 +193,9 @@ You can also add a new entity of the same type to the collection:
 	//to the collection and it is saved automatically
 	dogs.addEntity(options, function(err, dog, data) {
 		if (err) {
-			error('extra dog not saved or added to collection');
+			//error - extra dog not saved or added to collection
 		} else {
-			success('extra dog saved and added to collection');
+			//success - extra dog saved and added to collection
 		}
 	});
 
@@ -297,9 +217,9 @@ To get the next page of data from the server, use the following pattern:
 		//there is a next page, so get it from the server
 		dogs.getNextPage(function(err){
 			if (err) {
-				error('could not get next page of dogs');
+				//error - could not get next page of dogs
 			} else {
-				success('got next page of dogs');
+				//success - got next page of dogs
 				//we got the dogs, now display the Entities:
 				while(dogs.hasNextEntity()) {
 					//get a reference to the dog
@@ -307,7 +227,7 @@ To get the next page of data from the server, use the following pattern:
 					var name = dog.get('name');
 					notice('dog is called ' + name);
 				}
-				success('looped through dogs');
+				//success - looped through dogs
 			}
 		});
 	}
@@ -318,9 +238,9 @@ You can use the same pattern to get a previous page of data:
 		//there is a previous page, so get it from the server
 		dogs.getPreviousPage(function(err){
 			if(err) {
-				error('could not get previous page of dogs');
+				//error - could not get previous page of dogs
 			} else {
-				success('got next page of dogs');
+				//success - got next page of dogs
 				//we got the dogs, now display the Entities:
 				while(dogs.hasNextEntity()) {
 					//get a reference to the dog
@@ -328,7 +248,7 @@ You can use the same pattern to get a previous page of data:
 					var name = dog.get('name');
 					notice('dog is called ' + name);
 				}
-				success('looped through dogs');
+				//success - looped through dogs
 			}
 		});
 	}
@@ -343,9 +263,9 @@ By default, the database will return 10 entities per page.  You can change that 
 
 	client.createCollection(options, function (err, dogs) {
 		if (err) {
-			error('could not get all dogs');
+			//error - could not get all dogs
 		} else {
-			success('got at most 50 dogs');
+			//success - got at most 50 dogs
 		}
 	}
 
@@ -405,9 +325,9 @@ There is no specific User object in the module.  Instead, you simply need to use
 
   	client.createEntity(options, function (err, marty) {
 		if (err){
-			error('user not saved');
+			//error - user not saved
 		} else {
-			success('user saved');
+			//success - user saved
 		}
 	});
 
@@ -419,9 +339,9 @@ If the user is modified, just call save on the user again:
 	marty.set("girlfriend","Jennifer");
 	marty.save(function(err){
 		if (err){
-			error('user not updated');
+			//error - user not updated
 		} else {
-			success('user updated');
+			//success - user updated
 		}
 	});
 
@@ -429,9 +349,9 @@ To refresh the user's information in the database:
 
 	marty.fetch(function(err){
 		if (err){
-			error('not refreshed');
+			//error - not refreshed
 		} else {
-			success('user refreshed');
+			//success - user refreshed
 		}
 	});
 
@@ -439,9 +359,9 @@ If you no longer need the object, call the delete() method and the object will b
 
 	marty.destroy(function(err){
 		if (err){
-			error('user not deleted from database');
+			//error - user not deleted from database
 		} else {
-			success('user deleted from database');
+			//success - user deleted from database
 			marty = null; //blow away the local object
 		}
 	});
@@ -457,7 +377,7 @@ Logging a user in means sending the user's username and password to the server, 
 	client.login(username, password,
 		function (err) {
 			if (err) {
-				error('could not log user in');
+				//error - could not log user in
 			} else {
 				//the user has been logged in and the token has been stored
 				//in the client. any calls made now will use the token.
@@ -467,28 +387,26 @@ Logging a user in means sending the user's username and password to the server, 
 
 				//you can also detect if the user is logged in:
 				if (client.isLoggedIn()) {
-					success('user has been logged in');
+					// success - user has been logged in
 					//get the logged in user entity by calling for it:
 					client.getLoggedInUser(function(err, data, user) {
 						if(err) {
-							error('could not get logged in user');
+							//error - could not get logged in user
 						} else {
-							success('got logged in user');
+							//success got logged in user
 							//you can then info from the user entity object:
 							var username = user.get('username');
-							notice('logged in user was: ' + username);
 
 							//to log a user out:
 							client.logout();
 
 							//verify the logout worked
 							if (client.isLoggedIn()) {
-								error('logout failed');
+								//error - logout failed
 							} else {
-								success('user has been logged out');
+								//success - user has been logged out
 							}
-
-							runner(step, marty);
+							
 						}
 					});
 				}
@@ -508,6 +426,88 @@ Or, if you made a new client object specifically for the app user:
 	appUserClient.logout();
 
 This destroys the token and user object in the client object, effectively logging the user out.
+
+
+##Making generic calls
+If you find that you need to make calls to the API that fall outside of the scope of the Entity and Collection objects, you can use the following format to make any REST calls against the API:
+
+	client.request(options, callback);
+
+This format allows you to make almost any call against the App Services (Usergrid) API. For example, to get a list of users:
+
+	var options = {
+		method:'GET',
+		endpoint:'users'
+	};
+	client.request(options, function (err, data) {
+		if (err) {
+			//error - GET failed
+		} else {
+			//data will contain raw results from API call
+			//success - GET worked
+		}
+	});
+
+Or, to create a new user:
+
+	var options = {
+		method:'POST',
+		endpoint:'users',
+		body:{ username:'fred', password:'secret' }
+	};
+	client.request(options, function (err, data) {
+		if (err) {
+			//error - POST failed
+		} else {
+			//data will contain raw results from API call
+			//success - POST worked
+		}
+	});
+
+Or, to update the new user:
+
+	var options = {
+		method:'PUT',
+		endpoint:'users/fred',
+		body:{ newkey:'newvalue' }
+	};
+	client.request(options, function (err, data) {
+		if (err) {
+			//error - PUT failed
+		} else {
+			//data will contain raw results from API call
+			//success - PUT worked
+		}
+	});
+
+Or to delete the new user:
+
+	var options = {
+		method:'DELETE',
+		endpoint:'users/fred'
+	};
+	client.request(options, function (err, data) {
+		if (err) {
+			//error - DELETE failed
+		} else {
+			//data will contain raw results from API call
+			//success - DELETE worked
+		}
+	});
+
+
+
+The Options Object for the client.request fuction:
+
+* `method` - http method (GET, POST, PUT, or DELETE), defaults to GET
+* `qs` - object containing querystring values to be appended to the uri
+* `body` - object containing entity body for POST and PUT requests
+* `endpoint` - API endpoint, for example "users/fred"
+* `mQuery` - boolean, set to true if running management query, defaults to false
+* `buildCurl` - boolean, set to true if you want to see equivalent curl commands in console.log, defaults to false
+
+You can make any call to the API using the format above.  However, in practice using the higher level Entity and Collection objects will make life easier as they take care of much of the heavy lifting.
+
 
 
 ###Validation
