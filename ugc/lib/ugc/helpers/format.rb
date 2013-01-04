@@ -1,6 +1,7 @@
 SKIP_ATTRS = %w(metadata uri type)
 
-def format_result(response)
+def format_response(response)
+  save_response response
   if response.multiple_entities? && response.collection.size > 1
     format_collection(response.collection)
   else

@@ -7,7 +7,7 @@ command :post,:create do |c|
   c.action do |global_options,options,args|
     help_now! unless args[0]
 
-    format_result resource(args[0]).post parse_data(options[:data] || args[1])
+    format_response $application[args[0]].post parse_data(options[:data] || args[1])
   end
 
 end

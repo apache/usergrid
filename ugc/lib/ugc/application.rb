@@ -21,5 +21,14 @@ module Ugc
       $settings.access_token = auth_token
     end
 
+    def [](uri)
+      uri = perform_substitutions uri
+      if URI.parse(uri).host
+        Usergrid::Resource.new(uri, nil, $application.options) # absolute
+      else
+        super # relative
+      end
+    end
+
   end
 end

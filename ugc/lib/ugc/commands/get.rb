@@ -8,7 +8,7 @@ command :get,:show,:ls,:list do |c|
     c2.action do |global_options,options,args|
       help_now! unless args[0]
 
-      format_result $application[args[0]].get
+      format_response $application[args[0]].get
     end
   end
 
@@ -41,6 +41,7 @@ command :get,:show,:ls,:list do |c|
     c.command [e.to_sym] do |c2|
       c2.action do |global_options,options,args|
         format_collection($application[e].collection)
+        save_response response
       end
     end
   end

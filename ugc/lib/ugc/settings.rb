@@ -4,8 +4,8 @@ module Ugc
     SETTINGS_FILE = 'settings.yml'
 
     def initialize(directory)
-      @file = File.join directory, SETTINGS_FILE
-      @settings = YAML.load_file(@file) rescue default_settings
+      @settings_file = File.join directory, SETTINGS_FILE
+      @settings = YAML.load_file(@settings_file) rescue default_settings
     end
 
     def active_profile_name
@@ -15,14 +15,14 @@ module Ugc
     def active_profile_name=(name)
       raise "unknown profile: #{name}" unless profile(name)
       @settings['active_profile'] = name
-      save
+      save_profile
     end
 
     def delete_profile(name)
       raise "cannot delete active profile" if active_profile_name == name
       raise "unknown profile: #{name}" unless profiles[name]
       profiles.delete name
-      save
+      save_profile
     end
 
     def profile(name=nil)
@@ -75,16 +75,31 @@ module Ugc
       !!access_token
     end
 
+    def save_profile_blob(name, data)
+      file = File.join settings_dir, "#{active_profile_name}.#{name}"
+      File.open(file, 'w') do |out|
+        out.write data
+      end
+    end
+
+    def load_profile_blob(name)
+      IO.read File.join settings_dir, "#{active_profile_name}.#{name}"
+    end
+
     private
 
     def set_profile(prop, value)
       profile[prop] = value
-      save
+      save_profile
     end
 
-    def save
-      Dir.mkdir(File.dirname(@file)) unless Dir.exist?(File.dirname(@file))
-      File.open(@file, 'w') do |out|
+    def settings_dir
+      File.dirname(@settings_file)
+    end
+
+    def save_profile
+      Dir.mkdir(settings_dir) unless Dir.exist?(settings_dir)
+      File.open(@settings_file, 'w') do |out|
         YAML.dump(@settings, out)
       end
     end

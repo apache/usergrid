@@ -32,6 +32,7 @@ command :query do |c|
     response = $application[type].query query, params
 
     format_collection response.collection, parsed_query['select']
+    save_response response
   end
 
 end
