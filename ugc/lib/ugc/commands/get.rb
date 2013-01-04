@@ -18,7 +18,7 @@ command :get,:show,:ls,:list do |c|
     c2.action do |global_options,options,args|
       app = $application.entity
       collections = app['metadata']['collections']
-      table border: true do
+      table border: $settings.table_border? do
         row header: true do
           collections.first[1].each_key do |k|
             column k

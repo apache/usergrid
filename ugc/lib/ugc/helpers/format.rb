@@ -15,7 +15,7 @@ COL_OVERHEAD = 3
 def format_collection(collection, headers=nil)
   if collection && collection.size > 0
     metadata = collection_metadata collection, headers
-    table border: true do
+    table border: $settings.table_border? do
       row header: true do
         headers ||= metadata.keys
         column '#', width: INDEX_COL_WIDTH
@@ -47,7 +47,7 @@ def format_entity(entity)
       name_cols = [name_cols, k.size].max
       value_cols = [value_cols, v.to_s.size].max
     end
-    table border: true do
+    table border: $settings.table_border? do
       row header: true do
         column 'name', width: [name_cols, 20].min
         column 'value', width: [value_cols, HighLine.new.output_cols - 28].min

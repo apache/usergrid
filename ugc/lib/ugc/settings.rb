@@ -3,8 +3,9 @@ module Ugc
 
     SETTINGS_FILE = 'settings.yml'
 
-    def initialize(directory)
-      @settings_file = File.join directory, SETTINGS_FILE
+    def initialize(global_options)
+      @draw_table_border = global_options[:border]
+      @settings_file = File.join global_options[:settings], SETTINGS_FILE
       @settings = YAML.load_file(@settings_file) rescue default_settings
     end
 
@@ -69,6 +70,10 @@ module Ugc
 
     def configured?
       base_url && organization && application
+    end
+
+    def table_border?
+      !!@draw_table_border
     end
 
     def logged_in?

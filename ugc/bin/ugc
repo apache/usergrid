@@ -13,7 +13,11 @@ program_desc 'Usergrid Command Line'
 version Ugc::VERSION
 
 desc 'verbose'
-switch [:v,:verbose]
+switch [:v,:verbose], negatable: false
+
+desc 'draw table border'
+default_value true
+switch [:b,:border]
 
 desc 'settings directory'
 arg_name 'settings directory'
@@ -33,7 +37,7 @@ pre do |global_options,command,options,args|
     Usergrid::LOG.level = Logger::WARN
   end
 
-  $settings = Ugc::Settings.new global_options[:settings]
+  $settings = Ugc::Settings.new global_options
   if pre_login.include? command.name
     true
   elsif command.name == :login && $settings.configured?
