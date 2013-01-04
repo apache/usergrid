@@ -5,7 +5,7 @@ PATH
       command_line_reporter
       gli (= 2.5.0)
       highline
-      usergrid_iron
+      usergrid_iron (>= 0.0.8)
 
 GEM
   remote: http://rubygems.org/
