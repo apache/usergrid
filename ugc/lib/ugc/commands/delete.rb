@@ -1,7 +1,7 @@
 desc 'delete an entity'
 arg_name 'url'
 
-command :delete do |c|
+command :rm,:del,:delete do |c|
 
   c.action do |global_options,options,args|
     help_now! unless args[0]
