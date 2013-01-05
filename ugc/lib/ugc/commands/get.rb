@@ -40,7 +40,8 @@ command :get,:show,:ls,:list do |c|
     c.desc e
     c.command [e.to_sym] do |c2|
       c2.action do |global_options,options,args|
-        format_collection($application[e].collection)
+        response = $application[e].get
+        format_collection response.collection
         save_response response
       end
     end

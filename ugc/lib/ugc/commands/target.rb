@@ -36,7 +36,7 @@ command :target do |c|
       if args[0]
         app_name = args[0].split('/')[-1]
         org_name = args[0].split('/')[-2]
-        base_url = args[0][0..url.index(org_name)-2]
+        base_url = args[0][0..args[0].index(org_name)-2]
         $settings.base_url = base_url
         $settings.organization = org_name
         $settings.application = app_name
