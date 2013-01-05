@@ -25,8 +25,9 @@ end
 
 # returns a json string
 def parse_data(input)
+  return unless input
   # must be wrapped in {}
-  input = "{#{input}}" unless input.start_with? '{'
+  input = "{#{input}}" unless input.start_with? '{' or input.start_with? '['
   # must be a json string or 1.9 hash format
   begin
     MultiJson.dump(eval(input))
