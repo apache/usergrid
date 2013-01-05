@@ -21,6 +21,7 @@ command :query do |c|
       type = parsed_query['from']
       query.gsub! /from\s+#{type}/i, ''
     end
+    help_now! 'collection_name or sql from clause is required' unless type
 
     params = {}
     if parsed_query['limit']
