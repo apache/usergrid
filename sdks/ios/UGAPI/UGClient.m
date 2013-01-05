@@ -1006,6 +1006,13 @@ NSString *g_deviceUUID = nil;
     return [self httpTransaction:url op:kUGHTTPDelete opData:nil];
 }
 
+
+-(UGClientResponse *)connectEntities: (NSString *)connectorType connectorID:(NSString *)connectorID connectionType:(NSString *)connectionType connecteeType:(NSString *)connecteeType connecteeID:(NSString *)connecteeID
+{
+    NSString *url = [self createURL:connectorType append2:connectorID append3:connectionType append4:connecteeType append5:connecteeID];
+    return [self httpTransaction:url op:kUGHTTPPost opData:nil];
+}
+
 -(UGClientResponse *)connectEntities: (NSString *)connectorType connectorID:(NSString *)connectorID type:(NSString *)connectionType connecteeID:(NSString *)connecteeID
 {
     NSString *url = [self createURL:connectorType append2:connectorID append3:connectionType append4:connecteeID];

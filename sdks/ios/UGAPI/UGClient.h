@@ -175,6 +175,14 @@ set the response limit in UGQuery as well.
 // connecteeID would be the UUID of Lyons Restaurant
 -(UGClientResponse *)connectEntities: (NSString *)connectorType connectorID:(NSString *)connectorID type:(NSString *)connectionType connecteeID:(NSString *)connecteeID;
 
+// Directionally connect two entities. For instance, user "Bob" might follow user "Mary".
+// connectorType would be "users" (because Bob is a user)
+// connectorID would be Bob's userID
+// connectionType would be "like"
+// connecteeType would  be "users" (because Mary is a user)
+// connecteeID would be Mary's userID
+-(UGClientResponse *)connectEntities: (NSString *)connectorType connectorID:(NSString *)connectorID connectionType:(NSString *)connectionType connecteeType:(NSString *)connecteeType connecteeID:(NSString *)connecteeID;
+
 // disconnect two entities. It uses the same parameters and calling rules as connectEntities
 -(UGClientResponse *)disconnectEntities: (NSString *)connectorType connectorID:(NSString *)connectorID type:(NSString *)connectionType connecteeID:(NSString *)connecteeID;
 
