@@ -1,19 +1,21 @@
 SKIP_ATTRS = %w(metadata uri type)
+INDEX_COL_WIDTH = 2
 
 def format_response(response)
-  save_response response
   if response.multiple_entities? && response.collection.size > 1
-    format_collection(response.collection)
+    format_collection response.collection
   else
-    format_entity(response.entity)
+    format_entity response.entity
   end
 end
 
-INDEX_COL_WIDTH = 2
-COL_OVERHEAD = 3
+def col_overhead
+  $settings.table_border? ? 3 : 1
+end
 
 def format_collection(collection, headers=nil)
   if collection && collection.size > 0
+    save_response collection.response
     metadata = collection_metadata collection, headers
     table border: $settings.table_border? do
       row header: true do
@@ -49,8 +51,9 @@ def format_entity(entity)
     end
     table border: $settings.table_border? do
       row header: true do
-        column 'name', width: [name_cols, 20].min
-        column 'value', width: [value_cols, HighLine.new.output_cols - 28].min
+        name_width = [name_cols, 20].min
+        column 'name', width: name_width
+        column 'value', width: [value_cols, HighLine.new.output_cols - name_width - (3 * col_overhead)].min
       end
       entity.data.reject{|k,v| SKIP_ATTRS.include? k}.each do |k,v|
         row do
@@ -87,7 +90,7 @@ def collection_metadata(collection, headers=nil)
     total + meta[:max_size]
   end
   terminal_columns = HighLine.new.output_cols
-  overhead = (result.keys.size + 2) * COL_OVERHEAD + INDEX_COL_WIDTH
+  overhead = (result.keys.size + 2) * col_overhead + INDEX_COL_WIDTH
   if total_size + overhead < terminal_columns
     result.each {|col,meta| meta[:size] = meta[:max_size]}
   else
