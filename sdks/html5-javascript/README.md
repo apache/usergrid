@@ -24,7 +24,7 @@ Rod
 
 
 ##Overview
-This open source SDK simplifies writing JavaScript / HTML5 applications that connect to App Services. The repo is locatedhere:
+This open source SDK simplifies writing JavaScript / HTML5 applications that connect to App Services. The repo is located here:
 
 <https://github.com/apigee/usergrid-javascript-sdk>
 
@@ -545,7 +545,7 @@ More information on cURL can be found here:
 ## Contributing
 We welcome your enhancements!
 
-Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid Node module is open source and licensed under the Apache License, Version 2.0.
+Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid Javascript SDK is open source and licensed under the Apache License, Version 2.0.
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
