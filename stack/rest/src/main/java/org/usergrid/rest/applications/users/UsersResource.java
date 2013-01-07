@@ -220,7 +220,8 @@ public class UsersResource extends ServiceResource {
 		if ((response.getEntities() != null)
 				&& (response.getEntities().size() == 1)) {
 
-			Entity user = response.getEntities().get(0);
+			Entity entity = response.getEntities().get(0);
+			User user = (User)entity.toTypedEntity();
 
 			if (isNotBlank(password)) {
 				management.setAppUserPassword(getApplicationId(),
@@ -234,7 +235,7 @@ public class UsersResource extends ServiceResource {
 
 			if (!activated) {
 				management.startAppUserActivationFlow(getApplicationId(),
-						getUser());
+						user);
 			}
 		}
 		return new JSONWithPadding(response, callback);
