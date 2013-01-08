@@ -4199,6 +4199,7 @@ a:active {
 }
 .outside-link {
   color: #1b97d1 !important;
+  margin-bottom: 10px;
 }
 .outside-link:hover {
   opacity: 0.7;
@@ -4518,6 +4519,7 @@ a:active {
 #statusbar-placeholder .alert {
   display: none;
   padding: 4px 35px 4px 14px;
+  margin-bottom: 0px;
 }
 /*----------- Roles ----------------*/
 #role-permissions-form button {

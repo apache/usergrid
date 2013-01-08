@@ -220,6 +220,7 @@ function apigee_console_app(Pages, query_params) {
     $("#query-path").val("");
     $("#query-source").val("");
     $("#query-ql").val("");
+    showQueryCollectionView();
     query_history = [];
     //Prepare Collection Index Dropdown Menu
     requestIndexes(collection);
@@ -237,7 +238,18 @@ function apigee_console_app(Pages, query_params) {
   window.Usergrid.console.pageOpenQueryExplorer = pageOpenQueryExplorer;
 
   function runCollectionQuery(){
+    var method;
 
+    if($('#button-query-get').hasClass('active')){
+      method = 'GET';
+    } else if($('#button-query-post').hasClass('active')){
+      method = 'POST';
+    } else if($('#button-query-put').hasClass('active')){
+      method = 'PUT';
+    } else if($('#button-query-delete').hasClass('active')){
+      method = 'DELETE';
+    }
+    getCollection(method);
   }
 
   function getCollection(method, path){
@@ -297,6 +309,7 @@ function apigee_console_app(Pages, query_params) {
 
       if (response.entities.length > 1) {
         //Update Query Explorer autocomplete
+        showQueryCollectionView(path)
         updateQueryTypeahead(response, 'query-path');
         for (i in query_entities) {
           var entity = query_entities[i];
@@ -318,6 +331,8 @@ function apigee_console_app(Pages, query_params) {
         $("#query-response-table").html(t);
         $(".entity_list_item").loadEntityCollectionsListWidget();
       } else {
+        //Entity Detail view
+        showQueryDetailView();
         var entity = response.entities[0];
         query_entities_by_id[entity.uuid] = entity;
 
@@ -348,6 +363,28 @@ function apigee_console_app(Pages, query_params) {
       }
       $("#query-response-table").html("<div class='group-panel-section-message'>No Collection Entities Found</div>");
     }
+  }
+
+  function showQueryCollectionView() {
+    $('#query-collection-info').show();
+    $('#query-detail-info').hide();
+    $('#query-ql-box').show();
+    $('#back-to-collection').hide();
+  }
+
+  function showQueryDetailView(path) {
+    $('#query-collection-info').hide();
+    $('#query-detail-info').show();
+    $('#query-ql-box').hide();
+    generateBackToCollectionButton(path);
+    $('#back-to-collection').show();
+  }
+
+  function generateBackToCollectionButton(returnPath) {
+    $('#back-to-collection').unbind('click');
+    $('#back-to-collection').click(function() {
+      getCollection('GET', returnPath);
+    })
   }
 
   function pushQuery(queryObj) {
@@ -461,7 +498,7 @@ function apigee_console_app(Pages, query_params) {
         expandQueryInput();
         prepareQueryInput(this);
     });
-    $('#query-source').keyup(function(){activateJSONValidator('#button-query-validate');})
+    $('#query-source').keyup(function(){activateJSONValidator('#button-query-validate', '#query-source');})
     $('#button-query-shrink').click(shrinkQueryInput);
     $('#button-query-expand').click(expandQueryInput);
 
@@ -484,12 +521,12 @@ function apigee_console_app(Pages, query_params) {
   }
 
   function activateJSONValidator(valButton, jsonArea) {
-    var validatorButton = $(selector);
+    var validatorButton = $(valButton);
+    var textArea = $(jsonArea)
     if(validatorButton.hasClass('disabled')){
       validatorButton.removeClass('disabled');
       validatorButton.click(function() {validateJson();return false;});
-    } else if(validatorButton.val() === "") {
-      var test = validatorButton.val();
+    } else if(textArea.val() === "") {
       validatorButton.addClass('disabled');
       validatorButton.unbind('click');
     }
