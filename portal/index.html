@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<meta charset="utf-8" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
+<meta charset="utf-8" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html"
+      xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
 <html>
   <head>
 
@@ -1161,8 +1162,8 @@
                           <div class="controls">
                             <div class="input-append">
                               <textarea id="query-source" class="span6 pull-left" rows="4"
-                                        placeholder="{&quot;name&quot;:&quot;value&quot;}"></textarea>
-                              <a class="btn pull-left " id="button-query-validate" >Validate Json</a>
+                                        placeholder="{  &quot;name&quot;  :  &quot;value&quot;  }"></textarea>
+                              <a class="btn pull-left disabled" id="button-query-validate" >Validate Json</a>
                               <div id="statusbar-placeholder" class=" pull-left span4"></div>
                             </div>
                           </div>
@@ -1187,14 +1188,19 @@
                       </br>
                       <p><strong>Queries</strong><p>
                       <p>For issuing queries against your application's data, App Services supports much of the standard SQL syntax.</p>
-                      <a target="_blank" href="http://apigee.com/docs/usergrid/content/queries-and-parameters">Learn more about Queries and Parameters.</a>
                       </br>
-                      </br>
+                        <a class="outside-link" target="_blank" href="http://apigee.com/docs/usergrid/content/queries-and-parameters"><strong>Learn more about Queries and Parameters.</strong></a>
+
                       <p><strong>Example Queries</strong></p>
                       <p>Select all users whose name starts with <strong>fred</strong>:</p>
                       <pre>select * where name = 'fred*'</pre>
                       <p>Select all activities where a category is <strong>usermessage</strong> and content contains the word <strong>hello</strong> in a string:</p>
                       <pre class="code-para">select * where category = 'usermessage' and content contains 'hello'</pre>
+                        </br>
+                        </br>
+                        </br>
+                        </br>
+                        </br>
                     </div>
                   </div>
                 </div>

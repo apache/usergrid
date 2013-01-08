@@ -212,15 +212,13 @@ function apigee_console_app(Pages, query_params) {
    *
    ******************************************************************/
 
-  $("#query-source").val("{ }");
-
   function pageOpenQueryExplorer(collection) {
     collection = collection || "";
     showPanel("#query-panel");
     hideMoreQueryOptions();
     //reset the form fields
     $("#query-path").val("");
-    $("#query-source").val("{ }");
+    $("#query-source").val("");
     $("#query-ql").val("");
     query_history = [];
     //Prepare Collection Index Dropdown Menu
@@ -230,6 +228,7 @@ function apigee_console_app(Pages, query_params) {
     //clear out the table before we start
     var output = $('#query-response-table');
     output.empty();
+    deactivateJSONValidator();
     //if a collection was provided, go ahead and get the default data
     if (collection) {
       getCollection('GET', collection);
@@ -458,7 +457,11 @@ function apigee_console_app(Pages, query_params) {
 
   InitQueryPanel();
   function InitQueryPanel(){
-    $('#query-source').focus(expandQueryInput);
+    $('#query-source').focus(function(){
+        expandQueryInput();
+        prepareQueryInput(this);
+    });
+    $('#query-source').keyup(function(){activateJSONValidator('#button-query-validate');})
     $('#button-query-shrink').click(shrinkQueryInput);
     $('#button-query-expand').click(expandQueryInput);
 
@@ -468,8 +471,32 @@ function apigee_console_app(Pages, query_params) {
     $('#button-query-post').click(function() {getCollection('POST');return false;} );
     $('#button-query-put').click(function() {getCollection('PUT');return false;} );
     $('#button-query-delete').click(function() {getCollection('DELETE');return false;} );*/
-    $('#button-query-validate').click(function() {validateJson();return false;});
+
     $('#button-query').click(function(){runCollectionQuery(); return false;})
+
+  }
+
+  function prepareQueryInput(selector) {
+    var queryInput = $(selector);
+    if( queryInput.val() === ""){
+      queryInput.val("{\n\n}");
+    }
+  }
+
+  function activateJSONValidator(valButton, jsonArea) {
+    var validatorButton = $(selector);
+    if(validatorButton.hasClass('disabled')){
+      validatorButton.removeClass('disabled');
+      validatorButton.click(function() {validateJson();return false;});
+    } else if(validatorButton.val() === "") {
+      var test = validatorButton.val();
+      validatorButton.addClass('disabled');
+      validatorButton.unbind('click');
+    }
+  }
+
+  function deactivateJSONValidator() {
+    /*$('#button-query-validate').disable();*/
   }
 
   function showMoreQueryOptions() {
@@ -483,14 +510,14 @@ function apigee_console_app(Pages, query_params) {
     $('.query-more-options').hide();
     $('.query-less-options').show();
     $('#query-ql').val("");
-    $('#query-source').val("{ }");
+    $('#query-source').val("");
   }
 
   function toggleMoreQueryOptions() {
     $('.query-more-options').toggle();
     $('.query-less-options').toggle();
     $('#query-ql').val("");
-    $('#query-source').val("{ }");
+    $('#query-source').val("");
   }
 
   $('#button-query-more-options').click(function() {

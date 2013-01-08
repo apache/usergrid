@@ -4173,6 +4173,7 @@ a:active {
   background-color: #cacaca !important;
   opacity: 1 !important;
   color: #ffffff;
+  cursor: pointer !important;
 }
 .query-button:hover {
   background-color: #686868 !important;
@@ -4195,6 +4196,12 @@ a:active {
 }
 .query-console {
   padding: 0px !important;
+}
+.outside-link {
+  color: #1b97d1 !important;
+}
+.outside-link:hover {
+  opacity: 0.7;
 }
 /*-------------------------------------------------*/
 .application-row-name {
