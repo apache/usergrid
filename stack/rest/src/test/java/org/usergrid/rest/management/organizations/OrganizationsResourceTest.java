@@ -58,7 +58,8 @@ public class OrganizationsResourceTest extends AbstractRestTest {
         Map<String, String> payload = hashMap("email",
                 "test-user-1@mockserver.com").map("username", "test-user-1")
                 .map("name", "Test User").map("password", "password")
-                .map("organization", "test-org-1");
+                .map("organization", "test-org-1")
+                .map("company","Apigee");
 
         JsonNode node = resource().path("/management/organizations")
                 .accept(MediaType.APPLICATION_JSON)
@@ -83,6 +84,8 @@ public class OrganizationsResourceTest extends AbstractRestTest {
         EntityManager em = emf
                 .getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
         User user = em.get(ui.getUuid(), User.class);
+        assertEquals("Test User", user.getName());
+        assertEquals("Apigee",(String)user.getProperty("company"));
         // assertTrue(user.activated());
         // assertFalse(user.disabled());
         // assertTrue(user.confirmed());

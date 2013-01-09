@@ -27,6 +27,7 @@ import static org.usergrid.utils.ConversionUtils.getBoolean;
 import static org.usergrid.utils.ConversionUtils.string;
 import static org.usergrid.utils.ConversionUtils.uuid;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -42,6 +43,7 @@ public class UserInfo {
 	private final String email;
 	private final boolean activated;
 	private final boolean disabled;
+    private final Map<String,Object> properties;
 
 	public UserInfo(UUID applicationId, UUID id, String username, String name,
 			String email, boolean activated, boolean disabled) {
@@ -52,10 +54,12 @@ public class UserInfo {
 		this.email = email;
 		this.activated = activated;
 		this.disabled = disabled;
+        this.properties = new HashMap<String, Object>();
 	}
 
 	public UserInfo(UUID applicationId, Map<String, Object> properties) {
 		this.applicationId = applicationId;
+        this.properties = properties;
 		id = uuid(properties.get(PROPERTY_UUID));
 		username = string(properties.get(PROPERTY_USERNAME));
 		name = string(properties.get(PROPERTY_NAME));
@@ -115,5 +119,9 @@ public class UserInfo {
 	public boolean isAdminUser() {
 		return MANAGEMENT_APPLICATION_ID.equals(applicationId);
 	}
+
+    public Map<String,Object> getProperties() {
+        return properties;
+    }
 
 }

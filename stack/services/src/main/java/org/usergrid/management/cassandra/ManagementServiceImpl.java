@@ -452,8 +452,18 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public OrganizationOwnerInfo createOwnerAndOrganization(
+                String organizationName, String username, String name,
+                String email, String password, boolean activated, boolean disabled)
+                throws Exception {
+        return createOwnerAndOrganization(organizationName, username, name, email,
+                password, activated, disabled, null);
+    }
+
+    @Override
+    public OrganizationOwnerInfo createOwnerAndOrganization(
             String organizationName, String username, String name,
-            String email, String password, boolean activated, boolean disabled)
+            String email, String password, boolean activated, boolean disabled,
+            Map<String,Object> userProperties)
             throws Exception {
 
         lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "groups", "path");
@@ -466,10 +476,10 @@ public class ManagementServiceImpl implements ManagementService {
         try {
             if (areActivationChecksDisabled()) {
                 user = createAdminUser(username, name, email, password, true,
-                        false);
+                        false, userProperties);
             } else {
                 user = createAdminUser(username, name, email, password,
-                        activated, disabled);
+                        activated, disabled, userProperties);
             }
 
             organization = createOrganization(organizationName, user, true);
@@ -790,6 +800,14 @@ public class ManagementServiceImpl implements ManagementService {
     public UserInfo createAdminUser(String username, String name, String email,
             String password, boolean activated, boolean disabled)
             throws Exception {
+        return createAdminUser(username, name, email, password, activated, disabled, null);
+    }
+
+    @Override
+    public UserInfo createAdminUser(String username, String name, String email,
+            String password, boolean activated, boolean disabled,
+            Map<String,Object> userProperties)
+            throws Exception {
 
         if (email == null) {
             return null;
@@ -829,6 +847,11 @@ public class ManagementServiceImpl implements ManagementService {
                                                                 // against
                                                                 // config
         user.setDisabled(disabled);
+        if (userProperties != null) {
+            // double check no 'password' property just to be safe
+            userProperties.remove("password");
+            user.setProperties(userProperties);
+        }
         user = em.create(user);
 
         return createAdminFrom(user, password);

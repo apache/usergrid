@@ -62,6 +62,10 @@ public interface ManagementService {
 	public UserInfo createAdminUser(String username, String name, String email,
 			String password, boolean activated, boolean disabled) throws Exception;
 
+    public UserInfo createAdminUser(String username, String name, String email,
+   			String password, boolean activated, boolean disabled,
+            Map<String,Object> userProperties) throws Exception;
+
 	public UserInfo createAdminFrom(User user, String password) throws Exception;
 
 	public UserInfo createAdminFromPrexistingPassword(User user,
@@ -83,6 +87,11 @@ public interface ManagementService {
 	public OrganizationOwnerInfo createOwnerAndOrganization(
 			String organizationName, String username, String name,
 			String email, String password, boolean activated, boolean disabled) throws Exception;
+
+    public OrganizationOwnerInfo createOwnerAndOrganization(
+   			String organizationName, String username, String name,
+   			String email, String password, boolean activated, boolean disabled,
+            Map<String,Object> userProperties) throws Exception;
 
 	/**
 	 * Deactivate the user and return it's current state
