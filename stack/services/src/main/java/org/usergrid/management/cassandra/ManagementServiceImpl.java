@@ -163,10 +163,7 @@ import org.usergrid.services.ServiceManager;
 import org.usergrid.services.ServiceManagerFactory;
 import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
-import org.usergrid.utils.ConversionUtils;
-import org.usergrid.utils.JsonUtils;
-import org.usergrid.utils.MailUtils;
-import org.usergrid.utils.StringUtils;
+import org.usergrid.utils.*;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -446,7 +443,7 @@ public class ManagementServiceImpl implements ManagementService {
         // if we are active and enabled, skip the send email step
 
         return createOwnerAndOrganization(organizationName, username, name,
-                email, password, activated, disabled);
+                email, password, activated, disabled, null);
 
     }
 
@@ -757,8 +754,10 @@ public class ManagementServiceImpl implements ManagementService {
         writeUserMongoPassword(MANAGEMENT_APPLICATION_ID, user, mongoPassword);
 
         UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
-                user.getUuid(), user.getUsername(), user.getName(),
-                user.getEmail(), user.getActivated(), user.getDisabled());
+                            user.getUuid(), user.getUsername(), user.getName(),
+                            user.getEmail(), user.getActivated(), user.getDisabled(),
+                            user.getDynamicProperties());
+
 
         // special case for sysadmin only
         if (!user.getEmail().equals(
@@ -866,7 +865,8 @@ public class ManagementServiceImpl implements ManagementService {
                 (String) entity.getProperty("username"), entity.getName(),
                 (String) entity.getProperty("email"),
                 ConversionUtils.getBoolean(entity.getProperty("activated")),
-                ConversionUtils.getBoolean(entity.getProperty("disabled")));
+                ConversionUtils.getBoolean(entity.getProperty("disabled")),
+                entity.getDynamicProperties());
     }
 
     public UserInfo getUserInfo(UUID applicationId,

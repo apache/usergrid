@@ -46,7 +46,8 @@ public class UserInfo {
     private final Map<String,Object> properties;
 
 	public UserInfo(UUID applicationId, UUID id, String username, String name,
-			String email, boolean activated, boolean disabled) {
+			String email, boolean activated, boolean disabled,
+            Map<String,Object> properties) {
 		this.applicationId = applicationId;
 		this.id = id;
 		this.username = username;
@@ -54,18 +55,18 @@ public class UserInfo {
 		this.email = email;
 		this.activated = activated;
 		this.disabled = disabled;
-        this.properties = new HashMap<String, Object>();
+        this.properties = properties;
 	}
 
 	public UserInfo(UUID applicationId, Map<String, Object> properties) {
 		this.applicationId = applicationId;
+		id = uuid(properties.remove(PROPERTY_UUID));
+		username = string(properties.remove(PROPERTY_USERNAME));
+		name = string(properties.remove(PROPERTY_NAME));
+		email = string(properties.remove(PROPERTY_EMAIL));
+		activated = getBoolean(properties.remove(PROPERTY_ACTIVATED));
+		disabled = getBoolean(properties.remove(PROPERTY_DISABLED));
         this.properties = properties;
-		id = uuid(properties.get(PROPERTY_UUID));
-		username = string(properties.get(PROPERTY_USERNAME));
-		name = string(properties.get(PROPERTY_NAME));
-		email = string(properties.get(PROPERTY_EMAIL));
-		activated = getBoolean(properties.get(PROPERTY_ACTIVATED));
-		disabled = getBoolean(properties.get(PROPERTY_DISABLED));
 	}
 
 	public UUID getApplicationId() {
