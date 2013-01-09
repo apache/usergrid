@@ -192,6 +192,14 @@
 			<artifactId>java-uuid-generator</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.scale7</groupId>
+			<artifactId>scale7-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.scale7</groupId>
+			<artifactId>scale7-cages</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.cassandra</groupId>
 			<artifactId>cassandra-all</artifactId>
 			<scope>compile</scope>
