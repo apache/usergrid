@@ -4173,6 +4173,7 @@ a:active {
   background-color: #cacaca !important;
   opacity: 1 !important;
   color: #ffffff;
+  cursor: pointer !important;
 }
 .query-button:hover {
   background-color: #686868 !important;
@@ -4190,11 +4191,23 @@ a:active {
   word-break: normal;
 }
 .left-column {
-  border-left: solid 1px #CCC;
   padding-left: 20px;
+  padding-top: 10px;
+}
+.right-column {
+  border-right: solid 1px #CCC;
+  padding-right: 20px;
 }
 .query-console {
   padding: 0px !important;
+}
+.outside-link {
+  color: #1b97d1 !important;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+.outside-link:hover {
+  opacity: 0.7;
 }
 /*-------------------------------------------------*/
 .application-row-name {
@@ -4511,6 +4524,7 @@ a:active {
 #statusbar-placeholder .alert {
   display: none;
   padding: 4px 35px 4px 14px;
+  margin-bottom: 0px;
 }
 /*----------- Roles ----------------*/
 #role-permissions-form button {

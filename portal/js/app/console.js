@@ -212,16 +212,15 @@ function apigee_console_app(Pages, query_params) {
    *
    ******************************************************************/
 
-  $("#query-source").val("{ }");
-
   function pageOpenQueryExplorer(collection) {
     collection = collection || "";
     showPanel("#query-panel");
     hideMoreQueryOptions();
     //reset the form fields
     $("#query-path").val("");
-    $("#query-source").val("{ }");
+    $("#query-source").val("");
     $("#query-ql").val("");
+    showQueryCollectionView();
     query_history = [];
     //Prepare Collection Index Dropdown Menu
     requestIndexes(collection);
@@ -230,6 +229,7 @@ function apigee_console_app(Pages, query_params) {
     //clear out the table before we start
     var output = $('#query-response-table');
     output.empty();
+    deactivateJSONValidator();
     //if a collection was provided, go ahead and get the default data
     if (collection) {
       getCollection('GET', collection);
@@ -238,8 +238,21 @@ function apigee_console_app(Pages, query_params) {
   window.Usergrid.console.pageOpenQueryExplorer = pageOpenQueryExplorer;
 
   function runCollectionQuery(){
+    var method;
 
+    if($('#button-query-get').hasClass('active')){
+      method = 'GET';
+    } else if($('#button-query-post').hasClass('active')){
+      method = 'POST';
+    } else if($('#button-query-put').hasClass('active')){
+      method = 'PUT';
+    } else if($('#button-query-delete').hasClass('active')){
+      method = 'DELETE';
+    }
+    getCollection(method);
   }
+
+  window.Usergrid.console.getCollection = getCollection;
 
   function getCollection(method, path){
     //get the data to run the query
@@ -298,6 +311,7 @@ function apigee_console_app(Pages, query_params) {
 
       if (response.entities.length > 1) {
         //Update Query Explorer autocomplete
+        showQueryCollectionView(path)
         updateQueryTypeahead(response, 'query-path');
         for (i in query_entities) {
           var entity = query_entities[i];
@@ -319,6 +333,8 @@ function apigee_console_app(Pages, query_params) {
         $("#query-response-table").html(t);
         $(".entity_list_item").loadEntityCollectionsListWidget();
       } else {
+        //Entity Detail view
+        showQueryDetailView(path);
         var entity = response.entities[0];
         query_entities_by_id[entity.uuid] = entity;
 
@@ -349,6 +365,29 @@ function apigee_console_app(Pages, query_params) {
       }
       $("#query-response-table").html("<div class='group-panel-section-message'>No Collection Entities Found</div>");
     }
+  }
+
+  function showQueryCollectionView() {
+    $('#query-collection-info').show();
+    $('#query-detail-info').hide();
+    $('#query-ql-box').show();
+    $('#back-to-collection').hide();
+  }
+
+  function showQueryDetailView(path) {
+    $('#query-collection-info').hide();
+    $('#query-detail-info').show();
+    $('#query-ql-box').hide();
+    generateBackToCollectionButton(path);
+    $('#back-to-collection').show();
+  }
+
+  function generateBackToCollectionButton(returnPath) {
+    var backButton = $('#back-to-collection');
+    if(backButton.attr('onclick')){
+      backButton.removeAttr('onclick');
+    }
+    backButton.attr('onclick',"Usergrid.console.getCollection('GET','" + returnPath+ "')");
   }
 
   function pushQuery(queryObj) {
@@ -458,7 +497,11 @@ function apigee_console_app(Pages, query_params) {
 
   InitQueryPanel();
   function InitQueryPanel(){
-    $('#query-source').focus(expandQueryInput);
+    $('#query-source').focus(function(){
+        expandQueryInput();
+        prepareQueryInput(this);
+    });
+    $('#query-source').keyup(function(){activateJSONValidator('#button-query-validate', '#query-source');})
     $('#button-query-shrink').click(shrinkQueryInput);
     $('#button-query-expand').click(expandQueryInput);
 
@@ -468,8 +511,32 @@ function apigee_console_app(Pages, query_params) {
     $('#button-query-post').click(function() {getCollection('POST');return false;} );
     $('#button-query-put').click(function() {getCollection('PUT');return false;} );
     $('#button-query-delete').click(function() {getCollection('DELETE');return false;} );*/
-    $('#button-query-validate').click(function() {validateJson();return false;});
+
     $('#button-query').click(function(){runCollectionQuery(); return false;})
+
+  }
+
+  function prepareQueryInput(selector) {
+    var queryInput = $(selector);
+    if( queryInput.val() === ""){
+      queryInput.val("{\n\n}");
+    }
+  }
+
+  function activateJSONValidator(valButton, jsonArea) {
+    var validatorButton = $(valButton);
+    var textArea = $(jsonArea)
+    if(validatorButton.hasClass('disabled')){
+      validatorButton.removeClass('disabled');
+      validatorButton.click(function() {validateJson();return false;});
+    } else if(textArea.val() === "") {
+      validatorButton.addClass('disabled');
+      validatorButton.unbind('click');
+    }
+  }
+
+  function deactivateJSONValidator() {
+    /*$('#button-query-validate').disable();*/
   }
 
   function showMoreQueryOptions() {
@@ -483,14 +550,14 @@ function apigee_console_app(Pages, query_params) {
     $('.query-more-options').hide();
     $('.query-less-options').show();
     $('#query-ql').val("");
-    $('#query-source').val("{ }");
+    $('#query-source').val("");
   }
 
   function toggleMoreQueryOptions() {
     $('.query-more-options').toggle();
     $('.query-less-options').toggle();
     $('#query-ql').val("");
-    $('#query-source').val("{ }");
+    $('#query-source').val("");
   }
 
   $('#button-query-more-options').click(function() {
