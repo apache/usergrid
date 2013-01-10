@@ -30,7 +30,7 @@ public abstract class EncryptionCommand {
   /**
    * The default implementations provided by subclasses
    */
-  public static final String SHA1 = "sha1";
+  public static final String SHA1 = "sha-1";
   public static final String MD5 = "md5";
   public static final String PLAINTEXT = "plaintext";
   public static final String BCRYPT = "bcrypt";

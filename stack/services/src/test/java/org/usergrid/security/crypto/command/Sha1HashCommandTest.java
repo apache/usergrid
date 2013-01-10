@@ -55,6 +55,16 @@ public class Sha1HashCommandTest {
     
   }
   
+  /**
+   * the sha command MUST implement the name as "sha-1" for backwards compatibility
+   */
+  @Test
+  public void testLegacyName(){
+    Sha1HashCommand command = new Sha1HashCommand();
+    
+    assertEquals("sha-1", command.getName());
+  }
+  
   private byte[] digest(byte[] input) throws NoSuchAlgorithmException{
     MessageDigest md = MessageDigest.getInstance("SHA-1"); 
     return md.digest(input);
