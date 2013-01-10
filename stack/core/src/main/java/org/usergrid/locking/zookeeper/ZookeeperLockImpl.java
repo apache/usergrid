@@ -16,33 +16,27 @@
 package org.usergrid.locking.zookeeper;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Condition;
 
-import org.scale7.zookeeper.cages.ZkCagesException;
-import org.scale7.zookeeper.cages.ZkWriteLock;
-import org.scale7.zookeeper.cages.ILock.LockState;
 import org.usergrid.locking.Lock;
 import org.usergrid.locking.exception.UGLockException;
-import org.scale7.networking.utility.NetworkAlgorithms;
+
+import com.netflix.curator.framework.recipes.locks.InterProcessMutex;
 
 /**
+ * Wrapper for locks using curator
  * @author tnine
  *
  */
 public class ZookeeperLockImpl implements Lock {
   
-  private final int MIN_RETRY_DELAY = 125;
-  private final int MAX_RETRY_DELAY = 1000;
 
-  private ZkWriteLock zkLock;
-  private AtomicLong locks = new AtomicLong();;
+  private InterProcessMutex zkMutex;
   
   /**
    * 
    */
-  public ZookeeperLockImpl(ZkWriteLock zkLock) {
-    this.zkLock = zkLock;
+  public ZookeeperLockImpl(InterProcessMutex zkMutex) {
+    this.zkMutex = zkMutex;
   }
 
   /* (non-Javadoc)
@@ -51,26 +45,11 @@ public class ZookeeperLockImpl implements Lock {
   @Override
   public boolean tryLock(long timeout, TimeUnit time) throws UGLockException {
   
-    
-    long endTime = System.currentTimeMillis()+time.toMillis(timeout);
-    
-    for(int attempt = 0; System.currentTimeMillis() <= endTime; attempt ++){
-      try {
-        if(this.zkLock.tryAcquire()){
-          locks.incrementAndGet();
-          return true;
-        }
-        
-        Thread.sleep(NetworkAlgorithms.getBinaryBackoffDelay(attempt,
-            MIN_RETRY_DELAY, MAX_RETRY_DELAY));
-      } catch (ZkCagesException e) {
-        throw new UGLockException("Unable to obtain lock", e);
-      } catch (InterruptedException e) {
-        throw new UGLockException("Unable to obtain lock", e);
-      }
+    try {
+      return zkMutex.acquire(timeout, time);
+    } catch (Exception e) {
+      throw new UGLockException("Unable to obtain lock", e);
     }
-   
-    return false;
   }
 
   /* (non-Javadoc)
@@ -78,18 +57,9 @@ public class ZookeeperLockImpl implements Lock {
    */
   @Override
   public void lock() throws UGLockException {
-    //already have the lock, increment the internal count
-    if(this.zkLock.getState() == LockState.Acquired){
-      locks.incrementAndGet();
-      return;
-    }
-    
     try {
-      this.zkLock.acquire();
-      locks.incrementAndGet();
-    } catch (ZkCagesException e) {
-      throw new UGLockException("Unable to obtain lock", e);
-    } catch (InterruptedException e) {
+      zkMutex.acquire();
+    } catch (Exception e) {
       throw new UGLockException("Unable to obtain lock", e);
     }
   }
@@ -99,13 +69,11 @@ public class ZookeeperLockImpl implements Lock {
    */
   @Override
   public void unlock() throws UGLockException {
-    
-    long count = locks.decrementAndGet();
-    
-    if(count == 0 && this.zkLock.getState() == LockState.Acquired){
-      this.zkLock.release();
-    }
-    
+    try {
+      zkMutex.release();
+    } catch (Exception e) {
+      throw new UGLockException("Unable to obtain lock", e);
+    } 
   }
 
 

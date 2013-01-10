@@ -52,7 +52,7 @@ public class ZookeeperLockManagerTest extends AbstractZooKeeperTest {
     
     ZooKeeperLockManagerImpl lockImpl = new ZooKeeperLockManagerImpl();
     lockImpl.setHostPort("localhost:20181");
-    lockImpl.setMaxAttemps(1000);
+    lockImpl.setMaxAttempts(1000);
     lockImpl.setSessionTimeout(2);
     
     lockImpl.init();

@@ -19,14 +19,18 @@ import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 
-import org.scale7.zookeeper.cages.ZkSessionManager;
-import org.scale7.zookeeper.cages.ZkWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.locking.Lock;
 import org.usergrid.locking.LockManager;
 import org.usergrid.locking.LockPathBuilder;
 import org.usergrid.locking.exception.UGLockException;
+
+import com.netflix.curator.RetryPolicy;
+import com.netflix.curator.framework.CuratorFramework;
+import com.netflix.curator.framework.CuratorFrameworkFactory;
+import com.netflix.curator.framework.recipes.locks.InterProcessMutex;
+import com.netflix.curator.retry.ExponentialBackoffRetry;
 
 /**
  * Implementation for Zookeeper service that handles global locks.
@@ -38,12 +42,14 @@ public final class ZooKeeperLockManagerImpl implements LockManager {
 
   private int sessionTimeout;
 
-  private int maxAttemps;
+  private int maxAttempts;
+  
+  private CuratorFramework client;
 
   public ZooKeeperLockManagerImpl(String hostPort, int sessionTimeout, int maxAttemps) {
     this.hostPort = hostPort;
     this.sessionTimeout = sessionTimeout;
-    this.maxAttemps = maxAttemps;
+    this.maxAttempts = maxAttemps;
     init();
   }
 
@@ -52,7 +58,10 @@ public final class ZooKeeperLockManagerImpl implements LockManager {
 
   @PostConstruct
   public void init() {
-    ZkSessionManager.initializeInstance(hostPort, sessionTimeout, maxAttemps);
+    RetryPolicy retryPolicy = new ExponentialBackoffRetry(sessionTimeout, maxAttempts);
+    client = CuratorFrameworkFactory.newClient(hostPort, retryPolicy);
+    client.start();
+    
   }
 
   protected static final Logger logger = LoggerFactory.getLogger(ZooKeeperLockManagerImpl.class);
@@ -67,7 +76,9 @@ public final class ZooKeeperLockManagerImpl implements LockManager {
   public Lock createLock(UUID applicationId, String... path) throws UGLockException {
     String lockPath = LockPathBuilder.buildPath(applicationId, path);
 
-    return new ZookeeperLockImpl(new ZkWriteLock(lockPath));
+    
+    
+    return new ZookeeperLockImpl(new InterProcessMutex(client, lockPath));
 
   }
 
@@ -87,12 +98,12 @@ public final class ZooKeeperLockManagerImpl implements LockManager {
     this.sessionTimeout = sessionTimeout;
   }
 
-  public int getMaxAttemps() {
-    return maxAttemps;
+  public int getMaxAttempts() {
+    return maxAttempts;
   }
 
-  public void setMaxAttemps(int maxAttemps) {
-    this.maxAttemps = maxAttemps;
+  public void setMaxAttempts(int maxAttemps) {
+    this.maxAttempts = maxAttemps;
   }
 
 }

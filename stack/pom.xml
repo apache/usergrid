@@ -111,16 +111,7 @@
 				<version>3.2.1</version>
 				<type>jar</type>
 			</dependency>
-			<dependency>
-				<groupId>org.scale7</groupId>
-				<artifactId>scale7-core</artifactId>
-				<version>1.4-SNAPSHOT</version>
-			</dependency>
-			<dependency>
-				<groupId>org.scale7</groupId>
-				<artifactId>scale7-cages</artifactId>
-				<version>0.8-SNAPSHOT</version>
-			</dependency>
+			
 			<dependency>
 				<groupId>commons-lang</groupId>
 				<artifactId>commons-lang</artifactId>
@@ -379,7 +370,7 @@
 			<dependency>
 				<groupId>org.apache.zookeeper</groupId>
 				<artifactId>zookeeper</artifactId>
-				<version>3.3.2</version>
+				<version>3.4.5</version>
 			</dependency>
 			<dependency>
 				<groupId>org.codehaus.jackson</groupId>
