@@ -630,48 +630,8 @@ Usergrid.Collection = function(options, callback) {
 
   var self = this;
 
-  //get list of collections, see if this one exists
-  var callOptions = {
-    method:'GET',
-    endpoint:''
-  };
-  this._client.request(callOptions, function (err, data) {
-    if (err && self._client.logging) {
-      console.log('error getting collections - check options passed to client');
-      if (typeof(callback) === 'function') {
-        return callback(err, data);
-      }
-    } else {
-      //store collection list
-      var collections = data.entities[0].metadata.collections;
-      if ( collections.hasOwnProperty(self._type) ) {
-        //collection exists, so just fetch
-        self.fetch(function(err) {
-          if (typeof(callback) === 'function') {
-            return callback(err, data);
-          }
-        });
-      } else {
-        //collection doesn't exist, post first
-        self._client.request(
-          {
-            method:'POST',
-            endpoint:self._type,
-            json:{},
-            qs:self.qs
-          },
-          function (err, data) {
-            if (err && self._client.logging) {
-              console.log('error: collection not created');
-            }
-            if (typeof(callback) === 'function') {
-              callback(err, data);
-            }
-          }
-        );
-      }
-    }
-  });
+  //populate the collection
+  this.fetch(callback);
 }
 
 /**
