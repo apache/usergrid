@@ -252,6 +252,8 @@ function apigee_console_app(Pages, query_params) {
     getCollection(method);
   }
 
+  window.Usergrid.console.getCollection = getCollection;
+
   function getCollection(method, path){
     //get the data to run the query
     if(!path){
@@ -332,7 +334,7 @@ function apigee_console_app(Pages, query_params) {
         $(".entity_list_item").loadEntityCollectionsListWidget();
       } else {
         //Entity Detail view
-        showQueryDetailView();
+        showQueryDetailView(path);
         var entity = response.entities[0];
         query_entities_by_id[entity.uuid] = entity;
 
@@ -381,10 +383,11 @@ function apigee_console_app(Pages, query_params) {
   }
 
   function generateBackToCollectionButton(returnPath) {
-    $('#back-to-collection').unbind('click');
-    $('#back-to-collection').click(function() {
-      getCollection('GET', returnPath);
-    })
+    var backButton = $('#back-to-collection');
+    if(backButton.attr('onclick')){
+      backButton.removeAttr('onclick');
+    }
+    backButton.attr('onclick',"Usergrid.console.getCollection('GET','" + returnPath+ "')");
   }
 
   function pushQuery(queryObj) {
