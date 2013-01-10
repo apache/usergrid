@@ -24,6 +24,7 @@ import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.locking.HLockManager;
 import me.prettyprint.hector.api.locking.HLockManagerConfigurator;
 
+import org.springframework.util.Assert;
 import org.usergrid.locking.Lock;
 import org.usergrid.locking.LockManager;
 import org.usergrid.locking.LockPathBuilder;
@@ -86,6 +87,9 @@ public class HectorLockManagerImpl implements LockManager {
    * 
    */
   public void setReplicationFactor(int replicationFactor) {
+    
+    Assert.isTrue(numberOfLockObserverThreads%2 != 0, "You must specify an odd number for replication factor");
+
     this.replicationFactor = replicationFactor;
   }
  

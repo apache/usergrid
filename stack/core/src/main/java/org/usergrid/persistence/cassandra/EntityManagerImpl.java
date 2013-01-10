@@ -22,7 +22,7 @@ import static me.prettyprint.hector.api.factory.HFactory.createIndexedSlicesQuer
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.usergrid.locking.LockHelper.getUnqiueUpdateLock;
+import static org.usergrid.locking.LockHelper.getUniqueUpdateLock;
 import static org.usergrid.persistence.Results.fromEntities;
 import static org.usergrid.persistence.Results.Level.REFS;
 import static org.usergrid.persistence.Schema.COLLECTION_ROLES;
@@ -358,12 +358,16 @@ public class EntityManagerImpl implements EntityManager {
 
 			if (propertyName.equals(defaultSchema.aliasProperty(
 					entity.getType()))) {
-			  Lock lock = getUnqiueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entity.getType(), propertyName);
-				lock.lock();
-				deleteAliasesForEntity(batch, entity.getUuid(), timestamp-1);
-				createAlias(batch, applicationId, entity, entity.getType(),
-						string(propertyValue), timestamp);
-				lock.unlock();
+			  Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entity.getType(), propertyName);
+			  
+			  try{
+  				lock.lock();
+  				deleteAliasesForEntity(batch, entity.getUuid(), timestamp-1);
+  				createAlias(batch, applicationId, entity, entity.getType(),
+  						string(propertyValue), timestamp);
+			  }finally{
+			    lock.unlock();
+			  }
 			}
 
 			/**
@@ -371,17 +375,21 @@ public class EntityManagerImpl implements EntityManager {
 			 */
 			if(defaultSchema.getEntityInfo(entity.getType()).isPropertyUnique(propertyName)){
 			  
-			    Lock lock = getUnqiueUpdateLock(cass.getLockManager(),applicationId, propertyValue,
+			    Lock lock = getUniqueUpdateLock(cass.getLockManager(),applicationId, propertyValue,
                         entity.getType(), propertyName);
 
-			    lock.lock();
+			    try {
+            lock.lock();
+            
+            String collectionName = Schema.defaultCollectionName(entity.getType());
+
+            uniquePropertyDelete(batch, collectionName, entity.getType(), propertyName, propertyValue, entity.getUuid(), timestamp-1);
+            uniquePropertyWrite(batch, collectionName, propertyName, propertyValue, entity.getUuid(), timestamp);
+          } finally {
+            lock.unlock();
+          }
+
 			    
-			    String collectionName = Schema.defaultCollectionName(entity.getType());
-
-			    uniquePropertyDelete(batch, collectionName, entity.getType(), propertyName, propertyValue, entity.getUuid(), timestamp-1);
-			    uniquePropertyWrite(batch, collectionName, propertyName, propertyValue, entity.getUuid(), timestamp);
-
-			    lock.unlock();
 			}
 		}
 
@@ -598,7 +606,7 @@ public class EntityManagerImpl implements EntityManager {
 		String collectionName = defaultCollectionName(entityType);
 
 
-		Lock lock = getUnqiueUpdateLock(cass.getLockManager(), applicationId, propertyValue,  entityType, propertyName);
+		Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue,  entityType, propertyName);
 		lock.lock();
 
 
@@ -1180,7 +1188,7 @@ public class EntityManagerImpl implements EntityManager {
           /**
            * Only lock on the target values.  We don't want lock contention if another node is trying to set the property do a different value
            */
-          Lock lock = getUnqiueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entityType, prop_name);
+          Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entityType, prop_name);
           lock.lock();
 
           String collectionName = Schema.defaultCollectionName(entityType);

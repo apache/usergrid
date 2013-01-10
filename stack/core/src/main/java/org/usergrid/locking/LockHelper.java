@@ -30,6 +30,8 @@ import org.usergrid.locking.noop.NoOpLockImpl;
  */
 public class LockHelper {
 
+  
+  private static final NoOpLockImpl NO_OP_LOCK = new NoOpLockImpl();
 
   /**
    * Build a string path for this lock.  Since it's specifically for updating a property, the property
@@ -41,10 +43,10 @@ public class LockHelper {
    * @return
    * @throws UGLockException 
    */
-  public static Lock getUnqiueUpdateLock(LockManager manager, UUID applicationId, Object value , String... path) throws UGLockException {
+  public static Lock getUniqueUpdateLock(LockManager manager, UUID applicationId, Object value , String... path) throws UGLockException {
     //we have no value, therefore there's nothing to lock
     if(value == null){
-      return new NoOpLockImpl();
+      return NO_OP_LOCK;
     }
     
     return manager.createLock(applicationId, buildPath(Hex.encodeHexString( bytes(value)), path));

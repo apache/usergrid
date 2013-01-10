@@ -459,13 +459,13 @@ public class ManagementServiceImpl implements ManagementService {
         /**
          * Only lock on the target values.  We don't want lock contention if another node is trying to set the property do a different value
          */
-        Lock groupLock = getUnqiueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID,organizationName,  "groups", "path");
+        Lock groupLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID,organizationName,  "groups", "path");
         groupLock.lock();
         
-        Lock userLock = getUnqiueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, username, "users","username");
+        Lock userLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, username, "users","username");
         userLock.lock();
         
-        Lock emailLock = getUnqiueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, email,  "users", "email");
+        Lock emailLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, email,  "users", "email");
         emailLock.lock();
         
         UserInfo user = null;
@@ -890,11 +890,11 @@ public class ManagementServiceImpl implements ManagementService {
       /**
        * Only lock on the target values.  We don't want lock contention if another node is trying to set the property do a different value
        */
-      Lock usernameLock = getUnqiueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, username,  "users", "username");
+      Lock usernameLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, username,  "users", "username");
       usernameLock.lock();
       
       
-      Lock emailLock = getUnqiueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID,email,  "users", "email");
+      Lock emailLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID,email,  "users", "email");
       emailLock.lock();
       
         try {
