@@ -45,12 +45,26 @@
 		<constructor-arg ref="cassandraHostConfigurator" />
 	</bean>
 
-	<!-- bean name="lockManager" class="org.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" 
-		/> -->
-		
-		<!-- Note that if this is deployed in a production cluster, the RF on the keyspace MUST be updated to use an odd number for it's replication Factor.
-		  Even numbers can potentially case the locks to fail, via "split brain" when read at QUORUM on lock verification-->
+	<!--  locking for a single node -->	
 	<bean name="lockManager" class="org.usergrid.locking.singlenode.SingleNodeLockManagerImpl" />
+	
+	<!--  hector based locks -->
+	<!-- Note that if this is deployed in a production cluster, the RF on the keyspace MUST be updated to use an odd number for it's replication Factor.
+		  Even numbers can potentially case the locks to fail, via "split brain" when read at QUORUM on lock verification-->
+	
+	<!--  <bean name="lockManager" class="org.usergrid.locking.cassandra.HectorLockManagerImpl" >
+		<property name="cluster" ref="cassandraCluster"/>
+		<property name="keyspaceName" value="${cassandra.lock.keyspace}"/>
+	</bean>-->
+	
+	<!--  zookeeper locks -->
+	<!--
+	<bean name="lockManager" class="org.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" >
+		<property name="hostPort" value="${zookeeper.url}"/>
+		<property name="sessionTimeout" value="2000"/>
+		<property name="maxAttempts" value="10"/>
+	</bean>  -->
+	
 		
 	
 	<bean id="cassandraService"
