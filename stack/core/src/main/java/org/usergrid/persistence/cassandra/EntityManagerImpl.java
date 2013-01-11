@@ -606,16 +606,21 @@ public class EntityManagerImpl implements EntityManager {
 		String collectionName = defaultCollectionName(entityType);
 
 
-		Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue,  entityType, propertyName);
-		lock.lock();
+    Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entityType, propertyName);
+    List<HColumn<ByteBuffer, ByteBuffer>> cols = null;
+    
+    try {
+      lock.lock();
 
+      Object key = createUniqueIndexKey(collectionName, propertyName, propertyValue);
 
-		Object key = createUniqueIndexKey(collectionName, propertyName, propertyValue);
+      cols = cass.getColumns(cass.getApplicationKeyspace(applicationId),
+          ENTITY_UNIQUE, key, null, null, 2, false);
 
-		List<HColumn<ByteBuffer, ByteBuffer>> cols = cass.getColumns(cass.getApplicationKeyspace(applicationId), ENTITY_UNIQUE, key, null, null, 2, false);
+    } finally {
 
-
-		lock.unlock();
+      lock.unlock();
+    }
 
 		//No columns at all, it's unique
 		if(cols.size() == 0){
@@ -1184,18 +1189,24 @@ public class EntityManagerImpl implements EntityManager {
 			 /**
        * Unique property, load the old value and remove it, check if it's not a duplicate
        */
-      if(schema.getEntityInfo(entity.getType()).isPropertyUnique(prop_name)){
-          /**
-           * Only lock on the target values.  We don't want lock contention if another node is trying to set the property do a different value
-           */
-          Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entityType, prop_name);
+      if (schema.getEntityInfo(entity.getType()).isPropertyUnique(prop_name)) {
+        /**
+         * Only lock on the target values. We don't want lock contention if
+         * another node is trying to set the property do a different value
+         */
+        Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entityType, prop_name);
+
+        try {
           lock.lock();
 
           String collectionName = Schema.defaultCollectionName(entityType);
 
           uniquePropertyWrite(m, collectionName, prop_name, propertyValue, itemId, timestamp);
 
+        } finally {
           lock.unlock();
+        }
+
       }
 
 			entity.setProperty(prop_name, propertyValue);

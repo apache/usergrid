@@ -40,9 +40,9 @@ public final class ZooKeeperLockManagerImpl implements LockManager {
 
   private String hostPort;
 
-  private int sessionTimeout;
+  private int sessionTimeout = 2000;
 
-  private int maxAttempts;
+  private int maxAttempts = 5;
   
   private CuratorFramework client;
 

@@ -460,18 +460,21 @@ public class ManagementServiceImpl implements ManagementService {
          * Only lock on the target values.  We don't want lock contention if another node is trying to set the property do a different value
          */
         Lock groupLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID,organizationName,  "groups", "path");
-        groupLock.lock();
         
         Lock userLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, username, "users","username");
-        userLock.lock();
         
         Lock emailLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, email,  "users", "email");
-        emailLock.lock();
+       
         
         UserInfo user = null;
         OrganizationInfo organization = null;
 
         try {
+        
+          groupLock.lock();
+          userLock.lock();
+          emailLock.lock();
+            
             if (areActivationChecksDisabled()) {
                 user = createAdminUser(username, name, email, password, true,
                         false);
@@ -891,13 +894,15 @@ public class ManagementServiceImpl implements ManagementService {
        * Only lock on the target values.  We don't want lock contention if another node is trying to set the property do a different value
        */
       Lock usernameLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, username,  "users", "username");
-      usernameLock.lock();
-      
       
       Lock emailLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID,email,  "users", "email");
-      emailLock.lock();
+      
       
         try {
+          
+          usernameLock.lock();
+          emailLock.lock();
+          
             EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
             if (!isBlank(username)) {
