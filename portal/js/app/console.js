@@ -240,6 +240,7 @@
   function runCollectionQuery(){
     var method;
 
+    //Select method to use
     if($('#button-query-get').hasClass('active')){
       method = 'GET';
     } else if($('#button-query-post').hasClass('active')){
@@ -248,6 +249,11 @@
       method = 'PUT';
     } else if($('#button-query-delete').hasClass('active')){
       method = 'DELETE';
+    }
+
+    //If jsonBody is empty fill it with empty brackets
+    if($('#query-source').val() === '') {
+      $("#query-source").val('{}');
     }
     getCollection(method);
   }
