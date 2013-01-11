@@ -17,6 +17,7 @@
 package org.usergrid.management.cassandra;
 
 import static java.lang.Boolean.parseBoolean;
+import static org.usergrid.locking.LockHelper.*;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -114,6 +115,7 @@ import org.apache.shiro.UnavailableSecurityManagerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.usergrid.locking.Lock;
 import org.usergrid.locking.LockManager;
 import org.usergrid.management.AccountCreationProps;
 import org.usergrid.management.ActivationState;
@@ -463,14 +465,25 @@ public class ManagementServiceImpl implements ManagementService {
             Map<String,Object> userProperties)
             throws Exception {
 
-        lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "groups", "path");
-        lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "users",
-                "username", "email");
-
+        /**
+         * Only lock on the target values.  We don't want lock contention if another node is trying to set the property do a different value
+         */
+        Lock groupLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID,organizationName,  "groups", "path");
+        
+        Lock userLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, username, "users","username");
+        
+        Lock emailLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, email,  "users", "email");
+       
+        
         UserInfo user = null;
         OrganizationInfo organization = null;
 
         try {
+        
+          groupLock.lock();
+          userLock.lock();
+          emailLock.lock();
+            
             if (areActivationChecksDisabled()) {
                 user = createAdminUser(username, name, email, password, true,
                         false, userProperties);
@@ -482,10 +495,9 @@ public class ManagementServiceImpl implements ManagementService {
             organization = createOrganization(organizationName, user, true);
 
         } finally {
-            lockManager.unlockProperty(MANAGEMENT_APPLICATION_ID, "groups",
-                    "path");
-            lockManager.unlockProperty(MANAGEMENT_APPLICATION_ID, "users",
-                    "username", "email");
+          emailLock.unlock();
+          userLock.unlock();
+          groupLock.unlock();
         }
 
         return new OrganizationOwnerInfo(user, organization);
@@ -902,10 +914,20 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo updateAdminUser(UserInfo user, String username,
             String name, String email) throws Exception {
-
-        lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "users",
-                "username", "email");
+      
+      /**
+       * Only lock on the target values.  We don't want lock contention if another node is trying to set the property do a different value
+       */
+      Lock usernameLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, username,  "users", "username");
+      
+      Lock emailLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID,email,  "users", "email");
+      
+      
         try {
+          
+          usernameLock.lock();
+          emailLock.lock();
+          
             EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
             if (!isBlank(username)) {
@@ -928,8 +950,8 @@ public class ManagementServiceImpl implements ManagementService {
 
             user = getAdminUserByUuid(user.getUuid());
         } finally {
-            lockManager.unlockProperty(MANAGEMENT_APPLICATION_ID, "users",
-                    "username", "email");
+           emailLock.unlock();
+           usernameLock.unlock();
         }
 
         return user;

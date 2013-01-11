@@ -191,6 +191,7 @@
 			<groupId>com.fasterxml.uuid</groupId>
 			<artifactId>java-uuid-generator</artifactId>
 		</dependency>
+		
 		<dependency>
 			<groupId>org.apache.cassandra</groupId>
 			<artifactId>cassandra-all</artifactId>
@@ -397,6 +398,11 @@
             <groupId>cglib</groupId>
             <artifactId>cglib-nodep</artifactId>
             <version>2.2.2</version>
+        </dependency>
+        <dependency>
+        	<groupId>com.netflix.curator</groupId>
+        	<artifactId>curator-recipes</artifactId>
+        	<version>1.2.6</version>
         </dependency>
 	</dependencies>
 </project>

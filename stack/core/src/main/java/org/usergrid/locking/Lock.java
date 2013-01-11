@@ -15,26 +15,32 @@
  ******************************************************************************/
 package org.usergrid.locking;
 
-import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.usergrid.locking.exception.UGLockException;
 
 /**
- * This Interface to a class responsible for distributed lock across system.
+ * The lock object to acquire
  * @author tnine
+ *
  */
-public interface LockManager {
+public interface Lock {
 
   /**
-   * Acquires a lock on a particular path.
-   * 
-   * @param applicationId
-   *          application UUID
-   * @param path
-   *          a unique path
-   * @throws UGLockException
-   *           if the lock cannot be acquired
+   * Acquire the lock.  Wait the specified amount of time before giving up
+   * @param timeout The amount of time to wait
+   * @param time the units of time to wait
    */
-  public Lock createLock(final UUID applicationId, final String... path) throws UGLockException;
-
+  public boolean tryLock(long timeout, TimeUnit time) throws UGLockException;
+  
+  /**
+   * Block until a lock is available 
+   * @throws UGLockException
+   */
+  public void lock() throws UGLockException;
+  
+  /**
+   * Release the lock
+   */
+  public void unlock() throws UGLockException;
 }

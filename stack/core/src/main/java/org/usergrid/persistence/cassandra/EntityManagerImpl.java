@@ -22,6 +22,7 @@ import static me.prettyprint.hector.api.factory.HFactory.createIndexedSlicesQuer
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.usergrid.locking.LockHelper.getUniqueUpdateLock;
 import static org.usergrid.persistence.Results.fromEntities;
 import static org.usergrid.persistence.Results.Level.REFS;
 import static org.usergrid.persistence.Schema.COLLECTION_ROLES;
@@ -95,6 +96,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
@@ -122,6 +124,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.usergrid.locking.Lock;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.mq.cassandra.QueueManagerFactoryImpl;
@@ -355,29 +358,38 @@ public class EntityManagerImpl implements EntityManager {
 
 			if (propertyName.equals(defaultSchema.aliasProperty(
 					entity.getType()))) {
-				cass.getLockManager().lockProperty(applicationId,
-						entity.getType(), propertyName);
-				deleteAliasesForEntity(batch, entity.getUuid(), timestamp-1);
-				createAlias(batch, applicationId, entity, entity.getType(),
-						string(propertyValue), timestamp);
-				cass.getLockManager().unlockProperty(applicationId,
-						entity.getType(), propertyName);
+			  Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entity.getType(), propertyName);
+			  
+			  try{
+  				lock.lock();
+  				deleteAliasesForEntity(batch, entity.getUuid(), timestamp-1);
+  				createAlias(batch, applicationId, entity, entity.getType(),
+  						string(propertyValue), timestamp);
+			  }finally{
+			    lock.unlock();
+			  }
 			}
 
 			/**
 			 * Unique property, load the old value and remove it, check if it's not a duplicate
 			 */
 			if(defaultSchema.getEntityInfo(entity.getType()).isPropertyUnique(propertyName)){
-			    cass.getLockManager().lockProperty(applicationId,
+			  
+			    Lock lock = getUniqueUpdateLock(cass.getLockManager(),applicationId, propertyValue,
                         entity.getType(), propertyName);
 
-			    String collectionName = Schema.defaultCollectionName(entity.getType());
+			    try {
+            lock.lock();
+            
+            String collectionName = Schema.defaultCollectionName(entity.getType());
 
-			    uniquePropertyDelete(batch, collectionName, entity.getType(), propertyName, propertyValue, entity.getUuid(), timestamp-1);
-			    uniquePropertyWrite(batch, collectionName, propertyName, propertyValue, entity.getUuid(), timestamp);
+            uniquePropertyDelete(batch, collectionName, entity.getType(), propertyName, propertyValue, entity.getUuid(), timestamp-1);
+            uniquePropertyWrite(batch, collectionName, propertyName, propertyValue, entity.getUuid(), timestamp);
+          } finally {
+            lock.unlock();
+          }
 
-			    cass.getLockManager().unlockProperty(applicationId,
-                        entity.getType(), propertyName);
+			    
 			}
 		}
 
@@ -594,15 +606,21 @@ public class EntityManagerImpl implements EntityManager {
 		String collectionName = defaultCollectionName(entityType);
 
 
-		cass.getLockManager().lockProperty(applicationId, entityType, propertyName);
+    Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entityType, propertyName);
+    List<HColumn<ByteBuffer, ByteBuffer>> cols = null;
+    
+    try {
+      lock.lock();
 
+      Object key = createUniqueIndexKey(collectionName, propertyName, propertyValue);
 
-		Object key = createUniqueIndexKey(collectionName, propertyName, propertyValue);
+      cols = cass.getColumns(cass.getApplicationKeyspace(applicationId),
+          ENTITY_UNIQUE, key, null, null, 2, false);
 
-		List<HColumn<ByteBuffer, ByteBuffer>> cols = cass.getColumns(cass.getApplicationKeyspace(applicationId), ENTITY_UNIQUE, key, null, null, 2, false);
+    } finally {
 
-
-		cass.getLockManager().unlockProperty(applicationId, entityType, propertyName);
+      lock.unlock();
+    }
 
 		//No columns at all, it's unique
 		if(cols.size() == 0){
@@ -1169,17 +1187,27 @@ public class EntityManagerImpl implements EntityManager {
 			}
 
 			 /**
-             * Unique property, load the old value and remove it, check if it's not a duplicate
-             */
-            if(schema.getEntityInfo(entity.getType()).isPropertyUnique(prop_name)){
-                cass.getLockManager().lockProperty(applicationId, entityType, prop_name);
+       * Unique property, load the old value and remove it, check if it's not a duplicate
+       */
+      if (schema.getEntityInfo(entity.getType()).isPropertyUnique(prop_name)) {
+        /**
+         * Only lock on the target values. We don't want lock contention if
+         * another node is trying to set the property do a different value
+         */
+        Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entityType, prop_name);
 
-                String collectionName = Schema.defaultCollectionName(entityType);
+        try {
+          lock.lock();
 
-                uniquePropertyWrite(m, collectionName, prop_name, propertyValue, itemId, timestamp);
+          String collectionName = Schema.defaultCollectionName(entityType);
 
-                cass.getLockManager().unlockProperty(applicationId, entity.getType(), prop_name);
-            }
+          uniquePropertyWrite(m, collectionName, prop_name, propertyValue, itemId, timestamp);
+
+        } finally {
+          lock.unlock();
+        }
+
+      }
 
 			entity.setProperty(prop_name, propertyValue);
 
