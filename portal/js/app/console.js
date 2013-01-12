@@ -1,4 +1,4 @@
-function apigee_console_app(Pages, query_params) {
+﻿function apigee_console_app(Pages, query_params) {
   //This code block *WILL NOT* load before the document is complete
   window.Usergrid = window.Usergrid || {};
   Usergrid.console = Usergrid.console || {};
@@ -240,6 +240,7 @@ function apigee_console_app(Pages, query_params) {
   function runCollectionQuery(){
     var method;
 
+    //Select method to use
     if($('#button-query-get').hasClass('active')){
       method = 'GET';
     } else if($('#button-query-post').hasClass('active')){
@@ -248,6 +249,11 @@ function apigee_console_app(Pages, query_params) {
       method = 'PUT';
     } else if($('#button-query-delete').hasClass('active')){
       method = 'DELETE';
+    }
+
+    //If jsonBody is empty fill it with empty brackets
+    if($('#query-source').val() === '') {
+      $("#query-source").val('{}');
     }
     getCollection(method);
   }
@@ -3155,14 +3161,7 @@ function apigee_console_app(Pages, query_params) {
     var output = $('#activities-table');
     output.empty();
 
-    var query = {"ql" : "order by " + activitiesSortBy}; //default to built in search
-    if (typeof search == 'string') {
-      if (search.length > 0) {
-        query = {"ql" : searchType + "='" + search + "*'"};
-      }
-    }
-
-    queryObj = new Usergrid.Query("GET", "activities", {}, query, getActivitiesCallback, function() { alertModal("Error", "Unable to retrieve activities.")});
+    queryObj = new Usergrid.Query("GET", "activities", null, null, getActivitiesCallback, function() { alertModal("Error", "Unable to retrieve activities.")});
     runAppQuery(queryObj);
     return false;
   }
