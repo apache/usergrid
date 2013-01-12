@@ -1,4 +1,4 @@
-/**
+/*
 *  This module is a collection of classes designed to make working with
 *  the Appigee App Services API as easy as possible.
 *  Learn more at http://apigee.com/docs/usergrid
@@ -37,10 +37,7 @@ Usergrid.Client = function(options) {
   //Find your Orgname and Appname in the Admin portal (http://apigee.com/usergrid)
   this.orgName = options.orgName;
   this.appName = options.appName;
-
-  //authentication
-  this.token = options.token || null;
-
+  
   //other options
   this.buildCurl = options.buildCurl || false;
   this.logging = options.logging || false;
@@ -52,7 +49,7 @@ Usergrid.Client = function(options) {
 
 };
 
-/**
+/*
 *  Main function for making requests to the API.  Can be called directly.
 *
 *  options object:
@@ -81,10 +78,10 @@ Usergrid.Client.prototype.request = function (options, callback) {
     var uri = this.URI + '/' + this.orgName + '/' + this.appName + '/' + endpoint;
   }
 
-  if (self.token) {
-    qs['access_token'] = self.token;
-    /*
-    xhr.setRequestHeader("Authorization", "Bearer " + self.token);
+  if (self.getToken()) {
+    qs['access_token'] = self.getToken();
+    /* //could also use headers for the token
+    xhr.setRequestHeader("Authorization", "Bearer " + self.getToken());
     xhr.withCredentials = true;
     */
   }
@@ -186,7 +183,7 @@ Usergrid.Client.prototype.request = function (options, callback) {
   xhr.send(body);
 }
 
-/**
+/*
 *  Main function for creating new entities - should be called directly.
 *
 *  options object: options {data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
@@ -210,7 +207,7 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
   });
 }
 
-/**
+/*
 *  Main function for creating new collections - should be called directly.
 *
 *  options object: options {client:client, type: type, qs:qs}
@@ -230,7 +227,7 @@ Usergrid.Client.prototype.createCollection = function (options, callback) {
   });
 }
 
-/**
+/*
 *  Function for creating new activities for the current user - should be called directly.
 * 
 *  //user can be any of the following: "me", a uuid, a username
@@ -280,7 +277,7 @@ Usergrid.Client.prototype.createUserActivity = function (user, options, callback
   });
 }
 
-/**
+/*
 *  A private method to get call timing of last call
 */
 Usergrid.Client.prototype.calcTimeDiff = function () {
@@ -290,6 +287,37 @@ Usergrid.Client.prototype.calcTimeDiff = function () {
     seconds = ((time/10) / 60).toFixed(2);
  } catch(e) { return 0; }
  return seconds;
+}
+
+/*
+*  A public method to store the OAuth token for later use - uses localstorage if available
+*
+*  @method setToken
+*  @public
+*  @params {string} token
+*  @return none
+*/
+Usergrid.Client.prototype.setToken = function (token) {
+  this.token = token;
+  if(typeof(Storage)!=="undefined"){
+    localStorage.setItem('token', token);
+  }
+}
+
+/*
+*  A public method to get the OAuth token
+*
+*  @method getToken
+*  @public
+*  @return {string} token
+*/
+Usergrid.Client.prototype.getToken = function () {
+  if (this.token) {
+    return this.token;
+  } else if(typeof(Storage)!=="undefined") {
+    return localStorage.getItem('token');
+  }
+  return null;
 }
 
 /*
@@ -319,7 +347,7 @@ Usergrid.Client.prototype.login = function (username, password, callback) {
       console.log('error trying to log user in');
     } else {
       user = new Usergrid.Entity('users', data.user);
-      self.token = data.access_token;
+      self.setToken (data.access_token);
     }
     if (typeof(callback) === 'function') {
       callback(err, data, user);
@@ -352,7 +380,7 @@ Usergrid.Client.prototype.loginFacebook = function (facebookToken, callback) {
       console.log('error trying to log user in');
     } else {
       user = new Usergrid.Entity('users', data.user);
-      self.token = data.access_token;
+      self.setToken(data.access_token);
     }
     if (typeof(callback) === 'function') {
       callback(err, data, user);
@@ -369,7 +397,7 @@ Usergrid.Client.prototype.loginFacebook = function (facebookToken, callback) {
 *  @return {callback} callback(err, data)
 */
 Usergrid.Client.prototype.getLoggedInUser = function (callback) {
-  if (!this.token) {
+  if (!this.getToken) {
     callback(true, null, null);
   } else {
     var self = this;
@@ -399,7 +427,7 @@ Usergrid.Client.prototype.getLoggedInUser = function (callback) {
   }
 }
 
-/**
+/*
 *  A public method to test if a user is logged in - does not guarantee that the token is still valid,
 *  but rather that one exists
 *
@@ -408,13 +436,13 @@ Usergrid.Client.prototype.getLoggedInUser = function (callback) {
 *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
 */
 Usergrid.Client.prototype.isLoggedIn = function () {
-  if (this.token) {
+  if (this.getToken()) {
     return true;
   }
   return false;
 }
 
-/**
+/*
 *  A public method to log out an app user - clears all user fields from client
 *
 *  @method logout
@@ -422,7 +450,7 @@ Usergrid.Client.prototype.isLoggedIn = function () {
 *  @return none
 */
 Usergrid.Client.prototype.logout = function () {
-  this.token = null;
+  this.setToken(null);
 }
 
 /*
@@ -462,7 +490,7 @@ Usergrid.Client.prototype.buildCurlCall = function (options) {
 }
 
 
-/**
+/*
 *  A class to Model a Usergrid Entity.
 *  Set the type of entity in the 'data' json object
 *
@@ -474,7 +502,7 @@ Usergrid.Entity = function(options) {
   this._data = options.data || {};
 };
 
-/**
+/*
 *  gets a specific field or the entire data object. If null or no argument
 *  passed, will return all data, else, will return a specific field
 *
@@ -490,7 +518,7 @@ Usergrid.Entity.prototype.get = function (field) {
   }
 }
 
-/**
+/*
 *  adds a specific key value pair or object to the Entity's data
 *  is additive - will not overwrite existing values unless they
 *  are explicitly specified
@@ -516,7 +544,7 @@ Usergrid.Entity.prototype.set = function (key, value) {
   }
 }
 
-/**
+/*
 *  Saves the entity back to the database
 *
 *  @method save
@@ -595,7 +623,7 @@ Usergrid.Entity.prototype.save = function (callback) {
   });
 }
 
-/**
+/*
 *  refreshes the entity by making a GET call back to the database
 *
 *  @method fetch
@@ -658,7 +686,7 @@ Usergrid.Entity.prototype.fetch = function (callback) {
   });
 }
 
-/**
+/*
 *  deletes the entity from the database - will only delete
 *  if the object has a valid uuid
 *
@@ -700,7 +728,7 @@ Usergrid.Entity.prototype.destroy = function (callback) {
 
 
 
-/**
+/*
 *  The Collection class models Usergrid Collections.  It essentially
 *  acts as a container for holding Entity objects, while providing
 *  additional funcitonality such as paging, and saving
@@ -728,7 +756,7 @@ Usergrid.Collection = function(options, callback) {
   this.fetch(callback);
 }
 
-/**
+/*
 *  Populates the collection from the server
 *
 *  @method fetch
@@ -785,7 +813,7 @@ Usergrid.Collection.prototype.fetch = function (callback) {
   });
 }
 
-/**
+/*
 *  Adds a new Entity to the collection (saves, then adds to the local object)
 *
 *  @method addNewEntity
@@ -810,7 +838,7 @@ Usergrid.Collection.prototype.addEntity = function (options, callback) {
   });
 }
 
-/**
+/*
 *  Removes the Entity from the collection, then destroys the object on the server
 *
 *  @method destroyEntity
@@ -835,7 +863,7 @@ Usergrid.Collection.prototype.destroyEntity = function (entity, callback) {
   });
 }
 
-/**
+/*
 *  Looks up an Entity by UUID
 *
 *  @method getEntityByUUID
@@ -847,8 +875,8 @@ Usergrid.Collection.prototype.getEntityByUUID = function (uuid, callback) {
   //get the entity from the database
   var options = {
     data: {
-    	type: this._type,
-    	uuid:uuid
+      type: this._type,
+      uuid:uuid
     },
     client: this._client
   }
@@ -856,7 +884,7 @@ Usergrid.Collection.prototype.getEntityByUUID = function (uuid, callback) {
   entity.fetch(callback);
 }
 
-/**
+/*
 *  Returns the first Entity of the Entity list - does not affect the iterator
 *
 *  @method getFirstEntity
@@ -870,7 +898,7 @@ Usergrid.Collection.prototype.getFirstEntity = function () {
   return null;
 }
 
-/**
+/*
 *  Returns the last Entity of the Entity list - does not affect the iterator
 *
 *  @method getLastEntity
@@ -884,7 +912,7 @@ Usergrid.Collection.prototype.getLastEntity = function () {
   return null;
 }
 
-/**
+/*
 *  Entity iteration -Checks to see if there is a "next" entity
 *  in the list.  The first time this method is called on an entity
 *  list, or after the resetEntityPointer method is called, it will
@@ -902,7 +930,7 @@ Usergrid.Collection.prototype.hasNextEntity = function () {
   return false;
 }
 
-/**
+/*
 *  Entity iteration - Gets the "next" entity in the list.  The first
 *  time this method is called on an entity list, or after the method
 *  resetEntityPointer is called, it will return the,
@@ -920,7 +948,7 @@ Usergrid.Collection.prototype.getNextEntity = function () {
   return false;
 }
 
-/**
+/*
 *  Entity iteration - Checks to see if there is a "previous"
 *  entity in the list.
 *
@@ -936,7 +964,7 @@ Usergrid.Collection.prototype.hasPrevEntity = function () {
   return false;
 }
 
-/**
+/*
 *  Entity iteration - Gets the "previous" entity in the list.
 *
 *  @method getPrevEntity
@@ -951,7 +979,7 @@ Usergrid.Collection.prototype.getPrevEntity = function () {
    return false;
 }
 
-/**
+/*
 *  Entity iteration - Resets the iterator back to the beginning
 *  of the list
 *
@@ -962,7 +990,7 @@ Usergrid.Collection.prototype.resetEntityPointer = function () {
    this._iterator  = -1;
 }
 
-/**
+/*
 * Method to save off the cursor just returned by the last API call
 *
 * @public
@@ -976,7 +1004,7 @@ Usergrid.Collection.prototype.saveCursor = function(cursor) {
   }
 }
 
-/**
+/*
 * Resets the paging pointer (back to original page)
 *
 * @public
@@ -989,7 +1017,7 @@ Usergrid.Collection.prototype.resetPaging = function() {
   this._cursor = null;
 }
 
-/**
+/*
 *  Paging -  checks to see if there is a next page od data
 *
 *  @method hasNextPage
@@ -999,7 +1027,7 @@ Usergrid.Collection.prototype.hasNextPage = function () {
   return (this._next);
 }
 
-/**
+/*
 *  Paging - advances the cursor and gets the next
 *  page of data from the API.  Stores returned entities
 *  in the Entity list.
@@ -1019,7 +1047,7 @@ Usergrid.Collection.prototype.getNextPage = function (callback) {
   }
 }
 
-/**
+/*
 *  Paging -  checks to see if there is a previous page od data
 *
 *  @method hasPreviousPage
@@ -1029,7 +1057,7 @@ Usergrid.Collection.prototype.hasPreviousPage = function () {
   return (this._previous.length > 0);
 }
 
-/**
+/*
 *  Paging - reverts the cursor and gets the previous
 *  page of data from the API.  Stores returned entities
 *  in the Entity list.
@@ -1048,7 +1076,7 @@ Usergrid.Collection.prototype.getPreviousPage = function (callback) {
   }
 }
 
-/**
+/*
 * Tests if the string is a uuid
 *
 * @public
@@ -1063,7 +1091,7 @@ function isUUID (uuid) {
 }
 
 
-/**
+/*
 *  method to encode the query string parameters
 *
 *  @method encodeParams
