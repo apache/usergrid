@@ -55,7 +55,7 @@ Usergrid.validation = (function () {
     * @return {boolean} Returns true if string passes regex, false if not
     */
   function validateName(name, failureCallback) {
-    if (nameRegex.test(name) && checkLength(name, 4, 16)) {
+    if (nameRegex.test(name) && checkLength(name, 4, 80)) {
       return true;
     } else {
       if (failureCallback && typeof(failureCallback) === "function") {
