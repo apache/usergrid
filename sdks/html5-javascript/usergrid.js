@@ -189,7 +189,7 @@ Usergrid.Client.prototype.request = function (options, callback) {
 /**
 *  Main function for creating new entities - should be called directly.
 *
-*  options object: options {client:client, data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
+*  options object: options {data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
 *
 *  @method createEntity
 *  @public
@@ -226,6 +226,56 @@ Usergrid.Client.prototype.createCollection = function (options, callback) {
   var collection = new Usergrid.Collection(options, function(err, data) {
     if (typeof(callback) === 'function') {
       callback(err, collection);
+    }
+  });
+}
+
+/**
+*  Function for creating new activities for the current user - should be called directly.
+* 
+*  //user can be any of the following: "me", a uuid, a username
+*  Note: the "me" alias will reference the currently logged in user (e.g. 'users/me/activties')
+* 
+*  //build a json object that looks like this:
+*  var options =
+*  {
+*    "actor" : {
+*      "displayName" :"myusername",
+*      "uuid" : "myuserid",
+*      "username" : "myusername",
+*      "email" : "myemail",
+*      "picture": "http://path/to/picture",
+*      "image" : {
+*          "duration" : 0,
+*          "height" : 80,
+*          "url" : "http://www.gravatar.com/avatar/",
+*          "width" : 80
+*      },
+*    },
+*    "verb" : "post",
+*    "content" : "My cool message",
+*    "lat" : 48.856614,
+*    "lon" : 2.352222
+*  }
+
+*
+*  @method createEntity
+*  @public
+*  @params {string} user // "me", a uuid, or a username
+*  @params {object} options
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
+Usergrid.Client.prototype.createUserActivity = function (user, options, callback) {
+  options.type = 'users/'+user+'/activities';
+  var options = {
+    client:this,
+    data:options
+  }
+  var entity = new Usergrid.Entity(options);
+  entity.save(function(err, data) {
+    if (typeof(callback) === 'function') {
+      callback(err, entity);
     }
   });
 }
@@ -336,7 +386,11 @@ Usergrid.Client.prototype.getLoggedInUser = function (callback) {
           callback(err, data, null);
         }
       } else {
-        var user = new Usergrid.Entity('users', data.user);
+        var options = {
+          client:self,
+          data:data.entities[0]
+        }
+        var user = new Usergrid.Entity(options);
         if (typeof(callback) === 'function') {
           callback(err, data, user);
         }
@@ -669,9 +723,6 @@ Usergrid.Collection = function(options, callback) {
   this._previous = [];
   this._next = null;
   this._cursor = null
-
-
-  var self = this;
 
   //populate the collection
   this.fetch(callback);
