@@ -207,6 +207,7 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
 
       o.details.appendTo(el);
 
+      o.collections = el.find(".query-result-collections");
       o.details.find(".button").button();
       o.contents = el.find(".query-result-contents");
       o.json = el.find(".query-result-json");
@@ -217,6 +218,7 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
         if (o.contents.css('display') == 'none') {
           o.contents.show();
           o.json.hide();
+          o.collections.hide();
         } else {
           o.contents.hide();
         }
@@ -240,6 +242,7 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
         if (o.json.css('display') == 'none') {
           o.json.show();
           o.contents.hide();
+          o.collections.hide();
         } else {
           o.json.hide();
         }
