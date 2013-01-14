@@ -304,16 +304,20 @@
 
   function getCollectionCallback(response) {
     hidePagination('query-response');
-
     query_entities = null;
     query_entities_by_id = null;
     var t = "";
     if (response.entities && (response.entities.length > 0)) {
       query_entities = response.entities;
       query_entities_by_id = {};
+      //Inform the user of a valid query
+      showQueryStatus('Done');
 
       var path = response.path || "";
       path = "" + path.match(/[^?]*/);
+      if(response.action === ("delete")){
+        getCollection("GET", path);
+      }
 
       if (response.entities.length > 1) {
         //Update Query Explorer autocomplete
@@ -607,22 +611,6 @@
     }
     return false;
   };
-//TODO: Delete after tests
-//  $('#button-clear-query-source').click(function(event) {
-//    shrinkQueryInput();
-//    $('#query-source').val("{ }");
-//    return false;
-//  });
-//
-//  $('#button-clear-path').click(function(event) {
-//    $('#query-path').val("");
-//    return false;
-//  });
-//
-//  $('#button-clear-ql').click(function(event) {
-//    $('#query-ql').val("");
-//    return false;
-//  });
 
   window.Usergrid.console.doChildClick = function(event) {
     var path = new String($('#query-path').val());
