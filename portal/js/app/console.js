@@ -579,9 +579,7 @@
   $('#query-source').keydown(function(e) {
     var key = e.keyCode || e.which;
 
-    if (key == 13) {
-      validateJson();
-    } else if (key == 9) {
+    if ((key == 9 || key ===13)) {
       e.preventDefault();
       //Get cursor position
       var start = this.selectionStart;
