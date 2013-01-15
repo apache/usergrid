@@ -21,7 +21,7 @@
     },
 
     isTopLevelDomain:function () {
-      return window.location.host === this.default.top_level_domain;
+      return window.location.hostname === this.default.top_level_domain;
     },
 
     usingSSO:function () {

@@ -24,6 +24,9 @@ $(document).ready(function () {
   }
 
   function startApp() {
+  	if (Usergrid.apiUrl) {
+  		Usergrid.ApiClient.setApiUrl(Usergrid.apiUrl);
+  	}
     if (!Usergrid.userSession.loggedIn()) {
       // test to see if the Portal is running on apigee, if so, send to SSO, if not, fall through to login screen
       if (Usergrid.SSO.usingSSO()) {
