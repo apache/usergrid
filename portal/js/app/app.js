@@ -53,7 +53,7 @@ $(document).ready(function () {
     $('#hideBanner').click(Pages.hideBanner);
 
     var publicMenu = $('#publicMenu');
-    var privateMenu = $('#privateMenu');
+    var privateMenu = $('.privateMenu');
 
     Pages.AddPage({name:'login', menu:publicMenu});
     Pages.AddPage({name:'message', menu:publicMenu});

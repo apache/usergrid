@@ -90,7 +90,7 @@ html{
   margin: 0 auto; 
 }
 #pages{
-  padding: 70px 0 50px 0px;
+  padding: 110px 0 50px 0px;
   &>div{
     display:none;
   }
@@ -238,6 +238,9 @@ a:active {
       }
     }
     .dropdown-toggle{
+      span{
+        margin-left: 5px;
+      }
       .caret{
         margin-top: 13px;
       }
@@ -270,6 +273,28 @@ a:active {
           opacity: 0.7;
         }
       }
+    }
+  }
+}
+
+.main-nav{
+  margin: 0px;
+}
+
+.sub-nav{
+  position: fixed;
+  top: 48px;
+  left: -1px;
+  right: -2px;
+  margin-bottom: 18px;
+  background-color: @apigeeApplicationName;
+  z-index: 130;
+}
+
+.right-header{
+  a{
+    &:hover{
+      opacity: 0.9;
     }
   }
 }

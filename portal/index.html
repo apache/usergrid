@@ -43,7 +43,7 @@
   </head>
   <body>
     <div id="fullContainer">
-      <div data-dropdown="dropdown" class="navbar navbar-fixed-top">
+      <div data-dropdown="dropdown" class="main-nav navbar navbar-fixed-top">
         <div class="header-menus">
           <div id="publicMenu" class="navbar-inner">
             <div class="left-header">
@@ -59,40 +59,16 @@
               </ul>
             </div>
           </div>
-          <div id="privateMenu" class="navbar-inner">
+          <div class="navbar-inner privateMenu">
             <div class="left-header">
               <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img class="logo" src="images/logo-white.png">apigee</a></h1>
-              <b class="caret"></b>
               <ul class="nav">
                 <li class="portal-name" ><a class="go-home">Admin Portal</a></li>
-                <li id="help-menu" class="dropdown">
-                  <a class="dropdown-toggle" data-toggle="dropdown" >Help <span class="caret"></span></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="http://support.apigee.com/apigee" target="_blank"> Support</a></li>
-                    <li><a href="http://apigee.com/docs/app_services" target="_blank"> Docs</a></li>
-                    <li><a href="https://groups.google.com/forum/?fromgroups#!forum/usergrid" target="_blank"> Google Group</a></li>
-                    <li><a href="http://apigee.com/docs/usergrid/codesamples" target="_blank">Examples & SDKs</a></li>
-                    <li><a href="http://apigee.com/about/products/usergrid" target="_blank"> About</a></li>
-                  </ul>
-                </li>
               </ul>
             </div>
             <div class="right-header">
               <ul id="profileMenu" class="nav secondary-nav">
-                <li id="switchTo-menu" class="dropdown">
-                  <a id="switchTo-link" class="dropdown-toggle" data-toggle="dropdown" ><span>Switch to...
-                  </span> <span class="caret"></span></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="http://mobileanalytics.apigee.com/pages/signin.seam " target="_blank"> Mobile Analytics</a></li>
-                    <li><a href="http://apigee.com/console/others" target="_blank"> API Consoles</a></li>
-                  </ul>
-                </li>
-                <li id="organizations-menu" class="dropdown">
-                <a id="console-link" class="dropdown-toggle" data-toggle="dropdown"><span>Organizations</span> <span class="caret"></span></a>
-                <ul class="dropdown-menu">
-                  <li><a >loading...</a></li>
-                </ul>
-              </li>
+                <li ><a href="#">Dashboard</a></li>
                 <li class="dropdown">
                   <a id="account-link1" class="dropdown-toggle" data-toggle="dropdown" ><span id="userEmail">test</span> <span class="caret"></span></a>
                   <ul class="dropdown-menu">
@@ -105,6 +81,47 @@
           </div>
           <div id="api-activity" class="alert">Loading...</div>
         </div>
+      </div>
+      <div class="sub-nav navbar navbar-fixed privateMenu" style="display: none">
+          <div class="left-header nav pull-left">
+              <li id="organizations-menu" class="dropdown">
+                  <a id="console-link" class="dropdown-toggle" data-toggle="dropdown">
+                      <i class="icon-folder-close icon-white"></i>
+                      <span>Organizations</span>
+                      <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu">
+                      <li><a >loading...</a></li>
+                  </ul>
+              </li>
+              <li class="dropdown">
+                  <a class="dropdown-toggle" data-toggle="dropdown">
+                     <i class="icon-cog icon-white"></i>
+                      <span id="nav-app-name">App Name</span>
+                      <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu applications-menu" >
+                      <li><a >loading apps...</a></li>
+                  </ul>
+              </li>
+          </div>
+          <div class="right-header pull-right">
+              <ul class="nav">
+                  <li id="switchTo-menu" class="dropdown">
+                      <a id="switchTo-link" class="dropdown-toggle" data-toggle="dropdown" ><span>Switch to...
+                  </span> <span class="caret"></span></a>
+                      <ul class="dropdown-menu">
+                          <li><a href="http://mobileanalytics.apigee.com/pages/signin.seam " target="_blank"> Mobile Analytics</a></li>
+                          <li><a href="http://apigee.com/console/others" target="_blank"> API Consoles</a></li>
+                      </ul>
+                  </li>
+                  <li><a href="http://support.apigee.com/apigee" target="_blank"> Support</a></li>
+                  <li><a href="http://apigee.com/docs/app_services" target="_blank"> Docs</a></li>
+                  <li><a href="http://apigee.com/docs/usergrid/codesamples" target="_blank">Examples & SDKs</a></li>
+                  <li><a href="https://groups.google.com/forum/?fromgroups#!forum/usergrid" target="_blank"> Google Group</a></li>
+                  <li><a href="http://apigee.com/about/products/usergrid" target="_blank"> About</a></li>
+              </ul>
+          </div>
       </div>
       <div id="pages">
         <div id="banner" class="container-fluid">
@@ -250,7 +267,7 @@
                     <a id="current-app-name" class="btn dropdown-toggle" data-toggle="dropdown"  style="width: 109px; text-align: left;">
                       App Name
                     </a>
-                    <ul class="dropdown-menu" id="applications-menu">
+                    <ul class="dropdown-menu applications-menu" >
                       <li><a >loading apps...</a></li>
                     </ul>
                   </div>

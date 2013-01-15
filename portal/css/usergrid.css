@@ -3607,7 +3607,7 @@ html {
   margin: 0 auto;
 }
 #pages {
-  padding: 70px 0 50px 0px;
+  padding: 110px 0 50px 0px;
 }
 #pages > div {
   display: none;
@@ -3748,6 +3748,9 @@ a:active {
 .navbar .nav li #console-link:hover {
   background-color: transparent;
 }
+.navbar .nav .dropdown-toggle span {
+  margin-left: 5px;
+}
 .navbar .nav .dropdown-toggle .caret {
   margin-top: 13px;
 }
@@ -3774,6 +3777,21 @@ a:active {
 }
 .navbar .nav .active > a .caret {
   opacity: 0.7;
+}
+.main-nav {
+  margin: 0px;
+}
+.sub-nav {
+  position: fixed;
+  top: 48px;
+  left: -1px;
+  right: -2px;
+  margin-bottom: 18px;
+  background-color: #e02e03;
+  z-index: 130;
+}
+.right-header a:hover {
+  opacity: 0.9;
 }
 #sidebar-menu {
   position: absolute;

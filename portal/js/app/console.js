@@ -204,6 +204,7 @@
     }
     $('#current-app-name').html('<div class="app-menu">' + name + '</div>  <span class="caret"></span>');
     $('.thingy span.title span.app_title').text(" " + name);
+    $('#nav-app-name').html(name);
   }
 
   /*******************************************************************
@@ -706,7 +707,7 @@
   function displayApplications(response) {
     applications = {};
     applications_by_id = {};
-    var appMenu = $('#applications-menu');
+    var appMenu = $('.applications-menu');
     var appList = $('table#organization-applications-table');
     appMenu.empty();
     appList.empty();
@@ -729,6 +730,7 @@
       if (count) {
         $.tmpl('apigee.ui.applications.table_rows.html', data).appendTo(appList);
         appMenuTmpl.tmpl(data).appendTo(appMenu);
+        appMenuTmpl.tmpl(data)
         appMenu.find("a").click(function selectApp(e) {
           var link = $(this);
           pageSelect(link.tmplItem().data.name);
