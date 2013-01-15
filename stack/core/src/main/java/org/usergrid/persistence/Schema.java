@@ -1510,26 +1510,6 @@ public class Schema {
         properties.put(PROPERTY_MODIFIED, property);
 
         property = new PropertyInfo();
-        property.setName(PROPERTY_OWNER);
-        property.setRequired(false);
-        property.setType(UUID.class);
-        property.setMutable(false);
-        property.setAliasProperty(false);
-        property.setIndexed(false);
-        property.setIndexedInConnections(false);
-        properties.put(PROPERTY_OWNER, property);
-
-        property = new PropertyInfo();
-        property.setName(PROPERTY_OWNER_TYPE);
-        property.setRequired(false);
-        property.setType(String.class);
-        property.setMutable(false);
-        property.setAliasProperty(false);
-        property.setIndexed(false);
-        property.setIndexedInConnections(false);
-        properties.put(PROPERTY_OWNER_TYPE, property);
-
-        property = new PropertyInfo();
         property.setName(PROPERTY_ITEM);
         property.setRequired(false);
         property.setType(UUID.class);
