@@ -27,6 +27,7 @@ import static org.usergrid.utils.ConversionUtils.getBoolean;
 import static org.usergrid.utils.ConversionUtils.string;
 import static org.usergrid.utils.ConversionUtils.uuid;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -42,9 +43,11 @@ public class UserInfo {
 	private final String email;
 	private final boolean activated;
 	private final boolean disabled;
+    private final Map<String,Object> properties;
 
 	public UserInfo(UUID applicationId, UUID id, String username, String name,
-			String email, boolean activated, boolean disabled) {
+			String email, boolean activated, boolean disabled,
+            Map<String,Object> properties) {
 		this.applicationId = applicationId;
 		this.id = id;
 		this.username = username;
@@ -52,16 +55,18 @@ public class UserInfo {
 		this.email = email;
 		this.activated = activated;
 		this.disabled = disabled;
+        this.properties = properties;
 	}
 
 	public UserInfo(UUID applicationId, Map<String, Object> properties) {
 		this.applicationId = applicationId;
-		id = uuid(properties.get(PROPERTY_UUID));
-		username = string(properties.get(PROPERTY_USERNAME));
-		name = string(properties.get(PROPERTY_NAME));
-		email = string(properties.get(PROPERTY_EMAIL));
-		activated = getBoolean(properties.get(PROPERTY_ACTIVATED));
-		disabled = getBoolean(properties.get(PROPERTY_DISABLED));
+		id = uuid(properties.remove(PROPERTY_UUID));
+		username = string(properties.remove(PROPERTY_USERNAME));
+		name = string(properties.remove(PROPERTY_NAME));
+		email = string(properties.remove(PROPERTY_EMAIL));
+		activated = getBoolean(properties.remove(PROPERTY_ACTIVATED));
+		disabled = getBoolean(properties.remove(PROPERTY_DISABLED));
+        this.properties = properties;
 	}
 
 	public UUID getApplicationId() {
@@ -115,5 +120,9 @@ public class UserInfo {
 	public boolean isAdminUser() {
 		return MANAGEMENT_APPLICATION_ID.equals(applicationId);
 	}
+
+    public Map<String,Object> getProperties() {
+        return properties;
+    }
 
 }

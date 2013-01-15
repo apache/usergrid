@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.usergrid.locking.singlenode;
 
+import static org.junit.Assert.*;
+
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -29,6 +31,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.usergrid.locking.Lock;
 import org.usergrid.locking.LockManager;
 import org.usergrid.locking.exception.UGLockException;
 
@@ -70,14 +73,15 @@ public class LockTestSingleNode {
 		logger.info("Locking:" + application.toString() + "/" + entity.toString());
 
 		// Lock a node twice to test reentrancy and validate.
-		manager.lock(application, entity);
-		manager.lock(application, entity);
-
+		Lock lock = manager.createLock(application, entity.toString());
+		lock.lock();
+		lock.lock();
+		
 		boolean wasLocked = lockInDifferentThread(application, entity);
 		Assert.assertEquals(false, wasLocked);
 		
 		// Unlock once
-		manager.unlock(application, entity);
+		lock.unlock();
 		
 		// Try from the thread expecting to fail since we still hold one reentrant lock.
 		wasLocked = lockInDifferentThread(application, entity);
@@ -85,7 +89,7 @@ public class LockTestSingleNode {
 		
 		// Unlock completely
 		logger.info("Releasing lock:" + application.toString() + "/" + entity.toString());
-		manager.unlock(application, entity);
+		lock.unlock();
 		
 		// Try to effectively get the lock from the thread since the current one has already released it.
 		wasLocked = lockInDifferentThread(application, entity);
@@ -106,19 +110,25 @@ public class LockTestSingleNode {
 		logger.info("Locking:" + application.toString() + "/" + entity.toString());
 
 		// Acquire to locks. One of them twice.
-		manager.lock(application, entity);
-		manager.lock(application, entity);
-		manager.lock(application, entity2);
+		Lock lock = manager.createLock(application, entity.toString());
+		lock.lock();
+		lock.lock();
+		
+		Lock second = manager.createLock(application, entity2.toString());
+		second.lock();
 
 		// Cleanup the locks for main thread
 		logger.info("Cleaning up locks for current thread...");
-		manager.cleanupLocksForThread();
+		lock.unlock();
+		lock.unlock();
 		
-		boolean wasLocked = lockInDifferentThread(application, entity);
-		Assert.assertEquals(true, wasLocked);
+		second.unlock();
 		
-		wasLocked = lockInDifferentThread(application, entity2);
-		Assert.assertEquals(true, wasLocked);
+		boolean locked = lockInDifferentThread(application, entity);
+		assertTrue(locked);
+		
+		locked = lockInDifferentThread(application, entity2);
+		assertTrue(locked);
 	}
 
     /**
@@ -133,16 +143,20 @@ public class LockTestSingleNode {
 			@Override
 			public Boolean call() throws Exception {
 				
-				try {
-					manager.lock(application, entity);
-					System.out.println("Lock2 acquired");
-				} catch (Exception e) {
-					return false;
-				}
-
-				// False here means that the lock WAS NOT ACQUIRED. And that is
-				// what we expect.
-				return true;
+			  Lock lock = manager.createLock(application, entity.toString());
+			  
+			  // False here means that the lock WAS NOT ACQUIRED. And that is
+        // what we expect.
+      
+			  boolean locked =  lock.tryLock(0, TimeUnit.MILLISECONDS);
+			  
+			  //shouldn't lock, so unlock to avoid polluting future tests
+			  if(locked){
+			    lock.unlock();
+			  }
+			  
+			  return locked;
+			  
 			}
 		});
 

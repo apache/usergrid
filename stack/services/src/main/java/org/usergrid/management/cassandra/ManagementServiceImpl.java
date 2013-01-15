@@ -17,6 +17,7 @@
 package org.usergrid.management.cassandra;
 
 import static java.lang.Boolean.parseBoolean;
+import static org.usergrid.locking.LockHelper.*;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -61,6 +62,7 @@ import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFI
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
 import static org.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
 import static org.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
+import static org.usergrid.persistence.Schema.PROPERTY_MODIFIED;
 import static org.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.usergrid.persistence.Schema.PROPERTY_PATH;
 import static org.usergrid.persistence.Schema.PROPERTY_SECRET;
@@ -88,6 +90,7 @@ import static org.usergrid.security.tokens.TokenCategory.ACCESS;
 import static org.usergrid.security.tokens.TokenCategory.EMAIL;
 import static org.usergrid.services.ServiceParameter.parameters;
 import static org.usergrid.services.ServicePayload.payload;
+import static org.usergrid.services.ServiceResults.genericServiceResults;
 import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.ListUtils.anyNull;
@@ -112,6 +115,7 @@ import org.apache.shiro.UnavailableSecurityManagerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.usergrid.locking.Lock;
 import org.usergrid.locking.LockManager;
 import org.usergrid.management.AccountCreationProps;
 import org.usergrid.management.ActivationState;
@@ -161,10 +165,7 @@ import org.usergrid.services.ServiceManager;
 import org.usergrid.services.ServiceManagerFactory;
 import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
-import org.usergrid.utils.ConversionUtils;
-import org.usergrid.utils.JsonUtils;
-import org.usergrid.utils.MailUtils;
-import org.usergrid.utils.StringUtils;
+import org.usergrid.utils.*;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -444,39 +445,59 @@ public class ManagementServiceImpl implements ManagementService {
         // if we are active and enabled, skip the send email step
 
         return createOwnerAndOrganization(organizationName, username, name,
-                email, password, activated, disabled);
+                email, password, activated, disabled, null);
 
     }
 
     @Override
     public OrganizationOwnerInfo createOwnerAndOrganization(
+                String organizationName, String username, String name,
+                String email, String password, boolean activated, boolean disabled)
+                throws Exception {
+        return createOwnerAndOrganization(organizationName, username, name, email,
+                password, activated, disabled, null);
+    }
+
+    @Override
+    public OrganizationOwnerInfo createOwnerAndOrganization(
             String organizationName, String username, String name,
-            String email, String password, boolean activated, boolean disabled)
+            String email, String password, boolean activated, boolean disabled,
+            Map<String,Object> userProperties)
             throws Exception {
 
-        lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "groups", "path");
-        lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "users",
-                "username", "email");
-
+        /**
+         * Only lock on the target values.  We don't want lock contention if another node is trying to set the property do a different value
+         */
+        Lock groupLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID,organizationName,  "groups", "path");
+        
+        Lock userLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, username, "users","username");
+        
+        Lock emailLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, email,  "users", "email");
+       
+        
         UserInfo user = null;
         OrganizationInfo organization = null;
 
         try {
+        
+          groupLock.lock();
+          userLock.lock();
+          emailLock.lock();
+            
             if (areActivationChecksDisabled()) {
                 user = createAdminUser(username, name, email, password, true,
-                        false);
+                        false, userProperties);
             } else {
                 user = createAdminUser(username, name, email, password,
-                        activated, disabled);
+                        activated, disabled, userProperties);
             }
 
             organization = createOrganization(organizationName, user, true);
 
         } finally {
-            lockManager.unlockProperty(MANAGEMENT_APPLICATION_ID, "groups",
-                    "path");
-            lockManager.unlockProperty(MANAGEMENT_APPLICATION_ID, "users",
-                    "username", "email");
+          emailLock.unlock();
+          userLock.unlock();
+          groupLock.unlock();
         }
 
         return new OrganizationOwnerInfo(user, organization);
@@ -512,7 +533,7 @@ public class ManagementServiceImpl implements ManagementService {
                 organizationEntity.getUuid(), organizationName);
         postOrganizationActivity(organization.getUuid(), user, "create",
                 organizationEntity, "Organization", organization.getName(),
-                "<a mailto=\"" + user.getEmail() + "\">" + user.getName()
+                "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName()
                         + " (" + user.getEmail()
                         + ")</a> created a new organization account named "
                         + organizationName, null);
@@ -745,8 +766,10 @@ public class ManagementServiceImpl implements ManagementService {
         writeUserMongoPassword(MANAGEMENT_APPLICATION_ID, user, mongoPassword);
 
         UserInfo userInfo = new UserInfo(MANAGEMENT_APPLICATION_ID,
-                user.getUuid(), user.getUsername(), user.getName(),
-                user.getEmail(), user.getActivated(), user.getDisabled());
+                            user.getUuid(), user.getUsername(), user.getName(),
+                            user.getEmail(), user.getActivated(), user.getDisabled(),
+                            user.getDynamicProperties());
+
 
         // special case for sysadmin only
         if (!user.getEmail().equals(
@@ -782,6 +805,14 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo createAdminUser(String username, String name, String email,
             String password, boolean activated, boolean disabled)
+            throws Exception {
+        return createAdminUser(username, name, email, password, activated, disabled, null);
+    }
+
+    @Override
+    public UserInfo createAdminUser(String username, String name, String email,
+            String password, boolean activated, boolean disabled,
+            Map<String,Object> userProperties)
             throws Exception {
 
         if (email == null) {
@@ -822,6 +853,11 @@ public class ManagementServiceImpl implements ManagementService {
                                                                 // against
                                                                 // config
         user.setDisabled(disabled);
+        if (userProperties != null) {
+            // double check no 'password' property just to be safe
+            userProperties.remove("password");
+            user.setProperties(userProperties);
+        }
         user = em.create(user);
 
         return createAdminFrom(user, password);
@@ -836,7 +872,8 @@ public class ManagementServiceImpl implements ManagementService {
                 (String) entity.getProperty("username"), entity.getName(),
                 (String) entity.getProperty("email"),
                 ConversionUtils.getBoolean(entity.getProperty("activated")),
-                ConversionUtils.getBoolean(entity.getProperty("disabled")));
+                ConversionUtils.getBoolean(entity.getProperty("disabled")),
+                entity.getDynamicProperties());
     }
 
     public UserInfo getUserInfo(UUID applicationId,
@@ -872,10 +909,20 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo updateAdminUser(UserInfo user, String username,
             String name, String email) throws Exception {
-
-        lockManager.lockProperty(MANAGEMENT_APPLICATION_ID, "users",
-                "username", "email");
+      
+      /**
+       * Only lock on the target values.  We don't want lock contention if another node is trying to set the property do a different value
+       */
+      Lock usernameLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, username,  "users", "username");
+      
+      Lock emailLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID,email,  "users", "email");
+      
+      
         try {
+          
+          usernameLock.lock();
+          emailLock.lock();
+          
             EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
             if (!isBlank(username)) {
@@ -898,8 +945,8 @@ public class ManagementServiceImpl implements ManagementService {
 
             user = getAdminUserByUuid(user.getUuid());
         } finally {
-            lockManager.unlockProperty(MANAGEMENT_APPLICATION_ID, "users",
-                    "username", "email");
+           emailLock.unlock();
+           usernameLock.unlock();
         }
 
         return user;
@@ -1472,7 +1519,7 @@ public class ManagementServiceImpl implements ManagementService {
         if ((user != null) && user.isAdminUser()) {
             postOrganizationActivity(organizationId, user, "create",
                     applicationEntity, "Application", applicationName,
-                    "<a mailto=\"" + user.getEmail() + "\">" + user.getName()
+                    "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName()
                             + " (" + user.getEmail()
                             + ")</a> created a new application named "
                             + applicationName, null);
@@ -1625,6 +1672,27 @@ public class ManagementServiceImpl implements ManagementService {
         }
         return new ApplicationInfo(entity.getProperties());
     }
+
+    @Override
+	public ServiceResults getApplicationMetadata(UUID applicationId)
+			throws Exception {
+
+		if(applicationId==null){
+		 return ServiceResults.genericServiceResults();
+		}
+
+        EntityManager em = emf.getEntityManager(applicationId);
+        Entity entity = em.get(em.getApplicationRef());
+
+        Results r = Results.fromEntity(entity);
+
+        Map<String, Object> collections = em.getApplicationCollectionMetadata();
+        if (collections.size() > 0) {
+            r.setMetadata(em.getApplicationRef().getUuid(), "collections",
+                    collections);
+        }
+        return genericServiceResults(r);
+	}
 
     public String getSecret(UUID applicationId, AuthPrincipalType type, UUID id)
             throws Exception {
@@ -2720,6 +2788,7 @@ public class ManagementServiceImpl implements ManagementService {
                       properties.remove("username");
                       properties.remove("name");
                       em.updateProperties(user, properties);
+                      user.setProperty(PROPERTY_MODIFIED, properties.get(PROPERTY_MODIFIED));
                     } else {
                       properties.put("email", fb_user_email);
                     }
@@ -2736,7 +2805,7 @@ public class ManagementServiceImpl implements ManagementService {
                 properties.put("picture", "http://graph.facebook.com/"
                         + fb_user_id + "/picture");
                 em.updateProperties(user, properties);
-
+                user.setProperty(PROPERTY_MODIFIED, properties.get(PROPERTY_MODIFIED));
                 user.setProperty("facebook", fb_user);
                 user.setProperty("picture", "http://graph.facebook.com/"
                         + fb_user_id + "/picture");

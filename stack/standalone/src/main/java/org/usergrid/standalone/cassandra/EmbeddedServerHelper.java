@@ -30,6 +30,7 @@ import org.apache.cassandra.config.ConfigurationException;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.commitlog.CommitLog;
 import org.apache.cassandra.io.util.FileUtils;
+import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.thrift.CassandraDaemon;
 import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
@@ -57,7 +58,7 @@ public class EmbeddedServerHelper {
 		this.yamlFile = yamlFile;
 	}
 
-	static ExecutorService executor = Executors.newSingleThreadExecutor();
+	static ExecutorService executor;
 
 	/**
 	 * Set embedded cassandra up and spawn it in a new thread.
@@ -87,16 +88,21 @@ public class EmbeddedServerHelper {
 
 	public void start() throws TTransportException, IOException,
 			InterruptedException, ConfigurationException {
+        if ( executor == null ) {
+            executor = Executors.newSingleThreadExecutor();
+            System.setProperty("cassandra.config", "file:" + TMP + yamlFile);
+            System.setProperty("log4j.configuration", "file:" + TMP
+                    + "/log4j.properties");
+            System.setProperty("cassandra-foreground", "true");
 
-		System.setProperty("cassandra.config", "file:" + TMP + yamlFile);
-		System.setProperty("log4j.configuration", "file:" + TMP
-				+ "/log4j.properties");
-		System.setProperty("cassandra-foreground", "true");
+            log.info("Starting executor");
 
-		log.info("Starting executor");
+            executor.execute(new CassandraRunner());
+            log.info("Started executor");
+        } else {
+            cassandraDaemon.startRPCServer();
+        }
 
-		executor.execute(new CassandraRunner());
-		log.info("Started executor");
 
 		try {
 			TimeUnit.SECONDS.sleep(3);
@@ -106,14 +112,19 @@ public class EmbeddedServerHelper {
 		}
 	}
 
-	public static void teardown() {
-		// if ( cassandraDaemon != null )
-		// cassandraDaemon.stop();
+    public static void teardown() {
+        if ( cassandraDaemon != null ) {
+            cassandraDaemon.deactivate();
+            StorageService.instance.stopClient();
+        }
 		executor.shutdown();
 		executor.shutdownNow();
 		log.info("Teardown complete");
-		executor = Executors.newSingleThreadExecutor();
 	}
+
+    public void stop() {
+        cassandraDaemon.stopRPCServer();
+    }
 
 	private static void rmdir(String dir) throws IOException {
 		File dirFile = new File(dir);

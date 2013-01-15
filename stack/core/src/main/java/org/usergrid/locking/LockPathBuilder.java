@@ -15,112 +15,61 @@
  ******************************************************************************/
 package org.usergrid.locking;
 
-import static org.usergrid.persistence.Schema.defaultCollectionName;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
-
-import org.usergrid.persistence.EntityRef;
 
 /**
  * Helper class that contains the logic to build a lock path
+ * @author eanuff
  */
 public class LockPathBuilder {
 
 	private static final String SLASH = "/";
-	private static final String AT = "@";
 
-	public static String buildPath(UUID applicationId, UUID entityId) {
+	/**
+	 * Build a string path for this lock
+	 * @param applicationId
+	 * @param path
+	 * @return
+	 */
+	public static String buildPath(UUID applicationId, String... path) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(SLASH);
 		builder.append(applicationId.toString());
-		builder.append(SLASH);
-		builder.append(entityId.toString());
+		
+		for(String element: path){
+  		builder.append(SLASH);
+  		builder.append(element);
+		}
 		return builder.toString();
 	}
+	
+	/**
+   * Build a string path for this lock
+   * @param The binary value to append to the end of the lock path
+   * @param path The values to prepend to build path
+   * @return
+   */
+  public static String buildPath(String binaryValue, String... path) {
+    
+    StringBuilder builder = new StringBuilder();
+    
+    for(String element: path){
+      builder.append(SLASH);
+      builder.append(element);
+    }
+    
+    builder.append(SLASH);
+    builder.append(binaryValue);
+    
+    builder.deleteCharAt(0);
+    
+    return builder.toString();
+  }
+	
+	
 
-	public static String buildPath(EntityRef application, EntityRef entity) {
-		StringBuilder builder = new StringBuilder();
-		builder.append(SLASH);
-		builder.append(application.getUuid().toString());
-		builder.append(SLASH);
-		builder.append(entity.getUuid().toString());
-		return builder.toString();
-	}
+  
+  
 
-	public static List<String> buildPath(EntityRef application,
-			EntityRef[] entities) {
-		List<String> paths = new ArrayList<String>(entities.length);
-
-		for (EntityRef ref : entities) {
-			paths.add(buildPath(application, ref));
-		}
-
-		// Sort the paths
-		Collections.sort(paths);
-
-		return paths;
-	}
-
-	public static List<String> buildPath(UUID applicationId, UUID[] entityIDs) {
-		List<String> paths = new ArrayList<String>(entityIDs.length);
-
-		for (UUID aUUID : entityIDs) {
-			paths.add(buildPath(applicationId, aUUID));
-		}
-
-		// Sort the paths
-		Collections.sort(paths);
-
-		return paths;
-	}
-
-	public static String buildPath(UUID applicationId, String path) {
-		StringBuilder builder = new StringBuilder();
-		builder.append(SLASH);
-		builder.append(applicationId.toString());
-		builder.append(SLASH);
-		builder.append(path);
-		return builder.toString();
-	}
-
-	public static List<String> buildPath(UUID applicationId, String[] pathsParam) {
-		List<String> paths = new ArrayList<String>(pathsParam.length);
-
-		for (String aPath : paths) {
-			paths.add(buildPath(applicationId, aPath));
-		}
-
-		// Sort the paths
-		Collections.sort(paths);
-
-		return paths;
-	}
-
-	public static String buildPropertyPath(UUID applicationId,
-			String entityType, String propertyName) {
-		StringBuilder builder = new StringBuilder();
-		builder.append(SLASH);
-		builder.append(applicationId.toString());
-		builder.append(SLASH);
-		builder.append(defaultCollectionName(entityType));
-		builder.append(SLASH);
-		builder.append(AT);
-		builder.append(propertyName);
-		return builder.toString();
-	}
-
-	public static List<String> buildPropertyPaths(UUID applicationId,
-			String entityType, String... propertyNames) {
-		List<String> paths = new ArrayList<String>(propertyNames.length);
-		for (String propertyName : propertyNames) {
-			paths.add(buildPropertyPath(applicationId, entityType, propertyName));
-		}
-		Collections.sort(paths);
-		return paths;
-
-	}
 
 }

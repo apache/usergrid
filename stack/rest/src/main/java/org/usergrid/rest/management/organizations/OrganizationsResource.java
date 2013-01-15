@@ -40,6 +40,7 @@ import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationCreator;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
+import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.ManagementException;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
@@ -100,14 +101,14 @@ public class OrganizationsResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction("new organization");
 
-        String organizationName = (String) json.get("organization");
-        String username = (String) json.get("username");
-        String name = (String) json.get("name");
-        String email = (String) json.get("email");
-        String password = (String) json.get("password");
+        String organizationName = (String) json.remove("organization");
+        String username = (String) json.remove("username");
+        String name = (String) json.remove("name");
+        String email = (String) json.remove("email");
+        String password = (String) json.remove("password");
 
         return newOrganization(ui, organizationName, username, name, email,
-                password, callback);
+                password, json, callback);
     }
 
     @POST
@@ -134,7 +135,7 @@ public class OrganizationsResource extends AbstractContextResource {
         String password = passwordForm != null ? passwordForm : passwordQuery;
 
         return newOrganization(ui, organizationName, username, name, email,
-                password, callback);
+                password, null, callback);
 
     }
 
@@ -153,18 +154,19 @@ public class OrganizationsResource extends AbstractContextResource {
      */
     private JSONWithPadding newOrganization(@Context UriInfo ui,
             String organizationName, String username, String name,
-            String email, String password, String callback) throws Exception {
+            String email, String password, Map<String,Object> userProperties,
+            String callback) throws Exception {
         Preconditions.checkArgument(StringUtils.isNotBlank(organizationName),
                 "The organization parameter was missing");
 
-        logger.info("New organization: " + organizationName);
+        logger.info("New organization: {}", organizationName);
 
         ApiResponse response = createApiResponse();
         response.setAction("new organization");
 
         OrganizationOwnerInfo organizationOwner = management
                 .createOwnerAndOrganization(organizationName, username, name,
-                        email, password, false, false);
+                        email, password, false, false, userProperties);
 
         if (organizationOwner == null) {
             return null;

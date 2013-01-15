@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@ package org.usergrid.rest.management;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 import org.usergrid.management.OrganizationInfo;
@@ -134,7 +136,7 @@ public class ManagementResourceTest extends AbstractRestTest {
 
     /**
      * Test that admins can't view organizations they're not authorized to view.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -195,6 +197,49 @@ public class ManagementResourceTest extends AbstractRestTest {
 
         assertNull(status);
 
+    }
+
+    @Test
+    public void mgmtUserFeed() throws Exception {
+        JsonNode userdata = resource().path("/management/users/test@usergrid.com/feed").queryParam("access_token", adminAccessToken)
+                .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+        assertTrue(StringUtils.contains(this.getEntity(userdata, 0).get("title").asText(),"<a href=\"mailto:test@usergrid.com\">"));
+    }
+
+    @Test
+    public void mgmtCreateAndGetApplication() throws Exception {
+
+    	OrganizationInfo orgInfo = managementService.getOrganizationByName("test-organization");
+        Map<String, String> data = new HashMap<String, String>();
+        data.put("name", "mgmt-org-app");
+
+        // POST /applications
+        JsonNode appdata = resource().path("/management/orgs/"+orgInfo.getUuid()+"/applications")
+        		.queryParam("access_token", adminToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class,data);
+        logNode(appdata);
+        appdata = getEntity(appdata, 0);
+
+        assertEquals("test-organization/mgmt-org-app", appdata.get("name").asText());
+        assertEquals("Roles", appdata.get("metadata").get("collections").get("roles").get("title").asText());
+        assertEquals(3, appdata.get("metadata").get("collections").get("roles").get("count").asInt());
+
+        // GET /applications/mgmt-org-app
+        appdata = resource().path("/management/orgs/"+orgInfo.getUuid()+"/applications/mgmt-org-app")
+        		.queryParam("access_token", adminToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        logNode(appdata);
+
+        assertEquals("test-organization", appdata.get("organization").asText());
+        assertEquals("mgmt-org-app", appdata.get("applicationName").asText());
+        assertEquals("http://sometestvalue/test-organization/mgmt-org-app", appdata.get("uri").getTextValue());
+        appdata = getEntity(appdata, 0);
+
+        assertEquals("test-organization/mgmt-org-app", appdata.get("name").asText());
+        assertEquals("Roles", appdata.get("metadata").get("collections").get("roles").get("title").asText());
+        assertEquals(3, appdata.get("metadata").get("collections").get("roles").get("count").asInt());
     }
 
     @Test
@@ -270,7 +315,7 @@ public class ManagementResourceTest extends AbstractRestTest {
         assertEquals(Status.BAD_REQUEST, responseStatus);
 
     }
-    
+
     @Test
     public void revokeToken() throws Exception {
     	String token1 = super.adminToken();
@@ -313,10 +358,10 @@ public class ManagementResourceTest extends AbstractRestTest {
         }
 
         assertEquals(Status.UNAUTHORIZED, status);
-        
+
         String token3 = super.adminToken();
         String token4 = super.adminToken();
-        
+
         response = resource().path("/management/users/test").queryParam("access_token", token3)
                 .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
@@ -361,7 +406,7 @@ public class ManagementResourceTest extends AbstractRestTest {
                     .accept(MediaType.APPLICATION_JSON)
                     .type(MediaType.APPLICATION_JSON_TYPE)
                     .get(JsonNode.class);
-            
+
             status = Status.OK;
         } catch (UniformInterfaceException uie) {
             status = uie.getResponse().getClientResponseStatus();

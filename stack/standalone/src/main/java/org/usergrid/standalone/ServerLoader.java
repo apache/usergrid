@@ -20,7 +20,7 @@ import com.jdotsoft.jarloader.JarClassLoader;
 public class ServerLoader {
 
 	public static void main(String[] args) {
-		JarClassLoader jcl = new JarClassLoader();
+		JarClassLoader jcl = new JarClassLoader(Thread.currentThread().getContextClassLoader());
 		try {
 			jcl.invokeMain("org.usergrid.standalone.Server", args);
 		} catch (Throwable e) {

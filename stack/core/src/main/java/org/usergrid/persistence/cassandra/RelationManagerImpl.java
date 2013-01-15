@@ -44,8 +44,6 @@ import static org.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
 import static org.usergrid.persistence.Schema.PROPERTY_ITEM;
 import static org.usergrid.persistence.Schema.PROPERTY_ITEM_TYPE;
 import static org.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.usergrid.persistence.Schema.PROPERTY_OWNER;
-import static org.usergrid.persistence.Schema.PROPERTY_OWNER_TYPE;
 import static org.usergrid.persistence.Schema.PROPERTY_TITLE;
 import static org.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.usergrid.persistence.Schema.TYPE_APPLICATION;
@@ -643,8 +641,6 @@ public class RelationManagerImpl implements RelationManager {
         Map<String, Object> properties = new TreeMap<String, Object>(
                 CASE_INSENSITIVE_ORDER);
         properties.put(PROPERTY_TYPE, membershipRef.getType());
-        properties.put(PROPERTY_OWNER, ownerRef.getUuid());
-        properties.put(PROPERTY_OWNER_TYPE, ownerRef.getType());
         properties.put(PROPERTY_COLLECTION_NAME, collectionName);
         properties.put(PROPERTY_ITEM, itemRef.getUuid());
         properties.put(PROPERTY_ITEM_TYPE, itemRef.getType());

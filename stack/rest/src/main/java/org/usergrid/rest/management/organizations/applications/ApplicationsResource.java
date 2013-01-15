@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import com.google.common.base.Preconditions;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationInfo;
@@ -43,15 +42,17 @@ import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.sun.jersey.api.json.JSONWithPadding;
 
 @Component("org.usergrid.rest.management.organizations.applications.ApplicationsResource")
 @Scope("prototype")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-		"application/x-javascript", "text/ecmascript",
-		"application/ecmascript", "text/jscript" })
+        "application/x-javascript", "text/ecmascript",
+        "application/ecmascript", "text/jscript" })
 public class ApplicationsResource extends AbstractContextResource {
+
 
 	OrganizationInfo organization;
 
@@ -81,6 +82,7 @@ public class ApplicationsResource extends AbstractContextResource {
 
 	@RequireOrganizationAccess
 	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
 	public JSONWithPadding newApplicationForOrganization(@Context UriInfo ui,
 			Map<String, Object> json,
 			@QueryParam("callback") @DefaultValue("callback") String callback)
@@ -109,7 +111,7 @@ public class ApplicationsResource extends AbstractContextResource {
 		LinkedHashMap<String, UUID> applications = new LinkedHashMap<String, UUID>();
 		applications.put(applicationInfo.getName(), applicationInfo.getId());
 		response.setData(applications);
-
+        response.setResults(management.getApplicationMetadata(applicationInfo.getId()));
 		return new JSONWithPadding(response, callback);
 	}
 
@@ -139,5 +141,4 @@ public class ApplicationsResource extends AbstractContextResource {
 		return getSubResource(ApplicationResource.class).init(organization,
 				application);
 	}
-
 }

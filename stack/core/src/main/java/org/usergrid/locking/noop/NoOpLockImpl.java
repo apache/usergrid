@@ -13,28 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.locking;
+package org.usergrid.locking.noop;
 
-import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import org.usergrid.locking.Lock;
 import org.usergrid.locking.exception.UGLockException;
 
 /**
- * This Interface to a class responsible for distributed lock across system.
  * @author tnine
+ *
  */
-public interface LockManager {
+public class NoOpLockImpl implements Lock {
 
   /**
-   * Acquires a lock on a particular path.
    * 
-   * @param applicationId
-   *          application UUID
-   * @param path
-   *          a unique path
-   * @throws UGLockException
-   *           if the lock cannot be acquired
    */
-  public Lock createLock(final UUID applicationId, final String... path) throws UGLockException;
+  public NoOpLockImpl() {
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.locking.Lock#acquire(long, java.util.concurrent.TimeUnit)
+   */
+  @Override
+  public boolean tryLock(long timeout, TimeUnit time) throws UGLockException {
+    //no op
+    return true;
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.locking.Lock#lock()
+   */
+  @Override
+  public void lock() throws UGLockException {
+    //no op
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.locking.Lock#release()
+   */
+  @Override
+  public void unlock() throws UGLockException {
+    //no op
+  }
 
 }
