@@ -30,8 +30,8 @@ $(document).ready(function () {
   //first set the org / app path (must be orgname / appname or org id / app id - can't mix names and uuids!!)
 
   var client = new Usergrid.Client({
-    orgName:'Apigee',
-    appName:'Sandbox',
+    orgName:'yourorgname',
+    appName:'yourappname',
     logging: true, //optional - turn on logging, off by default
     buildCurl: true //optional - turn on curl commands, off by default
   });
