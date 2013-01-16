@@ -1,5 +1,5 @@
 ##Version
-Current Version: **0.10.2**
+Current Version: **0.10.3**
 
 See change log:
 
@@ -120,7 +120,7 @@ Or, to update the new user:
 	var options = {
 		method:'PUT',
 		endpoint:'users/fred',
-		body:{ newkey:'newvalue' }		
+		body:{ newkey:'newvalue' }
 	};
 	client.request(options, function (err, data) {
 		if (err) {
@@ -445,13 +445,13 @@ If you no longer need the object, call the delete() method and the object will b
 
 
 ###To log a user in
-Up to this point, we have shown how you can use the client secret / client id combination to authenticate your calls against the API.  For a server-side Node.js app, this may be all you need.  However, if you do find that your app requires that you authenticate an individual user, you have several options.  
+Up to this point, we have shown how you can use the client secret / client id combination to authenticate your calls against the API.  For a server-side Node.js app, this may be all you need.  However, if you do find that your app requires that you authenticate an individual user, you have several options.
 
 The first is to use client-side authentication with Ajax.  If you want to opt for this method, take a look at our Javascript SDK.  The syntax for usage is the same as this Node.js module, so it will be easy to pick up:
 
 <https://github.com/apigee/usergrid-javascript-sdk>
 
-The other method is to log the user in server-side. When you log a user in, the API will return an OAuth token for you to use for calls to the API on the user's behalf.  Once that token is returned, you can either make a new client just for the user, or change the auth method on the existing client.  These methods are described below: 
+The other method is to log the user in server-side. When you log a user in, the API will return an OAuth token for you to use for calls to the API on the user's behalf.  Once that token is returned, you can either make a new client just for the user, or change the auth method on the existing client.  These methods are described below:
 
 
 	username = 'marty';
@@ -515,11 +515,11 @@ The other method is to log the user in server-side. When you log a user in, the 
 	);
 
 
-To recap, once a user has been logged in, and an OAuth token has been acquired, use one of the two methods to make calls to the API: 
+To recap, once a user has been logged in, and an OAuth token has been acquired, use one of the two methods to make calls to the API:
 
-1. Use the same client object and change auth types before each call 
+1. Use the same client object and change auth types before each call
 
-2. Grab the token and make a new client object specifically for user calls.  
+2. Grab the token and make a new client object specifically for user calls.
 
 Either method will work.
 

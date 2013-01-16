@@ -1,5 +1,10 @@
 ##Change log
 
+###0.10.3
+
+- Added set / get token methods to accomodate session storage
+- Added createUserActivity method to make creating activities for logged in user easier
+
 ###0.10.2
 
 - Removed local caching of user object in client
