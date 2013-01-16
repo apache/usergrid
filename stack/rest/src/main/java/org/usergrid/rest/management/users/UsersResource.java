@@ -148,6 +148,7 @@ public class UsersResource extends AbstractContextResource {
 
 	@GET
 	@Path("resetpw")
+  @Produces(MediaType.TEXT_HTML)
 	public Viewable showPasswordResetForm(@Context UriInfo ui) {
 		return handleViewable("resetpw_email_form", this);
 	}
@@ -155,6 +156,7 @@ public class UsersResource extends AbstractContextResource {
 	@POST
 	@Path("resetpw")
 	@Consumes("application/x-www-form-urlencoded")
+  @Produces(MediaType.TEXT_HTML)
 	public Viewable handlePasswordResetForm(@Context UriInfo ui,
 			@FormParam("email") String email,
 			@FormParam("recaptcha_challenge_field") String challenge,

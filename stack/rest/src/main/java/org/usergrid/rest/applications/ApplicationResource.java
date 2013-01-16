@@ -367,6 +367,7 @@ public class ApplicationResource extends ServiceResource {
     @POST
     @Path("credentials")
     @RequireApplicationAccess
+    @Produces(MediaType.TEXT_HTML)
     public JSONWithPadding generateKeys(@Context UriInfo ui,
             @QueryParam("callback") @DefaultValue("callback") String callback)
                     throws Exception {
@@ -416,6 +417,7 @@ public class ApplicationResource extends ServiceResource {
 
     @POST
     @Path("authorize")
+    @Produces(MediaType.TEXT_HTML)
     public Viewable handleAuthorizeForm(@Context UriInfo ui,
             @FormParam("response_type") String response_type,
             @FormParam("client_id") String client_id,

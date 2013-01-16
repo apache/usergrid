@@ -322,6 +322,7 @@ public class UserResource extends ServiceResource {
 
     @GET
     @Path("resetpw")
+    @Produces(MediaType.TEXT_HTML)
     public Viewable showPasswordResetForm(@Context UriInfo ui,
             @QueryParam("token") String token) {
 
@@ -345,6 +346,7 @@ public class UserResource extends ServiceResource {
     @POST
     @Path("resetpw")
     @Consumes("application/x-www-form-urlencoded")
+    @Produces(MediaType.TEXT_HTML)
     public Viewable handlePasswordResetForm(@Context UriInfo ui,
             @FormParam("token") String token,
             @FormParam("password1") String password1,
@@ -434,6 +436,7 @@ public class UserResource extends ServiceResource {
 
     @GET
     @Path("activate")
+    @Produces(MediaType.TEXT_HTML)
     public Viewable activate(@Context UriInfo ui,
             @QueryParam("token") String token) {
 
@@ -452,6 +455,7 @@ public class UserResource extends ServiceResource {
 
     @GET
     @Path("confirm")
+    @Produces(MediaType.TEXT_HTML)
     public Viewable confirm(@Context UriInfo ui,
             @QueryParam("token") String token) {
 
