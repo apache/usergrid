@@ -240,6 +240,7 @@ public class ManagementResource extends AbstractContextResource {
 
     @GET
     @Path("authorize")
+    @Produces(MediaType.TEXT_HTML)
     public Viewable showAuthorizeForm(@Context UriInfo ui, @QueryParam("response_type") String response_type,
             @QueryParam("client_id") String client_id, @QueryParam("redirect_uri") String redirect_uri,
             @QueryParam("scope") String scope, @QueryParam("state") String state) {
@@ -255,6 +256,7 @@ public class ManagementResource extends AbstractContextResource {
 
     @POST
     @Path("authorize")
+    @Produces(MediaType.TEXT_HTML)
     public Viewable handleAuthorizeForm(@Context UriInfo ui, @FormParam("response_type") String response_type,
             @FormParam("client_id") String client_id, @FormParam("redirect_uri") String redirect_uri,
             @FormParam("scope") String scope, @FormParam("state") String state, @FormParam("username") String username,
