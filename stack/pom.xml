@@ -260,9 +260,9 @@
 				<version>1.1.2</version>
 			</dependency>
 			<dependency>
-				<groupId>com.beoui</groupId>
+				<groupId>com.ganyo</groupId>
 				<artifactId>geocell</artifactId>
-				<version>0.0.8</version>
+				<version>0.0.10</version>
 			</dependency>
 			<dependency>
 				<groupId>javaee</groupId>

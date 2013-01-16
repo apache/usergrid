@@ -287,7 +287,7 @@
 			<artifactId>guava</artifactId>
         </dependency>
 		<dependency>
-			<groupId>com.beoui</groupId>
+			<groupId>com.ganyo</groupId>
 			<artifactId>geocell</artifactId>
 		</dependency>
 		<dependency>

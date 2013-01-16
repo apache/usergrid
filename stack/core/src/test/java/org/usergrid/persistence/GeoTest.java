@@ -107,7 +107,37 @@ public class GeoTest extends AbstractPersistenceTest {
 
 		assertEquals(1, results.size());
 
-		results = em.searchCollection(em.getApplicationRef(), "users",
+    // check at globally large distance
+    results = geo.proximitySearchCollection(em.getApplicationRef(),
+        "users", "location.coordinates", center, Integer.MAX_VALUE, null, 10, false, ALL_PROPERTIES);
+    assertEquals(1, results.size());
+
+    // create a new entity so we have 2
+    LinkedHashMap<String, Object> properties2 = new LinkedHashMap<String, Object>();
+    properties2.put("username", "sganyo");
+    properties2.put("email", "sganyo@anuff.com");
+    Entity user2 = em.create("user", properties2);
+    assertNotNull(user2);
+    EntityLocationRef loc2 = new EntityLocationRef(user2, 31.1, 121.2);
+    geo.storeLocationInCollectionIndex(em.getApplicationRef(), "users", user2.getUuid(), "location.coordinates", loc2);
+
+    // check at 10000m distance
+    results = geo.proximitySearchCollection(em.getApplicationRef(),
+        "users", "location.coordinates", center, 10000, null, 10, false, ALL_PROPERTIES);
+    assertEquals(1, results.size());
+
+    // check at globally large distance
+    results = geo.proximitySearchCollection(em.getApplicationRef(),
+        "users", "location.coordinates", center, Integer.MAX_VALUE, null, 10, false, ALL_PROPERTIES);
+    assertEquals(2, results.size());
+
+    // check at globally large distance (center point close to other entity)
+    center = new Point(31.14, 121.27);
+    results = geo.proximitySearchCollection(em.getApplicationRef(),
+        "users", "location.coordinates", center, Integer.MAX_VALUE, null, 10, false, ALL_PROPERTIES);
+    assertEquals(2, results.size());
+
+    results = em.searchCollection(em.getApplicationRef(), "users",
 				Query.fromQL("location within 1000 of 37.776753, -122.407846"));
 		assertEquals(1, results.size());
 
