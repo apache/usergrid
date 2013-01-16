@@ -253,15 +253,19 @@ public class AbstractCollectionService extends AbstractService {
 		}
 
 		EntityRef ref = em.getAlias(getEntityType(), name);
-		if (ref == null) {
-			throw new ServiceResourceNotFoundException(context);
-		}
-		Entity entity = em.get(ref);
-		entity = importEntity(context, entity);
-
-		checkPermissionsForEntity(context, entity);
-
-		updateEntity(context, entity);
+    Entity entity;
+    if (ref == null) {
+      Map<String,Object> properties = context.getPayload().getProperties();
+      if (!properties.containsKey("name") || !((String)properties.get("name")).trim().equalsIgnoreCase(name)) {
+        properties.put("name", name);
+      }
+      entity = em.create(getEntityType(), properties);
+    } else {
+		  entity = em.get(ref);
+		  entity = importEntity(context, entity);
+      checkPermissionsForEntity(context, entity);
+      updateEntity(context, entity);
+    }
 
 		return new ServiceResults(this, context, Type.COLLECTION,
 				Results.fromEntity(entity), null, null);
