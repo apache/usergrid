@@ -3589,10 +3589,9 @@ html {
   position: relative;
   /* needed for footer positioning*/
 
-  margin: 0 auto;
-  /* center, not in IE5 */
-
   height: auto !important;
+  /* real browsers */
+
   min-height: 100%;
   /* real browsers */
 
@@ -3603,7 +3602,6 @@ html {
   max-width: 1280px;
 }
 .header-menus {
-  width: 1280px;
   margin: 0 auto;
 }
 #pages {
@@ -3691,7 +3689,7 @@ a:active {
 }
 .navbar {
   height: 48px;
-  min-width: 700px;
+  min-width: 760px;
   background-color: #ff4300;
   margin: 0px 1px 20px 1px;
 }
@@ -3783,12 +3781,13 @@ a:active {
 }
 .sub-nav {
   position: fixed;
-  top: 48px;
+  top: 42px;
   left: -1px;
   right: -2px;
   margin-bottom: 18px;
   background-color: #e02e03;
   z-index: 130;
+  height: 42px;
 }
 .right-header a:hover {
   opacity: 0.9;
@@ -3798,7 +3797,7 @@ a:active {
   left: 5px;
   width: 155px;
 }
-.nav-list > li > a {
+.nav-list  > li > a {
   text-align: left;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -4390,10 +4389,10 @@ a:active {
   background-image: -o-linear-gradient(top, #ff4300, #ff0303);
   background-image: linear-gradient(top, #ff4300, #ff0303);
   background-repeat: repeat-x;
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='@apigeeOrange', endColorstr='@apigeeNavSelection', GradientType=0);
+  filter: progid:dximagetransform.microsoft.gradient(startColorstr='@apigeeOrange', endColorstr='@apigeeNavSelection', GradientType=0);
   border-color: #C84B27 #C84B27 #ad6704;
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+  filter: progid:dximagetransform.microsoft.gradient(enabled=false);
 }
 .btn-usergrid:hover,
 .btn-usergrid:active,

@@ -78,7 +78,6 @@ html{
 
 #fullContainer{
   position:relative; /* needed for footer positioning*/
-  margin:0 auto; /* center, not in IE5 */
   height:auto !important; /* real browsers */
   min-height:100%; /* real browsers */
   height:100%; /* IE6: treaded as min-height*/
@@ -86,8 +85,7 @@ html{
   max-width: @maxPanelWidth;
 }
 .header-menus{
-  width: 1280px;
-  margin: 0 auto; 
+  margin: 0 auto;
 }
 #pages{
   padding: 110px 0 50px 0px;
@@ -176,7 +174,7 @@ a:active {
 
 .navbar{
   height:48px;
-  min-width: 700px;
+  min-width: 760px;
   background-color: @apigeeOrange;
 
   margin: 0px 1px 20px 1px;
@@ -283,12 +281,13 @@ a:active {
 
 .sub-nav{
   position: fixed;
-  top: 48px;
+  top: 42px;
   left: -1px;
   right: -2px;
   margin-bottom: 18px;
   background-color: @apigeeApplicationName;
   z-index: 130;
+  height: 42px;
 }
 
 .right-header{
