@@ -379,11 +379,7 @@
 			<groupId>org.perf4j</groupId>
 			<artifactId>perf4j</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>javaee</groupId>
-			<artifactId>javaee-api</artifactId>
-			<scope>provided</scope>
-		</dependency>
+		
                 <dependency>
                     <groupId>org.aspectj</groupId>
                     <artifactId>aspectjweaver</artifactId>
