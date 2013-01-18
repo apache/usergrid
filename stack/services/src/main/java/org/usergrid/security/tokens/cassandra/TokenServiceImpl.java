@@ -285,7 +285,7 @@ public class TokenServiceImpl implements TokenService {
             return maxPersistenceTokenAge;
         }
 
-        Application application = emf.getEntityManager(principal.getApplicationId()).getApplication();
+        Application application = emf.getEntityManager(principal.getApplicationId()).get(principal.getApplicationId(), Application.class);
 
         if (application == null) {
             return maxPersistenceTokenAge;
