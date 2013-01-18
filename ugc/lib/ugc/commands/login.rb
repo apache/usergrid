@@ -6,11 +6,12 @@ arg_name 'username'
 command :login do |c|
 
   c.switch [:a,:admin]
+  c.flag [:p,:password]
   c.action do |global_options,options,args|
 
     help_now! unless args[0]
 
-    password = ask('password: ') { |q| q.echo = '*' }
+    password = options[:password] || ask('password: ') { |q| q.echo = '*' }
 
     if password
       if options[:admin]
