@@ -171,6 +171,12 @@ If you specify column names in your query, you will be unable to reference the r
 
 ## Release notes
 
+### 0.9.1
+* New features
+  1. allow non-interactive password on login (-p or --password)
+* Bug fixes
+  1. fix display issue with assign query (select {user:username} from...)
+
 ### 0.9.0
 * New features
   1. path reference '@n' in commands to previous list entities
