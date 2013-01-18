@@ -5,10 +5,14 @@ def parse_sql(query)
   keywords = %w(select from where limit)
   current = nil
   query.downcase.split(/[\s,*]/).each do |ea|
-    next if ea == ''
+    next if ea == '' || (current == 'select' && ea == 'distinct')
     if keywords.include? ea
       current = ea
     elsif current
+      if current == 'select' and ea.start_with? "{"
+        current = nil
+        next
+      end
       if result[current]
         if result[current].is_a? Array
           result[current] << ea
