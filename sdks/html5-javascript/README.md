@@ -1,13 +1,13 @@
 ##Version
 
-Current Version: **0.10.2**
+Current Version: **0.10.3**
 
 Change log:
 
 <https://github.com/apigee/usergrid-javascript-sdk/blob/master/changelog.md>
 
-**About this version:** 
-I revved this version of the SDK to 0.10.x because it is a complete rework of the code.  Not only is the code new, but also the way that you use it (more about that below).  I know that many of you have already built apps on the SDK and reworking them to use this new format will likely be a pain.  I apologize for that.  
+**About this version:**
+I revved this version of the SDK to 0.10.x because it is a complete rework of the code.  Not only is the code new, but also the way that you use it (more about that below).  I know that many of you have already built apps on the SDK and reworking them to use this new format will likely be a pain.  I apologize for that.
 
 Hopefully that you will find it is worth the upgrade. I think this new version is more streamlined and has better structure.  I also made it consistent syntactically with the new [Node.js Module](https://github.com/apigee/usergrid-node-module).  The idea here is that developers may want to make client-side calls in their Node.js applications, so why not use the same syntax for both.
 
@@ -15,7 +15,7 @@ Please feel free to send comments:
 
 	twitter: @rockerston
 	email: rod at apigee.com
-	
+
 Or just open github issues.  I truly want to know what you think, and will address all suggestions / comments / concerns.
 
 Thank you!
@@ -79,7 +79,7 @@ This SDK comes with a variety of samples that you can use to learn how to connec
 
 Also note that all the examples provided in this readme file can be seen running in the test app:
 
-<http://apigee.github.com/usergrid-javascript-sdk/examples/test/test.html> 
+<http://apigee.github.com/usergrid-javascript-sdk/examples/test/test.html>
 
 
 ##Entities and Collections
@@ -406,7 +406,7 @@ Logging a user in means sending the user's username and password to the server, 
 							} else {
 								//success - user has been logged out
 							}
-							
+
 						}
 					});
 				}
@@ -524,7 +524,7 @@ A variety of functions are provided for verification of many common types such a
 
 
 ###cURL
-[cURL](http://curl.haxx.se/) is an excellent way to make calls directly against the API. As mentioned in the **Getting started** section of this guide, one of the parameters you can add to the new client options object is **buildCurl**:  
+[cURL](http://curl.haxx.se/) is an excellent way to make calls directly against the API. As mentioned in the **Getting started** section of this guide, one of the parameters you can add to the new client options object is **buildCurl**:
 
 	var client = new Usergrid.Client({
 		orgName:'yourorgname',
