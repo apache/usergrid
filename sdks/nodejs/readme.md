@@ -3,7 +3,7 @@ Current Version: **0.10.3**
 
 See change log:
 
-https://github.com/apigee/usergrid-node-module/master/changelog.md
+https://github.com/apigee/usergrid-node-module/blob/master/changelog.md
 
 ##Overview
 This Node.js module, which simplifies the process of making API calls to App Services from within Node.js, is provided by [Apigee](http://apigee.com) and is available as an open-source project on github.  We welcome your contributions and suggestions. The repository is located here:
