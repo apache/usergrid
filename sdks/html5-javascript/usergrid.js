@@ -37,7 +37,7 @@ Usergrid.Client = function(options) {
   //Find your Orgname and Appname in the Admin portal (http://apigee.com/usergrid)
   this.orgName = options.orgName;
   this.appName = options.appName;
-  
+
   //other options
   this.buildCurl = options.buildCurl || false;
   this.logging = options.logging || false;
@@ -229,10 +229,10 @@ Usergrid.Client.prototype.createCollection = function (options, callback) {
 
 /*
 *  Function for creating new activities for the current user - should be called directly.
-* 
+*
 *  //user can be any of the following: "me", a uuid, a username
 *  Note: the "me" alias will reference the currently logged in user (e.g. 'users/me/activties')
-* 
+*
 *  //build a json object that looks like this:
 *  var options =
 *  {
@@ -726,7 +726,80 @@ Usergrid.Entity.prototype.destroy = function (callback) {
   });
 }
 
+/*
+*  connects one entity to another
+*
+*  @method connect
+*  @public
+*  @param {string} connection
+*  @param {object} entity
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*
+*/
+/*
+barney.connect('likes', fred, function (err, data){
 
+});
+*/
+Usergrid.Entity.prototype.connect = function (connection, entity, callback) {
+
+  //connectee info
+  var connecteeType = entity.get('type');
+  var connectee;
+  if (isUUID(entity.get('uuid'))) {
+    connectee = entity.get('uuid');
+  } else {
+    if (type == 'users') {
+      connectee = entity.get('username');
+    } else if (entity.get('name')) {
+      connectee = entity.get('name');
+    } else {
+      if (typeof(callback) === 'function') {
+        var error = 'Error trying to delete object - no uuid specified.';
+        if (self._client.logging) {
+          console.log(error);
+        }
+        return callback(true, error);
+      }
+    }
+  }
+
+  //connector info
+  var connectorType = this.get('type');
+  if (isUUID(entity.get('uuid'))) {
+    connector = entity.get('uuid');
+  } else {
+    if (type == 'users') {
+      connector = entity.get('username');
+    } else if (entity.get('name')) {
+      connector = entity.get('name');
+    } else {
+      if (typeof(callback) === 'function') {
+        var error = 'Error trying to delete object - no uuid specified.';
+        if (self._client.logging) {
+          console.log(error);
+        }
+        return callback(true, error);
+      }
+    }
+  }
+
+  var endpoint = connectorType + '/' + connector + '/' + connection + '/' + connecteeType + '/' + connectee;
+  var self = this;
+  var options = {
+    method:'POST',
+    endpoint:endpoint
+  };
+  this._client.request(options, function (err, data) {
+    if (err && self._client.logging) {
+      console.log('entity could not be connected');
+    }
+    if (typeof(callback) === 'function') {
+      callback(err, data);
+    }
+  });
+}
 
 /*
 *  The Collection class models Usergrid Collections.  It essentially
