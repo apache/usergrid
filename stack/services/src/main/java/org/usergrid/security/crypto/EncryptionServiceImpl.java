@@ -35,7 +35,7 @@ import org.usergrid.security.crypto.command.EncryptionCommand;
  * @author tnine
  * 
  */
-@Service("org.usergrid.security.crypto.EncryptionServiceImpl")
+@Service("encryptionService")
 public class EncryptionServiceImpl implements EncryptionService {
 
   private String defaultCommandName = EncryptionCommand.BCRYPT;
@@ -184,6 +184,24 @@ public class EncryptionServiceImpl implements EncryptionService {
     return credentials;
 
   }
+  
+
+  /* (non-Javadoc)
+   * @see org.usergrid.security.crypto.EncryptionService#getCommand(java.lang.String)
+   */
+  @Override
+  public EncryptionCommand getCommand(String name) {
+    return commands.get(name);
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.security.crypto.EncryptionService#getDefaultCommand()
+   */
+  @Override
+  public EncryptionCommand getDefaultCommand() {
+    return defaultCommand;
+  }
+
 
   protected String encode(byte[] bytes) {
     return encodeBase64URLSafeString(bytes);

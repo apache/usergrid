@@ -20,10 +20,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.Application;
+import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.security.shiro.PrincipalCredentialsToken;
@@ -68,8 +70,7 @@ public interface ManagementService {
 
 	public UserInfo createAdminFrom(User user, String password) throws Exception;
 
-	public UserInfo createAdminFromPrexistingPassword(User user,
-			String precypheredPassword, String hashType) throws Exception;
+	public UserInfo createAdminFromPrexistingPassword(User user, CredentialsInfo ci) throws Exception;
 
 	public ApplicationInfo createApplication(UUID organizationId, String applicationName)
 			throws Exception;
@@ -378,7 +379,24 @@ public interface ManagementService {
 	public User getOrCreateUserForFoursquareAccessToken(UUID applicationId,
 			String fq_access_token) throws Exception;
 
-    public abstract void provisionSuperuser() throws Exception;
+  public abstract void provisionSuperuser() throws Exception;
 
-  List<OrganizationInfo> getOrganizations(UUID startResult, int count) throws Exception;
+  public List<OrganizationInfo> getOrganizations(UUID startResult, int count) throws Exception;
+  
+  /**
+   * Add the properties to the organization
+   * @param orgId
+   * @param props
+   * @throws Exception 
+   */
+  public void setOrganizationProps(UUID orgId, Map<String, Object> props) throws Exception;
+  
+  /**
+   * Get the organization properties, returns them in the group object
+   * @param orgId
+   * @return
+   * @throws Exception 
+   */
+  public Group getOrganizationProps(UUID orgId) throws Exception;
+  
 }
