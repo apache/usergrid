@@ -6,6 +6,7 @@ ugc enables convenient terminal access to Apigee's App Services (aka Usergrid).
 
 * Multiple connection/login profiles
 * Simple syntax to Usergrid data
+* Will automatically perform paging on long query results
 * Use relative or absolute URLs
 * Convenient path reference '@n' to previous list entities
 * Easy-to-read tabular output
