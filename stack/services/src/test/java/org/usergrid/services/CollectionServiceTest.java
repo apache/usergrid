@@ -121,7 +121,7 @@ public class CollectionServiceTest extends AbstractServiceTest {
 			testRequest(sm, ServiceAction.PUT, 0, properties, "users",
 					"test-group");
 			Assert.fail();
-		} catch (ServiceResourceNotFoundException srnfe) {
+		} catch (RequiredPropertyNotFoundException srnfe) {
 			// ok
 		}
 
@@ -215,14 +215,6 @@ public class CollectionServiceTest extends AbstractServiceTest {
 		}
 
 		try {
-			// try PUT on cats with dogs name
-			testRequest(sm, ServiceAction.PUT, 0, properties, "cats", "Danny");
-			Assert.fail();
-		} catch (ServiceResourceNotFoundException srnfe) {
-			// ok
-		}
-
-		try {
 			// try DELETE on cats with dogs id
 			testRequest(sm, ServiceAction.DELETE, 0, null, "cats",
 					dog.getUuid());
@@ -239,7 +231,29 @@ public class CollectionServiceTest extends AbstractServiceTest {
 			// ok
 		}
 
-	}
+    // try PUT on cats with a new UUID
+    ServiceResults results = testRequest(sm, ServiceAction.PUT, 1, properties, "cats", "99999990-600c-11e2-b414-14109fd49581");
+    Entity entity = results.getEntity();
+    Assert.assertEquals(entity.getUuid().toString(), "99999990-600c-11e2-b414-14109fd49581");
+
+    // try PUT on cats with a name w/o name in properties
+    properties.remove("name");
+    results = testRequest(sm, ServiceAction.PUT, 1, properties, "cats", "Danny");
+    entity = results.getEntity();
+    Assert.assertEquals(entity.getName(), "danny");
+
+    // try PUT on cats with a name in properties w/ difference capitalization
+    properties.put("name", "Danny2");
+    results = testRequest(sm, ServiceAction.PUT, 1, properties, "cats", "Danny2");
+    entity = results.getEntity();
+    Assert.assertEquals(entity.getName(), "Danny2");
+
+    // try PUT on cats with a completely different name in properties
+    properties.put("name", "Jimmy");
+    results = testRequest(sm, ServiceAction.PUT, 1, properties, "cats", "Danny3");
+    entity = results.getEntity();
+    Assert.assertEquals(entity.getName(), "danny3");
+  }
 
 	@Test
 	public void testEmptyCollection() throws Exception {

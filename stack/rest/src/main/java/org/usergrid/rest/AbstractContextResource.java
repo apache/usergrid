@@ -149,7 +149,6 @@ public abstract class AbstractContextResource {
 		if (isNotBlank(redirect_url)) {
 			sendRedirect(redirect_url);
 		}
-		System.out.println(this.getClass());
 		return new Viewable(template, model, this.getClass());
 	}
 

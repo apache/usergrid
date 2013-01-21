@@ -97,6 +97,7 @@ public class OrganizationResource extends AbstractContextResource {
 
     @GET
     @Path("activate")
+    @Produces(MediaType.TEXT_HTML)
     public Viewable activate(@Context UriInfo ui, @QueryParam("token") String token) {
 
         try {
@@ -113,6 +114,7 @@ public class OrganizationResource extends AbstractContextResource {
 
     @GET
     @Path("confirm")
+    @Produces(MediaType.TEXT_HTML)
     public Viewable confirm(@Context UriInfo ui, @QueryParam("token") String token) {
 
         try {
