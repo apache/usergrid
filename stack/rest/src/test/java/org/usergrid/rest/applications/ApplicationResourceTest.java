@@ -233,4 +233,37 @@ public class ApplicationResourceTest extends AbstractRestTest {
         assertEquals(Status.BAD_REQUEST, responseStatus);
 
     }
+
+    @Test
+    public void updateAccessTokenTtl() throws Exception {
+
+        JsonNode node = resource().path("/test-organization/test-app/token").queryParam("grant_type", "password")
+                        .queryParam("username", "ed@anuff.com").queryParam("password", "sesame")
+                        .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+
+
+        String token = node.get("access_token").getTextValue();
+        logNode(node);
+        assertNotNull(token);
+
+        long expires_in = node.get("expires_in").getLongValue();
+        assertEquals(604800, expires_in);
+
+
+        Map<String, String> payload = hashMap("accesstokenttl", "31536000000");
+
+        node = resource().path("/test-organization/test-app")
+                .queryParam("access_token", adminAccessToken)
+                .type(MediaType.APPLICATION_JSON_TYPE).put(JsonNode.class, payload);
+        logNode(node);
+
+
+
+        node = resource().path("/test-organization/test-app/token").queryParam("grant_type", "password")
+                                .queryParam("username", "ed@anuff.com").queryParam("password", "sesame")
+                                .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+
+        assertEquals(31536000, node.get("expires_in").getLongValue());
+        logNode(node);
+    }
 }
