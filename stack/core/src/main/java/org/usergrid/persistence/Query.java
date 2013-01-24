@@ -258,8 +258,8 @@ public class Query {
         pad = firstBoolean(params.get("pad"));
 
         for (Entry<String, List<String>> param : params.entrySet()) {
-            if ((param.getValue() == null) || (param.getValue().size() == 0)) {
-                Identifier identifier = Identifier.from(param.getKey());
+            Identifier identifier = Identifier.from(param.getKey());
+            if ((param.getValue() == null) || (param.getValue().size() == 0) || identifier.isUUID()) {
                 if (identifier != null) {
                     if (identifiers == null) {
                         identifiers = new ArrayList<Identifier>();
