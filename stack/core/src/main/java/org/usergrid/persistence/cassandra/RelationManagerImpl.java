@@ -2628,12 +2628,15 @@ public class RelationManagerImpl implements RelationManager {
 
         // nothing to search for or sort, just grab ids
         if (!query.hasQueryPredicates() && !query.hasSortPredicates()) {
-            List<UUID> ids = cass.getIdList(
+            List<UUID> ids = query.getUuidIdentifiers();
+            if (ids == null) {
+                ids = cass.getIdList(
                     cass.getApplicationKeyspace(applicationId),
                     key(headEntity.getUuid(), DICTIONARY_COLLECTIONS,
                             collectionName), query.getStartResult(), null,
                     query.getLimit() + 1, reversed, indexBucketLocator,
                     applicationId, collectionName);
+            }
 
             Results results = Results.fromIdList(ids, collection.getType());
 
