@@ -72,9 +72,6 @@ public class Import extends ToolBase {
         Option hostOption = OptionBuilder.withArgName("host").hasArg()
                 .withDescription("Cassandra host").create("host");
 
-        Option remoteOption = OptionBuilder.withDescription(
-                "Use remote Cassandra instance").create("remote");
-
         Option inputDir = OptionBuilder.hasArg()
                 .withDescription("input directory -inputDir").create(INPUT_DIR);
 
@@ -85,7 +82,6 @@ public class Import extends ToolBase {
 
         Options options = new Options();
         options.addOption(hostOption);
-        options.addOption(remoteOption);
         options.addOption(inputDir);
         options.addOption(verbose);
 
