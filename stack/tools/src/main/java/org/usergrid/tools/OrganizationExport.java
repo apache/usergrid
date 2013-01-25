@@ -22,6 +22,7 @@ import org.usergrid.utils.TimeUtils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -36,6 +37,7 @@ import java.util.*;
  */
 public class OrganizationExport extends ExportingToolBase {
 
+  private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
  
 
   @Override
@@ -62,9 +64,12 @@ public class OrganizationExport extends ExportingToolBase {
    
       for(UserInfo user: managementService.getAdminUsersForOrganization(organization.getUuid())){
         
-        Object createdDate = user.getProperties().get("created");
+        Entity admin = managementService.getAdminUserEntityByUuid(user.getUuid());
         
-        writer.writeNext(new String[]{organization.getName(), user.getName(), user.getEmail(), createdDate == null? "Unknown" : createdDate.toString() });
+        Long createdDate = (Long) admin.getProperties().get("created");
+        
+       
+        writer.writeNext(new String[]{organization.getName(), user.getName(), user.getEmail(), createdDate == null? "Unknown" : sdf.format(new Date(createdDate)) });
       }
 
     }
