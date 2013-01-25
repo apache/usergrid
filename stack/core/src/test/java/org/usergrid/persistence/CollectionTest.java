@@ -1287,5 +1287,68 @@ public class CollectionTest extends AbstractPersistenceTest {
     assertTrue("edanuff".equals(firstResult.get("name")));
     assertTrue("ed@anuff.com".equals(firstResult.get("email")));
   }
+  
+  
+
+
+  @Test
+  public void testNotQueryAnd() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "testNotQueryAnd");
+
+    EntityManager em = emf.getEntityManager(applicationId);
+
+    
+    Map<String, Object>  location = new LinkedHashMap<String, Object>();
+    location.put("Place", "24 Westminster Avenue, Venice, CA 90291, USA");
+    location.put("Longitude", -118.47425979999998);
+    location.put("Latitude", 33.9887663);
+    
+
+    Map<String, Object>  recipient = new LinkedHashMap<String, Object>();
+    recipient.put("TimeRequested", 1359077878l);
+    recipient.put("Username", "fb_536692245");
+    recipient.put("Location", location);
+    
+    Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    properties.put("Flag", "requested");
+    properties.put("Recipient", recipient);
+    
+    em.create("loveobject", properties);
+    
+    
+    
+    location = new LinkedHashMap<String, Object>();
+    location.put("Place", "Via Pietro Maroncelli, 48, 62012 Santa Maria Apparente Province of Macerata, Italy");
+    location.put("Longitude", 13.693080199999999);
+    location.put("Latitude", 43.2985019);
+    
+    recipient = new LinkedHashMap<String, Object>();
+    recipient.put("TimeRequested", 1359077878l);
+    recipient.put("Username", "fb_100000787138041");
+    recipient.put("Location", location);
+    
+    properties = new LinkedHashMap<String, Object>();
+    properties.put("Flag", "requested");
+    properties.put("Recipient", recipient);
+    
+    em.create("loveobject", properties);
+    
+//    String s = "select * where Flag = 'requested'";
+//    String s = "select * where Flag = 'requested' and NOT Recipient.Username = 'fb_536692245' order by created asc";
+    String s = "select * where Flag = 'requested' and NOT Recipient.Username = 'fb_536692245' order by created asc";
+    Query query = Query.fromQL(s);
+
+    Results r = em.searchCollection(em.getApplicationRef(), "loveobjects", query);
+    assertTrue(r.size() == 1);
+
+    String username = (String) ((Map)r.getEntities().get(0).getProperty("Recipient")).get("Username");
+    // selection results should be a list of lists
+    List<Object> sr = query.getSelectionResults(r);
+    assertTrue(sr.size() == 1);
+
+   
+    assertEquals("fb_100000787138041", username);
+  }
 
 }
