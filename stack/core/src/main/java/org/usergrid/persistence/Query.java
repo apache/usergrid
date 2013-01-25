@@ -165,7 +165,7 @@ public class Query {
             }
         }
 
-        ANTLRStringStream in = new ANTLRStringStream(ql.trim());
+        ANTLRStringStream in = new ANTLRStringStream(qlt.trim());
         QueryFilterLexer lexer = new QueryFilterLexer(in);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         QueryFilterParser parser = new QueryFilterParser(tokens);
