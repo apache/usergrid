@@ -29,12 +29,14 @@
 		</plugins>
 	</reporting>
 	<build>
+        <!--
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
 				<filtering>true</filtering>
 				<includes>
 					<include>**/*.xml</include>
+                    <include>**/*.properties</include>
 				</includes>
 			</resource>
 		</resources>
@@ -46,7 +48,7 @@
 					<include>**/*.xml</include>
 				</includes>
 			</testResource>
-		</testResources>
+		</testResources> -->
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -92,7 +94,11 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
+        <dependency>
+            <groupId>org.usergrid</groupId>
+            <artifactId>usergrid-config</artifactId>
+            <version>0.0.13-SNAPSHOT</version>
+        </dependency>
 		<dependency>
 			<groupId>javax.persistence</groupId>
 			<artifactId>persistence-api</artifactId>
@@ -106,6 +112,10 @@
 			<artifactId>hector-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+        <dependency>
+      			<groupId>commons-logging</groupId>
+      			<artifactId>commons-logging</artifactId>
+      		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
@@ -161,6 +171,7 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context-support</artifactId>
+
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>

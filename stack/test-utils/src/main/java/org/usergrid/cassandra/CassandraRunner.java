@@ -8,7 +8,11 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import javax.annotation.Resource;
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.util.concurrent.ExecutorService;
@@ -18,23 +22,24 @@ import java.util.concurrent.TimeUnit;
 public class CassandraRunner extends BlockJUnit4ClassRunner {
 
     private static final String TMP = "tmp";
-    private static CassandraDaemon cassandraDaemon;
     private static Logger logger = LoggerFactory.getLogger(CassandraRunner.class);
     private static ExecutorService executor = Executors.newSingleThreadExecutor();
+    private static ContextHolder contextHolder;
+
+    // TODO maybe put a 'holder' object in the executor and provide access to application context thusly?
+    // TODO assume a static 'usergrid-test-context.xml' primer/starter file
 
     public CassandraRunner(Class<?> klass) throws InitializationError {
         super(klass);
         logger.info("CassandraRunner started with class {}", klass.getName());
     }
 
-    @Override
-    protected void runChild(FrameworkMethod method, RunNotifier notifier) {
 
-        super.runChild(method, notifier);
+    public static <T> T getBean(String name, Class<T> requiredType) {
+        return contextHolder.applicationContext.getBean(name, requiredType);
     }
-
     /**
-     * The order of events are as follows:
+     * Class-level run. The order of events are as follows:
      * - start IntravertDeamon if not started already
      * - create any keyspaces defined as class level annotations
      * - create any column families defined as class level annotations
@@ -42,12 +47,23 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
      */
     @Override
     public void run(RunNotifier notifier) {
-
+        maybeInit();
+        AutowireCapableBeanFactory acbf = contextHolder.applicationContext.getAutowireCapableBeanFactory();
+        acbf.autowire(getTestClass().getJavaClass(),AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, true);
         super.run(notifier);
+    }
+
+    @Override
+    protected void runChild(FrameworkMethod method, RunNotifier notifier) {
+        // TODO should scan for:
+        // - DataControl: truncateOnExit=true, dataLoader=[a class which implements load()]
+        super.runChild(method, notifier);
     }
 
     private void maybeCreateSchema() {
 
+        // TODO check for schema -
+        // Setup.setup() if not present
     }
 
     private static boolean deleteRecursive(File path) {
@@ -62,24 +78,35 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         return ret && path.delete();
     }
 
-    private void startCassandra() {
-        if ( cassandraDaemon != null ) {
+    private void loadSpringContext() {
+        // TODO check for appContext, create if not present
+        String[] locations = {"usergrid-test-context.xml"};
+        contextHolder.applicationContext = new ClassPathXmlApplicationContext(locations);
+    }
+
+    private void maybeInit() {
+        if ( contextHolder != null ) {
             return;
         }
-        deleteRecursive(new File("tmp/cache"));
+        contextHolder = new ContextHolder();
+        loadSpringContext();
+        // TODO make sure these match up with configs
+        // TODO one cassandra config in this project!
+        // TODO log4j.properties required to be present
+        deleteRecursive(new File("tmp/saved_caches"));
         deleteRecursive(new File ("tmp/data"));
-        deleteRecursive(new File ("tmp/log"));
+        deleteRecursive(new File ("tmp/commitlog"));
         System.setProperty("cassandra-foreground", "true");
         System.setProperty("log4j.defaultInitOverride","true");
         System.setProperty("log4j.configuration", "log4j.properties");
-        System.setProperty("cassandra.ring_delay_ms","1000");
+        System.setProperty("cassandra.ring_delay_ms","100");
         //System.setProperty("cassandra.start_rpc","false");
         //System.setProperty("cassandra.start_native_transport","false");
 
         executor.execute(new Runnable() {
             public void run() {
-                cassandraDaemon = new CassandraDaemon();
-                cassandraDaemon.activate();
+                contextHolder.cassandraDaemon = new CassandraDaemon();
+                contextHolder.cassandraDaemon.activate();
             }
         });
         try {
@@ -102,8 +129,8 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     }
 
     private void stopCassandra() throws Exception {
-        if (cassandraDaemon != null) {
-            cassandraDaemon.deactivate();
+        if (contextHolder != null) {
+            contextHolder.cassandraDaemon.deactivate();
             StorageService.instance.stopClient();
 
         }
@@ -111,4 +138,8 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         executor.shutdownNow();
     }
 
+    static class ContextHolder {
+        ApplicationContext applicationContext;
+        CassandraDaemon cassandraDaemon;
+    }
 }
