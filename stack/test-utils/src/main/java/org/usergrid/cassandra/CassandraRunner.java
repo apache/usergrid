@@ -78,16 +78,17 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         return ret && path.delete();
     }
 
-    private void loadSpringContext() {
+    private static void loadSpringContext() {
         // TODO check for appContext, create if not present
         String[] locations = {"usergrid-test-context.xml"};
         contextHolder.applicationContext = new ClassPathXmlApplicationContext(locations);
     }
 
-    private void maybeInit() {
+    private static void maybeInit() {
         if ( contextHolder != null ) {
             return;
         }
+        logger.info("Initing...");
         contextHolder = new ContextHolder();
         loadSpringContext();
         // TODO make sure these match up with configs
@@ -128,7 +129,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         });
     }
 
-    private void stopCassandra() throws Exception {
+    private static void stopCassandra() throws Exception {
         if (contextHolder != null) {
             contextHolder.cassandraDaemon.deactivate();
             StorageService.instance.stopClient();
