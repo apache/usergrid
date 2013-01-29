@@ -1,5 +1,6 @@
 package org.usergrid.rest.management.organizations;
 
+import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -89,6 +90,54 @@ public class OrganizationsResourceTest extends AbstractRestTest {
         // assertTrue(user.activated());
         // assertFalse(user.disabled());
         // assertTrue(user.confirmed());
+    }
+
+    @Test
+    public void testCreateDuplicateOrgName() throws Exception {
+        Map<String, String> payload = hashMap("email",
+                "create-duplicate-org@mockserver.com").map("password", "password")
+                .map("organization", "create-duplicate-orgname-org");
+
+        JsonNode node = resource().path("/management/organizations")
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(JsonNode.class, payload);
+
+        logNode(node);
+        assertNotNull(node);
+
+        payload = hashMap("email",
+                "create-duplicate-org2@mockserver.com").map("username", "create-dupe-orgname2")
+                .map("password", "password")
+                .map("organization", "create-duplicate-orgname-org");
+
+        try {
+            node = resource().path("/management/organizations")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .type(MediaType.APPLICATION_JSON_TYPE)
+                        .post(JsonNode.class, payload);
+
+        } catch (Exception ex){ }
+        payload = hashMap("grant_type","password")
+                .map("username", "create-dupe-orgname2")
+                .map("password", "password");
+        try {
+            node = resource().path("/management/token")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE)
+                    .post(JsonNode.class, payload);
+            fail("Should not have created user");
+        } catch (Exception ex) {}
+        logNode(node);
+
+        payload = hashMap("username",
+                        "create-duplicate-org@mockserver.com").map("grant_type", "password")
+                        .map("password", "password");
+        node = resource().path("/management/token")
+                            .accept(MediaType.APPLICATION_JSON)
+                            .type(MediaType.APPLICATION_JSON_TYPE)
+                            .post(JsonNode.class, payload);
+        logNode(node);
     }
 
     @Test
