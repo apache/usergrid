@@ -3,8 +3,8 @@
       xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
 <html>
   <head>
-  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <title>Apigee App Services Admin Portal </title>
+
+    <title>Apigee App Services Admin Portal </title>
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" type="text/css" href="css/reset.css"/>
     <link rel="stylesheet" type="text/css" href="css/usergrid.css"/>
@@ -40,268 +40,218 @@
     <script src="js/app/console.js" type="text/javascript"></script>
     <script src="js/app/ui/ui.js" type="text/javascript"></script>
 
-<style type="text/css">
-
-  #header {
-    margin:0; padding:0;
-    }
-
-  #main1 {
-    margin:70px 0 0 0;
-    padding:0;
-    min-width:900px;
-    }
-  #main2 {
-    margin:0; padding:0;
-    }
-  #left {
-    float:left;
-    width:177px;
-    margin:0; padding:0;
-    }
-  #left2 {
-    float:left;
-    width:180px;
-    margin:0; padding:0;
-    }
-  #right {
-    float:right;
-    width:180px;
-    margin:0; padding:0;
-    }
-  #middle {
-    margin:0 180px;
-    min-width:500px;
-    min-height: 700px;
-    border-left: 1px solid #cacaca;
-    }
-  .column-in {
-    margin:0; padding:0.5em 1em;
-    }
-  .cleaner {
-    clear:both;
-    height:1px;
-    font-size:1px;
-    border:none;
-    margin:0; padding:0;
-    background:transparent;
-    }
-
-
-</style>
-
-</head>
-<body>
-
-
-<div id="header">
-  <div class="column-in">
-    <div data-dropdown="dropdown" class="main-nav navbar navbar-fixed-top">
-      <div class="header-menus">
-        <div id="publicMenu" class="navbar-inner">
-          <div class="left-header">
-            <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img src="images/logo-white.png">apigee</a></h1>
-            <b class="caret"></b>
-            <h2 id="ActualPage1">Admin Portal</h2>
+  </head>
+  <body>
+    <div id="fullContainer">
+      <div data-dropdown="dropdown" class="main-nav navbar navbar-fixed-top">
+        <div class="header-menus">
+          <div id="publicMenu" class="navbar-inner">
+            <div class="left-header">
+              <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img src="images/logo-white.png">apigee</a></h1>
+              <b class="caret"></b>
+              <h2 id="ActualPage1">Admin Portal</h2>
+            </div>
+            <div class="right-header">
+              <ul id="loginMenu" class="nav secondary-nav">
+                <li><a id="login-link" ><i class="icon-user"></i> Login</a></li>
+                <li><a id="signup-link" > Sign Up</a></li>
+                <li><a id="forgot-password-link" ><i class="icon-lock"></i> Forgot Password</a></li>
+              </ul>
+            </div>
           </div>
-          <div class="right-header">
-            <ul id="loginMenu" class="nav secondary-nav">
-              <li><a id="login-link" ><i class="icon-user"></i> Login</a></li>
-              <li><a id="signup-link" > Sign Up</a></li>
-              <li><a id="forgot-password-link" ><i class="icon-lock"></i> Forgot Password</a></li>
-            </ul>
-          </div>
-        </div>
-        <div class="navbar-inner privateMenu">
-          <div class="left-header">
-            <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img class="logo" src="images/logo-white.png">apigee</a></h1>
-            <ul class="nav">
-              <li class="portal-name" ><a class="go-home">Admin Portal</a></li>
-            </ul>
-          </div>
-          <div class="right-header">
-            <ul id="profileMenu" class="nav secondary-nav">
-              <li ><a href="#">Dashboard</a></li>
-              <li class="dropdown">
-                <a id="account-link1" class="dropdown-toggle" data-toggle="dropdown" ><span id="userEmail">test</span> <span class="caret"></span></a>
-                <ul class="dropdown-menu">
-                  <li><a id="account-link" ><i class="icon-user"></i> Profile</a></li>
-                  <li><a id="logout-link" ><i class="icon-off"></i> Sign Out</a></li>
-                </ul>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div id="api-activity" class="alert">Loading...</div>
-      </div>
-    </div>
-    <div class="sub-nav navbar navbar-fixed privateMenu" style="display: none">
-        <div class="left-header nav pull-left">
-            <li id="organizations-menu" class="dropdown">
-                <a id="console-link" class="dropdown-toggle" data-toggle="dropdown">
-                    <i class="icon-folder-close icon-white"></i>
-                    <span>Organizations</span>
-                    <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a >loading...</a></li>
-                </ul>
-            </li>
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown">
-                   <i class="icon-cog icon-white"></i>
-                    <span id="nav-app-name">App Name</span>
-                    <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu applications-menu" >
-                    <li><a >loading apps...</a></li>
-                </ul>
-            </li>
-        </div>
-        <div class="right-header pull-right">
-            <ul class="nav">
-                <li id="switchTo-menu" class="dropdown">
-                    <a id="switchTo-link" class="dropdown-toggle" data-toggle="dropdown" ><span>Switch to...
-                </span> <span class="caret"></span></a>
-                    <ul class="dropdown-menu">
-                        <li><a href="http://mobileanalytics.apigee.com/pages/signin.seam " target="_blank"> Mobile Analytics</a></li>
-                        <li><a href="http://apigee.com/console/others" target="_blank"> API Consoles</a></li>
-                    </ul>
+          <div class="navbar-inner privateMenu">
+            <div class="left-header">
+              <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img class="logo" src="images/logo-white.png">apigee</a></h1>
+              <ul class="nav">
+                <li class="portal-name" ><a class="go-home">Admin Portal</a></li>
+              </ul>
+            </div>
+            <div class="right-header">
+              <ul id="profileMenu" class="nav secondary-nav">
+                <li ><a href="#">Dashboard</a></li>
+                <li class="dropdown">
+                  <a id="account-link1" class="dropdown-toggle" data-toggle="dropdown" ><span id="userEmail">test</span> <span class="caret"></span></a>
+                  <ul class="dropdown-menu">
+                    <li><a id="account-link" ><i class="icon-user"></i> Profile</a></li>
+                    <li><a id="logout-link" ><i class="icon-off"></i> Sign Out</a></li>
+                  </ul>
                 </li>
-                <li><a href="http://support.apigee.com/apigee" target="_blank"> Support</a></li>
-                <li><a href="http://apigee.com/docs/app_services" target="_blank"> Docs</a></li>
-                <li><a href="http://apigee.com/docs/usergrid/codesamples" target="_blank">Examples & SDKs</a></li>
-                <li><a href="https://groups.google.com/forum/?fromgroups#!forum/usergrid" target="_blank"> Google Group</a></li>
-                <li><a href="http://apigee.com/about/products/usergrid" target="_blank"> About</a></li>
-            </ul>
-        </div>
-    </div>
-  </div>
-</div>
-
-<div id="pages">
-
-  <div id="message-page" class="container-fluid">
-    <div id="message-area" class="alert alert-info curl-data" style="padding: 20px;">
-      Whoops! We encounterd an error connecting to the API.  Press refresh to try loading the Admin Portal again.
-      <button id="reload-button" class="btn btn-primary" style="float: right; margin: -4px 30px;" onClick="window.location.reload()">Refresh</button>
-    </div>
-  </div>
-  <div id="login-page" class="container-fluid">
-    <div class="row">
-      <div id="login-area" class="span6 offset1">
-        <div id="login-message" class="alert alert-error">
-          <strong>ERROR</strong>: Your details were incorrect.<br/>
-        </div>
-        <div class="console-section">
-          <div class="well thingy"><span class="title">Login</span></div>
-          <form name="login-form" id="login-form" class="form-horizontal">
-            <div class="control-group">
-              <label class="control-label" for="login-email">Email:</label>
-              <div class="controls">
-                <input type="text" name="login-email" id="login-email" class="" value="" size="20"/>
-              </div>
+              </ul>
             </div>
-            <div class="control-group">
-              <label class="control-label" for="login-password">Password:</label>
-              <div class="controls">
-                <input type="password" name="login-password" id="login-password" class="" value="" size="20"/>
-              </div>
-            </div>
-            <div class="control-group">
-              <div class="controls">
-                <input type="checkbox" value="true" id="remember" name="remember"/>
-                <span>Remember me</span>
-              </div>
-            </div>
-            <div class="form-actions">
-              <div class="submit">
-                <input type="submit" name="button-login" id="button-login" value="Log In" class="btn btn-usergrid"/>
-              </div>
-            </div>
-          </form>
+          </div>
+          <div id="api-activity" class="alert">Loading...</div>
         </div>
       </div>
-    </div>
-  </div>
-  <div id="post-signup-page" class="container-fluid">
-    <div class="row">
-      <div id="login-area" class="span6 offset1">
-        <div class="console-section well thingy">
-          <span class="title">We're holding a seat for you!</span>
-          <br /><br />
-          <p>Thanks for signing up for a spot on our private beta. We will send you an email as soon as we're ready for you!</p>
-          <p>In the mean time, you can stay up to date with App Services on our <a href="https://groups.google.com/forum/?fromgroups#!forum/usergrid">Google Group</a>.</p>
-        </div>
+      <div class="sub-nav navbar navbar-fixed privateMenu" style="display: none">
+          <div class="left-header nav pull-left">
+              <li id="organizations-menu" class="dropdown">
+                  <a id="console-link" class="dropdown-toggle" data-toggle="dropdown">
+                      <i class="icon-folder-close icon-white"></i>
+                      <span>Organizations</span>
+                      <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu">
+                      <li><a >loading...</a></li>
+                  </ul>
+              </li>
+              <li class="dropdown">
+                  <a class="dropdown-toggle" data-toggle="dropdown">
+                     <i class="icon-cog icon-white"></i>
+                      <span id="nav-app-name">App Name</span>
+                      <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu applications-menu" >
+                      <li><a >loading apps...</a></li>
+                  </ul>
+              </li>
+          </div>
+          <div class="right-header pull-right">
+              <ul class="nav">
+                  <li id="switchTo-menu" class="dropdown">
+                      <a id="switchTo-link" class="dropdown-toggle" data-toggle="dropdown" ><span>Switch to...
+                  </span> <span class="caret"></span></a>
+                      <ul class="dropdown-menu">
+                          <li><a href="http://mobileanalytics.apigee.com/pages/signin.seam " target="_blank"> Mobile Analytics</a></li>
+                          <li><a href="http://apigee.com/console/others" target="_blank"> API Consoles</a></li>
+                      </ul>
+                  </li>
+                  <li><a href="http://support.apigee.com/apigee" target="_blank"> Support</a></li>
+                  <li><a href="http://apigee.com/docs/app_services" target="_blank"> Docs</a></li>
+                  <li><a href="http://apigee.com/docs/usergrid/codesamples" target="_blank">Examples & SDKs</a></li>
+                  <li><a href="https://groups.google.com/forum/?fromgroups#!forum/usergrid" target="_blank"> Google Group</a></li>
+                  <li><a href="http://apigee.com/about/products/usergrid" target="_blank"> About</a></li>
+              </ul>
+          </div>
       </div>
-    </div>
-  </div>
-  <div id="signup-page" class="container-fluid">
-    <div class="row">
-      <div id="signup-area" class="span6 offset1">
-        <div id="signup-message" class="alert alert-error"></div>
-        <div class="console-section">
-          <div class="well thingy"><span class="title">Register</span> </div>
-          <form name="signup-form" id="signup-form" onsubmit="return false;" class="form-horizontal">
-            <div class="control-group">
-              <label class="control-label" for="signup-organization-name">Organization Account</label>
-              <div class="controls">
-                <input type="text" name="signup-organization-name" id="signup-organization-name" class="" value="" size="20"/>
+      <div id="pages">
+        <div id="banner" class="container-fluid">
+          <div>
+              <div id="banner-area" class="well thingy" style="padding: 5px; width: 90%; margin: auto;">
+                  Welcome to Apigee App Services. Find more on how to <a style="color: #007CDC;"
+                  href="http://apigee.com/docs/usergrid/content/quick-start">get started</a>
+                  or <a style="color: #007CDC;" href="mailto:feedback@apigee.com">contact us</a> if you need help!
+                  <a style="float: right; color: #007CDC;"  id="hideBanner">Dismiss</a>
               </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" for="signup-username">Username</label>
-              <div class="controls">
-                <input type="text" name="signup-username" id="signup-username" class="" value="" size="20"/>
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" for="signup-name">Name </label>
-              <div class="controls">
-                <input type="text" name="signup-name" id="signup-name" class="" value="" size="20"/>
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" for="signup-email">Email </label>
-              <div class="controls">
-                <input type="text" name="signup-email" id="signup-email" class="" value="" size="20"/>
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" for="signup-password">Password </label>
-              <div class="controls">
-                <input type="password" name="signup-password" id="signup-password" class="" value="" size="20"/>
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" for="signup-password-confirm">Confirm </label>
-              <div class="controls">
-                <input type="password" name="signup-password-confirm" id="signup-password-confirm" class="" value="" size="20"/>
-              </div>
-            </div>
-            <div class="form-actions">
-              <div class="submit">
-                <input type="button" name="button-signup" id="button-signup" value="Sign up" class="btn btn-usergrid"/>
-              </div>
-            </div>
-          </form>
+              <div>&nbsp;</div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-  <div id="forgot-password-page" class="container">
-    <iframe class="container"></iframe>
-  </div>
 
-  <div id="console-page" class="">
-    <div id="main1">
-      <div id="main2">
-        <div id="left" style="min-height: 600px;">
-          <div class="column-in">
+        <div id="message-page" class="container-fluid">
+          <div id="message-area" class="alert alert-info curl-data" style="padding: 20px;">
+            Whoops! We encounterd an error connecting to the API.  Press refresh to try loading the Admin Portal again.
+            <button id="reload-button" class="btn btn-primary" style="float: right; margin: -4px 30px;" onClick="window.location.reload()">Refresh</button>
+          </div>
+        </div>
+        <div id="login-page" class="container-fluid">
+          <div class="row">
+            <div id="login-area" class="span6 offset1">
+              <div id="login-message" class="alert alert-error">
+                <strong>ERROR</strong>: Your details were incorrect.<br/>
+              </div>
+              <div class="console-section">
+                <div class="well thingy"><span class="title">Login</span></div>
+                <form name="login-form" id="login-form" class="form-horizontal">
+                  <div class="control-group">
+                    <label class="control-label" for="login-email">Email:</label>
+                    <div class="controls">
+                      <input type="text" name="login-email" id="login-email" class="" value="" size="20"/>
+                    </div>
+                  </div>
+                  <div class="control-group">
+                    <label class="control-label" for="login-password">Password:</label>
+                    <div class="controls">
+                      <input type="password" name="login-password" id="login-password" class="" value="" size="20"/>
+                    </div>
+                  </div>
+                  <div class="control-group">
+                    <div class="controls">
+                      <input type="checkbox" value="true" id="remember" name="remember"/>
+                      <span>Remember me</span>
+                    </div>
+                  </div>
+                  <div class="form-actions">
+                    <div class="submit">
+                      <input type="submit" name="button-login" id="button-login" value="Log In" class="btn btn-usergrid"/>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="post-signup-page" class="container-fluid">
+          <div class="row">
+            <div id="login-area" class="span6 offset1">
+              <div class="console-section well thingy">
+                <span class="title">We're holding a seat for you!</span>
+                <br /><br />
+                <p>Thanks for signing up for a spot on our private beta. We will send you an email as soon as we're ready for you!</p>
+                <p>In the mean time, you can stay up to date with App Services on our <a href="https://groups.google.com/forum/?fromgroups#!forum/usergrid">Google Group</a>.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="signup-page" class="container-fluid">
+          <div class="row">
+            <div id="signup-area" class="span6 offset1">
+              <div id="signup-message" class="alert alert-error"></div>
+              <div class="console-section">
+                <div class="well thingy"><span class="title">Register</span> </div>
+                <form name="signup-form" id="signup-form" onsubmit="return false;" class="form-horizontal">
+                  <div class="control-group">
+                    <label class="control-label" for="signup-organization-name">Organization Account</label>
+                    <div class="controls">
+                      <input type="text" name="signup-organization-name" id="signup-organization-name" class="" value="" size="20"/>
+                    </div>
+                  </div>
+                  <div class="control-group">
+                    <label class="control-label" for="signup-username">Username</label>
+                    <div class="controls">
+                      <input type="text" name="signup-username" id="signup-username" class="" value="" size="20"/>
+                    </div>
+                  </div>
+                  <div class="control-group">
+                    <label class="control-label" for="signup-name">Name </label>
+                    <div class="controls">
+                      <input type="text" name="signup-name" id="signup-name" class="" value="" size="20"/>
+                    </div>
+                  </div>
+                  <div class="control-group">
+                    <label class="control-label" for="signup-email">Email </label>
+                    <div class="controls">
+                      <input type="text" name="signup-email" id="signup-email" class="" value="" size="20"/>
+                    </div>
+                  </div>
+                  <div class="control-group">
+                    <label class="control-label" for="signup-password">Password </label>
+                    <div class="controls">
+                      <input type="password" name="signup-password" id="signup-password" class="" value="" size="20"/>
+                    </div>
+                  </div>
+                  <div class="control-group">
+                    <label class="control-label" for="signup-password-confirm">Confirm </label>
+                    <div class="controls">
+                      <input type="password" name="signup-password-confirm" id="signup-password-confirm" class="" value="" size="20"/>
+                    </div>
+                  </div>
+                  <div class="form-actions">
+                    <div class="submit">
+                      <input type="button" name="button-signup" id="button-signup" value="Sign up" class="btn btn-usergrid"/>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="forgot-password-page" class="container">
+          <iframe class="container"></iframe>
+        </div>
+        <div id="console-page" class="">
 
 
 
-
+          <div>
             <div id="sidebar-menu">
               <ul id="application-panel-buttons" class="nav nav-list" style="margin-bottom: 5px;">
                 <!--
@@ -326,44 +276,20 @@
                     </ul>
                   </div>
                 </li>
+                <li id="application-panel-button-dashboard"><a href="#dashboard"><i class="icon-th"></i> Dashboard</a></li>
                 -->
-                <li id="application-panel-button-dashboard"><a href="#dashboard"><i class="icon-th"></i> App Overview</a></li>
-
-                <li><a href="#users"><i class="icon-user"></i> <span class="nav-menu-text">App End-Users</span></a></li>
-                <li><a href="#groups"><i class="icon-user"></i> <span class="nav-menu-text">Groups</span></a></li>
-                <li><a href="#roles" id="application-panel-button-roles"><i class="icon-user"></i> <span class="nav-menu-text">Roles</span></a></li>
-                <li><a href="#activities"><i class="icon-calendar"></i> <span class="nav-menu-text">Activities</span></a></li>
-                <li><a href="#collections" id="application-panel-button-collections"><i class="icon-book"></i> <span class="nav-menu-text">Collections</span></a></li>
-                <li><a href="#analytics"><i class="icon-signal"></i> <span class="nav-menu-text">Analytics</span></a></li>
-                <li><a href="#properties"><i class="wrench "></i> <span class="nav-menu-text">App Settings</span></a></li>
-                <li><a href="#shell"><i class="icon-warning-sign"></i> <span class="nav-menu-text">Shell</span></a></li>
+                <li><a href="#users"><i class="icon-user"></i> Users</a></li>
+                <li><a href="#groups"><i class="icon-user"></i> Groups</a></li>
+                <li><a href="#roles" id="application-panel-button-roles"><i class="icon-user"></i> Roles</a></li>
+                <li><a href="#activities"><i class="icon-calendar"></i> Activities</a></li>
+                <li><a href="#collections" id="application-panel-button-collections"><i class="icon-book"></i> Collections</a></li>
+                <li><a href="#analytics"><i class="icon-signal"></i> Analytics</a></li>
+                <li><a href="#properties"><i class="wrench "></i>Properties</a></li>
+                <li><a href="#shell"><i class="icon-warning-sign"></i> Shell</a></li>
+                <li><a href="#console"><i class="icon-list-alt"></i> Console</a></li>
+                <li><a href="http://apigee.com/docs/usergrid" target="_blank"><i class="icon-question-sign"></i> Help</a></li>
               </ul>
             </div>
-
-
-          </div>
-        </div>
-
-
-
-        <div id="left2" style="display: none;">
-          <div class="column-in">
-            This is the second column
-          </div>
-        </div>
-        <div id="right">
-          <div class="column-in">
-            <h4>Right Col</h4>
-            <p id="rccont">
-              This is content of the RIGHT column.
-            </p>
-          </div>
-        </div>
-
-        <div id="middle">
-          <div class="column-in">
-
-
             <div id="console-panels" class="container-fluid">
               <div id="organization-panel" style="display: none">
                 <div id="console-panel-nav-bar"></div>
@@ -1284,7 +1210,7 @@
                       </form>
                     </div>
                   <div class="left-column row span6" id="query-collection-info">
-                      <p><strong>Queries</strong></p>
+                      <p><strong>Queries</strong><p>
                       <p>For issuing queries against your application's data, App Services supports much of the standard SQL syntax.</p>
                         <a class="outside-link" target="_blank" href="http://apigee.com/docs/usergrid/content/queries-and-parameters"><strong>Learn more about Queries and Parameters.</strong></a>
                       <p><strong>Example Queries</strong></p>
@@ -1323,26 +1249,104 @@
               </div>
             </div>
 
-
           </div>
         </div>
-        <div class="cleaner">&nbsp;</div>
+        <div class="clear"></div>
       </div>
+      <form id="confirmAction" class="modal hide fade">
+        <div class="modal-header">
+          <a class="close" data-dismiss="modal">&times</a>
+          <h4></h4>
+        </div>
+        <div class="modal-body">
+          <p></p>
+        </div>
+        <div class="modal-footer">
+          <input type="submit" class="btn btn-danger" value="Yes, continue"/>
+          <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+        </div>
+      </form>
+      <form id="confirmDialog" class="modal hide fade">
+        <div class="modal-header">
+          <a class="close" data-dismiss="modal">&times</a>
+          <h4>Are you sure?</h4>
+        </div>
+        <div class="modal-body">
+          <p></p>
+        </div>
+        <div class="modal-footer">
+          <input type="submit" class="btn btn-danger" value="Yes, delete"/>
+          <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+        </div>
+      </form>
+      <form id="alertModal" class="modal hide fade">
+        <div class="modal-header">
+          <a class="close" data-dismiss="modal">&times</a>
+          <h4></h4>
+        </div>
+        <div class="modal-body">
+          <p></p>
+        </div>
+        <div class="modal-footer">
+          <input type="reset" class="btn btn-usergrid" value="OK" data-dismiss="modal"/>
+        </div>
+      </form>
+      <form id="dialog-form-new-application" class="modal hide fade" action="#">
+      <div class="modal-header">
+        <a class="close" data-dismiss="modal">&times</a>
+        <h4>Create new application</h4>
+      </div>
+      <div class="modal-body">
+        <p class="validateTips">All form fields are required.</p>
+        <fieldset>
+          <div class="control-group">
+            <label for="new-application-name">Name</label>
+            <div class="controls">
+              <input type="text" name="name" id="" value="" class="input-xlarge new-application-name"/>
+              <p class="help-block">Length of name must be between 4 and 80</p>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+      <div class="modal-footer">
+        <input type="submit" class="btn btn-usergrid" value="Create"/>
+        <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+      </div>
+    </form>
+      <div class="clear"></div>
     </div>
-  </div>
-</div>
+    <footer>
+      <div class="container-fluid">
+        <div class="subnav pull-left">
+          <ul class="nav nav-pills">
+            <li><a target="_blank" href="About.html">About</a></li>
+            <li><a target="_blank" href="blog.html">Blog</a></li>
+            <li><a target="_blank" href="Careers.html">Careers</a></li>
+            <li><a target="_blank" href="Contacts.html">Contacts</a></li>
+            <li><a target="_blank" href="News.html">News</a></li>
+            <li><a target="_blank" href="Privacy.html">Privacy</a></li>
+            <li><a target="_blank" href="Terms.html">Terms</a></li>
+          </ul>
+        </div>
+        <span id="copyright" class="pull-right">&copy; 2012 Apigee Corp. All rights reserved.</span>
+      </div>
+    </footer>
+    <script type="text/javascript">
 
-<div id="footer">
-  <div class="column-in">
-    <!--
-    <hr />
-    <span id="copyright" class="pull-right">&copy; 2012 Apigee Corp. All rights reserved.</span>
-    -->
-  </div>
-</div>
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-4084158-4']);
+      _gaq.push(['_trackPageview']);
 
+      (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
 
-<script src="js/app/ui/collections.entity.js" type="text/javascript"></script>
+    </script>
+  </body>
+
+  <script src="js/app/ui/collections.entity.js" type="text/javascript"></script>
   <script src="js/app/ui/collections.user.js" type="text/javascript"></script>
 
   <link rel="stylesheet" type="text/css" href="css/custom-theme/jquery-ui-1.8.9.custom.css"/>
@@ -1358,5 +1362,6 @@
   <script src="js/app/status.js" type="text/javascript"></script>
   <script src="js/lib/prettify.js" type="text/javascript"></script>
   <script type="text/javascript" charset="utf-8">prettyPrint();</script>
-</body>
+
+
 </html>

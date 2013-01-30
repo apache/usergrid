@@ -97,8 +97,7 @@ html{
   }
 }
 #console-panels{
-  margin-left: 160px;
-  border-left:1px solid @border;
+
 }
 footer{
   position:fixed;
@@ -301,18 +300,23 @@ a:active {
 //----------------- Navigation --------------------------------------------------------------------
 #sidebar-menu{
   position: absolute;
-  left: 5px;
+  left: 0px;
   width: 155px;
 }
+
+.nav-menu-text{
+  padding-left: 10px;
+}
 .nav-list{
+  padding-left: 0px;
   & > li > a{
     text-align: left;
-    .border-radius(5px);
-    padding: 5px 0 5px 10px;
+   // .border-radius(5px);
+    padding: 10px 0 10px 10px;
     margin: 0px 0;
   }
   .active > a{
-    background-color:@redApigee;
+    //background-color:@redApigee;
     color: @white;
     &:hover{
       color: @redApigee;
@@ -344,7 +348,7 @@ a:active {
   display: none;
   position:fixed;
   z-index: 10;
-  width: 127px;
+  width: 181px;
   .active > a{
     i{
       .icon-white;
