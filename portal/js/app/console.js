@@ -84,7 +84,6 @@
 
   var indexes = [];
   var backgroundGraphColor = '#ffffff';
-  Pages.resetPasswordUrl = Usergrid.ApiClient.getResetPasswordUrl();
 
   String.prototype.startsWith = function(s) {
     return this.lastIndexOf(s, 0) === 0;
