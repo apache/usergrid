@@ -22,7 +22,6 @@ public class CassandraRunnerTest {
 
     @Test
     public void simpleTest() {
-        //testBean = CassandraRunner.getAc().getBean("testBean", String.class);
         logger.info("info");
         assertTrue(true);
         assertEquals("testValue",testBean);

@@ -1,7 +1,9 @@
 package org.usergrid.cassandra;
 
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.thrift.CassandraDaemon;
+import org.apache.commons.io.FileUtils;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
@@ -12,18 +14,16 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import javax.annotation.Resource;
 import java.io.File;
-import java.lang.annotation.Annotation;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class CassandraRunner extends BlockJUnit4ClassRunner {
 
     private static final String TMP = "tmp";
     private static Logger logger = LoggerFactory.getLogger(CassandraRunner.class);
-    private static ExecutorService executor = Executors.newSingleThreadExecutor();
+    private static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private static ContextHolder contextHolder;
 
     // TODO maybe put a 'holder' object in the executor and provide access to application context thusly?
@@ -56,7 +56,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     @Override
     protected void runChild(FrameworkMethod method, RunNotifier notifier) {
         // TODO should scan for:
-        // - DataControl: truncateOnExit=true, dataLoader=[a class which implements load()]
+        // - DataControl: dropSchemaOnExit=true, dataLoader=[a class which implements load()]
         super.runChild(method, notifier);
     }
 
@@ -64,57 +64,39 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
 
         // TODO check for schema -
         // Setup.setup() if not present
+        // - schema creation, baseline data population, test data population
     }
 
-    private static boolean deleteRecursive(File path) {
-        if (!path.exists())
-            return false;
-        boolean ret = true;
-        if (path.isDirectory()){
-            for (File f : path.listFiles()){
-                ret = ret && deleteRecursive(f);
-            }
-        }
-        return ret && path.delete();
-    }
 
-    private static void loadSpringContext() {
-        // TODO check for appContext, create if not present
-        String[] locations = {"usergrid-test-context.xml"};
-        contextHolder.applicationContext = new ClassPathXmlApplicationContext(locations);
-    }
 
     private static void maybeInit() {
         if ( contextHolder != null ) {
             return;
         }
-        logger.info("Initing...");
-        contextHolder = new ContextHolder();
-        loadSpringContext();
+        logger.info("Initing CassandraRunner...");
+
+        // TODO these should all be passed in as config options ... via spring?
         // TODO make sure these match up with configs
         // TODO one cassandra config in this project!
         // TODO log4j.properties required to be present
-        deleteRecursive(new File("tmp/saved_caches"));
-        deleteRecursive(new File ("tmp/data"));
-        deleteRecursive(new File ("tmp/commitlog"));
+
         System.setProperty("cassandra-foreground", "true");
         System.setProperty("log4j.defaultInitOverride","true");
         System.setProperty("log4j.configuration", "log4j.properties");
-        System.setProperty("cassandra.ring_delay_ms","100");
-        //System.setProperty("cassandra.start_rpc","false");
-        //System.setProperty("cassandra.start_native_transport","false");
+        //System.setProperty("cassandra.ring_delay_ms","100");
+        //System.setProperty("cassandra.load_ring_state", "false");
+        System.setProperty("cassandra.join_ring","false");
 
-        executor.execute(new Runnable() {
-            public void run() {
-                contextHolder.cassandraDaemon = new CassandraDaemon();
-                contextHolder.cassandraDaemon.activate();
-            }
-        });
+        FileUtils.deleteQuietly(new File(TMP));
+        
+        //FileUtils.deleteQuietly(new File("tmp/data"));
+        //FileUtils.deleteQuietly(new File("tmp/commit_log"));
+
+        contextHolder = new ContextHolder();
         try {
-            TimeUnit.SECONDS.sleep(3);
-        }
-        catch (InterruptedException e) {
-            throw new AssertionError(e);
+            executor.schedule(contextHolder ,3, TimeUnit.SECONDS).get();
+        } catch (Exception ex) {
+            logger.error("Could not schedule cassandra runner");
         }
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -132,15 +114,26 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     private static void stopCassandra() throws Exception {
         if (contextHolder != null) {
             contextHolder.cassandraDaemon.deactivate();
-            StorageService.instance.stopClient();
+            //StorageService.instance.stopClient();
 
         }
         executor.shutdown();
         executor.shutdownNow();
     }
 
-    static class ContextHolder {
-        ApplicationContext applicationContext;
+    static class ContextHolder implements Runnable {
+        final ApplicationContext applicationContext;
         CassandraDaemon cassandraDaemon;
+
+        ContextHolder() {
+            String[] locations = {"usergrid-test-context.xml"};
+            applicationContext = new ClassPathXmlApplicationContext(locations);
+
+        }
+        @Override
+        public void run() {
+            cassandraDaemon = new CassandraDaemon();
+            cassandraDaemon.activate();
+        }
     }
 }
