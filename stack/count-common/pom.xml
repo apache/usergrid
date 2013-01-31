@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.usergrid</groupId>
         <artifactId>usergrid</artifactId>
-        <version>0.0.14-SNAPSHOT</version>
+        <version>0.0.14</version>
     </parent>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -31,7 +31,7 @@
 	</parent>
 	<groupId>org.usergrid</groupId>
 	<artifactId>usergrid</artifactId>
-	<version>0.0.14-SNAPSHOT</version>
+	<version>0.0.14</version>
 	<name>${bundle.symbolicName} [${bundle.namespace}]</name>
 	<description>Usergrid Project</description>
 	<packaging>pom</packaging>
