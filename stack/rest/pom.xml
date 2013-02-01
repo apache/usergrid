@@ -9,6 +9,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<bundle.symbolicName>org.usergrid.rest</bundle.symbolicName>
 		<bundle.namespace>org.usergrid</bundle.namespace>
+		<jetty.version>8.1.8.v20121106</jetty.version>
 	</properties>
 	<artifactId>usergrid-rest</artifactId>
 	<packaging>war</packaging>
@@ -142,6 +143,7 @@
 					</execution>
 				</executions>
 			</plugin>
+			
 			<plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
@@ -237,10 +239,11 @@
 			<artifactId>usergrid-mongo-emulator</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
-			<scope>test</scope>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -331,11 +334,11 @@
 			<groupId>net.tanesha.recaptcha4j</groupId>
 			<artifactId>recaptcha4j</artifactId>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>catalina</artifactId>
 			<scope>provided</scope>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.codehaus.jackson</groupId>
 			<artifactId>jackson-core-asl</artifactId>
@@ -471,17 +474,33 @@
 			<artifactId>hector-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!--  use the external test client.  Just depend on the maven jetty plugin to launch jetty -->
 		<dependency>
 			<groupId>com.sun.jersey.jersey-test-framework</groupId>
-			<artifactId>jersey-test-framework-grizzly2</artifactId>
-			<version>1.9.1</version>
+			<artifactId>jersey-test-framework-external</artifactId>
+			<version>${jersey-version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.glassfish.grizzly</groupId>
-			<artifactId>grizzly-http-servlet-server</artifactId>
+			<groupId>com.sun.jersey.jersey-test-framework</groupId>
+			<artifactId>jersey-test-framework-core</artifactId>
+			<version>${jersey-version}</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty.aggregate</groupId>
+			<artifactId>jetty-server</artifactId>
+			<version>${jetty.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty.aggregate</groupId>
+			<artifactId>jetty-webapp</artifactId>
+			<version>${jetty.version}</version>
+			<scope>test</scope>
+		</dependency>
+		
+		
 		<dependency>
 			<groupId>org.usergrid</groupId>
 			<artifactId>usergrid-java-client</artifactId>
@@ -492,7 +511,7 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>12.0</version>
-        </dependency>
+         </dependency>
 	</dependencies>
 
 </project>
