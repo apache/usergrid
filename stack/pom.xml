@@ -11,7 +11,7 @@
 		<hector-version>1.1-2</hector-version>
 		<hector-test-version>1.1-2</hector-test-version>
 		<jackson-version>1.9.9</jackson-version>
-		<jersey-version>1.11</jersey-version>
+		<jersey-version>1.17</jersey-version>
 		<shiro-version>1.2.0</shiro-version>
 		<junit-version>4.8.2</junit-version>
 		<log4j-version>1.2.16</log4j-version>
@@ -264,7 +264,7 @@
 				<artifactId>geocell</artifactId>
 				<version>0.0.10</version>
 			</dependency>
-			<dependency>
+			<!-- TODO T.N. try and remove this --> <dependency>
 				<groupId>javaee</groupId>
 				<artifactId>javaee-api</artifactId>
 				<version>5</version>
