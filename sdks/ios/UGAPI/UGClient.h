@@ -75,6 +75,17 @@ set the response limit in UGQuery as well.
 -(UGClientResponse *)logInUserWithPin: (NSString *)userName pin:(NSString *)pin;
 
 // log in user with Facebook token
+//
+//  //sample usage:
+//  NSString * facebookToken = @"your-facebook-token";
+//  UGClientResponse *response = [usergridClient logInUserWithFacebook:facebookToken];
+//  user = [usergridClient getLoggedInUser];
+//  if (user.username){
+//    return true;
+//  } else {
+//    return false;
+//  }
+//
 -(UGClientResponse *)logInUserWithFacebook: (NSString *)facebookToken;
 
 // log in as the administrator of the application. Generally used for applications
