@@ -74,6 +74,9 @@ set the response limit in UGQuery as well.
 // log in with the given username and PIN value
 -(UGClientResponse *)logInUserWithPin: (NSString *)userName pin:(NSString *)pin;
 
+// log in user with Facebook token
+-(UGClientResponse *)logInUserWithFacebook: (NSString *)facebookToken;
+
 // log in as the administrator of the application. Generally used for applications
 // that have an "administrator" feature. Not the sort of thing you want normal
 // users doing. 

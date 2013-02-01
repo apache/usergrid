@@ -678,6 +678,15 @@ NSString *g_deviceUUID = nil;
     return [self logIn:@"pin" userKey:@"username" userValue:userName pwdKey:@"pin" pwdValue:pin];
 }
 
+-(UGClientResponse *)logInUserWithFacebook: (NSString *)facebookToken
+{
+    NSMutableString *url = [self createURL:@"auth/facebook"];
+    UGQuery *query = [[UGQuery alloc] init];
+    [query addURLTerm:@"fb_access_token" equals:facebookToken];
+    [self appendQueryToURL:url query:query];
+    return [self httpTransaction:url op:kUGHTTPGet opData:nil];
+}
+
 -(UGClientResponse *)logInAdmin: (NSString *)adminUserName secret:(NSString *)adminSecret
 {
     return [self logIn:@"client_credentials" userKey:@"client_id" userValue:adminUserName pwdKey:@"client_secret" pwdValue:adminSecret];
