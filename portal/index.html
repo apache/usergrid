@@ -8,6 +8,7 @@
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" type="text/css" href="css/reset.css"/>
     <link rel="stylesheet" type="text/css" href="css/usergrid.css"/>
+    <script src="config.js" type="text/javascript"></script>
     <script src="js/app/usergrid.appSDK.js" type="text/javascript"></script>
     <script src="js/app/session.js" type="text/javascript"></script>
     <script src="js/app/quickLogin.js" type="text/javascript"></script>
@@ -21,7 +22,7 @@
       Usergrid.Params.parseParams();
       Usergrid.SSO.setUseSSO(Usergrid.Params.queryParams.use_sso);
       Usergrid.QuickLogin.init(Usergrid.Params.queryParams,Usergrid.userSession.loggedIn(),
-        Usergrid.SSO.usingSSO());
+      Usergrid.SSO.usingSSO());
 
     </script>
     <script src="js/lib/jquery-1.7.2.min.js" type="text/javascript"></script>
@@ -101,7 +102,6 @@
         <div id="publicMenu" class="navbar-inner">
           <div class="left-header">
             <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img src="images/logo-white.png">apigee</a></h1>
-            <b class="caret"></b>
             <h2 id="ActualPage1">Admin Portal</h2>
           </div>
           <div class="right-header">
@@ -201,11 +201,13 @@
               <div class="controls">
                 <input type="text" name="login-email" id="login-email" class="" value="" size="20"/>
               </div>
+
             </div>
             <div class="control-group">
               <label class="control-label" for="login-password">Password:</label>
               <div class="controls">
                 <input type="password" name="login-password" id="login-password" class="" value="" size="20"/>
+
               </div>
             </div>
             <div class="control-group">
@@ -304,31 +306,16 @@
 
             <div id="sidebar-menu">
               <ul id="application-panel-buttons" class="nav nav-list" style="margin-bottom: 5px;">
-                <!--
-                <h4 class="panel-title">
-                  ORGANIZATION
-                </h4>
-                <li><a class="go-home">
-                  <i class="icon-home"></i>
-                  <div id="organization-name">Home</div>
-                </a></li>
-                <br>
-                <h4 class="panel-title">
-                  APPLICATION
-                </h4>
-                <li>
-                  <div class="btn-group">
-                    <a id="current-app-name" class="btn dropdown-toggle" data-toggle="dropdown"  style="width: 109px; text-align: left;">
-                      App Name
-                    </a>
-                    <ul class="dropdown-menu applications-menu" >
-                      <li><a >loading apps...</a></li>
-                    </ul>
-                  </div>
-                </li>
-                -->
-                <li id="application-panel-button-dashboard"><a href="#dashboard"><i class="icon-th"></i> App Overview</a></li>
+                <h4 class="panel-title">Organization</h4>
+                <div class="panel-desc">View your org's apps, activities, administrators and more.</div>
+                <hr style="margin: 0;">
+                <li id="application-panel-button-dashboard"><a href="#"><i class="icon-th"></i> Org Overview</a></li>
 
+                <h4 class="panel-title">Application</h4>
+                <p class="panel-desc">View your app's data, scripts, analytics and more.</p>
+                <hr style="margin: 0;">
+
+                <li id="application-panel-button-dashboard"><a href="#dashboard"><i class="icon-th"></i> App Overview</a></li>
                 <li><a href="#users"><i class="icon-user"></i> <span class="nav-menu-text">App End-Users</span></a></li>
                 <li><a href="#groups"><i class="icon-user"></i> <span class="nav-menu-text">Groups</span></a></li>
                 <li><a href="#roles" id="application-panel-button-roles"><i class="icon-user"></i> <span class="nav-menu-text">Roles</span></a></li>

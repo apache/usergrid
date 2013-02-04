@@ -84,7 +84,6 @@
 
   var indexes = [];
   var backgroundGraphColor = '#ffffff';
-  Pages.resetPasswordUrl = Usergrid.ApiClient.getResetPasswordUrl();
 
   String.prototype.startsWith = function(s) {
     return this.lastIndexOf(s, 0) === 0;
@@ -827,7 +826,7 @@
     var size = size || 50;
     return 'https://secure.gravatar.com/avatar/' + MD5(email) + '?s=' + size + encodeURI("&d=http://apigee.com/usergrid/images/user_profile.png");
   }
-  
+
   function get_replacementGravatar(picture) {
     picture = picture.replace(/^http:\/\/www.gravatar/i, 'https://secure.gravatar');
     //note: changing this to use the image on apigee.com - since the gravatar default won't work on any non-public domains such as localhost
@@ -1924,7 +1923,7 @@
         if (!this_data.picture) {
           this_data.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user_profile.png"
         } else {
-          this_data.picture = get_replacementGravatar(this_data.picture);          
+          this_data.picture = get_replacementGravatar(this_data.picture);
         }
         $.tmpl('apigee.ui.users.table_rows.html', this_data).appendTo('#users-table');
       }
@@ -4044,7 +4043,7 @@
    * Signup
    *
    ******************************************************************/
-   
+
   $('#signup-cancel').click(function() {
     Pages.ShowPage('login');
     clearSignupError();
@@ -4218,6 +4217,7 @@
     if (Usergrid.SSO.usingSSO()) {
       Usergrid.SSO.sendToSSOProfilePage(urlCallback);
     } else {
+     Pages.SelectPanel('account');
       $('#update-account-id').text(Usergrid.userSession.getUserUUID());
       $('#update-account-name').val("");
       $('#update-account-email').val("");

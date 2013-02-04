@@ -3605,7 +3605,7 @@ html {
   margin: 0 auto;
 }
 #pages {
-  padding: 110px 0 50px 0px;
+  padding: 0px 0 50px 0px;
 }
 #pages > div {
   display: none;
@@ -3758,7 +3758,7 @@ a:active {
   background-color: #1b97d1;
 }
 .navbar .nav .active {
-  background-color: #e02e03 !important;
+  background-color: #b22714 !important;
 }
 .navbar .nav .active .go-home {
   background-color: transparent;
@@ -3781,7 +3781,7 @@ a:active {
   left: -1px;
   right: -2px;
   margin-bottom: 18px;
-  background-color: #e02e03;
+  background-color: #b22714;
   z-index: 130;
   height: 42px;
 }
@@ -4907,8 +4907,16 @@ table .zebraRows:nth-child(2n) {
   display: inline;
 }
 .panel-title {
-  color: #909090;
-  padding-left: 5px;
+  font-weight: 400;
+  font-size: 16px;
+  color: #000;
+  padding: 10px 0 0 10px;
+}
+.panel-desc {
+  font-weight: 200;
+  font-size: 12px;
+  color: #000;
+  padding-left: 10px;
 }
 .wrench {
   background-image: url("../images/glyphicons_halflings_135_wrench.png");

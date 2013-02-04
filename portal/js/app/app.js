@@ -7,6 +7,11 @@ var Pages = new ApigeePages();
 $(document).ready(function () {
 
   var query_params = Usergrid.Params.queryParams;
+  if (Usergrid.apiUrl) {
+    Usergrid.ApiClient.setApiUrl(Usergrid.apiUrl);
+  }
+  Pages.resetPasswordUrl = Usergrid.ApiClient.getResetPasswordUrl();
+
   initCore();
   initUI(query_params);
   startApp();
@@ -24,6 +29,7 @@ $(document).ready(function () {
   }
 
   function startApp() {
+
     if (!Usergrid.userSession.loggedIn()) {
       // test to see if the Portal is running on apigee, if so, send to SSO, if not, fall through to login screen
       if (Usergrid.SSO.usingSSO()) {
@@ -83,7 +89,7 @@ $(document).ready(function () {
     Pages.AddPanel('analytics', null, null, null, Usergrid.console.pageSelectAnalytics, null);
     Pages.AddPanel('properties', null, null, null, Usergrid.console.pageSelectProperties, null);
     Pages.AddPanel('shell', null, null, null, Usergrid.console.pageSelectShell, null);
-    Pages.AddPanel('account', "#account-link", null, null, Usergrid.console.requestAccountSettings, accountRedirect);
+    Pages.AddPanel('account', "#account-link", null, null, null, accountRedirect);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
 
   }
