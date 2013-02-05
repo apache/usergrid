@@ -38,6 +38,8 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     public static <T> T getBean(String name, Class<T> requiredType) {
         return contextHolder.applicationContext.getBean(name, requiredType);
     }
+    //TODO get by class type
+
     /**
      * Class-level run. The order of events are as follows:
      * - start IntravertDeamon if not started already
@@ -57,6 +59,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     protected void runChild(FrameworkMethod method, RunNotifier notifier) {
         // TODO should scan for:
         // - DataControl: dropSchemaOnExit=true, dataLoader=[a class which implements load()]
+        // dataControl.loadMyData(cassandraService)
         super.runChild(method, notifier);
     }
 
@@ -65,6 +68,11 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         // TODO check for schema -
         // Setup.setup() if not present
         // - schema creation, baseline data population, test data population
+        // - SchemaManager iface
+        // - DataLoader iface
+        // 1. SchemaManager.loadSchema()
+        // 2. SchemaManager.populateBaseData()
+        // 3. DataLoader.execute()
     }
 
 
@@ -83,14 +91,11 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         System.setProperty("cassandra-foreground", "true");
         System.setProperty("log4j.defaultInitOverride","true");
         System.setProperty("log4j.configuration", "log4j.properties");
-        //System.setProperty("cassandra.ring_delay_ms","100");
-        //System.setProperty("cassandra.load_ring_state", "false");
+        System.setProperty("cassandra.load_ring_state", "false");
         System.setProperty("cassandra.join_ring","false");
+        // System.setProperty("cassandra.ring_delay_ms","100");
 
         FileUtils.deleteQuietly(new File(TMP));
-        
-        //FileUtils.deleteQuietly(new File("tmp/data"));
-        //FileUtils.deleteQuietly(new File("tmp/commit_log"));
 
         contextHolder = new ContextHolder();
         try {
@@ -114,8 +119,6 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     private static void stopCassandra() throws Exception {
         if (contextHolder != null) {
             contextHolder.cassandraDaemon.deactivate();
-            //StorageService.instance.stopClient();
-
         }
         executor.shutdown();
         executor.shutdownNow();
