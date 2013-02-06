@@ -125,10 +125,12 @@ import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
+import org.usergrid.management.exceptions.DisabledAppUserException;
 import org.usergrid.management.exceptions.IncorrectPasswordException;
 import org.usergrid.management.exceptions.ManagementException;
 import org.usergrid.management.exceptions.UnableToLeaveOrganizationException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
+import org.usergrid.management.exceptions.UnactivatedAppUserException;
 import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
@@ -2310,10 +2312,10 @@ public class ManagementServiceImpl implements ManagementService {
 
     if (verify(applicationId, user.getUuid(), password)) {
       if (!user.activated()) {
-        throw new UnactivatedAdminUserException();
+        throw new UnactivatedAppUserException();
       }
       if (user.disabled()) {
-        throw new DisabledAdminUserException();
+        throw new DisabledAppUserException();
       }
       return user;
     }
