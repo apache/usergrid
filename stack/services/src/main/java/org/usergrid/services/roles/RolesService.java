@@ -28,10 +28,8 @@ import org.usergrid.persistence.EntityRef;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.SimpleRoleRef;
 import org.usergrid.persistence.entities.Group;
-import org.usergrid.persistence.entities.Role;
 import org.usergrid.services.AbstractCollectionService;
 import org.usergrid.services.ServiceContext;
-import org.usergrid.services.ServiceParameter;
 import org.usergrid.services.ServicePayload;
 import org.usergrid.services.ServiceResults;
 

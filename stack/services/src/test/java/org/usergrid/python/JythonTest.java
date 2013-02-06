@@ -15,9 +15,9 @@
  ******************************************************************************/
 package org.usergrid.python;
 
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.junit.Test;
 
 public class JythonTest {
 	private static final Logger logger = LoggerFactory.getLogger(JythonTest.class);

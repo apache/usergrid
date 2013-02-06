@@ -23,7 +23,6 @@ import java.util.UUID;
 
 import org.junit.Test;
 import org.usergrid.persistence.CredentialsInfo;
-import org.usergrid.persistence.entities.User;
 
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.MetricPredicate;

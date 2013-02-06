@@ -1,7 +1,8 @@
 package org.usergrid.security.tokens;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.ClassUtils.cast;
@@ -9,8 +10,6 @@ import static org.usergrid.utils.MapUtils.hashMap;
 
 import java.util.Map;
 import java.util.UUID;
-
-import me.prettyprint.cassandra.utils.TimeUUIDUtils;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -31,8 +30,6 @@ import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.utils.UUIDUtils;
-
-import com.sun.xml.bind.v2.schemagen.xmlschema.Appinfo;
 
 public class TokenServiceTest {
 

@@ -1,11 +1,14 @@
 package org.usergrid.services.assets.data;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.inject.Module;
-import eu.medsea.mimeutil.MimeException;
-import eu.medsea.mimeutil.MimeType;
-import eu.medsea.mimeutil.MimeUtil2;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Properties;
+import java.util.UUID;
+
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -23,12 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.entities.Asset;
 
-import javax.ws.rs.core.MediaType;
-import java.io.*;
-import java.util.Collection;
-import java.util.Properties;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.inject.Module;
 
 /**
  * @author zznate

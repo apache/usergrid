@@ -36,7 +36,7 @@ public class Md5HashCommand extends SaltedHasherCommand {
   public byte[] hash(byte[] input, CredentialsInfo info,  UUID userId, UUID applicationId) {
      byte[]  data = maybeSalt(input, applicationId, userId);
      
-     return DigestUtils.md5(data);
+     return DigestUtils.md5Hex(data).getBytes(UTF8);
   
   }
   

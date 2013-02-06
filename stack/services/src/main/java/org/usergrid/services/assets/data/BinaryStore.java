@@ -1,9 +1,9 @@
 package org.usergrid.services.assets.data;
 
-import org.usergrid.persistence.entities.Asset;
-
 import java.io.InputStream;
 import java.util.UUID;
+
+import org.usergrid.persistence.entities.Asset;
 
 /**
  * @author zznate

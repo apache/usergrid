@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.usergrid.services.applications;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.usergrid.services.ServiceResults.genericServiceResults;
 import static org.usergrid.services.ServiceResults.simpleServiceResults;
 import static org.usergrid.utils.MapUtils.hashMap;

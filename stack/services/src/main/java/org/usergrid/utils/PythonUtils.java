@@ -17,10 +17,10 @@ package org.usergrid.utils;
 
 import static org.usergrid.utils.StringUtils.compactWhitespace;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.python.core.PyObject;
 import org.python.util.PythonInterpreter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PythonUtils {
 
