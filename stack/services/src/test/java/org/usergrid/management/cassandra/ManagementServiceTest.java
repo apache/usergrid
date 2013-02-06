@@ -9,13 +9,10 @@ import static org.junit.Assert.assertTrue;
 import static org.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
-import java.io.UnsupportedEncodingException;
-import java.util.*;
-
-import com.google.common.collect.BiMap;
-import com.usergrid.count.SimpleBatcher;
-
-import me.prettyprint.cassandra.utils.TimeUUIDUtils;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -29,7 +26,6 @@ import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
-import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.AuthPrincipalType;
 import org.usergrid.security.crypto.command.Md5HashCommand;
@@ -37,9 +33,10 @@ import org.usergrid.security.crypto.command.Sha1HashCommand;
 import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.security.tokens.TokenService;
 import org.usergrid.security.tokens.exceptions.InvalidTokenException;
-import org.usergrid.services.devices.users.UsersService;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
+
+import com.usergrid.count.SimpleBatcher;
 
 /**
  * @author zznate

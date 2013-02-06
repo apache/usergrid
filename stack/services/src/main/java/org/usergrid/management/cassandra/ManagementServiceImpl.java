@@ -17,10 +17,10 @@
 package org.usergrid.management.cassandra;
 
 import static java.lang.Boolean.parseBoolean;
-import static org.usergrid.locking.LockHelper.*;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.usergrid.locking.LockHelper.getUniqueUpdateLock;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_ACTIVATION_URL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_CONFIRMATION_URL;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_RESETPW_URL;
@@ -95,6 +95,7 @@ import static org.usergrid.utils.ConversionUtils.bytes;
 import static org.usergrid.utils.ConversionUtils.uuid;
 import static org.usergrid.utils.ListUtils.anyNull;
 import static org.usergrid.utils.MapUtils.hashMap;
+import static org.usergrid.utils.PasswordUtils.mongoPassword;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -166,7 +167,10 @@ import org.usergrid.services.ServiceManager;
 import org.usergrid.services.ServiceManagerFactory;
 import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
-import org.usergrid.utils.*;
+import org.usergrid.utils.ConversionUtils;
+import org.usergrid.utils.JsonUtils;
+import org.usergrid.utils.MailUtils;
+import org.usergrid.utils.StringUtils;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -175,8 +179,6 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
-
-import static org.usergrid.utils.PasswordUtils.*;
 
 public class ManagementServiceImpl implements ManagementService {
 

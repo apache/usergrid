@@ -15,15 +15,14 @@
  ******************************************************************************/
 package org.usergrid.services.assets;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.EntityRef;
-import org.usergrid.services.AbstractCollectionService;
 import org.usergrid.services.AbstractPathBasedColllectionService;
 import org.usergrid.services.ServiceContext;
 import org.usergrid.services.ServiceResults;
-
-import java.util.List;
 
 public class AssetsService extends AbstractPathBasedColllectionService {
 

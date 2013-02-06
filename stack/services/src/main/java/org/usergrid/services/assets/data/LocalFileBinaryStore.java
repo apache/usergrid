@@ -1,11 +1,13 @@
 package org.usergrid.services.assets.data;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.usergrid.persistence.entities.Asset;
-
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
+
+import org.apache.commons.io.FileUtils;
+import org.usergrid.persistence.entities.Asset;
 
 /**
  * A binary store implementation using the local file system

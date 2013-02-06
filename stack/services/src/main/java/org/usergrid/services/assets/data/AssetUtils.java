@@ -1,15 +1,16 @@
 package org.usergrid.services.assets.data;
 
-import com.google.common.base.Preconditions;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.UUID;
+
 import org.apache.commons.lang.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.entities.Asset;
 import org.usergrid.utils.StringUtils;
 
-import java.text.ParseException;
-import java.util.Date;
-import java.util.UUID;
+import com.google.common.base.Preconditions;
 
 /**
  * @author zznate

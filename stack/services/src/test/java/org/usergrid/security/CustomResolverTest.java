@@ -29,8 +29,6 @@ import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.shiro.CustomPermission;
 import org.usergrid.security.shiro.principals.ApplicationUserPrincipal;
-import org.usergrid.security.shiro.principals.UserPrincipal;
-import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.utils.UUIDUtils;
 
 public class CustomResolverTest extends AbstractShiroTestHelper {

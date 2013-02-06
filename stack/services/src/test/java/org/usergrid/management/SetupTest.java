@@ -1,6 +1,16 @@
 package org.usergrid.management;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+import java.util.Properties;
+
+import javax.mail.Message;
+
 import me.prettyprint.hector.testutils.EmbeddedServerHelper;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,14 +21,6 @@ import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
-
-import javax.mail.Message;
-import java.util.List;
-import java.util.Properties;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 public class SetupTest {
 

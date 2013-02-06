@@ -1,5 +1,13 @@
 package org.usergrid.management.cassandra;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Set;
+
+import javax.annotation.Resource;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,12 +18,6 @@ import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.persistence.EntityManagerFactory;
-
-import javax.annotation.Resource;
-
-import java.util.Set;
-
-import static org.junit.Assert.*;
 
 /**
  * @author zznate

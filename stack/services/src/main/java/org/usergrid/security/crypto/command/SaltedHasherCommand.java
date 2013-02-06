@@ -30,7 +30,7 @@ import org.usergrid.security.salt.SaltProvider;
  */
 public abstract class SaltedHasherCommand extends EncryptionCommand {
 
-  private static final Charset UTF8 = Charset.forName("UTF-8");
+  protected static final Charset UTF8 = Charset.forName("UTF-8");
 
   @Autowired
   private SaltProvider provider;

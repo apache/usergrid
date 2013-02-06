@@ -1,6 +1,8 @@
 package org.usergrid.management.cassandra;
 
-import com.google.common.base.Preconditions;
+import java.util.Arrays;
+import java.util.UUID;
+
 import org.usergrid.management.ApplicationCreator;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
@@ -8,12 +10,8 @@ import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.exceptions.ApplicationCreationException;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
-import org.usergrid.persistence.entities.Application;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import com.google.common.base.Preconditions;
 
 /**
  * @author zznate

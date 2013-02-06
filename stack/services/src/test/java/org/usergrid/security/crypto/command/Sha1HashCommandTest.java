@@ -15,18 +15,15 @@
  ******************************************************************************/
 package org.usergrid.security.crypto.command;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.UUID;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.shiro.crypto.hash.Md5Hash;
 import org.junit.Test;
 import org.usergrid.persistence.CredentialsInfo;
-import org.usergrid.persistence.entities.User;
 
 /**
  * @author tnine

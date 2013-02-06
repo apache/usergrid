@@ -15,16 +15,15 @@
  ******************************************************************************/
 package org.usergrid.management.cassandra;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.usergrid.management.AccountCreationProps;
+import static java.lang.Boolean.parseBoolean;
+import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.util.Enumeration;
 import java.util.Properties;
 
-import static java.lang.Boolean.parseBoolean;
-import static java.lang.Boolean.valueOf;
-import static org.apache.commons.lang.StringUtils.isBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.usergrid.management.AccountCreationProps;
 
 public class AccountCreationPropsImpl implements AccountCreationProps {
     private static final Logger logger = LoggerFactory.getLogger(AccountCreationPropsImpl.class);

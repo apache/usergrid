@@ -34,7 +34,7 @@ public class Md5HashCommandTest {
     
     String test = "I'm a  test password";
     
-    byte[] hashed = DigestUtils.md5(test.getBytes("UTF-8"));
+    byte[] hashed = DigestUtils.md5Hex(test.getBytes("UTF-8")).getBytes("UTF-8");
     
     Md5HashCommand command = new  Md5HashCommand();
     
@@ -51,4 +51,21 @@ public class Md5HashCommandTest {
     
   }
 
+  @Test
+  public void legacyCompatible() throws UnsupportedEncodingException{
+    String test = "secret";
+    
+    
+    String hashedString = DigestUtils.md5Hex(test.getBytes("UTF-8"));
+    
+    byte[] hashedStringBytes = hashedString.getBytes("UTF-8");
+    
+    Md5HashCommand command = new  Md5HashCommand();
+    
+    CredentialsInfo info = new CredentialsInfo();
+    
+    byte[] results = command.hash(test.getBytes("UTF-8"), info, null, null);
+    
+    assertArrayEquals(hashedStringBytes, results);
+  }
 }

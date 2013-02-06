@@ -25,8 +25,12 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.persistence.*;
+import org.usergrid.persistence.Entity;
+import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.Query;
+import org.usergrid.persistence.Results;
 import org.usergrid.persistence.Results.Level;
+import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.usergrid.services.ServiceResults.Type;
 import org.usergrid.services.exceptions.ServiceResourceNotFoundException;

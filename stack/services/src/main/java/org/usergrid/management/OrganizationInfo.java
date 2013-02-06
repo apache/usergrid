@@ -15,8 +15,8 @@
  ******************************************************************************/
 package org.usergrid.management;
 
-import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.usergrid.persistence.Schema.PROPERTY_PATH;
+import static org.usergrid.persistence.Schema.PROPERTY_UUID;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

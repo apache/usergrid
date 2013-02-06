@@ -22,7 +22,27 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.usergrid.management.AccountCreationProps.*;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_ACTIVATED;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_CONFIRMATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ORGANIZATION_ACTIVATED;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_ACTIVATED;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_CONFIRMATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_PASSWORD_RESET;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_PIN_REQUEST;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_ORGANIZATIONS_REQUIRE_CONFIRMATION;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_ACTIVATION_URL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
+import static org.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -32,33 +52,24 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Store;
 import javax.mail.internet.MimeMultipart;
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
-import org.codehaus.jackson.JsonNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 import org.usergrid.persistence.EntityManager;
-import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.entities.User;
-
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class EmailFlowTest {
 

@@ -81,13 +81,11 @@ public class EncryptionServiceImpl implements EncryptionService {
       EncryptionCommand command = commands.get(commandName);
 
       // verify we have a command to load
-      Assert
-          .notNull(
-              command,
-              String
-                  .format(
+     if(command == null){
+       throw new IllegalArgumentException(String.format(
                       "No command implementat for name %s exists, yet it is persisted on a user's credentials info.  This means their credentials either need removed, or this command needs supported",
                       commandName));
+     }
 
       encrypted = command.auth(encrypted, creds, userId, applicationId);
     }

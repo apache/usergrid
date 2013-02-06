@@ -33,11 +33,19 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.management.UserInfo;
-import org.usergrid.persistence.*;
+import org.usergrid.persistence.Entity;
+import org.usergrid.persistence.EntityRef;
+import org.usergrid.persistence.Identifier;
+import org.usergrid.persistence.Query;
+import org.usergrid.persistence.Results;
+import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.entities.Role;
-import org.usergrid.persistence.entities.User;
 import org.usergrid.security.shiro.utils.SubjectUtils;
-import org.usergrid.services.*;
+import org.usergrid.services.AbstractCollectionService;
+import org.usergrid.services.ServiceContext;
+import org.usergrid.services.ServicePayload;
+import org.usergrid.services.ServiceRequest;
+import org.usergrid.services.ServiceResults;
 import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
 public class UsersService extends AbstractCollectionService {

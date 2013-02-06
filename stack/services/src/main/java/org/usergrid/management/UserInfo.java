@@ -27,7 +27,6 @@ import static org.usergrid.utils.ConversionUtils.getBoolean;
 import static org.usergrid.utils.ConversionUtils.string;
 import static org.usergrid.utils.ConversionUtils.uuid;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 

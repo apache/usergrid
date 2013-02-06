@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.usergrid.security.crypto;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +24,8 @@ import java.util.UUID;
 import org.junit.Test;
 import org.usergrid.persistence.CredentialsInfo;
 import org.usergrid.security.crypto.command.EncryptionCommand;
+import org.usergrid.security.crypto.command.Md5HashCommand;
+import org.usergrid.security.crypto.command.Sha1HashCommand;
 
 /**
  * @author tnine
@@ -123,6 +127,44 @@ public class EncryptionServiceImplTest {
     EncryptionServiceImpl service = new EncryptionServiceImpl();
     service.init();
 
+  }
+  
+  /**
+   * Tests legacy md5 support for old imported md5 -> sha-1 passwords
+   */
+  @Test
+  public void legacyMd5Support(){
+    EncryptionServiceImpl impl = new EncryptionServiceImpl();
+    
+    Md5HashCommand md5 = new Md5HashCommand();
+    Sha1HashCommand sha1 = new Sha1HashCommand();
+    
+    List<EncryptionCommand> commands = new ArrayList<EncryptionCommand>(2);
+    commands.add(md5);
+    commands.add(sha1);
+    
+    impl.setCommands(commands);
+    impl.setDefaultCommandName(sha1.getName());
+    impl.init();
+    
+    //now encrypt
+    String password = "secret";
+    
+    CredentialsInfo creds = new CredentialsInfo();
+    creds.setHashType("md5");
+    creds.setEncrypted(true);
+    creds.setCipher("sha-1");
+    
+    //set the secret into the creds statically for the legacy test
+    creds.setSecret("8rpwQiXFx-5nbzIB6iVr9XeeaHc");
+    
+    
+    
+    
+    boolean result = impl.verify(password, creds, null, null);
+    
+    assertTrue("Legacy password verified", result);
+    
   }
 
 }
