@@ -58,7 +58,9 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.exceptions.DisabledAdminUserException;
+import org.usergrid.management.exceptions.DisabledAppUserException;
 import org.usergrid.management.exceptions.UnactivatedAdminUserException;
+import org.usergrid.management.exceptions.UnactivatedAppUserException;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
@@ -224,9 +226,9 @@ public class ApplicationResource extends ServiceResource {
                 try {
                     user = management.verifyAppUserPasswordCredentials(
                             services.getApplicationId(), username, password);
-                } catch (UnactivatedAdminUserException uaue) {
+                } catch (UnactivatedAppUserException uaue) {
                     errorDescription = "user not activated";
-                } catch (DisabledAdminUserException daue) {
+                } catch (DisabledAppUserException daue) {
                     errorDescription = "user disabled";
                 } catch (Exception e1) {
                 }

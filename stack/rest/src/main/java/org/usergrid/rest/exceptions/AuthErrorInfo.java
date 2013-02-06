@@ -64,7 +64,11 @@ public enum AuthErrorInfo {
 	UNACTIVATED_ADMIN("auth_unactivated_admin",
 			"Unable to authenticate due to admin user not activated"), //
 	DISABLED_ADMIN("auth_disabled_admin",
-			"Unable to authenticate due to admin user access disabled");
+			"Unable to authenticate due to admin user access disabled"), //
+	UNACTIVATED_APPUSER("auth_unactivated_appuser",
+			"Unable to authenticate due to app user not activated"), //
+	DISABLED_APPUSER("auth_disabled_appuser",
+			"Unable to authenticate due to app user access disabled");
 
 	private final String type;
 	private final String message;
@@ -97,6 +101,10 @@ public enum AuthErrorInfo {
 			return UNACTIVATED_ADMIN;
 		} else if (e instanceof BadTokenException) {
 			return BAD_ACCESS_TOKEN_ERROR;
+		} else if (e instanceof UnactivatedAdminUserException) {
+			return UNACTIVATED_APPUSER;
+		} else if (e instanceof DisabledAdminUserException) {
+			return DISABLED_APPUSER;
 		}
 		return null;
 	}
