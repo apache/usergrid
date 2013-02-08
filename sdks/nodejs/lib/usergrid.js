@@ -59,7 +59,7 @@ Usergrid.Client = function(options) {
 *
 *  options object:
 *  `method` - http method (GET, POST, PUT, or DELETE), defaults to GET
-*  `qs` - object containing querystring values to be appended to the uri
+*  `qs` or `query`- object containing querystring values to be appended to the uri
 *  `body` - object containing entity body for POST and PUT requests
 *  `endpoint` - API endpoint, for example 'users/fred'
 *  `mQuery` - boolean, set to true if running management query, defaults to false
@@ -76,6 +76,7 @@ Usergrid.Client.prototype.request = function (options, callback) {
   var endpoint = options.endpoint;
   var body = options.body || {};
   var qs = options.qs || {};
+  var qs = options.query || qs; //users may also like to use "query" as the parameter
   var mQuery = options.mQuery || false; //is this a query to the management endpoint?
   if (mQuery) {
     var uri = this.URI + '/' + endpoint;

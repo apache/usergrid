@@ -43,111 +43,115 @@ function runner(step, arg, arg2){
 	step++;
 	switch(step)
 	{
-	case 1:
-		notice('-----running step '+step+': GET test');
-		testGET(step);
-		break;
-	case 2:
-		notice('-----running step '+step+': POST test');
-		testPOST(step);
-		break;
-	case 3:
-		notice('-----running step '+step+': PUT test');
-		testPUT(step);
-		break;
-	case 4:
-		notice('-----running step '+step+': DELETE test');
-		testDELETE(step);
-		break;
-	case 5:
-		notice('-----running step '+step+': prepare database - remove all dogs (no real dogs harmed here!!)');
-		cleanupAllDogs(step);
-		break;
-	case 6:
-		notice('-----running step '+step+': make a new dog');
-		makeNewDog(step);
-		break;
-	case 7:
-		notice('-----running step '+step+': update our dog');
-		updateDog(step, arg);
-		break;
-	case 8:
-		notice('-----running step '+step+': refresh our dog');
-		refreshDog(step, arg);
-		break;
-	case 9:
-		notice('-----running step '+step+': remove our dog from database (no real dogs harmed here!!)');
-		removeDogFromDatabase(step, arg);
-		break;
-	case 10:
-		notice('-----running step '+step+': make lots of dogs!');
-		makeSampleData(step, arg);
-		break;
-	case 11:
-		notice('-----running step '+step+': make a dogs collection and show each dog');
-		testDogsCollection(step);
-		break;
-	case 12:
-		notice('-----running step '+step+': get the next page of the dogs collection and show each dog');
-		getNextDogsPage(step, arg);
-		break;
-	case 13:
-		notice('-----running step '+step+': get the previous page of the dogs collection and show each dog');
-		getPreviousDogsPage(step, arg);
-		break;
-	case 14:
-		notice('-----running step '+step+': remove all dogs from the database (no real dogs harmed here!!)');
-		cleanupAllDogs(step);
-		break;
-	case 15:
-		notice('-----running step '+step+': prepare database (remove existing user if present)');
-		prepareDatabaseForNewUser(step);
-		break;
-	case 16:
-		notice('-----running step '+step+': create a new user');
-		createUser(step);
-		break;
-	case 17:
-		notice('-----running step '+step+': update the user');
-		updateUser(step, arg);
-		break;
-	case 18:
-		notice('-----running step '+step+': refresh the user from the database');
-		refreshUser(step, arg);
-		break;
-	case 19:
-		notice('-----running step '+step+': refresh the user from the database');
-		loginUser(step, arg);
-		break;
-	case 20:
-		notice('-----running step '+step+': logged in user creates dog');
-		userCreatesDog(step, arg);
-		break;
-	case 21:
-		notice('-----running step '+step+': logged in user likes dog');
-		userLikesDog(step, arg, arg2);
-		break;
-	case 22:
-		notice('-----running step '+step+': logged in user removes likes connection to dog');
-		removeUserLikesDog(step, arg, arg2);
-		break;
-	case 23:
-		notice('-----running step '+step+': user removes dog');
-		userRemovesDog(step, arg, arg2);
-		break;
-	case 24:
-		notice('-----running step '+step+': log the user out');
-		logoutUser(step, arg);
-		break;
-	case 25:
-		notice('-----running step '+step+': remove the user from the database');
-		destroyUser(step, arg);
-		break;
-	default:
-		notice('-----test complete!-----');
-		notice('Success count= ' + successCount);
-		notice('Error count= ' + errorCount);
-		notice('-----thank you for playing!-----');
+		case 1:
+			notice('-----running step '+step+': DELETE user from DB to prep test');
+			clearUser(step);
+			break;
+		case 2:
+			notice('-----running step '+step+': GET test');
+			testGET(step);
+			break;
+		case 3:
+			notice('-----running step '+step+': POST test');
+			testPOST(step);
+			break;
+		case 4:
+			notice('-----running step '+step+': PUT test');
+			testPUT(step);
+			break;
+		case 5:
+			notice('-----running step '+step+': DELETE test');
+			testDELETE(step);
+			break;
+		case 6:
+			notice('-----running step '+step+': prepare database - remove all dogs (no real dogs harmed here!!)');
+			cleanupAllDogs(step);
+			break;
+		case 7:
+			notice('-----running step '+step+': make a new dog');
+			makeNewDog(step);
+			break;
+		case 8:
+			notice('-----running step '+step+': update our dog');
+			updateDog(step, arg);
+			break;
+		case 9:
+			notice('-----running step '+step+': refresh our dog');
+			refreshDog(step, arg);
+			break;
+		case 10:
+			notice('-----running step '+step+': remove our dog from database (no real dogs harmed here!!)');
+			removeDogFromDatabase(step, arg);
+			break;
+		case 11:
+			notice('-----running step '+step+': make lots of dogs!');
+			makeSampleData(step, arg);
+			break;
+		case 12:
+			notice('-----running step '+step+': make a dogs collection and show each dog');
+			testDogsCollection(step);
+			break;
+		case 13:
+			notice('-----running step '+step+': get the next page of the dogs collection and show each dog');
+			getNextDogsPage(step, arg);
+			break;
+		case 14:
+			notice('-----running step '+step+': get the previous page of the dogs collection and show each dog');
+			getPreviousDogsPage(step, arg);
+			break;
+		case 15:
+			notice('-----running step '+step+': remove all dogs from the database (no real dogs harmed here!!)');
+			cleanupAllDogs(step);
+			break;
+		case 16:
+			notice('-----running step '+step+': prepare database (remove existing user if present)');
+			prepareDatabaseForNewUser(step);
+			break;
+		case 17:
+			notice('-----running step '+step+': create a new user');
+			createUser(step);
+			break;
+		case 18:
+			notice('-----running step '+step+': update the user');
+			updateUser(step, arg);
+			break;
+		case 19:
+			notice('-----running step '+step+': refresh the user from the database');
+			refreshUser(step, arg);
+			break;
+		case 20:
+			notice('-----running step '+step+': refresh the user from the database');
+			loginUser(step, arg);
+			break;
+		case 21:
+			notice('-----running step '+step+': logged in user creates dog');
+			createDog(step, arg);
+			break;
+		case 22:
+			notice('-----running step '+step+': logged in user likes dog');
+			userLikesDog(step, arg, arg2);
+			break;
+		case 23:
+			notice('-----running step '+step+': logged in user removes likes connection to dog');
+			removeUserLikesDog(step, arg, arg2);
+			break;
+		case 24:
+			notice('-----running step '+step+': user removes dog');
+			removeDog(step, arg, arg2);
+			break;
+		case 25:
+			notice('-----running step '+step+': log the user out');
+			logoutUser(step, arg);
+			break;
+		case 26:
+			notice('-----running step '+step+': remove the user from the database');
+			destroyUser(step, arg);
+			break;
+		default:
+			notice('-----test complete!-----');
+			notice('Success count= ' + successCount);
+			notice('Error count= ' + errorCount);
+			notice('-----thank you for playing!-----');
 	}
 }
 
@@ -173,6 +177,18 @@ function notice(message){
 }
 
 //tests
+function clearUser(step) {
+  var options = {
+    method:'DELETE',
+    endpoint:'users/fred'
+  };
+  client.request(options, function (err, data) {
+    //data will contain raw results from API call
+    success('User cleared from DB');
+    runner(step);
+  });
+}
+
 function testGET(step) {
 	var options = {
 		method:'GET',
@@ -526,10 +542,10 @@ function createUser(step) {
 
 	client.createEntity(options, function (err, marty) {
 		if (err){
-			error('user not saved');
+			error('user not created');
 			runner(step, marty);
 		} else {
-			success('user saved');
+			success('user created');
 			runner(step, marty);
 		}
 	});
@@ -620,7 +636,7 @@ function loginUser(step, marty) {
 //DELETE "https://api.usergrid.com/yourorgname/yourappname/roles/default/permissions?permission=get%2Cpost%2Cput%2Cdelete%3A%2Fdogs%2F**"
 
 
-function userCreatesDog(step, marty) {
+function createDog(step, marty) {
   //see if marty can create a new dog now that he is logged in
 
 	var options = {
@@ -696,7 +712,7 @@ function removeUserLikesDog(step, marty, dog) {
 
 }
 
-function userRemovesDog(step, marty, dog) {
+function removeDog(step, marty, dog) {
 
 	//now delete the dog from the database
 	dog.destroy(function(err, data) {
