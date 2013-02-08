@@ -155,6 +155,9 @@ Usergrid.Client.prototype.request = function (options, callback) {
 *  @return {callback} callback(err, data)
 */
 Usergrid.Client.prototype.createEntity = function (options, callback) {
+  // todo: replace the check for new / save on not found code with simple save
+  // when users PUT on no user fix is in place.
+  /*
   var options = {
     client:this,
     data:options
@@ -165,6 +168,30 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
       callback(err, entity);
     }
   });
+  */
+
+  var options = {
+    client:this,
+    data:options
+  }
+  var entity = new Usergrid.Entity(options);
+  entity.fetch(function(err, data) {
+    //if the fetch doesn't find what we are looking for, or there is no error, do a save
+    var okToSave = (err && 'service_resource_not_found' === data.error) || !err;
+    if(okToSave) {
+      entity.set(options.data); //add the data again just in case
+      entity.save(function(err, data) {
+        if (typeof(callback) === 'function') {
+          callback(err, entity);
+        }
+      });
+    } else {
+      if (typeof(callback) === 'function') {
+        callback(err, entity);
+      }
+    }
+  });
+
 }
 
 /*
@@ -525,7 +552,7 @@ Usergrid.Entity.prototype.save = function (callback) {
   //remove system specific properties
   for (var item in entityData) {
     if (item === 'metadata' || item === 'created' || item === 'modified' ||
-        item === 'type' || item === 'activatted' ) { continue; }
+        item === 'type' || item === 'activatted' || item ==='uuid') { continue; }
     data[item] = entityData[item];
   }
   var options =  {
@@ -541,9 +568,11 @@ Usergrid.Entity.prototype.save = function (callback) {
         return callback(err, retdata, self);
       }
     } else {
-      if (retdata.entities.length) {
-        var entity = retdata.entities[0];
-        self.set(entity);
+      if (retdata.entities) {
+        if (retdata.entities.length) {
+          var entity = retdata.entities[0];
+          self.set(entity);
+        }
       }
       //if this is a user, update the password if it has been specified;
       var needPasswordChange = (type === 'users' && entityData.oldpassword && entityData.newpassword);
@@ -630,9 +659,11 @@ Usergrid.Entity.prototype.fetch = function (callback) {
     } else {
       if (data.user) {
         self.set(data.user);
-      } else if (data.entities.length) {
-        var entity = data.entities[0];
-        self.set(entity);
+      } else if (data.entities) {
+        if (data.entities.length) {
+          var entity = data.entities[0];
+          self.set(entity);
+        }
       }
     }
     if (typeof(callback) === 'function') {

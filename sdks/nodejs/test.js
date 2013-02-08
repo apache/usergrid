@@ -32,7 +32,8 @@ var logNotice = true;
 	var client = new usergrid.client({
 		orgName:'yourorgname',
 		appName:'sandbox',
-		logging: true, //optional - turn on logging, off by default
+		//logging: true, //optional - turn on logging, off by default
+		buildCurl: true //optional - turn on curl commands, off by default
 	});
 
 
@@ -146,6 +147,10 @@ function runner(step, arg, arg2){
 		case 26:
 			notice('-----running step '+step+': remove the user from the database');
 			destroyUser(step, arg);
+			break;
+		case 27:
+			notice('-----running step '+step+': try to create existing entity');
+			createExistingEntity(step, arg);
 			break;
 		default:
 			notice('-----test complete!-----');
@@ -753,6 +758,57 @@ function destroyUser(step, marty) {
 			success('user deleted from database');
 			marty = null; //blow away the local object
 			runner(step);
+		}
+	});
+
+}
+
+function createExistingEntity(step, marty) {
+
+	var options = {
+		type:'dogs',
+		name:'einstein'
+	}
+
+client.createEntity(options, function (err, dog) {
+		if (err) {
+			error('Create new entity to use for existing entity failed');
+		} else {
+			success('Create new entity to use for existing entity succeeded');
+
+			var uuid = dog.get('uuid');
+			//now create new entity, but use same entity name of einstein.  This means that
+			//the original einstein entity now exists.  Thus, the new einstein entity should
+			//be the same as the original + any data differences from the options var:
+
+			options = {
+				type:'dogs',
+				name:'einstein',
+				breed:'mutt'
+			}
+			client.createEntity(options, function (err, newdog) {
+				if (err) {
+					error('Create new entity to use for existing entity failed');
+				} else {
+					success('Create new entity to use for existing entity succeeded');
+
+					var newuuid = newdog.get('uuid');
+					if (newuuid === uuid) {
+						success('UUIDs of new and old entities match');
+					} else {
+						error('UUIDs of new and old entities do not match');
+					}
+
+					var breed = newdog.get('breed');
+					if (breed === 'mutt') {
+						success('attribute sucesfully set on new entity');
+					} else {
+						error('attribute not sucesfully set on new entity');
+					}
+
+				}
+				runner(step, marty, dog);
+			});
 		}
 	});
 
