@@ -4,6 +4,7 @@
 
 - Added new functions for creating, getting, and deleting connections
 - Added test cases for said functions
+- Added logout call to client create to clear out any remnant token from a past session
 
 ###0.10.3
 
