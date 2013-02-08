@@ -31,7 +31,7 @@ var AUTH_NONE = 'NONE';
 
 Usergrid.Client = function(options) {
   //usergrid enpoint
-  this.URI = 'https://api.usergrid.com';
+  this.URI = options.URI || 'https://api.usergrid.com';
 
   //Find your Orgname and Appname in the Admin portal (http://apigee.com/usergrid)
   this.orgName = options.orgName;
@@ -812,6 +812,63 @@ Usergrid.Entity.prototype.getConnections = function (connection, callback) {
 
 }
 
+/*
+*  disconnects one entity from another
+*
+*  @method disconnect
+*  @public
+*  @param {string} connection
+*  @param {object} entity
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*
+*/
+Usergrid.Entity.prototype.disconnect = function (connection, entity, callback) {
+
+  var self = this;
+
+  //connectee info
+  var connecteeType = entity.get('type');
+  var connectee = this.getEntityId(entity);
+  if (!connectee) {
+    if (typeof(callback) === 'function') {
+      var error = 'Error trying to delete object - no uuid specified.';
+      if (self._client.logging) {
+        console.log(error);
+      }
+      callback(true, error);
+    }
+    return;
+  }
+
+  //connector info
+  var connectorType = this.get('type');
+  var connector = this.getEntityId(this);
+  if (!connector) {
+    if (typeof(callback) === 'function') {
+      var error = 'Error in connect - no uuid specified.';
+      if (self._client.logging) {
+        console.log(error);
+      }
+      callback(true, error);
+    }
+    return;
+  }
+
+  var endpoint = connectorType + '/' + connector + '/' + connection + '/' + connecteeType + '/' + connectee;
+  var options = {
+    method:'DELETE',
+    endpoint:endpoint
+  };
+  this._client.request(options, function (err, data) {
+    if (err && self._client.logging) {
+      console.log('entity could not be disconnected');
+    }
+    if (typeof(callback) === 'function') {
+      callback(err, data);
+    }
+  });
+}
 
 /*
 *  The Collection class models Usergrid Collections.  It essentially

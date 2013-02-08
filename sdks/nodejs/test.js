@@ -28,6 +28,7 @@ var logNotice = true;
 		buildCurl: false //optional - turn on curl commands, off by default
 	});
 
+
 	var client = new usergrid.client({
 		orgName:'yourorgname',
 		appName:'sandbox',
@@ -38,7 +39,7 @@ var logNotice = true;
 //call the runner function to start the process
 runner(0);
 
-function runner(step, arg){
+function runner(step, arg, arg2){
 	step++;
 	switch(step)
 	{
@@ -119,6 +120,26 @@ function runner(step, arg){
 		loginUser(step, arg);
 		break;
 	case 20:
+		notice('-----running step '+step+': logged in user creates dog');
+		userCreatesDog(step, arg);
+		break;
+	case 21:
+		notice('-----running step '+step+': logged in user likes dog');
+		userLikesDog(step, arg, arg2);
+		break;
+	case 22:
+		notice('-----running step '+step+': logged in user removes likes connection to dog');
+		removeUserLikesDog(step, arg, arg2);
+		break;
+	case 23:
+		notice('-----running step '+step+': user removes dog');
+		userRemovesDog(step, arg, arg2);
+		break;
+	case 24:
+		notice('-----running step '+step+': log the user out');
+		logoutUser(step, arg);
+		break;
+	case 25:
 		notice('-----running step '+step+': remove the user from the database');
 		destroyUser(step, arg);
 		break;
@@ -578,32 +599,133 @@ function loginUser(step, marty) {
 					} else {
 						success('got logged in user');
 
-						//you can then get info from the user entity object:
-						var username = user.get('username');
-						notice('logged in user was: ' + username);
+            //you can then get info from the user entity object:
+            var username = marty.get('username');
+            notice('logged in user was: ' + username);
 
-						//to log the user out, call the logout() method
-						appUserClient.logout();
-						client.logout();
-
-						//verify the logout worked
-						if (client.isLoggedIn()) {
-							error('logout failed');
-						} else {
-							success('user has been logged out');
-						}
-
-						//since we don't need to App User level calls anymore,
-						//set the authtype back to client:
-						client.authType = usergrid.AUTH_CLIENT_ID;
-
-						runner(step, marty);
+            runner(step, user);
 					}
 				});
 
 			}
 		}
 	);
+}
+
+//TODO: currently, this code assumes permissions have been set to support user actions.  need to add code to show how to add new role and permission programatically
+//
+//first create a new permission on the default role:
+//POST "https://api.usergrid.com/yourorgname/yourappname/roles/default/permissions" -d '{"permission":"get,post,put,delete:/dogs/**"}'
+//then after user actions, delete the permission on the default role:
+//DELETE "https://api.usergrid.com/yourorgname/yourappname/roles/default/permissions?permission=get%2Cpost%2Cput%2Cdelete%3A%2Fdogs%2F**"
+
+
+function userCreatesDog(step, marty) {
+  //see if marty can create a new dog now that he is logged in
+
+	var options = {
+		type:'dogs',
+		name:'einstein',
+		breed:'mutt'
+	}
+
+	client.createEntity(options, function (err, dog) {
+		if (err) {
+			error('POST new dog by logged in user failed');
+		} else {
+			success('POST new dog by logged in user succeeded');
+			runner(step, marty, dog);
+		}
+	});
+
+}
+
+function userLikesDog(step, marty, dog) {
+
+	marty.connect('likes', dog, function (err, data) {
+		if (err) {
+			error('connection not created');
+			runner(step, marty);
+		} else {
+
+			//call succeeded, so pull the connections back down
+			marty.getConnections('likes', function (err, data) {
+				if (err) {
+						error('could not get connections');
+				} else {
+					//verify that connection exists
+					if (marty.likes.einstein) {
+						success('connection exists');
+					} else {
+						error('connection does not exist');
+					}
+
+					runner(step, marty, dog);
+				}
+			});
+		}
+	});
+
+}
+
+function removeUserLikesDog(step, marty, dog) {
+
+	marty.disconnect('likes', dog, function (err, data) {
+		if (err) {
+			error('connection not deleted');
+			runner(step, marty);
+		} else {
+
+			//call succeeded, so pull the connections back down
+			marty.getConnections('likes', function (err, data) {
+				if (err) {
+					error('error getting connections');
+				} else {
+					//verify that connection exists
+					if (marty.likes.einstein) {
+						error('connection still exists');
+					} else {
+						success('connection deleted');
+					}
+
+					runner(step, marty, dog);
+				}
+			});
+		}
+	});
+
+}
+
+function userRemovesDog(step, marty, dog) {
+
+	//now delete the dog from the database
+	dog.destroy(function(err, data) {
+		if (err) {
+			error('dog not removed');
+		} else {
+			success('dog removed');
+		}
+	});
+	runner(step, marty);
+}
+
+function logoutUser(step, marty) {
+
+	//to log the user out, call the logout() method
+	client.logout();
+
+	//verify the logout worked
+	if (client.isLoggedIn()) {
+		error('logout failed');
+	} else {
+		success('user has been logged out');
+	}
+
+	//since we don't need to App User level calls anymore,
+	//set the authtype back to client:
+	client.authType = usergrid.AUTH_CLIENT_ID;
+
+	runner(step, marty);
 }
 
 function destroyUser(step, marty) {

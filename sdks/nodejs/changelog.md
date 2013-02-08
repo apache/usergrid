@@ -1,5 +1,10 @@
 ##Change log
 
+###0.10.4
+
+- Added new functions for creating, getting, and deleting connections
+- Added test cases for said functions
+
 ###0.10.3
 
 - Added set / get token methods to accomodate session storage

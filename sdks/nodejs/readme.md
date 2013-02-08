@@ -1,5 +1,5 @@
 ##Version
-Current Version: **0.10.3**
+Current Version: **0.10.4**
 
 See change log:
 
@@ -68,7 +68,15 @@ You are now ready to use the usergrid handle to make calls against the API.
 ##About the samples
 All of the samples provided in this readme file come from unit tests in the test.js which is located in the root of this project.
 
-To run this file, first do the following:
+Three functions are used in the tests and in the samples below which do not exist in Javascript:
+
+error('message');
+success('message');
+notice('message');
+
+Be mindful of these and remove them if you are copying the sample code to your project.  I wanted the code to be as accurate as possible, so the samples are copied directly from the test file.
+
+To run the test file, first do the following:
 
 1. Change the org-name and app-name to point to your Usergrid account.  Log into the [Admin Portal](http://apigee.com/usergrid) to see this information.
 2. Change the client secret and client id
@@ -77,7 +85,7 @@ Then run the code:
 
 	$ node test.js
 
-Read through the samples in this file as they show many examples of how to use this module.
+The samples in this file will show you the many ways you can use this module.
 
 ##Make some calls
 This Usergrid module uses the [request](https://github.com/mikeal/request) module by [mikeal](https://github.com/mikeal).  We expose a similar request function and a subset of the options available. This allows you to make basic calls against the API using this format:
@@ -440,6 +448,63 @@ If you no longer need the object, call the delete() method and the object will b
 		} else {
 			success('user deleted from database');
 			marty = null; //blow away the local object
+		}
+	});
+
+###Making connections
+Connections are a way to connect to entities with some verb.  This is called an entity relationship.  For example, if you have a user entity with username of marty, and a dog entity with a name of einstein, then using our RESTful API, you could make a call like this:
+	
+	POST users/marty/likes/dogs/einstein 
+
+This creates a one-way connection between marty and einstein, where marty "likes" einstein. 
+
+Complete documentation on the entity relationships API can be found here:
+
+<http://apigee.com/docs/usergrid/content/entity-relationships>
+
+The following code shows you how to create this connection, and then verify that the connection has been made:
+
+	marty.connect('likes', dog, function (err, data) {
+		if (err) {
+			error('connection not created');
+		} else {
+
+			//call succeeded, so pull the connections back down
+			marty.getConnections('likes', function (err, data) {
+				if (err) {
+						error('could not get connections');
+				} else {
+					//verify that connection exists
+					if (marty.likes.ralphy) {
+						success('connection exists');
+					} else {
+						error('connection does not exist');
+					}
+				}
+			});
+		}
+	});
+
+You can also remove connections, by using the disconnect method:
+
+	marty.disconnect('likes', dog, function (err, data) {
+		if (err) {
+			error('connection not deleted');
+		} else {
+
+			//call succeeded, so pull the connections back down
+			marty.getConnections('likes', function (err, data) {
+				if (err) {
+					error('error getting connections');'
+				} else {
+					//verify that connection exists
+					if (marty.likes.einstein) {
+						error('connection still exists');
+					} else {
+						success('connection deleted');
+					}
+				}
+			});
 		}
 	});
 
