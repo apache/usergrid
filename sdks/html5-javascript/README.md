@@ -1,17 +1,19 @@
 ##Version
 
-Current Version: **0.10.3**
+Current Version: **0.10.4**
 
-Change log:
+See change log:
 
 <https://github.com/apigee/usergrid-javascript-sdk/blob/master/changelog.md>
 
 **About this version:**
+
 I revved this version of the SDK to 0.10.x because it is a complete rework of the code.  Not only is the code new, but also the way that you use it (more about that below).  I know that many of you have already built apps on the SDK and reworking them to use this new format will likely be a pain.  I apologize for that.
 
 Hopefully that you will find it is worth the upgrade. I think this new version is more streamlined and has better structure.  I also made it consistent syntactically with the new [Node.js Module](https://github.com/apigee/usergrid-node-module).  The idea here is that developers may want to make client-side calls in their Node.js applications, so why not use the same syntax for both.
 
-Please feel free to send comments:
+##Comments / Questions
+Please feel free to send comments or questions:
 
 	twitter: @rockerston
 	email: rod at apigee.com
@@ -28,7 +30,7 @@ This open source SDK simplifies writing JavaScript / HTML5 applications that con
 
 <https://github.com/apigee/usergrid-javascript-sdk>
 
-You can download the SDK here:
+You can download this package here:
 
 * Download as a zip file: <https://github.com/apigee/usergrid-javascript-sdk/archive/master.zip>
 * Download as a tar.gz file: <https://github.com/apigee/usergrid-javascript-sdk/archive/master.tar.gz>
@@ -56,6 +58,7 @@ Once you have downloaded the SDK, add the usergrid.js file to your project.  Thi
 
 	<script src="path/to/usergrid.js" type="text/javascript"></script>
 
+
 ##Getting started
 You are now ready to create a new client, which is the main entry point to the SDK:
 
@@ -71,6 +74,7 @@ The last two items are optional. The **logging** option will enable console.log 
 **Note:** you can find your client secret and client id on the "Properties" page of the [Admin Portal](http://apigee.com/usergrid).
 
 You are now ready to use the usergrid handle to make calls against the API.
+
 
 ##About the samples
 This SDK comes with a variety of samples that you can use to learn how to connect your project to App Services (Usergrid). See these examples running live now:
@@ -150,6 +154,43 @@ To remove the entity from the database:
 			dog = null; //no real dogs were harmed!
 		}
 	});
+
+To set properties on the entity, use the set() method:
+
+	//once the dog is created, you can set single properties:
+	dog.set('breed','Dinosaur');
+
+	//or a JSON object:
+	var data = {
+		master:'Fred',
+		state:'hungry'
+	}
+	//set is additive, so previously set properties are not overwritten
+	dog.set(data);
+
+**Note:** These properties are now set locally, but make sure you call the .save() method on the entity to save them back to the database!
+
+To get a single property from the entity, use the get method:
+
+	var breed = dog.get('breed');
+
+or
+	
+	var state = dog.get('state');
+
+or, to get a JSON object with all properties, don't pass a key
+
+	var props = dog.get();
+
+Based on the set statements above, our JSON object should look like this:
+
+	{
+		name:'Dino',
+		type:'dogs',
+		breed:'Dinosaur',
+		master:'Fred',
+		state:'hungry'
+	}
 
 
 ##The Collection object
@@ -367,6 +408,64 @@ If you no longer need the object, call the delete() method and the object will b
 	});
 
 
+###Making connections
+Connections are a way to connect to entities with some verb.  This is called an entity relationship.  For example, if you have a user entity with username of marty, and a dog entity with a name of einstein, then using our RESTful API, you could make a call like this:
+	
+	POST users/marty/likes/dogs/einstein 
+
+This creates a one-way connection between marty and einstein, where marty "likes" einstein. 
+
+Complete documentation on the entity relationships API can be found here:
+
+<http://apigee.com/docs/usergrid/content/entity-relationships>
+
+The following code shows you how to create this connection, and then verify that the connection has been made:
+
+	marty.connect('likes', dog, function (err, data) {
+		if (err) {
+			// error - connection not created
+		} else {
+
+			//call succeeded, so pull the connections back down
+			marty.getConnections('likes', function (err, data) {
+				if (err) {
+						//error - could not get connections
+				} else {
+					//verify that connection exists
+					if (marty.likes.ralphy) {
+						//success - connection exists
+					} else {
+						//error - connection does not exist
+					}
+				}
+			});
+		}
+	});
+
+You can also remove connections, by using the disconnect method:
+
+	marty.disconnect('likes', dog, function (err, data) {
+		if (err) {
+			//error - connection not deleted
+		} else {
+
+			//call succeeded, so pull the connections back down
+			marty.getConnections('likes', function (err, data) {
+				if (err) {
+					//error - error getting connections
+				} else {
+					//verify that connection exists
+					if (marty.likes.einstein) {
+						//error - connection still exists
+					} else {
+						//success - connection deleted
+					}
+				}
+			});
+		}
+	});
+
+
 ###To log a user in
 Up to this point, we have shown how you can use the client secret / client id combination to authenticate your calls against the API.  For a server-side Node.js app, this may be all you need.  However, if you do find that your app requires that you authenticate an individual user, this section shows you how.
 
@@ -379,40 +478,32 @@ Logging a user in means sending the user's username and password to the server, 
 			if (err) {
 				//error - could not log user in
 			} else {
-				//the user has been logged in and the token has been stored
-				//in the client. any calls made now will use the token.
-				//once a user has logged in, thier user object is stored
+				//success - user has been logged in
+
+				//the login call will return an OAuth token, which is saved
+				//in the client. Any calls made now will use the token.
+				//once a user has logged in, their user object is stored
 				//in the client and you can access it this way:
 				var token = client.token;
 
-				//you can also detect if the user is logged in:
-				if (client.isLoggedIn()) {
-					// success - user has been logged in
-					//get the logged in user entity by calling for it:
-					client.getLoggedInUser(function(err, data, user) {
-						if(err) {
-							//error - could not get logged in user
-						} else {
-							//success got logged in user
-							//you can then info from the user entity object:
-							var username = user.get('username');
+				//Then make calls against the API.  For example, you can
+				//get the user entity this way:
+				client.getLoggedInUser(function(err, data, user) {
+					if(err) {
+						//error - could not get logged in user
+					} else {
+						//success - got logged in user
 
-							//to log a user out:
-							client.logout();
+						//you can then get info from the user entity object:
+						var username = user.get('username');
 
-							//verify the logout worked
-							if (client.isLoggedIn()) {
-								//error - logout failed
-							} else {
-								//success - user has been logged out
-							}
+					}
+				});
 
-						}
-					});
-				}
 			}
 		}
 	);
+	
 To recap, once a user has been logged in, and an OAuth token has been acquired, any subsequent calls to the API will use the token.
 
 
@@ -495,8 +586,6 @@ Or to delete the new user:
 		}
 	});
 
-
-
 The Options Object for the client.request fuction:
 
 * `method` - http method (GET, POST, PUT, or DELETE), defaults to GET
@@ -507,7 +596,6 @@ The Options Object for the client.request fuction:
 * `buildCurl` - boolean, set to true if you want to see equivalent curl commands in console.log, defaults to false
 
 You can make any call to the API using the format above.  However, in practice using the higher level Entity and Collection objects will make life easier as they take care of much of the heavy lifting.
-
 
 
 ###Validation
@@ -541,7 +629,6 @@ More information on cURL can be found here:
 
 <http://curl.haxx.se/>
 
-
 ## Contributing
 We welcome your enhancements!
 
@@ -557,7 +644,7 @@ Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid Ja
 For more information on Apigee App Services, visit <http://apigee.com/about/developers>.
 
 ## Copyright
-Copyright 2012 Apigee Corporation
+Copyright 2013 Apigee Corporation
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

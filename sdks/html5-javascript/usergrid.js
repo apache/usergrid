@@ -32,7 +32,7 @@ Usergrid.SDK_VERSION = '0.10.03';
 
 Usergrid.Client = function(options) {
   //usergrid enpoint
-  this.URI = 'https://api.usergrid.com';
+  this.URI = options.URI || 'https://api.usergrid.com';
 
   //Find your Orgname and Appname in the Admin portal (http://apigee.com/usergrid)
   this.orgName = options.orgName;
@@ -300,7 +300,11 @@ Usergrid.Client.prototype.calcTimeDiff = function () {
 Usergrid.Client.prototype.setToken = function (token) {
   this.token = token;
   if(typeof(Storage)!=="undefined"){
-    localStorage.setItem('token', token);
+    if (token) {
+      localStorage.setItem('token', token);
+    } else {
+      localStorage.removeItem('token');
+    }
   }
 }
 
@@ -347,7 +351,7 @@ Usergrid.Client.prototype.login = function (username, password, callback) {
       console.log('error trying to log user in');
     } else {
       user = new Usergrid.Entity('users', data.user);
-      self.setToken (data.access_token);
+      self.setToken(data.access_token);
     }
     if (typeof(callback) === 'function') {
       callback(err, data, user);
@@ -737,56 +741,39 @@ Usergrid.Entity.prototype.destroy = function (callback) {
 *  @return {callback} callback(err, data)
 *
 */
-/*
-barney.connect('likes', fred, function (err, data){
-
-});
-*/
 Usergrid.Entity.prototype.connect = function (connection, entity, callback) {
+
+  var self = this;
 
   //connectee info
   var connecteeType = entity.get('type');
-  var connectee;
-  if (isUUID(entity.get('uuid'))) {
-    connectee = entity.get('uuid');
-  } else {
-    if (type == 'users') {
-      connectee = entity.get('username');
-    } else if (entity.get('name')) {
-      connectee = entity.get('name');
-    } else {
-      if (typeof(callback) === 'function') {
-        var error = 'Error trying to delete object - no uuid specified.';
-        if (self._client.logging) {
-          console.log(error);
-        }
-        return callback(true, error);
+  var connectee = this.getEntityId(entity);
+  if (!connectee) {
+    if (typeof(callback) === 'function') {
+      var error = 'Error trying to delete object - no uuid specified.';
+      if (self._client.logging) {
+        console.log(error);
       }
+      callback(true, error);
     }
+    return;
   }
 
   //connector info
   var connectorType = this.get('type');
-  if (isUUID(entity.get('uuid'))) {
-    connector = entity.get('uuid');
-  } else {
-    if (type == 'users') {
-      connector = entity.get('username');
-    } else if (entity.get('name')) {
-      connector = entity.get('name');
-    } else {
-      if (typeof(callback) === 'function') {
-        var error = 'Error trying to delete object - no uuid specified.';
-        if (self._client.logging) {
-          console.log(error);
-        }
-        return callback(true, error);
+  var connector = this.getEntityId(this);
+  if (!connector) {
+    if (typeof(callback) === 'function') {
+      var error = 'Error in connect - no uuid specified.';
+      if (self._client.logging) {
+        console.log(error);
       }
+      callback(true, error);
     }
+    return;
   }
 
   var endpoint = connectorType + '/' + connector + '/' + connection + '/' + connecteeType + '/' + connectee;
-  var self = this;
   var options = {
     method:'POST',
     endpoint:endpoint
@@ -794,6 +781,137 @@ Usergrid.Entity.prototype.connect = function (connection, entity, callback) {
   this._client.request(options, function (err, data) {
     if (err && self._client.logging) {
       console.log('entity could not be connected');
+    }
+    if (typeof(callback) === 'function') {
+      callback(err, data);
+    }
+  });
+}
+
+
+Usergrid.Entity.prototype.getEntityId = function (entity) {
+  var id = false;
+  if (isUUID(entity.get('uuid'))) {
+    id = entity.get('uuid');
+  } else {
+    if (type === 'users') {
+      id = entity.get('username');
+    } else if (entity.get('name')) {
+      id = entity.get('name');
+    }
+  }
+  return id;
+}
+
+/*
+*  gets an entities connections
+*
+*  @method getConnections
+*  @public
+*  @param {string} connection
+*  @param {object} entity
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*
+*/
+Usergrid.Entity.prototype.getConnections = function (connection, callback) {
+
+  var self = this;
+
+  //connector info
+  var connectorType = this.get('type');
+  var connector = this.getEntityId(this);
+  if (!connector) {
+    if (typeof(callback) === 'function') {
+      var error = 'Error in getConnections - no uuid specified.';
+      if (self._client.logging) {
+        console.log(error);
+      }
+      callback(true, error);
+    }
+    return;
+  }
+
+  var endpoint = connectorType + '/' + connector + '/' + connection + '/';
+  var options = {
+    method:'GET',
+    endpoint:endpoint
+  };
+  this._client.request(options, function (err, data) {
+    if (err && self._client.logging) {
+      console.log('entity could not be connected');
+    }
+
+    self[connection] = {};
+
+    var length = data.entities.length;
+    for (var i=0;i<length;i++)
+    {
+      if (data.entities[i].type === 'user'){
+        self[connection][data.entities[i].username] = data.entities[i];
+      } else {
+        self[connection][data.entities[i].name] = data.entities[i]
+      }
+    }
+
+    if (typeof(callback) === 'function') {
+      callback(err, data);
+    }
+  });
+
+}
+
+/*
+*  disconnects one entity from another
+*
+*  @method disconnect
+*  @public
+*  @param {string} connection
+*  @param {object} entity
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*
+*/
+Usergrid.Entity.prototype.disconnect = function (connection, entity, callback) {
+
+  var self = this;
+
+  //connectee info
+  var connecteeType = entity.get('type');
+  var connectee = this.getEntityId(entity);
+  if (!connectee) {
+    if (typeof(callback) === 'function') {
+      var error = 'Error trying to delete object - no uuid specified.';
+      if (self._client.logging) {
+        console.log(error);
+      }
+      callback(true, error);
+    }
+    return;
+  }
+
+  //connector info
+  var connectorType = this.get('type');
+  var connector = this.getEntityId(this);
+  if (!connector) {
+    if (typeof(callback) === 'function') {
+      var error = 'Error in connect - no uuid specified.';
+      if (self._client.logging) {
+        console.log(error);
+      }
+      callback(true, error);
+    }
+    return;
+  }
+
+  var endpoint = connectorType + '/' + connector + '/' + connection + '/' + connecteeType + '/' + connectee;
+  var options = {
+    method:'DELETE',
+    endpoint:endpoint
+  };
+  this._client.request(options, function (err, data) {
+    if (err && self._client.logging) {
+      console.log('entity could not be disconnected');
     }
     if (typeof(callback) === 'function') {
       callback(err, data);

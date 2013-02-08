@@ -31,96 +31,120 @@ var client = new Usergrid.Client({
 	buildCurl: true //optional - turn on curl commands, off by default
 });
 
-function runner(step, arg){
+function runner(step, arg, arg2){
 	step++;
 	switch(step)
 	{
-	case 1:
-		notice('-----running step '+step+': GET test');
-		testGET(step);
-		break;
-	case 2:
-		notice('-----running step '+step+': POST test');
-		testPOST(step);
-		break;
-	case 3:
-		notice('-----running step '+step+': PUT test');
-		testPUT(step);
-		break;
-	case 4:
-		notice('-----running step '+step+': DELETE test');
-		testDELETE(step);
-		break;
-	case 5:
-		notice('-----running step '+step+': prepare database - remove all dogs (no real dogs harmed here!!)');
-		cleanupAllDogs(step);
-		break;
-	case 6:
-		notice('-----running step '+step+': make a new dog');
-		makeNewDog(step);
-		break;
-	case 7:
-		notice('-----running step '+step+': update our dog');
-		updateDog(step, arg);
-		break;
-	case 8:
-		notice('-----running step '+step+': refresh our dog');
-		refreshDog(step, arg);
-		break;
-	case 9:
-		notice('-----running step '+step+': remove our dog from database (no real dogs harmed here!!)');
-		removeDogFromDatabase(step, arg);
-		break;
-	case 10:
-		notice('-----running step '+step+': make lots of dogs!');
-		makeSampleData(step, arg);
-		break;
-	case 11:
-		notice('-----running step '+step+': make a dogs collection and show each dog');
-		testDogsCollection(step);
-		break;
-	case 12:
-		notice('-----running step '+step+': get the next page of the dogs collection and show each dog');
-		getNextDogsPage(step, arg);
-		break;
-	case 13:
-		notice('-----running step '+step+': get the previous page of the dogs collection and show each dog');
-		getPreviousDogsPage(step, arg);
-		break;
-	case 14:
-		notice('-----running step '+step+': remove all dogs from the database (no real dogs harmed here!!)');
-		cleanupAllDogs(step);
-		break;
-	case 15:
-		notice('-----running step '+step+': prepare database (remove existing user if present)');
-		prepareDatabaseForNewUser(step);
-		break;
-	case 16:
-		notice('-----running step '+step+': create a new user');
-		createUser(step);
-		break;
-	case 17:
-		notice('-----running step '+step+': update the user');
-		updateUser(step, arg);
-		break;
-	case 18:
-		notice('-----running step '+step+': refresh the user from the database');
-		refreshUser(step, arg);
-		break;
-	case 19:
-		notice('-----running step '+step+': refresh the user from the database');
-		loginUser(step, arg);
-		break;
-	case 20:
-		notice('-----running step '+step+': remove the user from the database');
-		destroyUser(step, arg);
-		break;
-	default:
-		notice('-----test complete!-----');
-		notice('Success count= ' + successCount);
-		notice('Error count= ' + errorCount);
-		notice('-----thank you for playing!-----');
-		$('#start-button').removeAttr("disabled");
+		case 1:
+			notice('-----running step '+step+': DELETE user from DB to prep test');
+			clearUser(step);
+			break;
+		case 2:
+			notice('-----running step '+step+': GET test');
+			testGET(step);
+			break;
+		case 3:
+			notice('-----running step '+step+': POST test');
+			testPOST(step);
+			break;
+		case 4:
+			notice('-----running step '+step+': PUT test');
+			testPUT(step);
+			break;
+		case 5:
+			notice('-----running step '+step+': DELETE test');
+			testDELETE(step);
+			break;
+		case 6:
+			notice('-----running step '+step+': prepare database - remove all dogs (no real dogs harmed here!!)');
+			cleanupAllDogs(step);
+			break;
+		case 7:
+			notice('-----running step '+step+': make a new dog');
+			makeNewDog(step);
+			break;
+		case 8:
+			notice('-----running step '+step+': update our dog');
+			updateDog(step, arg);
+			break;
+		case 9:
+			notice('-----running step '+step+': refresh our dog');
+			refreshDog(step, arg);
+			break;
+		case 10:
+			notice('-----running step '+step+': remove our dog from database (no real dogs harmed here!!)');
+			removeDogFromDatabase(step, arg);
+			break;
+		case 11:
+			notice('-----running step '+step+': make lots of dogs!');
+			makeSampleData(step, arg);
+			break;
+		case 12:
+			notice('-----running step '+step+': make a dogs collection and show each dog');
+			testDogsCollection(step);
+			break;
+		case 13:
+			notice('-----running step '+step+': get the next page of the dogs collection and show each dog');
+			getNextDogsPage(step, arg);
+			break;
+		case 14:
+			notice('-----running step '+step+': get the previous page of the dogs collection and show each dog');
+			getPreviousDogsPage(step, arg);
+			break;
+		case 15:
+			notice('-----running step '+step+': remove all dogs from the database (no real dogs harmed here!!)');
+			cleanupAllDogs(step);
+			break;
+		case 16:
+			notice('-----running step '+step+': prepare database (remove existing user if present)');
+			prepareDatabaseForNewUser(step);
+			break;
+		case 17:
+			notice('-----running step '+step+': create a new user');
+			createUser(step);
+			break;
+		case 18:
+			notice('-----running step '+step+': update the user');
+			updateUser(step, arg);
+			break;
+		case 19:
+			notice('-----running step '+step+': refresh the user from the database');
+			refreshUser(step, arg);
+			break;
+		case 20:
+			notice('-----running step '+step+': refresh the user from the database');
+			loginUser(step, arg);
+			break;
+		case 21:
+			notice('-----running step '+step+': logged in user creates dog');
+			createDog(step, arg);
+			break;
+		case 22:
+			notice('-----running step '+step+': logged in user likes dog');
+			userLikesDog(step, arg, arg2);
+			break;
+		case 23:
+			notice('-----running step '+step+': logged in user removes likes connection to dog');
+			removeUserLikesDog(step, arg, arg2);
+			break;
+		case 24:
+			notice('-----running step '+step+': user removes dog');
+			removeDog(step, arg, arg2);
+			break;
+		case 25:
+			notice('-----running step '+step+': log the user out');
+			logoutUser(step, arg);
+			break;
+		case 26:
+  		notice('-----running step '+step+': remove the user from the database');
+  		destroyUser(step, arg);
+  		break;
+  	default:
+  		notice('-----test complete!-----');
+  		notice('Success count= ' + successCount);
+  		notice('Error count= ' + errorCount);
+  		notice('-----thank you for playing!-----');
+  		$('#start-button').removeAttr("disabled");
 	}
 }
 
@@ -155,6 +179,18 @@ function notice(message){
 }
 
 //tests
+function clearUser(step) {
+  var options = {
+    method:'DELETE',
+    endpoint:'users/fred'
+  };
+  client.request(options, function (err, data) {
+    //data will contain raw results from API call
+    success('User cleared from DB');
+    runner(step);
+  });
+}
+
 function testGET(step) {
 	var options = {
 		method:'GET',
@@ -508,10 +544,10 @@ function createUser(step) {
 
 	client.createEntity(options, function (err, marty) {
 		if (err){
-			error('user not saved');
+			error('user not created');
 			runner(step, marty);
 		} else {
-			success('user saved');
+			success('user created');
 			runner(step, marty);
 		}
 	});
@@ -547,6 +583,61 @@ function refreshUser(step, marty) {
 
 }
 
+function connectUsers(step, marty) {
+
+  //type is 'users', set additional paramaters as needed
+  var options = {
+    type:'users',
+    username:'jennifer',
+  }
+
+  client.createEntity(options, function (err, jennifer) {
+    if (err){
+      error('new user not created');
+      runner(step, marty);
+    } else {
+      success('user saved');
+
+      marty.connect('likes', jennifer, function (err, data) {
+      if (err) {
+        error('connection not created');
+        runner(step, marty);
+      } else {
+
+
+
+
+
+        //call succeeded, so pull the connections back down
+        marty.getConnections('likes', function (err, data) {
+          if (err) {
+            //error getting connection
+          } else {
+            //verify that connection exists
+            if (marty.likes.jennifer) {
+              //success
+              success('connection exists');
+            } else {
+              error('connection does not exist');
+            }
+
+          }
+        })
+
+      }
+
+});
+
+
+
+
+      runner(step, marty);
+    }
+  });
+
+}
+
+
 function loginUser(step, marty) {
 	username = 'marty';
 	password = 'mysecurepassword';
@@ -555,42 +646,144 @@ function loginUser(step, marty) {
 			if (err) {
 				error('could not log user in');
 			} else {
-				//the user has been logged in and the token has been stored
-				//in the client. any calls made now will use the token.
-				//once a user has logged in, thier user object is stored
+				success('user has been logged in');
+
+				//the login call will return an OAuth token, which is saved
+				//in the client. Any calls made now will use the token.
+				//once a user has logged in, their user object is stored
 				//in the client and you can access it this way:
 				var token = client.token;
 
-				//you can also detect if the user is logged in:
-				if (client.isLoggedIn()) {
-					success('user has been logged in');
-					//get the logged in user entity by calling for it:
-					client.getLoggedInUser(function(err, data, user) {
-						if(err) {
-							error('could not get logged in user');
-						} else {
-							success('got logged in user');
-							//you can then info from the user entity object:
-							var username = user.get('username');
-							notice('logged in user was: ' + username);
+				//Then make calls against the API.  For example, you can
+				//get the user entity this way:
+				client.getLoggedInUser(function(err, data, user) {
+					if(err) {
+						error('could not get logged in user');
+					} else {
+						success('got logged in user');
 
-							//to log a user out:
-							client.logout();
+						//you can then get info from the user entity object:
+						var username = user.get('username');
+						notice('logged in user was: ' + username);
 
-							//verify the logout worked
-							if (client.isLoggedIn()) {
-								error('logout failed');
-							} else {
-								success('user has been logged out');
-							}
+						runner(step, user);
+					}
+				});
 
-							runner(step, marty);
-						}
-					});
-				}
 			}
 		}
 	);
+}
+
+//TODO: currently, this code assumes permissions have been set to support user actions.  need to add code to show how to add new role and permission programatically
+//
+//first create a new permission on the default role:
+//POST "https://api.usergrid.com/yourorgname/yourappname/roles/default/permissions" -d '{"permission":"get,post,put,delete:/dogs/**"}'
+//then after user actions, delete the permission on the default role:
+//DELETE "https://api.usergrid.com/yourorgname/yourappname/roles/default/permissions?permission=get%2Cpost%2Cput%2Cdelete%3A%2Fdogs%2F**"
+
+
+function createDog(step, marty) {
+
+	var options = {
+		type:'dogs',
+		name:'einstein',
+		breed:'mutt'
+	}
+
+	client.createEntity(options, function (err, dog) {
+		if (err) {
+			error('POST new dog by logged in user failed');
+		} else {
+			success('POST new dog by logged in user succeeded');
+			runner(step, marty, dog);
+		}
+	});
+
+}
+
+function userLikesDog(step, marty, dog) {
+
+	marty.connect('likes', dog, function (err, data) {
+		if (err) {
+			error('connection not created');
+			runner(step, marty);
+		} else {
+
+			//call succeeded, so pull the connections back down
+			marty.getConnections('likes', function (err, data) {
+				if (err) {
+						error('could not get connections');
+				} else {
+					//verify that connection exists
+					if (marty.likes.einstein) {
+						success('connection exists');
+					} else {
+						error('connection does not exist');
+					}
+
+					runner(step, marty, dog);
+				}
+			});
+		}
+	});
+
+}
+
+function removeUserLikesDog(step, marty, dog) {
+
+	marty.disconnect('likes', dog, function (err, data) {
+		if (err) {
+			error('connection not deleted');
+			runner(step, marty);
+		} else {
+
+			//call succeeded, so pull the connections back down
+			marty.getConnections('likes', function (err, data) {
+				if (err) {
+					error('error getting connections');
+				} else {
+					//verify that connection exists
+					if (marty.likes.einstein) {
+						error('connection still exists');
+					} else {
+						success('connection deleted');
+					}
+
+					runner(step, marty, dog);
+				}
+			});
+		}
+	});
+
+}
+
+function removeDog(step, marty, dog) {
+
+	//now delete the dog from the database
+	dog.destroy(function(err, data) {
+		if (err) {
+			error('dog not removed');
+		} else {
+			success('dog removed');
+		}
+	});
+	runner(step, marty);
+}
+
+function logoutUser(step, marty) {
+
+	//to log the user out, call the logout() method
+	client.logout();
+
+	//verify the logout worked
+	if (client.isLoggedIn()) {
+		error('logout failed');
+	} else {
+		success('user has been logged out');
+	}
+
+	runner(step, marty);
 }
 
 function destroyUser(step, marty) {
