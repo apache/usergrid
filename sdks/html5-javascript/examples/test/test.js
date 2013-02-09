@@ -116,35 +116,51 @@ function runner(step, arg, arg2){
 			loginUser(step, arg);
 			break;
 		case 21:
+			notice('-----running step '+step+': refresh the user from the database');
+			changeUsersPassword(step, arg);
+			break;
+		case 22:
+			notice('-----running step '+step+': refresh the user from the database');
+			logoutUser(step, arg);
+			break;
+		case 23:
+			notice('-----running step '+step+': refresh the user from the database');
+			reloginUser(step, arg);
+			break;
+		case 24:
 			notice('-----running step '+step+': logged in user creates dog');
 			createDog(step, arg);
 			break;
-		case 22:
+		case 25:
 			notice('-----running step '+step+': logged in user likes dog');
 			userLikesDog(step, arg, arg2);
 			break;
-		case 23:
+		case 26:
 			notice('-----running step '+step+': logged in user removes likes connection to dog');
 			removeUserLikesDog(step, arg, arg2);
 			break;
-		case 24:
+		case 27:
 			notice('-----running step '+step+': user removes dog');
 			removeDog(step, arg, arg2);
 			break;
-		case 25:
+		case 28:
 			notice('-----running step '+step+': log the user out');
 			logoutUser(step, arg);
 			break;
-		case 26:
-  		notice('-----running step '+step+': remove the user from the database');
-  		destroyUser(step, arg);
-  		break;
-  	default:
-  		notice('-----test complete!-----');
-  		notice('Success count= ' + successCount);
-  		notice('Error count= ' + errorCount);
-  		notice('-----thank you for playing!-----');
-  		$('#start-button').removeAttr("disabled");
+		case 29:
+			notice('-----running step '+step+': remove the user from the database');
+			destroyUser(step, arg);
+			break;
+		case 30:
+			notice('-----running step '+step+': try to create existing entity');
+			createExistingEntity(step, arg);
+			break;
+		default:
+			notice('-----test complete!-----');
+			notice('Success count= ' + successCount);
+			notice('Error count= ' + errorCount);
+			notice('-----thank you for playing!-----');
+			$('#start-button').removeAttr("disabled");
 	}
 }
 
@@ -583,61 +599,6 @@ function refreshUser(step, marty) {
 
 }
 
-function connectUsers(step, marty) {
-
-  //type is 'users', set additional paramaters as needed
-  var options = {
-    type:'users',
-    username:'jennifer',
-  }
-
-  client.createEntity(options, function (err, jennifer) {
-    if (err){
-      error('new user not created');
-      runner(step, marty);
-    } else {
-      success('user saved');
-
-      marty.connect('likes', jennifer, function (err, data) {
-      if (err) {
-        error('connection not created');
-        runner(step, marty);
-      } else {
-
-
-
-
-
-        //call succeeded, so pull the connections back down
-        marty.getConnections('likes', function (err, data) {
-          if (err) {
-            //error getting connection
-          } else {
-            //verify that connection exists
-            if (marty.likes.jennifer) {
-              //success
-              success('connection exists');
-            } else {
-              error('connection does not exist');
-            }
-
-          }
-        })
-
-      }
-
-});
-
-
-
-
-      runner(step, marty);
-    }
-  });
-
-}
-
-
 function loginUser(step, marty) {
 	username = 'marty';
 	password = 'mysecurepassword';
@@ -674,6 +635,54 @@ function loginUser(step, marty) {
 		}
 	);
 }
+
+function changeUsersPassword(step, marty) {
+
+	marty.set('oldpassword', 'mysecurepassword');
+	marty.set('newpassword', 'mynewsecurepassword');
+	marty.save(function(err){
+		if (err){
+			error('user password not updated');
+		} else {
+			success('user password updated');
+			runner(step, marty);
+		}
+	});
+
+}
+
+function logoutUser(step, marty) {
+
+	//to log the user out, call the logout() method
+	client.logout();
+
+	//verify the logout worked
+	if (client.isLoggedIn()) {
+		error('logout failed');
+	} else {
+		success('user has been logged out');
+	}
+
+	runner(step, marty);
+}
+
+function reloginUser(step, marty) {
+
+	username = 'marty';
+	password = 'mynewsecurepassword';
+	client.login(username, password,
+		function (err) {
+		if (err) {
+			error('could not relog user in');
+		} else {
+			success('user has been re-logged in');
+			runner(step, marty);
+		}
+		}
+	);
+}
+
+
 
 //TODO: currently, this code assumes permissions have been set to support user actions.  need to add code to show how to add new role and permission programatically
 //
@@ -771,21 +780,6 @@ function removeDog(step, marty, dog) {
 	runner(step, marty);
 }
 
-function logoutUser(step, marty) {
-
-	//to log the user out, call the logout() method
-	client.logout();
-
-	//verify the logout worked
-	if (client.isLoggedIn()) {
-		error('logout failed');
-	} else {
-		success('user has been logged out');
-	}
-
-	runner(step, marty);
-}
-
 function destroyUser(step, marty) {
 
 	marty.destroy(function(err){
@@ -795,6 +789,67 @@ function destroyUser(step, marty) {
 			success('user deleted from database');
 			marty = null; //blow away the local object
 			runner(step);
+		}
+	});
+
+}
+
+function createExistingEntity(step, marty) {
+
+	var options = {
+		type:'dogs',
+		name:'einstein'
+	}
+
+	client.createEntity(options, function (err, dog) {
+		if (err) {
+			error('Create new entity to use for existing entity failed');
+		} else {
+			success('Create new entity to use for existing entity succeeded');
+
+			var uuid = dog.get('uuid');
+			//now create new entity, but use same entity name of einstein.  This means that
+			//the original einstein entity now exists.  Thus, the new einstein entity should
+			//be the same as the original + any data differences from the options var:
+
+			options = {
+				type:'dogs',
+				name:'einstein',
+				breed:'mutt'
+			}
+			client.createEntity(options, function (err, newdog) {
+				if (err) {
+					error('Create new entity to use for existing entity failed');
+				} else {
+					success('Create new entity to use for existing entity succeeded');
+
+					var newuuid = newdog.get('uuid');
+					if (newuuid === uuid) {
+						success('UUIDs of new and old entities match');
+					} else {
+						error('UUIDs of new and old entities do not match');
+					}
+
+					var breed = newdog.get('breed');
+					if (breed === 'mutt') {
+						success('attribute sucesfully set on new entity');
+					} else {
+						error('attribute not sucesfully set on new entity');
+					}
+
+					newdog.destroy(function(err){
+						if (err){
+							error('existing entity not deleted from database');
+						} else {
+							success('existing entity deleted from database');
+							dog = null; //blow away the local object
+							newdog = null; //blow away the local object
+							runner(step);
+						}
+					});
+
+				}
+			});
 		}
 	});
 
