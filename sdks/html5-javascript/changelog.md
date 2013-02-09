@@ -5,6 +5,8 @@
 - Added new functions for creating, getting, and deleting connections
 - Added test cases for said functions
 - Added logout call to client create to clear out any remnant token from a past session
+- Fixed change password error
+- Added getEntity method to get existing entity from server
 
 ###0.10.3
 
