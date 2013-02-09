@@ -29,6 +29,7 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.deser.ValueInstantiators.Base;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -576,6 +577,134 @@ public class UserResourceTest extends AbstractRestTest {
         assertEquals(secondCreatedId.toString(), getEntity(node, 0).get("uuid").asText());
 
     }
+    
+    /**
+     * Usergrid-1222 test
+     */
+    @Test
+    public void connectionQuerybyEmail() {
+        UUID id = UUIDUtils.newTimeUUID();
+
+        String name = "name1" + id;
+        String email = "email1" + id + "@usergrid.org";
+
+        ApiResponse response = client.createUser(email, name, email, "password");
+
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
+
+        UUID userId = response.getEntities().get(0).getUuid();
+
+        Entity role = new Entity("role");
+        role.setProperty("name", "connectionQuerybyEmail1");
+        
+        response = client.createEntity(role);
+
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
+
+        UUID roleId1 = response.getEntities().get(0).getUuid();
+        
+        //add permissions to the role
+        
+        Map<String, String> perms = new HashMap<String, String>();
+        perms.put("permission", "get:/stuff/**");
+        
+        String path = String.format("/test-organization/test-app/roles/%s/permissions", roleId1);
+
+        JsonNode node = resource().path(path).queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, perms);
+        
+        
+        //Create the second role
+        role = new Entity("role");
+        role.setProperty("name", "connectionQuerybyEmail2");
+        
+        response = client.createEntity(role);
+
+        assertNull("Error was: " + response.getErrorDescription(), response.getError());
+
+        UUID roleId2 = response.getEntities().get(0).getUuid();
+        
+        //add permissions to the role
+        
+        perms = new HashMap<String, String>();
+        perms.put("permission", "get:/stuff/**");
+        
+        path = String.format("/test-organization/test-app/roles/%s/permissions", roleId2);
+
+        node = resource().path(path).queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, perms);
+        
+        
+        //connect the entities where role is the root
+        path = String.format("/test-organization/test-app/roles/%s/users/%s", roleId1, userId);
+
+        node = resource().path(path).queryParam("access_token", access_token)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+
+        // now create a connection of "likes" between the first user and the
+        // second using pluralized form
+
+        assertEquals(userId.toString(), getEntity(node, 0).get("uuid").asText());
+        
+        
+        //connect the second role
+        path = String.format("/test-organization/test-app/roles/%s/users/%s", roleId2, userId);
+        
+        node = resource().path(path).queryParam("access_token", access_token)
+            .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+
+
+
+        assertEquals(userId.toString(), getEntity(node, 0).get("uuid").asText());
+        
+        //query the second role, it should work
+        path = String.format("/test-organization/test-app/roles/%s/users", roleId2);
+        
+        node = resource().path(path).queryParam("access_token", access_token).queryParam("ql","select%20*%20where%20username%20=%20'"+email+"'")
+            .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        
+        assertEquals(userId.toString(), getEntity(node, 0).get("uuid").asText());
+
+        
+        
+        //query the first role, it should work
+        path = String.format("/test-organization/test-app/roles/%s/users", roleId1);
+        
+        node = resource().path(path).queryParam("access_token", access_token).queryParam("ql","select%20*%20where%20username%20=%20'"+email+"'")
+            .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        
+        assertEquals(userId.toString(), getEntity(node, 0).get("uuid").asText());
+        
+
+        //now delete the first role
+        path = String.format("/test-organization/test-app/roles/%s", roleId1);
+        
+        node = resource().path(path).queryParam("access_token", access_token)
+            .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).delete(JsonNode.class);
+        
+        //query the first role, it should 404
+        path = String.format("/test-organization/test-app/roles/%s/users", roleId1);
+        
+        try{
+          node = resource().path(path).queryParam("access_token", access_token).queryParam("ql","select%20*%20where%20username%20=%20'"+email+"'")
+              .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        }catch(UniformInterfaceException e){
+          assertEquals(Status.NOT_FOUND, e.getResponse().getClientResponseStatus());
+        }
+        
+        assertEquals(userId.toString(), getEntity(node, 0).get("uuid").asText());
+        
+        
+        //query the second role, it should work
+        path = String.format("/test-organization/test-app/roles/%s/users", roleId2);
+        
+        node = resource().path(path).queryParam("access_token", access_token).queryParam("ql","select%20*%20where%20username%20=%20'"+email+"'")
+            .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+        
+        assertEquals(userId.toString(), getEntity(node, 0).get("uuid").asText());
+
+    }
+
 
     @Test
     public void connectionByNameAndDynamicType() {
