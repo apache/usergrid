@@ -28,7 +28,7 @@ window.console.log = window.console.log || function() {};
 //Usergrid namespace encapsulates this SDK
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
-Usergrid.SDK_VERSION = '0.10.03';
+Usergrid.SDK_VERSION = '0.10.04';
 
 Usergrid.Client = function(options) {
   //usergrid enpoint
