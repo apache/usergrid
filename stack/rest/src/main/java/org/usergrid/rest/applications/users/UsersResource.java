@@ -23,15 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
@@ -177,7 +169,24 @@ public class UsersResource extends ServiceResource {
 		return user;
 	}
 
-	@POST
+    @PUT
+    @Override
+    @RequireApplicationAccess
+    public JSONWithPadding executePut(@Context UriInfo ui,
+                                      Map<String, Object> json,
+                                      @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
+        User user = getUser();
+        if ( user == null ) {
+            return executePost(ui, new EntityHolder(json), callback);
+        }
+        if(json!=null) {
+            json.remove("password");
+            json.remove("pin");
+        }
+        return super.executePut(ui, json, callback);
+    }
+
+    @POST
 	@Override
 	@RequireApplicationAccess
 	public JSONWithPadding executePost(@Context UriInfo ui,
