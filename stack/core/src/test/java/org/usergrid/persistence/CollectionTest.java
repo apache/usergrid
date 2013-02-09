@@ -1257,6 +1257,9 @@ public class CollectionTest extends AbstractPersistenceTest {
     List firstResult = (List)sr.get(0);
     assertTrue("edanuff".equals(firstResult.get(0)));
     assertTrue("ed@anuff.com".equals(firstResult.get(1)));
+    
+    
+    
 
   }
 
@@ -1286,6 +1289,59 @@ public class CollectionTest extends AbstractPersistenceTest {
     Map firstResult = (Map)sr.get(0);
     assertTrue("edanuff".equals(firstResult.get("name")));
     assertTrue("ed@anuff.com".equals(firstResult.get("email")));
+  }
+  
+  @Test
+  public void testSelectEmailViaConnection() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "testSelectEmail");
+
+    EntityManager em = emf.getEntityManager(applicationId);
+
+    Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    properties.put("username", "ed@anuff.com");
+    properties.put("email", "ed@anuff.com");
+
+    em.create("user", properties);
+
+    String s = "select * where username = 'ed@anuff.com'";
+    Query query = Query.fromQL(s);
+
+    Results r = em.searchCollection(em.getApplicationRef(), "users", query);
+    assertTrue(r.size() == 1);
+
+    // selection results should be a list of lists
+    Entity entity = r.getEntity();
+    
+    
+    assertTrue("ed@anuff.com".equals(entity.getProperty("username")));
+    assertTrue("ed@anuff.com".equals(entity.getProperty("email")));
+    
+    
+    //now create a role and connect it
+    properties = new LinkedHashMap<String, Object>();
+    properties.put("name", "test");
+    
+    Entity foo = em.create("foo", properties);
+    
+    em.createConnection(foo, "testconnection", entity);
+    
+    //now query via the testConnection, this should work
+    
+    query = Query.fromQL(s);
+    query.setConnectionType("testconnection");
+    query.setEntityType("user");
+    
+    r = em.searchConnectedEntities(foo, query);
+    
+    assertTrue(r.size() == 1);
+
+    // selection results should be a list of lists
+    entity = r.getEntity();
+    assertTrue("ed@anuff.com".equals(entity.getProperty("username")));
+    assertTrue("ed@anuff.com".equals(entity.getProperty("email")));
+    
+    
   }
   
   
