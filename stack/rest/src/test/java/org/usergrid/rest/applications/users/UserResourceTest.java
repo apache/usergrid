@@ -30,7 +30,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.deser.ValueInstantiators.Base;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +52,6 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  * @author zznate
  * @author tnine
  */
-@Ignore
 public class UserResourceTest extends AbstractRestTest {
 
     private static Logger log = LoggerFactory.getLogger(UserResourceTest.class);
@@ -1225,38 +1223,6 @@ public class UserResourceTest extends AbstractRestTest {
             JsonNode body = uie.getResponse().getEntity(JsonNode.class);
             assertEquals("user not activated", body.findPath("error_description").getTextValue());
         }
-    }
-
-    @Test
-    public void delegatePutOnNotFound() throws Exception {
-        String randomName = "user1_"+UUIDUtils.newTimeUUID().toString();
-        createUser(randomName,randomName+"@apigee.com","password",randomName);
-
-        // should update a field
-        JsonNode response = resource().path("/test-organization/test-app/users/"+randomName)
-                        .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
-                        .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-        logNode(response);
-        assertNotNull(getEntity(response, 0));
-        // PUT on user
-
-        // PUT a new user
-        randomName = "user2_"+UUIDUtils.newTimeUUID().toString();
-        Map<String, String> payload = hashMap("email", randomName+"@apigee.com")
-                .map("username", randomName)
-                .map("name", randomName)
-            .map("password","password").map("pin", "1234");
-
-        response = resource().path("/test-organization/test-app/users").queryParam("access_token", adminAccessToken)
-            .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).put(JsonNode.class, payload);
-
-        logNode(response);
-        response = resource().path("/test-organization/test-app/users/"+randomName)
-                                .queryParam("access_token", adminAccessToken).accept(MediaType.APPLICATION_JSON)
-                                .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-
-        assertNotNull(getEntity(response, 0));
-        logNode(response);
     }
 
 
