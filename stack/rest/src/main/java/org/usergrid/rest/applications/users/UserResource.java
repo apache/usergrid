@@ -80,6 +80,7 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import com.sun.jersey.core.provider.EntityHolder;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 
@@ -141,12 +142,11 @@ public class UserResource extends ServiceResource {
             Map<String, Object> json,
             @QueryParam("callback") @DefaultValue("callback") String callback)
                     throws Exception {
-
-		if(json!=null) {
-			json.remove("password");
-			json.remove("pin");
-		}
-
+        if(json!=null) {
+            json.remove("password");
+            json.remove("pin");
+        }
+        
         return super.executePut(ui, json, callback);
     }
 

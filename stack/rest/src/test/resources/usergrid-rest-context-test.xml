@@ -26,8 +26,8 @@
 	<import resource="usergrid-rest-context.xml"/>
 
     <bean id="traceTagManager" class="org.usergrid.persistence.cassandra.util.TraceTagManager">
-        <property name="reportUnattached" value="true"/>
-        <property name="traceEnabled" value="true"/>
+        <property name="reportUnattached" value="false"/>
+        <property name="traceEnabled" value="false"/>
     </bean>
 
 
