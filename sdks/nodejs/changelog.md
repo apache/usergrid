@@ -4,6 +4,8 @@
 
 - Added new functions for creating, getting, and deleting connections
 - Added test cases for said functions
+- Fixed change password error
+- Added getEntity method to get existing entity from server
 
 ###0.10.3
 
