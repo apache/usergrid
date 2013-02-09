@@ -209,7 +209,7 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
     }
   });
   */
-
+  var getOnExist = options.getOnExist || false; //if true, will return entity if one already exists
   var options = {
     client:this,
     data:options
@@ -217,7 +217,7 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
   var entity = new Usergrid.Entity(options);
   entity.fetch(function(err, data) {
     //if the fetch doesn't find what we are looking for, or there is no error, do a save
-    var okToSave = (err && 'service_resource_not_found' === data.error) || !err;
+    var okToSave = (err && 'service_resource_not_found' === data.error) || (!err && getOnExist);
     if(okToSave) {
       entity.set(options.data); //add the data again just in case
       entity.save(function(err, data) {
@@ -233,6 +233,34 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
   });
 
 }
+
+/*
+*  Main function for getting existing entities - should be called directly.
+*
+*  You must supply a uuid or (username or name). Username only applies to users.
+*  Name applies to all custom entities
+*
+*  options object: options {data:{'type':'collection_type', 'name':'value', 'username':'value'}, uuid:uuid}}
+*
+*  @method createEntity
+*  @public
+*  @params {object} options
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
+Usergrid.Client.prototype.getEntity = function (options, callback) {
+  var options = {
+    client:this,
+    data:options
+  }
+  var entity = new Usergrid.Entity(options);
+  entity.fetch(function(err, data) {
+    if (typeof(callback) === 'function') {
+      callback(err, entity);
+    }
+  });
+}
+
 
 /*
 *  Main function for creating new collections - should be called directly.

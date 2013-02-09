@@ -108,50 +108,54 @@ function runner(step, arg, arg2){
 			updateUser(step, arg);
 			break;
 		case 19:
-			notice('-----running step '+step+': refresh the user from the database');
-			refreshUser(step, arg);
+			notice('-----running step '+step+': get the existing user');
+			getExistingUser(step, arg);
 			break;
 		case 20:
 			notice('-----running step '+step+': refresh the user from the database');
-			loginUser(step, arg);
+			refreshUser(step, arg);
 			break;
 		case 21:
 			notice('-----running step '+step+': refresh the user from the database');
-			changeUsersPassword(step, arg);
+			loginUser(step, arg);
 			break;
 		case 22:
 			notice('-----running step '+step+': refresh the user from the database');
-			logoutUser(step, arg);
+			changeUsersPassword(step, arg);
 			break;
 		case 23:
 			notice('-----running step '+step+': refresh the user from the database');
-			reloginUser(step, arg);
+			logoutUser(step, arg);
 			break;
 		case 24:
+			notice('-----running step '+step+': refresh the user from the database');
+			reloginUser(step, arg);
+			break;
+		case 25:
 			notice('-----running step '+step+': logged in user creates dog');
 			createDog(step, arg);
 			break;
-		case 25:
+		case 26:
 			notice('-----running step '+step+': logged in user likes dog');
 			userLikesDog(step, arg, arg2);
 			break;
-		case 26:
+		case 27:
 			notice('-----running step '+step+': logged in user removes likes connection to dog');
 			removeUserLikesDog(step, arg, arg2);
 			break;
-		case 27:
+		case 28:
 			notice('-----running step '+step+': user removes dog');
 			removeDog(step, arg, arg2);
 			break;
-		case 28:
+		case 29:
 			notice('-----running step '+step+': log the user out');
 			logoutUser(step, arg);
 			break;
-		case 29:
+		case 30:
 			notice('-----running step '+step+': remove the user from the database');
 			destroyUser(step, arg);
 			break;
-		case 30:
+		case 31:
 			notice('-----running step '+step+': try to create existing entity');
 			createExistingEntity(step, arg);
 			break;
@@ -585,6 +589,31 @@ function updateUser(step, marty) {
 	});
 
 }
+
+function getExistingUser(step, marty) {
+
+	var options = {
+		type:'users',
+		username:'marty'
+	}
+	client.getEntity(options, function(err, existingUser){
+		if (err){
+			error('existing user not retrieved');
+		} else {
+			success('existing user was retrieved');
+
+			var username = existingUser.get('username');
+			if (username === 'marty'){
+				success('got existing user username');
+			} else {
+				error('could not get existing user username');
+			}
+			runner(step, marty);
+		}
+	});
+
+}
+
 
 function refreshUser(step, marty) {
 
