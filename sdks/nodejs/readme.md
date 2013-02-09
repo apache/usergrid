@@ -119,9 +119,9 @@ This module provides an easy way to make new entities. Here is a simple example 
 	}
 	client.createEntity(options, function (err, dog) {
 		if (err) {
-			//error - dog not created;
+			//error - dog not created
 		} else {
-			//success -dog is created;
+			//success -dog is created
 
 			//once the dog is created, you can set single properties:
 			dog.set('breed','Dinosaur');
@@ -209,6 +209,43 @@ Based on the set statements above, our JSON object should look like this:
 		master:'Fred',
 		state:'hungry'
 	}
+
+**Wait!** But what if my entity already exists on the server?
+
+During a client.createEntity call, there are two ways that you can choose to handle this situation.  The question is, what should the client do if an entity with the same name, username, or uuid already exists on the server?
+	
+  	1. Give you back an error.
+  	2. Give you back the pre-existing entity.
+
+If you want to get back an error when the entity already exists, then simply call the client.createEntity function as above. If there is a collision, you will get back a 400  However, if you want the existing entity to be returned, then set the getOnExist flag to true:
+
+	var options = {
+		type:'dogs',
+		name:'Dino',
+		getOnExist:true
+	}
+	client.createEntity(options, function (err, dog) {
+		if (err) {
+			//error - dog not created
+		} else {
+			//success -dog is created or returned, depending on if it already exists or not
+
+
+Alternatively, if you know that you only want to retrieve an existing entity, use the getEntity method:
+
+	var options = {
+		type:'users',
+		username:'marty'
+	}
+	client.getEntity(options, function(err, existingUser){
+		if (err){
+			//error - existing user not retrieved
+		} else {
+			//success - existing user was retrieved
+
+			var username = existingUser.get('username');
+		}
+	});
 
 
 ##The Collection object
@@ -672,11 +709,10 @@ More information on cURL can be found here:
 
 <http://curl.haxx.se/>
 
-
 ## Contributing
 We welcome your enhancements!
 
-Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid Node module is open source and licensed under the Apache License, Version 2.0.
+Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid Javascript SDK is open source and licensed under the Apache License, Version 2.0.
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
@@ -684,10 +720,8 @@ Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid No
 4. Push your changes to the upstream branch (`git push origin my-new-feature`)
 5. Create new Pull Request (make sure you describe what you did and why your mod is needed)
 
-
 ##More information
 For more information on Apigee App Services, visit <http://apigee.com/about/developers>.
-
 
 ## Copyright
 Copyright 2013 Apigee Corporation

@@ -117,38 +117,54 @@ function runner(step, arg, arg2){
 			updateUser(step, arg);
 			break;
 		case 19:
-			notice('-----running step '+step+': refresh the user from the database');
-			refreshUser(step, arg);
+			notice('-----running step '+step+': get the existing user');
+			getExistingUser(step, arg);
 			break;
 		case 20:
 			notice('-----running step '+step+': refresh the user from the database');
-			loginUser(step, arg);
+			refreshUser(step, arg);
 			break;
 		case 21:
+			notice('-----running step '+step+': refresh the user from the database');
+			loginUser(step, arg);
+			break;
+		case 22:
+			notice('-----running step '+step+': refresh the user from the database');
+			changeUsersPassword(step, arg);
+			break;
+		case 23:
+			notice('-----running step '+step+': refresh the user from the database');
+			logoutUser(step, arg);
+			break;
+		case 24:
+			notice('-----running step '+step+': refresh the user from the database');
+			reloginUser(step, arg);
+			break;
+		case 25:
 			notice('-----running step '+step+': logged in user creates dog');
 			createDog(step, arg);
 			break;
-		case 22:
+		case 26:
 			notice('-----running step '+step+': logged in user likes dog');
 			userLikesDog(step, arg, arg2);
 			break;
-		case 23:
+		case 27:
 			notice('-----running step '+step+': logged in user removes likes connection to dog');
 			removeUserLikesDog(step, arg, arg2);
 			break;
-		case 24:
+		case 28:
 			notice('-----running step '+step+': user removes dog');
 			removeDog(step, arg, arg2);
 			break;
-		case 25:
+		case 29:
 			notice('-----running step '+step+': log the user out');
 			logoutUser(step, arg);
 			break;
-		case 26:
+		case 30:
 			notice('-----running step '+step+': remove the user from the database');
 			destroyUser(step, arg);
 			break;
-		case 27:
+		case 31:
 			notice('-----running step '+step+': try to create existing entity');
 			createExistingEntity(step, arg);
 			break;
@@ -573,6 +589,31 @@ function updateUser(step, marty) {
 
 }
 
+function getExistingUser(step, marty) {
+
+	var options = {
+		type:'users',
+		username:'marty'
+	}
+	client.getEntity(options, function(err, existingUser){
+		if (err){
+			error('existing user not retrieved');
+		} else {
+			success('existing user was retrieved');
+
+			var username = existingUser.get('username');
+			if (username === 'marty'){
+				success('got existing user username');
+			} else {
+				error('could not get existing user username');
+			}
+			runner(step, marty);
+		}
+	});
+
+}
+
+
 function refreshUser(step, marty) {
 
 	marty.fetch(function(err){
@@ -620,11 +661,11 @@ function loginUser(step, marty) {
 					} else {
 						success('got logged in user');
 
-            //you can then get info from the user entity object:
-            var username = marty.get('username');
-            notice('logged in user was: ' + username);
+						//you can then get info from the user entity object:
+						var username = user.get('username');
+						notice('logged in user was: ' + username);
 
-            runner(step, user);
+						runner(step, user);
 					}
 				});
 
@@ -632,6 +673,54 @@ function loginUser(step, marty) {
 		}
 	);
 }
+
+function changeUsersPassword(step, marty) {
+
+	marty.set('oldpassword', 'mysecurepassword');
+	marty.set('newpassword', 'mynewsecurepassword');
+	marty.save(function(err){
+		if (err){
+			error('user password not updated');
+		} else {
+			success('user password updated');
+			runner(step, marty);
+		}
+	});
+
+}
+
+function logoutUser(step, marty) {
+
+	//to log the user out, call the logout() method
+	client.logout();
+
+	//verify the logout worked
+	if (client.isLoggedIn()) {
+		error('logout failed');
+	} else {
+		success('user has been logged out');
+	}
+
+	runner(step, marty);
+}
+
+function reloginUser(step, marty) {
+
+	username = 'marty';
+	password = 'mynewsecurepassword';
+	client.login(username, password,
+		function (err) {
+		if (err) {
+			error('could not relog user in');
+		} else {
+			success('user has been re-logged in');
+			runner(step, marty);
+		}
+		}
+	);
+}
+
+
 
 //TODO: currently, this code assumes permissions have been set to support user actions.  need to add code to show how to add new role and permission programatically
 //
@@ -730,25 +819,6 @@ function removeDog(step, marty, dog) {
 	runner(step, marty);
 }
 
-function logoutUser(step, marty) {
-
-	//to log the user out, call the logout() method
-	client.logout();
-
-	//verify the logout worked
-	if (client.isLoggedIn()) {
-		error('logout failed');
-	} else {
-		success('user has been logged out');
-	}
-
-	//since we don't need to App User level calls anymore,
-	//set the authtype back to client:
-	client.authType = usergrid.AUTH_CLIENT_ID;
-
-	runner(step, marty);
-}
-
 function destroyUser(step, marty) {
 
 	marty.destroy(function(err){
@@ -770,7 +840,7 @@ function createExistingEntity(step, marty) {
 		name:'einstein'
 	}
 
-client.createEntity(options, function (err, dog) {
+	client.createEntity(options, function (err, dog) {
 		if (err) {
 			error('Create new entity to use for existing entity failed');
 		} else {
@@ -806,8 +876,18 @@ client.createEntity(options, function (err, dog) {
 						error('attribute not sucesfully set on new entity');
 					}
 
+					newdog.destroy(function(err){
+						if (err){
+							error('existing entity not deleted from database');
+						} else {
+							success('existing entity deleted from database');
+							dog = null; //blow away the local object
+							newdog = null; //blow away the local object
+							runner(step);
+						}
+					});
+
 				}
-				runner(step, marty, dog);
 			});
 		}
 	});

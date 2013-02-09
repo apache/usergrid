@@ -169,7 +169,7 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
     }
   });
   */
-
+  var getOnExist = options.getOnExist || false; //if true, will return entity if one already exists
   var options = {
     client:this,
     data:options
@@ -177,7 +177,7 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
   var entity = new Usergrid.Entity(options);
   entity.fetch(function(err, data) {
     //if the fetch doesn't find what we are looking for, or there is no error, do a save
-    var okToSave = (err && 'service_resource_not_found' === data.error) || !err;
+    var okToSave = (err && 'service_resource_not_found' === data.error) || (!err && getOnExist);
     if(okToSave) {
       entity.set(options.data); //add the data again just in case
       entity.save(function(err, data) {
@@ -193,6 +193,34 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
   });
 
 }
+
+/*
+*  Main function for getting existing entities - should be called directly.
+*
+*  You must supply a uuid or (username or name). Username only applies to users.
+*  Name applies to all custom entities
+*
+*  options object: options {data:{'type':'collection_type', 'name':'value', 'username':'value'}, uuid:uuid}}
+*
+*  @method createEntity
+*  @public
+*  @params {object} options
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*/
+Usergrid.Client.prototype.getEntity = function (options, callback) {
+  var options = {
+    client:this,
+    data:options
+  }
+  var entity = new Usergrid.Entity(options);
+  entity.fetch(function(err, data) {
+    if (typeof(callback) === 'function') {
+      callback(err, entity);
+    }
+  });
+}
+
 
 /*
 *  Main function for creating new collections - should be called directly.
@@ -575,31 +603,29 @@ Usergrid.Entity.prototype.save = function (callback) {
         }
       }
       //if this is a user, update the password if it has been specified;
-      var needPasswordChange = (type === 'users' && entityData.oldpassword && entityData.newpassword);
+      var needPasswordChange = (self.get('type') === 'user' && entityData.oldpassword && entityData.newpassword);
       if (needPasswordChange) {
         //Note: we have a ticket in to change PUT calls to /users to accept the password change
         //      once that is done, we will remove this call and merge it all into one
         var pwdata = {};
         pwdata.oldpassword = entityData.oldpassword;
         pwdata.newpassword = entityData.newpassword;
-        this._client.request(
-          {
-            method:'PUT',
-            endpoint:type,
-            body:pwdata
-          },
-          function (err, data) {
-            if (err && self._client.logging) {
-              console.log('could not update user');
-            }
-            //remove old and new password fields so they don't end up as part of the entity object
-            self.set('oldpassword', null);
-            self.set('newpassword', null);
-            if (typeof(callback) === 'function') {
-              callback(err, data, self);
-            }
+        var options = {
+          method:'PUT',
+          endpoint:type+'/password',
+          body:pwdata
+        }
+        self._client.request(options, function (err, data) {
+          if (err && self._client.logging) {
+            console.log('could not update user');
           }
-        );
+          //remove old and new password fields so they don't end up as part of the entity object
+          self.set('oldpassword', null);
+          self.set('newpassword', null);
+          if (typeof(callback) === 'function') {
+            callback(err, data, self);
+          }
+        });
       } else if (typeof(callback) === 'function') {
         callback(err, retdata, self);
       }
