@@ -228,7 +228,7 @@ public class Query {
 
         List<String> l = null;
 
-        ql = first(params.get("ql"));
+        ql = QueryUtils.queryStrFrom(params);
         type = first(params.get("type"));
         reversed = firstBoolean(params.get("reversed"));
         connection = first(params.get("connection"));
