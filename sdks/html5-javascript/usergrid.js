@@ -46,7 +46,6 @@ Usergrid.Client = function(options) {
   this._callTimeout =  options.callTimeout || 30000; //default to 30 seconds
   this._callTimeoutCallback =  options.callTimeoutCallback || null;
   this.logoutCallback =  options.logoutCallback || null;
-  this.logout(); //needed to clear out any remnant token out of local storage
 };
 
 /*
