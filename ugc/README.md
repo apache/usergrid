@@ -152,6 +152,10 @@ Note synonym commands:
     created  1357344269759
     modified 1357344537483
     breed    Mixed
+    
+If you have more than ten dogs, it might be easier to target your specific dog when you update it:
+
+```ugc update dogs/79dfb563-56cb-11e2-a6b8-14109fd49581 '{ "breed" : "Mixed" }'```
 
 #### show off our latest dogs
 
