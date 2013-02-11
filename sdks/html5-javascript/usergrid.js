@@ -352,12 +352,13 @@ Usergrid.Client.prototype.calcTimeDiff = function () {
 *  @return none
 */
 Usergrid.Client.prototype.setToken = function (token) {
+	var tokenKey = 'token' + this.appName + this.orgName;
   this.token = token;
   if(typeof(Storage)!=="undefined"){
     if (token) {
-      localStorage.setItem('token', token);
+      localStorage.setItem(tokenKey, token);
     } else {
-      localStorage.removeItem('token');
+      localStorage.removeItem(tokenKey);
     }
   }
 }
@@ -370,10 +371,11 @@ Usergrid.Client.prototype.setToken = function (token) {
 *  @return {string} token
 */
 Usergrid.Client.prototype.getToken = function () {
+	var tokenKey = 'token' + this.appName + this.orgName;
   if (this.token) {
     return this.token;
   } else if(typeof(Storage)!=="undefined") {
-    return localStorage.getItem('token');
+    return localStorage.getItem(tokenKey);
   }
   return null;
 }
