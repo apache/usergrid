@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    ugc (0.9.1)
+    ugc (0.9.2)
       command_line_reporter
       gli (= 2.5.0)
       highline

@@ -8,7 +8,7 @@ command :get,:show,:ls,:list do |c|
     c2.action do |global_options,options,args|
       help_now! unless args[0]
 
-      format_response $application[args[0]].get
+      format_response $context[args[0]].get
     end
   end
 
@@ -31,18 +31,6 @@ command :get,:show,:ls,:list do |c|
             end
           end
         end
-      end
-    end
-  end
-
-  default_names = %w(assets users events roles folders activities devices groups)
-  default_names.each do |e|
-    c.desc e
-    c.command [e.to_sym] do |c2|
-      c2.action do |global_options,options,args|
-        response = $application[e].get
-        format_collection response.collection
-        save_response response
       end
     end
   end

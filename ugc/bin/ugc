@@ -15,6 +15,9 @@ version Ugc::VERSION
 desc 'verbose'
 switch [:v,:verbose], negatable: false
 
+desc 'management'
+switch [:m,:management], negatable: false
+
 desc 'draw table border'
 default_value true
 switch [:b,:border]
@@ -45,6 +48,8 @@ pre do |global_options,command,options,args|
   else
     if $settings.configured? && $settings.logged_in?
       $application = Ugc::Application.new
+      $management = Ugc::Management.new
+      $context = global_options[:management] ? $management : $application
       true
     else
       if $settings.configured?

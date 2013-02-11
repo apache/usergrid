@@ -172,6 +172,11 @@ If you specify column names in your query, you will be unable to reference the r
 
 ## Release notes
 
+### 0.9.2
+* New features
+  1. access management functions with -m (--management) global switch
+    * eg. `$ ugc -m get orgs/my-org`
+
 ### 0.9.1
 * New features
   1. allow non-interactive password on login (-p or --password)
