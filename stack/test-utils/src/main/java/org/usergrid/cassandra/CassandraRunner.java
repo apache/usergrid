@@ -15,6 +15,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +26,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     private static Logger logger = LoggerFactory.getLogger(CassandraRunner.class);
     private static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private static ContextHolder contextHolder;
+    private SchemaManager schemaManager;
 
     // TODO maybe put a 'holder' object in the executor and provide access to application context thusly?
     // TODO assume a static 'usergrid-test-context.xml' primer/starter file
@@ -38,13 +40,16 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     public static <T> T getBean(String name, Class<T> requiredType) {
         return contextHolder.applicationContext.getBean(name, requiredType);
     }
-    //TODO get by class type
+
+    public static <T> T getBean(Class<T> requiredType) {
+        return contextHolder.applicationContext.getBean(requiredType);
+    }
 
     /**
      * Class-level run. The order of events are as follows:
-     * - start IntravertDeamon if not started already
-     * - create any keyspaces defined as class level annotations
-     * - create any column families defined as class level annotations
+     * - load spring (if not loaded)
+     * - init cassandra (if not started)
+     * - look for DataControl annotation on class and delegate
      * @param notifier
      */
     @Override
@@ -52,9 +57,23 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         maybeInit();
         AutowireCapableBeanFactory acbf = contextHolder.applicationContext.getAutowireCapableBeanFactory();
         acbf.autowire(getTestClass().getJavaClass(),AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, true);
+        // check for SchemaManager annotation
+        DataControl control = null;
+        for(Annotation ann : getTestClass().getAnnotations() ) {
+            if ( ann instanceof DataControl ) {
+                control = (DataControl)ann;
+            }
+        }
+        loadDataControl(control);
         super.run(notifier);
     }
 
+    /**
+     * Method-level run
+     *
+     * @param method
+     * @param notifier
+     */
     @Override
     protected void runChild(FrameworkMethod method, RunNotifier notifier) {
         // TODO should scan for:
@@ -63,16 +82,25 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         super.runChild(method, notifier);
     }
 
-    private void maybeCreateSchema() {
+    private void loadDataControl(DataControl dataControl) {
+        if ( dataControl != null ) {
+            // TODO check for classpath and go static?
+            schemaManager = getBean(dataControl.schemaManager(), SchemaManager.class);
+        } else {
+            schemaManager = getBean(SchemaManager.class);
+        }
 
-        // TODO check for schema -
-        // Setup.setup() if not present
-        // - schema creation, baseline data population, test data population
-        // - SchemaManager iface
-        // - DataLoader iface
-        // 1. SchemaManager.loadSchema()
-        // 2. SchemaManager.populateBaseData()
-        // 3. DataLoader.execute()
+    }
+
+    private boolean maybeCreateSchema() {
+        if ( schemaManager.exists() ) {
+            logger.info("Schema existed");
+            return false;
+        }
+        schemaManager.create();
+        schemaManager.populateBaseData();
+
+        return true;
     }
 
 

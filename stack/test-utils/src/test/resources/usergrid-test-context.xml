@@ -13,7 +13,7 @@
         <constructor-arg value="testValue"/>
 	</bean>
 
-
+    <bean class="org.usergrid.cassandra.FakeSchemaManager"/>
 
 	<!--<import resource="classpath:/usergrid-core-context.xml"/> -->
 
