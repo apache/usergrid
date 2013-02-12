@@ -18,6 +18,7 @@ import java.io.File;
 import java.lang.annotation.Annotation;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class CassandraRunner extends BlockJUnit4ClassRunner {
@@ -60,11 +61,14 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         // check for SchemaManager annotation
         DataControl control = null;
         for(Annotation ann : getTestClass().getAnnotations() ) {
+            logger.info("examinign annotation " + ann);
             if ( ann instanceof DataControl ) {
+                logger.info("founda dataCOntrol annotation");
                 control = (DataControl)ann;
             }
         }
         loadDataControl(control);
+        maybeCreateSchema();
         super.run(notifier);
     }
 
@@ -85,8 +89,10 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     private void loadDataControl(DataControl dataControl) {
         if ( dataControl != null ) {
             // TODO check for classpath and go static?
+            logger.info("dataControl found - looking up SchemaManager impl");
             schemaManager = getBean(dataControl.schemaManager(), SchemaManager.class);
         } else {
+            logger.info("dataControl not found - using default SchemaManager impl");
             schemaManager = getBean(SchemaManager.class);
         }
 
@@ -119,15 +125,15 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         System.setProperty("cassandra-foreground", "true");
         System.setProperty("log4j.defaultInitOverride","true");
         System.setProperty("log4j.configuration", "log4j.properties");
-        System.setProperty("cassandra.load_ring_state", "false");
-        System.setProperty("cassandra.join_ring","false");
-        // System.setProperty("cassandra.ring_delay_ms","100");
+        //System.setProperty("cassandra.load_ring_state", "false");
+        //System.setProperty("cassandra.join_ring","false");
+        System.setProperty("cassandra.ring_delay_ms","100");
 
         FileUtils.deleteQuietly(new File(TMP));
 
         contextHolder = new ContextHolder();
         try {
-            executor.schedule(contextHolder ,3, TimeUnit.SECONDS).get();
+            executor.schedule(contextHolder, 3, TimeUnit.SECONDS).get();
         } catch (Exception ex) {
             logger.error("Could not schedule cassandra runner");
         }
@@ -153,18 +159,15 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     }
 
     static class ContextHolder implements Runnable {
-        final ApplicationContext applicationContext;
+        ApplicationContext applicationContext;
         CassandraDaemon cassandraDaemon;
 
-        ContextHolder() {
-            String[] locations = {"usergrid-test-context.xml"};
-            applicationContext = new ClassPathXmlApplicationContext(locations);
-
-        }
         @Override
         public void run() {
             cassandraDaemon = new CassandraDaemon();
             cassandraDaemon.activate();
+            String[] locations = {"usergrid-test-context.xml"};
+            applicationContext = new ClassPathXmlApplicationContext(locations);
         }
     }
 }
