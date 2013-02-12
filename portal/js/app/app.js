@@ -2,8 +2,16 @@ Usergrid.organizations = new Usergrid.Organization();
 
 var Pages = new ApigeePages();
 
+
+
 $(document).ready(function () {
+
   var query_params = Usergrid.Params.queryParams;
+  if (Usergrid.apiUrl) {
+    Usergrid.ApiClient.setApiUrl(Usergrid.apiUrl);
+  }
+  Pages.resetPasswordUrl = Usergrid.ApiClient.getResetPasswordUrl();
+
   initCore();
   initUI(query_params);
   startApp();
@@ -21,6 +29,7 @@ $(document).ready(function () {
   }
 
   function startApp() {
+
     if (!Usergrid.userSession.loggedIn()) {
       // test to see if the Portal is running on apigee, if so, send to SSO, if not, fall through to login screen
       if (Usergrid.SSO.usingSSO()) {
@@ -53,31 +62,53 @@ $(document).ready(function () {
     var privateMenu = $('#privateMenu');
 
     Pages.AddPage({name:'login', menu:publicMenu});
-    //Pages.ShowPage('login');
+    Pages.AddPage({name:'message', menu:publicMenu});
     Pages.AddPage({name:'signup', menu:publicMenu});
     Pages.AddPage({name:'forgot-password', menu:publicMenu});
     Pages.AddPage({name:'post-signup', menu:publicMenu});
-    Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction:Usergrid.console.pageSelectHome});
-
+    Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction: function() {
+      Pages.SelectPanel('organization');
+      if(!Backbone.History.started){
+        Backbone.history.start();
+      }
+    }});
   }
 
   function initConsole() {
-    //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc);
-    Pages.AddPanel('organization', null, null, null, null);
-    Pages.AddPanel('console', null, null, null, null);
-    Pages.AddPanel('application', null, null, null, Usergrid.console.pageSelectApplication);
-    Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null);
-    Pages.AddPanel('users', null, null, null, Usergrid.console.pageSelectUsers);
-    Pages.AddPanel('group', "#sidebar-menu a[href='#groups']", null, null, null);
-    Pages.AddPanel('groups', null, null, null, Usergrid.console.pageSelectGroups);
-    Pages.AddPanel('roles', null, null, null, Usergrid.console.pageSelectRoles);
-    Pages.AddPanel('activities', null, null, null, Usergrid.console.pageSelectActivities);
-    Pages.AddPanel('collections', null, null, null, Usergrid.console.pageSelectCollections);
-    Pages.AddPanel('analytics', null, null, null, Usergrid.console.pageSelectAnalytics);
-    Pages.AddPanel('properties', null, null, null, Usergrid.console.pageSelectProperties);
-    Pages.AddPanel('shell', null, null, null, Usergrid.console.pageSelectShell);
-    Pages.AddPanel('account', "#account-link", null, null, Usergrid.console.requestAccountSettings);
+    //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc,buttonHandlerFunction);
+    Pages.AddPanel('organization', '.go-home', null, null, Usergrid.console.pageSelectHome,null);
+    Pages.AddPanel('console', null, null, null, null, null);
+    Pages.AddPanel('dashboard', null, null, null, Usergrid.console.pageSelectApplication,null);
+    Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null, function() {});
+    Pages.AddPanel('users', null, null, null, Usergrid.console.pageSelectUsers, null);
+    Pages.AddPanel('group', "#sidebar-menu a[href='#groups']", null, null, null, function() {});
+    Pages.AddPanel('groups', null, null, null, Usergrid.console.pageSelectGroups, null);
+    Pages.AddPanel('roles', null, null, null, Usergrid.console.pageSelectRoles, null);
+    Pages.AddPanel('activities', null, null, null, Usergrid.console.pageSelectActivities, null);
+    Pages.AddPanel('collections', null, null, null, Usergrid.console.pageSelectCollections, null);
+    Pages.AddPanel('analytics', null, null, null, Usergrid.console.pageSelectAnalytics, null);
+    Pages.AddPanel('properties', null, null, null, Usergrid.console.pageSelectProperties, null);
+    Pages.AddPanel('shell', null, null, null, Usergrid.console.pageSelectShell, null);
+    Pages.AddPanel('account', "#account-link", null, null, null, accountRedirect);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
+
   }
 
+  function accountRedirect(e) {
+    e.preventDefault();
+    Usergrid.console.requestAccountSettings(Backbone.history.getHash(window));
+  }
+
+  function initCenterPanels(){
+    $(window).resize(centerPanels);
+    $(window).resize();
+  }
+
+  function centerPanels(){
+    var panels = $("#console-page");
+    var freeSpace = $(window).width() - panels.width();
+    console.log("window: " + $(window).width() + " Panels:" + panels.width());
+    console.log("free space: "+freeSpace);
+    panels.css('margin-left',function(){return freeSpace / 2;});
+  }
 });

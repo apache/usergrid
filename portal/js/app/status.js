@@ -17,8 +17,8 @@ var StatusBar = function () {
       type = 'info';
     }
 
-    var closebutton = '<a href="#" onclick="closeErrorMessage();" class="close">&times;</a>'
-    var item = $('<div class="alert alert-' + type + ' ">' + msg + closebutton + '</div>');
+    var closebutton = '<a onclick="closeErrorMessage();" class="close">&times;</a>'
+    var item = $('<div class="alert span3 alert-' + type + ' ">' + msg + closebutton + '</div>');
     self.box.find(".alert").remove();
     self.box.show().prepend(item);
     item.show();

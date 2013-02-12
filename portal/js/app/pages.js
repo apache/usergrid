@@ -3,7 +3,7 @@ function ApigeePages() {
     pages: {},
     panels: {},
     resetPasswordUrl: ''
-  };
+    };
 
   self.clearPage = function(){
     $("#pages > div").hide();
@@ -20,7 +20,6 @@ function ApigeePages() {
     if(page.link.parent().parent().hasClass("dropdown-menu")) {
       page.link.parent().parent().parent().addClass('active');
     } else {
-      page.link.parent().addClass('active');
       page.menu.show();
     }
 
@@ -59,7 +58,7 @@ function ApigeePages() {
     self.pages[page.name] = page;
   };
 
-  self.AddPanel = function(panelName, linkSelector,boxSelector,initFunction,showFunction) {
+  self.AddPanel = function(panelName, linkSelector,boxSelector,initFunction,showFunction, buttonHandler) {
     if (!linkSelector) {
       linkSelector = "#sidebar-menu a[href='#" + panelName + "']";
     }
@@ -76,17 +75,27 @@ function ApigeePages() {
       showFunction: showFunction
     };
 
+    if(!buttonHandler) {
+      buttonHandler = function(e) {
+        e.preventDefault();
+        redrawBox(panel.box);
+        Usergrid.Navigation.router.navigateTo(panel.name);
+      }
+    }
+    panel.link.click(buttonHandler);
+
+    self.panels[panel.name] = panel;
+
     if (panel.initFunction) {
       panel.initFunction();
     }
-
-    panel.link.click(function(e) {
-      e.preventDefault();
-      self.SelectPanel(panel.name);
-    });
-
-    self.panels[panel.name] = panel;
   };
+
+  self.ActivatePanel = function(panelName){
+    var panel = self.panels[panelName];
+    $("#sidebar-menu li.active").removeClass('active');
+    panel.link.parent().addClass('active');
+  }
 
   self.SelectPanel = function (panelName){
     var panel = self.panels[panelName];
@@ -103,8 +112,7 @@ function ApigeePages() {
       $("#console-panel iframe").attr("src", url);
     }
 
-    $("#console-panels > div").hide();
-    panel.box.show();
+    redrawBox(panel.box);
 
   };
 
@@ -123,6 +131,12 @@ function ApigeePages() {
         page.initFunction();
       }
     }
+  }
+
+  function redrawBox(box) {
+    $("#console-panels > div").hide();
+    box.show();
+
   }
   return self;
 }

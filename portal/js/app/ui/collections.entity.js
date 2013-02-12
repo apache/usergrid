@@ -83,30 +83,36 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
     },
 
     getHeader : function() {
-      var entity = this.options.entity;
+      var entity = this.options.entity,
+         name = entity.uuid + " : " + entity.type;
 
-      var name = entity.uuid + " : "
-        + entity.type;
       if (entity.name) {
         name = name + " : " + entity.name;
       } else if (entity.username) {
         name = name + " : " + entity.username;
+      } else if (entity.title) {
+        name = name + " : " + entity.title;
       }
 
-      if (!entity.picture) {
-        entity.picture = "/images/user_profile.png"
-      } else {
-        entity.picture = entity.picture + "?d=http://" + window.location.host + window.location.pathname + "images/user_profile.png"
-      }
-
-      return $.tmpl("apigee.ui.collections.entity.header.html", {
+      var collections = {
         entity : entity,
         name : name,
-        picture: entity.picture,
         path : this.options.path,
         collections : !$.isEmptyObject((entity.metadata || { }).collections || (entity.metadata || { }).connections),
         uri : (entity.metadata || { }).uri
-      });
+      }
+
+      if(entity.type === 'user' || entity.picture){
+        if (!entity.picture) {
+          entity.picture = "/images/user_profile.png"
+        } else {
+          entity.picture = entity.picture + "?d=http://" + window.location.host + window.location.pathname + "images/user_profile.png"
+        }
+        collections['picture'] = entity.picture;
+      }
+
+      return $.tmpl("apigee.ui.collections.entity.header.html",
+        collections);
 
     },
 
@@ -201,6 +207,7 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
 
       o.details.appendTo(el);
 
+      o.collections = el.find(".query-result-collections");
       o.details.find(".button").button();
       o.contents = el.find(".query-result-contents");
       o.json = el.find(".query-result-json");
@@ -211,6 +218,7 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
         if (o.contents.css('display') == 'none') {
           o.contents.show();
           o.json.hide();
+          o.collections.hide();
         } else {
           o.contents.hide();
         }
@@ -234,6 +242,7 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
         if (o.json.css('display') == 'none') {
           o.json.show();
           o.contents.hide();
+          o.collections.hide();
         } else {
           o.json.hide();
         }
@@ -244,18 +253,26 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
     },
 
     getDetails : function() {
-      var entity = this.options.entity;
+      var entity = this.options.entity,
+        name = entity.uuid + " : " + entity.type,
+        collections,
+        connections;
 
-      var name = entity.uuid + " : "
-        + entity.type;
       if (entity.name) {
         name = name + " : " + entity.name;
       } else if (entity.username) {
         name = name + " : " + entity.username;
+      } else if (entity.title) {
+        name = name + " : " + entity.title;
       }
 
-      var collections = $.extend({ }, (entity.metadata || { }).collections, (entity.metadata || { }).connections);
-      if ($.isEmptyObject(collections)) collections = null;
+      if(entity.metadata.collections){
+        collections = entity.metadata.collections;
+      }
+
+      if(entity.metadata.connections){
+        connections = entity.metadata.connections;
+      }
 
       var entity_contents = $.extend( false, { }, this.options.entity);
       var path = entity_contents['metadata']['path'];
@@ -270,6 +287,7 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
         name : name,
         path : this.options.path,
         collections : collections,
+        connections : connections,
         metadata : metadata,
         uri : (entity.metadata || { }).uri
       }, {

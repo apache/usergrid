@@ -1,18 +1,29 @@
 @import "../bootstrap/less/bootstrap.less";
-@apigee-logo: url(../images/apigee-logo.png);
-@redApigee: #FF3B00;
+@apigee-logo: url("..\images\logo-white.png");
+@redApigee: #FF4300;
 @grayApigee: #575560;
 @border: #C9C9C9;
 @border2: #E5E5E5;
 @modalBar: #F2F2F2;
 @h3Color: #CCCCCC;
-@minScreenWidth: 600px;
+@minScreenWidth: 640px;
+@maxPanelWidth: 1280px;
 @linkHoverBgColor: #E5E5E5;
-@linkColor: #007CDC;
+@linkColor: #1b97d1;
+@apigeeOrange: #FF4300;
+@apigeeNavSelection: #FF0303;
+@apigeeApplicationName: #E02E03;
+@apigeeGradient: #F03800;
+@apigeeBlue: #1B97D1 ;
+@white: #FFFFFF;
 //@fontMenu:
 
 
 //--------------General ------------------------------------------------------------
+a {
+  color: #000000;
+}
+
 html, body{
   height: 100%;
   min-width: @minScreenWidth;
@@ -72,8 +83,12 @@ html{
   min-height:100%; /* real browsers */
   height:100%; /* IE6: treaded as min-height*/
   min-width: @minScreenWidth;
+  max-width: @maxPanelWidth;
 }
-
+.header-menus{
+  width: 1280px;
+  margin: 0 auto; 
+}
 #pages{
   padding: 70px 0 50px 0px;
   &>div{
@@ -88,7 +103,7 @@ html{
   border-left:1px solid @border;
 }
 footer{
-  position:absolute;
+  position:fixed;
   bottom:0;
   width:100%;
   border-top: 1px solid @border;
@@ -122,7 +137,7 @@ a:visited {
 }
 
 a:hover {
-  color: @redApigee !important;
+  color: @redApigee ;
   text-decoration: none;
 }
 
@@ -140,25 +155,50 @@ a:active {
 }
 
 //----------Header ------------------------------------------------------------
+.navbar.navbar-fixed-top:before{
+  content: " ";
+  display: block;
+  background: #F93F00;
+  overflow: hidden;
+  width: 100%;
+  height: 8px;
+  margin-bottom: -8px;
+  position: absolute;
+  background-image: -moz-linear-gradient(top, @apigeeOrange, @apigeeGradient);
+  background-image: -ms-linear-gradient(top, @apigeeOrange, @apigeeGradient);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(@apigeeOrange), to(@apigeeGradient));
+  background-image: -webkit-linear-gradient(top, @apigeeOrange, @apigeeGradient);
+  background-repeat: repeat-x;
+  bottom: 8px;
+  left: 0px;
+}
+
+
 .navbar{
-  height:46px;
+  height:48px;
   min-width: 700px;
-  #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
-  &:before {
-    content: '';
-    height: 6px;
-    display: block;
-    background: @redApigee;
-  }
+  background-color: @apigeeOrange;
+
   margin: 0px 1px 20px 1px;
-  border-top: 1px solid #C9C9C9;
-  border-bottom: 3px solid @grayApigee;
   .navbar-inner{
     display: none;
+    b.caret{
+      position: relative;
+      display: inline-block;
+      float: left;
+      top: 48px;
+      left: -83px;
+      border-top: 8px solid @apigeeGradient;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      opacity: 1;
+    }
   }
   h1, h2{
     display: inline;
     float:left;
+    color: @white;
+    font-weight: normal;
   }
   h1 {
     height: 32px;
@@ -167,12 +207,17 @@ a:active {
     position: relative;
     color: transparent !important;
     margin: 0 15px;
+    padding-top: 8px;
   }
   h2{
-    color:@grayApigee;
-    font-size:14px;
-    margin: 10px;
-    line-height: 20px;
+    font-size:13px;
+    padding: 5px;
+    line-height: 35px;
+    padding-top: 8px;
+    color: @white;
+    a{
+      color: @white;
+    }
   }
   .secondary-nav{
     float:right;
@@ -181,19 +226,49 @@ a:active {
     li{
       a{
         text-shadow: 0 0px 0 white;
+        padding: 13px 10px 11px;
         font-weight: normal;
-        color: @grayApigee;
+        color: @white;
+        line-height: 24px;
+      }
+      #console-link{
         &:hover{
-          color: @redApigee !important;
-          background: @linkHoverBgColor !important;
+          background-color: transparent;
         }
       }
     }
+    .dropdown-toggle{
+      .caret{
+        margin-top: 13px;
+      }
+    }
+    .dropdown-menu{
+      a{
+        line-height: 18px;
+        color: #000000;
+        padding: 3px 15px;
+        &:hover{
+          color: @white;
+          background-color: @apigeeBlue;
+        }
+      }
+
+    }
+    .active{
+      .go-home{
+        background-color: transparent;
+        &:hover{
+          background-color: transparent;
+        }
+      }
+      background-color: @apigeeApplicationName !important;
+    }
     .active{
       &>a{
-        //background: url('../images/menuActiveTriangle.png') no-repeat center top;
-                                color:@redApigee;
-                                font-weight: bold;
+        color:@white;
+        .caret{
+          opacity: 0.7;
+        }
       }
     }
   }
@@ -214,13 +289,18 @@ a:active {
   }
   .active > a{
     background-color:@redApigee;
+    color: @white;
+    &:hover{
+      color: @redApigee;
+      background: @linkHoverBgColor !important;
+    }
   }
   .dropdown-menu a{
     text-shadow: 0 0px 0 white;
     font-weight: normal;
     color: @grayApigee;
     &:hover{
-      color: @redApigee !important;
+      color: @redApigee;
       background: @linkHoverBgColor !important;
     }
   }
@@ -238,6 +318,9 @@ a:active {
 }
 #application-panel-buttons{
   display: none;
+  position:fixed;
+  z-index: 10;
+  width: 127px;
   .active > a{
     i{
       .icon-white;
@@ -249,6 +332,11 @@ a:active {
 }
 .icon-black{
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
+}
+
+.nav-tabs{
+  display: inline-block;
+  width: 100%;
 }
 
 
@@ -345,7 +433,6 @@ a:active {
       .border-radius(0px 14px 14px 0px);
     }
     .title{
-
       cursor:pointer;
       &:hover{
         //color: white;
@@ -356,6 +443,7 @@ a:active {
     font-size: 12pt;
     padding: 10px;
     line-height:18px;
+    display: inline-block;
     background: @h3Color;
     .bar{
       float:right;
@@ -372,7 +460,7 @@ a:active {
     &:after{
       clear: both;
       content: ".";
-      display: block;
+      display: inline-block;
       height: 0;
       visibility: hidden;
     }
@@ -380,6 +468,7 @@ a:active {
   form {
     margin:0px;
     padding-top: 10px;
+    display: inline-block;
   }
   .form-actions{
     margin-bottom:0px;
@@ -389,6 +478,7 @@ a:active {
     position: relative;
     padding: 10px;
     line-height: 25px;
+    display: block;
     .form-actions{
       margin: 20px -10px -10px;
     }
@@ -445,7 +535,6 @@ a:active {
 }
 //-------------------------------------------------------------------------------------
 
-//TODO: Controles
 #resolutionSelect-menu{
   display:none;
 }
@@ -456,8 +545,17 @@ a:active {
   display:none;
 }
 
+#applications-menu {
+  a {
+    z-index: 300;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .dropdown.open .dropdown-toggle{
-  color: black;
+  color: @white;
 }
 
 
@@ -471,6 +569,10 @@ a:active {
     margin-left: 10px;
     tr > *{
       text-align: left;
+      width: 90%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     th{
       font-weight: bold;
@@ -620,6 +722,52 @@ a:active {
 .query-result-table-name, .query-result-table-value {
   width: 25%;
   padding: 10px !important;
+}
+
+.query-button{
+  background-color: #cacaca !important;
+  opacity: 1 !important;
+  color: #ffffff;
+  cursor: pointer !important;
+  &:hover{
+    background-color:  #686868 !important;
+    color: #ffffff;
+   }
+  &:active{
+    background-color: #1b97d1 !important;
+    color: #ffffff;
+  }
+  &.active{
+    background-color: #1b97d1 !important;
+    color: #ffffff;
+  }
+}
+
+.code-para{
+  word-break: normal;
+}
+
+.left-column{
+  padding-left: 20px;
+  padding-top: 10px;
+}
+
+.right-column{
+  border-right:solid 1px #CCC;
+  padding-right: 20px
+}
+
+.query-console{
+  padding: 0px !important;
+}
+
+.outside-link{
+  color: @apigeeBlue !important;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  &:hover{
+    opacity: 0.7;
+  }
 }
 
 /*-------------------------------------------------*/
@@ -806,15 +954,15 @@ a:active {
 }
 
 .btn-usergrid {
-  background-color: #F17221;
-  background-image: -moz-linear-gradient(top, #F17221, #C84B27);
-  background-image: -ms-linear-gradient(top, #F17221, #C84B27);
-  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#F17221), to(#C84B27));
-  background-image: -webkit-linear-gradient(top, #F17221, #C84B27);
-  background-image: -o-linear-gradient(top, #F17221, #C84B27);
-  background-image: linear-gradient(top, #F17221, #C84B27);
+  background-color: @apigeeOrange;
+  background-image: -moz-linear-gradient(top, @apigeeOrange, @apigeeNavSelection);
+  background-image: -ms-linear-gradient(top, @apigeeOrange, @apigeeNavSelection);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(@apigeeOrange), to(@apigeeNavSelection));
+  background-image: -webkit-linear-gradient(top, @apigeeOrange, @apigeeNavSelection);
+  background-image: -o-linear-gradient(top, @apigeeOrange, @apigeeNavSelection);
+  background-image: linear-gradient(top, @apigeeOrange, @apigeeNavSelection);
   background-repeat: repeat-x;
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#F17221', endColorstr='#C84B27', GradientType=0);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='@apigeeOrange', endColorstr='@apigeeNavSelection', GradientType=0);
   border-color: #C84B27 #C84B27 #ad6704;
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
@@ -983,8 +1131,8 @@ a:active {
   z-index: 999;
   .alert{
     display: none;
-    margin:5px;
     padding: 4px 35px 4px 14px;
+    margin-bottom: 0px;
   }
 }
 
@@ -1071,7 +1219,7 @@ a:active {
 }
 
 .graph{
-  margin: 5px -25px 5px 15px
+  margin: 5px -25px 5px 15px;
 }
 
 #application-panel-text{
@@ -1294,11 +1442,10 @@ table .zebraRows {
 /* --------------- Collections -------------- */
 
 .collection-column {
-  width: 100px;
+  width: 80%;
 }
 
 #button-query-validate {
-  margin-left: 20px;
 }
 
 /* ---------------- Account Panel ------------ */
@@ -1316,13 +1463,27 @@ table .zebraRows {
 }
 /* ---------------- Curl Container ------------ */
 .curl-container{
-
   .curl-info, .curl-token{
     padding-left: 5px;
   }
   .input-append{
     position: relative;
   }
+}
+.side-label{
+  display: inline;
+}
+.alert .close{
+  top: 2px;
+}
+.horizontal {
+  display: inline;
+  float: left;
+  padding: 5px;
+}
+
+#query-collections-caret{
+  margin-top: 6px;
 }
 #organization-name{
   display:inline;
@@ -1350,4 +1511,43 @@ table .zebraRows {
 #application-panel-buttons .active > a:hover i.wrench{
   background-image: url("../images/glyphicons_halflings_135_wrench.png") !important;
 }
+
+//Apigee Specific data
+
+.apigee{
+  .logo{
+    width: 57px;
+  }
+}
+
+//Application Menu text
+.app-menu{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 90%;
+  float: left;
+}
+
+.go-home {
+  overflow: hidden;
+
+  .icon-home{
+    float: left;
+  }
+
+  #organization-name {
+    width: 80%;
+    float: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-left: 5px;
+  }
+}
+//General Dropdown Menu overrride
+.dropdown-menu {
+  max-width: 700px;
+}
+
+
 

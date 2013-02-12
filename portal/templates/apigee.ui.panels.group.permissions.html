@@ -23,13 +23,13 @@
           </td>
         </tr>
         {{/each}}
-      </table>      
-      {{/if}}
+      </table>     
       {{else}}
       <div class="group-panel-section-message">No Roles</div>
       {{/if}}
+      {{/if}}
       <div id="group-panel-roles-curl-container" class="curl-container">
-	  </div>      
+    </div>      
       <br/>
       <div class="user-roles-title">Permissions </div>
       <h4>Add Permission Rule</h4>
@@ -72,7 +72,7 @@
             <td class="role-permission-op">{{if $value.ops.put}}<i class="icon-ok"></i>{{/if}}</td>
             <td class="role-permission-op">{{if $value.ops.delete}}<i class="icon-ok"></i>{{/if}}</td>
             <td class="role-permission-delete">
-              <a onclick="Usergrid.console.deleteGroupPermission('${groupname}', '${$value.perm}'); return false;" href="#" class="btn btn-danger"><i class="icon-trash icon-white"></i> Remove</a>
+              <a onclick="Usergrid.console.deleteGroupPermission('${name}', '${$value.perm}'); return false;" href="#" class="btn btn-danger"><i class="icon-trash icon-white"></i> Remove</a>
             </td>
           </tr>
           {{/each}}
@@ -82,7 +82,7 @@
       <div class="alert">No Permissions</div>
       {{/if}}
       <div id="group-panel-permissions-curl-container" class="curl-container">
-	  </div>
+    </div>
     </div>
   </div>
 </div>
