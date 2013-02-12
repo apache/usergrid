@@ -504,20 +504,31 @@ public class ManagementServiceImpl implements ManagementService {
   public OrganizationInfo createOrganization(String organizationName, UserInfo user, boolean activated)
       throws Exception {
 
-    if ((organizationName == null) || (user == null)) {
-      return null;
-    }
-    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-    if (!em.isPropertyValueUniqueForEntity("group", "path", organizationName)) {
-      throw new DuplicateUniquePropertyExistsException("group", "path", organizationName);
-    }
-    return createOrganizationInternal(organizationName, user, activated);
+      if ((organizationName == null) || (user == null)) {
+          return null;
+      }
+      Lock groupLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, organizationName, "groups", "path");
+      EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+      if (!em.isPropertyValueUniqueForEntity("group", "path", organizationName)) {
+          throw new DuplicateUniquePropertyExistsException("group", "path", organizationName);
+      }
+      try {
+          groupLock.lock();
+          return createOrganizationInternal(organizationName, user, activated);
+      } finally {
+          groupLock.unlock();
+      }
+
   }
 
   @Override
   public OrganizationInfo importOrganization(UUID organizationId, OrganizationInfo organizationInfo,
       Map<String, Object> properties) throws Exception {
 
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    if (!em.isPropertyValueUniqueForEntity("group", "path", organizationInfo.getName())) {
+      throw new DuplicateUniquePropertyExistsException("group", "path", organizationInfo.getName());
+    }
     if (properties == null) {
       properties = new HashMap<String, Object>();
     }
@@ -548,7 +559,7 @@ public class ManagementServiceImpl implements ManagementService {
       return null;
     }
 
-    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+
     properties.put(PROPERTY_PATH, organizationName);
     properties.put(PROPERTY_SECRET, generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION));
     Entity organization = em.create(organizationId, Group.ENTITY_TYPE, properties);
