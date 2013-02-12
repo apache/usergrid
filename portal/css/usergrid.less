@@ -36,8 +36,8 @@ html{
 
 .thingy {
   margin-bottom: 0px !important;
-  padding: 15px !important;
-  background-color: #e0e0e0 !important;
+  padding: 10px 10px 10px 5px!important;
+  //background-color: #e0e0e0 !important;
   border-radius: 0px;
 
   .gravatar50 {
@@ -49,7 +49,7 @@ html{
 
   .title {
     float: left;
-    font-size: 19px;
+    font-size: 17px;
     cursor: pointer;
   }
 
@@ -58,9 +58,11 @@ html{
   }
 
   .bar a {
-    padding-left: 10px !important;
     float: right;
-    color: #007cdc;
+  }
+  .button{
+    margin-top: -5px;
+    min-width: 150px;
   }
 }
 
@@ -99,25 +101,20 @@ html{
 #console-panels{
 
 }
-footer{
-  position:fixed;
-  bottom:0;
-  width:100%;
-  border-top: 1px solid @border;
-  border-bottom: 1px solid @border;
-  #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
-  .subnav{
-    display: none;
-  }
-  &> div {
-    padding: 5px 0;
-  }
-  .nav{
-    margin: 0;
-  }
-  #copyright{
-    padding: 9px;
-  }
+
+#right{
+  a {
+   color: @apigeeBlue;
+   font-weight: 400;
+ }
+ a:visited  {
+   color: @apigeeBlue;
+   font-weight: 400;
+ }
+}
+
+#copyright{
+    padding: 5px;
 }
 
 a{
@@ -299,8 +296,14 @@ a:active {
 
 //----------------- Navigation --------------------------------------------------------------------
 #sidebar-menu{
-  position: absolute;
-  left: 0px;
+  //position: absolute;
+  //left: 0px;
+  width: 155px;
+}
+
+#sidebar-menu2{
+  //position: absolute;
+  //left: 0px;
   width: 155px;
 }
 
@@ -345,7 +348,6 @@ a:active {
   }
 }
 #application-panel-buttons{
-  display: none;
   position:fixed;
   z-index: 10;
   width: 181px;
@@ -358,6 +360,20 @@ a:active {
     }
   }
 }
+#application-panel-buttons2{
+//position:fixed;
+  z-index: 10;
+  width: 181px;
+  .active > a{
+    i{
+      .icon-white;
+    }
+    &:hover i{
+      .icon-black;
+    }
+  }
+}
+
 .icon-black{
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
 }
@@ -441,10 +457,10 @@ a:active {
 .console-section {
   min-width: 450px;
   margin: 0 0px 20px;
-  border: solid 1px @h3Color;
+ //border: solid 1px @h3Color;
   //background: #F2F5F7;
   overflow: show;
-  .border-radius(5px);
+  //.border-radius(5px);
   h3 {
     .search{
       background-color: @linkHoverBgColor;
@@ -478,7 +494,7 @@ a:active {
       font-size: 12px;
       a {
         padding: 5px 10px;
-        .border-radius(15px);
+        //.border-radius(15px);
         color:#007CDC !important;
         &:hover{
           color:white !important;
@@ -521,7 +537,11 @@ a:active {
 }
 
 //---------------- Panels ---------------------------------------------------------------------
-
+.well {
+  background: none;
+  border: none;
+  box-shadow: none;
+}
 #application-panel{
   .boxContent{
     background-color:#f2f5f7;
@@ -1356,6 +1376,9 @@ table#organization-admins-table {
 
 .zebraRows {
   background: white;
+  border-bottom: 1px solid @border2;
+  border-left: 1px solid @border2;
+  border-right: 1px solid @border2;
 
   &:nth-child(2n){
     background: #EEE;
@@ -1521,15 +1544,18 @@ table .zebraRows {
   font-weight: 400;
   font-size: 16px;
   color: #000;
-  padding: 10px 0 0 10px;
+  padding: 0 0 0 10px;
 }
 .panel-desc{
-  font-weight: 200;
   font-size: 12px;
-  color: #000;
+  color: #919091;
   padding-left: 10px;
 }
+.sdk-download{
+  margin: 30px auto;
+  text-align: center;
 
+}
 .wrench{
   background-image: url("../images/glyphicons_halflings_135_wrench.png");
   display: inline-block;

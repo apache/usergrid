@@ -48,7 +48,7 @@
     }
 
   #main1 {
-    margin:70px 0 0 0;
+    margin:84px 0 0 0;
     padding:0;
     min-width:900px;
     }
@@ -63,7 +63,10 @@
   #left2 {
     float:left;
     width:180px;
-    margin:0; padding:0;
+    margin:0;
+    padding:10px;
+    min-height: 1050px;
+    border-right: 1px solid #cacaca;
     }
   #right {
     float:right;
@@ -73,11 +76,9 @@
   #middle {
     margin:0 180px;
     min-width:500px;
-    min-height: 700px;
-    border-left: 1px solid #cacaca;
     }
   .column-in {
-    margin:0; padding:0.5em 1em;
+    margin:0; padding: 0px;
     }
   .cleaner {
     clear:both;
@@ -89,6 +90,10 @@
     }
 
 
+  #footer{
+    border-top: 1px solid #cacaca;
+    height: 50px;
+  }
 </style>
 
 </head>
@@ -298,13 +303,13 @@
   <div id="console-page" class="">
     <div id="main1">
       <div id="main2">
-        <div id="left" style="min-height: 600px;">
+
+
+        <div id="left" style="">
           <div class="column-in">
 
 
-
-
-            <div id="sidebar-menu">
+            <div id="sidebar-menu" style="padding-top: 10px;">
               <ul id="application-panel-buttons" class="nav nav-list" style="margin-bottom: 5px;">
                 <h4 class="panel-title">Organization</h4>
                 <div class="panel-desc">View your org's apps, activities, administrators and more.</div>
@@ -315,15 +320,39 @@
                 <p class="panel-desc">View your app's data, scripts, analytics and more.</p>
                 <hr style="margin: 0;">
 
-                <li id="application-panel-button-dashboard"><a href="#dashboard"><i class="icon-th"></i> App Overview</a></li>
-                <li><a href="#users"><i class="icon-user"></i> <span class="nav-menu-text">App End-Users</span></a></li>
-                <li><a href="#groups"><i class="icon-user"></i> <span class="nav-menu-text">Groups</span></a></li>
-                <li><a href="#roles" id="application-panel-button-roles"><i class="icon-user"></i> <span class="nav-menu-text">Roles</span></a></li>
-                <li><a href="#activities"><i class="icon-calendar"></i> <span class="nav-menu-text">Activities</span></a></li>
-                <li><a href="#collections" id="application-panel-button-collections"><i class="icon-book"></i> <span class="nav-menu-text">Collections</span></a></li>
-                <li><a href="#analytics"><i class="icon-signal"></i> <span class="nav-menu-text">Analytics</span></a></li>
-                <li><a href="#properties"><i class="wrench "></i> <span class="nav-menu-text">App Settings</span></a></li>
-                <li><a href="#shell"><i class="icon-warning-sign"></i> <span class="nav-menu-text">Shell</span></a></li>
+                <li id="application-panel-button-dashboard"><a href="#dashboard" id="dashboard-link"><i class="icon-th"></i> App Overview</a></li>
+
+
+                <li><a href="#users" id="users-link"><i class="icon-user"></i> <span class="nav-menu-text">App End-Users</span></a></li>
+
+
+                <li><a href="#activities" id="activities-link"><i class="icon-calendar"></i> <span class="nav-menu-text">Activities</span></a></li>
+                <!--<li><a href="#collections" id="application-panel-button-collections"><i class="icon-book"></i> <span class="nav-menu-text">Collections</span></a></li>-->
+                <li><a href="#collections" id="collections-link"><i class="icon-book"></i> <span class="nav-menu-text">Collections</span></a></li>
+                <li><a href="#analytics" id="analytics-link"><i class="icon-signal"></i> <span class="nav-menu-text">Analytics</span></a></li>
+                <li><a href="#properties" id="properties-link"><i class="wrench "></i> <span class="nav-menu-text">App Settings</span></a></li>
+                <li><a href="#shell" id="shell-link"><i class="icon-warning-sign"></i> <span class="nav-menu-text">Shell</span></a></li>
+              </ul>
+            </div>
+
+
+          </div>
+        </div>
+
+        <div id="left2" style="display: none;">
+          <div class="column-in">
+
+            <div id="sidebar-menu2" style="padding-top: 10px;">
+
+              <h4 class="panel-title">End-Users</h4>
+              <p class="panel-desc">Data related to your application end-users.</p>
+              <hr style="margin: 0;">
+
+              <ul id="application-panel-buttons2" class="nav nav-list" style="margin-bottom: 5px;">
+                <li><a href="#users" id="users-sublink"><span class="nav-menu-text">/users</span></a></li>
+                <li><a href="#groups" id="groups-sublink"><span class="nav-menu-text">/groups</span></a></li>
+                <!--<li><a href="#roles" id="application-panel-button-roles"> <span class="nav-menu-text">/roles</span></a></li>-->
+                <li><a href="#roles" id="roles-sublink"> <span class="nav-menu-text">/roles</span></a></li>
               </ul>
             </div>
 
@@ -332,23 +361,62 @@
         </div>
 
 
-
-        <div id="left2" style="display: none;">
-          <div class="column-in">
-            This is the second column
-          </div>
-        </div>
         <div id="right">
           <div class="column-in">
-            <h4>Right Col</h4>
-            <p id="rccont">
-              This is content of the RIGHT column.
-            </p>
+            <div style="padding-top: 10px;">
+              <h4 class="panel-title">Quick Start Guide</h4>
+              <div class="panel-desc">Need help getting started? Follow our Quick Start Guide</div>
+              <hr style="margin: 0;">
+
+              <div class="panel-desc" style="height: 50px; text-align:center; width:100px;margin: 20px auto;">
+              <a href="http://apigee.com/docs/usergrid/content/quick-start" target="_blank">App Services: Quick Start Guide</a>
+              </div>
+
+              <h4 class="panel-title">SDKs & Modules</h4>
+              <div class="panel-desc">Download an SDK or module to get up-and-running quickly</div>
+              <hr style="margin: 0;">
+
+              <div class="sdk-download">
+                <img src="images/ios-sdk-download.png">
+                <br>
+                <a href="https://github.com/apigee/usergrid-ios-sdk/archive/master.zip" target="_blank">iOS SDK: Download</a>
+              </div>
+
+              <div class="sdk-download">
+                <img src="images/android-sdk-download.png">
+                <br>
+                <a href="https://github.com/apigee/usergrid-java-sdk/archive/master.zip" target="_blank">Android SDK: Download</a>
+              </div>
+
+              <div class="sdk-download">
+                <img src="images/javascript-sdk-download.png">
+                <br>
+                <a href="https://github.com/apigee/usergrid-javascript-sdk/archive/master.zip">Javascript SDK: Download</a>
+              </div>
+
+              <div class="sdk-download">
+                <img src="images/nodejs-sdk-download.png">
+                <br>
+                <a href="http://npmjs.org/usergrid" target="_blank">Node.js Module</a>
+              </div>
+
+              <div class="sdk-download">
+                <img src="images/ruby-sdk-download.png">
+                <br>
+                <a href="https://github.com/scottganyo/usergrid_iron" target="_blank">Ruby SDK: Download</a>
+              </div>
+
+              <div class="sdk-download">
+                <img src="images/dotnet-sdk-download.png">
+                <br>
+                <a href="https://github.com/sympletech/Apigee.Net" target="_blank">C# SDK: Download</a>
+              </div>
+            </div>
           </div>
         </div>
 
         <div id="middle">
-          <div class="column-in">
+          <div class="column-in" style="border-right: 1px solid #cacaca; border-left: 1px solid #cacaca; padding-top: 10px;">
 
 
             <div id="console-panels" class="container-fluid">
@@ -364,7 +432,7 @@
                 <div class="console-section">
                   <div class="well thingy"><span class="title"> Applications </span>
                     <div class="bar">
-                      <a class="" data-toggle="modal" href="#dialog-form-new-application"> New Application</a>
+                      <a class="btn button" data-toggle="modal" href="#dialog-form-new-application"> New Application</a>
                     </div>
                   </div>
                   <table id="organization-applications-table" class="hideable table">
@@ -382,7 +450,7 @@
                 <div class="console-section">
                   <div class="well thingy"><span class="title"> Organization's Administrators </span>
                     <div class="bar">
-                      <a class="" data-toggle="modal" href="#dialog-form-new-admin"> New Administrator</a>
+                      <a class="btn button" data-toggle="modal" href="#dialog-form-new-admin"> New Administrator</a>
                     </div>
                   </div>
                   <table id="organization-admins-table" class="hideable table">
@@ -392,7 +460,7 @@
                 <div class="console-section">
                   <div class="well thingy"><span class="title"> Organization API Credentials </span>
                     <div class="bar">
-                      <a  onclick="Usergrid.console.newOrganizationCredentials(); return false;"> Regenerate Credentials</a>
+                      <a class="btn button" onclick="Usergrid.console.newOrganizationCredentials(); return false;"> Regenerate Credentials</a>
                     </div>
                   </div>
                   <table class="hideable table">
@@ -601,89 +669,95 @@
                   </form>
                 </div>
               </div>
-              <div id="users-panel" style="display: none">
-                <ul id="users-panel-tab-bar" class="nav nav-tabs">
-                  <li class="active"><a id="button-users-list" >List</a></li>
-                </ul>
-                <div id="users-panel-list" class="panel-content">
-                  <div id="users-messages" class="alert" style="display: none;"></div>
-                  <div class="console-section">
-                    <div class="well thingy"><span class="title"> Users: <span class="app_title"></span></span>
-                      <div class="bar">
-                        <input onkeyup="Usergrid.console.searchUsers();" type="text" name="search-user-username" id="search-user-username" class="input-small search" placeholder="Search"/>
-                        <select id="search-user-type" onChange="Usergrid.console.searchUsers();" class="input-medium search">
-                          <option value="username">Username</option>
-                          <option value="name">Full Name</option>
-                        </select>
-                        <a id="selectAllUsers" class=""  onclick="Usergrid.console.selectAllUsers();"> Select All </a>
-                        <a id="deselectAllUsers" style="display: none;" class=""  onclick="Usergrid.console.deselectAllUsers();"> Deselect All </a>
-                        <a class="" data-toggle="modal" href="#dialog-form-new-user"> Add</a>
-                        <a id="delete-users-link" > Delete</a>
+              <div id="users-panel" style="display: none; margin-left: 190px">
+
+
+                  <ul id="users-panel-tab-bar" class="nav nav-tabs">
+                    <li class="active"><a id="button-users-list" >List</a></li>
+                  </ul>
+                  <div id="users-panel-list" class="panel-content">
+                    <div id="users-messages" class="alert" style="display: none;"></div>
+                    <div class="console-section">
+                      <div class="well thingy"><span class="title"> Users: <span class="app_title"></span></span>
+                        <div class="bar">
+                          <input onkeyup="Usergrid.console.searchUsers();" type="text" name="search-user-username" id="search-user-username" class="input-small search" placeholder="Search"/>
+                          <select id="search-user-type" onChange="Usergrid.console.searchUsers();" class="input-medium search">
+                            <option value="username">Username</option>
+                            <option value="name">Full Name</option>
+                          </select>
+                          <a id="selectAllUsers" class=""  onclick="Usergrid.console.selectAllUsers();"> Select All </a>
+                          <a id="deselectAllUsers" style="display: none;" class=""  onclick="Usergrid.console.deselectAllUsers();"> Deselect All </a>
+                          <a class="" data-toggle="modal" href="#dialog-form-new-user"> Add</a>
+                          <a id="delete-users-link" > Delete</a>
+                        </div>
                       </div>
+                      <table id="users-table" class="table">
+                        <tbody></tbody>
+                      </table>
+                      <ul id="users-pagination" class="pager">
+                        <li id="users-previous" class="previous"><a >&larr; Previous</a></li>
+                        <li id="users-next" class="next"><a >Next &rarr;</a></li>
+                      </ul>
                     </div>
-                    <table id="users-table" class="table">
-                      <tbody></tbody>
-                    </table>
-                    <ul id="users-pagination" class="pager">
-                      <li id="users-previous" class="previous"><a >&larr; Previous</a></li>
-                      <li id="users-next" class="next"><a >Next &rarr;</a></li>
-                    </ul>
+                    <div id="users-curl-container" class="row-fluid curl-container ">
+                    </div>
                   </div>
-                  <div id="users-curl-container" class="row-fluid curl-container ">
-                  </div>
+                  <form id="dialog-form-new-user" class="modal hide fade">
+                    <div class="modal-header">
+                      <a class="close" data-dismiss="modal">&times</a>
+                      <h4>Create new user</h4>
+                    </div>
+                    <div class="modal-body">
+                      <p class="validateTips">Username is required.</p>
+                      <fieldset>
+                        <div class="control-group">
+                          <label for="new-user-username">Username</label>
+                          <div class="controls">
+                            <input type="text" name="username" id="new-user-username" class="input-xlarge"/>
+                            <p class="help-block hide"></p>
+                          </div>
+                        </div>
+                        <div class="control-group">
+                          <label for="new-user-fullname">Full name</label>
+                          <div class="controls">
+                            <input type="text" name="name" id="new-user-fullname" class="input-xlarge"/>
+                            <p class="help-block hide"></p>
+                          </div>
+                        </div>
+                        <div class="control-group">
+                          <label for="new-user-email">Email</label>
+                          <div class="controls">
+                            <input type="text" name="email" id="new-user-email" class="input-xlarge"/>
+                            <p class="help-block hide"></p>
+                          </div>
+                        </div>
+                        <div class="control-group">
+                          <label for="new-user-password">Password</label>
+                          <div class="controls">
+                            <input type="password" name="password" id="new-user-password" class="input-xlarge"/>
+                            <p class="help-block hide"></p>
+                          </div>
+                        </div>
+                        <div class="control-group">
+                          <label for="new-user-validate-password">Confirm password</label>
+                          <div class="controls">
+                            <input type="password" name="validate-password" id="new-user-validate-password" class="input-xlarge"/>
+                            <p class="help-block hide"></p>
+                          </div>
+                        </div>
+                      </fieldset>
+                    </div>
+                    <div class="modal-footer">
+                      <input type="submit" class="btn btn-usergrid" value="Create"/>
+                      <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                    </div>
+                  </form>
                 </div>
-                <form id="dialog-form-new-user" class="modal hide fade">
-                  <div class="modal-header">
-                    <a class="close" data-dismiss="modal">&times</a>
-                    <h4>Create new user</h4>
-                  </div>
-                  <div class="modal-body">
-                    <p class="validateTips">Username is required.</p>
-                    <fieldset>
-                      <div class="control-group">
-                        <label for="new-user-username">Username</label>
-                        <div class="controls">
-                          <input type="text" name="username" id="new-user-username" class="input-xlarge"/>
-                          <p class="help-block hide"></p>
-                        </div>
-                      </div>
-                      <div class="control-group">
-                        <label for="new-user-fullname">Full name</label>
-                        <div class="controls">
-                          <input type="text" name="name" id="new-user-fullname" class="input-xlarge"/>
-                          <p class="help-block hide"></p>
-                        </div>
-                      </div>
-                      <div class="control-group">
-                        <label for="new-user-email">Email</label>
-                        <div class="controls">
-                          <input type="text" name="email" id="new-user-email" class="input-xlarge"/>
-                          <p class="help-block hide"></p>
-                        </div>
-                      </div>
-                      <div class="control-group">
-                        <label for="new-user-password">Password</label>
-                        <div class="controls">
-                          <input type="password" name="password" id="new-user-password" class="input-xlarge"/>
-                          <p class="help-block hide"></p>
-                        </div>
-                      </div>
-                      <div class="control-group">
-                        <label for="new-user-validate-password">Confirm password</label>
-                        <div class="controls">
-                          <input type="password" name="validate-password" id="new-user-validate-password" class="input-xlarge"/>
-                          <p class="help-block hide"></p>
-                        </div>
-                      </div>
-                    </fieldset>
-                  </div>
-                  <div class="modal-footer">
-                    <input type="submit" class="btn btn-usergrid" value="Create"/>
-                    <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
-                  </div>
-                </form>
-              </div>
-              <div id="user-panel" style="display: none">
+
+
+
+
+              <div id="user-panel" style="display: none; margin-left: 190px">
                 <ul id="user-panel-tab-bar" class="nav nav-tabs">
                   <li><a id="button-user-list" >List</a></li>
                   <li><a id="button-user-profile" >Profile</a></li>
@@ -765,7 +839,13 @@
                   </div>
                 </form>
               </div>
-              <div id="groups-panel" style="display: none">
+
+
+
+
+
+
+              <div id="groups-panel" style="display: none; margin-left: 190px">
                 <div id="groups-panel-tab-bar" class="">
                   <ul class="nav nav-tabs">
                     <li class="active"><a id="button-groups-list" >List</a></li>
@@ -828,7 +908,7 @@
                   </div>
                 </form>
               </div>
-              <div id="group-panel" style="display: none">
+              <div id="group-panel" style="display: none; margin-left: 190px">
                 <ul id="group-panel-tab-bar" class="nav nav-tabs">
                   <li><a id="button-group-list" >List</a></li>
                   <li><a id="button-group-details" >Details</a></li>
@@ -885,7 +965,7 @@
                   </div>
                 </form>
               </div>
-              <div id="roles-panel" style="display: none">
+              <div id="roles-panel" style="display: none; margin-left: 190px">
                 <ul id="roles-panel-tab-bar" class="nav nav-tabs">
                   <li class="active"><a id="button-roles-list" >List</a></li>
                 </ul>
@@ -949,7 +1029,7 @@
                   </div>
                 </form>
               </div>
-              <div id="role-panel" style="display: none">
+              <div id="role-panel" style="display: none; margin-left: 190px">
                 <ul id="role-panel-tab-bar" class="nav nav-tabs">
                   <li class="active"><a id="button-role-list" >List</a></li>
                   <li><a id="button-role-settings" >Settings</a></li>
@@ -1165,7 +1245,8 @@
                   </div>
                 </div>
               </div>
-              <div id="collections-panel" style="display: none">
+
+              <div id="collections-panel" style="display: none; margin-left: 190px;">
                 <div class="panel-content">
                   <div id="collections-messages" class="alert" style="display: none;"></div>
                   <div class="console-section">
@@ -1321,10 +1402,7 @@
 
 <div id="footer">
   <div class="column-in">
-    <!--
-    <hr />
-    <span id="copyright" class="pull-right">&copy; 2012 Apigee Corp. All rights reserved.</span>
-    -->
+    <div id="copyright" class="pull-right">&copy; 2013 Apigee Corp. All rights reserved.</div>
   </div>
 </div>
 
