@@ -46,18 +46,31 @@ To view the Apigee App Services documentation, see:
 
 
 ##Node.js
-Want to use Node.js? No problem - just head over to the Usergrid Node Module repo:
+Want to use Node.js? No problem - use the Usergrid Node Module:
+
+<https://npmjs.org/package/usergrid>
+
+or on github:
 
 <https://github.com/apigee/usergrid-node-module>
 
 The syntax for this Javascript SDK and the Usergrid Node module are almost exactly the same so you can easily transition between them.
 
 
+##About the samples
+This SDK comes with a variety of samples that you can use to learn how to connect your project to App Services (Usergrid). See these examples running live now:
+
+<http://apigee.github.com/usergrid-javascript-sdk/>
+
+**Note:** All the sample code in this file is pulled directly from the "test" example, so you can rest-assured that it will work!  You can run them yourself here:
+
+<http://apigee.github.com/usergrid-javascript-sdk/examples/test/test.html>
+
+
 ##Installing
-Once you have downloaded the SDK, add the usergrid.js file to your project.  This file is located in the root of the SDK. Then include it in the top of your HTML file (in between the head tags):
+Once you have downloaded the SDK, add the usergrid.js file to your project. This file is located in the root of the SDK. Include it in the top of your HTML file (in between the head tags):
 
 	<script src="path/to/usergrid.js" type="text/javascript"></script>
-
 
 ##Getting started
 You are now ready to create a new client, which is the main entry point to the SDK:
@@ -68,22 +81,11 @@ You are now ready to create a new client, which is the main entry point to the S
 		logging: true, //optional - turn on logging, off by default
 		buildCurl: true //optional - turn on curl commands, off by default
 	});
+The last two items are optional. The **logging** option will enable console.log output from the client, and will output various bits of information (calls that are being made, erros that happen).  The **buildCurl** option will cause cURL equivalent commands of all calls to the API to be displayed in the console.log output (see more about this below).
 
-The last two items are optional. The **logging** option will enable console.log output from the client.  The **buildCurl** option will cause cURL equivalent commands of all calls to the API to be displayed in the console.log output (see more about this below).
+**Note:** you can find your organization name and application in the [Admin Portal](http://apigee.com/usergrid).
 
-**Note:** you can find your client secret and client id on the "Properties" page of the [Admin Portal](http://apigee.com/usergrid).
-
-You are now ready to use the usergrid handle to make calls against the API.
-
-
-##About the samples
-This SDK comes with a variety of samples that you can use to learn how to connect your project to App Services (Usergrid). See these examples running live now:
-
-<http://apigee.github.com/usergrid-javascript-sdk/>
-
-Also note that all the examples provided in this readme file can be seen running in the test app:
-
-<http://apigee.github.com/usergrid-javascript-sdk/examples/test/test.html>
+You are now ready to use the client to make calls against the API.
 
 
 ##Entities and Collections
@@ -93,145 +95,172 @@ Usergrid stores its data as "Entities" in "Collections".  Entities are essential
 
 
 ##Entities
-This module provides an easy way to make new entities. Here is a simple example that shows how to create a new object of type "dogs":
+You can easily create new entities, or access existing ones. Here is a simple example that shows how to create a new Entity of type "dogs":
 
 	var options = {
 		type:'dogs',
-		name:'Dino'
+		name:'einstein'
 	}
+
 	client.createEntity(options, function (err, dog) {
 		if (err) {
-			//error - dog not created
+			//Error - Dog not created
 		} else {
-			//success -dog is created
+			//Success - Dog was created
 
-			//once the dog is created, you can set single properties:
-			dog.set('breed','Dinosaur');
-
-			//or a JSON object:
-			var data = {
-				master:'Fred',
-				state:'hungry'
-			}
-			//set is additive, so previously set properties are not overwritten
-			dog.set(data);
-
-			//finally, call save on the object to save it back to the database
-			dog.save(function(err){
-				if (err){
-					//error - dog not saved
-				} else {
-					//success - new dog is saved
-				}
-			});
 		}
 	});
 
 **note:** all calls to the API will be executed asynchronously, so it is important that you use a callback.
 
+Once your object is created, you an update properties on it by using the "set" method, then save it back to the database using the "save" method
 
-You can also refresh the object from the database if needed (in case the data has been updated by a different client or device):
+	//once the dog is created, you can set single properties (key, value):
+	dog.set('breed','mutt');
+
+	//the set function can also take a JSON object:
+	var data = {
+		master:'Doc',
+		state:'hungry'
+	}
+
+	//set is additive, so previously set properties are not overwritten
+	dog.set(data);
+
+	//and save back to the database
+	dog.save(function(err){
+		if (err){
+			//Error - dog not saved
+		} else {
+			//Success - dog was saved
+		}
+	});
+
+**Note:** Using the "set" function will set the properties locally. Make sure you call the .save() method on the entity to save them back to the database!
+
+You can also refresh the object from the database if needed (in case the data has been updated by a different client or device) by using the fetch method.  Use the get method to retrieve properties from the object:
 
 	//call fetch to refresh the data from the server
 	dog.fetch(function(err){
 		if (err){
-			// error - dog not refreshed from database;
+			//Error - dog not refreshed from database
 		} else {
 			//dog has been refreshed from the database
 			//will only work if the UUID for the entity is in the dog object
-			//success - dog entity refreshed from database;
+
+			//get single properties from the object using "get"
+			var master = dog.get('master');
+			var name = dog.get('name');
+
+			//or, get all the data as a JSON object:
+			var data = dog.get();
+
+			//based on statements above, the data object should look like this:
+			/*
+			{
+				type:'dogs',
+				name:'einstein',
+				master:'Doc',
+				state:'hungry',
+				breed:'mutt'
+			}
+			*/
+
 		}
 	});
-
-To remove the entity from the database:
-
-	//the destroy method will delete the entity from the database
-	dog.destroy(function(err){
-		if (err){
-			//error - dog not removed from database
-		} else {
-			//success - dog removed from database (no real dogs were harmed!)
-			dog = null; //no real dogs were harmed!
-		}
-	});
-
-To set properties on the entity, use the set() method:
-
-	//once the dog is created, you can set single properties:
-	dog.set('breed','Dinosaur');
-
-	//or a JSON object:
-	var data = {
-		master:'Fred',
-		state:'hungry'
-	}
-	//set is additive, so previously set properties are not overwritten
-	dog.set(data);
-
-**Note:** These properties are now set locally, but make sure you call the .save() method on the entity to save them back to the database!
-
-To get a single property from the entity, use the get method:
-
-	var breed = dog.get('breed');
-
-or
-	
-	var state = dog.get('state');
-
-or, to get a JSON object with all properties, don't pass a key
-
-	var props = dog.get();
-
-Based on the set statements above, our JSON object should look like this:
-
-	{
-		name:'Dino',
-		type:'dogs',
-		breed:'Dinosaur',
-		master:'Fred',
-		state:'hungry'
-	}
 
 **Wait!** But what if my entity already exists on the server?
 
 During a client.createEntity call, there are two ways that you can choose to handle this situation.  The question is, what should the client do if an entity with the same name, username, or uuid already exists on the server?
-	
-  	1. Give you back an error.
-  	2. Give you back the pre-existing entity.
 
-If you want to get back an error when the entity already exists, then simply call the client.createEntity function as above. If there is a collision, you will get back a 400  However, if you want the existing entity to be returned, then set the getOnExist flag to true:
+	1. Give you back an error.
+	2. Give you back the pre-existing entity.
 
-	var options = {
+If you want to get back an error when the entity already exists, then simply call the client.createEntity function as already described above. If there is a collision, you will get back a 400 error.
+
+However, if you want the existing entity to be returned, then set the getOnExist flag to true:
+
+	//start by getting the uuid of our existing dog named einstein
+	var uuid = dog.get('uuid');
+
+	//now create new entity, but use same entity name of einstein.  This means that
+	//the original einstein entity now exists.  Thus, the new einstein entity should
+	//be the same as the original + any data differences from the options var:
+	options = {
 		type:'dogs',
-		name:'Dino',
+		name:'einstein',
+		hair:'long',
 		getOnExist:true
 	}
-	client.createEntity(options, function (err, dog) {
+	client.createEntity(options, function (err, newdog) {
 		if (err) {
-			//error - dog not created
+			//Error - could not get duplicate dog
 		} else {
-			//success -dog is created or returned, depending on if it already exists or not
+			//Success - got duplicate dog
 
+			//get the id of the new dog
+			var newuuid = newdog.get('uuid');
+			if (newuuid === uuid) {
+				//Success - UUIDs of new and old entities match
+			} else {
+				//Error - UUIDs of new and old entities do not match
+			}
 
-Alternatively, if you know that you only want to retrieve an existing entity, use the getEntity method:
-
-	var options = {
-		type:'users',
-		username:'marty'
-	}
-	client.getEntity(options, function(err, existingUser){
-		if (err){
-			//error - existing user not retrieved
-		} else {
-			//success - existing user was retrieved
-
-			var username = existingUser.get('username');
+			//verify that our new attribute was added to the existing entity
+			var hair = newdog.get('hair');
+			if (hair === 'long') {
+				//Success - attribute sucesfully set on new entity
+			} else {
+				//Error - attribute not sucesfully set on new entity
+			}
 		}
 	});
 
+Alternatively, if you know that an entity exists on the server already, and you just want to retrieve it, use the getEntity method. It will only retrieve the entity if there is a match:
+
+	//again, get the uuid of our existing dog:
+	var uuid = dog.get('uuid');
+
+	//now make a new call to get the existing dog from the database
+	var options = {
+		type:'dogs',
+		name:'einstein' //could also use uuid if you know it, or username, if this is a user
+	}
+	client.getEntity(options, function(err, existingDog){
+		if (err){
+			//existing dog not retrieved
+		} else {
+			//existing dog was retrieved
+
+			//get the uuid of the dog we just got from the database
+			var newuuid = existingDog.get('uuid');
+
+			//make sure the uuids match
+			if (uuid === newuuid){
+				//uuids match - got the same entity
+			} else {
+				//uuids do not match - not the same entity
+			}
+		}
+	});
+
+Use the "destroy" method to remove the entity from the database:
+
+	//the destroy method will delete the entity from the database
+	dog.destroy(function(err){
+		if (err){
+			//Error - dog not removed from database
+		} else {
+			//Success - dog was removed from database
+			dog = null;
+			// no real dogs were harmed!
+		}
+	});
 
 ##The Collection object
-The Collection object models Collections in the database.  Once you start programming your app, you will likely find that this is the most useful method of interacting with the database.  Creating a collection will automatically populate the object with entities from the collection. The following example shows how to create a Collection object, then how to use entities once the Collection has been populated with entities from the server:
+The Collection object models collections in the database.  Once you start programming your app, you will likely find that this is a useful method of interacting with the database.  Creating a collection will automatically populate the object with entities from the collection.
+
+The following example shows how to create a Collection object, then how to use those entities once they have been populated from the server:
 
 	//options object needs to have the type (which is the collection type)
 	var options = {
@@ -241,24 +270,20 @@ The Collection object models Collections in the database.  Once you start progra
 
 	client.createCollection(options, function (err, dogs) {
 		if (err) {
-			//error - could not make collection
+			//Error - could not make collection
 		} else {
-
-			//success - new Collection worked
+			//Success - new collection created
 
 			//we got the dogs, now display the Entities:
 			while(dogs.hasNextEntity()) {
 				//get a reference to the dog
 				dog = dogs.getNextEntity();
+				//do something with the entity
 				var name = dog.get('name');
-				notice('dog is called ' + name);
 			}
-
-			//success - looped through dogs
 
 		}
 	});
-
 
 You can also add a new entity of the same type to the collection:
 
@@ -271,41 +296,32 @@ You can also add a new entity of the same type to the collection:
 	//to the collection and it is saved automatically
 	dogs.addEntity(options, function(err, dog, data) {
 		if (err) {
-			//error - extra dog not saved or added to collection
+			//Error - extra dog not saved or added to collection
 		} else {
-			//success - extra dog saved and added to collection
+			//Success - extra dog saved and added to collection
 		}
 	});
 
-
 ##Collection iteration and paging
-The Collection object works in Pages of data.  This means that at any given time, the Collection object will have one page of data loaded.  You can iterate across all the entities in the current page of data by using the following pattern:
+To provide paging functionality, Usergrid uses a cursor to keep track of what page of the data is currently being used. Keeping track of cursors can be tedious, so the Collection object obscures this complexity, and provides easy-to-use methods for paging.
 
-	//we got the dogs, now display the Entities:
-	while(dogs.hasNextEntity()) {
-		//get a reference to the dog
-		dog = dogs.getNextEntity();
-		var name = dog.get('name');
-		notice('dog is called ' + name);
-	}
-
-To get the next page of data from the server, use the following pattern:
+At any given time, the Collection object will have one page of data loaded. To get the next page of data from the server and iterate across the entities, use the following pattern:
 
 	if (dogs.hasNextPage()) {
 		//there is a next page, so get it from the server
 		dogs.getNextPage(function(err){
 			if (err) {
-				//error - could not get next page of dogs
+				//Error - could not get next page of dogs
 			} else {
-				//success - got next page of dogs
-				//we got the dogs, now display the Entities:
+				//Success - got next page of dogs, so do something with it:
+
 				while(dogs.hasNextEntity()) {
 					//get a reference to the dog
 					dog = dogs.getNextEntity();
+					//do something with the entity
 					var name = dog.get('name');
-					notice('dog is called ' + name);
 				}
-				//success - looped through dogs
+
 			}
 		});
 	}
@@ -316,23 +332,22 @@ You can use the same pattern to get a previous page of data:
 		//there is a previous page, so get it from the server
 		dogs.getPreviousPage(function(err){
 			if(err) {
-				//error - could not get previous page of dogs
+				//Error - could not get previous page of dogs
 			} else {
-				//success - got next page of dogs
-				//we got the dogs, now display the Entities:
+				//Success - got next page of dogs, so do something with it:
+
 				while(dogs.hasNextEntity()) {
 					//get a reference to the dog
 					dog = dogs.getNextEntity();
+					//do something with the entity
 					var name = dog.get('name');
-					notice('dog is called ' + name);
 				}
-				//success - looped through dogs
+
 			}
 		});
 	}
 
-By default, the database will return 10 entities per page.  You can change that amount by setting a limit:
-
+By default, the database will return 10 entities per page.  Use the "qs" property in the options object (more about this below). Set a limit of up to 999:
 
 	var options = {
 		type:'dogs',
@@ -341,14 +356,34 @@ By default, the database will return 10 entities per page.  You can change that 
 
 	client.createCollection(options, function (err, dogs) {
 		if (err) {
-			//error - could not get all dogs
+			//Error - could not get all dogs
 		} else {
-			//success - got at most 50 dogs
+			//Success - got at most 50 dogs
+
+			//we got 50 dogs, now display the Entities:
+			while(dogs.hasNextEntity()) {
+				//get a reference to the dog
+				var dog = dogs.getNextEntity();
+				//do something with the entity
+				var name = dog.get('name');
+			}
+
+			//Wait! What if we want to display them again??
+			//Simple!  Just reset the entity pointer:
+			dogs.resetEntityPointer();
+			while(dogs.hasNextEntity()) {
+				//get a reference to the dog
+				var dog = dogs.getNextEntity();
+				//do something with the entity
+				var name = dog.get('name');
+			}
+
 		}
-	}
+	});
 
-Several other convenience methods exist to make working with pages of data easier:
+Several convenience methods exist to make working with pages of data easier:
 
+* resetPaging - calls made after this will get the first page of data (the cursor, which points to the current page of data, is deleted)
 * getFirstEntity - gets the first entity of a page
 * getLastEntity - gets the last entity of a page
 * resetEntityPointer - sets the internal pointer back to the first element of the page
@@ -356,23 +391,38 @@ Several other convenience methods exist to make working with pages of data easie
 
 
 ###Custom Queries
-A custom query allows you to tell the API that you want your results filtered or altered in some way.  To specify that the query results should be ordered by creation date, add the qs parameter to the options object:
+A custom query allows you to tell the API that you want your results filtered or altered in some way.
+
+Use the "qs" property in the options object - "qs" stands for "query string".  By adding a JSON object of key value pairs to the "qs" property of the options object, you signal that you want those values used for the key/value pairs in the query string that is sent to the server.
+
+For example, to specify that the query results should be ordered by creation date, add the qs parameter to the options object:
 
 	var options = {
 		type:'dogs',
 		qs:{ql:'order by created DESC'}
 	};
 
-You may find that you need to change the query on an existing object.  Simply access the qs property directly:
+The qs object above will be converted into a call that looks like this:
 
-	dogs.qs = {ql:'order by created DESC'};
-
+/dogs?ql=order by created DESC
 
 If you also wanted to get more entities in the result set than the default 10, say 100, you can specify a query similar to the following (the limit can be a maximum of 999):
 
 	dogs.qs = {ql:'order by created DESC',limit:'100'};
 
+The qs object above will be converted into a call that looks like this:
+
+/dogs?ql=order by created DESC&limit=100
+
 **Note**: there are many cases where expanding the result set is useful.  But be careful - the more results you get back in a single call, the longer it will take to transmit the data back to your app.
+
+If need to change the query on an existing object.  Simply access the qs property directly:
+
+	dogs.qs = {ql:'order by created DESC'};
+
+Then make your fetch call:
+
+	dogs.fetch(...)
 
 Another common requirement is to limit the results to a specific query.  For example, to get all brown dogs, use the following syntax:
 
@@ -390,7 +440,10 @@ You can find more information on custom queries here:
 
 
 ##Modeling users with the Entity object
-There is no specific User object in the module.  Instead, you simply need to use the Entity object, specifying a type of "users".  Here is an example:
+Use the Entity object to model users.  Simply specify a type of "users".
+
+**Note:** remember that user entities use "username", not "name", as the distinct key
+Here is an example:
 
 	//type is 'users', set additional paramaters as needed
 	var options = {
@@ -401,25 +454,26 @@ There is no specific User object in the module.  Instead, you simply need to use
 		city:'Hill Valley'
 	}
 
-  	client.createEntity(options, function (err, marty) {
+	client.createEntity(options, function (err, marty) {
 		if (err){
-			//error - user not saved
+			//Error - user not created
 		} else {
-			//success - user saved
+			//Success - user created
+			var name = marty.get('name');
 		}
 	});
-
 
 If the user is modified, just call save on the user again:
 
 	//add properties cumulatively
 	marty.set('state', 'California');
 	marty.set("girlfriend","Jennifer");
+
 	marty.save(function(err){
 		if (err){
-			//error - user not updated
+			//Error - user not updated
 		} else {
-			//success - user updated
+			//Success - user updated
 		}
 	});
 
@@ -427,9 +481,143 @@ To refresh the user's information in the database:
 
 	marty.fetch(function(err){
 		if (err){
-			//error - not refreshed
+			//Error - not refreshed
 		} else {
-			//success - user refreshed
+			//Success - user refreshed
+
+			//do something with the entity
+			var girlfriend = marty.get('girlfriend');
+		}
+	});
+
+###To log a user in
+Logging a user in means sending the user's username and password to the server, and getting back an access (OAuth) token.  You can then use this token to make calls to the API on the User's behalf. The following example shows how to log a user in and log them out:
+
+	username = 'marty';
+	password = 'mysecurepassword';
+	client.login(username, password, function (err) {
+		if (err) {
+			//Error - could not log user in
+		} else {
+			//Success - user has been logged in
+
+			//the login call will return an OAuth token, which is saved
+			//in the client. Any calls made now will use the token.
+			//once a user has logged in, their user object is stored
+			//in the client and you can access it this way:
+			var token = client.token;
+
+			//Then make calls against the API.  For example, you can
+			//get the logged in user entity this way:
+			client.getLoggedInUser(function(err, data, user) {
+				if(err) {
+					//Error - could not get logged in user
+				} else {
+					//Success - got logged in user
+
+					//you can then get info from the user entity object:
+					var username = user.get('username');
+				}
+			});
+		}
+	});
+
+If you need to change a user's password, set the oldpassword and newpassword fields, then call save:
+
+	marty.set('oldpassword', 'mysecurepassword');
+	marty.set('newpassword', 'mynewsecurepassword');
+	marty.save(function(err){
+		if (err){
+			//Error - user password not updated
+		} else {
+			//Success - user password updated
+		}
+	});
+
+To log a user out, call the logout function:
+
+	client.logout();
+
+	//verify the logout worked
+	if (client.isLoggedIn()) {
+		//Error - logout failed
+	} else {
+		//Success - user has been logged out
+	}
+
+###Making connections
+Connections are a way to connect two entities with a word, typically a verb.  This is called an entity relationship.  For example, if you have a user entity with username of marty, and a dog entity with a name of einstein, then using our RESTful API, you could make a call like this:
+
+	POST users/marty/likes/dogs/einstein
+
+This creates a one-way connection between marty and einstein, where marty "likes" einstein.
+
+Complete documentation on the entity relationships API can be found here:
+
+<http://apigee.com/docs/usergrid/content/entity-relationships>
+
+For example, say we have a new dog named einstein:
+
+	var options = {
+		type:'dogs',
+		name:'einstein',
+		breed:'mutt'
+	}
+
+	client.createEntity(options, function (err, dog) {
+		if (err) {
+			//Error - new dog not created
+		} else {
+			//Success - new dog created
+		}
+	});
+
+Then, we can create a "likes" connection between our user, Marty, and the dog named einstien:
+
+	marty.connect('likes', dog, function (err, data) {
+		if (err) {
+			//Error - connection not created
+		} else {
+			//Success - the connection call succeeded
+			//now lets do a getConnections call to verify that it worked
+			marty.getConnections('likes', function (err, data) {
+				if (err) {
+					//Error - could not get connections
+				} else {
+					//Success - got all the connections
+					//verify that connection exists
+					if (marty.likes.einstein) {
+						//Success - connection exists
+					} else {
+						//Error - connection does not exist
+					}
+
+				}
+			});
+		}
+	});
+
+We could have just as easily used any other word as the connection (e.g. "owns", "feeds", "cares-for", etc.).
+
+Now, if you want to remove the connection, do the following:
+
+	marty.disconnect('likes', dog, function (err, data) {
+		if (err) {
+			//Error - connection not deleted
+		} else {
+			//Success - the connection has been deleted
+			marty.getConnections('likes', function (err, data) {
+				if (err) {
+					//Error - error getting connections
+				} else {
+					//Success! - now verify that the connection exists
+					if (marty.likes.einstein) {
+						//Error - connection still exists
+					} else {
+						//Success - connection deleted
+					}
+				}
+			});
 		}
 	});
 
@@ -437,124 +625,12 @@ If you no longer need the object, call the delete() method and the object will b
 
 	marty.destroy(function(err){
 		if (err){
-			//error - user not deleted from database
+			//Error - user not deleted from database
 		} else {
-			//success - user deleted from database
+			//Success - user deleted from database
 			marty = null; //blow away the local object
 		}
 	});
-
-
-###Making connections
-Connections are a way to connect to entities with some verb.  This is called an entity relationship.  For example, if you have a user entity with username of marty, and a dog entity with a name of einstein, then using our RESTful API, you could make a call like this:
-	
-	POST users/marty/likes/dogs/einstein 
-
-This creates a one-way connection between marty and einstein, where marty "likes" einstein. 
-
-Complete documentation on the entity relationships API can be found here:
-
-<http://apigee.com/docs/usergrid/content/entity-relationships>
-
-The following code shows you how to create this connection, and then verify that the connection has been made:
-
-	marty.connect('likes', dog, function (err, data) {
-		if (err) {
-			// error - connection not created
-		} else {
-
-			//call succeeded, so pull the connections back down
-			marty.getConnections('likes', function (err, data) {
-				if (err) {
-						//error - could not get connections
-				} else {
-					//verify that connection exists
-					if (marty.likes.ralphy) {
-						//success - connection exists
-					} else {
-						//error - connection does not exist
-					}
-				}
-			});
-		}
-	});
-
-You can also remove connections, by using the disconnect method:
-
-	marty.disconnect('likes', dog, function (err, data) {
-		if (err) {
-			//error - connection not deleted
-		} else {
-
-			//call succeeded, so pull the connections back down
-			marty.getConnections('likes', function (err, data) {
-				if (err) {
-					//error - error getting connections
-				} else {
-					//verify that connection exists
-					if (marty.likes.einstein) {
-						//error - connection still exists
-					} else {
-						//success - connection deleted
-					}
-				}
-			});
-		}
-	});
-
-
-###To log a user in
-Up to this point, we have shown how you can use the client secret / client id combination to authenticate your calls against the API.  For a server-side Node.js app, this may be all you need.  However, if you do find that your app requires that you authenticate an individual user, this section shows you how.
-
-Logging a user in means sending the user's username and password to the server, and getting back an access (OAuth) token.  You can then use this token to make calls to the API on the User's behalf. The following example shows how to log a user in and log them out:
-
-	username = 'marty';
-	password = 'mysecurepassword';
-	client.login(username, password,
-		function (err) {
-			if (err) {
-				//error - could not log user in
-			} else {
-				//success - user has been logged in
-
-				//the login call will return an OAuth token, which is saved
-				//in the client. Any calls made now will use the token.
-				//once a user has logged in, their user object is stored
-				//in the client and you can access it this way:
-				var token = client.token;
-
-				//Then make calls against the API.  For example, you can
-				//get the user entity this way:
-				client.getLoggedInUser(function(err, data, user) {
-					if(err) {
-						//error - could not get logged in user
-					} else {
-						//success - got logged in user
-
-						//you can then get info from the user entity object:
-						var username = user.get('username');
-
-					}
-				});
-
-			}
-		}
-	);
-	
-To recap, once a user has been logged in, and an OAuth token has been acquired, any subsequent calls to the API will use the token.
-
-
-###To log a user out
-To log the user out, call:
-
-	client.logout();
-
-Or, if you made a new client object specifically for the app user:
-
-	appUserClient.logout();
-
-This destroys the token and user object in the client object, effectively logging the user out.
-
 
 ##Making generic calls
 If you find that you need to make calls to the API that fall outside of the scope of the Entity and Collection objects, you can use the following format to make any REST calls against the API:
@@ -569,10 +645,10 @@ This format allows you to make almost any call against the App Services (Usergri
 	};
 	client.request(options, function (err, data) {
 		if (err) {
-			//error - GET failed
+			//Error - GET failed
 		} else {
 			//data will contain raw results from API call
-			//success - GET worked
+			//Success - GET worked
 		}
 	});
 
@@ -585,14 +661,14 @@ Or, to create a new user:
 	};
 	client.request(options, function (err, data) {
 		if (err) {
-			//error - POST failed
+			//Error - POST failed
 		} else {
 			//data will contain raw results from API call
-			//success - POST worked
+			//Success - POST worked
 		}
 	});
 
-Or, to update the new user:
+Or, to update a user:
 
 	var options = {
 		method:'PUT',
@@ -601,14 +677,14 @@ Or, to update the new user:
 	};
 	client.request(options, function (err, data) {
 		if (err) {
-			//error - PUT failed
+			//Error - PUT failed
 		} else {
 			//data will contain raw results from API call
-			//success - PUT worked
+			//Success - PUT worked
 		}
 	});
 
-Or to delete the new user:
+Or, to delete a user:
 
 	var options = {
 		method:'DELETE',
@@ -616,10 +692,10 @@ Or to delete the new user:
 	};
 	client.request(options, function (err, data) {
 		if (err) {
-			//error - DELETE failed
+			//Error - DELETE failed
 		} else {
 			//data will contain raw results from API call
-			//success - DELETE worked
+			//Success - DELETE worked
 		}
 	});
 
@@ -694,3 +770,4 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
