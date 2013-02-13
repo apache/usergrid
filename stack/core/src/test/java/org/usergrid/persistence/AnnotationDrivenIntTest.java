@@ -28,4 +28,9 @@ public class AnnotationDrivenIntTest {
         logger.info("shouldStillBeUp");
         assertTrue(true);
     }
+
+    @Test
+    public void shouldStillBeUp() throws Exception {
+        assertTrue(true);
+    }
 }
