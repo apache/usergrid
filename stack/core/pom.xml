@@ -44,6 +44,7 @@
 				<filtering>true</filtering>
 				<includes>
 					<include>**/*.xml</include>
+                    <include>**/*.properties</include>
 				</includes>
 			</testResource>
 		</testResources>
@@ -73,7 +74,7 @@
 					<systemPropertyVariables>
 						<storage-config>${basedir}/src/test/conf</storage-config>
 					</systemPropertyVariables>
-					<argLine>-Xmx512M -Xms512M -Dfile.encoding=UTF-8</argLine>
+
 				</configuration>
 			</plugin>
 			<plugin>

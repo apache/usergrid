@@ -61,7 +61,7 @@ public abstract class AbstractPersistenceTest {
 	@BeforeClass
 	public static void setup() throws Exception {
 		logger.info("setup");
-		assertNull(helper);
+
 		helper = new PersistenceTestHelperImpl();
 		// helper.setClient(this);
 		helper.setup();

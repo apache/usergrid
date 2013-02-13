@@ -128,7 +128,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         System.setProperty("cassandra-foreground", "true");
         System.setProperty("log4j.defaultInitOverride","true");
         System.setProperty("log4j.configuration", "log4j.properties");
-        //System.setProperty("cassandra.load_ring_state", "false");
+        //System.setProperty("cassandra.load_ring_state", "false");so
         //System.setProperty("cassandra.join_ring","false");
         System.setProperty("cassandra.ring_delay_ms","100");
 
@@ -138,7 +138,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         try {
             executor.schedule(contextHolder, 3, TimeUnit.SECONDS).get();
         } catch (Exception ex) {
-            logger.error("Could not schedule cassandra runner");
+            logger.error("Could not schedule cassandra runner",ex);
         }
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -162,8 +162,8 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     }
 
     static class ContextHolder implements Runnable {
-        ApplicationContext applicationContext;
-        CassandraDaemon cassandraDaemon;
+        static ApplicationContext applicationContext;
+        static CassandraDaemon cassandraDaemon;
 
         @Override
         public void run() {

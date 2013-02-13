@@ -32,8 +32,9 @@ import org.apache.cassandra.config.ConfigurationException;
 import org.apache.thrift.transport.TTransportException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
-
+@Ignore
 public class ExampleDaoTest {
 
 	private static EmbeddedServerHelper embedded;

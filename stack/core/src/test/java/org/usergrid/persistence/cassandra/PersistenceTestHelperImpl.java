@@ -87,12 +87,8 @@ public class PersistenceTestHelperImpl implements PersistenceTestHelper {
 
     @Override
     public void teardown() {
-        logger.info("Stopping Cassandra");
 
-        if (ac != null) {
-            ac.close();
-        }
-        forceQuit();
+
     }
 
     public void forceQuit() {

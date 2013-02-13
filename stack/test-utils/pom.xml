@@ -75,7 +75,7 @@
         <dependency>
             <groupId>org.usergrid</groupId>
             <artifactId>usergrid-config</artifactId>
-            <version>0.0.13-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
