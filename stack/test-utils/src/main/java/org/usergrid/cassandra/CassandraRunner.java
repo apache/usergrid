@@ -70,6 +70,9 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         loadDataControl(control);
         maybeCreateSchema();
         super.run(notifier);
+        if ( !control.skipTruncate() ) {
+            schemaManager.destroy();
+        }
     }
 
     /**
@@ -89,7 +92,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     private void loadDataControl(DataControl dataControl) {
         if ( dataControl != null ) {
             // TODO check for classpath and go static?
-            logger.info("dataControl found - looking up SchemaManager impl");
+            logger.info("dataControl found - looking upma SchemaManager impl");
             schemaManager = getBean(dataControl.schemaManager(), SchemaManager.class);
         } else {
             logger.info("dataControl not found - using default SchemaManager impl");

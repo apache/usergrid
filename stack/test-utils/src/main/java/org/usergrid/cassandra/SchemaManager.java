@@ -22,4 +22,9 @@ public interface SchemaManager {
      */
     void populateBaseData();
 
+    /**
+     * marshall the data removal
+     */
+    void destroy();
+
 }

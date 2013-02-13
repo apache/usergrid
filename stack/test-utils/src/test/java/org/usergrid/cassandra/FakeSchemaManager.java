@@ -21,4 +21,9 @@ public class FakeSchemaManager implements SchemaManager {
     public void populateBaseData() {
 
     }
+
+    @Override
+    public void destroy() {
+
+    }
 }

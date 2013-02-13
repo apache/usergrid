@@ -33,10 +33,12 @@
     <!-- The default schema manager -->
     <bean class="org.usergrid.persistence.CoreSchemaManager">
         <constructor-arg ref="setup"/>
+        <constructor-arg ref="cassandraCluster"/>
     </bean>
     <!-- refer to a named schemaManager from the DataControl annotation thusly -->
     <bean id="coreManager" class="org.usergrid.persistence.CoreSchemaManager">
         <constructor-arg ref="setup"/>
+        <constructor-arg ref="cassandraCluster"/>
     </bean>
     <!--
     <bean id="traceTagManager" class="org.usergrid.persistence.cassandra.util.TraceTagManager">
