@@ -23,14 +23,6 @@ import org.usergrid.persistence.cassandra.CassandraService;
 
 public interface PersistenceTestHelper {
 
-	public abstract EntityManagerFactory getEntityManagerFactory();
-
-	public abstract void setEntityManagerFactory(EntityManagerFactory emf);
-
-	public abstract QueueManagerFactory getMessageManagerFactory();
-
-	public abstract void setMessageManagerFactory(QueueManagerFactory mmf);
-
 	public abstract Properties getProperties();
 
 	public abstract void setProperties(Properties properties);
@@ -39,10 +31,5 @@ public interface PersistenceTestHelper {
 
 	public abstract void teardown() throws Exception;
 
-	public abstract void setCassandraService(CassandraService cassandraService);
-
-	public abstract CassandraService getCassandraService();
-
-	public ApplicationContext getApplicationContext();
 
 }

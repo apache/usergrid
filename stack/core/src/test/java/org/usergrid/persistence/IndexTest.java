@@ -31,6 +31,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.IndexUpdate;
 import org.usergrid.persistence.cassandra.RelationManagerImpl;
@@ -441,7 +442,7 @@ public class IndexTest extends AbstractPersistenceTest {
     //now read the index and see what properties are there
     
     
-    CassandraService cass = helper.getCassandraService();
+    CassandraService cass = CassandraRunner.getBean(CassandraService.class);
     
     ByteBufferSerializer buf = ByteBufferSerializer.get();
     

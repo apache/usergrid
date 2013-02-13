@@ -31,9 +31,12 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.cassandra.DataControl;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
@@ -45,6 +48,8 @@ import org.usergrid.persistence.cassandra.util.TraceTagReporter;
 
 import javax.annotation.Resource;
 
+@RunWith(CassandraRunner.class)
+@DataControl(schemaManager = "coreManager")
 public class EntityManagerFactoryImplTest {
 
 	public static final boolean USE_DEFAULT_DOMAIN = !CassandraService.USE_VIRTUAL_KEYSPACES;
@@ -55,7 +60,7 @@ public class EntityManagerFactoryImplTest {
 	static PersistenceTestHelper helper;
 
 	public EntityManagerFactoryImplTest() {
-		emf = (EntityManagerFactoryImpl) helper.getEntityManagerFactory();
+		emf = CassandraRunner.getBean(EntityManagerFactory.class);
 	}
 
 	@BeforeClass
@@ -73,14 +78,10 @@ public class EntityManagerFactoryImplTest {
 		helper.teardown();
 	}
 
-	EntityManagerFactoryImpl emf;
+	EntityManagerFactory emf;
     TraceTagManager traceTagManager;
     TraceTagReporter traceTagReporter;
 
-	@Autowired
-	public void setEntityManagerFactory(EntityManagerFactory emf) {
-		this.emf = (EntityManagerFactoryImpl) emf;
-	}
 
 	public EntityManagerFactory getEntityManagerFactory() {
 		return emf;
@@ -95,8 +96,8 @@ public class EntityManagerFactoryImplTest {
 
     @Before
     public void initTracing() {
-        traceTagManager = helper.getApplicationContext().getBean("traceTagManager",TraceTagManager.class);
-        traceTagReporter = helper.getApplicationContext().getBean("traceTagReporter", TraceTagReporter.class);
+        traceTagManager = CassandraRunner.getBean("traceTagManager", TraceTagManager.class);
+        traceTagReporter = CassandraRunner.getBean("traceTagReporter", TraceTagReporter.class);
     }
 
 	@Test

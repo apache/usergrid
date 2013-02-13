@@ -73,7 +73,6 @@ public class PersistenceTestHelperImpl implements PersistenceTestHelper {
 
     ClassPathXmlApplicationContext ac = null;
 
-    EmbeddedServerHelper embedded = null;
 
     @Override
     public void setup() throws Exception {
@@ -82,38 +81,14 @@ public class PersistenceTestHelperImpl implements PersistenceTestHelper {
         String maven_opts = System.getenv("MAVEN_OPTS");
         logger.info("Maven options: " + maven_opts);
 
-        logger.info("Starting Cassandra");
-        embedded = new EmbeddedServerHelper();
-        embedded.setup();
 
-        // copy("/usergrid-core-context-test.xml", TMP);
-
-        String[] locations = { "usergrid-test-context.xml" };
-        ac = new ClassPathXmlApplicationContext(locations);
-
-        AutowireCapableBeanFactory acbf = ac.getAutowireCapableBeanFactory();
-        acbf.autowireBeanProperties(this,
-                AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, false);
-        acbf.initializeBean(this, "testClient");
-
-        assertNotNull(emf);
-        assertTrue(
-                "EntityManagerFactory is instance of EntityManagerFactoryImpl",
-                emf instanceof EntityManagerFactoryImpl);
-
-        Setup setup = ((EntityManagerFactoryImpl) emf).getSetup();
-
-        logger.info("Setting up Usergrid schema");
-        setup.setup();
-        logger.info("Usergrid schema setup");
-        setup.checkKeyspaces();
 
     }
 
     @Override
     public void teardown() {
         logger.info("Stopping Cassandra");
-        EmbeddedServerHelper.teardown();
+
         if (ac != null) {
             ac.close();
         }
@@ -127,27 +102,7 @@ public class PersistenceTestHelperImpl implements PersistenceTestHelper {
         }
     }
 
-    @Override
-    @Autowired
-    public void setEntityManagerFactory(EntityManagerFactory emf) {
-        this.emf = emf;
-    }
 
-    @Override
-    public EntityManagerFactory getEntityManagerFactory() {
-        return emf;
-    }
-
-    @Override
-    public QueueManagerFactory getMessageManagerFactory() {
-        return mmf;
-    }
-
-    @Override
-    @Autowired
-    public void setMessageManagerFactory(QueueManagerFactory mmf) {
-        this.mmf = mmf;
-    }
 
     @Override
     public Properties getProperties() {
@@ -155,33 +110,10 @@ public class PersistenceTestHelperImpl implements PersistenceTestHelper {
     }
 
     @Override
-    @Autowired
     public void setProperties(Properties properties) {
         this.properties = properties;
     }
 
-    public boolean isForceQuit() {
-        return forceQuit;
-    }
 
-    public void setForceQuit(boolean forceQuit) {
-        this.forceQuit = forceQuit;
-    }
-
-    @Override
-    public CassandraService getCassandraService() {
-        return cassandraService;
-    }
-
-    @Override
-    @Autowired
-    public void setCassandraService(CassandraService cassandraService) {
-        this.cassandraService = cassandraService;
-    }
-
-    @Override
-    public ApplicationContext getApplicationContext() {
-        return ac;
-    }
 
 }

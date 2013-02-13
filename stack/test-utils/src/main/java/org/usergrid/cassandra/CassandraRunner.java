@@ -70,7 +70,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         loadDataControl(control);
         maybeCreateSchema();
         super.run(notifier);
-        if ( !control.skipTruncate() ) {
+        if ( control == null || !control.skipTruncate() ) {
             schemaManager.destroy();
         }
     }

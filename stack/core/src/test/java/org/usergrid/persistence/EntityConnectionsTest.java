@@ -28,7 +28,9 @@ import me.prettyprint.cassandra.utils.TimeUUIDUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.persistence.Results.Level;
+import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.utils.UUIDUtils;
 
@@ -144,7 +146,7 @@ public class EntityConnectionsTest extends AbstractPersistenceTest {
 
         // Thread.sleep(5000);
 
-        helper.getCassandraService().logKeyspaces();
+        CassandraRunner.getBean(CassandraService.class).logKeyspaces();
 
         logger.info("Find all connections for cat A: " + catA.getUuid());
 
