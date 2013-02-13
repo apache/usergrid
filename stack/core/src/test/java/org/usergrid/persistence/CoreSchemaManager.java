@@ -24,7 +24,10 @@ public class CoreSchemaManager implements SchemaManager {
     @Override
     public void create() {
         try {
-            setup.setup();
+            setup.init();
+            setup.setupSystemKeyspace();
+            setup.setupStaticKeyspace();
+
         } catch (Exception ex){
             logger.error("Could not setup usergrid core schema",ex);
         }
@@ -32,11 +35,15 @@ public class CoreSchemaManager implements SchemaManager {
 
     @Override
     public boolean exists() {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return setup.keyspacesExist();
     }
 
     @Override
     public void populateBaseData() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        try {
+            setup.createDefaultApplications();
+        } catch (Exception ex) {
+            logger.error("Could not create default applications", ex);
+        }
     }
 }

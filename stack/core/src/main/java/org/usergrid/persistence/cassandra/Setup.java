@@ -74,20 +74,29 @@ public class Setup {
 	 *             the exception
 	 */
 	public synchronized void setup() throws Exception {
-		cass.init();
+		init();
 
 		setupSystemKeyspace();
 
 		setupStaticKeyspace();
 
-		((EntityManagerFactoryImpl) emf).initializeApplication(
-				DEFAULT_ORGANIZATION, DEFAULT_APPLICATION_ID,
-				DEFAULT_APPLICATION, null);
-
-		((EntityManagerFactoryImpl) emf).initializeApplication(
-				DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION_ID,
-				MANAGEMENT_APPLICATION, null);
+		createDefaultApplications();
 	}
+
+    public void init() throws Exception {
+        cass.init();
+    }
+
+    public void createDefaultApplications() throws Exception {
+        // TODO unique check?
+        ((EntityManagerFactoryImpl) emf).initializeApplication(
+                DEFAULT_ORGANIZATION, DEFAULT_APPLICATION_ID,
+                DEFAULT_APPLICATION, null);
+
+        ((EntityManagerFactoryImpl) emf).initializeApplication(
+                DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION_ID,
+                MANAGEMENT_APPLICATION, null);
+    }
 
 	/**
 	 * Initialize system keyspace.
@@ -169,6 +178,10 @@ public class Setup {
 			 */
 		}
 	}
+
+    public boolean keyspacesExist() {
+        return cass.checkKeyspacesExist();
+    }
 
 	public void checkKeyspaces() {
 		cass.checkKeyspaces();

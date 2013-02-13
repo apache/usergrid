@@ -18,4 +18,9 @@ public class AnnotationDrivenIntTest {
     public void shouldSpinUp() throws Exception {
         assertTrue(true);
     }
+
+    @Test
+    public void shouldStillBeUp() throws Exception {
+        assertTrue(true);
+    }
 }
