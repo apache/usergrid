@@ -216,7 +216,7 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
   var entity = new Usergrid.Entity(options);
   entity.fetch(function(err, data) {
     //if the fetch doesn't find what we are looking for, or there is no error, do a save
-    var okToSave = (err && 'service_resource_not_found' === data.error) || (!err && getOnExist);
+    var okToSave = (err && 'service_resource_not_found' === data.error || 'no_name_specified' === data.error) || (!err && getOnExist);
     if(okToSave) {
       entity.set(options.data); //add the data again just in case
       entity.save(function(err, data) {
@@ -703,11 +703,11 @@ Usergrid.Entity.prototype.fetch = function (callback) {
         type += '/' + this.get('username');
       } else {
         if (typeof(callback) === 'function') {
-          var error = 'cannot fetch entity, no username specified';
+          var error = 'no_name_specified';
           if (self._client.logging) {
             console.log(error);
           }
-          return callback(true, error, self)
+          return callback(true, {error:error}, self)
         }
       }
     } else {
@@ -715,11 +715,11 @@ Usergrid.Entity.prototype.fetch = function (callback) {
         type += '/' + this.get('name');
       } else {
         if (typeof(callback) === 'function') {
-          var error = 'cannot fetch entity, no name specified';
+          var error = 'no_name_specified';
           if (self._client.logging) {
             console.log(error);
           }
-          return callback(true, error, self)
+          return callback(true, {error:error}, self)
         }
       }
     }
