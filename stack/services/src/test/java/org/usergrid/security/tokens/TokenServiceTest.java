@@ -14,8 +14,10 @@ import java.util.UUID;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.ManagementTestHelper;
@@ -24,6 +26,7 @@ import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.security.AuthPrincipalInfo;
 import org.usergrid.security.AuthPrincipalType;
@@ -31,12 +34,13 @@ import org.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.usergrid.utils.UUIDUtils;
 
+@RunWith(CassandraRunner.class)
 public class TokenServiceTest {
 
     static Logger log = LoggerFactory.getLogger(TokenServiceTest.class);
     static ManagementService managementService;
-    static ManagementTestHelper helper;
     static TokenService tokenService;
+    static EntityManagerFactory entityManagerFactory;
     // app-level data generated only once
     private static UserInfo adminUser;
     private static OrganizationInfo organization;
@@ -45,11 +49,9 @@ public class TokenServiceTest {
     @BeforeClass
     public static void setup() throws Exception {
         log.info("in setup");
-        assertNull(helper);
-        helper = new ManagementTestHelperImpl();
-        helper.setup();
-        managementService = (ManagementService) helper.getManagementService();
-        tokenService = helper.getTokenService();
+        managementService = CassandraRunner.getBean(ManagementService.class);
+        tokenService = CassandraRunner.getBean(TokenService.class);
+        entityManagerFactory = CassandraRunner.getBean(EntityManagerFactory.class);
         setupLocal();
     }
 
@@ -61,11 +63,6 @@ public class TokenServiceTest {
                 .getId();
     }
 
-    @AfterClass
-    public static void teardown() throws Exception {
-        log.info("In teardown");
-        helper.teardown();
-    }
 
     @SuppressWarnings("unchecked")
     @Test
@@ -274,7 +271,7 @@ public class TokenServiceTest {
 
         ApplicationInfo appInfo = managementService.createApplication(orgInfo.getOrganization().getUuid(), "bar");
 
-        EntityManager em = helper.getEntityManagerFactory().getEntityManager(appInfo.getId());
+        EntityManager em = entityManagerFactory.getEntityManager(appInfo.getId());
 
         Application app = em.getApplication();
 
@@ -351,7 +348,7 @@ public class TokenServiceTest {
 
         ApplicationInfo appInfo = managementService.createApplication(orgInfo.getOrganization().getUuid(), "bar");
 
-        EntityManager em = helper.getEntityManagerFactory().getEntityManager(appInfo.getId());
+        EntityManager em = entityManagerFactory.getEntityManager(appInfo.getId());
 
         Application app = em.getApplication();
 

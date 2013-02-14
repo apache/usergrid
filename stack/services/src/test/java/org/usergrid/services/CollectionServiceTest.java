@@ -37,27 +37,30 @@ import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
 public class CollectionServiceTest extends AbstractServiceTest {
 
-	private static final Logger logger = LoggerFactory
+    private static final Logger logger = LoggerFactory
 			.getLogger(CollectionServiceTest.class);
+    private static final String TEST_ORGANIZATION = "testOrganizationCST";
+    private static final String TEST_APPLICATION = "testCollectionCST";
+    public static final String CST_TEST_GROUP = "cst-test-group";
 
-	@Test
+    @Test
 	public void testUsersCollectionWithGroupIdName() throws Exception {
 
-		UUID applicationId = createApplication("testOrganization",
-				"testCollection");
+		UUID applicationId = createApplication(TEST_ORGANIZATION,
+                TEST_APPLICATION);
 
 		ServiceManager sm = smf.getServiceManager(applicationId);
 
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("path", "test-group/test-group");
+		properties.put("path", "cst-test-group/cst-test-group");
 		properties.put("title", "Collection Test group");
 
 		Entity group = testRequest(sm, ServiceAction.POST, 1, properties,
 				"groups").getEntity();
 		assertNotNull(group);
 
-		testRequest(sm, ServiceAction.GET, 1, null, "groups", "test-group",
-				"test-group");
+		testRequest(sm, ServiceAction.GET, 1, null, "groups", CST_TEST_GROUP,
+                CST_TEST_GROUP);
 
 		testRequest(sm, ServiceAction.GET, 1, null, "groups");
 
@@ -80,7 +83,7 @@ public class CollectionServiceTest extends AbstractServiceTest {
 
 		try {
 			// try GET on users with group name
-			testRequest(sm, ServiceAction.GET, 0, null, "users", "test-group");
+			testRequest(sm, ServiceAction.GET, 0, null, "users", CST_TEST_GROUP);
 			Assert.fail();
 		} catch (ServiceResourceNotFoundException srnfe) {
 			// ok
@@ -101,7 +104,7 @@ public class CollectionServiceTest extends AbstractServiceTest {
 		try {
 			// try POST on users with group name
 			testRequest(sm, ServiceAction.POST, 0, properties, "users",
-					"test-group");
+                    CST_TEST_GROUP);
 			Assert.fail();
 		} catch (ServiceResourceNotFoundException srnfe) {
 			// ok
@@ -119,7 +122,7 @@ public class CollectionServiceTest extends AbstractServiceTest {
 		try {
 			// try PUT on users with group name
 			testRequest(sm, ServiceAction.PUT, 0, properties, "users",
-					"test-group");
+                    CST_TEST_GROUP);
 			Assert.fail();
 		} catch (RequiredPropertyNotFoundException srnfe) {
 			// ok
@@ -137,7 +140,7 @@ public class CollectionServiceTest extends AbstractServiceTest {
 		try {
 			// try DELETE on users with group name
 			testRequest(sm, ServiceAction.DELETE, 0, null, "users",
-					"test-group");
+                    CST_TEST_GROUP);
 			Assert.fail();
 		} catch (ServiceResourceNotFoundException srnfe) {
 			// ok
@@ -148,7 +151,7 @@ public class CollectionServiceTest extends AbstractServiceTest {
 	@Test
 	public void testGenericEntityCollectionWithIdName() throws Exception {
 
-		UUID applicationId = createApplication("testOrganization",
+		UUID applicationId = createApplication(TEST_ORGANIZATION,
 				"testCatsDogs");
 
 		ServiceManager sm = smf.getServiceManager(applicationId);

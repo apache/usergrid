@@ -26,10 +26,13 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.usergrid.cassandra.CassandraRunner;
 
+@RunWith(CassandraRunner.class)
 public class ServiceRequestTest {
 
 	private static final Logger logger = LoggerFactory
@@ -40,10 +43,8 @@ public class ServiceRequestTest {
 
 		UUID applicationId = DEFAULT_APPLICATION_ID;
 
-		ServiceManagerFactory smf = new ServiceManagerFactory(null);
-		ClassPathXmlApplicationContext ac = new ClassPathXmlApplicationContext();
-		ac.refresh();
-		smf.setApplicationContext(ac);
+		ServiceManagerFactory smf = CassandraRunner.getBean(ServiceManagerFactory.class);
+
 		ServiceManager services = smf.getServiceManager(applicationId);
 
 		ServiceRequest path = null;

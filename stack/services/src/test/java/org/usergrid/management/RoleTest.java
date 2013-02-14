@@ -26,8 +26,10 @@ import org.apache.shiro.subject.Subject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
@@ -36,6 +38,7 @@ import org.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.services.ServiceManagerFactory;
 
+@RunWith(CassandraRunner.class)
 public class RoleTest {
 
 	private static final Logger logger = LoggerFactory
@@ -43,29 +46,16 @@ public class RoleTest {
 
 	static ManagementService management;
 
-	static ManagementTestHelper helper;
-
 	static EntityManagerFactoryImpl emf;
 	static ServiceManagerFactory smf;
 
 	@BeforeClass
 	public static void setup() throws Exception {
-		logger.info("setup");
-		assertNull(helper);
-		helper = new ManagementTestHelperImpl();
-		// helper.setClient(this);
-		helper.setup();
-		management = helper.getManagementService();
-		emf = (EntityManagerFactoryImpl) helper.getEntityManagerFactory();
-		smf = new ServiceManagerFactory(emf);
-		smf.setApplicationContext(helper.getApplicationContext());
+		management = CassandraRunner.getBean(ManagementService.class);
+		emf = CassandraRunner.getBean(EntityManagerFactoryImpl.class);
+		smf = CassandraRunner.getBean(ServiceManagerFactory.class);
 	}
 
-	@AfterClass
-	public static void teardown() throws Exception {
-		logger.info("teardown");
-		helper.teardown();
-	}
 
 	@Test
 	public void testRoleInactivity() throws Exception {

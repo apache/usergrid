@@ -81,8 +81,8 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
      * assertNull(this.client); this.client = client; }
      */
 
-    EmbeddedServerHelper embedded = null;
-    ApplicationContext ac = null;
+
+
 
     @Override
     public void setup() throws Exception {
@@ -91,79 +91,28 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
         String maven_opts = System.getenv("MAVEN_OPTS");
         logger.info("Maven options: " + maven_opts);
 
-        logger.info("Starting Cassandra");
-        embedded = new EmbeddedServerHelper();
-        embedded.setup();
-
-        // copy("/testApplicationContext.xml", TMP);
-
-        String[] locations = { "usergrid-test-context.xml" };
-        ac = new ClassPathXmlApplicationContext(locations);
-
-        AutowireCapableBeanFactory acbf = ac.getAutowireCapableBeanFactory();
-        acbf.autowireBeanProperties(this,
-                AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, false);
-        acbf.initializeBean(this, "testClient");
-
-        assertNotNull(emf);
-        assertTrue(
-                "EntityManagerFactory is instance of EntityManagerFactoryImpl",
-                emf instanceof EntityManagerFactoryImpl);
-
-        emf.setup();
-
-        management.setup();
 
     }
 
     @Override
     public void teardown() {
-        logger.info("Stopping Cassandra");
-        EmbeddedServerHelper.teardown();
 
-        forceQuit();
     }
 
-    public void forceQuit() {
-        if (forceQuit) {
-            logger.warn("\n\n\n******\n\nSystem.exit(0) to workaround Cassandra not stopping!\n\n******\n\n\n");
-            System.exit(0);
-        }
-    }
 
     @Override
     public EntityManagerFactory getEntityManagerFactory() {
         return emf;
     }
 
-    @Override
-    @Autowired
-    public void setEntityManagerFactory(EntityManagerFactory emf) {
-        this.emf = emf;
-        logger.info("ManagementTestHelperImpl.setEntityManagerFactory");
-    }
 
-    @Override
-    public javax.persistence.EntityManagerFactory getJpaEntityManagerFactory() {
-        return jpaEmf;
-    }
-
-    @Override
-    public void setJpaEntityManagerFactory(
-            javax.persistence.EntityManagerFactory jpaEmf) {
-        this.jpaEmf = jpaEmf;
-    }
 
     @Override
     public ManagementService getManagementService() {
         return management;
     }
 
-    @Override
-    @Autowired
-    public void setManagementService(ManagementService management) {
-        this.management = management;
-    }
+
 
     @Override
     public Properties getProperties() {
@@ -181,23 +130,6 @@ public class ManagementTestHelperImpl implements ManagementTestHelper {
         return tokens;
     }
 
-    @Override
-    @Autowired
-    public void setTokenService(TokenService tokens) {
-        this.tokens = tokens;
-    }
 
-    public boolean isForceQuit() {
-        return forceQuit;
-    }
-
-    public void setForceQuit(boolean forceQuit) {
-        this.forceQuit = forceQuit;
-    }
-
-    @Override
-    public ApplicationContext getApplicationContext() {
-        return ac;
-    }
 
 }

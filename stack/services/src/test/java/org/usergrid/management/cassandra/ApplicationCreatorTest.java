@@ -8,11 +8,13 @@ import java.util.Set;
 
 import javax.annotation.Resource;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.ApplicationCreator;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
@@ -22,25 +24,20 @@ import org.usergrid.persistence.EntityManagerFactory;
 /**
  * @author zznate
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = "/usergrid-test-context.xml")
+@RunWith(CassandraRunner.class)
 public class ApplicationCreatorTest {
 
-    private static ManagementTestHelperImpl helper;
-
-    @Resource
     private ApplicationCreator applicationCreator;
-    @Resource
+
     private EntityManagerFactory emf;
 
-    private static ManagementService managementService;
+    private ManagementService managementService;
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        helper = new ManagementTestHelperImpl();
-        helper.setup();
-        managementService = (ManagementService) helper
-                .getManagementService();
+    @Before
+    public void setup() throws Exception {
+        managementService = CassandraRunner.getBean(ManagementService.class);
+        applicationCreator = CassandraRunner.getBean(ApplicationCreator.class);
+        emf = CassandraRunner.getBean(EntityManagerFactory.class);
     }
 
     @Test
