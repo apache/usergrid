@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource.mgmt;
 
+import java.util.UUID;
+
 import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.test.resource.CollectionResource;
 import org.usergrid.rest.test.resource.NamedResource;
@@ -39,12 +41,20 @@ public class OrganizationsCollection extends CollectionResource {
     return new Organization(name, this);
   }
   
-  public void create(String name, TestUser owner){
+  /**
+   * Create the org and return it's UUID
+   * @param name
+   * @param owner
+   * @return
+   */
+  public UUID create(String name, TestUser owner){
     
-    JsonNode node =  post(MapUtils.hashMap("organization", name).map("username", owner.getUser()).map("email", owner.getEmail()).map("name", owner.getUser()).map("password", owner.getPassword()));
+    JsonNode node =  postInternal(MapUtils.hashMap("organization", name).map("username", owner.getUser()).map("email", owner.getEmail()).map("name", owner.getUser()).map("password", owner.getPassword()));
     
+    return UUID.fromString(node.get("data").get("organization").get("uuid").asText());
     
     
   }
 
+  
 }

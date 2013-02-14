@@ -13,26 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.rest.test.resource.mgmt;
+package org.usergrid.rest.test.resource;
+
+import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
-import org.usergrid.rest.test.resource.NamedResource;
-import org.usergrid.rest.test.resource.RootResource;
-import org.usergrid.rest.test.resource.user.UsersCollection;
+
+import com.sun.jersey.api.client.WebResource;
 
 /**
  * @author tnine
  * 
  */
-public class Management extends NamedResource {
+public abstract class ValueResource extends NamedResource {
 
-  /**
-   * @param parent
-   */
-  public Management(RootResource root) {
-    super(root);
+  private String name;
+
+  public ValueResource(String name, NamedResource parent) {
+    super(parent);
+    this.name = name;
   }
 
   /*
@@ -44,36 +45,50 @@ public class Management extends NamedResource {
   @Override
   public void addToUrl(StringBuilder buffer) {
     parent.addToUrl(buffer);
+
     buffer.append(SLASH);
-    buffer.append("management");
+
+    buffer.append(name);
   }
 
-  public UsersCollection users() {
-    return new UsersCollection(this);
-  }
-  
-  public OrganizationsCollection orgs(){
-    return new OrganizationsCollection(this);
-  }
-  
   /**
-   * Get the token from management for this username and password
-   * @param username
-   * @param password
+   * post to the entity set
+   * 
+   * @param entity
    * @return
    */
-  public String token(String username, String password){
-
-      JsonNode node = resource().path(String.format("%s/token", url())).queryParam("grant_type","password").queryParam("username",username).queryParam("password",password)
-          .accept(MediaType.APPLICATION_JSON)
-          .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-    
-    
-      return node.get("access_token").asText();
+  protected JsonNode postInternal(Map<String, ?> entity) {
+   
+    return jsonMedia(withToken(resource()))
+        .post(JsonNode.class, entity);
   }
-  
 
-//  public 
+  /**
+   * Get a list of entities
+   * 
+   * @return
+   */
+  protected JsonNode getInternal() {
+    return jsonMedia(withToken(resource())).get(JsonNode.class);
+  }
 
+  /**
+   * Get entities in this collection. Cursor is optional
+   * 
+   * @param query
+   * @param cursor
+   * @return
+   */
+  protected JsonNode getInternal(String query, String cursor) {
+
+    
+    WebResource resource = withToken(resource()).queryParam("ql", query);
+
+    if (cursor != null) {
+      resource = resource.queryParam("cursor", cursor);
+    }
+
+    return jsonMedia(resource).get(JsonNode.class);
+  }
 
 }

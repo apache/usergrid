@@ -13,46 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.rest.test.resource.mgmt;
+package org.usergrid.rest.exceptions;
 
-import java.util.UUID;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
-import org.usergrid.rest.test.resource.EntityResource;
-import org.usergrid.rest.test.resource.NamedResource;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.Provider;
 
+import org.usergrid.persistence.exceptions.EntityNotFoundException;
 
-/**
- * A resource for testing queues
- * 
- * @author tnine
- *
- */
-public class Organization extends EntityResource {
+@Provider
+public class EntityNotFoundExceptionMapper extends
+		AbstractExceptionMapper<EntityNotFoundException> {
 
-  /**
-   * @param entityId
-   * @param parent
-   */
-  public Organization(UUID entityId, NamedResource parent) {
-    super(entityId, parent);
-  }
+	@Override
+	public Response toResponse(EntityNotFoundException e) {
+		return toResponse(NOT_FOUND, e);
+	}
 
-  /**
-   * @param entityName
-   * @param parent
-   */
-  public Organization(String entityName, NamedResource parent) {
-    super(entityName, parent);
-  }
-  
-  
-
-  public ApplicationsCollection apps(){
-    return new ApplicationsCollection(this);
-  }
- 
-
-  
-  
-  
 }

@@ -15,15 +15,6 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.core.MediaType;
-
-import org.codehaus.jackson.JsonNode;
-
-import com.sun.jersey.api.client.WebResource;
 
 /**
  * @author tnine

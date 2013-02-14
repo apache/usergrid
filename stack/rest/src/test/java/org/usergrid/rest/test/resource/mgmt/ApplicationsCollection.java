@@ -17,42 +17,43 @@ package org.usergrid.rest.test.resource.mgmt;
 
 import java.util.UUID;
 
-import org.usergrid.rest.test.resource.EntityResource;
+import org.codehaus.jackson.JsonNode;
+import org.usergrid.rest.test.resource.CollectionResource;
 import org.usergrid.rest.test.resource.NamedResource;
-
+import org.usergrid.utils.MapUtils;
 
 /**
- * A resource for testing queues
- * 
  * @author tnine
  *
  */
-public class Organization extends EntityResource {
+public class ApplicationsCollection extends CollectionResource {
 
   /**
-   * @param entityId
+   * @param collectionName
    * @param parent
    */
-  public Organization(UUID entityId, NamedResource parent) {
-    super(entityId, parent);
+  public ApplicationsCollection(NamedResource parent) {
+    super("apps", parent);
   }
-
+  
+  public Application application(String name){
+    return new Application(name, this);
+  }
+  
   /**
-   * @param entityName
-   * @param parent
+   * Create the org and return it's UUID
+   * @param name
+   * @param owner
+   * @return
    */
-  public Organization(String entityName, NamedResource parent) {
-    super(entityName, parent);
+  public UUID create(String name){
+    
+    JsonNode node =  postInternal(MapUtils.hashMap("name", name));
+    
+    return getEntityId(node, 0);
+    
+    
   }
-  
-  
 
-  public ApplicationsCollection apps(){
-    return new ApplicationsCollection(this);
-  }
- 
-
-  
-  
   
 }

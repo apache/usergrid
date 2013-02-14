@@ -15,42 +15,18 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource;
 
-import java.util.Map;
 import java.util.UUID;
-
-import javax.ws.rs.core.MediaType;
-
-import org.codehaus.jackson.JsonNode;
-
-import com.sun.jersey.api.client.WebResource;
 
 /**
  * @author tnine
  *
  */
-public abstract class SetResource extends NamedResource {
-
-  private String name;
+public abstract class SetResource extends ValueResource {
 
   public SetResource(String name, NamedResource parent) {
-    super(parent);
-    this.name = name;
+    super(name, parent);
   }
 
-
-
-  /* (non-Javadoc)
-   * @see org.usergrid.rest.resource.NamedResource#addToUrl(java.lang.StringBuilder)
-   */
-  @Override
-  public void addToUrl(StringBuilder buffer) {
-    parent.addToUrl(buffer);
-    
-    buffer.append(SLASH);
-    
-    buffer.append(name);
-  }
-  
 
   
   
@@ -73,45 +49,6 @@ public abstract class SetResource extends NamedResource {
   }
 
 
-  /**
-   * post to the entity set
-   * @param entity
-   * @return
-   */
-  public JsonNode post(Map<String, ?> entity){
-    return resource().path(url()).queryParam("access_token",token())
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, entity);
-  }
-  
-  /**
-   * Get a list of entities
-   * @return
-   */
-  public JsonNode get(){
-    return resource().path(url()).queryParam("access_token",token())
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-  }
-  
-  /**
-   * Get entities in this collection.  Cursor is optional
-   * @param query
-   * @param cursor
-   * @return
-   */
-  public JsonNode get(String query, String cursor){
-    
-     WebResource resource =  resource().path(url()).queryParam("access_token",token()).queryParam("ql",query);
-     
-     if(cursor != null){
-       resource = resource.queryParam("cursor", cursor);
-     }
-        
-     return resource.accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
-  }
-  
 
 
 }

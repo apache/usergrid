@@ -18,8 +18,6 @@ package org.usergrid.rest.test.resource;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.ws.rs.core.MediaType;
-
 import org.codehaus.jackson.JsonNode;
 
 /**
@@ -78,9 +76,7 @@ public class EntityResource extends NamedResource {
    * @return
    */
   protected JsonNode post(Map<String, Object> entity){
-    return resource().path(url()).queryParam("access_token",token())
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, entity);
+    return jsonMedia(withToken(resource())).post(JsonNode.class, entity);
   }
   
   /**
@@ -89,9 +85,7 @@ public class EntityResource extends NamedResource {
    * @return
    */
   protected JsonNode put(Map<String, Object> entity){
-    return resource().path(url()).queryParam("access_token",token())
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE).put(JsonNode.class, entity);
+    return jsonMedia(withToken(resource())).put(JsonNode.class, entity);
   }
   
   
@@ -100,13 +94,18 @@ public class EntityResource extends NamedResource {
    * @param entity
    * @return
    */
-  protected JsonNode delete(Map<String, Object> entity){
-    return resource().path(url()).queryParam("access_token",token())
-        .accept(MediaType.APPLICATION_JSON)
-        .type(MediaType.APPLICATION_JSON_TYPE).delete(JsonNode.class);
+  protected JsonNode delete(){
+    return jsonMedia(withToken(resource())).delete(JsonNode.class);
+  }
+  
+  /**
+   * Get the resource
+   * @return
+   */
+  protected JsonNode get(){
+    return jsonMedia(withToken(resource())).get(JsonNode.class);
   }
  
-  
   
   
 }

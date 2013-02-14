@@ -41,7 +41,7 @@ public class RootResource extends NamedResource {
    */
   @Override
   protected WebResource resource() {
-    return this.resource;
+   return this.resource;
   }
 
   /* (non-Javadoc)

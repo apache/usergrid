@@ -15,16 +15,14 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource.user;
 
-import java.util.UUID;
-
-import org.usergrid.rest.test.resource.CollectionResource;
 import org.usergrid.rest.test.resource.NamedResource;
+import org.usergrid.rest.test.resource.ValueResource;
 
 /**
  * @author tnine
  * 
  */
-public class QueuesCollection extends CollectionResource {
+public class QueuesCollection extends ValueResource {
 
  
   public QueuesCollection(NamedResource parent) {
