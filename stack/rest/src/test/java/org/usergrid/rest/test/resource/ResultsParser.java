@@ -13,44 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.exception;
+package org.usergrid.rest.test.resource;
 
-public class NotImplementedException extends RuntimeException {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-
-  /**
-   * 
-   */
-  public NotImplementedException() {
-    super();
-  }
-
-  /**
-   * @param message
-   * @param cause
-   */
-  public NotImplementedException(String message, Throwable cause) {
-    super(message, cause);
-  }
-
-  /**
-   * @param message
-   */
-  public NotImplementedException(String message) {
-    super(message);
-  }
-
-  /**
-   * @param cause
-   */
-  public NotImplementedException(Throwable cause) {
-    super(cause);
-  }
-
-	
+/**
+ * @author tnine
+ *
+ */
+public interface ResultsParser {
 
 }

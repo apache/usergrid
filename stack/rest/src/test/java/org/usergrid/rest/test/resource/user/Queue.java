@@ -43,12 +43,25 @@ public class Queue extends CollectionResource {
     super(queueName, parent);
   }
 
+  /**
+   * Set the client id with the string
+   * @param clientId
+   * @return
+   */
   public Queue withClientId(String clientId) {
     this.clientId = clientId;
     return this;
   }
 
-  public Object post(Map<String, ?> payload) {
+  /**
+   * 
+   * @return
+   */
+  public SubscribersCollection subscribers(){
+    return new SubscribersCollection(this);
+  }
+  
+  public JsonNode post(Map<String, ?> payload) {
     JsonNode node = super.postInternal(payload);
     return node;
   }
@@ -63,6 +76,18 @@ public class Queue extends CollectionResource {
   public JsonNode get() {
     return jsonMedia(withClientId(withToken(resource()))).get(JsonNode.class);
   }
+  
+
+  
+  /**
+   * post to the entity set
+   * @param entity
+   * @return
+   */
+  public JsonNode delete(){
+    return jsonMedia(withToken(resource())).delete(JsonNode.class);
+  }
+  
 
   /**
    * Set the queue client ID if set
