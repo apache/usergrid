@@ -94,7 +94,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     private void loadDataControl(DataControl dataControl) {
         if ( !contextHolder.applicationContext.isActive() ) {
             logger.info("restarting context...");
-            contextHolder.applicationContext.start();
+            contextHolder.applicationContext.refresh();
         }
 
         if ( dataControl != null ) {
