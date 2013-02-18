@@ -35,7 +35,10 @@
 
 	<bean id="taskExecutor" class="org.springframework.core.task.SyncTaskExecutor"/>
 
-	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl" />
+	<bean id="tokenService" class="org.usergrid.security.tokens.cassandra.TokenServiceImpl">
+        <property name="cassandraService" ref="cassandraService"/>
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+            </bean>
 
 	<bean id="managementService" class="org.usergrid.management.cassandra.ManagementServiceImpl" >
 		<property name="saltProvider" ref="saltProvider"/>

@@ -64,18 +64,6 @@ public abstract class AbstractServiceTest {
 	}
 
 
-
-
-
-	public ServiceManagerFactory getServiceManagerFactory() {
-		return smf;
-	}
-
-
-	public EntityManagerFactory getEntityManagerFactory() {
-		return emf;
-	}
-
 	UUID dId = null;
 
 	public UUID createApplication(String organizationName,

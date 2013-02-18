@@ -51,8 +51,10 @@ public class CollectionServiceTest extends AbstractServiceTest {
 
 		ServiceManager sm = smf.getServiceManager(applicationId);
 
+
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
-		properties.put("path", "cst-test-group/cst-test-group");
+
+        properties.put("path", "cst-test-group/cst-test-group");
 		properties.put("title", "Collection Test group");
 
 		Entity group = testRequest(sm, ServiceAction.POST, 1, properties,

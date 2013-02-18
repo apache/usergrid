@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.io.File;
@@ -56,8 +57,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     @Override
     public void run(RunNotifier notifier) {
         maybeInit();
-        AutowireCapableBeanFactory acbf = contextHolder.applicationContext.getAutowireCapableBeanFactory();
-        acbf.autowire(getTestClass().getJavaClass(),AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, true);
+
         // check for SchemaManager annotation
         DataControl control = null;
         for(Annotation ann : getTestClass().getAnnotations() ) {
@@ -73,6 +73,8 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         if ( control == null || !control.skipTruncate() ) {
             schemaManager.destroy();
         }
+        logger.info("shutting down context");
+        contextHolder.applicationContext.stop();
     }
 
     /**
@@ -90,6 +92,11 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     }
 
     private void loadDataControl(DataControl dataControl) {
+        if ( !contextHolder.applicationContext.isActive() ) {
+            logger.info("restarting context...");
+            contextHolder.applicationContext.start();
+        }
+
         if ( dataControl != null ) {
             // TODO check for classpath and go static?
             logger.info("dataControl found - looking upma SchemaManager impl");
@@ -98,6 +105,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
             logger.info("dataControl not found - using default SchemaManager impl");
             schemaManager = getBean(SchemaManager.class);
         }
+
 
     }
 
@@ -162,7 +170,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     }
 
     static class ContextHolder implements Runnable {
-        static ApplicationContext applicationContext;
+        static ConfigurableApplicationContext applicationContext;
         static CassandraDaemon cassandraDaemon;
 
         @Override
@@ -171,6 +179,10 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
             cassandraDaemon.activate();
             String[] locations = {"usergrid-test-context.xml"};
             applicationContext = new ClassPathXmlApplicationContext(locations);
+
+
+
+                    //acbf.autowire(getTestClass().getJavaClass(),AutowireCapableBeanFactory.AUTOWIRE_BY_NAME, true);
         }
     }
 }
