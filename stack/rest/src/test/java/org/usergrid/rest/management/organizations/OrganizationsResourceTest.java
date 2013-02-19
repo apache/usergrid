@@ -17,7 +17,6 @@ import javax.annotation.Resource;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -38,8 +37,6 @@ import com.sun.jersey.api.representation.Form;
  * @author zznate
  */
 //@Ignore
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = "/usergrid-rest-context-test.xml")
 public class OrganizationsResourceTest extends AbstractRestTest {
 
     @Resource
