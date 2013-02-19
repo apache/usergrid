@@ -79,11 +79,11 @@ $(document).ready(function () {
     Pages.AddPanel('organization', '.go-home', null,null, null, Usergrid.console.pageSelectHome,null);
     Pages.AddPanel('console', null, null, null, null, null, null);
     Pages.AddPanel('dashboard', null, null, null, null, Usergrid.console.pageSelectApplication,null);
-    Pages.AddPanel('user', "users-link", "users-sublink", null, null, null, function() {});
-    Pages.AddPanel('users', null, null, null, Usergrid.console.pageSelectUsers, null);
-    Pages.AddPanel('group', "users-link", "groups-sublink", null, null, null, function() {});
-    Pages.AddPanel('groups', null, null, null, null, Usergrid.console.pageSelectGroups, null);
-    Pages.AddPanel('roles', "users-link", "roles-sublink", null, null, Usergrid.console.pageSelectRoles, null);
+    Pages.AddPanel('user', "#users-link", "#users-sublink", null, null, null, function() {});
+    Pages.AddPanel('users', "#users-link", "#users-sublink", null, null, Usergrid.console.pageSelectUsers, null);
+    Pages.AddPanel('group', "#users-link", "#groups-sublink", null, null, null, function() {});
+    Pages.AddPanel('groups', "#users-link", null, null, null, Usergrid.console.pageSelectGroups, null);
+    Pages.AddPanel('roles',  "#users-link", null, null, null, Usergrid.console.pageSelectRoles, null);
     Pages.AddPanel('activities', null, null, null, null, Usergrid.console.pageSelectActivities, null);
     Pages.AddPanel('collections', null, null, null, null, Usergrid.console.pageSelectCollections, null);
     Pages.AddPanel('analytics', null, null, null, null, Usergrid.console.pageSelectAnalytics, null);

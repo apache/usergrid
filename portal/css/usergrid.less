@@ -34,11 +34,16 @@ html{
   border-right: 1px solid @border;
 }
 
+.title {
+  font-size: 17px;
+}
+
 .thingy {
   margin-bottom: 0px !important;
-  padding: 10px 10px 10px 5px!important;
+  padding: 10px 10px 10px 0!important;
   //background-color: #e0e0e0 !important;
   border-radius: 0px;
+  min-width: 440px;
 
   .gravatar50 {
     position: relative;
@@ -47,11 +52,7 @@ html{
     right: 15px;
   }
 
-  .title {
-    float: left;
-    font-size: 17px;
-    cursor: pointer;
-  }
+
 
   .app_title {
     padding-right: 20px;
@@ -294,6 +295,61 @@ a:active {
   }
 }
 
+#header {
+  margin:0; padding:0;
+}
+
+#main1 {
+  margin:84px 0 0 0;
+  padding:0;
+  min-width:900px;
+}
+#main2 {
+  margin:0; padding:0;
+}
+#left {
+  float:left;
+  width:177px;
+  margin:0; padding:0;
+}
+#left2 {
+  float:left;
+  width:171px;
+  margin:0 0 0 -7px;
+  padding:10px;
+  min-height: 1050px;
+  border-right: 1px solid #cacaca;
+  hr{
+    width: 180px;
+  }
+}
+#right {
+  float:right;
+  width:180px;
+  margin:0; padding:0;
+}
+#middle {
+  margin:0 180px;
+  min-width:500px;
+}
+.column-in {
+  margin:0; padding: 0px;
+}
+.cleaner {
+  clear:both;
+  height:1px;
+  font-size:1px;
+  border:none;
+  margin:0; padding:0;
+  background:transparent;
+}
+
+
+#footer{
+  border-top: 1px solid #cacaca;
+  height: 50px;
+}
+
 //----------------- Navigation --------------------------------------------------------------------
 #sidebar-menu{
   //position: absolute;
@@ -350,7 +406,7 @@ a:active {
 #application-panel-buttons{
   position:fixed;
   z-index: 10;
-  width: 181px;
+  width: 180px;
   .active > a{
     i{
       .icon-white;
@@ -772,6 +828,33 @@ a:active {
   padding: 10px !important;
 }
 
+#user-panel-tab-bar , #group-panel-tab-bar, #role-panel-tab-bar{
+  .tab-button{
+    background-color: #ffffff !important;
+    opacity: 1 !important;
+    color: #1b97d1;
+    cursor: pointer !important;
+    &:hover{
+      background-color:  @linkHoverBgColor !important;
+      color: #ffffff;
+     }
+    &:active{
+      background-color: #1b97d1 !important;
+      color: #ffffff;
+    }
+    &.active{
+      background-color: #1b97d1 !important;
+      color: #ffffff;
+    }
+  }
+  .btn{
+      text-shadow: none;
+      border: 1px solid #ffffff;
+      background-image: none;
+      box-shadow: none;
+    }
+}
+
 .query-button{
   background-color: #cacaca !important;
   opacity: 1 !important;
@@ -922,7 +1005,6 @@ a:active {
 }
 
 .user-roles-title {
-  clear: both;
   font-size: 18px;
   font-weight: bold;
   border-bottom: 1px solid #AED0EA;
@@ -1097,6 +1179,9 @@ a:active {
 
 }
 
+.panel-content{
+  margin-top: 20px;
+}
 
 #api-activity {
   font-size: 14px;
@@ -1321,6 +1406,7 @@ a:active {
 .gravatar50-td {
   padding: 0px !important;
   width: 50px;
+  border-right: 1px solid @border2;
 }
 
 .gravatar50 {
@@ -1329,9 +1415,9 @@ a:active {
 }
 
 td.checkboxo {
-  background-color: #666 !important;
-  width: 19px;
-  padding: 9px 0 0 3px !important;
+  width: 15px;
+  padding: 15px !important;
+  border-right: 1px solid @border2;
 }
 
 table#organization-admins-table {
@@ -1353,6 +1439,15 @@ table#organization-admins-table {
 
   td.user-details {
     line-height: 25px !important;
+    border-right: 1px solid @border2;
+  }
+
+  td.view-details {
+    line-height: 25px !important;
+    width: 75px;
+  }
+  a.view-details {
+    color: @apigeeBlue;
   }
 }
 
@@ -1513,6 +1608,7 @@ table .zebraRows {
   }
 }
 /* ---------------- Curl Container ------------ */
+
 .curl-container{
   .curl-info, .curl-token{
     padding-left: 5px;
@@ -1610,6 +1706,12 @@ table .zebraRows {
 .dropdown-menu {
   max-width: 700px;
 }
+.bold-header{
+  font-weight: 600;
+  color: #000000;
+}
+
+
 
 
 

@@ -192,6 +192,11 @@
     tab.addClass('active');
   }
 
+  function selectPillButton(link) {
+    var tab = $(link);
+    tab.parent().find("a.active").removeClass('active');
+    tab.addClass('active');
+  }
   function selectFirstTabButton(bar){
     selectTabButton($(bar).find("li:first-child a"));
   }
@@ -1917,11 +1922,11 @@
     if (response.entities.length < 1) {
       output.replaceWith('<div id="users-table" class="user-panel-section-message">No users found.</div>');
     } else {
-      output.replaceWith('<table id="users-table" class="table"><tbody></tbody></table>');
+      output.replaceWith('<table id="users-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllUsers();" /></td><td class="gravatar50-td">&nbsp;</td><td class="user-details bold-header">username</td><td class="user-details bold-header">Display Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
         var this_data = response.entities[i];
         if (!this_data.picture) {
-          this_data.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user_profile.png"
+          this_data.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user-photo.png"
         } else {
           this_data.picture = get_replacementGravatar(this_data.picture);
         }
@@ -1953,10 +1958,18 @@
   }
   Usergrid.console.searchUsers = searchUsers;
 
+  var selectUsers = true;
   function selectAllUsers(){
-    $('[class=userListItem]').attr('checked', true);
-    $('#deselectAllUsers').show();
-    $('#selectAllUsers').hide();
+    if (selectUsers) {
+      $('[class=userListItem]').attr('checked', true);
+      $('#deselectAllUsers').show();
+      $('#selectAllUsers').hide();
+    } else {
+      $('[class=userListItem]').attr('checked', false);
+      $('#selectAllUsers').show();
+      $('#deselectAllUsers').hide();
+    }
+    selectUsers = (selectUsers)?false:true;
   }
   window.Usergrid.console.selectAllUsers = selectAllUsers;
 
@@ -4310,7 +4323,8 @@
   });
 
   $('#user-panel-tab-bar a').click(function() {
-    selectTabButton(this);
+    //selectTabButton(this);
+    selectPillButton(this);
     if ($(this).attr("id") == "button-user-list") {
       userLetter = '*';
       Pages.SelectPanel('users');
@@ -4327,7 +4341,8 @@
   });
 
   $('#group-panel-tab-bar a').click(function() {
-    selectTabButton(this);
+    //selectTabButton(this);
+    selectPillButton(this);
     if ($(this).attr('id') == "button-group-list") {
       groupLetter = '*';
       Pages.SelectPanel('groups');
@@ -4344,7 +4359,8 @@
       showPanelList('roles');
     }
     else if ($(this).attr('id') == "button-roles-search") {
-      selectTabButton('#button-roles-search');
+      //selectTabButton('#button-roles-search');
+      selectPillButton('#button-roles-search');
       $('#roles-panel-list').hide();
       $('#role-panel-users').hide();
       $('#roles-panel-search').show();
@@ -4359,19 +4375,22 @@
       Pages.SelectPanel('roles');
       showPanelList('roles');
     } else if ($(this).attr('id') == "button-role-settings") {
-      selectTabButton('#button-role-settings');
+      //selectTabButton('#button-role-settings');
+      selectPillButton('#button-role-settings');
       $('#roles-panel-list').hide();
       $('#role-panel-users').hide();
       $('#role-panel-groups').hide();
       $('#role-panel-settings').show();
     } else if ($(this).attr('id') == "button-role-users") {
-      selectTabButton('#button-role-users');
+      //selectTabButton('#button-role-users');
+      selectPillButton('#button-role-users');
       $('#roles-panel-list').hide();
       $('#role-panel-settings').hide();
       $('#role-panel-groups').hide();
       $('#role-panel-users').show();
     } else if ($(this).attr('id') == "button-role-groups") {
-      selectTabButton('#button-role-groups');
+      //selectTabButton('#button-role-groups');
+      selectPillButton('#button-role-groups');
       $('#roles-panel-list').hide();
       $('#role-panel-settings').hide();
       $('#role-panel-users').hide();

@@ -43,57 +43,7 @@
 
 <style type="text/css">
 
-  #header {
-    margin:0; padding:0;
-    }
 
-  #main1 {
-    margin:84px 0 0 0;
-    padding:0;
-    min-width:900px;
-    }
-  #main2 {
-    margin:0; padding:0;
-    }
-  #left {
-    float:left;
-    width:177px;
-    margin:0; padding:0;
-    }
-  #left2 {
-    float:left;
-    width:180px;
-    margin:0;
-    padding:10px;
-    min-height: 1050px;
-    border-right: 1px solid #cacaca;
-    }
-  #right {
-    float:right;
-    width:180px;
-    margin:0; padding:0;
-    }
-  #middle {
-    margin:0 180px;
-    min-width:500px;
-    }
-  .column-in {
-    margin:0; padding: 0px;
-    }
-  .cleaner {
-    clear:both;
-    height:1px;
-    font-size:1px;
-    border:none;
-    margin:0; padding:0;
-    background:transparent;
-    }
-
-
-  #footer{
-    border-top: 1px solid #cacaca;
-    height: 50px;
-  }
 </style>
 
 </head>
@@ -346,12 +296,11 @@
 
               <h4 class="panel-title">End-Users</h4>
               <p class="panel-desc">Data related to your application end-users.</p>
-              <hr style="margin: 0;">
+              <hr style="margin: 0 0 0 1px;">
 
               <ul id="application-panel-buttons2" class="nav nav-list" style="margin-bottom: 5px;">
                 <li><a href="#users" id="users-sublink"><span class="nav-menu-text">/users</span></a></li>
                 <li><a href="#groups" id="groups-sublink"><span class="nav-menu-text">/groups</span></a></li>
-                <!--<li><a href="#roles" id="application-panel-button-roles"> <span class="nav-menu-text">/roles</span></a></li>-->
                 <li><a href="#roles" id="roles-sublink"> <span class="nav-menu-text">/roles</span></a></li>
               </ul>
             </div>
@@ -672,23 +621,26 @@
               <div id="users-panel" style="display: none; margin-left: 190px">
 
 
-                  <ul id="users-panel-tab-bar" class="nav nav-tabs">
-                    <li class="active"><a id="button-users-list" >List</a></li>
-                  </ul>
+
+
                   <div id="users-panel-list" class="panel-content">
                     <div id="users-messages" class="alert" style="display: none;"></div>
+
                     <div class="console-section">
-                      <div class="well thingy"><span class="title"> Users: <span class="app_title"></span></span>
+                       <span class="title"> Collection: /users </span>
+                      <div class="well thingy">
                         <div class="bar">
                           <input onkeyup="Usergrid.console.searchUsers();" type="text" name="search-user-username" id="search-user-username" class="input-small search" placeholder="Search"/>
                           <select id="search-user-type" onChange="Usergrid.console.searchUsers();" class="input-medium search">
                             <option value="username">Username</option>
                             <option value="name">Full Name</option>
                           </select>
-                          <a id="selectAllUsers" class=""  onclick="Usergrid.console.selectAllUsers();"> Select All </a>
-                          <a id="deselectAllUsers" style="display: none;" class=""  onclick="Usergrid.console.deselectAllUsers();"> Deselect All </a>
-                          <a class="" data-toggle="modal" href="#dialog-form-new-user"> Add</a>
-                          <a id="delete-users-link" > Delete</a>
+
+                          <a class="btn " data-toggle="modal" id="delete-users-link" > Delete Enity</a>
+                          <a class="btn " data-toggle="modal" href="#dialog-form-new-user"> Add Entity</a>
+
+
+
                         </div>
                       </div>
                       <table id="users-table" class="table">
@@ -758,14 +710,22 @@
 
 
               <div id="user-panel" style="display: none; margin-left: 190px">
-                <ul id="user-panel-tab-bar" class="nav nav-tabs">
+                <!--ul id="user-panel-tab-bar" class="nav nav-tabs">
                   <li><a id="button-user-list" >List</a></li>
                   <li><a id="button-user-profile" >Profile</a></li>
                   <li><a id="button-user-memberships" >Groups</a></li>
                   <li><a id="button-user-activities" >Activities</a></li>
                   <li><a id="button-user-graph" >Graph</a></li>
                   <li><a id="button-user-permissions" >Roles & Permissions</a></li>
-                </ul>
+                </ul -->
+                <div id="user-panel-tab-bar">
+                  <a class="tab-button btn" id="button-user-list" >List</a>
+                  <a class="tab-button btn active" id="button-user-profile" >Profile</a>
+                  <a class="tab-button btn" id="button-user-memberships" >Groups</a>
+                  <a class="tab-button btn" id="button-user-activities" >Activities</a>
+                  <a class="tab-button btn" id="button-user-graph" >Graph</a>
+                  <a class="tab-button btn" id="button-user-permissions" >Roles & Permissions</a>
+                </div>
                 <div id="user-panel-profile" class="panel-content"></div>
                 <div id="user-panel-memberships" class="panel-content" style="display: none;"></div>
                 <div id="user-panel-activities" class="panel-content" style="display: none;"></div>
@@ -846,11 +806,6 @@
 
 
               <div id="groups-panel" style="display: none; margin-left: 190px">
-                <div id="groups-panel-tab-bar" class="">
-                  <ul class="nav nav-tabs">
-                    <li class="active"><a id="button-groups-list" >List</a></li>
-                  </ul>
-                </div>
                 <div id="groups-panel-list" class="panel-content">
                   <div id="groups-messages" class="alert" style="display: none;"></div>
                   <div class="console-section">
@@ -909,13 +864,21 @@
                 </form>
               </div>
               <div id="group-panel" style="display: none; margin-left: 190px">
-                <ul id="group-panel-tab-bar" class="nav nav-tabs">
+                <!--ul id="group-panel-tab-bar" class="nav nav-tabs">
                   <li><a id="button-group-list" >List</a></li>
                   <li><a id="button-group-details" >Details</a></li>
                   <li><a id="button-group-memberships" >Members</a></li>
                   <li><a id="button-group-activities" >Activities</a></li>
                   <li><a id="button-group-permissions" >Roles & Permissions</a></li>
-                </ul>
+                </ul-->
+                <div id="group-panel-tab-bar">
+                  <a class="tab-button btn" id="button-group-list" >List</a>
+                  <a class="tab-button btn active" id="button-group-details" >Details</a>
+                  <a class="tab-button btn" id="button-group-memberships" >Members</a>
+                  <a class="tab-button btn" id="button-group-activities" >Activities</a>
+                  <a class="tab-button btn" id="button-group-permissions" >Roles & Permissions</a>
+                </div>
+
                 <div id="group-panel-details" class="panel-content"></div>
                 <div id="group-panel-memberships" class="panel-content" style="display: none;"></div>
                 <div id="group-panel-activities" class="panel-content" style="display: none;"></div>
@@ -966,9 +929,6 @@
                 </form>
               </div>
               <div id="roles-panel" style="display: none; margin-left: 190px">
-                <ul id="roles-panel-tab-bar" class="nav nav-tabs">
-                  <li class="active"><a id="button-roles-list" >List</a></li>
-                </ul>
                 <div id="roles-panel-list" class="panel-content">
                   <div id="roles-messages" class="alert" style="display: none;"></div>
                   <div class="console-section">
@@ -1030,12 +990,19 @@
                 </form>
               </div>
               <div id="role-panel" style="display: none; margin-left: 190px">
-                <ul id="role-panel-tab-bar" class="nav nav-tabs">
+                <!--ul id="role-panel-tab-bar" class="nav nav-tabs">
                   <li class="active"><a id="button-role-list" >List</a></li>
                   <li><a id="button-role-settings" >Settings</a></li>
                   <li><a id="button-role-users" >Users</a></li>
                   <li><a id="button-role-groups" >Groups</a></li>
-                </ul>
+                </ul-->
+                <div id="role-panel-tab-bar">
+                  <a class="tab-button btn" id="button-role-list" >List</a>
+                  <a class="tab-button btn active" id="button-role-settings" >Settings</a>
+                  <a class="tab-button btn" id="button-role-users" >Users</a>
+                  <a class="tab-button btn" id="button-role-groups" >Groups</a>
+                </div>
+
                 <div id="role-panel-settings" class="panel-content">
                   <div class="console-section">
                     <div class="well thingy"> <span id="role-section-title" class="title">Role</span> </div>
@@ -1418,6 +1385,7 @@
   <script src="js/lib/MD5.min.js" type="text/javascript"></script>
   <script src="https://www.google.com/jsapi?autoload=%7B%22modules%22%3A%5B%7B%22name%22%3A%22visualization%22%2C%22version%22%3A%221.0%22%2C%22packages%22%3A%5B%22corechart%22%5D%7D%5D%7D" type="text/javascript"></script>
   <script src="bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+  <script src="bootstrap/js/bootstrap-dropdown.js" type="text/javascript"></script>
   <script src="js/app/pages.js" type="text/javascript"></script>
   <script src="js/app/app.js" type="text/javascript"></script>
   <script src="js/app/status.js" type="text/javascript"></script>

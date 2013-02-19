@@ -7,11 +7,13 @@
     <img src="${picture}" class="gravatar50"/>
   </td>
   <td class="user-details">
-    {{if uuid}}
       <a href="" onclick="Usergrid.console.pageOpenUserProfile('${username}'); return false;">${username}: ${name}</a>
-    {{else}}
-      ${username}: ${name}</a>
-    {{/if}}
+  </td>
+  <td class="user-details">
+     ${name}
+  </td>
+  <td class="view-details">
+    <a href="" class="view-details">View Details</a>
   </td>
 </tr>
 

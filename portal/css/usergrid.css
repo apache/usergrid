@@ -3550,21 +3550,20 @@ html {
   border-left: 1px solid #c9c9c9;
   border-right: 1px solid #c9c9c9;
 }
+.title {
+  font-size: 17px;
+}
 .thingy {
   margin-bottom: 0px !important;
-  padding: 10px 10px 10px 5px!important;
+  padding: 10px 10px 10px 0!important;
   border-radius: 0px;
+  min-width: 440px;
 }
 .thingy .gravatar50 {
   position: relative;
   float: left;
   margin-top: -15px;
   right: 15px;
-}
-.thingy .title {
-  float: left;
-  font-size: 17px;
-  cursor: pointer;
 }
 .thingy .app_title {
   padding-right: 20px;
@@ -3772,6 +3771,63 @@ a:active {
 .right-header a:hover {
   opacity: 0.9;
 }
+#header {
+  margin: 0;
+  padding: 0;
+}
+#main1 {
+  margin: 84px 0 0 0;
+  padding: 0;
+  min-width: 900px;
+}
+#main2 {
+  margin: 0;
+  padding: 0;
+}
+#left {
+  float: left;
+  width: 177px;
+  margin: 0;
+  padding: 0;
+}
+#left2 {
+  float: left;
+  width: 171px;
+  margin: 0 0 0 -7px;
+  padding: 10px;
+  min-height: 1050px;
+  border-right: 1px solid #cacaca;
+}
+#left2 hr {
+  width: 180px;
+}
+#right {
+  float: right;
+  width: 180px;
+  margin: 0;
+  padding: 0;
+}
+#middle {
+  margin: 0 180px;
+  min-width: 500px;
+}
+.column-in {
+  margin: 0;
+  padding: 0px;
+}
+.cleaner {
+  clear: both;
+  height: 1px;
+  font-size: 1px;
+  border: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+#footer {
+  border-top: 1px solid #cacaca;
+  height: 50px;
+}
 #sidebar-menu {
   width: 155px;
 }
@@ -3816,7 +3872,7 @@ a:active {
 #application-panel-buttons {
   position: fixed;
   z-index: 10;
-  width: 181px;
+  width: 180px;
 }
 #application-panel-buttons .active > a i {
   background-image: url(../img/glyphicons-halflings-white.png);
@@ -4179,6 +4235,40 @@ a:active {
   width: 25%;
   padding: 10px !important;
 }
+#user-panel-tab-bar .tab-button,
+#group-panel-tab-bar .tab-button,
+#role-panel-tab-bar .tab-button {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  color: #1b97d1;
+  cursor: pointer !important;
+}
+#user-panel-tab-bar .tab-button:hover,
+#group-panel-tab-bar .tab-button:hover,
+#role-panel-tab-bar .tab-button:hover {
+  background-color: #e5e5e5 !important;
+  color: #ffffff;
+}
+#user-panel-tab-bar .tab-button:active,
+#group-panel-tab-bar .tab-button:active,
+#role-panel-tab-bar .tab-button:active {
+  background-color: #1b97d1 !important;
+  color: #ffffff;
+}
+#user-panel-tab-bar .tab-button.active,
+#group-panel-tab-bar .tab-button.active,
+#role-panel-tab-bar .tab-button.active {
+  background-color: #1b97d1 !important;
+  color: #ffffff;
+}
+#user-panel-tab-bar .btn,
+#group-panel-tab-bar .btn,
+#role-panel-tab-bar .btn {
+  text-shadow: none;
+  border: 1px solid #ffffff;
+  background-image: none;
+  box-shadow: none;
+}
 .query-button {
   background-color: #cacaca !important;
   opacity: 1 !important;
@@ -4306,7 +4396,6 @@ a:active {
   display: none;
 }
 .user-roles-title {
-  clear: both;
   font-size: 18px;
   font-weight: bold;
   border-bottom: 1px solid #AED0EA;
@@ -4458,6 +4547,9 @@ a:active {
 /*-----------------------------------------------*/
 #application-panel .console-section-contents > .row > div {
   min-width: 200px;
+}
+.panel-content {
+  margin-top: 20px;
 }
 #api-activity {
   font-size: 14px;
@@ -4692,15 +4784,16 @@ a:active {
 .gravatar50-td {
   padding: 0px !important;
   width: 50px;
+  border-right: 1px solid #e5e5e5;
 }
 .gravatar50 {
   padding: 0px !important;
   width: 50px;
 }
 td.checkboxo {
-  background-color: #666 !important;
-  width: 19px;
-  padding: 9px 0 0 3px !important;
+  width: 15px;
+  padding: 15px !important;
+  border-right: 1px solid #e5e5e5;
 }
 table#organization-admins-table tr td.gravatar20 {
   width: 30px !important;
@@ -4713,6 +4806,14 @@ table#organization-admins-table tr td.gravatar20 {
 }
 .users-row td.user-details {
   line-height: 25px !important;
+  border-right: 1px solid #e5e5e5;
+}
+.users-row td.view-details {
+  line-height: 25px !important;
+  width: 75px;
+}
+.users-row a.view-details {
+  color: #1b97d1;
 }
 /*------------------ Home Page ------------------*/
 .table {
@@ -4971,4 +5072,8 @@ table .zebraRows:nth-child(2n) {
 }
 .dropdown-menu {
   max-width: 700px;
+}
+.bold-header {
+  font-weight: 600;
+  color: #000000;
 }
