@@ -15,12 +15,6 @@
  ******************************************************************************/
 package org.usergrid.mq.cassandra.io;
 
-import java.util.List;
-import java.util.TreeSet;
-import java.util.UUID;
-
-import org.usergrid.mq.QueryProcessor;
-import org.usergrid.mq.QueryProcessor.QuerySlice;
 import org.usergrid.mq.QueueQuery;
 import org.usergrid.mq.QueueResults;
 

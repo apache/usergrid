@@ -55,7 +55,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueResults;
-import org.usergrid.mq.cassandra.QueueManagerImpl.QueueBounds;
 import org.usergrid.mq.cassandra.io.NoTransactionSearch.SearchParam;
 import org.usergrid.persistence.exceptions.QueueException;
 
@@ -108,7 +107,7 @@ public abstract class AbstractSearch implements QueueSearch {
    * @param messageIds
    * @return
    */
-  protected List<Message> loadMessages(List<UUID> messageIds) {
+  protected List<Message> loadMessages(List<UUID> messageIds, boolean reversed) {
 
     Rows<UUID, String, ByteBuffer> messageResults = createMultigetSliceQuery(ko, ue, se, be)
         .setColumnFamily(MESSAGE_PROPERTIES.getColumnFamily()).setKeys(messageIds)
@@ -122,7 +121,12 @@ public abstract class AbstractSearch implements QueueSearch {
       }
     }
 
-    Message.sortReversed(messages);
+    //multiget hoses the order, so re-order them
+    if(reversed){
+      Message.sortReversed(messages);
+    }else{
+      Message.sort(messages);
+    }
 
     return messages;
   }
@@ -279,4 +283,66 @@ public abstract class AbstractSearch implements QueueSearch {
     mutator.execute();
   }
 
+
+  protected static final class QueueBounds {
+
+    private final UUID oldest;
+    private final UUID newest;
+
+    public QueueBounds(UUID oldest, UUID newest) {
+      this.oldest = oldest;
+      this.newest = newest;
+    }
+
+    public UUID getOldest() {
+      return oldest;
+    }
+
+    public UUID getNewest() {
+      return newest;
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = (prime * result) + ((newest == null) ? 0 : newest.hashCode());
+      result = (prime * result) + ((oldest == null) ? 0 : oldest.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      QueueBounds other = (QueueBounds) obj;
+      if (newest == null) {
+        if (other.newest != null) {
+          return false;
+        }
+      } else if (!newest.equals(other.newest)) {
+        return false;
+      }
+      if (oldest == null) {
+        if (other.oldest != null) {
+          return false;
+        }
+      } else if (!oldest.equals(other.oldest)) {
+        return false;
+      }
+      return true;
+    }
+
+    @Override
+    public String toString() {
+      return "QueueBounds [oldest=" + oldest + ", newest=" + newest + "]";
+    }
+  }
 }

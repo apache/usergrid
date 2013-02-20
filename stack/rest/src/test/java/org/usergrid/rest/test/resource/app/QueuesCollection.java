@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.rest.test.resource.user;
+package org.usergrid.rest.test.resource.app;
 
 import org.usergrid.rest.test.resource.NamedResource;
 import org.usergrid.rest.test.resource.ValueResource;

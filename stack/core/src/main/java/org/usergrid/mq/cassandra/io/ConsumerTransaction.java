@@ -37,7 +37,6 @@ import me.prettyprint.hector.api.query.SliceQuery;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueQuery;
 import org.usergrid.mq.QueueResults;
-import org.usergrid.mq.cassandra.QueueManagerImpl.QueueBounds;
 import org.usergrid.utils.UUIDUtils;
 
 /**
@@ -103,7 +102,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
     ids = ids.subList(0, params.limit);
 
     // load the messages
-    List<Message> messages = loadMessages(ids);
+    List<Message> messages = loadMessages(ids, params.reversed);
 
     // write our future timeouts for all these messages
     writeTransactions(ids, query.getTimeout(), queueId, consumerId);

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.rest.test.resource.user;
+package org.usergrid.rest.test.resource.app;
 
 import java.util.List;
 import java.util.Map;
@@ -21,6 +21,7 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
+import org.usergrid.mq.QueuePosition;
 import org.usergrid.rest.test.resource.CollectionResource;
 import org.usergrid.rest.test.resource.NamedResource;
 
@@ -35,6 +36,10 @@ import com.sun.jersey.api.client.WebResource;
 public class Queue extends CollectionResource {
 
   private String clientId;
+  private int next = 0;
+  private int previous = 0;
+  private String position;
+  private String last;
 
   /**
    * 
@@ -45,6 +50,7 @@ public class Queue extends CollectionResource {
 
   /**
    * Set the client id with the string
+   * 
    * @param clientId
    * @return
    */
@@ -54,13 +60,44 @@ public class Queue extends CollectionResource {
   }
 
   /**
+   * Set this with the next page size
    * 
+   * @param nextSize
    * @return
    */
-  public SubscribersCollection subscribers(){
-    return new SubscribersCollection(this);
+  public Queue withNext(int nextSize) {
+    this.next = nextSize;
+    return this;
   }
   
+  /**
+   * Set this with the next page size
+   * 
+   * @param nextSize
+   * @return
+   */
+  public Queue withPrevious(int previous) {
+    this.previous = previous;
+    return this;
+  }
+  
+  public Queue withPosition(String position){
+    this.position = position;
+    return this;
+  }
+  
+  public Queue withLast(String last){
+    this.last = last;
+    return this;
+  }
+
+  /**
+   * @return
+   */
+  public SubscribersCollection subscribers() {
+    return new SubscribersCollection(this);
+  }
+
   public JsonNode post(Map<String, ?> payload) {
     JsonNode node = super.postInternal(payload);
     return node;
@@ -74,20 +111,18 @@ public class Queue extends CollectionResource {
    * @return
    */
   public JsonNode get() {
-    return jsonMedia(withClientId(withToken(resource()))).get(JsonNode.class);
+    return jsonMedia(withQueueParams(withToken(resource()))).get(JsonNode.class);
   }
-  
 
-  
   /**
    * post to the entity set
+   * 
    * @param entity
    * @return
    */
-  public JsonNode delete(){
+  public JsonNode delete() {
     return jsonMedia(withToken(resource())).delete(JsonNode.class);
   }
-  
 
   /**
    * Set the queue client ID if set
@@ -95,16 +130,30 @@ public class Queue extends CollectionResource {
    * @param resource
    * @return
    */
-  private WebResource withClientId(WebResource resource) {
-    if (clientId == null) {
-      return resource;
+  private WebResource withQueueParams(WebResource resource) {
+    if (clientId != null) {
+      resource = resource.queryParam("consumer", clientId);
+    }
+    if(position != null){
+      resource = resource.queryParam("pos", position);
+    }
+    if(last != null){
+      resource = resource.queryParam("last", last);
+    }
+    
+    if (next > 0) {
+      resource = resource.queryParam("next", String.valueOf(next));
+    }
+    
+    if (previous > 0) {
+      resource = resource.queryParam("prev", String.valueOf(next));
     }
 
-    return resource.queryParam("consumer", clientId);
+    return resource;
   }
 
   /**
-   * Get the next entry in the queue.  Returns null if one doesn't exist
+   * Get the next entry in the queue. Returns null if one doesn't exist
    * 
    * @return
    */
@@ -112,6 +161,22 @@ public class Queue extends CollectionResource {
     List<JsonNode> messages = getNodesAsList("messages", get());
 
     return messages.size() == 1 ? messages.get(0) : null;
+  }
+  
+  /**
+   * Get the json response of the messages nodes
+   * @return
+   */
+  public List<JsonNode> getNextPage(){
+    JsonNode response = get();
+    
+    JsonNode last = response.get("last");
+    
+    if(last != null){
+      this.last = last.asText();
+    }
+    
+    return getNodesAsList("messages", response);
   }
 
 }

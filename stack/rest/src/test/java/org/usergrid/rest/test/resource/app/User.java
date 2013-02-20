@@ -13,30 +13,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.rest.test.resource.user;
+package org.usergrid.rest.test.resource.app;
 
 import java.util.UUID;
 
-import org.usergrid.rest.test.resource.CollectionResource;
+import org.usergrid.rest.test.resource.EntityResource;
 import org.usergrid.rest.test.resource.NamedResource;
 
+
 /**
- * @author tnine
+ * A resource for testing queues
  * 
+ * @author tnine
+ *
  */
-public class UsersCollection extends CollectionResource {
+public class User extends EntityResource {
 
- 
-  public UsersCollection(NamedResource parent) {
-    super("users", parent);
+  /**
+   * @param entityId
+   * @param parent
+   */
+  public User(UUID entityId, NamedResource parent) {
+    super(entityId, parent);
   }
 
- 
-  public User user(String username){
-    return new User(username, this);
+  /**
+   * @param entityName
+   * @param parent
+   */
+  public User(String entityName, NamedResource parent) {
+    super(entityName, parent);
   }
+
   
-  public User user(UUID id){
-    return new User(id, this);
-  }
+  
+  
+
+  
+  
+  
 }

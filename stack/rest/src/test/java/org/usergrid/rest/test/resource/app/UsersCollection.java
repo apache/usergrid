@@ -13,49 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.rest.test.resource.user;
+package org.usergrid.rest.test.resource.app;
 
-import java.util.Map;
+import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.test.resource.CollectionResource;
 import org.usergrid.rest.test.resource.NamedResource;
-import org.usergrid.rest.test.resource.ValueResource;
 
 /**
  * @author tnine
  * 
  */
-public class SubscribersCollection extends CollectionResource {
+public class UsersCollection extends CollectionResource {
 
-  private String queueName;
-
-  public SubscribersCollection(NamedResource parent) {
-    super("subscribers", parent);
+ 
+  public UsersCollection(NamedResource parent) {
+    super("users", parent);
   }
 
-  public JsonNode subscribe(String queueName) {
-    this.queueName = queueName;
-    return jsonMedia(withToken(resource())).put(JsonNode.class);
-
+ 
+  public User user(String username){
+    return new User(username, this);
   }
-
-  public JsonNode unsubscribe(String queueName) {
-    this.queueName = queueName;
-    return jsonMedia(withToken(resource())).delete(JsonNode.class);
+  
+  public User user(UUID id){
+    return new User(id, this);
   }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.usergrid.rest.test.resource.ValueResource#addToUrl(java.lang.StringBuilder
-   * )
-   */
-  @Override
-  public void addToUrl(StringBuilder buffer) {
-    super.addToUrl(buffer);
-    buffer.append(SLASH).append(queueName);
-  }
-
 }

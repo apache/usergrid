@@ -26,7 +26,6 @@ import me.prettyprint.hector.api.Keyspace;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueQuery;
 import org.usergrid.mq.QueueResults;
-import org.usergrid.mq.cassandra.QueueManagerImpl.QueueBounds;
 
 /**
  * Reads from the queue without starting transactions.
@@ -56,26 +55,11 @@ public class NoTransactionSearch extends AbstractSearch {
     UUID queueId = getQueueId(queuePath);
     UUID consumerId = getConsumerId(queueId, query);
     QueueBounds bounds = getQueueBounds(queueId);
+    SearchParam params =  getParams(queueId, consumerId, query);
 
-    // QueuePosition requested = query.getPosition();
-    // UUID startId = null;
-    // boolean reversed = query.isReversed();
-    // int limit = query.getLimit();
-    //
-    // //determine where we need to start
-    // if(requested == START){
-    // limit = max(query.getNextCount(), query.getLimit());
-    // reversed = false;
-    // }else if (requested == END){
-    // limit = max(query.getPreviousCount(), query.getLimit());
-    // reversed = true;
-    // }
-    //
-    //
+    List<UUID> ids = getIds(queueId, consumerId, bounds, params);
 
-    List<UUID> ids = getIds(queueId, consumerId, bounds, getParams(queueId, consumerId, query));
-
-    List<Message> messages = loadMessages(ids);
+    List<Message> messages = loadMessages(ids, params.reversed);
 
     QueueResults results = createResults(messages, queuePath, queueId, consumerId);
 

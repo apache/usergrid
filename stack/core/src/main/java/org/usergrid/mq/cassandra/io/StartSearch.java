@@ -47,7 +47,10 @@ public class StartSearch extends NoTransactionSearch {
    */
   @Override
   protected SearchParam getParams(UUID queueId, UUID consumerId, QueueQuery query) {
-    return new SearchParam(null, false, false, max(query.getNextCount(), query.getLimit()));
+    UUID lastMessageId = query.getLastMessageId();
+    
+    
+    return new SearchParam(lastMessageId, false, lastMessageId != null, max(query.getNextCount(), query.getLimit()));
   }
 
   /* (non-Javadoc)

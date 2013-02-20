@@ -18,10 +18,10 @@ package org.usergrid.rest.test.resource;
 import java.util.UUID;
 
 import org.codehaus.jackson.JsonNode;
+import org.usergrid.rest.test.resource.app.Application;
+import org.usergrid.rest.test.resource.app.User;
+import org.usergrid.rest.test.resource.app.UsersCollection;
 import org.usergrid.rest.test.resource.mgmt.Management;
-import org.usergrid.rest.test.resource.user.Application;
-import org.usergrid.rest.test.resource.user.User;
-import org.usergrid.rest.test.resource.user.UsersCollection;
 import org.usergrid.rest.test.security.TestUser;
 
 import com.sun.jersey.api.client.ClientResponse.Status;
