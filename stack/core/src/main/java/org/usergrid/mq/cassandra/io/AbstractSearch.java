@@ -108,7 +108,7 @@ public abstract class AbstractSearch implements QueueSearch {
    * @param messageIds
    * @return
    */
-  protected List<Message> loadMessages(List<UUID> messageIds) {
+  protected List<Message> loadMessages(List<UUID> messageIds, boolean reversed) {
 
     Rows<UUID, String, ByteBuffer> messageResults = createMultigetSliceQuery(ko, ue, se, be)
         .setColumnFamily(MESSAGE_PROPERTIES.getColumnFamily()).setKeys(messageIds)
@@ -122,7 +122,12 @@ public abstract class AbstractSearch implements QueueSearch {
       }
     }
 
-    Message.sortReversed(messages);
+    //multiget hoses the order, so re-order them
+    if(reversed){
+      Message.sortReversed(messages);
+    }else{
+      Message.sort(messages);
+    }
 
     return messages;
   }

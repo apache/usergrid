@@ -41,9 +41,38 @@ public class QueueResourceTest extends AbstractRestTest {
       queue.post(MapUtils.hashMap("id", i));
     }
 
-    // now consume and make sure we get 100 each. We'll use the default for this
+    // now consume and make sure we get each message. We'll use the default for
+    // this
     // test first
-    testMessages(queue, count, null);
+    testMessages(queue, 1, count, null);
+
+  }
+
+  @Test
+  public void inOrderPaging() {
+
+    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.inorderpaging",
+        "queueresourcetest.inorderpaging@usergrid.com", "queueresourcetest.inorderpaging@usergrid.com");
+
+    // create the text context
+    TestContext context = TestContext.create(this).withOrg("queueresourcetest.inorderpaging").withApp("inorderpaging")
+        .withUser(testAdmin).initAll();
+
+    // TODO test
+    Queue queue = context.application().queues().queue("test");
+
+    final int count = 30;
+
+    for (int i = 0; i < count; i++) {
+      queue.post(MapUtils.hashMap("id", i));
+    }
+
+    queue = queue.withNext(15);
+
+    // now consume and make sure we get each message. We'll use the default for
+    // this
+    // test first
+    testMessages(queue, 15, 2, null);
 
   }
 
@@ -91,13 +120,15 @@ public class QueueResourceTest extends AbstractRestTest {
       queue.post(MapUtils.hashMap("id", i));
     }
 
-    // now consume and make sure we get 100 each. We'll use the default for this
+    // now consume and make sure we get each message. We'll use the default for
+    // this
     // test first
-    testMessages(queue, count, "client1");
-    testMessages(queue, count, "client2");
+    testMessages(queue, 1, count, "client1");
+    testMessages(queue, 1, count, "client2");
 
     // change back to client 1, and we shouldn't have anything
-    // now consume and make sure we get 100 each. We'll use the default for this
+    // now consume and make sure we get each message. We'll use the default for
+    // this
     // test first
     queue = queue.withClientId("client1");
 
@@ -128,16 +159,16 @@ public class QueueResourceTest extends AbstractRestTest {
       queue.post(MapUtils.hashMap("id", i));
     }
 
-    testMessages(queue, count, null);
+    testMessages(queue, 1, count, null);
 
-    // now consume and make sure we get 100 in the queue
+    // now consume and make sure we get messages in the queue
     queue = context.application().queues().queue("testsub1");
 
-    testMessages(queue, count, null);
+    testMessages(queue, 1, count, null);
 
     queue = context.application().queues().queue("testsub2");
 
-    testMessages(queue, count, null);
+    testMessages(queue, 1, count, null);
 
   }
 
@@ -166,16 +197,16 @@ public class QueueResourceTest extends AbstractRestTest {
       queue.post(MapUtils.hashMap("id", i));
     }
 
-    testMessages(queue, count, null);
+    testMessages(queue, 1, count, null);
 
-    // now consume and make sure we get 100 in the queue
+    // now consume and make sure we get messages in the queue
     queue = context.application().queues().queue("testsub1");
 
-    testMessages(queue, count, null);
+    testMessages(queue, 1, count, null);
 
     queue = context.application().queues().queue("testsub2");
 
-    testMessages(queue, count, null);
+    testMessages(queue, 1, count, null);
 
     // now unsubscribe the second queue
     queue = context.application().queues().queue("test");
@@ -186,16 +217,16 @@ public class QueueResourceTest extends AbstractRestTest {
       queue.post(MapUtils.hashMap("id", i));
     }
 
-    testMessages(queue, count, null);
+    testMessages(queue, 1, count, null);
 
-    // now consume and make sure we get 100 in the queue
+    // now consume and make sure we get messages in the queue
     queue = context.application().queues().queue("testsub1");
 
-    testMessages(queue, 0, null);
+    testMessages(queue, 1, 0, null);
 
     queue = context.application().queues().queue("testsub2");
 
-    testMessages(queue, count, null);
+    testMessages(queue, 1, count, null);
 
   }
 
@@ -208,14 +239,20 @@ public class QueueResourceTest extends AbstractRestTest {
    * @param count
    * @param clientId
    */
-  private void testMessages(Queue queue, int count, String clientId) {
+  private void testMessages(Queue queue, int pageSize, int numPages, String clientId) {
 
     queue.withClientId(clientId);
 
-    for (int i = 0; i < count; i++) {
-      JsonNode entries = queue.getNextEntry();
+    for (int i = 0; i < numPages; i++) {
 
-      assertEquals(i, entries.get("id").asInt());
+      List<JsonNode> entries = queue.getNextPage();
+      
+      for (int j = 0; j < pageSize; j++) {
+
+        JsonNode entry = entries.get(j);
+
+        assertEquals(i * pageSize + j, entry.get("id").asInt());
+      }
 
     }
 

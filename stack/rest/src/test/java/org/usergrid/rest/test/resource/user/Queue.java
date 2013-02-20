@@ -35,6 +35,7 @@ import com.sun.jersey.api.client.WebResource;
 public class Queue extends CollectionResource {
 
   private String clientId;
+  private int next = 0;
 
   /**
    * 
@@ -45,6 +46,7 @@ public class Queue extends CollectionResource {
 
   /**
    * Set the client id with the string
+   * 
    * @param clientId
    * @return
    */
@@ -54,13 +56,23 @@ public class Queue extends CollectionResource {
   }
 
   /**
+   * Set this with the next page size
    * 
+   * @param nextSize
    * @return
    */
-  public SubscribersCollection subscribers(){
+  public Queue withNext(int nextSize) {
+    this.next = nextSize;
+    return this;
+  }
+
+  /**
+   * @return
+   */
+  public SubscribersCollection subscribers() {
     return new SubscribersCollection(this);
   }
-  
+
   public JsonNode post(Map<String, ?> payload) {
     JsonNode node = super.postInternal(payload);
     return node;
@@ -74,20 +86,18 @@ public class Queue extends CollectionResource {
    * @return
    */
   public JsonNode get() {
-    return jsonMedia(withClientId(withToken(resource()))).get(JsonNode.class);
+    return jsonMedia(withQueueParams(withToken(resource()))).get(JsonNode.class);
   }
-  
 
-  
   /**
    * post to the entity set
+   * 
    * @param entity
    * @return
    */
-  public JsonNode delete(){
+  public JsonNode delete() {
     return jsonMedia(withToken(resource())).delete(JsonNode.class);
   }
-  
 
   /**
    * Set the queue client ID if set
@@ -95,16 +105,19 @@ public class Queue extends CollectionResource {
    * @param resource
    * @return
    */
-  private WebResource withClientId(WebResource resource) {
-    if (clientId == null) {
-      return resource;
+  private WebResource withQueueParams(WebResource resource) {
+    if (clientId != null) {
+      resource = resource.queryParam("consumer", clientId);
+    }
+    if (next > 0) {
+      resource = resource.queryParam("next", String.valueOf(next));
     }
 
-    return resource.queryParam("consumer", clientId);
+    return resource;
   }
 
   /**
-   * Get the next entry in the queue.  Returns null if one doesn't exist
+   * Get the next entry in the queue. Returns null if one doesn't exist
    * 
    * @return
    */
@@ -112,6 +125,14 @@ public class Queue extends CollectionResource {
     List<JsonNode> messages = getNodesAsList("messages", get());
 
     return messages.size() == 1 ? messages.get(0) : null;
+  }
+  
+  /**
+   * Get the json response of the messages nodes
+   * @return
+   */
+  public List<JsonNode> getNextPage(){
+    return getNodesAsList("messages", get());
   }
 
 }

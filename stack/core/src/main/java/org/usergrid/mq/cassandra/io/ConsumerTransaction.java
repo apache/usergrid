@@ -103,7 +103,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
     ids = ids.subList(0, params.limit);
 
     // load the messages
-    List<Message> messages = loadMessages(ids);
+    List<Message> messages = loadMessages(ids, params.reversed);
 
     // write our future timeouts for all these messages
     writeTransactions(ids, query.getTimeout(), queueId, consumerId);
