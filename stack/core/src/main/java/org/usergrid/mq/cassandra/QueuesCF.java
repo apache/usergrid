@@ -39,6 +39,12 @@ public enum QueuesCF implements CFEnum {
 	QUEUE_SUBSCRIBERS("Queue_Subscribers", "BytesType"),
 
 	QUEUE_SUBSCRIPTIONS("Queue_Subscriptions", "BytesType"),
+	
+	/**
+	 * Time based UUID list of future timeouts for messages.
+	 * The UUID value is a pointer to the original message in the topic
+	 */
+	CONSUMER_QUEUE_TIMEOUTS("MQ_Consumers_Timeout", "UUIDType"),
 
 	CONSUMERS("MQ_Consumers", "BytesType"),
 

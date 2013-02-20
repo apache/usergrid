@@ -39,6 +39,7 @@ public class QueueQuery extends Query {
 	QueuePosition position = null;
 	boolean _synchronized;
 	boolean update = true;
+	long timeout;
 
 	public QueueQuery() {
 	}
@@ -138,6 +139,11 @@ public class QueueQuery extends Query {
 			query = newQueryIfNull(query);
 			query.setSynchronized(ConversionUtils.getBoolean(first(params
 					.get("synchronized"))));
+		}
+		
+		if(params.containsKey("timeout")){
+		  query = newQueryIfNull(query);
+		  query.setTimeout(ConversionUtils.getLong(first(params.get("timeout"))));
 		}
 
 		if ((query != null) && (consumer != null)) {
@@ -290,13 +296,20 @@ public class QueueQuery extends Query {
 		return this;
 	}
 
-	@Override
-	public String toString() {
-		return "QueueQuery [consumerId=" + consumerId + ", lastTimestamp="
-				+ lastTimestamp + ", lastMessageId=" + lastMessageId
-				+ ", previousCount=" + previousCount + ", nextCount="
-				+ nextCount + ", limit=" + limit + ", position=" + position
-				+ ", update=" + update + "]";
-	}
+  /**
+   * @return the timeout
+   */
+  public long getTimeout() {
+    return timeout;
+  }
+
+  /**
+   * @param timeout the timeout to set
+   */
+  public void setTimeout(long timeout) {
+    this.timeout = timeout;
+    setSynchronized(true);
+  }
+
 
 }
