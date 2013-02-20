@@ -69,7 +69,7 @@ Usergrid.Navigation = Backbone.Router.extend({
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('collections');
-      $('#left2').show();
+      $('#left2').hide();
     },
     analytics: function(organization, application) {
       this.checkOrganization(organization);

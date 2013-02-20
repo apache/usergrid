@@ -2364,7 +2364,7 @@
     if (response.entities.length < 1) {
       output.replaceWith('<div id="groups-table" class="group-panel-section-message">No groups found.</div>');
     } else {
-      output.replaceWith('<table id="groups-table" class="table"><tbody></tbody></table>');
+      output.replaceWith('<table id="groups-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllGroups();" /></td><td class="user-details bold-header">Path</td><td class="user-details bold-header">Group Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
         var this_data = response.entities[i];
         $.tmpl('apigee.ui.groups.table_rows.html', this_data).appendTo('#groups-table');
@@ -2399,10 +2399,14 @@
   }
   Usergrid.console.searchGroups = searchGroups;
 
+  var selectGroups = true;
   function selectAllGroups(){
-    $('[class=groupListItem]').attr('checked', true);
-    $('#deselectAllGroups').show();
-    $('#selectAllGroups').hide();
+    if (selectGroups) {
+      $('[class=groupListItem]').attr('checked', true);
+    } else {
+      $('[class=groupListItem]').attr('checked', false);
+    }
+    selectGroups = (selectGroups)?false:true;
   }
   window.Usergrid.console.selectAllGroups = selectAllGroups;
 
@@ -2701,6 +2705,8 @@
     if (response.entities < 1) {
       output.html('<div class="group-panel-section-message">No roles found.</div>');
     } else {
+      output.replaceWith('<table id="roles-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllRoles();" /></td><td class="user-details bold-header">Title</td><td class="user-details bold-header">Role Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
+
       $.each (response.entities, function(index, value) {
         var data = [
           {name: value.name,
@@ -2730,6 +2736,17 @@
       });
     });
   }
+
+  var selectRoles = true;
+  function selectAllRoles(){
+    if (selectRoles) {
+      $('[class=roleListItem]').attr('checked', true);
+    } else {
+       $('[class=roleListItem]').attr('checked', false);
+    }
+    selectRoles = (selectRoles)?false:true;
+  }
+  window.Usergrid.console.selectAllRoles = selectAllRoles;
 
   /*******************************************************************
    *

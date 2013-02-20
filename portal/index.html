@@ -620,9 +620,6 @@
               </div>
               <div id="users-panel" style="display: none; margin-left: 190px">
 
-
-
-
                   <div id="users-panel-list" class="panel-content">
                     <div id="users-messages" class="alert" style="display: none;"></div>
 
@@ -636,8 +633,8 @@
                             <option value="name">Full Name</option>
                           </select>
 
-                          <a class="btn " data-toggle="modal" id="delete-users-link" > Delete Enity</a>
-                          <a class="btn " data-toggle="modal" href="#dialog-form-new-user"> Add Entity</a>
+                          <a class="btn " data-toggle="modal" id="delete-users-link" > Delete</a>
+                          <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-new-user"> Add User</a>
 
 
 
@@ -706,8 +703,67 @@
                   </form>
                 </div>
 
+              <form id="confirmAction" class="modal hide fade">
+                <div class="modal-header">
+                  <a class="close" data-dismiss="modal">&times</a>
+                  <h4></h4>
+                </div>
+                <div class="modal-body">
+                  <p></p>
+                </div>
+                <div class="modal-footer">
+                  <input type="submit" class="btn btn-danger" value="Yes, continue"/>
+                  <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                </div>
+              </form>
+              <form id="confirmDialog" class="modal hide fade">
+                <div class="modal-header">
+                  <a class="close" data-dismiss="modal">&times</a>
+                  <h4>Are you sure?</h4>
+                </div>
+                <div class="modal-body">
+                  <p></p>
+                </div>
+                <div class="modal-footer">
+                  <input type="submit" class="btn btn-danger" value="Yes, delete"/>
+                  <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                </div>
+              </form>
+              <form id="alertModal" class="modal hide fade">
+                <div class="modal-header">
+                  <a class="close" data-dismiss="modal">&times</a>
+                  <h4></h4>
+                </div>
+                <div class="modal-body">
+                  <p></p>
+                </div>
+                <div class="modal-footer">
+                  <input type="reset" class="btn btn-usergrid" value="OK" data-dismiss="modal"/>
+                </div>
+              </form>
 
-
+               <form id="dialog-form-new-application" class="modal hide fade" action="#">
+                <div class="modal-header">
+                  <a class="close" data-dismiss="modal">&times</a>
+                  <h4>Create new application</h4>
+                </div>
+                <div class="modal-body">
+                  <p class="validateTips">All form fields are required.</p>
+                  <fieldset>
+                    <div class="control-group">
+                      <label for="new-application-name">Name</label>
+                      <div class="controls">
+                        <input type="text" name="name" id="" value="" class="input-xlarge new-application-name"/>
+                        <p class="help-block">Length of name must be between 4 and 80</p>
+                      </div>
+                    </div>
+                  </fieldset>
+                </div>
+                <div class="modal-footer">
+                  <input type="submit" class="btn btn-usergrid" value="Create"/>
+                  <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+                </div>
+              </form>
 
               <div id="user-panel" style="display: none; margin-left: 190px">
                 <!--ul id="user-panel-tab-bar" class="nav nav-tabs">
@@ -802,24 +858,22 @@
 
 
 
-
-
-
               <div id="groups-panel" style="display: none; margin-left: 190px">
                 <div id="groups-panel-list" class="panel-content">
                   <div id="groups-messages" class="alert" style="display: none;"></div>
                   <div class="console-section">
-                    <div class="well thingy"><span class="title"> Groups: <span class="app_title"></span> </span>
-                      <div class="bar">
+                      <span class="title"> Collection: /groups </span>
+                      <div class="well thingy">
+                        <div class="bar">
                         <input onkeyup="Usergrid.console.searchGroups();" type="text" name="search-user-groupname" id="search-user-groupname" class="input-small search" placeholder="Search"/>
                         <select id="search-group-type" onChange="Usergrid.console.searchGroups();" class="input-medium search">
                           <option value="path">Path</option>
                           <option value="title">Group Name</option>
                         </select>
-                        <a id="selectAllGroups" class=""  onclick="Usergrid.console.selectAllGroups();"> Select All </a>
-                        <a id="deselectAllGroups" style="display: none;" class=""  onclick="Usergrid.console.deselectAllGroups();"> Deselect All </a>
-                        <a class="" data-toggle="modal" href="#dialog-form-new-group"> Add </a>
-                        <a id="delete-groups-link" > Delete </a>
+
+                        <a class="btn" id="delete-groups-link" > Delete</a>
+                        <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-new-group"> Add Group</a>
+
                       </div>
                     </div>
                     <table id="groups-table" class="table">
@@ -932,10 +986,14 @@
                 <div id="roles-panel-list" class="panel-content">
                   <div id="roles-messages" class="alert" style="display: none;"></div>
                   <div class="console-section">
-                    <div class="well thingy"><span class="title"> Roles: <span class="app_title"></span></span>
+                    <span class="title"> Collection: /roles </span>
+                    <div class="well thingy">
                       <div class="bar">
-                        <a data-toggle="modal" href="#dialog-form-new-role"> Add </a>
-                        <a id="delete-roles-link" > Delete </a>
+
+                        <a class="btn" id="delete-roles-link" > Delete</a>
+                        <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-new-role"> Add Role</a>
+
+
                       </div>
                     </div>
                     <table id="roles-table" class="table">
@@ -1087,14 +1145,15 @@
               <div id="activities-panel" style="display: none">
                 <div id="activities-panel-list" class="panel-content">
                   <div class="console-section">
-                    <div class="well thingy"><span class="title"> Activities: <span class="app_title"></span></span>
-                      <div class="bar">
+                    <span class="title"> Activities </span>
+                    <div class="well thingy">
+                      <div class="bar" style="margin-bottom: 25px;">
                         <input onkeyup="Usergrid.console.searchActivities();" type="text" name="search-activities" id="search-activities" class="input-small search" placeholder="Search"/>
                         <select id="search-activities-type" onChange="Usergrid.console.searchActivities();" class="input-medium search">
                           <option value="content">Content</option>
                           <option value="actor">Actor</option>
                         </select>
-                        <a class="" onclick="Usergrid.console.requestActivities(); return false;">Update Activities</a>
+                        <a class="btn" onclick="Usergrid.console.requestActivities(); return false;">Update Activities</a>
                       </div>
                     </div>
                     <table id="activities-table" class="table">
@@ -1110,7 +1169,7 @@
               <div id="analytics-panel" style="display: none">
                 <div class="panel-content">
                   <div class="console-section">
-                    <div class="well thingy"><span class="title"> Analytics: <span class="app_title"></span></span></div>
+                    <div class="well thingy"><span class="title"> Analytics </span></div>
                     <div class="console-section-contents">
                       <div id="analytics-time">
                         <form id="resolutionSelectForm" action="" class="form-horizontal">
@@ -1171,8 +1230,8 @@
               <div id="properties-panel" style="display: none">
                 <div class="console-section">
                   <div class="well thingy"><span class="title"> Application Properties: <span class="app_title"></span></span>
-                    <div class="bar">
-                      <a class=""  onclick="Usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
+                    <div class="bar" style="margin-bottom: 25px;">
+                      <a class="btn"  onclick="Usergrid.console.newApplicationCredentials(); return false;">Regenerate Credentials</a>
                     </div>
                   </div>
                   <div class="console-section-contents">
@@ -1213,14 +1272,18 @@
                 </div>
               </div>
 
-              <div id="collections-panel" style="display: none; margin-left: 190px;">
+              <div id="collections-panel" style="display: none;">
                 <div class="panel-content">
                   <div id="collections-messages" class="alert" style="display: none;"></div>
                   <div class="console-section">
-                    <div class="well thingy"><span class="title"> Collections: <span class="app_title"></span></span>
-                      <div class="bar">
-                        <a class="" data-toggle="modal" href="#dialog-form-new-collection"> Add </a>
-                        <a  onclick="Usergrid.console.pageOpenQueryExplorer(); return false;">Query Explorer</a>
+                    <span class="title"> Collections </span>
+                    <div class="well thingy">
+                      <div class="bar" style="margin-bottom: 25px;">
+
+
+                        <a class="btn"  onclick="Usergrid.console.pageOpenQueryExplorer(); return false;">Query Explorer</a>
+                        <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-new-collection"> Add Collection </a>
+
                       </div>
                     </div>
                     <table id="collections-table" class="table">
@@ -1258,7 +1321,7 @@
                 </form>
               </div>
               <div id="query-panel" style="display: none">
-                <div id="query-path-area" class="console-section">
+                <div id="query-path-area" class="console-section query-path-area">
                   <div class="well thingy"><span class="title"> Query Explorer: <span class="app_title"></span></span></div>
                   <div class="console-section-contents query-console">
                     <div class="row span6">
@@ -1336,6 +1399,7 @@
                   </div>
                   </div>
                 </div>
+
                 <div id="query-response-area" class="console-section">
                   <div class="well thingy" id="query-received-header">
                     <span class="title"> Received: <span class="app_title"></span></span>

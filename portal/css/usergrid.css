@@ -3575,6 +3575,9 @@ html {
   margin-top: -5px;
   min-width: 150px;
 }
+.thingy .btn-primary {
+  color: #ffffff;
+}
 .monospace {
   font-family: monospace !important;
 }
@@ -4030,11 +4033,13 @@ a:active {
   margin: 20px -10px -10px;
 }
 .console-section .console-section-contents:after {
-  clear: both;
   content: ".";
   display: block;
   height: 0;
   visibility: hidden;
+}
+.query-path-area {
+  height: 450px;
 }
 .well {
   background: none;
@@ -4384,7 +4389,7 @@ a:active {
   margin-left: 50px;
 }
 #roles-table {
-  margin-bottom: 0px !important;
+  margin-top: 20px !important;
 }
 #roles-pagination {
   display: none;
@@ -4798,21 +4803,32 @@ td.checkboxo {
 table#organization-admins-table tr td.gravatar20 {
   width: 30px !important;
 }
-.users-row td {
+.users-row td,
+.groups-row td,
+.roles-row td {
   line-height: 9px !important;
+  vertical-align: middle;
 }
-.users-row td.checkboxo {
+.users-row td.checkboxo,
+.groups-row td.checkboxo,
+.roles-row td.checkboxo {
   padding-top: 15px !important;
 }
-.users-row td.user-details {
+.users-row td.details,
+.groups-row td.details,
+.roles-row td.details {
   line-height: 25px !important;
   border-right: 1px solid #e5e5e5;
 }
-.users-row td.view-details {
+.users-row td.view-details,
+.groups-row td.view-details,
+.roles-row td.view-details {
   line-height: 25px !important;
   width: 75px;
 }
-.users-row a.view-details {
+.users-row a.view-details,
+.groups-row a.view-details,
+.roles-row a.view-details {
   color: #1b97d1;
 }
 /*------------------ Home Page ------------------*/

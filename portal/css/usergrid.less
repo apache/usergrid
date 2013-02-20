@@ -65,6 +65,9 @@ html{
     margin-top: -5px;
     min-width: 150px;
   }
+  .btn-primary{
+    color: #ffffff;
+  }
 }
 
 .monospace {
@@ -583,7 +586,7 @@ a:active {
       margin: 20px -10px -10px;
     }
     &:after{
-      clear: both;
+
       content: ".";
       display: block;
       height: 0;
@@ -591,7 +594,9 @@ a:active {
     }
   }
 }
-
+.query-path-area{
+  height: 450px;
+}
 //---------------- Panels ---------------------------------------------------------------------
 .well {
   background: none;
@@ -988,7 +993,7 @@ a:active {
 }
 
 #roles-table {
-  margin-bottom: 0px !important;
+  margin-top: 20px !important;
 }
 
 #roles-pagination {
@@ -1428,16 +1433,17 @@ table#organization-admins-table {
   }
 }
 
-.users-row {
+.users-row, .groups-row, .roles-row {
   td {
     line-height: 9px !important;
+    vertical-align: middle;
   }
 
   td.checkboxo {
     padding-top: 15px !important;
   }
 
-  td.user-details {
+  td.details {
     line-height: 25px !important;
     border-right: 1px solid @border2;
   }
