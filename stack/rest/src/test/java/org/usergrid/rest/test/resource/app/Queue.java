@@ -97,6 +97,7 @@ public class Queue extends CollectionResource {
   public SubscribersCollection subscribers() {
     return new SubscribersCollection(this);
   }
+ 
 
   public JsonNode post(Map<String, ?> payload) {
     JsonNode node = super.postInternal(payload);
@@ -146,7 +147,7 @@ public class Queue extends CollectionResource {
     }
     
     if (previous > 0) {
-      resource = resource.queryParam("prev", String.valueOf(next));
+      resource = resource.queryParam("prev", String.valueOf(previous));
     }
 
     return resource;

@@ -286,6 +286,7 @@ public class QueueResourceTest extends AbstractRestTest {
 
     testMessages(queue, 1, count, new NoLastCommand());
 
+
     // now consume and make sure we get messages in the queue
     queue = context.application().queues().queue("testsub1");
 
@@ -356,6 +357,7 @@ public class QueueResourceTest extends AbstractRestTest {
         JsonNode entry = entries.get(j);
 
         assertEquals((pageSize*numPages) - (i * pageSize + j) -1, entry.get("id").asInt());
+
       }
 
     }
