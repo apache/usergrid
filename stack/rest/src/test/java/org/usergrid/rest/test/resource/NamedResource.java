@@ -89,6 +89,15 @@ public abstract class NamedResource {
     
     return resource;
   }
+  
+  /**
+   * Method to add params to the generated url.  Subclasses can override it
+   * @param resource
+   * @return
+   */
+  protected WebResource withParams(WebResource resource){
+    return resource;
+  }
 
   /**
    * Get the entity from the entity array in the response

@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.rest.test.resource.app;
+package org.usergrid.rest.test.resource.app.queue;
 
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.core.MediaType;
-
 import org.codehaus.jackson.JsonNode;
-import org.usergrid.mq.QueuePosition;
 import org.usergrid.rest.test.resource.CollectionResource;
 import org.usergrid.rest.test.resource.NamedResource;
 
@@ -38,6 +35,7 @@ public class Queue extends CollectionResource {
   private String clientId;
   private int next = 0;
   private int previous = 0;
+  private long timeout = 0;
   private String position;
   private String last;
 
@@ -48,6 +46,8 @@ public class Queue extends CollectionResource {
     super(queueName, parent);
   }
 
+  
+  
   /**
    * Set the client id with the string
    * 
@@ -91,11 +91,25 @@ public class Queue extends CollectionResource {
     return this;
   }
 
+  
+  public Queue withTimeout(long timeout){
+    this.timeout = timeout;
+    return this;
+  }
+
+  
   /**
    * @return
    */
   public SubscribersCollection subscribers() {
     return new SubscribersCollection(this);
+  }
+ 
+  /**
+   * @return
+   */
+  public TransactionsCollection transactions() {
+    return new TransactionsCollection(this);
   }
  
 
@@ -148,6 +162,10 @@ public class Queue extends CollectionResource {
     
     if (previous > 0) {
       resource = resource.queryParam("prev", String.valueOf(previous));
+    }
+    
+    if(timeout > 0){
+      resource = resource.queryParam("timeout", String.valueOf(timeout));
     }
 
     return resource;

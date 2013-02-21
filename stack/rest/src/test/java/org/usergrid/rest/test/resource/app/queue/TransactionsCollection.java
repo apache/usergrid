@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.rest.test.resource.app;
+package org.usergrid.rest.test.resource.app.queue;
 
 import org.usergrid.rest.test.resource.NamedResource;
 import org.usergrid.rest.test.resource.ValueResource;
@@ -22,15 +22,15 @@ import org.usergrid.rest.test.resource.ValueResource;
  * @author tnine
  * 
  */
-public class QueuesCollection extends ValueResource {
+public class TransactionsCollection extends ValueResource {
 
  
-  public QueuesCollection(NamedResource parent) {
-    super("queues", parent);
+  public TransactionsCollection(NamedResource parent) {
+    super("transactions", parent);
   }
 
  
-  public Queue queue(String queueName){
-    return new Queue(queueName, this);
+  public Transaction transaction(String id){
+    return new Transaction(id, this);
   }
 }

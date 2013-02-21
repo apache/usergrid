@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.rest.test.resource.app;
-
-import java.util.Map;
+package org.usergrid.rest.test.resource.app.queue;
 
 import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.test.resource.CollectionResource;
 import org.usergrid.rest.test.resource.NamedResource;
-import org.usergrid.rest.test.resource.ValueResource;
 
 /**
  * @author tnine

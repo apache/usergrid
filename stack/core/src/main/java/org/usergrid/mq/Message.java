@@ -66,6 +66,7 @@ public class Message {
 	public static final String MESSAGE_CATEGORY = "category";
 	public static final String MESSAGE_INDEXED = "indexed";
 	public static final String MESSAGE_PERSISTENT = "persistent";
+	public static final String MESSAGE_TRANSACTION = "transaction";
 
 	@SuppressWarnings("rawtypes")
 	public static final Map<String, Class> MESSAGE_PROPERTIES = hashMap(
@@ -75,7 +76,7 @@ public class Message {
 			.map(MESSAGE_TIMESTAMP, Long.class).map(MESSAGE_TYPE, String.class)
 			.map(MESSAGE_CATEGORY, String.class)
 			.map(MESSAGE_INDEXED, Boolean.class)
-			.map(MESSAGE_PERSISTENT, Boolean.class);
+			.map(MESSAGE_PERSISTENT, Boolean.class).map(MESSAGE_TRANSACTION, UUID.class);
 
 	public static int compare(Message m1, Message m2) {
 		if ((m1 == null) && (m2 == null)) {
@@ -425,6 +426,14 @@ public class Message {
 		} else {
 			throw new IllegalArgumentException("Not a time-based UUID");
 		}
+	}
+	
+	public void setTransaction(UUID transaction){
+	  properties.put(MESSAGE_TRANSACTION, transaction);
+	}
+	
+	public UUID getTransaction(){
+	  return (UUID) properties.get(MESSAGE_TRANSACTION);
 	}
 
 	public void sync() {

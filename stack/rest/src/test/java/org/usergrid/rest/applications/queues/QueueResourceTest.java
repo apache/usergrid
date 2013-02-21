@@ -1,24 +1,27 @@
 package org.usergrid.rest.applications.queues;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 
 import org.codehaus.jackson.JsonNode;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.usergrid.mq.QueuePosition;
 import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.rest.test.resource.TestContext;
-import org.usergrid.rest.test.resource.app.Queue;
+import org.usergrid.rest.test.resource.app.queue.Queue;
+import org.usergrid.rest.test.resource.app.queue.Transaction;
 import org.usergrid.rest.test.security.TestAdminUser;
 import org.usergrid.utils.MapUtils;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.hazelcast.impl.ConcurrentMapManager.Entries;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
 public class QueueResourceTest extends AbstractRestTest {
@@ -33,7 +36,6 @@ public class QueueResourceTest extends AbstractRestTest {
     TestContext context = TestContext.create(this).withOrg("queueresourcetest.inorder").withApp("testInOrder")
         .withUser(testAdmin).initAll();
 
-    // TODO test
     Queue queue = context.application().queues().queue("test");
 
     final int count = 30;
@@ -42,10 +44,13 @@ public class QueueResourceTest extends AbstractRestTest {
       queue.post(MapUtils.hashMap("id", i));
     }
 
+    IncrementHandler  handler = new IncrementHandler(count); 
     // now consume and make sure we get each message. We'll use the default for
     // this
     // test first
-    testMessages(queue, 1, count, new NoLastCommand());
+    testMessages(queue, handler, new NoLastCommand());
+    
+    handler.assertResults();
 
   }
 
@@ -59,7 +64,6 @@ public class QueueResourceTest extends AbstractRestTest {
     TestContext context = TestContext.create(this).withOrg("queueresourcetest.inorderpaging").withApp("inorderpaging")
         .withUser(testAdmin).initAll();
 
-    // TODO test
     Queue queue = context.application().queues().queue("test");
 
     final int count = 30;
@@ -70,15 +74,20 @@ public class QueueResourceTest extends AbstractRestTest {
 
     queue = queue.withNext(15);
 
+    IncrementHandler  handler = new IncrementHandler(count); 
+    
     // now consume and make sure we get each message. We'll use the default for
     // this
     // test first
-    testMessages(queue, 15, 2, new NoLastCommand());
+    testMessages(queue, handler, new NoLastCommand());
+    
+    handler.assertResults();
 
   }
-  
+
   /**
-   * Read all messages with the client, then re-issue the reads from the start position to test we do this properly
+   * Read all messages with the client, then re-issue the reads from the start
+   * position to test we do this properly
    */
   @Test
   public void startPaging() {
@@ -90,7 +99,6 @@ public class QueueResourceTest extends AbstractRestTest {
     TestContext context = TestContext.create(this).withOrg("queueresourcetest.startpaging").withApp("startpaging")
         .withUser(testAdmin).initAll();
 
-    // TODO test
     Queue queue = context.application().queues().queue("test");
 
     final int count = 30;
@@ -101,16 +109,23 @@ public class QueueResourceTest extends AbstractRestTest {
 
     queue = queue.withNext(15);
 
-    // now consume and make sure we get each message. We'll use the default for this test first
-    testMessages(queue, 15, 2, new NoLastCommand());
+    // now consume and make sure we get each message. We'll use the default for
+    // this test first
+    IncrementHandler  handler = new IncrementHandler(count); 
     
+    testMessages(queue, handler,  new NoLastCommand());
+    handler.assertResults();
+
     queue = queue.withPosition(QueuePosition.START.name()).withLast(null);
-    
-    //now test it again, we should get same results when we explicitly read from start and pass back the last
-    testMessages(queue, 15, 2);
+
+    // now test it again, we should get same results when we explicitly read
+    // from start and pass back the last
+    handler = new IncrementHandler(count); 
+    testMessages(queue, handler);
+    handler.assertResults();
 
   }
-  
+
   @Test
   public void reverseOrderPaging() {
 
@@ -118,10 +133,9 @@ public class QueueResourceTest extends AbstractRestTest {
         "queueresourcetest.reverseorderpaging@usergrid.com", "queueresourcetest.reverseorderpaging@usergrid.com");
 
     // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.reverseorderpaging").withApp("reverseorderpaging")
-        .withUser(testAdmin).initAll();
+    TestContext context = TestContext.create(this).withOrg("queueresourcetest.reverseorderpaging")
+        .withApp("reverseorderpaging").withUser(testAdmin).initAll();
 
-    // TODO test
     Queue queue = context.application().queues().queue("test");
 
     final int count = 30;
@@ -132,14 +146,17 @@ public class QueueResourceTest extends AbstractRestTest {
 
     queue = queue.withNext(15);
 
-   
-    testMessages(queue, 15, 2);
-   
+    IncrementHandler handler = new IncrementHandler(count); 
+    
+    testMessages(queue, handler);
+    handler.assertResults();
+
+    DecrementHandler decrement = new DecrementHandler(30);
     
     queue = queue.withPrevious(15).withPosition(QueuePosition.END.name()).withLast(null);
-    
-    testMessagesReverse(queue, 15, 2);
-    
+
+    testMessages(queue, decrement);
+    decrement.assertResults();
 
   }
 
@@ -155,7 +172,6 @@ public class QueueResourceTest extends AbstractRestTest {
     TestContext context = TestContext.create(this).withOrg("queueresourcetest.delete").withApp("delete")
         .withUser(testAdmin).initAll();
 
-    // TODO test
     Queue queue = context.application().queues().queue("test");
 
     try {
@@ -178,7 +194,6 @@ public class QueueResourceTest extends AbstractRestTest {
     TestContext context = TestContext.create(this).withOrg("queueresourcetest.topic").withApp("topic")
         .withUser(testAdmin).initAll();
 
-    // TODO test
     Queue queue = context.application().queues().queue("test");
 
     final int count = 30;
@@ -190,8 +205,14 @@ public class QueueResourceTest extends AbstractRestTest {
     // now consume and make sure we get each message. We'll use the default for
     // this
     // test first
-    testMessages(queue, 1, count, new ClientId("client1"), new NoLastCommand());
-    testMessages(queue, 1, count, new ClientId("client2"), new NoLastCommand());
+    
+    IncrementHandler  handler = new IncrementHandler(count); 
+    testMessages(queue, handler, new ClientId("client1"), new NoLastCommand());
+    handler.assertResults();
+    
+    handler = new IncrementHandler(count);
+    testMessages(queue,handler, new ClientId("client2"), new NoLastCommand());
+    handler.assertResults();
 
     // change back to client 1, and we shouldn't have anything
     // now consume and make sure we get each message. We'll use the default for
@@ -214,7 +235,6 @@ public class QueueResourceTest extends AbstractRestTest {
     TestContext context = TestContext.create(this).withOrg("queueresourcetest.subscribe").withApp("subscribe")
         .withUser(testAdmin).initAll();
 
-    // TODO test
     Queue queue = context.application().queues().queue("test");
 
     queue.subscribers().subscribe("testsub1");
@@ -226,16 +246,28 @@ public class QueueResourceTest extends AbstractRestTest {
       queue.post(MapUtils.hashMap("id", i));
     }
 
-    testMessages(queue, 1, count, new NoLastCommand());
+    IncrementHandler handler = new IncrementHandler(count);
+    
+    testMessages(queue,handler, new NoLastCommand());
+    
+    handler.assertResults();
 
     // now consume and make sure we get messages in the queue
     queue = context.application().queues().queue("testsub1");
+    
+    handler = new IncrementHandler(count);
 
-    testMessages(queue, 1, count, new NoLastCommand());
+    testMessages(queue, handler, new NoLastCommand());
+    
+    handler.assertResults();
+    
+    handler = new IncrementHandler(count);
 
     queue = context.application().queues().queue("testsub2");
 
-    testMessages(queue, 1, count, new NoLastCommand());
+    testMessages(queue, handler, new NoLastCommand());
+    
+    handler.assertResults();
 
   }
 
@@ -252,7 +284,6 @@ public class QueueResourceTest extends AbstractRestTest {
     TestContext context = TestContext.create(this).withOrg("queueresourcetest.unsubscribe").withApp("unsubscribe")
         .withUser(testAdmin).initAll();
 
-    // TODO test
     Queue queue = context.application().queues().queue("test");
 
     queue.subscribers().subscribe("testsub1");
@@ -264,16 +295,31 @@ public class QueueResourceTest extends AbstractRestTest {
       queue.post(MapUtils.hashMap("id", i));
     }
 
-    testMessages(queue, 1, count, new NoLastCommand());
+    IncrementHandler handler = new IncrementHandler(count);
+    
+    testMessages(queue, handler, new NoLastCommand());
+    
+    handler.assertResults();
+   
+    
+    
 
+    handler = new IncrementHandler(count);
+    
     // now consume and make sure we get messages in the queue
     queue = context.application().queues().queue("testsub1");
 
-    testMessages(queue, 1, count, new NoLastCommand());
+    testMessages(queue, handler, new NoLastCommand());
+    handler.assertResults();
+    
+    
+    handler = new IncrementHandler(count);
 
     queue = context.application().queues().queue("testsub2");
 
-    testMessages(queue, 1, count, new NoLastCommand());
+    testMessages(queue,handler, new NoLastCommand());
+    handler.assertResults();
+    
 
     // now unsubscribe the second queue
     queue = context.application().queues().queue("test");
@@ -283,129 +329,370 @@ public class QueueResourceTest extends AbstractRestTest {
     for (int i = 0; i < count; i++) {
       queue.post(MapUtils.hashMap("id", i));
     }
+    
+    handler = new IncrementHandler(count);
 
-    testMessages(queue, 1, count, new NoLastCommand());
+    testMessages(queue, handler, new NoLastCommand());
+    handler.assertResults();
 
-
-    // now consume and make sure we get messages in the queue
+    // now consume and make sure we don't have messages in the ququq
     queue = context.application().queues().queue("testsub1");
 
-    testMessages(queue, 1, 0, new NoLastCommand());
+    handler = new IncrementHandler(0);
+    
+    testMessages(queue, handler, new NoLastCommand());
+    
+    handler.assertResults();
 
     queue = context.application().queues().queue("testsub2");
-
-    testMessages(queue, 1, count, new NoLastCommand());
-
-  }
-
-  /**
-   * Test that when receiving the messages from a queue, we receive the same
-   * amount as "count". Starts from 0 to count-1 for message bodies. Client id
-   * optional
-   * 
-   * @param queue
-   * @param count
-   * @param clientId
-   */
-  private void testMessages(Queue queue, int pageSize, int numPages, QueueCommand... commands) {
-
-    for (int i = 0; i < numPages; i++) {
     
-      for(QueueCommand command: commands){
-        queue = command.processQueue(queue);
-      }
-      
-      List<JsonNode> entries = queue.getNextPage();
-      
-      for (int j = 0; j < pageSize; j++) {
+    handler = new IncrementHandler(count);
 
-        JsonNode entry = entries.get(j);
+    testMessages(queue, handler, new NoLastCommand());
+    
+    handler.assertResults();
 
-        assertEquals(i * pageSize + j, entry.get("id").asInt());
-      }
+  }
 
+  @Test
+  public void transactionTimeout() throws InterruptedException {
+
+    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.transactionTimeout",
+        "queueresourcetest.transactionTimeout@usergrid.com", "queueresourcetest.transactionTimeout@usergrid.com");
+
+    // create the text context
+    TestContext context = TestContext.create(this).withOrg("queueresourcetest.transactionTimeout")
+        .withApp("transactionTimeout").withUser(testAdmin).initAll();
+
+    Queue queue = context.application().queues().queue("test");
+
+    final int count = 30;
+
+    for (int i = 0; i < count; i++) {
+      queue.post(MapUtils.hashMap("id", i));
     }
 
-    // get the next one, should be empty
+    // now consume and make sure we get each message. We'll use the default for
+    // this
+    // test first
+    
+    final long timeout = 15000;
+    
+    queue = queue.withTimeout(timeout);
+    
+    TransactionResponseHandler transHandler = new TransactionResponseHandler(count);
+   
+    testMessages(queue, transHandler, new NoLastCommand());
+    
+    long start = System.currentTimeMillis();
+    
+    transHandler.assertResults();
+    
+    List<String> originalMessageIds = transHandler.getMessageIds();
+    BiMap<String, String> transactionInfo = transHandler.getTransactionToMessageId();
+    
+    //now read again, we shouldn't have any results
+    IncrementHandler incrementHandler = new IncrementHandler(0);
+    
+    testMessages(queue, incrementHandler, new NoLastCommand());
+    
+    incrementHandler.assertResults();
+    
+    //now sleep until our timeout expires 
+    Thread.sleep(timeout - (System.currentTimeMillis()-start));
+    
+    //now re-read our messages, we should get them all again
+    transHandler = new TransactionResponseHandler(count);
+    
+    testMessages(queue, transHandler, new NoLastCommand());
+    
+    start = System.currentTimeMillis();
+    
+    transHandler.assertResults();
+    
+    List<String> returned = transHandler.getMessageIds();
+    
+    assertTrue(returned.size() > 0);
+    
+    BiMap<String, String> newTransactions = transHandler.getTransactionToMessageId();
+    
+    for(int i = 0; i < originalMessageIds.size(); i ++){
+       //check the messages come back in the same order, they should
+       assertEquals(originalMessageIds.get(i), returned.get(i) );
+       
+       assertNotNull(transactionInfo.get(originalMessageIds.get(i)));
+       
+       //ack the transaction we were returned
+      Transaction transaction = queue.transactions().transaction(newTransactions.get(originalMessageIds.get(i)));
+      transaction.delete();
+      
+    } 
+    
+    
+    //now sleep again we shouldn't have any messages since we acked all the transactions 
+    Thread.sleep(timeout - (System.currentTimeMillis()-start));
+    
+    incrementHandler = new IncrementHandler(0);
+    
+    testMessages(queue, incrementHandler, new NoLastCommand());
+    
+    incrementHandler.assertResults();
+    
+    
 
-    JsonNode node = queue.getNextEntry();
-
-    assertNull(node);
   }
-  
+
   /**
    * Test that when receiving the messages from a queue, we receive the same
    * amount as "count". Starts from 0 to count-1 for message bodies. Client id
    * optional
    * 
    * @param queue
-   * @param count
+   * @param max
    * @param clientId
    */
-  private void testMessagesReverse(Queue queue, int pageSize, int numPages, QueueCommand... commands) {
+  private void testMessages(Queue queue, ResponseHandler handler, QueueCommand... commands) {
+    List<JsonNode> entries = null;
 
-    for (int i = 0; i < numPages; i++) {
-      
-      for(QueueCommand command: commands){
+    do {
+      for (QueueCommand command : commands) {
         queue = command.processQueue(queue);
       }
-      
-      List<JsonNode> entries = queue.getNextPage();
-      
-      for (int j = 0; j < pageSize; j++) {
 
-        JsonNode entry = entries.get(j);
+      entries = queue.getNextPage();
 
-        assertEquals((pageSize*numPages) - (i * pageSize + j) -1, entry.get("id").asInt());
-
+      for (JsonNode entry : entries) {
+        handler.response(entry);
       }
 
-    }
+    } while (entries.size() > 0);
 
-    // get the next one, should be empty
 
-    JsonNode node = queue.getNextEntry();
-
-    assertNull(node);
   }
-  
+
+  /**
+   * Commands for editing queue information
+   * 
+   * @author tnine
+   * 
+   */
   private interface QueueCommand {
-    
+
     /**
      * Perform any modifications on the queue and return it
+     * 
      * @param queue
      * @return
      */
     public Queue processQueue(Queue queue);
   }
 
-  
-  private class NoLastCommand implements QueueCommand{
+  private class NoLastCommand implements QueueCommand {
 
-    /* (non-Javadoc)
-     * @see org.usergrid.rest.applications.queues.QueueResourceTest.QueueCommand#processQueue(org.usergrid.rest.test.resource.app.Queue)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.rest.applications.queues.QueueResourceTest.QueueCommand#
+     * processQueue(org.usergrid.rest.test.resource.app.Queue)
      */
     @Override
     public Queue processQueue(Queue queue) {
       return queue.withLast(null);
     }
-    
+
   }
-  
-  private class ClientId implements QueueCommand{
+
+  private class ClientId implements QueueCommand {
 
     private String clientId;
-    
-    public ClientId(String clientId){
+
+    public ClientId(String clientId) {
       this.clientId = clientId;
     }
-    /* (non-Javadoc)
-     * @see org.usergrid.rest.applications.queues.QueueResourceTest.QueueCommand#processQueue(org.usergrid.rest.test.resource.app.Queue)
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.rest.applications.queues.QueueResourceTest.QueueCommand#
+     * processQueue(org.usergrid.rest.test.resource.app.Queue)
      */
     @Override
     public Queue processQueue(Queue queue) {
       return queue.withClientId(clientId);
     }
-    
+
   }
+
+
+  /**
+   * Interface for handling responses from the queue (per message)
+   * 
+   * @author tnine
+   * 
+   */
+  private interface ResponseHandler {
+    /**
+     * Do something with the response
+     * 
+     * @param node
+     */
+    public void response(JsonNode node);
+    
+    /**
+     * Validate the results are correct
+     */
+    public void assertResults();
+  }
+
+  /**
+   * Simple handler ensure we get up to count messages
+   * 
+   * @author tnine
+   * 
+   */
+  protected class IncrementHandler implements ResponseHandler {
+
+    int max;
+    int current = 0;
+
+    private IncrementHandler(int max) {
+      this.max = max;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
+     * #response(org.codehaus.jackson.JsonNode)
+     */
+    @Override
+    public void response(JsonNode node) {
+      assertEquals(current, node.get("id").asInt());
+      current++;
+      
+      if(current > max){
+        fail(String.format("Received %d messages, but we should only receive %d", current, max));
+      }
+    }
+    
+    @Override
+    public void assertResults(){
+      assertEquals(max, current);
+    }
+
+  }
+
+  /**
+   * Simple handler ensure we get up to count messages
+   * 
+   * @author tnine
+   * 
+   */
+  protected class DecrementHandler implements ResponseHandler {
+
+    int max;
+    int current;
+    int count = 0;
+
+    private DecrementHandler(int max) {
+      this.max = max;
+      current = max - 1;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
+     * #response(org.codehaus.jackson.JsonNode)
+     */
+    @Override
+    public void response(JsonNode node) {
+      if(current < 0){
+        fail(String.format("Received %d messages, but we should only receive %d", current, max));
+      }
+      
+      assertEquals(current, node.get("id").asInt());
+      current--;
+      count++;
+      
+      
+    }
+    
+    @Override
+    public void assertResults(){
+      assertEquals(max, count);
+    }
+
+  }
+
+  /**
+   * Simple handler to build a list of the message responses
+   * 
+   * @author tnine
+   * 
+   */
+  protected class TransactionResponseHandler extends IncrementHandler{
+
+    List<JsonNode> responses = new ArrayList<JsonNode>();
+
+    protected TransactionResponseHandler(int max){
+      super(max);
+    }
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
+     * #response(org.codehaus.jackson.JsonNode)
+     */
+    @Override
+    public void response(JsonNode node) {
+      super.response(node);
+      
+      JsonNode transaction = node.get("transaction");
+      
+      assertNotNull(transaction);
+      
+      responses.add(node);
+      
+    }
+    
+    /**
+     * Get transaction ids from messages.  Key is  messageId, value is transactionId
+     * @return
+     */
+    public BiMap<String, String> getTransactionToMessageId(){
+      BiMap<String, String> map = HashBiMap.create(responses.size());
+      
+      for(JsonNode message: responses){
+        map.put(message.get("uuid").asText(), message.get("transaction").asText());
+      }
+      
+      return map;
+      
+    }
+    
+    /**
+     * Get all message ids from the response
+     * @return
+     */
+    public List<String> getMessageIds(){
+      List<String> results = new ArrayList<String>(responses.size());
+      
+      for(JsonNode message: responses){
+        results.add(message.get("uuid").asText());
+      }
+      
+      return results;
+    }
+    
+    
+
+  }
+
 }

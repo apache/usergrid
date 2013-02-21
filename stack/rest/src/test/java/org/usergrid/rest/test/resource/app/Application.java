@@ -20,6 +20,7 @@ import javax.ws.rs.core.MediaType;
 import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.test.resource.NamedResource;
 import org.usergrid.rest.test.resource.RootResource;
+import org.usergrid.rest.test.resource.app.queue.QueuesCollection;
 
 
 /**

@@ -64,6 +64,8 @@ public class ConsumerTransaction extends NoTransactionSearch {
   @Override
   public QueueResults getResults(String queuePath, QueueQuery query) {
 
+    long startTime = System.currentTimeMillis();
+    
     UUID queueId = getQueueId(queuePath);
     UUID consumerId = getConsumerId(queueId, query);
     QueueBounds bounds = getQueueBounds(queueId);
@@ -73,7 +75,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
     List<UUID> ids = getQueueRange(queueId, bounds, params);
 
     // get a list of ids from the consumer.
-    List<TransactionPointer> pointers = getConsumerIds(queueId, consumerId, params);
+    List<TransactionPointer> pointers = getConsumerIds(queueId, consumerId, params, startTime);
 
     TransactionPointer pointer = null;
 
@@ -85,8 +87,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
 
       int insertIndex = Collections.binarySearch(ids, pointer.expiration);
 
-      // we're done, this message goes at the end, not point in continuing since
-      // we have our full result set
+      // we're done, this message goes at the end, no point in continuing since we have our full result set
       if (insertIndex == params.limit * -1 - 1) {
         break;
       }
@@ -99,13 +100,15 @@ public class ConsumerTransaction extends NoTransactionSearch {
     }
 
     // now we've merge the results, trim them to size;
-    ids = ids.subList(0, params.limit);
+    if(ids.size() > params.limit){
+      ids = ids.subList(0, params.limit);
+    }
 
     // load the messages
     List<Message> messages = loadMessages(ids, params.reversed);
 
     // write our future timeouts for all these messages
-    writeTransactions(ids, query.getTimeout(), queueId, consumerId);
+    writeTransactions(messages, query.getTimeout()+startTime, queueId, consumerId);
 
     // remove all read transaction pointers
     deleteTransactionPointers(pointers, lastTransactionIndex, queueId, consumerId);
@@ -129,11 +132,14 @@ public class ConsumerTransaction extends NoTransactionSearch {
    *          The
    * @return
    */
-  protected List<TransactionPointer> getConsumerIds(UUID queueId, UUID consumerId, SearchParam params) {
+  protected List<TransactionPointer> getConsumerIds(UUID queueId, UUID consumerId, SearchParam params, long startTime) {
+    //create a UUID representing now, we dont' want to read transactions that are in the future
+    UUID nowUUID = UUIDUtils.newTimeUUID(startTime);
+    
     SliceQuery<ByteBuffer, UUID, UUID> q = createSliceQuery(ko, be, ue, ue);
     q.setColumnFamily(CONSUMER_QUEUE_TIMEOUTS.getColumnFamily());
     q.setKey(getQueueClientTransactionKey(queueId, consumerId));
-    q.setRange(params.startId, null, false, params.limit);
+    q.setRange(params.startId, nowUUID, false, params.limit);
 
     List<HColumn<UUID, UUID>> cassResults = q.execute().get().getColumns();
 
@@ -170,9 +176,9 @@ public class ConsumerTransaction extends NoTransactionSearch {
    * Write the transaction timeouts
    * 
    * @param messageIds
-   * @param futureTimeout
+   * @param futureTimeout The time these message should expire
    */
-  protected void writeTransactions(List<UUID> messageIds, final long futureTimeout, UUID queueId, UUID consumerId) {
+  protected void writeTransactions(List<Message> messages, final long futureTimeout, UUID queueId, UUID consumerId) {
 
     Mutator<ByteBuffer> mutator = createMutator(ko, be);
 
@@ -180,13 +186,16 @@ public class ConsumerTransaction extends NoTransactionSearch {
 
     ByteBuffer key = getQueueClientTransactionKey(queueId, consumerId);
 
-    for (UUID messageId : messageIds) {
-
+    for (Message message : messages) {
       // note we're not incrementing futureSnapshot on purpose. The uuid
       // generation should give us a unique ID for each response, even if the
       // time is the same
       UUID expirationId = UUIDUtils.newTimeUUID(futureSnapshot);
+      UUID messageId = message.getUuid();
       mutator.addInsertion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(), createColumn(expirationId, messageId));
+
+      //add the transactionid to the message
+      message.setTransaction(expirationId);
     }
 
     mutator.execute();
