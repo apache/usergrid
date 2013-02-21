@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.EntityManager;
@@ -39,8 +40,8 @@ import com.sun.jersey.api.representation.Form;
 //@Ignore
 public class OrganizationsResourceTest extends AbstractRestTest {
 
-    @Resource
-    private EntityManagerFactory emf;
+
+    private EntityManagerFactory emf = CassandraRunner.getBean(EntityManagerFactory.class);
 
     @Test
     public void createOrgAndOwner() throws Exception {
