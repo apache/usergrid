@@ -862,7 +862,7 @@ public class ManagementServiceImpl implements ManagementService {
   }
 
   @Override
-  public UserInfo updateAdminUser(UserInfo user, String username, String name, String email) throws Exception {
+  public UserInfo updateAdminUser(UserInfo user, String username, String name, String email, Map<String, Object> json) throws Exception {
 
     /**
      * Only lock on the target values. We don't want lock contention if another
@@ -879,16 +879,23 @@ public class ManagementServiceImpl implements ManagementService {
 
       EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
+      SimpleEntityRef entityRef = new SimpleEntityRef(User.ENTITY_TYPE, user.getUuid());
       if (!isBlank(username)) {
-        em.setProperty(new SimpleEntityRef(User.ENTITY_TYPE, user.getUuid()), "username", username);
+        em.setProperty(entityRef, "username", username);
       }
-
       if (!isBlank(name)) {
-        em.setProperty(new SimpleEntityRef(User.ENTITY_TYPE, user.getUuid()), "name", name);
+        em.setProperty(entityRef, "name", name);
       }
-
       if (!isBlank(email)) {
-        em.setProperty(new SimpleEntityRef(User.ENTITY_TYPE, user.getUuid()), "email", email);
+        em.setProperty(entityRef, "email", email);
+      }
+      if ( json != null ) {
+          json.remove("password");
+          json.remove("oldpassword");
+          json.remove("newpassword");
+          Map<String,Object> userProperties = user.getProperties();
+          userProperties.putAll(json);
+          em.updateProperties(entityRef, userProperties);
       }
 
       user = getAdminUserByUuid(user.getUuid());
