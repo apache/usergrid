@@ -3208,7 +3208,11 @@
           this_data.actor.picture = this_data.actor.picture.replace(/^http:\/\/www.gravatar/i, 'https://secure.gravatar');
           //note: changing this to use the image on apigee.com - since the gravatar default won't work on any non-public domains such as localhost
           //this_data.picture = this_data.picture + encodeURI("?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png");
-          this_data.actor.picture = this_data.actor.picture + encodeURI("?d=http://apigee.com/usergrid/images/user_profile.png");
+          if (~this_data.actor.picture.indexOf('http')) {
+            this_data.actor.picture = this_data.actor.picture + encodeURI("?d=http://apigee.com/usergrid/images/user_profile.png");
+          } else {
+            this_data.actor.picture = 'http://apigee.com/usergrid/images/user_profile.png';
+          }
         }
 
         $.tmpl('apigee.ui.activities.table_rows.html', this_data).appendTo('#activities-table');

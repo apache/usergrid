@@ -3907,8 +3907,12 @@ a:active {
 #login-area,
 #signup-area {
   position: relative;
-  margin-left: -230px;
+  margin: 100px 0 0 -230px;
   left: 50%;
+  border: 1px solid #c9c9c9;
+  -webkit-border-radius: 5px 5px 5px 5px;
+  -moz-border-radius: 5px 5px 5px 5px;
+  border-radius: 5px 5px 5px 5px;
 }
 .the-grid {
   background-image: url("../images/usergrid_400.png");
@@ -4016,6 +4020,7 @@ a:active {
   margin: 0px;
   padding-top: 10px;
   display: inline-block;
+  width: 460px;
 }
 .console-section .form-actions {
   margin-bottom: 0px;
@@ -4065,6 +4070,9 @@ a:active {
   outline: none;
   box-shadow: 0 0 0 white inset;
   margin-bottom: 40px;
+}
+.bottom-space {
+  margin-bottom: 15px;
 }
 .form-horizontal .controls span {
   margin-top: 5px;

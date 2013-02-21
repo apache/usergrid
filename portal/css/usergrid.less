@@ -451,8 +451,10 @@ a:active {
 
 #login-area, #signup-area {
   position: relative;
-  margin-left: -230px;
+  margin: 100px 0 0 -230px;
   left: 50%;
+  border: 1px solid @border;
+  .border-radius(5px 5px 5px 5px);
 }
 
 .the-grid {
@@ -572,6 +574,7 @@ a:active {
     margin:0px;
     padding-top: 10px;
     display: inline-block;
+    width: 460px;
   }
   .form-actions{
     margin-bottom:0px;
@@ -625,6 +628,9 @@ a:active {
     box-shadow: 0 0 0 white inset;
     margin-bottom:40px;
   }
+}
+.bottom-space{
+  margin-bottom: 15px;
 }
 //-------------------------------------------------------------------------------------
 

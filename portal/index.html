@@ -93,7 +93,7 @@
     <div class="sub-nav navbar navbar-fixed privateMenu" style="display: none">
         <div class="left-header nav pull-left">
             <li id="organizations-menu" class="dropdown">
-                <a id="console-link" class="dropdown-toggle" data-toggle="dropdown">
+                <a id="console-links" class="dropdown-toggle" data-toggle="dropdown">
                     <i class="icon-folder-close icon-white"></i>
                     <span>Organizations</span>
                     <span class="caret"></span>
@@ -149,7 +149,7 @@
           <strong>ERROR</strong>: Your details were incorrect.<br/>
         </div>
         <div class="console-section">
-          <div class="well thingy"><span class="title">Login</span></div>
+          <div class="well thingy"><span style="margin-left: 30px" class="title">Login</span></div>
           <form name="login-form" id="login-form" class="form-horizontal">
             <div class="control-group">
               <label class="control-label" for="login-email">Email:</label>
@@ -381,7 +381,7 @@
                 <div class="console-section">
                   <div class="well thingy"><span class="title"> Applications </span>
                     <div class="bar">
-                      <a class="btn button" data-toggle="modal" href="#dialog-form-new-application"> New Application</a>
+                      <a class="btn button bottom-space" data-toggle="modal" href="#dialog-form-new-application"> New Application</a>
                     </div>
                   </div>
                   <table id="organization-applications-table" class="hideable table">
@@ -399,7 +399,7 @@
                 <div class="console-section">
                   <div class="well thingy"><span class="title"> Organization's Administrators </span>
                     <div class="bar">
-                      <a class="btn button" data-toggle="modal" href="#dialog-form-new-admin"> New Administrator</a>
+                      <a class="btn button bottom-space" data-toggle="modal" href="#dialog-form-new-admin"> New Administrator</a>
                     </div>
                   </div>
                   <table id="organization-admins-table" class="hideable table">
@@ -409,7 +409,7 @@
                 <div class="console-section">
                   <div class="well thingy"><span class="title"> Organization API Credentials </span>
                     <div class="bar">
-                      <a class="btn button" onclick="Usergrid.console.newOrganizationCredentials(); return false;"> Regenerate Credentials</a>
+                      <a class="btn button bottom-space" onclick="Usergrid.console.newOrganizationCredentials(); return false;"> Regenerate Credentials</a>
                     </div>
                   </div>
                   <table class="hideable table">
@@ -478,26 +478,27 @@
                   </div>
                 </form>
               </div>
-              <div id="console-panel" class="container">
-                <iframe class="container" src="loading.html" scrolling="no"></iframe>
-              </div>
+
               <div id="dashboard-panel" style="display: none">
                 <div class="console-section">
                   <div class="well thingy">
                     <span class="title"> Application Dashboard: <span class="app_title"></span> </span>
                   </div>
                   <div class="console-section-contents">
-                    <div id="application-panel-table" class="row">
+                    <div id="application-panel-table" style="width: 480px; overflow: hidden;">
                       <div id="application-panel-entity-graph" class="span graph"></div>
                       <div id="application-panel-text" class="span">...</div>
                     </div>
-                    <div class="row">
+
+                    <div style="max-width: 680px; overflow: hidden;">
+                    <div>
                       <div id="application-entities-timeline" class="span graph"></div>
                       <div id="application-cpu-time" class="span graph"></div>
                     </div>
-                    <div class="row">
+                    <div>
                       <div id="application-data-uploaded" class="span graph"></div>
                       <div id="application-data-downloaded" class="span graph"></div>
+                    </div>
                     </div>
                   </div>
                 </div>
