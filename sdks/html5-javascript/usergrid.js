@@ -393,9 +393,9 @@ Usergrid.Client.prototype.getToken = function () {
 Usergrid.Client.prototype.login = function (username, password, callback) {
   var self = this;
   var options = {
-    method:'GET',
+    method:'POST',
     endpoint:'token',
-    qs:{
+    body:{
       username: username,
       password: password,
       grant_type: 'password'
