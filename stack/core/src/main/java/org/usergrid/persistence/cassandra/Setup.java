@@ -40,6 +40,7 @@ import me.prettyprint.hector.api.ddl.ComparatorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.mq.cassandra.QueuesCF;
+import org.usergrid.persistence.entities.Application;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -73,20 +74,29 @@ public class Setup {
 	 *             the exception
 	 */
 	public synchronized void setup() throws Exception {
-		cass.init();
+		init();
 
 		setupSystemKeyspace();
 
 		setupStaticKeyspace();
 
-		((EntityManagerFactoryImpl) emf).initializeApplication(
-				DEFAULT_ORGANIZATION, DEFAULT_APPLICATION_ID,
-				DEFAULT_APPLICATION, null);
-
-		((EntityManagerFactoryImpl) emf).initializeApplication(
-				DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION_ID,
-				MANAGEMENT_APPLICATION, null);
+		createDefaultApplications();
 	}
+
+    public void init() throws Exception {
+        cass.init();
+    }
+
+    public void createDefaultApplications() throws Exception {
+        // TODO unique check?
+        ((EntityManagerFactoryImpl) emf).initializeApplication(
+                DEFAULT_ORGANIZATION, DEFAULT_APPLICATION_ID,
+                DEFAULT_APPLICATION, null);
+
+        ((EntityManagerFactoryImpl) emf).initializeApplication(
+                DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION_ID,
+                MANAGEMENT_APPLICATION, null);
+    }
 
 	/**
 	 * Initialize system keyspace.
@@ -169,6 +179,10 @@ public class Setup {
 		}
 	}
 
+    public boolean keyspacesExist() {
+        return cass.checkKeyspacesExist();
+    }
+
 	public void checkKeyspaces() {
 		cass.checkKeyspaces();
 	}
@@ -187,5 +201,31 @@ public class Setup {
 					+ ".<rw>=usergrid");
 		}
 	}
+
+    /**
+     * @return staticly constructed reference to the management application
+     */
+    public static Application getManagementApp() {
+        return SystemDefaults.managementApp;
+    }
+
+    /**
+     * @return statically constructed reference to the default application
+     */
+    public static Application getDefaultApp() {
+        return SystemDefaults.defaultApp;
+    }
+
+    static class SystemDefaults {
+        private static final Application managementApp = new Application(MANAGEMENT_APPLICATION_ID);
+        private static final Application defaultApp = new Application(DEFAULT_APPLICATION_ID);
+
+        static {
+            managementApp.setName(MANAGEMENT_APPLICATION);
+            defaultApp.setName(DEFAULT_APPLICATION);
+        }
+
+
+    }
 
 }

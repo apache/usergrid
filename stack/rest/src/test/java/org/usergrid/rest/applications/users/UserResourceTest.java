@@ -30,6 +30,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.deser.ValueInstantiators.Base;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +53,7 @@ import com.sun.jersey.api.client.UniformInterfaceException;
  * @author zznate
  * @author tnine
  */
+@Ignore
 public class UserResourceTest extends AbstractRestTest {
 
     private static Logger log = LoggerFactory.getLogger(UserResourceTest.class);

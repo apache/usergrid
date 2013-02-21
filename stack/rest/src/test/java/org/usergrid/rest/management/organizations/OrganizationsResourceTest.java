@@ -17,11 +17,11 @@ import javax.annotation.Resource;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.EntityManager;
@@ -38,12 +38,10 @@ import com.sun.jersey.api.representation.Form;
  * @author zznate
  */
 //@Ignore
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = "/usergrid-rest-context-test.xml")
 public class OrganizationsResourceTest extends AbstractRestTest {
 
-    @Resource
-    private EntityManagerFactory emf;
+
+    private EntityManagerFactory emf = CassandraRunner.getBean(EntityManagerFactory.class);
 
     @Test
     public void createOrgAndOwner() throws Exception {

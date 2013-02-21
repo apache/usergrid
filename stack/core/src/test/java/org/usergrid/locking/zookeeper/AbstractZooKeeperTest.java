@@ -44,7 +44,7 @@ public abstract class AbstractZooKeeperTest {
 
 	protected static ZKServerMain zkServer = new ZKServerMain();
 
-	protected static File tmpDir = new File("./tmp");
+	protected static File tmpDir = new File("./zk_tmp");
 
 	protected int clientPort;
 

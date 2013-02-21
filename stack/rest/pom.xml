@@ -42,7 +42,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.13</version>
                     <configuration>
-                      <forkMode>always</forkMode>
+
                       <argLine>-Xmx512M -Xms512M -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
                     </configuration>
                   </plugin>
@@ -203,6 +203,19 @@
 			<groupId>org.usergrid</groupId>
 			<artifactId>usergrid-config</artifactId>
 			<version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.usergrid</groupId>
+            <artifactId>usergrid-test-utils</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+		<dependency>
+			<groupId>org.usergrid</groupId>
+			<artifactId>usergrid-core</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+			<classifier>tests</classifier>
 		</dependency>
         <dependency>
             <groupId>org.usergrid</groupId>

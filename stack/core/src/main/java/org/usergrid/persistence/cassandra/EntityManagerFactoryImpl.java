@@ -236,7 +236,10 @@ ApplicationContextAware {
                     throws Exception {
 
         String appName = buildAppName(organizationName, name);
-
+        // check for pre-existing
+        if ( lookupApplication(appName) != null) {
+            throw new ApplicationAlreadyExistsException(appName);
+        }
         if (properties == null) {
             properties = new TreeMap<String, Object>(CASE_INSENSITIVE_ORDER);
         }

@@ -44,6 +44,7 @@
 				<filtering>true</filtering>
 				<includes>
 					<include>**/*.xml</include>
+                    <include>**/*.properties</include>
 				</includes>
 			</testResource>
 		</testResources>
@@ -67,16 +68,45 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.6</version>
+				<version>2.13</version>
 				<configuration>
 					<!-- <groups>fast,${groups}</groups> -->
 					<systemPropertyVariables>
 						<storage-config>${basedir}/src/test/conf</storage-config>
 					</systemPropertyVariables>
-					<forkMode>always</forkMode>
-					<argLine>-Xmx512M -Xms512M -Dfile.encoding=UTF-8</argLine>
+
 				</configuration>
 			</plugin>
+            <!--
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.13</version>
+                <configuration>
+                    <systemProperties combine.children="append">
+                        <dataDir>${basedir}/src/test/resources</dataDir>
+                    </systemProperties>
+
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+
+                            <includes>
+                                <include>**/*Test.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/*UnitTest.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin> -->
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -183,6 +213,12 @@
 			<artifactId>usergrid-count-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+        <dependency>
+      			<groupId>org.usergrid</groupId>
+      			<artifactId>usergrid-test-utils</artifactId>
+      			<version>${project.version}</version>
+                <scope>test</scope>
+      		</dependency>
 		<dependency>
 			<groupId>org.antlr</groupId>
 			<artifactId>antlr-runtime</artifactId>

@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.persistence.entities.Event;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.entities.User;
@@ -52,7 +53,7 @@ public class CounterTest extends AbstractPersistenceTest {
 	@Before
 	public void getSubmitter(){
 	    //set the batcher to block the submit so we wait for results when testing
-	    SimpleBatcher batcher = helper.getApplicationContext().getBean(SimpleBatcher.class);
+	    SimpleBatcher batcher = CassandraRunner.getBean(SimpleBatcher.class);
 	    
 	    batcher.setBlockingSubmit(true);
 	}

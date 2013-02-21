@@ -27,12 +27,15 @@ import java.util.UUID;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 import org.usergrid.security.AuthPrincipalInfo;
 
+@RunWith(CassandraRunner.class)
 public class OrganizationTest {
 
 	private static final Logger logger = LoggerFactory
@@ -40,23 +43,12 @@ public class OrganizationTest {
 
 	static ManagementService management;
 
-	static ManagementTestHelper helper;
 
 	@BeforeClass
 	public static void setup() throws Exception {
-		logger.info("setup");
-		assertNull(helper);
-		helper = new ManagementTestHelperImpl();
-		// helper.setClient(this);
-		helper.setup();
-		management = helper.getManagementService();
+		management = CassandraRunner.getBean(ManagementService.class);
 	}
 
-	@AfterClass
-	public static void teardown() throws Exception {
-		logger.info("teardown");
-		helper.teardown();
-	}
 
 	@Test
 	public void testCreateOrganization() throws Exception {

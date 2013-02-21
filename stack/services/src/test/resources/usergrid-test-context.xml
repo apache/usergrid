@@ -22,6 +22,17 @@
 
 	<import resource="classpath:/usergrid-services-context.xml" />
 
+    <bean id="setup" class="org.usergrid.persistence.cassandra.Setup">
+        <constructor-arg ref="entityManagerFactory"/>
+        <constructor-arg ref="cassandraService"/>
+    </bean>
+    <!-- The default schema manager -->
+    <!-- refer to a named schemaManager from the DataControl annotation thusly -->
+    <bean id="coreManager" class="org.usergrid.persistence.CoreSchemaManager">
+        <constructor-arg ref="setup"/>
+        <constructor-arg ref="cassandraCluster"/>
+    </bean>
+
     <bean id="binaryStore" class="org.usergrid.services.assets.data.LocalFileBinaryStore">
         <property name="reposLocation" value="${usergrid.temp.files}"/>
     </bean>

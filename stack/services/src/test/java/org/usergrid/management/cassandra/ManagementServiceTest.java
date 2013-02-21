@@ -17,8 +17,11 @@ import java.util.UUID;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.management.ManagementService;
 import org.usergrid.management.ManagementTestHelper;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
@@ -41,11 +44,11 @@ import com.usergrid.count.SimpleBatcher;
 /**
  * @author zznate
  */
+@RunWith(CassandraRunner.class)
 public class ManagementServiceTest {
   static Logger log = LoggerFactory.getLogger(ManagementServiceTest.class);
   static ManagementServiceImpl managementService;
   static TokenService tokenService;
-  static ManagementTestHelper helper;
   static EntityManagerFactory emf;
 
   // app-level data generated only once
@@ -56,12 +59,9 @@ public class ManagementServiceTest {
   @BeforeClass
   public static void setup() throws Exception {
     log.info("in setup");
-    assertNull(helper);
-    helper = new ManagementTestHelperImpl();
-    helper.setup();
-    managementService = (ManagementServiceImpl) helper.getManagementService();
-    tokenService = helper.getApplicationContext().getBean(TokenService.class);
-    emf = helper.getEntityManagerFactory();
+    managementService = CassandraRunner.getBean(ManagementServiceImpl.class);
+    tokenService = CassandraRunner.getBean(TokenService.class);
+    emf = CassandraRunner.getBean(EntityManagerFactory.class);
     setupLocal();
   }
 
@@ -69,12 +69,6 @@ public class ManagementServiceTest {
     adminUser = managementService.createAdminUser("edanuff", "Ed Anuff", "ed@anuff.com", "test", false, false);
     organization = managementService.createOrganization("ed-organization", adminUser, true);
     applicationId = managementService.createApplication(organization.getUuid(), "ed-application").getId();
-  }
-
-  @AfterClass
-  public static void teardown() throws Exception {
-    log.info("In teardown");
-    helper.teardown();
   }
 
   @Test
@@ -104,7 +98,7 @@ public class ManagementServiceTest {
     properties.put("username", "edanuff");
     properties.put("email", "ed@anuff.com");
 
-    Entity user = helper.getEntityManagerFactory().getEntityManager(applicationId).create("user", properties);
+    Entity user = emf.getEntityManager(applicationId).create("user", properties);
 
     assertNotNull(user);
     String token = managementService.getTokenForPrincipal(TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
@@ -114,13 +108,13 @@ public class ManagementServiceTest {
 
   @Test
   public void testCountAdminUserAction() throws Exception {
-    SimpleBatcher batcher = helper.getApplicationContext().getBean(SimpleBatcher.class);
+    SimpleBatcher batcher = CassandraRunner.getBean(SimpleBatcher.class);
 
     batcher.setBlockingSubmit(true);
 
     managementService.countAdminUserAction(adminUser, "login");
 
-    EntityManager em = helper.getEntityManagerFactory().getEntityManager(MANAGEMENT_APPLICATION_ID);
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
     Map<String, Long> counts = em.getApplicationCounters();
     log.info(JsonUtils.mapToJsonString(counts));
@@ -137,7 +131,7 @@ public class ManagementServiceTest {
     properties.put("username", "test" + uuid);
     properties.put("email", String.format("test%s@anuff.com", uuid));
 
-    EntityManager em = helper.getEntityManagerFactory().getEntityManager(applicationId);
+    EntityManager em = emf.getEntityManager(applicationId);
 
     Entity entity = em.create("user", properties);
 
@@ -205,7 +199,7 @@ public class ManagementServiceTest {
     properties.put("username", "test" + uuid);
     properties.put("email", String.format("test%s@anuff.com", uuid));
 
-    EntityManager em = helper.getEntityManagerFactory().getEntityManager(MANAGEMENT_APPLICATION_ID);
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
     Entity entity = em.create("user", properties);
 
@@ -406,12 +400,12 @@ public class ManagementServiceTest {
       managementService.createOrganization("super-user-org-" + x, adminUser, true);
     }
     // should be 17 total
-    assertEquals(17, managementService.getOrganizations().size());
+    assertEquals(16, managementService.getOrganizations().size());
     List<OrganizationInfo> orgs = managementService.getOrganizations(null, 10);
     assertEquals(10, orgs.size());
     UUID val = orgs.get(9).getUuid();
     orgs = managementService.getOrganizations(val, 10);
-    assertEquals(8, orgs.size());
+    assertEquals(7, orgs.size());
     assertEquals(val, orgs.get(0).getUuid());
   }
 

@@ -31,10 +31,13 @@ import java.util.Properties;
 import java.util.UUID;
 
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.PersistenceTestHelper;
@@ -42,56 +45,24 @@ import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
 import org.usergrid.persistence.cassandra.PersistenceTestHelperImpl;
 import org.usergrid.utils.JsonUtils;
 
+@RunWith(CassandraRunner.class)
 public abstract class AbstractServiceTest {
 	public static final boolean USE_DEFAULT_DOMAIN = false;
 
 	private static final Logger logger = LoggerFactory
 			.getLogger(AbstractServiceTest.class);
 
-	static PersistenceTestHelper helper;
-	@Autowired protected Properties properties;
-	
-	public AbstractServiceTest() {
-		emf = (EntityManagerFactoryImpl) helper.getEntityManagerFactory();
-		smf = new ServiceManagerFactory(emf, properties);
-		smf.setApplicationContext(helper.getApplicationContext());
+	protected Properties properties;
+    protected EntityManagerFactoryImpl emf;
+   	protected ServiceManagerFactory smf;
+
+    @Before
+	public void setupLocal() {
+		emf = (EntityManagerFactoryImpl) CassandraRunner.getBean(EntityManagerFactory.class);
+		smf = CassandraRunner.getBean(ServiceManagerFactory.class);
+        properties = CassandraRunner.getBean("properties",Properties.class);
 	}
 
-	@BeforeClass
-	public static void setup() throws Exception {
-		logger.info("setup");
-		assertNull(helper);
-		helper = new PersistenceTestHelperImpl();
-		// helper.setClient(this);
-		helper.setup();
-	}
-
-	@AfterClass
-	public static void teardown() throws Exception {
-		logger.info("teardown");
-		helper.teardown();
-	}
-
-	EntityManagerFactoryImpl emf;
-	ServiceManagerFactory smf;
-
-	public ServiceManagerFactory getServiceManagerFactory() {
-		return smf;
-	}
-	
-	@Autowired
-	public void setServiceManagerFactory(ServiceManagerFactory smf) {
-		this.smf = smf;
-	}
-
-	@Autowired
-	public void setEntityManagerFactory(EntityManagerFactory emf) {
-		this.emf = (EntityManagerFactoryImpl) emf;
-	}
-
-	public EntityManagerFactory getEntityManagerFactory() {
-		return emf;
-	}
 
 	UUID dId = null;
 

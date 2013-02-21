@@ -34,17 +34,16 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.6</version>
+				<version>2.13</version>
                 <configuration>
                     <argLine>
                         -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5/powermock-module-javaagent-1.5.jar
                     </argLine>
-                    <useSystemClassloader>true</useSystemClassloader>
 					<!-- <groups>fast,${groups}</groups> -->
 					<systemPropertyVariables>
 						<storage-config>${basedir}/src/test/conf</storage-config>
 					</systemPropertyVariables>
-					<forkMode>always</forkMode>
+					<forkMode>once</forkMode>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -79,6 +78,7 @@
 				<filtering>true</filtering>
 				<includes>
 					<include>**/*.xml</include>
+                    <include>**/*.properties</include>
 				</includes>
 			</testResource>
 			<testResource>
@@ -130,6 +130,12 @@
 			<scope>test</scope>
 			<classifier>tests</classifier>
 		</dependency>
+        <dependency>
+      			<groupId>org.usergrid</groupId>
+      			<artifactId>usergrid-test-utils</artifactId>
+      			<version>${project.version}</version>
+      			<scope>test</scope>
+        </dependency>
 		<dependency>
 			<groupId>org.usergrid</groupId>
 			<artifactId>usergrid-config</artifactId>

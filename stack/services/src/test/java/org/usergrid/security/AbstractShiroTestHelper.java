@@ -41,8 +41,8 @@ public class AbstractShiroTestHelper {
       //0.  Build and set the SecurityManager used to build Subject instances used in your tests
         //    This typically only needs to be done once per class if your shiro.ini doesn't change,
         //    otherwise, you'll need to do this logic in each test that is different
-        DefaultSecurityManager manager = new DefaultSecurityManager();
-        setSecurityManager(manager);
+        //DefaultSecurityManager manager = new DefaultSecurityManager();
+        //setSecurityManager(manager);
     }
 
     /**
@@ -92,6 +92,7 @@ public class AbstractShiroTestHelper {
     @AfterClass
     public static void tearDownShiro() {
         doClearSubject();
+        /*
         try {
             SecurityManager securityManager = getSecurityManager();
             LifecycleUtils.destroy(securityManager);
@@ -102,5 +103,6 @@ public class AbstractShiroTestHelper {
             // mock Subject instances)
         }
         setSecurityManager(null);
+        */
     }
 }

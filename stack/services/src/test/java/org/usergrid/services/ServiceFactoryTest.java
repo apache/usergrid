@@ -28,9 +28,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import baas.io.simple.SimpleService;
+import org.usergrid.cassandra.CassandraRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = "/usergrid-test-context.xml")
+@RunWith(CassandraRunner.class)
 public class ServiceFactoryTest extends AbstractServiceTest {
 
 	private static final Logger logger = LoggerFactory
@@ -45,7 +45,7 @@ public class ServiceFactoryTest extends AbstractServiceTest {
 	@Test
 	public void testPackagePrefixes() throws Exception {
 		logger.info("test package prefixes");
-		Assert.assertNotNull(properties);
+
 		UUID applicationId = emf.createApplication("org", "app");
 		ServiceManager sm = smf.getServiceManager(applicationId);
 		Service service = sm.getService("simple");
