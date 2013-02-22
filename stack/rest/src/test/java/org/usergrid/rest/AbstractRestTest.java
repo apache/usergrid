@@ -53,6 +53,7 @@ import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.cassandra.DataControl;
 import org.usergrid.java.client.Client;
 import org.usergrid.management.ManagementService;
+import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.xml.sax.SAXException;
 
@@ -166,11 +167,9 @@ public abstract class AbstractRestTest extends JerseyTest {
 
         assertTrue(response != null && response.getError() == null);
 
-
-
-
-
   }
+
+
 
   @Override
   protected TestContainerFactory getTestContainerFactory() {
