@@ -3951,7 +3951,7 @@
       username: email,
       password: password
     };
-    runManagementQuery(new Usergrid.Query('GET', 'token', null, formdata,
+    runManagementQuery(new Usergrid.Query('POST', 'token', formdata, null,
       function(response) {
         if (!response || response.error){
           displayLoginError();
