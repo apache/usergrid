@@ -19,8 +19,7 @@ module Usergrid
     # gets user token and automatically set auth header for future requests
     # precondition: resource must already be set to the correct context (application or management)
     def login(username, password)
-      params = { grant_type: "password", username: username, password: password }
-      response = self['token'].get({ params: params })
+      response = self['token'].post grant_type: 'password', username: username, password: password
       self.auth_token = response.data['access_token']
       user_uuid = response.data['user']['uuid']
       @current_user = self["/users/#{user_uuid}"].get.entity
