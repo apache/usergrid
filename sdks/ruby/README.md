@@ -181,7 +181,7 @@ usergrid_iron/spec/spec_settings.yaml to match.)
 
 ## Release notes
 
-### 0.0.10
+### 0.9.0
 * Backend changes
   1. login function now uses POST instead of GET
 
