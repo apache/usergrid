@@ -291,7 +291,7 @@ public interface ManagementService {
 	public void setup() throws Exception;
 
 	public UserInfo updateAdminUser(UserInfo user, String username,
-			String name, String email) throws Exception;
+                                    String name, String email, Map<String, Object> json) throws Exception;
 
 	public boolean verifyAdminUserPassword(UUID userId, String password)
 			throws Exception;

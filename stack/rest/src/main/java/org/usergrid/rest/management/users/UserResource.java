@@ -102,14 +102,17 @@ public class UserResource extends AbstractContextResource {
 		if (json == null) {
 			return null;
 		}
+        if ( string(json.get("oldpassword")) != null ){
+            setUserPasswordPut(ui, json, callback);
+            json.remove("oldpassword");
+            json.remove("newpassword");
+        }
 
-		setUserPasswordPut(ui, json, callback);
+		String email = string(json.remove("email"));
+		String username = string(json.remove("username"));
+		String name = string(json.remove("name"));
 
-		String email = string(json.get("email"));
-		String username = string(json.get("username"));
-		String name = string(json.get("name"));
-
-		management.updateAdminUser(user, username, name, email);
+		management.updateAdminUser(user, username, name, email, json);
 
 		ApiResponse response = createApiResponse();
 		response.setAction("update user info");
