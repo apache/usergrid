@@ -65,7 +65,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
   public QueueResults getResults(String queuePath, QueueQuery query) {
 
     long startTime = System.currentTimeMillis();
-    
+
     UUID queueId = getQueueId(queuePath);
     UUID consumerId = getConsumerId(queueId, query);
     QueueBounds bounds = getQueueBounds(queueId);
@@ -87,7 +87,8 @@ public class ConsumerTransaction extends NoTransactionSearch {
 
       int insertIndex = Collections.binarySearch(ids, pointer.expiration);
 
-      // we're done, this message goes at the end, no point in continuing since we have our full result set
+      // we're done, this message goes at the end, no point in continuing since
+      // we have our full result set
       if (insertIndex == params.limit * -1 - 1) {
         break;
       }
@@ -95,12 +96,12 @@ public class ConsumerTransaction extends NoTransactionSearch {
       // get the insertion index into the set
       insertIndex = (insertIndex + 1) * -1;
 
-      ids.add(pointer.targetMessage);
+      ids.add(insertIndex, pointer.targetMessage);
 
     }
 
     // now we've merge the results, trim them to size;
-    if(ids.size() > params.limit){
+    if (ids.size() > params.limit) {
       ids = ids.subList(0, params.limit);
     }
 
@@ -108,7 +109,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
     List<Message> messages = loadMessages(ids, params.reversed);
 
     // write our future timeouts for all these messages
-    writeTransactions(messages, query.getTimeout()+startTime, queueId, consumerId);
+    writeTransactions(messages, query.getTimeout() + startTime, queueId, consumerId);
 
     // remove all read transaction pointers
     deleteTransactionPointers(pointers, lastTransactionIndex, queueId, consumerId);
@@ -116,7 +117,9 @@ public class ConsumerTransaction extends NoTransactionSearch {
     // return the results
     QueueResults results = createResults(messages, queuePath, queueId, consumerId);
 
-    writeClientPointer(queueId, consumerId, results.getLast());
+    UUID lastId = ids.size() > 0 ? ids.get(ids.size() - 1) : null;
+
+    writeClientPointer(queueId, consumerId, lastId);
 
     return results;
   }
@@ -133,9 +136,14 @@ public class ConsumerTransaction extends NoTransactionSearch {
    * @return
    */
   protected List<TransactionPointer> getConsumerIds(UUID queueId, UUID consumerId, SearchParam params, long startTime) {
-    //create a UUID representing now, we dont' want to read transactions that are in the future
-    UUID nowUUID = UUIDUtils.newTimeUUID(startTime);
-    
+    // create a UUID representing now, we dont' want to read transactions that
+    // are in the future
+    UUID nowUUID = UUIDUtils.newTimeUUID(startTime, 0);
+    //
+    // long time = nowUUID.timestamp();
+
+    // org.springframework.util.Assert.isTrue(startTime == time);
+
     SliceQuery<ByteBuffer, UUID, UUID> q = createSliceQuery(ko, be, ue, ue);
     q.setColumnFamily(CONSUMER_QUEUE_TIMEOUTS.getColumnFamily());
     q.setKey(getQueueClientTransactionKey(queueId, consumerId));
@@ -175,27 +183,39 @@ public class ConsumerTransaction extends NoTransactionSearch {
   /**
    * Write the transaction timeouts
    * 
-   * @param messageIds
-   * @param futureTimeout The time these message should expire
+   * @param messages
+   *          The messages to load
+   * @param futureTimeout
+   *          The time these message should expire
+   * @param queueId
+   *          The queue UUId
+   * @param consumerId
+   *          The consumer Id
    */
   protected void writeTransactions(List<Message> messages, final long futureTimeout, UUID queueId, UUID consumerId) {
 
     Mutator<ByteBuffer> mutator = createMutator(ko, be);
 
-    long futureSnapshot = System.currentTimeMillis() + futureTimeout;
-
     ByteBuffer key = getQueueClientTransactionKey(queueId, consumerId);
+
+    int counter = 0;
 
     for (Message message : messages) {
       // note we're not incrementing futureSnapshot on purpose. The uuid
-      // generation should give us a unique ID for each response, even if the
-      // time is the same
-      UUID expirationId = UUIDUtils.newTimeUUID(futureSnapshot);
+      // generation should give us a sequenced unique ID for each response, even
+      // if the
+      // time is the same since we increment the counter. If we read more than
+      // 10k messages in a single transaction, our millisecond will roll to the
+      // next due to 10k being the max amount of 1/10 microsecond headroom. Not
+      // possible to avoid this given the way time uuids are encoded.
+      UUID expirationId = UUIDUtils.newTimeUUID(futureTimeout, counter);
       UUID messageId = message.getUuid();
-      mutator.addInsertion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(), createColumn(expirationId, messageId));
+      mutator.addInsertion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(),
+          createColumn(expirationId, messageId, cassTimestamp, ue, ue));
 
-      //add the transactionid to the message
+      // add the transactionid to the message
       message.setTransaction(expirationId);
+      counter++;
     }
 
     mutator.execute();

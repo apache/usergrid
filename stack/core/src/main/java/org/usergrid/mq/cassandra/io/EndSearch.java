@@ -22,7 +22,6 @@ import java.util.UUID;
 import me.prettyprint.hector.api.Keyspace;
 
 import org.usergrid.mq.QueueQuery;
-import org.usergrid.mq.cassandra.io.NoTransactionSearch.SearchParam;
 
 /**
  * Reads from the queue without starting transactions.

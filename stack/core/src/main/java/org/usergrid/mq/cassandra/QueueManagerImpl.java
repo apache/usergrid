@@ -38,7 +38,6 @@ import static org.usergrid.mq.cassandra.QueueIndexUpdate.indexValueCode;
 import static org.usergrid.mq.cassandra.QueueIndexUpdate.toIndexableValue;
 import static org.usergrid.mq.cassandra.QueueIndexUpdate.validIndexableValue;
 import static org.usergrid.mq.cassandra.QueueIndexUpdate.validIndexableValueOrJson;
-import static org.usergrid.mq.cassandra.QueuesCF.CONSUMERS;
 import static org.usergrid.mq.cassandra.QueuesCF.COUNTERS;
 import static org.usergrid.mq.cassandra.QueuesCF.MESSAGE_PROPERTIES;
 import static org.usergrid.mq.cassandra.QueuesCF.PROPERTY_INDEX;
@@ -59,10 +58,7 @@ import static org.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.usergrid.utils.IndexUtils.getKeyValueList;
 import static org.usergrid.utils.MapUtils.emptyMapWithKeys;
 import static org.usergrid.utils.NumberUtils.roundLong;
-import static org.usergrid.utils.UUIDUtils.MAX_TIME_UUID;
-import static org.usergrid.utils.UUIDUtils.MIN_TIME_UUID;
 import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
-import static org.usergrid.utils.UUIDUtils.getTimestampInMillis;
 import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
 import java.nio.ByteBuffer;
@@ -128,7 +124,6 @@ import org.usergrid.persistence.cassandra.CassandraPersistenceUtils;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.CounterUtils;
 import org.usergrid.persistence.cassandra.CounterUtils.AggregateCounterSelection;
-import org.usergrid.utils.UUIDUtils;
 
 import com.fasterxml.uuid.UUIDComparator;
 

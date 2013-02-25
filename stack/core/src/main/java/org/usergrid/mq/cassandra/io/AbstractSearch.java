@@ -37,7 +37,11 @@ import static org.usergrid.utils.UUIDUtils.getTimestampInMillis;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
@@ -113,23 +117,23 @@ public abstract class AbstractSearch implements QueueSearch {
         .setColumnFamily(MESSAGE_PROPERTIES.getColumnFamily()).setKeys(messageIds)
         .setRange(null, null, false, ALL_COUNT).execute().get();
 
-    List<Message> messages = new ArrayList<Message>();
+    List<Message> messages = new ArrayList<Message>(messageIds.size());
+    
     for (Row<UUID, String, ByteBuffer> row : messageResults) {
       Message message = deserializeMessage(row.getColumnSlice().getColumns());
+     
       if (message != null) {
         messages.add(message);
       }
     }
+    
+    Collections.sort(messages, new RequestedOrderComparator(messageIds));
 
-    //multiget hoses the order, so re-order them
-    if(reversed){
-      Message.sortReversed(messages);
-    }else{
-      Message.sort(messages);
-    }
-
+  
     return messages;
   }
+  
+ 
 
   /**
    * Create the results to return from the given messages
@@ -267,7 +271,8 @@ public abstract class AbstractSearch implements QueueSearch {
    * Write the updated client pointer
    * 
    * @param queueId
-   * @param lastReturnedId
+   * @param consumerId
+   * @param lastReturnedId  This is a null safe parameter.  If it's null, this won't be written since it means we didn't read any messages
    */
   protected void writeClientPointer(UUID queueId, UUID consumerId, UUID lastReturnedId) {
     //nothing to do
@@ -344,5 +349,29 @@ public abstract class AbstractSearch implements QueueSearch {
     public String toString() {
       return "QueueBounds [oldest=" + oldest + ", newest=" + newest + "]";
     }
+  }
+  
+  private class RequestedOrderComparator implements Comparator<Message>{
+
+    private Map<UUID, Integer> indexCache = new HashMap<UUID, Integer>();
+    
+    private RequestedOrderComparator(List<UUID> ids ){
+      for(int i = 0; i < ids.size(); i ++){
+        indexCache.put(ids.get(i), i);
+      }
+    }
+    
+    /* (non-Javadoc)
+     * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+     */
+    @Override
+    public int compare(Message o1, Message o2) {
+      int o1Idx = indexCache.get(o1.getUuid());
+      
+      int o2Idx = indexCache.get(o2.getUuid());
+      
+      return o1Idx - o2Idx;
+    }
+    
   }
 }

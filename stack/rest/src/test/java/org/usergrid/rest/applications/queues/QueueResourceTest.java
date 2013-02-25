@@ -1,13 +1,13 @@
 package org.usergrid.rest.applications.queues;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
@@ -21,7 +21,6 @@ import org.usergrid.utils.MapUtils;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.hazelcast.impl.ConcurrentMapManager.Entries;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
 public class QueueResourceTest extends AbstractRestTest {
@@ -372,11 +371,8 @@ public class QueueResourceTest extends AbstractRestTest {
       queue.post(MapUtils.hashMap("id", i));
     }
 
-    // now consume and make sure we get each message. We'll use the default for
-    // this
-    // test first
-    
-    final long timeout = 15000;
+    // now consume and make sure we get each message.  We should receive each message, and we'll use this for comparing results later
+    final long timeout = 30000;
     
     queue = queue.withTimeout(timeout);
     
@@ -391,7 +387,7 @@ public class QueueResourceTest extends AbstractRestTest {
     List<String> originalMessageIds = transHandler.getMessageIds();
     BiMap<String, String> transactionInfo = transHandler.getTransactionToMessageId();
     
-    //now read again, we shouldn't have any results
+    //now read again, we shouldn't have any results because our timeout hasn't lapsed
     IncrementHandler incrementHandler = new IncrementHandler(0);
     
     testMessages(queue, incrementHandler, new NoLastCommand());
@@ -400,6 +396,7 @@ public class QueueResourceTest extends AbstractRestTest {
     
     //now sleep until our timeout expires 
     Thread.sleep(timeout - (System.currentTimeMillis()-start));
+    
     
     //now re-read our messages, we should get them all again
     transHandler = new TransactionResponseHandler(count);
@@ -414,6 +411,7 @@ public class QueueResourceTest extends AbstractRestTest {
     
     assertTrue(returned.size() > 0);
     
+    //compare the replayed messages and the make sure they're in the same order
     BiMap<String, String> newTransactions = transHandler.getTransactionToMessageId();
     
     for(int i = 0; i < originalMessageIds.size(); i ++){
