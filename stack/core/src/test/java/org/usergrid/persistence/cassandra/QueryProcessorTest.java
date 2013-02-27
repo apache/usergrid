@@ -24,7 +24,6 @@ import java.math.BigInteger;
 import java.util.Iterator;
 
 import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenRewriteStream;
 import org.junit.Test;
 import org.usergrid.persistence.Query;
@@ -629,5 +628,61 @@ public class QueryProcessorTest {
         assertEquals("foo with bar", slice.getFinish().getValue());
         assertTrue(slice.getFinish().isInclusive());
     }
+    
+    @Test
+    public void fieldWithDash() throws Exception {
+        String queryString = "select * where a-foo = 5";
+
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
+
+        Query query = parser.ql().query;
+
+        QueryProcessor processor = new QueryProcessor(query, null);
+
+        SliceNode node = (SliceNode) processor.getFirstNode();
+
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+
+        QuerySlice slice = slices.next();
+
+        assertEquals("a-foo", slice.getPropertyName());
+        
+        assertEquals(BigInteger.valueOf(5), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(5), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
+    }
+    
+    @Test
+    public void stringWithDash() throws Exception {
+        String queryString = "select * where a = 'foo-bar'";
+
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
+
+        Query query = parser.ql().query;
+
+        QueryProcessor processor = new QueryProcessor(query, null);
+
+        SliceNode node = (SliceNode) processor.getFirstNode();
+
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+
+        QuerySlice slice = slices.next();
+
+        assertEquals("a", slice.getPropertyName());
+
+        assertEquals("foo-bar", slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+
+        assertEquals("foo-bar", slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
+    }
+
 
 }
