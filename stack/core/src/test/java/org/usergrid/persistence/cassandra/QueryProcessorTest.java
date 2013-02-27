@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Iterator;
-import java.util.UUID;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.TokenRewriteStream;
@@ -37,9 +36,6 @@ import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
 import org.usergrid.persistence.query.tree.QueryFilterLexer;
 import org.usergrid.persistence.query.tree.QueryFilterParser;
-import org.usergrid.utils.UUIDUtils;
-
-import com.fasterxml.uuid.impl.UUIDUtil;
 
 /**
  * @author tnine
@@ -47,675 +43,646 @@ import com.fasterxml.uuid.impl.UUIDUtil;
  */
 public class QueryProcessorTest {
 
-  @Test
-  public void equality() throws Exception {
-    String queryString = "select * where a = 5";
+    @Test
+    public void equality() throws Exception {
+        String queryString = "select * where a = 5";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    SliceNode node = (SliceNode) processor.getFirstNode();
+        SliceNode node = (SliceNode) processor.getFirstNode();
 
-    Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
 
-    QuerySlice slice = slices.next();
+        QuerySlice slice = slices.next();
 
-    assertEquals(BigInteger.valueOf(5), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(5), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
-  }
+        assertEquals(BigInteger.valueOf(5), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(5), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
+    }
 
-  @Test
-  public void lessThan() throws Exception {
-    String queryString = "select * where a < 5";
+    @Test
+    public void lessThan() throws Exception {
+        String queryString = "select * where a < 5";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    SliceNode node = (SliceNode) processor.getFirstNode();
+        SliceNode node = (SliceNode) processor.getFirstNode();
 
-    Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
 
-    QuerySlice slice = slices.next();
+        QuerySlice slice = slices.next();
 
-    assertNull(slice.getStart());
+        assertNull(slice.getStart());
 
-    assertEquals(BigInteger.valueOf(5), slice.getFinish().getValue());
-    assertFalse(slice.getFinish().isInclusive());
-  }
+        assertEquals(BigInteger.valueOf(5), slice.getFinish().getValue());
+        assertFalse(slice.getFinish().isInclusive());
+    }
 
-  @Test
-  public void lessThanEquals() throws Exception {
-    String queryString = "select * where a <= 5";
+    @Test
+    public void lessThanEquals() throws Exception {
+        String queryString = "select * where a <= 5";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    SliceNode node = (SliceNode) processor.getFirstNode();
+        SliceNode node = (SliceNode) processor.getFirstNode();
 
-    Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
 
-    QuerySlice slice = slices.next();
+        QuerySlice slice = slices.next();
 
-    assertNull(slice.getStart());
+        assertNull(slice.getStart());
 
-    assertEquals(BigInteger.valueOf(5), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
-  }
+        assertEquals(BigInteger.valueOf(5), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
+    }
 
-  @Test
-  public void greaterThan() throws Exception {
-    String queryString = "select * where a > 5";
+    @Test
+    public void greaterThan() throws Exception {
+        String queryString = "select * where a > 5";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    SliceNode node = (SliceNode) processor.getFirstNode();
+        SliceNode node = (SliceNode) processor.getFirstNode();
 
-    Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
 
-    QuerySlice slice = slices.next();
+        QuerySlice slice = slices.next();
 
-    assertEquals(BigInteger.valueOf(5), slice.getStart().getValue());
-    assertFalse(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(5), slice.getStart().getValue());
+        assertFalse(slice.getStart().isInclusive());
 
-    assertNull(slice.getFinish());
-  }
+        assertNull(slice.getFinish());
+    }
 
-  @Test
-  public void greaterThanEquals() throws Exception {
-    String queryString = "select * where a >= 5";
+    @Test
+    public void greaterThanEquals() throws Exception {
+        String queryString = "select * where a >= 5";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    SliceNode node = (SliceNode) processor.getFirstNode();
+        SliceNode node = (SliceNode) processor.getFirstNode();
 
-    Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
 
-    QuerySlice slice = slices.next();
+        QuerySlice slice = slices.next();
 
-    assertEquals(BigInteger.valueOf(5), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(5), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
 
-    assertNull(slice.getFinish());
-  }
+        assertNull(slice.getFinish());
+    }
 
-  @Test
-  public void contains() throws Exception {
-    String queryString = "select * where a contains 'foo'";
+    @Test
+    public void contains() throws Exception {
+        String queryString = "select * where a contains 'foo'";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    SliceNode node = (SliceNode) processor.getFirstNode();
+        SliceNode node = (SliceNode) processor.getFirstNode();
 
-    Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
 
-    QuerySlice slice = slices.next();
+        QuerySlice slice = slices.next();
 
-    assertEquals("a.keywords", slice.getPropertyName());
+        assertEquals("a.keywords", slice.getPropertyName());
 
-    assertEquals("foo", slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
+        assertEquals("foo", slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
 
-    assertEquals("foo", slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
-  }
+        assertEquals("foo", slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
+    }
 
-  @Test
-  public void containsLower() throws Exception {
-    String queryString = "select * where a contains 'FOO'";
+    @Test
+    public void containsLower() throws Exception {
+        String queryString = "select * where a contains 'FOO'";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    SliceNode node = (SliceNode) processor.getFirstNode();
+        SliceNode node = (SliceNode) processor.getFirstNode();
 
-    Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
 
-    QuerySlice slice = slices.next();
+        QuerySlice slice = slices.next();
 
-    assertEquals("a.keywords", slice.getPropertyName());
+        assertEquals("a.keywords", slice.getPropertyName());
 
-    assertEquals("foo", slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
+        assertEquals("foo", slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
 
-    assertEquals("foo", slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
-  }
+        assertEquals("foo", slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
+    }
 
-  @Test
-  public void containsRange() throws Exception, PersistenceException {
-    String queryString = "select * where a contains 'foo*'";
+    @Test
+    public void containsRange() throws Exception, PersistenceException {
+        String queryString = "select * where a contains 'foo*'";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    SliceNode node = (SliceNode) processor.getFirstNode();
+        SliceNode node = (SliceNode) processor.getFirstNode();
 
-    Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
 
-    QuerySlice slice = slices.next();
+        QuerySlice slice = slices.next();
 
-    assertEquals("a.keywords", slice.getPropertyName());
+        assertEquals("a.keywords", slice.getPropertyName());
 
-    assertEquals("foo", slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
+        assertEquals("foo", slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
 
-    assertEquals("foo\uffff", slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
-  }
+        assertEquals("foo\uffff", slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
+    }
 
-  @Test
-  public void within() throws Exception {
-    String queryString = "select * where a within .5 of 157.00, 0.00";
+    @Test
+    public void within() throws Exception {
+        String queryString = "select * where a within .5 of 157.00, 0.00";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    WithinNode node = (WithinNode) processor.getFirstNode();
+        WithinNode node = (WithinNode) processor.getFirstNode();
 
-    assertEquals("a.coordinates", node.getPropertyName());
-    assertEquals(.5f, node.getDistance(), 0);
-    assertEquals(157f, node.getLattitude(), 0);
-    assertEquals(0f, node.getLongitude(), 0);
+        assertEquals("a.coordinates", node.getPropertyName());
+        assertEquals(.5f, node.getDistance(), 0);
+        assertEquals(157f, node.getLattitude(), 0);
+        assertEquals(0f, node.getLongitude(), 0);
 
-  }
+    }
 
-  @Test
-  public void andEquality() throws Exception {
-    assertAndQuery("select * where a = 1 and b = 2 and c = 3");
-    assertAndQuery("select * where a = 1 AND b = 2 and c = 3");
-    assertAndQuery("select * where a = 1 AnD b = 2 and c = 3");
-    assertAndQuery("select * where a = 1 ANd b = 2 and c = 3");
-    assertAndQuery("select * where a = 1 anD b = 2 and c = 3");
-    assertAndQuery("select * where a = 1 ANd b = 2 and c = 3");
-    assertAndQuery("select * where a = 1 && b = 2 && c = 3");
-  }
+    @Test
+    public void andEquality() throws Exception {
+        assertAndQuery("select * where a = 1 and b = 2 and c = 3");
+        assertAndQuery("select * where a = 1 AND b = 2 and c = 3");
+        assertAndQuery("select * where a = 1 AnD b = 2 and c = 3");
+        assertAndQuery("select * where a = 1 ANd b = 2 and c = 3");
+        assertAndQuery("select * where a = 1 anD b = 2 and c = 3");
+        assertAndQuery("select * where a = 1 ANd b = 2 and c = 3");
+        assertAndQuery("select * where a = 1 && b = 2 && c = 3");
+    }
 
-  private void assertAndQuery(String queryString) throws Exception {
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+    private void assertAndQuery(String queryString) throws Exception {
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        Query query = parser.ql().query;
 
-    SliceNode node = (SliceNode) processor.getFirstNode();
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+        SliceNode node = (SliceNode) processor.getFirstNode();
 
-    QuerySlice slice = slices.next();
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
 
-    assertEquals("b", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(2), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(2), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+        QuerySlice slice = slices.next();
 
-    slice = slices.next();
+        assertEquals("b", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(2), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(2), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
 
-    assertEquals("c", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(3), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(3), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+        slice = slices.next();
 
-    slice = slices.next();
+        assertEquals("c", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(3), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(3), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
 
-    assertEquals("a", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(1), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
-  }
+        slice = slices.next();
 
-  @Test
-  public void orEquality() throws Exception {
-    assertOrQuery("select * where a = 1 or b = 2");
-    assertOrQuery("select * where a = 1 OR b = 2");
-    assertOrQuery("select * where a = 1 oR b = 2");
-    assertOrQuery("select * where a = 1 Or b = 2");
-    assertOrQuery("select * where a = 1 || b = 2");
-  }
+        assertEquals("a", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(1), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
+    }
 
-  private void assertOrQuery(String queryString) throws Exception {
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+    @Test
+    public void orEquality() throws Exception {
+        assertOrQuery("select * where a = 1 or b = 2");
+        assertOrQuery("select * where a = 1 OR b = 2");
+        assertOrQuery("select * where a = 1 oR b = 2");
+        assertOrQuery("select * where a = 1 Or b = 2");
+        assertOrQuery("select * where a = 1 || b = 2");
+    }
+    
+   
 
-    Query query = parser.ql().query;
+    private void assertOrQuery(String queryString) throws Exception {
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        Query query = parser.ql().query;
 
-    OrNode node = (OrNode) processor.getFirstNode();
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    SliceNode sliceNode = (SliceNode) node.getLeft();
+        OrNode node = (OrNode) processor.getFirstNode();
 
-    Iterator<QuerySlice> slices = sliceNode.getAllSlices().iterator();
+        SliceNode sliceNode = (SliceNode) node.getLeft();
 
-    QuerySlice slice = slices.next();
+        Iterator<QuerySlice> slices = sliceNode.getAllSlices().iterator();
 
-    assertEquals("a", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(1), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+        QuerySlice slice = slices.next();
 
-    sliceNode = (SliceNode) node.getRight();
+        assertEquals("a", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(1), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
 
-    slices = sliceNode.getAllSlices().iterator();
+        sliceNode = (SliceNode) node.getRight();
 
-    slice = slices.next();
+        slices = sliceNode.getAllSlices().iterator();
 
-    assertEquals("b", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(2), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(2), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+        slice = slices.next();
 
-  }
+        assertEquals("b", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(2), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(2), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
 
-  /**
-   * Tests that when properties are not siblings, they are properly assigned to
-   * a SliceNode
-   * 
-   * @throws Exception
-   */
-  @Test
-  public void nestedCompression() throws Exception {
-    String queryString = "select * where (a > 1 and b > 10 and a < 10 and b < 20 ) or ( c >= 20 and d >= 30 and c <= 30 and d <= 40)";
+    }
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+    /**
+     * Tests that when properties are not siblings, they are properly assigned
+     * to a SliceNode
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void nestedCompression() throws Exception {
+        String queryString = "select * where (a > 1 and b > 10 and a < 10 and b < 20 ) or ( c >= 20 and d >= 30 and c <= 30 and d <= 40)";
 
-    Query query = parser.ql().query;
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        Query query = parser.ql().query;
 
-    OrNode node = (OrNode) processor.getFirstNode();
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    SliceNode sliceNode = (SliceNode) node.getLeft();
+        OrNode node = (OrNode) processor.getFirstNode();
 
-    Iterator<QuerySlice> slices = sliceNode.getAllSlices().iterator();
+        SliceNode sliceNode = (SliceNode) node.getLeft();
 
-    QuerySlice slice = slices.next();
+        Iterator<QuerySlice> slices = sliceNode.getAllSlices().iterator();
 
-    assertEquals("b", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(10), slice.getStart().getValue());
-    assertFalse(slice.getStart().isInclusive());
+        QuerySlice slice = slices.next();
 
-    assertEquals(BigInteger.valueOf(20), slice.getFinish().getValue());
-    assertFalse(slice.getFinish().isInclusive());
+        assertEquals("b", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(10), slice.getStart().getValue());
+        assertFalse(slice.getStart().isInclusive());
 
-    slice = slices.next();
+        assertEquals(BigInteger.valueOf(20), slice.getFinish().getValue());
+        assertFalse(slice.getFinish().isInclusive());
 
-    assertEquals("a", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
-    assertFalse(slice.getStart().isInclusive());
+        slice = slices.next();
 
-    assertEquals(BigInteger.valueOf(10), slice.getFinish().getValue());
-    assertFalse(slice.getFinish().isInclusive());
+        assertEquals("a", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
+        assertFalse(slice.getStart().isInclusive());
 
-    sliceNode = (SliceNode) node.getRight();
+        assertEquals(BigInteger.valueOf(10), slice.getFinish().getValue());
+        assertFalse(slice.getFinish().isInclusive());
 
-    slices = sliceNode.getAllSlices().iterator();
+        sliceNode = (SliceNode) node.getRight();
 
-    slice = slices.next();
+        slices = sliceNode.getAllSlices().iterator();
 
-    assertEquals("d", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(30), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(40), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+        slice = slices.next();
 
-    slice = slices.next();
+        assertEquals("d", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(30), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(40), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
 
-    assertEquals("c", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(20), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(30), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+        slice = slices.next();
 
-  }
+        assertEquals("c", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(20), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(30), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
 
-  /**
-   * Tests that when there are multiple or with and clauses, the tree is
-   * constructed correctly
-   * 
-   * @throws Exception
-   */
-  @Test
-  public void nestedOrCompression() throws Exception {
-    String queryString = "select * where ((a > 1 and  a < 10) or (b > 10 and b < 20 )) or (( c >= 20 and c <= 30 ) or (d >= 30  and d <= 40))";
+    }
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+    /**
+     * Tests that when there are multiple or with and clauses, the tree is
+     * constructed correctly
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void nestedOrCompression() throws Exception {
+        String queryString = "select * where ((a > 1 and  a < 10) or (b > 10 and b < 20 )) or (( c >= 20 and c <= 30 ) or (d >= 30  and d <= 40))";
 
-    Query query = parser.ql().query;
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        Query query = parser.ql().query;
 
-    OrNode rootNode = (OrNode) processor.getFirstNode();
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    OrNode node = (OrNode) rootNode.getLeft();
+        OrNode rootNode = (OrNode) processor.getFirstNode();
 
-    // get the left node of the or
+        OrNode node = (OrNode) rootNode.getLeft();
 
-    SliceNode sliceNode = (SliceNode) node.getLeft();
+        // get the left node of the or
 
-    Iterator<QuerySlice> slices = sliceNode.getAllSlices().iterator();
+        SliceNode sliceNode = (SliceNode) node.getLeft();
 
-    QuerySlice slice = slices.next();
+        Iterator<QuerySlice> slices = sliceNode.getAllSlices().iterator();
 
-    assertEquals("a", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
-    assertFalse(slice.getStart().isInclusive());
+        QuerySlice slice = slices.next();
 
-    assertEquals(BigInteger.valueOf(10), slice.getFinish().getValue());
-    assertFalse(slice.getFinish().isInclusive());
+        assertEquals("a", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
+        assertFalse(slice.getStart().isInclusive());
 
-    // get our right node
-    sliceNode = (SliceNode) node.getRight();
+        assertEquals(BigInteger.valueOf(10), slice.getFinish().getValue());
+        assertFalse(slice.getFinish().isInclusive());
 
-    slices = sliceNode.getAllSlices().iterator();
+        // get our right node
+        sliceNode = (SliceNode) node.getRight();
 
-    slice = slices.next();
+        slices = sliceNode.getAllSlices().iterator();
 
-    assertEquals("b", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(10), slice.getStart().getValue());
-    assertFalse(slice.getStart().isInclusive());
+        slice = slices.next();
 
-    assertEquals(BigInteger.valueOf(20), slice.getFinish().getValue());
-    assertFalse(slice.getFinish().isInclusive());
+        assertEquals("b", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(10), slice.getStart().getValue());
+        assertFalse(slice.getStart().isInclusive());
 
-    node = (OrNode) rootNode.getRight();
+        assertEquals(BigInteger.valueOf(20), slice.getFinish().getValue());
+        assertFalse(slice.getFinish().isInclusive());
 
-    sliceNode = (SliceNode) node.getLeft();
+        node = (OrNode) rootNode.getRight();
 
-    slices = sliceNode.getAllSlices().iterator();
+        sliceNode = (SliceNode) node.getLeft();
 
-    slice = slices.next();
+        slices = sliceNode.getAllSlices().iterator();
 
-    assertEquals("c", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(20), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(30), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+        slice = slices.next();
 
-    sliceNode = (SliceNode) node.getRight();
+        assertEquals("c", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(20), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(30), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
 
-    slices = sliceNode.getAllSlices().iterator();
+        sliceNode = (SliceNode) node.getRight();
 
-    slice = slices.next();
+        slices = sliceNode.getAllSlices().iterator();
 
-    assertEquals("d", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(30), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(40), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+        slice = slices.next();
 
-  }
+        assertEquals("d", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(30), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(40), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
 
-  /**
-   * Tests that when NOT is not the root operand the tree has a different root
-   * 
-   * @throws Exception
-   */
-  @Test
-  public void andNot() throws Exception {
-    String queryString = "select * where a > 1 and not b = 2";
+    }
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+    /**
+     * Tests that when NOT is not the root operand the tree has a different root
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void andNot() throws Exception {
+        String queryString = "select * where a > 1 and not b = 2";
 
-    Query query = parser.ql().query;
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        Query query = parser.ql().query;
 
-    AndNode rootNode = (AndNode) processor.getFirstNode();
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    SliceNode sliceNode = (SliceNode) rootNode.getLeft();
+        AndNode rootNode = (AndNode) processor.getFirstNode();
 
-    Iterator<QuerySlice> slices = sliceNode.getAllSlices().iterator();
+        SliceNode sliceNode = (SliceNode) rootNode.getLeft();
 
-    QuerySlice slice = slices.next();
+        Iterator<QuerySlice> slices = sliceNode.getAllSlices().iterator();
 
-    assertEquals("a", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
-    assertFalse(slice.getStart().isInclusive());
+        QuerySlice slice = slices.next();
 
-    assertNull(slice.getFinish());
+        assertEquals("a", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(1), slice.getStart().getValue());
+        assertFalse(slice.getStart().isInclusive());
 
-    NotNode notNode = (NotNode) rootNode.getRight();
+        assertNull(slice.getFinish());
 
-    // now get the child of the not node
-    sliceNode = (SliceNode) notNode.getChild();
+        NotNode notNode = (NotNode) rootNode.getRight();
 
-    slices = sliceNode.getAllSlices().iterator();
+        // now get the child of the not node
+        sliceNode = (SliceNode) notNode.getChild();
 
-    slice = slices.next();
+        slices = sliceNode.getAllSlices().iterator();
 
-    assertEquals("b", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(2), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(2), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
+        slice = slices.next();
 
-  }
+        assertEquals("b", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(2), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(2), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
 
-  /**
-   * Tests that when NOT is the root operand, a full scan range is performed.
-   * 
-   * @throws Exception
-   */
-  @Test
-  public void notRootOperand() throws Exception {
-    String queryString = "select * where not b = 2";
+    }
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+    /**
+     * Tests that when NOT is the root operand, a full scan range is performed.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void notRootOperand() throws Exception {
+        String queryString = "select * where not b = 2";
 
-    Query query = parser.ql().query;
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        Query query = parser.ql().query;
 
-    NotNode rootNode = (NotNode) processor.getFirstNode();
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    SliceNode sliceNode = (SliceNode) rootNode.getChild();
+        NotNode rootNode = (NotNode) processor.getFirstNode();
 
-    Iterator<QuerySlice> slices = sliceNode.getAllSlices().iterator();
+        SliceNode sliceNode = (SliceNode) rootNode.getChild();
 
-    QuerySlice slice = slices.next();
+        Iterator<QuerySlice> slices = sliceNode.getAllSlices().iterator();
 
-    assertEquals("b", slice.getPropertyName());
-    assertEquals(BigInteger.valueOf(2), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(2), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
-  }
+        QuerySlice slice = slices.next();
 
-  @Test
-  public void stringWithSpaces() throws Exception {
-    String queryString = "select * where a = 'foo with bar'";
+        assertEquals("b", slice.getPropertyName());
+        assertEquals(BigInteger.valueOf(2), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(2), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
+    }
+    
+    @Test
+    public void stringWithSpaces() throws Exception {
+        String queryString = "select * where a = 'foo with bar'";
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    Query query = parser.ql().query;
+        Query query = parser.ql().query;
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    SliceNode node = (SliceNode) processor.getFirstNode();
+        SliceNode node = (SliceNode) processor.getFirstNode();
 
-    Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
 
-    QuerySlice slice = slices.next();
+        QuerySlice slice = slices.next();
 
-    assertEquals("a", slice.getPropertyName());
+        assertEquals("a", slice.getPropertyName());
 
-    assertEquals("foo with bar", slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
+        assertEquals("foo with bar", slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
 
-    assertEquals("foo with bar", slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
-  }
+        assertEquals("foo with bar", slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
+    }
+    
+    @Test
+    public void fieldWithDash() throws Exception {
+        String queryString = "select * where a-foo = 5";
 
-  @Test
-  public void fieldWithDash() throws Exception {
-    String queryString = "select * where a-foo = 5";
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        Query query = parser.ql().query;
 
-    Query query = parser.ql().query;
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        SliceNode node = (SliceNode) processor.getFirstNode();
 
-    SliceNode node = (SliceNode) processor.getFirstNode();
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
 
-    Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+        QuerySlice slice = slices.next();
 
-    QuerySlice slice = slices.next();
+        assertEquals("a-foo", slice.getPropertyName());
+        
+        assertEquals(BigInteger.valueOf(5), slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
+        assertEquals(BigInteger.valueOf(5), slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
+    }
+    
+    @Test
+    public void stringWithDash() throws Exception {
+        String queryString = "select * where a = 'foo-bar'";
 
-    assertEquals("a-foo", slice.getPropertyName());
+        ANTLRStringStream in = new ANTLRStringStream(queryString);
+        QueryFilterLexer lexer = new QueryFilterLexer(in);
+        TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+        QueryFilterParser parser = new QueryFilterParser(tokens);
 
-    assertEquals(BigInteger.valueOf(5), slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(BigInteger.valueOf(5), slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
-  }
+        Query query = parser.ql().query;
 
-  @Test
-  public void stringWithDash() throws Exception {
-    String queryString = "select * where a = 'foo-bar'";
+        QueryProcessor processor = new QueryProcessor(query, null);
 
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
+        SliceNode node = (SliceNode) processor.getFirstNode();
 
-    Query query = parser.ql().query;
+        Iterator<QuerySlice> slices = node.getAllSlices().iterator();
 
-    QueryProcessor processor = new QueryProcessor(query, null);
+        QuerySlice slice = slices.next();
 
-    SliceNode node = (SliceNode) processor.getFirstNode();
+        assertEquals("a", slice.getPropertyName());
 
-    Iterator<QuerySlice> slices = node.getAllSlices().iterator();
+        assertEquals("foo-bar", slice.getStart().getValue());
+        assertTrue(slice.getStart().isInclusive());
 
-    QuerySlice slice = slices.next();
+        assertEquals("foo-bar", slice.getFinish().getValue());
+        assertTrue(slice.getFinish().isInclusive());
+    }
 
-    assertEquals("a", slice.getPropertyName());
 
-    assertEquals("foo-bar", slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-
-    assertEquals("foo-bar", slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
-  }
-
-  @Test
-  public void uuidParse() throws Exception {
-
-//    UUID value = UUID.fromString("4b91a9c2-86a1-11e2-b7fa-68a86d52fa56");
-//    
-//
-//    String queryString = "select * where uuid = 4b91a9c2-86a1-11e2-b7fa-68a86d52fa56";
-
-    UUID value = UUID.fromString("c6ee8a1c-3ef4-11e2-8861-02e81adcf3d0");
-    String queryString = "select * where uuid = c6ee8a1c-3ef4-11e2-8861-02e81adcf3d0";
-
-    ANTLRStringStream in = new ANTLRStringStream(queryString);
-    QueryFilterLexer lexer = new QueryFilterLexer(in);
-    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
-    QueryFilterParser parser = new QueryFilterParser(tokens);
-
-    Query query = parser.ql().query;
-
-    QueryProcessor processor = new QueryProcessor(query, null);
-
-    SliceNode node = (SliceNode) processor.getFirstNode();
-
-    Iterator<QuerySlice> slices = node.getAllSlices().iterator();
-
-    QuerySlice slice = slices.next();
-
-    assertEquals("uuid", slice.getPropertyName());
-
-    assertEquals(value, slice.getStart().getValue());
-    assertTrue(slice.getStart().isInclusive());
-    assertEquals(value, slice.getFinish().getValue());
-    assertTrue(slice.getFinish().isInclusive());
-  }
 }
