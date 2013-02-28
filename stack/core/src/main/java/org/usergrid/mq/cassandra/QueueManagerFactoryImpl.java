@@ -29,22 +29,22 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.usergrid.locking.LockManager;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.CounterUtils;
 
-public class QueueManagerFactoryImpl implements QueueManagerFactory,
-		ApplicationContextAware {
+public class QueueManagerFactoryImpl implements QueueManagerFactory {
 
 	public static final Logger logger = LoggerFactory
 			.getLogger(QueueManagerFactoryImpl.class);
 
 	public static String IMPLEMENTATION_DESCRIPTION = "Cassandra Queue Manager Factory 1.0";
 
-	ApplicationContext applicationContext;
-	CassandraService cass;
-	CounterUtils counterUtils;
+	private CassandraService cass;
+	private CounterUtils counterUtils;
+	private LockManager lockManager;
 
 	public static final StringSerializer se = new StringSerializer();
 	public static final ByteBufferSerializer be = new ByteBufferSerializer();
@@ -62,9 +62,10 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory,
 	 *            the CounterUtils
 	 */
 	public QueueManagerFactoryImpl(CassandraService cass,
-			CounterUtils counterUtils) {
+			CounterUtils counterUtils, LockManager lockManager) {
 		this.cass = cass;
 		this.counterUtils = counterUtils;
+		this.lockManager = lockManager;
 	}
 
 	@Override
@@ -75,17 +76,12 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory,
 	@Override
 	public QueueManager getQueueManager(UUID applicationId) {
 	    QueueManagerImpl qm = new QueueManagerImpl();
-	    qm.init(this, cass, counterUtils, applicationId);
+	    qm.init(this, cass, counterUtils, lockManager, applicationId);
 	    return qm;
 		//return applicationContext.getAutowireCapableBeanFactory()
 		//		.createBean(QueueManagerImpl.class)
 		//		.init(this, cass, counterUtils, applicationId);
 	}
 
-	@Override
-	public void setApplicationContext(ApplicationContext applicationContext)
-			throws BeansException {
-		this.applicationContext = applicationContext;
-	}
 
 }

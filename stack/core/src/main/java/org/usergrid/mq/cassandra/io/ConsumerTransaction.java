@@ -28,15 +28,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import javax.management.RuntimeErrorException;
 
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.SliceQuery;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.usergrid.locking.Lock;
+import org.usergrid.locking.LockManager;
+import org.usergrid.locking.exception.UGLockException;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueQuery;
 import org.usergrid.mq.QueueResults;
+import org.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.usergrid.persistence.exceptions.TransactionNotFoundException;
 import org.usergrid.utils.UUIDUtils;
 
 /**
@@ -47,12 +57,115 @@ import org.usergrid.utils.UUIDUtils;
  */
 public class ConsumerTransaction extends NoTransactionSearch {
 
+  private static final Logger logger = LoggerFactory.getLogger(ConsumerTransaction.class);
+  private static final int MAX_READ = 10000;
+  private LockManager lockManager;
+  private UUID applicationId;
+
   /**
    * @param ko
    * @param cassTimestamp
    */
-  public ConsumerTransaction(Keyspace ko, long cassTimestamp) {
+  public ConsumerTransaction(UUID applicationId, Keyspace ko, LockManager lockManager, long cassTimestamp) {
     super(ko, cassTimestamp);
+    this.applicationId = applicationId;
+    this.lockManager = lockManager;
+  }
+
+  /**
+   * Renew the existing transaction. Does so by deleting the exiting timeout,
+   * and replacing it with a new value
+   * 
+   * @param queuePath
+   *          The queue path
+   * @param transactionId
+   *          The transaction id
+   * @param query
+   *          The query params
+   * @return The new transaction uuid
+   * @throws TransactionNotFoundException
+   */
+  public UUID renewTransaction(String queuePath, UUID transactionId, QueueQuery query)
+      throws TransactionNotFoundException {
+    long now = System.currentTimeMillis();
+    
+    if(query == null){
+      query = new QueueQuery();
+    }
+
+    UUID queueId = getQueueId(queuePath);
+    UUID consumerId = getConsumerId(queueId, query);
+    ByteBuffer key = getQueueClientTransactionKey(queueId, consumerId);
+
+    // read the original transaction, if it's not there, then we can't possibly
+    // extend it
+    SliceQuery<ByteBuffer, UUID, UUID> q = createSliceQuery(ko, be, ue, ue);
+    q.setColumnFamily(CONSUMER_QUEUE_TIMEOUTS.getColumnFamily());
+    q.setKey(key);
+    q.setColumnNames(transactionId);
+
+    HColumn<UUID, UUID> col = q.execute().get().getColumnByName(transactionId);
+
+    if (col == null) {
+      throw new TransactionNotFoundException(String.format("No transaction with id %s exists", transactionId));
+    }
+
+    UUID origTrans = col.getName();
+    UUID messageId = col.getValue();
+
+    // Generate a new expiration and insert it
+    UUID expirationId = UUIDUtils.newTimeUUID(now + query.getTimeout());
+
+    logger.debug("Writing new timeout at '{}' for message '{}'", expirationId, messageId);
+
+    Mutator<ByteBuffer> mutator = createMutator(ko, be);
+
+    mutator.addInsertion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(),
+        createColumn(expirationId, messageId, cassTimestamp, ue, ue));
+
+    mutator.execute();
+
+    // now delete the old value
+    deleteTransaction(queueId, consumerId, origTrans);
+
+    return expirationId;
+
+  }
+
+  /**
+   * Delete the specified transaction
+   * 
+   * @param queuePath
+   * @param transactionId
+   * @param query
+   */
+  public void deleteTransaction(String queuePath, UUID transactionId, QueueQuery query) {
+    
+    if(query == null){
+      query = new QueueQuery();
+    }
+    
+    UUID queueId = getQueueId(queuePath);
+    UUID consumerId = getConsumerId(queueId, query);
+
+    deleteTransaction(queueId, consumerId, transactionId);
+  }
+
+  /**
+   * Delete the specified transaction
+   * 
+   * @param queueId
+   * @param consumerId
+   * @param transactionId
+   */
+  private void deleteTransaction(UUID queueId, UUID consumerId, UUID transactionId) {
+
+    Mutator<ByteBuffer> mutator = createMutator(ko, be);
+    ByteBuffer key = getQueueClientTransactionKey(queueId, consumerId);
+
+    mutator.addDeletion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(), transactionId, ue, cassTimestamp);
+
+    mutator.execute();
   }
 
   /*
@@ -64,64 +177,116 @@ public class ConsumerTransaction extends NoTransactionSearch {
   @Override
   public QueueResults getResults(String queuePath, QueueQuery query) {
 
-    long startTime = System.currentTimeMillis();
-
     UUID queueId = getQueueId(queuePath);
     UUID consumerId = getConsumerId(queueId, query);
-    QueueBounds bounds = getQueueBounds(queueId);
 
-    SearchParam params = getParams(queueId, consumerId, query);
+    if (query.getNextCount() > MAX_READ) {
+      throw new IllegalArgumentException(String.format(
+          "You specified a size of %d, you cannot specify a size larger than %d when using transations", query.getNextCount(),
+          MAX_READ));
+    }
 
-    List<UUID> ids = getQueueRange(queueId, bounds, params);
+  
+ 
+   
+    QueueResults results = null;
+    
+    Lock lock = lockManager.createLock(applicationId, queueId.toString(), consumerId.toString());
 
-    // get a list of ids from the consumer.
-    List<TransactionPointer> pointers = getConsumerIds(queueId, consumerId, params, startTime);
+    try {
+   
+      lock.lock();
+      
+      long startTime = System.currentTimeMillis();
+      
+      UUID startTimeUUID = UUIDUtils.newTimeUUID(startTime, 0);
+     
+      QueueBounds bounds = getQueueBounds(queueId);
+      
+      
+      // with transactional reads, we can't read into the future, set the bounds
+      // to be now
+      bounds = new QueueBounds(bounds.getOldest(), startTimeUUID);
+    
+    
 
-    TransactionPointer pointer = null;
 
-    int lastTransactionIndex = 0;
+      SearchParam params = getParams(queueId, consumerId, query);
 
-    for (lastTransactionIndex = 0; lastTransactionIndex < pointers.size(); lastTransactionIndex++) {
 
-      pointer = pointers.get(lastTransactionIndex);
+      List<UUID> ids = getQueueRange(queueId, bounds, params);
 
-      int insertIndex = Collections.binarySearch(ids, pointer.expiration);
+      // get a list of ids from the consumer.
 
-      // we're done, this message goes at the end, no point in continuing since
-      // we have our full result set
-      if (insertIndex == params.limit * -1 - 1) {
-        break;
+      List<TransactionPointer> pointers = getConsumerIds(queueId, consumerId, params, startTimeUUID);
+
+      TransactionPointer pointer = null;
+
+      int lastTransactionIndex = -1;
+
+      for (int i = 0; i < pointers.size(); i++) {
+
+        pointer = pointers.get(i);
+
+        int insertIndex = Collections.binarySearch(ids, pointer.expiration);
+
+        // we're done, this message goes at the end, no point in continuing
+        // since
+        // we have our full result set
+        if (insertIndex == params.limit * -1 - 1) {
+          break;
+        }
+
+        // get the insertion index into the set
+        insertIndex = (insertIndex + 1) * -1;
+
+        ids.add(insertIndex, pointer.targetMessage);
+
+        lastTransactionIndex = i;
+
       }
 
-      // get the insertion index into the set
-      insertIndex = (insertIndex + 1) * -1;
+      // now we've merge the results, trim them to size;
+      if (ids.size() > params.limit) {
+        ids = ids.subList(0, params.limit);
+      }
 
-      ids.add(insertIndex, pointer.targetMessage);
+      // load the messages
+      List<Message> messages = loadMessages(ids, params.reversed);
 
+      // write our future timeouts for all these messages
+      writeTransactions(messages, query.getTimeout() + startTime, queueId, consumerId);
+
+      // remove all read transaction pointers
+      deleteTransactionPointers(pointers, lastTransactionIndex + 1, queueId, consumerId);
+
+      // return the results
+      results = createResults(messages, queuePath, queueId, consumerId);
+
+      UUID lastReadTransactionPointer = lastTransactionIndex == -1 ? null
+          : pointers.get(lastTransactionIndex).expiration;
+
+      UUID lastId = messages.size() == 0 ? null : messages.get(messages.size() - 1).getUuid();
+
+      // our last read id will either be the last read transaction pointer, or
+      // the
+      // last read messages uuid, whichever is greater
+      UUID lastReadId = UUIDUtils.max(lastReadTransactionPointer, lastId);
+
+      writeClientPointer(queueId, consumerId, lastReadId);
+
+    } catch (UGLockException e) {
+      logger.error("Unable to acquire lock", e);
+    } finally {
+      try {
+        lock.unlock();
+      } catch (UGLockException e) {
+        logger.error("Unable to release lock", e);
+      }
     }
-
-    // now we've merge the results, trim them to size;
-    if (ids.size() > params.limit) {
-      ids = ids.subList(0, params.limit);
-    }
-
-    // load the messages
-    List<Message> messages = loadMessages(ids, params.reversed);
-
-    // write our future timeouts for all these messages
-    writeTransactions(messages, query.getTimeout() + startTime, queueId, consumerId);
-
-    // remove all read transaction pointers
-    deleteTransactionPointers(pointers, lastTransactionIndex, queueId, consumerId);
-
-    // return the results
-    QueueResults results = createResults(messages, queuePath, queueId, consumerId);
-
-    UUID lastId = ids.size() > 0 ? ids.get(ids.size() - 1) : null;
-
-    writeClientPointer(queueId, consumerId, lastId);
-
+    //we should never get here
     return results;
+
   }
 
   /**
@@ -135,10 +300,11 @@ public class ConsumerTransaction extends NoTransactionSearch {
    *          The
    * @return
    */
-  protected List<TransactionPointer> getConsumerIds(UUID queueId, UUID consumerId, SearchParam params, long startTime) {
+  protected List<TransactionPointer> getConsumerIds(UUID queueId, UUID consumerId, SearchParam params,
+      UUID startTimeUUID) {
     // create a UUID representing now, we dont' want to read transactions that
     // are in the future
-    UUID nowUUID = UUIDUtils.newTimeUUID(startTime, 0);
+
     //
     // long time = nowUUID.timestamp();
 
@@ -147,13 +313,21 @@ public class ConsumerTransaction extends NoTransactionSearch {
     SliceQuery<ByteBuffer, UUID, UUID> q = createSliceQuery(ko, be, ue, ue);
     q.setColumnFamily(CONSUMER_QUEUE_TIMEOUTS.getColumnFamily());
     q.setKey(getQueueClientTransactionKey(queueId, consumerId));
-    q.setRange(params.startId, nowUUID, false, params.limit);
+    q.setRange(params.startId, startTimeUUID, false, params.limit + 1);
 
     List<HColumn<UUID, UUID>> cassResults = q.execute().get().getColumns();
 
     List<TransactionPointer> results = new ArrayList<TransactionPointer>(params.limit);
 
     for (HColumn<UUID, UUID> column : cassResults) {
+
+      if (logger.isDebugEnabled()) {
+        logger.debug("Adding uuid '{}' for original message '{}' to results for queue '{}' and consumer '{}'",
+            new Object[] { column.getName(), column.getValue(), queueId, consumerId });
+        logger.debug("Max timeuuid : '{}', Current timeuuid : '{}', comparison '{}'", new Object[] { startTimeUUID,
+            column.getName(), UUIDUtils.compare(startTimeUUID, column.getName()) });
+      }
+
       results.add(new TransactionPointer(column.getName(), column.getValue()));
     }
 
@@ -164,9 +338,13 @@ public class ConsumerTransaction extends NoTransactionSearch {
    * Delete all re-read transaction pointers
    * 
    * @param pointers
+   *          The list of transaction pointers
    * @param maxIndex
+   *          The index to stop at (exclusive)
    * @param queueId
+   *          The queue id
    * @param consumerId
+   *          The consumer id
    */
   protected void deleteTransactionPointers(List<TransactionPointer> pointers, int maxIndex, UUID queueId,
       UUID consumerId) {
@@ -174,7 +352,14 @@ public class ConsumerTransaction extends NoTransactionSearch {
     ByteBuffer key = getQueueClientTransactionKey(queueId, consumerId);
 
     for (int i = 0; i < maxIndex && i < pointers.size(); i++) {
-      mutator.addDeletion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(), pointers.get(i).expiration, ue);
+      UUID pointer = pointers.get(i).expiration;
+
+      if (logger.isDebugEnabled()) {
+        logger.debug("Removing transaction pointer '{}' for queue '{}' and consumer '{}'", new Object[] { pointer,
+            queueId, consumerId });
+      }
+
+      mutator.addDeletion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(), pointer, ue, cassTimestamp);
     }
 
     mutator.execute();
@@ -210,6 +395,9 @@ public class ConsumerTransaction extends NoTransactionSearch {
       // possible to avoid this given the way time uuids are encoded.
       UUID expirationId = UUIDUtils.newTimeUUID(futureTimeout, counter);
       UUID messageId = message.getUuid();
+
+      logger.debug("Writing new timeout at '{}' for message '{}'", expirationId, messageId);
+
       mutator.addInsertion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(),
           createColumn(expirationId, messageId, cassTimestamp, ue, ue));
 
@@ -233,6 +421,16 @@ public class ConsumerTransaction extends NoTransactionSearch {
       super();
       this.expiration = expiration;
       this.targetMessage = targetMessage;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+      return "TransactionPointer [expiration=" + expiration + ", targetMessage=" + targetMessage + "]";
     }
 
   }

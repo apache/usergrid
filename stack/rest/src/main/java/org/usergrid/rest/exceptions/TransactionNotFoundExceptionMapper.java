@@ -13,28 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.locking;
+package org.usergrid.rest.exceptions;
 
-import java.util.UUID;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
-import org.usergrid.locking.exception.UGLockException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.Provider;
 
-/**
- * This Interface to a class responsible for distributed lock across system.
- * @author tnine
- */
-public interface LockManager {
+import org.usergrid.persistence.exceptions.TransactionNotFoundException;
 
-  /**
-   * Acquires a lock on a particular path.
-   * 
-   * @param applicationId
-   *          application UUID
-   * @param path
-   *          a unique path
-   * @throws UGLockException
-   *           if the lock cannot be acquired
-   */
-  public Lock createLock(final UUID applicationId, final String... path);
+@Provider
+public class TransactionNotFoundExceptionMapper extends
+		AbstractExceptionMapper<TransactionNotFoundException> {
+
+	@Override
+	public Response toResponse(TransactionNotFoundException e) {
+		return toResponse(NOT_FOUND, e);
+	}
 
 }

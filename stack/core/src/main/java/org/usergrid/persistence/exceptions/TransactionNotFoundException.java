@@ -13,28 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.locking;
+package org.usergrid.persistence.exceptions;
 
-import java.util.UUID;
+public class TransactionNotFoundException extends PersistenceException {
 
-import org.usergrid.locking.exception.UGLockException;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3579346096812510039L;
 
-/**
- * This Interface to a class responsible for distributed lock across system.
- * @author tnine
- */
-public interface LockManager {
+	public TransactionNotFoundException() {
+		super();
+	}
 
-  /**
-   * Acquires a lock on a particular path.
-   * 
-   * @param applicationId
-   *          application UUID
-   * @param path
-   *          a unique path
-   * @throws UGLockException
-   *           if the lock cannot be acquired
-   */
-  public Lock createLock(final UUID applicationId, final String... path);
+	public TransactionNotFoundException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public TransactionNotFoundException(String message) {
+		super(message);
+	}
+
+	public TransactionNotFoundException(Throwable cause) {
+		super(cause);
+	}
 
 }

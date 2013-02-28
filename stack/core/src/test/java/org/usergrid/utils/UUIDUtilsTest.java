@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.utils;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -139,10 +140,12 @@ public class UUIDUtilsTest {
   
   
   @Test
-  public void timeUUIDOrderingGaps() {
+  public void timeUUIDOrderingGaps() throws InterruptedException {
 
     UUID now1 = newTimeUUID();
     UUID now2 = newTimeUUID();
+    
+    Thread.sleep(1);
     
     long start  = System.currentTimeMillis();
     
@@ -163,6 +166,73 @@ public class UUIDUtilsTest {
     
     
     
+  }
+  
+  @Test
+  public void max(){
+    long start = System.currentTimeMillis();
+    
+    UUID t1 = newTimeUUID(start, 0);
+    UUID t2 = newTimeUUID(start, 1);
+    
+    assertEquals(t2, UUIDUtils.max(t1, t2));
+  }
+  
+  @Test
+  public void maxFirstNull(){
+    long start = System.currentTimeMillis();
+    
+    UUID t1 = newTimeUUID(start, 0);
+    
+    assertEquals(t1, UUIDUtils.max(null, t1));
+  }
+  
+  @Test
+  public void maxSecondNull(){
+    long start = System.currentTimeMillis();
+    
+    UUID t1 = newTimeUUID(start, 0);
+    
+    assertEquals(t1, UUIDUtils.max(t1, null));
+  }
+  
+  @Test
+  public void maxBothNull(){
+    assertNull(UUIDUtils.max(null, null));
+  }
+
+  
+  @Test
+  public void min(){
+    long start = System.currentTimeMillis();
+    
+    UUID t1 = newTimeUUID(start, 0);
+    UUID t2 = newTimeUUID(start, 1);
+    
+    assertEquals(t1, UUIDUtils.min(t1, t2));
+  }
+  
+  @Test
+  public void minFirstNull(){
+    long start = System.currentTimeMillis();
+    
+    UUID t1 = newTimeUUID(start, 0);
+    
+    assertEquals(t1, UUIDUtils.min(null, t1));
+  }
+  
+  @Test
+  public void minSecondNull(){
+    long start = System.currentTimeMillis();
+    
+    UUID t1 = newTimeUUID(start, 0);
+    
+    assertEquals(t1, UUIDUtils.min(t1, null));
+  }
+  
+  @Test
+  public void minBothNull(){
+    assertNull(UUIDUtils.min(null, null));
   }
 
 }

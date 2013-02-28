@@ -168,4 +168,12 @@ public class QueueResource extends AbstractContextResource {
       @QueryParam("callback") @DefaultValue("callback") String callback) throws Exception {
     throw new NotImplementedException("Queue delete is not implemented yet");
   }
+  
+  @Path("transactions")
+  public QueueTransactionsResource getTransactions(@Context UriInfo ui) throws Exception {
+
+    logger.info("QueueResource.getSubscriptions");
+
+    return getSubResource(QueueTransactionsResource.class).init(mq, queuePath);
+  }
 }

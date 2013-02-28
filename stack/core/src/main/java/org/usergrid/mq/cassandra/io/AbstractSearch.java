@@ -118,22 +118,19 @@ public abstract class AbstractSearch implements QueueSearch {
         .setRange(null, null, false, ALL_COUNT).execute().get();
 
     List<Message> messages = new ArrayList<Message>(messageIds.size());
-    
+
     for (Row<UUID, String, ByteBuffer> row : messageResults) {
       Message message = deserializeMessage(row.getColumnSlice().getColumns());
-     
+
       if (message != null) {
         messages.add(message);
       }
     }
-    
+
     Collections.sort(messages, new RequestedOrderComparator(messageIds));
 
-  
     return messages;
   }
-  
- 
 
   /**
    * Create the results to return from the given messages
@@ -159,8 +156,10 @@ public abstract class AbstractSearch implements QueueSearch {
    * Get a list of UUIDs that can be read for the client. This comes directly
    * from the queue inbox, and DOES NOT take into account client messages
    * 
-   * @param queueId The queue id to read
-   * @param bounds The bounds to use when reading
+   * @param queueId
+   *          The queue id to read
+   * @param bounds
+   *          The bounds to use when reading
    * 
    * @return
    */
@@ -171,12 +170,12 @@ public abstract class AbstractSearch implements QueueSearch {
       throw new QueueException("Neccessary queue bounds not found");
     }
 
-    UUID finish_uuid = params.reversed ?  bounds.getOldest() : bounds.getNewest();
+    UUID finish_uuid = params.reversed ? bounds.getOldest() : bounds.getNewest();
 
     List<UUID> results = new ArrayList<UUID>(params.limit);
 
     UUID start = params.startId;
-    
+
     if (start == null) {
       start = params.reversed ? bounds.getNewest() : bounds.getOldest();
     }
@@ -216,19 +215,23 @@ public abstract class AbstractSearch implements QueueSearch {
       SliceQuery<ByteBuffer, UUID, ByteBuffer> q = createSliceQuery(ko, be, ue, be);
       q.setColumnFamily(QUEUE_INBOX.getColumnFamily());
       q.setKey(getQueueShardRowKey(queueId, current_ts_shard));
-      q.setRange(slice_start, slice_end, params.reversed, params.limit+1);
+      q.setRange(slice_start, slice_end, params.reversed, params.limit + 1);
 
       List<HColumn<UUID, ByteBuffer>> cassResults = q.execute().get().getColumns();
-     
-      for (int i = 0; i < cassResults.size(); i ++)  {
+
+      for (int i = 0; i < cassResults.size(); i++) {
         HColumn<UUID, ByteBuffer> column = cassResults.get(i);
-        
-        //skip the first one, we've already read it
-        if(i == 0 && params.skipFirst && params.startId.equals(column.getName())){
+
+        // skip the first one, we've already read it
+        if (i == 0 && params.skipFirst && params.startId.equals(column.getName())) {
           continue;
         }
-        
-        results.add(column.getName());
+
+        UUID id = column.getName();
+
+        results.add(id);
+
+        logger.debug("Added id '{}' to result set for queue id '{}'", id, queueId);
 
         if (results.size() >= params.limit) {
           return results;
@@ -272,22 +275,28 @@ public abstract class AbstractSearch implements QueueSearch {
    * 
    * @param queueId
    * @param consumerId
-   * @param lastReturnedId  This is a null safe parameter.  If it's null, this won't be written since it means we didn't read any messages
+   * @param lastReturnedId
+   *          This is a null safe parameter. If it's null, this won't be written
+   *          since it means we didn't read any messages
    */
   protected void writeClientPointer(UUID queueId, UUID consumerId, UUID lastReturnedId) {
-    //nothing to do
-    if(lastReturnedId == null){
+    // nothing to do
+    if (lastReturnedId == null) {
       return;
     }
-    
+
     Mutator<UUID> mutator = createMutator(ko, ue);
+
+    if (logger.isDebugEnabled()) {
+      logger.debug("Writing last client id pointer of '{}' for queue '{}' and consumer '{}'", new Object[] {
+          lastReturnedId, queueId, consumerId });
+    }
 
     mutator.addInsertion(consumerId, CONSUMERS.getColumnFamily(),
         createColumn(queueId, lastReturnedId, cassTimestamp, ue, ue));
 
     mutator.execute();
   }
-
 
   protected static final class QueueBounds {
 
@@ -350,28 +359,30 @@ public abstract class AbstractSearch implements QueueSearch {
       return "QueueBounds [oldest=" + oldest + ", newest=" + newest + "]";
     }
   }
-  
-  private class RequestedOrderComparator implements Comparator<Message>{
+
+  private class RequestedOrderComparator implements Comparator<Message> {
 
     private Map<UUID, Integer> indexCache = new HashMap<UUID, Integer>();
-    
-    private RequestedOrderComparator(List<UUID> ids ){
-      for(int i = 0; i < ids.size(); i ++){
+
+    private RequestedOrderComparator(List<UUID> ids) {
+      for (int i = 0; i < ids.size(); i++) {
         indexCache.put(ids.get(i), i);
       }
     }
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
     @Override
     public int compare(Message o1, Message o2) {
       int o1Idx = indexCache.get(o1.getUuid());
-      
+
       int o2Idx = indexCache.get(o2.getUuid());
-      
+
       return o1Idx - o2Idx;
     }
-    
+
   }
 }

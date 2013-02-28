@@ -97,6 +97,7 @@ import me.prettyprint.hector.api.query.SliceQuery;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.locking.LockManager;
 import org.usergrid.mq.CounterQuery;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.Query;
@@ -124,6 +125,7 @@ import org.usergrid.persistence.cassandra.CassandraPersistenceUtils;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.CounterUtils;
 import org.usergrid.persistence.cassandra.CounterUtils.AggregateCounterSelection;
+import org.usergrid.persistence.exceptions.TransactionNotFoundException;
 
 import com.fasterxml.uuid.UUIDComparator;
 
@@ -140,11 +142,12 @@ public class QueueManagerImpl implements QueueManager {
   public static final int DEFAULT_SEARCH_COUNT = 10000;
   public static final int ALL_COUNT = 100000000;
 
-  UUID applicationId;
-  QueueManagerFactoryImpl mmf;
-  CassandraService cass;
-  CounterUtils counterUtils;
-
+  private UUID applicationId;
+  private QueueManagerFactoryImpl mmf;
+  private CassandraService cass;
+  private CounterUtils counterUtils;
+  private LockManager lockManager;
+  
   public static final StringSerializer se = new StringSerializer();
   public static final ByteBufferSerializer be = new ByteBufferSerializer();
   public static final UUIDSerializer ue = new UUIDSerializer();
@@ -155,12 +158,13 @@ public class QueueManagerImpl implements QueueManager {
   public QueueManagerImpl() {
   }
 
-  public QueueManagerImpl init(QueueManagerFactoryImpl mmf, CassandraService cass, CounterUtils counterUtils,
+  public QueueManagerImpl init(QueueManagerFactoryImpl mmf, CassandraService cass, CounterUtils counterUtils, LockManager lockManager,
       UUID applicationId) {
     this.mmf = mmf;
     this.cass = cass;
     this.counterUtils = counterUtils;
     this.applicationId = applicationId;
+    this.lockManager = lockManager;
     return this;
   }
 
@@ -187,6 +191,8 @@ public class QueueManagerImpl implements QueueManager {
     addMessageToMutator(batch, message, timestamp);
 
     long shard_ts = roundLong(message.getTimestamp(), QUEUE_SHARD_INTERVAL);
+    
+    logger.debug("Adding message with id '{}' to queue '{}'", message.getUuid(), queueId);
 
     batch.addInsertion(getQueueShardRowKey(queueId, shard_ts), QUEUE_INBOX.getColumnFamily(),
         createColumn(message.getUuid(), ByteBuffer.allocate(0), timestamp, ue, be));
@@ -368,7 +374,7 @@ public class QueueManagerImpl implements QueueManager {
     if (query.getPosition() == LAST || query.getPosition() == CONSUMER) {
       if (!query.hasFilterPredicates()) {
         if (query.getTimeout() > 0) {
-          search = new ConsumerTransaction(ko, cass.createTimestamp());
+          search = new ConsumerTransaction(applicationId, ko, lockManager, cass.createTimestamp());
         } else {
           search = new NoTransactionSearch(ko, cass.createTimestamp());
         }
@@ -381,6 +387,8 @@ public class QueueManagerImpl implements QueueManager {
     } else if (query.getPosition() == END) {
       search = new EndSearch(ko, cass.createTimestamp());
 
+    }else{
+      throw new IllegalArgumentException("You must specify a valid position");
     }
     
     return search.getResults(queuePath, query);
@@ -1380,6 +1388,27 @@ public class QueueManagerImpl implements QueueManager {
   public UUID getNewConsumerId() {
     // TODO Auto-generated method stub
     return null;
+  }
+
+ 
+
+  /* (non-Javadoc)
+   * @see org.usergrid.mq.QueueManager#renewTransaction(java.lang.String, java.lang.String, org.usergrid.mq.QueueQuery)
+   */
+  @Override
+  public UUID renewTransaction(String queuePath, UUID transactionId, QueueQuery query) throws TransactionNotFoundException {
+    Keyspace ko = cass.getApplicationKeyspace(applicationId);
+    return new ConsumerTransaction(applicationId,ko, lockManager, cass.createTimestamp()).renewTransaction(queuePath, transactionId, query);
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.mq.QueueManager#deleteTransaction(java.lang.String, java.lang.String, org.usergrid.mq.QueueQuery)
+   */
+  @Override
+  public void deleteTransaction(String queuePath, UUID transactionId, QueueQuery query) {
+    Keyspace ko = cass.getApplicationKeyspace(applicationId);
+    new ConsumerTransaction(applicationId, ko, lockManager, cass.createTimestamp()).deleteTransaction(queuePath, transactionId, query);
+    
   }
 
 }

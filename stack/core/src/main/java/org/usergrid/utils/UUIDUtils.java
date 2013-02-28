@@ -174,6 +174,57 @@ public class UUIDUtils {
 
     return uuid(uuidBytes);
   }
+  
+  /**
+   * Returns the minimum UUID
+   * @param first
+   * @param second
+   * @return
+   */
+  public static UUID min(UUID first, UUID second){
+    if(first == null){
+      if(second == null){
+        return null;
+      }
+      return second;
+    }
+    
+    if(second == null){
+      return first;
+    }
+    
+    if(compare(first, second) < 0){
+      return first;
+    }
+    return second;
+  }
+  
+
+  
+  /**
+   * Returns the minimum UUID
+   * @param first
+   * @param second
+   * @return
+   */
+  public static UUID max(UUID first, UUID second){
+    if(first == null){
+      if(second == null){
+        return null;
+      }
+      return second;
+    }
+    
+    if(second == null){
+      return first;
+    }
+    
+    if(compare(first, second) < 0){
+      return second;
+    }
+    return first;
+  }
+
 
   /**
    * @param uuid

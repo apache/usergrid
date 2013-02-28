@@ -43,12 +43,12 @@ public class QueueResourceTest extends AbstractRestTest {
       queue.post(MapUtils.hashMap("id", i));
     }
 
-    IncrementHandler  handler = new IncrementHandler(count); 
+    IncrementHandler handler = new IncrementHandler(count);
     // now consume and make sure we get each message. We'll use the default for
     // this
     // test first
     testMessages(queue, handler, new NoLastCommand());
-    
+
     handler.assertResults();
 
   }
@@ -73,13 +73,13 @@ public class QueueResourceTest extends AbstractRestTest {
 
     queue = queue.withNext(15);
 
-    IncrementHandler  handler = new IncrementHandler(count); 
-    
+    IncrementHandler handler = new IncrementHandler(count);
+
     // now consume and make sure we get each message. We'll use the default for
     // this
     // test first
     testMessages(queue, handler, new NoLastCommand());
-    
+
     handler.assertResults();
 
   }
@@ -110,16 +110,16 @@ public class QueueResourceTest extends AbstractRestTest {
 
     // now consume and make sure we get each message. We'll use the default for
     // this test first
-    IncrementHandler  handler = new IncrementHandler(count); 
-    
-    testMessages(queue, handler,  new NoLastCommand());
+    IncrementHandler handler = new IncrementHandler(count);
+
+    testMessages(queue, handler, new NoLastCommand());
     handler.assertResults();
 
     queue = queue.withPosition(QueuePosition.START.name()).withLast(null);
 
     // now test it again, we should get same results when we explicitly read
     // from start and pass back the last
-    handler = new IncrementHandler(count); 
+    handler = new IncrementHandler(count);
     testMessages(queue, handler);
     handler.assertResults();
 
@@ -145,13 +145,13 @@ public class QueueResourceTest extends AbstractRestTest {
 
     queue = queue.withNext(15);
 
-    IncrementHandler handler = new IncrementHandler(count); 
-    
+    IncrementHandler handler = new IncrementHandler(count);
+
     testMessages(queue, handler);
     handler.assertResults();
 
     DecrementHandler decrement = new DecrementHandler(30);
-    
+
     queue = queue.withPrevious(15).withPosition(QueuePosition.END.name()).withLast(null);
 
     testMessages(queue, decrement);
@@ -204,13 +204,13 @@ public class QueueResourceTest extends AbstractRestTest {
     // now consume and make sure we get each message. We'll use the default for
     // this
     // test first
-    
-    IncrementHandler  handler = new IncrementHandler(count); 
+
+    IncrementHandler handler = new IncrementHandler(count);
     testMessages(queue, handler, new ClientId("client1"), new NoLastCommand());
     handler.assertResults();
-    
+
     handler = new IncrementHandler(count);
-    testMessages(queue,handler, new ClientId("client2"), new NoLastCommand());
+    testMessages(queue, handler, new ClientId("client2"), new NoLastCommand());
     handler.assertResults();
 
     // change back to client 1, and we shouldn't have anything
@@ -246,26 +246,26 @@ public class QueueResourceTest extends AbstractRestTest {
     }
 
     IncrementHandler handler = new IncrementHandler(count);
-    
-    testMessages(queue,handler, new NoLastCommand());
-    
+
+    testMessages(queue, handler, new NoLastCommand());
+
     handler.assertResults();
 
     // now consume and make sure we get messages in the queue
     queue = context.application().queues().queue("testsub1");
-    
+
     handler = new IncrementHandler(count);
 
     testMessages(queue, handler, new NoLastCommand());
-    
+
     handler.assertResults();
-    
+
     handler = new IncrementHandler(count);
 
     queue = context.application().queues().queue("testsub2");
 
     testMessages(queue, handler, new NoLastCommand());
-    
+
     handler.assertResults();
 
   }
@@ -295,30 +295,25 @@ public class QueueResourceTest extends AbstractRestTest {
     }
 
     IncrementHandler handler = new IncrementHandler(count);
-    
+
     testMessages(queue, handler, new NoLastCommand());
-    
+
     handler.assertResults();
-   
-    
-    
 
     handler = new IncrementHandler(count);
-    
+
     // now consume and make sure we get messages in the queue
     queue = context.application().queues().queue("testsub1");
 
     testMessages(queue, handler, new NoLastCommand());
     handler.assertResults();
-    
-    
+
     handler = new IncrementHandler(count);
 
     queue = context.application().queues().queue("testsub2");
 
-    testMessages(queue,handler, new NoLastCommand());
+    testMessages(queue, handler, new NoLastCommand());
     handler.assertResults();
-    
 
     // now unsubscribe the second queue
     queue = context.application().queues().queue("test");
@@ -328,7 +323,7 @@ public class QueueResourceTest extends AbstractRestTest {
     for (int i = 0; i < count; i++) {
       queue.post(MapUtils.hashMap("id", i));
     }
-    
+
     handler = new IncrementHandler(count);
 
     testMessages(queue, handler, new NoLastCommand());
@@ -338,17 +333,17 @@ public class QueueResourceTest extends AbstractRestTest {
     queue = context.application().queues().queue("testsub1");
 
     handler = new IncrementHandler(0);
-    
+
     testMessages(queue, handler, new NoLastCommand());
-    
+
     handler.assertResults();
 
     queue = context.application().queues().queue("testsub2");
-    
+
     handler = new IncrementHandler(count);
 
     testMessages(queue, handler, new NoLastCommand());
-    
+
     handler.assertResults();
 
   }
@@ -365,78 +360,256 @@ public class QueueResourceTest extends AbstractRestTest {
 
     Queue queue = context.application().queues().queue("test");
 
-    final int count = 30;
+    final int count = 2;
 
     for (int i = 0; i < count; i++) {
       queue.post(MapUtils.hashMap("id", i));
     }
 
-    // now consume and make sure we get each message.  We should receive each message, and we'll use this for comparing results later
-    final long timeout = 30000;
-    
+    // now consume and make sure we get each message. We should receive each
+    // message, and we'll use this for comparing results later
+    final long timeout = 5000;
+
     queue = queue.withTimeout(timeout);
-    
+
     TransactionResponseHandler transHandler = new TransactionResponseHandler(count);
-   
+
     testMessages(queue, transHandler, new NoLastCommand());
-    
+
     long start = System.currentTimeMillis();
-    
+
     transHandler.assertResults();
-    
+
     List<String> originalMessageIds = transHandler.getMessageIds();
     BiMap<String, String> transactionInfo = transHandler.getTransactionToMessageId();
-    
-    //now read again, we shouldn't have any results because our timeout hasn't lapsed
+
+    // now read again, we shouldn't have any results because our timeout hasn't
+    // lapsed
     IncrementHandler incrementHandler = new IncrementHandler(0);
-    
+
     testMessages(queue, incrementHandler, new NoLastCommand());
-    
+
     incrementHandler.assertResults();
-    
-    //now sleep until our timeout expires 
-    Thread.sleep(timeout - (System.currentTimeMillis()-start));
-    
-    
-    //now re-read our messages, we should get them all again
+
+    // now sleep until our timeout expires
+    Thread.sleep(timeout - (System.currentTimeMillis() - start));
+
+    // now re-read our messages, we should get them all again
     transHandler = new TransactionResponseHandler(count);
-    
+
     testMessages(queue, transHandler, new NoLastCommand());
-    
+
     start = System.currentTimeMillis();
-    
+
     transHandler.assertResults();
-    
+
     List<String> returned = transHandler.getMessageIds();
-    
+
     assertTrue(returned.size() > 0);
-    
-    //compare the replayed messages and the make sure they're in the same order
+
+    // compare the replayed messages and the make sure they're in the same order
     BiMap<String, String> newTransactions = transHandler.getTransactionToMessageId();
+
+    for (int i = 0; i < originalMessageIds.size(); i++) {
+      // check the messages come back in the same order, they should
+      assertEquals(originalMessageIds.get(i), returned.get(i));
+
+      assertNotNull(transactionInfo.get(originalMessageIds.get(i)));
+
+    }
     
-    for(int i = 0; i < originalMessageIds.size(); i ++){
-       //check the messages come back in the same order, they should
-       assertEquals(originalMessageIds.get(i), returned.get(i) );
-       
-       assertNotNull(transactionInfo.get(originalMessageIds.get(i)));
-       
-       //ack the transaction we were returned
+    //sleep again before testing a second timeout
+    Thread.sleep(timeout - (System.currentTimeMillis() - start));
+    // now re-read our messages, we should get them all again
+    transHandler = new TransactionResponseHandler(count);
+
+    testMessages(queue, transHandler, new NoLastCommand());
+
+    start = System.currentTimeMillis();
+
+    transHandler.assertResults();
+
+    returned = transHandler.getMessageIds();
+
+    assertTrue(returned.size() > 0);
+
+    // compare the replayed messages and the make sure they're in the same order
+    newTransactions = transHandler.getTransactionToMessageId();
+
+    for (int i = 0; i < originalMessageIds.size(); i++) {
+      // check the messages come back in the same order, they should
+      assertEquals(originalMessageIds.get(i), returned.get(i));
+
+      assertNotNull(transactionInfo.get(originalMessageIds.get(i)));
+      
+      // ack the transaction we were returned
       Transaction transaction = queue.transactions().transaction(newTransactions.get(originalMessageIds.get(i)));
       transaction.delete();
-      
-    } 
+
+    }
     
     
-    //now sleep again we shouldn't have any messages since we acked all the transactions 
-    Thread.sleep(timeout - (System.currentTimeMillis()-start));
-    
+
+   
+
+    // now sleep again we shouldn't have any messages since we acked all the
+    // transactions
+    Thread.sleep(timeout - (System.currentTimeMillis() - start));
+
     incrementHandler = new IncrementHandler(0);
-    
+
     testMessages(queue, incrementHandler, new NoLastCommand());
-    
+
     incrementHandler.assertResults();
+
+  }
+
+  @Test
+  public void transaction10KMax() throws InterruptedException {
+
+    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.transaction10KMax",
+        "queueresourcetest.transaction10KMax@usergrid.com", "queueresourcetest.transaction10KMax@usergrid.com");
+
+    // create the text context
+    TestContext context = TestContext.create(this).withOrg("queueresourcetest.transaction10KMax")
+        .withApp("transaction10KMax").withUser(testAdmin).initAll();
+
+    Queue queue = context.application().queues().queue("test");
+    queue.post(MapUtils.hashMap("id", 0));
+
+    queue = queue.withTimeout(10000).withNext(10001);
+
+    try {
+      queue.getNextPage();
+    } catch (UniformInterfaceException uie) {
+
+      return;
+    }
+
+    fail("An exception should be thrown");
+
+  }
+  
+  @Test
+  public void transactionRenewal() throws InterruptedException {
+
+    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.transactionRenewal",
+        "queueresourcetest.transactionRenewal@usergrid.com", "queueresourcetest.transactionRenewal@usergrid.com");
+
+    // create the text context
+    TestContext context = TestContext.create(this).withOrg("queueresourcetest.transactionRenewal")
+        .withApp("transactionRenewal").withUser(testAdmin).initAll();
+
+    Queue queue = context.application().queues().queue("test");
+
+    final int count = 2;
+
+    for (int i = 0; i < count; i++) {
+      queue.post(MapUtils.hashMap("id", i));
+    }
+
+    // now consume and make sure we get each message. We should receive each
+    // message, and we'll use this for comparing results later
+    final long timeout = 5000;
+
+    queue = queue.withTimeout(timeout);
+
+    TransactionResponseHandler transHandler = new TransactionResponseHandler(count);
+
+    testMessages(queue, transHandler, new NoLastCommand());
+
+    long start = System.currentTimeMillis();
+
+    transHandler.assertResults();
+
+    List<String> originalMessageIds = transHandler.getMessageIds();
+    BiMap<String, String> transactionInfo = transHandler.getTransactionToMessageId();
+
+    // now read again, we shouldn't have any results because our timeout hasn't
+    // lapsed
+    IncrementHandler incrementHandler = new IncrementHandler(0);
+
+    testMessages(queue, incrementHandler, new NoLastCommand());
+
+    incrementHandler.assertResults();
+
+    // now sleep until our timeout expires
+    Thread.sleep(timeout - (System.currentTimeMillis() - start));
+
+    //renew the transactions, then read.  We shouldn't get any messages.
+    List<String> returned = transHandler.getMessageIds();
+
+    assertTrue(returned.size() > 0);
+    
+ // compare the replayed messages and the make sure they're in the same order
+    BiMap<String, String> newTransactions = transHandler.getTransactionToMessageId();
+
+    for (int i = 0; i < originalMessageIds.size(); i++) {
+      // check the messages come back in the same order, they should
+      assertEquals(originalMessageIds.get(i), returned.get(i));
+
+      assertNotNull(transactionInfo.get(originalMessageIds.get(i)));
+      
+      // ack the transaction we were returned
+      Transaction transaction = queue.transactions().transaction(newTransactions.get(originalMessageIds.get(i)));
+      transaction.renew(timeout);
+
+    }
     
     
+    
+    // now re-read our messages, we should not get any
+    incrementHandler = new IncrementHandler(0);
+    testMessages(queue, incrementHandler, new NoLastCommand());
+
+    incrementHandler.assertResults();
+
+    start = System.currentTimeMillis();
+    
+    //sleep again before testing the transactions time out (since we're not renewing them)
+    Thread.sleep(timeout - (System.currentTimeMillis() - start));
+    
+    // now re-read our messages, we should get them all again
+    transHandler = new TransactionResponseHandler(count);
+
+    testMessages(queue, transHandler, new NoLastCommand());
+
+    start = System.currentTimeMillis();
+
+    transHandler.assertResults();
+
+    returned = transHandler.getMessageIds();
+
+    assertTrue(returned.size() > 0);
+
+    // compare the replayed messages and the make sure they're in the same order
+    newTransactions = transHandler.getTransactionToMessageId();
+
+    for (int i = 0; i < originalMessageIds.size(); i++) {
+      // check the messages come back in the same order, they should
+      assertEquals(originalMessageIds.get(i), returned.get(i));
+
+      assertNotNull(transactionInfo.get(originalMessageIds.get(i)));
+      
+      // ack the transaction we were returned
+      Transaction transaction = queue.transactions().transaction(newTransactions.get(originalMessageIds.get(i)));
+      transaction.delete();
+
+    }
+    
+    
+
+   
+
+    // now sleep again we shouldn't have any messages since we acked all the
+    // transactions
+    Thread.sleep(timeout - (System.currentTimeMillis() - start));
+
+    incrementHandler = new IncrementHandler(0);
+
+    testMessages(queue, incrementHandler, new NoLastCommand());
+
+    incrementHandler.assertResults();
 
   }
 
@@ -464,7 +637,6 @@ public class QueueResourceTest extends AbstractRestTest {
       }
 
     } while (entries.size() > 0);
-
 
   }
 
@@ -523,7 +695,6 @@ public class QueueResourceTest extends AbstractRestTest {
 
   }
 
-
   /**
    * Interface for handling responses from the queue (per message)
    * 
@@ -537,7 +708,7 @@ public class QueueResourceTest extends AbstractRestTest {
      * @param node
      */
     public void response(JsonNode node);
-    
+
     /**
      * Validate the results are correct
      */
@@ -568,16 +739,18 @@ public class QueueResourceTest extends AbstractRestTest {
      */
     @Override
     public void response(JsonNode node) {
-      assertEquals(current, node.get("id").asInt());
-      current++;
-      
-      if(current > max){
+      if (current > max) {
         fail(String.format("Received %d messages, but we should only receive %d", current, max));
       }
+      
+      assertEquals(current, node.get("id").asInt());
+      current++;
+
+      
     }
-    
+
     @Override
-    public void assertResults(){
+    public void assertResults() {
       assertEquals(max, current);
     }
 
@@ -609,19 +782,18 @@ public class QueueResourceTest extends AbstractRestTest {
      */
     @Override
     public void response(JsonNode node) {
-      if(current < 0){
+      if (current < 0) {
         fail(String.format("Received %d messages, but we should only receive %d", current, max));
       }
-      
+
       assertEquals(current, node.get("id").asInt());
       current--;
       count++;
-      
-      
+
     }
-    
+
     @Override
-    public void assertResults(){
+    public void assertResults() {
       assertEquals(max, count);
     }
 
@@ -633,14 +805,14 @@ public class QueueResourceTest extends AbstractRestTest {
    * @author tnine
    * 
    */
-  protected class TransactionResponseHandler extends IncrementHandler{
+  protected class TransactionResponseHandler extends IncrementHandler {
 
     List<JsonNode> responses = new ArrayList<JsonNode>();
 
-    protected TransactionResponseHandler(int max){
+    protected TransactionResponseHandler(int max) {
       super(max);
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -651,45 +823,46 @@ public class QueueResourceTest extends AbstractRestTest {
     @Override
     public void response(JsonNode node) {
       super.response(node);
-      
+
       JsonNode transaction = node.get("transaction");
-      
+
       assertNotNull(transaction);
-      
+
       responses.add(node);
-      
+
     }
-    
+
     /**
-     * Get transaction ids from messages.  Key is  messageId, value is transactionId
+     * Get transaction ids from messages. Key is messageId, value is
+     * transactionId
+     * 
      * @return
      */
-    public BiMap<String, String> getTransactionToMessageId(){
+    public BiMap<String, String> getTransactionToMessageId() {
       BiMap<String, String> map = HashBiMap.create(responses.size());
-      
-      for(JsonNode message: responses){
+
+      for (JsonNode message : responses) {
         map.put(message.get("uuid").asText(), message.get("transaction").asText());
       }
-      
+
       return map;
-      
+
     }
-    
+
     /**
      * Get all message ids from the response
+     * 
      * @return
      */
-    public List<String> getMessageIds(){
+    public List<String> getMessageIds() {
       List<String> results = new ArrayList<String>(responses.size());
-      
-      for(JsonNode message: responses){
+
+      for (JsonNode message : responses) {
         results.add(message.get("uuid").asText());
       }
-      
+
       return results;
     }
-    
-    
 
   }
 
