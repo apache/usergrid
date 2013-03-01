@@ -69,6 +69,18 @@ public abstract class ValueResource extends NamedResource {
    * @param entity
    * @return
    */
+  protected JsonNode postInternal(Map<String, ?>[] entity) {
+   
+    return jsonMedia(withParams(withToken(resource())))
+        .post(JsonNode.class, entity);
+  }
+  
+  /**
+   * post to the entity set
+   * 
+   * @param entity
+   * @return
+   */
   protected JsonNode putInternal(Map<String, ?> entity) {
    
     return jsonMedia(withParams(withToken(resource())))

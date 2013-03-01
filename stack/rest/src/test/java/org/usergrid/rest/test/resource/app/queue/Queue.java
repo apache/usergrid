@@ -117,6 +117,16 @@ public class Queue extends CollectionResource {
     JsonNode node = super.postInternal(payload);
     return node;
   }
+  
+  /**
+   * 
+   * @param payload
+   * @return
+   */
+  public JsonNode post(Map<String, ?>[] payload){
+    JsonNode node = super.postInternal(payload);
+    return node;
+  }
 
   /**
    * Get entities in this collection. Cursor is optional

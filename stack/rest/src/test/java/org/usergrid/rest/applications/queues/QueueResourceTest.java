@@ -8,6 +8,14 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Stack;
+import java.util.TreeMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
@@ -417,8 +425,8 @@ public class QueueResourceTest extends AbstractRestTest {
       assertNotNull(transactionInfo.get(originalMessageIds.get(i)));
 
     }
-    
-    //sleep again before testing a second timeout
+
+    // sleep again before testing a second timeout
     Thread.sleep(timeout - (System.currentTimeMillis() - start));
     // now re-read our messages, we should get them all again
     transHandler = new TransactionResponseHandler(count);
@@ -441,22 +449,83 @@ public class QueueResourceTest extends AbstractRestTest {
       assertEquals(originalMessageIds.get(i), returned.get(i));
 
       assertNotNull(transactionInfo.get(originalMessageIds.get(i)));
-      
+
       // ack the transaction we were returned
       Transaction transaction = queue.transactions().transaction(newTransactions.get(originalMessageIds.get(i)));
       transaction.delete();
 
     }
-    
-    
-
-   
 
     // now sleep again we shouldn't have any messages since we acked all the
     // transactions
     Thread.sleep(timeout - (System.currentTimeMillis() - start));
 
     incrementHandler = new IncrementHandler(0);
+
+    testMessages(queue, incrementHandler, new NoLastCommand());
+
+    incrementHandler.assertResults();
+
+  }
+
+  @Test
+  public void transactionPageSize() throws InterruptedException {
+
+    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.transactionPageSize",
+        "queueresourcetest.transactionPageSize@usergrid.com", "queueresourcetest.transactionPageSize@usergrid.com");
+
+    // create the text context
+    TestContext context = TestContext.create(this).withOrg("queueresourcetest.transactionPageSize")
+        .withApp("transactionPageSize").withUser(testAdmin).initAll();
+
+    Queue queue = context.application().queues().queue("test");
+
+    final int count = 100;
+
+    @SuppressWarnings("unchecked")
+    Map<String, ?>[] data = new Map[count];
+
+    for (int i = 0; i < count; i++) {
+      data[i] = MapUtils.hashMap("id", i);
+
+    }
+
+    queue.post(data);
+
+    // now consume and make sure we get each message. We should receive each
+    // message, and we'll use this for comparing results later
+    final long timeout = 20000;
+
+    // read 50 messages at a time
+    queue = queue.withTimeout(timeout).withNext(50);
+
+    TransactionResponseHandler transHandler = new TransactionResponseHandler(count);
+
+    testMessages(queue, transHandler, new NoLastCommand());
+
+    long start = System.currentTimeMillis();
+
+    transHandler.assertResults();
+
+    List<String> originalMessageIds = transHandler.getMessageIds();
+    BiMap<String, String> transactionInfo = transHandler.getTransactionToMessageId();
+
+    for (int i = 0; i < originalMessageIds.size(); i++) {
+      // check the messages come back in the same order, they should
+      assertEquals(originalMessageIds.get(i), originalMessageIds.get(i));
+
+      assertNotNull(transactionInfo.get(originalMessageIds.get(i)));
+
+      // ack the transaction we were returned
+      Transaction transaction = queue.transactions().transaction(transactionInfo.get(originalMessageIds.get(i)));
+      transaction.delete();
+
+    }
+
+    // now sleep until our timeout expires
+    Thread.sleep(Math.max(0, timeout - (System.currentTimeMillis() - start)));
+
+    IncrementHandler incrementHandler = new IncrementHandler(0);
 
     testMessages(queue, incrementHandler, new NoLastCommand());
 
@@ -489,7 +558,7 @@ public class QueueResourceTest extends AbstractRestTest {
     fail("An exception should be thrown");
 
   }
-  
+
   @Test
   public void transactionRenewal() throws InterruptedException {
 
@@ -536,12 +605,12 @@ public class QueueResourceTest extends AbstractRestTest {
     // now sleep until our timeout expires
     Thread.sleep(timeout - (System.currentTimeMillis() - start));
 
-    //renew the transactions, then read.  We shouldn't get any messages.
+    // renew the transactions, then read. We shouldn't get any messages.
     List<String> returned = transHandler.getMessageIds();
 
     assertTrue(returned.size() > 0);
-    
- // compare the replayed messages and the make sure they're in the same order
+
+    // compare the replayed messages and the make sure they're in the same order
     BiMap<String, String> newTransactions = transHandler.getTransactionToMessageId();
 
     for (int i = 0; i < originalMessageIds.size(); i++) {
@@ -549,15 +618,13 @@ public class QueueResourceTest extends AbstractRestTest {
       assertEquals(originalMessageIds.get(i), returned.get(i));
 
       assertNotNull(transactionInfo.get(originalMessageIds.get(i)));
-      
+
       // ack the transaction we were returned
       Transaction transaction = queue.transactions().transaction(newTransactions.get(originalMessageIds.get(i)));
       transaction.renew(timeout);
 
     }
-    
-    
-    
+
     // now re-read our messages, we should not get any
     incrementHandler = new IncrementHandler(0);
     testMessages(queue, incrementHandler, new NoLastCommand());
@@ -565,10 +632,11 @@ public class QueueResourceTest extends AbstractRestTest {
     incrementHandler.assertResults();
 
     start = System.currentTimeMillis();
-    
-    //sleep again before testing the transactions time out (since we're not renewing them)
+
+    // sleep again before testing the transactions time out (since we're not
+    // renewing them)
     Thread.sleep(timeout - (System.currentTimeMillis() - start));
-    
+
     // now re-read our messages, we should get them all again
     transHandler = new TransactionResponseHandler(count);
 
@@ -590,16 +658,12 @@ public class QueueResourceTest extends AbstractRestTest {
       assertEquals(originalMessageIds.get(i), returned.get(i));
 
       assertNotNull(transactionInfo.get(originalMessageIds.get(i)));
-      
+
       // ack the transaction we were returned
       Transaction transaction = queue.transactions().transaction(newTransactions.get(originalMessageIds.get(i)));
       transaction.delete();
 
     }
-    
-    
-
-   
 
     // now sleep again we shouldn't have any messages since we acked all the
     // transactions
@@ -610,6 +674,67 @@ public class QueueResourceTest extends AbstractRestTest {
     testMessages(queue, incrementHandler, new NoLastCommand());
 
     incrementHandler.assertResults();
+
+  }
+
+  @Test
+  public void concurrentConsumers() throws InterruptedException, ExecutionException {
+
+    int consumerSize = 8;
+    int count = 10000;
+    int batchsize = 100;
+
+    ExecutorService executor = Executors.newFixedThreadPool(consumerSize);
+
+    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.concurrentConsumers",
+        "queueresourcetest.concurrentConsumers@usergrid.com", "queueresourcetest.concurrentConsumers@usergrid.com");
+
+    // create the text context
+    TestContext context = TestContext.create(this).withOrg("queueresourcetest.concurrentConsumers")
+        .withApp("concurrentConsumers").withUser(testAdmin).initAll();
+
+    Queue queue = context.application().queues().queue("test");
+
+    // post the messages in batch
+    for (int i = 0; i < count / batchsize; i++) {
+
+      @SuppressWarnings("unchecked")
+      Map<String, ?>[] elements = new Map[batchsize];
+
+      for (int j = 0; j < batchsize; j++) {
+        elements[j] = MapUtils.hashMap("id", i * batchsize + j);
+      }
+
+      queue.post(elements);
+    }
+
+    // now consume and make sure we get each message. We should receive each
+    // message, and we'll use this for comparing results later
+    final long timeout = 60000;
+
+    // set our timeout to 30 seconds and read 50 messages at a time
+    queue = queue.withTimeout(timeout).withNext(50);
+
+    AsyncTransactionResponseHandler transHandler = new AsyncTransactionResponseHandler(count);
+
+    NoLastCommand command = new NoLastCommand();
+
+    List<Future<Void>> futures = new ArrayList<Future<Void>>(consumerSize);
+
+    for (int i = 0; i < consumerSize; i++) {
+      Future<Void> future = executor.submit(new QueueClient(queue, transHandler, command));
+
+      futures.add(future);
+    }
+
+    // wait for tests to finish
+    for (Future<Void> future : futures) {
+      future.get();
+    }
+
+    // now assert we're good.
+
+    transHandler.assertResults();
 
   }
 
@@ -637,6 +762,45 @@ public class QueueResourceTest extends AbstractRestTest {
       }
 
     } while (entries.size() > 0);
+
+  }
+
+  private class QueueClient implements Callable<Void> {
+
+    private ResponseHandler handler;
+    private QueueCommand[] commands;
+    private Queue queue;
+
+    private QueueClient(Queue queue, ResponseHandler handler, QueueCommand... commands) {
+      this.queue = queue;
+      this.handler = handler;
+      this.commands = commands;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.util.concurrent.Callable#call()
+     */
+    @Override
+    public Void call() throws Exception {
+      List<JsonNode> entries = null;
+
+      do {
+        for (QueueCommand command : commands) {
+          queue = command.processQueue(queue);
+        }
+
+        entries = queue.getNextPage();
+
+        for (JsonNode entry : entries) {
+          handler.response(entry);
+        }
+
+      } while (entries.size() > 0);
+
+      return null;
+    }
 
   }
 
@@ -742,11 +906,10 @@ public class QueueResourceTest extends AbstractRestTest {
       if (current > max) {
         fail(String.format("Received %d messages, but we should only receive %d", current, max));
       }
-      
+
       assertEquals(current, node.get("id").asInt());
       current++;
 
-      
     }
 
     @Override
@@ -862,6 +1025,91 @@ public class QueueResourceTest extends AbstractRestTest {
       }
 
       return results;
+    }
+
+  }
+
+  /**
+   * Simple handler to build a list of the message responses asynchronously.
+   * Ensures that no responses are duplicated
+   * 
+   * @author tnine
+   * 
+   */
+  protected class AsyncTransactionResponseHandler implements ResponseHandler {
+
+    private TreeMap<Integer, JsonNode> responses = new TreeMap<Integer, JsonNode>();
+    private int max;
+
+    protected AsyncTransactionResponseHandler(int max) {
+      this.max = max;
+      
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
+     * #response(org.codehaus.jackson.JsonNode)
+     */
+    @Override
+    public void response(JsonNode node) {
+      JsonNode transaction = node.get("transaction");
+
+      assertNotNull(transaction);
+
+      Integer id = node.get("id").asInt();
+
+      // we shouldn't have this response
+      assertNull(String.format("received id %d twice", id), responses.get(id));
+
+      responses.put(id, node);
+
+    }
+
+    /**
+     * Get transaction ids from messages. Key is messageId, value is
+     * transactionId
+     * 
+     * @return
+     */
+    public BiMap<String, String> getTransactionToMessageId() {
+      BiMap<String, String> map = HashBiMap.create(responses.size());
+
+      for (JsonNode message : responses.values()) {
+        map.put(message.get("uuid").asText(), message.get("transaction").asText());
+      }
+
+      return map;
+
+    }
+
+    /**
+     * Get all message ids from the response
+     * 
+     * @return
+     */
+    public List<String> getMessageIds() {
+      List<String> results = new ArrayList<String>(responses.size());
+
+      for (JsonNode message : responses.values()) {
+        results.add(message.get("uuid").asText());
+      }
+
+      return results;
+    }
+
+    @Override
+    public void assertResults() {
+      int count = 0;
+      
+      for(JsonNode message: responses.values()){
+        assertEquals(count, message.get("id").asInt());
+        count++;
+      }
+      
+      assertEquals(max, count);
     }
 
   }
