@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -1039,6 +1040,7 @@ public class QueueResourceTest extends AbstractRestTest {
   protected class AsyncTransactionResponseHandler implements ResponseHandler {
 
     private TreeMap<Integer, JsonNode> responses = new TreeMap<Integer, JsonNode>();
+    private Map<Integer, String> threads = new HashMap<Integer, String>();
     private int max;
 
     protected AsyncTransactionResponseHandler(int max) {
@@ -1060,10 +1062,14 @@ public class QueueResourceTest extends AbstractRestTest {
       assertNotNull(transaction);
 
       Integer id = node.get("id").asInt();
-
+      
+   
       // we shouldn't have this response
-      assertNull(String.format("received id %d twice", id), responses.get(id));
+      assertNull(String.format("received id %d twice from thread %s and then thread %s", id, threads.get(id), Thread.currentThread().getName()), threads.get(id));
 
+      threads.put(id, Thread.currentThread().getName());
+
+      
       responses.put(id, node);
 
     }
