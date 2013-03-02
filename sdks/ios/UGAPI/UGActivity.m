@@ -232,7 +232,7 @@ enum
         else if ( m_objectDataType == kUGActivityObjectEntity )
         {
             [object setObject:m_entityType forKey:@"entityType"];
-            [object setObject:m_entityType forKey:@"entityType"];
+            [object setObject:m_entityUUID forKey:@"entityUUID"];
         }
         
         // add to the dict
