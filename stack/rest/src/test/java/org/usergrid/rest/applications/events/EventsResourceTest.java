@@ -1,11 +1,10 @@
 package org.usergrid.rest.applications.events;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 

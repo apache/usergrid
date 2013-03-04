@@ -17,15 +17,12 @@ package org.usergrid.rest.test.resource;
 
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.test.resource.app.Application;
 import org.usergrid.rest.test.resource.app.User;
 import org.usergrid.rest.test.resource.app.UsersCollection;
 import org.usergrid.rest.test.resource.mgmt.Management;
 import org.usergrid.rest.test.security.TestUser;
 
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.test.framework.JerseyTest;
 
 /**

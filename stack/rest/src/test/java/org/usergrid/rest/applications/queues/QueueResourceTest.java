@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -21,28 +20,20 @@ import java.util.concurrent.Future;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 import org.usergrid.mq.QueuePosition;
-import org.usergrid.rest.AbstractRestTest;
-import org.usergrid.rest.test.resource.TestContext;
+import org.usergrid.rest.RestContextTest;
 import org.usergrid.rest.test.resource.app.queue.Queue;
 import org.usergrid.rest.test.resource.app.queue.Transaction;
-import org.usergrid.rest.test.security.TestAdminUser;
 import org.usergrid.utils.MapUtils;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
-public class QueueResourceTest extends AbstractRestTest {
+
+public class QueueResourceTest extends RestContextTest {
 
   @Test
   public void inOrder() {
-
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.inorder", "queueresourcetest.inorder@usergrid.com",
-        "queueresourcetest.inorder@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.inorder").withApp("testInOrder")
-        .withUser(testAdmin).initAll();
 
     Queue queue = context.application().queues().queue("test");
 
@@ -64,14 +55,6 @@ public class QueueResourceTest extends AbstractRestTest {
 
   @Test
   public void inOrderPaging() {
-
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.inorderpaging",
-        "queueresourcetest.inorderpaging@usergrid.com", "queueresourcetest.inorderpaging@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.inorderpaging").withApp("inorderpaging")
-        .withUser(testAdmin).initAll();
-
     Queue queue = context.application().queues().queue("test");
 
     final int count = 30;
@@ -99,13 +82,6 @@ public class QueueResourceTest extends AbstractRestTest {
    */
   @Test
   public void startPaging() {
-
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.startpaging",
-        "queueresourcetest.startpaging@usergrid.com", "queueresourcetest.startpaging@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.startpaging").withApp("startpaging")
-        .withUser(testAdmin).initAll();
 
     Queue queue = context.application().queues().queue("test");
 
@@ -137,13 +113,6 @@ public class QueueResourceTest extends AbstractRestTest {
   @Test
   public void reverseOrderPaging() {
 
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.reverseorderpaging",
-        "queueresourcetest.reverseorderpaging@usergrid.com", "queueresourcetest.reverseorderpaging@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.reverseorderpaging")
-        .withApp("reverseorderpaging").withUser(testAdmin).initAll();
-
     Queue queue = context.application().queues().queue("test");
 
     final int count = 30;
@@ -173,13 +142,7 @@ public class QueueResourceTest extends AbstractRestTest {
    */
   @Test
   public void delete() {
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.delete", "queueresourcetest.delete@usergrid.com",
-        "queueresourcetest.delete@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.delete").withApp("delete")
-        .withUser(testAdmin).initAll();
-
+  
     Queue queue = context.application().queues().queue("test");
 
     try {
@@ -195,13 +158,7 @@ public class QueueResourceTest extends AbstractRestTest {
 
   @Test
   public void topic() {
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.topic", "queueresourcetest.topic@usergrid.com",
-        "queueresourcetest.topic@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.topic").withApp("topic")
-        .withUser(testAdmin).initAll();
-
+   
     Queue queue = context.application().queues().queue("test");
 
     final int count = 30;
@@ -236,13 +193,7 @@ public class QueueResourceTest extends AbstractRestTest {
 
   @Test
   public void subscribe() {
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.subscribe",
-        "queueresourcetest.subscribe@usergrid.com", "queueresourcetest.subscribe@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.subscribe").withApp("subscribe")
-        .withUser(testAdmin).initAll();
-
+   
     Queue queue = context.application().queues().queue("test");
 
     queue.subscribers().subscribe("testsub1");
@@ -285,13 +236,7 @@ public class QueueResourceTest extends AbstractRestTest {
    */
   @Test
   public void unsubscribe() {
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.unsubscribe",
-        "queueresourcetest.unsubscribe@usergrid.com", "queueresourcetest.unsubscribe@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.unsubscribe").withApp("unsubscribe")
-        .withUser(testAdmin).initAll();
-
+  
     Queue queue = context.application().queues().queue("test");
 
     queue.subscribers().subscribe("testsub1");
@@ -360,13 +305,7 @@ public class QueueResourceTest extends AbstractRestTest {
   @Test
   public void transactionTimeout() throws InterruptedException {
 
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.transactionTimeout",
-        "queueresourcetest.transactionTimeout@usergrid.com", "queueresourcetest.transactionTimeout@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.transactionTimeout")
-        .withApp("transactionTimeout").withUser(testAdmin).initAll();
-
+    
     Queue queue = context.application().queues().queue("test");
 
     final int count = 2;
@@ -472,13 +411,7 @@ public class QueueResourceTest extends AbstractRestTest {
   @Test
   public void transactionPageSize() throws InterruptedException {
 
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.transactionPageSize",
-        "queueresourcetest.transactionPageSize@usergrid.com", "queueresourcetest.transactionPageSize@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.transactionPageSize")
-        .withApp("transactionPageSize").withUser(testAdmin).initAll();
-
+   
     Queue queue = context.application().queues().queue("test");
 
     final int count = 100;
@@ -542,13 +475,6 @@ public class QueueResourceTest extends AbstractRestTest {
   @Test
   public void transactionPageConsistent() throws InterruptedException {
 
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.transactionPageConsistent",
-        "queueresourcetest.transactionPageConsistent@usergrid.com", "queueresourcetest.transactionPageConsistent@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.transactionPageConsistent")
-        .withApp("transactionPageConsistent").withUser(testAdmin).initAll();
-
     Queue queue = context.application().queues().queue("test");
 
     final int count = 1000;
@@ -580,13 +506,7 @@ public class QueueResourceTest extends AbstractRestTest {
   @Test
   public void transaction10KMax() throws InterruptedException {
 
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.transaction10KMax",
-        "queueresourcetest.transaction10KMax@usergrid.com", "queueresourcetest.transaction10KMax@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.transaction10KMax")
-        .withApp("transaction10KMax").withUser(testAdmin).initAll();
-
+   
     Queue queue = context.application().queues().queue("test");
     queue.post(MapUtils.hashMap("id", 0));
 
@@ -605,14 +525,6 @@ public class QueueResourceTest extends AbstractRestTest {
 
   @Test
   public void transactionRenewal() throws InterruptedException {
-
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.transactionRenewal",
-        "queueresourcetest.transactionRenewal@usergrid.com", "queueresourcetest.transactionRenewal@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.transactionRenewal")
-        .withApp("transactionRenewal").withUser(testAdmin).initAll();
-
     Queue queue = context.application().queues().queue("test");
 
     final int count = 2;
@@ -730,13 +642,7 @@ public class QueueResourceTest extends AbstractRestTest {
 
     ExecutorService executor = Executors.newFixedThreadPool(consumerSize);
 
-    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.concurrentConsumers",
-        "queueresourcetest.concurrentConsumers@usergrid.com", "queueresourcetest.concurrentConsumers@usergrid.com");
-
-    // create the text context
-    TestContext context = TestContext.create(this).withOrg("queueresourcetest.concurrentConsumers")
-        .withApp("concurrentConsumers").withUser(testAdmin).initAll();
-
+   
     Queue queue = context.application().queues().queue("test");
 
     // post the messages in batch

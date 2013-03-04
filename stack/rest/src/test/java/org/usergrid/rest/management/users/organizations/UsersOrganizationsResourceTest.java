@@ -1,18 +1,16 @@
 package org.usergrid.rest.management.users.organizations;
 
-import org.codehaus.jackson.JsonNode;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.usergrid.rest.AbstractRestTest;
-
-import javax.ws.rs.core.MediaType;
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.usergrid.utils.MapUtils.hashMap;
+
+import java.util.Map;
+
+import javax.ws.rs.core.MediaType;
+
+import org.codehaus.jackson.JsonNode;
+import org.junit.Test;
+import org.usergrid.rest.AbstractRestTest;
 
 /**
  * @author zznate

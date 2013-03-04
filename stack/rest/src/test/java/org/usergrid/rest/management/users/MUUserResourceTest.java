@@ -1,26 +1,21 @@
 package org.usergrid.rest.management.users;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.usergrid.utils.MapUtils.hashMap;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.mail.Message;
+import javax.ws.rs.core.MediaType;
+
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.cassandra.CassandraRunner;
-import org.usergrid.management.AccountCreationProps;
-import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.rest.AbstractRestTest;
-
-import javax.mail.Message;
-import javax.ws.rs.core.MediaType;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
-import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
-import static org.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
-import static org.usergrid.utils.MapUtils.hashMap;
 
 /**
  * @author zznate

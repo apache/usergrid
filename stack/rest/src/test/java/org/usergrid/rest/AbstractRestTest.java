@@ -20,9 +20,6 @@ import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.usergrid.utils.MapUtils.hashMap;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,30 +29,18 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
-import me.prettyprint.hector.testutils.EmbeddedServerHelper;
-
 import org.codehaus.jackson.JsonNode;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
-import org.eclipse.jetty.xml.XmlConfiguration;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.context.ContextLoader;
-import org.springframework.web.context.WebApplicationContext;
 import org.usergrid.cassandra.CassandraRunner;
-import org.usergrid.cassandra.DataControl;
 import org.usergrid.java.client.Client;
 import org.usergrid.management.ManagementService;
-import org.usergrid.management.cassandra.ManagementServiceImpl;
-import org.usergrid.persistence.EntityManagerFactory;
-import org.xml.sax.SAXException;
 
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;

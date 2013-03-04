@@ -1,20 +1,21 @@
 package org.usergrid.rest.applications.users;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
-import org.codehaus.jackson.JsonNode;
-import org.junit.Before;
-import org.junit.Test;
-import org.usergrid.rest.AbstractRestTest;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.usergrid.utils.MapUtils.hashMap;
 
-import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.usergrid.utils.MapUtils.hashMap;
+import javax.ws.rs.core.MediaType;
+
+import org.codehaus.jackson.JsonNode;
+import org.junit.Test;
+import org.usergrid.rest.AbstractRestTest;
+
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 /**
  * @author zznate
