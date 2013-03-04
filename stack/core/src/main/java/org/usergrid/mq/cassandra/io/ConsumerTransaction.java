@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.RuntimeErrorException;
@@ -61,6 +62,8 @@ public class ConsumerTransaction extends NoTransactionSearch {
   private static final int MAX_READ = 10000;
   private LockManager lockManager;
   private UUID applicationId;
+  
+  private static final Semaphore testSemaphore = new Semaphore(1);
 
   /**
    * @param ko
@@ -197,6 +200,10 @@ public class ConsumerTransaction extends NoTransactionSearch {
    
       lock.lock();
       
+      if(!testSemaphore.tryAcquire()){
+        throw new RuntimeException("Semaphore was acquired twice in critial block!");
+      }
+      
       long startTime = System.currentTimeMillis();
       
       UUID startTimeUUID = UUIDUtils.newTimeUUID(startTime, 0);
@@ -279,6 +286,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
       logger.error("Unable to acquire lock", e);
     } finally {
       try {
+        testSemaphore.release();
         lock.unlock();
       } catch (UGLockException e) {
         logger.error("Unable to release lock", e);

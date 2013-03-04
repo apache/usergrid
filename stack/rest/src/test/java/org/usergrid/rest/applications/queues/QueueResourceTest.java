@@ -534,6 +534,49 @@ public class QueueResourceTest extends AbstractRestTest {
 
   }
 
+
+  /**
+   * Tests that if we page before transaction expiration, we're always getting all elements consecutively
+   * @throws InterruptedException
+   */
+  @Test
+  public void transactionPageConsistent() throws InterruptedException {
+
+    TestAdminUser testAdmin = new TestAdminUser("queueresourcetest.transactionPageConsistent",
+        "queueresourcetest.transactionPageConsistent@usergrid.com", "queueresourcetest.transactionPageConsistent@usergrid.com");
+
+    // create the text context
+    TestContext context = TestContext.create(this).withOrg("queueresourcetest.transactionPageConsistent")
+        .withApp("transactionPageConsistent").withUser(testAdmin).initAll();
+
+    Queue queue = context.application().queues().queue("test");
+
+    final int count = 1000;
+
+    @SuppressWarnings("unchecked")
+    Map<String, ?>[] data = new Map[count];
+
+    for (int i = 0; i < count; i++) {
+      data[i] = MapUtils.hashMap("id", i);
+
+    }
+
+    queue.post(data);
+
+    // now consume and make sure we get each message. We should receive each
+    // message, and we'll use this for comparing results later
+    final long timeout = 20000;
+
+    // read 50 messages at a time
+    queue = queue.withTimeout(timeout).withNext(120);
+
+    IncrementHandler incrementHandler = new IncrementHandler(count);
+
+    testMessages(queue, incrementHandler, new NoLastCommand());
+    
+    incrementHandler.assertResults();
+  }
+  
   @Test
   public void transaction10KMax() throws InterruptedException {
 
@@ -711,10 +754,11 @@ public class QueueResourceTest extends AbstractRestTest {
 
     // now consume and make sure we get each message. We should receive each
     // message, and we'll use this for comparing results later
-    final long timeout = 60000;
+    final long timeout = 120000;
 
     // set our timeout to 30 seconds and read 50 messages at a time
-    queue = queue.withTimeout(timeout).withNext(50);
+//    queue = queue.withTimeout(timeout).withNext(50);
+    queue = queue.withTimeout(timeout).withNext(20);
 
     AsyncTransactionResponseHandler transHandler = new AsyncTransactionResponseHandler(count);
 
@@ -1045,7 +1089,7 @@ public class QueueResourceTest extends AbstractRestTest {
 
     protected AsyncTransactionResponseHandler(int max) {
       this.max = max;
-      
+
     }
 
     /*
@@ -1062,14 +1106,13 @@ public class QueueResourceTest extends AbstractRestTest {
       assertNotNull(transaction);
 
       Integer id = node.get("id").asInt();
-      
-   
+
       // we shouldn't have this response
-      assertNull(String.format("received id %d twice from thread %s and then thread %s", id, threads.get(id), Thread.currentThread().getName()), threads.get(id));
+      assertNull(String.format("received id %d twice from thread %s and then thread %s", id, threads.get(id), Thread
+          .currentThread().getName()), threads.get(id));
 
       threads.put(id, Thread.currentThread().getName());
 
-      
       responses.put(id, node);
 
     }
@@ -1109,12 +1152,12 @@ public class QueueResourceTest extends AbstractRestTest {
     @Override
     public void assertResults() {
       int count = 0;
-      
-      for(JsonNode message: responses.values()){
+
+      for (JsonNode message : responses.values()) {
         assertEquals(count, message.get("id").asInt());
         count++;
       }
-      
+
       assertEquals(max, count);
     }
 

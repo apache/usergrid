@@ -23,6 +23,8 @@ import java.util.UUID;
 
 import me.prettyprint.hector.api.Keyspace;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueQuery;
 import org.usergrid.mq.QueueResults;
@@ -34,6 +36,8 @@ import org.usergrid.mq.QueueResults;
  * 
  */
 public class NoTransactionSearch extends AbstractSearch {
+
+  private static final Logger logger = LoggerFactory.getLogger(NoTransactionSearch.class);
 
   /**
    * @param ko
@@ -79,6 +83,10 @@ public class NoTransactionSearch extends AbstractSearch {
    */
   protected SearchParam getParams(UUID queueId, UUID consumerId, QueueQuery query) {
     UUID lastReadMessageId = getConsumerQueuePosition(queueId, consumerId);
+    
+    if(logger.isDebugEnabled()){
+      logger.debug("Last message id is '{}' for queueId '{}' and clientId '{}'", new Object[]{lastReadMessageId, queueId, consumerId});
+    }
 
     return new SearchParam(lastReadMessageId, false, lastReadMessageId != null, query.getNextCount());
   }
