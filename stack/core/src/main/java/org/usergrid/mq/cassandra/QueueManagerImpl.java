@@ -374,18 +374,18 @@ public class QueueManagerImpl implements QueueManager {
     if (query.getPosition() == LAST || query.getPosition() == CONSUMER) {
       if (!query.hasFilterPredicates()) {
         if (query.getTimeout() > 0) {
-          search = new ConsumerTransaction(applicationId, ko, lockManager, cass.createTimestamp());
+          search = new ConsumerTransaction(applicationId, ko, lockManager, cass);
         } else {
-          search = new NoTransactionSearch(ko, cass.createTimestamp());
+          search = new NoTransactionSearch(ko, cass);
         }
       } else {
         search = new BooleanSearch();
       }
     } else if (query.getPosition() == START) {
 
-      search = new StartSearch(ko, cass.createTimestamp());
+      search = new StartSearch(ko, cass);
     } else if (query.getPosition() == END) {
-      search = new EndSearch(ko, cass.createTimestamp());
+      search = new EndSearch(ko, cass);
 
     }else{
       throw new IllegalArgumentException("You must specify a valid position");
@@ -1398,7 +1398,7 @@ public class QueueManagerImpl implements QueueManager {
   @Override
   public UUID renewTransaction(String queuePath, UUID transactionId, QueueQuery query) throws TransactionNotFoundException {
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
-    return new ConsumerTransaction(applicationId,ko, lockManager, cass.createTimestamp()).renewTransaction(queuePath, transactionId, query);
+    return new ConsumerTransaction(applicationId,ko, lockManager, cass).renewTransaction(queuePath, transactionId, query);
   }
 
   /* (non-Javadoc)
@@ -1407,7 +1407,7 @@ public class QueueManagerImpl implements QueueManager {
   @Override
   public void deleteTransaction(String queuePath, UUID transactionId, QueueQuery query) {
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
-    new ConsumerTransaction(applicationId, ko, lockManager, cass.createTimestamp()).deleteTransaction(queuePath, transactionId, query);
+    new ConsumerTransaction(applicationId, ko, lockManager, cass).deleteTransaction(queuePath, transactionId, query);
     
   }
 

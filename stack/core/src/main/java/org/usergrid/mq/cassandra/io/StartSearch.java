@@ -22,6 +22,7 @@ import java.util.UUID;
 import me.prettyprint.hector.api.Keyspace;
 
 import org.usergrid.mq.QueueQuery;
+import org.usergrid.persistence.cassandra.CassandraService;
 
 /**
  * Reads from the queue without starting transactions.
@@ -35,8 +36,8 @@ public class StartSearch extends NoTransactionSearch {
    * @param ko
    * @param cassTimestamp
    */
-  public StartSearch(Keyspace ko, long cassTimestamp) {
-    super(ko, cassTimestamp);
+  public StartSearch(Keyspace ko, CassandraService cass) {
+    super(ko, cass);
   }
 
   /*
@@ -57,7 +58,7 @@ public class StartSearch extends NoTransactionSearch {
    * @see org.usergrid.mq.cassandra.io.FifoSearch#writeClientPointer(java.util.UUID, java.util.UUID, java.util.UUID)
    */
   @Override
-  protected void writeClientPointer(UUID queueId, UUID consumerId, UUID lastReturnedId) {
+  protected void writeClientPointer(UUID queueId, UUID consumerId, UUID lastReturnedId, long timestamp) {
     //no op for searches from the start
   }
   

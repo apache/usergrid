@@ -754,11 +754,10 @@ public class QueueResourceTest extends AbstractRestTest {
 
     // now consume and make sure we get each message. We should receive each
     // message, and we'll use this for comparing results later
-    final long timeout = 120000;
+    final long timeout = 60000;
 
-    // set our timeout to 30 seconds and read 50 messages at a time
-//    queue = queue.withTimeout(timeout).withNext(50);
-    queue = queue.withTimeout(timeout).withNext(20);
+    // set our timeout and read 10 messages at a time
+    queue = queue.withTimeout(timeout).withNext(10);
 
     AsyncTransactionResponseHandler transHandler = new AsyncTransactionResponseHandler(count);
 

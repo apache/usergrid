@@ -19,7 +19,7 @@
 package org.usergrid.persistence.exceptions;
 
 /**
- * General Exception for locking related operations.
+ * General Exception for queue related operations.
  *
  */
 public class QueueException extends RuntimeException {

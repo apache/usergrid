@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueQuery;
 import org.usergrid.mq.QueueResults;
+import org.usergrid.persistence.cassandra.CassandraService;
 
 /**
  * Reads from the queue without starting transactions.
@@ -39,12 +40,15 @@ public class NoTransactionSearch extends AbstractSearch {
 
   private static final Logger logger = LoggerFactory.getLogger(NoTransactionSearch.class);
 
+  protected CassandraService cass;
+  
   /**
    * @param ko
    * @param cassTimestamp
    */
-  public NoTransactionSearch(Keyspace ko, long cassTimestamp) {
-    super(ko, cassTimestamp);
+  public NoTransactionSearch(Keyspace ko, CassandraService cass) {
+    super(ko);
+    this.cass = cass;
   }
 
   /*
@@ -67,7 +71,7 @@ public class NoTransactionSearch extends AbstractSearch {
 
     QueueResults results = createResults(messages, queuePath, queueId, consumerId);
 
-    writeClientPointer(queueId, consumerId, results.getLast());
+    writeClientPointer(queueId, consumerId, results.getLast(), cass.createTimestamp() );
 
     return results;
   }

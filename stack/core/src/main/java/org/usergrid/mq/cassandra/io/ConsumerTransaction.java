@@ -28,10 +28,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-
-import javax.management.RuntimeErrorException;
 
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -46,7 +42,8 @@ import org.usergrid.locking.exception.UGLockException;
 import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueQuery;
 import org.usergrid.mq.QueueResults;
-import org.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.usergrid.persistence.cassandra.CassandraService;
+import org.usergrid.persistence.exceptions.QueueException;
 import org.usergrid.persistence.exceptions.TransactionNotFoundException;
 import org.usergrid.utils.UUIDUtils;
 
@@ -63,14 +60,13 @@ public class ConsumerTransaction extends NoTransactionSearch {
   private LockManager lockManager;
   private UUID applicationId;
   
-  private static final Semaphore testSemaphore = new Semaphore(1);
 
   /**
    * @param ko
    * @param cassTimestamp
    */
-  public ConsumerTransaction(UUID applicationId, Keyspace ko, LockManager lockManager, long cassTimestamp) {
-    super(ko, cassTimestamp);
+  public ConsumerTransaction(UUID applicationId, Keyspace ko, LockManager lockManager, CassandraService cass) {
+    super(ko, cass);
     this.applicationId = applicationId;
     this.lockManager = lockManager;
   }
@@ -124,7 +120,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
     Mutator<ByteBuffer> mutator = createMutator(ko, be);
 
     mutator.addInsertion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(),
-        createColumn(expirationId, messageId, cassTimestamp, ue, ue));
+        createColumn(expirationId, messageId, cass.createTimestamp(), ue, ue));
 
     mutator.execute();
 
@@ -166,7 +162,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
     Mutator<ByteBuffer> mutator = createMutator(ko, be);
     ByteBuffer key = getQueueClientTransactionKey(queueId, consumerId);
 
-    mutator.addDeletion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(), transactionId, ue, cassTimestamp);
+    mutator.addDeletion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(), transactionId, ue, cass.createTimestamp());
 
     mutator.execute();
   }
@@ -189,9 +185,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
           MAX_READ));
     }
 
-  
  
-   
     QueueResults results = null;
     
     Lock lock = lockManager.createLock(applicationId, queueId.toString(), consumerId.toString());
@@ -199,11 +193,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
     try {
    
       lock.lock();
-      
-      if(!testSemaphore.tryAcquire()){
-        throw new RuntimeException("Semaphore was acquired twice in critial block!");
-      }
-      
+     
       long startTime = System.currentTimeMillis();
       
       UUID startTimeUUID = UUIDUtils.newTimeUUID(startTime, 0);
@@ -216,8 +206,6 @@ public class ConsumerTransaction extends NoTransactionSearch {
       bounds = new QueueBounds(bounds.getOldest(), startTimeUUID);
     
     
-
-
       SearchParam params = getParams(queueId, consumerId, query);
 
 
@@ -240,7 +228,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
         // we're done, this message goes at the end, no point in continuing
         // since
         // we have our full result set
-        if (insertIndex == params.limit * -1 - 1) {
+        if (insertIndex <= params.limit * -1 - 1) {
           break;
         }
 
@@ -280,19 +268,20 @@ public class ConsumerTransaction extends NoTransactionSearch {
       // last read messages uuid, whichever is greater
       UUID lastReadId = UUIDUtils.max(lastReadTransactionPointer, lastId);
 
-      writeClientPointer(queueId, consumerId, lastReadId);
+      writeClientPointer(queueId, consumerId, lastReadId, cass.createTimestamp());
 
     } catch (UGLockException e) {
       logger.error("Unable to acquire lock", e);
+      throw new QueueException("Unable to acquire lock", e);
     } finally {
       try {
-        testSemaphore.release();
         lock.unlock();
       } catch (UGLockException e) {
         logger.error("Unable to release lock", e);
+        throw new QueueException("Unable to release lock", e);
       }
     }
-    //we should never get here
+    
     return results;
 
   }
@@ -367,7 +356,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
             queueId, consumerId });
       }
 
-      mutator.addDeletion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(), pointer, ue, cassTimestamp);
+      mutator.addDeletion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(), pointer, ue, cass.createTimestamp());
     }
 
     mutator.execute();
@@ -392,6 +381,8 @@ public class ConsumerTransaction extends NoTransactionSearch {
     ByteBuffer key = getQueueClientTransactionKey(queueId, consumerId);
 
     int counter = 0;
+    
+    long time = cass.createTimestamp();
 
     for (Message message : messages) {
       // note we're not incrementing futureSnapshot on purpose. The uuid
@@ -407,7 +398,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
       logger.debug("Writing new timeout at '{}' for message '{}'", expirationId, messageId);
 
       mutator.addInsertion(key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(),
-          createColumn(expirationId, messageId, cassTimestamp, ue, ue));
+          createColumn(expirationId, messageId, time, ue, ue));
 
       // add the transactionid to the message
       message.setTransaction(expirationId);

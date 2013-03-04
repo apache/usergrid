@@ -75,14 +75,13 @@ public abstract class AbstractSearch implements QueueSearch {
   protected static final ByteBufferSerializer be = new ByteBufferSerializer();
 
   protected Keyspace ko;
-  protected long cassTimestamp;
+//  protected long cassTimestamp;
 
   /**
    * 
    */
-  public AbstractSearch(Keyspace ko, long cassTimestamp) {
+  public AbstractSearch(Keyspace ko) {
     this.ko = ko;
-    this.cassTimestamp = cassTimestamp;
   }
 
   /**
@@ -279,7 +278,7 @@ public abstract class AbstractSearch implements QueueSearch {
    *          This is a null safe parameter. If it's null, this won't be written
    *          since it means we didn't read any messages
    */
-  protected void writeClientPointer(UUID queueId, UUID consumerId, UUID lastReturnedId) {
+  protected void writeClientPointer(UUID queueId, UUID consumerId, UUID lastReturnedId, long timestamp) {
     // nothing to do
     if (lastReturnedId == null) {
       return;
@@ -293,7 +292,7 @@ public abstract class AbstractSearch implements QueueSearch {
     }
 
     mutator.addInsertion(consumerId, CONSUMERS.getColumnFamily(),
-        createColumn(queueId, lastReturnedId, cassTimestamp, ue, ue));
+        createColumn(queueId, lastReturnedId, timestamp, ue, ue));
 
     mutator.execute();
   }
