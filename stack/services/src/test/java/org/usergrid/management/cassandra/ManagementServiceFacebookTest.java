@@ -24,6 +24,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
@@ -36,8 +37,7 @@ import com.sun.jersey.api.client.WebResource.Builder;
 import com.sun.jersey.api.client.config.ClientConfig;
 
 @PrepareForTest(Client.class)
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = "/usergrid-test-context.xml")
+@RunWith(CassandraRunner.class)
 public class ManagementServiceFacebookTest {
 
 	@Rule
@@ -47,15 +47,12 @@ public class ManagementServiceFacebookTest {
 	private static OrganizationInfo organization;
 	private static UUID applicationId;
 
-	private static ManagementTestHelperImpl helper;
 
 	private static ManagementService managementService;
 
 	@BeforeClass
 	public static void setup() throws Exception {
-		helper = new ManagementTestHelperImpl();
-		helper.setup();
-		managementService = (ManagementService) helper.getManagementService();
+		managementService = CassandraRunner.getBean(ManagementService.class);
 		setupLocal();
 	}
 

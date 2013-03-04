@@ -31,6 +31,7 @@ import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 
+@Ignore
 public class BasicMongoTest extends AbstractMongoTest {
 
     @Test

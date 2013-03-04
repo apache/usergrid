@@ -8,22 +8,27 @@ import javax.annotation.Resource;
 import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.usergrid.cassandra.CassandraRunner;
 
 /**
  * @author zznate
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = "/usergrid-test-context.xml")
+@RunWith(CassandraRunner.class)
 public class UsergridSystemMonitorTest {
-    private static EmbeddedServerHelper embedded;
 
-    @Resource
+
     private UsergridSystemMonitor usergridSystemMonitor;
+
+    @Before
+    public void setupLocal() {
+        usergridSystemMonitor = CassandraRunner.getBean(UsergridSystemMonitor.class);
+    }
 
     @Test
     public void testVersionNumber() {
@@ -35,15 +40,5 @@ public class UsergridSystemMonitorTest {
         assertTrue(usergridSystemMonitor.getIsCassandraAlive());
     }
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        embedded = new EmbeddedServerHelper();
-        embedded.setup();
-    }
-
-    @AfterClass
-    public static void teardown() {
-        EmbeddedServerHelper.teardown();
-    }
 
 }

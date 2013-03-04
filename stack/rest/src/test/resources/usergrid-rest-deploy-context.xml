@@ -7,7 +7,7 @@
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
-	<import resource="classpath:/usergrid-rest-context-test.xml" />
+	<import resource="classpath:/usergrid-test-context.xml" />
 	
 	
 

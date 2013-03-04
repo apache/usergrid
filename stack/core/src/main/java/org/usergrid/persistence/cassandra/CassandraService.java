@@ -356,6 +356,17 @@ public class CassandraService {
         }
     }
 
+    public boolean checkKeyspacesExist() {
+        boolean exists = false;
+        try {
+            exists = cluster.describeKeyspace(SYSTEM_KEYSPACE) != null
+                    && cluster.describeKeyspace(STATIC_APPLICATION_KEYSPACE) != null;
+        } catch (Exception ex) {
+            logger.error("could not describe keyspaces", ex);
+        }
+        return exists;
+    }
+
     public void logKeyspaces() {
 
         List<KeyspaceDefinition> ksDefs = null;

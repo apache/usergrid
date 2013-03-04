@@ -13,7 +13,7 @@
 		<jackson-version>1.9.9</jackson-version>
 		<jersey-version>1.17</jersey-version>
 		<shiro-version>1.2.0</shiro-version>
-		<junit-version>4.8.2</junit-version>
+		<junit-version>4.10</junit-version>
 		<log4j-version>1.2.16</log4j-version>
 		<org.springframework.version>3.1.2.RELEASE</org.springframework.version>
 		<slf4j-version>1.6.1</slf4j-version>
@@ -83,6 +83,7 @@
 		<module>count-common</module>
 		<module>count-batcher</module>
 		<module>count-inserter</module>
+    <module>test-utils</module>
 	</modules>
 
 

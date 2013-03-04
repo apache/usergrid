@@ -23,18 +23,9 @@ import org.usergrid.security.tokens.TokenService;
 
 public interface ManagementTestHelper {
 
-	public abstract javax.persistence.EntityManagerFactory getJpaEntityManagerFactory();
-
-	public abstract void setJpaEntityManagerFactory(
-			javax.persistence.EntityManagerFactory jpaEmf);
-
 	public abstract EntityManagerFactory getEntityManagerFactory();
 
-	public abstract void setEntityManagerFactory(EntityManagerFactory emf);
-
 	public ManagementService getManagementService();
-
-	public void setManagementService(ManagementService management);
 
 	public abstract void setup() throws Exception;
 
@@ -44,10 +35,7 @@ public interface ManagementTestHelper {
 
 	public abstract void setProperties(Properties properties);
 
-	public abstract void setTokenService(TokenService tokens);
-
 	public abstract TokenService getTokenService();
 
-	public abstract ApplicationContext getApplicationContext();
 
 }

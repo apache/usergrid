@@ -33,10 +33,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.locking.Lock;
 import org.usergrid.locking.LockManager;
 import org.usergrid.locking.exception.UGLockException;
 import org.usergrid.persistence.AbstractPersistenceTest;
+import org.usergrid.persistence.cassandra.CassandraService;
 
 public class HectorLockManagerTest extends AbstractPersistenceTest {
 
@@ -51,7 +53,7 @@ public class HectorLockManagerTest extends AbstractPersistenceTest {
     AbstractPersistenceTest.setup();
 
     HectorLockManagerImpl hlockManager = new HectorLockManagerImpl();
-		hlockManager.setCluster(helper.getCassandraService().getCluster());
+		hlockManager.setCluster(CassandraRunner.getBean(CassandraService.class).getCluster());
 		hlockManager.setKeyspaceName("Locks");
 		hlockManager.setLockTtl(2000);
 		hlockManager.setNumberOfLockObserverThreads(1);

@@ -41,6 +41,7 @@ import org.eclipse.jetty.xml.XmlConfiguration;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -48,8 +49,11 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.WebApplicationContext;
+import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.cassandra.DataControl;
 import org.usergrid.java.client.Client;
 import org.usergrid.management.ManagementService;
+import org.usergrid.management.cassandra.ManagementServiceImpl;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.xml.sax.SAXException;
 
@@ -70,6 +74,7 @@ import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
  * verb]_[action mapping]_[ok|fail][_[specific failure condition if multiple]
  */
 // @Autowire
+@RunWith(CassandraRunner.class)
 public abstract class AbstractRestTest extends JerseyTest {
 
   /**
@@ -81,23 +86,24 @@ public abstract class AbstractRestTest extends JerseyTest {
 
   private static Logger logger = LoggerFactory.getLogger(AbstractRestTest.class);
 
-  static EmbeddedServerHelper embedded = null;
   static boolean usersSetup = false;
-  protected static Properties properties;
+  protected Properties properties;
 
   protected static String access_token;
 
   protected static String adminAccessToken;
 
-  protected ManagementService managementService;
+  protected static ManagementService managementService;
 
   static ClientConfig clientConfig = new DefaultClientConfig();
 
   protected static Client client;
 
   protected static final AppDescriptor descriptor;
+
+    private static Server server;
   
-  protected static ApplicationContext appCtx;
+
 
   static {
     clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
@@ -128,7 +134,7 @@ public abstract class AbstractRestTest extends JerseyTest {
 
   public AbstractRestTest() throws TestContainerException {
     super(descriptor);
-    setupUsers();
+
   }
 
   protected void setupUsers() {
@@ -151,9 +157,7 @@ public abstract class AbstractRestTest extends JerseyTest {
     // I am). There's a bug in the grizzly server when it's restarted per
     // test, and until we can upgrade versions this is the workaround. Backs
     // off with each attempt to allow the server to catch up
-    for (int i = 0; i < 10; i++) {
 
-      try {
 
         setUserPassword("ed@anuff.com", "sesame");
 
@@ -163,17 +167,9 @@ public abstract class AbstractRestTest extends JerseyTest {
 
         assertTrue(response != null && response.getError() == null);
 
-        break;
-      } catch (ResourceAccessException rae) {
-        // swallow and try again. Bug in grizzly server causes a socket
-        // exception occasionally
-        logger.error("Ignoring exception and retrying", rae);
-        Thread.sleep(100 * i);
-      }
-
-    }
-
   }
+
+
 
   @Override
   protected TestContainerFactory getTestContainerFactory() {
@@ -186,28 +182,31 @@ public abstract class AbstractRestTest extends JerseyTest {
   public static void setup() throws Exception {
     // Class.forName("jsp.WEB_002dINF.jsp.org.usergrid.rest.TestResource.error_jsp");
     logger.info("setup");
-    assertNull(embedded);
-    embedded = new EmbeddedServerHelper();
-    embedded.setup();
-
-    appCtx = new ClassPathXmlApplicationContext("classpath:/usergrid-rest-context-test.xml");
     
     startJetty();
 
+
+
+      managementService = CassandraRunner.getBean(ManagementService.class);
+
+      managementService.setup();
+
+
   }
+
+    @AfterClass
+    public static void teardown() {
+        access_token = null;
+        usersSetup = false;
+        adminAccessToken = null;
+    }
 
   private static void startJetty() throws Exception {
-    Server server = new Server(JETTY_PORT);
+      if ( server == null ) {
+    server = new Server(JETTY_PORT);
     server.setHandler(new WebAppContext("src/main/webapp", CONTEXT));
     server.start();
-
-  }
-
-  @AfterClass
-  public static void teardown() throws Exception {
-    logger.info("teardown");
-    EmbeddedServerHelper.teardown();
-    embedded = null;
+      }
   }
 
   public static void logNode(JsonNode node) {
@@ -219,15 +218,14 @@ public abstract class AbstractRestTest extends JerseyTest {
    */
   @Before
   public void acquireToken() throws Exception {
-
-    
-    properties = (Properties) appCtx.getBean("properties");
-
-    managementService = (ManagementService) appCtx.getBean("managementService");
-
+      properties = CassandraRunner.getBean("properties",Properties.class);
+      setupUsers();
+    logger.info("acquiring token");
     access_token = userToken("ed@anuff.com", "sesame");
-
+    logger.info("with token: {}", access_token);
     loginClient();
+
+
 
   }
 
@@ -240,22 +238,31 @@ public abstract class AbstractRestTest extends JerseyTest {
         .get(JsonNode.class);
 
     String userToken = node.get("access_token").getTextValue();
-
+    logger.info("returning user token: {}", userToken);
     return userToken;
 
   }
 
   public void createUser(String username, String email, String password, String name) {
+      try {
+          JsonNode node = resource().path("/test-organization/test-app/token").queryParam("grant_type", "password")
+                  .queryParam("username", username).queryParam("password", password).accept(MediaType.APPLICATION_JSON)
+                  .get(JsonNode.class);
+          if ( getError(node) == null ) {
+              return;
+          }
+      } catch (Exception ex) {
+          logger.error("Miss on user. Creating.");
+      }
 
-    if (adminAccessToken == null) {
       adminToken();
-    }
 
-    Map<String, String> payload = hashMap("email", email).map("username", username).map("name", name)
-        .map("password", password).map("pin", "1234");
 
-    resource().path("/test-organization/test-app/users").queryParam("access_token", adminAccessToken)
-        .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
+      Map<String, String> payload = hashMap("email", email).map("username", username).map("name", name)
+              .map("password", password).map("pin", "1234");
+
+      resource().path("/test-organization/test-app/users").queryParam("access_token", adminAccessToken)
+              .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
 
   }
 
@@ -263,9 +270,9 @@ public abstract class AbstractRestTest extends JerseyTest {
     Map<String, String> data = new HashMap<String, String>();
     data.put("newpassword", password);
 
-    if (adminAccessToken == null) {
+
       adminToken();
-    }
+
 
     // change the password as admin. The old password isn't required
     JsonNode node = resource().path(String.format("/test-organization/test-app/users/%s/password", username))
@@ -308,7 +315,7 @@ public abstract class AbstractRestTest extends JerseyTest {
         .get(JsonNode.class);
 
     String mgmToken = node.get("access_token").getTextValue();
-
+    logger.info("got mgmt token: {}", mgmToken);
     return mgmToken;
 
   }
@@ -328,7 +335,7 @@ public abstract class AbstractRestTest extends JerseyTest {
    * Get the entity from the entity array in the response
    * 
    * @param response
-   * @param index
+   * @param name
    * @return
    */
   protected JsonNode getEntity(JsonNode response, String name) {

@@ -280,7 +280,8 @@ public class RegistrationTest extends AbstractRestTest {
 		UserInfo adminUser = managementService.createAdminUser(adminUserEmail, adminUserEmail, adminUserEmail, "password1",
 				true, false);
 		assertNotNull(adminUser);
-
+        Message[] msgs = getMessages("otherorg.com","AdminUserFromOtherOrg",  "password1");
+        assertEquals(1,msgs.length);
 		// add existing admin user to org
         // this should NOT send resetpwd  link in email to newly added org admin user(that already exists in usergrid)
 		// only "User Invited To Organization" email
@@ -294,14 +295,14 @@ public class RegistrationTest extends AbstractRestTest {
         String resetpwd = "Password Reset";
         String invited = "User Invited To Organization";
 
-        Message[] msgs = getMessages("otherorg.com","AdminUserFromOtherOrg",  "password");
+        msgs = getMessages("otherorg.com","AdminUserFromOtherOrg",  "password1");
 
 	    // only 1 invited msg
-	    assertTrue(msgs.length == 1);
+	    assertEquals(2,msgs.length);
 
 	    //email subject
-	    assertNotSame(resetpwd, msgs[0].getSubject());
-	    assertEquals(invited, msgs[0].getSubject());
+	    assertNotSame(resetpwd, msgs[1].getSubject());
+	    assertEquals(invited, msgs[1].getSubject());
     }
 
     private Message[] getMessages(String host, String user, String password) throws MessagingException, IOException {

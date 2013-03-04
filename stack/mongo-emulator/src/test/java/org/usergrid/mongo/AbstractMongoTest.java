@@ -51,9 +51,9 @@ public abstract class AbstractMongoTest {
 
 	public AbstractMongoTest() {
 		super();
-		emf = (EntityManagerFactoryImpl) helper.getEntityManagerFactory();
+		//emf = (EntityManagerFactoryImpl) helper.getEntityManagerFactory();
 		smf = new ServiceManagerFactory(emf);
-		smf.setApplicationContext(helper.getApplicationContext());
+		//smf.setApplicationContext(helper.getApplicationContext());
 	}
 
 	@BeforeClass

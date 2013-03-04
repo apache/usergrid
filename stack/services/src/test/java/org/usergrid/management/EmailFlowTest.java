@@ -58,46 +58,41 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
-import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usergrid.management.cassandra.ManagementTestHelperImpl;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.persistence.EntityManager;
+import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.CassandraService;
-import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.entities.User;
 
+@RunWith(CassandraRunner.class)
 public class EmailFlowTest {
 
-	private static final Logger logger = LoggerFactory
+    private static final Logger logger = LoggerFactory
 			.getLogger(EmailFlowTest.class);
+    private static final String ORGANIZATION_NAME = "email-test-org-1";
+    public static final String ORGANIZATION_NAME_2 = "email-test-org-2";
 
-	static ManagementService management;
-
-	static ManagementTestHelper helper;
-
-	static Properties properties;
+    static ManagementService management;
+    static EntityManagerFactory emf;
+    static Properties properties;
 
 	@BeforeClass
 	public static void setup() throws Exception {
 		logger.info("setup");
-		assertNull(helper);
-		helper = new ManagementTestHelperImpl();
-		// helper.setClient(this);
-		helper.setup();
-		management = helper.getManagementService();
-		properties = helper.getProperties();
+		management = CassandraRunner.getBean(ManagementService.class);
+        management.setup();
+        emf = CassandraRunner.getBean(EntityManagerFactory.class);
+        properties = CassandraRunner.getBean("properties", Properties.class);
 	}
 
-	@AfterClass
-	public static void teardown() throws Exception {
-		logger.info("teardown");
-		helper.teardown();
-	}
 
 	@Test
 	public void testCreateOrganizationAndAdminWithConfirmationOnly()
@@ -115,7 +110,7 @@ public class EmailFlowTest {
          "true");
 
 		OrganizationOwnerInfo org_owner = management
-				.createOwnerAndOrganization("test-org-1", "test-user-1",
+				.createOwnerAndOrganization(ORGANIZATION_NAME, "test-user-1",
 						"Test User", "test-user-1@mockserver.com",
 						"testpassword", false, false);
 		assertNotNull(org_owner);
@@ -164,7 +159,7 @@ public class EmailFlowTest {
 				"sysadmin-2@mockserver.com");
 
 		OrganizationOwnerInfo org_owner = management
-				.createOwnerAndOrganization("test-org-2", "test-user-2",
+				.createOwnerAndOrganization(ORGANIZATION_NAME_2, "test-user-2",
 						"Test User", "test-user-2@mockserver.com",
 						"testpassword", false, false);
 		assertNotNull(org_owner);
@@ -240,7 +235,7 @@ public class EmailFlowTest {
     OrganizationOwnerInfo ooi = management.createOwnerAndOrganization("org-skipallemailtest",
             "user-skipallemailtest","name-skipallemailtest",
             "nate+skipallemailtest@apigee.com","password");
-    EntityManager em = helper.getEntityManagerFactory().getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
+    EntityManager em = emf.getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
     User user = em.get(ooi.getOwner().getUuid(), User.class);
     assertTrue(user.activated());
     assertFalse(user.disabled());
@@ -266,7 +261,7 @@ public class EmailFlowTest {
 	}
 
 	public void testProperty(String propertyName, boolean containsSubstitution) {
-		Properties properties = helper.getProperties();
+
 		String propertyValue = properties.getProperty(propertyName);
 		assertTrue(propertyName + " was not found", isNotBlank(propertyValue));
 		logger.info(propertyName + "=" + propertyValue);
@@ -349,6 +344,7 @@ public class EmailFlowTest {
     public void testAppUserConfirmationMail() throws Exception {
 
     	ApplicationInfo appInfo = management.getApplicationInfo("test-organization/test-app");
+        assertNotNull(appInfo);
 		User user = setupAppUser(appInfo.getId(),"registration_requires_email_confirmation", Boolean.TRUE,
 						"testAppUserConfMail", "testAppUserConfMail@test.com",true);
 
@@ -381,7 +377,7 @@ public class EmailFlowTest {
 
     private User setupAppUser(UUID appId, String property, Object value , String username, String email, boolean activated) throws Exception {
     	org.jvnet.mock_javamail.Mailbox.clearAll();
-    	EntityManagerFactoryImpl emf = (EntityManagerFactoryImpl) helper.getEntityManagerFactory();
+
     	EntityManager em = emf.getEntityManager(appId);
 
         em.setProperty(new SimpleEntityRef(Application.ENTITY_TYPE, appId), property, value);

@@ -20,8 +20,6 @@
 		</property>
 	</bean>
 	
-	<bean id="databaseInitializer" class="org.usergrid.rest.DatabaseInitializer"
-		init-method="init" />
 
 	<import resource="usergrid-rest-context.xml"/>
 
@@ -32,5 +30,22 @@
 
 
     <bean id="binaryStore" class="org.usergrid.services.assets.data.LocalFileBinaryStore"/>
+
+    <bean id="setup" class="org.usergrid.persistence.cassandra.Setup">
+        <constructor-arg ref="entityManagerFactory"/>
+        <constructor-arg ref="cassandraService"/>
+    </bean>
+    <!-- The default schema manager -->
+    <!--
+    <bean class="org.usergrid.persistence.CoreSchemaManager">
+        <constructor-arg ref="setup"/>
+        <constructor-arg ref="cassandraCluster"/>
+    </bean>
+    -->
+    <!-- refer to a named schemaManager from the DataControl annotation thusly -->
+    <bean id="coreManager" class="org.usergrid.persistence.CoreSchemaManager">
+        <constructor-arg ref="setup"/>
+        <constructor-arg ref="cassandraCluster"/>
+    </bean>
 
 </beans>

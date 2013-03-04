@@ -21,9 +21,12 @@ import java.util.UUID;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.cassandra.DataControl;
 import org.usergrid.mq.QueueManagerFactory;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.PersistenceTestHelperImpl;
@@ -34,7 +37,8 @@ import org.usergrid.utils.JsonUtils;
  import org.testng.annotations.AfterClass;
  import org.testng.annotations.BeforeClass;
  */
-
+@RunWith(CassandraRunner.class)
+@DataControl(schemaManager = "coreManager")
 public abstract class AbstractPersistenceTest {
 
 	public static final boolean USE_DEFAULT_APPLICATION = false;
@@ -45,8 +49,8 @@ public abstract class AbstractPersistenceTest {
 	protected static PersistenceTestHelper helper;
 
 	public AbstractPersistenceTest() {
-		emf = helper.getEntityManagerFactory();
-		qmf = helper.getMessageManagerFactory();
+		emf = CassandraRunner.getBean(EntityManagerFactory.class);
+		qmf = CassandraRunner.getBean(QueueManagerFactory.class);
 	}
 
 	protected EntityManagerFactory emf;
@@ -57,7 +61,7 @@ public abstract class AbstractPersistenceTest {
 	@BeforeClass
 	public static void setup() throws Exception {
 		logger.info("setup");
-		assertNull(helper);
+
 		helper = new PersistenceTestHelperImpl();
 		// helper.setClient(this);
 		helper.setup();
@@ -74,18 +78,8 @@ public abstract class AbstractPersistenceTest {
 		return emf;
 	}
 
-	@Autowired
-	public void setEntityManagerFactory(EntityManagerFactory emf) {
-		this.emf = emf;
-	}
-
 	public QueueManagerFactory geQueueManagerFactory() {
 		return qmf;
-	}
-
-	@Autowired
-	public void setQueyeManagerFactory(QueueManagerFactory qmf) {
-		this.qmf = qmf;
 	}
 	
 

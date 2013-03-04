@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.bson.types.BasicBSONList;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.persistence.EntityManager;
 
@@ -18,6 +19,7 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 
+@Ignore
 public class MongoQueryTest extends AbstractMongoTest {
 
     @Test
