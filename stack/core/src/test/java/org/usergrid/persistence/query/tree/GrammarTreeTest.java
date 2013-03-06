@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.RecognitionException;
@@ -547,5 +548,23 @@ public class GrammarTreeTest {
         assertEquals("hot", ((StringLiteral)rootNode.getLiteral()).getValue());
         
         
+    }
+    
+    @Test
+    public void uuidParse() throws RecognitionException{
+      String queryString = "select * where  title = c6ee8a1c-3ef4-11e2-8861-02e81adcf3d0";
+      
+
+      ANTLRStringStream in = new ANTLRStringStream(queryString);
+      QueryFilterLexer lexer = new QueryFilterLexer(in);
+      TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+      QueryFilterParser parser = new QueryFilterParser(tokens);
+
+      Query query = parser.ql().query;
+      
+      Equal rootNode = (Equal) query.getRootOperand();
+      
+      assertEquals("title", rootNode.getProperty().getValue());
+      assertEquals(UUID.fromString("c6ee8a1c-3ef4-11e2-8861-02e81adcf3d0"), ((UUIDLiteral)rootNode.getLiteral()).getValue());
     }
 }
