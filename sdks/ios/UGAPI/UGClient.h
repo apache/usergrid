@@ -238,6 +238,21 @@ set the response limit in UGQuery as well.
 // is also handy for clients, so it is part of the interface.
 +(NSString *)getUniqueDeviceID;
 
+/***************** REMOTE PUSH NOTIFICATIONS *****************/
+
+// call from application:didRegisterForRemoteNotificationsWithDeviceToken: callback
+// will automatically register the passed deviceToken with the usergrid system
+// using the getUniqueDeviceID method to associate this device on the server
+- (UGClientResponse *)setDevicePushToken:(NSData *)newDeviceToken;
+
+// push an "alert" type notification to the remote group, user, or device specified
+// in the path argument. the notifer may be a name or UUID of an apns notifier
+// that has been set up on the usergrid server.
+- (UGClientResponse *)pushAlert:(NSString *)message
+                      withSound:(NSString *)sound
+                             to:(NSString *)path
+                  usingNotifier:(NSString *)notifier;
+
 /*********************** ACCESSORS ************************/
 // if a user is logged in, this returns the OAuth token for this session. 
 // UGClient manages this internally, so you never really need it. But if you
