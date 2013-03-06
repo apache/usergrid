@@ -37,6 +37,7 @@ import static org.usergrid.utils.UUIDUtils.getTimestampInMillis;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -75,7 +76,6 @@ public abstract class AbstractSearch implements QueueSearch {
   protected static final ByteBufferSerializer be = new ByteBufferSerializer();
 
   protected Keyspace ko;
-//  protected long cassTimestamp;
 
   /**
    * 
@@ -110,7 +110,7 @@ public abstract class AbstractSearch implements QueueSearch {
    * @param messageIds
    * @return
    */
-  protected List<Message> loadMessages(List<UUID> messageIds, boolean reversed) {
+  protected List<Message> loadMessages(Collection<UUID> messageIds, boolean reversed) {
 
     Rows<UUID, String, ByteBuffer> messageResults = createMultigetSliceQuery(ko, ue, se, be)
         .setColumnFamily(MESSAGE_PROPERTIES.getColumnFamily()).setKeys(messageIds)
@@ -363,9 +363,12 @@ public abstract class AbstractSearch implements QueueSearch {
 
     private Map<UUID, Integer> indexCache = new HashMap<UUID, Integer>();
 
-    private RequestedOrderComparator(List<UUID> ids) {
-      for (int i = 0; i < ids.size(); i++) {
-        indexCache.put(ids.get(i), i);
+    private RequestedOrderComparator(Collection<UUID> ids) {
+      int i = 0; 
+      
+      for(UUID id: ids){
+        indexCache.put(id, i);
+        i++;
       }
     }
 

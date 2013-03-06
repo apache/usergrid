@@ -33,11 +33,11 @@ import com.sun.jersey.api.client.WebResource;
 public class Queue extends CollectionResource {
 
   private String clientId;
-  private int next = 0;
-  private int previous = 0;
+  private int limit = 0;
   private long timeout = 0;
   private String position;
   private String last;
+  private String[] filters = {};
 
   /**
    * 
@@ -65,19 +65,8 @@ public class Queue extends CollectionResource {
    * @param nextSize
    * @return
    */
-  public Queue withNext(int nextSize) {
-    this.next = nextSize;
-    return this;
-  }
-  
-  /**
-   * Set this with the next page size
-   * 
-   * @param nextSize
-   * @return
-   */
-  public Queue withPrevious(int previous) {
-    this.previous = previous;
+  public Queue withLimit(int limit) {
+    this.limit = limit;
     return this;
   }
   
@@ -97,6 +86,10 @@ public class Queue extends CollectionResource {
     return this;
   }
 
+  public Queue withFilters(String... filters){
+    this.filters = filters;
+    return this;
+  }
   
   /**
    * @return
@@ -166,16 +159,16 @@ public class Queue extends CollectionResource {
       resource = resource.queryParam("last", last);
     }
     
-    if (next > 0) {
-      resource = resource.queryParam("next", String.valueOf(next));
-    }
-    
-    if (previous > 0) {
-      resource = resource.queryParam("prev", String.valueOf(previous));
+    if (limit > 0) {
+      resource = resource.queryParam("limit", String.valueOf(limit));
     }
     
     if(timeout > 0){
       resource = resource.queryParam("timeout", String.valueOf(timeout));
+    }
+    
+    for(String filter: filters){
+      resource = resource.queryParam("filter", filter);
     }
 
     return resource;

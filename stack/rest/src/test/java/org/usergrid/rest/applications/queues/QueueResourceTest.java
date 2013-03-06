@@ -29,7 +29,6 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
-
 public class QueueResourceTest extends RestContextTest {
 
   @Test
@@ -63,7 +62,7 @@ public class QueueResourceTest extends RestContextTest {
       queue.post(MapUtils.hashMap("id", i));
     }
 
-    queue = queue.withNext(15);
+    queue = queue.withLimit(15);
 
     IncrementHandler handler = new IncrementHandler(count);
 
@@ -91,7 +90,7 @@ public class QueueResourceTest extends RestContextTest {
       queue.post(MapUtils.hashMap("id", i));
     }
 
-    queue = queue.withNext(15);
+    queue = queue.withLimit(15);
 
     // now consume and make sure we get each message. We'll use the default for
     // this test first
@@ -121,7 +120,7 @@ public class QueueResourceTest extends RestContextTest {
       queue.post(MapUtils.hashMap("id", i));
     }
 
-    queue = queue.withNext(15);
+    queue = queue.withLimit(15);
 
     IncrementHandler handler = new IncrementHandler(count);
 
@@ -130,7 +129,7 @@ public class QueueResourceTest extends RestContextTest {
 
     DecrementHandler decrement = new DecrementHandler(30);
 
-    queue = queue.withPrevious(15).withPosition(QueuePosition.END.name()).withLast(null);
+    queue = queue.withLimit(15).withPosition(QueuePosition.END.name()).withLast(null);
 
     testMessages(queue, decrement);
     decrement.assertResults();
@@ -142,7 +141,7 @@ public class QueueResourceTest extends RestContextTest {
    */
   @Test
   public void delete() {
-  
+
     Queue queue = context.application().queues().queue("test");
 
     try {
@@ -156,9 +155,73 @@ public class QueueResourceTest extends RestContextTest {
 
   }
 
+  /**
+   * Read messages ad-hoc with filtering
+   */
+  @Test
+  public void filterForward() {
+
+    Queue queue = context.application().queues().queue("test");
+
+    final int count = 30;
+
+    for (int i = 0; i < count; i++) {
+      Map<String, Object> data = new HashMap<String, Object>();
+      data.put("name", "todd");
+      data.put("id", i);
+      data.put("indexed", true);
+      
+      queue.post(data);
+    }
+
+    queue = queue.withLimit(1).withPosition(QueuePosition.START.name())
+        .withFilters("name = 'todd'", "id >= 10", "id <= 20").withLast(null);
+
+    // test it the first time, we should match
+    ForwardMatchHandler handler = new ForwardMatchHandler(10, 10);
+    testMessages(queue, handler);
+    handler.assertResults();
+
+    // test it again, shoudl still match
+    handler = new ForwardMatchHandler(10, 10);
+    testMessages(queue, handler);
+    handler.assertResults();
+
+  }
+  
+
+  /**
+   * Read messages ad-hoc with filtering
+   */
+  @Test
+  public void filterReverse() {
+
+    Queue queue = context.application().queues().queue("test");
+
+    final int count = 30;
+
+    for (int i = 0; i < count; i++) {
+      queue.post(MapUtils.hashMap("name", "todd").map("id", String.valueOf(i)).map("indexed", "true"));
+    }
+
+    queue = queue.withLimit(1).withPosition(QueuePosition.END.name())
+        .withFilters("name = 'todd'", "id >= 20", "id <= 30").withLast(null);
+
+    // test it the first time, we should match
+    ReverseMatchHandler handler = new ReverseMatchHandler(30, 10);
+    testMessages(queue, handler);
+    handler.assertResults();
+
+    // test it again, shoudl still match
+    handler = new ReverseMatchHandler(10, 10);
+    testMessages(queue, handler);
+    handler.assertResults();
+
+  }
+
   @Test
   public void topic() {
-   
+
     Queue queue = context.application().queues().queue("test");
 
     final int count = 30;
@@ -193,7 +256,7 @@ public class QueueResourceTest extends RestContextTest {
 
   @Test
   public void subscribe() {
-   
+
     Queue queue = context.application().queues().queue("test");
 
     queue.subscribers().subscribe("testsub1");
@@ -236,7 +299,7 @@ public class QueueResourceTest extends RestContextTest {
    */
   @Test
   public void unsubscribe() {
-  
+
     Queue queue = context.application().queues().queue("test");
 
     queue.subscribers().subscribe("testsub1");
@@ -305,7 +368,6 @@ public class QueueResourceTest extends RestContextTest {
   @Test
   public void transactionTimeout() throws InterruptedException {
 
-    
     Queue queue = context.application().queues().queue("test");
 
     final int count = 2;
@@ -411,7 +473,6 @@ public class QueueResourceTest extends RestContextTest {
   @Test
   public void transactionPageSize() throws InterruptedException {
 
-   
     Queue queue = context.application().queues().queue("test");
 
     final int count = 100;
@@ -431,7 +492,7 @@ public class QueueResourceTest extends RestContextTest {
     final long timeout = 20000;
 
     // read 50 messages at a time
-    queue = queue.withTimeout(timeout).withNext(50);
+    queue = queue.withTimeout(timeout).withLimit(50);
 
     TransactionResponseHandler transHandler = new TransactionResponseHandler(count);
 
@@ -467,9 +528,10 @@ public class QueueResourceTest extends RestContextTest {
 
   }
 
-
   /**
-   * Tests that if we page before transaction expiration, we're always getting all elements consecutively
+   * Tests that if we page before transaction expiration, we're always getting
+   * all elements consecutively
+   * 
    * @throws InterruptedException
    */
   @Test
@@ -494,23 +556,22 @@ public class QueueResourceTest extends RestContextTest {
     final long timeout = 20000;
 
     // read 50 messages at a time
-    queue = queue.withTimeout(timeout).withNext(120);
+    queue = queue.withTimeout(timeout).withLimit(120);
 
     IncrementHandler incrementHandler = new IncrementHandler(count);
 
     testMessages(queue, incrementHandler, new NoLastCommand());
-    
+
     incrementHandler.assertResults();
   }
-  
+
   @Test
   public void transaction10KMax() throws InterruptedException {
 
-   
     Queue queue = context.application().queues().queue("test");
     queue.post(MapUtils.hashMap("id", 0));
 
-    queue = queue.withTimeout(10000).withNext(10001);
+    queue = queue.withTimeout(10000).withLimit(10001);
 
     try {
       queue.getNextPage();
@@ -642,7 +703,6 @@ public class QueueResourceTest extends RestContextTest {
 
     ExecutorService executor = Executors.newFixedThreadPool(consumerSize);
 
-   
     Queue queue = context.application().queues().queue("test");
 
     // post the messages in batch
@@ -663,7 +723,7 @@ public class QueueResourceTest extends RestContextTest {
     final long timeout = 60000;
 
     // set our timeout and read 10 messages at a time
-    queue = queue.withTimeout(timeout).withNext(10);
+    queue = queue.withTimeout(timeout).withLimit(10);
 
     AsyncTransactionResponseHandler transHandler = new AsyncTransactionResponseHandler(count);
 
@@ -911,6 +971,93 @@ public class QueueResourceTest extends RestContextTest {
     }
 
   }
+
+  /**
+   * Simple handler ensure we get up to count messages from x to y ascending
+   * 
+   * @author tnine
+   * 
+   */
+  protected class ForwardMatchHandler implements ResponseHandler {
+
+    int startValue;
+    int count;
+    int current = 0;
+
+    private ForwardMatchHandler(int startValue, int count) {
+      this.startValue = startValue;
+      this.count = count;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
+     * #response(org.codehaus.jackson.JsonNode)
+     */
+    @Override
+    public void response(JsonNode node) {
+
+      assertEquals(startValue + current, node.get("id").asInt());
+
+      current++;
+
+    }
+
+    @Override
+    public void assertResults() {
+      // only ever invoked once
+      assertEquals(count, current);
+
+    }
+
+  }
+  
+  /**
+   * Simple handler ensure we get up to count messages from x to y ascending
+   * 
+   * @author tnine
+   * 
+   */
+  protected class ReverseMatchHandler implements ResponseHandler {
+
+    int startValue;
+    int count;
+    int current = 0;
+
+    private ReverseMatchHandler(int startValue, int count) {
+      this.startValue = startValue;
+      this.count = count;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.usergrid.rest.applications.queues.QueueResourceTest.ResponseHandler
+     * #response(org.codehaus.jackson.JsonNode)
+     */
+    @Override
+    public void response(JsonNode node) {
+
+      assertEquals(startValue - count, node.get("id").asInt());
+
+      current++;
+
+    }
+
+    @Override
+    public void assertResults() {
+      // only ever invoked once
+      assertEquals(count, current);
+
+    }
+
+  }
+
 
   /**
    * Simple handler to build a list of the message responses

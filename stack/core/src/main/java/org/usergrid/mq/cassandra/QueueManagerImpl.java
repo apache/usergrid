@@ -111,7 +111,7 @@ import org.usergrid.mq.QueueResults;
 import org.usergrid.mq.QueueSet;
 import org.usergrid.mq.QueueSet.QueueInfo;
 import org.usergrid.mq.cassandra.QueueIndexUpdate.QueueIndexEntry;
-import org.usergrid.mq.cassandra.io.BooleanSearch;
+import org.usergrid.mq.cassandra.io.FilterSearch;
 import org.usergrid.mq.cassandra.io.ConsumerTransaction;
 import org.usergrid.mq.cassandra.io.EndSearch;
 import org.usergrid.mq.cassandra.io.NoTransactionSearch;
@@ -143,11 +143,10 @@ public class QueueManagerImpl implements QueueManager {
   public static final int ALL_COUNT = 100000000;
 
   private UUID applicationId;
-  private QueueManagerFactoryImpl mmf;
   private CassandraService cass;
   private CounterUtils counterUtils;
   private LockManager lockManager;
-  
+
   public static final StringSerializer se = new StringSerializer();
   public static final ByteBufferSerializer be = new ByteBufferSerializer();
   public static final UUIDSerializer ue = new UUIDSerializer();
@@ -158,9 +157,8 @@ public class QueueManagerImpl implements QueueManager {
   public QueueManagerImpl() {
   }
 
-  public QueueManagerImpl init(QueueManagerFactoryImpl mmf, CassandraService cass, CounterUtils counterUtils, LockManager lockManager,
+  public QueueManagerImpl init(CassandraService cass, CounterUtils counterUtils, LockManager lockManager,
       UUID applicationId) {
-    this.mmf = mmf;
     this.cass = cass;
     this.counterUtils = counterUtils;
     this.applicationId = applicationId;
@@ -191,7 +189,7 @@ public class QueueManagerImpl implements QueueManager {
     addMessageToMutator(batch, message, timestamp);
 
     long shard_ts = roundLong(message.getTimestamp(), QUEUE_SHARD_INTERVAL);
-    
+
     logger.debug("Adding message with id '{}' to queue '{}'", message.getUuid(), queueId);
 
     batch.addInsertion(getQueueShardRowKey(queueId, shard_ts), QUEUE_INBOX.getColumnFamily(),
@@ -276,8 +274,6 @@ public class QueueManagerImpl implements QueueManager {
 
     return messages;
   }
-
-
 
   static TreeSet<UUID> add(TreeSet<UUID> a, UUID uuid, boolean reversed, int limit) {
 
@@ -368,18 +364,17 @@ public class QueueManagerImpl implements QueueManager {
 
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
 
-
     QueueSearch search = null;
 
-    if (query.getPosition() == LAST || query.getPosition() == CONSUMER) {
-      if (!query.hasFilterPredicates()) {
-        if (query.getTimeout() > 0) {
-          search = new ConsumerTransaction(applicationId, ko, lockManager, cass);
-        } else {
-          search = new NoTransactionSearch(ko, cass);
-        }
+    if (query.hasFilterPredicates()) {
+      search = new FilterSearch(ko, cass);
+    }
+    
+    else if (query.getPosition() == LAST || query.getPosition() == CONSUMER) {
+      if (query.getTimeout() > 0) {
+        search = new ConsumerTransaction(applicationId, ko, lockManager, cass);
       } else {
-        search = new BooleanSearch();
+        search = new NoTransactionSearch(ko, cass);
       }
     } else if (query.getPosition() == START) {
 
@@ -387,10 +382,10 @@ public class QueueManagerImpl implements QueueManager {
     } else if (query.getPosition() == END) {
       search = new EndSearch(ko, cass);
 
-    }else{
-      throw new IllegalArgumentException("You must specify a valid position");
+    } else {
+      throw new IllegalArgumentException("You must specify a valid position or query");
     }
-    
+
     return search.getResults(queuePath, query);
 
     // UUID searchConsumerId = null;
@@ -423,136 +418,137 @@ public class QueueManagerImpl implements QueueManager {
     //
     // TreeSet<UUID> uuid_set = new TreeSet<UUID>(new UUIDComparator());
 
-//    QueueSearch search = null;
-//
-//    if (!query.hasFilterPredicates()) {
-      // if (prev_count > 0) {
-      //
-      //
-      //
-      // uuid_set = getQueueRange(ko, queueId, bounds, uuid_set,
-      // start_uuid, null, true, prev_count);
-      // }
-      //
-      // uuid_set = getQueueRange(ko, queueId, bounds, uuid_set, start_uuid,
-      // null, false, skip_first ? next_count + 1 : next_count);
-//
-//      if (query.getTimeout() > 0) {
-//        search = new ConsumerTransaction();
-//      } else {
-//        search = new NoTransaction();
-//      }
-//
-//    } else {
-//
-//      search = new BooleanSearch();
-      //
-      // QueryProcessor qp = new QueryProcessor(query);
-      // List<QuerySlice> slices = qp.getSlices();
-      //
-      // TreeSet<UUID> prev_set = null;
-      //
-      // if (prev_count > 0) {
-      // if (slices.size() > 1) {
-      // prev_count = DEFAULT_SEARCH_COUNT;
-      // }
-      //
-      // for (QuerySlice slice : slices) {
-      //
-      // TreeSet<UUID> r = null;
-      // try {
-      // r = searchQueueRange(ko, queueId, bounds, null,
-      // start_uuid, null, true, slice, prev_count);
-      // } catch (Exception e) {
-      // logger.error("Error during search", e);
-      // }
-      //
-      // if (prev_set != null) {
-      // mergeAnd(prev_set, r, true, 10000);
-      // } else {
-      // prev_set = r;
-      // }
-      //
-      // }
-      // }
-      //
-      // TreeSet<UUID> next_set = null;
-      //
-      // if (slices.size() > 1) {
-      // next_count = DEFAULT_SEARCH_COUNT;
-      // }
-      //
-      // for (QuerySlice slice : slices) {
-      //
-      // TreeSet<UUID> r = null;
-      // try {
-      // r = searchQueueRange(ko, queueId, bounds, null, start_uuid,
-      // null, false, slice, skip_first ? next_count + 1
-      // : next_count);
-      // } catch (Exception e) {
-      // logger.error("Error during search", e);
-      // }
-      //
-      // if (next_set != null) {
-      // mergeAnd(next_set, r, true, 10000);
-      // } else {
-      // next_set = r;
-      // }
-      //
-      // }
+    // QueueSearch search = null;
+    //
+    // if (!query.hasFilterPredicates()) {
+    // if (prev_count > 0) {
+    //
+    //
+    //
+    // uuid_set = getQueueRange(ko, queueId, bounds, uuid_set,
+    // start_uuid, null, true, prev_count);
+    // }
+    //
+    // uuid_set = getQueueRange(ko, queueId, bounds, uuid_set, start_uuid,
+    // null, false, skip_first ? next_count + 1 : next_count);
+    //
+    // if (query.getTimeout() > 0) {
+    // search = new ConsumerTransaction();
+    // } else {
+    // search = new NoTransaction();
+    // }
+    //
+    // } else {
+    //
+    // search = new BooleanSearch();
+    //
+    // QueryProcessor qp = new QueryProcessor(query);
+    // List<QuerySlice> slices = qp.getSlices();
+    //
+    // TreeSet<UUID> prev_set = null;
+    //
+    // if (prev_count > 0) {
+    // if (slices.size() > 1) {
+    // prev_count = DEFAULT_SEARCH_COUNT;
+    // }
+    //
+    // for (QuerySlice slice : slices) {
+    //
+    // TreeSet<UUID> r = null;
+    // try {
+    // r = searchQueueRange(ko, queueId, bounds, null,
+    // start_uuid, null, true, slice, prev_count);
+    // } catch (Exception e) {
+    // logger.error("Error during search", e);
+    // }
+    //
+    // if (prev_set != null) {
+    // mergeAnd(prev_set, r, true, 10000);
+    // } else {
+    // prev_set = r;
+    // }
+    //
+    // }
+    // }
+    //
+    // TreeSet<UUID> next_set = null;
+    //
+    // if (slices.size() > 1) {
+    // next_count = DEFAULT_SEARCH_COUNT;
+    // }
+    //
+    // for (QuerySlice slice : slices) {
+    //
+    // TreeSet<UUID> r = null;
+    // try {
+    // r = searchQueueRange(ko, queueId, bounds, null, start_uuid,
+    // null, false, slice, skip_first ? next_count + 1
+    // : next_count);
+    // } catch (Exception e) {
+    // logger.error("Error during search", e);
+    // }
+    //
+    // if (next_set != null) {
+    // mergeAnd(next_set, r, true, 10000);
+    // } else {
+    // next_set = r;
+    // }
+    //
+    // }
 
-//    }
-//
-//    if (skip_first && query.isUpdate()) {
-//      uuid_set.remove(start_uuid);
-//    }
-//
-//    List<UUID> uuid_list = new ArrayList<UUID>(uuid_set);
-//    UUIDUtils.sortReversed(uuid_list);
-//    limit = query.getLimit();
-//    if ((limit > 0) && (limit < uuid_list.size())) {
-//      uuid_list = uuid_list.subList(0, limit);
-//    }
-//
-//    Rows<UUID, String, ByteBuffer> messageResults = createMultigetSliceQuery(ko, ue, se, be)
-//        .setColumnFamily(MESSAGE_PROPERTIES.getColumnFamily()).setKeys(uuid_list)
-//        .setRange(null, null, false, ALL_COUNT).execute().get();
-//
-//    List<Message> messages = new ArrayList<Message>();
-//    for (Row<UUID, String, ByteBuffer> row : messageResults) {
-//      Message message = deserializeMessage(row.getColumnSlice().getColumns());
-//      if (message != null) {
-//        messages.add(message);
-//      }
-//    }
-//
-//    Message.sortReversed(messages);
-//
-//    UUID lastUUID = null;
-//    if (messages.size() > 0) {
-//      lastUUID = messages.get(0).getUuid();
-//    } else if (start_uuid != null) {
-//      lastUUID = start_uuid;
-//    }
-//
-//    if (lastUUID != null && query.isUpdate()) {
-//      Mutator<UUID> batch = createMutator(ko, ue);
-//
-//      if (query.getPosition() == QueuePosition.LAST) {
-//        batch.addInsertion(queueId, CONSUMERS.getColumnFamily(),
-//            createColumn(queueId, lastUUID, cass.createTimestamp(), ue, ue));
-//      } else if (query.getPosition() == QueuePosition.CONSUMER) {
-//        batch.addInsertion(consumerId, CONSUMERS.getColumnFamily(),
-//            createColumn(queueId, lastUUID, cass.createTimestamp(), ue, ue));
-//      }
-//
-//      batchExecute(batch, RETRY_COUNT);
-//    }
-//
-//    // return new QueueResults(queuePath, queueId, messages, lastUUID,
-//    // consumerId);
-//    //
-//    return search.getResults(queuePath, queueId, searchConsumerId, query);
+    // }
+    //
+    // if (skip_first && query.isUpdate()) {
+    // uuid_set.remove(start_uuid);
+    // }
+    //
+    // List<UUID> uuid_list = new ArrayList<UUID>(uuid_set);
+    // UUIDUtils.sortReversed(uuid_list);
+    // limit = query.getLimit();
+    // if ((limit > 0) && (limit < uuid_list.size())) {
+    // uuid_list = uuid_list.subList(0, limit);
+    // }
+    //
+    // Rows<UUID, String, ByteBuffer> messageResults =
+    // createMultigetSliceQuery(ko, ue, se, be)
+    // .setColumnFamily(MESSAGE_PROPERTIES.getColumnFamily()).setKeys(uuid_list)
+    // .setRange(null, null, false, ALL_COUNT).execute().get();
+    //
+    // List<Message> messages = new ArrayList<Message>();
+    // for (Row<UUID, String, ByteBuffer> row : messageResults) {
+    // Message message = deserializeMessage(row.getColumnSlice().getColumns());
+    // if (message != null) {
+    // messages.add(message);
+    // }
+    // }
+    //
+    // Message.sortReversed(messages);
+    //
+    // UUID lastUUID = null;
+    // if (messages.size() > 0) {
+    // lastUUID = messages.get(0).getUuid();
+    // } else if (start_uuid != null) {
+    // lastUUID = start_uuid;
+    // }
+    //
+    // if (lastUUID != null && query.isUpdate()) {
+    // Mutator<UUID> batch = createMutator(ko, ue);
+    //
+    // if (query.getPosition() == QueuePosition.LAST) {
+    // batch.addInsertion(queueId, CONSUMERS.getColumnFamily(),
+    // createColumn(queueId, lastUUID, cass.createTimestamp(), ue, ue));
+    // } else if (query.getPosition() == QueuePosition.CONSUMER) {
+    // batch.addInsertion(consumerId, CONSUMERS.getColumnFamily(),
+    // createColumn(queueId, lastUUID, cass.createTimestamp(), ue, ue));
+    // }
+    //
+    // batchExecute(batch, RETRY_COUNT);
+    // }
+    //
+    // // return new QueueResults(queuePath, queueId, messages, lastUUID,
+    // // consumerId);
+    // //
+    // return search.getResults(queuePath, queueId, searchConsumerId, query);
   }
 
   public void batchSubscribeToQueue(Mutator<ByteBuffer> batch, String publisherQueuePath, UUID publisherQueueId,
@@ -1390,25 +1386,31 @@ public class QueueManagerImpl implements QueueManager {
     return null;
   }
 
- 
-
-  /* (non-Javadoc)
-   * @see org.usergrid.mq.QueueManager#renewTransaction(java.lang.String, java.lang.String, org.usergrid.mq.QueueQuery)
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.usergrid.mq.QueueManager#renewTransaction(java.lang.String,
+   * java.lang.String, org.usergrid.mq.QueueQuery)
    */
   @Override
-  public UUID renewTransaction(String queuePath, UUID transactionId, QueueQuery query) throws TransactionNotFoundException {
+  public UUID renewTransaction(String queuePath, UUID transactionId, QueueQuery query)
+      throws TransactionNotFoundException {
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
-    return new ConsumerTransaction(applicationId,ko, lockManager, cass).renewTransaction(queuePath, transactionId, query);
+    return new ConsumerTransaction(applicationId, ko, lockManager, cass).renewTransaction(queuePath, transactionId,
+        query);
   }
 
-  /* (non-Javadoc)
-   * @see org.usergrid.mq.QueueManager#deleteTransaction(java.lang.String, java.lang.String, org.usergrid.mq.QueueQuery)
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.usergrid.mq.QueueManager#deleteTransaction(java.lang.String,
+   * java.lang.String, org.usergrid.mq.QueueQuery)
    */
   @Override
   public void deleteTransaction(String queuePath, UUID transactionId, QueueQuery query) {
     Keyspace ko = cass.getApplicationKeyspace(applicationId);
     new ConsumerTransaction(applicationId, ko, lockManager, cass).deleteTransaction(queuePath, transactionId, query);
-    
+
   }
 
 }

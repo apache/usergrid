@@ -26,9 +26,6 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.usergrid.locking.LockManager;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.mq.QueueManagerFactory;
@@ -76,7 +73,7 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
 	@Override
 	public QueueManager getQueueManager(UUID applicationId) {
 	    QueueManagerImpl qm = new QueueManagerImpl();
-	    qm.init(this, cass, counterUtils, lockManager, applicationId);
+	    qm.init(cass, counterUtils, lockManager, applicationId);
 	    return qm;
 		//return applicationContext.getAutowireCapableBeanFactory()
 		//		.createBean(QueueManagerImpl.class)

@@ -34,8 +34,6 @@ public class QueueQuery extends Query {
 	UUID consumerId;
 	long lastTimestamp;
 	UUID lastMessageId;
-	int previousCount = 0;
-	int nextCount = 1;
 	QueuePosition position = null;
 	boolean _synchronized;
 	boolean update = true;
@@ -45,7 +43,7 @@ public class QueueQuery extends Query {
 	}
 
 	public QueueQuery(Query q) {
-		super(q);
+	  super(q);
 	}
 
 	public QueueQuery(QueueQuery q) {
@@ -54,14 +52,13 @@ public class QueueQuery extends Query {
 			consumerId = q.consumerId;
 			lastTimestamp = q.lastTimestamp;
 			lastMessageId = q.lastMessageId;
-			previousCount = q.previousCount;
-			nextCount = q.nextCount;
 			position = q.position;
 			_synchronized = q._synchronized;
 			update = q.update;
 		}
+		
 	}
-
+	
 	public static QueueQuery newQueryIfNull(QueueQuery query) {
 		if (query == null) {
 			query = new QueueQuery();
@@ -110,17 +107,6 @@ public class QueueQuery extends Query {
 				query.setLastTimestamp(t);
 			}
 		}
-
-		if (params.containsKey("prev")) {
-			query = newQueryIfNull(query);
-			query.setPreviousCount(getInt(first(params.get("prev"))));
-		}
-
-		if (params.containsKey("next")) {
-			query = newQueryIfNull(query);
-			query.setNextCount(getInt(first(params.get("next"))));
-		}
-
 		if (params.containsKey("pos")) {
 			query = newQueryIfNull(query);
 			QueuePosition pos = QueuePosition.find(first(params.get("pos")));
@@ -199,31 +185,6 @@ public class QueueQuery extends Query {
 		return this;
 	}
 
-	public int getPreviousCount() {
-		return previousCount;
-	}
-
-	public void setPreviousCount(int previousCount) {
-		this.previousCount = previousCount;
-	}
-
-	public QueueQuery withPreviousCount(int previousCount) {
-		this.previousCount = previousCount;
-		return this;
-	}
-
-	public int getNextCount() {
-		return nextCount;
-	}
-
-	public void setNextCount(int nextCount) {
-		this.nextCount = nextCount;
-	}
-
-	public QueueQuery withNextCount(int nextCount) {
-		this.nextCount = nextCount;
-		return this;
-	}
 
 	public QueuePosition getPosition() {
 		if (position != null) {

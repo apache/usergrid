@@ -179,9 +179,9 @@ public class ConsumerTransaction extends NoTransactionSearch {
     UUID queueId = getQueueId(queuePath);
     UUID consumerId = getConsumerId(queueId, query);
 
-    if (query.getNextCount() > MAX_READ) {
+    if (query.getLimit() > MAX_READ) {
       throw new IllegalArgumentException(String.format(
-          "You specified a size of %d, you cannot specify a size larger than %d when using transations", query.getNextCount(),
+          "You specified a size of %d, you cannot specify a size larger than %d when using transations", query.getLimit(DEFAULT_READ),
           MAX_READ));
     }
 

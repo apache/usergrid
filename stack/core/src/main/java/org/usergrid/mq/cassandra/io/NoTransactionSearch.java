@@ -40,6 +40,8 @@ public class NoTransactionSearch extends AbstractSearch {
 
   private static final Logger logger = LoggerFactory.getLogger(NoTransactionSearch.class);
 
+  protected static final int DEFAULT_READ = 1;
+  
   protected CassandraService cass;
   
   /**
@@ -92,7 +94,7 @@ public class NoTransactionSearch extends AbstractSearch {
       logger.debug("Last message id is '{}' for queueId '{}' and clientId '{}'", new Object[]{lastReadMessageId, queueId, consumerId});
     }
 
-    return new SearchParam(lastReadMessageId, false, lastReadMessageId != null, query.getNextCount());
+    return new SearchParam(lastReadMessageId, false, lastReadMessageId != null, query.getLimit(DEFAULT_READ));
   }
 
   /**

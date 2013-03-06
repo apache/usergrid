@@ -50,6 +50,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.codehaus.jackson.annotate.JsonAnyGetter;
 import org.codehaus.jackson.annotate.JsonAnySetter;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.usergrid.utils.UUIDUtils;
 
 import com.fasterxml.uuid.UUIDComparator;
@@ -432,6 +434,7 @@ public class Message {
 	  properties.put(MESSAGE_TRANSACTION, transaction);
 	}
 	
+	@JsonSerialize(include = Inclusion.NON_NULL)
 	public UUID getTransaction(){
 	  return (UUID) properties.get(MESSAGE_TRANSACTION);
 	}

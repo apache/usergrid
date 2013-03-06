@@ -48,7 +48,7 @@ public class EndSearch extends NoTransactionSearch {
   @Override
   protected SearchParam getParams(UUID queueId, UUID consumerId, QueueQuery query) {
     UUID lastMessageId = query.getLastMessageId();
-    return new SearchParam(lastMessageId, true, lastMessageId != null, max(query.getPreviousCount(), query.getLimit()));
+    return new SearchParam(lastMessageId, true, lastMessageId != null, query.getLimit(DEFAULT_READ));
   }
 
   /*

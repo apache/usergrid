@@ -51,7 +51,7 @@ public class StartSearch extends NoTransactionSearch {
     UUID lastMessageId = query.getLastMessageId();
     
     
-    return new SearchParam(lastMessageId, false, lastMessageId != null, max(query.getNextCount(), query.getLimit()));
+    return new SearchParam(lastMessageId, false, lastMessageId != null, query.getLimit(DEFAULT_READ));
   }
 
   /* (non-Javadoc)

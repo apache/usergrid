@@ -26,6 +26,8 @@ public class CollectionResource extends SetResource {
   public CollectionResource(String collectionName, NamedResource parent) {
     super(collectionName, parent);
   }
+  
+  
 
   
   
