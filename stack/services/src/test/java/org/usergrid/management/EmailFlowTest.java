@@ -64,6 +64,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
@@ -90,7 +91,8 @@ public class EmailFlowTest {
 		management = CassandraRunner.getBean(ManagementService.class);
         management.setup();
         emf = CassandraRunner.getBean(EntityManagerFactory.class);
-        properties = CassandraRunner.getBean("properties", Properties.class);
+        properties = CassandraRunner.getBean(PropertiesFactoryBean.class).getObject();
+
 	}
 
 
