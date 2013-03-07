@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.apache.shiro.subject.Subject;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,11 +62,16 @@ public class RoleTest {
 	/**
 	 * DO NOT REMOVE THIS!  Otherwise our subject state is hose for other tests runs and classes
 	 */
-	@After
-	public void clearSubject(){
-	  SubjectUtils.getSubject().logout();
-	}
-	
+
+  @Before
+  public void cleanSubject(){
+  //create a clean subject for the tests
+    Subject subject = SubjectUtils.getSubject();
+    if(subject != null){
+      subject.logout();
+    }
+  }
+
 	@Test
 	public void testRoleInactivity() throws Exception {
 
