@@ -207,9 +207,83 @@
       name = "Select an Application";
     }
     $('#current-app-name').html('<div class="app-menu">' + name + '</div>  <span class="caret"></span>');
-    $('.thingy span.title span.app_title').text(" " + name);
+  //  $('.thingy span.title span.app_title').text(" " + name);
     $('#nav-app-name').html(name);
   }
+
+  /*******************************************************************
+   *
+   * Collections
+   *
+   ******************************************************************/
+
+  function pageSelectCollections() {
+    hideModal(' #collections-messages')
+    getCollections();
+  }
+  window.Usergrid.console.pageSelectCollections = pageSelectCollections;
+
+  function getCollections() {
+    //clear out the table before we start
+    var output = $('#collections-table');
+    output.empty();
+    hideCurlCommand('collections');
+    var section =$('#application-collections');
+    section.empty().html('<div class="alert alert-info">Loading...</div>');
+
+    var queryObj = new Usergrid.Query("GET",'', null, null, getCollectionsCallback,
+      function() { alertModal("Error", "There was an error getting the collections"); }
+    );
+
+    runAppQuery(queryObj);
+    return false;
+  }
+
+  function getCollectionsCallback(response) {
+    $('#collections-pagination').hide();
+    $('#collections-next').hide();
+    $('#collections-previous').hide();
+    showEntitySelectButton();
+    if (response.entities && response.entities[0] && response.entities[0].metadata && response.entities[0].metadata.collections) {
+      applicationData.Collections = response.entities[0].metadata.collections;
+      updateApplicationDashboard();
+      updateQueryAutocompleteCollections();
+    }
+
+    var data = response.entities[0].metadata.collections;
+    var output = $('#collections-table');
+
+    if ($.isEmptyObject(data)) {
+      output.replaceWith('<div id="collections-table" class="collection-panel-section-message">No collections found.</div>');
+    } else {
+      output.replaceWith('<table id="collections-table" class="table"><tbody></tbody></table>');
+      var leftMenuContent = '<ul id="collections-link-buttons" class="nav nav-list" style="margin-bottom: 5px;">';
+      for (var i in data) {
+        var this_data = data[i];
+        $.tmpl('apigee.ui.collections.table_rows.html', this_data).appendTo('#collections-table');
+
+        var link = "Usergrid.console.pageOpenQueryExplorer('"+data[i].name+"'); return false;";
+        leftMenuContent += '<li id="collections-link-button-'+data[i].name+'"><a href="#" onclick="'+link+'" class="collection-nav-links"><span class="nav-menu-text">/'+data[i].name+'</span></a></li>';
+      }
+      leftMenuContent += '</ul>';
+      $('#left-collections-content').html(leftMenuContent);
+    }
+    showCurlCommand('collections', this.getCurl(), this.getToken());
+  }
+
+  function selectAllCollections(){
+    $('#query-response-table input[class=queryResultItem]').attr('checked', true);
+    $('#deselectAllCollections').show();
+    $('#selectAllCollections').hide();
+  }
+  window.Usergrid.console.selectAllCollections = selectAllCollections;
+
+  function deselectAllCollections(){
+    $('#query-response-table input[class=queryResultItem]').attr('checked', false);
+    $('#deselectAllCollections').hide();
+    $('#selectAllCollections').show();
+  }
+  window.Usergrid.console.deselectAllCollections = deselectAllCollections;
 
   /*******************************************************************
    *
@@ -218,8 +292,9 @@
    ******************************************************************/
 
   function pageOpenQueryExplorer(collection) {
+
     collection = collection || "";
-    showPanel("#query-panel");
+    showPanel("#collections-panel");
     hideMoreQueryOptions();
     //reset the form fields
     $("#query-path").val("");
@@ -241,6 +316,27 @@
     }
   }
   window.Usergrid.console.pageOpenQueryExplorer = pageOpenQueryExplorer;
+
+  //change contexts for REST operations
+  $("#button-query-get").click(function(){
+    $("#query-json-box").show();
+    $("#query-query-box").show();
+  });
+
+  $("#button-query-post").click(function(){
+    $("#query-json-box").show();
+    $("#query-query-box").hide();
+  });
+
+  $("#button-query-put").click(function(){
+    $("#query-json-box").show();
+    $("#query-query-box").show();
+  });
+
+  $("#button-query-delete").click(function(){
+    $("#query-json-box").hide();
+    $("#query-query-box").show();
+  });
 
   function runCollectionQuery(){
     var method;
@@ -285,102 +381,145 @@
     if(ql !== ""){
       var params = {"ql":ql};
     }
-    if(method.toUpperCase() === 'PUT' && !Usergrid.validation.isUUID( path.split("/").pop())) {
-      confirmAction("Warning!",
-        "You are attempting to run a PUT (update) command, but it appears that you have not given a specific entity to act on.  This action may update all entities in this colleciton.  Are you sure you want to proceed?",
-        function() {
-          //make a new query object
-          queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function(response) { alertModal("Error", response) });
-          //store the query object on the stack
-          pushQuery(queryObj);
-          //then run the query
-          runAppQuery(queryObj);
-        }
-      );
-    } else {
       //make a new query object
       queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function(response) { alertModal("Error", response) });
       //store the query object on the stack
       pushQuery(queryObj);
       //then run the query
       runAppQuery(queryObj);
-    }
   }
 
-  function getCollectionCallback(response) {
-    hidePagination('query-response');
-    query_entities = null;
-    query_entities_by_id = null;
-    var t = "";
-    if (response.entities && (response.entities.length > 0)) {
-      query_entities = response.entities;
-      query_entities_by_id = {};
+
+function getCollectionCallback(response) {
+  hidePagination('query-response');
+
+  if (response.action == 'post') {
+    pageSelectCollections();
+  }
+
+  var path = response.path || "";
+  path = "" + path.match(/[^?]*/);
+
+  var path_no_slashes = response.path.replace(/\//g,'');
+  $("#collections-link-buttons li").removeClass('active');
+  $("#collections-link-button-"+path_no_slashes).addClass('active');
+
+  if(response.action === ("delete")){
+    getCollection("GET", path);
+    return;
+  }
+
+  // events collection returns like:  /events/
+  if(response.path === '/events/') {
+    $('#query-path').val(response.path);
+  } else {
+    $('#query-path').val(response.path + '/');
+  }
+
+  $("#collection-type-field").html(response.path);
+  var output = $('#query-response-table');
+  if (response.entities) {
+    if (response.entities.length < 1) {
+      output.replaceWith('<table id="query-response-table" class="table"><tbody><tr class="zebraRows users-row"><td>No entities found</td></tr></table>');
+    } else {
       //Inform the user of a valid query
       showQueryStatus('Done');
 
-      var path = response.path || "";
-      path = "" + path.match(/[^?]*/);
-      if(response.action === ("delete")){
-        getCollection("GET", path);
+
+      //showQueryCollectionView(path)
+      //updateQueryTypeahead(response, 'query-path');
+
+      var entity_type = response.entities [0].type;
+      var table = '<table id="query-response-table" class="table"><tbody><tr class="zebraRows users-row">' +
+                  '<td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllUsers();" /></td>';
+      if (entity_type === 'user') {
+        table += '<td class="gravatar50-td">&nbsp;</td>'+
+          '<td class="user-details bold-header">username</td>'+
+          '<td class="user-details bold-header">Display Name</td>';
+      } else if (entity_type === 'group') {
+        table += '<td class="user-details bold-header">Path</td>'+
+          '<td class="user-details bold-header">Title</td>';
+      } else if (entity_type === 'role') {
+        table += '<td class="user-details bold-header">Title</td>'+
+          '<td class="user-details bold-header">Rolename</td>';
+      } else {
+        table += '<td class="user-details bold-header">Name</td>';
       }
+      table += '<td class="view-details">&nbsp;</td>' +
+               '</tr></tbody></table>';
+      output.replaceWith(table);
+      for (i = 0; i < response.entities.length; i++) {
+        var this_data = {}
+        this_data.r = response.entities [i];
 
-      if (response.entities.length > 1) {
-        //Update Query Explorer autocomplete
-        showQueryCollectionView(path)
-        updateQueryTypeahead(response, 'query-path');
-        for (i in query_entities) {
-          var entity = query_entities[i];
-          query_entities_by_id[entity.uuid] = entity;
+        //next get a table view of the object
+        this_data.content = buildContentArea(response.entities [i]);
 
-          var entity_path = (entity.metadata || {}).path;
-          if ($.isEmptyObject(entity_path)) {
-            entity_path = path + "/";
+
+        //get a json representation of the object
+        this_data.json = JSON.stringify(response.entities [i], null, 2);
+
+        if (this_data.type === 'user') {
+          if (!this_data.picture) {
+            this_data.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user-photo.png"
+          } else {
+            this_data.picture = get_replacementGravatar(this_data.picture);
           }
-          $("#query-path").val(path)
-          t += "<div class=\"query-result-row entity_list_item\" id=\"query-result-row-"
-            + i
-            + "\" data-entity-type=\""
-            + entity.type
-            + "\" data-entity-id=\"" + entity.uuid + "\" data-collection-path=\""
-            + entity_path
-            + "\"></div>";
+        } else {
+          if (!this_data.name) {
+            name = '[No value set]';
+          }
         }
-        $("#query-response-table").html(t);
-        $(".entity_list_item").loadEntityCollectionsListWidget();
-      } else {
-        //Entity Detail view
-        showQueryDetailView(path);
-        var entity = response.entities[0];
-        query_entities_by_id[entity.uuid] = entity;
-
-        var entity_path = (entity.metadata || {}).path;
-        if ($.isEmptyObject(entity_path)) {
-          entity_path = path + "/" ;
-        }
-        $('#query-path').val(entity_path);
-
-        t = '<div class="query-result-row entity_detail" id="query-result-detail" data-entity-type="'
-          + entity.type
-          + '" data-entity-id="' + entity.uuid + '" data-collection-path="'
-          + entity_path
-          + '"></div>';
-
-        $("#query-response-table").html(t);
-        $('#query-result-detail').loadEntityCollectionsDetailWidget();
+        $.tmpl('apigee.ui.collection.table_rows.html', this_data).appendTo('#query-response-table');
       }
-
-      showBackButton();
-      showPagination('query-response');
-    }else{
-      // events collection returns like:  /events/
-      if(response.path === '/events/') {
-        $('#query-path').val(response.path);
-      } else {
-        $('#query-path').val(response.path + '/');
-      }
-      $("#query-response-table").html("<div class='group-panel-section-message'>No Collection Entities Found</div>");
     }
+  } else {
+    output.replaceWith('<table id="query-response-table" class="table"><tbody><tr class="zebraRows users-row"><td>No entities found</td></tr></table>');
   }
+  showBackButton();
+  showPagination('query-response');
+}
+
+
+function buildContentArea(obj2) {
+  function getProperties(obj, depth){
+    depth = 1;
+    var output = '';
+    for (var property in obj) {
+      if (depth ==1) { output += '<tr>';}
+      if (obj.hasOwnProperty(property)){
+        if (obj[property].constructor == Object || obj[property] instanceof Array) {
+
+          var prop = (obj[property] instanceof Array)?property:'';
+          //console.log('**Object -> '+property+': ');
+          output += '<td>'+prop+'</td><td style="padding: 0"><table><tr>';
+          output += getProperties(obj[property], depth);
+          output += '</td></tr></table>';
+        }
+        else {
+          //console.log(property + " " + obj[property]);
+          output += '<td>'+property+'</td><td>'+obj[property]+'</td>';
+        }
+      }
+      if (depth ==1) { output += '</tr>';}
+    }
+    return output;
+  }
+  var output = getProperties(obj2, '', 0);
+  return '<table>' + output + '</table>';
+}
+
+  function activateQueryRowJSONButton() {
+     $("#button-query-show-row-JSON").removeClass('disabled').addClass('active');
+     $("#button-query-show-row-content").removeClass('active').addClass('disabled');
+  }
+  window.Usergrid.console.activateQueryRowJSONButton = activateQueryRowJSONButton;
+
+  function activateQueryRowContentButton() {
+     $("#button-query-show-row-JSON").removeClass('active').addClass('disabled');
+     $("#button-query-show-row-content").removeClass('disabled').addClass('active');
+  }
+  window.Usergrid.console.activateQueryRowContentButton = activateQueryRowContentButton;
 
   function showQueryCollectionView() {
     $('#query-collection-info').show();
@@ -2364,7 +2503,7 @@
     if (response.entities.length < 1) {
       output.replaceWith('<div id="groups-table" class="group-panel-section-message">No groups found.</div>');
     } else {
-      output.replaceWith('<table id="groups-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllGroups();" /></td><td class="user-details bold-header">Path</td><td class="user-details bold-header">Group Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
+      output.replaceWith('<table id="groups-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllGroups();" /></td><td class="user-details bold-header">Path</td><td class="user-details bold-header">Title</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
         var this_data = response.entities[i];
         $.tmpl('apigee.ui.groups.table_rows.html', this_data).appendTo('#groups-table');
@@ -3569,73 +3708,6 @@
     shell_input.css('height', shell_input.attr('scrollHeight'));
   });
 
-  /*******************************************************************
-   *
-   * Collections
-   *
-   ******************************************************************/
-
-  function pageSelectCollections(uuid) {
-    hideModal(' #collections-messages')
-    getCollections();
-  }
-  window.Usergrid.console.pageSelectCollections = pageSelectCollections;
-
-  function getCollections(search, searchType) {
-    //clear out the table before we start
-    var output = $('#collections-table');
-    output.empty();
-  hideCurlCommand('collections');
-    var section =$('#application-collections');
-    section.empty().html('<div class="alert alert-info">Loading...</div>');
-
-    var queryObj = new Usergrid.Query("GET",'', null, null, getCollectionsCallback,
-      function() { alertModal("Error", "There was an error getting the collections"); }
-    );
-
-    runAppQuery(queryObj);
-    return false;
-  }
-
-  function getCollectionsCallback(response) {
-    $('#collections-pagination').hide();
-    $('#collections-next').hide();
-    $('#collections-previous').hide();
-    showEntitySelectButton();
-    if (response.entities && response.entities[0] && response.entities[0].metadata && response.entities[0].metadata.collections) {
-      applicationData.Collections = response.entities[0].metadata.collections;
-      updateApplicationDashboard();
-      updateQueryAutocompleteCollections();
-    }
-
-    var data = response.entities[0].metadata.collections;
-    var output = $('#collections-table');
-
-    if ($.isEmptyObject(data)) {
-      output.replaceWith('<div id="collections-table" class="collection-panel-section-message">No collections found.</div>');
-    } else {
-      output.replaceWith('<table id="collections-table" class="table"><tbody></tbody></table>');
-      for (var i in data) {
-        var this_data = data[i];
-        $.tmpl('apigee.ui.collections.table_rows.html', this_data).appendTo('#collections-table');
-      }
-    }
-    showCurlCommand('collections', this.getCurl(), this.getToken());
-  }
-
-  function selectAllCollections(){
-    $('#query-response-table input[class=queryResultItem]').attr('checked', true);
-    $('#deselectAllCollections').show();
-    $('#selectAllCollections').hide();
-  }
-  window.Usergrid.console.selectAllCollections = selectAllCollections;
-
-  function deselectAllCollections(){
-    $('#query-response-table input[class=queryResultItem]').attr('checked', false);
-    $('#deselectAllCollections').hide();
-    $('#selectAllCollections').show();
-  }
-  window.Usergrid.console.deselectAllCollections = deselectAllCollections;
 
   /*******************************************************************
    *
@@ -4506,6 +4578,7 @@
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.activities.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.graph.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.permissions.html");
+    Usergrid.console.ui.loadTemplate("apigee.ui.collection.table_rows.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.header.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.contents.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.metadata.html");

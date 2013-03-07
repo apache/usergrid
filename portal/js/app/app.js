@@ -85,7 +85,8 @@ $(document).ready(function () {
     Pages.AddPanel('groups', null, null, null, null, Usergrid.console.pageSelectGroups, null);
     Pages.AddPanel('roles',  null, null, null, null, Usergrid.console.pageSelectRoles, null);
     Pages.AddPanel('activities', null, null, null, null, Usergrid.console.pageSelectActivities, null);
-    Pages.AddPanel('collections', null, null, null, null, Usergrid.console.pageSelectCollections, null);
+   // Pages.AddPanel('collections', null, null, null, null, Usergrid.console.pageSelectCollections, null);
+    Pages.AddPanel('collections', "#collections-link", null, null, null, Usergrid.console.pageSelectCollections, null);
     Pages.AddPanel('analytics', null, null, null, null, Usergrid.console.pageSelectAnalytics, null);
     Pages.AddPanel('properties', null, null, null, null, Usergrid.console.pageSelectProperties, null);
     Pages.AddPanel('shell', null, null, null, null, Usergrid.console.pageSelectShell, null);

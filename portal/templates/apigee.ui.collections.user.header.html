@@ -1,19 +1,21 @@
-<table class="query-result-table">
-  <tr class="query-result-header">
-    <td class="query-result-td-checkbox"><input type="checkbox" name="entity" value="${entity.uuid}" class="queryResultItem"  id="queryResultItem" /></td>
-    <td class="query-result-td-picture gravatar50-td"><img class="gravatar50" src="{{if picture}}${entity.picture}{{else}}images/user_profile.png{{/if}}" /></td>
-    <td class="query-result-td-header-name">
-      <div class="query-result-header-name{{if picture}} query-result-picture-vert-offset{{/if}}">
-        {{if path}}<a href="" onclick="Usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
-          ${name}
-        {{if path}}</a>{{/if}}
-      </div>
-    </td>
-    <td class="query-result-td-header-buttons btn-group">
-      {{if fblink}}<a class="query-result-header-fblink btn" target="_blank" href="${fblink}">Facebook</a>{{/if}}
-      {{if collections}}<button class="query-result-header-toggle-collections btn">Collections</button>{{/if}}
-      <button class="query-result-header-toggle-contents btn">Contents</button>
-      <button class="query-result-header-toggle-json btn">JSON</button>
-    </td>
-  </tr>
-</table>
+
+  <td class="checkboxo">
+    <input class="queryResultItem" type="checkbox" name="entity" value="${uuid}" />
+  </td>
+  <td class="gravatar50-td">
+    <img class="gravatar50" src="{{if picture}}${picture}{{else}}images/user-photo.png{{/if}}" />
+  </td>
+  <td class="details">
+      {{if path}}
+        <a href="" onclick="Usergrid.console.pageOpenQueryExplorer('${path}'); return false;">
+          ${username}
+        </a>
+      {{/if}}
+  </td>
+  <td class="details">
+     ${name}
+  </td>
+  <td class="view-details">
+    <button class="query-result-header-toggle-json btn">JSON</button>
+  </td>
+

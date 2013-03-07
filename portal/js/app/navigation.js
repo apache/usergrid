@@ -45,19 +45,19 @@ Usergrid.Navigation = Backbone.Router.extend({
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('users');
-      $('#left2').show();
+      this.showAppUserContent();
     },
     groups: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('groups');
-      $('#left2').show();
+      this.showAppUserContent();
     },
     roles: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('roles');
-      $('#left2').show();
+      this.showAppUserContent();
     },
     activities: function(organization, application) {
       this.checkOrganization(organization);
@@ -68,8 +68,14 @@ Usergrid.Navigation = Backbone.Router.extend({
     collections: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
+
+      $('#left2').show();
+      $('#sidebar-menu2').hide();
+      $('#left-collections-menu').show();
+      Pages.ActivatePanel("collections");
+
       Pages.SelectPanel('collections');
-      $('#left2').hide();
+      this.showAppDataContent();
     },
     analytics: function(organization, application) {
       this.checkOrganization(organization);
@@ -121,6 +127,16 @@ Usergrid.Navigation = Backbone.Router.extend({
         }
       }
       return false
+    },
+    showAppUserContent: function(){
+      $('#left2').show();
+      $('#sidebar-menu2').show();
+      $('#left-collections-menu').hide();
+    },
+    showAppDataContent: function(){
+      $('#left2').show();
+      $('#sidebar-menu2').hide();
+      $('#left-collections-menu').show();
     },
 
     navigateTo: function(address) {
