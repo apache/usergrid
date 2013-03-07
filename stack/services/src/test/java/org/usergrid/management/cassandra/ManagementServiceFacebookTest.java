@@ -22,13 +22,12 @@ import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.entities.User;
+import org.usergrid.test.ShiroHelperRunner;
 import org.usergrid.utils.MapUtils;
 
 import com.sun.jersey.api.client.Client;
@@ -37,7 +36,7 @@ import com.sun.jersey.api.client.WebResource.Builder;
 import com.sun.jersey.api.client.config.ClientConfig;
 
 @PrepareForTest(Client.class)
-@RunWith(CassandraRunner.class)
+@RunWith(ShiroHelperRunner.class)
 public class ManagementServiceFacebookTest {
 
 	@Rule

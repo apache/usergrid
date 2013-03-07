@@ -77,20 +77,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
         contextHolder.applicationContext.stop();
     }
 
-    /**
-     * Method-level run
-     *
-     * @param method
-     * @param notifier
-     */
-    @Override
-    protected void runChild(FrameworkMethod method, RunNotifier notifier) {
-        // TODO should scan for:
-        // - DataControl: dropSchemaOnExit=true, dataLoader=[a class which implements load()]
-        // dataControl.loadMyData(cassandraService)
-        super.runChild(method, notifier);
-    }
-
+   
     private void loadDataControl(DataControl dataControl) {
         if ( !contextHolder.applicationContext.isActive() ) {
             logger.info("restarting context...");

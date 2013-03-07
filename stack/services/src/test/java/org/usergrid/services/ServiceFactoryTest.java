@@ -24,13 +24,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.usergrid.test.ShiroHelperRunner;
 
 import baas.io.simple.SimpleService;
-import org.usergrid.cassandra.CassandraRunner;
 
-@RunWith(CassandraRunner.class)
+@RunWith(ShiroHelperRunner.class)
 public class ServiceFactoryTest extends AbstractServiceTest {
 
 	private static final Logger logger = LoggerFactory
