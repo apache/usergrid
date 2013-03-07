@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.shiro.subject.Subject;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -57,6 +58,14 @@ public class RoleTest {
 	}
 
 
+	/**
+	 * DO NOT REMOVE THIS!  Otherwise our subject state is hose for other tests runs and classes
+	 */
+	@After
+	public void clearSubject(){
+	  SubjectUtils.getSubject().logout();
+	}
+	
 	@Test
 	public void testRoleInactivity() throws Exception {
 
