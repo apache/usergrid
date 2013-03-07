@@ -318,7 +318,7 @@ a:active {
 #left2 {
   float:left;
   width:171px;
-  margin:0 0 0 -7px;
+  margin:0 0 0 -4px;
   padding:10px;
   min-height: 1050px;
   border-right: 1px solid #cacaca;
@@ -373,7 +373,7 @@ a:active {
     text-align: left;
    // .border-radius(5px);
     padding: 10px 0 10px 10px;
-    margin: 0 0 0 1px;
+    margin: 0 0 0 -2px;
   }
   .active > a{
     //background-color:@redApigee;
@@ -407,7 +407,7 @@ a:active {
 #application-panel-buttons{
   position:fixed;
   z-index: 10;
-  width: 180px;
+  width: 182px;
   .active > a{
     i{
       .icon-white;
@@ -421,6 +421,22 @@ a:active {
 //position:fixed;
   z-index: 10;
   width: 181px;
+  .active > a{
+    i{
+      .icon-white;
+    }
+    &:hover i{
+      .icon-black;
+    }
+  }
+}
+#left-collections-content{
+//position:fixed;
+  z-index: 10;
+  width: 181px;
+  li{
+    width: 181px;
+  }
   .active > a{
     i{
       .icon-white;

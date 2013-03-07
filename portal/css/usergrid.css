@@ -3796,7 +3796,7 @@ a:active {
 #left2 {
   float: left;
   width: 171px;
-  margin: 0 0 0 -7px;
+  margin: 0 0 0 -4px;
   padding: 10px;
   min-height: 1050px;
   border-right: 1px solid #cacaca;
@@ -3843,7 +3843,7 @@ a:active {
 .nav-list  > li > a {
   text-align: left;
   padding: 10px 0 10px 10px;
-  margin: 0 0 0 1px;
+  margin: 0 0 0 -2px;
 }
 .nav-list .active > a {
   color: #ffffff;
@@ -3872,7 +3872,7 @@ a:active {
 #application-panel-buttons {
   position: fixed;
   z-index: 10;
-  width: 180px;
+  width: 182px;
 }
 #application-panel-buttons .active > a i {
   background-image: url(../img/glyphicons-halflings-white.png);
@@ -3888,6 +3888,19 @@ a:active {
   background-image: url(../img/glyphicons-halflings-white.png);
 }
 #application-panel-buttons2 .active > a:hover i {
+  background-image: url(../bootstrap/img/glyphicons-halflings.png);
+}
+#left-collections-content {
+  z-index: 10;
+  width: 181px;
+}
+#left-collections-content li {
+  width: 181px;
+}
+#left-collections-content .active > a i {
+  background-image: url(../img/glyphicons-halflings-white.png);
+}
+#left-collections-content .active > a:hover i {
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
 }
 .icon-black {
