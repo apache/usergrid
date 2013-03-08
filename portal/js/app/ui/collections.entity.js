@@ -104,9 +104,9 @@ Usergrid.console.ui.collections = Usergrid.console.ui.collections || { };
 
       if(entity.type === 'user' || entity.picture){
         if (!entity.picture) {
-          entity.picture = "/images/user_profile.png"
+          entity.picture = "/images/user-photo.png"
         } else {
-          entity.picture = entity.picture + "?d=http://" + window.location.host + window.location.pathname + "images/user_profile.png"
+          entity.picture = entity.picture + "?d=http://" + window.location.host + window.location.pathname + "images/user-photo.png"
         }
         collections['picture'] = entity.picture;
       }

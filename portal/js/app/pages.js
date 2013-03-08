@@ -84,7 +84,11 @@ function ApigeePages() {
       buttonHandler = function(e) {
         e.preventDefault();
         redrawBox(panel.box);
-        Usergrid.Navigation.router.navigateTo(panel.name);
+        if(panel.name == "query") {
+          Usergrid.Navigation.router.navigateTo("collections");
+        } else {
+          Usergrid.Navigation.router.navigateTo(panel.name);
+        }
       }
     }
     panel.link.click(buttonHandler);
@@ -100,7 +104,7 @@ function ApigeePages() {
   self.ActivatePanel = function(panelName){
     var panel = self.panels[panelName];
     $("#sidebar-menu li.active").removeClass('active');
-    panel.link.parent().addClass('active');
+    $("#"+panelName+"-link").parent().addClass('active');
   }
 
   self.SelectPanel = function (panelName){
@@ -113,11 +117,6 @@ function ApigeePages() {
 
     if (panel.showFunction) {
       panel.showFunction();
-    }
-
-    if (panelName == 'console') {
-      url = Usergrid.console.getAccessTokenURL();
-      $("#console-panel iframe").attr("src", url);
     }
 
     redrawBox(panel.box);

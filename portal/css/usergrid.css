@@ -3781,7 +3781,7 @@ a:active {
 #main1 {
   margin: 84px 0 0 0;
   padding: 0;
-  min-width: 900px;
+  min-width: 1080px;
 }
 #main2 {
   margin: 0;
@@ -3796,13 +3796,10 @@ a:active {
 #left2 {
   float: left;
   width: 171px;
-  margin: 0 0 0 -7px;
+  margin: 0 0 0 -4px;
   padding: 10px;
   min-height: 1050px;
   border-right: 1px solid #cacaca;
-}
-#left2 hr {
-  width: 180px;
 }
 #right {
   float: right;
@@ -3812,7 +3809,7 @@ a:active {
 }
 #middle {
   margin: 0 180px;
-  min-width: 500px;
+  min-width: 700px;
 }
 .column-in {
   margin: 0;
@@ -3846,7 +3843,7 @@ a:active {
 .nav-list  > li > a {
   text-align: left;
   padding: 10px 0 10px 10px;
-  margin: 0px 0;
+  margin: 0 0 0 -2px;
 }
 .nav-list .active > a {
   color: #ffffff;
@@ -3875,7 +3872,7 @@ a:active {
 #application-panel-buttons {
   position: fixed;
   z-index: 10;
-  width: 180px;
+  width: 182px;
 }
 #application-panel-buttons .active > a i {
   background-image: url(../img/glyphicons-halflings-white.png);
@@ -3893,12 +3890,29 @@ a:active {
 #application-panel-buttons2 .active > a:hover i {
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
 }
+#left-collections-content {
+  z-index: 10;
+  width: 181px;
+}
+#left-collections-content li {
+  width: 181px;
+}
+#left-collections-content .active > a i {
+  background-image: url(../img/glyphicons-halflings-white.png);
+}
+#left-collections-content .active > a:hover i {
+  background-image: url(../bootstrap/img/glyphicons-halflings.png);
+}
 .icon-black {
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
 }
 .nav-tabs {
   display: inline-block;
   width: 100%;
+}
+hr.col-divider {
+  width: 160px;
+  margin: 0 0 0 10px;
 }
 #login-page,
 #signup-page {
@@ -4171,7 +4185,6 @@ a:active {
 }
 .query-result-table {
   margin: 0px;
-  width: 100%;
 }
 .query-result-table tr {
   border-bottom: 1px solid #cccccc;
@@ -5006,6 +5019,9 @@ table .zebraRows:nth-child(2n) {
 /* --------------- Collections -------------- */
 .collection-column {
   width: 80%;
+}
+a.data-explorer-link {
+  color: #1b97d1;
 }
 /* ---------------- Account Panel ------------ */
 .leave-org-row td {

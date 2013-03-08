@@ -1,2 +1,2 @@
 var Usergrid = Usergrid || {};
-//Usergrid.apiUrl = 'https://path.to/api_url/'; //notice trailing slash
+//Usergrid.apiUrl = 'http://localhost:8080/'; //notice trailing slash

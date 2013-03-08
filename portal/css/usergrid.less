@@ -305,7 +305,7 @@ a:active {
 #main1 {
   margin:84px 0 0 0;
   padding:0;
-  min-width:900px;
+  min-width:1080px;
 }
 #main2 {
   margin:0; padding:0;
@@ -318,14 +318,12 @@ a:active {
 #left2 {
   float:left;
   width:171px;
-  margin:0 0 0 -7px;
+  margin:0 0 0 -4px;
   padding:10px;
   min-height: 1050px;
   border-right: 1px solid #cacaca;
-  hr{
-    width: 180px;
-  }
 }
+
 #right {
   float:right;
   width:180px;
@@ -333,7 +331,7 @@ a:active {
 }
 #middle {
   margin:0 180px;
-  min-width:500px;
+  min-width:700px;
 }
 .column-in {
   margin:0; padding: 0px;
@@ -375,7 +373,7 @@ a:active {
     text-align: left;
    // .border-radius(5px);
     padding: 10px 0 10px 10px;
-    margin: 0px 0;
+    margin: 0 0 0 -2px;
   }
   .active > a{
     //background-color:@redApigee;
@@ -409,7 +407,7 @@ a:active {
 #application-panel-buttons{
   position:fixed;
   z-index: 10;
-  width: 180px;
+  width: 182px;
   .active > a{
     i{
       .icon-white;
@@ -432,6 +430,22 @@ a:active {
     }
   }
 }
+#left-collections-content{
+//position:fixed;
+  z-index: 10;
+  width: 181px;
+  li{
+    width: 181px;
+  }
+  .active > a{
+    i{
+      .icon-white;
+    }
+    &:hover i{
+      .icon-black;
+    }
+  }
+}
 
 .icon-black{
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
@@ -442,6 +456,10 @@ a:active {
   width: 100%;
 }
 
+hr.col-divider{
+  width: 160px;
+  margin: 0 0 0 10px;
+}
 
 //----------Login, Signup, Forgot ------------------------------------------------------------
 
@@ -763,7 +781,6 @@ a:active {
 
 .query-result-table {
   margin: 0px;
-  width: 100%;
   tr{
     border-bottom: 1px solid @h3Color;
     &:last-child {
@@ -1606,6 +1623,9 @@ table .zebraRows {
 #button-query-validate {
 }
 
+a.data-explorer-link {
+  color: @linkColor;
+}
 /* ---------------- Account Panel ------------ */
 .leave-org-row {
   td {
