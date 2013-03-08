@@ -26,6 +26,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
+import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.persistence.CounterResolution;
@@ -63,7 +64,7 @@ public class ApplicationRequestCounterTest extends AbstractRestTest {
     	assertEquals(true, UUIDUtils.isUUID(uuid));
     	
     	UUID applicationId = UUID.fromString(uuid);
-    	EntityManagerFactory emf = (EntityManagerFactory) appCtx.getBean("entityManagerFactory");
+    	EntityManagerFactory emf = CassandraRunner.getBean(EntityManagerFactory.class);
     	EntityManager em = emf.getEntityManager(applicationId);
     	
 		int beforeTotalCall = getConter(em, ServiceManager.APPLICATION_REQUESTS);
