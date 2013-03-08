@@ -84,6 +84,7 @@
 		<module>count-batcher</module>
 		<module>count-inserter</module>
     <module>test-utils</module>
+    <module>scheduler</module>
 	</modules>
 
 

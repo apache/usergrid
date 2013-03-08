@@ -1,0 +1,40 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:metrics="http://www.yammer.com/schema/metrics"
+       xsi:schemaLocation="
+           http://www.yammer.com/schema/metrics http://www.yammer.com/schema/metrics/metrics.xsd
+           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+    <metrics:metrics-registry id="metrics"/>
+    <metrics:health-check-registry id="health"/>
+
+    <metrics:annotation-driven metrics-registry="metrics" health-check-registry="health"/>
+
+    <metrics:jmx-reporter id="metricsJmxReporter" metrics-registry="metrics"/>
+
+    <bean id="bulkJobScheduledService" class="org.usergrid.batch.service.BulkJobScheduledService">
+        <constructor-arg ref="simpleJobAccessor"/>
+    </bean>
+
+    <bean id="simpleJobAccessor" class="org.usergrid.batch.repository.SimpleJobAccessor">
+        <property name="jobDescriptors">
+            <list>
+                <ref bean="simpleJobDescriptor"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="simpleJobDescriptor" class="org.usergrid.batch.repository.JobDescriptor" factory-method="instance">
+        <constructor-arg value="my-job-name"/>
+        <constructor-arg ref="simpleBulkJobFactory"/>
+        <constructor-arg ref="simpleJobID"/>
+    </bean>
+    <bean id="simpleBulkJobFactory" class="org.usergrid.batch.SimpleBulkJobFactory"/>
+
+    <bean id="simpleJobID" class="java.util.UUID">
+        <constructor-arg value="0"/>
+        <constructor-arg value="16"/>
+    </bean>
+    <!-- other beans -->
+
+</beans>

@@ -1,0 +1,14 @@
+{
+    "name" : "TestKeyspace",
+    "columnFamilies" : [{
+        "name" : "Test",
+        "comparatorType" : "UTF8Type",
+        "rows" : [{
+            "key" : "01",
+            "columns" : [{
+                "name" : "02",
+                "value" : "03"
+            }]
+        }]
+    }]
+}
