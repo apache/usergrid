@@ -1151,7 +1151,7 @@ Usergrid.ApiClient = (function () {
   var _loggedInUser = null;
   var _logoutCallback = null;
   var _callTimeoutCallback = null;
-  var _unAuthCount = 0;
+
 
   /*
    *  A method to set up the ApiClient with orgname and appname
@@ -1552,14 +1552,6 @@ Usergrid.ApiClient = (function () {
     _queryType = type;
   }
 
-  function incrementUnAuthCount() {
-    _unAuthCount++;
-    return _unAuthCount;
-  }
-
-  function setUnAuthCount(unAuthCount) {
-    _unAuthCount = unAuthCount;
-  }
   /**
    *  A private method to validate, prepare,, and make the calls to the API
    *  Use runAppQuery or runManagementQuery to make your calls!
@@ -1729,22 +1721,17 @@ Usergrid.ApiClient = (function () {
           console.log('API call failed: (status: '+xhr.status+') ' + response.error_description);
           if ( (error == "auth_expired_session_token") ||
                (error == "auth_missing_credentials")   ||
+               (error == "unauthorized")               ||
                (error == "auth_invalid")) {
             //this error type means the user is not authorized. If a logout function is defined, call it
             console.log('Auth error: ' + error);
             callLogoutCallback();
-          } else if (error == "unauthorized") {
-            console.log('Auth error: ' + error);
-            if (incrementUnAuthCount() > 3) {
-              callLogoutCallback();
-            }
           }
         } catch(e){}
         //otherwise, just call the failure callback
         Query.callFailureCallback(response.error_description);
         return;
       } else {
-        setUnAuthCount(0);
         //query completed succesfully, so store cursor
         var cursor = response.cursor || null;
         Query.saveCursor(cursor);
@@ -1832,9 +1819,7 @@ Usergrid.ApiClient = (function () {
     isLoggedInAppUser:isLoggedInAppUser,
     getLogoutCallback:getLogoutCallback,
     setLogoutCallback:setLogoutCallback,
-    callLogoutCallback:callLogoutCallback,
-    incrementUnAuthCount:incrementUnAuthCount,
-    setUnAuthCount:setUnAuthCount
+    callLogoutCallback:callLogoutCallback
   }
 })();
 

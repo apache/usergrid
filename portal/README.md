@@ -99,10 +99,6 @@ The Properties page lists the credentials (Client ID and Client Secret) for the 
 ###Shell
 The Shell page gives you a simple way to get started using the Usergrid API. It provides a command-line environment within your web browser for trying out Usergrid API calls interactively. 
 
-###Console
-The Console provides an interface for exploring the Usergrid API resources and executing its methods. Using the interface, you can select a particular resource and method, such as "Collections" and "Create entity". You can take advantage of templates and other interface elements to easily build and submit an API request. The Console displays the results returned by the request as well as the request header.
-
-
 ##Displaying API calls as cURL commands
 You can display the equivalent cURL syntax for each API call that is made through the Admin portal. The calls are displayed in the console area of any of the following browsers: Chrome, Internet Explorer (in the debugger), Firefox (in Firebug), and Safari. 
 For details, see Displaying Usergrid API calls as Curl commands:
@@ -125,11 +121,9 @@ Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Admin porta
 5. Create new Pull Request (make sure you describe what you did and why your mod is needed)
 
 ##More information
-For more information on Apigee App Services, Apigee's free hosted version of Usergrid, visit <http://apigee.com/about/developers>.
+For more information on App Services, Apigee's free hosted version of Usergrid, visit <http://apigee.com/about/developers>.
 
-## Copyright
-Copyright 2013 Apigee Corporation
-
+## Usergrid is open source
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
