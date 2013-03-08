@@ -30,7 +30,7 @@ import com.sun.jersey.test.framework.spi.container.TestContainerException;
  *
  */
 @RunWith(RestRunner.class)
-public class RestContextTest extends AbstractRestTest {
+public abstract class RestContextTest extends AbstractRestTest {
 
   @Context
   protected TestContext context;
