@@ -76,6 +76,8 @@ public class EventsResourceTest extends AbstractRestTest {
 		assertNotNull(node.get("entities"));
 		String marketing = node.get("entities").get(0).get("uuid").asText();
 
+		String lastId = null;
+		
 		// subsequent GETs advertising
 		for (int i = 0; i < 3; i++) {
 
@@ -86,19 +88,22 @@ public class EventsResourceTest extends AbstractRestTest {
 
 			logNode(node);
 			assertEquals("Expected Advertising", advertising, node.get("messages").get(0).get("uuid").asText());
+			lastId = node.get("last").asText();
 		}
 
 		// check sales event in queue
-		node = resource().path("/test-organization/test-app/events/"+sales)
+		node = resource().path("/test-organization/test-app/events/?last="+lastId)
 				.queryParam("access_token", access_token)
 				.accept(MediaType.APPLICATION_JSON)
 				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
 		logNode(node);
 		assertEquals("Expected Sales", sales,node.get("entities").get(0).get("uuid").asText());
+		lastId = node.get("last").asText();
+		
 
 		// check marketing event in queue
-		node = resource().path("/test-organization/test-app/events/"+marketing)
+		node = resource().path("/test-organization/test-app/events?last="+lastId)
 				.queryParam("access_token", access_token)
 				.accept(MediaType.APPLICATION_JSON)
 				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
