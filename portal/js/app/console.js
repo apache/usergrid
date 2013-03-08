@@ -3911,7 +3911,6 @@ function buildContentArea(obj2) {
 
   function displayLoginError(message) {
     var message = message || '<strong>ERROR</strong>: Your details were incorrect.<br/>';
-    logout();
     $('#login-area .box').effect('shake', {times: 2},100);
     $('#login-message').html(message);
     $('#login-message').show();
@@ -3996,7 +3995,20 @@ function buildContentArea(obj2) {
   }
   Usergrid.console.logout = logout;
 
-  Usergrid.ApiClient.setLogoutCallback(Usergrid.console.logout);
+  function handleInvalidToken() {
+    Usergrid.userSession.clearAll();
+    if (Usergrid.SSO.usingSSO()) {
+      Pages.clearPage();
+      Usergrid.SSO.sendToSSOLoginPage(Backbone.history.getHash(window));
+    } else {
+      Pages.ShowPage("login");
+    }
+    initOrganizationVars();
+    return false;
+  }
+  Usergrid.console.handleInvalidToken = handleInvalidToken;
+
+  Usergrid.ApiClient.setLogoutCallback(Usergrid.console.handleInvalidToken);
 
   $("#login-form").submit(function () {
     login();
