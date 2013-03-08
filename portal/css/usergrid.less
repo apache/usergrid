@@ -12,7 +12,7 @@
 @linkColor: #1b97d1;
 @apigeeOrange: #FF4300;
 @apigeeNavSelection: #FF0303;
-@apigeeApplicationName: #E02E03;
+@apigeeApplicationName: #b22714;
 @apigeeGradient: #F03800;
 @apigeeBlue: #1B97D1 ;
 @white: #FFFFFF;
@@ -34,11 +34,16 @@ html{
   border-right: 1px solid @border;
 }
 
+.title {
+  font-size: 17px;
+}
+
 .thingy {
   margin-bottom: 0px !important;
-  padding: 15px !important;
-  background-color: #e0e0e0 !important;
+  padding: 10px 10px 10px 0!important;
+  //background-color: #e0e0e0 !important;
   border-radius: 0px;
+  min-width: 440px;
 
   .gravatar50 {
     position: relative;
@@ -47,20 +52,21 @@ html{
     right: 15px;
   }
 
-  .title {
-    float: left;
-    font-size: 19px;
-    cursor: pointer;
-  }
+
 
   .app_title {
     padding-right: 20px;
   }
 
   .bar a {
-    padding-left: 10px !important;
     float: right;
-    color: #007cdc;
+  }
+  .button{
+    margin-top: -5px;
+    min-width: 150px;
+  }
+  .btn-primary{
+    color: #ffffff;
   }
 }
 
@@ -78,7 +84,6 @@ html{
 
 #fullContainer{
   position:relative; /* needed for footer positioning*/
-  margin:0 auto; /* center, not in IE5 */
   height:auto !important; /* real browsers */
   min-height:100%; /* real browsers */
   height:100%; /* IE6: treaded as min-height*/
@@ -86,11 +91,10 @@ html{
   max-width: @maxPanelWidth;
 }
 .header-menus{
-  width: 1280px;
-  margin: 0 auto; 
+  margin: 0 auto;
 }
 #pages{
-  padding: 70px 0 50px 0px;
+  padding: 0px 0 50px 0px;
   &>div{
     display:none;
   }
@@ -99,28 +103,22 @@ html{
   }
 }
 #console-panels{
-  margin-left: 160px;
-  border-left:1px solid @border;
+
 }
-footer{
-  position:fixed;
-  bottom:0;
-  width:100%;
-  border-top: 1px solid @border;
-  border-bottom: 1px solid @border;
-  #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
-  .subnav{
-    display: none;
-  }
-  &> div {
-    padding: 5px 0;
-  }
-  .nav{
-    margin: 0;
-  }
-  #copyright{
-    padding: 9px;
-  }
+
+#right{
+  a {
+   color: @apigeeBlue;
+   font-weight: 400;
+ }
+ a:visited  {
+   color: @apigeeBlue;
+   font-weight: 400;
+ }
+}
+
+#copyright{
+    padding: 5px;
 }
 
 a{
@@ -176,7 +174,7 @@ a:active {
 
 .navbar{
   height:48px;
-  min-width: 700px;
+  min-width: 760px;
   background-color: @apigeeOrange;
 
   margin: 0px 1px 20px 1px;
@@ -238,6 +236,9 @@ a:active {
       }
     }
     .dropdown-toggle{
+      span{
+        margin-left: 5px;
+      }
       .caret{
         margin-top: 13px;
       }
@@ -274,21 +275,110 @@ a:active {
   }
 }
 
+.main-nav{
+  margin: 0px;
+}
+
+.sub-nav{
+  position: fixed;
+  top: 42px;
+  left: -1px;
+  right: -2px;
+  margin-bottom: 18px;
+  background-color: @apigeeApplicationName;
+  z-index: 130;
+  height: 42px;
+}
+
+.right-header{
+  a{
+    &:hover{
+      opacity: 0.9;
+    }
+  }
+}
+
+#header {
+  margin:0; padding:0;
+}
+
+#main1 {
+  margin:84px 0 0 0;
+  padding:0;
+  min-width:900px;
+}
+#main2 {
+  margin:0; padding:0;
+}
+#left {
+  float:left;
+  width:177px;
+  margin:0; padding:0;
+}
+#left2 {
+  float:left;
+  width:171px;
+  margin:0 0 0 -7px;
+  padding:10px;
+  min-height: 1050px;
+  border-right: 1px solid #cacaca;
+  hr{
+    width: 180px;
+  }
+}
+#right {
+  float:right;
+  width:180px;
+  margin:0; padding:0;
+}
+#middle {
+  margin:0 180px;
+  min-width:500px;
+}
+.column-in {
+  margin:0; padding: 0px;
+}
+.cleaner {
+  clear:both;
+  height:1px;
+  font-size:1px;
+  border:none;
+  margin:0; padding:0;
+  background:transparent;
+}
+
+
+#footer{
+  border-top: 1px solid #cacaca;
+  height: 50px;
+}
+
 //----------------- Navigation --------------------------------------------------------------------
 #sidebar-menu{
-  position: absolute;
-  left: 5px;
+  //position: absolute;
+  //left: 0px;
   width: 155px;
 }
+
+#sidebar-menu2{
+  //position: absolute;
+  //left: 0px;
+  width: 155px;
+}
+
+.nav-menu-text{
+  padding-left: 10px;
+}
 .nav-list{
+  padding-left: 0px;
   & > li > a{
     text-align: left;
-    .border-radius(5px);
-    padding: 5px 0 5px 10px;
+   // .border-radius(5px);
+    padding: 10px 0 10px 10px;
     margin: 0px 0;
   }
   .active > a{
-    background-color:@redApigee;
+    //background-color:@redApigee;
     color: @white;
     &:hover{
       color: @redApigee;
@@ -317,10 +407,9 @@ a:active {
   }
 }
 #application-panel-buttons{
-  display: none;
   position:fixed;
   z-index: 10;
-  width: 127px;
+  width: 180px;
   .active > a{
     i{
       .icon-white;
@@ -330,6 +419,20 @@ a:active {
     }
   }
 }
+#application-panel-buttons2{
+//position:fixed;
+  z-index: 10;
+  width: 181px;
+  .active > a{
+    i{
+      .icon-white;
+    }
+    &:hover i{
+      .icon-black;
+    }
+  }
+}
+
 .icon-black{
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
 }
@@ -348,8 +451,10 @@ a:active {
 
 #login-area, #signup-area {
   position: relative;
-  margin-left: -230px;
+  margin: 100px 0 0 -230px;
   left: 50%;
+  border: 1px solid @border;
+  .border-radius(5px 5px 5px 5px);
 }
 
 .the-grid {
@@ -413,10 +518,10 @@ a:active {
 .console-section {
   min-width: 450px;
   margin: 0 0px 20px;
-  border: solid 1px @h3Color;
+ //border: solid 1px @h3Color;
   //background: #F2F5F7;
   overflow: show;
-  .border-radius(5px);
+  //.border-radius(5px);
   h3 {
     .search{
       background-color: @linkHoverBgColor;
@@ -450,7 +555,7 @@ a:active {
       font-size: 12px;
       a {
         padding: 5px 10px;
-        .border-radius(15px);
+        //.border-radius(15px);
         color:#007CDC !important;
         &:hover{
           color:white !important;
@@ -469,6 +574,7 @@ a:active {
     margin:0px;
     padding-top: 10px;
     display: inline-block;
+    width: 460px;
   }
   .form-actions{
     margin-bottom:0px;
@@ -483,7 +589,7 @@ a:active {
       margin: 20px -10px -10px;
     }
     &:after{
-      clear: both;
+
       content: ".";
       display: block;
       height: 0;
@@ -491,9 +597,15 @@ a:active {
     }
   }
 }
-
+.query-path-area{
+  height: 450px;
+}
 //---------------- Panels ---------------------------------------------------------------------
-
+.well {
+  background: none;
+  border: none;
+  box-shadow: none;
+}
 #application-panel{
   .boxContent{
     background-color:#f2f5f7;
@@ -516,6 +628,9 @@ a:active {
     box-shadow: 0 0 0 white inset;
     margin-bottom:40px;
   }
+}
+.bottom-space{
+  margin-bottom: 15px;
 }
 //-------------------------------------------------------------------------------------
 
@@ -724,6 +839,33 @@ a:active {
   padding: 10px !important;
 }
 
+#user-panel-tab-bar , #group-panel-tab-bar, #role-panel-tab-bar{
+  .tab-button{
+    background-color: #ffffff !important;
+    opacity: 1 !important;
+    color: #1b97d1;
+    cursor: pointer !important;
+    &:hover{
+      background-color:  @linkHoverBgColor !important;
+      color: #ffffff;
+     }
+    &:active{
+      background-color: #1b97d1 !important;
+      color: #ffffff;
+    }
+    &.active{
+      background-color: #1b97d1 !important;
+      color: #ffffff;
+    }
+  }
+  .btn{
+      text-shadow: none;
+      border: 1px solid #ffffff;
+      background-image: none;
+      box-shadow: none;
+    }
+}
+
 .query-button{
   background-color: #cacaca !important;
   opacity: 1 !important;
@@ -857,7 +999,7 @@ a:active {
 }
 
 #roles-table {
-  margin-bottom: 0px !important;
+  margin-top: 20px !important;
 }
 
 #roles-pagination {
@@ -874,7 +1016,6 @@ a:active {
 }
 
 .user-roles-title {
-  clear: both;
   font-size: 18px;
   font-weight: bold;
   border-bottom: 1px solid #AED0EA;
@@ -1049,6 +1190,9 @@ a:active {
 
 }
 
+.panel-content{
+  margin-top: 20px;
+}
 
 #api-activity {
   font-size: 14px;
@@ -1273,6 +1417,7 @@ a:active {
 .gravatar50-td {
   padding: 0px !important;
   width: 50px;
+  border-right: 1px solid @border2;
 }
 
 .gravatar50 {
@@ -1281,9 +1426,9 @@ a:active {
 }
 
 td.checkboxo {
-  background-color: #666 !important;
-  width: 19px;
-  padding: 9px 0 0 3px !important;
+  width: 15px;
+  padding: 15px !important;
+  border-right: 1px solid @border2;
 }
 
 table#organization-admins-table {
@@ -1294,17 +1439,27 @@ table#organization-admins-table {
   }
 }
 
-.users-row {
+.users-row, .groups-row, .roles-row {
   td {
     line-height: 9px !important;
+    vertical-align: middle;
   }
 
   td.checkboxo {
     padding-top: 15px !important;
   }
 
-  td.user-details {
+  td.details {
     line-height: 25px !important;
+    border-right: 1px solid @border2;
+  }
+
+  td.view-details {
+    line-height: 25px !important;
+    width: 75px;
+  }
+  a.view-details {
+    color: @apigeeBlue;
   }
 }
 
@@ -1328,6 +1483,9 @@ table#organization-admins-table {
 
 .zebraRows {
   background: white;
+  border-bottom: 1px solid @border2;
+  border-left: 1px solid @border2;
+  border-right: 1px solid @border2;
 
   &:nth-child(2n){
     background: #EEE;
@@ -1462,6 +1620,7 @@ table .zebraRows {
   }
 }
 /* ---------------- Curl Container ------------ */
+
 .curl-container{
   .curl-info, .curl-token{
     padding-left: 5px;
@@ -1490,10 +1649,21 @@ table .zebraRows {
 }
 
 .panel-title{
-  color: #909090;
-  padding-left: 5px;
+  font-weight: 400;
+  font-size: 16px;
+  color: #000;
+  padding: 0 0 0 10px;
 }
+.panel-desc{
+  font-size: 12px;
+  color: #919091;
+  padding-left: 10px;
+}
+.sdk-download{
+  margin: 30px auto;
+  text-align: center;
 
+}
 .wrench{
   background-image: url("../images/glyphicons_halflings_135_wrench.png");
   display: inline-block;
@@ -1548,6 +1718,12 @@ table .zebraRows {
 .dropdown-menu {
   max-width: 700px;
 }
+.bold-header{
+  font-weight: 600;
+  color: #000000;
+}
+
+
 
 
 

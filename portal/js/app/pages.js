@@ -35,7 +35,7 @@ function ApigeePages() {
     Usergrid.userSession.showBanner();
     $('#banner').show();
   };
-  
+
   self.hideBanner = function(){
     Usergrid.userSession.hideBanner();
     $("#banner").hide();
@@ -58,9 +58,13 @@ function ApigeePages() {
     self.pages[page.name] = page;
   };
 
-  self.AddPanel = function(panelName, linkSelector,boxSelector,initFunction,showFunction, buttonHandler) {
+  self.AddPanel = function(panelName, linkSelector, sublinkSelector,boxSelector,initFunction,showFunction, buttonHandler) {
     if (!linkSelector) {
-      linkSelector = "#sidebar-menu a[href='#" + panelName + "']";
+      //linkSelector = "#sidebar-menu a[href='#" + panelName + "']";
+      linkSelector = "#" + panelName  + '-link';
+    }
+    if (!sublinkSelector) {
+      sublinkSelector = "#" + panelName  + '-sublink';
     }
 
     if (!boxSelector) {
@@ -70,6 +74,7 @@ function ApigeePages() {
     var panel = {
       name: panelName,
       link: $(linkSelector),
+      sublink: $(sublinkSelector),
       box: $(boxSelector),
       initFunction: initFunction,
       showFunction: showFunction
@@ -83,6 +88,7 @@ function ApigeePages() {
       }
     }
     panel.link.click(buttonHandler);
+    panel.sublink.click(buttonHandler);
 
     self.panels[panel.name] = panel;
 
@@ -101,7 +107,9 @@ function ApigeePages() {
     var panel = self.panels[panelName];
 
     $("#sidebar-menu li.active").removeClass('active');
+    $("#sidebar-menu2 li.active").removeClass('active');
     panel.link.parent().addClass('active');
+    panel.sublink.parent().addClass('active');
 
     if (panel.showFunction) {
       panel.showFunction();

@@ -1353,7 +1353,7 @@ Usergrid.ApiClient = (function () {
    *  @return {string} the api rul of the reset password endpoint
    */
   function getResetPasswordUrl() {
-    return getApiUrl() + "/management/users/resetpw"
+    return getApiUrl() + "management/users/resetpw"
   }
 
   /*
@@ -1393,7 +1393,7 @@ Usergrid.ApiClient = (function () {
   function logInAppUser (username, password, successCallback, failureCallback) {
     var self = this;
     var data = {"username": username, "password": password, "grant_type": "password"};
-    this.runAppQuery(new Usergrid.Query('GET', 'token', null, data,
+    this.runAppQuery(new Usergrid.Query('POST', 'token', data, null,
       function (response) {
         var user = new Usergrid.Entity('users');
         user.set('username', response.user.username);

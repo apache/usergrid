@@ -192,6 +192,11 @@
     tab.addClass('active');
   }
 
+  function selectPillButton(link) {
+    var tab = $(link);
+    tab.parent().find("a.active").removeClass('active');
+    tab.addClass('active');
+  }
   function selectFirstTabButton(bar){
     selectTabButton($(bar).find("li:first-child a"));
   }
@@ -203,6 +208,7 @@
     }
     $('#current-app-name').html('<div class="app-menu">' + name + '</div>  <span class="caret"></span>');
     $('.thingy span.title span.app_title').text(" " + name);
+    $('#nav-app-name').html(name);
   }
 
   /*******************************************************************
@@ -705,7 +711,7 @@
   function displayApplications(response) {
     applications = {};
     applications_by_id = {};
-    var appMenu = $('#applications-menu');
+    var appMenu = $('.applications-menu');
     var appList = $('table#organization-applications-table');
     appMenu.empty();
     appList.empty();
@@ -728,6 +734,7 @@
       if (count) {
         $.tmpl('apigee.ui.applications.table_rows.html', data).appendTo(appList);
         appMenuTmpl.tmpl(data).appendTo(appMenu);
+        appMenuTmpl.tmpl(data)
         appMenu.find("a").click(function selectApp(e) {
           var link = $(this);
           pageSelect(link.tmplItem().data.name);
@@ -1915,11 +1922,11 @@
     if (response.entities.length < 1) {
       output.replaceWith('<div id="users-table" class="user-panel-section-message">No users found.</div>');
     } else {
-      output.replaceWith('<table id="users-table" class="table"><tbody></tbody></table>');
+      output.replaceWith('<table id="users-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllUsers();" /></td><td class="gravatar50-td">&nbsp;</td><td class="user-details bold-header">username</td><td class="user-details bold-header">Display Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
         var this_data = response.entities[i];
         if (!this_data.picture) {
-          this_data.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user_profile.png"
+          this_data.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user-photo.png"
         } else {
           this_data.picture = get_replacementGravatar(this_data.picture);
         }
@@ -1951,10 +1958,18 @@
   }
   Usergrid.console.searchUsers = searchUsers;
 
+  var selectUsers = true;
   function selectAllUsers(){
-    $('[class=userListItem]').attr('checked', true);
-    $('#deselectAllUsers').show();
-    $('#selectAllUsers').hide();
+    if (selectUsers) {
+      $('[class=userListItem]').attr('checked', true);
+      $('#deselectAllUsers').show();
+      $('#selectAllUsers').hide();
+    } else {
+      $('[class=userListItem]').attr('checked', false);
+      $('#selectAllUsers').show();
+      $('#deselectAllUsers').hide();
+    }
+    selectUsers = (selectUsers)?false:true;
   }
   window.Usergrid.console.selectAllUsers = selectAllUsers;
 
@@ -2349,7 +2364,7 @@
     if (response.entities.length < 1) {
       output.replaceWith('<div id="groups-table" class="group-panel-section-message">No groups found.</div>');
     } else {
-      output.replaceWith('<table id="groups-table" class="table"><tbody></tbody></table>');
+      output.replaceWith('<table id="groups-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllGroups();" /></td><td class="user-details bold-header">Path</td><td class="user-details bold-header">Group Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
         var this_data = response.entities[i];
         $.tmpl('apigee.ui.groups.table_rows.html', this_data).appendTo('#groups-table');
@@ -2384,10 +2399,14 @@
   }
   Usergrid.console.searchGroups = searchGroups;
 
+  var selectGroups = true;
   function selectAllGroups(){
-    $('[class=groupListItem]').attr('checked', true);
-    $('#deselectAllGroups').show();
-    $('#selectAllGroups').hide();
+    if (selectGroups) {
+      $('[class=groupListItem]').attr('checked', true);
+    } else {
+      $('[class=groupListItem]').attr('checked', false);
+    }
+    selectGroups = (selectGroups)?false:true;
   }
   window.Usergrid.console.selectAllGroups = selectAllGroups;
 
@@ -2686,6 +2705,8 @@
     if (response.entities < 1) {
       output.html('<div class="group-panel-section-message">No roles found.</div>');
     } else {
+      output.replaceWith('<table id="roles-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllRoles();" /></td><td class="user-details bold-header">Title</td><td class="user-details bold-header">Role Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
+
       $.each (response.entities, function(index, value) {
         var data = [
           {name: value.name,
@@ -2715,6 +2736,17 @@
       });
     });
   }
+
+  var selectRoles = true;
+  function selectAllRoles(){
+    if (selectRoles) {
+      $('[class=roleListItem]').attr('checked', true);
+    } else {
+       $('[class=roleListItem]').attr('checked', false);
+    }
+    selectRoles = (selectRoles)?false:true;
+  }
+  window.Usergrid.console.selectAllRoles = selectAllRoles;
 
   /*******************************************************************
    *
@@ -3176,7 +3208,11 @@
           this_data.actor.picture = this_data.actor.picture.replace(/^http:\/\/www.gravatar/i, 'https://secure.gravatar');
           //note: changing this to use the image on apigee.com - since the gravatar default won't work on any non-public domains such as localhost
           //this_data.picture = this_data.picture + encodeURI("?d="+window.location.protocol+"//" + window.location.host + window.location.pathname + "images/user_profile.png");
-          this_data.actor.picture = this_data.actor.picture + encodeURI("?d=http://apigee.com/usergrid/images/user_profile.png");
+          if (~this_data.actor.picture.indexOf('http')) {
+            this_data.actor.picture = this_data.actor.picture + encodeURI("?d=http://apigee.com/usergrid/images/user_profile.png");
+          } else {
+            this_data.actor.picture = 'http://apigee.com/usergrid/images/user_profile.png';
+          }
         }
 
         $.tmpl('apigee.ui.activities.table_rows.html', this_data).appendTo('#activities-table');
@@ -3928,7 +3964,7 @@
       username: email,
       password: password
     };
-    runManagementQuery(new Usergrid.Query('GET', 'token', null, formdata,
+    runManagementQuery(new Usergrid.Query('POST', 'token', formdata, null,
       function(response) {
         if (!response || response.error){
           displayLoginError();
@@ -4321,7 +4357,8 @@
   });
 
   $('#user-panel-tab-bar a').click(function() {
-    selectTabButton(this);
+    //selectTabButton(this);
+    selectPillButton(this);
     if ($(this).attr("id") == "button-user-list") {
       userLetter = '*';
       Pages.SelectPanel('users');
@@ -4338,7 +4375,8 @@
   });
 
   $('#group-panel-tab-bar a').click(function() {
-    selectTabButton(this);
+    //selectTabButton(this);
+    selectPillButton(this);
     if ($(this).attr('id') == "button-group-list") {
       groupLetter = '*';
       Pages.SelectPanel('groups');
@@ -4355,7 +4393,8 @@
       showPanelList('roles');
     }
     else if ($(this).attr('id') == "button-roles-search") {
-      selectTabButton('#button-roles-search');
+      //selectTabButton('#button-roles-search');
+      selectPillButton('#button-roles-search');
       $('#roles-panel-list').hide();
       $('#role-panel-users').hide();
       $('#roles-panel-search').show();
@@ -4370,19 +4409,22 @@
       Pages.SelectPanel('roles');
       showPanelList('roles');
     } else if ($(this).attr('id') == "button-role-settings") {
-      selectTabButton('#button-role-settings');
+      //selectTabButton('#button-role-settings');
+      selectPillButton('#button-role-settings');
       $('#roles-panel-list').hide();
       $('#role-panel-users').hide();
       $('#role-panel-groups').hide();
       $('#role-panel-settings').show();
     } else if ($(this).attr('id') == "button-role-users") {
-      selectTabButton('#button-role-users');
+      //selectTabButton('#button-role-users');
+      selectPillButton('#button-role-users');
       $('#roles-panel-list').hide();
       $('#role-panel-settings').hide();
       $('#role-panel-groups').hide();
       $('#role-panel-users').show();
     } else if ($(this).attr('id') == "button-role-groups") {
-      selectTabButton('#button-role-groups');
+      //selectTabButton('#button-role-groups');
+      selectPillButton('#button-role-groups');
       $('#roles-panel-list').hide();
       $('#role-panel-settings').hide();
       $('#role-panel-users').hide();

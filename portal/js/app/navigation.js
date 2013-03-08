@@ -20,7 +20,6 @@ Usergrid.Navigation = Backbone.Router.extend({
       ":organization/:application/analytics": "analytics",
       ":organization/:application/properties": "properties",
       ":organization/:application/shell": "shell",
-      ":organization/:application/console": "console",
       ":organization/:application/account": "account",
       ":organization/home": "home",
       ":organization": "home",
@@ -33,60 +32,66 @@ Usergrid.Navigation = Backbone.Router.extend({
       }
       this.checkApplication(application);
       Pages.SelectPanel('organization');
+      $('#left2').hide();
     },
     dashboard: function(organization,application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Usergrid.console.pageSelect(application);
       Pages.SelectPanel('dashboard');
+      $('#left2').hide();
     },
     users: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('users');
+      $('#left2').show();
     },
     groups: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('groups');
+      $('#left2').show();
     },
     roles: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
-      Pages.SelectPanel('roles')
+      Pages.SelectPanel('roles');
+      $('#left2').show();
     },
     activities: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('activities');
+      $('#left2').hide();
     },
     collections: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('collections');
+      $('#left2').hide();
     },
     analytics: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('analytics');
+      $('#left2').hide();
     },
     properties: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('properties');
+      $('#left2').hide();
     },
     shell: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('shell');
-    },
-    console: function(organization, application) {
-      this.checkOrganization(organization);
-      this.checkApplication(application);
-      Pages.SelectPanel('console');
+      $('#left2').hide();
     },
     account: function(organization, application) {
       Pages.SelectPanel('account');
+      $('#left2').hide();
     },
     //Utils
     checkOrganization: function(org) {
