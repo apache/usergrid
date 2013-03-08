@@ -17,14 +17,12 @@ package org.usergrid.management;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,10 +30,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.cassandra.ManagementServiceImpl;
-import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 import org.usergrid.security.AuthPrincipalInfo;
+import org.usergrid.test.ShiroHelperRunner;
 
-@RunWith(CassandraRunner.class)
+@RunWith(ShiroHelperRunner.class)
 public class OrganizationTest {
 
 	private static final Logger logger = LoggerFactory

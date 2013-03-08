@@ -29,10 +29,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.test.ShiroHelperRunner;
 
-@RunWith(CassandraRunner.class)
+@RunWith(ShiroHelperRunner.class)
 public class ServiceRequestTest {
 
 	private static final Logger logger = LoggerFactory

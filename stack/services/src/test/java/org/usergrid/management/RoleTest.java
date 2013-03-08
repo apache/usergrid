@@ -16,15 +16,12 @@
 package org.usergrid.management;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import org.apache.shiro.subject.Subject;
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -32,15 +29,15 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.CassandraRunner;
-import org.usergrid.management.cassandra.ManagementTestHelperImpl;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.services.ServiceManagerFactory;
+import org.usergrid.test.ShiroHelperRunner;
 
-@RunWith(CassandraRunner.class)
+@RunWith(ShiroHelperRunner.class)
 public class RoleTest {
 
 	private static final Logger logger = LoggerFactory

@@ -24,24 +24,15 @@ package org.usergrid.management.cassandra;
  import static org.testng.Assert.assertNull;
  */
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Properties;
-
-import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.ManagementTestHelper;
 import org.usergrid.persistence.EntityManagerFactory;
-import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
 import org.usergrid.security.tokens.TokenService;
 
 @Component

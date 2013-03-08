@@ -56,41 +56,40 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
      */
     @Override
     public void run(RunNotifier notifier) {
-        maybeInit();
-
-        // check for SchemaManager annotation
-        DataControl control = null;
-        for(Annotation ann : getTestClass().getAnnotations() ) {
-            logger.info("examinign annotation " + ann);
-            if ( ann instanceof DataControl ) {
-                logger.info("founda dataCOntrol annotation");
-                control = (DataControl)ann;
-            }
-        }
-        loadDataControl(control);
-        maybeCreateSchema();
+        DataControl control = preTest(notifier);
         super.run(notifier);
-        if ( control == null || !control.skipTruncate() ) {
-            schemaManager.destroy();
-        }
-        logger.info("shutting down context");
-        contextHolder.applicationContext.stop();
+        postTest(notifier, control);
+       
+    }
+    
+    protected DataControl preTest(RunNotifier notifier){
+      maybeInit();
+
+      // check for SchemaManager annotation
+      DataControl control = null;
+      for(Annotation ann : getTestClass().getAnnotations() ) {
+          logger.info("examinign annotation " + ann);
+          if ( ann instanceof DataControl ) {
+              logger.info("founda dataCOntrol annotation");
+              control = (DataControl)ann;
+          }
+      }
+      loadDataControl(control);
+      maybeCreateSchema();
+      
+      return control;
+    }
+    
+    protected void postTest(RunNotifier notifier, DataControl control){
+      if ( control == null || !control.skipTruncate() ) {
+        schemaManager.destroy();
+    }
+    logger.info("shutting down context");
+    contextHolder.applicationContext.stop();
+      
     }
 
-    /**
-     * Method-level run
-     *
-     * @param method
-     * @param notifier
-     */
-    @Override
-    protected void runChild(FrameworkMethod method, RunNotifier notifier) {
-        // TODO should scan for:
-        // - DataControl: dropSchemaOnExit=true, dataLoader=[a class which implements load()]
-        // dataControl.loadMyData(cassandraService)
-        super.runChild(method, notifier);
-    }
-
+   
     private void loadDataControl(DataControl dataControl) {
         if ( !contextHolder.applicationContext.isActive() ) {
             logger.info("restarting context...");
