@@ -5,3 +5,4 @@ dist
 nbproject/
 *.swp
 node-modules/
+.vagrant

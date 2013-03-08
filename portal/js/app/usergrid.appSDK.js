@@ -1151,10 +1151,7 @@ Usergrid.ApiClient = (function () {
   var _loggedInUser = null;
   var _logoutCallback = null;
   var _callTimeoutCallback = null;
-<<<<<<< HEAD
-  var _unAuthCount = 0;
-=======
->>>>>>> 2bf9194d12d1a008256d3e272cd115e7b9ec01fe
+
 
   /*
    *  A method to set up the ApiClient with orgname and appname
@@ -1555,14 +1552,6 @@ Usergrid.ApiClient = (function () {
     _queryType = type;
   }
 
-  function incrementUnAuthCount() {
-    _unAuthCount++;
-    return _unAuthCount;
-  }
-
-  function setUnAuthCount(unAuthCount) {
-    _unAuthCount = unAuthCount;
-  }
   /**
    *  A private method to validate, prepare,, and make the calls to the API
    *  Use runAppQuery or runManagementQuery to make your calls!
@@ -1743,7 +1732,6 @@ Usergrid.ApiClient = (function () {
         Query.callFailureCallback(response.error_description);
         return;
       } else {
-        setUnAuthCount(0);
         //query completed succesfully, so store cursor
         var cursor = response.cursor || null;
         Query.saveCursor(cursor);
@@ -1831,9 +1819,7 @@ Usergrid.ApiClient = (function () {
     isLoggedInAppUser:isLoggedInAppUser,
     getLogoutCallback:getLogoutCallback,
     setLogoutCallback:setLogoutCallback,
-    callLogoutCallback:callLogoutCallback,
-    incrementUnAuthCount:incrementUnAuthCount,
-    setUnAuthCount:setUnAuthCount
+    callLogoutCallback:callLogoutCallback
   }
 })();
 
