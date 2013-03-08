@@ -14,15 +14,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.CassandraRunner;
-import org.usergrid.management.ManagementService;
-import org.usergrid.management.ManagementTestHelper;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.CredentialsInfo;
@@ -36,6 +33,7 @@ import org.usergrid.security.crypto.command.Sha1HashCommand;
 import org.usergrid.security.tokens.TokenCategory;
 import org.usergrid.security.tokens.TokenService;
 import org.usergrid.security.tokens.exceptions.InvalidTokenException;
+import org.usergrid.test.ShiroHelperRunner;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
@@ -44,7 +42,7 @@ import com.usergrid.count.SimpleBatcher;
 /**
  * @author zznate
  */
-@RunWith(CassandraRunner.class)
+@RunWith(ShiroHelperRunner.class)
 public class ManagementServiceTest {
   static Logger log = LoggerFactory.getLogger(ManagementServiceTest.class);
   static ManagementServiceImpl managementService;

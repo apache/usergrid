@@ -17,7 +17,6 @@ package org.usergrid.services;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION_ID;
 import static org.usergrid.services.ServiceParameter.parameters;
 import static org.usergrid.services.ServicePayload.batchPayload;
@@ -30,22 +29,18 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManagerFactory;
-import org.usergrid.persistence.PersistenceTestHelper;
 import org.usergrid.persistence.cassandra.EntityManagerFactoryImpl;
-import org.usergrid.persistence.cassandra.PersistenceTestHelperImpl;
+import org.usergrid.test.ShiroHelperRunner;
 import org.usergrid.utils.JsonUtils;
 
-@RunWith(CassandraRunner.class)
+@RunWith(ShiroHelperRunner.class)
 public abstract class AbstractServiceTest {
 	public static final boolean USE_DEFAULT_DOMAIN = false;
 
