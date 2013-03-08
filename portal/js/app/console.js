@@ -3803,7 +3803,6 @@
 
   function displayLoginError(message) {
     var message = message || '<strong>ERROR</strong>: Your details were incorrect.<br/>';
-    logout();
     $('#login-area .box').effect('shake', {times: 2},100);
     $('#login-message').html(message);
     $('#login-message').show();
