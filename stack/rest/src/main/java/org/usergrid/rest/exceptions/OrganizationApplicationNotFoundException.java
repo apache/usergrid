@@ -1,32 +1,37 @@
 package org.usergrid.rest.exceptions;
 
-import org.usergrid.rest.ApiResponse;
-import org.usergrid.rest.ServerEnvironmentProperties;
+import static org.usergrid.utils.JsonUtils.mapToJsonString;
 
 import javax.ws.rs.core.UriInfo;
 
-import static org.usergrid.utils.JsonUtils.mapToJsonString;
+import org.usergrid.rest.ApiResponse;
+import org.usergrid.rest.ServerEnvironmentProperties;
 
 /**
  * @author zznate
  */
 public class OrganizationApplicationNotFoundException extends RuntimeException {
-    private ApiResponse apiResponse;
+  /**
+   * 
+   */
+  private static final long serialVersionUID = 1L;
 
-  	public OrganizationApplicationNotFoundException(String orgAppName, UriInfo uriInfo, ServerEnvironmentProperties properties) {
-      super("Could not find application for " + orgAppName + " from URI: " + uriInfo.getPath());
-      apiResponse = new ApiResponse(properties);
+  private ApiResponse apiResponse;
 
-      apiResponse.setError(this);
-  	}
+  public OrganizationApplicationNotFoundException(String orgAppName, UriInfo uriInfo,
+      ServerEnvironmentProperties properties) {
+    super("Could not find application for " + orgAppName + " from URI: " + uriInfo.getPath());
+    apiResponse = new ApiResponse(properties);
 
+    apiResponse.setError(this);
+  }
 
-  	public ApiResponse getApiResponse() {
-  		return apiResponse;
-  	}
+  public ApiResponse getApiResponse() {
+    return apiResponse;
+  }
 
-  	public String getJsonResponse() {
-  		return mapToJsonString(apiResponse);
-  	}
+  public String getJsonResponse() {
+    return mapToJsonString(apiResponse);
+  }
 
 }

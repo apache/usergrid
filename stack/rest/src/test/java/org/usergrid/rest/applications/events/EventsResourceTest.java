@@ -1,11 +1,10 @@
 package org.usergrid.rest.applications.events;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
@@ -77,6 +76,8 @@ public class EventsResourceTest extends AbstractRestTest {
 		assertNotNull(node.get("entities"));
 		String marketing = node.get("entities").get(0).get("uuid").asText();
 
+		String lastId = null;
+		
 		// subsequent GETs advertising
 		for (int i = 0; i < 3; i++) {
 
@@ -87,25 +88,28 @@ public class EventsResourceTest extends AbstractRestTest {
 
 			logNode(node);
 			assertEquals("Expected Advertising", advertising, node.get("messages").get(0).get("uuid").asText());
+			lastId = node.get("last").asText();
 		}
 
 		// check sales event in queue
-		node = resource().path("/test-organization/test-app/events/"+sales)
+		node = resource().path("/test-organization/test-app/events").queryParam("last", lastId)
 				.queryParam("access_token", access_token)
 				.accept(MediaType.APPLICATION_JSON)
 				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
 		logNode(node);
-		assertEquals("Expected Sales", sales,node.get("entities").get(0).get("uuid").asText());
+		assertEquals("Expected Sales", sales,node.get("messages").get(0).get("uuid").asText());
+		lastId = node.get("last").asText();
+		
 
 		// check marketing event in queue
-		node = resource().path("/test-organization/test-app/events/"+marketing)
+		node = resource().path("/test-organization/test-app/events").queryParam("last", lastId)
 				.queryParam("access_token", access_token)
 				.accept(MediaType.APPLICATION_JSON)
 				.type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
 
 		logNode(node);
-		assertEquals("Expected Marketing", marketing, node.get("entities").get(0).get("uuid").asText());
+		assertEquals("Expected Marketing", marketing, node.get("messages").get(0).get("uuid").asText());
 
 
 	}

@@ -73,7 +73,7 @@ public final class ZooKeeperLockManagerImpl implements LockManager {
    * java.lang.String[])
    */
   @Override
-  public Lock createLock(UUID applicationId, String... path) throws UGLockException {
+  public Lock createLock(UUID applicationId, String... path) {
     String lockPath = LockPathBuilder.buildPath(applicationId, path);
 
     

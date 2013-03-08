@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.usergrid.mq.QueuePosition;
 import org.usergrid.mq.QueueQuery;
 import org.usergrid.mq.QueueResults;
 import org.usergrid.persistence.entities.User;
@@ -58,7 +59,7 @@ public class EventsResource extends ServiceResource {
 		if (query == null) {
 			query = new QueueQuery();
 		}
-		query.setUpdate(false);
+		query.setPosition(QueuePosition.START);
 		QueueResults results = ((ApplicationResource) parent).getQueues()
 				.getFromQueue("/events", query);
 		return new JSONWithPadding(results, callback);

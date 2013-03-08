@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.usergrid.persistence.CounterResolution;
 import org.usergrid.persistence.Results;
+import org.usergrid.persistence.exceptions.TransactionNotFoundException;
 
 
 public interface QueueManager {
@@ -96,4 +97,21 @@ public interface QueueManager {
 	public abstract Map<String, Long> getQueueCounters(String queuePath)
 			throws Exception;
 
+	/**
+	 * Renew a transaction.  Will remove the current transaction and return a new one
+	 * @param queuePath The path to the queue
+	 * @param transactionId The transaction id
+	 * @param query
+	 * @return
+	 * @throws TransactionNotFoundException 
+	 */
+	public abstract UUID renewTransaction(String queuePath,UUID transactionId,QueueQuery query) throws TransactionNotFoundException;
+	
+	/**
+	 * Deletes the transaction for the consumer
+	 * @param queuePath The path to the queue
+	 * @param transactionId The transaction id
+	 * @param query
+	 */
+	public abstract void deleteTransaction(String queuePath,UUID transactionId, QueueQuery query);
 }

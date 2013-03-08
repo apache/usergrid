@@ -15,7 +15,12 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.usergrid.rest.applications.utils.TestUtils.getIdFromSearchResults;
 import static org.usergrid.utils.MapUtils.hashMap;
 
@@ -29,7 +34,6 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.deser.ValueInstantiators.Base;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;

@@ -1,5 +1,15 @@
 package org.usergrid.rest.applications.assets;
 
+import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.usergrid.utils.MapUtils.hashMap;
+
+import java.io.InputStream;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.ws.rs.core.MediaType;
+
 import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
@@ -7,15 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.rest.applications.utils.UserRepo;
-
-import javax.ws.rs.core.MediaType;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.UUID;
-
-import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.usergrid.utils.MapUtils.hashMap;
 
 /**
  * @author zznate

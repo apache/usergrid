@@ -93,6 +93,7 @@
           class="org.usergrid.mq.cassandra.QueueManagerFactoryImpl">
         <constructor-arg ref="cassandraService" />
         <constructor-arg ref="counterUtils"/>
+        <constructor-arg ref="lockManager"/>
     </bean>
 
     <bean id="simpleBatcher" class="com.usergrid.count.SimpleBatcher">
