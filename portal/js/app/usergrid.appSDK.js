@@ -1720,11 +1720,10 @@ Usergrid.ApiClient = (function () {
           console.log('API call failed: (status: '+xhr.status+').' + error.type);
           if ( (error == "auth_expired_session_token") ||
                (error == "auth_missing_credentials")   ||
+               (error == "unauthorized")               ||
                (error == "auth_invalid")) {
             //this error type means the user is not authorized. If a logout function is defined, call it
             callLogoutCallback();
-          } else if (error == "unauthorized") {
-
           }
         } catch(e){}
         //otherwise, just call the failure callback
