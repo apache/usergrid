@@ -338,6 +338,12 @@
     $("#query-query-box").show();
   });
 
+  $("#data-explorer-link").click(function(){
+    $('#data-explorer').show();
+    $('#query-path').val('');
+    $("#query-response-area").hide();
+  });
+
   function runCollectionQuery(){
     var method;
 
@@ -350,7 +356,11 @@
       method = 'PUT';
     } else if($('#button-query-delete').hasClass('active')){
       method = 'DELETE';
+    } else {
+      alertModal("Notice", "Please select a method.");
+      return;
     }
+
 
     //If jsonBody is empty fill it with empty brackets
     if($('#query-source').val() === '') {
@@ -392,15 +402,18 @@
 
 function getCollectionCallback(response) {
   hidePagination('query-response');
-
+  $('#query-response-area').show();
   if (response.action == 'post') {
     pageSelectCollections();
   }
 
   var path = response.path || "";
   path = "" + path.match(/[^?]*/);
+  var path_no_slashes = "";
+  try {
+    path_no_slashes = response.path.replace(/\//g,'');
+  } catch(e) {}
 
-  var path_no_slashes = response.path.replace(/\//g,'');
   $("#collections-link-buttons li").removeClass('active');
   $("#collections-link-button-"+path_no_slashes).addClass('active');
 
@@ -425,11 +438,17 @@ function getCollectionCallback(response) {
       //Inform the user of a valid query
       showQueryStatus('Done');
 
+      var entity_type = response.entities [0].type;
+
+      if (response.entities.length == 1 && response.action != 'post') {
+        var path = response.entities [0].metadata.path;
+        $('#query-path').val(path);
+      }
 
       //showQueryCollectionView(path)
       //updateQueryTypeahead(response, 'query-path');
 
-      var entity_type = response.entities [0].type;
+
       var table = '<table id="query-response-table" class="table"><tbody><tr class="zebraRows users-row">' +
                   '<td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllUsers();" /></td>';
       if (entity_type === 'user') {
