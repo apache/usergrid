@@ -1,77 +1,71 @@
 package org.usergrid.batch.repository;
 
-import com.google.common.base.Preconditions;
-import org.usergrid.batch.BulkJobFactory;
-
 import java.util.UUID;
+
+import me.prettyprint.cassandra.utils.Assert;
+
+import org.usergrid.batch.service.JobData;
+import org.usergrid.batch.service.SchedulerService;
 
 /**
  * @author zznate
+ * @author tnine
  */
 public class JobDescriptor {
 
   private final String jobName;
-  private final BulkJobFactory bulkJobFactory;
   private final UUID jobId;
-  // optional fields
-  private UUID orgId;
-  private UUID appId;
-  private String appName;
+  private UUID transactionId;
+  private JobData data;
+  private SchedulerService scheduler;
 
-  private JobDescriptor(String jobName,
-                        BulkJobFactory bulkJobFactory,
-                        UUID jobId) {
+  public JobDescriptor(String jobName, UUID jobId, UUID transactionId, JobData data, SchedulerService scheduler) {
+    Assert.notNull(jobName, "Job name cannot be null");
+    Assert.notNull(jobId != null, "A JobId is required");
+    Assert.notNull(transactionId != null, "A transactionId is required");
+    Assert.notNull(data != null, "Data is required");
+    Assert.notNull(scheduler != null, "A scheduler is required");
+
     this.jobName = jobName;
-    this.bulkJobFactory = bulkJobFactory;
     this.jobId = jobId;
+    this.transactionId = transactionId;
+    this.data = data;
+    this.scheduler = scheduler;
   }
 
-  public static JobDescriptor instance(String jobName,
-                                       BulkJobFactory bulkJobFactory,
-                                       UUID jobId ) {
-    Preconditions.checkArgument(jobName != null, "Job name cannot be null");
-    Preconditions.checkArgument(bulkJobFactory != null, "BulkJobFactory cannot be null");
-    Preconditions.checkArgument(jobId != null, "A JobId is required");
-    return new JobDescriptor(jobName, bulkJobFactory, jobId);
-  }
-
+  /**
+   * @return the jobName
+   */
   public String getJobName() {
     return jobName;
   }
 
-
-  public BulkJobFactory getBulkJobFactory() {
-    return bulkJobFactory;
-  }
-
-  public UUID getOrgId() {
-    return orgId;
-  }
-
-  public JobDescriptor setOrgId(UUID orgId) {
-    this.orgId = orgId;
-    return this;
-  }
-
-  public UUID getAppId() {
-    return appId;
-  }
-
-  public JobDescriptor setAppId(UUID appId) {
-    this.appId = appId;
-    return this;
-  }
-
+  /**
+   * @return the jobId
+   */
   public UUID getJobId() {
     return jobId;
   }
 
-  public String getAppName() {
-    return appName;
+  /**
+   * @return the transactionId
+   */
+  public UUID getTransactionId() {
+    return transactionId;
   }
 
-  public JobDescriptor setAppName(String appName) {
-    this.appName = appName;
-    return this;
+  /**
+   * @return the data
+   */
+  public JobData getData() {
+    return data;
   }
+
+  /**
+   * @return the scheduler
+   */
+  public SchedulerService getScheduler() {
+    return scheduler;
+  }
+
 }

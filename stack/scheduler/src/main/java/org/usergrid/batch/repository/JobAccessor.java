@@ -1,16 +1,24 @@
 package org.usergrid.batch.repository;
 
-import org.usergrid.batch.BulkJobExecution;
-import org.usergrid.batch.BulkJobFactory;
-
 import java.util.List;
+
+import org.usergrid.batch.JobExecution;
 
 /**
  * @author zznate
  */
 public interface JobAccessor {
 
-  List<JobDescriptor> activeJobs();
+  /**
+   * Get new jobs, with a max return value of size
+   * @param size
+   * @return
+   */
+  public List<JobDescriptor> getJobs(int size);
 
-  void save(BulkJobExecution bulkJobExecution);
+  /**
+   * Save job execution information
+   * @param bulkJobExecution
+   */
+  public void save(JobExecution bulkJobExecution);
 }

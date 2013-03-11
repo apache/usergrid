@@ -3,7 +3,7 @@ package org.usergrid.batch;
 /**
  * @author zznate
  */
-public class BulkJobExecutionException extends Exception {
+public class JobExecutionException extends Exception {
 
   /**
    * 
@@ -12,14 +12,14 @@ public class BulkJobExecutionException extends Exception {
 
   private static final String DEF_MSG = "There was a problem executing the bulk job: ";
 
-  private final BulkJobExecution bulkJobExecution;
+  private final JobExecution bulkJobExecution;
 
-  public BulkJobExecutionException(BulkJobExecution bulkJobExecution, String message, Throwable t) {
+  public JobExecutionException(JobExecution bulkJobExecution, String message, Throwable t) {
     super(DEF_MSG + message, t);
     this.bulkJobExecution = bulkJobExecution;
   }
 
-  public BulkJobExecution getBulkJobExecution() {
+  public JobExecution getExecution() {
     return this.bulkJobExecution;
   }
 

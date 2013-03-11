@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+	<bean id="properties"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="singleton" value="true" />
+		<property name="ignoreResourceNotFound" value="true" />
+		<property name="locations">
+			<list>
+				<value>classpath:/usergrid-default.properties</value>
+				<value>classpath:/usergrid-test.properties</value>
+				<value>${usergrid-custom-spring-test-properties}</value>
+			</list>
+		</property>
+	</bean>
+
+	<import resource="classpath:/usergrid-scheduler-context.xml" />
+
+    <bean id="setup" class="org.usergrid.persistence.cassandra.Setup">
+        <constructor-arg ref="entityManagerFactory"/>
+        <constructor-arg ref="cassandraService"/>
+    </bean>
+    <!-- The default schema manager -->
+    <!-- refer to a named schemaManager from the DataControl annotation thusly -->
+    <bean id="coreManager" class="org.usergrid.persistence.CoreSchemaManager">
+        <constructor-arg ref="setup"/>
+        <constructor-arg ref="cassandraCluster"/>
+    </bean>
+
+    <bean id="binaryStore" class="org.usergrid.services.assets.data.LocalFileBinaryStore">
+        <property name="reposLocation" value="${usergrid.temp.files}"/>
+    </bean>
+
+</beans>

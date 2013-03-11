@@ -1,8 +1,8 @@
 package org.usergrid.batch;
 
-import org.usergrid.batch.repository.JobDescriptor;
-
 import java.util.List;
+
+import org.usergrid.batch.repository.JobDescriptor;
 
 /**
  * It is up to the implementation how many BulkJob instances to return,
@@ -10,14 +10,15 @@ import java.util.List;
  *
  * @author zznate
  */
-public interface BulkJobFactory {
+public interface JobFactory {
 
   /**
    * Return one or more BulkJob ready for execution by a worker thread
    *
    * @param bulkJobsBuilder
    * @return
+   * @throws JobNotFoundException 
    */
-  List<BulkJob> jobsFrom(BulkJobsBuilder bulkJobsBuilder);
+  List<Job> jobsFrom(JobDescriptor descriptor) throws JobNotFoundException;
 
 }

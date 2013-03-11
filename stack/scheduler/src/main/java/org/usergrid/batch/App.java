@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
-import org.usergrid.batch.service.BulkJobScheduledService;
+import org.usergrid.batch.service.JobSchedulerService;
 
 /**
  * Entry point for CLI functions of Usergrid batch framework
@@ -55,7 +55,7 @@ public class App {
   }
 
   private void doExecute() {
-    BulkJobScheduledService bjss = appContext.getBean("bulkJobScheduledService",BulkJobScheduledService.class);
+    JobSchedulerService bjss = appContext.getBean("bulkJobScheduledService",JobSchedulerService.class);
     logger.info("starting scheduledService...");
     bjss.startAndWait();
     logger.info("scheduledService started.");

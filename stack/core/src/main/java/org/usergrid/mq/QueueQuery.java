@@ -271,6 +271,11 @@ public class QueueQuery extends Query {
     this.timeout = timeout;
     setSynchronized(true);
   }
+  
+  public QueueQuery withTimeout(long timeout){
+    setTimeout(timeout);
+    return this;
+  }
 
 
 }
