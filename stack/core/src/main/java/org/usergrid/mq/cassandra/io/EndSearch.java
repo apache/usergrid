@@ -36,8 +36,8 @@ public class EndSearch extends NoTransactionSearch {
    * @param ko
    * @param cassTimestamp
    */
-  public EndSearch(Keyspace ko, CassandraService cass) {
-    super(ko, cass);
+  public EndSearch(Keyspace ko) {
+    super(ko);
   } /*
      * (non-Javadoc)
      * 
@@ -59,7 +59,7 @@ public class EndSearch extends NoTransactionSearch {
    * java.util.UUID, java.util.UUID)
    */
   @Override
-  protected void writeClientPointer(UUID queueId, UUID consumerId, UUID lastReturnedId, long timestamp) {
+  protected void writeClientPointer(UUID queueId, UUID consumerId, UUID lastReturnedId) {
     // no op for searches from the end
   }
 

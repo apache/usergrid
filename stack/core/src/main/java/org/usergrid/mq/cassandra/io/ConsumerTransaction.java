@@ -59,16 +59,17 @@ public class ConsumerTransaction extends NoTransactionSearch {
   private static final int MAX_READ = 10000;
   private LockManager lockManager;
   private UUID applicationId;
-  
+  protected CassandraService cass;
 
   /**
    * @param ko
    * @param cassTimestamp
    */
   public ConsumerTransaction(UUID applicationId, Keyspace ko, LockManager lockManager, CassandraService cass) {
-    super(ko, cass);
+    super(ko);
     this.applicationId = applicationId;
     this.lockManager = lockManager;
+    this.cass = cass;
   }
 
   /**
@@ -87,8 +88,8 @@ public class ConsumerTransaction extends NoTransactionSearch {
   public UUID renewTransaction(String queuePath, UUID transactionId, QueueQuery query)
       throws TransactionNotFoundException {
     long now = System.currentTimeMillis();
-    
-    if(query == null){
+
+    if (query == null) {
       query = new QueueQuery();
     }
 
@@ -139,11 +140,11 @@ public class ConsumerTransaction extends NoTransactionSearch {
    * @param query
    */
   public void deleteTransaction(String queuePath, UUID transactionId, QueueQuery query) {
-    
-    if(query == null){
+
+    if (query == null) {
       query = new QueueQuery();
     }
-    
+
     UUID queueId = getQueueId(queuePath);
     UUID consumerId = getConsumerId(queueId, query);
 
@@ -181,33 +182,29 @@ public class ConsumerTransaction extends NoTransactionSearch {
 
     if (query.getLimit() > MAX_READ) {
       throw new IllegalArgumentException(String.format(
-          "You specified a size of %d, you cannot specify a size larger than %d when using transations", query.getLimit(DEFAULT_READ),
-          MAX_READ));
+          "You specified a size of %d, you cannot specify a size larger than %d when using transations",
+          query.getLimit(DEFAULT_READ), MAX_READ));
     }
 
- 
     QueueResults results = null;
-    
+
     Lock lock = lockManager.createLock(applicationId, queueId.toString(), consumerId.toString());
 
     try {
-   
+
       lock.lock();
-     
+
       long startTime = System.currentTimeMillis();
-      
+
       UUID startTimeUUID = UUIDUtils.newTimeUUID(startTime, 0);
-     
+
       QueueBounds bounds = getQueueBounds(queueId);
-      
-      
+
       // with transactional reads, we can't read into the future, set the bounds
       // to be now
       bounds = new QueueBounds(bounds.getOldest(), startTimeUUID);
-    
-    
-      SearchParam params = getParams(queueId, consumerId, query);
 
+      SearchParam params = getParams(queueId, consumerId, query);
 
       List<UUID> ids = getQueueRange(queueId, bounds, params);
 
@@ -268,7 +265,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
       // last read messages uuid, whichever is greater
       UUID lastReadId = UUIDUtils.max(lastReadTransactionPointer, lastId);
 
-      writeClientPointer(queueId, consumerId, lastReadId, cass.createTimestamp());
+      writeClientPointer(queueId, consumerId, lastReadId);
 
     } catch (UGLockException e) {
       logger.error("Unable to acquire lock", e);
@@ -281,7 +278,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
         throw new QueueException("Unable to release lock", e);
       }
     }
-    
+
     return results;
 
   }
@@ -381,7 +378,7 @@ public class ConsumerTransaction extends NoTransactionSearch {
     ByteBuffer key = getQueueClientTransactionKey(queueId, consumerId);
 
     int counter = 0;
-    
+
     long time = cass.createTimestamp();
 
     for (Message message : messages) {

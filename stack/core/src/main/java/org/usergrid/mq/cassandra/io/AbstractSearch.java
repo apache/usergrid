@@ -62,6 +62,7 @@ import org.usergrid.mq.Message;
 import org.usergrid.mq.QueueResults;
 import org.usergrid.mq.cassandra.io.NoTransactionSearch.SearchParam;
 import org.usergrid.persistence.exceptions.QueueException;
+import org.usergrid.utils.UUIDUtils;
 
 /**
  * @author tnine
@@ -278,11 +279,17 @@ public abstract class AbstractSearch implements QueueSearch {
    *          This is a null safe parameter. If it's null, this won't be written
    *          since it means we didn't read any messages
    */
-  protected void writeClientPointer(UUID queueId, UUID consumerId, UUID lastReturnedId, long timestamp) {
+  protected void writeClientPointer(UUID queueId, UUID consumerId, UUID lastReturnedId) {
     // nothing to do
     if (lastReturnedId == null) {
       return;
     }
+
+    // we want to set the timestamp to the value from the time uuid. If this is
+    // not the max time uuid to ever be written
+    // for this consumer, we want this to be discarded to avoid internode race
+    // conditions with clock drift.
+    long colTimestamp = UUIDUtils.getTimestampInMicros(lastReturnedId);
 
     Mutator<UUID> mutator = createMutator(ko, ue);
 
@@ -292,7 +299,7 @@ public abstract class AbstractSearch implements QueueSearch {
     }
 
     mutator.addInsertion(consumerId, CONSUMERS.getColumnFamily(),
-        createColumn(queueId, lastReturnedId, timestamp, ue, ue));
+        createColumn(queueId, lastReturnedId, colTimestamp, ue, ue));
 
     mutator.execute();
   }
@@ -364,9 +371,9 @@ public abstract class AbstractSearch implements QueueSearch {
     private Map<UUID, Integer> indexCache = new HashMap<UUID, Integer>();
 
     private RequestedOrderComparator(Collection<UUID> ids) {
-      int i = 0; 
-      
-      for(UUID id: ids){
+      int i = 0;
+
+      for (UUID id : ids) {
         indexCache.put(id, i);
         i++;
       }

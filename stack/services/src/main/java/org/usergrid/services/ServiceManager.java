@@ -191,8 +191,6 @@ public class ServiceManager {
 			return null;
 		}
 
-		serviceType = ServiceInfo.normalizeServicePattern(serviceType);
-
 		logger.debug("Looking up service pattern: {}", serviceType);
 
 		ServiceInfo info = ServiceInfo.getServiceInfo(serviceType);

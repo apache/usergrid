@@ -63,8 +63,8 @@ public class FilterSearch extends NoTransactionSearch {
   /**
    * 
    */
-  public FilterSearch(Keyspace ko, CassandraService cass) {
-    super(ko, cass);
+  public FilterSearch(Keyspace ko) {
+    super(ko);
   }
 
   /*
