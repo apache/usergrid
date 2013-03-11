@@ -36,8 +36,8 @@ public class StartSearch extends NoTransactionSearch {
    * @param ko
    * @param cassTimestamp
    */
-  public StartSearch(Keyspace ko, CassandraService cass) {
-    super(ko, cass);
+  public StartSearch(Keyspace ko) {
+    super(ko);
   }
 
   /*
@@ -58,7 +58,7 @@ public class StartSearch extends NoTransactionSearch {
    * @see org.usergrid.mq.cassandra.io.FifoSearch#writeClientPointer(java.util.UUID, java.util.UUID, java.util.UUID)
    */
   @Override
-  protected void writeClientPointer(UUID queueId, UUID consumerId, UUID lastReturnedId, long timestamp) {
+  protected void writeClientPointer(UUID queueId, UUID consumerId, UUID lastReturnedId) {
     //no op for searches from the start
   }
   

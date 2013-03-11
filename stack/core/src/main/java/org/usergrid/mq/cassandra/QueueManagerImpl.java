@@ -367,20 +367,20 @@ public class QueueManagerImpl implements QueueManager {
     QueueSearch search = null;
 
     if (query.hasFilterPredicates()) {
-      search = new FilterSearch(ko, cass);
+      search = new FilterSearch(ko);
     }
     
     else if (query.getPosition() == LAST || query.getPosition() == CONSUMER) {
       if (query.getTimeout() > 0) {
         search = new ConsumerTransaction(applicationId, ko, lockManager, cass);
       } else {
-        search = new NoTransactionSearch(ko, cass);
+        search = new NoTransactionSearch(ko);
       }
     } else if (query.getPosition() == START) {
 
-      search = new StartSearch(ko, cass);
+      search = new StartSearch(ko);
     } else if (query.getPosition() == END) {
-      search = new EndSearch(ko, cass);
+      search = new EndSearch(ko);
 
     } else {
       throw new IllegalArgumentException("You must specify a valid position or query");
