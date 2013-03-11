@@ -17,6 +17,7 @@ Usergrid.Navigation = Backbone.Router.extend({
       ":organization/:application/roles": "roles",
       ":organization/:application/activities": "activities",
       ":organization/:application/collections": "collections",
+      ":organization/:application/notifications": "notifications",
       ":organization/:application/analytics": "analytics",
       ":organization/:application/properties": "properties",
       ":organization/:application/shell": "shell",
@@ -68,14 +69,16 @@ Usergrid.Navigation = Backbone.Router.extend({
     collections: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
-
-      $('#left2').show();
-      $('#sidebar-menu2').hide();
-      $('#left-collections-menu').show();
       Pages.ActivatePanel("collections");
-
       Pages.SelectPanel('collections');
       this.showAppDataContent();
+    },
+    notifications: function(organization, application) {
+      this.checkOrganization(organization);
+      this.checkApplication(application);
+      Pages.ActivatePanel("notifications");
+      Pages.SelectPanel('notifications');
+      this.showAppNotificationsContent();
     },
     analytics: function(organization, application) {
       this.checkOrganization(organization);
@@ -132,11 +135,19 @@ Usergrid.Navigation = Backbone.Router.extend({
       $('#left2').show();
       $('#sidebar-menu2').show();
       $('#left-collections-menu').hide();
+      $('#left-notifications-menu').hide();
     },
     showAppDataContent: function(){
       $('#left2').show();
       $('#sidebar-menu2').hide();
       $('#left-collections-menu').show();
+      $('#left-notifications-menu').hide();
+    },
+    showAppNotificationsContent: function(){
+      $('#left2').show();
+      $('#sidebar-menu2').hide();
+      $('#left-collections-menu').hide();
+      $('#left-notifications-menu').show();
     },
 
     navigateTo: function(address) {
