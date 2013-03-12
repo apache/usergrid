@@ -4470,7 +4470,7 @@ html {
 
 /* line 32, ../sass/usergrid.scss */
 a {
-  color: #000;
+  color: black;
   cursor: pointer;
 }
 /* line 36, ../sass/usergrid.scss */
@@ -4480,7 +4480,7 @@ a:link {
 }
 /* line 41, ../sass/usergrid.scss */
 a:visited {
-  color: #000;
+  color: black;
   text-decoration: none;
 }
 /* line 46, ../sass/usergrid.scss */
@@ -4490,7 +4490,7 @@ a:hover {
 }
 /* line 51, ../sass/usergrid.scss */
 a:active {
-  color: #000;
+  color: black;
   text-decoration: none;
 }
 
@@ -4701,7 +4701,7 @@ a:active {
 /* line 255, ../sass/usergrid.scss */
 .navbar .nav .dropdown-menu a {
   line-height: 18px;
-  color: #000000;
+  color: black;
   padding: 3px 15px;
 }
 /* line 260, ../sass/usergrid.scss */
@@ -6258,7 +6258,7 @@ a.data-explorer-link {
 .panel-title {
   font-weight: 400;
   font-size: 16px;
-  color: #000;
+  color: black;
   padding: 0 0 0 10px;
 }
 
@@ -6335,5 +6335,5 @@ a.data-explorer-link {
 /* line 1827, ../sass/usergrid.scss */
 .bold-header {
   font-weight: 600;
-  color: #000000;
+  color: black;
 }
