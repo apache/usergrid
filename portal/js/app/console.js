@@ -440,11 +440,6 @@ function getCollectionCallback(response) {
 
       var entity_type = response.entities [0].type;
 
-      if (response.entities.length == 1 && response.action != 'post') {
-        var path = response.entities [0].metadata.path;
-        $('#query-path').val(path);
-      }
-
       //showQueryCollectionView(path)
       //updateQueryTypeahead(response, 'query-path');
 
@@ -479,17 +474,23 @@ function getCollectionCallback(response) {
         this_data.json = JSON.stringify(response.entities [i], null, 2);
 
         if (this_data.type === 'user') {
-          if (!this_data.picture) {
-            this_data.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user-photo.png"
+          if (!this_data.r.picture) {
+            this_data.r.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user-photo.png"
           } else {
-            this_data.picture = get_replacementGravatar(this_data.picture);
+            this_data.r.picture = get_replacementGravatar(this_data.r.picture);
           }
         } else {
-          if (!this_data.name) {
-            name = '[No value set]';
+          if (!this_data.r.name) {
+            this_data.r.name = '[No value set]';
           }
         }
         $.tmpl('apigee.ui.collection.table_rows.html', this_data).appendTo('#query-response-table');
+      }
+      if (response.entities.length == 1 && response.action != 'post') {
+        var path = response.entities[0].metadata.path;
+        $('#query-path').val(path);
+        var uuid = response.entities[0].uuid;
+        $("#query-row-" + uuid).show();
       }
     }
   } else {
@@ -1362,7 +1363,7 @@ function buildContentArea(obj2) {
       //Email is NOT required
       && ( checkLength2(email, 6, 80) )
       && ( email.val() === "" || checkRegexp2(email,emailRegex, emailAllowedCharsMessage) )
-      && ( checkLength2(password ,0 ,0) || checkLength2(password, 5, 32) )
+      && ( checkLength2(password ,0 ,0) || checkLength2(password, 1, 64) )
       && ( password.val() === "" || checkRegexp2(password,passwordRegex, passwordAllowedCharsMessage) )
       && ( checkTrue2(password, (password.val() === validate_password.val()), passwordMismatchMessage));
 
