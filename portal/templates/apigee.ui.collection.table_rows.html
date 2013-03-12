@@ -51,8 +51,8 @@
   {{/if}}
     <div>
         <div style="padding-bottom: 10px;">
-          <button type="button" class="btn btn-small query-button active" id="button-query-show-row-JSON" onclick="Usergrid.console.activateQueryRowJSONButton(); Usergrid.console.showQueryRowDetails('#query-row-JSON-${r.uuid}'); Usergrid.console.hideQueryRowDetails('#query-row-content-${r.uuid}'); return false;">JSON</button>
-          <button type="button" class="btn btn-small query-button disabled" id="button-query-show-row-content" onclick="Usergrid.console.activateQueryRowContentButton(); Usergrid.console.showQueryRowDetails('#query-row-content-${r.uuid}'); Usergrid.console.hideQueryRowDetails('#query-row-JSON-${r.uuid}'); return false;">Content</button>
+          <button type="button" class="btn btn-small query-button active" id="button-query-show-row-JSON" onclick="Usergrid.console.activateQueryRowJSONButton(); $('#query-row-JSON-${r.uuid}').show(); $('#query-row-content-${r.uuid}').hide(); return false;">JSON</button>
+          <button type="button" class="btn btn-small query-button disabled" id="button-query-show-row-content" onclick="Usergrid.console.activateQueryRowContentButton();$('#query-row-content-${r.uuid}').show(); $('#query-row-JSON-${r.uuid}').hide(); return false;">Content</button>
         </div>
         <div id="query-row-JSON-${r.uuid}">
           <pre>${json}</pre>

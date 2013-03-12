@@ -338,6 +338,12 @@
     $("#query-query-box").show();
   });
 
+  $("#data-explorer-link").click(function(){
+    $('#data-explorer').show();
+    $('#query-path').val('');
+    $("#query-response-area").hide();
+  });
+
   function runCollectionQuery(){
     var method;
 
@@ -350,7 +356,11 @@
       method = 'PUT';
     } else if($('#button-query-delete').hasClass('active')){
       method = 'DELETE';
+    } else {
+      alertModal("Notice", "Please select a method.");
+      return;
     }
+
 
     //If jsonBody is empty fill it with empty brackets
     if($('#query-source').val() === '') {
@@ -392,15 +402,18 @@
 
 function getCollectionCallback(response) {
   hidePagination('query-response');
-
+  $('#query-response-area').show();
   if (response.action == 'post') {
     pageSelectCollections();
   }
 
   var path = response.path || "";
   path = "" + path.match(/[^?]*/);
+  var path_no_slashes = "";
+  try {
+    path_no_slashes = response.path.replace(/\//g,'');
+  } catch(e) {}
 
-  var path_no_slashes = response.path.replace(/\//g,'');
   $("#collections-link-buttons li").removeClass('active');
   $("#collections-link-button-"+path_no_slashes).addClass('active');
 
@@ -425,11 +438,12 @@ function getCollectionCallback(response) {
       //Inform the user of a valid query
       showQueryStatus('Done');
 
+      var entity_type = response.entities [0].type;
 
       //showQueryCollectionView(path)
       //updateQueryTypeahead(response, 'query-path');
 
-      var entity_type = response.entities [0].type;
+
       var table = '<table id="query-response-table" class="table"><tbody><tr class="zebraRows users-row">' +
                   '<td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllUsers();" /></td>';
       if (entity_type === 'user') {
@@ -460,17 +474,23 @@ function getCollectionCallback(response) {
         this_data.json = JSON.stringify(response.entities [i], null, 2);
 
         if (this_data.type === 'user') {
-          if (!this_data.picture) {
-            this_data.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user-photo.png"
+          if (!this_data.r.picture) {
+            this_data.r.picture = window.location.protocol+ "//" + window.location.host + window.location.pathname + "images/user-photo.png"
           } else {
-            this_data.picture = get_replacementGravatar(this_data.picture);
+            this_data.r.picture = get_replacementGravatar(this_data.r.picture);
           }
         } else {
-          if (!this_data.name) {
-            name = '[No value set]';
+          if (!this_data.r.name) {
+            this_data.r.name = '[No value set]';
           }
         }
         $.tmpl('apigee.ui.collection.table_rows.html', this_data).appendTo('#query-response-table');
+      }
+      if (response.entities.length == 1 && response.action != 'post') {
+        var path = response.entities[0].metadata.path;
+        $('#query-path').val(path);
+        var uuid = response.entities[0].uuid;
+        $("#query-row-" + uuid).show();
       }
     }
   } else {
@@ -1343,7 +1363,7 @@ function buildContentArea(obj2) {
       //Email is NOT required
       && ( checkLength2(email, 6, 80) )
       && ( email.val() === "" || checkRegexp2(email,emailRegex, emailAllowedCharsMessage) )
-      && ( checkLength2(password ,0 ,0) || checkLength2(password, 5, 32) )
+      && ( checkLength2(password ,0 ,0) || checkLength2(password, 1, 64) )
       && ( password.val() === "" || checkRegexp2(password,passwordRegex, passwordAllowedCharsMessage) )
       && ( checkTrue2(password, (password.val() === validate_password.val()), passwordMismatchMessage));
 

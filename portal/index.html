@@ -275,6 +275,7 @@
                 <li><a href="#users" id="users-link"><i class="icon-user"></i> <span class="nav-menu-text">App End-Users</span></a></li>
 
 
+                <li><a href="#notifications" id="notifications-link"><i class="icon-calendar"></i> <span class="nav-menu-text">Notifications</span></a></li>
                 <li><a href="#activities" id="activities-link"><i class="icon-calendar"></i> <span class="nav-menu-text">Activities</span></a></li>
                 <!--<li><a href="#collections" id="application-panel-button-collections"><i class="icon-book"></i> <span class="nav-menu-text">Collections</span></a></li>-->
                 <li><a href="#collections" id="collections-link"><i class="icon-book"></i> <span class="nav-menu-text">Collections</span></a></li>
@@ -307,7 +308,7 @@
                 <p class="panel-desc">Explore your application's data collections.</p>
                 <hr class="col-divider">
                 <div style="padding:10px 0 10px 10px;">
-                  <a href="#users" id="users-link"><i class="icon-user"></i> <span class="nav-menu-text">Data Explorer</span></a>
+                  <a id="data-explorer-link"><i class="icon-user"></i> <span class="nav-menu-text">Data Explorer</span></a>
                 </div>
                 <hr class="col-divider">
 
@@ -315,15 +316,22 @@
                  <a class="btn" data-toggle="modal" href="#dialog-form-new-collection">Add Collection</a>
                 </div>
                 <hr class="col-divider">
-
-                 <!-- <a class="btn"  onclick="Usergrid.console.pageOpenQueryExplorer(); return false;">Query Explorer</a>-->
-
-
                 <div id="left-collections-content">
-
-
                 </div>
             </div>
+
+            <div id="left-notifications-menu" style="display: none;">
+              <h4 class="panel-title">Notifications</h4>
+              <p class="panel-desc">Send messages to your user's apps.</p>
+              <hr class="col-divider">
+
+              <ul id="application-panel-buttons2" class="nav nav-list" style="margin-bottom: 5px;">
+                <li><a href="#users" id="users-sublink"><span class="nav-menu-text">/users</span></a></li>
+                <li><a href="#groups" id="groups-sublink"><span class="nav-menu-text">/groups</span></a></li>
+                <li><a href="#roles" id="roles-sublink"> <span class="nav-menu-text">/roles</span></a></li>
+              </ul>
+            </div>
+
           </div>
         </div>
 
@@ -1292,9 +1300,21 @@
               </div>
 
 
+
+
+              <div id="notifications-panel" style="display: none; margin-left: 151px; padding-left: 30px;">
+                <div id="notifications-content" class="console-section">
+                  <div class="well thingy">
+                    <span class="title">Notifications:</span> <span class="title" id="notification-type-field"></span>
+                  </div>
+                </div>
+              </div>
+
+
+
+
               <div id="collections-panel" style="display: none; margin-left: 151px; padding-left: 30px;">
                 <div id="query-path-area" class="console-section query-path-area">
-
 
                   <div class="well thingy">
                     <span class="title">Collection:</span> <span class="title" id="collection-type-field"></span>
@@ -1387,12 +1407,10 @@
 
 
 
-                  <div id="query-response-area" class="console-section">
+                  <div id="query-response-area" class="console-section" style="display: none;">
                     <div class="well thingy" id="query-received-header">
                       <div class="bar">
-
                         <a class="btn " data-toggle="modal" id="delete-entity-link" > Delete</a>
-
                       </div>
                     </div>
                     <div class="console-section-contents">
@@ -1401,8 +1419,8 @@
 
                       </table>
                       <ul id="query-response-pagination" class="pager">
-                        <li id="query-response-previous" class="previous"><a >&larr; Previous</a></li>
-                        <li id="query-response-next" class="next"><a >Next &rarr;</a></li>
+                        <li style="display: none" id="query-response-previous" class="previous"><a >&larr; Previous</a></li>
+                        <li style="display: none" id="query-response-next" class="next"><a >Next &rarr;</a></li>
                       </ul>
                     </div>
                   </div>
