@@ -54,6 +54,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		638F675816EF875F002BD513 /* UGClientDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UGClientDelegate.h; sourceTree = "<group>"; };
 		E89D6C9C150E5B2E005F5FB9 /* UGAPIApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UGAPIApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E89D6CA0150E5B2E005F5FB9 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		E89D6CA2150E5B2E005F5FB9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -235,6 +236,7 @@
 				E89D6D02150E5B99005F5FB9 /* UGQuery.m */,
 				E89D6D03150E5B99005F5FB9 /* UGUser.h */,
 				E89D6D04150E5B99005F5FB9 /* UGUser.m */,
+				638F675816EF875F002BD513 /* UGClientDelegate.h */,
 			);
 			path = UGAPI;
 			sourceTree = "<group>";
@@ -580,6 +582,7 @@
 				E89D6CD4150E5B2E005F5FB9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		E89D6CD5150E5B2E005F5FB9 /* Build configuration list for PBXNativeTarget "UGAPIAppTests" */ = {
 			isa = XCConfigurationList;
@@ -588,6 +591,7 @@
 				E89D6CD7150E5B2E005F5FB9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
