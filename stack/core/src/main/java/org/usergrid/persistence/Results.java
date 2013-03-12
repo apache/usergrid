@@ -90,6 +90,8 @@ public class Results implements Iterable<Entity> {
 
     public Results(Results r) {
         if (r != null) {
+            level = r.level;
+
             id = r.id;
             ids = r.ids;
             idSet = r.idSet;
