@@ -49,6 +49,11 @@
 </head>
 <body>
 
+<div id="alert-error-message-container" class="alert alert-error" style="width:96.5%; z-index: 99; position: fixed; top: 84px;display: none;">
+  <a href="#" class="close" data-dismiss="alert">&times;</a>
+  <strong id="alert-error-header"></strong>
+  <span id="alert-error-message"></span>
+</div>
 
 <div id="header">
   <div class="column-in">
@@ -265,7 +270,7 @@
                 <div class="panel-desc">View your org's apps, activities, administrators and more.</div>
                 <hr  class="col-divider">
                 <li id="application-panel-button-dashboard"><a href="#"><i class="icon-th"></i> Org Overview</a></li>
-
+                <br/>
                 <h4 class="panel-title">Application</h4>
                 <p class="panel-desc">View your app's data, scripts, analytics and more.</p>
                 <hr  class="col-divider">
@@ -274,12 +279,12 @@
 
 
                 <li><a href="#users" id="users-link"><i class="icon-user"></i> <span class="nav-menu-text">App End-Users</span></a></li>
-
+                <li><a href="#collections" id="collections-link"><i class="icon-book"></i> <span class="nav-menu-text">App Data</span></a></li>
 
                 <li><a href="#notifications" id="notifications-link"><i class="icon-calendar"></i> <span class="nav-menu-text">Notifications</span></a></li>
                 <li><a href="#activities" id="activities-link"><i class="icon-calendar"></i> <span class="nav-menu-text">Activities</span></a></li>
                 <!--<li><a href="#collections" id="application-panel-button-collections"><i class="icon-book"></i> <span class="nav-menu-text">Collections</span></a></li>-->
-                <li><a href="#collections" id="collections-link"><i class="icon-book"></i> <span class="nav-menu-text">Collections</span></a></li>
+
                 <li><a href="#analytics" id="analytics-link"><i class="icon-signal"></i> <span class="nav-menu-text">Analytics</span></a></li>
                 <li><a href="#properties" id="properties-link"><i class="wrench "></i> <span class="nav-menu-text">App Settings</span></a></li>
                 <li><a href="#shell" id="shell-link"><i class="icon-warning-sign"></i> <span class="nav-menu-text">Shell</span></a></li>
@@ -342,7 +347,7 @@
             <div style="padding-top: 10px;">
               <h4 class="panel-title">Quick Start Guide</h4>
               <div class="panel-desc">Need help getting started? Follow our Quick Start Guide</div>
-              <hr style="margin: 0;">
+              <hr class="col-divider">
 
               <div class="panel-desc" style="height: 50px; text-align:center; width:100px;margin: 20px auto;">
               <a href="http://apigee.com/docs/usergrid/content/quick-start" target="_blank">App Services: Quick Start Guide</a>
@@ -350,7 +355,7 @@
 
               <h4 class="panel-title">SDKs & Modules</h4>
               <div class="panel-desc">Download an SDK or module to get up-and-running quickly</div>
-              <hr style="margin: 0;">
+              <hr class="col-divider">
 
               <div class="sdk-download">
                 <img src="images/ios-sdk-download.png">

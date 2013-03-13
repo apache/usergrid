@@ -1119,6 +1119,21 @@ function buildContentArea(obj2) {
     $('#alertModal').modal('show');
   }
 
+  //use like: alertBanner("Oh no!", "Say it isn't so!!");
+  //or like: alertBanner("Oh no!", "Say it isn't so!!", 5000); //will auto-close in 5 seconds
+  function alertBanner(header, message, timeout) {
+    $('#alert-error-header').html(header);
+    $('#alert-error-message').html(message);
+    $('#alert-error-message-container').show();
+    if (timeout) {
+      var alertTimer = setInterval(function(){
+          $('#alert-error-message-container').hide();
+          window.clearInterval(alertTimer);
+        },timeout);
+    }
+  }
+
+
   function hideModal(id){
     $(id).hide();
   }
@@ -3032,8 +3047,8 @@ function buildContentArea(obj2) {
     if(response.entities && (response.entities.length > 0)){
       $.tmpl('apigee.ui.role.groups.table_rows.html', response.entities).appendTo('#role-groups');
     }else {
-      var data = [{"message":"No Groups have this Role"}];
-      $.tmpl('apigee.ui.panels.alert.html', data).appendTo('#role-groups');
+      var data = '<div class="group-panel-section-message">No Groups have this Role</div>';
+      $('#role-groups').html(data);
     }
     updateGroupsForRolesAutocomplete();
     showCurlCommand('role-groups', curl);
@@ -4611,19 +4626,13 @@ function buildContentArea(obj2) {
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.graph.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.permissions.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.collection.table_rows.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.header.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.contents.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.metadata.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.collections.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.json.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.detail.html");
+    //Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.collections.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.collections.query.indexes.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.details.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.memberships.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.activities.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.permissions.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.curl.detail.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.panels.alert.html");
     $(window).resize();
   });
 

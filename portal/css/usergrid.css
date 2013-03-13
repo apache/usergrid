@@ -4193,13 +4193,13 @@ hr.col-divider {
   border-bottom: none;
 }
 .query-result-table-obj tr {
-  background: white;
+  background: #eee;
   border-bottom: 1px solid #e5e5e5;
   border-left: 1px solid #e5e5e5;
   border-right: 1px solid #e5e5e5;
 }
 .query-result-table-obj tr:nth-child(2n) {
-  background: #EEE;
+  background: #fff;
 }
 .query-result-table-obj tr:last-child {
   -webkit-border-radius: 5px;
@@ -4867,13 +4867,13 @@ table#organization-admins-table {
   table-layout: auto;
 }
 .zebraRows {
-  background: white;
+  background: #eee;
   border-bottom: 1px solid #e5e5e5;
   border-left: 1px solid #e5e5e5;
   border-right: 1px solid #e5e5e5;
 }
 .zebraRows:nth-child(2n) {
-  background: #EEE;
+  background: #fff;
 }
 .zebraRows:last-child {
   -webkit-border-radius: 5px;
@@ -4883,21 +4883,6 @@ table#organization-admins-table {
 .zebraRows td {
   padding: 10px;
 }
-/* #organization-applications{ */
-/*     padding: 0px; */
-/*     .application-row{ */
-/*         .zebraRows; */
-/*     } */
-/*     .alert{ */
-/*         margin: 15px; */
-/*     } */
-/*  */
-/*   .application-row { */
-/*     &:last-child { */
-/*       border-radius: 0 0 5px 5px; */
-/*     } */
-/*   } */
-/* } */
 #organization-admins {
   padding: 0px;
 }
@@ -4906,13 +4891,13 @@ table#organization-admins-table {
   margin: 15px;
 }
 #organization-admins .admin-row {
-  background: white;
+  background: #eee;
   border-bottom: 1px solid #e5e5e5;
   border-left: 1px solid #e5e5e5;
   border-right: 1px solid #e5e5e5;
 }
 #organization-admins .admin-row:nth-child(2n) {
-  background: #EEE;
+  background: #fff;
 }
 #organization-admins .admin-row:last-child {
   -webkit-border-radius: 5px;
@@ -4939,14 +4924,14 @@ table#organization-admins-table {
   border-radius: 0 0 5px 5px;
 }
 #organization-activities .organization-activity-row {
-  background: white;
+  background: #eee;
   border-bottom: 1px solid #e5e5e5;
   border-left: 1px solid #e5e5e5;
   border-right: 1px solid #e5e5e5;
   line-height: 25px;
 }
 #organization-activities .organization-activity-row:nth-child(2n) {
-  background: #EEE;
+  background: #fff;
 }
 #organization-activities .organization-activity-row:last-child {
   -webkit-border-radius: 5px;
@@ -4981,13 +4966,13 @@ table#organization-admins-table {
   margin: 15px;
 }
 #organizations .row {
-  background: white;
+  background: #eee;
   border-bottom: 1px solid #e5e5e5;
   border-left: 1px solid #e5e5e5;
   border-right: 1px solid #e5e5e5;
 }
 #organizations .row:nth-child(2n) {
-  background: #EEE;
+  background: #fff;
 }
 #organizations .row:last-child {
   -webkit-border-radius: 5px;
@@ -5011,10 +4996,10 @@ table#organization-admins-table {
 }
 /* ---------------- Dashboard ---------------- */
 table .zebraRows {
-  background: white;
+  background: #eee;
 }
 table .zebraRows:nth-child(2n) {
-  background: #EEE;
+  background: #fff;
 }
 /* --------------- Collections -------------- */
 .collection-column {
@@ -5042,9 +5027,6 @@ a.data-explorer-link {
 }
 .side-label {
   display: inline;
-}
-.alert .close {
-  top: 2px;
 }
 .horizontal {
   display: inline;
