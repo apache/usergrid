@@ -19,8 +19,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.usergrid.count.common.Count;
 import com.yammer.metrics.Metrics;
@@ -38,7 +40,7 @@ public abstract class AbstractBatcher implements Batcher {
     protected BatchSubmitter batchSubmitter;
 
     private Batch batch;
-
+    private final ReentrantLock submitLock = new ReentrantLock();
     private final AtomicLong opCount = new AtomicLong();
     private final Timer addTimer =
             Metrics.newTimer(AbstractBatcher.class, "add_invocation", TimeUnit.MICROSECONDS, TimeUnit.SECONDS);
@@ -78,20 +80,27 @@ public abstract class AbstractBatcher implements Batcher {
       invocationCounter.inc();
       final TimerContext context = addTimer.time();
 
-      // This should be fairly safe while still avoid locking. Assumptions:
-      // 1) A batch may grow slightly beyond the "shouldSubmit" bounds.
-      // 2) The chance of losing a count by adding it to a copied batch after
-      //    it is stored is approximately zero.
+
      
       batch.add(count);
-      
-      if (shouldSubmit(batch)) {
-        Batch copy = batch;
-        batch = new Batch();
-        submit(copy);
-      }
 
+      // If it's submit time and the lock is free, acquire the lock.
+      // Submission of the batch should reset the child impl submit state.
+      // Though multiple threads can return true on shouldSubmit, only one
+      //  thread will pass the tryLock check and acquire the submitLock
+      if (shouldSubmit(batch) && submitLock.tryLock()) {
+        try {
+          Batch copy = batch;
+          batch = new Batch();
+          submit(copy);
+        } finally {
+          // by this time, submit(copy) above will have reset the the
+          // shouldSubmit condition
+          submitLock.unlock();
+        }
+      }
       context.stop();
+
     }
     
 

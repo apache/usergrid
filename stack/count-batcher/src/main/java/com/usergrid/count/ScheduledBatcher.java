@@ -30,7 +30,7 @@ public class ScheduledBatcher extends AbstractBatcher {
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduledBatcher.class);
     private int batchInterval;
-    private volatile long currentMillis;
+    private long currentMillis;
     private AtomicLong batchSubmissionCount = new AtomicLong();
 
     /**
