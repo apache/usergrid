@@ -517,7 +517,7 @@
                     <span class="title"> Application Dashboard: <span class="app_title"></span> </span>
                   </div>
                   <div class="console-section-contents">
-                    <div id="application-panel-table" style="width: 480px; overflow: hidden;">
+                    <div id="application-panel-table" style="overflow: hidden;">
                       <div id="application-panel-entity-graph" class="span graph"></div>
                       <div id="application-panel-text" class="span">...</div>
                     </div>
@@ -651,7 +651,7 @@
                   </form>
                 </div>
               </div>
-              <div id="users-panel" style="display: none; margin-left: 190px">
+              <div id="users-panel" class="panel-buffer">
 
                   <div id="users-panel-list" class="panel-content">
                     <div id="users-messages" class="alert" style="display: none;"></div>
@@ -798,7 +798,7 @@
                 </div>
               </form>
 
-              <div id="user-panel" style="display: none; margin-left: 190px">
+              <div id="user-panel" class="panel-buffer">
                 <!--ul id="user-panel-tab-bar" class="nav nav-tabs">
                   <li><a id="button-user-list" >List</a></li>
                   <li><a id="button-user-profile" >Profile</a></li>
@@ -891,7 +891,7 @@
 
 
 
-              <div id="groups-panel" style="display: none; margin-left: 190px">
+              <div id="groups-panel" class="panel-buffer">
                 <div id="groups-panel-list" class="panel-content">
                   <div id="groups-messages" class="alert" style="display: none;"></div>
                   <div class="console-section">
@@ -950,7 +950,7 @@
                   </div>
                 </form>
               </div>
-              <div id="group-panel" style="display: none; margin-left: 190px">
+              <div id="group-panel" class="panel-buffer">
                 <!--ul id="group-panel-tab-bar" class="nav nav-tabs">
                   <li><a id="button-group-list" >List</a></li>
                   <li><a id="button-group-details" >Details</a></li>
@@ -1015,7 +1015,7 @@
                   </div>
                 </form>
               </div>
-              <div id="roles-panel" style="display: none; margin-left: 190px">
+              <div id="roles-panel" class="panel-buffer">
                 <div id="roles-panel-list" class="panel-content">
                   <div id="roles-messages" class="alert" style="display: none;"></div>
                   <div class="console-section">
@@ -1080,7 +1080,7 @@
                   </div>
                 </form>
               </div>
-              <div id="role-panel" style="display: none; margin-left: 190px">
+              <div id="role-panel" class="panel-buffer">
                 <!--ul id="role-panel-tab-bar" class="nav nav-tabs">
                   <li class="active"><a id="button-role-list" >List</a></li>
                   <li><a id="button-role-settings" >Settings</a></li>
@@ -1322,11 +1322,6 @@
               <div id="collections-panel" style="display: none; margin-left: 151px; padding-left: 30px;">
                 <div id="query-path-area" class="console-section query-path-area">
 
-                  <div class="well thingy">
-                    <span class="title">Collection:</span> <span class="title" id="collection-type-field"></span>
-                     <a class="data-explorer-link"  style="float: right" onclick="$('#data-explorer').toggle(); return false;">Data Explorer</a>
-                  </div>
-
                   <form id="dialog-form-new-collection" class="modal hide fade">
                     <div class="modal-header">
                       <a class="close" data-dismiss="modal">&times</a>
@@ -1351,7 +1346,15 @@
                   </form>
 
 
+                    <!--a class="data-explorer-link"  style="float: right" onclick="$('#data-explorer').toggle(); return false;">Data Explorer</a -->
+
+
                   <div id="data-explorer" class="">
+                    <div class="well thingy">
+                      <span class="title">Data Explorer</span>
+                    </div>
+
+
                     <form id="query-inputs" class="">
                       <div class="control-group">
                         <div class="" data-toggle="buttons-radio">

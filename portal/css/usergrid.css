@@ -3770,6 +3770,7 @@ a:active {
   background-color: #b22714;
   z-index: 130;
   height: 42px;
+  min-width: 880px;
 }
 .right-header a:hover {
   opacity: 0.9;
@@ -3979,7 +3980,7 @@ hr.col-divider {
 }
 .console-section {
   min-width: 450px;
-  margin: 0 0px 20px;
+  margin: 0;
   overflow: show;
 }
 .console-section h3 {
@@ -4044,7 +4045,7 @@ hr.col-divider {
 }
 .console-section .console-section-contents {
   position: relative;
-  padding: 10px;
+  padding: 0px;
   line-height: 25px;
   display: block;
 }
@@ -4087,6 +4088,10 @@ hr.col-divider {
 }
 .bottom-space {
   margin-bottom: 15px;
+}
+.panel-buffer {
+  display: none;
+  margin-left: 180px;
 }
 .form-horizontal .controls span {
   margin-top: 5px;

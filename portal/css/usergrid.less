@@ -288,6 +288,7 @@ a:active {
   background-color: @apigeeApplicationName;
   z-index: 130;
   height: 42px;
+  min-width: 880px;
 }
 
 .right-header{
@@ -535,7 +536,7 @@ hr.col-divider{
 //----------Box ------------------------------------------------------------
 .console-section {
   min-width: 450px;
-  margin: 0 0px 20px;
+  margin: 0;
  //border: solid 1px @h3Color;
   //background: #F2F5F7;
   overflow: show;
@@ -600,7 +601,7 @@ hr.col-divider{
   }
   .console-section-contents{
     position: relative;
-    padding: 10px;
+    padding: 0px;
     line-height: 25px;
     display: block;
     .form-actions{
@@ -649,6 +650,10 @@ hr.col-divider{
 }
 .bottom-space{
   margin-bottom: 15px;
+}
+.panel-buffer{
+  display: none;
+  margin-left: 180px
 }
 //-------------------------------------------------------------------------------------
 
