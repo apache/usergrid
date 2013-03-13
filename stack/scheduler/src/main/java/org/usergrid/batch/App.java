@@ -1,12 +1,13 @@
 package org.usergrid.batch;
 
-import com.google.common.base.CharMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 import org.usergrid.batch.service.JobSchedulerService;
+
+import com.google.common.base.CharMatcher;
 
 /**
  * Entry point for CLI functions of Usergrid batch framework

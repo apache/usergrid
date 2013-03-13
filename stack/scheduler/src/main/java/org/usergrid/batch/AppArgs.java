@@ -2,9 +2,6 @@ package org.usergrid.batch;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.beust.jcommander.converters.FileConverter;
-
-import java.io.File;
 
 /**
  * @author zznate

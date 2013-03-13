@@ -1,6 +1,5 @@
 package org.usergrid.batch;
 
-import org.usergrid.batch.repository.JobDescriptor;
 
 /**
  * Created when a job cannot be instantiated.  This usually occurs during the deploy of new code on nodes that don't yet have the job

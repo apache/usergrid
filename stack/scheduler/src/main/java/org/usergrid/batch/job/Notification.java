@@ -22,7 +22,7 @@ import org.usergrid.batch.JobExecutionException;
 
 /**
  * @author tnine
- *
+ * 
  */
 @Component("notification")
 public class Notification implements Job {
@@ -33,18 +33,34 @@ public class Notification implements Job {
   public Notification() {
   }
 
-
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.usergrid.batch.Job#execute(org.usergrid.batch.JobExecution)
    */
   @Override
   public void execute(JobExecution execution) throws JobExecutionException {
-    //TODO, 1 page of data, then invoke the call below.  Must be invoked every 30 seconds to avoid this job timing out as dead
-  
-    execution.heartbeat();
-  
-  }
+    // TODO, 1 page of data, then invoke the call below. Must be invoked every
+    // 30 seconds to avoid this job timing out as dead
+
+    try {
+      
+      while (true) {
+        // do 1 execution, less than 30 seconds
+        
+        //signal we're still processing
+        execution.heartbeat();
+      }
+    } 
+    //if ANY error occurs, we want to throw an execution exception.  This will mark the job as failed, 
+    // and cause it to re-fire. We want to be able to mark any error as a
+    // failure, so we can eventually stop firing the job and stop it from 
+    //being re-scheduled indefinitely
+    catch (Throwable t) {
+      throw new JobExecutionException(execution, "Unable to run job", t);
+    }
 
  
+  }
 
 }

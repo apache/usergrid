@@ -1,11 +1,12 @@
 package org.usergrid.batch;
 
-import com.google.common.base.Preconditions;
+import java.util.UUID;
+
 import org.usergrid.batch.repository.JobDescriptor;
 import org.usergrid.batch.service.JobData;
 import org.usergrid.batch.service.SchedulerService;
 
-import java.util.UUID;
+import com.google.common.base.Preconditions;
 
 /**
  * Models the execution context of the {@link Job} with state transition methods

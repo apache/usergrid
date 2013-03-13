@@ -19,10 +19,6 @@ import java.util.UUID;
 
 import org.usergrid.batch.JobExecution;
 import org.usergrid.batch.JobExecutionException;
-import org.usergrid.batch.JobNotFoundException;
-import org.usergrid.mq.QueueQuery;
-import org.usergrid.persistence.Entity;
-import org.usergrid.persistence.exceptions.TransactionNotFoundException;
 
 /**
  * Simple interface for performing job scheduling

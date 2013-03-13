@@ -148,6 +148,8 @@ public class JobSchedulerService extends AbstractScheduledService {
             execution.failed();
             jobAccessor.save(execution);
           }
+          
+          
           runningJobs.decrementAndGet();
         }
       });

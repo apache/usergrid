@@ -294,8 +294,8 @@ public abstract class AbstractSearch implements QueueSearch {
     Mutator<UUID> mutator = createMutator(ko, ue);
 
     if (logger.isDebugEnabled()) {
-      logger.debug("Writing last client id pointer of '{}' for queue '{}' and consumer '{}'", new Object[] {
-          lastReturnedId, queueId, consumerId });
+      logger.debug("Writing last client id pointer of '{}' for queue '{}' and consumer '{}' with timestamp '{}", new Object[] {
+          lastReturnedId, queueId, consumerId, colTimestamp });
     }
 
     mutator.addInsertion(consumerId, CONSUMERS.getColumnFamily(),
