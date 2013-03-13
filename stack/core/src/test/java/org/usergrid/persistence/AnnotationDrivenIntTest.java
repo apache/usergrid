@@ -29,8 +29,4 @@ public class AnnotationDrivenIntTest {
         assertTrue(true);
     }
 
-    @Test
-    public void shouldStillBeUp() throws Exception {
-        assertTrue(true);
-    }
 }
