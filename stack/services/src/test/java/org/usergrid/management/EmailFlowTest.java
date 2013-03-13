@@ -71,11 +71,7 @@ import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.entities.User;
-<<<<<<< HEAD
-=======
-import org.usergrid.security.shiro.utils.SubjectUtils;
 import org.usergrid.test.ShiroHelperRunner;
->>>>>>> f2de466cfd29621e33fb3f4680722df60af4f5c9
 
 @RunWith(ShiroHelperRunner.class)
 public class EmailFlowTest {

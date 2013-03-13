@@ -22,11 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.shiro.subject.Subject;
-<<<<<<< HEAD
 import org.junit.AfterClass;
-=======
-import org.junit.Before;
->>>>>>> f2de466cfd29621e33fb3f4680722df60af4f5c9
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
