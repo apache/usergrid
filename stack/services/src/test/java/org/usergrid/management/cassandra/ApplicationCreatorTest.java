@@ -6,25 +6,21 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
-import javax.annotation.Resource;
-
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.ApplicationCreator;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.persistence.EntityManagerFactory;
+import org.usergrid.test.ShiroHelperRunner;
 
 /**
  * @author zznate
  */
-@RunWith(CassandraRunner.class)
+@RunWith(ShiroHelperRunner.class)
 public class ApplicationCreatorTest {
 
     private ApplicationCreator applicationCreator;

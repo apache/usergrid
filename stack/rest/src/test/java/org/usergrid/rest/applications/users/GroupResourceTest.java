@@ -15,26 +15,25 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
-import java.util.HashMap;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.UUID;
+
+import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.java.client.Client.Query;
-import org.usergrid.java.client.entities.Entity;
-import org.usergrid.java.client.entities.User;
 import org.usergrid.java.client.response.ApiResponse;
 import org.usergrid.rest.AbstractRestTest;
 import org.usergrid.utils.UUIDUtils;
-
-import javax.ws.rs.core.MediaType;
-
-import static org.junit.Assert.*;
 
 /**
  * @author tnine

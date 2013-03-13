@@ -13,14 +13,10 @@ import static org.usergrid.utils.MapUtils.hashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.UserInfo;
@@ -30,8 +26,8 @@ import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractRestTest;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.ClientResponse.Status;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 
 /**

@@ -34,10 +34,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.jclouds.rest.ResourceNotFoundException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationInfo;
 import org.usergrid.management.OrganizationInfo;
+import org.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
@@ -117,7 +119,7 @@ public class ApplicationsResource extends AbstractContextResource {
 
 	@RequireOrganizationAccess
 	@Path("{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-	public ApplicationResource deleteApplicationFromOrganizationByApplicationId(
+	public ApplicationResource applicationFromOrganizationByApplicationId(
 			@Context UriInfo ui,
 			@PathParam("applicationId") String applicationIdStr)
 			throws Exception {
@@ -128,7 +130,7 @@ public class ApplicationsResource extends AbstractContextResource {
 
 	@RequireOrganizationAccess
 	@Path("{applicationName}")
-	public ApplicationResource deleteApplicationFromOrganizationByApplicationName(
+	public ApplicationResource applicationFromOrganizationByApplicationName(
 			@Context UriInfo ui,
 			@PathParam("applicationName") String applicationName)
 			throws Exception {
@@ -138,6 +140,10 @@ public class ApplicationsResource extends AbstractContextResource {
 		ApplicationInfo application = management
 				.getApplicationInfo(appName);
 
+		if(application == null){
+		  throw new EntityNotFoundException(String.format("Application %s does not exist for organization %s", applicationName,organization.getName() ));
+		}
+		
 		return getSubResource(ApplicationResource.class).init(organization,
 				application);
 	}

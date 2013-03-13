@@ -41,240 +41,318 @@ import com.fasterxml.uuid.impl.TimeBasedGenerator;
  */
 public class UUIDUtils {
 
-	public static final UUID MIN_TIME_UUID = UUID
-			.fromString("00000000-0000-1000-8000-000000000000");
+  public static final UUID MIN_TIME_UUID = UUID.fromString("00000000-0000-1000-8000-000000000000");
 
-	public static final UUID MAX_TIME_UUID = UUID
-			.fromString("ffffffff-ffff-1fff-bfff-ffffffffffff");
+  public static final UUID MAX_TIME_UUID = UUID.fromString("ffffffff-ffff-1fff-bfff-ffffffffffff");
 
-	public static final TimeBasedGenerator generator = Generators
-			.timeBasedGenerator(EthernetAddress.fromInterface());
-	/**
+  public static final TimeBasedGenerator generator = Generators.timeBasedGenerator(EthernetAddress.fromInterface());
+  /**
 	 * 
 	 */
-	public static final UUID zeroUUID = new UUID(0, 0);
+  public static final UUID zeroUUID = new UUID(0, 0);
 
-	/**
-	 * @return
-	 */
-	public static java.util.UUID newTimeUUID() {
-		return generator.generate();
-	}
+  /**
+   * @return
+   */
+  public static java.util.UUID newTimeUUID() {
+    return generator.generate();
+  }
 
-	private final static long kClockOffset = 0x01b21dd213814000L;
-	private final static long kClockMultiplierL = 10000L;
+  private final static long kClockOffset = 0x01b21dd213814000L;
+  private final static long kClockMultiplierL = 10000L;
 
-	private final static Random clockSequenceRandom = new Random();
-	private final static Random timeResolutionRandom = new Random();
+  private final static Random clockSequenceRandom = new Random();
+  private final static Random timeResolutionRandom = new Random();
 
-	// 13 bits of randomness
-	private static int getRandomTimeResolution() {
-		return timeResolutionRandom.nextInt() & 0x1FFF;
-	}
+  // 13 bits of randomness
+  private static int getRandomTimeResolution() {
+    return timeResolutionRandom.nextInt() & 0x1FFF;
+  }
 
-	// 14 bits of randomness
-	private static int getRandomClockSequence() {
-		return clockSequenceRandom.nextInt() & 0x3FFF;
-	}
+  // 14 bits of randomness
+  private static int getRandomClockSequence() {
+    return clockSequenceRandom.nextInt() & 0x3FFF;
+  }
 
-	private static void setTimestamp(long timestamp, byte[] uuidBytes,
-			int clockSeq, int timeOffset) {
+  private static void setTimestamp(long timestamp, byte[] uuidBytes, int clockSeq, int timeOffset) {
 
-		timestamp *= kClockMultiplierL;
-		timestamp += kClockOffset;
-		timestamp += timeOffset;
+    timestamp *= kClockMultiplierL;
+    timestamp += kClockOffset;
+    timestamp += timeOffset;
 
-		// Set random clock sequence
-		uuidBytes[BYTE_OFFSET_CLOCK_SEQUENCE] = (byte) (clockSeq >> 8);
-		uuidBytes[BYTE_OFFSET_CLOCK_SEQUENCE + 1] = (byte) clockSeq;
+    // Set random clock sequence
+    uuidBytes[BYTE_OFFSET_CLOCK_SEQUENCE] = (byte) (clockSeq >> 8);
+    uuidBytes[BYTE_OFFSET_CLOCK_SEQUENCE + 1] = (byte) clockSeq;
 
-		// Set variant
-		uuidBytes[BYTE_OFFSET_CLOCK_SEQUENCE] &= 0x3F;
-		uuidBytes[BYTE_OFFSET_CLOCK_SEQUENCE] |= 0x80;
+    // Set variant
+    uuidBytes[BYTE_OFFSET_CLOCK_SEQUENCE] &= 0x3F;
+    uuidBytes[BYTE_OFFSET_CLOCK_SEQUENCE] |= 0x80;
 
-		// Time fields aren't nicely split across the UUID, so can't just
-		// linearly dump the stamp:
-		int clockHi = (int) (timestamp >>> 32);
-		int clockLo = (int) timestamp;
+    // Time fields aren't nicely split across the UUID, so can't just
+    // linearly dump the stamp:
+    int clockHi = (int) (timestamp >>> 32);
+    int clockLo = (int) timestamp;
 
-		uuidBytes[BYTE_OFFSET_CLOCK_HI] = (byte) (clockHi >>> 24);
-		uuidBytes[BYTE_OFFSET_CLOCK_HI + 1] = (byte) (clockHi >>> 16);
-		uuidBytes[BYTE_OFFSET_CLOCK_MID] = (byte) (clockHi >>> 8);
-		uuidBytes[BYTE_OFFSET_CLOCK_MID + 1] = (byte) clockHi;
+    uuidBytes[BYTE_OFFSET_CLOCK_HI] = (byte) (clockHi >>> 24);
+    uuidBytes[BYTE_OFFSET_CLOCK_HI + 1] = (byte) (clockHi >>> 16);
+    uuidBytes[BYTE_OFFSET_CLOCK_MID] = (byte) (clockHi >>> 8);
+    uuidBytes[BYTE_OFFSET_CLOCK_MID + 1] = (byte) clockHi;
 
-		uuidBytes[BYTE_OFFSET_CLOCK_LO] = (byte) (clockLo >>> 24);
-		uuidBytes[BYTE_OFFSET_CLOCK_LO + 1] = (byte) (clockLo >>> 16);
-		uuidBytes[BYTE_OFFSET_CLOCK_LO + 2] = (byte) (clockLo >>> 8);
-		uuidBytes[BYTE_OFFSET_CLOCK_LO + 3] = (byte) clockLo;
+    uuidBytes[BYTE_OFFSET_CLOCK_LO] = (byte) (clockLo >>> 24);
+    uuidBytes[BYTE_OFFSET_CLOCK_LO + 1] = (byte) (clockLo >>> 16);
+    uuidBytes[BYTE_OFFSET_CLOCK_LO + 2] = (byte) (clockLo >>> 8);
+    uuidBytes[BYTE_OFFSET_CLOCK_LO + 3] = (byte) clockLo;
 
-		// Set version
-		uuidBytes[BYTE_OFFSET_CLOCK_HI] &= 0x0F;
-		uuidBytes[BYTE_OFFSET_CLOCK_HI] |= 0x10;
+    // Set version
+    uuidBytes[BYTE_OFFSET_CLOCK_HI] &= 0x0F;
+    uuidBytes[BYTE_OFFSET_CLOCK_HI] |= 0x10;
 
-	}
+  }
 
-	public static UUID newTimeUUID(long ts) {
-		if (ts == 0) {
-			return newTimeUUID();
-		}
+  /**
+   * Generate a timeuuid with the given timestamp in milliseconds and the time
+   * offset. Useful when you need to generate sequential UUIDs for the same
+   * period in time. I.E
+   * 
+   * newTimeUUID(1000, 0) <br/>
+   * newTimeUUID(1000, 1) <br />
+   * newTimeUUID(1000, 2) <br />
+   * 
+   * etc.
+   * 
+   * Only use this method if you are absolutely sure you need it. When it doubt
+   * use the method without the timestamp offset
+   * 
+   * @param ts
+   *          The timestamp in milliseconds
+   * @param timeoffset
+   *          The offset, which should always be <= 10000. If you go beyond this
+   *          range, the millisecond will be incremented since this is beyond
+   *          the possible values when coverrting from millis to 1/10 microseconds stored in the time uuid.
+   * @return
+   */
+  public static UUID newTimeUUID(long ts, int timeoffset) {
+    if (ts == 0) {
+      return newTimeUUID();
+    }
 
-		byte[] uuidBytes = new byte[16];
-		// 47 bits of randomness
-		EthernetAddress eth = EthernetAddress.constructMulticastAddress();
-		eth.toByteArray(uuidBytes, 10);
-		setTimestamp(ts, uuidBytes, getRandomClockSequence(),
-				getRandomTimeResolution());
+    byte[] uuidBytes = new byte[16];
+    // 47 bits of randomness
+    EthernetAddress eth = EthernetAddress.constructMulticastAddress();
+    eth.toByteArray(uuidBytes, 10);
+    setTimestamp(ts, uuidBytes, getRandomClockSequence(), timeoffset);
 
-		return uuid(uuidBytes);
-	}
+    return uuid(uuidBytes);
+  }
 
-	public static UUID minTimeUUID(long ts) {
-		byte[] uuidBytes = new byte[16];
-		setTimestamp(ts, uuidBytes, 0, 0);
+  /**
+   * Generate a new UUID with the given time stamp in milliseconds
+   * 
+   * @param ts
+   * @return
+   */
+  public static UUID newTimeUUID(long ts) {
+    return newTimeUUID(ts, getRandomTimeResolution());
+  }
 
-		return uuid(uuidBytes);
-	}
+  public static UUID minTimeUUID(long ts) {
+    byte[] uuidBytes = new byte[16];
+    setTimestamp(ts, uuidBytes, 0, 0);
 
-	public static UUID maxTimeUUID(long ts) {
-		byte[] uuidBytes = new byte[16];
-		uuidBytes[10] = (byte) 0xFF;
-		uuidBytes[11] = (byte) 0xFF;
-		uuidBytes[12] = (byte) 0xFF;
-		uuidBytes[13] = (byte) 0xFF;
-		uuidBytes[14] = (byte) 0xFF;
-		uuidBytes[15] = (byte) 0xFF;
-		setTimestamp(ts, uuidBytes, 0x3FFF, 0x1FFF);
+    return uuid(uuidBytes);
+  }
 
-		return uuid(uuidBytes);
-	}
+  public static UUID maxTimeUUID(long ts) {
+    byte[] uuidBytes = new byte[16];
+    uuidBytes[10] = (byte) 0xFF;
+    uuidBytes[11] = (byte) 0xFF;
+    uuidBytes[12] = (byte) 0xFF;
+    uuidBytes[13] = (byte) 0xFF;
+    uuidBytes[14] = (byte) 0xFF;
+    uuidBytes[15] = (byte) 0xFF;
+    setTimestamp(ts, uuidBytes, 0x3FFF, 0x1FFF);
 
-	/**
-	 * @param uuid
-	 * @return
-	 */
-	public static boolean isTimeBased(UUID uuid) {
-		if (uuid == null) {
-			return false;
-		}
-		return uuid.version() == 1;
-	}
+    return uuid(uuidBytes);
+  }
+  
+  /**
+   * Returns the minimum UUID
+   * @param first
+   * @param second
+   * @return
+   */
+  public static UUID min(UUID first, UUID second){
+    if(first == null){
+      if(second == null){
+        return null;
+      }
+      return second;
+    }
+    
+    if(second == null){
+      return first;
+    }
+    
+    if(compare(first, second) < 0){
+      return first;
+    }
+    return second;
+  }
+  
 
-	public static long getTimestampInMillis(UUID uuid) {
-		if (uuid == null) {
-			return 0;
-		}
-		long t = uuid.timestamp();
-		long timeMillis = (t - kClockOffset) / kClockMultiplierL;
-		return timeMillis;
-	}
+  
+  /**
+   * Returns the minimum UUID
+   * @param first
+   * @param second
+   * @return
+   */
+  public static UUID max(UUID first, UUID second){
+    if(first == null){
+      if(second == null){
+        return null;
+      }
+      return second;
+    }
+    
+    if(second == null){
+      return first;
+    }
+    
+    if(compare(first, second) < 0){
+      return second;
+    }
+    return first;
+  }
 
-	public static long getTimestampInMicros(UUID uuid) {
-		if (uuid == null) {
-			return 0;
-		}
-		long t = uuid.timestamp();
-		long timeMillis = (t - kClockOffset) / 10;
-		return timeMillis;
-	}
 
-	public static UUID tryGetUUID(String s) {
-		if (s == null) {
-			return null;
-		}
-		if (s.length() != 36) {
-			return null;
-		}
-		// 8-4-4-4-12
-		// 0-7,8,9-12,13,14-17,18,19-22,23,24-35
-		if (s.charAt(8) != '-') {
-			return null;
-		}
-		if (s.charAt(13) != '-') {
-			return null;
-		}
-		if (s.charAt(18) != '-') {
-			return null;
-		}
-		if (s.charAt(23) != '-') {
-			return null;
-		}
-		UUID uuid = null;
-		try {
-			uuid = UUID.fromString(s);
-		} catch (Exception e) {
-		}
-		return uuid;
-	}
+  /**
+   * @param uuid
+   * @return
+   */
+  public static boolean isTimeBased(UUID uuid) {
+    if (uuid == null) {
+      return false;
+    }
+    return uuid.version() == 1;
+  }
 
-	public static boolean isUUID(String s) {
-		return tryGetUUID(s) != null;
-	}
+  public static long getTimestampInMillis(UUID uuid) {
+    if (uuid == null) {
+      return 0;
+    }
+    long t = uuid.timestamp();
+    long timeMillis = (t - kClockOffset) / kClockMultiplierL;
+    return timeMillis;
+  }
 
-	public static boolean startsWithUUID(String s) {
-		if (s == null) {
-			return false;
-		}
-		if (s.length() < 36) {
-			return false;
-		}
-		return isUUID(s.substring(0, 36));
-	}
+  public static long getTimestampInMicros(UUID uuid) {
+    if (uuid == null) {
+      return 0;
+    }
+    long t = uuid.timestamp();
+    long timeMillis = (t - kClockOffset) / 10;
+    return timeMillis;
+  }
 
-	public static UUID tryExtractUUID(String s) {
-		if (s == null) {
-			return null;
-		}
-		if (s.length() < 36) {
-			return null;
-		}
-		return tryGetUUID(s.substring(0, 36));
-	}
+  public static UUID tryGetUUID(String s) {
+    if (s == null) {
+      return null;
+    }
+    if (s.length() != 36) {
+      return null;
+    }
+    // 8-4-4-4-12
+    // 0-7,8,9-12,13,14-17,18,19-22,23,24-35
+    if (s.charAt(8) != '-') {
+      return null;
+    }
+    if (s.charAt(13) != '-') {
+      return null;
+    }
+    if (s.charAt(18) != '-') {
+      return null;
+    }
+    if (s.charAt(23) != '-') {
+      return null;
+    }
+    UUID uuid = null;
+    try {
+      uuid = UUID.fromString(s);
+    } catch (Exception e) {
+    }
+    return uuid;
+  }
 
-	public static UUID tryExtractUUID(String s, int offset) {
-		if (s == null) {
-			return null;
-		}
-		if ((s.length() - offset) < 36) {
-			return null;
-		}
-		return tryGetUUID(s.substring(offset, offset + 36));
-	}
+  public static boolean isUUID(String s) {
+    return tryGetUUID(s) != null;
+  }
 
-	public static String toBase64(UUID id) {
-		if (id == null) {
-			return null;
-		}
-		return encodeBase64URLSafeString(bytes(id));
-	}
+  public static boolean startsWithUUID(String s) {
+    if (s == null) {
+      return false;
+    }
+    if (s.length() < 36) {
+      return false;
+    }
+    return isUUID(s.substring(0, 36));
+  }
 
-	public static UUID fromBase64(String str) {
-		if (str == null) {
-			return null;
-		}
-		byte[] bytes = decodeBase64(str);
-		if (bytes.length != 16) {
-			return null;
-		}
-		return uuid(bytes);
-	}
+  public static UUID tryExtractUUID(String s) {
+    if (s == null) {
+      return null;
+    }
+    if (s.length() < 36) {
+      return null;
+    }
+    return tryGetUUID(s.substring(0, 36));
+  }
 
-	public static int compare(UUID u1, UUID u2) {
-		return UUIDComparator.staticCompare(u1, u2);
-	}
+  public static UUID tryExtractUUID(String s, int offset) {
+    if (s == null) {
+      return null;
+    }
+    if ((s.length() - offset) < 36) {
+      return null;
+    }
+    return tryGetUUID(s.substring(offset, offset + 36));
+  }
 
-	public static List<UUID> sort(List<UUID> uuids) {
-		Collections.sort(uuids, new UUIDComparator());
-		return uuids;
-	}
+  public static String toBase64(UUID id) {
+    if (id == null) {
+      return null;
+    }
+    return encodeBase64URLSafeString(bytes(id));
+  }
 
-	public static List<UUID> sortReversed(List<UUID> uuids) {
-		Collections.sort(uuids, new Comparator<UUID>() {
-			@Override
-			public int compare(UUID u1, UUID u2) {
-				return UUIDComparator.staticCompare(u2, u1);
-			}
-		});
-		return uuids;
-	}
+  public static UUID fromBase64(String str) {
+    if (str == null) {
+      return null;
+    }
+    byte[] bytes = decodeBase64(str);
+    if (bytes.length != 16) {
+      return null;
+    }
+    return uuid(bytes);
+  }
+
+  public static int compare(UUID u1, UUID u2) {
+    return UUIDComparator.staticCompare(u1, u2);
+  }
+
+  public static List<UUID> sort(List<UUID> uuids) {
+    Collections.sort(uuids, new UUIDComparator());
+    return uuids;
+  }
+
+  public static List<UUID> sortReversed(List<UUID> uuids) {
+    Collections.sort(uuids, new Comparator<UUID>() {
+      @Override
+      public int compare(UUID u1, UUID u2) {
+        return UUIDComparator.staticCompare(u2, u1);
+      }
+    });
+    return uuids;
+  }
 
 }

@@ -54,8 +54,12 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable>
 	public Response toResponse(E e) {
 		return toResponse(BAD_REQUEST, e);
 	}
+	
+	public Response toResponse(Status status, E e){
+	  return toResponse(status.getStatusCode(), e);
+	}
 
-	public Response toResponse(Status status, E e) {
+	public Response toResponse(int status, E e) {
 		logger.error("Error in request (" + status + ")", e);
 		ApiResponse response = new ApiResponse();
 		AuthErrorInfo authError = AuthErrorInfo.getForException(e);
@@ -69,17 +73,21 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable>
 	}
 
 	public Response toResponse(Status status, String jsonResponse) {
-		logger.error("Error in request (" + status + "):\n" + jsonResponse);
-		String callback = httpServletRequest.getParameter("callback");
-		if (isJSONP() && isNotBlank(callback)) {
-			jsonResponse = wrapJSONPResponse(callback, jsonResponse);
-			return Response.status(OK).type("application/javascript")
-					.entity(jsonResponse).build();
-		} else {
-			return Response.status(status).type(APPLICATION_JSON_TYPE)
-					.entity(jsonResponse).build();
-
-		}
+		return toResponse(status.getStatusCode(), jsonResponse);
 	}
+	
+	public Response toResponse(int status, String jsonResponse) {
+    logger.error("Error in request (" + status + "):\n" + jsonResponse);
+    String callback = httpServletRequest.getParameter("callback");
+    if (isJSONP() && isNotBlank(callback)) {
+      jsonResponse = wrapJSONPResponse(callback, jsonResponse);
+      return Response.status(OK).type("application/javascript")
+          .entity(jsonResponse).build();
+    } else {
+      return Response.status(status).type(APPLICATION_JSON_TYPE)
+          .entity(jsonResponse).build();
+
+    }
+  }
 
 }

@@ -42,7 +42,7 @@ public enum QueuePosition {
 		if (s == null) {
 			return null;
 		}
-		return nameMap.get(s);
+		return nameMap.get(s.toLowerCase());
 	}
 
 	@Override

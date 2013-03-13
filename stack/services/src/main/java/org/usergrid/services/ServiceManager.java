@@ -191,8 +191,6 @@ public class ServiceManager {
 			return null;
 		}
 
-		serviceType = ServiceInfo.normalizeServicePattern(serviceType);
-
 		logger.debug("Looking up service pattern: {}", serviceType);
 
 		ServiceInfo info = ServiceInfo.getServiceInfo(serviceType);
@@ -371,9 +369,6 @@ public class ServiceManager {
 			throws Exception {
 
 		if (em != null) {
-			em.incrementAggregateCounters(null, null, null,
-                    APPLICATION_REQUESTS, 1);
-
 			if (action != null) {
 				em.incrementAggregateCounters(null, null, null,
 						APPLICATION_REQUESTS_PER.concat(action.toString().toLowerCase()), 1);

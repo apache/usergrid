@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 import static org.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_ACTIVATED;
@@ -72,8 +71,13 @@ import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.entities.User;
+<<<<<<< HEAD
+=======
+import org.usergrid.security.shiro.utils.SubjectUtils;
+import org.usergrid.test.ShiroHelperRunner;
+>>>>>>> f2de466cfd29621e33fb3f4680722df60af4f5c9
 
-@RunWith(CassandraRunner.class)
+@RunWith(ShiroHelperRunner.class)
 public class EmailFlowTest {
 
     private static final Logger logger = LoggerFactory

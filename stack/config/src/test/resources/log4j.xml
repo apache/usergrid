@@ -13,6 +13,10 @@
     <logger name="org.usergrid.persistence.cassandra.CounterUtils">
         <level value="warn"/>
     </logger>
+     <logger name="org.usergrid.mq.cassandra.io" additivity="false">
+        <level value="DEBUG"/>
+        <appender-ref ref="stdout"/>
+    </logger>
     <root>
         <level value="info"/>
         <appender-ref ref="stdout"/>
