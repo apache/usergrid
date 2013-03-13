@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -38,7 +39,7 @@ public abstract class AbstractBatcher implements Batcher {
     protected BatchSubmitter batchSubmitter;
 
     private Batch batch;
-
+    private final AtomicBoolean submit = new AtomicBoolean(false);
     private final AtomicLong opCount = new AtomicLong();
     private final Timer addTimer =
             Metrics.newTimer(AbstractBatcher.class, "add_invocation", TimeUnit.MICROSECONDS, TimeUnit.SECONDS);
@@ -84,12 +85,17 @@ public abstract class AbstractBatcher implements Batcher {
       //    it is stored is approximately zero.
      
       batch.add(count);
-      
-      if (shouldSubmit(batch)) {
-        Batch copy = batch;
-        batch = new Batch();
-        submit(copy);
-      }
+
+        if (shouldSubmit(batch) ) {
+            synchronized (batch) {
+                if ( submit.compareAndSet(false, true) ) {
+                    Batch copy = batch;
+                    batch = new Batch();
+                    submit(copy);
+                    submit.set(false);
+                }
+            }
+        }
 
       context.stop();
     }
