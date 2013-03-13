@@ -4594,6 +4594,7 @@ hr.col-divider {
 }
 .pager {
   margin: 15px;
+  height: 30px;
 }
 /*-------------- --------------------------------*/
 .query-result-form label {
