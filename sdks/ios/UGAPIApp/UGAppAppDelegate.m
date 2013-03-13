@@ -63,11 +63,11 @@ int g_taps = 0;
     // creation and init
     if ( !g_client )
     {
-        g_client =[[UGClient alloc] initWithApplicationID:@"iOSSample"];
+        g_client =[[UGClient alloc] initWithOrganizationId:@"1hotrod" withApplicationID:@"fred" ];
     }
     
     UGClientResponse *response = nil;
-    response = [g_client logInUser:@"Alice" password:@"cheshire"];
+    response = [g_client logInUser:@"alice" password:@"test1test"];
     if ( [response transactionState] == kUGClientResponseFailure )
     {
         [self outputResponse:response title:@"LOG IN ERROR"];
