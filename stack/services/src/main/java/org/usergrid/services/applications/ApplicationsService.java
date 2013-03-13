@@ -158,43 +158,6 @@ public class ApplicationsService extends AbstractService {
         return genericServiceResults(r);
     }
 
-//    public ServiceResults getApplicationRoles() throws Exception {
-//        Map<String, String> roles = em.getRoles();
-//        ServiceResults results = genericServiceResults().withData(roles);
-//        return results;
-//    }
-
-//    public ServiceResults newApplicationRole(String roleName, String roleTitle,
-//            long inactivity) throws Exception {
-//        em.createRole(roleName, roleTitle, inactivity);
-//        return getApplicationRoles();
-//    }
-//
-//    public ServiceResults deleteApplicationRole(String roleName)
-//            throws Exception {
-//        em.deleteRole(roleName);
-//        return getApplicationRoles();
-//    }
-
-//    public ServiceResults getApplicationRolePermissions(String roleName)
-//            throws Exception {
-//        Set<String> permissions = em.getRolePermissions(roleName);
-//        ServiceResults results = genericServiceResults().withData(permissions);
-//        return results;
-//    }
-
-//    public ServiceResults grantApplicationRolePermission(String roleName,
-//            String permission) throws Exception {
-//        em.grantRolePermission(roleName, permission);
-//        return getApplicationRolePermissions(roleName);
-//    }
-//
-//    public ServiceResults revokeApplicationRolePermission(String roleName,
-//            String permission) throws Exception {
-//        em.revokeRolePermission(roleName, permission);
-//        return getApplicationRolePermissions(roleName);
-//    }
-
     public ServiceResults getApplicationCounterNames() throws Exception {
         Set<String> counters = em.getCounterNames();
         ServiceResults results = genericServiceResults().withData(counters);
