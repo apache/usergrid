@@ -4626,7 +4626,6 @@ function buildContentArea(obj2) {
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.graph.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.permissions.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.collection.table_rows.html");
-    //Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.collections.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.collections.query.indexes.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.details.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.memberships.html");
