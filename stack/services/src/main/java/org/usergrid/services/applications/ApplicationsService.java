@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
@@ -137,7 +138,11 @@ public class ApplicationsService extends AbstractService {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> collections = (Map<String, Object>) c;
                 for (String collection : collections.keySet()) {
-                    em.createApplicationCollection(collection);
+                	if( isReservedCollection(collection) ) {
+                		continue;
+                	}
+                	
+                	em.createApplicationCollection(collection);
                     logger.info("Created collection " + collection
                             + " for application " + sm.getApplicationId());
                 }
@@ -156,6 +161,15 @@ public class ApplicationsService extends AbstractService {
         }
 
         return genericServiceResults(r);
+    }
+    
+    private boolean isReservedCollection(String collection) {
+    	if(StringUtils.equalsIgnoreCase("applications", collection) 
+    		|| StringUtils.equalsIgnoreCase("application", collection)) {
+    		return true;
+    	}
+    	
+		return false;
     }
 
     public ServiceResults getApplicationCounterNames() throws Exception {
