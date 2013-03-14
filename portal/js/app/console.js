@@ -271,20 +271,6 @@
     showCurlCommand('collections', this.getCurl(), this.getToken());
   }
 
-  function selectAllCollections(){
-    $('#query-response-table input[class=queryResultItem]').attr('checked', true);
-    $('#deselectAllCollections').show();
-    $('#selectAllCollections').hide();
-  }
-  window.Usergrid.console.selectAllCollections = selectAllCollections;
-
-  function deselectAllCollections(){
-    $('#query-response-table input[class=queryResultItem]').attr('checked', false);
-    $('#deselectAllCollections').hide();
-    $('#selectAllCollections').show();
-  }
-  window.Usergrid.console.deselectAllCollections = deselectAllCollections;
-
   /*******************************************************************
    *
    * Query Explorer
@@ -445,7 +431,7 @@ function getCollectionCallback(response) {
 
 
       var table = '<table id="query-response-table" class="table"><tbody><tr class="zebraRows users-row">' +
-                  '<td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllUsers();" /></td>';
+                  '<td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities();" /></td>';
       if (entity_type === 'user') {
         table += '<td class="gravatar50-td">&nbsp;</td>'+
           '<td class="user-details bold-header">username</td>'+
@@ -632,8 +618,8 @@ function buildContentArea(obj2) {
   };
 
   function hideEntityCheckboxes(){
-    $(".queryResultItem").hide();
-    $(".queryResultItem").attr('checked', true);
+    $(".listItem").hide();
+    $(".listItem").attr('checked', true);
   }
 
   function hideEntitySelectButton(){
@@ -796,7 +782,7 @@ function buildContentArea(obj2) {
 
   function deleteEntity(e) {
     e.preventDefault();
-    var items = $('#query-response-table input[class=queryResultItem]:checked');
+    var items = $('#query-response-table input[class=listItem]:checked');
     if(!items.length){
       alertModal("Please, first select the entities you want to delete.");
       return;
@@ -804,16 +790,15 @@ function buildContentArea(obj2) {
     var itemsCount = items.size();
     confirmDelete(function(){
       items.each(function() {
-        var entityId = $(this).attr('value');
         var path = $(this).attr('name');
-        runAppQuery(new Usergrid.Query("DELETE", path + "/" + entityId, null, null,
+        runAppQuery(new Usergrid.Query("DELETE", path, null, null,
           function() {
             itemsCount--;
             if(itemsCount==0){
               deselectAllCollections();
               getCollection('GET');
             }},
-          function() { alertModal("Unable to delete entity ID: " + entityId); }
+          function() { alertModal("Unable to delete: " + path); }
         ));
       });
     });
@@ -1607,7 +1592,7 @@ function buildContentArea(obj2) {
     }
   }
 
-    function submitAddRoleToUser(roleName, roleTitle) {
+  function submitAddRoleToUser(roleName, roleTitle) {
     var form = $(this);
     formClearErrors(form);
     var roleIdField = $('#search-roles-user-name-input');
@@ -1645,7 +1630,7 @@ function buildContentArea(obj2) {
   }
 
   function deleteUsersFromRoles(username) {
-    var items = $('input[class^=userRoleItem]:checked');
+    var items = $('input[class^=listItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the roles you want to delete for this user.");
       return;
@@ -1664,7 +1649,7 @@ function buildContentArea(obj2) {
   window.Usergrid.console.deleteUsersFromRoles = deleteUsersFromRoles;
 
   function deleteRoleFromUser(roleName, roleTitle) {
-    var items = $('#role-users input[class^=userRoleItem]:checked');
+    var items = $('#role-users input[class^=listItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the users you want to delete from this role.");
         return;
@@ -1683,7 +1668,7 @@ function buildContentArea(obj2) {
   window.Usergrid.console.deleteRoleFromUser = deleteRoleFromUser;
 
   function removeUserFromGroup(userId) {
-    var items = $('#user-panel-memberships input[class^=userGroupItem]:checked');
+    var items = $('#user-panel-memberships input[class^=listItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the groups you want to delete for this user.")
         return;
@@ -1701,7 +1686,7 @@ function buildContentArea(obj2) {
   window.Usergrid.console.removeUserFromGroup = removeUserFromGroup;
 
   function removeGroupFromUser(groupId) {
-    var items = $('#group-panel-memberships input[id^=userGroupItem]:checked');
+    var items = $('#group-panel-memberships input[id^=listItem]:checked');
     if (!items.length) {
       alertModal("Error", "Please, first select the users you want to from this group.");
       return;
@@ -2096,7 +2081,7 @@ function buildContentArea(obj2) {
     if (response.entities.length < 1) {
       output.replaceWith('<div id="users-table" class="user-panel-section-message">No users found.</div>');
     } else {
-      output.replaceWith('<table id="users-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllUsers();" /></td><td class="gravatar50-td">&nbsp;</td><td class="user-details bold-header">username</td><td class="user-details bold-header">Display Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
+      output.replaceWith('<table id="users-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities();" /></td><td class="gravatar50-td">&nbsp;</td><td class="user-details bold-header">username</td><td class="user-details bold-header">Display Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
         var this_data = response.entities[i];
         if (!this_data.picture) {
@@ -2132,35 +2117,22 @@ function buildContentArea(obj2) {
   }
   Usergrid.console.searchUsers = searchUsers;
 
-  var selectUsers = true;
-  function selectAllUsers(){
-    if (selectUsers) {
-      $('[class=userListItem]').attr('checked', true);
-      $('#deselectAllUsers').show();
-      $('#selectAllUsers').hide();
+  var selectEntities = true;
+  function selectAllEntities(){
+    if (selectEntities) {
+      $('[class=listItem]').attr('checked', true);
     } else {
-      $('[class=userListItem]').attr('checked', false);
-      $('#selectAllUsers').show();
-      $('#deselectAllUsers').hide();
+      $('[class=listItem]').attr('checked', false);
     }
-    selectUsers = (selectUsers)?false:true;
+    selectEntities = (selectEntities)?false:true;
   }
-  window.Usergrid.console.selectAllUsers = selectAllUsers;
-
-  function deselectAllUsers(){
-    $('[class=userListItem]').attr('checked', false);
-    $('#selectAllUsers').show();
-    $('#deselectAllUsers').hide();
-  }
-  window.Usergrid.console.deselectAllUsers = deselectAllUsers;
-
-
+  window.Usergrid.console.selectAllEntities = selectAllEntities;
 
   $('#delete-users-link').click(deleteUsers);
   function deleteUsers(e) {
     e.preventDefault();
 
-    var items = $('#users-table input[class^=userListItem]:checked');
+    var items = $('#users-table input[class^=listItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the users you want to delete.");
       return;
@@ -2273,8 +2245,8 @@ function buildContentArea(obj2) {
   };
 
   function redrawPanel(panelDiv, panelTemplate, data){
-  $("#"+panelDiv).html("");
-  $.tmpl(panelTemplate, data).appendTo($("#"+panelDiv));
+    $("#"+panelDiv).html("");
+    $.tmpl(panelTemplate, data).appendTo($("#"+panelDiv));
   };
 
   function redrawGroupForm(panelDiv, panelTemplate, data){
@@ -2287,17 +2259,17 @@ function buildContentArea(obj2) {
   }
 
   function redrawFormPanel(panelDiv, panelTemplate, data){
-  $("#"+panelDiv).html("");
-  var details = $.tmpl(panelTemplate, data);
-  var formDiv = details.find('.query-result-form');
-  $(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.vcard_schema, data.entity));
-  details.appendTo($("#"+panelDiv));
+    $("#"+panelDiv).html("");
+    var details = $.tmpl(panelTemplate, data);
+    var formDiv = details.find('.query-result-form');
+    $(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.vcard_schema, data.entity));
+    details.appendTo($("#"+panelDiv));
   };
 
   function saveUserData(){
     Usergrid.console.ui.jsonSchemaToPayload(schema, obj);
   }
-  //TODO: MARKED for Refactoring
+
   var user_data = null;
 
   function handleUserResponse(response) {
@@ -2538,7 +2510,7 @@ function buildContentArea(obj2) {
     if (response.entities.length < 1) {
       output.replaceWith('<div id="groups-table" class="group-panel-section-message">No groups found.</div>');
     } else {
-      output.replaceWith('<table id="groups-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllGroups();" /></td><td class="user-details bold-header">Path</td><td class="user-details bold-header">Title</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
+      output.replaceWith('<table id="groups-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities();" /></td><td class="user-details bold-header">Path</td><td class="user-details bold-header">Title</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
         var this_data = response.entities[i];
         $.tmpl('apigee.ui.groups.table_rows.html', this_data).appendTo('#groups-table');
@@ -2573,30 +2545,12 @@ function buildContentArea(obj2) {
   }
   Usergrid.console.searchGroups = searchGroups;
 
-  var selectGroups = true;
-  function selectAllGroups(){
-    if (selectGroups) {
-      $('[class=groupListItem]').attr('checked', true);
-    } else {
-      $('[class=groupListItem]').attr('checked', false);
-    }
-    selectGroups = (selectGroups)?false:true;
-  }
-  window.Usergrid.console.selectAllGroups = selectAllGroups;
-
-  function deselectAllGroups(){
-    $('[class=groupListItem]').attr('checked', false);
-    $('#selectAllGroups').show();
-    $('#deselectAllGroups').hide();
-  }
-  window.Usergrid.console.deselectAllGroups = deselectAllGroups;
-
   $('#delete-groups-link').click(deleteGroups);
 
   function deleteGroups(e) {
     e.preventDefault();
 
-    var items = $('#groups-table input[class^=groupListItem]:checked');
+    var items = $('#groups-table input[class^=listItem]:checked');
     if (!items.length) {
       alertModal("Error", "Please, first select the groups you want to delete.")
         return;
@@ -2675,7 +2629,7 @@ function buildContentArea(obj2) {
   }
 
   window.Usergrid.console.saveGroupProfile = saveGroupProfile;
-
+/*
   function selectAllGroupMemberships(){
     $('[id=userGroupItem]').attr('checked', true);
     $('#deselectAllGroupMemberships').show();
@@ -2689,7 +2643,7 @@ function buildContentArea(obj2) {
     $('#selectAllGroupMemberships').show();
   }
   Usergrid.console.deselectAllGroupMemberships = deselectAllGroupMemberships;
-
+*/
   var group_data = null;
 
   function handleGroupResponse(response) {
@@ -2879,7 +2833,7 @@ function buildContentArea(obj2) {
     if (response.entities < 1) {
       output.html('<div class="group-panel-section-message">No roles found.</div>');
     } else {
-      output.replaceWith('<table id="roles-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllRoles();" /></td><td class="user-details bold-header">Title</td><td class="user-details bold-header">Role Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
+      output.replaceWith('<table id="roles-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities();" /></td><td class="user-details bold-header">Title</td><td class="user-details bold-header">Role Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
 
       $.each (response.entities, function(index, value) {
         var data = [
@@ -2896,7 +2850,7 @@ function buildContentArea(obj2) {
   function deleteRoles(e) {
     e.preventDefault();
 
-    var items = $('#roles-table input[class^=roleListItem]:checked');
+    var items = $('#roles-table input[class^=listItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the roles you want to delete.")
         return;
@@ -2910,17 +2864,6 @@ function buildContentArea(obj2) {
       });
     });
   }
-
-  var selectRoles = true;
-  function selectAllRoles(){
-    if (selectRoles) {
-      $('[class=roleListItem]').attr('checked', true);
-    } else {
-       $('[class=roleListItem]').attr('checked', false);
-    }
-    selectRoles = (selectRoles)?false:true;
-  }
-  window.Usergrid.console.selectAllRoles = selectAllRoles;
 
   /*******************************************************************
    *
@@ -3053,20 +2996,6 @@ function buildContentArea(obj2) {
     updateGroupsForRolesAutocomplete();
     showCurlCommand('role-groups', curl);
   }
-
-  function selectAllRolesUsers(){
-    $('[class=userRoleItem]').attr('checked', true);
-    $('#deselectAllRolesUsers').show();
-    $('#selectAllRolesUsers').hide();
-  }
-  window.Usergrid.console.selectAllRolesUsers = selectAllRolesUsers;
-
-  function deselectAllRolesUsers(){
-    $('[class=userRoleItem]').attr('checked', false);
-    $('#selectAllRolesUsers').show();
-    $('#deselectAllRolesUsers').hide();
-  }
-  window.Usergrid.console.deselectAllRolesUsers = deselectAllRolesUsers;
 
   function requestRole(roleName, roleTitle) {
     clearRoleSection();
@@ -3309,7 +3238,7 @@ function buildContentArea(obj2) {
 
   $('#remove-selected-role-groups').click(function () {
   removeGroupFromRole(current_roleName, current_roleTitle)});
-
+/*
   function selectAllRoleGroups(){
     $('[class=roleGroupItem]').attr('checked', true);
     $('#deselectAllRoleGroups').show();
@@ -3323,7 +3252,7 @@ function buildContentArea(obj2) {
     $('#deselectAllRoleGroups').hide();
   }
   window.Usergrid.console.deselectAllRoleGroups = deselectAllRoleGroups;
-
+*/
   /*******************************************************************
    *
    * Activities

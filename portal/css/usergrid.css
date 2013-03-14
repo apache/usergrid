@@ -4048,6 +4048,7 @@ hr.col-divider {
   padding: 0px;
   line-height: 25px;
   display: block;
+  margin-top: 15px;
 }
 .console-section .console-section-contents .form-actions {
   margin: 20px -10px -10px;
@@ -4778,7 +4779,7 @@ hr.col-divider {
   color: #c09853;
 }
 .user-panel-section-message {
-  margin: 15px;
+  margin: 30px 15px 15px 15px;
   padding: 8px 35px 8px 14px;
   margin-bottom: 18px;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
