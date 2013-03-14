@@ -201,7 +201,7 @@ Usergrid.console.ui = Usergrid.console.ui || { };
           "type" : "br"
         });
       } else if (type == "object") {
-        var element = jsonSchemaToDForm(property, obj);
+        var element = jsonSchemaToDForm(property, obj[propName]);
         element.type = "fieldset";
         element.caption = property.title;
         dform.elements.push(element);
@@ -223,7 +223,17 @@ Usergrid.console.ui = Usergrid.console.ui || { };
         payloadData[propName] = value;
 
       } else if (type == "object") {
+        payloadData[propName] = {};
+        for (var propName2 in schema.properties[propName].properties) {
+          var property2 = schema.properties[propName].properties[propName2];
+          var type2 = property2.type;
+          if (type2 == "string") {
+            var value2 = $('#ui-form-'+propName2).val();
+            if (!value) value = "";
+            payloadData[propName][propName2] = value2;
 
+          }
+        }
       }
     }
     return payloadData;
