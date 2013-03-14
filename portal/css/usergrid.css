@@ -4437,6 +4437,7 @@ hr.col-divider {
   border-bottom: 1px solid #AED0EA;
   margin-bottom: 16px;
   padding-bottom: 8px;
+  margin-top: 30px;
 }
 .user-role-row {
   font-size: 18px;
@@ -4783,7 +4784,7 @@ hr.col-divider {
   color: #c09853;
 }
 .panel-section-message {
-  margin: 15px;
+  margin: 25px;
   padding: 8px 35px 8px 14px;
   margin-bottom: 18px;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);

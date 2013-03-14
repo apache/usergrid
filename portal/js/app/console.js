@@ -431,7 +431,7 @@ function getCollectionCallback(response) {
 
 
       var table = '<table id="query-response-table" class="table"><tbody><tr class="zebraRows users-row">' +
-                  '<td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities();" /></td>';
+                  '<td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" /></td>';
       if (entity_type === 'user') {
         table += '<td class="gravatar50-td">&nbsp;</td>'+
           '<td class="user-details bold-header">username</td>'+
@@ -1630,7 +1630,7 @@ function buildContentArea(obj2) {
   }
 
   function deleteUsersFromRoles(username) {
-    var items = $('input[class^=listItem]:checked');
+    var items = $('#users-permissions-response-table input[class^=listItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the roles you want to delete for this user.");
       return;
@@ -2081,7 +2081,7 @@ function buildContentArea(obj2) {
     if (response.entities.length < 1) {
       output.replaceWith('<div id="users-table" class="panel-section-message">No users found.</div>');
     } else {
-      output.replaceWith('<table id="users-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities();" /></td><td class="gravatar50-td">&nbsp;</td><td class="user-details bold-header">username</td><td class="user-details bold-header">Display Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
+      output.replaceWith('<table id="users-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" /></td><td class="gravatar50-td">&nbsp;</td><td class="user-details bold-header">username</td><td class="user-details bold-header">Display Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
         var this_data = response.entities[i];
         if (!this_data.picture) {
@@ -2117,14 +2117,12 @@ function buildContentArea(obj2) {
   }
   Usergrid.console.searchUsers = searchUsers;
 
-  var selectEntities = true;
-  function selectAllEntities(){
-    if (selectEntities) {
+  function selectAllEntities(checkbox){
+    if (checkbox.checked) {
       $('[class=listItem]').attr('checked', true);
     } else {
       $('[class=listItem]').attr('checked', false);
     }
-    selectEntities = (selectEntities)?false:true;
   }
   window.Usergrid.console.selectAllEntities = selectAllEntities;
 
@@ -2510,7 +2508,7 @@ function buildContentArea(obj2) {
     if (response.entities.length < 1) {
       output.replaceWith('<div id="groups-table" class="panel-section-message">No groups found.</div>');
     } else {
-      output.replaceWith('<table id="groups-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities();" /></td><td class="user-details bold-header">Path</td><td class="user-details bold-header">Title</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
+      output.replaceWith('<table id="groups-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" /></td><td class="user-details bold-header">Path</td><td class="user-details bold-header">Title</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
         var this_data = response.entities[i];
         $.tmpl('apigee.ui.groups.table_rows.html', this_data).appendTo('#groups-table');
@@ -2819,7 +2817,7 @@ function buildContentArea(obj2) {
     if (response.entities < 1) {
       output.html('<div class="panel-section-message">No roles found.</div>');
     } else {
-      output.replaceWith('<table id="roles-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities();" /></td><td class="user-details bold-header">Title</td><td class="user-details bold-header">Role Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
+      output.replaceWith('<table id="roles-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" /></td><td class="user-details bold-header">Title</td><td class="user-details bold-header">Role Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
 
       $.each (response.entities, function(index, value) {
         var data = [
@@ -2972,13 +2970,10 @@ function buildContentArea(obj2) {
   var rolesGroupsResults = ''
 
   function displayRoleGroups(response, curl) {
-    $('#role-groups').html('');
-    if(response.entities && (response.entities.length > 0)){
-      $.tmpl('apigee.ui.role.groups.table_rows.html', response.entities).appendTo('#role-groups');
-    }else {
-      var data = '<div class="panel-section-message">No Groups have this Role</div>';
-      $('#role-groups').html(data);
-    }
+    response.roleName = current_roleName;
+    response.roleTitle = current_roleTitle;
+    $('#role-panel-groups').html('');
+    $.tmpl('apigee.ui.role.groups.table_rows.html', response).appendTo('#role-panel-groups');
     updateGroupsForRolesAutocomplete();
     showCurlCommand('role-groups', curl);
   }
@@ -3024,17 +3019,17 @@ function buildContentArea(obj2) {
   }
 
   function deleteRolePermission(roleName, permission) {
-      data = {"permission":permission};
-      confirmDelete(function(){
-        runAppQuery(new Usergrid.Query("DELETE", "roles/" + roleName + "/permissions", null, data,
-        function(){getRolePermissions(roleName)},
-        function(){getRolePermissions(roleName)}
-        ));
-      });
-    }
+    data = {"permission":permission};
+    confirmDelete(function(){
+      runAppQuery(new Usergrid.Query("DELETE", "roles/" + roleName + "/permissions", null, data,
+      function(){getRolePermissions(roleName)},
+      function(){getRolePermissions(roleName)}
+      ));
+    });
+  }
   window.Usergrid.console.deleteRolePermission = deleteRolePermission;
 
-   function addRolePermission(roleName) {
+  function addRolePermission(roleName) {
     var path = $('#role-permission-path-entry-input').val();
     var ops = "";
     var s = "";
@@ -3199,9 +3194,8 @@ function buildContentArea(obj2) {
   }
   window.Usergrid.console.submitAddGroupToRole = submitAddGroupToRole;
 
-
   function removeGroupFromRole(roleName,roleTitle) {
-    var items = $('input[class=roleGroupItem]:checked');
+    var items = $('#role-panel-groups input[class=listItem]:checked');
     if (!items.length) {
       alertModal("Error", "Please, first select the groups you want to delete for this role.");
       return;
@@ -3219,26 +3213,9 @@ function buildContentArea(obj2) {
         ));
       });
     });
-
   }
+  window.Usergrid.console.removeGroupFromRole = removeGroupFromRole;
 
-  $('#remove-selected-role-groups').click(function () {
-  removeGroupFromRole(current_roleName, current_roleTitle)});
-/*
-  function selectAllRoleGroups(){
-    $('[class=roleGroupItem]').attr('checked', true);
-    $('#deselectAllRoleGroups').show();
-    $('#selectAllRoleGroups').hide();
-  }
-  window.Usergrid.console.selectAllRoleGroups = selectAllRoleGroups;
-
-  function deselectAllRoleGroups(){
-    $('[class=roleGroupItem]').attr('checked', false);
-    $('#selectAllRoleGroups').show();
-    $('#deselectAllRoleGroups').hide();
-  }
-  window.Usergrid.console.deselectAllRoleGroups = deselectAllRoleGroups;
-*/
   /*******************************************************************
    *
    * Activities
@@ -3687,16 +3664,16 @@ function buildContentArea(obj2) {
 
   function updateRolesTypeahead(response, inputId){
     roles = {};
-    if (response.data) {
-      roles = response.data;
+    if (response.entities) {
+      roles = response.entities;
     }
     var pathInput = $('#'+inputId);
     var list = [];
-    $.each(roles, function(name, title){
-      list.push(name);
+    $.each(roles, function(key, value){
+      list.push(value.roleName);
     })
     pathInput.typeahead({source:list});
-      pathInput.data('typeahead').source = list;
+    pathInput.data('typeahead').source = list;
   }
 
   function updateGroupsTypeahead(response, inputId){
@@ -3755,7 +3732,7 @@ function buildContentArea(obj2) {
       return checker.test(item);
     }
   }
-  //TODO: find a nice place to store this function
+
   function getEntityName(entity) {
     var name;
     switch(entity.type) {
@@ -3832,7 +3809,7 @@ function buildContentArea(obj2) {
   }
 
   function updateRolesAutocomplete(){
-    updateAutocomplete('rolenames', updateRolesAutocompleteCallback, "Unable to retrieve Roles.");
+    updateAutocomplete('roles', updateRolesAutocompleteCallback, "Unable to retrieve Roles.");
   }
 
   function updateRolesAutocompleteCallback(response) {
@@ -3842,7 +3819,7 @@ function buildContentArea(obj2) {
   window.Usergrid.console.updateRolesAutocompleteCallback = updateRolesAutocompleteCallback;
 
   function updateRolesForGroupsAutocomplete(){
-    updateAutocomplete('rolenames', updateRolesForGroupsAutocompleteCallback, "Unable to retrieve Roles.");
+    updateAutocomplete('roles', updateRolesForGroupsAutocompleteCallback, "Unable to retrieve Roles.");
   }
 
   function updateRolesForGroupsAutocompleteCallback(response) {

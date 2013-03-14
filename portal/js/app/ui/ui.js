@@ -187,7 +187,10 @@ Usergrid.console.ui = Usergrid.console.ui || { };
       var property = schema.properties[propName];
       var type = property.type;
       if (type == "string") {
-        var value = obj[propName];
+        var value = '';
+        try {
+          var value = obj[propName];
+        } catch (e) {}
         if (!value) value = "";
         var element = {
           "name" : "ui-form-" + propName,

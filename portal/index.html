@@ -1081,12 +1081,6 @@
                 </form>
               </div>
               <div id="role-panel" class="panel-buffer">
-                <!--ul id="role-panel-tab-bar" class="nav nav-tabs">
-                  <li class="active"><a id="button-role-list" >List</a></li>
-                  <li><a id="button-role-settings" >Settings</a></li>
-                  <li><a id="button-role-users" >Users</a></li>
-                  <li><a id="button-role-groups" >Groups</a></li>
-                </ul-->
                 <div id="role-panel-tab-bar">
                   <a class="tab-button btn" id="button-role-list" >List</a>
                   <a class="tab-button btn active" id="button-role-settings" >Settings</a>
@@ -1112,24 +1106,7 @@
                   <div id="role-users-curl-container" class="curl-container">
                   </div>
                 </div>
-                <div id="role-panel-groups" class="panel-content">
-                  <div class="console-section">
-                    <div class="well thingy">
-                      <span class="title">Groups</span>
-                      <div class="bar">
-                        <a data-toggle="modal" href="#dialog-form-add-group-to-role"> Add </a>
-                        <a id="remove-selected-role-groups" > Remove </a>
-                        <a id="selectAllRoleGroups" class=""  onclick="Usergrid.console.selectAllRoleGroups();"> Select All </a>
-                        <a id="deselectAllRoleGroups" style="display: none;" class=""  onclick="Usergrid.console.deselectAllRoleGroups();"> Deselect All </a>
-                      </div>
-                    </div>
-                    <table id="role-groups" class="table">
-                      <tbody></tbody>
-                    </table>
-                  </div>
-                  <div id="role-groups-curl-container" class="curl-container">
-                  </div>
-                </div>
+                <div id="role-panel-groups" class="panel-content"></div>
                 <form id="dialog-form-add-group-to-role" class="modal hide fade">
                   <div class="modal-header">
                     <a class="close" data-dismiss="modal">&times</a>
