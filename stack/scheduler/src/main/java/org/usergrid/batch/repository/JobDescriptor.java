@@ -6,12 +6,13 @@ import me.prettyprint.cassandra.utils.Assert;
 
 import org.usergrid.batch.service.JobData;
 import org.usergrid.batch.service.SchedulerService;
+import org.usergrid.persistence.TypedEntity;
 
 /**
  * @author zznate
  * @author tnine
  */
-public class JobDescriptor {
+public class JobDescriptor extends TypedEntity {
 
   private final String jobName;
   private final UUID jobId;

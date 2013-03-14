@@ -15,7 +15,6 @@
 			<list>
 				<value>classpath:/usergrid-default.properties</value>
 				<value>classpath:/usergrid-test.properties</value>
-				<value>${usergrid-custom-spring-test-properties}</value>
 			</list>
 		</property>
 	</bean>
@@ -36,5 +35,7 @@
     <bean id="binaryStore" class="org.usergrid.services.assets.data.LocalFileBinaryStore">
         <property name="reposLocation" value="${usergrid.temp.files}"/>
     </bean>
+    
+    <!--  test jobs -->
 
 </beans>

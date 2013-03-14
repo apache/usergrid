@@ -24,11 +24,10 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.usergrid.batch.JobExecution;
+import org.usergrid.batch.JobExecution.Status;
 import org.usergrid.batch.JobExecutionException;
 import org.usergrid.batch.JobRuntimeException;
-import org.usergrid.batch.JobExecution.Status;
 import org.usergrid.batch.repository.JobAccessor;
 import org.usergrid.batch.repository.JobDescriptor;
 import org.usergrid.mq.Message;
@@ -49,18 +48,19 @@ import org.usergrid.persistence.exceptions.TransactionNotFoundException;
  * @author tnine
  * 
  */
-@Service("schedulerService")
 public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
 
   private static final Logger logger = LoggerFactory.getLogger(SchedulerServiceImpl.class);
 
-  private static final String QUEUE_NAME = "/jobs";
+  private static final String DEFAULT_QUEUE_NAME = "/jobs";
+  
+  
 
-  @Autowired
+ 
   private QueueManagerFactory qmf;
-
-  @Autowired
   private EntityManagerFactory emf;
+  
+  private String jobQueueName = DEFAULT_QUEUE_NAME;
 
   private QueueManager qm;
   private EntityManager em;
@@ -69,7 +69,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
    * Timeout for how long to set the transaction timeout from the queue. Default
    * is 30000
    */
-  private long timeout = 30000;
+  private long jobTimeout = 30000;
 
   /**
    * 
@@ -99,7 +99,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
     message.setStringProperty("jobName", jobName);
     message.setProperty("jobId", job.getUuid());
 
-    qm.postToQueue(QUEUE_NAME, message);
+    qm.postToQueue(jobQueueName, message);
 
     return job;
 
@@ -132,16 +132,17 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
   @Override
   public List<JobDescriptor> getJobs(int size) {
     QueueQuery query = new QueueQuery();
-    query.setTimeout(timeout);
+    query.setTimeout(jobTimeout);
     query.setLimit(size);
 
-    QueueResults jobs = qm.getFromQueue(QUEUE_NAME, query);
+    QueueResults jobs = qm.getFromQueue(jobQueueName, query);
 
     List<JobDescriptor> results = new ArrayList<JobDescriptor>(jobs.size());
 
     for (Message job : jobs.getMessages()) {
 
       UUID jobUuid = (UUID) job.getProperties().get("jobId");
+      String jobName = job.getStringProperty("jobName"); 
 
       JobData data = null;
       try {
@@ -156,11 +157,11 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
        */
       if (data == null) {
         logger.info("Received job with data id '{}' from the queue, but no data was found.  Dropping job", jobUuid);
-        qm.deleteTransaction(QUEUE_NAME, job.getTransaction(), null);
+        qm.deleteTransaction(jobQueueName, job.getTransaction(), null);
         continue;
       }
 
-      results.add(new JobDescriptor(job.getStringProperty("jobName"), job.getUuid(), job.getTransaction(), data, this));
+      results.add(new JobDescriptor(jobName, job.getUuid(), job.getTransaction(), data, this));
     }
 
     return results;
@@ -176,7 +177,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
   @Override
   public void heartbeat(JobExecution execution) throws JobExecutionException {
     try {
-      UUID newId = qm.renewTransaction(QUEUE_NAME, execution.getTransactionId(), new QueueQuery().withTimeout(timeout));
+      UUID newId = qm.renewTransaction(jobQueueName, execution.getTransactionId(), new QueueQuery().withTimeout(jobTimeout));
 
       execution.setTransactionId(newId);
     } catch (TransactionNotFoundException e) {
@@ -195,15 +196,49 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
   @Override
   public void save(JobExecution bulkJobExecution) {
     if (bulkJobExecution.getStatus() == Status.COMPLETED) {
-      qm.deleteTransaction(QUEUE_NAME, bulkJobExecution.getTransactionId(), null);
+      qm.deleteTransaction(jobQueueName, bulkJobExecution.getTransactionId(), null);
     }
   }
-
+  
+  
   @PostConstruct
   public void init() {
     qm = qmf.getQueueManager(CassandraService.MANAGEMENT_APPLICATION_ID);
     em = emf.getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
 
   }
+  
+
+
+  /**
+   * @param qmf the qmf to set
+   */
+  @Autowired
+  public void setQmf(QueueManagerFactory qmf) {
+    this.qmf = qmf;
+  }
+
+  /**
+   * @param emf the emf to set
+   */
+  @Autowired
+  public void setEmf(EntityManagerFactory emf) {
+    this.emf = emf;
+  }
+
+  /**
+   * @param jobQueueName the jobQueueName to set
+   */
+  public void setJobQueueName(String jobQueueName) {
+    this.jobQueueName = jobQueueName;
+  }
+
+  /**
+   * @param timeout the timeout to set
+   */
+  public void setJobTimeout(long timeout) {
+    this.jobTimeout = timeout;
+  }
+
 
 }

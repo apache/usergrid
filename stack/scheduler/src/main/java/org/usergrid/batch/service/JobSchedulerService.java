@@ -27,12 +27,13 @@ import com.yammer.metrics.annotation.Timed;
 
 /**
  * @author zznate
+ * @author tnine
  */
 public class JobSchedulerService extends AbstractScheduledService {
   private Logger logger = LoggerFactory.getLogger(JobSchedulerService.class);
 
-  private int milliseconds = 10;
-  private int listeners = 1;
+  private int interval = 1000;
+  private int workerSize = 1;
   private ListeningExecutorService service;
 
   private JobAccessor jobAccessor;
@@ -61,14 +62,14 @@ public class JobSchedulerService extends AbstractScheduledService {
 
   @Override
   protected Scheduler scheduler() {
-    return Scheduler.newFixedRateSchedule(0, milliseconds, TimeUnit.SECONDS);
+    return Scheduler.newFixedRateSchedule(0, interval, TimeUnit.MILLISECONDS);
   }
 
   @Override
   protected void startUp() throws Exception {
     super.startUp();
-    service = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(listeners));
-    runningJobs = new AtomicInteger(listeners);
+    service = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(workerSize));
+    runningJobs = new AtomicInteger(workerSize);
   }
 
   @Override
@@ -78,24 +79,8 @@ public class JobSchedulerService extends AbstractScheduledService {
   }
 
   private List<JobDescriptor> jobsFor() {
-    List<JobDescriptor> actives = jobAccessor.getJobs(listeners - runningJobs.get());
+    List<JobDescriptor> actives = jobAccessor.getJobs(workerSize - runningJobs.get());
     return actives;
-  }
-
-  /**
-   * @param jobAccessor
-   *          the jobAccessor to set
-   */
-  public void setJobAccessor(JobAccessor jobAccessor) {
-    this.jobAccessor = jobAccessor;
-  }
-
-  /**
-   * @param jobFactory
-   *          the jobFactory to set
-   */
-  public void setJobFactory(JobFactory jobFactory) {
-    this.jobFactory = jobFactory;
   }
 
   /**
@@ -155,4 +140,36 @@ public class JobSchedulerService extends AbstractScheduledService {
       });
     }
   }
+
+  /**
+   * @param milliseconds the milliseconds to set
+   */
+  public void setInterval(int milliseconds) {
+    this.interval = milliseconds;
+  }
+
+  /**
+   * @param listeners the listeners to set
+   */
+  public void setWorkerSize(int listeners) {
+    this.workerSize = listeners;
+  }
+  
+
+  /**
+   * @param jobAccessor
+   *          the jobAccessor to set
+   */
+  public void setJobAccessor(JobAccessor jobAccessor) {
+    this.jobAccessor = jobAccessor;
+  }
+
+  /**
+   * @param jobFactory
+   *          the jobFactory to set
+   */
+  public void setJobFactory(JobFactory jobFactory) {
+    this.jobFactory = jobFactory;
+  }
+
 }

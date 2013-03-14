@@ -1,40 +1,31 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:metrics="http://www.yammer.com/schema/metrics"
-       xsi:schemaLocation="
-           http://www.yammer.com/schema/metrics http://www.yammer.com/schema/metrics/metrics.xsd
-           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
-    <metrics:metrics-registry id="metrics"/>
-    <metrics:health-check-registry id="health"/>
+	<import resource="classpath:/usergrid-services-context.xml" />
 
-    <metrics:annotation-driven metrics-registry="metrics" health-check-registry="health"/>
+	<bean id="jobSchedulerBackgroundService" class="org.usergrid.batch.service.JobSchedulerService">
+		<property name="jobFactory" ref="jobFactory" />
+		<property name="jobAccessor" ref="schedulerService" />
+		<property name="workerSize" value="${usergrid.scheduler.job.workers}" />
+		<property name="interval" value="${usergrid.scheduler.job.interval}" />
+	</bean>
 
-    <metrics:jmx-reporter id="metricsJmxReporter" metrics-registry="metrics"/>
+	<bean id="schedulerService" class="org.usergrid.batch.service.SchedulerServiceImpl">
+		<property name="jobTimeout" value="${usergrid.scheduler.job.timeout}" />
+		<property name="jobQueueName" value="${usergrid.scheduler.job.queueName}" />
+	</bean>
 
-    <bean id="bulkJobScheduledService" class="org.usergrid.batch.service.BulkJobScheduledService">
-        <constructor-arg ref="simpleJobAccessor"/>
-    </bean>
 
-    <bean id="simpleJobAccessor" class="org.usergrid.batch.repository.SimpleJobAccessor">
-        <property name="jobDescriptors">
-            <list>
-                <ref bean="simpleJobDescriptor"/>
-            </list>
-        </property>
-    </bean>
+	<bean id="jobFactory" class="org.usergrid.batch.UsergridJobFactory" />
 
-    <bean id="simpleJobDescriptor" class="org.usergrid.batch.repository.JobDescriptor" factory-method="instance">
-        <constructor-arg value="my-job-name"/>
-        <constructor-arg ref="simpleBulkJobFactory"/>
-        <constructor-arg ref="simpleJobID"/>
-    </bean>
-    <bean id="simpleBulkJobFactory" class="org.usergrid.batch.SimpleBulkJobFactory"/>
 
-    <bean id="simpleJobID" class="java.util.UUID">
-        <constructor-arg value="0"/>
-        <constructor-arg value="16"/>
-    </bean>
-    <!-- other beans -->
+	<!-- scan all job classes -->
+	<context:component-scan base-package="org.usergrid.batch.job" />
+	<context:annotation-config />
+	
+	<!-- other beans -->
 
 </beans>
