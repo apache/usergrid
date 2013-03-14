@@ -9,7 +9,6 @@
     <div class="bar">
       <a class="btn" data-toggle="modal" href="#" onclick="Usergrid.console.deleteUsersFromRoles('${username}'); return false;"> Remove </a>
       <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-add-user-to-role"> Add </a>
-
     </div>
   </div>
   <div class="console-section-contents">
@@ -43,7 +42,7 @@
       </table>
       {{/if}}
       {{else}}
-      <div class="user-panel-section-message">No Roles</div>
+      <div class="panel-section-message">No Roles</div>
       {{/if}}
       <br/>
       <div id="user-panel-roles-curl-container" class="curl-container">

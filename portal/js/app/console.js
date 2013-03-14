@@ -1686,7 +1686,7 @@ function buildContentArea(obj2) {
   window.Usergrid.console.removeUserFromGroup = removeUserFromGroup;
 
   function removeGroupFromUser(groupId) {
-    var items = $('#group-panel-memberships input[id^=listItem]:checked');
+    var items = $('#group-panel-memberships input[class^=listItem]:checked');
     if (!items.length) {
       alertModal("Error", "Please, first select the users you want to from this group.");
       return;
@@ -1705,7 +1705,7 @@ function buildContentArea(obj2) {
   window.Usergrid.console.removeGroupFromUser = removeGroupFromUser;
 
   function deleteRolesFromGroup(roleId, rolename) {
-    var items = $('input[class=groupRoleItem]:checked');
+    var items = $('#group-panel-permissions input[class^=listItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the roles you want to delete from this group.")
         return;
@@ -2079,7 +2079,7 @@ function buildContentArea(obj2) {
     hidePagination('users');
     var output = $('#users-table');
     if (response.entities.length < 1) {
-      output.replaceWith('<div id="users-table" class="user-panel-section-message">No users found.</div>');
+      output.replaceWith('<div id="users-table" class="panel-section-message">No users found.</div>');
     } else {
       output.replaceWith('<table id="users-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities();" /></td><td class="gravatar50-td">&nbsp;</td><td class="user-details bold-header">username</td><td class="user-details bold-header">Display Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
@@ -2508,7 +2508,7 @@ function buildContentArea(obj2) {
 
     var output = $('#groups-table');
     if (response.entities.length < 1) {
-      output.replaceWith('<div id="groups-table" class="group-panel-section-message">No groups found.</div>');
+      output.replaceWith('<div id="groups-table" class="panel-section-message">No groups found.</div>');
     } else {
       output.replaceWith('<table id="groups-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities();" /></td><td class="user-details bold-header">Path</td><td class="user-details bold-header">Title</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
@@ -2629,21 +2629,7 @@ function buildContentArea(obj2) {
   }
 
   window.Usergrid.console.saveGroupProfile = saveGroupProfile;
-/*
-  function selectAllGroupMemberships(){
-    $('[id=userGroupItem]').attr('checked', true);
-    $('#deselectAllGroupMemberships').show();
-    $('#selectAllGroupMemberships').hide();
-  }
-  Usergrid.console.selectAllGroupMemberships = selectAllGroupMemberships;
 
-  function deselectAllGroupMemberships(){
-    $('[id=userGroupItem]').attr('checked', false);
-    $('#deselectAllGroupMemberships').hide();
-    $('#selectAllGroupMemberships').show();
-  }
-  Usergrid.console.deselectAllGroupMemberships = deselectAllGroupMemberships;
-*/
   var group_data = null;
 
   function handleGroupResponse(response) {
@@ -2831,7 +2817,7 @@ function buildContentArea(obj2) {
     var output = $('#roles-table')
     output.empty();
     if (response.entities < 1) {
-      output.html('<div class="group-panel-section-message">No roles found.</div>');
+      output.html('<div class="panel-section-message">No roles found.</div>');
     } else {
       output.replaceWith('<table id="roles-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities();" /></td><td class="user-details bold-header">Title</td><td class="user-details bold-header">Role Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
 
@@ -2990,7 +2976,7 @@ function buildContentArea(obj2) {
     if(response.entities && (response.entities.length > 0)){
       $.tmpl('apigee.ui.role.groups.table_rows.html', response.entities).appendTo('#role-groups');
     }else {
-      var data = '<div class="group-panel-section-message">No Groups have this Role</div>';
+      var data = '<div class="panel-section-message">No Groups have this Role</div>';
       $('#role-groups').html(data);
     }
     updateGroupsForRolesAutocomplete();
@@ -3300,7 +3286,7 @@ function buildContentArea(obj2) {
     hidePagination('activities');
     var output = $('#activities-table');
     if (response.entities.length < 1) {
-      output.replaceWith('<div id="activities-table" class="user-panel-section-message">No activities found.</div>');
+      output.replaceWith('<div id="activities-table" class="panel-section-message">No activities found.</div>');
     } else {
       output.replaceWith('<table id="activities-table" class="table"><tbody></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
