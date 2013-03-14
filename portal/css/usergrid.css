@@ -4048,7 +4048,6 @@ hr.col-divider {
   padding: 0px;
   line-height: 25px;
   display: block;
-  margin-top: 15px;
 }
 .console-section .console-section-contents .form-actions {
   margin: 20px -10px -10px;
@@ -4266,6 +4265,11 @@ hr.col-divider {
 .query-result-table-value {
   width: 25%;
   padding: 10px !important;
+}
+#user-panel-tab-bar,
+#group-panel-tab-bar,
+#role-panel-tab-bar {
+  margin-left: 40px;
 }
 #user-panel-tab-bar .tab-button,
 #group-panel-tab-bar .tab-button,
@@ -4779,7 +4783,7 @@ hr.col-divider {
   color: #c09853;
 }
 .panel-section-message {
-  margin: 30px 15px 15px 15px;
+  margin: 15px;
   padding: 8px 35px 8px 14px;
   margin-bottom: 18px;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
@@ -4790,7 +4794,9 @@ hr.col-divider {
   border-radius: 4px;
   color: #c09853;
 }
-
+.user-panel-section {
+  margin: 15px;
+}
 /*----------------- Activities ------------------*/
 #activities-pagination {
   display: none;
@@ -5011,6 +5017,9 @@ a.data-explorer-link {
   padding-right: 40px;
 }
 /* ---------------- Curl Container ------------ */
+.curl-container {
+  margin-top: 10px;
+}
 .curl-container .curl-info,
 .curl-container .curl-token {
   padding-left: 5px;

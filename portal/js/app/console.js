@@ -2159,7 +2159,7 @@ function buildContentArea(obj2) {
     hideModal('.messages');
     Pages.SelectPanel('user');
     requestUser(userName);
-    selectTabButton('#button-user-profile');
+    selectPillButton('#button-user-profile');
     showPanelContent('#user-panel', '#user-panel-profile');
   }
   window.Usergrid.console.pageOpenUserProfile = pageOpenUserProfile;
@@ -2167,7 +2167,7 @@ function buildContentArea(obj2) {
   function pageOpenUserActivities(userId) {
     Pages.SelectPanel('user');
     requestUser(userId);
-    selectTabButton('#button-user-activities');
+    selectPillButton('#button-user-activities');
     showPanelContent('#user-panel', '#user-panel-activities');
   }
   window.Usergrid.console.pageOpenUserActivities = pageOpenUserActivities;
@@ -2175,7 +2175,7 @@ function buildContentArea(obj2) {
   function pageSelectUserPermissions(userId) {
     Pages.SelectPanel('user');
     requestUser(userId);
-    selectTabButton('#button-user-permissions');
+    selectPillButton('#button-user-permissions');
     showPanelContent('#user-panel', '#user-panel-permissions');
   }
   window.Usergrid.console.pageSelectUserPermissions = pageSelectUserPermissions;
@@ -2183,14 +2183,14 @@ function buildContentArea(obj2) {
   function pageSelectUserGroups(userId) {
     Pages.SelectPanel('user');
     requestUser(userId);
-    selectTabButton('#button-user-memberships');
+    selectPillButton('#button-user-memberships');
     showPanelContent('#user-panel', '#user-panel-memberships');
   }
 
   function pageSelectUserGraph(userId) {
     Pages.SelectPanel('user');
     requestUser(userId);
-    selectTabButton('#button-user-graph');
+    selectPillButton('#button-user-graph');
     showPanelContent('#user-panel', '#user-panel-graph');
   }
 
@@ -2576,7 +2576,7 @@ function buildContentArea(obj2) {
   function pageOpenGroupProfile(groupPath) {
     Pages.SelectPanel('group');
     requestGroup(groupPath);
-    selectTabButton('#button-group-details');
+    selectPillButton('#button-group-details');
     showPanelContent('#group-panel', '#group-panel-details');
   }
   window.Usergrid.console.pageOpenGroupProfile = pageOpenGroupProfile;
@@ -2584,7 +2584,7 @@ function buildContentArea(obj2) {
   function pageSelectGroupMemberships(groupId) {
     Pages.SelectPanel('group');
     requestGroup(groupId);
-    selectTabButton('#button-group-memberships');
+    selectPillButton('#button-group-memberships');
     showPanelContent('#group-panel', '#group-panel-memberships');
   }
   window.Usergrid.console.pageSelectGroupMemberships = pageSelectGroupMemberships;
@@ -2871,7 +2871,7 @@ function buildContentArea(obj2) {
     showPanel('#role-panel');
     Pages.ActivatePanel('roles');
     $('#role-panel-list').hide();
-    selectTabButton('#button-role-settings');
+    selectPillButton('#button-role-settings');
     $('#role-panel-settings').show();
   }
   window.Usergrid.console.pageOpenRole = pageOpenRole;
@@ -2882,7 +2882,7 @@ function buildContentArea(obj2) {
     showPanel('#role-panel');
     Pages.ActivatePanel('roles');
     $('#role-panel-list').hide();
-    selectTabButton('#button-role-users');
+    selectPillButton('#button-role-users');
     $('#role-panel-users').show();
   }
   window.Usergrid.console.pageSelectRoleUsers = pageSelectRoleUsers;
@@ -2893,7 +2893,7 @@ function buildContentArea(obj2) {
     showPanel('#role-panel');
     Pages.ActivatePanel('roles');
     $('#role-panel-list').hide();
-    selectTabButton('#button-role-groups');
+    selectPillButton('#button-role-groups');
     $('#role-panel-groups').show();
   }
   window.Usergrid.console.pageSelectRoleGroups = pageSelectRoleGroups;
@@ -3176,7 +3176,7 @@ function buildContentArea(obj2) {
   function pageSelectGroupPermissions(groupId) {
     Pages.SelectPanel('group');
     requestGroup(groupId);
-    selectTabButton('#button-group-permissions');
+    selectPillButton('#button-group-permissions');
     showPanelContent('#group-panel', '#group-panel-permissions');
   }
   window.Usergrid.console.pageSelectGroupPermissions = pageSelectGroupPermissions;
@@ -4396,7 +4396,6 @@ function buildContentArea(obj2) {
   });
 
   $('#group-panel-tab-bar a').click(function() {
-    //selectTabButton(this);
     selectPillButton(this);
     if ($(this).attr('id') == "button-group-list") {
       groupLetter = '*';
@@ -4414,7 +4413,6 @@ function buildContentArea(obj2) {
       showPanelList('roles');
     }
     else if ($(this).attr('id') == "button-roles-search") {
-      //selectTabButton('#button-roles-search');
       selectPillButton('#button-roles-search');
       $('#roles-panel-list').hide();
       $('#role-panel-users').hide();
@@ -4430,21 +4428,18 @@ function buildContentArea(obj2) {
       Pages.SelectPanel('roles');
       showPanelList('roles');
     } else if ($(this).attr('id') == "button-role-settings") {
-      //selectTabButton('#button-role-settings');
       selectPillButton('#button-role-settings');
       $('#roles-panel-list').hide();
       $('#role-panel-users').hide();
       $('#role-panel-groups').hide();
       $('#role-panel-settings').show();
     } else if ($(this).attr('id') == "button-role-users") {
-      //selectTabButton('#button-role-users');
       selectPillButton('#button-role-users');
       $('#roles-panel-list').hide();
       $('#role-panel-settings').hide();
       $('#role-panel-groups').hide();
       $('#role-panel-users').show();
     } else if ($(this).attr('id') == "button-role-groups") {
-      //selectTabButton('#button-role-groups');
       selectPillButton('#button-role-groups');
       $('#roles-panel-list').hide();
       $('#role-panel-settings').hide();
