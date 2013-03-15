@@ -350,7 +350,7 @@
 
     //If jsonBody is empty fill it with empty brackets
     if($('#query-source').val() === '') {
-      $("#query-source").val('{}');
+      $("#query-source").val('{"name":"value"}');
     }
     getCollection(method);
   }
@@ -1562,7 +1562,7 @@ function buildContentArea(obj2) {
     var form = $(this);
     formClearErrors(form);
     var add_user_username = $('#search-user-name-input');
-    var bValid = checkLength2(add_user_username, 4, 80)
+    var bValid = checkLength2(add_user_username, 1, 80)
       && checkRegexp2(add_user_username, usernameRegex, usernameAllowedCharsMessage);
 
     if (bValid) {
@@ -1580,7 +1580,7 @@ function buildContentArea(obj2) {
     var form = $(this);
     formClearErrors(form);
     var username = $('#search-follow-username-input');
-    var bValid = checkLength2(username, 4, 80) && checkRegexp2(username, usernameRegex, usernameAllowedCharsMessage);
+    var bValid = checkLength2(username, 1, 80) && checkRegexp2(username, usernameRegex, usernameAllowedCharsMessage);
     if (bValid) {
       var followingUserId = $('#search-follow-username').val();
       var followedUserId = $('#search-follow-username-input').val();
