@@ -141,7 +141,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
 
     for (Message job : jobs.getMessages()) {
 
-      UUID jobUuid = (UUID) job.getProperties().get("jobId");
+      UUID jobUuid = UUID.fromString(job.getStringProperty("jobId"));
       String jobName = job.getStringProperty("jobName"); 
 
       JobData data = null;

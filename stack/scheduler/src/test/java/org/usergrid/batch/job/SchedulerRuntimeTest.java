@@ -15,48 +15,100 @@
  ******************************************************************************/
 package org.usergrid.batch.job;
 
+import static org.junit.Assert.*;
+
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.usergrid.batch.service.JobData;
+import org.usergrid.batch.service.JobSchedulerService;
 import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.cassandra.CassandraRunner;
 
+import com.google.common.util.concurrent.Service.State;
+
 /**
  * Class to test job runtimes
+ * 
  * @author tnine
- *
+ * 
  */
 @RunWith(CassandraRunner.class)
 public class SchedulerRuntimeTest {
 
   private SchedulerService scheduler;
-  
+
   @Before
-  public void setup(){
+  public void setup() {
     scheduler = CassandraRunner.getBean(SchedulerService.class);
+    JobSchedulerService jobScheduler = CassandraRunner.getBean(JobSchedulerService.class);
+    if(jobScheduler.state() != State.RUNNING){
+      jobScheduler.start();
+    }
+  }
+
+  @Test
+  public void basicScheduling() throws InterruptedException {
+
+    int count = 1000;
+
+    CountdownLatchJob counterJob = CassandraRunner.getBean(CountdownLatchJob.class);
+    // set the counter job latch size
+    counterJob.setLatch(count);
+
+    for (int i = 0; i < count; i++) {
+      scheduler.createJob("countdownLatch", System.currentTimeMillis(), new JobData());
+    }
+
+    // now wait until everything fires
+    boolean waited = counterJob.waitForCount(60, TimeUnit.SECONDS);
+
+    assertTrue("Jobs ran", waited);
+
   }
   
-  
+  /**
+   * Test the scheduler ramps up correctly when there are more jobs to be read after a pause
+   * @throws InterruptedException
+   */
   @Test
-  public void basicScheduling() throws InterruptedException{
-    
-    
-    int count = 1000;
-    
+  public void schedulingWithNoJobs() throws InterruptedException {
+
+    int count = 200;
+
     CountdownLatchJob counterJob = CassandraRunner.getBean(CountdownLatchJob.class);
-    //set the counter job latch size
+    // set the counter job latch size
     counterJob.setLatch(count);
-    
-    for(int i = 0; i < count; i++){
+
+    for (int i = 0; i < count; i++) {
       scheduler.createJob("countdownLatch", System.currentTimeMillis(), new JobData());
     }
     
-    //now wait until everything fires
-    counterJob.waitForCount(10, TimeUnit.SECONDS);
+    // now wait until everything fires
+    boolean waited = counterJob.waitForCount(30000, TimeUnit.SECONDS);
+
+    assertTrue("Jobs ran", waited);
     
+    Thread.sleep(5000);
+    
+    // set the counter job latch size
+    counterJob.setLatch(count);
+
+    for (int i = 0; i < count; i++) {
+      scheduler.createJob("countdownLatch", System.currentTimeMillis(), new JobData());
+    }
+    
+    // now wait until everything fires
+    waited = counterJob.waitForCount(3000000, TimeUnit.SECONDS);
+
+    assertTrue("Jobs ran", waited);
+    
+    
+    
+    
+
   }
 
 }

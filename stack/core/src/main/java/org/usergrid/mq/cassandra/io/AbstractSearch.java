@@ -260,7 +260,7 @@ public abstract class AbstractSearch implements QueueSearch {
       ColumnSlice<String, UUID> result = HFactory.createSliceQuery(ko, ue, se, ue).setKey(queueId)
           .setColumnNames(QUEUE_NEWEST, QUEUE_OLDEST).setColumnFamily(QUEUE_PROPERTIES.getColumnFamily()).execute()
           .get();
-      if (result != null) {
+      if (result != null && result.getColumnByName(QUEUE_OLDEST) != null && result.getColumnByName(QUEUE_NEWEST) != null) {
         return new QueueBounds(result.getColumnByName(QUEUE_OLDEST).getValue(), result.getColumnByName(QUEUE_NEWEST)
             .getValue());
       }

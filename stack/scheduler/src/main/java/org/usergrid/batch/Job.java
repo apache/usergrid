@@ -13,7 +13,7 @@ public interface Job {
    * Invoked when a job should execute
    * 
    * @param execution
-   *          The execution information
+   *          The execution information.  This will be the same from the last run.  By default you should call exeuction.start() once processing starts
    * @throws JobExecutionException
    *           If the job cannot be executed
    */

@@ -50,6 +50,7 @@ public class CountdownLatchJob implements Job {
    */
   @Override
   public void execute(JobExecution execution) throws JobExecutionException {
+   execution.start();
    latch.countDown();
   }
 
@@ -57,7 +58,7 @@ public class CountdownLatchJob implements Job {
     latch = new CountDownLatch(size);
   }
 
-  public void waitForCount(long timeout, TimeUnit unit) throws InterruptedException {
-    latch.await(timeout, unit);
+  public boolean waitForCount(long timeout, TimeUnit unit) throws InterruptedException {
+    return latch.await(timeout, unit);
   }
 }

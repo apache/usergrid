@@ -199,6 +199,11 @@ public class ConsumerTransaction extends NoTransactionSearch {
       UUID startTimeUUID = UUIDUtils.newTimeUUID(startTime, 0);
 
       QueueBounds bounds = getQueueBounds(queueId);
+      
+      //queue has never been written to
+      if(bounds == null){
+        return createResults(new ArrayList<Message>(0), queuePath, queueId, consumerId);
+      }
 
       // with transactional reads, we can't read into the future, set the bounds
       // to be now
