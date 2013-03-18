@@ -379,6 +379,7 @@ Usergrid.Client.prototype.getToken = function () {
   }
   return null;
 }
+
 /*
  * A public facing helper method for signing up users
  *
@@ -388,7 +389,7 @@ Usergrid.Client.prototype.getToken = function () {
  * @params {string} password
  * @params {string} email
  * @params {string} name
- * @params {function} callback
+ * @param {function} callback
  * @return {callback} callback(err, data)
  */
 Usergrid.Client.prototype.signup = function(username, password, email, name, callback) {
