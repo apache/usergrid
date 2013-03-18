@@ -553,25 +553,17 @@ function prepareDatabaseForNewUser(step) {
 
 function createUser(step) {
 
-	//type is 'users', set additional paramaters as needed
-	var options = {
-		type:'users',
-		username:'marty',
-		password:'mysecurepassword',
-		name:'Marty McFly',
-		city:'Hill Valley'
-	}
-
-	client.createEntity(options, function (err, marty) {
-		if (err){
-			error('user not created');
-			runner(step, marty);
-		} else {
-			success('user created');
-			runner(step, marty);
+	client.signup('marty', 'mysecurepassword', 'marty@timetravel.com', 'Marty McFly',
+		function (err, marty) {
+			if (err){
+				error('user not created');
+				runner(step, marty);
+			} else {
+				success('user created');
+				runner(step, marty);
+			}
 		}
-	});
-
+	);
 }
 
 function updateUser(step, marty) {

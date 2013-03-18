@@ -490,6 +490,23 @@ To refresh the user's information in the database:
 		}
 	});
 
+###To sign up a new user
+When a new user wants to sign up in your app, simply create a form to catch their information, then use the client.signin method:
+
+	//method signature: client.signup(username, password, email, name, callback)
+	client.signup('marty', 'mysecurepassword', 'marty@timetravel.com', 'Marty McFly',
+		function (err, marty) {
+			if (err){
+				error('user not created');
+				runner(step, marty);
+			} else {
+				success('user created');
+				runner(step, marty);
+			}
+		}
+	);
+
+
 ###To log a user in
 Logging a user in means sending the user's username and password to the server, and getting back an access (OAuth) token.  You can then use this token to make calls to the API on the User's behalf. The following example shows how to log a user in and log them out:
 
