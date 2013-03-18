@@ -105,7 +105,10 @@ public class User extends TypedEntity {
 	@EntityCollection(type = "role", linkedCollection = "users", indexingDynamicDictionaries = true)
 	protected List<UUID> roles;
 
-	public User() {
+  @EntityCollection(type = "notification")
+  protected List<UUID> notifications;
+
+  public User() {
 		// id = UUIDUtils.newTimeUUID();
 	}
 
@@ -298,5 +301,14 @@ public class User extends TypedEntity {
 	public void setRoles(List<UUID> roles) {
 		this.roles = roles;
 	}
+
+  @JsonSerialize(include = Inclusion.NON_NULL)
+  public List<UUID> getNotifications() {
+    return notifications;
+  }
+
+  public void setNotifications(List<UUID> notifications) {
+    this.notifications = notifications;
+  }
 
 }

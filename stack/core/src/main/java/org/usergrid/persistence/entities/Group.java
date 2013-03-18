@@ -67,6 +67,9 @@ public class Group extends TypedEntity {
 	@EntityCollection(type = "role", linkedCollection = "groups", indexingDynamicDictionaries = true)
 	protected List<UUID> roles;
 
+  @EntityCollection(type = "notification")
+  protected List<UUID> notifications;
+
 	public Group() {
 		// id = UUIDUtils.newTimeUUID();
 	}
@@ -147,4 +150,11 @@ public class Group extends TypedEntity {
 		this.roles = roles;
 	}
 
+  public List<UUID> getNotifications() {
+    return notifications;
+  }
+
+  public void setNotifications(List<UUID> notifications) {
+    this.notifications = notifications;
+  }
 }
