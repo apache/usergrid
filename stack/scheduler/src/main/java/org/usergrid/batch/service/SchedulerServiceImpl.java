@@ -24,6 +24,7 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
 import org.usergrid.batch.JobExecution;
 import org.usergrid.batch.JobExecution.Status;
 import org.usergrid.batch.JobExecutionException;
@@ -53,13 +54,10 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
   private static final Logger logger = LoggerFactory.getLogger(SchedulerServiceImpl.class);
 
   private static final String DEFAULT_QUEUE_NAME = "/jobs";
-  
-  
 
- 
   private QueueManagerFactory qmf;
   private EntityManagerFactory emf;
-  
+
   private String jobQueueName = DEFAULT_QUEUE_NAME;
 
   private QueueManager qm;
@@ -94,14 +92,30 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
       throw new JobRuntimeException(e);
     }
 
+    scheduleJob(jobName, fireTime, job.getUuid());
+
+    return job;
+
+  }
+
+  /**
+   * Schedule the job internally
+   * 
+   * @param fireTime
+   * @param jobName
+   * @param jobDataId
+   */
+  private void scheduleJob(String jobName, long fireTime, UUID jobDataId) {
+    Assert.notNull(jobName, "jobName is required");
+    Assert.isTrue(fireTime > -1, "fireTime must be positive");
+    Assert.notNull(jobDataId, "jobDataId is required");
+    
     Message message = new Message();
     message.setTimestamp(fireTime);
     message.setStringProperty("jobName", jobName);
-    message.setProperty("jobId", job.getUuid());
+    message.setProperty("jobId", jobDataId);
 
     qm.postToQueue(jobQueueName, message);
-
-    return job;
 
   }
 
@@ -142,13 +156,16 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
     for (Message job : jobs.getMessages()) {
 
       UUID jobUuid = UUID.fromString(job.getStringProperty("jobId"));
-      String jobName = job.getStringProperty("jobName"); 
+      String jobName = job.getStringProperty("jobName");
 
       JobData data = null;
       try {
         data = em.get(jobUuid, JobData.class);
       } catch (Exception e) {
-        // swallow
+        // log and skip.  This is a catastrophic runtime error if we see an exception here.  We don't want to cause job loss, so leave the job in the Q.
+        logger.error("Unable to retrieve job data for jobname {} and job id {}.  Skipping to avoid job loss",new Object[]{ jobName, jobUuid, e});
+        continue;
+        
       }
 
       /**
@@ -177,7 +194,8 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
   @Override
   public void heartbeat(JobExecution execution) throws JobExecutionException {
     try {
-      UUID newId = qm.renewTransaction(jobQueueName, execution.getTransactionId(), new QueueQuery().withTimeout(jobTimeout));
+      UUID newId = qm.renewTransaction(jobQueueName, execution.getTransactionId(),
+          new QueueQuery().withTimeout(jobTimeout));
 
       execution.setTransactionId(newId);
     } catch (TransactionNotFoundException e) {
@@ -195,23 +213,81 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
    */
   @Override
   public void save(JobExecution bulkJobExecution) {
-    if (bulkJobExecution.getStatus() == Status.COMPLETED) {
-      qm.deleteTransaction(jobQueueName, bulkJobExecution.getTransactionId(), null);
+
+    JobData data = bulkJobExecution.getData();
+
+    Status jobStatus = bulkJobExecution.getStatus();
+    try {
+
+      // we're done. Mark the transaction as complete and delete the job info
+      if (jobStatus == Status.COMPLETED) {
+        qm.deleteTransaction(jobQueueName, bulkJobExecution.getTransactionId(), null);
+        em.delete(data);
+      }
+      // the job failed too many times. Delete the transaction to prevent it
+      // running again and save it for querying later
+      else if (jobStatus == Status.DEAD) {
+        qm.deleteTransaction(jobQueueName, bulkJobExecution.getTransactionId(), null);
+        em.update(data);
+      }
+      // update the job for the next run
+      else {
+        em.update(data);
+      }
+    } catch (Exception e) {
+      // should never happen
+      throw new JobRuntimeException(String.format("Unable to delete job data with id %s", data.getUuid()), e);
     }
+
   }
-  
-  
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.usergrid.batch.repository.JobAccessor#delayRetry(org.usergrid.batch
+   * .JobExecution, long)
+   */
+  @Override
+  public void delayRetry(JobExecution execution, long delay) {
+
+    JobData data = execution.getData();
+
+    try {
+      
+      // if it's a dead status, it's failed too many times, just kill the job
+      if (execution.getStatus() == Status.DEAD) {
+        qm.deleteTransaction(jobQueueName, execution.getTransactionId(), null);
+        em.update(data);
+        return;
+      }
+
+      // re-schedule the job to run again in the future
+      scheduleJob(execution.getJobName(), System.currentTimeMillis() + delay, data.getUuid());
+
+      // delete the pending transaction
+      qm.deleteTransaction(jobQueueName, execution.getTransactionId(), null);
+
+      // update the data for the next run
+
+      em.update(data);
+    } catch (Exception e) {
+      // should never happen
+      throw new JobRuntimeException(String.format("Unable to delete job data with id %s", data.getUuid()), e);
+    }
+
+  }
+
   @PostConstruct
   public void init() {
     qm = qmf.getQueueManager(CassandraService.MANAGEMENT_APPLICATION_ID);
     em = emf.getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
 
   }
-  
-
 
   /**
-   * @param qmf the qmf to set
+   * @param qmf
+   *          the qmf to set
    */
   @Autowired
   public void setQmf(QueueManagerFactory qmf) {
@@ -219,7 +295,8 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
   }
 
   /**
-   * @param emf the emf to set
+   * @param emf
+   *          the emf to set
    */
   @Autowired
   public void setEmf(EntityManagerFactory emf) {
@@ -227,18 +304,19 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
   }
 
   /**
-   * @param jobQueueName the jobQueueName to set
+   * @param jobQueueName
+   *          the jobQueueName to set
    */
   public void setJobQueueName(String jobQueueName) {
     this.jobQueueName = jobQueueName;
   }
 
   /**
-   * @param timeout the timeout to set
+   * @param timeout
+   *          the timeout to set
    */
   public void setJobTimeout(long timeout) {
     this.jobTimeout = timeout;
   }
-
 
 }

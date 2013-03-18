@@ -15,10 +15,13 @@ import com.google.common.base.Preconditions;
  * @author zznate
  * @author tnine
  */
-public class JobExecution {
+public class JobExecution{
 
+  public static final int FOREVER = -1;
+  
   private final UUID jobId;
   private final UUID runId;
+  private final String jobName;
   private long duration;
   private Status status = Status.NOT_STARTED;
   private long startTime;
@@ -31,8 +34,10 @@ public class JobExecution {
     this.runId = UUID.randomUUID();
     this.jobId = jobDescriptor.getJobId();
     this.scheduler = jobDescriptor.getScheduler();
+    this.jobName = jobDescriptor.getJobName();
     this.transactionId = jobDescriptor.getTransactionId();
     this.data = jobDescriptor.getData();
+    
   }
 
   public UUID getRunId() {
@@ -76,10 +81,22 @@ public class JobExecution {
     duration = System.currentTimeMillis() - startTime;
   }
 
-  public void failed() {
+  /**
+   * Mark this execution as failed.  Also pass the maxium number of possible failures.  Set to JobExecution.FOREVER for no limit
+   * @param maxFailures
+   */
+  public void failed(int maxFailures) {
     Preconditions.checkState(this.status.equals(Status.IN_PROGRESS), "Attempted to fail job not in progress");
-    this.status = Status.FAILED;
+    status = Status.FAILED;
     duration = System.currentTimeMillis() - startTime;
+    data.incrementFailures();
+    
+    
+    
+    //use >= in case the threshold lowers after the job has passed the failure mark
+    if(maxFailures != FOREVER && data.getFailCount() > maxFailures){
+      status = Status.DEAD;
+    }
   }
   
   public void heartbeat() throws JobExecutionException{
@@ -105,8 +122,15 @@ public class JobExecution {
     return this.status;
   }
 
+  /**
+   * @return the jobName
+   */
+  public String getJobName() {
+    return jobName;
+  }
+
   public enum Status {
-    NOT_STARTED, IN_PROGRESS, COMPLETED, FAILED
+    NOT_STARTED, IN_PROGRESS, COMPLETED, FAILED, DEAD
   }
 
 }

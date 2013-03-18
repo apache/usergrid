@@ -6,7 +6,9 @@ import static org.junit.Assert.fail;
 import java.util.UUID;
 
 import org.junit.Test;
+import org.usergrid.batch.JobExecution.Status;
 import org.usergrid.batch.repository.JobDescriptor;
+import org.usergrid.batch.service.JobData;
 
 /**
  * @author zznate
@@ -35,7 +37,7 @@ public class BulkJobExecutionUnitTest {
     }
 
     try {
-      bje.failed();
+      bje.failed(0);
       fail("Should have thrown ISE on NOT_STARTED to FAILED");
     } catch (IllegalStateException ise) {
     }
@@ -43,11 +45,58 @@ public class BulkJobExecutionUnitTest {
 
     bje.completed();
     try {
-      bje.failed();
+      bje.failed(0);
       fail("Should have failed failed after complete call");
     } catch (IllegalStateException ise) {
     }
 
+  }
+  
+  @Test
+  public void failureTriggerCount(){
+    JobData data = new JobData();
+    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, null);
+    JobExecution bje = new JobExecution(jobDescriptor);
+    
+    bje.start();
+    bje.failed(1);
+    
+    assertEquals(Status.FAILED, bje.getStatus());
+    assertEquals(1, data.getFailCount());
+    
+    //now fail again, we should trigger a state change
+    bje = new JobExecution(jobDescriptor);
+    bje.start();
+    bje.failed(1);
+    
+    assertEquals(Status.DEAD, bje.getStatus());
+    assertEquals(2, data.getFailCount());
+    
+    
+  }
+  
+  
+  @Test
+  public void failureTriggerNoTrip(){
+    JobData data = new JobData();
+    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, null);
+    JobExecution bje = new JobExecution(jobDescriptor);
+    
+    bje.start();
+    bje.failed(JobExecution.FOREVER);
+    
+    assertEquals(Status.FAILED, bje.getStatus());
+    assertEquals(1, data.getFailCount());
+    
+    //now fail again, we should trigger a state change
+    bje = new JobExecution(jobDescriptor);
+    bje.start();
+    bje.failed(JobExecution.FOREVER);
+    
+    assertEquals(Status.FAILED, bje.getStatus());
+    assertEquals(2, data.getFailCount());
+    
+    
   }
 
   @Test

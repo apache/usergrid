@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -37,19 +38,20 @@ import com.yammer.metrics.annotation.Timed;
  */
 public class JobSchedulerService extends AbstractScheduledService {
 
-  protected static final long DEFAULT_DELAY = 1000;
+  protected static final long DEFAULT_DELAY = 200;
   protected static final long ERROR_DELAY = 10000;
   protected static final List<JobDescriptor> EMPTY = Collections.unmodifiableList(new ArrayList<JobDescriptor>(0));
 
   private static final Logger logger = LoggerFactory.getLogger(JobSchedulerService.class);
 
-  private final AtomicInteger runningJobs = new AtomicInteger();
-
   private long interval = DEFAULT_DELAY;
   private int workerSize = 1;
+  private int maxFailCount = 10;
 
   private JobAccessor jobAccessor;
   private JobFactory jobFactory;
+
+  private Semaphore capacitySemaphore;
 
   private ListeningScheduledExecutorService service;
 
@@ -61,25 +63,27 @@ public class JobSchedulerService extends AbstractScheduledService {
   protected void runOneIteration() throws Exception {
     logger.info("running iteration...");
     List<JobDescriptor> activeJobs = null;
-  
+
     // run until there are no more active jobs
     while (true) {
 
-      int capacity = getCapacity();
-      
+      // get the semaphore if we can. This means we have space for at least 1
+      // job
+      capacitySemaphore.acquire();
+      // release the sempaphore we only need to acquire as a way to stop the
+      // loop if there's no capacity
+      capacitySemaphore.release();
+
+      // always +1 since the acquire means we'll be off by 1
+      int capacity = capacitySemaphore.availablePermits();
+
       logger.debug("capacity = {}", capacity);
-      
-      // nothing to do, exit the loop, we don't have capacity to run any more jobs
-      if (capacity == 0) {
-        break;
-      }
 
       activeJobs = jobAccessor.getJobs(capacity);
-     
-     
+
       // nothing to do, we don't have any jobs to run
       if (activeJobs.size() == 0) {
-        break;
+        return;
       }
 
       for (JobDescriptor jd : activeJobs) {
@@ -102,13 +106,6 @@ public class JobSchedulerService extends AbstractScheduledService {
   }
 
   /**
-   * Get the number of workers we can submit
-   * @return
-   */
-  private int getCapacity(){
-    return workerSize - runningJobs.get();
-  }
-  /**
    * Use the provided BulkJobFactory to build and submit BulkJob items as
    * ListenableFuture objects
    * 
@@ -117,6 +114,7 @@ public class JobSchedulerService extends AbstractScheduledService {
   @ExceptionMetered(name = "BulkJobScheduledService_submitWork_exceptions", group = "scheduler")
   private void submitWork(final JobDescriptor jobDescriptor) {
     List<Job> jobs;
+
     try {
       jobs = jobFactory.jobsFrom(jobDescriptor);
     } catch (JobNotFoundException e) {
@@ -126,41 +124,54 @@ public class JobSchedulerService extends AbstractScheduledService {
 
     for (final Job job : jobs) {
 
-      ListenableFuture<JobExecution> future = service.submit(new Callable<JobExecution>() {
-        @Override
-        public JobExecution call() throws Exception {
-          runningJobs.incrementAndGet();
+      // job execution needs to be external to both the callback and the task.
+      // This way regardless of any error we can
+      // mark a job as failed if required
+      final JobExecution execution = new JobExecution(jobDescriptor);
 
-          JobExecution execution = new JobExecution(jobDescriptor);
+      ListenableFuture<Void> future = service.submit(new Callable<Void>() {
+        @Override
+        public Void call() throws Exception {
+          capacitySemaphore.acquire();
 
           // TODO wrap and throw specifically typed exception for onFailure,
           // needs jobId
           job.execute(execution);
 
-          return execution;
+          return null;
 
         }
       });
 
-      Futures.addCallback(future, new FutureCallback<JobExecution>() {
+      Futures.addCallback(future, new FutureCallback<Void>() {
         @Override
-        public void onSuccess(JobExecution execution) {
+        public void onSuccess(Void param) {
           logger.info("Successful completion of bulkJob {}", execution);
           execution.completed();
           jobAccessor.save(execution);
-          runningJobs.decrementAndGet();
+          capacitySemaphore.release();
         }
 
         @Override
         public void onFailure(Throwable throwable) {
           logger.error("Failed execution for bulkJob {}", throwable);
+          // mark it as failed
+          execution.failed(maxFailCount);
+
+          // there's a retry delay, use it
           if (throwable instanceof JobExecutionException) {
-            JobExecution execution = ((JobExecutionException) throwable).getExecution();
-            execution.failed();
-            jobAccessor.save(execution);
+            long retryDelay = ((JobExecutionException) throwable).getRetryTimeout();
+
+            if (retryDelay > 0) {
+              jobAccessor.delayRetry(execution, retryDelay);
+              capacitySemaphore.release();
+              return;
+            }
           }
 
-          runningJobs.decrementAndGet();
+          jobAccessor.save(execution);
+          capacitySemaphore.release();
+
         }
       });
     }
@@ -198,6 +209,14 @@ public class JobSchedulerService extends AbstractScheduledService {
     this.jobFactory = jobFactory;
   }
 
+  /**
+   * @param maxFailCount
+   *          the maxFailCount to set
+   */
+  public void setMaxFailCount(int maxFailCount) {
+    this.maxFailCount = maxFailCount;
+  }
+
   /*
    * (non-Javadoc)
    * 
@@ -206,6 +225,7 @@ public class JobSchedulerService extends AbstractScheduledService {
   @Override
   protected void startUp() throws Exception {
     service = MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(workerSize));
+    capacitySemaphore = new Semaphore(workerSize);
     super.startUp();
   }
 
@@ -216,6 +236,7 @@ public class JobSchedulerService extends AbstractScheduledService {
    */
   @Override
   protected void shutDown() throws Exception {
+    service.shutdown();
     super.shutDown();
   }
 }

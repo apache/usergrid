@@ -33,12 +33,9 @@ public class JobData extends TypedEntity {
 
   @EntityProperty(required = true, basic = true, indexed = true)
   private long fireTime;
-
-  // this is ugly, but the only way to register this class once with the schema
-  // manager
-//  static {
-//    Schema.getDefaultSchema().registerEntity(JobData.class);
-//  }
+  
+  @EntityProperty(required = true, basic = true, indexed = true)
+  private int failCount;
 
   /**
    * @param jobName
@@ -97,6 +94,25 @@ public class JobData extends TypedEntity {
    */
   public void setFireTime(long fireTime) {
     this.fireTime = fireTime;
+  }
+  
+  public void incrementFailures(){
+    failCount++;
+  }
+  
+  /**
+   * Get the number of times this job has failed
+   * @return
+   */
+  public int getFailCount(){
+    return failCount;
+  }
+
+  /**
+   * @param failCount the failCount to set
+   */
+  public void setFailCount(int failCount) {
+    this.failCount = failCount;
   }
 
   // /**
