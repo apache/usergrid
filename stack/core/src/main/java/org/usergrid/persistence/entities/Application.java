@@ -115,6 +115,8 @@ public class Application extends TypedEntity {
 	@EntityCollection(type = "device")
 	protected List<UUID> devices;
 
+  @EntityCollection(type = "notification")
+  protected List<UUID> notifications;
 
 	public Application() {
 		// id = UUIDUtils.newTimeUUID();
