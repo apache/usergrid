@@ -391,7 +391,7 @@ Usergrid.Client.prototype.getToken = function () {
  * @params {function} callback
  * @return {callback} callback(err, data)
  */
-Usergrid.Client.prototype.createUser = function(username, password, email, name, callback) {
+Usergrid.Client.prototype.signup = function(username, password, email, name, callback) {
   var self = this;
   var options = {
     type:"users",
