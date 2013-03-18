@@ -381,6 +381,32 @@ Usergrid.Client.prototype.getToken = function () {
 }
 
 /*
+ * A public facing helper method for signing up users
+ *
+ * @method signup
+ * @public
+ * @params {string} username
+ * @params {string} password
+ * @params {string} email
+ * @params {string} name
+ * @param {function} callback
+ * @return {callback} callback(err, data)
+ */
+Usergrid.Client.prototype.signup = function(username, password, email, name, callback) {
+  var self = this;
+  var options = {
+    type:"users",
+    username:username,
+    password:password,
+    email:email,
+    name:name
+  };
+  
+  this.createEntity(options, callback);
+}
+
+
+/*
 *  A public method to log in an app user - stores the token for later use
 *
 *  @method login
