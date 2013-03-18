@@ -74,6 +74,7 @@ import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.test.ShiroHelperRunner;
 
+@Ignore
 @RunWith(ShiroHelperRunner.class)
 public class EmailFlowTest {
 
@@ -98,7 +99,6 @@ public class EmailFlowTest {
 
 
 	@Test
-  @Ignore
 	public void testCreateOrganizationAndAdminWithConfirmationOnly()
 			throws Exception {
 
