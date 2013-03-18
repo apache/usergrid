@@ -38,7 +38,7 @@ import com.yammer.metrics.annotation.Timed;
  */
 public class JobSchedulerService extends AbstractScheduledService {
 
-  protected static final long DEFAULT_DELAY = 200;
+  protected static final long DEFAULT_DELAY = 1000;
   protected static final long ERROR_DELAY = 10000;
   protected static final List<JobDescriptor> EMPTY = Collections.unmodifiableList(new ArrayList<JobDescriptor>(0));
 
