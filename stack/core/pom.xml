@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.usergrid</groupId>
@@ -23,9 +24,9 @@
 				<version>2.7</version>
 			</plugin>
 			<plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>cobertura-maven-plugin</artifactId>
-            </plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+			</plugin>
 		</plugins>
 	</reporting>
 	<build>
@@ -44,7 +45,7 @@
 				<filtering>true</filtering>
 				<includes>
 					<include>**/*.xml</include>
-                    <include>**/*.properties</include>
+					<include>**/*.properties</include>
 				</includes>
 			</testResource>
 		</testResources>
@@ -77,35 +78,23 @@
 
 				</configuration>
 			</plugin>
-            <!--
-            <plugin>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.13</version>
-                <configuration>
-                    <systemProperties combine.children="append">
-                        <dataDir>${basedir}/src/test/resources</dataDir>
-                    </systemProperties>
-
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                        <configuration>
-                            <skip>false</skip>
-
-                            <includes>
-                                <include>**/*Test.java</include>
-                            </includes>
-                            <excludes>
-                                <exclude>**/*UnitTest.java</exclude>
-                            </excludes>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin> -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- <plugin> <artifactId>maven-failsafe-plugin</artifactId> <version>2.13</version> 
+				<configuration> <systemProperties combine.children="append"> <dataDir>${basedir}/src/test/resources</dataDir> 
+				</systemProperties> </configuration> <executions> <execution> <goals> <goal>integration-test</goal> 
+				<goal>verify</goal> </goals> <configuration> <skip>false</skip> <includes> 
+				<include>**/*Test.java</include> </includes> <excludes> <exclude>**/*UnitTest.java</exclude> 
+				</excludes> </configuration> </execution> </executions> </plugin> -->
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -143,7 +132,7 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
@@ -213,12 +202,12 @@
 			<artifactId>usergrid-count-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-        <dependency>
-      			<groupId>org.usergrid</groupId>
-      			<artifactId>usergrid-test-utils</artifactId>
-      			<version>${project.version}</version>
-                <scope>test</scope>
-      		</dependency>
+		<dependency>
+			<groupId>org.usergrid</groupId>
+			<artifactId>usergrid-test-utils</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.antlr</groupId>
 			<artifactId>antlr-runtime</artifactId>
@@ -227,7 +216,7 @@
 			<groupId>com.fasterxml.uuid</groupId>
 			<artifactId>java-uuid-generator</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.apache.cassandra</groupId>
 			<artifactId>cassandra-all</artifactId>
@@ -321,7 +310,7 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-        </dependency>
+		</dependency>
 		<dependency>
 			<groupId>com.ganyo</groupId>
 			<artifactId>geocell</artifactId>
@@ -415,26 +404,26 @@
 			<groupId>org.perf4j</groupId>
 			<artifactId>perf4j</artifactId>
 		</dependency>
-		
-                <dependency>
-                    <groupId>org.aspectj</groupId>
-                    <artifactId>aspectjweaver</artifactId>
-                    <version>1.6.12</version>
-                </dependency>
-               <dependency>
-                    <groupId>org.aspectj</groupId>
-                    <artifactId>aspectjrt</artifactId>
-                    <version>1.6.12</version>
-                </dependency>
-        <dependency>
-            <groupId>cglib</groupId>
-            <artifactId>cglib-nodep</artifactId>
-            <version>2.2.2</version>
-        </dependency>
-        <dependency>
-        	<groupId>com.netflix.curator</groupId>
-        	<artifactId>curator-recipes</artifactId>
-        	<version>1.2.6</version>
-        </dependency>
+
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+			<version>1.6.12</version>
+		</dependency>
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjrt</artifactId>
+			<version>1.6.12</version>
+		</dependency>
+		<dependency>
+			<groupId>cglib</groupId>
+			<artifactId>cglib-nodep</artifactId>
+			<version>2.2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.curator</groupId>
+			<artifactId>curator-recipes</artifactId>
+			<version>1.2.6</version>
+		</dependency>
 	</dependencies>
 </project>

@@ -161,7 +161,7 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     }
 
     private static void stopCassandra() throws Exception {
-        if (contextHolder != null) {
+        if (contextHolder != null && contextHolder.cassandraDaemon != null) {
             contextHolder.cassandraDaemon.deactivate();
         }
         executor.shutdown();
@@ -169,8 +169,8 @@ public class CassandraRunner extends BlockJUnit4ClassRunner {
     }
 
     static class ContextHolder implements Runnable {
-        static ConfigurableApplicationContext applicationContext;
-        static CassandraDaemon cassandraDaemon;
+        ConfigurableApplicationContext applicationContext;
+        CassandraDaemon cassandraDaemon;
 
         @Override
         public void run() {

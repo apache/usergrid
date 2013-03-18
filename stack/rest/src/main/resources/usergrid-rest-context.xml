@@ -8,6 +8,7 @@
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
 	<import resource="classpath:/usergrid-services-context.xml" />
+	<import resource="classpath:/usergrid-scheduler-context.xml" />
 	
 	<context:component-scan base-package="org.usergrid.rest" />
 
