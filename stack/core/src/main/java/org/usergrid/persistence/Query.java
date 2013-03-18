@@ -1777,9 +1777,7 @@ public class Query {
                 Map<String, String> selects = getSelectAssignments();
                 for (Map.Entry<String, String> select : selects.entrySet()) {
                     Object obj = JsonUtils.select(entity, select.getValue(), false);
-                    if (obj == null) {
-                        obj = "";
-                    } else {
+                    if (obj != null) {
                         include = true;
                     }
                     result.put(select.getKey(), obj);
@@ -1793,9 +1791,7 @@ public class Query {
                 Set<String> selects = getSelectSubjects();
                 for (String select : selects) {
                     Object obj = JsonUtils.select(entity, select);
-                    if (obj == null) {
-                        obj = "";
-                    } else {
+                    if (obj != null) {
                         include = true;
                     }
                     result.add(obj);

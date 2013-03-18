@@ -322,6 +322,9 @@ public class JsonUtils {
           return result;
         }
       }
+      else {
+          return result;
+      }
     }
 
 		return obj;

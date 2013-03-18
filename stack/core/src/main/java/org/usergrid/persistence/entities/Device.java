@@ -33,12 +33,22 @@ import org.usergrid.persistence.annotations.EntityProperty;
 public class Device extends TypedEntity {
 
 	public static final String ENTITY_TYPE = "device";
+  public static final String RECEIPTS_COLLECTION = "receipts";
 
-	@EntityProperty(indexed = true, fulltextIndexed = false, required = false, indexedInConnections = true, aliasProperty = true, unique = true, basic = true)
+  @EntityProperty(indexed = true, fulltextIndexed = false, required = false, indexedInConnections = true, aliasProperty = true, unique = true, basic = true)
 	protected String name;
 
 	@EntityCollection(type = "user", linkedCollection = "devices")
 	protected List<UUID> users;
+
+  @EntityCollection(type = "receipt")
+  protected List<UUID> receipts;
+
+  @EntityProperty
+  protected Integer badge;
+
+  @EntityCollection(type = "notification")
+  protected List<UUID> notifications;
 
 	public Device() {
 		// id = UUIDUtils.newTimeUUID();
@@ -67,4 +77,28 @@ public class Device extends TypedEntity {
 		this.users = users;
 	}
 
+  public List<UUID> getNotifications() {
+    throw new UnsupportedOperationException();
+  }
+
+  public void setNotifications(List<UUID> notifications) {
+    throw new UnsupportedOperationException();
+  }
+
+  public List<UUID> getReceipts() {
+    return receipts;
+  }
+
+  public void setReceipts(List<UUID> receipts) {
+    this.receipts = receipts;
+  }
+
+  @JsonSerialize(include = Inclusion.NON_NULL)
+  public Integer getBadge() {
+    return badge;
+  }
+
+  public void setBadge(Integer badge) {
+    this.badge = badge;
+  }
 }

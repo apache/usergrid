@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
@@ -137,7 +138,11 @@ public class ApplicationsService extends AbstractService {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> collections = (Map<String, Object>) c;
                 for (String collection : collections.keySet()) {
-                    em.createApplicationCollection(collection);
+                	if( isReservedCollection(collection) ) {
+                		continue;
+                	}
+                	
+                	em.createApplicationCollection(collection);
                     logger.info("Created collection " + collection
                             + " for application " + sm.getApplicationId());
                 }
@@ -157,43 +162,15 @@ public class ApplicationsService extends AbstractService {
 
         return genericServiceResults(r);
     }
-
-//    public ServiceResults getApplicationRoles() throws Exception {
-//        Map<String, String> roles = em.getRoles();
-//        ServiceResults results = genericServiceResults().withData(roles);
-//        return results;
-//    }
-
-//    public ServiceResults newApplicationRole(String roleName, String roleTitle,
-//            long inactivity) throws Exception {
-//        em.createRole(roleName, roleTitle, inactivity);
-//        return getApplicationRoles();
-//    }
-//
-//    public ServiceResults deleteApplicationRole(String roleName)
-//            throws Exception {
-//        em.deleteRole(roleName);
-//        return getApplicationRoles();
-//    }
-
-//    public ServiceResults getApplicationRolePermissions(String roleName)
-//            throws Exception {
-//        Set<String> permissions = em.getRolePermissions(roleName);
-//        ServiceResults results = genericServiceResults().withData(permissions);
-//        return results;
-//    }
-
-//    public ServiceResults grantApplicationRolePermission(String roleName,
-//            String permission) throws Exception {
-//        em.grantRolePermission(roleName, permission);
-//        return getApplicationRolePermissions(roleName);
-//    }
-//
-//    public ServiceResults revokeApplicationRolePermission(String roleName,
-//            String permission) throws Exception {
-//        em.revokeRolePermission(roleName, permission);
-//        return getApplicationRolePermissions(roleName);
-//    }
+    
+    private boolean isReservedCollection(String collection) {
+    	if(StringUtils.equalsIgnoreCase("applications", collection) 
+    		|| StringUtils.equalsIgnoreCase("application", collection)) {
+    		return true;
+    	}
+    	
+		return false;
+    }
 
     public ServiceResults getApplicationCounterNames() throws Exception {
         Set<String> counters = em.getCounterNames();
