@@ -59,6 +59,6 @@
 			<scope>test</scope>
 			<classifier>tests</classifier>
 		</dependency>
-		
+				
 	</dependencies>
 </project>
