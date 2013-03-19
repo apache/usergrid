@@ -1,0 +1,31 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+	<import resource="classpath:/usergrid-services-context.xml" />
+
+	<bean id="jobSchedulerBackgroundService" class="org.usergrid.batch.service.JobSchedulerService">
+		<property name="jobFactory" ref="jobFactory" />
+		<property name="jobAccessor" ref="schedulerService" />
+		<property name="workerSize" value="${usergrid.scheduler.job.workers}" />
+		<property name="interval" value="${usergrid.scheduler.job.interval}" />
+	</bean>
+
+	<bean id="schedulerService" class="org.usergrid.batch.service.SchedulerServiceImpl">
+		<property name="jobTimeout" value="${usergrid.scheduler.job.timeout}" />
+		<property name="jobQueueName" value="${usergrid.scheduler.job.queueName}" />
+	</bean>
+
+
+	<bean id="jobFactory" class="org.usergrid.batch.UsergridJobFactory" />
+
+
+	<!-- scan all job classes -->
+	<context:component-scan base-package="org.usergrid.batch.job" />
+	<context:annotation-config />
+	
+	<!-- other beans -->
+
+</beans>

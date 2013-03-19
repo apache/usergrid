@@ -443,6 +443,8 @@ public class Schema {
 
             entityClassPropertyToDescriptor.put(entityClass,
                     propertyDescriptors);
+            
+            registeredEntityClasses.put(entityClass, entity);
         }
     }
 
@@ -1764,6 +1766,12 @@ public class Schema {
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         Map<String, PropertyDescriptor> propertyDescriptors = entityClassPropertyToDescriptor
                 .get(entity.getClass());
+        
+        if(propertyDescriptors == null){
+          registerEntity(entity.getClass());
+          propertyDescriptors = entityClassPropertyToDescriptor.get(entity.getClass());
+        }
+        
         for (Entry<String, PropertyDescriptor> propertyEntry : propertyDescriptors
                 .entrySet()) {
             String property = propertyEntry.getKey();

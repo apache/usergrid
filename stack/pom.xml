@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -20,8 +21,8 @@
 		<snakeyaml-version>1.8</snakeyaml-version>
 		<usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
 		<usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
-        <metrics-version>2.1.2</metrics-version>
-        <amber-version>0.22-incubating</amber-version>
+		<metrics-version>2.1.2</metrics-version>
+		<amber-version>0.22-incubating</amber-version>
 	</properties>
 
 	<parent>
@@ -83,7 +84,8 @@
 		<module>count-common</module>
 		<module>count-batcher</module>
 		<module>count-inserter</module>
-    <module>test-utils</module>
+		<module>test-utils</module>
+		<module>scheduler</module>
 	</modules>
 
 
@@ -112,7 +114,7 @@
 				<version>3.2.1</version>
 				<type>jar</type>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>commons-lang</groupId>
 				<artifactId>commons-lang</artifactId>
@@ -233,12 +235,12 @@
 				<version>1.5</version>
 				<scope>test</scope>
 			</dependency>
-		    <dependency>
-		        <groupId>org.powermock</groupId>
-		        <artifactId>powermock-module-junit4-rule-agent</artifactId>
-		        <version>1.5</version>
-		        <scope>test</scope>
-		    </dependency>
+			<dependency>
+				<groupId>org.powermock</groupId>
+				<artifactId>powermock-module-junit4-rule-agent</artifactId>
+				<version>1.5</version>
+				<scope>test</scope>
+			</dependency>
 			<dependency>
 				<groupId>org.powermock</groupId>
 				<artifactId>powermock-api-mockito</artifactId>
@@ -265,7 +267,8 @@
 				<artifactId>geocell</artifactId>
 				<version>0.0.10</version>
 			</dependency>
-			<!-- TODO T.N. try and remove this --> <dependency>
+			<!-- TODO T.N. try and remove this -->
+			<dependency>
 				<groupId>javaee</groupId>
 				<artifactId>javaee-api</artifactId>
 				<version>5</version>
@@ -531,39 +534,51 @@
 				<artifactId>snakeyaml</artifactId>
 				<version>${snakeyaml-version}</version>
 			</dependency>
-        <dependency>
-            <groupId>com.yammer.metrics</groupId>
-            <artifactId>metrics-core</artifactId>
-            <version>${metrics-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.metrics</groupId>
-            <artifactId>metrics-spring</artifactId>
-            <version>${metrics-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.metrics</groupId>
-            <artifactId>metrics-annotation</artifactId>
-            <version>${metrics-version}</version>
-        </dependency>
+			<dependency>
+				<groupId>com.yammer.metrics</groupId>
+				<artifactId>metrics-core</artifactId>
+				<version>${metrics-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.yammer.metrics</groupId>
+				<artifactId>metrics-spring</artifactId>
+				<version>${metrics-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.yammer.metrics</groupId>
+				<artifactId>metrics-annotation</artifactId>
+				<version>${metrics-version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<build>
 		<plugins>
-		<plugin>
-			    <groupId>org.apache.maven.plugins</groupId>
-			    <artifactId>maven-compiler-plugin</artifactId>
-			    <configuration>
-			        <source>1.6</source>
-			        <target>1.6</target>
-			    </configuration>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<!--  always build test-jars if we have them -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
 
 	<profiles>
-		<!-- Jenkins by default defines a property BUILD_NUMBER which is used to
+		<!-- Jenkins by default defines a property BUILD_NUMBER which is used to 
 			enable the profile. -->
 		<profile>
 			<id>jenkins</id>
