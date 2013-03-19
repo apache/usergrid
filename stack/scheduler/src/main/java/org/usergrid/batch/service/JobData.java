@@ -115,29 +115,4 @@ public class JobData extends TypedEntity {
     this.failCount = failCount;
   }
 
-  // /**
-  // *
-  // */
-  // public JobData() {
-  // }
-  //
-  // /* (non-Javadoc)
-  // * @see org.usergrid.persistence.DynamicEntity#getType()
-  // */
-  // @Override
-  // @EntityProperty(required = true, mutable = false, basic = true, indexed =
-  // false)
-  // public String getType() {
-  // return NAME;
-  // }
-  //
-  // /* (non-Javadoc)
-  // * @see org.usergrid.persistence.DynamicEntity#setType(java.lang.String)
-  // */
-  // @Override
-  // public void setType(String type) {
-  // //do nothing, no op on purpose
-  // }
-  //
-
 }
