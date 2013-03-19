@@ -170,6 +170,15 @@ public class AbstractCollectionService extends AbstractService {
 			level = Results.Level.ALL_PROPERTIES;
 		}
 
+    // enable fancy hierarchy selection for creating notifications
+    if (context.getAction() == ServiceAction.POST) {
+      List<ServiceParameter> parameters = context.getRequest().getParameters();
+      String lastParam = parameters.get(parameters.size() - 1).getName();
+      if (lastParam.equalsIgnoreCase("notification") || lastParam.equalsIgnoreCase("notifications")) {
+        count = 10000;
+      }
+    }
+
 		query = new Query(query);
 		query.setResultsLevel(level);
 		query.setLimit(query.getLimit(count));
