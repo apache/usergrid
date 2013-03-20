@@ -3,8 +3,8 @@ package org.usergrid.batch;
 import java.util.UUID;
 
 import org.usergrid.batch.repository.JobDescriptor;
-import org.usergrid.batch.service.JobData;
 import org.usergrid.batch.service.SchedulerService;
+import org.usergrid.persistence.entities.JobData;
 
 import com.google.common.base.Preconditions;
 
@@ -73,6 +73,7 @@ public class JobExecution{
         "Attempted to start job in progress");
     this.status = Status.IN_PROGRESS;
     startTime = System.currentTimeMillis();
+    data.setStartTime(startTime);
   }
 
   public void completed() {

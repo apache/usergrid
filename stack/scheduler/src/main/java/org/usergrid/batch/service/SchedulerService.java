@@ -19,6 +19,7 @@ import java.util.UUID;
 
 import org.usergrid.batch.JobExecution;
 import org.usergrid.batch.JobExecutionException;
+import org.usergrid.persistence.entities.JobData;
 
 /**
  * Simple interface for performing job scheduling
