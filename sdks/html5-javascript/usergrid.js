@@ -191,7 +191,6 @@ Usergrid.Client.prototype.request = function (options, callback) {
  *  @param {function} callback
  *  @return {callback} callback(err, data)
  */
-
 Usergrid.Client.prototype.createGroup = function(path, callback) {
   var options = {
     type:"groups",
@@ -204,8 +203,13 @@ Usergrid.Client.prototype.createGroup = function(path, callback) {
 /*
  *  Main function for deleting groups.
  *
+ *  @method deleteGroup
+ *  @public
+ *  @params {string} path
+ *  @param {function} callback
+ *  @return {callback} callback(err, data)
+ *
  */
-
 Usergrid.Client.prototype.deleteGroup = function(path, callback) {
   var options = {
     type:"groups",
@@ -214,7 +218,9 @@ Usergrid.Client.prototype.deleteGroup = function(path, callback) {
 
   this.getEntity(options, function(error, group) {
     if(error) {
-      callback(error, group);
+      if(typeof(callback) === 'function'){
+        callback(error, group);
+      }
     } else {
       group.destroy(callback);
     }
@@ -232,7 +238,6 @@ Usergrid.Client.prototype.deleteGroup = function(path, callback) {
  *  @param {function} callback
  *  @return {callback} callback(err, data)
  */
-
 Usergrid.Client.prototype.addUserToGroup = function(options, callback) {
   var options = {
     method:"POST",
@@ -241,13 +246,26 @@ Usergrid.Client.prototype.addUserToGroup = function(options, callback) {
 
   this.request(options, function(error, data){
     if(error) {
-      callback(error);
+      if(typeof(callback) === 'function') {
+        callback(error, data);
+      }
     } else {
       callback(error, data);
     }
   });
 }
 
+/*
+ *  Main function for removing a user from a group.
+ *
+ *  options object: options {path:'group_path', user: user entity}
+ *
+ *  @method removeUserFromGroup
+ *  @public
+ *  @params {object} options
+ *  @param {function} callback
+ *  @return {callback} callback(err, data_
+ */
 Usergrid.Client.prototype.removeUserFromGroup = function(options, callback) {
   var options = {
     method:"DELETE",
@@ -256,7 +274,9 @@ Usergrid.Client.prototype.removeUserFromGroup = function(options, callback) {
 
   this.request(options, function(error, data){
     if(error) {
-      callback(error);
+      if(typeof(callback) === 'function') {
+        callback(error, data);
+      }
     } else {
       callback(error, data);
     }
