@@ -646,7 +646,7 @@ public class Schema {
         }
 
         if (cls == null) {
-            return null;
+            cls = DynamicEntity.class;
         }
         
         typeToEntityClass.put(type, cls);

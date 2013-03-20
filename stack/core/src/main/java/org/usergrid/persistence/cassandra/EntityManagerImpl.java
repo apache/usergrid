@@ -2228,8 +2228,7 @@ public class EntityManagerImpl implements EntityManager {
 	@Override
 	public Results get(List<UUID> entityIds, Results.Level resultsLevel)
 			throws Exception {
-		List<? extends Entity> results = getEntities(entityIds, null,
-				DynamicEntity.class);
+		List<? extends Entity> results = getEntities(entityIds, null, null);
 		return Results.fromEntities(results);
 	}
 
@@ -2260,8 +2259,7 @@ public class EntityManagerImpl implements EntityManager {
 			return results;
 		}
 
-		results.setEntities(getEntities(results.getIds(), null,
-				DynamicEntity.class));
+		results.setEntities(getEntities(results.getIds(), null,null));
 
 		if (resultsLevel == Results.Level.LINKED_PROPERTIES) {
 			List<Entity> entities = results.getEntities();
@@ -2279,7 +2277,7 @@ public class EntityManagerImpl implements EntityManager {
 				}
 			}
 			List<DynamicEntity> linked = getEntities(new ArrayList<UUID>(
-					associatedIds.values()), null, DynamicEntity.class);
+					associatedIds.values()), null, null);
 			for (DynamicEntity l : linked) {
 				Map<String, Object> p = l.getDynamicProperties();
 				if ((p != null) && (p.size() > 0)) {
