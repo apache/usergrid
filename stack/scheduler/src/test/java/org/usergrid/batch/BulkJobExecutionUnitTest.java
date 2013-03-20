@@ -8,16 +8,18 @@ import java.util.UUID;
 import org.junit.Test;
 import org.usergrid.batch.JobExecution.Status;
 import org.usergrid.batch.repository.JobDescriptor;
-import org.usergrid.batch.service.JobData;
+import org.usergrid.persistence.entities.JobData;
 
 /**
  * @author zznate
+ * @author tnine
  */
 public class BulkJobExecutionUnitTest {
 
   @Test
   public void transitionsOk() {
-    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), null, null);
+    JobData data = new JobData();
+    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, null);
     JobExecution bje = new JobExecution(jobDescriptor);
     assertEquals(JobExecution.Status.NOT_STARTED, bje.getStatus());
     bje.start();
@@ -28,7 +30,8 @@ public class BulkJobExecutionUnitTest {
 
   @Test
   public void transitionFail() {
-    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), null, null);
+    JobData data = new JobData();
+    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, null);
     JobExecution bje = new JobExecution(jobDescriptor);
     try {
       bje.completed();
@@ -101,7 +104,8 @@ public class BulkJobExecutionUnitTest {
 
   @Test
   public void doubleInvokeFail() {
-    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), null, null);
+    JobData data = new JobData();
+    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, null);
     JobExecution bje = new JobExecution(jobDescriptor);
     bje.start();
     try {

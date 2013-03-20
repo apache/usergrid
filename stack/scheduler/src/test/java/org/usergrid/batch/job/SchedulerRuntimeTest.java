@@ -24,10 +24,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.usergrid.batch.service.JobData;
 import org.usergrid.batch.service.JobSchedulerService;
 import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.persistence.entities.JobData;
 
 import com.google.common.util.concurrent.Service.State;
 
