@@ -305,23 +305,27 @@
 
   //change contexts for REST operations
   $("#button-query-get").click(function(){
-    $("#query-json-box").show();
+    $("#query-json-box").hide();
     $("#query-query-box").show();
+    $("#query-limit-box").show();
   });
 
   $("#button-query-post").click(function(){
     $("#query-json-box").show();
     $("#query-query-box").hide();
+    $("#query-limit-box").hide();
   });
 
   $("#button-query-put").click(function(){
     $("#query-json-box").show();
     $("#query-query-box").show();
+    $("#query-limit-box").hide();
   });
 
   $("#button-query-delete").click(function(){
     $("#query-json-box").hide();
     $("#query-query-box").show();
+    $("#query-limit-box").hide();
   });
 
   $("#data-explorer-link").click(function(){
@@ -362,7 +366,7 @@
     if(!path){
       var path = $("#query-path").val();
     }
-    if(method.toUpperCase() !== 'GET'){
+    if(method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'DELETE'){
       var data = $("#query-source").val();
       try{
         validateJson();
@@ -372,14 +376,18 @@
         return false;
       }
     }
-    var queryString = $("#query-ql").val();
-    params = Usergrid.Params.getParsedParams(queryString);
 
-
+    var params = {};
+    var ql = $("#query-ql").val();
+    params.ql = ql;
+    if(method.toUpperCase() === 'GET'){
+      var limit = $("#query-limit").val();
+      params.limit = limit;
+    }
 
     queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function(response) { alertModal("Error", response) });
     //store the query object on the stack
-    pushQuery(queryObj);
+ //   pushQuery(queryObj);
     //then run the query
     runAppQuery(queryObj);
   }
@@ -472,6 +480,7 @@ function getCollectionCallback(response) {
         $.tmpl('apigee.ui.collection.table_rows.html', this_data).appendTo('#query-response-table');
       }
       if (response.entities.length == 1 && response.action != 'post') {
+        var p = $('#query-path').val();
         var path = response.entities[0].metadata.path;
         $('#query-path').val(path);
         var uuid = response.entities[0].uuid;
@@ -548,7 +557,7 @@ function buildContentArea(obj2) {
     }
     backButton.attr('onclick',"Usergrid.console.getCollection('GET','" + returnPath+ "')");
   }
-
+/*
   function pushQuery(queryObj) {
     //store the query object on the stack
     query_history.push(queryObj);
@@ -580,7 +589,7 @@ function buildContentArea(obj2) {
     }
     showBackButton();
   }
-
+*/
   //helper function for query explorer back button
   function showBackButton() {
     if (query_history.length > 0){
@@ -664,14 +673,9 @@ function buildContentArea(obj2) {
     $('#button-query-shrink').click(shrinkQueryInput);
     $('#button-query-expand').click(expandQueryInput);
 
-    $('#button-query-back').click(function() {popQuery();return false;} );
+   // $('#button-query-back').click(function() {popQuery();return false;} );
 
-/*    $('#button-query-get').click(function() {getCollection('GET');return false;} );
-    $('#button-query-post').click(function() {getCollection('POST');return false;} );
-    $('#button-query-put').click(function() {getCollection('PUT');return false;} );
-    $('#button-query-delete').click(function() {getCollection('DELETE');return false;} );*/
-
-    $('#button-query').click(function(){runCollectionQuery(); return false;})
+    $('#button-query').click(function(){runCollectionQuery(); return false;});
 
   }
 
@@ -905,6 +909,8 @@ function buildContentArea(obj2) {
     var appName = Usergrid.ApiClient.getApplicationName();
     if (!appName) {
       selectFirstApp();
+    } else {
+      setNavApplicationText();
     }
   }
 
@@ -4027,6 +4033,14 @@ function buildContentArea(obj2) {
           errorCallback();
           return
         }
+
+        //get the orgname and app name from the url
+        var requestedOrgName = Usergrid.Navigation.router.getOrgNameFromURL();
+        var requestedAppName = Usergrid.Navigation.router.getAppNameFromURL();
+
+        var orgNameSelected = false;
+        var appNameSelected = false;
+
         //store all the organizations and their applications
         for (org in response.data.organizations) {
           //grab the name
@@ -4034,10 +4048,21 @@ function buildContentArea(obj2) {
           //grab the uuid
           var orgUUID = response.data.organizations[org].uuid;
           organization = new Usergrid.Organization(orgName, orgUUID);
+
+          if (orgName === requestedOrgName) {
+            Usergrid.ApiClient.setOrganizationName(orgName);
+            orgNameSelected = true;
+          }
+
           for (app in response.data.organizations[org].applications) {
             //grab the name
             var appName = app.split("/")[1];
             if (!appName) { appName = app; }
+            if (appName === requestedAppName && orgNameSelected && orgName === requestedOrgName) {
+               Usergrid.ApiClient.setApplicationName(appName);
+               appNameSelected = true;
+            }
+
             //grab the id
             var appUUID = response.data.organizations[org].applications[app];
             //store in the new Application object
@@ -4047,10 +4072,13 @@ function buildContentArea(obj2) {
           //add organization to organizations list
           Usergrid.organizations.addItem(organization);
         }
-        //select the first org by default
-        var firstOrg = Usergrid.organizations.getFirstItem();
-        //save the first org in the client
-        Usergrid.ApiClient.setOrganizationName(firstOrg.getName());
+
+        if (!orgNameSelected) {
+          //select the first org by default
+          var firstOrg = Usergrid.organizations.getFirstItem();
+          //save the first org in the client
+          Usergrid.ApiClient.setOrganizationName(firstOrg.getName());
+        }
 
         //store user data in local storage
         Usergrid.userSession.saveAll(response.data.uuid, response.data.email, response.data.token);

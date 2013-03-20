@@ -131,6 +131,21 @@ Usergrid.Navigation = Backbone.Router.extend({
       }
       return false
     },
+    getAppNameFromURL: function(){
+      name = '';
+      try  {
+        name = window.location.hash.split('/')[1];
+      } catch (e) {}
+      return name;
+    },
+    getOrgNameFromURL: function(){
+      name = '';
+      try  {
+        name = window.location.hash.split('/')[0];
+        name = name.replace("#","");
+      } catch (e) {}
+      return name;
+    },
     showAppUserContent: function(){
       $('#left2').show();
       $('#sidebar-menu2').show();

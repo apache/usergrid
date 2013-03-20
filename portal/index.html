@@ -1338,7 +1338,7 @@
                           <!--a class="btn" id="button-query-back">&#9664; Back</a-->
                           <!--Added disabled class to change the way button looks but their functionality is as usual -->
                           <label class="control-label"><strong>Method </strong></label>
-                          <button type="button" class="btn btn-small disabled query-button" id="button-query-get">GET</button>
+                          <button type="button" class="btn btn-small disabled query-button active" id="button-query-get">GET</button>
                           <button type="button" class="btn btn-small disabled query-button" id="button-query-post">POST</button>
                           <button type="button" class="btn btn-small disabled query-button" id="button-query-put">PUT</button>
                           <button type="button" class="btn btn-small disabled query-button" id="button-query-delete">DELETE</button>
@@ -1374,23 +1374,11 @@
                         <label class="control-label" for="query-limit"><strong>Limit</strong></label>
                         <div class="controls">
                           <div class="input-append">
-                            <input id="query-limit" type="text" name="query-limit" class="span5" placeholder="ex: 100"/>
+                            <input id="query-limit" type="text" name="query-limit" class="span5" placeholder="ex: 10"/>
                           </div>
                         </div>
                       </div>
-                      <div class="control-group" id="query-order-by-box">
-                        <label class="control-label" for="query-order-by"><strong>Order By</strong></label>
-                        <div class="controls">
-                          <div class="input-append">
-                            <select id="query-order-by" name="query-order-by" class="span5">
-                              <option value="">None</option>
-                              <option value="ASC">ASC</option>
-                              <option value="DESC">DESC</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="control-group" id="query-json-box">
+                      <div class="control-group" id="query-json-box" style="display:none">
                         <label class="control-label" for="query-source"><strong>Json Body </strong></label>
                         <div class="controls">
                           <div class="input-append">
