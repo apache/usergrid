@@ -35,6 +35,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.entities.User;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
 
@@ -1406,5 +1407,48 @@ public class CollectionTest extends AbstractPersistenceTest {
    
     assertEquals("fb_100000787138041", username);
   }
+  
+  @Test
+  public void runtimeTypeCorrect() throws Exception {
+
+    UUID applicationId = createApplication("testOrganization", "runtimeTypeCorrect");
+    assertNotNull(applicationId);
+
+    EntityManager em = emf.getEntityManager(applicationId);
+    assertNotNull(em);
+
+    int size = 20;
+    List<User> createdEntities = new ArrayList<User>();
+
+    for (int i = 0; i < size; i++) {
+      User user = new User();
+      user.setEmail(String.format("test%d@usergrid.com", i));
+      user.setUsername(String.format("test%d", i));
+      user.setName(String.format("test%d", i));
+
+      User created = em.create(user);
+
+      createdEntities.add(created);
+      
+    }
+
+    Query query = new Query();
+    query.setLimit(50);
+
+    Results r = em.searchCollection(em.getApplicationRef(), "users",
+            query);
+
+    logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+
+    assertEquals(size, r.size());
+
+    // check they're all the same before deletion
+    for (int i = 0; i < size; i++) {
+      assertEquals(createdEntities.get(i).getUuid(), r.getEntities().get(i).getUuid());
+      assertTrue(createdEntities.get(i) instanceof User);
+    }
+
+  }
+
 
 }
