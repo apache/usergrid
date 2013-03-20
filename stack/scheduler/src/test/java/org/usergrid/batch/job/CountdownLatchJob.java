@@ -17,7 +17,6 @@ package org.usergrid.batch.job;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Ignore;
 import org.springframework.stereotype.Component;
