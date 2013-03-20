@@ -202,6 +202,26 @@ Usergrid.Client.prototype.createGroup = function(path, callback) {
 }
 
 /*
+ *  Main function for deleting groups.
+ *
+ */
+
+Usergrid.Client.prototype.deleteGroup = function(path, callback) {
+  var options = {
+    type:"groups",
+    name:path
+  }
+
+  this.getEntity(options, function(error, group) {
+    if(error) {
+      callback(error, group);
+    } else {
+      group.destroy(callback);
+    }
+  });
+}
+
+/*
  *  Main function for adding user to a group.
  *
  *  options object: options {path:'group_path', username: 'username'}
