@@ -35,6 +35,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.utils.JsonUtils;
 import org.usergrid.utils.UUIDUtils;
@@ -1432,12 +1433,8 @@ public class CollectionTest extends AbstractPersistenceTest {
       
     }
 
-    Query query = new Query();
-    query.setLimit(50);
-
-    Results r = em.searchCollection(em.getApplicationRef(), "users",
-            query);
-
+    Results r = em.getCollection(em.getApplicationRef(), "users", null, 50, Level.ALL_PROPERTIES, false);
+    
     logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
 
     assertEquals(size, r.size());
@@ -1445,7 +1442,7 @@ public class CollectionTest extends AbstractPersistenceTest {
     // check they're all the same before deletion
     for (int i = 0; i < size; i++) {
       assertEquals(createdEntities.get(i).getUuid(), r.getEntities().get(i).getUuid());
-      assertTrue(createdEntities.get(i) instanceof User);
+      assertTrue(r.getEntities().get(i) instanceof User);
     }
 
   }
