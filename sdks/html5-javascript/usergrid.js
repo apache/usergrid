@@ -183,6 +183,22 @@ Usergrid.Client.prototype.request = function (options, callback) {
 }
 
 /*
+ * Main function for creating new groups. Call this directly.
+ *
+ *
+ */
+
+Usergrid.Client.prototype.createGroup = function(path, callback) {
+  var options = {
+    type:"groups",
+    path:path
+  };
+
+  this.createEntity(options, callback);
+  
+}
+
+/*
 *  Main function for creating new entities - should be called directly.
 *
 *  options object: options {data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
