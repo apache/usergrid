@@ -64,6 +64,7 @@ import org.usergrid.management.exceptions.UnactivatedAppUserException;
 import org.usergrid.mq.QueueManager;
 import org.usergrid.persistence.Identifier;
 import org.usergrid.persistence.entities.User;
+import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.applications.assets.AssetsResource;
 import org.usergrid.rest.applications.events.EventsResource;
@@ -522,5 +523,31 @@ public class ApplicationResource extends ServiceResource {
     public String getState() {
         return state;
     }
+
+  // todo: find a mechanism to move these methods into the push notifications project
+  @RequireApplicationAccess
+  @Path("notifiers")
+  public AbstractContextResource getNotifiersResource(@Context UriInfo ui)
+      throws Exception {
+
+    Class cls = Class.forName("org.usergrid.rest.applications.notifiers.NotifiersResource");
+
+    logger.debug("NotifiersResource.getNotifiersResource");
+    addParameter(getServiceParameters(), "notifiers");
+
+    PathSegment ps = getFirstPathSegment("notifiers");
+    if (ps != null) {
+      addMatrixParams(getServiceParameters(), ui, ps);
+    }
+
+    return getSubResource(cls);
+  }
+
+  @RequireApplicationAccess
+  @Path("notifier")
+  public AbstractContextResource getNotifierResource(@Context UriInfo ui)
+      throws Exception {
+    return getNotifiersResource(ui);
+  }
 
 }
