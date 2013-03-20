@@ -372,17 +372,16 @@
         return false;
       }
     }
-    var ql = $("#query-ql").val();
-    //merge the data and the query only if query is not empty
-    if(ql !== ""){
-      var params = {"ql":ql};
-    }
-      //make a new query object
-      queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function(response) { alertModal("Error", response) });
-      //store the query object on the stack
-      pushQuery(queryObj);
-      //then run the query
-      runAppQuery(queryObj);
+    var queryString = $("#query-ql").val();
+    params = Usergrid.Params.getParsedParams(queryString);
+
+
+
+    queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function(response) { alertModal("Error", response) });
+    //store the query object on the stack
+    pushQuery(queryObj);
+    //then run the query
+    runAppQuery(queryObj);
   }
 
 

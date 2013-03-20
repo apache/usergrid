@@ -1359,7 +1359,7 @@
                         <label class="control-label" for="query-ql"><strong>Query String</strong></label>
                         <div class="controls">
                           <div class="input-append">
-                            <input id="query-ql" type="text" name="query" class="span5" placeholder="ex: ql=select * where name='fred'&limit=100"/>
+                            <input id="query-ql" type="text" name="query" class="span5" placeholder="ex: select * where name='fred'"/>
                             <div class="btn-group pull-right">
                               <a class="btn dropdown-toggle " data-toggle="dropdown">
                                 <span id='query-collections-caret' class="caret"></span>
@@ -1367,6 +1367,26 @@
                               <ul id="query-collections-indexes-list"  class="dropdown-menu ">
                               </ul>
                             </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="control-group" id="query-limit-box">
+                        <label class="control-label" for="query-limit"><strong>Limit</strong></label>
+                        <div class="controls">
+                          <div class="input-append">
+                            <input id="query-limit" type="text" name="query-limit" class="span5" placeholder="ex: 100"/>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="control-group" id="query-order-by-box">
+                        <label class="control-label" for="query-order-by"><strong>Order By</strong></label>
+                        <div class="controls">
+                          <div class="input-append">
+                            <select id="query-order-by" name="query-order-by" class="span5">
+                              <option value="">None</option>
+                              <option value="ASC">ASC</option>
+                              <option value="DESC">DESC</option>
+                            </select>
                           </div>
                         </div>
                       </div>
