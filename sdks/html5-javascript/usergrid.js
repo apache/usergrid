@@ -224,7 +224,7 @@ Usergrid.Client.prototype.deleteGroup = function(path, callback) {
 /*
  *  Main function for adding user to a group.
  *
- *  options object: options {path:'group_path', username: 'username'}
+ *  options object: options {path:'group_path', user: user entity}
  *
  *  @method addUserToGroup
  *  @public
@@ -236,7 +236,7 @@ Usergrid.Client.prototype.deleteGroup = function(path, callback) {
 Usergrid.Client.prototype.addUserToGroup = function(options, callback) {
   var options = {
     method:"POST",
-    endpoint:"groups/"+options.path+"/users/"+options.username
+    endpoint:"groups/"+options.path+"/users/"+options.user.get('username')
   }
 
   this.request(options, function(error, data){
@@ -247,6 +247,22 @@ Usergrid.Client.prototype.addUserToGroup = function(options, callback) {
     }
   });
 }
+
+Usergrid.Client.prototype.removeUserFromGroup = function(options, callback) {
+  var options = {
+    method:"DELETE",
+    endpoint:"groups/"+options.path+"/users/"+options.user.get('username')
+  }
+
+  this.request(options, function(error, data){
+    if(error) {
+      callback(error);
+    } else {
+      callback(error, data);
+    }
+  });
+}
+
 
 /*
 *  Main function for creating new entities - should be called directly.
