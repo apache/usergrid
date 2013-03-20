@@ -212,7 +212,7 @@ Usergrid.Client.prototype.addUserToGroup = function(options, callback) {
     if(error) {
       callback(error);
     } else {
-      callback(error, JSON.parse(data));
+      callback(error, "Done.");
     }
   });
 }
