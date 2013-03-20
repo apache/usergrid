@@ -183,9 +183,13 @@ Usergrid.Client.prototype.request = function (options, callback) {
 }
 
 /*
- * Main function for creating new groups. Call this directly.
+ *  Main function for creating new groups. Call this directly.
  *
- *
+ *  @method createGroup
+ *  @public
+ *  @params {string} path
+ *  @param {function} callback
+ *  @return {callback} callback(err, data)
  */
 
 Usergrid.Client.prototype.createGroup = function(path, callback) {
@@ -198,8 +202,15 @@ Usergrid.Client.prototype.createGroup = function(path, callback) {
 }
 
 /*
- * Main function for adding user to a group.
+ *  Main function for adding user to a group.
  *
+ *  options object: options {path:'group_path', username: 'username'}
+ *
+ *  @method addUserToGroup
+ *  @public
+ *  @params {object} options
+ *  @param {function} callback
+ *  @return {callback} callback(err, data)
  */
 
 Usergrid.Client.prototype.addUserToGroup = function(options, callback) {
@@ -212,7 +223,7 @@ Usergrid.Client.prototype.addUserToGroup = function(options, callback) {
     if(error) {
       callback(error);
     } else {
-      callback(error, "Done.");
+      callback(error, data);
     }
   });
 }
