@@ -40,6 +40,15 @@ import com.google.common.util.concurrent.Service.State;
 @RunWith(CassandraRunner.class)
 public class SchedulerRuntimeTest {
 
+  /**
+   * 
+   */
+  private static final String FAIL_PROP = "usergrid.scheduler.job.maxfail";
+  /**
+   * 
+   */
+  private static final String TIMEOUT_PROP = "usergrid.scheduler.job.timeout";
+  
   private SchedulerService scheduler;
   private Properties props;
 
@@ -48,21 +57,22 @@ public class SchedulerRuntimeTest {
     scheduler = CassandraRunner.getBean(SchedulerService.class);
 
     props = CassandraRunner.getBean("properties", Properties.class);
-    
-    //start the scheduler after we're all set up
+
+    // start the scheduler after we're all set up
     JobSchedulerService jobScheduler = CassandraRunner.getBean(JobSchedulerService.class);
     if (jobScheduler.state() != State.RUNNING) {
       jobScheduler.startAndWait();
     }
 
   }
-  
+
   @After
-  public void stopScheduler(){
-//   We can't stop the scheduler, it won't restart.  This is in the guava code
-//    JobSchedulerService jobScheduler = CassandraRunner.getBean(JobSchedulerService.class);
-//    jobScheduler.stopAndWait();
-    
+  public void stopScheduler() {
+    // We can't stop the scheduler, it won't restart. This is in the guava code
+    // JobSchedulerService jobScheduler =
+    // CassandraRunner.getBean(JobSchedulerService.class);
+    // jobScheduler.stopAndWait();
+
   }
 
   @Test
@@ -132,25 +142,25 @@ public class SchedulerRuntimeTest {
    * @throws InterruptedException
    */
   @Test
-  public void failureCauses() throws InterruptedException {
+  public void failureCausesJobDeath() throws InterruptedException {
 
-    long sleepTime = Long.parseLong(props.getProperty("usergrid.scheduler.job.timeout"));
+    int failCount = Integer.parseInt(props.getProperty(FAIL_PROP));
 
-    int failCount = Integer.parseInt(props.getProperty("usergrid.scheduler.job.failure"));
-    
     FailureJobExceuction job = CassandraRunner.getBean("failureJobExceuction", FailureJobExceuction.class);
-    
-    job.reset();
+
+    job.setLatch(failCount + 1);
 
     scheduler.createJob("failureJobExceuction", System.currentTimeMillis(), new JobData());
+
+    // sleep until the job should have failed. We sleep 1 extra cycle just to
+    // make sure we're not racing the test
+    boolean waited = job.waitForCount(60, TimeUnit.SECONDS);
     
-    //sleep until the job should have failed.  We sleep 1 extra cycle just to make sure we're not racing the test
-    Thread.sleep(sleepTime*(failCount+1));
-    
-    assertEquals(failCount+1, job.getCount());
-    
+    assertTrue("Job ran to failure", waited);
+
+
   }
-  
+
   /**
    * Test the scheduler ramps up correctly when there are more jobs to be read
    * after a pause when the job specifies the retry time
@@ -160,24 +170,27 @@ public class SchedulerRuntimeTest {
   @Test
   public void failureWithRetry() throws InterruptedException {
 
-    long sleepTime = Long.parseLong(props.getProperty("usergrid.scheduler.job.timeout"));
+    long sleepTime = Long.parseLong(props.getProperty(TIMEOUT_PROP));
 
-    int failCount = Integer.parseInt(props.getProperty("usergrid.scheduler.job.failure"));
-    
-    
-    long customRetry = sleepTime*2; 
-    
-    FailureRetryJobExceuction job = CassandraRunner.getBean("failureRetryJobExceuction", FailureRetryJobExceuction.class);
-    
+    int failCount = Integer.parseInt(props.getProperty(FAIL_PROP));
+
+    long customRetry = sleepTime * 2;
+
+    FailureJobExceuction job = CassandraRunner.getBean("failureJobExceuction",
+        FailureJobExceuction.class);
+
     job.setTimeout(customRetry);
+    job.setLatch(failCount + 1);
+
+    scheduler.createJob("failureJobExceuction", System.currentTimeMillis(), new JobData());
+
+    // sleep until the job should have failed. We sleep 1 extra cycle just to
+    // make sure we're not racing the test
+    boolean waited = job.waitForCount(customRetry*(failCount+1), TimeUnit.MILLISECONDS);
     
-    scheduler.createJob("failureRetryJobExceuction", System.currentTimeMillis(), new JobData());
-    
-    //sleep until the job should have failed.  We sleep 1 extra cycle just to make sure we're not racing the test
-    Thread.sleep(customRetry*(failCount+1));
-    
-    assertEquals(failCount+1, job.getCount());
-    
+    assertTrue("Job ran to failure", waited);
+
+
   }
 
 }

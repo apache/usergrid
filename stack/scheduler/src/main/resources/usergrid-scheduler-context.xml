@@ -11,6 +11,7 @@
 		<property name="jobAccessor" ref="schedulerService" />
 		<property name="workerSize" value="${usergrid.scheduler.job.workers}" />
 		<property name="interval" value="${usergrid.scheduler.job.interval}" />
+		<property name="maxFailCount" value="${usergrid.scheduler.job.maxfail}" />
 	</bean>
 
 	<bean id="schedulerService" class="org.usergrid.batch.service.SchedulerServiceImpl">

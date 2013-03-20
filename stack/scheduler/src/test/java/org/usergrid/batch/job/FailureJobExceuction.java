@@ -17,7 +17,6 @@ package org.usergrid.batch.job;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Ignore;
 import org.springframework.stereotype.Component;
@@ -35,8 +34,9 @@ import org.usergrid.batch.JobExecutionException;
 @Ignore("Not a test")
 public class FailureJobExceuction implements Job {
 
-  protected int count;
-
+  private CountDownLatch latch = null;
+  private long timeout;
+  
   /**
    * 
    */
@@ -52,17 +52,34 @@ public class FailureJobExceuction implements Job {
   public void execute(JobExecution execution) throws JobExecutionException {
     execution.start();
 
-    count++;
+    latch.countDown();
 
-    throw new JobExecutionException(execution, "Failed", null);
+    throw new JobExecutionException(execution, timeout, "Failed", null);
+  }
+  
+  public void setLatch(int calls){
+    latch = new CountDownLatch(calls);
   }
 
-  public void reset() {
-    count = 0;
+  public boolean waitForCount(long timeout, TimeUnit unit) throws InterruptedException {
+    return latch.await(timeout, unit);
   }
 
-  public int getCount() {
-    return count;
+  
+
+  /**
+   * @return the timeout
+   */
+  public long getTimeout() {
+    return timeout;
   }
 
+  /**
+   * @param timeout
+   *          the timeout to set
+   */
+  public void setTimeout(long timeout) {
+    this.timeout = timeout;
+  }
+  
 }
