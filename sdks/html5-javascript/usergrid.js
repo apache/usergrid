@@ -195,7 +195,26 @@ Usergrid.Client.prototype.createGroup = function(path, callback) {
   };
 
   this.createEntity(options, callback);
-  
+}
+
+/*
+ * Main function for adding user to a group.
+ *
+ */
+
+Usergrid.Client.prototype.addUserToGroup = function(options, callback) {
+  var options = {
+    method:"POST",
+    endpoint:"groups/"+options.path+"/users/"+options.username
+  }
+
+  this.request(options, function(error, data){
+    if(error) {
+      callback(error);
+    } else {
+      callback(null, JSON.parse(data));
+    }
+  });
 }
 
 /*
