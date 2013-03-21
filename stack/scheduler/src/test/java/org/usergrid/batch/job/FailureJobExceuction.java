@@ -54,7 +54,7 @@ public class FailureJobExceuction implements Job {
 
     latch.countDown();
 
-    throw new JobExecutionException(execution, timeout, "Failed", null);
+    throw new JobExecutionException(timeout, "Failed", null);
   }
   
   public void setLatch(int calls){

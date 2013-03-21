@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.batch.service;
+package org.usergrid.persistence.entities;
 
 import org.usergrid.persistence.TypedEntity;
 import org.usergrid.persistence.annotations.EntityProperty;
@@ -26,45 +26,27 @@ import org.usergrid.persistence.annotations.EntityProperty;
  */
 public class JobData extends TypedEntity {
 
-  private static final String NAME = "jobdata";
 
   @EntityProperty(required = true, basic = true, indexed = true)
   private String jobName;
 
   @EntityProperty(required = true, basic = true, indexed = true)
-  private long fireTime;
+  private long startTime;
   
   @EntityProperty(required = true, basic = true, indexed = true)
   private int failCount;
+  
+  @EntityProperty(required = true, basic = true, indexed = true)
+  private long duration;
 
   /**
    * @param jobName
-   * @param fireTime
+   * @param startTime
    */
   public JobData() {
     super();
   }
 
-  /**
-   * @param jobName
-   * @param fireTime
-   */
-  public JobData(String jobName, long fireTime) {
-    super();
-    this.jobName = jobName;
-    this.fireTime = fireTime;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.usergrid.persistence.AbstractEntity#getType()
-   */
-  @Override
-  @EntityProperty(required = true, mutable = false, basic = true, indexed = false)
-  public String getType() {
-    return NAME;
-  }
 
   /**
    * @return the jobName
@@ -84,16 +66,17 @@ public class JobData extends TypedEntity {
   /**
    * @return the fireTime
    */
-  public long getFireTime() {
-    return fireTime;
+  public long getStartTime() {
+    return startTime;
   }
 
   /**
-   * @param fireTime
+   * Don't set this, it won't accomplish anything.  This is overwritten by the job as an audit record
+   * @param startTime
    *          the fireTime to set
    */
-  public void setFireTime(long fireTime) {
-    this.fireTime = fireTime;
+  public void setStartTime(long startTime) {
+    this.startTime = startTime;
   }
   
   public void incrementFailures(){
@@ -113,6 +96,22 @@ public class JobData extends TypedEntity {
    */
   public void setFailCount(int failCount) {
     this.failCount = failCount;
+  }
+
+
+  /**
+   * @return the duration
+   */
+  public long getDuration() {
+    return duration;
+  }
+
+
+  /**
+   * @param duration the duration to set
+   */
+  public void setDuration(long duration) {
+    this.duration = duration;
   }
 
 }

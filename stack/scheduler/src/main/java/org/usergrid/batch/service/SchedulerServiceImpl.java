@@ -40,6 +40,7 @@ import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.CassandraService;
+import org.usergrid.persistence.entities.JobData;
 import org.usergrid.persistence.exceptions.TransactionNotFoundException;
 
 /**
@@ -84,9 +85,12 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
    */
   @Override
   public JobData createJob(String jobName, long fireTime, JobData jobData) {
-
+    Assert.notNull(jobName, "jobName is required");
+    Assert.notNull(jobData, "jobData is required");
+    
     JobData job = null;
     try {
+      jobData.setJobName(jobName);
       job = em.create(jobData);
     } catch (Exception e) {
       throw new JobRuntimeException(e);
@@ -200,7 +204,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
       execution.setTransactionId(newId);
     } catch (TransactionNotFoundException e) {
       logger.error("Could not renew transaction", e);
-      throw new JobExecutionException(execution, "Could not renew transaction during heartbeat", e);
+      throw new JobExecutionException("Could not renew transaction during heartbeat", e);
     }
   }
 

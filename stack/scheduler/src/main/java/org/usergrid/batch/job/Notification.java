@@ -57,7 +57,7 @@ public class Notification implements Job {
     // failure, so we can eventually stop firing the job and stop it from 
     //being re-scheduled indefinitely
     catch (Throwable t) {
-      throw new JobExecutionException(execution, "Unable to run job", t);
+      throw new JobExecutionException("Unable to run job", t);
     }
 
  

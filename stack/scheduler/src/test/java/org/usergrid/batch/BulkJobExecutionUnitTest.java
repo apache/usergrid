@@ -8,16 +8,18 @@ import java.util.UUID;
 import org.junit.Test;
 import org.usergrid.batch.JobExecution.Status;
 import org.usergrid.batch.repository.JobDescriptor;
-import org.usergrid.batch.service.JobData;
+import org.usergrid.persistence.entities.JobData;
 
 /**
  * @author zznate
+ * @author tnine
  */
 public class BulkJobExecutionUnitTest {
 
   @Test
   public void transitionsOk() {
-    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), null, null);
+    JobData data = new JobData();
+    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, null);
     JobExecution bje = new JobExecution(jobDescriptor);
     assertEquals(JobExecution.Status.NOT_STARTED, bje.getStatus());
     bje.start();
@@ -25,10 +27,35 @@ public class BulkJobExecutionUnitTest {
     bje.completed();
     assertEquals(JobExecution.Status.COMPLETED, bje.getStatus());
   }
+  
+  @Test
+  public void transitionsDead() {
+    JobData data = new JobData();
+    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, null);
+    JobExecution bje = new JobExecution(jobDescriptor);
+    assertEquals(JobExecution.Status.NOT_STARTED, bje.getStatus());
+    bje.start();
+    assertEquals(JobExecution.Status.IN_PROGRESS, bje.getStatus());
+    bje.killed();
+    assertEquals(JobExecution.Status.DEAD, bje.getStatus());
+  }
+  
+  @Test
+  public void transitionsRetry() {
+    JobData data = new JobData();
+    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, null);
+    JobExecution bje = new JobExecution(jobDescriptor);
+    assertEquals(JobExecution.Status.NOT_STARTED, bje.getStatus());
+    bje.start();
+    assertEquals(JobExecution.Status.IN_PROGRESS, bje.getStatus());
+    bje.failed(JobExecution.FOREVER);
+    assertEquals(JobExecution.Status.FAILED, bje.getStatus());
+  }
 
   @Test
   public void transitionFail() {
-    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), null, null);
+    JobData data = new JobData();
+    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, null);
     JobExecution bje = new JobExecution(jobDescriptor);
     try {
       bje.completed();
@@ -49,6 +76,36 @@ public class BulkJobExecutionUnitTest {
       fail("Should have failed failed after complete call");
     } catch (IllegalStateException ise) {
     }
+    
+
+  }
+  
+  
+  @Test
+  public void transitionFailOnDeath() {
+    JobData data = new JobData();
+    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, null);
+    JobExecution bje = new JobExecution(jobDescriptor);
+    try {
+      bje.completed();
+      fail("Should have throw ISE on NOT_STARTED to IN_PROGRESS");
+    } catch (IllegalStateException ise) {
+    }
+
+    try {
+      bje.failed(0);
+      fail("Should have thrown ISE on NOT_STARTED to FAILED");
+    } catch (IllegalStateException ise) {
+    }
+    bje.start();
+
+    bje.killed();
+    try {
+      bje.killed();
+      fail("Should have failed failed after complete call");
+    } catch (IllegalStateException ise) {
+    }
+    
 
   }
   
@@ -101,7 +158,8 @@ public class BulkJobExecutionUnitTest {
 
   @Test
   public void doubleInvokeFail() {
-    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), null, null);
+    JobData data = new JobData();
+    JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, null);
     JobExecution bje = new JobExecution(jobDescriptor);
     bje.start();
     try {
