@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.usergrid.persistence.TypedEntity;
@@ -77,12 +78,13 @@ public class Device extends TypedEntity {
 		this.users = users;
 	}
 
+	@JsonSerialize(include = Inclusion.NON_NULL)
   public List<UUID> getNotifications() {
-    throw new UnsupportedOperationException();
+    return this.notifications;
   }
 
   public void setNotifications(List<UUID> notifications) {
-    throw new UnsupportedOperationException();
+    this.notifications = notifications;
   }
 
   public List<UUID> getReceipts() {
