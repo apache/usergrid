@@ -204,7 +204,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
       execution.setTransactionId(newId);
     } catch (TransactionNotFoundException e) {
       logger.error("Could not renew transaction", e);
-      throw new JobExecutionException(execution, "Could not renew transaction during heartbeat", e);
+      throw new JobExecutionException("Could not renew transaction during heartbeat", e);
     }
   }
 

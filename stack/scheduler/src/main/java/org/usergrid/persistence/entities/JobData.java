@@ -35,6 +35,9 @@ public class JobData extends TypedEntity {
   
   @EntityProperty(required = true, basic = true, indexed = true)
   private int failCount;
+  
+  @EntityProperty(required = true, basic = true, indexed = true)
+  private long duration;
 
   /**
    * @param jobName
@@ -93,6 +96,22 @@ public class JobData extends TypedEntity {
    */
   public void setFailCount(int failCount) {
     this.failCount = failCount;
+  }
+
+
+  /**
+   * @return the duration
+   */
+  public long getDuration() {
+    return duration;
+  }
+
+
+  /**
+   * @param duration the duration to set
+   */
+  public void setDuration(long duration) {
+    this.duration = duration;
   }
 
 }

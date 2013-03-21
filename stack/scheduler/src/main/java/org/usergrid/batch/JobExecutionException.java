@@ -13,7 +13,6 @@ public class JobExecutionException extends Exception {
 
   private static final String DEF_MSG = "There was a problem executing the bulk job: ";
 
-  private final JobExecution bulkJobExecution;
   
   private final long retryTimeout;
 
@@ -24,9 +23,8 @@ public class JobExecutionException extends Exception {
    * @param message The message to display
    * @param t The parent cause of this exception 
    */
-  public JobExecutionException(JobExecution jobExecution, long retryTimeout, String message, Throwable t) {
+  public JobExecutionException(long retryTimeout, String message, Throwable t) {
     super(DEF_MSG + message, t);
-    this.bulkJobExecution = jobExecution;
     this.retryTimeout = retryTimeout;
   }
   
@@ -36,13 +34,10 @@ public class JobExecutionException extends Exception {
    * @param message
    * @param t
    */
-  public JobExecutionException(JobExecution jobExecution, String message, Throwable t) {
-    this(jobExecution, 0, message, t);
+  public JobExecutionException(String message, Throwable t) {
+    this(0, message, t);
   }
 
-  public JobExecution getExecution() {
-    return this.bulkJobExecution;
-  }
 
   /**
    * @return the retryTimeout

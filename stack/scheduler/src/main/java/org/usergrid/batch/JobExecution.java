@@ -80,6 +80,7 @@ public class JobExecution{
     Preconditions.checkState(this.status.equals(Status.IN_PROGRESS), "Attempted to complete job not in progress");
     this.status = Status.COMPLETED;
     duration = System.currentTimeMillis() - startTime;
+    data.setDuration(duration);
   }
 
   /**
@@ -92,13 +93,19 @@ public class JobExecution{
     duration = System.currentTimeMillis() - startTime;
     data.incrementFailures();
     
-    
-    
     //use >= in case the threshold lowers after the job has passed the failure mark
     if(maxFailures != FOREVER && data.getFailCount() > maxFailures){
       status = Status.DEAD;
     }
   }
+  
+  /**
+   * This job should be killed and not retried
+   */
+  public void killed(){
+    failed(0);
+  }
+  
   
   public void heartbeat() throws JobExecutionException{
     Preconditions.checkState(this.status.equals(Status.IN_PROGRESS), "Attempted to heartbeat job not in progress");
