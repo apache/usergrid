@@ -108,7 +108,7 @@ public class ServiceManager {
 	}
 	
 	public ApplicationContext getApplicationContext() {
-	    return smf.applicationContext;
+	    return smf.getApplicationContext();
 	}
 	
 	private void setServicePackagePrefixes(String packages) {

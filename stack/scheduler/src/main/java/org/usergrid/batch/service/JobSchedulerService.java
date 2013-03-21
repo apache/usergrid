@@ -7,15 +7,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.batch.Job;
 import org.usergrid.batch.JobExecution;
 import org.usergrid.batch.JobExecutionException;
+import org.usergrid.batch.JobExecutionImpl;
 import org.usergrid.batch.JobFactory;
 import org.usergrid.batch.JobNotFoundException;
 import org.usergrid.batch.repository.JobAccessor;
@@ -127,7 +125,7 @@ public class JobSchedulerService extends AbstractScheduledService {
       // job execution needs to be external to both the callback and the task.
       // This way regardless of any error we can
       // mark a job as failed if required
-      final JobExecution execution = new JobExecution(jobDescriptor);
+      final JobExecution execution = new JobExecutionImpl(jobDescriptor);
 
       ListenableFuture<Void> future = service.submit(new Callable<Void>() {
         @Override

@@ -22,27 +22,27 @@ import java.util.UUID;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 
 public class ServiceManagerFactory implements ApplicationContextAware {
 
-	ApplicationContext applicationContext;
+	private ApplicationContext applicationContext;
 
-	EntityManagerFactory emf;
-	Properties properties;
+	private EntityManagerFactory emf;
+	private Properties properties;
+	private SchedulerService schedulerService;
 
-	List<ServiceExecutionEventListener> eventListeners;
-	List<ServiceCollectionEventListener> collectionListeners;
-	
-	public ServiceManagerFactory(EntityManagerFactory emf) {
-		this.emf = emf;
-	}
-	
-	public ServiceManagerFactory(EntityManagerFactory emf, Properties properties) {
-		this.emf = emf;
-		this.properties = properties;
-	}
+	private List<ServiceExecutionEventListener> eventListeners;
+	private List<ServiceCollectionEventListener> collectionListeners;
+
+	public ServiceManagerFactory(EntityManagerFactory emf, Properties properties, SchedulerService schedulerService) {
+    this.emf = emf;
+    this.properties = properties;
+    this.schedulerService = schedulerService;
+  }
+  
 
 	public ServiceManager getServiceManager(UUID applicationId) {
 		EntityManager em = null;
@@ -98,5 +98,12 @@ public class ServiceManagerFactory implements ApplicationContextAware {
 			throws BeansException {
 		this.applicationContext = applicationContext;
 	}
+
+  /**
+   * @return the applicationContext
+   */
+  public ApplicationContext getApplicationContext() {
+    return applicationContext;
+  }
 
 }

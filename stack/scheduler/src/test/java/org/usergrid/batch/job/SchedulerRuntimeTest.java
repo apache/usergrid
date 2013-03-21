@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.usergrid.batch.job;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;

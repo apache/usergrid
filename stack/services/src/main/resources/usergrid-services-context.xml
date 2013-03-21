@@ -11,6 +11,7 @@
 	
 	
 	<import resource="classpath:/usergrid-core-context.xml" />
+	<import resource="classpath:/usergrid-scheduler-context.xml" />
 
 	<!--  scan for security -->
 	<context:component-scan base-package="org.usergrid.security.crypto"  />
@@ -49,6 +50,7 @@
 	<bean id="serviceManagerFactory" class="org.usergrid.services.ServiceManagerFactory">
 		<constructor-arg ref="entityManagerFactory" />
 		<constructor-arg ref="properties" />
+		<constructor-arg ref="schedulerService"/>
 	</bean>
 
 	<bean id="applicationCreator"

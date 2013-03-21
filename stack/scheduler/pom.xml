@@ -10,11 +10,7 @@
 	<name>${bundle.symbolicName} [${bundle.namespace}]</name>
 	<description>The scheduling framework for usergrid</description>
 	<dependencies>
-		<dependency>
-			<groupId>org.usergrid</groupId>
-			<artifactId>usergrid-services</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+	
 		<dependency>
 			<groupId>com.beust</groupId>
 			<artifactId>jcommander</artifactId>
@@ -51,6 +47,11 @@
 			<artifactId>usergrid-test-utils</artifactId>
 			<version>${project.version}</version>
 			<scope>test</scope>
+		</dependency>
+			<dependency>
+			<groupId>org.usergrid</groupId>
+			<artifactId>usergrid-core</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.usergrid</groupId>
