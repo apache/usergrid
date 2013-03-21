@@ -30,6 +30,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
+@Ignore
 public class QueueResourceTest extends RestContextTest {
 
   @Test
