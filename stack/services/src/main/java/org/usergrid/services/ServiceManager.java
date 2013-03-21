@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.persistence.Entity;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityRef;
@@ -75,7 +76,7 @@ public class ServiceManager {
 	private EntityManager em;
 
 	private ServiceManagerFactory smf;
-	
+
 	// search for commercial packages first for SaaS version
 	public static String[] package_prefixes = { COM_PACKAGE_PREFIX,
 			OSS_PACKAGE_PREFIX };
@@ -88,7 +89,7 @@ public class ServiceManager {
 	public ServiceManager init(ServiceManagerFactory smf, EntityManager em, Properties properties) {
 		this.smf = smf;
 		this.em = em;
-		
+
 		if (em != null) {
 			try {
                 application = em.getApplication();
@@ -409,4 +410,7 @@ public class ServiceManager {
 		smf.notifyCollectionEventListeners(path, results);
 	}
 
+  public SchedulerService getSchedulerService() {
+    return smf.getSchedulerService();
+  }
 }

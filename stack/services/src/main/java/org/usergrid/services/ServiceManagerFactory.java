@@ -106,4 +106,7 @@ public class ServiceManagerFactory implements ApplicationContextAware {
     return applicationContext;
   }
 
+  public SchedulerService getSchedulerService() {
+    return schedulerService;
+  }
 }
