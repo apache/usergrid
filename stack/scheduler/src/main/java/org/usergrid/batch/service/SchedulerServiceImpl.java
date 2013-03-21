@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import org.usergrid.batch.JobExecution;
 import org.usergrid.batch.JobExecution.Status;
-import org.usergrid.batch.JobExecutionException;
+import org.usergrid.batch.JobExecutionImpl;
 import org.usergrid.batch.JobRuntimeException;
 import org.usergrid.batch.repository.JobAccessor;
 import org.usergrid.batch.repository.JobDescriptor;
@@ -41,6 +41,7 @@ import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.JobData;
+import org.usergrid.persistence.entities.JobStat;
 import org.usergrid.persistence.exceptions.TransactionNotFoundException;
 
 /**
@@ -51,6 +52,21 @@ import org.usergrid.persistence.exceptions.TransactionNotFoundException;
  * 
  */
 public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
+
+  /**
+   * 
+   */
+  private static final String STATS_ID = "statsId";
+
+  /**
+   * 
+   */
+  private static final String JOB_ID = "jobId";
+
+  /**
+   * 
+   */
+  private static final String JOB_NAME = "jobName";
 
   private static final Logger logger = LoggerFactory.getLogger(SchedulerServiceImpl.class);
 
@@ -87,18 +103,19 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
   public JobData createJob(String jobName, long fireTime, JobData jobData) {
     Assert.notNull(jobName, "jobName is required");
     Assert.notNull(jobData, "jobData is required");
-    
-    JobData job = null;
+
     try {
       jobData.setJobName(jobName);
-      job = em.create(jobData);
+      JobData job = em.create(jobData);
+      JobStat stat = em.create(new JobStat(jobName, job.getUuid()));
+
+      scheduleJob(jobName, fireTime, job.getUuid(), stat.getUuid());
+
+      return job;
+
     } catch (Exception e) {
       throw new JobRuntimeException(e);
     }
-
-    scheduleJob(jobName, fireTime, job.getUuid());
-
-    return job;
 
   }
 
@@ -109,15 +126,17 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
    * @param jobName
    * @param jobDataId
    */
-  private void scheduleJob(String jobName, long fireTime, UUID jobDataId) {
+  private void scheduleJob(String jobName, long fireTime, UUID jobDataId, UUID jobStatId) {
     Assert.notNull(jobName, "jobName is required");
     Assert.isTrue(fireTime > -1, "fireTime must be positive");
     Assert.notNull(jobDataId, "jobDataId is required");
-    
+    Assert.notNull(jobStatId, "jobStatId is required");
+
     Message message = new Message();
     message.setTimestamp(fireTime);
-    message.setStringProperty("jobName", jobName);
-    message.setProperty("jobId", jobDataId);
+    message.setStringProperty(JOB_NAME, jobName);
+    message.setProperty(JOB_ID, jobDataId);
+    message.setProperty(STATS_ID, jobStatId);
 
     qm.postToQueue(jobQueueName, message);
 
@@ -159,30 +178,46 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
 
     for (Message job : jobs.getMessages()) {
 
-      UUID jobUuid = UUID.fromString(job.getStringProperty("jobId"));
-      String jobName = job.getStringProperty("jobName");
+      UUID jobUuid = UUID.fromString(job.getStringProperty(JOB_ID));
+      UUID statsUuid = UUID.fromString(job.getStringProperty(STATS_ID));
+      String jobName = job.getStringProperty(JOB_NAME);
 
-      JobData data = null;
       try {
-        data = em.get(jobUuid, JobData.class);
+        JobData data = em.get(jobUuid, JobData.class);
+
+        JobStat stats = em.get(statsUuid, JobStat.class);
+
+        /**
+         * no job data, which is required even if empty to signal the job should
+         * still fire. Ignore this job
+         */
+        if (data == null || stats == null) {
+          logger.info("Received job with data id '{}' from the queue, but no data was found.  Dropping job", jobUuid);
+          qm.deleteTransaction(jobQueueName, job.getTransaction(), null);
+
+          if (data != null) {
+            em.delete(data);
+          }
+
+          if (stats != null) {
+            em.delete(stats);
+          }
+
+          continue;
+        }
+
+        results.add(new JobDescriptor(jobName, job.getUuid(), job.getTransaction(), data, stats, this));
+
       } catch (Exception e) {
-        // log and skip.  This is a catastrophic runtime error if we see an exception here.  We don't want to cause job loss, so leave the job in the Q.
-        logger.error("Unable to retrieve job data for jobname {} and job id {}.  Skipping to avoid job loss",new Object[]{ jobName, jobUuid, e});
+        // log and skip. This is a catastrophic runtime error if we see an
+        // exception here. We don't want to cause job loss, so leave the job in
+        // the Q.
+        logger.error("Unable to retrieve job data for jobname {}, job id {}, stats id {}.  Skipping to avoid job loss",
+            new Object[] { jobName, jobUuid, statsUuid, e });
         continue;
-        
+
       }
 
-      /**
-       * no job data, which is required even if empty to signal the job should
-       * still fire. Ignore this job
-       */
-      if (data == null) {
-        logger.info("Received job with data id '{}' from the queue, but no data was found.  Dropping job", jobUuid);
-        qm.deleteTransaction(jobQueueName, job.getTransaction(), null);
-        continue;
-      }
-
-      results.add(new JobDescriptor(jobName, job.getUuid(), job.getTransaction(), data, this));
     }
 
     return results;
@@ -196,7 +231,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
    * .JobExecution)
    */
   @Override
-  public void heartbeat(JobExecution execution) throws JobExecutionException {
+  public void heartbeat(JobExecutionImpl execution) {
     try {
       UUID newId = qm.renewTransaction(jobQueueName, execution.getTransactionId(),
           new QueueQuery().withTimeout(jobTimeout));
@@ -204,7 +239,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
       execution.setTransactionId(newId);
     } catch (TransactionNotFoundException e) {
       logger.error("Could not renew transaction", e);
-      throw new JobExecutionException("Could not renew transaction during heartbeat", e);
+      throw new JobRuntimeException("Could not renew transaction during heartbeat", e);
     }
   }
 
@@ -218,7 +253,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
   @Override
   public void save(JobExecution bulkJobExecution) {
 
-    JobData data = bulkJobExecution.getData();
+    JobData data = bulkJobExecution.getJobData();
 
     Status jobStatus = bulkJobExecution.getStatus();
     try {
@@ -255,10 +290,11 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
   @Override
   public void delayRetry(JobExecution execution, long delay) {
 
-    JobData data = execution.getData();
-
+    JobData data = execution.getJobData();
+    JobStat stat = execution.getJobStats();
+    
     try {
-      
+
       // if it's a dead status, it's failed too many times, just kill the job
       if (execution.getStatus() == Status.DEAD) {
         qm.deleteTransaction(jobQueueName, execution.getTransactionId(), null);
@@ -267,7 +303,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
       }
 
       // re-schedule the job to run again in the future
-      scheduleJob(execution.getJobName(), System.currentTimeMillis() + delay, data.getUuid());
+      scheduleJob(execution.getJobName(), System.currentTimeMillis() + delay, data.getUuid(), stat.getUuid());
 
       // delete the pending transaction
       qm.deleteTransaction(jobQueueName, execution.getTransactionId(), null);

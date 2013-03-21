@@ -1,141 +1,106 @@
+/*******************************************************************************
+ * Copyright 2012 Apigee Corporation
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 package org.usergrid.batch;
 
 import java.util.UUID;
 
-import org.usergrid.batch.repository.JobDescriptor;
-import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.persistence.entities.JobData;
-
-import com.google.common.base.Preconditions;
+import org.usergrid.persistence.entities.JobStat;
 
 /**
- * Models the execution context of the {@link Job} with state transition methods
- * for job status.
+ * Interface to define all operations possible during a job execution
  * 
- * @author zznate
  * @author tnine
+ * 
  */
-public class JobExecution{
+public interface JobExecution {
 
+  /**
+   * Retry constant to signal the job should try forever
+   */
   public static final int FOREVER = -1;
+
+  /**
+   * Get the data for this execution
+   * 
+   * @return
+   */
+  public JobData getJobData();
   
-  private final UUID jobId;
-  private final UUID runId;
-  private final String jobName;
-  private long duration;
-  private Status status = Status.NOT_STARTED;
-  private long startTime;
-  private SchedulerService scheduler;
-  private UUID transactionId;
-  private JobData data;
-
-
-  public JobExecution(JobDescriptor jobDescriptor) {
-    this.runId = UUID.randomUUID();
-    this.jobId = jobDescriptor.getJobId();
-    this.scheduler = jobDescriptor.getScheduler();
-    this.jobName = jobDescriptor.getJobName();
-    this.transactionId = jobDescriptor.getTransactionId();
-    this.data = jobDescriptor.getData();
-    
-  }
-
-  public UUID getRunId() {
-    return runId;
-  }
-
-  public long getDuration() {
-    return duration;
-  }
-
-
-
   /**
-   * @param transactionId the transactionId to set
+   * Get the job statistic information
+   * @return
    */
-  public void setTransactionId(UUID transactionId) {
-    this.transactionId = transactionId;
-  }
-
-  public UUID getJobId() {
-    return jobId;
-  }
+  public JobStat getJobStats();
 
   /**
-   * @return the data
+   * Marke the job as started
    */
-  public JobData getData() {
-    return data;
-  }
-
-  public void start() {
-    Preconditions.checkState(this.status.equals(Status.NOT_STARTED) || this.status.equals(Status.FAILED),
-        "Attempted to start job in progress");
-    this.status = Status.IN_PROGRESS;
-    startTime = System.currentTimeMillis();
-    data.setStartTime(startTime);
-  }
-
-  public void completed() {
-    Preconditions.checkState(this.status.equals(Status.IN_PROGRESS), "Attempted to complete job not in progress");
-    this.status = Status.COMPLETED;
-    duration = System.currentTimeMillis() - startTime;
-    data.setDuration(duration);
-  }
+  public void start();
 
   /**
-   * Mark this execution as failed.  Also pass the maxium number of possible failures.  Set to JobExecution.FOREVER for no limit
+   * Mark the job as successfully completed
+   */
+  public void completed();
+
+  /**
+   * Mark the job as failed. If it has failed more than maxFailures, mark it as
+   * dead
+   * 
    * @param maxFailures
    */
-  public void failed(int maxFailures) {
-    Preconditions.checkState(this.status.equals(Status.IN_PROGRESS), "Attempted to fail job not in progress");
-    status = Status.FAILED;
-    duration = System.currentTimeMillis() - startTime;
-    data.incrementFailures();
-    
-    //use >= in case the threshold lowers after the job has passed the failure mark
-    if(maxFailures != FOREVER && data.getFailCount() > maxFailures){
-      status = Status.DEAD;
-    }
-  }
-  
-  /**
-   * This job should be killed and not retried
-   */
-  public void killed(){
-    failed(0);
-  }
-  
-  
-  public void heartbeat() throws JobExecutionException{
-    Preconditions.checkState(this.status.equals(Status.IN_PROGRESS), "Attempted to heartbeat job not in progress");
-    scheduler.heartbeat(this);
-  }
+  public void failed(int maxFailures);
 
   /**
-   * @return the startTime
+   * Mark the job as dead
    */
-  public long getStartTime() {
-    return startTime;
-  }
+  public void killed();
 
   /**
-   * @return the transactionId
+   * Provide a heartbeat to the job execution to keep it alive
    */
-  public UUID getTransactionId() {
-    return transactionId;
-  }
-
-  public Status getStatus() {
-    return this.status;
-  }
+  public void heartbeat();
 
   /**
-   * @return the jobName
+   * Get the current status of the execution
+   * 
+   * @return
    */
-  public String getJobName() {
-    return jobName;
-  }
+  public Status getStatus();
+
+  /**
+   * Get the name of the job
+   * 
+   * @return
+   */
+  public String getJobName();
+
+  /**
+   * Get the job id
+   * 
+   * @return
+   */
+  public UUID getJobId();
+
+  /**
+   * Get the current transaction Id from the heartbeat
+   * 
+   * @return
+   */
+  public UUID getTransactionId();
 
   public enum Status {
     NOT_STARTED, IN_PROGRESS, COMPLETED, FAILED, DEAD
