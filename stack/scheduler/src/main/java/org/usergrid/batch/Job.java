@@ -17,6 +17,6 @@ public interface Job {
    * @throws JobExecutionException
    *           If the job cannot be executed
    */
-  public void execute(JobExecution execution) throws JobExecutionException;
+  public void execute(JobExecution execution) throws Exception;
 
 }
