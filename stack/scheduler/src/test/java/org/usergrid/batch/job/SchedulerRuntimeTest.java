@@ -15,9 +15,11 @@
  ******************************************************************************/
 package org.usergrid.batch.job;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -27,8 +29,12 @@ import org.junit.runner.RunWith;
 import org.usergrid.batch.service.JobSchedulerService;
 import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.cassandra.CassandraRunner;
+import org.usergrid.persistence.Query;
+import org.usergrid.persistence.Results;
 import org.usergrid.persistence.entities.JobData;
+import org.usergrid.utils.UUIDUtils;
 
+import com.fasterxml.uuid.impl.UUIDUtil;
 import com.google.common.util.concurrent.Service.State;
 
 /**
@@ -48,7 +54,7 @@ public class SchedulerRuntimeTest {
    * 
    */
   private static final String TIMEOUT_PROP = "usergrid.scheduler.job.timeout";
-  
+
   private SchedulerService scheduler;
   private Properties props;
 
@@ -155,9 +161,8 @@ public class SchedulerRuntimeTest {
     // sleep until the job should have failed. We sleep 1 extra cycle just to
     // make sure we're not racing the test
     boolean waited = job.waitForCount(60, TimeUnit.SECONDS);
-    
-    assertTrue("Job ran to failure", waited);
 
+    assertTrue("Job ran to failure", waited);
 
   }
 
@@ -176,8 +181,7 @@ public class SchedulerRuntimeTest {
 
     long customRetry = sleepTime * 2;
 
-    FailureJobExceuction job = CassandraRunner.getBean("failureJobExceuction",
-        FailureJobExceuction.class);
+    FailureJobExceuction job = CassandraRunner.getBean("failureJobExceuction", FailureJobExceuction.class);
 
     job.setTimeout(customRetry);
     job.setLatch(failCount + 1);
@@ -186,10 +190,72 @@ public class SchedulerRuntimeTest {
 
     // sleep until the job should have failed. We sleep 1 extra cycle just to
     // make sure we're not racing the test
-    boolean waited = job.waitForCount(customRetry*(failCount+1), TimeUnit.MILLISECONDS);
-    
+    boolean waited = job.waitForCount(customRetry * (failCount + 1), TimeUnit.MILLISECONDS);
+
     assertTrue("Job ran to failure", waited);
 
+  }
+
+  /**
+   * Test the scheduler ramps up correctly when there are more jobs to be read
+   * after a pause when the job specifies the retry time
+   * @throws Exception 
+   */
+  @Test
+  public void queryAndDeleteJobs() throws Exception {
+
+    CountdownLatchJob job = CassandraRunner.getBean("countdownLatch", CountdownLatchJob.class);
+
+    job.setLatch(1);
+
+    // fire the job 30 seconds from now
+    long fireTime = System.currentTimeMillis() + 30000;
+
+    UUID notificationId = UUIDUtils.newTimeUUID();
+
+    JobData test = new JobData();
+    test.setProperty("stringprop", "test");
+    test.setProperty("notificationId", notificationId);
+
+    JobData saved = scheduler.createJob("countdownLatch", fireTime, test);
+
+    
+    //now query and make sure it equals the saved value
+    
+    Query query = new Query();
+    query.addEqualityFilter("notificationId", notificationId);
+    
+    Results r = scheduler.queryJobData(query);
+    
+    assertEquals(1, r.size());
+    
+    assertEquals(saved.getUuid(), r.getEntity().getUuid());
+    
+    
+    //query by uuid
+    query = new Query();
+    query.addEqualityFilter("stringprop", "test");
+    
+    
+    r = scheduler.queryJobData(query);
+    
+    assertEquals(1, r.size());
+    
+    assertEquals(saved.getUuid(), r.getEntity().getUuid());
+    
+    //now delete the job
+    
+    scheduler.deleteJob(saved.getUuid());
+    
+    
+    // sleep until the job should have failed. We sleep 1 extra cycle just to
+    // make sure we're not racing the test
+    
+    long waitTime = Math.max(0, fireTime-System.currentTimeMillis()+1000);
+    
+    boolean waited = job.waitForCount(waitTime, TimeUnit.MILLISECONDS);
+
+    assertFalse("Job ran ", waited);
 
   }
 

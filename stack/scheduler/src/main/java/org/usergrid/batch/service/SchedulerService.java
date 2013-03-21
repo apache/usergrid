@@ -19,6 +19,8 @@ import java.util.UUID;
 
 import org.usergrid.batch.JobExecutionException;
 import org.usergrid.batch.JobExecutionImpl;
+import org.usergrid.persistence.Query;
+import org.usergrid.persistence.Results;
 import org.usergrid.persistence.entities.JobData;
 
 /**
@@ -36,7 +38,7 @@ public interface SchedulerService {
    * @param fireTime The time to fire in milliseconds since epoch
    * @param jobData The data to pass to the job
    * 
-   * @return The newly created job
+   * @return The newly created job data.  The job data uuid is the job id
    * @throws Exception 
    * 
    */
@@ -55,4 +57,12 @@ public interface SchedulerService {
    * @throws JobExecutionException 
    */
   public void heartbeat(JobExecutionImpl execution);
+  
+  /**
+   * Query the job data with the given query object
+   * @param query
+   * @return
+   * @throws Exception 
+   */
+  public Results queryJobData(Query query) throws Exception;
 }

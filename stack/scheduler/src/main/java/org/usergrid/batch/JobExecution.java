@@ -21,7 +21,21 @@ import org.usergrid.persistence.entities.JobData;
 import org.usergrid.persistence.entities.JobStat;
 
 /**
- * Interface to define all operations possible during a job execution
+ * Interface to define all operations possible during a job execution. The job
+ * execution has several states.
+ * 
+ * 
+ * The Execution has the following state transitions
+ * 
+ * NOT_STARTED->IN_PROGRESS
+ * 
+ * 
+ * IN_PROGRESS->COMPLETED <br/>
+ * IN_PROGRESS->FAILED <br/>
+ * IN_PROGRESS->DEAD
+ * 
+ * FAILED->IN_PROGRESS
+ * 
  * 
  * @author tnine
  * 
@@ -39,9 +53,10 @@ public interface JobExecution {
    * @return
    */
   public JobData getJobData();
-  
+
   /**
    * Get the job statistic information
+   * 
    * @return
    */
   public JobStat getJobStats();

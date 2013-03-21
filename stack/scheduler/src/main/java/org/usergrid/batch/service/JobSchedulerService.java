@@ -16,6 +16,7 @@ import org.usergrid.batch.JobExecutionException;
 import org.usergrid.batch.JobExecutionImpl;
 import org.usergrid.batch.JobFactory;
 import org.usergrid.batch.JobNotFoundException;
+import org.usergrid.batch.JobExecution.Status;
 import org.usergrid.batch.repository.JobAccessor;
 import org.usergrid.batch.repository.JobDescriptor;
 
@@ -132,6 +133,8 @@ public class JobSchedulerService extends AbstractScheduledService {
         public Void call() throws Exception {
           capacitySemaphore.acquire();
 
+          execution.start();
+          
           // TODO wrap and throw specifically typed exception for onFailure,
           // needs jobId
           job.execute(execution);
@@ -145,7 +148,9 @@ public class JobSchedulerService extends AbstractScheduledService {
         @Override
         public void onSuccess(Void param) {
           logger.info("Successful completion of bulkJob {}", execution);
-          execution.completed();
+          if(execution.getStatus() == Status.IN_PROGRESS){
+            execution.completed();
+          }
           jobAccessor.save(execution);
           capacitySemaphore.release();
         }
@@ -154,7 +159,10 @@ public class JobSchedulerService extends AbstractScheduledService {
         public void onFailure(Throwable throwable) {
           logger.error("Failed execution for bulkJob {}", throwable);
           // mark it as failed
-          execution.failed(maxFailCount);
+          if(execution.getStatus() == Status.IN_PROGRESS){
+            execution.failed(maxFailCount);
+          }
+         
 
           // there's a retry delay, use it
           if (throwable instanceof JobExecutionException) {

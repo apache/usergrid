@@ -49,7 +49,6 @@ public class CountdownLatchJob implements Job {
    */
   @Override
   public void execute(JobExecution execution) throws JobExecutionException {
-   execution.start();
    latch.countDown();
   }
 
