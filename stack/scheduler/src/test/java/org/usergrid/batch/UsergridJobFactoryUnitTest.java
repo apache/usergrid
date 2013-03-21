@@ -19,7 +19,7 @@ public class UsergridJobFactoryUnitTest {
   @Test
   public void verifyBuildup() throws JobNotFoundException {
     JobDescriptor jobDescriptor = new JobDescriptor("",
-            jobId,UUID.randomUUID(), null, null);
+            jobId,UUID.randomUUID(), null, null, null);
    
     
 

@@ -17,8 +17,8 @@ package org.usergrid.batch.service;
 
 import java.util.UUID;
 
-import org.usergrid.batch.JobExecution;
 import org.usergrid.batch.JobExecutionException;
+import org.usergrid.batch.JobExecutionImpl;
 import org.usergrid.persistence.entities.JobData;
 
 /**
@@ -54,5 +54,5 @@ public interface SchedulerService {
    * @param execution
    * @throws JobExecutionException 
    */
-  public void heartbeat(JobExecution execution) throws JobExecutionException;
+  public void heartbeat(JobExecutionImpl execution);
 }

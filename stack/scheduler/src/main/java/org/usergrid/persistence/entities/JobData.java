@@ -30,14 +30,7 @@ public class JobData extends TypedEntity {
   @EntityProperty(required = true, basic = true, indexed = true)
   private String jobName;
 
-  @EntityProperty(required = true, basic = true, indexed = true)
-  private long startTime;
-  
-  @EntityProperty(required = true, basic = true, indexed = true)
-  private int failCount;
-  
-  @EntityProperty(required = true, basic = true, indexed = true)
-  private long duration;
+ 
 
   /**
    * @param jobName
@@ -63,55 +56,6 @@ public class JobData extends TypedEntity {
     this.jobName = jobName;
   }
 
-  /**
-   * @return the fireTime
-   */
-  public long getStartTime() {
-    return startTime;
-  }
-
-  /**
-   * Don't set this, it won't accomplish anything.  This is overwritten by the job as an audit record
-   * @param startTime
-   *          the fireTime to set
-   */
-  public void setStartTime(long startTime) {
-    this.startTime = startTime;
-  }
   
-  public void incrementFailures(){
-    failCount++;
-  }
-  
-  /**
-   * Get the number of times this job has failed
-   * @return
-   */
-  public int getFailCount(){
-    return failCount;
-  }
-
-  /**
-   * @param failCount the failCount to set
-   */
-  public void setFailCount(int failCount) {
-    this.failCount = failCount;
-  }
-
-
-  /**
-   * @return the duration
-   */
-  public long getDuration() {
-    return duration;
-  }
-
-
-  /**
-   * @param duration the duration to set
-   */
-  public void setDuration(long duration) {
-    this.duration = duration;
-  }
 
 }
