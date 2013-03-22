@@ -359,6 +359,43 @@ Usergrid.Client.prototype.createUserActivity = function (user, options, callback
 }
 
 /*
+ *  Function for creating user activities with an associated user entity.
+ *
+ *  user object:
+ *  The user object passed into this function is an instance of Usergrid.Entity.
+ *
+ *  @method createUserActivityWithEntity
+ *  @public
+ *  @params {object} user
+ *  @params {string} content
+ *  @param {function} callback
+ *  @return {callback} callback(err, data)
+ */ 
+Usergrid.Client.prototype.createUserActivityWithEntity = function(user, content, callback) {
+  var username = user.get("username");
+  var options = {
+    actor: {
+      "displayName":username,
+      "uuid":user.get("uuid"),
+      "username":username,
+      "email":user.get("email"),
+      "picture":user.get("picture"),
+      "image": {
+        "duration":0,
+        "height":80,
+        "url":user.get("picture"),
+        "width":80
+       },
+    },
+    "verb":"post",
+    "content":content };
+
+    this.createUserActivity(username, options, callback); 
+
+}
+
+
+/*
 *  A private method to get call timing of last call
 */
 Usergrid.Client.prototype.calcTimeDiff = function () {
