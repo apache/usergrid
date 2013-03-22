@@ -281,6 +281,24 @@ Usergrid.Client.prototype.createCollection = function (options, callback) {
   });
 }
 
+Usergrid.Client.prototype.getFeedForUser = function(username, callback) {
+  var options = {
+    method: "GET",
+    endpoint: "users/"+username+"/feed"
+  }
+
+  this.request(options, function(err, data){
+    if(typeof(callback) === "function") {
+      if(err) {
+        callback(err);
+      } else {
+        callback(err, data);
+      }
+    }
+  });
+}
+
+
 /*
 *  Function for creating new activities for the current user - should be called directly.
 *
