@@ -1069,7 +1069,7 @@ Usergrid.Entity.prototype.getEntityId = function (entity) {
 *  @param {string} connection
 *  @param {object} entity
 *  @param {function} callback
-*  @return {callback} callback(err, data)
+*  @return {callback} callback(err, data, connections)
 *
 */
 Usergrid.Entity.prototype.getConnections = function (connection, callback) {
@@ -1113,7 +1113,7 @@ Usergrid.Entity.prototype.getConnections = function (connection, callback) {
     }
 
     if (typeof(callback) === 'function') {
-      callback(err, data);
+      callback(err, data, data.entities);
     }
   });
 
