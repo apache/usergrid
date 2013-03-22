@@ -288,7 +288,7 @@ Usergrid.Client.prototype.createCollection = function (options, callback) {
  *  @public
  *  @params {string} username
  *  @param {function} callback
- *  @return {callback} callback(err, data)
+ *  @return {callback} callback(err, data, activities)
  */
 Usergrid.Client.prototype.getFeedForUser = function(username, callback) {
   var options = {
@@ -301,7 +301,7 @@ Usergrid.Client.prototype.getFeedForUser = function(username, callback) {
       if(err) {
         callback(err);
       } else {
-        callback(err, data);
+        callback(err, data, data.entities);
       }
     }
   });
