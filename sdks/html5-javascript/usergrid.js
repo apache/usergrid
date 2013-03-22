@@ -183,6 +183,108 @@ Usergrid.Client.prototype.request = function (options, callback) {
 }
 
 /*
+ *  Main function for creating new groups. Call this directly.
+ *
+ *  @method createGroup
+ *  @public
+ *  @params {string} path
+ *  @param {function} callback
+ *  @return {callback} callback(err, data)
+ */
+Usergrid.Client.prototype.createGroup = function(path, callback) {
+  var options = {
+    type:"groups",
+    path:path
+  };
+
+  this.createEntity(options, callback);
+}
+
+/*
+ *  Main function for deleting groups.
+ *
+ *  @method deleteGroup
+ *  @public
+ *  @params {string} path
+ *  @param {function} callback
+ *  @return {callback} callback(err, data)
+ *
+ */
+Usergrid.Client.prototype.deleteGroup = function(path, callback) {
+  var options = {
+    type:"groups",
+    name:path
+  }
+
+  this.getEntity(options, function(error, group) {
+    if(error) {
+      if(typeof(callback) === 'function'){
+        callback(error, group);
+      }
+    } else {
+      group.destroy(callback);
+    }
+  });
+}
+
+/*
+ *  Main function for adding user to a group.
+ *
+ *  options object: options {path:'group_path', user: user entity}
+ *
+ *  @method addUserToGroup
+ *  @public
+ *  @params {object} options
+ *  @param {function} callback
+ *  @return {callback} callback(err, data)
+ */
+Usergrid.Client.prototype.addUserToGroup = function(options, callback) {
+  var options = {
+    method:"POST",
+    endpoint:"groups/"+options.path+"/users/"+options.user.get('username')
+  }
+
+  this.request(options, function(error, data){
+    if(error) {
+      if(typeof(callback) === 'function') {
+        callback(error, data);
+      }
+    } else {
+      callback(error, data);
+    }
+  });
+}
+
+/*
+ *  Main function for removing a user from a group.
+ *
+ *  options object: options {path:'group_path', user: user entity}
+ *
+ *  @method removeUserFromGroup
+ *  @public
+ *  @params {object} options
+ *  @param {function} callback
+ *  @return {callback} callback(err, data_
+ */
+Usergrid.Client.prototype.removeUserFromGroup = function(options, callback) {
+  var options = {
+    method:"DELETE",
+    endpoint:"groups/"+options.path+"/users/"+options.user.get('username')
+  }
+
+  this.request(options, function(error, data){
+    if(error) {
+      if(typeof(callback) === 'function') {
+        callback(error, data);
+      }
+    } else {
+      callback(error, data);
+    }
+  });
+}
+
+
+/*
 *  Main function for creating new entities - should be called directly.
 *
 *  options object: options {data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
