@@ -1,3 +1,43 @@
+##Quickstart
+Detailed instructions follow but if you just want a quick example of how to get started with this SDK, here’s a minimal HTML5 file that shows you how to include & initialize the SDK, as well as how to read & write data from Usergrid with it.
+
+```html
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- Don't forget to include the SDK -->
+		<script src="path/to/usergrid.js"></script>
+
+		<script type="text/javascript">
+		
+			// Initializing the SDK
+			var client = new Usergrid.Client({
+				orgName:'yourorgname', // Your Usergrid org’s name (or apigee.com username for App Services)
+				appName:'sandbox', // You Usergrid app’s name
+			});
+
+			// Reading data
+			var books = new Usergrid.Collection({ "client":client, "type":"books" });
+			books.fetch(
+				function() { // Success
+					while(books.hasNextEntity()) {
+						var book = books.getNextEntity();
+						// Do something with the book…
+				} }, function() { // Failure
+					alert("read failed");
+				});
+
+			// Writing data
+			options = { "type": "books", "title": "the old man and the sea" };
+			client.createEntity(options, function (err, response) {
+				if (err) { alert("write failed");
+				} else { alert("write succeeded"); } });
+		</script>
+	</head>
+	<body></body>
+</html>
+```
+
 ##Version
 
 Current Version: **0.10.4**
