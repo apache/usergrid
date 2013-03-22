@@ -282,6 +282,33 @@ Usergrid.Client.prototype.createCollection = function (options, callback) {
 }
 
 /*
+ *  Main function for retrieving a user's activity feed.
+ *
+ *  @method getFeedForUser
+ *  @public
+ *  @params {string} username
+ *  @param {function} callback
+ *  @return {callback} callback(err, data, activities)
+ */
+Usergrid.Client.prototype.getFeedForUser = function(username, callback) {
+  var options = {
+    method: "GET",
+    endpoint: "users/"+username+"/feed"
+  }
+
+  this.request(options, function(err, data){
+    if(typeof(callback) === "function") {
+      if(err) {
+        callback(err);
+      } else {
+        callback(err, data, data.entities);
+      }
+    }
+  });
+}
+
+
+/*
 *  Function for creating new activities for the current user - should be called directly.
 *
 *  //user can be any of the following: "me", a uuid, a username
