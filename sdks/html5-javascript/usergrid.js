@@ -471,6 +471,7 @@ Usergrid.Client.prototype.signup = function(username, password, email, name, cal
 
 
 /*
+*
 *  A public method to log in an app user - stores the token for later use
 *
 *  @method login
@@ -496,7 +497,11 @@ Usergrid.Client.prototype.login = function (username, password, callback) {
     if (err && self.logging) {
       console.log('error trying to log user in');
     } else {
-      user = new Usergrid.Entity('users', data.user);
+      var options = {
+        client:self,
+        data:data.user
+      }
+      user = new Usergrid.Entity(options);
       self.setToken(data.access_token);
     }
     if (typeof(callback) === 'function') {
@@ -529,7 +534,11 @@ Usergrid.Client.prototype.loginFacebook = function (facebookToken, callback) {
     if (err && self.logging) {
       console.log('error trying to log user in');
     } else {
-      user = new Usergrid.Entity('users', data.user);
+      var options = {
+        client: self,
+        data: data.user
+      }
+      user = new Usergrid.Entity(options);
       self.setToken(data.access_token);
     }
     if (typeof(callback) === 'function') {
