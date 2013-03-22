@@ -50,8 +50,6 @@ public class FailureJobExceuction implements Job {
    */
   @Override
   public void execute(JobExecution execution) throws JobExecutionException {
-    execution.start();
-
     latch.countDown();
 
     throw new JobExecutionException(timeout, "Failed", null);

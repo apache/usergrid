@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
+import javax.print.attribute.standard.JobName;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,9 @@ import org.usergrid.mq.QueueQuery;
 import org.usergrid.mq.QueueResults;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
+import org.usergrid.persistence.Query;
+import org.usergrid.persistence.Results;
+import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.JobData;
@@ -278,6 +282,23 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
       throw new JobRuntimeException(String.format("Unable to delete job data with id %s", data.getUuid()), e);
     }
 
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.batch.service.SchedulerService#queryJobData(org.usergrid.persistence.Query)
+   */
+  @Override
+  public Results queryJobData(Query query) throws Exception {
+   
+    if(query == null){
+      query = new Query();
+    }
+    
+    
+    
+    
+    return em.searchCollection(em.getApplicationRef(), "job_data", query);
+    
   }
 
   /*
