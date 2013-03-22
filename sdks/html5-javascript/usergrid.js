@@ -281,6 +281,15 @@ Usergrid.Client.prototype.createCollection = function (options, callback) {
   });
 }
 
+/*
+ *  Main function for retrieving a user's activity feed.
+ *
+ *  @method getFeedForUser
+ *  @public
+ *  @params {string} username
+ *  @param {function} callback
+ *  @return {callback} callback(err, data)
+ */
 Usergrid.Client.prototype.getFeedForUser = function(username, callback) {
   var options = {
     method: "GET",
