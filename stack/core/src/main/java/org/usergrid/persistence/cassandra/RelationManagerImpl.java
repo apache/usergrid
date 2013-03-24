@@ -2543,7 +2543,7 @@ public class RelationManagerImpl implements RelationManager {
 
         if (headEntity.getType().equals(Group.ENTITY_TYPE)) {
             if (collectionName.equals(COLLECTION_ROLES)) {
-                String path = (String)((DynamicEntity)itemRef).getMetadata("path");
+                String path = (String)((Entity)itemRef).getMetadata("path");
                 if (path.startsWith("/roles/")) {
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity(itemEntity);
                     em.deleteRole(roleRef.getApplicationRoleName());

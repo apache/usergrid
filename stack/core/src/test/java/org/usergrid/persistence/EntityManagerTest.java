@@ -475,4 +475,32 @@ public class EntityManagerTest extends AbstractPersistenceTest {
         assertEquals(thing2.getUuid(), r.getEntities().get(1).getUuid());
 
     }
+    
+
+    @Test
+    public void testCorrectType() throws Exception {
+
+        UUID applicationId = createApplication("testOrganization", "testCorrectType");
+
+        EntityManager em = emf.getEntityManager(applicationId);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "testuser");
+        properties.put("username", "testuser");
+        properties.put("email", "test@foo.bar");
+        Entity created = em.create("user", properties);
+
+        Entity returned = em.get(created.getUuid());
+        
+        assertNotNull(created);
+        assertNotNull(returned);
+        
+
+        assertTrue(created instanceof User);
+        assertTrue(returned instanceof User);
+        
+        assertEquals(created, returned);
+        
+
+    }
 }

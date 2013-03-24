@@ -1012,7 +1012,7 @@ public class EntityManagerImpl implements EntityManager {
 		}
 
 		if (entityClass == null) {
-			entityClass = (Class<A>) DynamicEntity.class;
+			entityClass = (Class<A>) Schema.getDefaultSchema().getEntityClass(entityType);
 		}
 
 		Set<String> required = schema.getRequiredProperties(
@@ -1390,7 +1390,7 @@ public class EntityManagerImpl implements EntityManager {
 	 * @throws Exception
 	 *             the exception
 	 */
-	public <A extends Entity> A getEntity(UUID entityId, String entityType,
+	public <A extends Entity> A getEntity(UUID entityId, 
 			Class<A> entityClass) throws Exception {
 
 		Object entity_key = key(entityId);
@@ -2182,7 +2182,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	@Override
 	public Entity get(UUID entityid) throws Exception {
-		return getEntity(entityid, null, DynamicEntity.class);
+		return getEntity(entityid, null);
 	}
 
 	@Override
@@ -2200,7 +2200,7 @@ public class EntityManagerImpl implements EntityManager {
 		if (entityRef == null) {
 			return null;
 		}
-		return getEntity(entityRef.getUuid(), null, DynamicEntity.class);
+		return getEntity(entityRef.getUuid(), null);
 	}
 
 	@Override
@@ -2218,7 +2218,7 @@ public class EntityManagerImpl implements EntityManager {
 			throws Exception {
 		A e = null;
 		try {
-			e = (A) getEntity(entityId, null, (Class<Entity>) entityClass);
+			e = (A) getEntity(entityId, (Class<Entity>) entityClass);
 		} catch (ClassCastException e1) {
 			logger.error("Unable to get typed entity", e1);
 		}

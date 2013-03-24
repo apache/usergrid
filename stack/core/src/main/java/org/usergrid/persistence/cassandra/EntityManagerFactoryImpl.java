@@ -323,8 +323,7 @@ ApplicationContextAware {
         UUID applicationId = uuid(column.getValue());
 
         EntityManager em = getEntityManager(applicationId);
-        return ((EntityManagerImpl) em).getEntity(applicationId,
-                TYPE_APPLICATION, Application.class);
+        return ((EntityManagerImpl) em).getEntity(applicationId, Application.class);
     }
 
     @Override
