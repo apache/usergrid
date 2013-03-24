@@ -66,6 +66,7 @@ public class UUIDUtils {
   private static long timestampMillisNow = System.currentTimeMillis();
 
   private static AtomicInteger currentMicrosPoint = new AtomicInteger(0);
+  private static AtomicInteger customMicrosPointer = new AtomicInteger(0);
 
   /**
    * Return the "next" UUID in micro second resolution.
@@ -88,20 +89,21 @@ public class UUIDUtils {
     // if count + currentMicro > 1k, block and roll
     tsLock.lock();
     long ts = System.currentTimeMillis();
+    if ( ts > timestampMillisNow ) {
+      timestampMillisNow = ts;
+      currentMicrosPoint.set(0);
+    }
+    int pointer = currentMicrosPoint.getAndIncrement();
     try {
-      if ( currentMicrosPoint.get() > 1000) {
+      if ( pointer > 990) {
         TimeUnit.MILLISECONDS.sleep(1L);
-      }
-      if ( ts > timestampMillisNow ) {
-        timestampMillisNow = ts;
-        currentMicrosPoint.set(0);
       }
     } catch (Exception ex) {
       ex.printStackTrace();
     } finally {
       tsLock.unlock();
     }
-    return newTimeUUID(ts, MICROS[currentMicrosPoint.getAndIncrement()]);
+    return newTimeUUID(ts, MICROS[pointer]);
   }
 
   private final static long kClockOffset = 0x01b21dd213814000L;
@@ -192,13 +194,26 @@ public class UUIDUtils {
   }
 
   /**
-   * Generate a new UUID with the given time stamp in milliseconds
+   * Generate a new UUID with the given time stamp in milliseconds. This
+   * method guarantees that subsequent calls will be of increasing value
+   * chronologically. If a large number of subsequent calls are made to
+   * this method (>1000) with the same timestamp, you will have non-unique
+   * temporal values stored in your UUID.
    * 
    * @param ts
    * @return
    */
   public static UUID newTimeUUID(long ts) {
-    return newTimeUUID(ts, getRandomTimeResolution());
+    tsLock.lock();
+    int pointer = customMicrosPointer.getAndIncrement();
+    try {
+      if ( pointer > 990) {
+        customMicrosPointer.set(0);
+      }
+    } finally {
+      tsLock.unlock();
+    }
+    return newTimeUUID(ts, MICROS[pointer]);
   }
 
   private static int[] getNextFakeMicros(int count) {
