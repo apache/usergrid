@@ -126,12 +126,10 @@ public class UUIDUtilsTest {
   /**
    * Populate timestamp set for the methods testing uuid contention
    */
-  private Set buildTsMicros(int count) {
+  private static final Set buildTsMicros(int count) {
     HashSet created = new HashSet(count);
-    long tsmicros;
     for (int x=0; x< count; x++) {
-      tsmicros = UUIDUtils.getTimestampInMicros(UUIDUtils.newTimeUUID());
-      created.add(tsmicros);
+      created.add(UUIDUtils.getTimestampInMicros(UUIDUtils.newTimeUUID()));
     }
     return created;
   }
