@@ -123,16 +123,26 @@ public class UUIDUtilsTest {
     }
   }
 
-  @Test
-  public void directUuidFrob() {
-    long startTime = System.currentTimeMillis();
-    int count = 1000* 1000;
+  /**
+   * Populate timestamp set for the methods testing uuid contention
+   */
+  private Set buildTsMicros(int count) {
     HashSet created = new HashSet(count);
     long tsmicros;
     for (int x=0; x< count; x++) {
       tsmicros = UUIDUtils.getTimestampInMicros(UUIDUtils.newTimeUUID());
       created.add(tsmicros);
     }
+    return created;
+  }
+
+  @Test
+  public void directUuidFrob() {
+    long startTime = System.currentTimeMillis();
+    int count = 1000* 1000;
+
+    Set created = buildTsMicros(count);
+
     logger.info("execution took {}", System.currentTimeMillis() - startTime);
     assertEquals(count, created.size());
     assertTrue(created.size() > 0);
@@ -142,31 +152,31 @@ public class UUIDUtilsTest {
   public void concurrentUuidFrob() throws Exception {
     long startTime = System.currentTimeMillis();
     List<Future> jobs = executeFrob();
+
     for ( Future f: jobs ) {
       logger.info("waiting on job...");
       f.get();
     }
+
     logger.info("execution took {}", System.currentTimeMillis() - startTime);
   }
 
   private List<Future> executeFrob() {
     ExecutorService exec = Executors.newFixedThreadPool(5);
     List<Future> jobs  = new ArrayList<Future>(10);
+
     for (int x=0; x<10; x++){
       jobs.add(exec.submit(new Callable<Object>() {
         @Override
         public Object call() throws Exception {
           logger.info("call invoked");
-          int count = 1000* 100;
-              HashSet created = new HashSet(count);
-              long tsmicros;
-              for (int x=0; x< count; x++) {
-                tsmicros = UUIDUtils.getTimestampInMicros(UUIDUtils.newTimeUUID());
-                created.add(tsmicros);
-              }
 
-              assertEquals(count, created.size());
-              assertTrue(created.size() > 0);
+          int count = 1000* 100;
+          Set created = buildTsMicros(count);
+
+          assertEquals(count, created.size());
+          assertTrue(created.size() > 0);
+
           logger.info("run complete");
           return null;
         }
