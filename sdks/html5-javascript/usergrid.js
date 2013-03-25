@@ -1624,6 +1624,34 @@ Usergrid.Group.prototype.remove = function(options, callback) {
 }
 
 /*
+* Gets feed for a group.
+*
+* @public
+* @method feed
+* @param {function} callback
+* @returns {callback} callback(err, data, activities)
+*/
+Usergrid.Group.prototype.feed = function(callback) {
+  var self = this;
+
+  var endpoint = "groups/"+this._path+"/feed";
+
+  var options = {
+    method:"GET",
+    endpoint:endpoint
+  }
+
+  this._client.request(options, function(err, data){
+    if (err && self.logging) {
+      console.log('error trying to log user in');
+    } 
+    if(typeof(callback) === 'function') {
+        callback(err, data, data.entities);
+    }
+  });
+}
+
+/*
 * Tests if the string is a uuid
 *
 * @public
