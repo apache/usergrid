@@ -191,98 +191,32 @@ Usergrid.Client.prototype.request = function (options, callback) {
  *  @param {function} callback
  *  @return {callback} callback(err, data)
  */
-Usergrid.Client.prototype.createGroup = function(path, callback) {
-  var options = {
-    type:"groups",
-    path:path
-  };
+Usergrid.Client.prototype.createGroup = function(options, callback) {
+  var getOnExist = options.getOnExist || false;
 
-  this.createEntity(options, callback);
-}
-
-/*
- *  Main function for deleting groups.
- *
- *  @method deleteGroup
- *  @public
- *  @params {string} path
- *  @param {function} callback
- *  @return {callback} callback(err, data)
- *
- */
-Usergrid.Client.prototype.deleteGroup = function(path, callback) {
   var options = {
-    type:"groups",
-    name:path
+    path: options.path,
+    client: this,
+    data:options
   }
 
-  this.getEntity(options, function(error, group) {
-    if(error) {
-      if(typeof(callback) === 'function'){
-        callback(error, group);
-      }
+  var group = new Usergrid.Group(options);
+  group.fetch(function(err, data){
+    var okToSave = (err && 'service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) || (!err && getOnExist);
+    if (okToSave) {
+      group.save(function(err, data){
+        if (typeof(callback) === 'function') {
+          callback(err, group);
+        }
+      });
     } else {
-      group.destroy(callback);
-    }
-  });
-}
-
-/*
- *  Main function for adding user to a group.
- *
- *  options object: options {path:'group_path', user: user entity}
- *
- *  @method addUserToGroup
- *  @public
- *  @params {object} options
- *  @param {function} callback
- *  @return {callback} callback(err, data)
- */
-Usergrid.Client.prototype.addUserToGroup = function(options, callback) {
-  var options = {
-    method:"POST",
-    endpoint:"groups/"+options.path+"/users/"+options.user.get('username')
-  }
-
-  this.request(options, function(error, data){
-    if(error) {
       if(typeof(callback) === 'function') {
-        callback(error, data);
+        callback(err, group);
       }
-    } else {
-      callback(error, data);
     }
   });
+  
 }
-
-/*
- *  Main function for removing a user from a group.
- *
- *  options object: options {path:'group_path', user: user entity}
- *
- *  @method removeUserFromGroup
- *  @public
- *  @params {object} options
- *  @param {function} callback
- *  @return {callback} callback(err, data_
- */
-Usergrid.Client.prototype.removeUserFromGroup = function(options, callback) {
-  var options = {
-    method:"DELETE",
-    endpoint:"groups/"+options.path+"/users/"+options.user.get('username')
-  }
-
-  this.request(options, function(error, data){
-    if(error) {
-      if(typeof(callback) === 'function') {
-        callback(error, data);
-      }
-    } else {
-      callback(error, data);
-    }
-  });
-}
-
 
 /*
 *  Main function for creating new entities - should be called directly.
@@ -758,8 +692,10 @@ Usergrid.Client.prototype.buildCurlCall = function (options) {
 *  @param {object} options {client:client, data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
 */
 Usergrid.Entity = function(options) {
-  this._client = options.client;
-  this._data = options.data || {};
+  if(options){
+    this._client = options.client;
+    this._data = options.data || {};
+  }
 };
 
 /*
@@ -1523,6 +1459,168 @@ Usergrid.Collection.prototype.getPreviousPage = function (callback) {
     this._list = [];
     this.fetch(callback);
   }
+}
+/*
+ *  A class to model a Usergrid group.
+ *  Set the path in the options object.
+ *
+ *  @constructor
+ *  @param {object} options {client:client, data: {'key': 'value'}, path:'path'}
+ */
+Usergrid.Group = function(options, callback) {
+  this._path = options.path;
+  this._list = [];
+  this._client = options.client;
+  this._data = options.data || {};
+  this._data.type = "groups"; 
+}
+
+
+/*  
+ *  Inherit from Usergrid.Entity.
+ *  Note: This only accounts for data on the group object itself. 
+ *  You need to use add and remove to manipulate group membership.
+ */
+Usergrid.Group.prototype = new Usergrid.Entity();
+
+/*
+*  Fetches current group data, and members.
+*
+*  @method fetch
+*  @public
+*  @param {function} callback
+*  @returns {function} callback(err, data)
+*/
+Usergrid.Group.prototype.fetch = function(callback) {
+  var self = this;
+  var groupEndpoint = 'groups/'+this._path;
+  var memberEndpoint = 'groups/'+this._path+'/users';
+
+  var groupOptions = {
+    method:'GET',
+    endpoint:groupEndpoint
+  }
+
+  var memberOptions = {
+    method:'GET',
+    endpoint:memberEndpoint
+  }
+  
+
+  this._client.request(groupOptions, function(err, data){
+    if(err && self._client.logging) {
+      console.log('error getting group');
+      if(typeof(callback) === 'function') {
+        callback(err, data);
+      }
+    } else {
+      if(data.entities) {
+        var groupData = data.entities[0];
+        self._data = groupData || {};
+        self._client.request(memberOptions, function(err, data) {
+          if(err && self._client.logging) {
+            console.log('error getting group users');
+          } else {
+            if(data.entities) {
+              var count = data.entities.length;
+              self._list = [];
+              for (var i = 0; i < count; i++) {
+                var uuid = data.entities[i].uuid;
+                if(uuid) {
+                  var entityData = data.entities[i] || {};
+                  var entityOptions = {
+                    type: entityData.type,
+                    client: self._client,
+                    uuid:uuid,
+                    data:entityData
+                  };
+                  var entity = new Usergrid.Entity(entityOptions);
+                  self._list.push(entity);
+                }
+       
+              }
+            }
+          }
+          if(typeof(callback) === 'function') {
+            callback(err, data, self._list);
+          }
+        });
+      }
+    }
+  });
+}
+
+/*
+ *  Retrieves the members of a group.
+ *
+ *  @method members
+ *  @public
+ *  @param {function} callback
+ *  @return {function} callback(err, data);
+ */
+Usergrid.Group.prototype.members = function(callback) {
+  if(typeof(callback) === 'function') {
+    callback(null, this._list);
+  }
+}
+
+/*
+ *  Adds a user to the group, and refreshes the group object.
+ *
+ *  Options object: {user: user_entity}
+ *
+ *  @method add
+ *  @public
+ *  @params {object} options
+ *  @param {function} callback
+ *  @return {function} callback(err, data)
+ */
+Usergrid.Group.prototype.add = function(options, callback) {
+  var self = this;
+  var options = {
+    method:"POST",
+    endpoint:"groups/"+this._path+"/users/"+options.user.get('username')
+  }
+
+  this._client.request(options, function(error, data){
+    if(error) {
+      if(typeof(callback) === 'function') {
+        callback(error, data);
+      }
+    } else {
+      self.fetch(callback);
+    }
+  });
+}
+
+/* 
+ *  Removes a user from a group, and refreshes the group object.
+ *
+ *  Options object: {user: user_entity}
+ *
+ *  @method remove
+ *  @public
+ *  @params {object} options
+ *  @param {function} callback
+ *  @return {function} callback(err, data)
+ */
+Usergrid.Group.prototype.remove = function(options, callback) {
+  var self = this;
+
+  var options = {
+    method:"DELETE",
+    endpoint:"groups/"+this._path+"/users/"+options.user.get('username')
+  }
+
+  this._client.request(options, function(error, data){
+    if(error) {
+      if(typeof(callback) === 'function') {
+        callback(error, data);
+      }
+    } else {
+      self.fetch(callback);
+    }
+  });
 }
 
 /*
