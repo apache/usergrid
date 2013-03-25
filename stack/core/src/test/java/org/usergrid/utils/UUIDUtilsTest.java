@@ -22,11 +22,8 @@ import static org.junit.Assert.assertTrue;
 import static org.usergrid.utils.UUIDUtils.getTimestampInMillis;
 import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.*;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -120,6 +117,85 @@ public class UUIDUtilsTest {
     for (int i = 0; i < count - 1; i++) {
       assertEquals(-1, uuids.get(i).compareTo(uuids.get(i + 1)));
     }
+  }
+
+  @Test
+  public void verifyOrderingTsOnlyAndUnique() {
+    int count = 500;
+    long ts = System.currentTimeMillis();
+
+    List<UUID> uuids = new ArrayList<UUID>(count);
+    HashSet times = new HashSet();
+    UUID lastSeen = null;
+    for (int i = 0; i < count; i++) {
+      lastSeen = newTimeUUID(ts);
+      uuids.add(lastSeen);
+      times.add(UUIDUtils.getTimestampInMicros(lastSeen));
+    }
+    assertEquals(500, times.size());
+    for (int i = 0; i < count - 1; i++) {
+      assertEquals(-1, uuids.get(i).compareTo(uuids.get(i + 1)));
+    }
+  }
+
+  /**
+   * Populate timestamp set for the methods testing uuid contention
+   */
+  private static final Set buildTsMicros(int count) {
+    HashSet created = new HashSet(count);
+    for (int x=0; x< count; x++) {
+      created.add(UUIDUtils.getTimestampInMicros(UUIDUtils.newTimeUUID()));
+    }
+    return created;
+  }
+
+  @Test
+  public void directUuidFrob() {
+    long startTime = System.currentTimeMillis();
+    int count = 1000* 1000;
+
+    Set created = buildTsMicros(count);
+
+    logger.info("execution took {}", System.currentTimeMillis() - startTime);
+    assertEquals(count, created.size());
+    assertTrue(created.size() > 0);
+  }
+
+  @Test
+  public void concurrentUuidFrob() throws Exception {
+    long startTime = System.currentTimeMillis();
+    List<Future> jobs = executeFrob();
+
+    for ( Future f: jobs ) {
+      logger.info("waiting on job...");
+      f.get();
+    }
+
+    logger.info("execution took {}", System.currentTimeMillis() - startTime);
+  }
+
+  private List<Future> executeFrob() {
+    ExecutorService exec = Executors.newFixedThreadPool(5);
+    List<Future> jobs  = new ArrayList<Future>(10);
+
+    for (int x=0; x<10; x++){
+      jobs.add(exec.submit(new Callable<Object>() {
+        @Override
+        public Object call() throws Exception {
+          logger.info("call invoked");
+
+          int count = 1000* 100;
+          Set created = buildTsMicros(count);
+
+          assertEquals(count, created.size());
+          assertTrue(created.size() > 0);
+
+          logger.info("run complete");
+          return null;
+        }
+      }));
+    }
+    return jobs;
   }
 
   @Test
