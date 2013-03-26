@@ -85,8 +85,10 @@ $(document).ready(function () {
     Pages.AddPanel('roles',  null, null, null, null, Usergrid.console.pageSelectRoles, null);
     Pages.AddPanel('activities', null, null, null, null, Usergrid.console.pageSelectActivities, null);
     Pages.AddPanel('notifications', null, null, null, null, Usergrid.console.pageSelectNotifcations, null);
-    Pages.AddPanel('notifications-', null, "#notifications-sublink", null, null, null, function() {});
-    Pages.AddPanel('notifications--', null, "#notifications--sublink", null, null, null, function() {});
+    Pages.AddPanel('sendNotification', null, "#sendNotification-sublink", null, null, null, null);
+    Pages.AddPanel('messageHistory', null, "#messageHistory-sublink", null, null, null, null);
+    Pages.AddPanel('configuration', null, "#configuration-sublink", null, null, null, null);
+    Pages.AddPanel('getStarted', null, "#getStarted-sublink", null, null, null, null);
     Pages.AddPanel('collections', "#collections-link", null, null, null, Usergrid.console.pageSelectCollections, null);
     Pages.AddPanel('analytics', null, null, null, null, Usergrid.console.pageSelectAnalytics, null);
     Pages.AddPanel('properties', null, null, null, null, Usergrid.console.pageSelectProperties, null);

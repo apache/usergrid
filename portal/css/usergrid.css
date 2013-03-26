@@ -3881,14 +3881,24 @@ a:active {
 #application-panel-buttons .active > a:hover i {
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
 }
-#application-panel-buttons2 {
+#app-end-users-buttons {
   z-index: 10;
   width: 181px;
 }
-#application-panel-buttons2 .active > a i {
+#app-end-users-buttons .active > a i {
   background-image: url(../img/glyphicons-halflings-white.png);
 }
-#application-panel-buttons2 .active > a:hover i {
+#app-end-users-buttons .active > a:hover i {
+  background-image: url(../bootstrap/img/glyphicons-halflings.png);
+}
+#notification-buttons {
+  z-index: 10;
+  width: 181px;
+}
+#notification-buttons .active > a i {
+  background-image: url(../img/glyphicons-halflings-white.png);
+}
+#notification-buttons .active > a:hover i {
   background-image: url(../bootstrap/img/glyphicons-halflings.png);
 }
 #left-collections-content {
@@ -4101,6 +4111,10 @@ hr.col-divider {
 .add-on {
   cursor: pointer;
   padding: 4px 5px !important;
+}
+.notifcations-form {
+  border: 1px solid #e5e5e5;
+  padding: 15px;
 }
 #resolutionSelect-menu {
   display: none;

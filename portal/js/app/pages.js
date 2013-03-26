@@ -105,6 +105,9 @@ function ApigeePages() {
     var panel = self.panels[panelName];
     $("#sidebar-menu li.active").removeClass('active');
     $("#"+panelName+"-link").parent().addClass('active');
+
+    $("#left-notifications-menu li.active").removeClass('active');
+
   }
 
   self.SelectPanel = function (panelName){

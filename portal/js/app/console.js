@@ -3891,16 +3891,29 @@ function buildContentArea(obj2) {
   function selectOrganization(orgName) {
     if(orgName){
       var currentOrg = Usergrid.organizations.getItemByName(orgName);
-      Usergrid.ApiClient.setOrganizationName(currentOrg.getName());
-      //sets the organization name in the console page.
-      displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
-      // make sure there is an application for this org
-      var app = currentOrg.getFirstItem();
-      if (app) {
-        Usergrid.ApiClient.setApplicationName(app.getName());
-        setNavApplicationText();
+      if (currentOrg) {
+        Usergrid.ApiClient.setOrganizationName(currentOrg.getName());
+        //sets the organization name in the console page.
+        displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
+        // make sure there is an application for this org
+        var app = currentOrg.getFirstItem();
+        if (app) {
+          Usergrid.ApiClient.setApplicationName(app.getName());
+          setNavApplicationText();
+        } else {
+          forceNewApp();
+        }
       } else {
-        forceNewApp();
+
+        var newOrg = Usergrid.organizations.getFirstItem();
+        Usergrid.ApiClient.setOrganizationName(newOrg.getName());
+        var app = newOrg.getFirstItem();
+        if (app) {
+          Usergrid.ApiClient.setApplicationName(app.getName());
+          setNavApplicationText();
+        } else {
+          forceNewApp();
+        }
       }
     }
   }
@@ -4554,4 +4567,7 @@ function buildContentArea(obj2) {
   Usergrid.console.ui.loadTemplate("apigee.ui.admins.table_rows.html");
   Usergrid.console.ui.loadTemplate("apigee.ui.feed.table_rows.html");
 
+  if (Usergrid.showNotifcations) {
+    $("#notifications-link").show();
+  }
 }

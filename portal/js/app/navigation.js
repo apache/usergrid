@@ -18,6 +18,10 @@ Usergrid.Navigation = Backbone.Router.extend({
       ":organization/:application/activities": "activities",
       ":organization/:application/collections": "collections",
       ":organization/:application/notifications": "notifications",
+      ":organization/:application/sendNotification": "sendNotification",
+      ":organization/:application/messageHistory": "messageHistory",
+      ":organization/:application/configuration": "configuration",
+      ":organization/:application/getStarted": "getStarted",
       ":organization/:application/analytics": "analytics",
       ":organization/:application/properties": "properties",
       ":organization/:application/shell": "shell",
@@ -74,10 +78,47 @@ Usergrid.Navigation = Backbone.Router.extend({
       this.showAppDataContent();
     },
     notifications: function(organization, application) {
+      var checkForCerts = true;
+      if (checkForCerts) {
+        this.checkOrganization(organization);
+        this.checkApplication(application);
+        Pages.ActivatePanel("notifications");
+        Pages.SelectPanel('notifications');
+        this.showAppNotificationsContent();
+      } else { //certs are not configured, so show welcome page
+        this.checkOrganization(organization);
+        this.checkApplication(application);
+        Pages.ActivatePanel("notifications");
+        Pages.SelectPanel('notifications');
+        this.showAppNotificationsContent();
+      }
+    },
+    sendNotification: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
-      Pages.ActivatePanel("notifications");
-      Pages.SelectPanel('notifications');
+      Pages.ActivatePanel("sendNotification");
+      Pages.SelectPanel('sendNotification');
+      this.showAppNotificationsContent();
+    },
+    messageHistory: function(organization, application) {
+      this.checkOrganization(organization);
+      this.checkApplication(application);
+      Pages.ActivatePanel("messageHistory");
+      Pages.SelectPanel('messageHistory');
+      this.showAppNotificationsContent();
+    },
+    configuration: function(organization, application) {
+      this.checkOrganization(organization);
+      this.checkApplication(application);
+      Pages.ActivatePanel("configuration");
+      Pages.SelectPanel('configuration');
+      this.showAppNotificationsContent();
+    },
+    getStarted: function(organization, application) {
+      this.checkOrganization(organization);
+      this.checkApplication(application);
+      Pages.ActivatePanel("getStarted");
+      Pages.SelectPanel('getStarted');
       this.showAppNotificationsContent();
     },
     analytics: function(organization, application) {

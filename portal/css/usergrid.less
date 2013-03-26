@@ -418,7 +418,20 @@ a:active {
     }
   }
 }
-#application-panel-buttons2{
+#app-end-users-buttons{
+//position:fixed;
+  z-index: 10;
+  width: 181px;
+  .active > a{
+    i{
+      .icon-white;
+    }
+    &:hover i{
+      .icon-black;
+    }
+  }
+}
+#notification-buttons{
 //position:fixed;
   z-index: 10;
   width: 181px;
@@ -670,6 +683,13 @@ hr.col-divider{
   cursor: pointer;
   padding: 4px 5px !important;
 }
+
+//---------------- Notifcations panel--------------------------------------------------
+.notifcations-form {
+  border: 1px solid @border2;
+  padding: 15px;
+}
+
 //-------------------------------------------------------------------------------------
 
 #resolutionSelect-menu{
