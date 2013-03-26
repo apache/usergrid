@@ -28,7 +28,7 @@ window.console.log = window.console.log || function() {};
 //Usergrid namespace encapsulates this SDK
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
-Usergrid.SDK_VERSION = '0.10.04';
+Usergrid.SDK_VERSION = '0.10.05';
 
 Usergrid.Client = function(options) {
   //usergrid enpoint
@@ -215,7 +215,7 @@ Usergrid.Client.prototype.createGroup = function(options, callback) {
       }
     }
   });
-  
+
 }
 
 /*
@@ -296,7 +296,6 @@ Usergrid.Client.prototype.getEntity = function (options, callback) {
   });
 }
 
-
 /*
 *  Main function for creating new collections - should be called directly.
 *
@@ -342,7 +341,6 @@ Usergrid.Client.prototype.getFeedForUser = function(username, callback) {
     }
   });
 }
-
 
 /*
 *  Function for creating new activities for the current user - should be called directly.
@@ -406,7 +404,7 @@ Usergrid.Client.prototype.createUserActivity = function (user, options, callback
  *  @params {string} content
  *  @param {function} callback
  *  @return {callback} callback(err, data)
- */ 
+ */
 Usergrid.Client.prototype.createUserActivityWithEntity = function(user, content, callback) {
   var username = user.get("username");
   var options = {
@@ -426,10 +424,9 @@ Usergrid.Client.prototype.createUserActivityWithEntity = function(user, content,
     "verb":"post",
     "content":content };
 
-    this.createUserActivity(username, options, callback); 
+    this.createUserActivity(username, options, callback);
 
 }
-
 
 /*
 *  A private method to get call timing of last call
@@ -501,10 +498,9 @@ Usergrid.Client.prototype.signup = function(username, password, email, name, cal
     email:email,
     name:name
   };
-  
+
   this.createEntity(options, callback);
 }
-
 
 /*
 *
@@ -982,7 +978,16 @@ Usergrid.Entity.prototype.connect = function (connection, entity, callback) {
   });
 }
 
-
+/*
+*  returns a unique identifier for an entity
+*
+*  @method connect
+*  @public
+*  @param {object} entity
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*
+*/
 Usergrid.Entity.prototype.getEntityId = function (entity) {
   var id = false;
   if (isUUID(entity.get('uuid'))) {
@@ -1460,6 +1465,8 @@ Usergrid.Collection.prototype.getPreviousPage = function (callback) {
     this.fetch(callback);
   }
 }
+
+
 /*
  *  A class to model a Usergrid group.
  *  Set the path in the options object.
@@ -1472,13 +1479,12 @@ Usergrid.Group = function(options, callback) {
   this._list = [];
   this._client = options.client;
   this._data = options.data || {};
-  this._data.type = "groups"; 
+  this._data.type = "groups";
 }
 
-
-/*  
+/*
  *  Inherit from Usergrid.Entity.
- *  Note: This only accounts for data on the group object itself. 
+ *  Note: This only accounts for data on the group object itself.
  *  You need to use add and remove to manipulate group membership.
  */
 Usergrid.Group.prototype = new Usergrid.Entity();
@@ -1505,7 +1511,6 @@ Usergrid.Group.prototype.fetch = function(callback) {
     method:'GET',
     endpoint:memberEndpoint
   }
-  
 
   this._client.request(groupOptions, function(err, data){
     if(err && self._client.logging) {
@@ -1537,7 +1542,7 @@ Usergrid.Group.prototype.fetch = function(callback) {
                   var entity = new Usergrid.Entity(entityOptions);
                   self._list.push(entity);
                 }
-       
+
               }
             }
           }
@@ -1593,7 +1598,7 @@ Usergrid.Group.prototype.add = function(options, callback) {
   });
 }
 
-/* 
+/*
  *  Removes a user from a group, and refreshes the group object.
  *
  *  Options object: {user: user_entity}
@@ -1644,7 +1649,7 @@ Usergrid.Group.prototype.feed = function(callback) {
   this._client.request(options, function(err, data){
     if (err && self.logging) {
       console.log('error trying to log user in');
-    } 
+    }
     if(typeof(callback) === 'function') {
         callback(err, data, data.entities);
     }
@@ -1654,7 +1659,7 @@ Usergrid.Group.prototype.feed = function(callback) {
 /*
 * Creates activity and posts to group feed.
 *
-* options object: {user: user_entity, content: "activity content"} 
+* options object: {user: user_entity, content: "activity content"}
 *
 * @public
 * @method createGroupActivity
@@ -1708,7 +1713,6 @@ function isUUID (uuid) {
   if (!uuid) return false;
   return uuidValueRegex.test(uuid);
 }
-
 
 /*
 *  method to encode the query string parameters
