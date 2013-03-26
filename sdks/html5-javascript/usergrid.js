@@ -1652,6 +1652,50 @@ Usergrid.Group.prototype.feed = function(callback) {
 }
 
 /*
+* Creates activity and posts to group feed.
+*
+* options object: {user: user_entity, content: "activity content"} 
+*
+* @public
+* @method createGroupActivity
+* @params {object} options
+* @param {function} callback
+* @returns {callback} callback(err, entity)
+*/
+Usergrid.Group.prototype.createGroupActivity = function(options, callback){
+  var user = options.user;
+  var options = {
+    actor: {
+      "displayName":user.get("username"),
+      "uuid":user.get("uuid"),
+      "username":user.get("username"),
+      "email":user.get("email"),
+      "picture":user.get("picture"),
+      "image": {
+        "duration":0,
+        "height":80,
+        "url":user.get("picture"),
+        "width":80
+       },
+    },
+    "verb":"post",
+    "content":options.content };
+
+    options.type = 'groups/'+this._path+'/activities';
+    var options = {
+      client:this._client,
+      data:options
+    }
+
+    var entity = new Usergrid.Entity(options);
+    entity.save(function(err, data) {
+      if (typeof(callback) === 'function') {
+        callback(err, entity);
+      }
+    });
+}
+
+/*
 * Tests if the string is a uuid
 *
 * @public
