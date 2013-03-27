@@ -1,6 +1,6 @@
 package org.usergrid.java.client.entities;
 
-import static org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL;
+import static com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion.NON_NULL;
 import static org.usergrid.java.client.utils.JsonUtils.getBooleanProperty;
 import static org.usergrid.java.client.utils.JsonUtils.getStringProperty;
 import static org.usergrid.java.client.utils.JsonUtils.setBooleanProperty;
@@ -8,8 +8,8 @@ import static org.usergrid.java.client.utils.JsonUtils.setStringProperty;
 
 import java.util.List;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class User extends Entity {
 

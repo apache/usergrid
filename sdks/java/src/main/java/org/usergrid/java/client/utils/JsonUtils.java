@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.JsonNodeFactory;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.usergrid.java.client.exception.ClientException;
 
 public class JsonUtils {
@@ -132,7 +133,8 @@ public class JsonUtils {
 
 	public static <T> T fromJsonNode(JsonNode json, Class<T> c) {
 		try {
-			return mapper.readValue(json, c);
+			JsonParser jp = json.traverse();
+			return mapper.readValue(jp, c);
 		} catch (JsonGenerationException e) {
             throw new ClientException("Unable to generate json", e);
         } catch (JsonMappingException e) {

@@ -2,7 +2,7 @@ package org.usergrid.java.client.response;
 
 import static org.usergrid.java.client.utils.JsonUtils.toJsonString;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ClientCredentialsInfo {
 
