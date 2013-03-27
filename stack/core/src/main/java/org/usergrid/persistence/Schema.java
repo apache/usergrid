@@ -29,6 +29,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -77,6 +78,11 @@ import org.usergrid.utils.MapUtils;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * The controller class for determining Entity relationships as well as
@@ -1893,8 +1899,10 @@ public class Schema {
         } else if (PROPERTY_TYPE.equals(propertyName)) {
             propertyValue = string(bytes);
         } else {
-            propertyValue = Schema
-                    .deserializePropertyValueFromJsonBinary(bytes);
+            if (Schema.getDefaultSchema().isPropertyEncrypted(entityType, propertyName)) {
+              bytes = decrypt(bytes);
+            }
+            propertyValue = Schema.deserializePropertyValueFromJsonBinary(bytes);
         }
         return propertyValue;
     }
@@ -1907,13 +1915,16 @@ public class Schema {
         } else if (PROPERTY_TYPE.equals(propertyName)) {
             bytes = bytebuffer(string(propertyValue));
         } else {
-            bytes = Schema
-                    .serializePropertyValueToJsonBinary(toJsonNode(propertyValue));
+            bytes = Schema.serializePropertyValueToJsonBinary(toJsonNode(propertyValue));
+            if (Schema.getDefaultSchema().isPropertyEncrypted(entityType, propertyName)) {
+              bytes.rewind();
+              bytes = encrypt(bytes);
+            }
         }
         return bytes;
     }
 
-    public static ByteBuffer serializePropertyValueToJsonBinary(Object obj) {
+  public static ByteBuffer serializePropertyValueToJsonBinary(Object obj) {
         return JsonUtils.toByteBuffer(obj);
     }
 
@@ -1926,5 +1937,60 @@ public class Schema {
         return JsonUtils.normalizeJsonTree(JsonUtils.fromByteBuffer(bytes,
                 classType));
     }
+
+  public boolean isPropertyEncrypted(String entityType, String propertyName) {
+
+    EntityInfo entity = getEntityInfo(entityType);
+    if (entity == null) { return false; }
+
+    PropertyInfo property = entity.getProperty(propertyName);
+    if (property == null) { return false; }
+
+    return property.isEncrypted();
+  }
+
+  private static final byte[] DEFAULT_ENCRYPTION_SEED = "oWyWX?I2kZAhkKb_jQ8SZvjmgkiF4eGSjsfIkhnRetD4Dvtx2J".getBytes();
+  private static byte[] encryptionSeed = (System.getProperty("encryptionSeed") != null)
+      ? System.getProperty("encryptionSeed").getBytes()
+      : DEFAULT_ENCRYPTION_SEED;
+
+  public static ByteBuffer encrypt(ByteBuffer clear) {
+    if (clear == null || !clear.hasRemaining()) return clear;
+    try {
+      SecretKeySpec sKeySpec = new SecretKeySpec(getRawKey(encryptionSeed), "AES");
+      Cipher cipher = Cipher.getInstance("AES");
+      cipher.init(Cipher.ENCRYPT_MODE, sKeySpec);
+      ByteBuffer encrypted = ByteBuffer.allocate(cipher.getOutputSize(clear.remaining()));
+      cipher.doFinal(clear, encrypted);
+      encrypted.rewind();
+      return encrypted;
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  public static ByteBuffer decrypt(ByteBuffer encrypted) {
+    if (encrypted == null || !encrypted.hasRemaining()) return encrypted;
+    try {
+      SecretKeySpec sKeySpec = new SecretKeySpec(getRawKey(encryptionSeed), "AES");
+      Cipher cipher = Cipher.getInstance("AES");
+      cipher.init(Cipher.DECRYPT_MODE, sKeySpec);
+      ByteBuffer decrypted = ByteBuffer.allocate(cipher.getOutputSize(encrypted.remaining()));
+      cipher.doFinal(encrypted, decrypted);
+      decrypted.rewind();
+      return decrypted;
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  private static byte[] getRawKey(byte[] seed) throws Exception {
+    KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+    SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+    sr.setSeed(seed);
+    keyGenerator.init(128, sr); // 192 and 256 bits may not be available
+    SecretKey secretKey = keyGenerator.generateKey();
+    return secretKey.getEncoded();
+  }
 
 }

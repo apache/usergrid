@@ -33,6 +33,7 @@ public class PropertyInfo {
 	private boolean unique;
 	private boolean includedInExport = true;
 	private boolean timestamp = false;
+  private boolean encrypted = false;
 
 	public PropertyInfo() {
 	}
@@ -51,6 +52,7 @@ public class PropertyInfo {
 		setUnique(propertyAnnotation.unique());
 		setIncludedInExport(propertyAnnotation.includedInExport());
 		setTimestamp(propertyAnnotation.timestamp());
+    setEncrypted(propertyAnnotation.encrypted());
 	}
 
 	public String getName() {
@@ -174,7 +176,15 @@ public class PropertyInfo {
 		this.timestamp = timestamp;
 	}
 
-	@Override
+  public boolean isEncrypted() {
+    return encrypted;
+  }
+
+  public void setEncrypted(boolean encrypted) {
+    this.encrypted = encrypted;
+  }
+
+  @Override
 	public String toString() {
 		return "PropertyInfo [name=" + name + ", type=" + type
 				+ ", aliasProperty=" + aliasProperty + ", fulltextIndexed="
