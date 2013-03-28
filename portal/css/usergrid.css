@@ -5115,3 +5115,15 @@ a.data-explorer-link {
   font-weight: 600;
   color: #000000;
 }
+.notifications-get-started {
+  padding: 20px 20px 0 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+.notifications-get-started a {
+  color: #1b97d1;
+}
+.notifications-get-started .header {
+  font-size: 14px;
+  font-weight: 600;
+  padding-bottom: 5px;
+}
