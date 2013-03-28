@@ -50,4 +50,5 @@ public @interface EntityProperty {
 
 	boolean timestamp() default false;
 
+  boolean encrypted() default false;
 }
