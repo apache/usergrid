@@ -69,7 +69,11 @@ end
 on_error do |e|
   # return false to skip default error handling
   if e.is_a? RestClient::Exception
-    puts e.response.data['error_description']
+    begin
+      puts e.response.data['error_description']
+    rescue MultiJson::DecodeError
+      puts e.response
+    end
     false
   else
     true
