@@ -14,6 +14,7 @@ ugc enables convenient terminal access to Apigee's App Services (aka Usergrid).
 * Ruby evaluation within data elements
 * Can optionally emits raw output (--verbose switch)
 * Extended SQL syntax (adds 'from' and 'limit' clauses to standard Usergrid syntax)
+* File upload (-f or --file option) on PUT and POST
 
 ## Installation
 
@@ -175,6 +176,11 @@ Note: with ugc, you can also use extended sql syntax...
 If you specify column names in your query, you will be unable to reference the returned rows by @1 reference in later commands. (The current Usergrid implementation doesn't return any metadata for the entries.) In addition, for your safety the history will be cleared so that you don't inadvertently reference entities from a previous list.
 
 ## Release notes
+
+### 0.9.3
+* New features
+  1. file upload function with -f (--file) switch
+    * eg. `$ ugc post something "property1Name: 'property1Value'" --file property2Name=/path/to/myfile`
 
 ### 0.9.2
 * New features
