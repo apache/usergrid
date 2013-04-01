@@ -302,6 +302,7 @@ a {
     background-color: $apigeeApplicationName;
     z-index: 130;
     height: 42px;
+    min-width: 880px;
 }
 
 .right-header a:hover {
@@ -579,7 +580,7 @@ hr.col-divider {
 //----------Box ------------------------------------------------------------
 .console-section {
     min-width: 450px;
-    margin: 0 0px 20px;
+    margin: 0;
     //border: solid 1px $h3Color;
     //background: #F2F5F7;
     overflow: show;
@@ -639,7 +640,6 @@ hr.col-divider {
 
     form {
         margin: 0px;
-        padding-top: 10px;
         display: inline-block;
         width: 460px;
     }
@@ -651,7 +651,7 @@ hr.col-divider {
 
     .console-section-contents {
         position: relative;
-        padding: 10px;
+        padding: 0;
         line-height: 25px;
         display: block;
 
@@ -704,6 +704,11 @@ hr.col-divider {
 
 .bottom-space {
     margin-bottom: 15px;
+}
+
+.panel-buffer{
+    display: none;
+    margin-left: 180px
 }
 //-------------------------------------------------------------------------------------
 
@@ -914,6 +919,8 @@ hr.col-divider {
 }
 
 #user-panel-tab-bar , #group-panel-tab-bar, #role-panel-tab-bar {
+    margin-left: 40px;
+
     .tab-button {
         background-color: #ffffff !important;
         opacity: 1 !important;
@@ -1105,6 +1112,7 @@ hr.col-divider {
     border-bottom: 1px solid #AED0EA;
     margin-bottom: 16px;
     padding-bottom: 8px;
+    margin-top: 30px;
 }
 
 .user-role-row {
@@ -1301,6 +1309,7 @@ hr.col-divider {
 
 .pager {
     margin: 15px;
+    height: 30px;
 }
 
 /*-------------- --------------------------------*/
@@ -1481,18 +1490,13 @@ hr.col-divider {
     @extend .alert;
 }
 
-.user-panel-section-message {
-    margin: 15px;
+.panel-section-message {
+    margin: 25px;
     @extend .alert;
 }
 
 .user-panel-section {
     margin: 15px;
-}
-
-.group-panel-section-message {
-    margin: 15px;
-    @extend .alert;
 }
 
 /*----------------- Activities ------------------*/
@@ -1571,13 +1575,13 @@ table#organization-admins-table {
 }
 
 .zebraRows {
-    background: white;
+    background: #eee;
     border-bottom: 1px solid $border2;
     border-left: 1px solid $border2;
     border-right: 1px solid $border2;
 
     &:nth-child(2n){
-        background: #EEE;
+        background: white;
     }
 
     &:last-child {
@@ -1588,22 +1592,6 @@ table#organization-admins-table {
         padding: 10px;
     }
 }
-
-/* #organization-applications{ */
-/*     padding: 0px; */
-/*     .application-row{ */
-/*         .zebraRows; */
-/*     } */
-/*     .alert{ */
-/*         margin: 15px; */
-/*     } */
-/*  */
-/*   .application-row { */
-/*     &:last-child { */
-/*       border-radius: 0 0 5px 5px; */
-/*     } */
-/*   } */
-/* } */
 
 #organization-admins {
     padding: 0px;
@@ -1690,10 +1678,10 @@ table#organization-admins-table {
 
 /* ---------------- Dashboard ---------------- */
 table .zebraRows {
-    background: white;
+    background: #eee;
 
     &:nth-child(2n) {
-        background: #EEE;
+        background: white;
     }
 }
 
@@ -1720,6 +1708,8 @@ a.data-explorer-link {
 
 /* ---------------- Curl Container ------------ */
 .curl-container {
+    margin-top: 10px;
+
     .curl-info, .curl-token {
         padding-left: 5px;
     }
@@ -1731,10 +1721,6 @@ a.data-explorer-link {
 
 .side-label {
     display: inline;
-}
-
-.alert .close {
-    top: 2px;
 }
 
 .horizontal {
