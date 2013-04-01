@@ -452,7 +452,23 @@ a {
     }
 }
 
-#application-panel-buttons2 {
+#app-end-users-buttons {
+    //position:fixed;
+    z-index: 10;
+    width: 181px;
+
+    .active > a {
+        i {
+            @extend .icon-white;
+        }
+
+        &:hover i {
+            @extend .icon-black;
+        }
+    }
+}
+
+#notification-buttons {
     //position:fixed;
     z-index: 10;
     width: 181px;
@@ -724,6 +740,13 @@ hr.col-divider {
     cursor: pointer;
     padding: 4px 5px !important;
 }
+
+//---------------- Notifications panel--------------------------------------------------
+.notifcations-form {
+    border: 1px solid $border2;
+    padding: 15px;
+}
+
 //-------------------------------------------------------------------------------------
 
 #resolutionSelect-menu {
@@ -1813,4 +1836,20 @@ a.data-explorer-link {
 .bold-header{
     font-weight: 600;
     color: $black;
+}
+
+//Notifications
+.notifications-get-started {
+    padding: 20px 20px 0 20px;
+    border-bottom: 1px solid $border2;
+
+    a {
+        color: $linkColor;
+    }
+
+    .header {
+        font-size: 14px;
+        font-weight: 600;
+        padding-bottom: 5px;
+    }
 }
