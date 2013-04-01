@@ -37,3 +37,13 @@ apache::vhost { $server_name:
     template => 'vhost-ssl.conf.erb',
     require  => Exec['openssl-req']
 }
+
+package { 'compass':
+    ensure => present,
+    provider => gem
+}
+
+package { 'bootstrap-sass':
+    ensure => '2.0.0',
+    provider => gem
+}
