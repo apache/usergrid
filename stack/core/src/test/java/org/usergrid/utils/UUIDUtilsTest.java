@@ -227,10 +227,13 @@ public class UUIDUtilsTest {
     
     UUID t1 = newTimeUUID(start, 0);
     UUID t2 = newTimeUUID(start, 1);
-    
+    // we are moving independantly now between the default form of
+    // newTimeUUID and the user-determined offsets. Keeping them
+    // in sync is not feasible and no longer necessary
+    TimeUnit.MILLISECONDS.sleep(1);
+
     UUID now3 = newTimeUUID();
     
-
     assertEquals(-1, now1.compareTo(t1));
     assertEquals(-1, now2.compareTo(t1));
     
