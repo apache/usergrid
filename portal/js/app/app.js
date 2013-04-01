@@ -67,7 +67,6 @@ $(document).ready(function () {
     Pages.AddPage({name:'forgot-password', menu:publicMenu});
     Pages.AddPage({name:'post-signup', menu:publicMenu});
     Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction: function() {
-      Pages.SelectPanel('organization');
       if(!Backbone.History.started){
         Backbone.history.start();
       }

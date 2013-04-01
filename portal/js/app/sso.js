@@ -35,9 +35,7 @@
     getSSOCallback:function (urlCallback) {
 
        var url = this.buildBaseUrl();
-/*
-      var url = 'https://apigee.com/usergrid/';
- */
+
       if(urlCallback) {
         url += "#" + urlCallback;
       }

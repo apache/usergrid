@@ -48,6 +48,11 @@
 </head>
 <body>
 
+<div id="alert-error-message-container" class="alert alert-error" style="width:96.5%; z-index: 99; position: fixed; top: 84px;display: none;">
+  <a href="#" class="close" data-dismiss="alert">&times;</a>
+  <strong id="alert-error-header"></strong>
+  <span id="alert-error-message"></span>
+</div>
 
 <div id="header">
   <div class="column-in">
@@ -264,7 +269,7 @@
                 <div class="panel-desc">View your org's apps, activities, administrators and more.</div>
                 <hr  class="col-divider">
                 <li id="application-panel-button-dashboard"><a href="#"><i class="icon-th"></i> Org Overview</a></li>
-
+                <br/>
                 <h4 class="panel-title">Application</h4>
                 <p class="panel-desc">View your app's data, scripts, analytics and more.</p>
                 <hr  class="col-divider">
@@ -273,12 +278,12 @@
 
 
                 <li><a href="#users" id="users-link"><i class="icon-user"></i> <span class="nav-menu-text">App End-Users</span></a></li>
-
+                <li><a href="#collections" id="collections-link"><i class="icon-book"></i> <span class="nav-menu-text">App Data</span></a></li>
 
                 <li><a href="#notifications" id="notifications-link"><i class="icon-calendar"></i> <span class="nav-menu-text">Notifications</span></a></li>
                 <li><a href="#activities" id="activities-link"><i class="icon-calendar"></i> <span class="nav-menu-text">Activities</span></a></li>
                 <!--<li><a href="#collections" id="application-panel-button-collections"><i class="icon-book"></i> <span class="nav-menu-text">Collections</span></a></li>-->
-                <li><a href="#collections" id="collections-link"><i class="icon-book"></i> <span class="nav-menu-text">Collections</span></a></li>
+
                 <li><a href="#analytics" id="analytics-link"><i class="icon-signal"></i> <span class="nav-menu-text">Analytics</span></a></li>
                 <li><a href="#properties" id="properties-link"><i class="wrench "></i> <span class="nav-menu-text">App Settings</span></a></li>
                 <li><a href="#shell" id="shell-link"><i class="icon-warning-sign"></i> <span class="nav-menu-text">Shell</span></a></li>
@@ -341,7 +346,7 @@
             <div style="padding-top: 10px;">
               <h4 class="panel-title">Quick Start Guide</h4>
               <div class="panel-desc">Need help getting started? Follow our Quick Start Guide</div>
-              <hr style="margin: 0;">
+              <hr class="col-divider">
 
               <div class="panel-desc" style="height: 50px; text-align:center; width:100px;margin: 20px auto;">
               <a href="http://apigee.com/docs/usergrid/content/quick-start" target="_blank">App Services: Quick Start Guide</a>
@@ -349,7 +354,7 @@
 
               <h4 class="panel-title">SDKs & Modules</h4>
               <div class="panel-desc">Download an SDK or module to get up-and-running quickly</div>
-              <hr style="margin: 0;">
+              <hr class="col-divider">
 
               <div class="sdk-download">
                 <img src="images/ios-sdk-download.png">
@@ -511,7 +516,7 @@
                     <span class="title"> Application Dashboard: <span class="app_title"></span> </span>
                   </div>
                   <div class="console-section-contents">
-                    <div id="application-panel-table" style="width: 480px; overflow: hidden;">
+                    <div id="application-panel-table" style="overflow: hidden;">
                       <div id="application-panel-entity-graph" class="span graph"></div>
                       <div id="application-panel-text" class="span">...</div>
                     </div>
@@ -645,7 +650,7 @@
                   </form>
                 </div>
               </div>
-              <div id="users-panel" style="display: none; margin-left: 190px">
+              <div id="users-panel" class="panel-buffer">
 
                   <div id="users-panel-list" class="panel-content">
                     <div id="users-messages" class="alert" style="display: none;"></div>
@@ -661,7 +666,7 @@
                           </select>
 
                           <a class="btn " data-toggle="modal" id="delete-users-link" > Delete</a>
-                          <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-new-user"> Add User</a>
+                          <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-new-user"> Create new user</a>
 
 
 
@@ -792,7 +797,7 @@
                 </div>
               </form>
 
-              <div id="user-panel" style="display: none; margin-left: 190px">
+              <div id="user-panel" class="panel-buffer">
                 <!--ul id="user-panel-tab-bar" class="nav nav-tabs">
                   <li><a id="button-user-list" >List</a></li>
                   <li><a id="button-user-profile" >Profile</a></li>
@@ -854,7 +859,7 @@
                     </fieldset>
                   </div>
                   <div class="modal-footer">
-                    <input type="submit" class="btn btn-usergrid" value="Create"/>
+                    <input type="submit" class="btn btn-usergrid" value="Add"/>
                     <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
                   </div>
                 </form>
@@ -885,7 +890,7 @@
 
 
 
-              <div id="groups-panel" style="display: none; margin-left: 190px">
+              <div id="groups-panel" class="panel-buffer">
                 <div id="groups-panel-list" class="panel-content">
                   <div id="groups-messages" class="alert" style="display: none;"></div>
                   <div class="console-section">
@@ -899,7 +904,7 @@
                         </select>
 
                         <a class="btn" id="delete-groups-link" > Delete</a>
-                        <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-new-group"> Add Group</a>
+                        <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-new-group"> Create new group</a>
 
                       </div>
                     </div>
@@ -944,7 +949,7 @@
                   </div>
                 </form>
               </div>
-              <div id="group-panel" style="display: none; margin-left: 190px">
+              <div id="group-panel" class="panel-buffer">
                 <!--ul id="group-panel-tab-bar" class="nav nav-tabs">
                   <li><a id="button-group-list" >List</a></li>
                   <li><a id="button-group-details" >Details</a></li>
@@ -982,7 +987,7 @@
                     </fieldset>
                   </div>
                   <div class="modal-footer">
-                    <input type="submit" class="btn btn-usergrid" value="Create"/>
+                    <input type="submit" class="btn btn-usergrid" value="Add"/>
                     <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
                   </div>
                 </form>
@@ -1009,7 +1014,7 @@
                   </div>
                 </form>
               </div>
-              <div id="roles-panel" style="display: none; margin-left: 190px">
+              <div id="roles-panel" class="panel-buffer">
                 <div id="roles-panel-list" class="panel-content">
                   <div id="roles-messages" class="alert" style="display: none;"></div>
                   <div class="console-section">
@@ -1074,13 +1079,7 @@
                   </div>
                 </form>
               </div>
-              <div id="role-panel" style="display: none; margin-left: 190px">
-                <!--ul id="role-panel-tab-bar" class="nav nav-tabs">
-                  <li class="active"><a id="button-role-list" >List</a></li>
-                  <li><a id="button-role-settings" >Settings</a></li>
-                  <li><a id="button-role-users" >Users</a></li>
-                  <li><a id="button-role-groups" >Groups</a></li>
-                </ul-->
+              <div id="role-panel" class="panel-buffer">
                 <div id="role-panel-tab-bar">
                   <a class="tab-button btn" id="button-role-list" >List</a>
                   <a class="tab-button btn active" id="button-role-settings" >Settings</a>
@@ -1106,24 +1105,7 @@
                   <div id="role-users-curl-container" class="curl-container">
                   </div>
                 </div>
-                <div id="role-panel-groups" class="panel-content">
-                  <div class="console-section">
-                    <div class="well thingy">
-                      <span class="title">Groups</span>
-                      <div class="bar">
-                        <a data-toggle="modal" href="#dialog-form-add-group-to-role"> Add </a>
-                        <a id="remove-selected-role-groups" > Remove </a>
-                        <a id="selectAllRoleGroups" class=""  onclick="Usergrid.console.selectAllRoleGroups();"> Select All </a>
-                        <a id="deselectAllRoleGroups" style="display: none;" class=""  onclick="Usergrid.console.deselectAllRoleGroups();"> Deselect All </a>
-                      </div>
-                    </div>
-                    <table id="role-groups" class="table">
-                      <tbody></tbody>
-                    </table>
-                  </div>
-                  <div id="role-groups-curl-container" class="curl-container">
-                  </div>
-                </div>
+                <div id="role-panel-groups" class="panel-content"></div>
                 <form id="dialog-form-add-group-to-role" class="modal hide fade">
                   <div class="modal-header">
                     <a class="close" data-dismiss="modal">&times</a>
@@ -1316,11 +1298,6 @@
               <div id="collections-panel" style="display: none; margin-left: 151px; padding-left: 30px;">
                 <div id="query-path-area" class="console-section query-path-area">
 
-                  <div class="well thingy">
-                    <span class="title">Collection:</span> <span class="title" id="collection-type-field"></span>
-                     <a class="data-explorer-link"  style="float: right" onclick="$('#data-explorer').toggle(); return false;">Data Explorer</a>
-                  </div>
-
                   <form id="dialog-form-new-collection" class="modal hide fade">
                     <div class="modal-header">
                       <a class="close" data-dismiss="modal">&times</a>
@@ -1345,14 +1322,22 @@
                   </form>
 
 
+                    <!--a class="data-explorer-link"  style="float: right" onclick="$('#data-explorer').toggle(); return false;">Data Explorer</a -->
+
+
                   <div id="data-explorer" class="">
+                    <div class="well thingy">
+                      <span class="title">Data Explorer</span>
+                    </div>
+
+
                     <form id="query-inputs" class="">
                       <div class="control-group">
                         <div class="" data-toggle="buttons-radio">
                           <!--a class="btn" id="button-query-back">&#9664; Back</a-->
                           <!--Added disabled class to change the way button looks but their functionality is as usual -->
                           <label class="control-label"><strong>Method </strong></label>
-                          <button type="button" class="btn btn-small disabled query-button" id="button-query-get">GET</button>
+                          <button type="button" class="btn btn-small disabled query-button active" id="button-query-get">GET</button>
                           <button type="button" class="btn btn-small disabled query-button" id="button-query-post">POST</button>
                           <button type="button" class="btn btn-small disabled query-button" id="button-query-put">PUT</button>
                           <button type="button" class="btn btn-small disabled query-button" id="button-query-delete">DELETE</button>
@@ -1373,7 +1358,7 @@
                         <label class="control-label" for="query-ql"><strong>Query String</strong></label>
                         <div class="controls">
                           <div class="input-append">
-                            <input id="query-ql" type="text" name="query" class="span5" placeholder="ex: ql=select * where name='fred'&limit=100"/>
+                            <input id="query-ql" type="text" name="query" class="span5" placeholder="ex: select * where name='fred'"/>
                             <div class="btn-group pull-right">
                               <a class="btn dropdown-toggle " data-toggle="dropdown">
                                 <span id='query-collections-caret' class="caret"></span>
@@ -1384,7 +1369,15 @@
                           </div>
                         </div>
                       </div>
-                      <div class="control-group" id="query-json-box">
+                      <div class="control-group" id="query-limit-box">
+                        <label class="control-label" for="query-limit"><strong>Limit</strong></label>
+                        <div class="controls">
+                          <div class="input-append">
+                            <input id="query-limit" type="text" name="query-limit" class="span5" placeholder="ex: 10"/>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="control-group" id="query-json-box" style="display:none">
                         <label class="control-label" for="query-source"><strong>Json Body </strong></label>
                         <div class="controls">
                           <div class="input-append">

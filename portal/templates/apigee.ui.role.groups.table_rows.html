@@ -1,14 +1,44 @@
-<tr class="zebraRows">
-  {{if uuid}}
-  <td class="checkboxo">
-    <input class="roleGroupItem" type="checkbox" value="${uuid}" />
-  </td>
-  <td>    
-      <a href="" onclick="Usergrid.console.pageOpenGroupProfile('${path}'); return false;">${title}: ${path}</a>
-    {{else}}
-      ${title}: ${path}</a>
-    {{/if}}
-  </td>
-</tr>
+
+<div class="console-section">
+  <div class="well thingy">
+    <span class="title">Groups</span>
+    <div class="bar">
+      <a class="btn" data-toggle="modal" href="#" onclick="Usergrid.console.removeGroupFromRole('${roleName}', '${roleTitle}'); return false;"> Remove </a>
+      <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-add-group-to-role"> Add </a>
+    </div>
+  </div>
 
 
+  {{if entities.length > 0}}
+  <table class="table" style="margin-top: 30px">
+    <tbody>
+      <tr class="zebraRows users-row">
+        <td class="checkboxo">
+          <input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" />
+        </td>
+        <td class="user-details bold-header">
+          Group Title
+        </td>
+        <td class="user-details bold-header">
+          Group Path
+        </td>
+      </tr>
+      {{each entities}}
+      <tr class="zebraRows users-row">
+        <td class="checkboxo"><input type="checkbox" name="${path}" class="listItem" value="${path}" /></td>
+        <td class="details">
+          <a href="" onclick="Usergrid.console.pageOpenGroupProfile('${path}'); return false;">${title}</a>
+        </td>
+        <td class="details">
+          <a href="" onclick="Usergrid.console.pageOpenGroupProfile('${path}'); return false;">${path}</a>
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+  {{else}}
+  <div class="panel-section-message">No Group Memberships</div>
+  {{/if}}
+</div>
+<div id="group-panel-memberships-curl-container" class="curl-container">
+</div>

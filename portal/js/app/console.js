@@ -42,19 +42,19 @@
   var emailRegex = new RegExp("^(([0-9a-zA-Z]+[_\+.-]?)+@[0-9a-zA-Z]+[0-9,a-z,A-Z,.,-]*(.){1}[a-zA-Z]{2,4})+$");
   var emailAllowedCharsMessage = 'eg. example@apigee.com';
 
-  var passwordRegex = new RegExp("^([0-9a-zA-Z@#$%^&!?<>;:.,'\"~*-=+_\[\\](){}/\\ |])+$");
-  var passwordAllowedCharsMessage = 'Password field only allows: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . < > / ? !';
+  var passwordRegex = new RegExp("^([0-9a-zA-Z@#$%^&!?<>;:.,'\"~*=+_\[\\](){}/\\ |-])+$");
+  var passwordAllowedCharsMessage = 'This field only allows: A-Z, a-z, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' " , . < > / ? !';
   var passwordMismatchMessage = 'Password must match';
 
-  var usernameRegex = new RegExp("^([0-9a-zA-Z\.\-_])+$");
-  var usernameAllowedCharsMessage = 'Username field only allows : A-Z, a-z, 0-9, dot, underscore and dash';
+  var usernameRegex = new RegExp("^([0-9a-zA-Z\.\_-])+$");
+  var usernameAllowedCharsMessage = 'This field only allows : A-Z, a-z, 0-9, dot, underscore and dash';
 
   var organizationNameRegex = new RegExp ("^([0-9a-zA-Z.-])+$");
-  var organizationNameAllowedCharsMessage = 'Organization name field only allows : A-Z, a-z, 0-9, dot, and dash';
+  var organizationNameAllowedCharsMessage = 'This field only allows : A-Z, a-z, 0-9, dot, and dash';
 
   //Regex declared differently from al the others because of the use of ". Functions exacly as if it was called from new RegExp
   var nameRegex = /[0-9a-zA-ZáéíóúÁÉÍÓÚÑñ@#$%\^&!\?;:\.,'\"~\*-=\+_\(\)\[\]\{\}\|\/\\]+/;
-  var nameAllowedCharsMessage = "Name field only allows: A-Z, a-z, áéíóúÁÉÍÓÚÑñ, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' \" , . / ? !";
+  var nameAllowedCharsMessage = "This field only allows: A-Z, a-z, áéíóúÁÉÍÓÚÑñ, 0-9, ~ @ # % ^ & * ( ) - _ = + [ ] { } \\ | ; : \' \" , . / ? !";
 
   var titleRegex = new RegExp("[a-zA-Z0-9.!-?]+[\/]?");
   var titleAllowedCharsMessage = 'Title field only allows : space, A-Z, a-z, 0-9, dot, dash, /, !, and ?';
@@ -271,20 +271,6 @@
     showCurlCommand('collections', this.getCurl(), this.getToken());
   }
 
-  function selectAllCollections(){
-    $('#query-response-table input[class=queryResultItem]').attr('checked', true);
-    $('#deselectAllCollections').show();
-    $('#selectAllCollections').hide();
-  }
-  window.Usergrid.console.selectAllCollections = selectAllCollections;
-
-  function deselectAllCollections(){
-    $('#query-response-table input[class=queryResultItem]').attr('checked', false);
-    $('#deselectAllCollections').hide();
-    $('#selectAllCollections').show();
-  }
-  window.Usergrid.console.deselectAllCollections = deselectAllCollections;
-
   /*******************************************************************
    *
    * Query Explorer
@@ -319,23 +305,27 @@
 
   //change contexts for REST operations
   $("#button-query-get").click(function(){
-    $("#query-json-box").show();
+    $("#query-json-box").hide();
     $("#query-query-box").show();
+    $("#query-limit-box").show();
   });
 
   $("#button-query-post").click(function(){
     $("#query-json-box").show();
     $("#query-query-box").hide();
+    $("#query-limit-box").hide();
   });
 
   $("#button-query-put").click(function(){
     $("#query-json-box").show();
     $("#query-query-box").show();
+    $("#query-limit-box").hide();
   });
 
   $("#button-query-delete").click(function(){
     $("#query-json-box").hide();
     $("#query-query-box").show();
+    $("#query-limit-box").hide();
   });
 
   $("#data-explorer-link").click(function(){
@@ -364,7 +354,7 @@
 
     //If jsonBody is empty fill it with empty brackets
     if($('#query-source').val() === '') {
-      $("#query-source").val('{}');
+      $("#query-source").val('{"name":"value"}');
     }
     getCollection(method);
   }
@@ -376,7 +366,7 @@
     if(!path){
       var path = $("#query-path").val();
     }
-    if(method.toUpperCase() !== 'GET'){
+    if(method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'DELETE'){
       var data = $("#query-source").val();
       try{
         validateJson();
@@ -386,17 +376,20 @@
         return false;
       }
     }
+
+    var params = {};
     var ql = $("#query-ql").val();
-    //merge the data and the query only if query is not empty
-    if(ql !== ""){
-      var params = {"ql":ql};
+    params.ql = ql;
+    if(method.toUpperCase() === 'GET'){
+      var limit = $("#query-limit").val();
+      params.limit = limit;
     }
-      //make a new query object
-      queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function(response) { alertModal("Error", response) });
-      //store the query object on the stack
-      pushQuery(queryObj);
-      //then run the query
-      runAppQuery(queryObj);
+
+    queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function(response) { alertModal("Error", response) });
+    //store the query object on the stack
+ //   pushQuery(queryObj);
+    //then run the query
+    runAppQuery(queryObj);
   }
 
 
@@ -445,7 +438,7 @@ function getCollectionCallback(response) {
 
 
       var table = '<table id="query-response-table" class="table"><tbody><tr class="zebraRows users-row">' +
-                  '<td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllUsers();" /></td>';
+                  '<td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" /></td>';
       if (entity_type === 'user') {
         table += '<td class="gravatar50-td">&nbsp;</td>'+
           '<td class="user-details bold-header">username</td>'+
@@ -487,6 +480,7 @@ function getCollectionCallback(response) {
         $.tmpl('apigee.ui.collection.table_rows.html', this_data).appendTo('#query-response-table');
       }
       if (response.entities.length == 1 && response.action != 'post') {
+        var p = $('#query-path').val();
         var path = response.entities[0].metadata.path;
         $('#query-path').val(path);
         var uuid = response.entities[0].uuid;
@@ -563,7 +557,7 @@ function buildContentArea(obj2) {
     }
     backButton.attr('onclick',"Usergrid.console.getCollection('GET','" + returnPath+ "')");
   }
-
+/*
   function pushQuery(queryObj) {
     //store the query object on the stack
     query_history.push(queryObj);
@@ -595,7 +589,7 @@ function buildContentArea(obj2) {
     }
     showBackButton();
   }
-
+*/
   //helper function for query explorer back button
   function showBackButton() {
     if (query_history.length > 0){
@@ -632,8 +626,8 @@ function buildContentArea(obj2) {
   };
 
   function hideEntityCheckboxes(){
-    $(".queryResultItem").hide();
-    $(".queryResultItem").attr('checked', true);
+    $(".listItem").hide();
+    $(".listItem").attr('checked', true);
   }
 
   function hideEntitySelectButton(){
@@ -679,14 +673,9 @@ function buildContentArea(obj2) {
     $('#button-query-shrink').click(shrinkQueryInput);
     $('#button-query-expand').click(expandQueryInput);
 
-    $('#button-query-back').click(function() {popQuery();return false;} );
+   // $('#button-query-back').click(function() {popQuery();return false;} );
 
-/*    $('#button-query-get').click(function() {getCollection('GET');return false;} );
-    $('#button-query-post').click(function() {getCollection('POST');return false;} );
-    $('#button-query-put').click(function() {getCollection('PUT');return false;} );
-    $('#button-query-delete').click(function() {getCollection('DELETE');return false;} );*/
-
-    $('#button-query').click(function(){runCollectionQuery(); return false;})
+    $('#button-query').click(function(){runCollectionQuery(); return false;});
 
   }
 
@@ -796,7 +785,7 @@ function buildContentArea(obj2) {
 
   function deleteEntity(e) {
     e.preventDefault();
-    var items = $('#query-response-table input[class=queryResultItem]:checked');
+    var items = $('#query-response-table input[class=listItem]:checked');
     if(!items.length){
       alertModal("Please, first select the entities you want to delete.");
       return;
@@ -804,16 +793,15 @@ function buildContentArea(obj2) {
     var itemsCount = items.size();
     confirmDelete(function(){
       items.each(function() {
-        var entityId = $(this).attr('value');
         var path = $(this).attr('name');
-        runAppQuery(new Usergrid.Query("DELETE", path + "/" + entityId, null, null,
+        runAppQuery(new Usergrid.Query("DELETE", path, null, null,
           function() {
             itemsCount--;
             if(itemsCount==0){
               deselectAllCollections();
               getCollection('GET');
             }},
-          function() { alertModal("Unable to delete entity ID: " + entityId); }
+          function() { alertModal("Unable to delete: " + path); }
         ));
       });
     });
@@ -921,6 +909,8 @@ function buildContentArea(obj2) {
     var appName = Usergrid.ApiClient.getApplicationName();
     if (!appName) {
       selectFirstApp();
+    } else {
+      setNavApplicationText();
     }
   }
 
@@ -1118,6 +1108,21 @@ function buildContentArea(obj2) {
     $('#alertModal p').text(message);
     $('#alertModal').modal('show');
   }
+
+  //use like: alertBanner("Oh no!", "Say it isn't so!!");
+  //or like: alertBanner("Oh no!", "Say it isn't so!!", 5000); //will auto-close in 5 seconds
+  function alertBanner(header, message, timeout) {
+    $('#alert-error-header').html(header);
+    $('#alert-error-message').html(message);
+    $('#alert-error-message-container').show();
+    if (timeout) {
+      var alertTimer = setInterval(function(){
+          $('#alert-error-message-container').hide();
+          window.clearInterval(alertTimer);
+        },timeout);
+    }
+  }
+
 
   function hideModal(id){
     $(id).hide();
@@ -1562,7 +1567,7 @@ function buildContentArea(obj2) {
     var form = $(this);
     formClearErrors(form);
     var add_user_username = $('#search-user-name-input');
-    var bValid = checkLength2(add_user_username, 4, 80)
+    var bValid = checkLength2(add_user_username, 1, 80)
       && checkRegexp2(add_user_username, usernameRegex, usernameAllowedCharsMessage);
 
     if (bValid) {
@@ -1580,7 +1585,7 @@ function buildContentArea(obj2) {
     var form = $(this);
     formClearErrors(form);
     var username = $('#search-follow-username-input');
-    var bValid = checkLength2(username, 4, 80) && checkRegexp2(username, usernameRegex, usernameAllowedCharsMessage);
+    var bValid = checkLength2(username, 1, 80) && checkRegexp2(username, usernameRegex, usernameAllowedCharsMessage);
     if (bValid) {
       var followingUserId = $('#search-follow-username').val();
       var followedUserId = $('#search-follow-username-input').val();
@@ -1592,7 +1597,7 @@ function buildContentArea(obj2) {
     }
   }
 
-    function submitAddRoleToUser(roleName, roleTitle) {
+  function submitAddRoleToUser(roleName, roleTitle) {
     var form = $(this);
     formClearErrors(form);
     var roleIdField = $('#search-roles-user-name-input');
@@ -1630,7 +1635,7 @@ function buildContentArea(obj2) {
   }
 
   function deleteUsersFromRoles(username) {
-    var items = $('input[class^=userRoleItem]:checked');
+    var items = $('#users-permissions-response-table input[class^=listItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the roles you want to delete for this user.");
       return;
@@ -1649,7 +1654,7 @@ function buildContentArea(obj2) {
   window.Usergrid.console.deleteUsersFromRoles = deleteUsersFromRoles;
 
   function deleteRoleFromUser(roleName, roleTitle) {
-    var items = $('#role-users input[class^=userRoleItem]:checked');
+    var items = $('#role-users input[class^=listItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the users you want to delete from this role.");
         return;
@@ -1668,7 +1673,7 @@ function buildContentArea(obj2) {
   window.Usergrid.console.deleteRoleFromUser = deleteRoleFromUser;
 
   function removeUserFromGroup(userId) {
-    var items = $('#user-panel-memberships input[class^=userGroupItem]:checked');
+    var items = $('#user-panel-memberships input[class^=listItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the groups you want to delete for this user.")
         return;
@@ -1686,7 +1691,7 @@ function buildContentArea(obj2) {
   window.Usergrid.console.removeUserFromGroup = removeUserFromGroup;
 
   function removeGroupFromUser(groupId) {
-    var items = $('#group-panel-memberships input[id^=userGroupItem]:checked');
+    var items = $('#group-panel-memberships input[class^=listItem]:checked');
     if (!items.length) {
       alertModal("Error", "Please, first select the users you want to from this group.");
       return;
@@ -1705,7 +1710,7 @@ function buildContentArea(obj2) {
   window.Usergrid.console.removeGroupFromUser = removeGroupFromUser;
 
   function deleteRolesFromGroup(roleId, rolename) {
-    var items = $('input[class=groupRoleItem]:checked');
+    var items = $('#group-panel-permissions input[class^=listItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the roles you want to delete from this group.")
         return;
@@ -2079,9 +2084,9 @@ function buildContentArea(obj2) {
     hidePagination('users');
     var output = $('#users-table');
     if (response.entities.length < 1) {
-      output.replaceWith('<div id="users-table" class="user-panel-section-message">No users found.</div>');
+      output.replaceWith('<div id="users-table" class="panel-section-message">No users found.</div>');
     } else {
-      output.replaceWith('<table id="users-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllUsers();" /></td><td class="gravatar50-td">&nbsp;</td><td class="user-details bold-header">username</td><td class="user-details bold-header">Display Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
+      output.replaceWith('<table id="users-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" /></td><td class="gravatar50-td">&nbsp;</td><td class="user-details bold-header">username</td><td class="user-details bold-header">Display Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
         var this_data = response.entities[i];
         if (!this_data.picture) {
@@ -2117,35 +2122,20 @@ function buildContentArea(obj2) {
   }
   Usergrid.console.searchUsers = searchUsers;
 
-  var selectUsers = true;
-  function selectAllUsers(){
-    if (selectUsers) {
-      $('[class=userListItem]').attr('checked', true);
-      $('#deselectAllUsers').show();
-      $('#selectAllUsers').hide();
+  function selectAllEntities(checkbox){
+    if (checkbox.checked) {
+      $('[class=listItem]').attr('checked', true);
     } else {
-      $('[class=userListItem]').attr('checked', false);
-      $('#selectAllUsers').show();
-      $('#deselectAllUsers').hide();
+      $('[class=listItem]').attr('checked', false);
     }
-    selectUsers = (selectUsers)?false:true;
   }
-  window.Usergrid.console.selectAllUsers = selectAllUsers;
-
-  function deselectAllUsers(){
-    $('[class=userListItem]').attr('checked', false);
-    $('#selectAllUsers').show();
-    $('#deselectAllUsers').hide();
-  }
-  window.Usergrid.console.deselectAllUsers = deselectAllUsers;
-
-
+  window.Usergrid.console.selectAllEntities = selectAllEntities;
 
   $('#delete-users-link').click(deleteUsers);
   function deleteUsers(e) {
     e.preventDefault();
 
-    var items = $('#users-table input[class^=userListItem]:checked');
+    var items = $('#users-table input[class^=listItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the users you want to delete.");
       return;
@@ -2172,7 +2162,7 @@ function buildContentArea(obj2) {
     hideModal('.messages');
     Pages.SelectPanel('user');
     requestUser(userName);
-    selectTabButton('#button-user-profile');
+    selectPillButton('#button-user-profile');
     showPanelContent('#user-panel', '#user-panel-profile');
   }
   window.Usergrid.console.pageOpenUserProfile = pageOpenUserProfile;
@@ -2180,7 +2170,7 @@ function buildContentArea(obj2) {
   function pageOpenUserActivities(userId) {
     Pages.SelectPanel('user');
     requestUser(userId);
-    selectTabButton('#button-user-activities');
+    selectPillButton('#button-user-activities');
     showPanelContent('#user-panel', '#user-panel-activities');
   }
   window.Usergrid.console.pageOpenUserActivities = pageOpenUserActivities;
@@ -2188,7 +2178,7 @@ function buildContentArea(obj2) {
   function pageSelectUserPermissions(userId) {
     Pages.SelectPanel('user');
     requestUser(userId);
-    selectTabButton('#button-user-permissions');
+    selectPillButton('#button-user-permissions');
     showPanelContent('#user-panel', '#user-panel-permissions');
   }
   window.Usergrid.console.pageSelectUserPermissions = pageSelectUserPermissions;
@@ -2196,14 +2186,14 @@ function buildContentArea(obj2) {
   function pageSelectUserGroups(userId) {
     Pages.SelectPanel('user');
     requestUser(userId);
-    selectTabButton('#button-user-memberships');
+    selectPillButton('#button-user-memberships');
     showPanelContent('#user-panel', '#user-panel-memberships');
   }
 
   function pageSelectUserGraph(userId) {
     Pages.SelectPanel('user');
     requestUser(userId);
-    selectTabButton('#button-user-graph');
+    selectPillButton('#button-user-graph');
     showPanelContent('#user-panel', '#user-panel-graph');
   }
 
@@ -2258,8 +2248,8 @@ function buildContentArea(obj2) {
   };
 
   function redrawPanel(panelDiv, panelTemplate, data){
-  $("#"+panelDiv).html("");
-  $.tmpl(panelTemplate, data).appendTo($("#"+panelDiv));
+    $("#"+panelDiv).html("");
+    $.tmpl(panelTemplate, data).appendTo($("#"+panelDiv));
   };
 
   function redrawGroupForm(panelDiv, panelTemplate, data){
@@ -2272,17 +2262,17 @@ function buildContentArea(obj2) {
   }
 
   function redrawFormPanel(panelDiv, panelTemplate, data){
-  $("#"+panelDiv).html("");
-  var details = $.tmpl(panelTemplate, data);
-  var formDiv = details.find('.query-result-form');
-  $(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.vcard_schema, data.entity));
-  details.appendTo($("#"+panelDiv));
+    $("#"+panelDiv).html("");
+    var details = $.tmpl(panelTemplate, data);
+    var formDiv = details.find('.query-result-form');
+    $(formDiv).buildForm(Usergrid.console.ui.jsonSchemaToDForm(Usergrid.console.ui.collections.vcard_schema, data.entity));
+    details.appendTo($("#"+panelDiv));
   };
 
   function saveUserData(){
     Usergrid.console.ui.jsonSchemaToPayload(schema, obj);
   }
-  //TODO: MARKED for Refactoring
+
   var user_data = null;
 
   function handleUserResponse(response) {
@@ -2521,9 +2511,9 @@ function buildContentArea(obj2) {
 
     var output = $('#groups-table');
     if (response.entities.length < 1) {
-      output.replaceWith('<div id="groups-table" class="group-panel-section-message">No groups found.</div>');
+      output.replaceWith('<div id="groups-table" class="panel-section-message">No groups found.</div>');
     } else {
-      output.replaceWith('<table id="groups-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllGroups();" /></td><td class="user-details bold-header">Path</td><td class="user-details bold-header">Title</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
+      output.replaceWith('<table id="groups-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" /></td><td class="user-details bold-header">Path</td><td class="user-details bold-header">Title</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
         var this_data = response.entities[i];
         $.tmpl('apigee.ui.groups.table_rows.html', this_data).appendTo('#groups-table');
@@ -2558,30 +2548,12 @@ function buildContentArea(obj2) {
   }
   Usergrid.console.searchGroups = searchGroups;
 
-  var selectGroups = true;
-  function selectAllGroups(){
-    if (selectGroups) {
-      $('[class=groupListItem]').attr('checked', true);
-    } else {
-      $('[class=groupListItem]').attr('checked', false);
-    }
-    selectGroups = (selectGroups)?false:true;
-  }
-  window.Usergrid.console.selectAllGroups = selectAllGroups;
-
-  function deselectAllGroups(){
-    $('[class=groupListItem]').attr('checked', false);
-    $('#selectAllGroups').show();
-    $('#deselectAllGroups').hide();
-  }
-  window.Usergrid.console.deselectAllGroups = deselectAllGroups;
-
   $('#delete-groups-link').click(deleteGroups);
 
   function deleteGroups(e) {
     e.preventDefault();
 
-    var items = $('#groups-table input[class^=groupListItem]:checked');
+    var items = $('#groups-table input[class^=listItem]:checked');
     if (!items.length) {
       alertModal("Error", "Please, first select the groups you want to delete.")
         return;
@@ -2607,7 +2579,7 @@ function buildContentArea(obj2) {
   function pageOpenGroupProfile(groupPath) {
     Pages.SelectPanel('group');
     requestGroup(groupPath);
-    selectTabButton('#button-group-details');
+    selectPillButton('#button-group-details');
     showPanelContent('#group-panel', '#group-panel-details');
   }
   window.Usergrid.console.pageOpenGroupProfile = pageOpenGroupProfile;
@@ -2615,7 +2587,7 @@ function buildContentArea(obj2) {
   function pageSelectGroupMemberships(groupId) {
     Pages.SelectPanel('group');
     requestGroup(groupId);
-    selectTabButton('#button-group-memberships');
+    selectPillButton('#button-group-memberships');
     showPanelContent('#group-panel', '#group-panel-memberships');
   }
   window.Usergrid.console.pageSelectGroupMemberships = pageSelectGroupMemberships;
@@ -2660,20 +2632,6 @@ function buildContentArea(obj2) {
   }
 
   window.Usergrid.console.saveGroupProfile = saveGroupProfile;
-
-  function selectAllGroupMemberships(){
-    $('[id=userGroupItem]').attr('checked', true);
-    $('#deselectAllGroupMemberships').show();
-    $('#selectAllGroupMemberships').hide();
-  }
-  Usergrid.console.selectAllGroupMemberships = selectAllGroupMemberships;
-
-  function deselectAllGroupMemberships(){
-    $('[id=userGroupItem]').attr('checked', false);
-    $('#deselectAllGroupMemberships').hide();
-    $('#selectAllGroupMemberships').show();
-  }
-  Usergrid.console.deselectAllGroupMemberships = deselectAllGroupMemberships;
 
   var group_data = null;
 
@@ -2862,9 +2820,9 @@ function buildContentArea(obj2) {
     var output = $('#roles-table')
     output.empty();
     if (response.entities < 1) {
-      output.html('<div class="group-panel-section-message">No roles found.</div>');
+      output.html('<div class="panel-section-message">No roles found.</div>');
     } else {
-      output.replaceWith('<table id="roles-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input class="userListItem" type="checkbox" onclick="Usergrid.console.selectAllRoles();" /></td><td class="user-details bold-header">Title</td><td class="user-details bold-header">Role Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
+      output.replaceWith('<table id="roles-table" class="table"><tbody><tr class="zebraRows users-row"><td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" /></td><td class="user-details bold-header">Title</td><td class="user-details bold-header">Role Name</td><td class="view-details">&nbsp;</td></tr></tbody></table>');
 
       $.each (response.entities, function(index, value) {
         var data = [
@@ -2881,7 +2839,7 @@ function buildContentArea(obj2) {
   function deleteRoles(e) {
     e.preventDefault();
 
-    var items = $('#roles-table input[class^=roleListItem]:checked');
+    var items = $('#roles-table input[class^=listItem]:checked');
     if(!items.length){
       alertModal("Error", "Please, first select the roles you want to delete.")
         return;
@@ -2895,17 +2853,6 @@ function buildContentArea(obj2) {
       });
     });
   }
-
-  var selectRoles = true;
-  function selectAllRoles(){
-    if (selectRoles) {
-      $('[class=roleListItem]').attr('checked', true);
-    } else {
-       $('[class=roleListItem]').attr('checked', false);
-    }
-    selectRoles = (selectRoles)?false:true;
-  }
-  window.Usergrid.console.selectAllRoles = selectAllRoles;
 
   /*******************************************************************
    *
@@ -2927,7 +2874,7 @@ function buildContentArea(obj2) {
     showPanel('#role-panel');
     Pages.ActivatePanel('roles');
     $('#role-panel-list').hide();
-    selectTabButton('#button-role-settings');
+    selectPillButton('#button-role-settings');
     $('#role-panel-settings').show();
   }
   window.Usergrid.console.pageOpenRole = pageOpenRole;
@@ -2938,7 +2885,7 @@ function buildContentArea(obj2) {
     showPanel('#role-panel');
     Pages.ActivatePanel('roles');
     $('#role-panel-list').hide();
-    selectTabButton('#button-role-users');
+    selectPillButton('#button-role-users');
     $('#role-panel-users').show();
   }
   window.Usergrid.console.pageSelectRoleUsers = pageSelectRoleUsers;
@@ -2949,7 +2896,7 @@ function buildContentArea(obj2) {
     showPanel('#role-panel');
     Pages.ActivatePanel('roles');
     $('#role-panel-list').hide();
-    selectTabButton('#button-role-groups');
+    selectPillButton('#button-role-groups');
     $('#role-panel-groups').show();
   }
   window.Usergrid.console.pageSelectRoleGroups = pageSelectRoleGroups;
@@ -3028,30 +2975,13 @@ function buildContentArea(obj2) {
   var rolesGroupsResults = ''
 
   function displayRoleGroups(response, curl) {
-    $('#role-groups').html('');
-    if(response.entities && (response.entities.length > 0)){
-      $.tmpl('apigee.ui.role.groups.table_rows.html', response.entities).appendTo('#role-groups');
-    }else {
-      var data = [{"message":"No Groups have this Role"}];
-      $.tmpl('apigee.ui.panels.alert.html', data).appendTo('#role-groups');
-    }
+    response.roleName = current_roleName;
+    response.roleTitle = current_roleTitle;
+    $('#role-panel-groups').html('');
+    $.tmpl('apigee.ui.role.groups.table_rows.html', response).appendTo('#role-panel-groups');
     updateGroupsForRolesAutocomplete();
     showCurlCommand('role-groups', curl);
   }
-
-  function selectAllRolesUsers(){
-    $('[class=userRoleItem]').attr('checked', true);
-    $('#deselectAllRolesUsers').show();
-    $('#selectAllRolesUsers').hide();
-  }
-  window.Usergrid.console.selectAllRolesUsers = selectAllRolesUsers;
-
-  function deselectAllRolesUsers(){
-    $('[class=userRoleItem]').attr('checked', false);
-    $('#selectAllRolesUsers').show();
-    $('#deselectAllRolesUsers').hide();
-  }
-  window.Usergrid.console.deselectAllRolesUsers = deselectAllRolesUsers;
 
   function requestRole(roleName, roleTitle) {
     clearRoleSection();
@@ -3094,17 +3024,17 @@ function buildContentArea(obj2) {
   }
 
   function deleteRolePermission(roleName, permission) {
-      data = {"permission":permission};
-      confirmDelete(function(){
-        runAppQuery(new Usergrid.Query("DELETE", "roles/" + roleName + "/permissions", null, data,
-        function(){getRolePermissions(roleName)},
-        function(){getRolePermissions(roleName)}
-        ));
-      });
-    }
+    data = {"permission":permission};
+    confirmDelete(function(){
+      runAppQuery(new Usergrid.Query("DELETE", "roles/" + roleName + "/permissions", null, data,
+      function(){getRolePermissions(roleName)},
+      function(){getRolePermissions(roleName)}
+      ));
+    });
+  }
   window.Usergrid.console.deleteRolePermission = deleteRolePermission;
 
-   function addRolePermission(roleName) {
+  function addRolePermission(roleName) {
     var path = $('#role-permission-path-entry-input').val();
     var ops = "";
     var s = "";
@@ -3246,7 +3176,7 @@ function buildContentArea(obj2) {
   function pageSelectGroupPermissions(groupId) {
     Pages.SelectPanel('group');
     requestGroup(groupId);
-    selectTabButton('#button-group-permissions');
+    selectPillButton('#button-group-permissions');
     showPanelContent('#group-panel', '#group-panel-permissions');
   }
   window.Usergrid.console.pageSelectGroupPermissions = pageSelectGroupPermissions;
@@ -3269,9 +3199,8 @@ function buildContentArea(obj2) {
   }
   window.Usergrid.console.submitAddGroupToRole = submitAddGroupToRole;
 
-
   function removeGroupFromRole(roleName,roleTitle) {
-    var items = $('input[class=roleGroupItem]:checked');
+    var items = $('#role-panel-groups input[class=listItem]:checked');
     if (!items.length) {
       alertModal("Error", "Please, first select the groups you want to delete for this role.");
       return;
@@ -3289,25 +3218,8 @@ function buildContentArea(obj2) {
         ));
       });
     });
-
   }
-
-  $('#remove-selected-role-groups').click(function () {
-  removeGroupFromRole(current_roleName, current_roleTitle)});
-
-  function selectAllRoleGroups(){
-    $('[class=roleGroupItem]').attr('checked', true);
-    $('#deselectAllRoleGroups').show();
-    $('#selectAllRoleGroups').hide();
-  }
-  window.Usergrid.console.selectAllRoleGroups = selectAllRoleGroups;
-
-  function deselectAllRoleGroups(){
-    $('[class=roleGroupItem]').attr('checked', false);
-    $('#selectAllRoleGroups').show();
-    $('#deselectAllRoleGroups').hide();
-  }
-  window.Usergrid.console.deselectAllRoleGroups = deselectAllRoleGroups;
+  window.Usergrid.console.removeGroupFromRole = removeGroupFromRole;
 
   /*******************************************************************
    *
@@ -3356,7 +3268,7 @@ function buildContentArea(obj2) {
     hidePagination('activities');
     var output = $('#activities-table');
     if (response.entities.length < 1) {
-      output.replaceWith('<div id="activities-table" class="user-panel-section-message">No activities found.</div>');
+      output.replaceWith('<div id="activities-table" class="panel-section-message">No activities found.</div>');
     } else {
       output.replaceWith('<table id="activities-table" class="table"><tbody></tbody></table>');
       for (i = 0; i < response.entities.length; i++) {
@@ -3757,16 +3669,16 @@ function buildContentArea(obj2) {
 
   function updateRolesTypeahead(response, inputId){
     roles = {};
-    if (response.data) {
-      roles = response.data;
+    if (response.entities) {
+      roles = response.entities;
     }
     var pathInput = $('#'+inputId);
     var list = [];
-    $.each(roles, function(name, title){
-      list.push(name);
+    $.each(roles, function(key, value){
+      list.push(value.roleName);
     })
     pathInput.typeahead({source:list});
-      pathInput.data('typeahead').source = list;
+    pathInput.data('typeahead').source = list;
   }
 
   function updateGroupsTypeahead(response, inputId){
@@ -3825,7 +3737,7 @@ function buildContentArea(obj2) {
       return checker.test(item);
     }
   }
-  //TODO: find a nice place to store this function
+
   function getEntityName(entity) {
     var name;
     switch(entity.type) {
@@ -3902,7 +3814,7 @@ function buildContentArea(obj2) {
   }
 
   function updateRolesAutocomplete(){
-    updateAutocomplete('rolenames', updateRolesAutocompleteCallback, "Unable to retrieve Roles.");
+    updateAutocomplete('roles', updateRolesAutocompleteCallback, "Unable to retrieve Roles.");
   }
 
   function updateRolesAutocompleteCallback(response) {
@@ -3912,7 +3824,7 @@ function buildContentArea(obj2) {
   window.Usergrid.console.updateRolesAutocompleteCallback = updateRolesAutocompleteCallback;
 
   function updateRolesForGroupsAutocomplete(){
-    updateAutocomplete('rolenames', updateRolesForGroupsAutocompleteCallback, "Unable to retrieve Roles.");
+    updateAutocomplete('roles', updateRolesForGroupsAutocompleteCallback, "Unable to retrieve Roles.");
   }
 
   function updateRolesForGroupsAutocompleteCallback(response) {
@@ -4121,6 +4033,14 @@ function buildContentArea(obj2) {
           errorCallback();
           return
         }
+
+        //get the orgname and app name from the url
+        var requestedOrgName = Usergrid.Navigation.router.getOrgNameFromURL();
+        var requestedAppName = Usergrid.Navigation.router.getAppNameFromURL();
+
+        var orgNameSelected = false;
+        var appNameSelected = false;
+
         //store all the organizations and their applications
         for (org in response.data.organizations) {
           //grab the name
@@ -4128,10 +4048,21 @@ function buildContentArea(obj2) {
           //grab the uuid
           var orgUUID = response.data.organizations[org].uuid;
           organization = new Usergrid.Organization(orgName, orgUUID);
+
+          if (orgName === requestedOrgName) {
+            Usergrid.ApiClient.setOrganizationName(orgName);
+            orgNameSelected = true;
+          }
+
           for (app in response.data.organizations[org].applications) {
             //grab the name
             var appName = app.split("/")[1];
             if (!appName) { appName = app; }
+            if (appName === requestedAppName && orgNameSelected && orgName === requestedOrgName) {
+               Usergrid.ApiClient.setApplicationName(appName);
+               appNameSelected = true;
+            }
+
             //grab the id
             var appUUID = response.data.organizations[org].applications[app];
             //store in the new Application object
@@ -4141,10 +4072,13 @@ function buildContentArea(obj2) {
           //add organization to organizations list
           Usergrid.organizations.addItem(organization);
         }
-        //select the first org by default
-        var firstOrg = Usergrid.organizations.getFirstItem();
-        //save the first org in the client
-        Usergrid.ApiClient.setOrganizationName(firstOrg.getName());
+
+        if (!orgNameSelected) {
+          //select the first org by default
+          var firstOrg = Usergrid.organizations.getFirstItem();
+          //save the first org in the client
+          Usergrid.ApiClient.setOrganizationName(firstOrg.getName());
+        }
 
         //store user data in local storage
         Usergrid.userSession.saveAll(response.data.uuid, response.data.email, response.data.token);
@@ -4466,7 +4400,6 @@ function buildContentArea(obj2) {
   });
 
   $('#group-panel-tab-bar a').click(function() {
-    //selectTabButton(this);
     selectPillButton(this);
     if ($(this).attr('id') == "button-group-list") {
       groupLetter = '*';
@@ -4484,7 +4417,6 @@ function buildContentArea(obj2) {
       showPanelList('roles');
     }
     else if ($(this).attr('id') == "button-roles-search") {
-      //selectTabButton('#button-roles-search');
       selectPillButton('#button-roles-search');
       $('#roles-panel-list').hide();
       $('#role-panel-users').hide();
@@ -4500,21 +4432,18 @@ function buildContentArea(obj2) {
       Pages.SelectPanel('roles');
       showPanelList('roles');
     } else if ($(this).attr('id') == "button-role-settings") {
-      //selectTabButton('#button-role-settings');
       selectPillButton('#button-role-settings');
       $('#roles-panel-list').hide();
       $('#role-panel-users').hide();
       $('#role-panel-groups').hide();
       $('#role-panel-settings').show();
     } else if ($(this).attr('id') == "button-role-users") {
-      //selectTabButton('#button-role-users');
       selectPillButton('#button-role-users');
       $('#roles-panel-list').hide();
       $('#role-panel-settings').hide();
       $('#role-panel-groups').hide();
       $('#role-panel-users').show();
     } else if ($(this).attr('id') == "button-role-groups") {
-      //selectTabButton('#button-role-groups');
       selectPillButton('#button-role-groups');
       $('#roles-panel-list').hide();
       $('#role-panel-settings').hide();
@@ -4611,19 +4540,12 @@ function buildContentArea(obj2) {
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.graph.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.user.permissions.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.collection.table_rows.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.header.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.contents.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.metadata.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.collections.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.json.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.collections.entity.detail.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.collections.query.indexes.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.details.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.memberships.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.activities.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.panels.group.permissions.html");
     Usergrid.console.ui.loadTemplate("apigee.ui.curl.detail.html");
-    Usergrid.console.ui.loadTemplate("apigee.ui.panels.alert.html");
     $(window).resize();
   });
 

@@ -6,7 +6,7 @@
       {{if path}}<a href="" onclick="Usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}${name}{{if path}}</a>{{/if}}
     </div>
     <div class="bar">
-      <a href="#" onclick="Usergrid.console.saveUserProfile('${username}'); return false;"> Save User </a>
+      <a style="margin-right: 15px;" class="btn btn-primary" onclick="Usergrid.console.saveUserProfile('${username}'); return false;">Save User</a>
     </div>
   </div>
   <h3>Edit</h3>
@@ -107,7 +107,7 @@
     </table>
     <h3>JSON</h3>
     <pre class="query-result-json-inner">${JSON.stringify(entity, null, "  ")}</pre>
-  </div>  
+  </div>
 </div>
 <div id="user-panel-profile-curl-container" class="curl-container">
 </div>

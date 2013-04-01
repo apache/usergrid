@@ -3,27 +3,37 @@
     {{if path}}<span class="title" href="" onclick="Usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}
       ${name}
     {{if path}}</span>{{/if}}
+
     <div class="bar">
-      <a id="selectAllGroupMemberships" class="" href="#" onclick="Usergrid.console.selectAllGroupMemberships();"> Select All </a>
-      <a id="deselectAllGroupMemberships" style="display: none;" class="" href="#" onclick="Usergrid.console.deselectAllGroupMemberships();"> Deselect All </a>
-      <a class="" data-toggle="modal" href="#dialog-form-add-user-to-group">Add a User to this Group</a>
-      <a data-toggle="modal" href="#" onclick="Usergrid.console.removeGroupFromUser('${uuid}'); return false;"> Remove </a>
-      <input type="hidden" value="${uuid}" id="search-user-groupid" name="search-user-groupid" >
+      <a class="btn " data-toggle="modal" onclick="Usergrid.console.removeGroupFromUser('${uuid}'); return false;">Remove</a>
+      <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-add-user-to-group">Add user</a>
+      <input type="hidden" value="${uuid}" id="search-user-groupid" name="search-user-groupid">
     </div>
   </div>
+
   {{if memberships}}
-  <table class="table">
-    {{each memberships}}
-    <tr class="zebraRows">
-      <td class="checkboxo"><input type="checkbox" name="${name}" id="userGroupItem" value="${$value.uuid}" /></td>
-      <td class="user-details">
-        <a href="" onclick="Usergrid.console.pageOpenUserProfile('${username}'); return false;">${username}:${name}</a>
-      </td>
-    </tr>
-    {{/each}}
+  <table class="table" style="margin-top: 30px">
+    <tbody>
+      <tr class="zebraRows users-row">
+        <td class="checkboxo">
+          <input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" />
+        </td>
+        <td class="user-details bold-header">
+          User Name
+        </td>
+      </tr>
+      {{each memberships}}
+      <tr class="zebraRows users-row">
+        <td class="checkboxo"><input type="checkbox" name="${name}" class="listItem" value="${$value.uuid}" /></td>
+        <td class="details">
+          <a href="#" onclick="Usergrid.console.pageOpenUserProfile('${username}'); return false;">${username}:${name}</a>
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
   </table>
   {{else}}
-  <div class="group-panel-section-message">No Group Memberships</div>
+  <div class="panel-section-message">No Group Memberships</div>
   {{/if}}
 </div>
 <div id="group-panel-memberships-curl-container" class="curl-container">

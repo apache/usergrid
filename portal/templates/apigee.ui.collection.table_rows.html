@@ -1,7 +1,7 @@
 
 <tr class="zebraRows users-row">
   <td class="checkboxo">
-    <input class="userListItem" type="checkbox" name="${r.name}" value="${r.uuid}" />
+    <input class="listItem" type="checkbox" name="${r.metadata.path}" value="${r.uuid}" />
   </td>
 
   {{if r.type == 'user'}}
@@ -35,7 +35,7 @@
   {{/if}}
 
   <td class="view-details">
-    <a href="" onclick="$('#query-row-${r.uuid}').toggle(); $('#data-explorer').show(); return false;" class="view-details">View Details</a>
+    <a href="" onclick="$('#query-row-${r.uuid}').show(); $('#data-explorer').show(); return false;" class="view-details">View Details</a>
   </td>
 </tr>
 
