@@ -1,6 +1,6 @@
 package org.usergrid.java.client.entities;
 
-import static org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL;
+import static com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion.NON_NULL;
 import static org.usergrid.java.client.utils.JsonUtils.getBooleanProperty;
 import static org.usergrid.java.client.utils.JsonUtils.getLongProperty;
 import static org.usergrid.java.client.utils.JsonUtils.getStringProperty;
@@ -13,10 +13,10 @@ import static org.usergrid.java.client.utils.JsonUtils.setUUIDProperty;
 import java.util.List;
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 
 public class Message extends Entity {
 

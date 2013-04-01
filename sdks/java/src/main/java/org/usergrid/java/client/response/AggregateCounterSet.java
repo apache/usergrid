@@ -5,8 +5,8 @@ import static org.usergrid.java.client.utils.JsonUtils.toJsonString;
 import java.util.List;
 import java.util.UUID;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 
 public class AggregateCounterSet {
 	private String name;
