@@ -295,7 +295,6 @@
     //clear out the table before we start
     var output = $('#query-response-table');
     output.empty();
-    deactivateJSONValidator();
     //if a collection was provided, go ahead and get the default data
     if (collection) {
       getCollection('GET', collection);
@@ -490,7 +489,6 @@ function getCollectionCallback(response) {
   } else {
     output.replaceWith('<table id="query-response-table" class="table"><tbody><tr class="zebraRows users-row"><td>No entities found</td></tr></table>');
   }
-  showBackButton();
   showPagination('query-response');
 }
 
@@ -556,47 +554,6 @@ function buildContentArea(obj2) {
       backButton.removeAttr('onclick');
     }
     backButton.attr('onclick',"Usergrid.console.getCollection('GET','" + returnPath+ "')");
-  }
-/*
-  function pushQuery(queryObj) {
-    //store the query object on the stack
-    query_history.push(queryObj);
-  }
-
-  function popQuery() {
-    if (query_history.length < 1) {
-      $('#button-query-back').hide();
-      return;
-    }
-    //get the last query off the stack
-    query_history.pop(); //first pull off the current query
-    lastQuery = query_history.pop(); //then get the previous one
-    if (lastQuery) {
-      //set the path in the query explorer
-      $("#query-path").val(lastQuery.getResource());
-      //get the ql and set it in the query explorer
-      var params = lastQuery.getQueryParams() || {};
-      $("#query-ql").val(params.ql);
-      //delete the ql from the json obj -it will be restored later when the query is run in getCollection()
-      var jsonObj = lastQuery.getJsonObj() || {};
-      delete jsonObj.ql;
-      //set the data obj in the query explorer
-      $("#query-source").val(JSON.stringify(jsonObj));
-    } else {
-      $("#query-path").val('');
-      $("#query-ql").val('');
-      $("#query-source").val('');
-    }
-    showBackButton();
-  }
-*/
-  //helper function for query explorer back button
-  function showBackButton() {
-    if (query_history.length > 0){
-      $('#button-query-back').show();
-    } else {
-      $('#button-query-back').hide();
-    }
   }
 
   $.fn.loadEntityCollectionsListWidget = function() {
@@ -673,8 +630,6 @@ function buildContentArea(obj2) {
     $('#button-query-shrink').click(shrinkQueryInput);
     $('#button-query-expand').click(expandQueryInput);
 
-   // $('#button-query-back').click(function() {popQuery();return false;} );
-
     $('#button-query').click(function(){runCollectionQuery(); return false;});
 
   }
@@ -696,10 +651,6 @@ function buildContentArea(obj2) {
       validatorButton.addClass('disabled');
       validatorButton.unbind('click');
     }
-  }
-
-  function deactivateJSONValidator() {
-    /*$('#button-query-validate').disable();*/
   }
 
   function showMoreQueryOptions() {
@@ -837,23 +788,17 @@ function buildContentArea(obj2) {
    *
    ******************************************************************/
 
-
+requestApplications();
   function pageSelectHome() {
     setupMenu();
-    requestApplications();
+   // requestApplications();
     requestAdmins();
     displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
     requestOrganizationCredentials();
     requestAdminFeed();
   }
-/* TODO: REMOVE
-  function goHome() {
-    Pages.SelectPanel('organization');
-  }*/
-
   window.Usergrid.console.pageSelectHome = pageSelectHome;
-//
-//  $(document).on('click','.go-home', goHome);
+
 
   function displayApplications(response) {
     applications = {};
@@ -3891,16 +3836,29 @@ function buildContentArea(obj2) {
   function selectOrganization(orgName) {
     if(orgName){
       var currentOrg = Usergrid.organizations.getItemByName(orgName);
-      Usergrid.ApiClient.setOrganizationName(currentOrg.getName());
-      //sets the organization name in the console page.
-      displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
-      // make sure there is an application for this org
-      var app = currentOrg.getFirstItem();
-      if (app) {
-        Usergrid.ApiClient.setApplicationName(app.getName());
-        setNavApplicationText();
+      if (currentOrg) {
+        Usergrid.ApiClient.setOrganizationName(currentOrg.getName());
+        //sets the organization name in the console page.
+        displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
+        // make sure there is an application for this org
+        var app = currentOrg.getFirstItem();
+        if (app) {
+          Usergrid.ApiClient.setApplicationName(app.getName());
+          setNavApplicationText();
+        } else {
+          forceNewApp();
+        }
       } else {
-        forceNewApp();
+
+        var newOrg = Usergrid.organizations.getFirstItem();
+        Usergrid.ApiClient.setOrganizationName(newOrg.getName());
+        var app = newOrg.getFirstItem();
+        if (app) {
+          Usergrid.ApiClient.setApplicationName(app.getName());
+          setNavApplicationText();
+        } else {
+          forceNewApp();
+        }
       }
     }
   }
@@ -4554,4 +4512,7 @@ function buildContentArea(obj2) {
   Usergrid.console.ui.loadTemplate("apigee.ui.admins.table_rows.html");
   Usergrid.console.ui.loadTemplate("apigee.ui.feed.table_rows.html");
 
+  if (Usergrid.showNotifcations) {
+    $("#notifications-link").show();
+  }
 }

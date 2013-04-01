@@ -75,7 +75,8 @@
           <div class="left-header">
             <h1 class="apigee"><a href="https://apigee.com" target="_blank"><img class="logo" src="images/logo-white.png">apigee</a></h1>
             <ul class="nav">
-              <li class="portal-name" ><a class="go-home">Admin Portal</a></li>
+              <li class="portal-name" ><a class="go-home">App Services</a></li>
+              <li><a href="http://mobileanalytics.apigee.com/pages/signin.seam " target="_blank"> Mobile Analytics</a></li>
             </ul>
           </div>
           <div class="right-header">
@@ -276,14 +277,10 @@
 
                 <li id="application-panel-button-dashboard"><a href="#dashboard" id="dashboard-link"><i class="icon-th"></i> App Overview</a></li>
 
-
                 <li><a href="#users" id="users-link"><i class="icon-user"></i> <span class="nav-menu-text">App End-Users</span></a></li>
                 <li><a href="#collections" id="collections-link"><i class="icon-book"></i> <span class="nav-menu-text">App Data</span></a></li>
-
-                <li><a href="#notifications" id="notifications-link"><i class="icon-calendar"></i> <span class="nav-menu-text">Notifications</span></a></li>
+                <li><a style="display:none" href="#notifications" id="notifications-link"><i class="icon-calendar"></i> <span class="nav-menu-text">Notifications</span></a></li>
                 <li><a href="#activities" id="activities-link"><i class="icon-calendar"></i> <span class="nav-menu-text">Activities</span></a></li>
-                <!--<li><a href="#collections" id="application-panel-button-collections"><i class="icon-book"></i> <span class="nav-menu-text">Collections</span></a></li>-->
-
                 <li><a href="#analytics" id="analytics-link"><i class="icon-signal"></i> <span class="nav-menu-text">Analytics</span></a></li>
                 <li><a href="#properties" id="properties-link"><i class="wrench "></i> <span class="nav-menu-text">App Settings</span></a></li>
                 <li><a href="#shell" id="shell-link"><i class="icon-warning-sign"></i> <span class="nav-menu-text">Shell</span></a></li>
@@ -301,7 +298,7 @@
               <h4 class="panel-title">End-Users</h4>
               <p class="panel-desc">Data related to your application end-users.</p>
               <hr style="margin: 0 0 0 1px;">
-              <ul id="application-panel-buttons2" class="nav nav-list" style="margin-bottom: 5px;">
+              <ul id="app-end-users-buttons" class="nav nav-list" style="margin-bottom: 5px;">
                 <li><a href="#users" id="users-sublink"><span class="nav-menu-text">/users</span></a></li>
                 <li><a href="#groups" id="groups-sublink"><span class="nav-menu-text">/groups</span></a></li>
                 <li><a href="#roles" id="roles-sublink"> <span class="nav-menu-text">/roles</span></a></li>
@@ -326,14 +323,15 @@
             </div>
 
             <div id="left-notifications-menu" style="display: none;">
-              <h4 class="panel-title">Notifications</h4>
-              <p class="panel-desc">Send messages to your user's apps.</p>
+              <h4 class="panel-title">Push Notifications</h4>
+              <p class="panel-desc">Configure and send push notifications to your app.</p>
               <hr class="col-divider">
 
-              <ul id="application-panel-buttons2" class="nav nav-list" style="margin-bottom: 5px;">
-                <li><a href="#users" id="users-sublink"><span class="nav-menu-text">/users</span></a></li>
-                <li><a href="#groups" id="groups-sublink"><span class="nav-menu-text">/groups</span></a></li>
-                <li><a href="#roles" id="roles-sublink"> <span class="nav-menu-text">/roles</span></a></li>
+              <ul id="notification-buttons" class="nav nav-list" style="margin-bottom: 5px;">
+                <li><a href="#sendNotification" id="sendNotification-sublink"><span class="nav-menu-text"><i class="icon-th"></i> Send Notification</span></a></li>
+                <li><a href="#messageHistory" id="messageHistory-sublink"><span class="nav-menu-text"><i class="icon-th"></i> Message History</span></a></li>
+                <li><a href="#configuration" id="configuration-sublink"> <span class="nav-menu-text"><i class="icon-th"></i> Configuration</span></a></li>
+                <li><a href="#getStarted" id="getStarted-sublink"> <span class="nav-menu-text"><i class="icon-th"></i> Getting Started</span></a></li>
               </ul>
             </div>
 
@@ -798,14 +796,6 @@
               </form>
 
               <div id="user-panel" class="panel-buffer">
-                <!--ul id="user-panel-tab-bar" class="nav nav-tabs">
-                  <li><a id="button-user-list" >List</a></li>
-                  <li><a id="button-user-profile" >Profile</a></li>
-                  <li><a id="button-user-memberships" >Groups</a></li>
-                  <li><a id="button-user-activities" >Activities</a></li>
-                  <li><a id="button-user-graph" >Graph</a></li>
-                  <li><a id="button-user-permissions" >Roles & Permissions</a></li>
-                </ul -->
                 <div id="user-panel-tab-bar">
                   <a class="tab-button btn" id="button-user-list" >List</a>
                   <a class="tab-button btn active" id="button-user-profile" >Profile</a>
@@ -1292,7 +1282,115 @@
                 </div>
               </div>
 
+              <div id="sendNotification-panel" class="panel-buffer">
+                <div class="well thingy">
+                  <span class="title">Compose Push Notification</span>
+                </div>
 
+                <form id="query-inputs" class="notifcations-form">
+                  <div class="control-group">
+                    <label class="control-label" for="query-path"><strong>Path </strong></label>
+                    <div class="controls">
+                      <div class="input-append">
+                        <input id="query-path" type="text" name="path" class="span6" autocomplete="off" placeholder="ex: /users"/>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <div id="messageHistory-panel" class="panel-buffer">
+                <div class="well thingy">
+                  <span class="title">Message History</span>
+                </div>
+
+                <form id="query-inputs" class="notifcations-form">
+                  <div class="control-group">
+                    <label class="control-label" for="query-path"><strong>Path </strong></label>
+                    <div class="controls">
+                      <div class="input-append">
+                        <input id="query-path" type="text" name="path" class="span6" autocomplete="off" placeholder="ex: /users"/>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+
+              <div id="configuration-panel" class="panel-buffer">
+                <div class="well thingy">
+                  <span class="title">Configure</span>
+                </div>
+
+                <form id="query-inputs" class="notifcations-form">
+                  <div class="control-group">
+                    <label class="control-label" for="query-path"><strong>Path </strong></label>
+                    <div class="controls">
+                      <div class="input-append">
+                        <input id="query-path" type="text" name="path" class="span6" autocomplete="off" placeholder="ex: /users"/>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <div id="setupNeeded-panel" class="panel-buffer">
+                <div class="well thingy">
+                  <span class="title">Configure</span>
+                </div>
+
+                <form id="query-inputs" class="notifcations-form">
+                  <div class="control-group">
+                    <label class="control-label" for="query-path"><strong>Path </strong></label>
+                    <div class="controls">
+                      <div class="input-append">
+                        <input id="query-path" type="text" name="path" class="span6" autocomplete="off" placeholder="ex: /users"/>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+
+              <div id="getStarted-panel" class="panel-buffer">
+                <div class="well thingy">
+                  <span class="title">Getting Started with Push Notificatsions</span>
+                </div>
+                Follow these three steps to enable push notifications for your app.
+                <hr class="col-divider">
+
+                <div class="notifications-get-started">
+                  <div class="header">
+                  1. Retrieve your APNs .p12 certificate(s) from the Apple Developer Connection website
+                  </div>
+                  <div style="">
+                    <a href="">Follow our guide to download your certificates</a>
+                  </div>
+                  <img style="margin-bottom: -5px;" src="http://f.cl.ly/items/3N0d1c0s1O0R4006201K/Screen%20Shot%202013-03-26%20at%2012.36.52%20PM.png">
+                </div>
+
+                <div class="notifications-get-started">
+                  <div class="header">
+                  2. Add the certificates to set up your notifiers.
+                  </div>
+                  <div style="">
+                    <a href="">Upload a certificate and create the connection to APNs.</a>
+                  </div>
+                  <img style="margin-bottom: -5px;" src="http://f.cl.ly/items/0q1s3m083R0E3X0t1F41/Screen%20Shot%202013-03-26%20at%2012.53.52%20PM.png">
+                </div>
+
+                <div class="notifications-get-started">
+                  <img style="float: right" src="http://f.cl.ly/items/3Y2y0E1K3q1Q3l0N0U2w/Screen%20Shot%202013-03-26%20at%201.02.53%20PM.png">
+                  <div class="header">
+                  3. Compose and schedule a push notification.
+                  </div>
+                  <div style="">
+                    <a href="">Send a push notification.</a>
+                  </div>
+                  <br><br>
+                  <img style="margin-bottom: -5px;" src="http://f.cl.ly/items/0Q1i3j3R2M3K0k1F3H1F/Screen%20Shot%202013-03-26%20at%201.03.57%20PM.png">
+                </div>
+              </div>
 
 
               <div id="collections-panel" style="display: none; margin-left: 151px; padding-left: 30px;">
@@ -1351,9 +1449,9 @@
                           </div>
                         </div>
                       </div>
-                        <div class="control-group">
-                            <a id="back-to-collection" class="outside-link">Back to collection</a>
-                        </div>
+                      <div class="control-group">
+                          <a id="back-to-collection" class="outside-link">Back to collection</a>
+                      </div>
                       <div class="control-group" id="query-ql-box">
                         <label class="control-label" for="query-ql"><strong>Query String</strong></label>
                         <div class="controls">
