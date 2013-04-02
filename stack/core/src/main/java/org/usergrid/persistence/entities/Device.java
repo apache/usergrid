@@ -87,6 +87,7 @@ public class Device extends TypedEntity {
     this.notifications = notifications;
   }
 
+  @JsonSerialize(include = Inclusion.NON_NULL)
   public List<UUID> getReceipts() {
     return receipts;
   }
