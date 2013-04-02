@@ -20,9 +20,8 @@ public class UserManager extends ToolBase {
   @Override
   public Options createOptions() {
     Options options = super.createOptions();
-    options.addOption("c","check-password",false,"Check that the password matches");
     options.addOption("u","username",true,"The username to lookup");
-    options.addOption("p","password",true,"The password to use for verification");
+    options.addOption("p","password",true,"The password to set for the user");
     return options;
   }
 
@@ -39,21 +38,13 @@ public class UserManager extends ToolBase {
 
     logger.info(mapToFormattedJsonString(userInfo));
 
-    EntityManager em = emf.getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
-    User user = em.get(userInfo.getUuid(), User.class);
-
-    
-   
-//    TODO T.N.  Nate, what does this do?  This needs updated for the new encryptionService
-//    CredentialsInfo ci = (CredentialsInfo) em.getDictionaryElementValue(em.get(userInfo.getUuid()),
-//                    DICTIONARY_CREDENTIALS, "password");
-//    logger.info(mapToFormattedJsonString(ci));
-//    if ( line.hasOption("c") ) {
-//      String password = line.getOptionValue("p");
-//      CredentialsInfo should = CredentialsInfo.hashedCredentials("",password,"md5");
-//      logger.info("password match?: " + managementService.verifyAdminUserPassword(userInfo.getUuid(), password));
-//      logger.info(mapToFormattedJsonString(should));
-//    }
+ 
+ 
+    if ( line.hasOption("p") ) {
+      String password = line.getOptionValue("p");
+      managementService.setAdminUserPassword(userInfo.getUuid(), password);
+      logger.info("new password match?: " + managementService.verifyAdminUserPassword(userInfo.getUuid(), password));
+    }
 
 
 
