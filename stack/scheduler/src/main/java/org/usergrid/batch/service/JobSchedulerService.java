@@ -68,6 +68,10 @@ public class JobSchedulerService extends AbstractScheduledService {
 
       // get the semaphore if we can. This means we have space for at least 1
       // job
+      if (logger.isDebugEnabled()) {
+        logger.debug("About to acquire semaphore.  Capacity is {}", capacitySemaphore.availablePermits());
+      }
+
       capacitySemaphore.acquire();
       // release the sempaphore we only need to acquire as a way to stop the
       // loop if there's no capacity
@@ -76,12 +80,13 @@ public class JobSchedulerService extends AbstractScheduledService {
       // always +1 since the acquire means we'll be off by 1
       int capacity = capacitySemaphore.availablePermits();
 
-      logger.debug("capacity = {}", capacity);
+      logger.debug("Capacity is {}", capacity);
 
       activeJobs = jobAccessor.getJobs(capacity);
 
       // nothing to do, we don't have any jobs to run
       if (activeJobs.size() == 0) {
+        logger.debug("No jobs returned. Exiting run loop");
         return;
       }
 
@@ -134,7 +139,7 @@ public class JobSchedulerService extends AbstractScheduledService {
           capacitySemaphore.acquire();
 
           execution.start();
-          
+
           // TODO wrap and throw specifically typed exception for onFailure,
           // needs jobId
           job.execute(execution);
@@ -148,7 +153,7 @@ public class JobSchedulerService extends AbstractScheduledService {
         @Override
         public void onSuccess(Void param) {
           logger.info("Successful completion of bulkJob {}", execution);
-          if(execution.getStatus() == Status.IN_PROGRESS){
+          if (execution.getStatus() == Status.IN_PROGRESS) {
             execution.completed();
           }
           jobAccessor.save(execution);
@@ -159,10 +164,9 @@ public class JobSchedulerService extends AbstractScheduledService {
         public void onFailure(Throwable throwable) {
           logger.error("Failed execution for bulkJob {}", throwable);
           // mark it as failed
-          if(execution.getStatus() == Status.IN_PROGRESS){
+          if (execution.getStatus() == Status.IN_PROGRESS) {
             execution.failed(maxFailCount);
           }
-         
 
           // there's a retry delay, use it
           if (throwable instanceof JobExecutionException) {
