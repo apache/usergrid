@@ -22,7 +22,7 @@ Detailed instructions follow but if you just want a quick example of how to get 
 				function() { // Success
 					while(books.hasNextEntity()) {
 						var book = books.getNextEntity();
-						// Do something with the book…
+						alert(book.get("title")); // Output the title of the book
 				} }, function() { // Failure
 					alert("read failed");
 				});
