@@ -60,36 +60,46 @@ public class JobSchedulerService extends AbstractScheduledService {
   @Timed(name = "BulkJobScheduledService_runOneIteration", group = "scheduler", durationUnit = TimeUnit.MILLISECONDS, rateUnit = TimeUnit.MINUTES)
   @Override
   protected void runOneIteration() throws Exception {
-    logger.info("running iteration...");
-    List<JobDescriptor> activeJobs = null;
 
-    // run until there are no more active jobs
-    while (true) {
+    try {
+      logger.info("running iteration...");
+      List<JobDescriptor> activeJobs = null;
 
-      // get the semaphore if we can. This means we have space for at least 1
-      // job
-      capacitySemaphore.acquire();
-      // release the sempaphore we only need to acquire as a way to stop the
-      // loop if there's no capacity
-      capacitySemaphore.release();
+      // run until there are no more active jobs
+      while (true) {
 
-      // always +1 since the acquire means we'll be off by 1
-      int capacity = capacitySemaphore.availablePermits();
+        // get the semaphore if we can. This means we have space for at least 1
+        // job
+        if (logger.isDebugEnabled()) {
+          logger.debug("About to acquire semaphore.  Capacity is {}", capacitySemaphore.availablePermits());
+        }
 
-      logger.debug("capacity = {}", capacity);
+        capacitySemaphore.acquire();
+        // release the sempaphore we only need to acquire as a way to stop the
+        // loop if there's no capacity
+        capacitySemaphore.release();
 
-      activeJobs = jobAccessor.getJobs(capacity);
+        // always +1 since the acquire means we'll be off by 1
+        int capacity = capacitySemaphore.availablePermits();
 
-      // nothing to do, we don't have any jobs to run
-      if (activeJobs.size() == 0) {
-        return;
+        logger.debug("Capacity is {}", capacity);
+
+        activeJobs = jobAccessor.getJobs(capacity);
+
+        // nothing to do, we don't have any jobs to run
+        if (activeJobs.size() == 0) {
+          logger.debug("No jobs returned. Exiting run loop");
+          return;
+        }
+
+        for (JobDescriptor jd : activeJobs) {
+          logger.info("Submitting work for {}", jd);
+          submitWork(jd);
+          logger.info("Work submitted for {}", jd);
+        }
       }
-
-      for (JobDescriptor jd : activeJobs) {
-        logger.info("Submitting work for {}", jd);
-        submitWork(jd);
-        logger.info("Work submitted for {}", jd);
-      }
+    } catch (Throwable t) {
+      logger.error("Something really bad happened!  Scheduler run failed", t);
     }
 
   }
@@ -134,7 +144,7 @@ public class JobSchedulerService extends AbstractScheduledService {
           capacitySemaphore.acquire();
 
           execution.start();
-          
+
           // TODO wrap and throw specifically typed exception for onFailure,
           // needs jobId
           job.execute(execution);
@@ -148,7 +158,7 @@ public class JobSchedulerService extends AbstractScheduledService {
         @Override
         public void onSuccess(Void param) {
           logger.info("Successful completion of bulkJob {}", execution);
-          if(execution.getStatus() == Status.IN_PROGRESS){
+          if (execution.getStatus() == Status.IN_PROGRESS) {
             execution.completed();
           }
           jobAccessor.save(execution);
@@ -159,10 +169,9 @@ public class JobSchedulerService extends AbstractScheduledService {
         public void onFailure(Throwable throwable) {
           logger.error("Failed execution for bulkJob {}", throwable);
           // mark it as failed
-          if(execution.getStatus() == Status.IN_PROGRESS){
+          if (execution.getStatus() == Status.IN_PROGRESS) {
             execution.failed(maxFailCount);
           }
-         
 
           // there's a retry delay, use it
           if (throwable instanceof JobExecutionException) {

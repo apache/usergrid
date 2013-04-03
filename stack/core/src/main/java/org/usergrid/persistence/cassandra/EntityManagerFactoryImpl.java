@@ -178,7 +178,7 @@ ApplicationContextAware {
         Setup setup = getSetup();
 
         setup.setup();
-        setup.checkKeyspaces();
+
 
         if (cass.getPropertiesMap() != null) {
             updateServiceProperties(cass.getPropertiesMap());
@@ -248,7 +248,6 @@ ApplicationContextAware {
 
         getSetup().setupApplicationKeyspace(applicationId, appName);
 
-        getSetup().checkKeyspaces();
 
         Keyspace ko = cass.getSystemKeyspace();
         Mutator<ByteBuffer> m = createMutator(ko, be);

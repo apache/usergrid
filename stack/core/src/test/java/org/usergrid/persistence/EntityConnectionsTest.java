@@ -146,7 +146,7 @@ public class EntityConnectionsTest extends AbstractPersistenceTest {
 
         // Thread.sleep(5000);
 
-        CassandraRunner.getBean(CassandraService.class).logKeyspaces();
+//        CassandraRunner.getBean(CassandraService.class).logKeyspaces();
 
         logger.info("Find all connections for cat A: " + catA.getUuid());
 

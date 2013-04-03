@@ -61,11 +61,7 @@ public class SystemResource extends AbstractContextResource {
 
         logger.info("Setting up Cassandra");
 
-        Map<String, String> properties = emf.getServiceProperties();
-        if (properties != null) {
-            response.setError("System properties are initialized, database is set up already.");
-            return new JSONWithPadding(response, callback);
-        }
+       
 
         try {
             emf.setup();

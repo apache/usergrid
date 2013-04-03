@@ -172,7 +172,6 @@ public abstract class ToolBase {
 		setup.setup();
 		logger.info("Usergrid schema setup");
 
-		setup.checkKeyspaces();
 
 		logger.info("Setting up Usergrid management services");
 
