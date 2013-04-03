@@ -298,11 +298,17 @@ public class ManagementServiceImpl implements ManagementService {
         return;
       }
 
-      OrganizationOwnerInfo created = createOwnerAndOrganization(test_organization_name, test_admin_username,
-          test_admin_name, test_admin_email, test_admin_password, true, false);
+      OrganizationInfo organization = getOrganizationByName(test_organization_name);
 
-      OrganizationInfo organization = created.getOrganization();
-      createApplication(organization.getUuid(), test_app_name);
+      if (organization == null) {
+        OrganizationOwnerInfo created = createOwnerAndOrganization(test_organization_name, test_admin_username,
+            test_admin_name, test_admin_email, test_admin_password, true, false);
+        organization = created.getOrganization();
+      }
+
+      if (!getApplicationsForOrganization(organization.getUuid()).containsValue(test_app_name)) {
+        createApplication(organization.getUuid(), test_app_name);
+      }
 
     } else {
       logger.warn("Test app creation disabled");
@@ -453,7 +459,7 @@ public class ManagementServiceImpl implements ManagementService {
       if (!em.isPropertyValueUniqueForEntity("group", "path", organizationName)) {
         throw new DuplicateUniquePropertyExistsException("group", "path", organizationName);
       }
-      if (!validateAdminInfo(username,name,email,password) ) {
+      if (!validateAdminInfo(username, name, email, password)) {
         return null;
       }
       if (areActivationChecksDisabled()) {
@@ -474,50 +480,50 @@ public class ManagementServiceImpl implements ManagementService {
 
   }
 
-    private OrganizationInfo createOrganizationInternal(String organizationName, UserInfo user, boolean activated)
-            throws Exception {
-        if ((organizationName == null) || (user == null)) {
-            return null;
-        }
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+  private OrganizationInfo createOrganizationInternal(String organizationName, UserInfo user, boolean activated)
+      throws Exception {
+    if ((organizationName == null) || (user == null)) {
+      return null;
+    }
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
-        Group organizationEntity = new Group();
-        organizationEntity.setPath(organizationName);
-        organizationEntity = em.create(organizationEntity);
+    Group organizationEntity = new Group();
+    organizationEntity.setPath(organizationName);
+    organizationEntity = em.create(organizationEntity);
 
-        em.addToCollection(organizationEntity, "users", new SimpleEntityRef(User.ENTITY_TYPE, user.getUuid()));
+    em.addToCollection(organizationEntity, "users", new SimpleEntityRef(User.ENTITY_TYPE, user.getUuid()));
 
-        writeUserToken(MANAGEMENT_APPLICATION_ID, organizationEntity, encryptionService.plainTextCredentials(
-                generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION), user.getUuid(), MANAGEMENT_APPLICATION_ID));
+    writeUserToken(MANAGEMENT_APPLICATION_ID, organizationEntity, encryptionService.plainTextCredentials(
+        generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION), user.getUuid(), MANAGEMENT_APPLICATION_ID));
 
-        OrganizationInfo organization = new OrganizationInfo(organizationEntity.getUuid(), organizationName);
-        postOrganizationActivity(organization.getUuid(), user, "create", organizationEntity, "Organization",
-                organization.getName(), "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
-                + ")</a> created a new organization account named " + organizationName, null);
+    OrganizationInfo organization = new OrganizationInfo(organizationEntity.getUuid(), organizationName);
+    postOrganizationActivity(organization.getUuid(), user, "create", organizationEntity, "Organization",
+        organization.getName(), "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
+            + ")</a> created a new organization account named " + organizationName, null);
 
-        startOrganizationActivationFlow(organization);
+    startOrganizationActivationFlow(organization);
 
-        return organization;
+    return organization;
   }
 
   @Override
   public OrganizationInfo createOrganization(String organizationName, UserInfo user, boolean activated)
       throws Exception {
 
-      if ((organizationName == null) || (user == null)) {
-          return null;
-      }
-      Lock groupLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, organizationName, "groups", "path");
-      EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-      if (!em.isPropertyValueUniqueForEntity("group", "path", organizationName)) {
-          throw new DuplicateUniquePropertyExistsException("group", "path", organizationName);
-      }
-      try {
-          groupLock.lock();
-          return createOrganizationInternal(organizationName, user, activated);
-      } finally {
-          groupLock.unlock();
-      }
+    if ((organizationName == null) || (user == null)) {
+      return null;
+    }
+    Lock groupLock = getUniqueUpdateLock(lockManager, MANAGEMENT_APPLICATION_ID, organizationName, "groups", "path");
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    if (!em.isPropertyValueUniqueForEntity("group", "path", organizationName)) {
+      throw new DuplicateUniquePropertyExistsException("group", "path", organizationName);
+    }
+    try {
+      groupLock.lock();
+      return createOrganizationInternal(organizationName, user, activated);
+    } finally {
+      groupLock.unlock();
+    }
 
   }
 
@@ -558,7 +564,6 @@ public class ManagementServiceImpl implements ManagementService {
     if (organizationId == null) {
       return null;
     }
-
 
     properties.put(PROPERTY_PATH, organizationName);
     properties.put(PROPERTY_SECRET, generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION));
@@ -761,12 +766,11 @@ public class ManagementServiceImpl implements ManagementService {
     return createAdminUser(username, name, email, password, activated, disabled, null);
   }
 
-
   @Override
   public UserInfo createAdminUser(String username, String name, String email, String password, boolean activated,
       boolean disabled, Map<String, Object> userProperties) throws Exception {
-    if ( !validateAdminInfo(username, name, email, password) ) {
-        return null;
+    if (!validateAdminInfo(username, name, email, password)) {
+      return null;
     }
     return createAdminUserInternal(username, name, email, password, activated, disabled, userProperties);
   }
@@ -794,8 +798,8 @@ public class ManagementServiceImpl implements ManagementService {
     return true;
   }
 
-  private UserInfo createAdminUserInternal(String username, String name, String email, String password, boolean activated,
-                                           boolean disabled, Map<String, Object> userProperties) throws Exception {
+  private UserInfo createAdminUserInternal(String username, String name, String email, String password,
+      boolean activated, boolean disabled, Map<String, Object> userProperties) throws Exception {
     if (isBlank(password)) {
       password = encodeBase64URLSafeString(bytes(UUID.randomUUID()));
     }
@@ -822,7 +826,6 @@ public class ManagementServiceImpl implements ManagementService {
 
     return createAdminFrom(user, password);
   }
-
 
   public UserInfo getUserInfo(UUID applicationId, Entity entity) {
 
@@ -862,7 +865,8 @@ public class ManagementServiceImpl implements ManagementService {
   }
 
   @Override
-  public UserInfo updateAdminUser(UserInfo user, String username, String name, String email, Map<String, Object> json) throws Exception {
+  public UserInfo updateAdminUser(UserInfo user, String username, String name, String email, Map<String, Object> json)
+      throws Exception {
 
     /**
      * Only lock on the target values. We don't want lock contention if another
@@ -889,13 +893,13 @@ public class ManagementServiceImpl implements ManagementService {
       if (!isBlank(email)) {
         em.setProperty(entityRef, "email", email);
       }
-      if ( json != null ) {
-          json.remove("password");
-          json.remove("oldpassword");
-          json.remove("newpassword");
-          Map<String,Object> userProperties = user.getProperties();
-          userProperties.putAll(json);
-          em.updateProperties(entityRef, userProperties);
+      if (json != null) {
+        json.remove("password");
+        json.remove("oldpassword");
+        json.remove("newpassword");
+        Map<String, Object> userProperties = user.getProperties();
+        userProperties.putAll(json);
+        em.updateProperties(entityRef, userProperties);
       }
 
       user = getAdminUserByUuid(user.getUuid());

@@ -131,8 +131,6 @@ public class DatabaseInitializer {
 		}
 
 		logger.info("Usergrid schema setup");
-		Setup setup = ((EntityManagerFactoryImpl) emf).getSetup();
-		setup.checkKeyspaces();
 	}
 
 }

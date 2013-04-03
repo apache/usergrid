@@ -60,41 +60,46 @@ public class JobSchedulerService extends AbstractScheduledService {
   @Timed(name = "BulkJobScheduledService_runOneIteration", group = "scheduler", durationUnit = TimeUnit.MILLISECONDS, rateUnit = TimeUnit.MINUTES)
   @Override
   protected void runOneIteration() throws Exception {
-    logger.info("running iteration...");
-    List<JobDescriptor> activeJobs = null;
 
-    // run until there are no more active jobs
-    while (true) {
+    try {
+      logger.info("running iteration...");
+      List<JobDescriptor> activeJobs = null;
 
-      // get the semaphore if we can. This means we have space for at least 1
-      // job
-      if (logger.isDebugEnabled()) {
-        logger.debug("About to acquire semaphore.  Capacity is {}", capacitySemaphore.availablePermits());
+      // run until there are no more active jobs
+      while (true) {
+
+        // get the semaphore if we can. This means we have space for at least 1
+        // job
+        if (logger.isDebugEnabled()) {
+          logger.debug("About to acquire semaphore.  Capacity is {}", capacitySemaphore.availablePermits());
+        }
+
+        capacitySemaphore.acquire();
+        // release the sempaphore we only need to acquire as a way to stop the
+        // loop if there's no capacity
+        capacitySemaphore.release();
+
+        // always +1 since the acquire means we'll be off by 1
+        int capacity = capacitySemaphore.availablePermits();
+
+        logger.debug("Capacity is {}", capacity);
+
+        activeJobs = jobAccessor.getJobs(capacity);
+
+        // nothing to do, we don't have any jobs to run
+        if (activeJobs.size() == 0) {
+          logger.debug("No jobs returned. Exiting run loop");
+          return;
+        }
+
+        for (JobDescriptor jd : activeJobs) {
+          logger.info("Submitting work for {}", jd);
+          submitWork(jd);
+          logger.info("Work submitted for {}", jd);
+        }
       }
-
-      capacitySemaphore.acquire();
-      // release the sempaphore we only need to acquire as a way to stop the
-      // loop if there's no capacity
-      capacitySemaphore.release();
-
-      // always +1 since the acquire means we'll be off by 1
-      int capacity = capacitySemaphore.availablePermits();
-
-      logger.debug("Capacity is {}", capacity);
-
-      activeJobs = jobAccessor.getJobs(capacity);
-
-      // nothing to do, we don't have any jobs to run
-      if (activeJobs.size() == 0) {
-        logger.debug("No jobs returned. Exiting run loop");
-        return;
-      }
-
-      for (JobDescriptor jd : activeJobs) {
-        logger.info("Submitting work for {}", jd);
-        submitWork(jd);
-        logger.info("Work submitted for {}", jd);
-      }
+    } catch (Throwable t) {
+      logger.error("Something really bad happened!  Scheduler run failed", t);
     }
 
   }
