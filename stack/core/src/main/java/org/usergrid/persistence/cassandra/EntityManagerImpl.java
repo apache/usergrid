@@ -299,14 +299,14 @@ public class EntityManagerImpl implements EntityManager {
 	 *             the exception
 	 */
 	public Mutator<ByteBuffer> batchSetProperty(Mutator<ByteBuffer> batch,
-			Entity entity, String propertyName, Object propertyValue,
+			EntityRef entity, String propertyName, Object propertyValue,
 			UUID timestampUuid) throws Exception {
 		return this.batchSetProperty(batch, entity, propertyName,
 				propertyValue, false, false, timestampUuid);
 	}
 
 	public Mutator<ByteBuffer> batchSetProperty(Mutator<ByteBuffer> batch,
-			Entity entity, String propertyName, Object propertyValue,
+			EntityRef entity, String propertyName, Object propertyValue,
 			boolean force, boolean noRead, UUID timestampUuid) throws Exception {
 
 		long timestamp = getTimestampInMicros(timestampUuid);
@@ -444,7 +444,7 @@ public class EntityManagerImpl implements EntityManager {
 	 *             the exception
 	 */
 	public Mutator<ByteBuffer> batchUpdateProperties(Mutator<ByteBuffer> batch,
-			Entity entity, Map<String, Object> properties, UUID timestampUuid)
+			EntityRef entity, Map<String, Object> properties, UUID timestampUuid)
 			throws Exception {
 
 		for (String propertyName : properties.keySet()) {
@@ -478,13 +478,14 @@ public class EntityManagerImpl implements EntityManager {
 			UUID entityId, Map<String, Object> properties, UUID timestampUuid)
 			throws Exception {
 
-		DynamicEntity entity = loadPartialEntity(entityId);
+    EntityRef entity = getRef(entityId);
 		if (entity == null) {
 			return batch;
 		}
 
-		for (String propertyName : properties.keySet()) {
-			Object propertyValue = properties.get(propertyName);
+		for (Map.Entry<String,Object> entry : properties.entrySet()) {
+      String propertyName = entry.getKey();
+			Object propertyValue = entry.getValue();
 
 			batch = batchSetProperty(batch, entity, propertyName,
 					propertyValue, timestampUuid);
@@ -521,14 +522,14 @@ public class EntityManagerImpl implements EntityManager {
 	 *             the exception
 	 */
 	public Mutator<ByteBuffer> batchUpdateDictionary(Mutator<ByteBuffer> batch,
-			Entity entity, String dictionaryName, Object elementValue,
+			EntityRef entity, String dictionaryName, Object elementValue,
 			boolean removeFromDictionary, UUID timestampUuid) throws Exception {
 		return batchUpdateDictionary(batch, entity, dictionaryName,
 				elementValue, null, removeFromDictionary, timestampUuid);
 	}
 
 	public Mutator<ByteBuffer> batchUpdateDictionary(Mutator<ByteBuffer> batch,
-			Entity entity, String dictionaryName, Object elementValue,
+			EntityRef entity, String dictionaryName, Object elementValue,
 			Object elementCoValue, boolean removeFromDictionary,
 			UUID timestampUuid) throws Exception {
 
@@ -1324,16 +1325,14 @@ public class EntityManagerImpl implements EntityManager {
 		return null;
 	}
 
-	/**
-	 * Gets the entity info.
+  /**
+	 * Gets the entity info. If no propertyNames are passed it loads the ENTIRE entity!
 	 *
-	 * @param applicationId
-	 *            the application id
 	 * @param entityId
 	 *            the entity id
 	 * @param propertyNames
 	 *            the property names
-	 * @return EntityInfo object holding properties
+	 * @return DynamicEntity object holding properties
 	 * @throws Exception
 	 *             the exception
 	 */
@@ -1745,8 +1744,8 @@ public class EntityManagerImpl implements EntityManager {
 	public void updateProperties(UUID entityId, Map<String, Object> properties)
 			throws Exception {
 
-		DynamicEntity entity = loadPartialEntity(entityId);
-		if (entity == null) {
+    EntityRef entity = getRef(entityId);
+    if (entity == null) {
 			return;
 		}
 
@@ -1761,13 +1760,13 @@ public class EntityManagerImpl implements EntityManager {
 		batchExecute(m, CassandraService.RETRY_COUNT);
 	}
 
-    @Metered(group="core",name="EntityManager_deleteEntity")
+  @Metered(group="core",name="EntityManager_deleteEntity")
 	public void deleteEntity(UUID entityId) throws Exception {
 
 		logger.info("deleteEntity {} of application {}", entityId,
 				applicationId);
 
-		DynamicEntity entity = loadPartialEntity(entityId);
+		EntityRef entity = getRef(entityId);
 		if (entity == null) {
 			return;
 		}
@@ -2149,7 +2148,7 @@ public class EntityManagerImpl implements EntityManager {
 			UUID entityId = entityRef.getUuid();
 			String entityType = entityRef.getType();
 			try {
-				entityRef = loadPartialEntity(entityRef.getUuid());
+				entityRef = getRef(entityRef.getUuid());
 			} catch (Exception e) {
 				logger.error("Unable to load entity"
 						+ entityRef.getUuid().toString(), e);
@@ -2338,7 +2337,8 @@ public class EntityManagerImpl implements EntityManager {
 			propertyValue = null;
 		}
 
-		DynamicEntity entity = loadPartialEntity(entityRef.getUuid());
+    // todo: would this ever need to load more?
+		DynamicEntity entity = loadPartialEntity(entityRef.getUuid(), propertyName);
 
 		UUID timestampUuid = newTimeUUID();
 		Mutator<ByteBuffer> batch = createMutator(
@@ -2377,7 +2377,7 @@ public class EntityManagerImpl implements EntityManager {
 			return;
 		}
 
-		Entity entity = loadPartialEntity(entityRef.getUuid());
+    EntityRef entity = getRef(entityRef.getUuid());
 
 		UUID timestampUuid = newTimeUUID();
 		Mutator<ByteBuffer> batch = createMutator(
@@ -2397,7 +2397,7 @@ public class EntityManagerImpl implements EntityManager {
 			return;
 		}
 
-		Entity entity = loadPartialEntity(entityRef.getUuid());
+    EntityRef entity = getRef(entityRef.getUuid());
 
 		UUID timestampUuid = newTimeUUID();
 		Mutator<ByteBuffer> batch = createMutator(
@@ -2420,7 +2420,7 @@ public class EntityManagerImpl implements EntityManager {
 			return;
 		}
 
-		Entity entity = loadPartialEntity(entityRef.getUuid());
+    EntityRef entity = getRef(entityRef.getUuid());
 
 		UUID timestampUuid = newTimeUUID();
 		Mutator<ByteBuffer> batch = createMutator(
@@ -2443,7 +2443,7 @@ public class EntityManagerImpl implements EntityManager {
 			return;
 		}
 
-		Entity entity = loadPartialEntity(entityRef.getUuid());
+    EntityRef entity = getRef(entityRef.getUuid());
 
 		UUID timestampUuid = newTimeUUID();
 		Mutator<ByteBuffer> batch = createMutator(

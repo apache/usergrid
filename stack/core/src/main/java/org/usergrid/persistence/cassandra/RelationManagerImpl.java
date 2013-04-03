@@ -181,6 +181,7 @@ public class RelationManagerImpl implements RelationManager {
         //        .init(em, cass, applicationId, headEntity, indexBucketLocator);
     }
 
+    /** side effect: converts headEntity into an Entity if it is an EntityRef! */
     Entity getHeadEntity() throws Exception {
         Entity entity = null;
         if (headEntity instanceof Entity) {
@@ -2246,10 +2247,9 @@ public class RelationManagerImpl implements RelationManager {
     @Override
     @Metered(group="core",name="RelationManager_getCollections")
     public Set<String> getCollections() throws Exception {
-        Entity e = getHeadEntity();
 
         Map<String, CollectionInfo> collections = getDefaultSchema()
-                .getCollections(e.getType());
+                .getCollections(headEntity.getType());
         if (collections == null) {
             return null;
         }
@@ -2366,7 +2366,6 @@ public class RelationManagerImpl implements RelationManager {
     public Entity addToCollection(String collectionName, EntityRef itemRef)
             throws Exception {
 
-        Entity entity = getHeadEntity();
         Entity itemEntity = em.get(itemRef);
 
         if (itemEntity == null) {
@@ -2374,7 +2373,7 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         CollectionInfo collection = getDefaultSchema().getCollection(
-                entity.getType(), collectionName);
+                headEntity.getType(), collectionName);
         if ((collection != null)
                 && !collection.getType().equals(itemRef.getType())) {
             return null;
@@ -2388,7 +2387,7 @@ public class RelationManagerImpl implements RelationManager {
 
         if (collection.getLinkedCollection() != null) {
             getRelationManager(itemEntity).batchAddToCollection(batch,
-                    collection.getLinkedCollection(), entity, timestampUuid);
+                    collection.getLinkedCollection(), getHeadEntity(), timestampUuid);
 
         }
 
@@ -2460,12 +2459,8 @@ public class RelationManagerImpl implements RelationManager {
                     (Long) properties.get(PROPERTY_INACTIVITY));
         }
 
-        Entity entity = getHeadEntity();
-
-        Entity itemEntity = null;
-
         CollectionInfo collection = getDefaultSchema().getCollection(
-                entity.getType(), collectionName);
+                headEntity.getType(), collectionName);
         if ((collection != null) && !collection.getType().equals(itemType)) {
             return null;
         }
@@ -2473,7 +2468,7 @@ public class RelationManagerImpl implements RelationManager {
         properties = getDefaultSchema().cleanUpdatedProperties(itemType,
                 properties, true);
 
-        itemEntity = em.create(itemType, properties);
+        Entity itemEntity = em.create(itemType, properties);
 
         if (itemEntity != null) {
             UUID timestampUuid = newTimeUUID();
@@ -2486,7 +2481,7 @@ public class RelationManagerImpl implements RelationManager {
             if (collection.getLinkedCollection() != null) {
                 getRelationManager(itemEntity)
                         .batchAddToCollection(batch,
-                                collection.getLinkedCollection(), entity,
+                                collection.getLinkedCollection(), getHeadEntity(),
                                 timestampUuid);
 
             }
@@ -2518,7 +2513,6 @@ public class RelationManagerImpl implements RelationManager {
             return;
         }
 
-        Entity entity = getHeadEntity();
         Entity itemEntity = em.get(itemRef);
 
         if (itemEntity == null) {
@@ -2533,10 +2527,10 @@ public class RelationManagerImpl implements RelationManager {
                 timestampUuid);
 
         CollectionInfo collection = getDefaultSchema().getCollection(
-                entity.getType(), collectionName);
+                headEntity.getType(), collectionName);
         if ((collection != null) && (collection.getLinkedCollection() != null)) {
             getRelationManager(itemEntity).batchRemoveFromCollection(batch,
-                    collection.getLinkedCollection(), entity, timestampUuid);
+                    collection.getLinkedCollection(), getHeadEntity(), timestampUuid);
         }
 
         batchExecute(batch, CassandraService.RETRY_COUNT);
@@ -2564,7 +2558,7 @@ public class RelationManagerImpl implements RelationManager {
                 for (String collectionName : container.getValue()) {
                     getRelationManager(container.getKey())
                             .batchRemoveFromCollection(m, collectionName,
-                                    entity, true, timestampUuid);
+                                entity, true, timestampUuid);
                 }
             }
         }
@@ -3191,7 +3185,7 @@ public class RelationManagerImpl implements RelationManager {
         public void visit(WithinNode node) throws Exception {
 
             Results r = em.getGeoIndexManager().proximitySearchCollection(
-                    getHeadEntity(), collection.getName(),
+                    headEntity, collection.getName(),
                     node.getPropertyName(),
                     new Point(node.getLattitude(), node.getLongitude()),
                     node.getDistance(), null, query.getLimit(), false,
