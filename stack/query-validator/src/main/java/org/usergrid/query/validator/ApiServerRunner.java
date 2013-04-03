@@ -1,0 +1,167 @@
+/*******************************************************************************
+ * Copyright 2013 baas.io
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+package org.usergrid.query.validator;
+
+import org.apache.commons.lang.StringUtils;
+import org.codehaus.jackson.JsonNode;
+import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Component;
+import org.usergrid.java.client.response.ApiResponse;
+import org.usergrid.persistence.Entity;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import org.usergrid.java.client.Client;
+import org.usergrid.persistence.Schema;
+
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * @author Sung-ju Jin(realbeast)
+ */
+@Component
+public class ApiServerRunner implements QueryRunner {
+
+    private Logger logger = Logger.getLogger(SqliteRunner.class.getName());
+    private Client client;
+
+    private String org;
+    private String app;
+    private String baseUri;
+    private String collection;
+    private List<Entity> entities;
+
+    @Override
+    public boolean setup() {
+        client = new Client(getOrg(), getApp()).withApiUrl(getBaseUri());
+        return insertDatas();
+    }
+
+    public boolean insertDatas() {
+       List<org.usergrid.java.client.entities.Entity> clientEntities = getEntitiesForClient(getEntities());
+       for(org.usergrid.java.client.entities.Entity entity : clientEntities) {
+           ApiResponse response = client.createEntity(entity);
+           if( response == null || !StringUtils.isEmpty(response.getException()) ) {
+               logger.log(Level.SEVERE, response.getErrorDescription());
+               //throw new RuntimeException(response.getErrorDescription());
+           }
+       }
+       return true;
+    }
+
+    private List<org.usergrid.java.client.entities.Entity> getEntitiesForClient(List<Entity> entities) {
+        List<org.usergrid.java.client.entities.Entity> clientEntities = new ArrayList<org.usergrid.java.client.entities.Entity>();
+        for(Entity entity : entities) {
+            org.usergrid.java.client.entities.Entity clientEntity = new org.usergrid.java.client.entities.Entity();
+            clientEntity.setType(entity.getType());
+            Map<String, Object> properties = Schema.getDefaultSchema().getEntityProperties(entity);
+            for(String key : properties.keySet()) {
+                Object value = entity.getProperty(key);
+                if( value instanceof String )
+                    clientEntity.setProperty(key,(String)value );
+                else if( value instanceof Long )
+                    clientEntity.setProperty(key,(Long)value );
+                else if( value instanceof Integer )
+                    clientEntity.setProperty(key,(Integer)value );
+                else if( value instanceof Float )
+                    clientEntity.setProperty(key,(Float)value );
+                else if( value instanceof Boolean )
+                    clientEntity.setProperty(key,(Boolean)value );
+            }
+            clientEntities.add(clientEntity);
+        }
+        return clientEntities;
+    }
+
+    @Override
+    public List<Entity> execute(String query) {
+        return execute(query, 10);
+    }
+
+    @Override
+    public List<Entity> execute(String query, int limit) {
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("ql", query);
+        params.put("limit", limit);
+        ApiResponse response = client.apiRequest(HttpMethod.GET, params, null, getOrg(), getApp(), getCollection());
+        List<Entity> entities = new ArrayList<Entity>();
+        for(org.usergrid.java.client.entities.Entity clientEntitity : response.getEntities()) {
+            Entity entity = new QueryEntity();
+            entity.setUuid(clientEntitity.getUuid());
+            entity.setType(clientEntitity.getType());
+            Map<String, JsonNode> values = clientEntitity.getProperties();
+            for( String key : values.keySet() ) {
+                JsonNode node = values.get(key);
+                if( node.isBoolean() ) {
+                    entity.setProperty(key, node.asBoolean());
+                } else if( node.isInt() ) {
+                    entity.setProperty(key, node.asInt());
+                } else if( node.isLong() ) {
+                    entity.setProperty(key, node.asLong());
+                } else if( node.isDouble() ) {
+                    entity.setProperty(key, node.asDouble());
+                } else {
+                    entity.setProperty(key, node.asText());
+                }
+            }
+            entities.add(entity);
+        }
+        return entities;
+    }
+
+    public String getOrg() {
+        return org;
+    }
+
+    public void setOrg(String org) {
+        this.org = org;
+    }
+
+    public String getApp() {
+        return app;
+    }
+
+    public void setApp(String app) {
+        this.app = app;
+    }
+
+    public String getBaseUri() {
+        return baseUri;
+    }
+
+    public void setBaseUri(String baseUri) {
+        this.baseUri = baseUri;
+    }
+
+    public String getCollection() {
+        return collection;
+    }
+
+    public void setCollection(String collection) {
+        this.collection = collection;
+    }
+
+    public List<Entity> getEntities() {
+        return entities;
+    }
+
+    public void setEntities(List<Entity> entities) {
+        this.entities = entities;
+    }
+}
