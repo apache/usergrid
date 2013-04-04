@@ -441,6 +441,8 @@ function getCollectionCallback(response) {
     return;
   }
 
+  if (queryPath.split("/")) {
+  }
   $('#query-path').val(queryPath);
 
   $("#collection-type-field").html(response.path);
@@ -505,6 +507,12 @@ function getCollectionCallback(response) {
   } else {
     output.replaceWith('<table id="query-response-table" class="table"><tbody><tr class="zebraRows users-row"><td>No entities found</td></tr></table>');
   }
+  var slashes = (queryPath.split("/").length -1)
+  if (response.entities.length == 1 && slashes > 1){
+    generateBackToCollectionButton(response.path);
+  } else {
+    $('#back-to-collection').hide();
+  }
   showPagination('query-response');
 }
 
@@ -556,13 +564,7 @@ function buildContentArea(obj2) {
     $('#back-to-collection').hide();
   }
 
-  function showQueryDetailView(path) {
-    $('#query-collection-info').hide();
-    $('#query-detail-info').show();
-    $('#query-ql-box').hide();
-    generateBackToCollectionButton(path);
-    $('#back-to-collection').show();
-  }
+
 
   function generateBackToCollectionButton(returnPath) {
     var backButton = $('#back-to-collection');
@@ -570,6 +572,7 @@ function buildContentArea(obj2) {
       backButton.removeAttr('onclick');
     }
     backButton.attr('onclick',"Usergrid.console.getCollection('GET','" + returnPath+ "')");
+    $('#back-to-collection').show();
   }
 
   $.fn.loadEntityCollectionsListWidget = function() {
