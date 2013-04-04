@@ -1108,14 +1108,7 @@ NSString *g_deviceUUID = nil;
     NSString *notifierKey = [notifier stringByAppendingString: @".notifier.id"];
     [entity setObject: tokenString forKey: notifierKey];
     
-    UGClientResponse *response = [self updateEntity: deviceId entity: entity];
-    
-    if (response.transactionState == kUGClientResponseSuccess) {
-        // connect device to my user
-        response = [self connectEntities: @"users" connectorID: @"me" type: @"devices" connecteeID: deviceId];
-    }
-    
-    return response;
+    return [self updateEntity: deviceId entity: entity];
 }
 
 - (UGClientResponse *)pushAlert:(NSString *)message
