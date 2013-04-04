@@ -1284,67 +1284,193 @@
 
               <div id="sendNotification-panel" class="panel-buffer">
                 <div class="well thingy">
-                  <span class="title">Compose Push Notification</span>
+                  <span class="title">Notififier and Recipients</span>
                 </div>
+                Choose the Notifier (a configured notification service) to connect with for this push notification. Only users
+                with devices registered with this notifier will receive the push notification. If a group is selected, only the users
+                in the selected goup, with devices registered with this notifier, will receive the push notification.
 
                 <form id="query-inputs" class="notifcations-form">
+
                   <div class="control-group">
-                    <label class="control-label" for="query-path"><strong>Path </strong></label>
-                    <div class="controls">
-                      <div class="input-append">
-                        <input id="query-path" type="text" name="path" class="span6" autocomplete="off" placeholder="ex: /users"/>
-                      </div>
+                    <input type="radio" name="notification-class" value="all" checked> All Users
+                    <input type="radio" name="notification-class" value="users"> User(s)
+                    <input type="radio" name="notification-class" value="Wine"> Group
+                  </div>
+                  <div class="control-group">
+                     <input id="users-list" type="text" name="path" class="span6" autocomplete="off" placeholder=""/>
+                  </div>
+                  <hr>
+                  <div class="well thingy">
+                    <span class="title">Notififier Message</span>
+                  </div>
+                  Edit the "alert" message in the JSON payload.
+                  <div class="controls">
+                    <div>
+                      <textarea id="notification-json" class="span6 pull-left" rows="4"
+                         placeholder="{  &quot;alert&quot;  :  &quot;Your text here&quot;, &quot;badge&quot;  :  &quot;1&quot;, &quot;sound&quot;  :  &quot;default&quot;  }">
+                      </textarea>
                     </div>
                   </div>
+                  <div id="notification-characters-remaining">24 characters remaining</div>
+
+                  Chime is the default alert sound. More information on using custom sounds in your application
+                  is available in the <a href="">Apple developer Library</a>
+
+                  <a class="btn disabled" id="button-query-validate" >Reset Payload</a>
+                  <a class="btn disabled" id="button-query-validate" >Validate Json</a>
+                  <div id="statusbar-placeholder" class=" pull-right span4"></div>
+
+                  <hr>
+                  <div class="well thingy">
+                    <span class="title">Delivery</span>
+                  </div>
+                  Select whether to schedule this push notification for immediate delivery or at a future date and time.
+
+                  <div class="control-group">
+                    <input type="radio" name="notification-class" value="all" checked> Now
+                    <input type="radio" name="notification-class" value="users"> Schedule for later
+                  </div>
+
+                  Send Date
+                  <input id="users-list" type="text" name="path" class="span6" autocomplete="off" placeholder=""/>
+                  Send Time
+                  <input id="users-list" type="text" name="path" class="span6" autocomplete="off" placeholder=""/>
+                  Time Zone
+                  <input id="users-list" type="text" name="path" class="span6" autocomplete="off" placeholder=""/>
+
+                  <hr>
+                  <div class="well thingy">
+                    <span class="title">Push Notification API Preview</span>
+                  </div>
+                  Review the API call and payload that will be sent to the App Services Push Notification Scheduler.
+                  Advanced users can also send this command via <a href="">UGC (Usergrid Command Line)</a>.
+
+                  <div id="notifications-command" class="well">
+                    POST users/
+                  </div>
+
                 </form>
+                <a class="btn btn-primary">Schedule Notification</a>
+                <a href="">Cancel</a>
               </div>
 
               <div id="messageHistory-panel" class="panel-buffer">
                 <div class="well thingy">
-                  <span class="title">Message History</span>
+                  <span class="title">Notification History</span>
+                </div>
+                <div style="float: left">
+                  <ul class="nav nav-pills">
+                    <li class="active"><a href="#">All</a></li>
+                    <li><a href="#">Scheduled</a></li>
+                    <li><a href="#">Sent</a></li>
+                    <li><a href="#">Failed</a></li>
+                  </ul>
+                </div>
+                <input id="notifications-history-search" type="text" name="path" class="span6" autocomplete="off" placeholder="search"/>
+                <div id="notifications-history-display">
+                  No Notifications to display.  Notifications will be displayed here once they are sent.
                 </div>
 
-                <form id="query-inputs" class="notifcations-form">
-                  <div class="control-group">
-                    <label class="control-label" for="query-path"><strong>Path </strong></label>
-                    <div class="controls">
-                      <div class="input-append">
-                        <input id="query-path" type="text" name="path" class="span6" autocomplete="off" placeholder="ex: /users"/>
-                      </div>
-                    </div>
+                <div style="border: 1px solid #aaa;">
+                  <div style="height: 50px; background-color: #eee; padding: 10px; border-bottom: 1px solid #aaa">
+                    <strong>Send Date:</strong> 3 March 2113 8:15PM PST
+                    <span style="float: right">delete</span>
                   </div>
-                </form>
+                  <div style="padding: 10px;">
+                    POST users/all/devices/notifications/ 'payloads: {"fdsa":"fdsafdsa"}'
+                  </div>
+                </div>
               </div>
 
 
               <div id="configuration-panel" class="panel-buffer">
                 <div class="well thingy">
-                  <span class="title">Configure</span>
+                  <span class="title">Notifiers</span>
+                  <a class="btn" style="float: right">Delete Certificate</a>
                 </div>
 
+                <table id="users-table" class="table">
+                  <tbody>
+                    <tr class="zebraRows users-row">
+                      <td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" /></td>
+                      <td class="user-details bold-header">Provider</td>
+                      <td class="user-details bold-header">Notifier</td>
+                      <td class="user-details bold-header">Certificate Upload Date</td>
+                      <td class="view-details">&nbsp;</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <br/><br/>
+                <span class="title">Configure Notifier: Apple Push Notification Service</span>
+                <br>
+                A Notifier allows App Services to connect to and deliver a message to a communication provider such as
+                Apple's APNs. Upload Development and Production Certificates (.p12) to set up a bridge between your app
+                and APNs for push notifications on iOS devices.
+
+
                 <form id="query-inputs" class="notifcations-form">
+                  Before you get started: <a href="">Retrieve .p12 certificates from the Apple Developer Connection website</a>.
+
+                  <fieldset>
                   <div class="control-group">
-                    <label class="control-label" for="query-path"><strong>Path </strong></label>
+                    <label class="control-label" for="new-notifier-name"><strong>Name this notifier </strong></label>
                     <div class="controls">
                       <div class="input-append">
-                        <input id="query-path" type="text" name="path" class="span6" autocomplete="off" placeholder="ex: /users"/>
+                        <input id="new-notifier-name" type="text" name="path" class="span6" autocomplete="off" placeholder="ex: appledev"/>
+                      </div>
+                      The notifier name is used as the key for push data.  Give this a name that describes the certificate being uploaded.
+                    </div>
+                  </div>
+
+                  <div class="control-group">
+                    <label class="control-label" for="notifier-certificate"><strong>Certificate </strong></label>
+                    <div class="controls">
+                      <div class="input-append">
+                       <input id="notifier-certificate" name="notifier-certificate" type="file" name="datafile" size="40">
                       </div>
                     </div>
                   </div>
+
+                  <div class="control-group">
+                    <label class="control-label" for="new-notifier-cert-password"><strong>Certificate Password</strong></label>
+                    <div class="controls">
+                      <div class="input-append">
+                        <input id="new-notifier-cert-password" type="text" name="path" class="span6" autocomplete="off" placeholder="ex: appledev"/>
+                      </div>
+                      Only applicable if your certificate is password protected
+                    </div>
+                  </div>
+
+
+                  <a class="btn btn-primary">Save Certificate</a>
+                  </fieldset>
+
                 </form>
+
+
               </div>
 
               <div id="setupNeeded-panel" class="panel-buffer">
                 <div class="well thingy">
-                  <span class="title">Configure</span>
+                  Before you can send a push notification, follow the <a href="">getting Started guide</a> and set up a notifier
+                </div>
+                <div class="header">
+                 Configure the Apple Push Notification Service by setting up a Notifier
+                </div>
+                <div style="">
+                   A Notifier allows your app to connect to and deliver a message to a service profider such as Apple's Push Notification Service (APNs).
+                   <br/>
+                   Follow the <a href="">getting Started guide</a> to configure Push Notifications for iOS devices.
                 </div>
 
                 <form id="query-inputs" class="notifcations-form">
                   <div class="control-group">
-                    <label class="control-label" for="query-path"><strong>Path </strong></label>
+                    <label class="control-label" for="query-pathfdsfds"><strong>Path </strong></label>
                     <div class="controls">
                       <div class="input-append">
-                        <input id="query-path" type="text" name="path" class="span6" autocomplete="off" placeholder="ex: /users"/>
+                        <input id="query-pathdsadsa" type="text" name="path" class="span6" autocomplete="off" placeholder="ex: /users"/>
                       </div>
                     </div>
                   </div>
@@ -1435,10 +1561,10 @@
                           <!--a class="btn" id="button-query-back">&#9664; Back</a-->
                           <!--Added disabled class to change the way button looks but their functionality is as usual -->
                           <label class="control-label"><strong>Method </strong></label>
-                          <button type="button" class="btn btn-small disabled query-button active" id="button-query-get">GET</button>
-                          <button type="button" class="btn btn-small disabled query-button" id="button-query-post">POST</button>
-                          <button type="button" class="btn btn-small disabled query-button" id="button-query-put">PUT</button>
-                          <button type="button" class="btn btn-small disabled query-button" id="button-query-delete">DELETE</button>
+                          <input type="radio" name="query-action" value="get" style="margin-top: -2px;" id="button-query-get"> GET &nbsp; &nbsp;
+                          <input type="radio" name="query-action" value="post" style="margin-top: -2px;" id="button-query-post"> POST &nbsp; &nbsp;
+                          <input type="radio" name="query-action" value="put" style="margin-top: -2px;" id="button-query-put"> PUT &nbsp; &nbsp;
+                          <input type="radio" name="query-action" value="delete" style="margin-top: -2px;" id="button-query-delete"> DELETE
                         </div>
                       </div>
                       <div class="control-group">

@@ -239,6 +239,14 @@
     return false;
   }
 
+function compare(a,b) {
+  if (a.name < b.name)
+     return -1;
+  if (a.name > b.name)
+    return 1;
+  return 0;
+}
+
   function getCollectionsCallback(response) {
     $('#collections-pagination').hide();
     $('#collections-next').hide();
@@ -253,18 +261,37 @@
     var data = response.entities[0].metadata.collections;
     var output = $('#collections-table');
 
+    var elements = [];
+    for (var key in data) {
+      if (data.hasOwnProperty(key)) {
+        elements.push(data[key])
+      }
+    }
+    elements.sort(compare)
+    var r = {};
     if ($.isEmptyObject(data)) {
       output.replaceWith('<div id="collections-table" class="collection-panel-section-message">No collections found.</div>');
     } else {
       output.replaceWith('<table id="collections-table" class="table"><tbody></tbody></table>');
       var leftMenuContent = '<ul id="collections-link-buttons" class="nav nav-list" style="margin-bottom: 5px;">';
+      for (var i=0;i<elements.length;i++) {
+        r.name = elements[i];
+        r.count = data[elements[i].count];
+        $.tmpl('apigee.ui.collections.table_rows.html', r).appendTo('#collections-table');
+
+        var link = "Usergrid.console.pageOpenQueryExplorer('"+elements[i].name+"'); return false;";
+        leftMenuContent += '<li id="collections-link-button-'+elements[i].name+'"><a href="#" onclick="'+link+'" class="collection-nav-links"><span class="nav-menu-text">/'+elements[i].name+'</span></a></li>';
+
+
+      }
+      /*
       for (var i in data) {
         var this_data = data[i];
         $.tmpl('apigee.ui.collections.table_rows.html', this_data).appendTo('#collections-table');
 
         var link = "Usergrid.console.pageOpenQueryExplorer('"+data[i].name+"'); return false;";
         leftMenuContent += '<li id="collections-link-button-'+data[i].name+'"><a href="#" onclick="'+link+'" class="collection-nav-links"><span class="nav-menu-text">/'+data[i].name+'</span></a></li>';
-      }
+      }*/
       leftMenuContent += '</ul>';
       $('#left-collections-content').html(leftMenuContent);
     }
@@ -333,6 +360,7 @@
     $("#query-response-area").hide();
   });
 
+  var queryPath = '';
   function runCollectionQuery(){
     var method;
 
@@ -384,10 +412,9 @@
       params.limit = limit;
     }
 
+    queryPath = path;
+
     queryObj = new Usergrid.Query(method, path, data, params, getCollectionCallback, function(response) { alertModal("Error", response) });
-    //store the query object on the stack
- //   pushQuery(queryObj);
-    //then run the query
     runAppQuery(queryObj);
   }
 
@@ -414,12 +441,7 @@ function getCollectionCallback(response) {
     return;
   }
 
-  // events collection returns like:  /events/
-  if(response.path === '/events/') {
-    $('#query-path').val(response.path);
-  } else {
-    $('#query-path').val(response.path + '/');
-  }
+  $('#query-path').val(queryPath);
 
   $("#collection-type-field").html(response.path);
   var output = $('#query-response-table');
@@ -478,13 +500,7 @@ function getCollectionCallback(response) {
         }
         $.tmpl('apigee.ui.collection.table_rows.html', this_data).appendTo('#query-response-table');
       }
-      if (response.entities.length == 1 && response.action != 'post') {
-        var p = $('#query-path').val();
-        var path = response.entities[0].metadata.path;
-        $('#query-path').val(path);
-        var uuid = response.entities[0].uuid;
-        $("#query-row-" + uuid).show();
-      }
+
     }
   } else {
     output.replaceWith('<table id="query-response-table" class="table"><tbody><tr class="zebraRows users-row"><td>No entities found</td></tr></table>');
@@ -749,7 +765,6 @@ function buildContentArea(obj2) {
           function() {
             itemsCount--;
             if(itemsCount==0){
-              deselectAllCollections();
               getCollection('GET');
             }},
           function() { alertModal("Unable to delete: " + path); }
