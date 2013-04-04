@@ -118,6 +118,8 @@ function ApigeePages() {
     panel.link.parent().addClass('active');
     panel.sublink.parent().addClass('active');
 
+    Usergrid.console.setupMenu();
+    Usergrid.console.requestApplications();
     if (panel.showFunction) {
       panel.showFunction();
     }

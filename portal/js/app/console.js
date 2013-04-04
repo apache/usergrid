@@ -465,10 +465,6 @@ function getCollectionCallback(response) {
 
       var entity_type = response.entities [0].type;
 
-      //showQueryCollectionView(path)
-      //updateQueryTypeahead(response, 'query-path');
-
-
       var table = '<table id="query-response-table" class="table"><tbody><tr class="zebraRows users-row">' +
                   '<td class="checkboxo"><input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" /></td>';
       if (entity_type === 'user') {
@@ -810,10 +806,9 @@ function buildContentArea(obj2) {
    *
    ******************************************************************/
 
-requestApplications();
+
   function pageSelectHome() {
-    setupMenu();
-   // requestApplications();
+
     requestAdmins();
     displayOrganizationName(Usergrid.ApiClient.getOrganizationName());
     requestOrganizationCredentials();
@@ -886,9 +881,12 @@ requestApplications();
     sectionApps.empty().html('<div class="alert alert-info user-panel-section">Loading...</div>');
     runManagementQuery(new Usergrid.Query("GET","organizations/" + Usergrid.ApiClient.getOrganizationName() + "/applications", null, null,
       displayApplications,
-      function() { sectionApps.html('<div class="alert user-panel-section">Unable to retrieve application list.</div>'); }
+      function() {
+        sectionApps.html('<div class="alert user-panel-section">Unable to retrieve application list.</div>');
+        }
     ));
   }
+  Usergrid.console.requestApplications = requestApplications;
 
   function selectFirstApp() {
     //get the currently specified app name
@@ -3825,6 +3823,7 @@ requestApplications();
       userNameBox.html("No Logged In User");
     }
   }
+  Usergrid.console.setupMenu = setupMenu;
 
   function displayOrganizationName(orgName){
     $('#organization-name').text(orgName);
