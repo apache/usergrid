@@ -1090,7 +1090,7 @@ NSString *g_deviceUUID = nil;
 /*************************** REMOTE PUSH NOTIFICATIONS ***************************/
 /*************************** REMOTE PUSH NOTIFICATIONS ***************************/
 
-- (UGClientResponse *)setDevicePushToken:(NSData *)newDeviceToken
+- (UGClientResponse *)setDevicePushToken:(NSData *)newDeviceToken forNotifier:(NSString *)notifier
 {
     // Pull the push token string out of the device token data
     NSString *tokenString = [[[newDeviceToken description]
@@ -1104,7 +1104,9 @@ NSString *g_deviceUUID = nil;
     NSMutableDictionary *entity = [[NSMutableDictionary alloc] init];
     [entity setObject: @"device"   forKey: @"type"];
     [entity setObject: deviceId    forKey: @"uuid"];
-    [entity setObject: tokenString forKey: @"apple.notifier.id"];
+    
+    NSString *notifierKey = [notifier stringByAppendingString: @".notifier.id"];
+    [entity setObject: tokenString forKey: notifierKey];
     
     UGClientResponse *response = [self updateEntity: deviceId entity: entity];
     
