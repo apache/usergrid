@@ -364,14 +364,15 @@ function compare(a,b) {
   function runCollectionQuery(){
     var method;
 
+
     //Select method to use
-    if($('#button-query-get').hasClass('active')){
+    if($('#button-query-get').prop('checked') ){
       method = 'GET';
-    } else if($('#button-query-post').hasClass('active')){
+    } else if($('#button-query-post').prop('checked')){
       method = 'POST';
-    } else if($('#button-query-put').hasClass('active')){
+    } else if($('#button-query-put').prop('checked')){
       method = 'PUT';
-    } else if($('#button-query-delete').hasClass('active')){
+    } else if($('#button-query-delete').prop('checked')){
       method = 'DELETE';
     } else {
       alertModal("Notice", "Please select a method.");
@@ -441,8 +442,16 @@ function getCollectionCallback(response) {
     return;
   }
 
-  if (queryPath.split("/")) {
+  var slashes = (queryPath.split("/").length -1)
+  if (response.entities.length == 1 && slashes > 1){
+    generateBackToCollectionButton(response.path);
+  } else {
+    $('#back-to-collection').hide();
   }
+  if (!slashes && queryPath.length > 0) {
+    queryPath = "/" + queryPath;
+  }
+
   $('#query-path').val(queryPath);
 
   $("#collection-type-field").html(response.path);
@@ -507,12 +516,7 @@ function getCollectionCallback(response) {
   } else {
     output.replaceWith('<table id="query-response-table" class="table"><tbody><tr class="zebraRows users-row"><td>No entities found</td></tr></table>');
   }
-  var slashes = (queryPath.split("/").length -1)
-  if (response.entities.length == 1 && slashes > 1){
-    generateBackToCollectionButton(response.path);
-  } else {
-    $('#back-to-collection').hide();
-  }
+
   showPagination('query-response');
 }
 
