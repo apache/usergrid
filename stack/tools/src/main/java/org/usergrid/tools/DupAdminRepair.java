@@ -57,14 +57,14 @@ import com.google.common.collect.Multimaps;
  * @author tnine
  * 
  */
-public class DupAppUserCheck extends ExportingToolBase {
+public class DupAdminRepair extends ExportingToolBase {
 
   /**
      * 
      */
   private static final int PAGE_SIZE = 100;
 
-  private static final Logger logger = LoggerFactory.getLogger(DupAppUserCheck.class);
+  private static final Logger logger = LoggerFactory.getLogger(DupAdminRepair.class);
 
   @Override
   @SuppressWarnings("static-access")
