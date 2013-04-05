@@ -16,7 +16,7 @@
     use_sso: true, // flag to override use SSO if needed set to ?use_sso=no
     login_url: "https://accounts.apigee.com/accounts/sign_in",
     profile_url: "https://accounts.apigee.com/accounts/my_account",
-    logout_url: "https://accounts.apigee.com/accounts/sign_out",
+    logout_url: "https://accounts.apigee.com/accounts/sign_in",
     api_url: "https://api.usergrid.com/"
     },
 
@@ -35,9 +35,7 @@
     getSSOCallback:function (urlCallback) {
 
        var url = this.buildBaseUrl();
-/*
-      var url = 'https://apigee.com/usergrid/';
- */
+
       if(urlCallback) {
         url += "#" + urlCallback;
       }

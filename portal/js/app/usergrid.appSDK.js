@@ -1025,12 +1025,12 @@ Usergrid.SDK_VERSION = '0.9.9';
     this.clearAll();
   }
 
-  //The get() function is deprecated.  Including here for backwards compatibility  
+  //The get() function is deprecated.  Including here for backwards compatibility
   //with previous versions of the SDK
   Usergrid.Collection.prototype.get = function (successCallback, errorCallback){
     Usergrid.Collection.fetch(successCallback, errorCallback);
-  } 
-    
+  }
+
   /**
    *  A method to get all items in the collection, as dictated by the
    *  cursor and the query.  By default, the API returns 10 items in
@@ -1151,7 +1151,8 @@ Usergrid.ApiClient = (function () {
   var _loggedInUser = null;
   var _logoutCallback = null;
   var _callTimeoutCallback = null;
-  
+
+
   /*
    *  A method to set up the ApiClient with orgname and appname
    *
@@ -1284,7 +1285,7 @@ Usergrid.ApiClient = (function () {
   function setApiUrl(apiUrl) {
     _apiUrl = apiUrl;
   }
-  
+
   /*
    *  A public method to return the call timeout amount
    *
@@ -1306,18 +1307,18 @@ Usergrid.ApiClient = (function () {
   function setCallTimeout(callTimeout) {
     _callTimeout = callTimeout;
   }
-  
+
   /*
    * Returns the call timeout callback function
    *
    * @public
    * @method setCallTimeoutCallback
    * @return none
-   */ 
+   */
   function setCallTimeoutCallback(callback) {
-    _callTimeoutCallback = callback; 
+    _callTimeoutCallback = callback;
   }
-  
+
   /*
    * Returns the call timeout callback function
    *
@@ -1326,9 +1327,9 @@ Usergrid.ApiClient = (function () {
    * @return {function} Returns the callTimeoutCallback
    */
   function getCallTimeoutCallback() {
-    return _callTimeoutCallback; 
+    return _callTimeoutCallback;
   }
-  
+
   /*
    * Calls the call timeout callback function
    *
@@ -1353,7 +1354,7 @@ Usergrid.ApiClient = (function () {
    *  @return {string} the api rul of the reset password endpoint
    */
   function getResetPasswordUrl() {
-    return getApiUrl() + "/management/users/resetpw"
+    return getApiUrl() + "management/users/resetpw"
   }
 
   /*
@@ -1393,7 +1394,7 @@ Usergrid.ApiClient = (function () {
   function logInAppUser (username, password, successCallback, failureCallback) {
     var self = this;
     var data = {"username": username, "password": password, "grant_type": "password"};
-    this.runAppQuery(new Usergrid.Query('GET', 'token', null, data,
+    this.runAppQuery(new Usergrid.Query('POST', 'token', data, null,
       function (response) {
         var user = new Usergrid.Entity('users');
         user.set('username', response.user.username);
@@ -1674,7 +1675,7 @@ Usergrid.ApiClient = (function () {
     //so far so good, so run the query
     var xD = window.XDomainRequest ? true : false;
     var xhr = getXHR(method, path, jsonObj);
-   
+
     // Handle response.
     /*
     xhr.onerror = function() {
@@ -1717,14 +1718,16 @@ Usergrid.ApiClient = (function () {
         //there was an api error
         try {
           var error = response.error;
-          console.log('API call failed: (status: '+xhr.status+').' + error.type);
+          console.log('API call failed: (status: '+xhr.status+') ' + response.error_description);
           if ( (error == "auth_expired_session_token") ||
-               (error == "unauthorized")   ||
                (error == "auth_missing_credentials")   ||
+               (error == "unauthorized")               ||
                (error == "auth_invalid")) {
             //this error type means the user is not authorized. If a logout function is defined, call it
+            console.log('Auth error: ' + error);
             callLogoutCallback();
-        }} catch(e){}
+          }
+        } catch(e){}
         //otherwise, just call the failure callback
         Query.callFailureCallback(response.error_description);
         return;
@@ -1735,22 +1738,22 @@ Usergrid.ApiClient = (function () {
         //then call the original callback
         Query.callSuccessCallback(response);
      }
-    }; 
-        
+    };
+
     var timeout = setTimeout(
-      function() { 
-        xhr.abort(); 
+      function() {
+        xhr.abort();
         if ( typeof(Usergrid.ApiClient.getCallTimeoutCallback()) === 'function') {
           Usergrid.ApiClient.callTimeoutCallback('API CALL TIMEOUT');
         } else if (typeof(Query.getFailureCallback()) === 'function'){
           Query.callFailureCallback('API CALL TIMEOUT');
-        }        
-      }, 
+        }
+      },
       Usergrid.ApiClient.getCallTimeout()); //set for 30 seconds
 
     xhr.send(jsonObj);
   }
-  
+
    /**
    *  A private method to return the XHR object
    *
@@ -1774,7 +1777,7 @@ Usergrid.ApiClient = (function () {
       }
       xhr.open(method, path, true);
     }
-    else 
+    else
     {
       xhr = new XMLHttpRequest();
       xhr.open(method, path, true);

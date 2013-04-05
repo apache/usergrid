@@ -1,0 +1,65 @@
+
+<tr class="zebraRows users-row">
+  <td class="checkboxo">
+    <input class="listItem" type="checkbox" name="${r.metadata.path}" value="${r.uuid}" />
+  </td>
+
+  {{if r.type == 'user'}}
+  <td class="gravatar50-td">
+    <img src="${r.picture}" class="gravatar50"/>
+  </td>
+  <td class="details">
+      <a onclick="Usergrid.console.getCollection('GET', '/${r.type}/'+'${r.uuid}'); $('#data-explorer').show(); return false;" class="view-details">${r.username}</a>
+  </td>
+  <td class="details">
+     ${r.name}
+  </td>
+  {{else r.type == 'group'}}
+  <td class="details">
+     <a href="" onclick="Usergrid.console.getCollection('GET', '/${r.type}/'+'${r.uuid}'); $('#data-explorer').show(); return false;" class="view-details">${r.path}</a>
+  </td>
+  <td class="details">
+     ${r.title}
+  </td>
+  {{else r.type == 'role'}}
+  <td class="details">
+    <a href="" onclick="Usergrid.console.getCollection('GET', '/${r.type}/'+'${r.uuid}'); $('#data-explorer').show(); return false;" class="view-details">${r.title}</a>
+  </td>
+  <td class="details">
+     ${r.name}
+  </td>
+  {{else}}
+  <td class="details">
+    <a href="" onclick="Usergrid.console.getCollection('GET', '/${r.type}/'+'${r.uuid}'); $('#data-explorer').show(); return false;" class="view-details">${r.name}</a>
+  </td>
+  {{/if}}
+
+  <td class="view-details">
+    <a href="" onclick="$('#query-row-${r.uuid}').show(); $('#data-explorer').show(); return false;" class="view-details">View Details</a>
+  </td>
+</tr>
+
+<tr id="query-row-${r.uuid}" style="display:none">
+  {{if r.type == 'user'}}
+  <td colspan="5">
+  {{else r.type == 'group'}}
+  <td colspan="4">
+  {{else r.type == 'role'}}
+  <td colspan="4">
+  {{else}}
+  <td colspan="3">
+  {{/if}}
+    <div>
+        <div style="padding-bottom: 10px;">
+          <button type="button" class="btn btn-small query-button active" id="button-query-show-row-JSON" onclick="Usergrid.console.activateQueryRowJSONButton(); $('#query-row-JSON-${r.uuid}').show(); $('#query-row-content-${r.uuid}').hide(); return false;">JSON</button>
+          <button type="button" class="btn btn-small query-button disabled" id="button-query-show-row-content" onclick="Usergrid.console.activateQueryRowContentButton();$('#query-row-content-${r.uuid}').show(); $('#query-row-JSON-${r.uuid}').hide(); return false;">Content</button>
+        </div>
+        <div id="query-row-JSON-${r.uuid}">
+          <pre>${json}</pre>
+        </div>
+         <div id="query-row-content-${r.uuid}" style="display:none">
+          {{html content}}
+        </div>
+    </div>
+  </td>
+</tr>

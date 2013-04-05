@@ -1,24 +1,38 @@
 <div class="well thingy">
   <span id="role-section-title" class="title">Users</span>
   <div class="bar">
-    <a id="selectAllRolesUsers" class="" href="#" onclick="Usergrid.console.selectAllRolesUsers();"> Select All </a>
-    <a id="deselectAllRolesUsers" style="display: none;" class="" href="#" onclick="Usergrid.console.deselectAllRolesUsers();"> Deselect All </a>
-    <a data-toggle="modal" href="#dialog-form-add-role-to-user"> Add </a>
-    <a data-toggle="modal" href="#" onclick="Usergrid.console.deleteRoleFromUser('${data.roleName}', '${data.roleTitle}'); return false;"> Remove </a>
+    <a class="btn" data-toggle="modal" href="#" onclick="Usergrid.console.deleteRoleFromUser('${data.roleName}', '${data.roleTitle}'); return false;"> Remove </a>
+    <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-add-role-to-user"> Add </a>
   </div>
 </div>
 {{if data.users.length > 0}}
-<table class="table">
-  {{each data.users}}
-  <tr class="zebraRows users-row">
-    <td class="checkboxo"><input type="checkbox" name="${name}" class="userRoleItem" value="${uuid}" /></td>
-    <td class="gravatar50-td"><img src="${picture}?d=http://${window.location.host + window.location.pathname}images/user_profile.png" class="gravatar50" /></td>
-    <td class="user-details">{{if username}}<a href=""
-                                               onclick="Usergrid.console.pageOpenUserProfile('${username}');return false;">{{/if}}${username}{{if username}}</a>{{/if}}</td>
-  </tr>
-  {{/each}}
+<table class="table" style="margin-top: 30px;">
+  <tbody>
+    <tr class="zebraRows users-row">
+      <td class="checkboxo">
+        <input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" />
+      </td>
+      <td class="user-details bold-header"></td>
+      <td class="user-details bold-header">
+        Username
+      </td>
+      <td class="user-details bold-header">
+        Name
+      </td>
+    </tr>
+    {{each data.users}}
+    <tr class="zebraRows users-row">
+      <td class="checkboxo"><input type="checkbox" name="${name}" class="listItem" value="${uuid}" /></td>
+      <td class="gravatar50-td"><img src="{{if picture}}${picture}{{else}}http://${window.location.host + window.location.pathname}images/user-photo.png{{/if}}" class="gravatar50" /></td>
+      <td class="details">
+        <a href="" onclick="Usergrid.console.pageOpenUserProfile('${username}'); return false;">${username}</a>
+      </td>
+      <td class="details">{{if name}}${name}{{/if}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
 </table>
 {{else}}
-<div class="group-panel-section-message">No Users have this Role</div>
+<div class="panel-section-message">No Users have this Role</div>
 {{/if}}
 

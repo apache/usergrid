@@ -7,8 +7,8 @@
       {{if path}}</a>{{/if}}
     </div>
     <div class="bar">
-      <a data-toggle="modal" href="#dialog-form-add-user-to-role"> Add </a>
-      <a data-toggle="modal" href="#" onclick="Usergrid.console.deleteUsersFromRoles('${username}'); return false;"> Remove </a>
+      <a class="btn" data-toggle="modal" href="#" onclick="Usergrid.console.deleteUsersFromRoles('${username}'); return false;"> Remove </a>
+      <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-add-user-to-role"> Add role</a>
     </div>
   </div>
   <div class="console-section-contents">
@@ -17,21 +17,32 @@
       {{if roles}}
       {{if roles.length > 0}}
       <table class="table table-bordered users-permissions-response-table">
-        {{each roles}}
-        <tr class="zebraRows">
-          <td class="checkboxo"><input type="checkbox" name="${title}" class="userRoleItem" value="${name}" /></td>
-          <td>
-            {{if path}}<a href="" onclick="Usergrid.console.pageOpenRole('${name}', '${title}'); return false;">{{/if}}
-              ${title}
-              (${name})
-            {{if path}}</a>{{/if}}
-          </td>
-        </tr>
-        {{/each}}
+        <tbody>
+          <tr class="zebraRows users-row">
+            <td class="checkboxo">
+              <input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" />
+            </td>
+            <td class="user-details bold-header">
+              Group Name
+            </td>
+          </tr>
+
+          {{each roles}}
+          <tr class="zebraRows users-row">
+            <td class="checkboxo"><input type="checkbox" name="${title}" class="listItem" value="${name}" /></td>
+            <td class="details">
+              {{if path}}<a href="" onclick="Usergrid.console.pageOpenRole('${name}', '${title}'); return false;">{{/if}}
+                ${title}
+                (${name})
+              {{if path}}</a>{{/if}}
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
       </table>
       {{/if}}
       {{else}}
-      <div class="user-panel-section-message">No Roles</div>
+      <div class="panel-section-message">No Roles</div>
       {{/if}}
       <br/>
       <div id="user-panel-roles-curl-container" class="curl-container">

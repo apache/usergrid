@@ -59,7 +59,7 @@ $(document).ready(function () {
     $('#hideBanner').click(Pages.hideBanner);
 
     var publicMenu = $('#publicMenu');
-    var privateMenu = $('#privateMenu');
+    var privateMenu = $('.privateMenu');
 
     Pages.AddPage({name:'login', menu:publicMenu});
     Pages.AddPage({name:'message', menu:publicMenu});
@@ -67,7 +67,6 @@ $(document).ready(function () {
     Pages.AddPage({name:'forgot-password', menu:publicMenu});
     Pages.AddPage({name:'post-signup', menu:publicMenu});
     Pages.AddPage({name:'console', menu:privateMenu, initFunction:initConsole, showFunction: function() {
-      Pages.SelectPanel('organization');
       if(!Backbone.History.started){
         Backbone.history.start();
       }
@@ -76,20 +75,25 @@ $(document).ready(function () {
 
   function initConsole() {
     //Pages.AddPanel(pageName,linkSelector,boxSelector,initfunc,showfunc,buttonHandlerFunction);
-    Pages.AddPanel('organization', '.go-home', null, null, Usergrid.console.pageSelectHome,null);
-    Pages.AddPanel('console', null, null, null, null, null);
-    Pages.AddPanel('dashboard', null, null, null, Usergrid.console.pageSelectApplication,null);
-    Pages.AddPanel('user', "#sidebar-menu a[href='#users']", null, null, null, function() {});
-    Pages.AddPanel('users', null, null, null, Usergrid.console.pageSelectUsers, null);
-    Pages.AddPanel('group', "#sidebar-menu a[href='#groups']", null, null, null, function() {});
-    Pages.AddPanel('groups', null, null, null, Usergrid.console.pageSelectGroups, null);
-    Pages.AddPanel('roles', null, null, null, Usergrid.console.pageSelectRoles, null);
-    Pages.AddPanel('activities', null, null, null, Usergrid.console.pageSelectActivities, null);
-    Pages.AddPanel('collections', null, null, null, Usergrid.console.pageSelectCollections, null);
-    Pages.AddPanel('analytics', null, null, null, Usergrid.console.pageSelectAnalytics, null);
-    Pages.AddPanel('properties', null, null, null, Usergrid.console.pageSelectProperties, null);
-    Pages.AddPanel('shell', null, null, null, Usergrid.console.pageSelectShell, null);
-    Pages.AddPanel('account', "#account-link", null, null, null, accountRedirect);
+    Pages.AddPanel('organization', '.go-home', null,null, null, Usergrid.console.pageSelectHome,null);
+    Pages.AddPanel('console', null, null, null, null, null, null);
+    Pages.AddPanel('dashboard', null, null, null, null, Usergrid.console.pageSelectApplication,null);
+    Pages.AddPanel('user', null, "#users-sublink", null, null, null, function() {});
+    Pages.AddPanel('users', null, "#users-sublink", null, null, Usergrid.console.pageSelectUsers, null);
+    Pages.AddPanel('group', null, "#groups-sublink", null, null, null, function() {});
+    Pages.AddPanel('groups', null, null, null, null, Usergrid.console.pageSelectGroups, null);
+    Pages.AddPanel('roles',  null, null, null, null, Usergrid.console.pageSelectRoles, null);
+    Pages.AddPanel('activities', null, null, null, null, Usergrid.console.pageSelectActivities, null);
+    Pages.AddPanel('notifications', null, null, null, null, Usergrid.console.pageSelectNotifcations, null);
+    Pages.AddPanel('sendNotification', null, "#sendNotification-sublink", null, null, null, null);
+    Pages.AddPanel('messageHistory', null, "#messageHistory-sublink", null, null, null, null);
+    Pages.AddPanel('configuration', null, "#configuration-sublink", null, null, null, null);
+    Pages.AddPanel('getStarted', null, "#getStarted-sublink", null, null, null, null);
+    Pages.AddPanel('collections', "#collections-link", null, null, null, Usergrid.console.pageSelectCollections, null);
+    Pages.AddPanel('analytics', null, null, null, null, Usergrid.console.pageSelectAnalytics, null);
+    Pages.AddPanel('properties', null, null, null, null, Usergrid.console.pageSelectProperties, null);
+    Pages.AddPanel('shell', null, null, null, null, Usergrid.console.pageSelectShell, null);
+    Pages.AddPanel('account', "#account-link", null, null, null, null, accountRedirect);
     //$("#sidebar-menu > ul > li > a").click(Pages.ShowPanel);
 
   }

@@ -5,24 +5,35 @@
       {{if path}}<a href="" onclick="Usergrid.console.pageOpenQueryExplorer('${path}'); return false;">{{/if}}${name}{{if path}}</a>{{/if}}
     </div>
     <div class="bar">
-      <a class="" data-toggle="modal" href="#dialog-form-add-group-to-user">Add to a Group</a>
-      <a data-toggle="modal" href="#" onclick="Usergrid.console.removeUserFromGroup('${username}'); return false;"> Remove </a>
+      <a class="btn " data-toggle="modal" onclick="Usergrid.console.removeUserFromGroup('${username}'); return false;">Remove</a>
+      <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-add-group-to-user">Add to a Group</a>
       <input type="hidden" value="${username}" id="search-group-userid" name="search-group-userid">
     </div>
   </div>
+
   {{if memberships}}
-  <table class="table">
-    {{each memberships}}
-    <tr class="zebraRows">
-      <td class="checkboxo"><input type="checkbox" name="${name}" class="userGroupItem" value="${$value.uuid}" /></td>
-      <td>
-        <a href="#" onclick="Usergrid.console.pageOpenGroupProfile('${$value.path}'); return false;">${$value.path}</a>
-      </td>
-    </tr>
-    {{/each}}
+  <table class="table" style="margin-top: 30px">
+    <tbody>
+      <tr class="zebraRows users-row">
+        <td class="checkboxo">
+          <input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" />
+        </td>
+        <td class="user-details bold-header">
+          Group Name
+        </td>
+      </tr>
+      {{each memberships}}
+      <tr class="zebraRows users-row">
+        <td class="checkboxo"><input type="checkbox" name="${name}" class="listItem" value="${$value.uuid}" /></td>
+        <td class="details">
+          <a href="#" onclick="Usergrid.console.pageOpenGroupProfile('${$value.path}'); return false;">${$value.path}</a>
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
   </table>
   {{else}}
-  <div class="user-panel-section-message">no group memberships</div>
+  <div class="panel-section-message">no group memberships</div>
   {{/if}}
 </div>
 <div id="user-panel-memberships-curl-container" class="curl-container">

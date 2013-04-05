@@ -4,3 +4,5 @@ dist
 .idea
 nbproject/
 *.swp
+node-modules/
+.vagrant

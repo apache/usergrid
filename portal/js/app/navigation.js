@@ -17,10 +17,13 @@ Usergrid.Navigation = Backbone.Router.extend({
       ":organization/:application/roles": "roles",
       ":organization/:application/activities": "activities",
       ":organization/:application/collections": "collections",
+      ":organization/:application/sendNotification": "sendNotification",
+      ":organization/:application/messageHistory": "messageHistory",
+      ":organization/:application/configuration": "configuration",
+      ":organization/:application/getStarted": "getStarted",
       ":organization/:application/analytics": "analytics",
       ":organization/:application/properties": "properties",
       ":organization/:application/shell": "shell",
-      ":organization/:application/console": "console",
       ":organization/:application/account": "account",
       ":organization/home": "home",
       ":organization": "home",
@@ -33,60 +36,85 @@ Usergrid.Navigation = Backbone.Router.extend({
       }
       this.checkApplication(application);
       Pages.SelectPanel('organization');
+      $('#left2').hide();
     },
     dashboard: function(organization,application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Usergrid.console.pageSelect(application);
       Pages.SelectPanel('dashboard');
+      $('#left2').hide();
     },
     users: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('users');
+      this.showAppUserContent();
     },
     groups: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('groups');
+      this.showAppUserContent();
     },
     roles: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
-      Pages.SelectPanel('roles')
+      Pages.SelectPanel('roles');
+      this.showAppUserContent();
     },
     activities: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('activities');
+      $('#left2').hide();
     },
     collections: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
+      Pages.ActivatePanel("collections");
       Pages.SelectPanel('collections');
+      this.showAppDataContent();
+    },
+    messageHistory: function(organization, application) {
+      this.checkOrganization(organization);
+      this.checkApplication(application);
+      Pages.ActivatePanel("messageHistory");
+      Pages.SelectPanel('messageHistory');
+    },
+    configuration: function(organization, application) {
+      this.checkOrganization(organization);
+      this.checkApplication(application);
+      Pages.ActivatePanel("configuration");
+      Pages.SelectPanel('configuration');
+    },
+    getStarted: function(organization, application) {
+      this.checkOrganization(organization);
+      this.checkApplication(application);
+      Pages.ActivatePanel("getStarted");
+      Pages.SelectPanel('getStarted');
     },
     analytics: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('analytics');
+      $('#left2').hide();
     },
     properties: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('properties');
+      $('#left2').hide();
     },
     shell: function(organization, application) {
       this.checkOrganization(organization);
       this.checkApplication(application);
       Pages.SelectPanel('shell');
-    },
-    console: function(organization, application) {
-      this.checkOrganization(organization);
-      this.checkApplication(application);
-      Pages.SelectPanel('console');
+      $('#left2').hide();
     },
     account: function(organization, application) {
       Pages.SelectPanel('account');
+      $('#left2').hide();
     },
     //Utils
     checkOrganization: function(org) {
@@ -117,7 +145,31 @@ Usergrid.Navigation = Backbone.Router.extend({
       }
       return false
     },
-
+    getAppNameFromURL: function(){
+      name = '';
+      try  {
+        name = window.location.hash.split('/')[1];
+      } catch (e) {}
+      return name;
+    },
+    getOrgNameFromURL: function(){
+      name = '';
+      try  {
+        name = window.location.hash.split('/')[0];
+        name = name.replace("#","");
+      } catch (e) {}
+      return name;
+    },
+    showAppUserContent: function(){
+      $('#left2').show();
+      $('#sidebar-menu2').show();
+      $('#left-collections-menu').hide();
+    },
+    showAppDataContent: function(){
+      $('#left2').show();
+      $('#sidebar-menu2').hide();
+      $('#left-collections-menu').show();
+    },
     navigateTo: function(address) {
       var url;
       url = Usergrid.ApiClient.getOrganizationName();

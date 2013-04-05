@@ -13,8 +13,18 @@
           this.queryParams[tmp[0]] = unescape(tmp[1]);
         }
       }
+    },
+    getParsedParams : function(queryString){
+      var retParams = {};
+      var params = queryString.slice(0).split("&");
+      for (var i = 0; i < params.length; i++) {
+        var tmp = params[i].split("=");
+        retParams[tmp[0]] = unescape(tmp[1]);
+      }
+      return retParams;
     }
   };
+
 })(Usergrid);
 
 Usergrid.Params = new Usergrid.Params();

@@ -1,12 +1,14 @@
-<tr class="zebraRows">
+<tr class="zebraRows groups-row">
   <td class="checkboxo">
-    <input class="groupListItem" type="checkbox" value="${uuid}" />
+    <input class="listItem" type="checkbox" value="${uuid}" />
   </td>
-  <td>
-    {{if path}}
-      <a href="" onclick="Usergrid.console.pageOpenGroupProfile('${path}'); return false;">${title}: ${path}</a>
-    {{else}}
-      ${title}: ${path}</a>
-    {{/if}}
+  <td class="details">
+      <a href="" onclick="Usergrid.console.pageOpenGroupProfile('${path}'); return false;">${path}</a>
+  </td>
+  <td class="details">
+     ${title}
+  </td>
+  <td class="view-details">
+    <a href="" onclick="Usergrid.console.pageOpenGroupProfile('${path}'); return false;" class="view-details">View Details</a>
   </td>
 </tr>

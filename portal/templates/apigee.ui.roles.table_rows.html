@@ -1,9 +1,15 @@
 
-<tr class="zebraRows">
+<tr class="zebraRows roles-row">
   <td class="checkboxo">
-    <input type="checkbox" class="roleListItem" name="${title}" value="${name}"/>
+    <input type="checkbox" class="listItem" name="${title}" value="${name}"/>
   </td>
-  <td>
-    <a href="#" onclick="Usergrid.console.pageOpenRole('${name}', '${title}'); return false;">${title}: ${name}</a>
+  <td class="details">
+    <a href="#" onclick="Usergrid.console.pageOpenRole('${name}', '${title}'); return false;">${title}</a>
+  </td>
+  <td class="details">
+     ${name}
+  </td>
+  <td class="view-details">
+    <a href="" onclick="Usergrid.console.pageOpenRole('${name}', '${title}'); return false;" class="view-details">View Details</a>
   </td>
 </tr>
