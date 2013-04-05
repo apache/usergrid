@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Usergrid Console</title>
+    <!--
+        <link rel="stylesheet" type="text/css" href="css/reset.css"/>
+        <link rel="stylesheet" type="text/css" href="css/custom-theme/jquery-ui-1.8.9.custom.css"/>
+        <link rel="stylesheet" type="text/css" href="css/jquery-ui-timepicker.css"/>
+        <link rel="stylesheet" type="text/css" href="css/jquery.ui.statusbar.css"/>
+        -->
+    <link rel="stylesheet/less" type="text/css" href="css/usergrid.less"/>
+    <script src="js/lib/json2.jsonlint.min.js" type="text/javascript"></script>
+    <script src="http://www.google.com/jsapi" type="text/javascript"></script>
+    <script type="text/javascript">
+      google.load('visualization', '1', {
+      packages : [ 'corechart' ]
+      });
+    </script>
+    <script src="http://code.jquery.com/jquery-1.7.1.min.js" type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.9/jquery-ui.min.js" type="text/javascript"></script>
+    <script src="js/lib/jquery.dataset.min.js" type="text/javascript"></script>
+    <script src="js/lib/jquery.tmpl.min.js" type="text/javascript"></script>
+    <script src="js/lib/jquery.dform-0.1.3.min.js" type="text/javascript"></script>
+    <script src="js/lib/jquery.ui.timepicker.min.js" type="text/javascript"></script>
+    <script src="js/lib/jquery.ui.statusbar.min.js" type="text/javascript"></script>
+    <script src="js/lib/date.min.js" type="text/javascript"></script>
+    <script src="js/app/client.js" type="text/javascript"></script>
+    <script src="js/app/ui/ui.js" type="text/javascript"></script>
+    <script src="js/app/ui/collections.entity.js" type="text/javascript"></script>
+    <script src="js/app/ui/collections.user.js" type="text/javascript"></script>
+    <script src="js/less-1.2.1.min.js" type="text/javascript"></script>
+    <script src="bootstrap/js/bootstrap-dropdown.js" type="text/javascript"></script>
+    <script src="js/app/pages.js" type="text/javascript"></script>
+    <script src="js/app/app.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <div data-dropdown="dropdown" class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <h1 class="apigee">Apigee Enterprise</h1>
+        <h2 id="ActualPage">Administration Console</h2>
+        <ul id="loginMenu" class="nav secondary-nav">
+          <li><a id="login-link" href="#">Login</a></li>
+          <li><a id="signup-link" href="#">Sign Up</a></li>
+          <li><a id="forgot-password-link" href="#">Forgot Password</a></li>
+        </ul>
+        <ul id="consoleMenu" class="nav secondary-nav">
+          <li><a id="console-link" href="#">Console</a></li>
+          <li><a id="account-link" href="#">test@usergrid.com</a></li>
+          <li class="dropdown">
+            <a class="dropdown-toggle" href="#">test-organization</a>
+            <ul class="dropdown-menu">
+              <li><a href="#">organization1</a></li>
+              <li><a href="#">organization2</a></li>
+              <li><a href="#">organization3</a></li>
+            </ul>
+          </li>
+          <li><a href="#">Sign Out</a></li>
+        </ul>
+      </div>
+    </div>
+    <div id="pages">
+      <div id="login-page" class="container">
+        Loading Login Page...
+      </div>
+      <div id="signup-page" class="container">
+        Loading Sign Up Page...
+      </div>
+      <div id="forgot-password-page" class="container">
+        <iframe class="container">
+        </iframe>
+      </div>
+      <div id="console-page" class="container-fluid">
+        Loading Console Page...
+      </div>
+      <div id="account-page" class="container">
+        Loading Account Page...
+      </div>
+      <div id="navlist-page" class="container-fluid">
+        Loading navlist Page...
+      </div>
+    </div>
+    <div class="clearfix"></div>
+    <footer>
+      <div class="container">
+        <p>&copy; Apigee 2012</p>
+      </div>
+    </footer>
+  </body>
+</html>
