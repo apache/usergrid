@@ -4533,7 +4533,4 @@ function buildContentArea(obj2) {
   Usergrid.console.ui.loadTemplate("apigee.ui.admins.table_rows.html");
   Usergrid.console.ui.loadTemplate("apigee.ui.feed.table_rows.html");
 
-  if (Usergrid.showNotifcations) {
-    $("#notifications-link").show();
-  }
 }
