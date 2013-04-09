@@ -1338,7 +1338,7 @@ function buildContentArea(obj2) {
       && ( checkTrue2(password, (password.val() === validate_password.val()), passwordMismatchMessage));
 
     if (bValid) {
-      var data = form.serializeObject();
+      var data = {"email":email.val(), "username":username.val(),"name":fullname.val(), "password":password.val()}
       runAppQuery(new Usergrid.Query("POST", 'users', data, null,
         function() {
           getUsers();
