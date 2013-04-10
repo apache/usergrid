@@ -29,12 +29,14 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author Sung-ju Jin(realbeast)
  */
 public class QueryValidatorRunner extends CassandraRunner {
 
+    private Properties properties;
     private static QueryValidator validator;
 
     public QueryValidatorRunner(Class<?> klass) throws InitializationError {
@@ -53,8 +55,26 @@ public class QueryValidatorRunner extends CassandraRunner {
     }
 
     public void setup() {
-        String collection = "user";
         validator = CassandraRunner.getBean(QueryValidator.class);
+        properties = CassandraRunner.getBean("properties",Properties.class);
+
+        String endpoint = (String)properties.get("usergrid.query.validator.api.endpoint");
+        String organization = (String)properties.get("usergrid.query.validator.api.organization");
+        String app = (String)properties.get("usergrid.query.validator.api.app");
+
+        String collection = "user";
+        List<Entity> entities = loadEntities(collection);
+        QueryValidationConfiguration configuration = new QueryValidationConfiguration();
+        configuration.setEndpointUri(endpoint);
+        configuration.setOrg(organization);
+        configuration.setApp(app);
+        configuration.setCollection(collection);
+        configuration.setEntities(entities);
+        validator.setConfiguration(configuration);
+        validator.setup();
+    }
+
+    private List<Entity> loadEntities(String collection) {
         String json = null;
         try {
             URL url = Thread.currentThread().getContextClassLoader().getResource(collection + ".json");
@@ -73,14 +93,6 @@ public class QueryValidatorRunner extends CassandraRunner {
             entity.setModified(entity.getCreated());
             entities.add(entity);
         }
-
-        QueryValidationConfiguration configuration = new QueryValidationConfiguration();
-        configuration.setEndpointUri("https://api.usergrid.com");
-        configuration.setOrg("realbeast");
-        configuration.setApp("sandbox");
-        configuration.setCollection(collection);
-        configuration.setEntities(entities);
-        validator.setConfiguration(configuration);
-        validator.setup();
+        return entities;
     }
 }
