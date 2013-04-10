@@ -503,4 +503,27 @@ public class EntityManagerTest extends AbstractPersistenceTest {
         
 
     }
+    @Test
+    public void testImmutableForcedPropChange() throws Exception {
+        logger.info("EntityDaoTest.testProperties");
+
+        UUID applicationId = createApplication("testOrganization",
+                "testNamePropChanges");
+
+        EntityManager em = emf.getEntityManager(applicationId);
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("name", "one");
+        Entity saved = em.create("thing", properties);
+
+        Entity thingOne = em.get(saved.getUuid());
+        assertNotNull("entity should not be null", thingOne);
+        assertEquals("one", thingOne.getProperty("name").toString());
+        
+        em.setProperty(thingOne, "name", "two", true);
+        
+        Entity thingTwo = em.get(saved.getUuid());
+        
+        assertEquals("two", thingTwo.getProperty("name"));
+    }
 }
