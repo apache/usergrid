@@ -13,7 +13,7 @@ Detailed instructions follow but if you just want a quick example of how to get 
 			// Initializing the SDK
 			var client = new Usergrid.Client({
 				orgName:'yourorgname', // Your Usergrid organization name (or apigee.com username for App Services)
-				appName:'sandbox', // Your Usergrid app name
+				appName:'sandbox' // Your Usergrid app name
 			});
 
 			// Reading data
