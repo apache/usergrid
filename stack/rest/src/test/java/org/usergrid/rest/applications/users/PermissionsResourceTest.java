@@ -508,6 +508,19 @@ public class PermissionsResourceTest extends AbstractRestTest {
                 .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
                 .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
     logNode(node);
+    // now try to post the same thing to books to verify as userOne the failure
+    Status status = null;
+    try{
+      node =  resource().path(String.format("/%s/%s/books",
+              params.get("orgName"),
+              params.get("appName")))
+              .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
+              .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+      logNode(node);
+    } catch (UniformInterfaceException uie) {
+      status = uie.getResponse().getClientResponseStatus();
+    }
+    assertEquals(Status.UNAUTHORIZED, status);
 
     node =  resource().path(String.format("/%s/%s/users/me/reviewed/books",
             params.get("orgName"),
