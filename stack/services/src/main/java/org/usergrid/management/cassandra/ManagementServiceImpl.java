@@ -169,10 +169,7 @@ import org.usergrid.services.ServiceManager;
 import org.usergrid.services.ServiceManagerFactory;
 import org.usergrid.services.ServiceRequest;
 import org.usergrid.services.ServiceResults;
-import org.usergrid.utils.ConversionUtils;
-import org.usergrid.utils.JsonUtils;
-import org.usergrid.utils.MailUtils;
-import org.usergrid.utils.StringUtils;
+import org.usergrid.utils.*;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -979,40 +976,29 @@ public class ManagementServiceImpl implements ManagementService {
   public User findUserEntity(UUID applicationId, String identifier) {
 
     User user = null;
-    try {
-      Entity entity = getUserEntityByIdentifier(applicationId, Identifier.fromUUID(UUID.fromString(identifier)));
-      if (entity != null) {
-        user = (User) entity.toTypedEntity();
-        logger.info("Found user {} as a UUID", identifier);
+    if (UUIDUtils.isUUID(identifier)) {
+      try {
+        Entity entity = getUserEntityByIdentifier(applicationId, Identifier.fromUUID(UUID.fromString(identifier)));
+        if (entity != null) {
+          user = (User) entity.toTypedEntity();
+          logger.info("Found user {} as a UUID", identifier);
+        }
+      } catch (Exception e) {
+        logger.warn("Unable to get user " + identifier + " as a UUID, trying username...");
       }
-    } catch (Exception e) {
-      logger.error("Unable to get user " + identifier + " as a UUID, trying username...");
-    }
-    if (user != null) {
       return user;
     }
+    // now we are either an email or a username. Let Indentifier handle the parsing of such.
+    Identifier id = Identifier.from(identifier);
 
     try {
-      Entity entity = getUserEntityByIdentifier(applicationId, Identifier.fromEmail(identifier));
+      Entity entity = getUserEntityByIdentifier(applicationId, id);
       if (entity != null) {
         user = (User) entity.toTypedEntity();
-        logger.info("Found user {} as an email address", identifier);
+        logger.info("Found user {} as an {}", identifier, id.getType());
       }
     } catch (Exception e) {
-      logger.error("Unable to get user " + identifier + " as an email address, trying username");
-    }
-    if (user != null) {
-      return user;
-    }
-
-    try {
-      Entity entity = getUserEntityByIdentifier(applicationId, Identifier.fromName(identifier));
-      if (entity != null) {
-        user = (User) entity.toTypedEntity();
-        logger.info("Found user {} as a username", identifier);
-      }
-    } catch (Exception e) {
-      logger.error("Unable to get user " + identifier + " as a username, failed...");
+      logger.warn("Unable to get user {} as a {}", identifier, id.getType());
     }
     if (user != null) {
       return user;

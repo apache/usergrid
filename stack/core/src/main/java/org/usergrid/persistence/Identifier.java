@@ -119,6 +119,10 @@ public class Identifier {
 		return type == Type.NAME;
 	}
 
+  public Type getType() {
+    return type;
+  }
+
 	@Override
 	public String toString() {
 		return value.toString();
