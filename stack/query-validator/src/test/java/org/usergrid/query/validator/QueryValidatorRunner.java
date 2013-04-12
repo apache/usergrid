@@ -61,12 +61,16 @@ public class QueryValidatorRunner extends CassandraRunner {
         String endpoint = (String)properties.get("usergrid.query.validator.api.endpoint");
         String organization = (String)properties.get("usergrid.query.validator.api.organization");
         String app = (String)properties.get("usergrid.query.validator.api.app");
+        String email = (String)properties.get("usergrid.query.validator.api.authorize.email");
+        String password = (String)properties.get("usergrid.query.validator.api.authorize.password");
 
         String collection = "user";
         List<Entity> entities = loadEntities(collection);
         QueryValidationConfiguration configuration = new QueryValidationConfiguration();
         configuration.setEndpointUri(endpoint);
         configuration.setOrg(organization);
+        configuration.setEmail(email);
+        configuration.setPassword(password);
         configuration.setApp(app);
         configuration.setCollection(collection);
         configuration.setEntities(entities);

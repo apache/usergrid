@@ -71,5 +71,7 @@ public class QueryValidator {
         api.setBaseUri(configuration.getEndpointUri());
         api.setCollection(configuration.getCollection());
         api.setEntities(configuration.getEntities());
+        api.setEmail(configuration.getEmail());
+        api.setPassword(configuration.getPassword());
     }
 }

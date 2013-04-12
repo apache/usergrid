@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static org.usergrid.java.client.utils.ObjectUtils.isEmpty;
+
 /**
  * @author Sung-ju Jin(realbeast)
  */
@@ -44,22 +46,46 @@ public class ApiServerRunner implements QueryRunner {
     private String org;
     private String app;
     private String baseUri;
+    private String email;
+    private String password;
     private String collection;
     private List<Entity> entities;
 
     @Override
     public boolean setup() {
         client = new Client(getOrg(), getApp()).withApiUrl(getBaseUri());
+        String accessToken = authorize(email, password);
+        if(!StringUtils.isEmpty(accessToken))
+            client.setAccessToken(accessToken);
         return insertDatas();
+    }
+
+    public String authorize(String email, String password) {
+        String accessToken = null;
+        Map<String, Object> formData = new HashMap<String, Object>();
+        formData.put("grant_type", "password");
+        formData.put("username", email);
+        formData.put("password", password);
+        ApiResponse response = client.apiRequest(HttpMethod.POST, null, formData,
+                "management", "token");
+        if (!isEmpty(response.getAccessToken())) {
+            accessToken = response.getAccessToken();
+            logger.info("Access token: " + accessToken);
+        } else {
+            logger.info("Response: " + response);
+        }
+        return accessToken;
     }
 
     public boolean insertDatas() {
        List<org.usergrid.java.client.entities.Entity> clientEntities = getEntitiesForClient(getEntities());
        for(org.usergrid.java.client.entities.Entity entity : clientEntities) {
            ApiResponse response = client.createEntity(entity);
-           if( response == null || !StringUtils.isEmpty(response.getException()) ) {
+           if( response == null || !StringUtils.isEmpty(response.getError()) ) {
                logger.log(Level.SEVERE, response.getErrorDescription());
                //throw new RuntimeException(response.getErrorDescription());
+           } else {
+               logger.log(Level.INFO, response.toString());
            }
        }
        return true;
@@ -101,6 +127,9 @@ public class ApiServerRunner implements QueryRunner {
         params.put("limit", limit);
         ApiResponse response = client.apiRequest(HttpMethod.GET, params, null, getOrg(), getApp(), getCollection());
         List<Entity> entities = new ArrayList<Entity>();
+        if( response.getEntities() == null )
+            return entities;
+
         for(org.usergrid.java.client.entities.Entity clientEntitity : response.getEntities()) {
             Entity entity = new QueryEntity();
             entity.setUuid(clientEntitity.getUuid());
@@ -163,5 +192,21 @@ public class ApiServerRunner implements QueryRunner {
 
     public void setEntities(List<Entity> entities) {
         this.entities = entities;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

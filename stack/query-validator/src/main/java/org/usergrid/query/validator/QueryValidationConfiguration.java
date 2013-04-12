@@ -10,7 +10,8 @@ public class QueryValidationConfiguration {
     String org;
     String app;
     String endpointUri;
-
+    String email;
+    String password;
     String collection;
     List<Entity> entities;
 
@@ -53,5 +54,21 @@ public class QueryValidationConfiguration {
 
     public void setEntities(List<Entity> entities) {
         this.entities = entities;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
