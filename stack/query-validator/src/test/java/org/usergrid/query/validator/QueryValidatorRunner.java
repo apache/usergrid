@@ -16,11 +16,16 @@
 package org.usergrid.query.validator;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.InitializationError;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.cassandra.CassandraRunner;
 import org.usergrid.cassandra.DataControl;
+import org.usergrid.management.ManagementService;
 import org.usergrid.persistence.Entity;
+import org.usergrid.standalone.Server;
 import org.usergrid.utils.JsonUtils;
 
 import java.io.IOException;
@@ -36,8 +41,12 @@ import java.util.Properties;
  */
 public class QueryValidatorRunner extends CassandraRunner {
 
+    private static Logger logger = LoggerFactory.getLogger(QueryValidatorRunner.class);
+    private boolean enableLocalServer;
+    private static StandaloneServer standaloneServer;
     private Properties properties;
     private static QueryValidator validator;
+    private static boolean initialize = false;
 
     public QueryValidatorRunner(Class<?> klass) throws InitializationError {
         super(klass);
@@ -46,7 +55,11 @@ public class QueryValidatorRunner extends CassandraRunner {
     @Override
     protected DataControl preTest(RunNotifier notifier) {
         DataControl control = super.preTest(notifier);
-        setup();
+        try {
+            setup();
+        } catch (InitializationError initializationError) {
+            initializationError.printStackTrace();
+        }
         return control;
     }
 
@@ -54,9 +67,32 @@ public class QueryValidatorRunner extends CassandraRunner {
         return validator;
     }
 
-    public void setup() {
+    public synchronized void setup() throws InitializationError {
+        if(initialize)
+            return;
+
+        try {
+            logger.info("Loading initialize...");
+            Thread.sleep(20*1000);
+        } catch (InterruptedException e) {}
+
         validator = CassandraRunner.getBean(QueryValidator.class);
         properties = CassandraRunner.getBean("properties",Properties.class);
+
+        if( validator == null || properties == null) {
+            throw new InitializationError("Application context not loaded.");
+        }
+
+        String enableString = (String)properties.get("usergrid.query.validator.api.enablelocal");
+        enableLocalServer = StringUtils.endsWithIgnoreCase("true", enableString);
+        if( enableLocalServer ) {
+            startStandaloneServer();
+            try {
+                logger.info("Loading standalone server...");
+                Thread.sleep(20*1000);
+            } catch (InterruptedException e) {}
+        }
+        initialize = true;
 
         String endpoint = (String)properties.get("usergrid.query.validator.api.endpoint");
         String organization = (String)properties.get("usergrid.query.validator.api.organization");
@@ -76,6 +112,7 @@ public class QueryValidatorRunner extends CassandraRunner {
         configuration.setEntities(entities);
         validator.setConfiguration(configuration);
         validator.setup();
+
     }
 
     private List<Entity> loadEntities(String collection) {
@@ -98,5 +135,75 @@ public class QueryValidatorRunner extends CassandraRunner {
             entities.add(entity);
         }
         return entities;
+    }
+
+    private void startStandaloneServer() {
+        standaloneServer = new StandaloneServer();
+        try {
+            Thread thread = new Thread(standaloneServer);
+            thread.start();
+        } catch (Exception ex) {
+            logger.error("Could not schedule standalone server runner", ex);
+        }
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                try {
+                    logger.error("In shutdownHook");
+                    stopServer();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        boolean loaded = false;
+        while (!loaded) {
+            if( standaloneServer.server.isRunning() ) {
+                if( standaloneServer.server.getManagementService() != null ) {
+                    loaded = true;
+                    continue;
+                }
+            }
+            try {
+                logger.info("Loding application context...");
+                Thread.sleep(2*1000);
+            } catch (InterruptedException e) {
+                continue;
+            }
+        }
+
+        if(loaded) {
+            ManagementService managementService = standaloneServer.server.getManagementService();
+            try {
+                managementService.setup();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        logger.info("Finish start standalone server.");
+    }
+
+    static class StandaloneServer implements Runnable {
+        public static Server server;
+
+        public StandaloneServer() {
+            server = new Server();
+        }
+
+        @Override
+        public void run() {
+            server.setInitializeDatabaseOnStart(true);
+            server.setDaemon(false);
+            server.startServer();
+        }
+
+        public void stop() {
+            server.stopServer();
+        }
+    }
+
+    private void stopServer() {
+        standaloneServer.stop();
     }
 }
