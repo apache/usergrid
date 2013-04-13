@@ -1592,7 +1592,7 @@ Usergrid.Group.prototype.add = function(options, callback) {
   this._client.request(options, function(error, data){
     if(error) {
       if(typeof(callback) === 'function') {
-        callback(error, data);
+        callback(error, data, data.entities);
       }
     } else {
       self.fetch(callback);
