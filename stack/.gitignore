@@ -39,3 +39,4 @@ core/src/main/java/QueryFilter.tokens
 *.log
 /release.properties
 *.sfx*
+*.db

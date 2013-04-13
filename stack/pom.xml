@@ -86,6 +86,7 @@
 		<module>count-inserter</module>
 		<module>test-utils</module>
 		<module>scheduler</module>
+        <module>query-validator</module>
 	</modules>
 
 
