@@ -762,7 +762,7 @@ Usergrid.Entity.prototype.save = function (callback) {
   //remove system specific properties
   for (var item in entityData) {
     if (item === 'metadata' || item === 'created' || item === 'modified' ||
-        item === 'type' || item === 'activatted' || item ==='uuid') { continue; }
+        item === 'type' || item === 'activated' || item ==='uuid') { continue; }
     data[item] = entityData[item];
   }
   var options =  {
