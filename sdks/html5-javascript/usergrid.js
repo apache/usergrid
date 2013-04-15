@@ -1513,8 +1513,10 @@ Usergrid.Group.prototype.fetch = function(callback) {
   }
 
   this._client.request(groupOptions, function(err, data){
-    if(err && self._client.logging) {
-      console.log('error getting group');
+    if(err) {
+      if(self._client.logging) {
+        console.log('error getting group');
+      }
       if(typeof(callback) === 'function') {
         callback(err, data);
       }
@@ -1590,7 +1592,7 @@ Usergrid.Group.prototype.add = function(options, callback) {
   this._client.request(options, function(error, data){
     if(error) {
       if(typeof(callback) === 'function') {
-        callback(error, data);
+        callback(error, data, data.entities);
       }
     } else {
       self.fetch(callback);
