@@ -6,7 +6,7 @@ See usergrid-standalone for an example of running inside Grizzly.
 
 To verify installation, go here:
 
-http://api.usergrid.com/test/hello
+http://localhost:8080/test/hello
 
 Eclipse insists on deploying with the ROOT servlet prefix:
 
@@ -15,7 +15,7 @@ http://localhost:8080/ROOT/test/hello
 Before you can use, you need to make sure that the database is setup. You can
 do that at the following URLs:
 
-http://api.usergrid.com/system/database/setup
+http://localhost:8080/system/database/setup
 http://localhost:8080/ROOT/system/database/setup
 
 You'll need to enter the superuser credentials (superuser/superuser), assuming

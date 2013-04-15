@@ -40,6 +40,8 @@ public class App {
 
 	private static final Logger logger = LoggerFactory.getLogger(App.class);
 
+  private static final String GH_PORTAL_URL = "http://apigee.github.io/usergrid-portal/";
+
 	public static boolean MAC_OS_X = (System.getProperty("os.name")
 			.toLowerCase().startsWith("mac os x"));
 
@@ -116,8 +118,7 @@ public class App {
 
 	public Set<String> getUrlSetFromPreferences() {
 		Set<String> urls = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-		// urls.add("http://api.usergrid.com/console");
-		urls.add("http://apigee.github.com/usergrid-portal");
+		urls.add(GH_PORTAL_URL);
 		ObjectMapper mapper = new ObjectMapper();
 		String json = null;
 		try {

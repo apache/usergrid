@@ -420,6 +420,14 @@ public class ManagementServiceTest {
 
     assertEquals(adminUser.getUuid(), authedUser.getUuid());
 
+    authedUser = managementService.verifyAdminUserPasswordCredentials(adminUser.getEmail(), password);
+
+    assertEquals(adminUser.getUuid(), authedUser.getUuid());
+
+    authedUser = managementService.verifyAdminUserPasswordCredentials(adminUser.getUuid().toString(), password);
+
+    assertEquals(adminUser.getUuid(), authedUser.getUuid());
+
   }
   
   

@@ -431,7 +431,11 @@ public class Server implements ApplicationContextAware {
             httpServer = null;
         }
 
-        stopCassandra();
+        if(embeddedCassandra != null) {
+            stopCassandra();
+            embeddedCassandra = null;
+        }
+
         if (ctx instanceof XmlWebApplicationContext) {
             ((XmlWebApplicationContext) ctx).close();
         }
