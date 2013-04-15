@@ -169,6 +169,7 @@ public class OrganizationsResource extends AbstractContextResource {
                         email, password, false, false, userProperties);
 
         if (organizationOwner == null) {
+            logger.info("organizationOwner is null, returning. organization: {}", organizationName);
             return null;
         }
 
@@ -177,6 +178,7 @@ public class OrganizationsResource extends AbstractContextResource {
         response.setData(organizationOwner);
         response.setSuccess();
 
+        logger.info("New organization complete: {}", organizationName);
         return new JSONWithPadding(response, callback);
     }
 

@@ -482,6 +482,7 @@ public class ManagementServiceImpl implements ManagementService {
     if ((organizationName == null) || (user == null)) {
       return null;
     }
+    logger.info("createOrganizationInternal: {}", organizationName);
     EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
     Group organizationEntity = new Group();
@@ -494,6 +495,8 @@ public class ManagementServiceImpl implements ManagementService {
         generateOAuthSecretKey(AuthPrincipalType.ORGANIZATION), user.getUuid(), MANAGEMENT_APPLICATION_ID));
 
     OrganizationInfo organization = new OrganizationInfo(organizationEntity.getUuid(), organizationName);
+
+    logger.info("createOrganizationInternal: {}", organizationName);
     postOrganizationActivity(organization.getUuid(), user, "create", organizationEntity, "Organization",
         organization.getName(), "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
             + ")</a> created a new organization account named " + organizationName, null);
@@ -797,6 +800,8 @@ public class ManagementServiceImpl implements ManagementService {
 
   private UserInfo createAdminUserInternal(String username, String name, String email, String password,
       boolean activated, boolean disabled, Map<String, Object> userProperties) throws Exception {
+    logger.info("createAdminUserInternal: {}", username);
+
     if (isBlank(password)) {
       password = encodeBase64URLSafeString(bytes(UUID.randomUUID()));
     }
@@ -1802,6 +1807,8 @@ public class ManagementServiceImpl implements ManagementService {
 
   @Override
   public void startOrganizationActivationFlow(OrganizationInfo organization) throws Exception {
+    logger.info("startOrganizationActivationFlow: {}", organization.getName());
+
     try {
       String token = getActivationTokenForOrganization(organization.getUuid(), 0);
       String activation_url = String.format(properties.getProperty(PROPERTIES_ORGANIZATION_ACTIVATION_URL),
@@ -1813,6 +1820,7 @@ public class ManagementServiceImpl implements ManagementService {
             + ", " + user.getHTMLDisplayEmailAddress();
       }
       if (newOrganizationsNeedSysAdminApproval()) {
+        logger.info("sending SysAdminApproval confirmation email: {}", organization.getName());
         sendHtmlMail(
             properties,
             properties.getProperty(PROPERTIES_SYSADMIN_EMAIL),
@@ -1827,6 +1835,7 @@ public class ManagementServiceImpl implements ManagementService {
             emailMsg(hashMap("organization_name", organization.getName()),
                 PROPERTIES_EMAIL_ORGANIZATION_CONFIRMED_AWAITING_ACTIVATION));
       } else if (properties.newOrganizationsRequireConfirmation()) {
+        logger.info("sending account confirmation email: {}", organization.getName());
         sendOrganizationEmail(
             organization,
             "Organization Account Confirmation",
@@ -1834,6 +1843,7 @@ public class ManagementServiceImpl implements ManagementService {
                 PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION));
         sendSysAdminNewOrganizationActivatedNotificationEmail(organization);
       } else {
+        logger.info("activating organization (no confirmation): {}", organization.getName());
         activateOrganization(organization, false);
         sendSysAdminNewOrganizationActivatedNotificationEmail(organization);
       }
