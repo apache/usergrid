@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		22D61E75171CBBF100E9CD17 /* UGConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 22D61E6E171CBBF100E9CD17 /* UGConnection.m */; };
+		22D61E76171CBBF100E9CD17 /* UGHTTPClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 22D61E70171CBBF100E9CD17 /* UGHTTPClient.m */; };
+		22D61E77171CBBF100E9CD17 /* UGHTTPHelpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 22D61E72171CBBF100E9CD17 /* UGHTTPHelpers.m */; };
+		22D61E78171CBBF100E9CD17 /* UGHTTPResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 22D61E74171CBBF100E9CD17 /* UGHTTPResult.m */; };
 		E89D6CA1150E5B2E005F5FB9 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E89D6CA0150E5B2E005F5FB9 /* UIKit.framework */; };
 		E89D6CA3150E5B2E005F5FB9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E89D6CA2150E5B2E005F5FB9 /* Foundation.framework */; };
 		E89D6CA5150E5B2E005F5FB9 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E89D6CA4150E5B2E005F5FB9 /* CoreGraphics.framework */; };
@@ -54,6 +58,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		22D61E6D171CBBF100E9CD17 /* UGConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGConnection.h; sourceTree = "<group>"; };
+		22D61E6E171CBBF100E9CD17 /* UGConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGConnection.m; sourceTree = "<group>"; };
+		22D61E6F171CBBF100E9CD17 /* UGHTTPClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGHTTPClient.h; sourceTree = "<group>"; };
+		22D61E70171CBBF100E9CD17 /* UGHTTPClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGHTTPClient.m; sourceTree = "<group>"; };
+		22D61E71171CBBF100E9CD17 /* UGHTTPHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGHTTPHelpers.h; sourceTree = "<group>"; };
+		22D61E72171CBBF100E9CD17 /* UGHTTPHelpers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGHTTPHelpers.m; sourceTree = "<group>"; };
+		22D61E73171CBBF100E9CD17 /* UGHTTPResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGHTTPResult.h; sourceTree = "<group>"; };
+		22D61E74171CBBF100E9CD17 /* UGHTTPResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGHTTPResult.m; sourceTree = "<group>"; };
 		638F675816EF875F002BD513 /* UGClientDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UGClientDelegate.h; sourceTree = "<group>"; };
 		E89D6C9C150E5B2E005F5FB9 /* UGAPIApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UGAPIApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E89D6CA0150E5B2E005F5FB9 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
@@ -142,6 +154,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		22D61E6C171CBBF100E9CD17 /* v2 */ = {
+			isa = PBXGroup;
+			children = (
+				22D61E6D171CBBF100E9CD17 /* UGConnection.h */,
+				22D61E6E171CBBF100E9CD17 /* UGConnection.m */,
+				22D61E6F171CBBF100E9CD17 /* UGHTTPClient.h */,
+				22D61E70171CBBF100E9CD17 /* UGHTTPClient.m */,
+				22D61E71171CBBF100E9CD17 /* UGHTTPHelpers.h */,
+				22D61E72171CBBF100E9CD17 /* UGHTTPHelpers.m */,
+				22D61E73171CBBF100E9CD17 /* UGHTTPResult.h */,
+				22D61E74171CBBF100E9CD17 /* UGHTTPResult.m */,
+			);
+			path = v2;
+			sourceTree = "<group>";
+		};
 		E89D6C91150E5B2E005F5FB9 = {
 			isa = PBXGroup;
 			children = (
@@ -221,6 +248,7 @@
 		E89D6CDC150E5B99005F5FB9 /* UGAPI */ = {
 			isa = PBXGroup;
 			children = (
+				22D61E6C171CBBF100E9CD17 /* v2 */,
 				E89D6CDD150E5B99005F5FB9 /* SBJson */,
 				E89D6CF7150E5B99005F5FB9 /* UGActivity.h */,
 				E89D6CF8150E5B99005F5FB9 /* UGActivity.m */,
@@ -403,6 +431,10 @@
 				E89D6D15150E5B99005F5FB9 /* UGMultiStepAction.m in Sources */,
 				E89D6D16150E5B99005F5FB9 /* UGQuery.m in Sources */,
 				E89D6D17150E5B99005F5FB9 /* UGUser.m in Sources */,
+				22D61E75171CBBF100E9CD17 /* UGConnection.m in Sources */,
+				22D61E76171CBBF100E9CD17 /* UGHTTPClient.m in Sources */,
+				22D61E77171CBBF100E9CD17 /* UGHTTPHelpers.m in Sources */,
+				22D61E78171CBBF100E9CD17 /* UGHTTPResult.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
