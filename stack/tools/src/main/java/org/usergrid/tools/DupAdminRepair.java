@@ -212,6 +212,8 @@ public class DupAdminRepair extends ExportingToolBase {
 
       }
     }
+    
+    logger.info("Repair complete");
 
   }
 
