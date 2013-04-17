@@ -25,6 +25,7 @@ import static org.usergrid.services.ServiceParameter.addParameter;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Map;
 import java.util.UUID;
@@ -447,20 +448,12 @@ public class ApplicationResource extends ServiceResource {
                 errorDescription = "user disabled";
             } catch (Exception e1) {
             }
+
             if ((user != null) && isNotBlank(redirect_uri)) {
-                if (!redirect_uri.contains("?")) {
-                    redirect_uri += "?";
-                } else {
-                    redirect_uri += "&";
-                }
-                redirect_uri += "code="
-                        + management.getAccessTokenForAppUser(
-                                services.getApplicationId(), user.getUuid(), 0);
-                if (isNotBlank(state)) {
-                    redirect_uri += "&state="
-                            + URLEncoder.encode(state, "UTF-8");
-                }
-                throw new RedirectionException(state);
+            	String authorizationCode = management.getAccessTokenForAppUser(services.getApplicationId(), user.getUuid(), 0);
+            	redirect_uri = buildRedirectUriWithAuthCode(redirect_uri, state, authorizationCode);
+
+                throw new RedirectionException(redirect_uri);
             } else {
                 errorMsg = errorDescription;
             }
@@ -524,30 +517,47 @@ public class ApplicationResource extends ServiceResource {
         return state;
     }
 
-  // todo: find a mechanism to move these methods into the push notifications project
-  @RequireApplicationAccess
-  @Path("notifiers")
-  public AbstractContextResource getNotifiersResource(@Context UriInfo ui)
-      throws Exception {
+	// todo: find a mechanism to move these methods into the push notifications
+	// project
+	@RequireApplicationAccess
+	@Path("notifiers")
+	public AbstractContextResource getNotifiersResource(@Context UriInfo ui)
+			throws Exception {
 
-    Class cls = Class.forName("org.usergrid.rest.applications.notifiers.NotifiersResource");
+		Class cls = Class
+				.forName("org.usergrid.rest.applications.notifiers.NotifiersResource");
 
-    logger.debug("NotifiersResource.getNotifiersResource");
-    addParameter(getServiceParameters(), "notifiers");
+		logger.debug("NotifiersResource.getNotifiersResource");
+		addParameter(getServiceParameters(), "notifiers");
 
-    PathSegment ps = getFirstPathSegment("notifiers");
-    if (ps != null) {
-      addMatrixParams(getServiceParameters(), ui, ps);
-    }
+		PathSegment ps = getFirstPathSegment("notifiers");
+		if (ps != null) {
+			addMatrixParams(getServiceParameters(), ui, ps);
+		}
 
-    return getSubResource(cls);
-  }
+		return getSubResource(cls);
+	}
 
-  @RequireApplicationAccess
-  @Path("notifier")
-  public AbstractContextResource getNotifierResource(@Context UriInfo ui)
-      throws Exception {
-    return getNotifiersResource(ui);
-  }
+	@RequireApplicationAccess
+	@Path("notifier")
+	public AbstractContextResource getNotifierResource(@Context UriInfo ui)
+			throws Exception {
+		return getNotifiersResource(ui);
+	}
+
+	private String buildRedirectUriWithAuthCode(String redirect_uri, String state, String authorizationCode) throws UnsupportedEncodingException {
+		if (!redirect_uri.contains("?")) {
+			redirect_uri += "?";
+		} else {
+			redirect_uri += "&";
+		}
+		redirect_uri += "code=" + authorizationCode;
+
+		if (isNotBlank(state)) {
+			redirect_uri += "&state=" + URLEncoder.encode(state, "UTF-8");
+		}
+
+		return redirect_uri;
+	}
 
 }
