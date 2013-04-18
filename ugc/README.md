@@ -20,7 +20,7 @@ ugc enables convenient terminal access to Apigee's App Services (aka Usergrid).
 
     $ gem install ugc
     
-Note: Requires Ruby 1.9.3+. If you have issues, check your version:
+Note: Requires Ruby 1.9.3+ or Ruby 2.0. If you have issues, check your version:
 
 	$ ruby -v
 	
