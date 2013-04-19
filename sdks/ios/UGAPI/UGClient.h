@@ -37,7 +37,7 @@ set the response limit in UGQuery as well.
 
 @interface UGClient : NSObject
 
-+(int) version;
++(NSString *) version;
 
 /********************* INIT AND SETUP *********************/
 // init with an app ID

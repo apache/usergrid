@@ -26,4 +26,8 @@
     (assert_equal "fred" (object applicationName:))
     (assert_equal "get" (object action:))
     (set entities (object entities:))
-    (assert_equal (object count:) (entities count))))
+    (assert_equal (object count:) (entities count)))
+
+ (- testSemVerOfClient is
+    ;; create a client
+    (assert_equal "0.1.1" (UGClient version))))

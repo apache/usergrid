@@ -42,9 +42,9 @@ NSString *g_deviceUUID = nil;
 /************************** ACCESSORS *******************************/
 /************************** ACCESSORS *******************************/
 /************************** ACCESSORS *******************************/
-+(int) version
++(NSString *) version
 {
-    return 1;
+    return @"0.1.1";
 }
 
 -(NSString *)getAccessToken
