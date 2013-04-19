@@ -67,6 +67,13 @@ The Messagee Xcode project is located here:
 
 <https://github.com/apigee/usergrid-sample-ios-messagee>
 
+##Running Tests
+
+The iOS SDK unit tests are written with Nu. You'll need to install the language itself to run the tests, and use the Nukefile to create a Usergrid.framework. For installation directions go [here](https://github.com/timburks/nu)
+
+To compile the Usergrid SDK as an Objective-C framework simple type `nuke` to build the framework and then `nuke install` to install it in the /Library/Frameworks path.
+
+To run the unit tests written for the SDK use the command `nuke test` this will run all tests.
 
 ## Contributing
 We welcome your enhancements!
