@@ -5,7 +5,8 @@ Detailed instructions follow but if you just want a quick example of how to get 
 <!DOCTYPE html>
 <html>
 	<head>
-		<!-- Don't forget to include the SDK -->
+		<!-- Don't forget to download and include the SDK -->
+		<!-- It’s available at the root of github.com/apigee/usergrid-javascript-sdk -->
 		<script src="path/to/usergrid.js"></script>
 
 		<script type="text/javascript">
@@ -23,15 +24,18 @@ Detailed instructions follow but if you just want a quick example of how to get 
 					while(books.hasNextEntity()) {
 						var book = books.getNextEntity();
 						alert(book.get("title")); // Output the title of the book
-				} }, function() { // Failure
+					}
+				}, function() { // Failure
 					alert("read failed");
-				});
+				}
+			);
 
-			// Writing data
-			options = { "type": "books", "title": "the old man and the sea" };
-			client.createEntity(options, function (err, response) {
-				if (err) { alert("write failed");
-				} else { alert("write succeeded"); } });
+			// Uncomment the next 4 lines if you want to write data
+			
+			// book = { "title": "the old man and the sea" };
+			// books.addEntity(book, function (error, response) {
+			// 	if (error) { alert("write failed");
+			// 	} else { alert("write succeeded"); } });
 		</script>
 	</head>
 	<body></body>
