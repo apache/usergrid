@@ -62,6 +62,7 @@ import org.usergrid.rest.management.users.UsersResource;
 import org.usergrid.security.oauth.AccessInfo;
 
 import com.sun.jersey.api.view.Viewable;
+import org.usergrid.security.shiro.utils.SubjectUtils;
 
 @Path("/management")
 @Component
@@ -119,85 +120,115 @@ public class ManagementResource extends AbstractContextResource {
     }
 
     @GET
-    @Path("token")
-    public Response getAccessToken(@Context UriInfo ui, @HeaderParam("Authorization") String authorization,
-            @QueryParam("grant_type") String grant_type, @QueryParam("username") String username,
-            @QueryParam("password") String password, @QueryParam("client_id") String client_id,
-            @QueryParam("client_secret") String client_secret, @QueryParam("ttl") long ttl,
-            @QueryParam("callback") @DefaultValue("") String callback) throws Exception {
+    @Path("me")
+    public Response getAccessTokenLight(@Context UriInfo ui, @HeaderParam("Authorization") String authorization,
+                @QueryParam("grant_type") String grant_type, @QueryParam("username") String username,
+                @QueryParam("password") String password, @QueryParam("client_id") String client_id,
+                @QueryParam("client_secret") String client_secret, @QueryParam("ttl") long ttl,
+                @QueryParam("access_token") String access_token,
+                @QueryParam("callback") @DefaultValue("") String callback) throws Exception {
+      return getAccessTokenInternal(ui,authorization,grant_type,username,password,client_id,client_secret,ttl,callback, false);
+    }
 
+      @GET
+      @Path("token")
+      public Response getAccessToken(@Context UriInfo ui, @HeaderParam("Authorization") String authorization,
+              @QueryParam("grant_type") String grant_type, @QueryParam("username") String username,
+              @QueryParam("password") String password, @QueryParam("client_id") String client_id,
+              @QueryParam("client_secret") String client_secret, @QueryParam("ttl") long ttl,
+              @QueryParam("callback") @DefaultValue("") String callback) throws Exception {
+      return getAccessTokenInternal(ui,authorization,grant_type,username,password,client_id,client_secret,ttl,callback, true);
+    }
+
+    private Response getAccessTokenInternal(UriInfo ui, String authorization,
+            String grant_type, String username,
+            String password, String client_id,
+            String client_secret, long ttl,
+            String callback, boolean loadAdminData) throws Exception {
+
+      UserInfo user = null;
+      try {
+        if ( SubjectUtils.getUser() != null ) {
+          user = SubjectUtils.getUser();
+        }
         logger.info("ManagementResource.getAccessToken with username: {}", username);
 
-        UserInfo user = null;
-
-        try {
-
-            if (authorization != null) {
-                String type = stringOrSubstringBeforeFirst(authorization, ' ').toUpperCase();
-                if ("BASIC".equals(type)) {
-                    String token = stringOrSubstringAfterFirst(authorization, ' ');
-                    String[] values = Base64.decodeToString(token).split(":");
-                    if (values.length >= 2) {
-                        client_id = values[0].toLowerCase();
-                        client_secret = values[1];
-                    }
-                }
+        String errorDescription = "invalid username or password";
+        if ( user == null ) {
+          if (authorization != null) {
+            String type = stringOrSubstringBeforeFirst(authorization, ' ').toUpperCase();
+            if ("BASIC".equals(type)) {
+              String token = stringOrSubstringAfterFirst(authorization, ' ');
+              String[] values = Base64.decodeToString(token).split(":");
+              if (values.length >= 2) {
+                client_id = values[0].toLowerCase();
+                client_secret = values[1];
+              }
             }
+          }
 
-            String errorDescription = "invalid username or password";
-            // do checking for different grant types
-            if (GrantType.PASSWORD.toString().equals(grant_type)) {
-                try {
-                    user = management.verifyAdminUserPasswordCredentials(username, password);
-                    if (user != null) {
-                        logger.info("found user from verify: {}", user.getUuid());
-                    }
-                } catch (UnactivatedAdminUserException uaue) {
-                    errorDescription = "user not activated";
-                    logger.error("failed token check", uaue);
-                } catch (DisabledAdminUserException daue) {
-                    errorDescription = "user disabled";
-                    logger.error("failed token check", daue);
-                } catch (Exception e1) {
-                    logger.error("failed token check", e1);
-                }
-            } else if ("client_credentials".equals(grant_type)) {
-                try {
-                    AccessInfo access_info = management.authorizeClient(client_id, client_secret, ttl);
-                    if (access_info != null) {
-                        return Response.status(SC_OK).type(jsonMediaType(callback))
-                                .entity(wrapWithCallback(access_info, callback)).build();
-                    }
-                } catch (Exception e1) {
-                    logger.error("failed authorizeClient", e1);
-                }
+
+          // do checking for different grant types
+          if (GrantType.PASSWORD.toString().equals(grant_type)) {
+            try {
+              user = management.verifyAdminUserPasswordCredentials(username, password);
+              if (user != null) {
+                logger.info("found user from verify: {}", user.getUuid());
+              }
+            } catch (UnactivatedAdminUserException uaue) {
+              errorDescription = "user not activated";
+              logger.error("failed token check", uaue);
+            } catch (DisabledAdminUserException daue) {
+              errorDescription = "user disabled";
+              logger.error("failed token check", daue);
+            } catch (Exception e1) {
+              logger.error("failed token check", e1);
             }
-
-            if (user == null) {
-                OAuthResponse response = OAuthResponse.errorResponse(SC_BAD_REQUEST)
-                        .setError(OAuthError.TokenResponse.INVALID_GRANT)
-                        .setErrorDescription(errorDescription).buildJSONMessage();
-                return Response.status(response.getResponseStatus()).type(jsonMediaType(callback))
-                        .entity(wrapWithCallback(response.getBody(), callback)).build();
+          } else if ("client_credentials".equals(grant_type)) {
+            try {
+              AccessInfo access_info = management.authorizeClient(client_id, client_secret, ttl);
+              if (access_info != null) {
+                return Response.status(SC_OK).type(jsonMediaType(callback))
+                        .entity(wrapWithCallback(access_info, callback)).build();
+              }
+            } catch (Exception e1) {
+              logger.error("failed authorizeClient", e1);
             }
-
-            String token = management.getAccessTokenForAdminUser(user.getUuid(), ttl);
-
-            AccessInfo access_info = new AccessInfo().withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
-                    .withAccessToken(token)
-                    .withProperty("user", management.getAdminUserOrganizationData(user.getUuid()));
-            // increment counters for admin login
-            management.countAdminUserAction(user, "login");
-
-            return Response.status(SC_OK).type(jsonMediaType(callback)).entity(wrapWithCallback(access_info, callback))
-                    .build();
-
-        } catch (OAuthProblemException e) {
-            logger.error("OAuth Error", e);
-            OAuthResponse res = OAuthResponse.errorResponse(SC_BAD_REQUEST).error(e).buildJSONMessage();
-            return Response.status(res.getResponseStatus()).type(jsonMediaType(callback))
-                    .entity(wrapWithCallback(res.getBody(), callback)).build();
+          }
         }
+
+        if (user == null) {
+          OAuthResponse response = OAuthResponse.errorResponse(SC_BAD_REQUEST)
+                  .setError(OAuthError.TokenResponse.INVALID_GRANT)
+                  .setErrorDescription(errorDescription).buildJSONMessage();
+          return Response.status(response.getResponseStatus()).type(jsonMediaType(callback))
+                  .entity(wrapWithCallback(response.getBody(), callback)).build();
+        }
+
+        String token = management.getAccessTokenForAdminUser(user.getUuid(), ttl);
+        AccessInfo access_info;
+        if ( loadAdminData ) {
+          access_info = new AccessInfo().withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
+                  .withAccessToken(token)
+                  .withProperty("user", management.getAdminUserOrganizationData(user.getUuid()));
+
+        } else {
+          access_info = new AccessInfo().withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
+                  .withAccessToken(token);
+        }
+
+        // increment counters for admin login
+        management.countAdminUserAction(user, "login");
+
+        return Response.status(SC_OK).type(jsonMediaType(callback)).entity(wrapWithCallback(access_info, callback))
+                .build();
+
+      } catch (OAuthProblemException e) {
+        logger.error("OAuth Error", e);
+        OAuthResponse res = OAuthResponse.errorResponse(SC_BAD_REQUEST).error(e).buildJSONMessage();
+        return Response.status(res.getResponseStatus()).type(jsonMediaType(callback))
+                .entity(wrapWithCallback(res.getBody(), callback)).build();
+      }
     }
 
     @POST
