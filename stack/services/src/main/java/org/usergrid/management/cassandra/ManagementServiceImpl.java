@@ -2409,6 +2409,8 @@ public class ManagementServiceImpl implements ManagementService {
 
   }
 
+  // TODO add getOrCreateuserForPingAccessToken
+
   @Override
   public User getOrCreateUserForFacebookAccessToken(UUID applicationId, String fb_access_token) throws Exception {
 

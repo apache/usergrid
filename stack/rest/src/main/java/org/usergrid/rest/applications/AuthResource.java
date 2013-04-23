@@ -70,6 +70,8 @@ public class AuthResource extends AbstractContextResource {
 		}
 	}
 
+  // TODO add auth for Ping Identity
+
 	@POST
 	@Path("facebook")
 	@Consumes(APPLICATION_FORM_URLENCODED)
