@@ -51,6 +51,7 @@
 		<constructor-arg ref="entityManagerFactory" />
 		<constructor-arg ref="properties" />
 		<constructor-arg ref="schedulerService"/>
+        <constructor-arg ref="lockManager"/>
 	</bean>
 
 	<bean id="applicationCreator"
