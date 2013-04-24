@@ -23,6 +23,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.usergrid.batch.service.SchedulerService;
+import org.usergrid.locking.LockManager;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 
@@ -33,14 +34,16 @@ public class ServiceManagerFactory implements ApplicationContextAware {
 	private EntityManagerFactory emf;
 	private Properties properties;
 	private SchedulerService schedulerService;
+  private LockManager lockManager;
 
 	private List<ServiceExecutionEventListener> eventListeners;
 	private List<ServiceCollectionEventListener> collectionListeners;
 
-	public ServiceManagerFactory(EntityManagerFactory emf, Properties properties, SchedulerService schedulerService) {
+	public ServiceManagerFactory(EntityManagerFactory emf, Properties properties, SchedulerService schedulerService, LockManager lockManager) {
     this.emf = emf;
     this.properties = properties;
     this.schedulerService = schedulerService;
+    this.lockManager = lockManager;
   }
   
 
@@ -108,5 +111,9 @@ public class ServiceManagerFactory implements ApplicationContextAware {
 
   public SchedulerService getSchedulerService() {
     return schedulerService;
+  }
+
+  public LockManager getLockManager() {
+    return lockManager;
   }
 }
