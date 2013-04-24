@@ -74,7 +74,7 @@
     (assert_equal 0 (object count:))
     
     ;; add some assets
-    (set N 4)
+    (set N 2)
     (N times:
        (do (i)
            (set results (perform (usergrid createEntityInCollection:"assets" withValues:(dict name:"asset-#{i}"
