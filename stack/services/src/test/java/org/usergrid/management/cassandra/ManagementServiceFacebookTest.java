@@ -27,6 +27,7 @@ import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.UserInfo;
 import org.usergrid.persistence.entities.User;
+import org.usergrid.security.providers.FacebookProvider;
 import org.usergrid.test.ShiroHelperRunner;
 import org.usergrid.utils.MapUtils;
 
@@ -47,11 +48,13 @@ public class ManagementServiceFacebookTest {
 	private static UUID applicationId;
 
 
-	private static ManagementService managementService;
+	private static FacebookProvider facebookProvider;
+  private static ManagementService managementService;
 
 	@BeforeClass
 	public static void setup() throws Exception {
-		managementService = CassandraRunner.getBean(ManagementService.class);
+		facebookProvider = CassandraRunner.getBean(FacebookProvider.class);
+    managementService = CassandraRunner.getBean(ManagementService.class);
 		setupLocal();
 	}
 
@@ -73,7 +76,7 @@ public class ManagementServiceFacebookTest {
 		// setup FB api
 		Object[] wrObjs = invokeFB(fb_access_token);
 		// process fb_access_token 1st time
-		User user1 = managementService.getOrCreateUserForFacebookAccessToken(
+		User user1 = facebookProvider.createOrAuthenticate(
 				applicationId, fb_access_token);
 		assertNotNull(user1);
 		verify(wrObjs,fb_access_token);
@@ -81,7 +84,7 @@ public class ManagementServiceFacebookTest {
 		// setup FB api
 		wrObjs = invokeFB(fb_access_token);
 		// process fb_access_token 2nd time
-		User user2 = managementService.getOrCreateUserForFacebookAccessToken(
+		User user2 = facebookProvider.createOrAuthenticate(
 				applicationId, fb_access_token);
 		assertNotNull(user2);
 		verify(wrObjs,fb_access_token);
@@ -89,7 +92,7 @@ public class ManagementServiceFacebookTest {
 		// setup FB api
 		wrObjs = invokeFB(fb_access_token);
 		// process fb_access_token 3rd time
-		User user3 = managementService.getOrCreateUserForFacebookAccessToken(
+		User user3 = facebookProvider.createOrAuthenticate(
 				applicationId, fb_access_token);
 		assertNotNull(user3);
 		verify(wrObjs,fb_access_token);

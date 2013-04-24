@@ -40,11 +40,14 @@ import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.security.oauth.AccessInfo;
+import org.usergrid.security.providers.FacebookProvider;
+import org.usergrid.security.providers.FoursquareProvider;
 import org.usergrid.services.ServiceManager;
 
 @Component
@@ -58,6 +61,11 @@ public class AuthResource extends AbstractContextResource {
 			.getLogger(AuthResource.class);
 
 	ServiceManager services = null;
+
+  @Autowired
+  private FacebookProvider facebookProvider;
+  @Autowired
+  private FoursquareProvider foursquareProvider;
 
 	public AuthResource() {
 	}
@@ -111,7 +119,7 @@ public class AuthResource extends AbstractContextResource {
 						.build();
 			}
 
-			User user = management.getOrCreateUserForFacebookAccessToken(
+			User user = facebookProvider.createOrAuthenticate(
 					services.getEntityManager().getApplicationRef().getUuid(),
 					fb_access_token);
 
@@ -189,7 +197,7 @@ public class AuthResource extends AbstractContextResource {
 						.build();
 			}
 
-			User user = management.getOrCreateUserForFoursquareAccessToken(
+			User user = foursquareProvider.createOrAuthenticate(
 					services.getEntityManager().getApplicationRef().getUuid(),
 					fq_access_token);
 

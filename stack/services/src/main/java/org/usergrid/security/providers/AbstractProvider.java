@@ -13,7 +13,7 @@ public abstract class AbstractProvider implements SignInAsProvider {
   protected ManagementService managementService;
 
   @Autowired
-  public void setEmf(EntityManagerFactory emf) {
+  public void setEntityManagerFactory(EntityManagerFactory emf) {
     this.emf = emf;
   }
 
