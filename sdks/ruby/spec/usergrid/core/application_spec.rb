@@ -294,4 +294,35 @@ describe Usergrid::Application do
     entities.size.should eq 1
   end
 
+  describe "grant_type: client_credentials" do
+
+    before(:each) do
+      @app = create_random_application
+    end
+
+    context "invalid credentials" do
+      it "should not be able to get access token with invalid credentials" do
+        @app.client_id = "invalid_client_id"
+        @app.client_secret = "invalid_client_secret"
+
+        expect { @app.access_token! }.to raise_exception RestClient::BadRequest
+      end
+
+      it "should not be able to get access token with empty credentials" do
+        expect { @app.access_token! }.to raise_exception RestClient::BadRequest
+      end
+    end
+
+    context "valid crendentials" do
+      it "should be able to get access token with invalid credentials"do
+        app_credentials = JSON.parse @app.credentials
+        @app.client_id     = app_credentials["credentials"]["client_id"]
+        @app.client_secret =  app_credentials["credentials"]["client_secret"]
+
+        @app.access_token!
+        expect(@app.auth_token).to_not be_empty
+        expect(@app.auth_token).to be_instance_of String
+      end
+    end
+  end
 end

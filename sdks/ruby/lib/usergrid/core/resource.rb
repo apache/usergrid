@@ -8,6 +8,7 @@ module Usergrid
     TYPE_HEADERS = { content_type: :json, accept: :json }
 
     attr_reader :current_user, :api_url, :response
+    attr_accessor :client_id, :client_secret
 
     def initialize(resource_url=DEFAULT_API_URL, api_url=nil, options={}, response=nil)
       options[:headers] = TYPE_HEADERS.merge options[:headers] || {}
