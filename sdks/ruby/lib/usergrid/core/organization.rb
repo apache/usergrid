@@ -49,5 +49,11 @@ module Usergrid
       self['credentials'].post nil
     end
 
+    def login_credentials(client_id, client_secret)
+      resource = api_resource 'management'
+      response = resource['token'].post grant_type: 'client_credentials', client_id: client_id, client_secret: client_secret
+      self.auth_token = response.data['access_token']
+    end
+
   end
 end
