@@ -39,6 +39,10 @@
 			<id>tnine</id>
 			<name>Todd Nine</name>
 		</developer>
+		<developer>
+			<id>sganyo</id>
+			<name>Scott Ganyo</name>
+		</developer>
 	</developers>
 	<scm>
 		<connection>scm:git:git@github.com:apigee/usergrid-android-sdk.git</connection>
@@ -50,7 +54,7 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>usergrid-java-client</artifactId>
-			<version>0.0.1</version>
+			<version>0.0.5</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.android</groupId>

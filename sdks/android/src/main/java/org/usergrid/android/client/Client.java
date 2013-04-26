@@ -1,26 +1,9 @@
 package org.usergrid.android.client;
 
-import static org.springframework.util.StringUtils.arrayToDelimitedString;
-import static org.springframework.util.StringUtils.tokenizeToStringArray;
-import static org.usergrid.android.client.utils.ObjectUtils.isEmpty;
-
-
-
-import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.codehaus.jackson.node.JsonNodeFactory;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.usergrid.android.client.callbacks.ApiResponseCallback;
 import org.usergrid.android.client.callbacks.ClientAsyncTask;
@@ -36,7 +19,6 @@ import org.usergrid.android.client.utils.DeviceUuidFactory;
 
 import android.content.Context;
 import android.location.Location;
-import android.util.Log;
 
 /**
  * The Client class for accessing the Usergrid API. Start by instantiating this
@@ -77,8 +59,8 @@ public class Client extends org.usergrid.java.client.Client {
 	 * @param applicationId
 	 *            the application id or name
 	 */
-	public Client(String applicationId) {
-		super(applicationId);
+	public Client(String organizationId, String applicationId) {
+		super(organizationId, applicationId);
 	}
 
 
@@ -186,9 +168,33 @@ public class Client extends org.usergrid.java.client.Client {
 		}).execute();
 	}
 
-	
 
-	/**
+  /**
+   * Registers a device using the device's unique device ID. Executes
+   * asynchronously in background and the callbacks are called in the UI
+   * thread.
+   *
+   * @param context
+   * @param properties
+   * @param callback
+   */
+  public void registerDeviceForPushAsync(final Context context,
+                                         final String notifier,
+                                         final String token,
+                                         final Map<String, Object> properties,
+                                         final DeviceRegistrationCallback callback) {
+    (new ClientAsyncTask<Device>(callback) {
+      @Override
+      public Device doTask() {
+        UUID deviceId = new DeviceUuidFactory(context).getDeviceUuid();
+
+        return registerDeviceForPush(deviceId, notifier, token, properties);
+      }
+    }).execute();
+  }
+
+
+  /**
 	 * Create a new entity on the server. Executes asynchronously in background
 	 * and the callbacks are called in the UI thread.
 	 * 
