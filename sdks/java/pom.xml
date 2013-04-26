@@ -38,6 +38,10 @@
 			<id>tnine</id>
 			<name>Todd Nine</name>
 		</developer>
+		<developer>
+			<id>sganyo</id>
+			<name>Scott Ganyo</name>
+		</developer>
 	</developers>
 	<dependencies>
 		<!-- <dependency> <groupId>com.google.android</groupId> <artifactId>android</artifactId> 

@@ -552,6 +552,25 @@ public class Client {
     }
 
     /**
+     * Registers a device using the device's unique device ID.
+     *
+     * @param context
+     * @param properties
+     * @return a Device object if success
+     */
+    public Device registerDeviceForPush(UUID deviceId,
+                                        String notifier,
+                                        String token,
+                                        Map<String, Object> properties) {
+      if (properties == null) {
+          properties = new HashMap<String, Object>();
+      }
+      String notifierKey = notifier + ".notifier.id";
+      properties.put(notifierKey, token);
+      return registerDevice(deviceId, properties);
+    }
+
+    /**
      * Create a new entity on the server.
      * 
      * @param entity
