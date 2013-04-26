@@ -87,6 +87,8 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.locking.LockManager;
 import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
+import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
+import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.utils.JsonUtils;
 
 public class CassandraService {
@@ -1035,7 +1037,7 @@ public class CassandraService {
    * @throws Exception
    *           the exception
    */
-  public List<UUID> getIdList(Keyspace ko, Object key, Object start, Object finish, int count, boolean reversed,
+  public List<UUID> getIdList(Keyspace ko, Object key, UUID start, UUID finish, int count, boolean reversed,
       IndexBucketLocator locator, UUID applicationId, String collectionName) throws Exception {
 
     if (count <= 0) {
@@ -1046,16 +1048,12 @@ public class CassandraService {
       start = null;
     }
 
-    IndexBucketScanner scanner = new IndexBucketScanner(this, locator, ENTITY_ID_SETS, applicationId,
-        IndexType.COLLECTION, key, start, finish, reversed, count, collectionName);
+    IndexScanner scanner = new IndexBucketScanner(this, locator, ENTITY_ID_SETS, applicationId, IndexType.COLLECTION,
+        key, start, finish, reversed, count, collectionName);
 
-    List<HColumn<ByteBuffer, ByteBuffer>> results = scanner.load();
-
-    if (results != null) {
-      for (HColumn<ByteBuffer, ByteBuffer> result : results) {
-        ByteBuffer bytes = result.getName();
-        ids.add(uuid(bytes));
-      }
+    for (HColumn<ByteBuffer, ByteBuffer> result : scanner) {
+      ByteBuffer bytes = result.getName();
+      ids.add(uuid(bytes));
     }
 
     return ids;
@@ -1063,6 +1061,7 @@ public class CassandraService {
   }
 
   public int countColumns(Keyspace ko, Object columnFamily, Object key) throws Exception {
+
 
     CountQuery<ByteBuffer, ByteBuffer> cq = HFactory.createCountQuery(ko, be, be);
     cq.setColumnFamily(columnFamily.toString());

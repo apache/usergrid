@@ -88,6 +88,7 @@ import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -122,6 +123,9 @@ import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
+import org.usergrid.persistence.cassandra.index.CompleteIndexScanner;
+import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
+import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.entities.Group;
 import org.usergrid.persistence.query.ir.AllNode;
 import org.usergrid.persistence.query.ir.QuerySlice;
@@ -1890,11 +1894,11 @@ public class RelationManagerImpl implements RelationManager {
      *             the exception
      */
     public Results getIndexResults(
-            List<HColumn<ByteBuffer, ByteBuffer>> results,
+            IndexScanner scanner,
             boolean compositeResults, String connectionType, String entityType,
-            Level level) throws Exception {
+            Level level, int maxResults) throws Exception {
 
-        if (results == null) {
+        if (scanner == null) {
             return null;
         }
 
@@ -1912,8 +1916,14 @@ public class RelationManagerImpl implements RelationManager {
         } else {
             ids = new ArrayList<UUID>();
         }
+        
+        int last = maxResults+1;
+        
+        Iterator<HColumn<ByteBuffer, ByteBuffer>> cols = scanner.iterator();
 
-        for (HColumn<ByteBuffer, ByteBuffer> result : results) {
+        for (int i = 0; i < last && cols.hasNext(); i ++) {
+          
+            HColumn<ByteBuffer, ByteBuffer> result = cols.next();
 
             UUID connectedEntityId = null;
             String cType = connectionType;
@@ -2135,27 +2145,27 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    private List<HColumn<ByteBuffer, ByteBuffer>> searchIndex(Object indexKey,
+    private IndexScanner searchIndex(Object indexKey,
             QuerySlice slice, int count) throws Exception {
 
-        Object start = getStart(slice);
+        DynamicComposite start = getStart(slice);
 
-        Object finish = getFinish(slice);
+        DynamicComposite finish = getFinish(slice);
 
         if (slice.isReversed() && (start != null) && (finish != null)) {
-            Object temp = start;
+          DynamicComposite temp = start;
             start = finish;
             finish = temp;
         }
 
         Object keyPrefix = key(indexKey, slice.getPropertyName());
 
-        IndexBucketScanner scanner = new IndexBucketScanner(cass,
+        IndexScanner scanner = new IndexBucketScanner(cass,
                 indexBucketLocator, ENTITY_INDEX, applicationId,
                 IndexType.CONNECTION, keyPrefix, start, finish,
                 slice.isReversed(), count, slice.getPropertyName());
 
-        return scanner.load();
+        return scanner;
 
     }
 
@@ -2170,36 +2180,36 @@ public class RelationManagerImpl implements RelationManager {
      * @return
      * @throws Exception
      */
-    private List<HColumn<ByteBuffer, ByteBuffer>> searchIndexBuckets(
+    private IndexScanner searchIndexBuckets(
             Object indexKey, QuerySlice slice, int count, String collectionName)
             throws Exception {
 
-        Object start = getStart(slice);
+        DynamicComposite start = getStart(slice);
 
-        Object finish = getFinish(slice);
+        DynamicComposite finish = getFinish(slice);
 
         if (slice.isReversed() && (start != null) && (finish != null)) {
-            Object temp = start;
+            DynamicComposite temp = start;
             start = finish;
             finish = temp;
         }
 
         Object keyPrefix = key(indexKey, slice.getPropertyName());
 
-        IndexBucketScanner scanner = new IndexBucketScanner(cass,
+        IndexScanner scanner = new IndexBucketScanner(cass,
                 indexBucketLocator, ENTITY_INDEX, applicationId,
                 IndexType.COLLECTION, keyPrefix, start, finish,
                 slice.isReversed(), count, collectionName);
 
-        return scanner.load();
+        return scanner;
 
     }
 
-    private Object getStart(QuerySlice slice) {
-        Object start = null;
+    private DynamicComposite getStart(QuerySlice slice) {
+        DynamicComposite start = null;
 
         if (slice.getCursor() != null) {
-            start = slice.getCursor();
+            start = DynamicComposite.fromByteBuffer(slice.getCursor());
         } else if (slice.getStart() != null) {
             start = new DynamicComposite(slice.getStart().getCode(), slice
                     .getStart().getValue());
@@ -2212,8 +2222,8 @@ public class RelationManagerImpl implements RelationManager {
         return start;
     }
 
-    private Object getFinish(QuerySlice slice) {
-        Object finish = null;
+    private DynamicComposite getFinish(QuerySlice slice) {
+        DynamicComposite finish = null;
 
         if (slice.getFinish() != null) {
             finish = new DynamicComposite(slice.getFinish().getCode(), slice
@@ -2623,6 +2633,7 @@ public class RelationManagerImpl implements RelationManager {
         // nothing to search for or sort, just grab ids
         if (!query.hasQueryPredicates() && !query.hasSortPredicates()) {
             List<UUID> ids = query.getUuidIdentifiers();
+           
             if (ids == null) {
                 ids = cass.getIdList(
                     cass.getApplicationKeyspace(applicationId),
@@ -3112,11 +3123,11 @@ public class RelationManagerImpl implements RelationManager {
                 // change the hash value of the slice
                 queryProcessor.applyCursorAndSort(slice);
 
-                List<HColumn<ByteBuffer, ByteBuffer>> columns = null;
+                IndexScanner columns = null;
 
                 //nothing left to search for this range
                 if (slice.isComplete()) {
-                    columns = new ArrayList<HColumn<ByteBuffer, ByteBuffer>>();
+                    columns = new CompleteIndexScanner();
                 }
                 //perform the search
                 else {
@@ -3126,7 +3137,7 @@ public class RelationManagerImpl implements RelationManager {
 
                 Results r = getIndexResults(columns, true,
                         query.getConnectionType(), collection.getType(),
-                        resultsLevel);
+                        resultsLevel, query.getLimit());
 
                 if (r.size() > query.getLimit()) {
                     r.setCursorToLastResult();
@@ -3157,6 +3168,7 @@ public class RelationManagerImpl implements RelationManager {
       public void visit(AllNode node) throws Exception {
 
         String collectionName = collection.getName();
+       
 
         List<UUID> ids = cass.getIdList(
                 cass.getApplicationKeyspace(applicationId),
@@ -3238,13 +3250,13 @@ public class RelationManagerImpl implements RelationManager {
                 // operation
                 queryProcessor.applyCursorAndSort(slice);
 
-                List<HColumn<ByteBuffer, ByteBuffer>> columns = searchIndex(
+                IndexScanner columns = searchIndex(
                         key(connection.getIndexId(), INDEX_CONNECTIONS), slice,
                         limit);
 
                 Results r = getIndexResults(columns, true,
                         connection.getConnectionType(),
-                        connection.getConnectedEntityType(), resultsLevel);
+                        connection.getConnectedEntityType(), resultsLevel, query.getLimit());
 
                 if (r.size() > query.getLimit()) {
                     r.setCursorToLastResult();

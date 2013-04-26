@@ -15,18 +15,15 @@
  ******************************************************************************/
 package org.usergrid.tools;
 
-import static org.usergrid.utils.CompositeUtils.*;
-import static java.util.Arrays.asList;
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
 import static org.usergrid.persistence.Schema.getDefaultSchema;
-import static org.usergrid.persistence.cassandra.ApplicationCF.*;
+import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
 import static org.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX_ENTRIES;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
 import static org.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.usergrid.persistence.cassandra.CassandraService.INDEX_ENTRY_LIST_COUNT;
-import static org.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
-import static org.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
+import static org.usergrid.utils.CompositeUtils.setEqualityFlag;
 import static org.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.usergrid.utils.UUIDUtils.newTimeUUID;
 
@@ -34,20 +31,13 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.BytesArraySerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.AbstractComposite;
-import me.prettyprint.hector.api.beans.DynamicComposite;
-import me.prettyprint.hector.api.beans.AbstractComposite.Component;
 import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
+import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 
@@ -62,16 +52,10 @@ import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
-import org.usergrid.persistence.Schema;
-import org.usergrid.persistence.cassandra.ApplicationCF;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.cassandra.EntityManagerImpl;
-import org.usergrid.persistence.cassandra.IndexBucketScanner;
-import org.usergrid.persistence.cassandra.IndexUpdate;
-import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.usergrid.persistence.entities.Application;
 import org.usergrid.persistence.schema.CollectionInfo;
-import org.usergrid.utils.UUIDUtils;
 
 /**
  * This is a utility to audit all available entity ids in the secondary index.

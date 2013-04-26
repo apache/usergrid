@@ -32,6 +32,7 @@ import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.mutation.Mutator;
 
 import org.apache.commons.cli.CommandLine;
