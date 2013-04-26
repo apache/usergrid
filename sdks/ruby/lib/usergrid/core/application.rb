@@ -48,7 +48,7 @@ module Usergrid
       response
     end
 
-    def access_token!
+    def login_credentials(client_id, client_secret)
       response = self['token'].post grant_type: 'client_credentials', client_id: client_id, client_secret: client_secret
       self.auth_token = response.data['access_token']
     end

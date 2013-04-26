@@ -302,26 +302,25 @@ describe Usergrid::Application do
 
     context "invalid credentials" do
       it "should not be able to get access token with invalid credentials" do
-        @app.client_id = "invalid_client_id"
-        @app.client_secret = "invalid_client_secret"
-
-        expect { @app.access_token! }.to raise_exception RestClient::BadRequest
+        expect { @app.login_credentials "invalid_client_id", "invalid_client_secret" }.to raise_exception RestClient::BadRequest
       end
 
       it "should not be able to get access token with empty credentials" do
-        expect { @app.access_token! }.to raise_exception RestClient::BadRequest
+        expect { @app.login_credentials "", "" }.to raise_exception RestClient::BadRequest
       end
     end
 
     context "valid crendentials" do
       it "should be able to get access token with invalid credentials"do
-        app_credentials = JSON.parse @app.credentials
-        @app.client_id     = app_credentials["credentials"]["client_id"]
-        @app.client_secret =  app_credentials["credentials"]["client_secret"]
+        app_info = JSON.parse @app.get
 
-        @app.access_token!
-        expect(@app.auth_token).to_not be_empty
-        expect(@app.auth_token).to be_instance_of String
+        management = login_management
+        app = management.application app_info["organization"], app_info["applicationName"]
+        app_credentials = JSON.parse app.credentials
+        app.login_credentials app_credentials["credentials"]["client_id"], app_credentials["credentials"]["client_secret"]
+
+        expect(app.auth_token).to_not be_empty
+        expect(app.auth_token).to be_instance_of String
       end
     end
   end

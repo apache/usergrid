@@ -72,25 +72,19 @@ describe Usergrid::Organization do
   describe "grant_type: client_credentials" do
     context "invalid credentials" do
       it "should not be able to get access token with invalid credentials" do
-        @organization.client_id = "invalid_client_id"
-        @organization.client_secret = "invalid_client_secret"
-
-        expect { @organization.access_token! }.to raise_exception RestClient::BadRequest
+        expect { @organization.login_credentials "invalid_client_id", "invalid_client_secret" }.to raise_exception RestClient::BadRequest
       end
 
       it "should not be able to get access token with empty credentials" do
-        expect { @organization.access_token! }.to raise_exception RestClient::BadRequest
+        expect { @organization.login_credentials "", "" }.to raise_exception RestClient::BadRequest
       end
     end
 
     context "valid crendentials" do
       it "should be able to get access token with invalid credentials" do
         org_credentials = JSON.parse @organization.credentials
+        @organization.login_credentials org_credentials["credentials"]["client_id"], org_credentials["credentials"]["client_secret"]
 
-        @organization.client_id     = org_credentials["credentials"]["client_id"]
-        @organization.client_secret =  org_credentials["credentials"]["client_secret"]
-
-        @organization.access_token!
         expect(@organization.auth_token).to_not be_empty
         expect(@organization.auth_token).to be_instance_of String
       end
