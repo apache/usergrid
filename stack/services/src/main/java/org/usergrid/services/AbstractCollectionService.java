@@ -33,6 +33,7 @@ import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.usergrid.services.ServiceResults.Type;
+import org.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
 public class AbstractCollectionService extends AbstractService {
@@ -425,6 +426,16 @@ public class AbstractCollectionService extends AbstractService {
 		return postItemById(context, ref.getUuid());
 	}
 
+  protected boolean isDeleteAllowed(ServiceContext context, Entity entity) {
+    return true;
+  }
+
+  protected void checkDeleteAllowed(ServiceContext context, Entity entity) {
+    if (!isDeleteAllowed(context, entity)) {
+      throw new ForbiddenServiceOperationException(context);
+    }
+  }
+
 	@Override
 	public ServiceResults deleteItemById(ServiceContext context, UUID id)
 			throws Exception {
@@ -443,6 +454,8 @@ public class AbstractCollectionService extends AbstractService {
 		validateEntityType(item,id);
 
 		item = importEntity(context, item);
+
+    checkDeleteAllowed(context, item);
 
 		em.removeFromCollection(context.getOwner(),
 				context.getCollectionName(), item);
@@ -472,7 +485,9 @@ public class AbstractCollectionService extends AbstractService {
 
 		checkPermissionsForEntity(context, entity);
 
-		em.removeFromCollection(context.getOwner(),
+    checkDeleteAllowed(context, entity);
+
+    em.removeFromCollection(context.getOwner(),
 				context.getCollectionName(), entity);
 
 		return new ServiceResults(this, context, Type.COLLECTION,
@@ -506,7 +521,11 @@ public class AbstractCollectionService extends AbstractService {
 
 		importEntities(context, r);
 
-		for (Entity entity : r) {
+    for (Entity entity : r) {
+      checkDeleteAllowed(context, entity);
+    }
+
+    for (Entity entity : r) {
 			em.removeFromCollection(context.getOwner(),
 					context.getCollectionName(), entity);
 		}
