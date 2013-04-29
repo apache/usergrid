@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.usergrid.utils.MapUtils.hashMap;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
@@ -378,10 +379,189 @@ public class PermissionsResourceTest extends AbstractRestTest {
   }
 
   /**
+   * Tests the scenario where we have roles declarations such as:
+   * <ul>
+   *  <li>GET /users/[star]/reviews "any user can read any others book review"</li>
+   *  <li>POST /users/[user1]/reviews "cannot post as user2 to user1's reviews"</li>
+   *  <ii>POST /users/[star]/reviews/feedback/* "can post as user2 to user1's feedback/good or /bad</ii>
+   * </ul>
+   *
+   * Scenario is as follows:
+   * Create an application
+   *
+   * Add two application users
+   * - user1
+   * - user2
+   *
+   * Create a book collection for user1
+   *
+   *
+   * @throws Exception
+   */
+  @Test
+  public void wildcardMiddlePermission() throws Exception {
+    Map<String,String> params = buildOrgAppParams();
+    OrganizationOwnerInfo orgs = managementService.createOwnerAndOrganization(params.get("orgName"),
+            params.get("username"), "noname", params.get("email"),
+            params.get("password"), true, false);
+
+        // create the app
+    ApplicationInfo appInfo = managementService.createApplication(orgs.getOrganization().getUuid(), params.get("appName"));
+    assertNotNull(appInfo);
+
+    String adminToken = managementService.getAccessTokenForAdminUser(orgs.getOwner().getUuid(), 0);
+
+    JsonNode node = resource().path(String.format("/%s/%s/roles/default", params.get("orgName"), params.get("appName")))
+               .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
+               .type(MediaType.APPLICATION_JSON_TYPE).delete(JsonNode.class);
+    Map<String, String> data = hashMap("name", "reviewer");
+
+    node = resource().path(String.format("/%s/%s/roles", params.get("orgName"), params.get("appName")))
+        .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
+        .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, data);
+    assertNull(getError(node));
+
+    // allow access to reviews
+    addPermission(params.get("orgName"),
+            params.get("appName"),
+            adminToken,
+            "reviewer",
+            "get,put,post:/reviews/**");
+    // allow access to all user's connections
+    addPermission(params.get("orgName"),
+            params.get("appName"),
+            adminToken,
+            "reviewer",
+            "get,put,post:/users/${user}/**");
+    // allow access to the review relationship
+    addPermission(params.get("orgName"),
+            params.get("appName"),
+            adminToken,
+            "reviewer",
+            "get,put,post:/books/*/review/*");
+
+    assertNull(getError(node));
+    // create userOne
+    UUID userOneId = createRoleUser(orgs.getOrganization().getUuid(),
+            appInfo.getId(), adminToken,
+            "wildcardpermuserone",
+            "wildcardpermuserone@apigee.com" );
+    assertNotNull(userOneId);
+
+    // create userTwo
+    UUID userTwoId = createRoleUser(orgs.getOrganization().getUuid(),
+                appInfo.getId(), adminToken,
+                "wildcardpermusertwo",
+                "wildcardpermusertwo@apigee.com" );
+    assertNotNull(userTwoId);
+
+
+    // assign userOne the reviewer role
+    node = resource().path(String.format("/%s/%s/users/%s/roles/reviewer", params.get("orgName"),
+            params.get("appName"), userOneId.toString()))
+                .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+
+    Map<String, String> book = hashMap("title", "Ready Player One")
+            .map("author", "Earnest Cline");
+
+    // create a book as admin
+    node = resource().path(String.format("/%s/%s/books", params.get("orgName"), params.get("appName")))
+            .queryParam("access_token", adminToken).accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, book);
+
+    logNode(node);
+    assertEquals("Ready Player One", getEntity(node,0).get("title").getTextValue());
+    String bookId = getEntity(node,0).get("uuid").getTextValue();
+
+    String userOneToken = managementService.getAccessTokenForAppUser(appInfo.getId(), userOneId, 0);
+    // post a review of the book as user1
+    // POST https://api.usergrid.com/my-org/my-app/users/$user1/reviewed/books/$uuid
+    Map<String,String> review = hashMap("heading","Loved It")
+            .map("body", "80s Awesomeness set in the future");
+    node = resource().path(String.format("/%s/%s/reviews", params.get("orgName"), params.get("appName")))
+                .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, review);
+    String reviewId = getEntity(node,0).get("uuid").getTextValue();
+
+    // POST https://api.usergrid.com/my-org/my-app/users/me/wrote/review/${reviewId}
+    node =  resource().path(String.format("/%s/%s/users/me/wrote/review/%s",
+            params.get("orgName"),
+            params.get("appName"),
+            reviewId))
+            .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+
+    node =  resource().path(String.format("/%s/%s/users/me/reviewed/books/%s",
+            params.get("orgName"),
+            params.get("appName"),
+            bookId))
+            .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+    logNode(node);
+    // POST https://api.usergrid.com/my-org/my-app/books/${bookId}/review/${reviewId}
+    node =  resource().path(String.format("/%s/%s/books/%s/review/%s",
+                params.get("orgName"),
+                params.get("appName"),
+                bookId,
+                reviewId))
+                .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+    logNode(node);
+    // now try to post the same thing to books to verify as userOne the failure
+    Status status = null;
+    try{
+      node =  resource().path(String.format("/%s/%s/books",
+              params.get("orgName"),
+              params.get("appName")))
+              .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
+              .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class);
+      logNode(node);
+    } catch (UniformInterfaceException uie) {
+      status = uie.getResponse().getClientResponseStatus();
+    }
+    assertEquals(Status.UNAUTHORIZED, status);
+
+    node =  resource().path(String.format("/%s/%s/users/me/reviewed/books",
+            params.get("orgName"),
+            params.get("appName")))
+            .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+    logNode(node);
+
+    node =  resource().path(String.format("/%s/%s/reviews/%s",
+            params.get("orgName"),
+            params.get("appName"),
+            reviewId))
+            .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+    logNode(node);
+
+    node =  resource().path(String.format("/%s/%s/users/me/wrote",
+            params.get("orgName"),
+            params.get("appName")))
+            .queryParam("access_token", userOneToken).accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE).get(JsonNode.class);
+    logNode(node);
+
+  }
+
+  private Map<String,String> buildOrgAppParams() {
+    UUID id = UUIDUtils.newTimeUUID();
+    Map<String,String> props = hashMap("username","wcpermadmin")
+            .map("orgName","orgnamewcperm")
+            .map("appName","test")
+            .map("password","password")
+            .map("email",String.format("email%s@apigee.com", id.toString()));
+
+    return props;
+  }
+
+  /**
    * Create the user, check there are no errors
    * 
-   * @param orgname
-   * @param appname
+   * @param orgId
+   * @param appId
    * @param adminToken
    * @param username
    * @param email
@@ -449,7 +629,6 @@ public class PermissionsResourceTest extends AbstractRestTest {
    * 
    * @param orgname
    * @param appname
-   * @param adminToken
    * @param rolename
    * @param grant
    */

@@ -83,35 +83,44 @@ public class AbstractCollectionService extends AbstractService {
 		return entity;
 	}
 
+  private EntityRef loadFromId(ServiceContext context, UUID id) throws Exception {
+    EntityRef entity = null;
+
+  		if (!context.moreParameters()) {
+  			entity = em.get(id);
+
+  			entity = importEntity(context, (Entity) entity);
+  		} else {
+  			entity = em.getRef(id);
+  		}
+
+  		if (entity == null) {
+  			throw new ServiceResourceNotFoundException(context);
+  		}
+      return entity;
+  }
+
+  private ServiceResults getItemById(ServiceContext context, UUID id, boolean skipPermissionCheck)
+          throws Exception {
+    EntityRef entity = loadFromId(context, id);
+    if ( !skipPermissionCheck ) {
+      checkPermissionsForEntity(context, entity);
+    }
+
+    // TODO check that entity is in fact in the collection
+
+    List<ServiceRequest> nextRequests = context
+            .getNextServiceRequests(entity);
+
+    return new ServiceResults(this, context, Type.COLLECTION,
+            Results.fromRef(entity), null, nextRequests);
+  }
+
 	@Override
 	public ServiceResults getItemById(ServiceContext context, UUID id)
 			throws Exception {
 
-		EntityRef entity = null;
-
-		if (!context.moreParameters()) {
-			entity = em.get(id);
-
-			entity = importEntity(context, (Entity) entity);
-		} else {
-			entity = em.getRef(id);
-		}
-
-		if (entity == null) {
-			throw new ServiceResourceNotFoundException(context);
-		}
-
-		validateEntityType(entity,id);
-
-		checkPermissionsForEntity(context, entity);
-
-		// TODO check that entity is in fact in the collection
-
-		List<ServiceRequest> nextRequests = context
-				.getNextServiceRequests(entity);
-
-		return new ServiceResults(this, context, Type.COLLECTION,
-				Results.fromRef(entity), null, nextRequests);
+		return getItemById(context, id, false);
 	}
 
 	@Override
@@ -238,7 +247,7 @@ public class AbstractCollectionService extends AbstractService {
 			throws Exception {
 
 		if (context.moreParameters()) {
-			return getItemById(context, id);
+			return getItemById(context, id, true);
 		}
 
 		checkPermissionsForEntity(context, id);
@@ -387,12 +396,10 @@ public class AbstractCollectionService extends AbstractService {
 	@Override
 	public ServiceResults postItemById(ServiceContext context, UUID id)
 			throws Exception {
-
-		checkPermissionsForEntity(context, id);
-
-		if (context.moreParameters()) {
-			return getItemById(context, id);
-		}
+    if (context.moreParameters()) {
+      return getItemById(context, id, true);
+    }
+    checkPermissionsForEntity(context, id);
 
 		Entity entity = em.get(id);
 		if (entity == null) {
