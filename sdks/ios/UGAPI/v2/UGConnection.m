@@ -106,6 +106,9 @@
 - (NSMutableURLRequest *) getAccessTokenForApplicationWithUsername:(NSString *) username
                                                           password:(NSString *) password
 {
+    if (!username || !password) {
+        return nil;
+    }
     NSDictionary *query = @{@"grant_type":@"password",
                             @"username":username,
                             @"password":password};
@@ -118,6 +121,9 @@
 - (NSMutableURLRequest *) getAccessTokenForApplicationWithClientID:(NSString *) clientID
                                                       clientSecret:(NSString *) clientSecret
 {
+    if (!clientID || !clientSecret) {
+        return nil;
+    }
     NSDictionary *query = @{@"grant_type":@"client_credentials",
                             @"client_id":clientID,
                             @"client_secret":clientSecret};
