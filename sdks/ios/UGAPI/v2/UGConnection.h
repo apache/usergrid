@@ -53,6 +53,10 @@
 - (NSMutableURLRequest *) getAccessTokenForApplicationWithClientID:(NSString *) clientID
                                                       clientSecret:(NSString *) clientSecret;
 
+// Client authorization
+
+- (NSMutableURLRequest *) authorizeClient:(NSString *) clientIdentifier withResponseType:(NSString *) responseType;
+
 // Organizations and Applications http://apigee.com/docs/usergrid/content/organization
 
 - (NSMutableURLRequest *) createOrganizationWithValues:(NSDictionary *) values;
