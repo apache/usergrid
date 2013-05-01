@@ -103,6 +103,7 @@ public class AbstractCollectionService extends AbstractService {
   private ServiceResults getItemById(ServiceContext context, UUID id, boolean skipPermissionCheck)
           throws Exception {
     EntityRef entity = loadFromId(context, id);
+    validateEntityType(entity,id);
     if ( !skipPermissionCheck ) {
       checkPermissionsForEntity(context, entity);
     }
