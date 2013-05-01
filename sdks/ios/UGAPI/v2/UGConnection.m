@@ -88,8 +88,8 @@
 - (BOOL) authenticateWithResult:(UGHTTPResult *) result
 {
     id results = result.object;
-    id expires = results[@"expires_in"];
     self.token = results[@"access_token"];
+    id expires = results[@"expires_in"];
     self.tokenExpirationDate = [NSDate dateWithTimeIntervalSinceNow:[expires intValue]];
     return [self isAuthenticated];
 }
@@ -109,25 +109,33 @@
 - (NSMutableURLRequest *) getAccessTokenForAdminWithUsername:(NSString *) username
                                                     password:(NSString *) password
 {
+    if (!username || !password) {
+        return nil;
+    }
     NSDictionary *query = @{@"grant_type":@"password",
                             @"username":username,
                             @"password":password};
     NSString *path = [NSMutableString stringWithFormat:@"%@/management/token?%@",
-                      self.server,
-                      [query URLQueryString]];
-    return [self authorizedRequestWithMethod:@"GET" path:path body:nil];
+                      self.server, [query URLQueryString]];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
 }
 
 - (NSMutableURLRequest *) getAccessTokenForOrganizationWithClientID:(NSString *) clientID
                                                        clientSecret:(NSString *) clientSecret
 {
+    if (!clientID || !clientSecret) {
+        return nil;
+    }
     NSDictionary *query = @{@"grant_type":@"client_credentials",
                             @"client_id":clientID,
                             @"client_secret":clientSecret};
     NSString *path = [NSMutableString stringWithFormat:@"%@/management/token?%@",
-                      self.server,
-                      [query URLQueryString]];
-    return [self authorizedRequestWithMethod:@"GET" path:path body:nil];
+                      self.server, [query URLQueryString]];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
 }
 
 - (NSMutableURLRequest *) getAccessTokenForApplicationWithUsername:(NSString *) username
@@ -140,9 +148,10 @@
                             @"username":username,
                             @"password":password};
     NSString *path = [NSMutableString stringWithFormat:@"%@/token?%@",
-                      self.root,
-                      [query URLQueryString]];
-    return [self authorizedRequestWithMethod:@"GET" path:path body:nil];
+                      self.root, [query URLQueryString]];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
 }
 
 - (NSMutableURLRequest *) getAccessTokenForApplicationWithClientID:(NSString *) clientID
@@ -155,9 +164,10 @@
                             @"client_id":clientID,
                             @"client_secret":clientSecret};
     NSString *path = [NSMutableString stringWithFormat:@"%@/token?%@",
-                      self.root,
-                      [query URLQueryString]];
-    return [self authorizedRequestWithMethod:@"GET" path:path body:nil];
+                      self.root, [query URLQueryString]];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
 }
 
 #pragma mark Organizations and Applications
@@ -165,7 +175,8 @@
 
 - (NSMutableURLRequest *) createOrganization:(NSDictionary *) organization
 {
-    NSString *path = [NSString stringWithFormat:@"%@/management/organizations", self.server];
+    NSString *path = [NSString stringWithFormat:@"%@/management/organizations",
+                      self.server];
     return [self authorizedRequestWithMethod:@"POST"
                                         path:path
                                         body:[organization URLQueryData]];
@@ -207,8 +218,7 @@
 - (NSMutableURLRequest *) getApplicationsForOrganization
 {
     NSString *path = [NSMutableString stringWithFormat:@"%@/management/organizations/%@/applications",
-                      self.server,
-                      self.organization];
+                      self.server, self.organization];
     return [self authorizedRequestWithMethod:@"GET"
                                         path:path
                                         body:nil];
@@ -219,7 +229,8 @@
 
 - (NSMutableURLRequest *) createAdminUser:(NSDictionary *) user
 {
-    NSString *path = [NSString stringWithFormat:@"%@/management/users", self.server];
+    NSString *path = [NSString stringWithFormat:@"%@/management/users",
+                      self.server];
     return [self authorizedRequestWithMethod:@"POST"
                                         path:path
                                         body:[user URLQueryData]];
@@ -232,11 +243,10 @@
 
 #pragma mark Assets
 
-- (NSMutableURLRequest *) getDataForAssetWithUUID:(NSString *) uuid
+- (NSMutableURLRequest *) getDataForAsset:(NSString *) assetIdentifier
 {
     NSString *path = [NSMutableString stringWithFormat:@"%@/assets/%@/data",
-                      self.root,
-                      uuid];
+                      self.root, assetIdentifier];
     NSMutableURLRequest *request = [self authorizedRequestWithMethod:@"GET"
                                                                 path:path
                                                                 body:nil];
@@ -244,11 +254,11 @@
 }
 
 - (NSMutableURLRequest *) postData:(NSData *) data
-                  forAssetWithUUID:(NSString *) uuid
+                          forAsset:(NSString *) assetIdentifier
 {
     NSString *path = [NSMutableString stringWithFormat:@"%@/assets/%@/data",
                       self.root,
-                      uuid];
+                      assetIdentifier];
     NSMutableURLRequest *request = [self authorizedRequestWithMethod:@"POST"
                                                                 path:path
                                                                 body:data];
@@ -263,8 +273,7 @@
                                         withValues:(NSDictionary *)values
 {
     NSString *path = [NSMutableString stringWithFormat:@"%@/%@",
-                      self.root,
-                      collection];
+                      self.root, collection];
     NSError *error;
     NSData *data = [NSJSONSerialization dataWithJSONObject:values options:0 error:&error];
     if (!data) {
@@ -275,24 +284,22 @@
                                         body:data];
 }
 
-- (NSMutableURLRequest *) getEntityInCollection:(NSString *)collection
-                                       withUUID:(NSString *)uuid
+- (NSMutableURLRequest *) getEntity:(NSString *) entityIdentifier
+                       inCollection:(NSString *) collection
 {
     NSString *path = [NSMutableString stringWithFormat:@"%@/%@/%@",
-                      self.root,
-                      collection,
-                      uuid];
+                      self.root, collection, entityIdentifier];
     return [self authorizedRequestWithMethod:@"GET"
                                         path:path
                                         body:nil];
 }
 
-- (NSMutableURLRequest *) updateEntityInCollection:(NSString *) collection
-                                          withUUID:(NSString *) uuid
-                                         newValues:(NSDictionary *) newValues {
-    NSString *path = [NSString stringWithFormat:@"%@/%@/%@", self.root, collection, uuid];
+- (NSMutableURLRequest *) updateEntity:(NSString *) entityIdentifier
+                          inCollection:(NSString *) collection
+                            withValues:(NSDictionary *) values {
+    NSString *path = [NSString stringWithFormat:@"%@/%@/%@", self.root, collection, entityIdentifier];
     NSError *error;
-    NSData *data = [NSJSONSerialization dataWithJSONObject:newValues options:0 error:&error];
+    NSData *data = [NSJSONSerialization dataWithJSONObject:values options:0 error:&error];
     if (!data) {
         NSLog(@"%@", error);
     }
@@ -301,10 +308,10 @@
                                         body:data];
 }
 
-- (NSMutableURLRequest *) deleteEntityInCollection:(NSString *) collection
-                                          withUUID:(NSString *) uuid
+- (NSMutableURLRequest *) deleteEntity:(NSString *) entityIdentifier
+                          inCollection:(NSString *) collection
 {
-    NSString *path = [NSString stringWithFormat:@"%@/%@/%@", self.root, collection, uuid];
+    NSString *path = [NSString stringWithFormat:@"%@/%@/%@", self.root, collection, entityIdentifier];
     return [self authorizedRequestWithMethod:@"DELETE"
                                         path:path
                                         body:nil];
@@ -313,37 +320,18 @@
 - (NSMutableURLRequest *) getEntitiesInCollection:(NSString *) collection
                                             limit:(int) limit
 {
+    NSDictionary *query = [self queryWithString:@"select *"
+                                          limit:limit
+                                      startUUID:nil
+                                         cursor:nil
+                                       reversed:NO];
     return [self getEntitiesInCollection:collection
-                         withQueryString:@"select *"
-                                   limit:limit
-                               startUUID:nil
-                                  cursor:nil
-                                reversed:NO];
+                              usingQuery:query];
 }
 
 - (NSMutableURLRequest *) getEntitiesInCollection:(NSString *) collection
-                                  withQueryString:(NSString *) queryString
-                                            limit:(int) limit
-                                        startUUID:(NSString *) startUUID
-                                           cursor:(NSString *) cursor
-                                         reversed:(BOOL) reversed
+                                       usingQuery:(NSDictionary *) query
 {
-    NSMutableDictionary *query = [NSMutableDictionary dictionary];
-    if (queryString) {
-        query[@"ql"] = queryString;
-    }
-    if (limit > 0) {
-        query[@"limit"] = [NSNumber numberWithInt:limit];
-    }
-    if (startUUID) {
-        query[@"start"] = startUUID;
-    }
-    if (cursor) {
-        query[@"cursor"] = cursor;
-    }
-    if (reversed) {
-        query[@"reversed"] = @"true";
-    }
     NSString *path = [NSMutableString stringWithFormat:@"%@/%@?%@",
                       self.root,
                       collection,
@@ -354,8 +342,8 @@
 }
 
 - (NSMutableURLRequest *) updateEntitiesInCollection:(NSString *) collection
-                                     withQueryString:(NSString *) queryString
-                                           newValues:(NSDictionary *) newValues
+                                          usingQuery:(NSDictionary *) query
+                                          withValues:(NSDictionary *) values
 {
     assert(0); // todo
     return nil;
@@ -363,14 +351,18 @@
 
 - (NSMutableURLRequest *) deleteEntitiesInCollection:(NSString *) collection
 {
+    NSDictionary *query = [self queryWithString:@"select *"
+                                          limit:0
+                                      startUUID:nil
+                                         cursor:nil
+                                       reversed:NO];
     return [self deleteEntitiesInCollection:collection
-                            withQueryString:@"select *"];
+                                 usingQuery:query];
 }
 
 - (NSMutableURLRequest *) deleteEntitiesInCollection:(NSString *) collection
-                                     withQueryString:(NSString *) queryString
+                                          usingQuery:(NSDictionary *) query
 {
-    NSDictionary *query = @{@"ql":queryString};
     NSString *path = [NSString stringWithFormat:@"%@/%@?%@", self.root, collection, [query URLQueryString]];
     return [self authorizedRequestWithMethod:@"DELETE"
                                         path:path
@@ -383,8 +375,80 @@
 #pragma mark Events and Counters
 // http://apigee.com/docs/usergrid/content/events-and-counters
 
+- (NSMutableURLRequest *) createEventWithValues:(NSDictionary *) values
+{
+    NSString *path = [NSString stringWithFormat:@"%@/events", self.root];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
 #pragma mark Groups
 // http://apigee.com/docs/usergrid/content/group
+
+- (NSMutableURLRequest *) createGroupWithValues:(NSDictionary *) values
+{
+    NSString *path = [NSString stringWithFormat:@"%@/groups", self.root];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) addUser:(NSString *) user
+                          toGroup:(NSString *) group
+{
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/users/%@",
+                      self.root, group, user];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getGroup:(NSString *) groupName
+{
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@", self.root, groupName];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) updateGroup:(NSString *) groupName
+                           withValues:(NSDictionary *) values
+{
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@",
+                      self.root, groupName];
+    return [self authorizedRequestWithMethod:@"PUT"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) deleteUser:(NSString *) user
+                           fromGroup:(NSString *) groupName
+{
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/users/%@",
+                      self.root, groupName, user];
+    return [self authorizedRequestWithMethod:@"DELETE"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) deleteGroup:(NSString *) groupName
+{
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@",
+                      self.root, groupName];
+    return [self authorizedRequestWithMethod:@"DELETE"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getUsersInGroup:(NSString *) groupName
+{
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/users",
+                      self.root, groupName];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
 
 #pragma mark Roles
 // http://apigee.com/docs/usergrid/content/role
@@ -434,7 +498,7 @@
 }
 
 - (NSMutableURLRequest *) deletePermissionsFromRole:(NSString *) roleName
-                                        withPattern:(NSString *) pattern
+                                       usingPattern:(NSString *) pattern
 {
     NSString *path = [NSString stringWithFormat:@"%@/roles/%@/permissions?pattern=%@",
                       self.root, roleName, pattern];
@@ -469,7 +533,7 @@
                       self.root, roleName, user];
     return [self authorizedRequestWithMethod:@"DELETE"
                                         path:path
-                                        body:nil];  
+                                        body:nil];
 }
 
 #pragma mark Users
@@ -506,13 +570,13 @@
 }
 
 - (NSMutableURLRequest *) updateUser:(NSString *) username
-                          withValues:(NSDictionary *) newValues
+                          withValues:(NSDictionary *) values
 {
     NSString *path = [NSString stringWithFormat:@"%@/users/%@",
                       self.root, username];
     return [self authorizedRequestWithMethod:@"PUT"
                                         path:path
-                                        body:[newValues URLQueryData]];
+                                        body:[values URLQueryData]];
 }
 
 - (NSMutableURLRequest *) deleteUser:(NSString *) username
@@ -524,7 +588,7 @@
                                         body:nil];
 }
 
-- (NSMutableURLRequest *) getUsersWithQuery:(NSDictionary *) query
+- (NSMutableURLRequest *) getUsersUsingQuery:(NSDictionary *) query
 {
     NSString *path = [NSString stringWithFormat:@"%@/users?%@",
                       self.root, [query URLQueryString]];
@@ -533,20 +597,10 @@
                                         body:nil];
 }
 
-- (NSMutableURLRequest *) addUser:(NSString *) user
-                          toGroup:(NSString *) group
-{
-    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/users/%@",
-                      self.root, group, user];
-    return [self authorizedRequestWithMethod:@"POST"
-                                        path:path
-                                        body:nil];
-}
-
 - (NSMutableURLRequest *) connectEntity:(NSString *) entity1
                            inCollection:(NSString *) collection
                                toEntity:(NSString *) entity2
-                       withRelationship:(NSString *) relationship
+                    throughRelationship:(NSString *) relationship
 {
     NSString *path = [NSString stringWithFormat:@"%@/%@/%@/%@/%@",
                       self.root, collection, entity1, relationship, entity2];
@@ -558,7 +612,7 @@
 - (NSMutableURLRequest *) disconnectEntity:(NSString *) entity1
                               inCollection:(NSString *) collection
                                 fromEntity:(NSString *) entity2
-                          withRelationship:(NSString *) relationship
+                       throughRelationship:(NSString *) relationship
 {
     NSString *path = [NSString stringWithFormat:@"%@/%@/%@/%@/%@",
                       self.root, collection, entity1, relationship, entity2];
@@ -569,8 +623,8 @@
 
 - (NSMutableURLRequest *) getConnectionsToEntity:(NSString *) entity
                                     inCollection:(NSString *) collection
-                                withRelationship:(NSString *) relationship
-                                           query:(NSDictionary *) query
+                             throughRelationship:(NSString *) relationship
+                                      usingQuery:(NSDictionary *) query
 {
     NSString *path = [NSString stringWithFormat:@"%@/%@/%@/%@?%@",
                       self.root, collection, entity, relationship, [query URLQueryString]];
