@@ -116,6 +116,64 @@
 
 // Roles http://apigee.com/docs/usergrid/content/role
 
+- (NSMutableURLRequest *) createRoleWithValues:(NSDictionary *) values;
+
+- (NSMutableURLRequest *) getRoles;
+
+- (NSMutableURLRequest *) deleteRole:(NSString *) roleName;
+
+- (NSMutableURLRequest *) getPermissionsForRole:(NSString *) roleName;
+
+- (NSMutableURLRequest *) addPermissionsToRole:(NSString *) roleName
+                                    withValues:(NSDictionary *) values;
+
+- (NSMutableURLRequest *) deletePermissionsFromRole:(NSString *) roleName
+                                        withPattern:(NSString *) pattern;
+
+- (NSMutableURLRequest *) addUser:(NSString *)user
+                           toRole:(NSString *)roleName;
+
+- (NSMutableURLRequest *) getUsersInRole:(NSString *) roleName;
+
+- (NSMutableURLRequest *) deleteUser:(NSString *) user
+                            fromRole:(NSString *) roleName;
+
 // Users http://apigee.com/docs/usergrid/content/user
+
+- (NSMutableURLRequest *) createUserWithValues:(NSDictionary *) values;
+
+- (NSMutableURLRequest *) setPasswordForUser:(NSString *) username
+                                  toPassword:(NSString *) newPassword
+                                fromPassword:(NSString *) oldPassword;
+
+- (NSMutableURLRequest *) getUser:(NSString *) username;
+
+- (NSMutableURLRequest *) updateUser:(NSString *) username
+                          withValues:(NSDictionary *) values;
+
+- (NSMutableURLRequest *) deleteUser:(NSString *) username;
+
+- (NSMutableURLRequest *) getUsersWithQuery:(NSDictionary *) query;
+
+- (NSMutableURLRequest *) addUser:(NSString *) user
+                          toGroup:(NSString *) group;
+
+- (NSMutableURLRequest *) connectEntity:(NSString *) entity1
+                           inCollection:(NSString *) collection
+                               toEntity:(NSString *) entity2
+                       withRelationship:(NSString *) relationship;
+
+- (NSMutableURLRequest *) disconnectEntity:(NSString *) entity1
+                              inCollection:(NSString *) collection
+                                fromEntity:(NSString *) entity2
+                          withRelationship:(NSString *) relationship;
+
+- (NSMutableURLRequest *) getConnectionsToEntity:(NSString *) entity
+                                    inCollection:(NSString *) collection
+                                withRelationship:(NSString *) relationship
+                                           query:(NSDictionary *) query;
+
+- (NSMutableURLRequest *) getFeedForUser:(NSString *) username;
+
 
 @end

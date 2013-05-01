@@ -56,6 +56,33 @@
 
 #pragma mark - External helpers -
 
+#pragma mark Queries
+
+- (NSMutableDictionary *) queryWithString:(NSString *) queryString
+                                    limit:(int) limit
+                                startUUID:(NSString *) startUUID
+                                   cursor:(NSString *) cursor
+                                 reversed:(BOOL) reversed
+{
+    NSMutableDictionary *query = [NSMutableDictionary dictionary];
+    if (queryString) {
+        query[@"ql"] = queryString;
+    }
+    if (limit > 0) {
+        query[@"limit"] = [NSNumber numberWithInt:limit];
+    }
+    if (startUUID) {
+        query[@"start"] = startUUID;
+    }
+    if (cursor) {
+        query[@"cursor"] = cursor;
+    }
+    if (reversed) {
+        query[@"reversed"] = @"true";
+    }
+    return query;
+}
+
 #pragma mark Authentication
 
 - (BOOL) authenticateWithResult:(UGHTTPResult *) result
@@ -362,7 +389,203 @@
 #pragma mark Roles
 // http://apigee.com/docs/usergrid/content/role
 
+- (NSMutableURLRequest *) createRoleWithValues:(NSDictionary *) values
+{
+    NSString *path = [NSString stringWithFormat:@"%@/roles", self.root];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) getRoles
+{
+    NSString *path = [NSString stringWithFormat:@"%@/roles", self.root];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) deleteRole:(NSString *) roleName
+{
+    NSString *path = [NSString stringWithFormat:@"%@/roles/%@",
+                      self.root, roleName];
+    return [self authorizedRequestWithMethod:@"DELETE"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getPermissionsForRole:(NSString *) roleName
+{
+    NSString *path = [NSString stringWithFormat:@"%@/roles/%@",
+                      self.root, roleName];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) addPermissionsToRole:(NSString *) roleName
+                                    withValues:(NSDictionary *) values
+{
+    NSString *path = [NSString stringWithFormat:@"%@/roles/%@/permissions",
+                      self.root, roleName];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) deletePermissionsFromRole:(NSString *) roleName
+                                        withPattern:(NSString *) pattern
+{
+    NSString *path = [NSString stringWithFormat:@"%@/roles/%@/permissions?pattern=%@",
+                      self.root, roleName, pattern];
+    return [self authorizedRequestWithMethod:@"DELETE"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) addUser:(NSString *)user
+                           toRole:(NSString *)roleName
+{
+    NSString *path = [NSString stringWithFormat:@"%@/roles/%@/users/%@",
+                      self.root, roleName, user];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getUsersInRole:(NSString *) roleName
+{
+    NSString *path = [NSString stringWithFormat:@"%@/roles/%@/users",
+                      self.root, roleName];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) deleteUser:(NSString *) user
+                            fromRole:(NSString *) roleName
+{
+    NSString *path = [NSString stringWithFormat:@"%@/roles/%@/users/%@",
+                      self.root, roleName, user];
+    return [self authorizedRequestWithMethod:@"DELETE"
+                                        path:path
+                                        body:nil];  
+}
+
 #pragma mark Users
 // http://apigee.com/docs/usergrid/content/user
+
+- (NSMutableURLRequest *) createUserWithValues:(NSDictionary *) values
+{
+    NSString *path = [NSString stringWithFormat:@"%@/users", self.root];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) setPasswordForUser:(NSString *) username
+                                  toPassword:(NSString *) newPassword
+                                fromPassword:(NSString *) oldPassword
+{
+    NSDictionary *query = @{@"newpassword":newPassword,
+                            @"oldpassword":oldPassword};
+    NSString *path = [NSString stringWithFormat:@"%@/users/%@/password",
+                      self.root, username];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:[query URLQueryData]];
+}
+
+- (NSMutableURLRequest *) getUser:(NSString *) username
+{
+    NSString *path = [NSString stringWithFormat:@"%@/users/%@",
+                      self.root, username];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) updateUser:(NSString *) username
+                          withValues:(NSDictionary *) newValues
+{
+    NSString *path = [NSString stringWithFormat:@"%@/users/%@",
+                      self.root, username];
+    return [self authorizedRequestWithMethod:@"PUT"
+                                        path:path
+                                        body:[newValues URLQueryData]];
+}
+
+- (NSMutableURLRequest *) deleteUser:(NSString *) username
+{
+    NSString *path = [NSString stringWithFormat:@"%@/users/%@",
+                      self.root, username];
+    return [self authorizedRequestWithMethod:@"DELETE"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getUsersWithQuery:(NSDictionary *) query
+{
+    NSString *path = [NSString stringWithFormat:@"%@/users?%@",
+                      self.root, [query URLQueryString]];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) addUser:(NSString *) user
+                          toGroup:(NSString *) group
+{
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/users/%@",
+                      self.root, group, user];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) connectEntity:(NSString *) entity1
+                           inCollection:(NSString *) collection
+                               toEntity:(NSString *) entity2
+                       withRelationship:(NSString *) relationship
+{
+    NSString *path = [NSString stringWithFormat:@"%@/%@/%@/%@/%@",
+                      self.root, collection, entity1, relationship, entity2];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) disconnectEntity:(NSString *) entity1
+                              inCollection:(NSString *) collection
+                                fromEntity:(NSString *) entity2
+                          withRelationship:(NSString *) relationship
+{
+    NSString *path = [NSString stringWithFormat:@"%@/%@/%@/%@/%@",
+                      self.root, collection, entity1, relationship, entity2];
+    return [self authorizedRequestWithMethod:@"DELETE"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getConnectionsToEntity:(NSString *) entity
+                                    inCollection:(NSString *) collection
+                                withRelationship:(NSString *) relationship
+                                           query:(NSDictionary *) query
+{
+    NSString *path = [NSString stringWithFormat:@"%@/%@/%@/%@?%@",
+                      self.root, collection, entity, relationship, [query URLQueryString]];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getFeedForUser:(NSString *) username
+{
+    NSString *path = [NSString stringWithFormat:@"%@/users/%@/feed",
+                      self.root, username];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
 
 @end
