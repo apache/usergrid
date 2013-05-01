@@ -11,10 +11,13 @@
 
 @interface UGConnection : NSObject
 
+// These three properties tie a  UGConnection to a specific application instance
 @property (nonatomic, strong) NSString *server;
 @property (nonatomic, strong) NSString *organization;
 @property (nonatomic, strong) NSString *application;
 
+// As a convenience, a sharedConnection object is available,
+// but any number of UGConnection objects may be created and separately configured.
 + (UGConnection *) sharedConnection;
 
 // Query helper: construct query dictionary from arguments
@@ -26,6 +29,7 @@
 
 // Authentication helper: call this method with the result of a getAccessToken request.
 - (BOOL) authenticateWithResult:(UGHTTPResult *) result;
+
 // Authentication helper: use this to confirm that a connection has a usable access token.
 - (BOOL) isAuthenticated;
 
@@ -36,6 +40,7 @@
 // We recommend (but do not require) that they be made with instances of the UGHTTPClient class.
 //
 // The goal here is to directly expose the complete Usergrid API.
+//
 // This follows http://apigee.com/docs/usergrid/content/app-services-resources
 //
 
@@ -52,6 +57,30 @@
 
 - (NSMutableURLRequest *) getAccessTokenForApplicationWithClientID:(NSString *) clientID
                                                       clientSecret:(NSString *) clientSecret;
+
+// Admin users http://apigee.com/docs/usergrid/content/admin-user
+
+- (NSMutableURLRequest *) createAdminUserWithValues:(NSDictionary *) values;
+
+- (NSMutableURLRequest *) updateAdminUser:(NSString *) adminUserIdentifier
+                               withValues:(NSDictionary *) values;
+
+- (NSMutableURLRequest *) getAdminUser:(NSString *) adminUserIdentifier;
+
+- (NSMutableURLRequest *) setPasswordForAdminUser:(NSString *) adminUserIdentifier
+                                          toValue:(NSString *) password;
+
+- (NSMutableURLRequest *) initiatePasswordResetForAdminUser;
+
+- (NSMutableURLRequest *) completePasswordResetForAdminUserWithValues:(NSDictionary *) values;
+
+- (NSMutableURLRequest *) activateAdminUser:(NSString *) adminUserIdentifier
+                                  withToken:(NSString *) token
+                   sendingConfirmationEmail:(BOOL) sendingConfirmationEmail;
+
+- (NSMutableURLRequest *) reactivateAdminUser:(NSString *) adminUserIdentifier;
+
+- (NSMutableURLRequest *) getActivityFeedForAdminUser:(NSString *) adminUserIdentifier;
 
 // Client authorization
 
@@ -100,31 +129,6 @@
 - (NSMutableURLRequest *) getApplication:(NSString *) applicationIdentifier
                           inOrganization:(NSString *) organizationIdentifier;
 
-
-// Admin users http://apigee.com/docs/usergrid/content/admin-user
-
-- (NSMutableURLRequest *) createAdminUserWithValues:(NSDictionary *) values;
-
-- (NSMutableURLRequest *) updateAdminUser:(NSString *) adminUserIdentifier
-                               withValues:(NSDictionary *) values;
-
-- (NSMutableURLRequest *) getAdminUser:(NSString *) adminUserIdentifier;
-
-- (NSMutableURLRequest *) setPasswordForAdminUser:(NSString *) adminUserIdentifier
-                                          toValue:(NSString *) password;
-
-- (NSMutableURLRequest *) initiatePasswordResetForAdminUser;
-
-- (NSMutableURLRequest *) completePasswordResetForAdminUserWithValues:(NSDictionary *) values;
-
-- (NSMutableURLRequest *) activateAdminUser:(NSString *) adminUserIdentifier
-                                  withToken:(NSString *) token
-                   sendingConfirmationEmail:(BOOL) sendingConfirmationEmail;
-
-- (NSMutableURLRequest *) reactivateAdminUser:(NSString *) adminUserIdentifier;
-
-- (NSMutableURLRequest *) getActivityFeedForAdminUser:(NSString *) adminUserIdentifier;
-
 // Activity http://apigee.com/docs/usergrid/content/activity
 
 - (NSMutableURLRequest *) createActivityForUser:(NSString *) userIdentifier
@@ -152,7 +156,7 @@
 - (NSMutableURLRequest *) postData:(NSData *) data
                           forAsset:(NSString *) assetIdentifier;
 
-// General-purpose endpoints http://apigee.com/docs/usergrid/content/general-purpose-endpoints
+// Collections (aka General-purpose endpoints) http://apigee.com/docs/usergrid/content/general-purpose-endpoints
 
 - (NSMutableURLRequest *) createEntityInCollection:(NSString *) collection
                                         withValues:(NSDictionary *) values;
@@ -184,6 +188,8 @@
 
 
 // Devices http://apigee.com/docs/usergrid/content/device
+
+// there are no device-specific methods
 
 // Events and Counters http://apigee.com/docs/usergrid/content/events-and-counters
 
