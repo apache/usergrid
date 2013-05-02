@@ -123,7 +123,7 @@ import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.Results.Level;
 import org.usergrid.persistence.cassandra.GeoIndexManager.EntityLocationRef;
 import org.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
-import org.usergrid.persistence.cassandra.index.CompleteIndexScanner;
+import org.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
 import org.usergrid.persistence.entities.Group;
@@ -156,6 +156,15 @@ public class RelationManagerImpl implements RelationManager {
     public static final UUIDSerializer ue = new UUIDSerializer();
     public static final LongSerializer le = new LongSerializer();
     private static final UUID NULL_ID = new UUID(0, 0);
+    /**
+     * Max page size when scanning indexes to load at a time
+     */
+    private static final int PAGE_SIZE = Query.MAX_LIMIT;
+    
+    /**
+     * The maximum number of possible elements to 
+     */
+    public static final int MAX_LOAD = PAGE_SIZE*10;
 
     public RelationManagerImpl() {
     }
@@ -2163,7 +2172,7 @@ public class RelationManagerImpl implements RelationManager {
         IndexScanner scanner = new IndexBucketScanner(cass,
                 indexBucketLocator, ENTITY_INDEX, applicationId,
                 IndexType.CONNECTION, keyPrefix, start, finish,
-                slice.isReversed(), count, slice.getPropertyName());
+                slice.isReversed(), PAGE_SIZE, MAX_LOAD, slice.getPropertyName());
 
         return scanner;
 
@@ -2199,7 +2208,7 @@ public class RelationManagerImpl implements RelationManager {
         IndexScanner scanner = new IndexBucketScanner(cass,
                 indexBucketLocator, ENTITY_INDEX, applicationId,
                 IndexType.COLLECTION, keyPrefix, start, finish,
-                slice.isReversed(), count, collectionName);
+                slice.isReversed(), PAGE_SIZE, MAX_LOAD, collectionName);
 
         return scanner;
 
@@ -3127,7 +3136,7 @@ public class RelationManagerImpl implements RelationManager {
 
                 //nothing left to search for this range
                 if (slice.isComplete()) {
-                    columns = new CompleteIndexScanner();
+                    columns = new NoOpIndexScanner();
                 }
                 //perform the search
                 else {

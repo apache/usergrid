@@ -15,38 +15,43 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
-import org.antlr.runtime.CommonToken;
+import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
-import org.usergrid.persistence.exceptions.NoIndexException;
 
 /**
+ * A property
+ * 
  * @author tnine
  * 
  */
-public class LessThan extends EqualityOperand {
+public class WithinProperty extends Property {
 
-    /**
-     * @param property
-     * @param literal
-     */
-    public LessThan(Token t) {
-        super(t);
-    }
+  private String indexedName = null;
+  
+  public WithinProperty(Token t) {
+    super(t);
+    this.indexedName = String.format("%s.coordinates", super.getValue());
+  }
+  
+  public WithinProperty(String property){
+    this(new ClassicToken(0, property));
+  }
 
-    public LessThan() {
-        super(new CommonToken(0, "<"));
-    }
+ 
+  /**
+   * Get the 
+   * @return
+   */
+  public String getIndexedName(){
+    return this.indexedName;
+  }
+  
+  /**
+   * @return the property
+   */
+  public WithinProperty getProperty() {
+    return (WithinProperty) this.children.get(0);
+  }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence
-     * .query.tree.QueryVisitor)
-     */
-    @Override
-    public void visit(QueryVisitor visitor) throws NoIndexException {
-        visitor.visit(this);
-    }
-   
+
 }

@@ -57,6 +57,7 @@ public class IndexBucketScanner implements IndexScanner {
   private final ApplicationCF columnFamily;
   private final Object finish;
   private final boolean reversed;
+  private final int pageSize;
   private final int max;
   
   private final String[] indexPath;
@@ -87,7 +88,7 @@ public class IndexBucketScanner implements IndexScanner {
 
   public IndexBucketScanner(CassandraService cass, IndexBucketLocator locator, ApplicationCF columnFamily,
       UUID applicationId, IndexType indexType, Object keyPrefix, Object start, Object finish,
-      boolean reversed, int max, String... indexPath) {
+      boolean reversed, int pageSize, int max, String... indexPath) {
     this.cass = cass;
     this.indexBucketLocator = locator;
     this.applicationId = applicationId;
@@ -96,6 +97,7 @@ public class IndexBucketScanner implements IndexScanner {
     this.start = start;
     this.finish = finish;
     this.reversed = reversed;
+    this.pageSize = pageSize;
     this.max = max;
     this.indexPath = indexPath;
     this.indexType = indexType;
@@ -130,7 +132,7 @@ public class IndexBucketScanner implements IndexScanner {
     }
 
     Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> results = cass.multiGetColumns(
-        cass.getApplicationKeyspace(applicationId), columnFamily, cassKeys, start, finish, max+1, reversed);
+        cass.getApplicationKeyspace(applicationId), columnFamily, cassKeys, start, finish, pageSize+1, reversed);
 
     final Comparator<ByteBuffer> comparator = reversed ? new DynamicCompositeReverseComparator(columnFamily)
         : new DynamicCompositeForwardComparator(columnFamily);
@@ -152,14 +154,14 @@ public class IndexBucketScanner implements IndexScanner {
         resultsTree.add(col);
 
         // trim if we're over size
-        if (resultsTree.size() > max) {
+        if (resultsTree.size() > pageSize) {
           resultsTree.remove(resultsTree.last());
         }
       }
 
     }
     // we loaded a full page, there might be more
-    if (resultsTree.size() == max) {
+    if (resultsTree.size() == pageSize) {
       hasMore = true;
 
       //set the bytebuffer for the next pass
@@ -239,9 +241,16 @@ public class IndexBucketScanner implements IndexScanner {
    */
   @Override
     public boolean hasNext() {
+      /**
+       * We've returned our max
+       */
+      if(count == max){
+        return false;
+      }
+      
       //We've either 1) paged everything we should and have 1 left from our "next page" pointer
       //Our currently buffered results don't exist or don't have a next.  Try to load them again if they're less than the page size
-      if(count == max || lastResults == null || !lastResults.hasNext()){
+      if(count%pageSize == 0 || lastResults == null || !lastResults.hasNext()){
         try {
           return load();
         } catch (Exception e) {

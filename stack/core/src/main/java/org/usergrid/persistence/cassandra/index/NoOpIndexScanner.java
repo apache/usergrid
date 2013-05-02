@@ -25,12 +25,12 @@ import me.prettyprint.hector.api.beans.HColumn;
  * @author tnine
  *
  */
-public class CompleteIndexScanner implements IndexScanner{
+public class NoOpIndexScanner implements IndexScanner{
 
   /**
    * 
    */
-  public CompleteIndexScanner() {
+  public NoOpIndexScanner() {
   }
 
   /* (non-Javadoc)

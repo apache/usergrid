@@ -1048,8 +1048,9 @@ public class CassandraService {
       start = null;
     }
 
-    IndexScanner scanner = new IndexBucketScanner(this, locator, ENTITY_ID_SETS, applicationId, IndexType.COLLECTION,
-        key, start, finish, reversed, count, collectionName);
+    IndexScanner scanner = new IndexBucketScanner(this, locator,
+        ENTITY_ID_SETS, applicationId, IndexType.COLLECTION, key,
+        start, finish, reversed, count, count*10, collectionName);
 
     for (HColumn<ByteBuffer, ByteBuffer> result : scanner) {
       ByteBuffer bytes = result.getName();
@@ -1057,6 +1058,7 @@ public class CassandraService {
     }
 
     return ids;
+
 
   }
 

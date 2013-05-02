@@ -15,38 +15,42 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.tree;
 
-import org.antlr.runtime.CommonToken;
+import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
-import org.usergrid.persistence.exceptions.NoIndexException;
 
 /**
+ * A property for full text searching that requires special renaming
+ * 
  * @author tnine
  * 
  */
-public class LessThan extends EqualityOperand {
+public class ContainsProperty extends Property {
 
-    /**
-     * @param property
-     * @param literal
-     */
-    public LessThan(Token t) {
-        super(t);
-    }
+  private String indexedName = null;
 
-    public LessThan() {
-        super(new CommonToken(0, "<"));
-    }
+  public ContainsProperty(Token t) {
+    super(t);
+    this.indexedName = String.format("%s.keywords", super.getValue());
+  }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.usergrid.persistence.query.tree.Operand#visit(org.usergrid.persistence
-     * .query.tree.QueryVisitor)
-     */
-    @Override
-    public void visit(QueryVisitor visitor) throws NoIndexException {
-        visitor.visit(this);
-    }
-   
+  public ContainsProperty(String property) {
+    this(new ClassicToken(0, property));
+  }
+
+  
+  /* (non-Javadoc)
+   * @see org.usergrid.persistence.query.tree.Property#getIndexedValue()
+   */
+  @Override
+  public String getIndexedValue() {
+    return this.indexedName;
+  }
+
+  /**
+   * @return the property
+   */
+  public ContainsProperty getProperty() {
+    return (ContainsProperty) this.children.get(0);
+  }
+
 }
