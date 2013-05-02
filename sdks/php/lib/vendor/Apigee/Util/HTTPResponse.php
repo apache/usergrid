@@ -15,6 +15,7 @@ class HTTPResponse {
   public $request;
   public $data;
   public $headers;
+  public $status_message;
 
   public function __construct() {
     $this->error = FALSE;
@@ -22,5 +23,6 @@ class HTTPResponse {
     $this->request = '';
     $this->data = '';
     $this->headers = array();
+    $this->status_message = '';
   }
 }
