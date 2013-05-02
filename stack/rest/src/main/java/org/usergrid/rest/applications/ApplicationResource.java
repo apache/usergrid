@@ -404,6 +404,11 @@ public class ApplicationResource extends ServiceResource {
             @QueryParam("scope") String scope, @QueryParam("state") String state) {
 
         try {
+            UUID uuid = getUUIDFromClientId(client_id);
+            if (uuid == null) {
+              throw mappableSecurityException(AuthErrorInfo.OAUTH2_INVALID_CLIENT, "Unable to authenticate (OAuth). Invalid client_id");
+            }
+
             responseType = response_type;
             clientId = client_id;
             redirectUri = redirect_uri;
