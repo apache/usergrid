@@ -9,7 +9,7 @@
 
 namespace Apigee\Util;
 
-class RESTClient {
+class HTTPClient {
 
   /**
    * Executes an http (or https) call and returns data and metadata.
