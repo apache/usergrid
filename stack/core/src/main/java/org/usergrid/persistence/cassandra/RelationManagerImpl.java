@@ -2155,7 +2155,7 @@ public class RelationManagerImpl implements RelationManager {
 
 
     private IndexScanner searchIndex(Object indexKey,
-            QuerySlice slice, int count) throws Exception {
+            QuerySlice slice) throws Exception {
 
         DynamicComposite start = getStart(slice);
 
@@ -2190,7 +2190,7 @@ public class RelationManagerImpl implements RelationManager {
      * @throws Exception
      */
     private IndexScanner searchIndexBuckets(
-            Object indexKey, QuerySlice slice, int count, String collectionName)
+            Object indexKey, QuerySlice slice, String collectionName)
             throws Exception {
 
         DynamicComposite start = getStart(slice);
@@ -3140,13 +3140,13 @@ public class RelationManagerImpl implements RelationManager {
                 }
                 //perform the search
                 else {
-                    columns = searchIndexBuckets(indexKey, slice, limit,
+                    columns = searchIndexBuckets(indexKey, slice,
                             collection.getName());
                 }
 
                 Results r = getIndexResults(columns, true,
                         query.getConnectionType(), collection.getType(),
-                        resultsLevel, query.getLimit());
+                        resultsLevel, Integer.MAX_VALUE);
 
                 if (r.size() > query.getLimit()) {
                     r.setCursorToLastResult();
@@ -3209,7 +3209,7 @@ public class RelationManagerImpl implements RelationManager {
                     headEntity, collection.getName(),
                     node.getPropertyName(),
                     new Point(node.getLattitude(), node.getLongitude()),
-                    node.getDistance(), null, query.getLimit(), false,
+                    node.getDistance(), null, MAX_LOAD, false,
                     query.getResultsLevel());
 
             results.push(r);
@@ -3260,12 +3260,11 @@ public class RelationManagerImpl implements RelationManager {
                 queryProcessor.applyCursorAndSort(slice);
 
                 IndexScanner columns = searchIndex(
-                        key(connection.getIndexId(), INDEX_CONNECTIONS), slice,
-                        limit);
+                        key(connection.getIndexId(), INDEX_CONNECTIONS), slice);
 
                 Results r = getIndexResults(columns, true,
                         connection.getConnectionType(),
-                        connection.getConnectedEntityType(), resultsLevel, query.getLimit());
+                        connection.getConnectedEntityType(), resultsLevel, Integer.MAX_VALUE);
 
                 if (r.size() > query.getLimit()) {
                     r.setCursorToLastResult();
@@ -3323,7 +3322,7 @@ public class RelationManagerImpl implements RelationManager {
             Results r = em.getGeoIndexManager().proximitySearchConnections(
                     connection.getIndexId(), node.getPropertyName(),
                     new Point(node.getLattitude(), node.getLongitude()),
-                    node.getDistance(), null, query.getLimit(), false,
+                    node.getDistance(), null, MAX_LOAD, false,
                     query.getResultsLevel());
 
             results.push(r);
