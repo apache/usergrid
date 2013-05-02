@@ -22,7 +22,7 @@
 
 var request = require('request');
 var Usergrid = {};
-Usergrid.SDK_VERSION = '0.10.03';
+Usergrid.SDK_VERSION = '0.10.05';
 
 //authentication type constants
 var AUTH_CLIENT_ID = 'CLIENT_ID';
@@ -144,6 +144,41 @@ Usergrid.Client.prototype.request = function (options, callback) {
 }
 
 /*
+ *  Main function for creating new groups. Call this directly.
+ *
+ *  @method createGroup
+ *  @public
+ *  @params {string} path
+ *  @param {function} callback
+ *  @return {callback} callback(err, data)
+ */
+Usergrid.Client.prototype.createGroup = function(options, callback) {
+  var getOnExist = options.getOnExist || false;
+
+  var options = {
+    path: options.path,
+    client: this,
+    data:options
+  }
+
+  var group = new Usergrid.Group(options);
+  group.fetch(function(err, data){
+    var okToSave = (err && 'service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) || (!err && getOnExist);
+    if (okToSave) {
+      group.save(function(err, data){
+        if (typeof(callback) === 'function') {
+          callback(err, group);
+        }
+      });
+    } else {
+      if(typeof(callback) === 'function') {
+        callback(err, group);
+      }
+    }
+  });
+}
+
+/*
 *  Main function for creating new entities - should be called directly.
 *
 *  options object: options {data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
@@ -177,7 +212,7 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
   var entity = new Usergrid.Entity(options);
   entity.fetch(function(err, data) {
     //if the fetch doesn't find what we are looking for, or there is no error, do a save
-    var okToSave = (err && 'service_resource_not_found' === data.error) || (!err && getOnExist);
+    var okToSave = (err && 'service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) || (!err && getOnExist);
     if(okToSave) {
       entity.set(options.data); //add the data again just in case
       entity.save(function(err, data) {
@@ -194,6 +229,25 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
 
 }
 
+/*
+ *  Main function for restoring an entity from serialized data.
+ *
+ *  serializedObject should have come from entityObject.serialize();
+ *
+ *  @method restoreEntity
+ *  @public
+ *  @param {string} serializedObject
+ *  @return {object} Entity Object
+ */
+Usergrid.Client.prototype.restoreEntity = function (serializedObject) {
+  var data = JSON.parse(serializedObject);
+  var options = {
+    client:this,
+    data:data
+  }
+  var entity = new Usergrid.Entity(options);
+  return entity;
+}
 /*
 *  Main function for getting existing entities - should be called directly.
 *
@@ -221,7 +275,6 @@ Usergrid.Client.prototype.getEntity = function (options, callback) {
   });
 }
 
-
 /*
 *  Main function for creating new collections - should be called directly.
 *
@@ -238,6 +291,49 @@ Usergrid.Client.prototype.createCollection = function (options, callback) {
   var collection = new Usergrid.Collection(options, function(err, data) {
     if (typeof(callback) === 'function') {
       callback(err, collection);
+    }
+  });
+}
+
+/*
+ *  Main function for restoring a collection from serialized data.
+ *
+ *  serializedObject should have come from collectionObject.serialize();
+ *
+ *  @method restoreCollection
+ *  @public
+ *  @param {string} serializedObject
+ *  @return {object} Collection Object
+ */
+Usergrid.Client.prototype.restoreCollection = function (serializedObject) {
+  var data = JSON.parse(serializedObject);
+  data.client = this;
+  var collection = new Usergrid.Collection(data);
+  return collection;
+}
+
+/*
+ *  Main function for retrieving a user's activity feed.
+ *
+ *  @method getFeedForUser
+ *  @public
+ *  @params {string} username
+ *  @param {function} callback
+ *  @return {callback} callback(err, data, activities)
+ */
+Usergrid.Client.prototype.getFeedForUser = function(username, callback) {
+  var options = {
+    method: "GET",
+    endpoint: "users/"+username+"/feed"
+  }
+
+  this.request(options, function(err, data){
+    if(typeof(callback) === "function") {
+      if(err) {
+        callback(err);
+      } else {
+        callback(err, data, data.entities);
+      }
     }
   });
 }
@@ -293,6 +389,42 @@ Usergrid.Client.prototype.createUserActivity = function (user, options, callback
 }
 
 /*
+ *  Function for creating user activities with an associated user entity.
+ *
+ *  user object:
+ *  The user object passed into this function is an instance of Usergrid.Entity.
+ *
+ *  @method createUserActivityWithEntity
+ *  @public
+ *  @params {object} user
+ *  @params {string} content
+ *  @param {function} callback
+ *  @return {callback} callback(err, data)
+ */
+Usergrid.Client.prototype.createUserActivityWithEntity = function(user, content, callback) {
+  var username = user.get("username");
+  var options = {
+    actor: {
+      "displayName":username,
+      "uuid":user.get("uuid"),
+      "username":username,
+      "email":user.get("email"),
+      "picture":user.get("picture"),
+      "image": {
+        "duration":0,
+        "height":80,
+        "url":user.get("picture"),
+        "width":80
+       },
+    },
+    "verb":"post",
+    "content":content };
+
+    this.createUserActivity(username, options, callback);
+
+}
+
+/*
 *  A private method to get call timing of last call
 */
 Usergrid.Client.prototype.calcTimeDiff = function () {
@@ -331,6 +463,32 @@ Usergrid.Client.prototype.getToken = function () {
 }
 
 /*
+ * A public facing helper method for signing up users
+ *
+ * @method signup
+ * @public
+ * @params {string} username
+ * @params {string} password
+ * @params {string} email
+ * @params {string} name
+ * @param {function} callback
+ * @return {callback} callback(err, data)
+ */
+Usergrid.Client.prototype.signup = function(username, password, email, name, callback) {
+  var self = this;
+  var options = {
+    type:"users",
+    username:username,
+    password:password,
+    email:email,
+    name:name
+  };
+
+  this.createEntity(options, callback);
+}
+
+/*
+*
 *  A public method to log in an app user - stores the token for later use
 *
 *  @method login
@@ -356,7 +514,11 @@ Usergrid.Client.prototype.login = function (username, password, callback) {
     if (err && self.logging) {
       console.log('error trying to log user in');
     } else {
-      user = new Usergrid.Entity('users', data.user);
+      var options = {
+        client:self,
+        data:data.user
+      }
+      user = new Usergrid.Entity(options);
       self.setToken(data.access_token);
     }
     if (typeof(callback) === 'function') {
@@ -389,7 +551,11 @@ Usergrid.Client.prototype.loginFacebook = function (facebookToken, callback) {
     if (err && self.logging) {
       console.log('error trying to log user in');
     } else {
-      user = new Usergrid.Entity('users', data.user);
+      var options = {
+        client: self,
+        data: data.user
+      }
+      user = new Usergrid.Entity(options);
       self.setToken(data.access_token);
     }
     if (typeof(callback) === 'function') {
@@ -413,7 +579,7 @@ Usergrid.Client.prototype.getLoggedInUser = function (callback) {
     var self = this;
     var options = {
       method:'GET',
-      endpoint:'users/me',
+      endpoint:'users/me'
     };
     this.request(options, function(err, data) {
       if (err) {
@@ -508,9 +674,23 @@ Usergrid.Client.prototype.buildCurlCall = function (options) {
 *  @param {object} options {client:client, data:{'type':'collection_type', 'key':'value'}, uuid:uuid}}
 */
 Usergrid.Entity = function(options) {
-  this._client = options.client;
-  this._data = options.data || {};
+  if(options){
+    this._client = options.client;
+    this._data = options.data || {};
+  }
 };
+
+/*
+ *  returns a serialized version of the entity object
+ *
+ *  Note: use the client.restoreEntity() function to restore
+ *
+ *  @method serialize
+ *  @return {string} data
+ */
+Usergrid.Entity.prototype.serialize = function () {
+  return JSON.stringify(this._data);
+}
 
 /*
 *  gets a specific field or the entire data object. If null or no argument
@@ -580,7 +760,7 @@ Usergrid.Entity.prototype.save = function (callback) {
   //remove system specific properties
   for (var item in entityData) {
     if (item === 'metadata' || item === 'created' || item === 'modified' ||
-        item === 'type' || item === 'activatted' || item ==='uuid') { continue; }
+        item === 'type' || item === 'activated' || item ==='uuid') { continue; }
     data[item] = entityData[item];
   }
   var options =  {
@@ -663,7 +843,7 @@ Usergrid.Entity.prototype.fetch = function (callback) {
       }
     } else {
       if (this.get('name')) {
-        type += '/' + this.get('name');
+        type += '/' + encodeURIComponent(this.get('name'));
       } else {
         if (typeof(callback) === 'function') {
           var error = 'cannot fetch entity, no name specified';
@@ -796,7 +976,16 @@ Usergrid.Entity.prototype.connect = function (connection, entity, callback) {
   });
 }
 
-
+/*
+*  returns a unique identifier for an entity
+*
+*  @method connect
+*  @public
+*  @param {object} entity
+*  @param {function} callback
+*  @return {callback} callback(err, data)
+*
+*/
 Usergrid.Entity.prototype.getEntityId = function (entity) {
   var id = false;
   if (isUUID(entity.get('uuid'))) {
@@ -819,7 +1008,7 @@ Usergrid.Entity.prototype.getEntityId = function (entity) {
 *  @param {string} connection
 *  @param {object} entity
 *  @param {function} callback
-*  @return {callback} callback(err, data)
+*  @return {callback} callback(err, data, connections)
 *
 */
 Usergrid.Entity.prototype.getConnections = function (connection, callback) {
@@ -863,7 +1052,7 @@ Usergrid.Entity.prototype.getConnections = function (connection, callback) {
     }
 
     if (typeof(callback) === 'function') {
-      callback(err, data);
+      callback(err, data, data.entities);
     }
   });
 
@@ -938,21 +1127,67 @@ Usergrid.Entity.prototype.disconnect = function (connection, entity, callback) {
 *  @return {callback} callback(err, data)
 */
 Usergrid.Collection = function(options, callback) {
-  this._client = options.client;
-  this._type = options.type;
-  this.qs = options.qs || {};
 
-  //iteration
-  this._list = [];
-  this._iterator = -1; //first thing we do is increment, so set to -1
+  if (options) {
+    this._client = options.client;
+    this._type = options.type;
+    this.qs = options.qs || {};
 
-  //paging
-  this._previous = [];
-  this._next = null;
-  this._cursor = null
+    //iteration
+    this._list = options.list || [];
+    this._iterator = options.iterator || -1; //first thing we do is increment, so set to -1
 
-  //populate the collection
-  this.fetch(callback);
+    //paging
+    this._previous = options.previous || [];
+    this._next = options.next || null;
+    this._cursor = options.cursor || null;
+
+    //restore entities if available
+    if (options.list) {
+      var count = options.list.length;
+      for(var i=0;i<count;i++){
+        //make new entity with
+        var entity = this._client.restoreEntity(options.list[i]);
+        this._list[i] = entity;
+      }
+    }
+  }
+  if (callback) {
+    //populate the collection
+    this.fetch(callback);
+  }
+
+}
+
+
+/*
+ *  gets the data from the collection object for serialization
+ *
+ *  @method serialize
+ *  @return {object} data
+ */
+Usergrid.Collection.prototype.serialize = function () {
+
+  //pull out the state from this object and return it
+  var data = {}
+  data.type = this._type;
+  data.qs = this.qs;
+  data.iterator = this._iterator;
+  data.previous = this._previous;
+  data.next = this._next;
+  data.cursor = this._cursor;
+
+  this.resetEntityPointer();
+  var i=0;
+  data.list = [];
+  while(this.hasNextEntity()) {
+    var entity = this.getNextEntity();
+    data.list[i] = entity.serialize();
+    i++;
+  }
+
+  data = JSON.stringify(data);
+  return data;
 }
 
 /*
@@ -1275,6 +1510,242 @@ Usergrid.Collection.prototype.getPreviousPage = function (callback) {
   }
 }
 
+
+/*
+ *  A class to model a Usergrid group.
+ *  Set the path in the options object.
+ *
+ *  @constructor
+ *  @param {object} options {client:client, data: {'key': 'value'}, path:'path'}
+ */
+Usergrid.Group = function(options, callback) {
+  this._path = options.path;
+  this._list = [];
+  this._client = options.client;
+  this._data = options.data || {};
+  this._data.type = "groups";
+}
+
+/*
+ *  Inherit from Usergrid.Entity.
+ *  Note: This only accounts for data on the group object itself.
+ *  You need to use add and remove to manipulate group membership.
+ */
+Usergrid.Group.prototype = new Usergrid.Entity();
+
+/*
+*  Fetches current group data, and members.
+*
+*  @method fetch
+*  @public
+*  @param {function} callback
+*  @returns {function} callback(err, data)
+*/
+Usergrid.Group.prototype.fetch = function(callback) {
+  var self = this;
+  var groupEndpoint = 'groups/'+this._path;
+  var memberEndpoint = 'groups/'+this._path+'/users';
+
+  var groupOptions = {
+    method:'GET',
+    endpoint:groupEndpoint
+  }
+
+  var memberOptions = {
+    method:'GET',
+    endpoint:memberEndpoint
+  }
+
+  this._client.request(groupOptions, function(err, data){
+    if(err) {
+      if(self._client.logging) {
+        console.log('error getting group');
+      }
+      if(typeof(callback) === 'function') {
+        callback(err, data);
+      }
+    } else {
+      if(data.entities) {
+        var groupData = data.entities[0];
+        self._data = groupData || {};
+        self._client.request(memberOptions, function(err, data) {
+          if(err && self._client.logging) {
+            console.log('error getting group users');
+          } else {
+            if(data.entities) {
+              var count = data.entities.length;
+              self._list = [];
+              for (var i = 0; i < count; i++) {
+                var uuid = data.entities[i].uuid;
+                if(uuid) {
+                  var entityData = data.entities[i] || {};
+                  var entityOptions = {
+                    type: entityData.type,
+                    client: self._client,
+                    uuid:uuid,
+                    data:entityData
+                  };
+                  var entity = new Usergrid.Entity(entityOptions);
+                  self._list.push(entity);
+                }
+
+              }
+            }
+          }
+          if(typeof(callback) === 'function') {
+            callback(err, data, self._list);
+          }
+        });
+      }
+    }
+  });
+}
+
+/*
+ *  Retrieves the members of a group.
+ *
+ *  @method members
+ *  @public
+ *  @param {function} callback
+ *  @return {function} callback(err, data);
+ */
+Usergrid.Group.prototype.members = function(callback) {
+  if(typeof(callback) === 'function') {
+    callback(null, this._list);
+  }
+}
+
+/*
+ *  Adds a user to the group, and refreshes the group object.
+ *
+ *  Options object: {user: user_entity}
+ *
+ *  @method add
+ *  @public
+ *  @params {object} options
+ *  @param {function} callback
+ *  @return {function} callback(err, data)
+ */
+Usergrid.Group.prototype.add = function(options, callback) {
+  var self = this;
+  var options = {
+    method:"POST",
+    endpoint:"groups/"+this._path+"/users/"+options.user.get('username')
+  }
+
+  this._client.request(options, function(error, data){
+    if(error) {
+      if(typeof(callback) === 'function') {
+        callback(error, data, data.entities);
+      }
+    } else {
+      self.fetch(callback);
+    }
+  });
+}
+
+/*
+ *  Removes a user from a group, and refreshes the group object.
+ *
+ *  Options object: {user: user_entity}
+ *
+ *  @method remove
+ *  @public
+ *  @params {object} options
+ *  @param {function} callback
+ *  @return {function} callback(err, data)
+ */
+Usergrid.Group.prototype.remove = function(options, callback) {
+  var self = this;
+
+  var options = {
+    method:"DELETE",
+    endpoint:"groups/"+this._path+"/users/"+options.user.get('username')
+  }
+
+  this._client.request(options, function(error, data){
+    if(error) {
+      if(typeof(callback) === 'function') {
+        callback(error, data);
+      }
+    } else {
+      self.fetch(callback);
+    }
+  });
+}
+
+/*
+* Gets feed for a group.
+*
+* @public
+* @method feed
+* @param {function} callback
+* @returns {callback} callback(err, data, activities)
+*/
+Usergrid.Group.prototype.feed = function(callback) {
+  var self = this;
+
+  var endpoint = "groups/"+this._path+"/feed";
+
+  var options = {
+    method:"GET",
+    endpoint:endpoint
+  }
+
+  this._client.request(options, function(err, data){
+    if (err && self.logging) {
+      console.log('error trying to log user in');
+    }
+    if(typeof(callback) === 'function') {
+        callback(err, data, data.entities);
+    }
+  });
+}
+
+/*
+* Creates activity and posts to group feed.
+*
+* options object: {user: user_entity, content: "activity content"}
+*
+* @public
+* @method createGroupActivity
+* @params {object} options
+* @param {function} callback
+* @returns {callback} callback(err, entity)
+*/
+Usergrid.Group.prototype.createGroupActivity = function(options, callback){
+  var user = options.user;
+  var options = {
+    actor: {
+      "displayName":user.get("username"),
+      "uuid":user.get("uuid"),
+      "username":user.get("username"),
+      "email":user.get("email"),
+      "picture":user.get("picture"),
+      "image": {
+        "duration":0,
+        "height":80,
+        "url":user.get("picture"),
+        "width":80
+       },
+    },
+    "verb":"post",
+    "content":options.content };
+
+    options.type = 'groups/'+this._path+'/activities';
+    var options = {
+      client:this._client,
+      data:options
+    }
+
+    var entity = new Usergrid.Entity(options);
+    entity.save(function(err, data) {
+      if (typeof(callback) === 'function') {
+        callback(err, entity);
+      }
+    });
+}
+
 /*
 * Tests if the string is a uuid
 *
@@ -1292,6 +1763,7 @@ function isUUID (uuid) {
 exports.client = Usergrid.Client;
 exports.entity = Usergrid.Entity;
 exports.collection = Usergrid.Collection;
+exports.group = Usergrid.Group;
 exports.AUTH_CLIENT_ID = AUTH_CLIENT_ID;
 exports.AUTH_APP_USER = AUTH_APP_USER;
 exports.AUTH_NONE = AUTH_NONE;

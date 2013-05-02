@@ -1,5 +1,14 @@
 ##Change log
 
+###0.10.5
+
+- Added new class and methods for Groups
+- Added serialization / restore methods for entities and collections
+- Various bug fixes
+- Added function for getting user feed
+- Added function for creating user activities with an associated user entity
+- Added public facing helper method for signing up users
+
 ###0.10.4
 
 - Added new functions for creating, getting, and deleting connections
