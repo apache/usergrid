@@ -13,6 +13,7 @@ import org.usergrid.persistence.*;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.tokens.exceptions.BadTokenException;
 import org.usergrid.utils.JsonUtils;
+import org.usergrid.utils.MapUtils;
 
 import javax.ws.rs.core.MediaType;
 import java.util.LinkedHashMap;
@@ -34,13 +35,9 @@ public class FacebookProvider extends AbstractProvider {
 
   @Override
   public User createOrAuthenticate(UUID applicationId, String externalToken) throws BadTokenException {
-    ClientConfig clientConfig = new DefaultClientConfig();
-    clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-    Client client = Client.create(clientConfig);
-    WebResource web_resource = client.resource("https://graph.facebook.com/me");
-    @SuppressWarnings("unchecked")
-    Map<String, Object> fb_user = web_resource.queryParam("access_token", externalToken)
-            .accept(MediaType.APPLICATION_JSON).get(Map.class);
+
+    Map<String, Object> fb_user = userFromResource("https://graph.facebook.com/me", MapUtils.hashMap("access_token",externalToken));
+
     String fb_user_id = (String) fb_user.get("id");
     String fb_user_name = (String) fb_user.get("name");
     String fb_user_username = (String) fb_user.get("username");
