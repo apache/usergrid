@@ -3,10 +3,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<bundle.symbolicName>org.usergrid</bundle.symbolicName>
 		<bundle.namespace>org.usergrid</bundle.namespace>
-		<spring-android-version>1.0.0.M4</spring-android-version>
-		<jackson-version>1.9.2</jackson-version>
 	</properties>
-	
+
 	<parent>
 		<groupId>org.sonatype.oss</groupId>
 		<artifactId>oss-parent</artifactId>
@@ -54,7 +52,7 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>usergrid-java-client</artifactId>
-			<version>0.0.5</version>
+			<version>0.0.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.android</groupId>
