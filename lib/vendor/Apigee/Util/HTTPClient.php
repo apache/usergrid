@@ -156,6 +156,8 @@ class HTTPClient {
       $result->headers['content-type'] = $info['content_type'];
       $result->headers['content-length'] = strlen($result->data);
 
+      $result->status_message = self::get_status_message($result->code);
+
       // Handle non-200-class statuses.
       // We should never get a 100-class status, since it is an intermediate
       // status occasionally sent while the server prepares to send content.
@@ -166,7 +168,7 @@ class HTTPClient {
         $result->error = 'Connection failure';
       }
       elseif ($status_class > 3) {
-        $result->error = self::get_status_message($result->code);
+        $result->error = $result->status_message;
       }
     }
     catch (\Exception $e) {
@@ -217,6 +219,31 @@ class HTTPClient {
    */
   private static function get_status_message($code) {
     static $responses = array(
+      100 => 'Continue',
+      101 => 'Switching Protocols',
+      102 => 'Processing', // WebDAV
+
+      200 => 'OK',
+      201 => 'Created',
+      202 => 'Accepted',
+      203 => 'Non-Authoritative Information',
+      204 => 'No Content',
+      205 => 'Reset Content',
+      206 => 'Partial Content',
+      207 => 'Multi-Status', // WebDAV
+      208 => 'Already Reported', // WebDAV
+      226 => 'IM Used',
+
+      300 => 'Multiple Choices',
+      301 => 'Moved Permanently',
+      302 => 'Found',
+      303 => 'See Other',
+      304 => 'Not Modified',
+      305 => 'Use Proxy',
+      306 => 'Switch Proxy',
+      307 => 'Temporary Redirect',
+      308 => 'Permanent Redirect',
+
       400 => 'Bad Request',
       401 => 'Unauthorized',
       402 => 'Payment Required',
@@ -235,7 +262,7 @@ class HTTPClient {
       415 => 'Unsupported Media Type',
       416 => 'Requested Range Not Satisfiable',
       417 => 'Expectation Failed',
-      418 => 'I\'m a teapot', // RFC 2324
+      418 => 'I\'m a teapot', // RFC 2324 ;-)
       420 => 'Enhance Your Calm', // Twitter ;-)
       422 => 'Unprocessable Entity', // WebDAV
       423 => 'Locked', // WebDAV
@@ -254,6 +281,7 @@ class HTTPClient {
       496 => 'No Cert', // nginx
       497 => 'HTTP to HTTPS', // nginx
       499 => 'Client Closed Request', // nginx
+
       500 => 'Internal Server Error',
       501 => 'Not Implemented',
       502 => 'Bad Gateway',
