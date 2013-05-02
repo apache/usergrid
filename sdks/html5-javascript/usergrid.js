@@ -270,6 +270,25 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
 }
 
 /*
+ *  Main function for restoring an entity from serialized data.
+ *
+ *  serializedObject should have come from entityObject.serialize();
+ *
+ *  @method restoreEntity
+ *  @public
+ *  @param {string} serializedObject
+ *  @return {object} Entity Object
+ */
+Usergrid.Client.prototype.restoreEntity = function (serializedObject) {
+  var data = JSON.parse(serializedObject);
+  var options = {
+    client:this,
+    data:data
+  }
+  var entity = new Usergrid.Entity(options);
+  return entity;
+}
+/*
 *  Main function for getting existing entities - should be called directly.
 *
 *  You must supply a uuid or (username or name). Username only applies to users.
@@ -314,6 +333,23 @@ Usergrid.Client.prototype.createCollection = function (options, callback) {
       callback(err, collection);
     }
   });
+}
+
+/*
+ *  Main function for restoring a collection from serialized data.
+ *
+ *  serializedObject should have come from collectionObject.serialize();
+ *
+ *  @method restoreCollection
+ *  @public
+ *  @param {string} serializedObject
+ *  @return {object} Collection Object
+ */
+Usergrid.Client.prototype.restoreCollection = function (serializedObject) {
+  var data = JSON.parse(serializedObject);
+  data.client = this;
+  var collection = new Usergrid.Collection(data);
+  return collection;
 }
 
 /*
@@ -693,6 +729,18 @@ Usergrid.Entity = function(options) {
     this._data = options.data || {};
   }
 };
+
+/*
+ *  returns a serialized version of the entity object
+ *
+ *  Note: use the client.restoreEntity() function to restore
+ *
+ *  @method serialize
+ *  @return {string} data
+ */
+Usergrid.Entity.prototype.serialize = function () {
+  return JSON.stringify(this._data);
+}
 
 /*
 *  gets a specific field or the entire data object. If null or no argument
@@ -1129,21 +1177,67 @@ Usergrid.Entity.prototype.disconnect = function (connection, entity, callback) {
 *  @return {callback} callback(err, data)
 */
 Usergrid.Collection = function(options, callback) {
-  this._client = options.client;
-  this._type = options.type;
-  this.qs = options.qs || {};
 
-  //iteration
-  this._list = [];
-  this._iterator = -1; //first thing we do is increment, so set to -1
+  if (options) {
+    this._client = options.client;
+    this._type = options.type;
+    this.qs = options.qs || {};
 
-  //paging
-  this._previous = [];
-  this._next = null;
-  this._cursor = null
+    //iteration
+    this._list = options.list || [];
+    this._iterator = options.iterator || -1; //first thing we do is increment, so set to -1
 
-  //populate the collection
-  this.fetch(callback);
+    //paging
+    this._previous = options.previous || [];
+    this._next = options.next || null;
+    this._cursor = options.cursor || null;
+
+    //restore entities if available
+    if (options.list) {
+      var count = options.list.length;
+      for(var i=0;i<count;i++){
+        //make new entity with
+        var entity = this._client.restoreEntity(options.list[i]);
+        this._list[i] = entity;
+      }
+    }
+  }
+  if (callback) {
+    //populate the collection
+    this.fetch(callback);
+  }
+
+}
+
+
+/*
+ *  gets the data from the collection object for serialization
+ *
+ *  @method serialize
+ *  @return {object} data
+ */
+Usergrid.Collection.prototype.serialize = function () {
+
+  //pull out the state from this object and return it
+  var data = {}
+  data.type = this._type;
+  data.qs = this.qs;
+  data.iterator = this._iterator;
+  data.previous = this._previous;
+  data.next = this._next;
+  data.cursor = this._cursor;
+
+  this.resetEntityPointer();
+  var i=0;
+  data.list = [];
+  while(this.hasNextEntity()) {
+    var entity = this.getNextEntity();
+    data.list[i] = entity.serialize();
+    i++;
+  }
+
+  data = JSON.stringify(data);
+  return data;
 }
 
 /*
