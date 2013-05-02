@@ -216,7 +216,7 @@ public class ApplicationResource extends ServiceResource {
                             ' ');
                     String[] values = Base64.decodeToString(token).split(":");
                     if (values.length >= 2) {
-                        client_id = values[0].toLowerCase();
+                        client_id = values[0];
                         client_secret = values[1];
                     }
                 }
@@ -297,6 +297,7 @@ public class ApplicationResource extends ServiceResource {
     @Path("token")
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response getAccessTokenPost(@Context UriInfo ui,
+    		@HeaderParam("Authorization") String authorization,
             @FormParam("grant_type") String grant_type,
             @FormParam("username") String username,
             @FormParam("password") String password,
@@ -311,7 +312,7 @@ public class ApplicationResource extends ServiceResource {
 
         logger.debug("ApplicationResource.getAccessTokenPost");
 
-        return getAccessToken(ui, null, grant_type, username, password, pin,
+        return getAccessToken(ui, authorization, grant_type, username, password, pin,
                 client_id, client_secret, code, ttl, redirect_uri, callback);
     }
 
