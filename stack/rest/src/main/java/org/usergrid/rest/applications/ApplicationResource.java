@@ -320,6 +320,7 @@ public class ApplicationResource extends ServiceResource {
     @Path("token")
     @Consumes(APPLICATION_JSON)
     public Response getAccessTokenPostJson(@Context UriInfo ui,
+            @HeaderParam("Authorization") String authorization,
             Map<String, Object> json,
             @QueryParam("callback") @DefaultValue("") String callback)
                     throws Exception {
@@ -342,7 +343,7 @@ public class ApplicationResource extends ServiceResource {
             }
         }
 
-        return getAccessToken(ui, null, grant_type, username, password, pin,
+        return getAccessToken(ui, authorization, grant_type, username, password, pin,
                 client_id, client_secret, code, ttl, redirect_uri, callback);
     }
 
