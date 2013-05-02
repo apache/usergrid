@@ -74,7 +74,7 @@ $(document).ready(function () {
 
   function createAndSerialzeCollection(step){
     var options = {
-      type:'dogs',
+      type:'books',
       qs:{ql:'order by name'}
     }
 
@@ -83,7 +83,7 @@ $(document).ready(function () {
         error('could not make collection');
       } else {
 
-        //var data = books.serialize();
+        //collection made, now serialize and store
         localStorage.setItem('item', books.serialize());
 
         success('new Collection created and data stored');
@@ -99,7 +99,7 @@ $(document).ready(function () {
     var books = client.restoreCollection(localStorage.getItem('item'));
 
     while(books.hasNextEntity()) {
-      //get a reference to the dog
+      //get a reference to the book
       book = books.getNextEntity();
       var name = book.get('name');
       notice('book is called ' + name);
