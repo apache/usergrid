@@ -193,7 +193,7 @@ To get a single property from the entity, use the get method:
 	var breed = dog.get('breed');
 
 or
-	
+
 	var state = dog.get('state');
 
 or, to get a JSON object with all properties, don't pass a key
@@ -213,7 +213,7 @@ Based on the set statements above, our JSON object should look like this:
 **Wait!** But what if my entity already exists on the server?
 
 During a client.createEntity call, there are two ways that you can choose to handle this situation.  The question is, what should the client do if an entity with the same name, username, or uuid already exists on the server?
-	
+
   	1. Give you back an error.
   	2. Give you back the pre-existing entity.
 
@@ -465,10 +465,10 @@ If you no longer need the object, call the delete() method and the object will b
 
 ###Making connections
 Connections are a way to connect to entities with some verb.  This is called an entity relationship.  For example, if you have a user entity with username of marty, and a dog entity with a name of einstein, then using our RESTful API, you could make a call like this:
-	
-	POST users/marty/likes/dogs/einstein 
 
-This creates a one-way connection between marty and einstein, where marty "likes" einstein. 
+	POST users/marty/likes/dogs/einstein
+
+This creates a one-way connection between marty and einstein, where marty "likes" einstein.
 
 Complete documentation on the entity relationships API can be found here:
 
@@ -611,6 +611,8 @@ Or, if you made a new client object specifically for the app user:
 
 This destroys the token and user object in the client object, effectively logging the user out.
 
+##Groups
+This module provides an easy way to make new groups. They follow the same syntax as Entities
 
 ##Making generic calls
 If you find that you need to make calls to the API that fall outside of the scope of the Entity and Collection objects, you can use the following format to make any REST calls against the API:
