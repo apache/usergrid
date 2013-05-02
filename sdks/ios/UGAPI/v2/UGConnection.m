@@ -9,6 +9,11 @@
 #import "UGHTTPResult.h"
 #import "UGConnection.h"
 
+static NSString *boolean_representation(BOOL value)
+{
+    return (value ? @"true" : @"false");
+}
+
 @interface UGConnection ()
 @property (nonatomic, strong) NSString *token;
 @property (nonatomic, strong) NSDate *tokenExpirationDate;
@@ -30,6 +35,17 @@
         self.server = @"http://api.usergrid.com";
     }
     return self;
+}
+
+- (UGConnection *) copy
+{
+    UGConnection *copy = [super copy];
+    copy.server = self.server;
+    copy.organization = self.organization;
+    copy.application = self.application;
+    copy.token = self.token;
+    copy.tokenExpirationDate = self.tokenExpirationDate;
+    return copy;
 }
 
 #pragma mark - Internal helpers -
@@ -170,76 +186,341 @@
                                         body:nil];
 }
 
-#pragma mark Organizations and Applications
-// http://apigee.com/docs/usergrid/content/organization
-
-- (NSMutableURLRequest *) createOrganization:(NSDictionary *) organization
-{
-    NSString *path = [NSString stringWithFormat:@"%@/management/organizations",
-                      self.server];
-    return [self authorizedRequestWithMethod:@"POST"
-                                        path:path
-                                        body:[organization URLQueryData]];
-}
-
-- (NSMutableURLRequest *) getOrganization
-{
-    NSString *path = [NSString stringWithFormat:@"%@/management/organizations/%@",
-                      self.server, self.organization];
-    return [self authorizedRequestWithMethod:@"GET"
-                                        path:path
-                                        body:nil];
-}
-
-- (NSMutableURLRequest *) createApplication:(NSDictionary *) application
-{
-    NSString *path = [NSMutableString stringWithFormat:@"%@/management/organizations/%@/applications",
-                      self.server,
-                      self.organization];
-    return [self authorizedRequestWithMethod:@"POST"
-                                        path:path
-                                        body:[application URLQueryData]];
-}
-
-- (NSMutableURLRequest *) deleteApplication
-{
-    return [self authorizedRequestWithMethod:@"DELETE"
-                                        path:self.root
-                                        body:nil];
-}
-
-- (NSMutableURLRequest *) getApplication
-{
-    return [self authorizedRequestWithMethod:@"GET"
-                                        path:self.root
-                                        body:nil];
-}
-
-- (NSMutableURLRequest *) getApplicationsForOrganization
-{
-    NSString *path = [NSMutableString stringWithFormat:@"%@/management/organizations/%@/applications",
-                      self.server, self.organization];
-    return [self authorizedRequestWithMethod:@"GET"
-                                        path:path
-                                        body:nil];
-}
-
 #pragma mark Admin users
 // http://apigee.com/docs/usergrid/content/admin-user
 
-- (NSMutableURLRequest *) createAdminUser:(NSDictionary *) user
+- (NSMutableURLRequest *) createAdminUserWithValues:(NSDictionary *) values
 {
     NSString *path = [NSString stringWithFormat:@"%@/management/users",
                       self.server];
     return [self authorizedRequestWithMethod:@"POST"
                                         path:path
-                                        body:[user URLQueryData]];
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) updateAdminUser:(NSString *) adminUserIdentifier
+                               withValues:(NSDictionary *) values
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/users/%@",
+                      self.server, adminUserIdentifier];
+    return [self authorizedRequestWithMethod:@"PUT"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) getAdminUser:(NSString *) adminUserIdentifier
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/users/%@",
+                      self.server, adminUserIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) setPasswordForAdminUser:(NSString *) adminUserIdentifier
+                                          toValue:(NSString *) password
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/users/%@/password",
+                      self.server, adminUserIdentifier];
+    NSDictionary *values = @{@"password":password};
+    return [self authorizedRequestWithMethod:@"PUT"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) initiatePasswordResetForAdminUser
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/users/resetpw",
+                      self.server];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) completePasswordResetForAdminUserWithValues:(NSDictionary *) values
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/users/resetpw",
+                      self.server];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) activateAdminUser:(NSString *) adminUserIdentifier
+                                  withToken:(NSString *) token
+                   sendingConfirmationEmail:(BOOL) sendingConfirmationEmail
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/users/%@/activate",
+                      self.server, adminUserIdentifier];
+    NSDictionary *values = @{@"token":token,
+                             @"confirm_email":boolean_representation(sendingConfirmationEmail)};
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) reactivateAdminUser:(NSString *) adminUserIdentifier
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/users/%@/reactivate",
+                      self.server, adminUserIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getActivityFeedForAdminUser:(NSString *) adminUserIdentifier
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/users/%@/feed",
+                      self.server, adminUserIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+#pragma mark Client authorization
+// http://apigee.com/docs/usergrid/content/client-authorization
+
+- (NSMutableURLRequest *) authorizeClient:(NSString *) clientIdentifier withResponseType:(NSString *) responseType
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/authorize",
+                      self.server];
+    NSDictionary *values = @{@"response_type":responseType,
+                             @"client_id":clientIdentifier};
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+
+#pragma mark Organizations and Applications
+// http://apigee.com/docs/usergrid/content/organization
+
+- (NSMutableURLRequest *) createOrganizationWithValues:(NSDictionary *) values
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/organizations",
+                      self.server];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) getOrganization:(NSString *) organizationIdentifier
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/organizations/%@",
+                      self.server, organizationIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) activateOrganization:(NSString *) organizationIdentifier
+                                     withToken:(NSString *) token
+                      sendingConfirmationEmail:(BOOL) sendingConfirmationEmail
+{
+    NSDictionary *values = @{@"token":token,
+                             @"confirm_email":boolean_representation(sendingConfirmationEmail)};
+    NSString *path = [NSString stringWithFormat:@"%@/management/organizations/%@/activate?%@",
+                      self.server, organizationIdentifier, [values URLQueryString]];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) reactivateOrganization:(NSString *) organizationIdentifier
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/organizations/%@/reactivate",
+                      self.server, organizationIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) generateClientCredentialsForOrganization:(NSString *) organizationIdentifier
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/organizations/%@/credentials",
+                      self.server, organizationIdentifier];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getClientCredentialsForOrganization:(NSString *) organizationIdentifier
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/organizations/%@/credentials",
+                      self.server, organizationIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getActivityFeedForOrganization:(NSString *) organizationIdentifier
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/organizations/%@/feed",
+                      self.server, organizationIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) createApplicationInOrganization:(NSString *)organizationIdentifier withValues:(NSDictionary *)values
+{
+    NSString *path = [NSMutableString stringWithFormat:@"%@/management/organizations/%@/applications",
+                      self.server, organizationIdentifier];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) deleteApplication:(NSString *) applicationIdentifier
+                             inOrganization:(NSString *)organizationIdentifier
+{
+    NSString *path = [NSMutableString stringWithFormat:@"%@/management/organizations/%@/applications/%@",
+                      self.server, organizationIdentifier, applicationIdentifier];
+    return [self authorizedRequestWithMethod:@"DELETE"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) generateClientCredentialsForApplication:(NSString *) applicationIdentifier
+                                                   inOrganization:(NSString *) organizationIdentifier
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/organizations/%@/applications/%@/credentials",
+                      self.server, organizationIdentifier, applicationIdentifier];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getClientCredentialsForApplication:(NSString *) applicationIdentifier
+                                              inOrganization:(NSString *) organizationIdentifier
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/organizations/%@/applications/%@/credentials",
+                      self.server, organizationIdentifier, applicationIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getApplicationsInOrganization:(NSString *) organizationIdentifier
+{
+    NSString *path = [NSMutableString stringWithFormat:@"%@/management/organizations/%@/applications",
+                      self.server, organizationIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) addAdminUser:(NSString *) adminUserIdentifier
+                        toOrganization:(NSString *) organizationIdentifier
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/organizations/%@/users/%@",
+                      self.server, organizationIdentifier, adminUserIdentifier];
+    return [self authorizedRequestWithMethod:@"PUT"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getAdminUsersInOrganization:(NSString *) organizationIdentifier
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/organizations/%@/users",
+                      self.server, organizationIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) removeAdminUser:(NSString *) adminUserIdentifier
+                         fromOrganization:(NSString *) organizationIdentifier
+{
+    NSString *path = [NSString stringWithFormat:@"%@/management/organizations/%@/users/%@",
+                      self.server, organizationIdentifier, adminUserIdentifier];
+    return [self authorizedRequestWithMethod:@"DELETE"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getApplication:(NSString *) applicationIdentifier
+                          inOrganization:(NSString *) organizationIdentifier
+{
+    NSString *path = [NSMutableString stringWithFormat:@"%@/%@/%@",
+                      self.server, organizationIdentifier, applicationIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
 }
 
 #pragma mark - Application API request generators -
 
 #pragma mark Activity
 // http://apigee.com/docs/usergrid/content/activity
+
+- (NSMutableURLRequest *) createActivityForUser:(NSString *) userIdentifier
+                                     withValues:(NSDictionary *) values
+{
+    NSString *path = [NSMutableString stringWithFormat:@"%@/users/%@/activities",
+                      self.root, userIdentifier];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) createActivityForGroup:(NSString *) groupIdentifier
+                                      withValues:(NSDictionary *) values
+{
+    NSString *path = [NSMutableString stringWithFormat:@"%@/groups/%@/activities",
+                      self.root, groupIdentifier];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:[values URLQueryData]];
+}
+
+- (NSMutableURLRequest *) createActivityForFollowersOfUser:(NSString *) userIdentifier
+                                                   inGroup:(NSString *) groupIdentifier
+                                                withValues:(NSDictionary *) values
+{
+    NSString *path = [NSMutableString stringWithFormat:@"%@/groups/%@/users/%@/activities",
+                      self.root, groupIdentifier, userIdentifier];
+    return [self authorizedRequestWithMethod:@"POST"
+                                        path:path
+                                        body:[values URLQueryData]];
+    
+}
+
+- (NSMutableURLRequest *) getActivitiesForUser:(NSString *) userIdentifier
+{
+    NSString *path = [NSMutableString stringWithFormat:@"%@/users/%@/activities",
+                      self.root, userIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getActivitiesForGroup:(NSString *) groupIdentifier
+{
+    NSString *path = [NSMutableString stringWithFormat:@"%@/groups/%@/activities",
+                      self.root, groupIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getActivityFeedForUser:(NSString *) userIdentifier
+{
+    NSString *path = [NSMutableString stringWithFormat:@"%@/users/%@/feed",
+                      self.root, userIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
+
+- (NSMutableURLRequest *) getActivityFeedForGroup:(NSString *) groupIdentifier
+{
+    NSString *path = [NSMutableString stringWithFormat:@"%@/groups/%@/feed",
+                      self.root, groupIdentifier];
+    return [self authorizedRequestWithMethod:@"GET"
+                                        path:path
+                                        body:nil];
+}
 
 #pragma mark Assets
 
@@ -345,8 +626,13 @@
                                           usingQuery:(NSDictionary *) query
                                           withValues:(NSDictionary *) values
 {
-    assert(0); // todo
-    return nil;
+    NSString *path = [NSMutableString stringWithFormat:@"%@/%@?%@",
+                      self.root,
+                      collection,
+                      [query URLQueryString]];
+    return [self authorizedRequestWithMethod:@"PUT"
+                                        path:path
+                                        body:[values URLQueryData]];
 }
 
 - (NSMutableURLRequest *) deleteEntitiesInCollection:(NSString *) collection
@@ -628,15 +914,6 @@
 {
     NSString *path = [NSString stringWithFormat:@"%@/%@/%@/%@?%@",
                       self.root, collection, entity, relationship, [query URLQueryString]];
-    return [self authorizedRequestWithMethod:@"GET"
-                                        path:path
-                                        body:nil];
-}
-
-- (NSMutableURLRequest *) getFeedForUser:(NSString *) username
-{
-    NSString *path = [NSString stringWithFormat:@"%@/users/%@/feed",
-                      self.root, username];
     return [self authorizedRequestWithMethod:@"GET"
                                         path:path
                                         body:nil];

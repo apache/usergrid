@@ -49,8 +49,9 @@
 
 - (void) downloadApplicationDescription
 {
+    UGConnection *usergrid = [UGConnection sharedConnection];
     [[[UGHTTPClient alloc]
-      initWithRequest:[[UGConnection sharedConnection] getApplication] ]
+      initWithRequest:[usergrid getApplication:usergrid.application inOrganization:usergrid.organization]]
      connectWithCompletionHandler:^(UGHTTPResult *result) {
          self.application = result.object[@"entities"][0];
          [self.tableView reloadData];

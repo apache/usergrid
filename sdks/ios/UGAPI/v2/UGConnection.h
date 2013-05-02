@@ -82,7 +82,7 @@
 
 - (NSMutableURLRequest *) getActivityFeedForAdminUser:(NSString *) adminUserIdentifier;
 
-// Client authorization
+// Client authorization http://apigee.com/docs/usergrid/content/client-authorization
 
 - (NSMutableURLRequest *) authorizeClient:(NSString *) clientIdentifier withResponseType:(NSString *) responseType;
 
@@ -269,7 +269,5 @@
                                     inCollection:(NSString *) collection
                              throughRelationship:(NSString *) relationship
                                       usingQuery:(NSDictionary *) query;
-
-- (NSMutableURLRequest *) getActivityFeedForUser:(NSString *) username;
 
 @end

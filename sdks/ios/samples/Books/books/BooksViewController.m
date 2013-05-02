@@ -121,7 +121,7 @@
     id entity = self.content[@"entities"][row];
     NSString *uuid = [entity objectForKey:@"uuid"];
     UGHTTPClient *client = [[UGHTTPClient alloc] initWithRequest:
-                            [[UGConnection sharedConnection] deleteEntityInCollection:@"books" withUUID:uuid]];
+                            [[UGConnection sharedConnection] deleteEntity:uuid inCollection:@"books"]];
     [client connectWithCompletionHandler:^(UGHTTPResult *result) {
         [self reload];
     }];

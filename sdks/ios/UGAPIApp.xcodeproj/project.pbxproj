@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		22CA67241732087600C03C70 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 22CA67231732087600C03C70 /* Default-568h@2x.png */; };
 		22D61E75171CBBF100E9CD17 /* UGConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 22D61E6E171CBBF100E9CD17 /* UGConnection.m */; };
 		22D61E76171CBBF100E9CD17 /* UGHTTPClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 22D61E70171CBBF100E9CD17 /* UGHTTPClient.m */; };
 		22D61E77171CBBF100E9CD17 /* UGHTTPHelpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 22D61E72171CBBF100E9CD17 /* UGHTTPHelpers.m */; };
@@ -58,6 +59,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		22CA67231732087600C03C70 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		22D61E6D171CBBF100E9CD17 /* UGConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGConnection.h; sourceTree = "<group>"; };
 		22D61E6E171CBBF100E9CD17 /* UGConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UGConnection.m; sourceTree = "<group>"; };
 		22D61E6F171CBBF100E9CD17 /* UGHTTPClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGHTTPClient.h; sourceTree = "<group>"; };
@@ -172,6 +174,7 @@
 		E89D6C91150E5B2E005F5FB9 = {
 			isa = PBXGroup;
 			children = (
+				22CA67231732087600C03C70 /* Default-568h@2x.png */,
 				E89D6D18150E5C54005F5FB9 /* CoreLocation.framework */,
 				E89D6CDC150E5B99005F5FB9 /* UGAPI */,
 				E89D6CA6150E5B2E005F5FB9 /* UGAPIApp */,
@@ -375,6 +378,7 @@
 				E89D6CAB150E5B2E005F5FB9 /* InfoPlist.strings in Resources */,
 				E89D6CB4150E5B2E005F5FB9 /* MainStoryboard_iPhone.storyboard in Resources */,
 				E89D6CB7150E5B2E005F5FB9 /* MainStoryboard_iPad.storyboard in Resources */,
+				22CA67241732087600C03C70 /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
