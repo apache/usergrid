@@ -28,7 +28,7 @@ window.console.log = window.console.log || function() {};
 //Usergrid namespace encapsulates this SDK
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
-Usergrid.SDK_VERSION = '0.10.05';
+Usergrid.SDK_VERSION = '0.10.06';
 
 Usergrid.Client = function(options) {
   //usergrid enpoint
@@ -215,7 +215,6 @@ Usergrid.Client.prototype.createGroup = function(options, callback) {
       }
     }
   });
-
 }
 
 /*
@@ -485,7 +484,7 @@ Usergrid.Client.prototype.calcTimeDiff = function () {
 *  @return none
 */
 Usergrid.Client.prototype.setToken = function (token) {
-	var tokenKey = 'token' + this.appName + this.orgName;
+  var tokenKey = 'token' + this.appName + this.orgName;
   this.token = token;
   if(typeof(Storage)!=="undefined"){
     if (token) {
@@ -504,7 +503,7 @@ Usergrid.Client.prototype.setToken = function (token) {
 *  @return {string} token
 */
 Usergrid.Client.prototype.getToken = function () {
-	var tokenKey = 'token' + this.appName + this.orgName;
+  var tokenKey = 'token' + this.appName + this.orgName;
   if (this.token) {
     return this.token;
   } else if(typeof(Storage)!=="undefined") {
@@ -884,11 +883,11 @@ Usergrid.Entity.prototype.fetch = function (callback) {
         type += '/' + this.get('username');
       } else {
         if (typeof(callback) === 'function') {
-          var error = 'no_name_specified';
+          var error = 'cannot fetch entity, no username specified';
           if (self._client.logging) {
             console.log(error);
           }
-          return callback(true, {error:error}, self)
+          return callback(true, error, self)
         }
       }
     } else {
@@ -896,11 +895,11 @@ Usergrid.Entity.prototype.fetch = function (callback) {
         type += '/' + encodeURIComponent(this.get('name'));
       } else {
         if (typeof(callback) === 'function') {
-          var error = 'no_name_specified';
+          var error = 'cannot fetch entity, no name specified';
           if (self._client.logging) {
             console.log(error);
           }
-          return callback(true, {error:error}, self)
+          return callback(true, error, self)
         }
       }
     }
