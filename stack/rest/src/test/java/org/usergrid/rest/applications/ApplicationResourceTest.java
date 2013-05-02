@@ -320,4 +320,67 @@ public class ApplicationResourceTest extends AbstractRestTest {
 
 		assertEquals(Status.TEMPORARY_REDIRECT, status);
     }
+
+    @Test
+    public void clientCredentialsFlowWithHeaderAuthorization() throws Exception{
+        ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
+        String clientId = managementService.getClientIdForApplication(appInfo.getId());
+        String clientSecret = managementService.getClientSecretForApplication(appInfo.getId());
+
+        String clientCredentials = clientId + ":" + clientSecret;
+        String token = Base64.encodeToString(clientCredentials.getBytes());
+
+        Form payload = new Form();
+        payload.add("grant_type", "client_credentials");
+
+        JsonNode node = resource().path("/test-organization/test-app/token")
+        						.header("Authorization", "Basic "+ token)
+        						.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+        						.accept(MediaType.APPLICATION_JSON)
+        						.post(JsonNode.class, payload);
+
+        assertNotNull("It has access_token.", node.get("access_token").getTextValue());
+        assertNotNull("It has expires_in.", node.get("expires_in").getIntValue());
+    }
+
+    @Test
+    public void clientCredentialsFlowWithPayload() throws Exception{
+        ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
+        String clientId = managementService.getClientIdForApplication(appInfo.getId());
+        String clientSecret = managementService.getClientSecretForApplication(appInfo.getId());
+
+        Form payload = new Form();
+        payload.add("grant_type", "client_credentials");
+        payload.add("client_id", clientId);
+        payload.add("client_secret", clientSecret);
+
+        JsonNode node = resource().path("/test-organization/test-app/token")
+        						.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+        						.accept(MediaType.APPLICATION_JSON)
+        						.post(JsonNode.class, payload);
+
+        assertNotNull("It has access_token.", node.get("access_token").getTextValue());
+        assertNotNull("It has expires_in.", node.get("expires_in").getIntValue());
+    }
+
+    @Test
+    public void clientCredentialsFlowWithHeaderAuthorizationAndPayload() throws Exception {
+      ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
+      String clientId = managementService.getClientIdForApplication(appInfo.getId());
+      String clientSecret = managementService.getClientSecretForApplication(appInfo.getId());
+
+      String clientCredentials = clientId + ":" + clientSecret;
+      String token = Base64.encodeToString(clientCredentials.getBytes());
+
+      Map<String, String> payload = hashMap("grant_type", "client_credentials");
+
+      JsonNode node = resource().path("/test-organization/test-app/token")
+      		.header("Authorization", "Basic " + token)
+      		.type(MediaType.APPLICATION_JSON_TYPE)
+      		.accept(MediaType.APPLICATION_JSON)
+      		.post(JsonNode.class, payload);
+
+      assertNotNull("It has access_token.", node.get("access_token").getTextValue());
+      assertNotNull("It has expires_in.", node.get("expires_in").getIntValue());
+    }
 }
