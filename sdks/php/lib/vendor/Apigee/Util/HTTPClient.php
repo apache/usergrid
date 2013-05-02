@@ -1,40 +1,69 @@
 <?php
 /**
  * @file
- * Provides a static method to make HTTP requests.
+ * Provides a wrapper for http/https REST requests, based on cURL.
  *
  * @author Daniel Johnson <djohnson@apigee.com>
- * @since 26-Apr-2013
+ * @since 01-May-2013
  */
 
 namespace Apigee\Util;
 
-class HTTPClient {
+class RESTClient {
 
   /**
-   * This is adapted from drupal_http_request().
+   * Executes an http (or https) call and returns data and metadata.
    *
-   * @param $url
-   * @param $opts
+   * This function accepts the same parameters as drupal_http_request(), with
+   * the exception that it also accepts an 'auth_method' option. It does not
+   * return the full list of response headers (since PHP's flavor of cURL does
+   * not expose them), but it does return content-type and content-length
+   * headers. This is generally enough for normal purposes. It does not return
+   * the HTTP status message unless the status is in the 400-500 status range,
+   * nor does it return the redirect url in the case of 300-range statuses.
+   *
+   * Expected members of the $opts array (all are optional):
+   * - headers (associative array of request headers)
+   * - method (defaults to GET)
+   * - data (string payload for PUT/POST)
+   * - auth_method (string description of HTTP authorization method. see below)
+   *
+   * Valid 'auth_method' values (case-insensitive):
+   * - "Basic" (Default value. Cleartext, most widely supported.)
+   * - "Digest" (More secure, but less widely supported; platform independent)
+   * - "GSS Negotiate" (Used mostly with Active Directory)
+   * - "NTLM" (Deprecated; used with older Windows NT authentication)
+   * - "Any" (Tries all four of the above, and goes with the first that works)
+   * - "Any Safe" (Like "Any", except excludes "Basic")
+   * Any invalid 'auth_method' value will resolve to "Basic".
+   *
+   * If authentication is needed, username/password should be passed as part of
+   * the URI, like so:
+   * https://username:password@example.com/
+   * This is done to maintain compatibility with drupal_http_request().
+   * The URL will be parsed out and the user credentials will be sent in the
+   * request headers rather than in the URI.
+   *
+   * @param string $url
+   * @param array $opts
    * @return \Apigee\Util\HTTPResponse
    */
-  public static function exec($url, $opts) {
-
+  public static function exec($url, $opts = array()) {
+    // Initialize our return object
     $result = new HTTPResponse();
 
+    // Fill in any missing options
     $opts += array(
-      'headers' => array(),
+      'headers' => array(), // contains request-headers
       'method' => 'GET',
       'data' => NULL,
-      'max_redirects' => 3,
-      'timeout' => 30.0,
-      'context' => NULL,
+      'auth_method' => 'Basic'
     );
 
     $uri = @parse_url($url);
     if (!$uri) {
-      $result->error = 'missing scheme';
-      $result->code = -1002;
+      $result->error = 'Missing scheme';
+      $result->code = -1001;
       return $result;
     }
     $scheme = (isset($uri['scheme']) ? strtolower($uri['scheme']) : 'http');
@@ -45,126 +74,149 @@ class HTTPClient {
     }
 
     $headers = (isset($opts['headers']) && is_array($opts['headers']) ? $opts['headers'] : array());
-    if (!isset($headers['User-Agent'])) {
-      $headers['User-Agent'] = 'Apigee HTTPClient';
-    }
 
-    if ($scheme == 'http') {
-      $port = isset($uri['port']) ? $uri['port'] : 80;
-      $socket = 'tcp://' . $uri['host'] . ':' . $port;
-      $headers['Host'] = $uri['host'] . ($port != 80 ? ':' . $port : '');
-    }
-    else {
-      // Note: Only works when PHP is compiled with OpenSSL support.
-      $port = isset($uri['port']) ? $uri['port'] : 443;
-      $socket = 'ssl://' . $uri['host'] . ':' . $port;
-      $headers['Host'] = $uri['host'] . ($port != 443 ? ':' . $port : '');
-    }
-
-    $fp = @stream_socket_client($socket, $errno, $errstr, $opts['timeout']);
-    if (!$fp) {
-      $message = trim($errstr);
-      if (empty($message)) {
-        $message = 'Error opening socket ' . $socket;
+    // Do some User-Agent magic. First set the default value.
+    $user_agent = 'Apigee RESTClient';
+    // We must search headers in a case-insensitive manner.
+    foreach ($headers as $key => $val) {
+      if (strtolower($key) == 'user-agent') {
+        // Override the default if set by this class's client.
+        $user_agent = $val;
+        unset($headers[$key]);
       }
-      $result->code = -$errno;
-      $result->error = $message;
-      return $result;
     }
+
+    // Build our URL. Strip out any username/password stuff, and make sure
+    // the URL has all the necessary parts.
     $path = isset($uri['path']) ? $uri['path'] : '/';
     if (isset($uri['query'])) {
       $path .= '?' . $uri['query'];
     }
-    $method = isset($opts['method']) ? $opts['method'] : 'GET';
+    $host = $uri['host'];
+    $default_port = ($scheme == 'http' ? 80 : 443);
+    if (isset($uri['port']) && $uri['port'] != $default_port) {
+      $host .= ':' . $uri['port'];
+    }
+    $url = $scheme . '://' . $host . $path;
+
+    $method = isset($opts['method']) ? strtoupper($opts['method']) : 'GET';
     $payload = isset($opts['payload']) ? $opts['payload'] : '';
     if (strlen($payload) > 0 || $method == 'POST' || $method == 'PUT') {
       $headers['Content-Length'] = strlen($payload);
     }
+
+    // Set some basic options.
+    $curl_options = array(
+      CURLOPT_RETURNTRANSFER => TRUE, // Makes curl_exec() return a string.
+      CURLOPT_URL => $url,
+      CURLINFO_HEADER_OUT => TRUE, // Must be present to get request headers
+      CURLOPT_USERAGENT => $user_agent,
+      CURLOPT_SSL_VERIFYPEER => FALSE, // Similar to cmd-line curl's -k option
+      CURLOPT_HTTPHEADER => $headers
+    );
+
     if (isset($uri['user']) && isset($uri['pass'])) {
-      $headers['Authorization'] = 'Basic ' . base64_encode($uri['user'] . ':' . $uri['pass']);
+      $curl_options[CURLOPT_HTTPAUTH] = self::parse_auth_method($opts['auth_method']);
+      $curl_options[CURLOPT_USERPWD] = $uri['user'] . ':' . $uri['pass'];
     }
 
-    $request = $method . ' ' . $path . " HTTP/1.0\r\n";
-    foreach ($headers as $name => $value) {
-      $request .= $name . ': ' . trim($value) . "\r\n";
+    switch ($method) {
+      case 'GET':
+        $curl_options[CURLOPT_HTTPGET] = TRUE;
+        break;
+      case 'POST':
+        $curl_options[CURLOPT_POST] = TRUE;
+        $curl_options[CURLOPT_POSTFIELDS] = $payload;
+        break;
+      case 'PUT':
+        $curl_options[CURLOPT_PUT] = TRUE;
+        $curl_options[CURLOPT_INFILE] = $payload;
+        $curl_options[CURLOPT_INFILESIZE] = strlen($payload);
+        break;
+      default: // DELETE, HEAD, etc.
+        $curl_options[CURLOPT_CUSTOMREQUEST] = 'DELETE';
+        break;
     }
-    $request .= "\r\n" . $payload;
+    if (($method == 'POST' || $method == 'PUT') && empty($payload)) {
+      // PHP's cURL implementation will add a content-type header even if
+      // the payload is empty. This is known to break certain obscure KMS
+      // invocations. Therefore we must explicitly unset content-type in
+      // this case.
+      $curl_options[CURLOPT_HTTPHEADER]['Content-Type'] = '';
+    }
 
-    $result->request = $request;
+    try {
+      $ch = curl_init();
+      curl_setopt_array($ch, $curl_options);
 
-    stream_set_timeout($fp, floor($opts['timeout']));
-    fwrite($fp, $request);
+      $result->data = curl_exec($ch);
+      $info = curl_getinfo($ch);
+      $result->code = $info['http_code'];
+      $result->request = $info['request_header'];
+      $result->headers['content-type'] = $info['content_type'];
+      $result->headers['content-length'] = strlen($result->data);
 
-    // Fetch response. Due to PHP bugs like http://bugs.php.net/bug.php?id=43782
-    // and http://bugs.php.net/bug.php?id=46049 we can't rely on feof(), but
-    // instead must invoke stream_get_meta_data() each iteration.
-    $info = stream_get_meta_data($fp);
-    $alive = !$info['eof'] && !$info['timed_out'];
-    $response = '';
-
-    $start_time = microtime(TRUE);
-
-    while ($alive) {
-      // Calculate how much time is left of the original timeout value.
-      $timeout = $opts['timeout'] - (microtime(TRUE) - $start_time);
-      if ($timeout <= 0) {
-        $result->code = -1;
-        $result->error = 'request timed out';
-        return $result;
+      // Handle non-200-class statuses.
+      // We should never get a 100-class status, since it is an intermediate
+      // status occasionally sent while the server prepares to send content.
+      $status_class = floor($result->code / 100);
+      // We might conceivably get a $result->code of zero, indicating cURL
+      // couldn't connect.
+      if ($status_class < 2) {
+        $result->error = 'Connection failure';
       }
-      stream_set_timeout($fp, floor($timeout), floor(1000000 * fmod($timeout, 1)));
-      $chunk = fread($fp, 1024);
-      $response .= $chunk;
-      $info = stream_get_meta_data($fp);
-      $alive = !$info['eof'] && $chunk;
-    }
-    fclose($fp);
-
-    // Parse response headers from the response body.
-    // Be tolerant of malformed HTTP responses that separate header and body with
-    // \n\n or \r\r instead of \r\n\r\n.
-    list($response, $result->data) = preg_split("/\r\n\r\n|\n\n|\r\r/", $response, 2);
-    $response = preg_split("/\r\n|\n|\r/", $response);
-
-    // Parse the response status line.
-    list($protocol, $code, $status_message) = explode(' ', trim(array_shift($response)), 3);
-    $result->protocol = $protocol;
-    $result->status_message = $status_message;
-
-    $result->headers = array();
-
-    // Parse the response headers.
-    while ($line = trim(array_shift($response))) {
-      list($name, $value) = explode(':', $line, 2);
-      $name = strtolower($name);
-      //$name = strtolower($name);
-      if (isset($result->headers[$name]) && $name == 'set-cookie') {
-        // RFC 2109: the Set-Cookie response header comprises the token Set-
-        // Cookie:, followed by a comma-separated list of one or more cookies.
-        $result->headers[$name] .= ',' . trim($value);
-      }
-      else {
-        $result->headers[$name] = trim($value);
+      elseif ($status_class > 3) {
+        $result->error = self::get_status_message($result->code);
       }
     }
+    catch (\Exception $e) {
+      $result->code = -abs($e->getCode());
+      $result->error = $e->getMessage();
+    }
+    return $result;
+  }
 
-    $responses = array(
-      100 => 'Continue',
-      101 => 'Switching Protocols',
-      200 => 'OK',
-      201 => 'Created',
-      202 => 'Accepted',
-      203 => 'Non-Authoritative Information',
-      204 => 'No Content',
-      205 => 'Reset Content',
-      206 => 'Partial Content',
-      300 => 'Multiple Choices',
-      301 => 'Moved Permanently',
-      302 => 'Found',
-      303 => 'See Other',
-      304 => 'Not Modified',
-      305 => 'Use Proxy',
-      307 => 'Temporary Redirect',
+  /**
+   * Parse string representation of auth type into a CURLAUTH_* constant.
+   *
+   * If auth type cannot be parsed, it defaults to CURLAUTH_BASIC.
+   *
+   * @param string $auth_type
+   * @return int
+   */
+  private static function parse_auth_method($auth_type) {
+    if (is_int($auth_type) && in_array($auth_type, array(CURLAUTH_ANYSAFE, CURLAUTH_ANY, CURLAUTH_NTLM, CURLAUTH_GSSNEGOTIATE, CURLAUTH_DIGEST, CURLAUTH_BASIC))) {
+      return $auth_type;
+    }
+
+    switch (strtolower($auth_type)) {
+      case 'basic':
+        return CURLAUTH_BASIC;
+      case 'digest':
+        return CURLAUTH_DIGEST;
+      case 'gss negotiate':
+      case 'gssnegotiate':
+        return CURLAUTH_GSSNEGOTIATE;
+      case 'ntlm':
+        return CURLAUTH_NTLM;
+      case 'any':
+        return CURLAUTH_ANY;
+      case 'any safe':
+      case 'anysafe':
+        return CURLAUTH_ANYSAFE;
+    }
+    return CURLAUTH_BASIC;
+  }
+
+  /**
+   * Given a status code, returns the proper human-readable message which
+   * corresponds to that code.
+   *
+   * @param int $code
+   * @return string
+   */
+  private static function get_status_message($code) {
+    static $responses = array(
       400 => 'Bad Request',
       401 => 'Unauthorized',
       402 => 'Payment Required',
@@ -181,56 +233,52 @@ class HTTPClient {
       413 => 'Request Entity Too Large',
       414 => 'Request-URI Too Large',
       415 => 'Unsupported Media Type',
-      416 => 'Requested range not satisfiable',
+      416 => 'Requested Range Not Satisfiable',
       417 => 'Expectation Failed',
+      418 => 'I\'m a teapot', // RFC 2324
+      420 => 'Enhance Your Calm', // Twitter ;-)
+      422 => 'Unprocessable Entity', // WebDAV
+      423 => 'Locked', // WebDAV
+      424 => 'Failed Dependency', // WebDAV
+      425 => 'Unordered Collection',
+      426 => 'Upgrade Required',
+      428 => 'Precondition Required',
+      429 => 'Too Many Requests',
+      431 => 'Request Header Fields Too Large',
+      444 => 'No Response', // nginx
+      449 => 'Retry With', // Microsoft
+      450 => 'Blocked By Parental Controls', // Microsoft
+      451 => 'Unavailable for Legal Reasons',
+      494 => 'Request Header Too Large', // nginx
+      495 => 'Cert Error', // nginx
+      496 => 'No Cert', // nginx
+      497 => 'HTTP to HTTPS', // nginx
+      499 => 'Client Closed Request', // nginx
       500 => 'Internal Server Error',
       501 => 'Not Implemented',
       502 => 'Bad Gateway',
       503 => 'Service Unavailable',
-      504 => 'Gateway Time-out',
+      504 => 'Gateway Timeout',
       505 => 'HTTP Version not supported',
+      506 => 'Variant Also Negotiates',
+      507 => 'Insufficient Storage', // WebDAV
+      508 => 'Loop Detected', // WebDAV
+      509 => 'Bandwidth Limit Exceeded', // apache?
+      510 => 'Not Extended',
+      511 => 'Network Authentication Required',
+      598 => 'Network read timeout error', // Microsoft
+      599 => 'Network connect timeout error', // Microsoft
     );
-    // RFC 2616 states that all unknown HTTP codes must be treated the same as the
-    // base code in their class.
+
     if (!isset($responses[$code])) {
+      // According to RFC 2616, all unknown HTTP codes must be treated the same
+      // as the base code in their class.
       $code = floor($code / 100) * 100;
     }
-    $result->code = $code;
-
-    switch ($result->code) {
-      case 200: // OK
-      case 201: // Created
-      case 202: // Accepted
-      case 204: // No Content
-      case 304: // Not modified
-        break;
-      case 301: // Moved permanently
-      case 302: // Moved temporarily
-      case 307: // Moved temporarily
-        $location = $result->headers['location'];
-        $opts['timeout'] -= (microtime(TRUE) - $start_time);
-        if ($opts['timeout'] <= 0) {
-          $result->code = -1;
-          $result->error = 'request timed out';
-          return $result;
-        }
-        elseif ($opts['max_redirects']) {
-          // Redirect to the new location.
-          $opts['max_redirects']--;
-          if ($opts['max_redirects'] < 1) {
-            $result->code = -2;
-            $result->error = 'Too many redirects';
-            return $result;
-          }
-          $result = self::exec($location, $opts);
-          if (!isset($result->redirect_url)) {
-            $result->redirect_url = $location;
-          }
-        }
-        break;
-      default:
-        $result->error = $status_message;
+    if (!isset($responses[$code])) {
+      // Something is seriously screwy; treat it as an internal server error.
+      $code = 500;
     }
-    return $result;
+    return $responses[$code];
   }
 }
