@@ -39,7 +39,7 @@ public class DevicesService extends AbstractCollectionService {
 	private static final Logger logger = LoggerFactory
 			.getLogger(DevicesService.class);
 
-	private static LRUMap deviceCache = new LRUMap(DEVICE_CACHE_COUNT);
+	private static final LRUMap deviceCache = new LRUMap(DEVICE_CACHE_COUNT);
 
 	public DevicesService() {
 		super();

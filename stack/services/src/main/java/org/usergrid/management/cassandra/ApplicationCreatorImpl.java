@@ -41,11 +41,12 @@ public class ApplicationCreatorImpl implements ApplicationCreator {
     @Override
     public ApplicationInfo createSampleFor(OrganizationInfo organizationInfo)
             throws ApplicationCreationException {
-        logger.info("create sample app {} in: {}", sampleAppName, organizationInfo.getName());
+
         Preconditions.checkArgument(organizationInfo != null,
                 "OrganizationInfo was null");
         Preconditions.checkArgument(organizationInfo.getUuid() != null,
                 "OrganizationInfo had no UUID");
+		logger.info("create sample app {} in: {}", sampleAppName, organizationInfo.getName());
         UUID appId = null;
         try {
             appId = managementService.createApplication(
