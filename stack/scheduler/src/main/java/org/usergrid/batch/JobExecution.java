@@ -62,9 +62,9 @@ public interface JobExecution {
   public JobStat getJobStats();
 
   /**
-   * Marke the job as started
+   * Marke the job as started.  If it's failed too many times, don't run it
    */
-  public void start();
+  public void start(int maxFailures);
 
   /**
    * Mark the job as successfully completed
@@ -77,7 +77,7 @@ public interface JobExecution {
    * 
    * @param maxFailures
    */
-  public void failed(int maxFailures);
+  public void failed();
 
   /**
    * Mark the job as dead

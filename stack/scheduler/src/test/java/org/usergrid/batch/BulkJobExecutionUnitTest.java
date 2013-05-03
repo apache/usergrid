@@ -24,7 +24,7 @@ public class BulkJobExecutionUnitTest {
     JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, stat, null);
     JobExecution bje = new JobExecutionImpl(jobDescriptor);
     assertEquals(JobExecution.Status.NOT_STARTED, bje.getStatus());
-    bje.start();
+    bje.start(1);
     assertEquals(JobExecution.Status.IN_PROGRESS, bje.getStatus());
     bje.completed();
     assertEquals(JobExecution.Status.COMPLETED, bje.getStatus());
@@ -37,7 +37,7 @@ public class BulkJobExecutionUnitTest {
     JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, stat, null);
     JobExecution bje = new JobExecutionImpl(jobDescriptor);
     assertEquals(JobExecution.Status.NOT_STARTED, bje.getStatus());
-    bje.start();
+    bje.start(1);
     assertEquals(JobExecution.Status.IN_PROGRESS, bje.getStatus());
     bje.killed();
     assertEquals(JobExecution.Status.DEAD, bje.getStatus());
@@ -50,9 +50,9 @@ public class BulkJobExecutionUnitTest {
     JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, stat, null);
     JobExecution bje = new JobExecutionImpl(jobDescriptor);
     assertEquals(JobExecution.Status.NOT_STARTED, bje.getStatus());
-    bje.start();
+    bje.start(JobExecution.FOREVER);
     assertEquals(JobExecution.Status.IN_PROGRESS, bje.getStatus());
-    bje.failed(JobExecution.FOREVER);
+    bje.failed();
     assertEquals(JobExecution.Status.FAILED, bje.getStatus());
   }
 
@@ -69,15 +69,15 @@ public class BulkJobExecutionUnitTest {
     }
 
     try {
-      bje.failed(0);
+      bje.failed();
       fail("Should have thrown ISE on NOT_STARTED to FAILED");
     } catch (IllegalStateException ise) {
     }
-    bje.start();
+    bje.start(1);
 
     bje.completed();
     try {
-      bje.failed(0);
+      bje.failed();
       fail("Should have failed failed after complete call");
     } catch (IllegalStateException ise) {
     }
@@ -97,11 +97,11 @@ public class BulkJobExecutionUnitTest {
     }
 
     try {
-      bje.failed(0);
+      bje.failed();
       fail("Should have thrown ISE on NOT_STARTED to FAILED");
     } catch (IllegalStateException ise) {
     }
-    bje.start();
+    bje.start(1);
 
     bje.killed();
     try {
@@ -119,19 +119,24 @@ public class BulkJobExecutionUnitTest {
     JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, stat, null);
     JobExecution bje = new JobExecutionImpl(jobDescriptor);
 
-    bje.start();
-    bje.failed(1);
+    bje.start(1);
 
+    assertEquals(Status.IN_PROGRESS, bje.getStatus());
+    assertEquals(1, stat.getRunCount());
+    
+
+    bje.failed();
+    
     assertEquals(Status.FAILED, bje.getStatus());
-    assertEquals(1, stat.getFailCount());
+    assertEquals(1, stat.getRunCount());
+  
 
     // now fail again, we should trigger a state change
     bje = new JobExecutionImpl(jobDescriptor);
-    bje.start();
-    bje.failed(1);
+    bje.start(1);
 
     assertEquals(Status.DEAD, bje.getStatus());
-    assertEquals(2, stat.getFailCount());
+    assertEquals(2, stat.getRunCount());
 
   }
 
@@ -142,19 +147,28 @@ public class BulkJobExecutionUnitTest {
     JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, stat, null);
     JobExecution bje = new JobExecutionImpl(jobDescriptor);
 
-    bje.start();
-    bje.failed(JobExecution.FOREVER);
+    bje.start(JobExecution.FOREVER);
+    
+    assertEquals(Status.IN_PROGRESS, bje.getStatus());
+    assertEquals(1, stat.getRunCount());
+    
+    bje.failed();
 
     assertEquals(Status.FAILED, bje.getStatus());
-    assertEquals(1, stat.getFailCount());
+    assertEquals(1, stat.getRunCount());
 
     // now fail again, we should trigger a state change
     bje = new JobExecutionImpl(jobDescriptor);
-    bje.start();
-    bje.failed(JobExecution.FOREVER);
+    bje.start(JobExecution.FOREVER);
+    
+    assertEquals(Status.IN_PROGRESS, bje.getStatus());
+    assertEquals(2, stat.getRunCount());
+    
+    bje.failed();
 
     assertEquals(Status.FAILED, bje.getStatus());
-    assertEquals(2, stat.getFailCount());
+    assertEquals(2, stat.getRunCount());
+  
 
   }
 
@@ -164,9 +178,9 @@ public class BulkJobExecutionUnitTest {
     JobStat stat = new JobStat();
     JobDescriptor jobDescriptor = new JobDescriptor("", UUID.randomUUID(), UUID.randomUUID(), data, stat, null);
     JobExecution bje = new JobExecutionImpl(jobDescriptor);
-    bje.start();
+    bje.start(1);
     try {
-      bje.start();
+      bje.start(1);
       fail("Should have failed on double start() call");
     } catch (IllegalStateException ise) {
     }
