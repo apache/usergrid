@@ -30,8 +30,14 @@
 - (void) reload {
     UGConnection *usergrid = [UGConnection sharedConnection];
     NSLog(@"loading...");
+    NSDictionary *query = [usergrid queryWithString:@"select * where conference = 'wwdc2013'"
+                                              limit:1000
+                                          startUUID:nil
+                                             cursor:nil
+                                           reversed:NO];
     UGHTTPClient *client = [[UGHTTPClient alloc] initWithRequest:
-                            [usergrid getEntitiesInCollection:@"parties" limit:100]];
+                            [usergrid getEntitiesInCollection:@"parties"
+                                                    usingQuery:query]];
     [client connectWithCompletionHandler:^(UGHTTPResult *result) {
         NSLog(@"%@", result.object);
         self.content = result.object;
@@ -46,10 +52,16 @@
     
     UGConnection *connection = [UGConnection sharedConnection];
     connection.server = @"https://api.usergrid.com";
-    connection.organization = @"radtastical";
+    connection.organization = @"macmoe";
     connection.application = @"partyapi";
-    [self reload];
     
+    [[[UGHTTPClient alloc] initWithRequest:
+      [connection getAccessTokenForApplicationWithUsername:@"radtastical"
+                                                  password:@"partyrock2013"]]
+     connectWithCompletionHandler:^(UGHTTPResult *result) {
+         [connection authenticateWithResult:result];
+         [self reload];
+     }];
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]
                                              initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh
                                              target:self
@@ -58,7 +70,7 @@
 
 - (void) viewWillAppear:(BOOL)animated
 {
-    [self reload];
+   
 }
 
 #pragma mark - Table view data source
