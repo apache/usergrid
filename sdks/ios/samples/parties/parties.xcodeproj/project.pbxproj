@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		22C1D70617357FC8006202F6 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C1D70517357FC8006202F6 /* MapKit.framework */; };
 		22C1D708173580ED006202F6 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22C1D707173580ED006202F6 /* CoreLocation.framework */; };
+		22CDB04A173607580015D864 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 22CDB049173607580015D864 /* Icon.png */; };
 		22FC71211730705D00153630 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22FC71201730705D00153630 /* UIKit.framework */; };
 		22FC71231730705D00153630 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22FC71221730705D00153630 /* Foundation.framework */; };
 		22FC71251730705D00153630 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22FC71241730705D00153630 /* CoreGraphics.framework */; };
@@ -48,6 +49,7 @@
 /* Begin PBXFileReference section */
 		22C1D70517357FC8006202F6 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		22C1D707173580ED006202F6 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		22CDB049173607580015D864 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
 		22FC711D1730705D00153630 /* parties.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = parties.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		22FC71201730705D00153630 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		22FC71221730705D00153630 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -178,6 +180,7 @@
 		22FC71271730705D00153630 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				22CDB049173607580015D864 /* Icon.png */,
 				22FC71281730705D00153630 /* parties-Info.plist */,
 				22FC71291730705D00153630 /* InfoPlist.strings */,
 				22FC712C1730705D00153630 /* main.m */,
@@ -316,6 +319,7 @@
 				22FC71331730705D00153630 /* Default.png in Resources */,
 				22FC71351730705D00153630 /* Default@2x.png in Resources */,
 				22FC71371730705D00153630 /* Default-568h@2x.png in Resources */,
+				22CDB04A173607580015D864 /* Icon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

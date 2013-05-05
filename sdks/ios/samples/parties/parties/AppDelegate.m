@@ -16,7 +16,7 @@
     UINavigationController *navigationController = [[UINavigationController alloc]
                                                     initWithRootViewController:[[PartiesViewController alloc] init]];
     navigationController.navigationBar.tintColor = [UIColor colorWithRed:255.0/255.0
-                                                                   green:102.0/255.0
+                                                                   green:067.0/255.0
                                                                     blue:000.0/255.0
                                                                    alpha:1];
     self.window.rootViewController = navigationController;
