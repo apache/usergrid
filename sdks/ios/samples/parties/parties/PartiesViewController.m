@@ -27,22 +27,41 @@
     return self;
 }
 
-- (void) reload {
-    UGConnection *usergrid = [UGConnection sharedConnection];
+- (void) fetchParties {
+    UGConnection *connection = [UGConnection sharedConnection];
     NSLog(@"loading...");
-    NSDictionary *query = [usergrid queryWithString:@"select * where conference = 'wwdc2013'"
-                                              limit:1000
-                                          startUUID:nil
-                                             cursor:nil
-                                           reversed:NO];
+    NSDictionary *query = [connection queryWithString:@"select * where conference = 'wwdc2013'"
+                                                limit:1000
+                                            startUUID:nil
+                                               cursor:nil
+                                             reversed:NO];
     UGHTTPClient *client = [[UGHTTPClient alloc] initWithRequest:
-                            [usergrid getEntitiesInCollection:@"parties"
-                                                    usingQuery:query]];
+                            [connection getEntitiesInCollection:@"parties"
+                                                     usingQuery:query]];
     [client connectWithCompletionHandler:^(UGHTTPResult *result) {
-        NSLog(@"%@", result.object);
         self.content = result.object;
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setObject:result.object forKey:@"parties"];
+        [defaults synchronize];
         [self.tableView reloadData];
     }];
+}
+
+- (void) reload {
+    UGConnection *connection = [UGConnection sharedConnection];
+    if (![connection isAuthenticated]) {
+        [[[UGHTTPClient alloc] initWithRequest:
+          [connection getAccessTokenForApplicationWithUsername:@"radtastical"
+                                                      password:@"partyrock2013"]]
+         connectWithCompletionHandler:^(UGHTTPResult *result) {
+             [connection authenticateWithResult:result];
+             if ([connection isAuthenticated]) {
+                 [self fetchParties];
+             }
+         }];
+    } else {
+        [self fetchParties];
+    }
 }
 
 - (void)loadView
@@ -55,35 +74,28 @@
     connection.organization = @"macmoe";
     connection.application = @"partyapi";
     
-    [[[UGHTTPClient alloc] initWithRequest:
-      [connection getAccessTokenForApplicationWithUsername:@"radtastical"
-                                                  password:@"partyrock2013"]]
-     connectWithCompletionHandler:^(UGHTTPResult *result) {
-         [connection authenticateWithResult:result];
-         [self reload];
-     }];
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *parties = [defaults objectForKey:@"parties"];
+    if (parties) {
+        self.content = parties;
+    } else {
+        [self reload];
+    }
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]
                                              initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh
                                              target:self
                                              action:@selector(reload)];
 }
 
-- (void) viewWillAppear:(BOOL)animated
-{
-   
-}
-
 #pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    // Return the number of sections.
     return 1;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    // Return the number of rows in the section.
     return self.content ? [self.content[@"entities"] count] : 0;
 }
 
@@ -99,7 +111,7 @@
     if (self.content) {
         id entity = self.content[@"entities"][[indexPath row]];
         cell.textLabel.text = entity[@"title"];
-        cell.detailTextLabel.text = entity[@"venue"];        
+        cell.detailTextLabel.text = entity[@"venue"];
     }
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
 }
