@@ -15,19 +15,9 @@
 
 @implementation PartyViewController
 
-- (id)initWithStyle:(UITableViewStyle)style
-{
-    self = [super initWithStyle:style];
-    if (self) {
-        // Custom initialization
-    }
-    return self;
-}
-
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
 - (void) viewWillAppear:(BOOL)animated
@@ -65,7 +55,16 @@ NSMutableAttributedString *attributed_string(NSString *string, CGFloat size) {
         [attributedString appendAttributedString:attributed_string([address objectForKey:@"state"], 18)];
         [attributedString appendAttributedString:carriage_return(18)];
         [attributedString appendAttributedString:carriage_return(18)];
+        
         [attributedString appendAttributedString:attributed_string([self.content objectForKey:@"description"], 18)];
+        [attributedString appendAttributedString:carriage_return(18)];
+        [attributedString appendAttributedString:carriage_return(18)];
+        
+        [attributedString appendAttributedString:attributed_string([self.content objectForKey:@"partytime"], 18)];
+        [attributedString appendAttributedString:carriage_return(18)];
+        [attributedString appendAttributedString:attributed_string([self.content objectForKey:@"startDate"], 18)];
+        [attributedString appendAttributedString:carriage_return(18)];
+        [attributedString appendAttributedString:attributed_string([self.content objectForKey:@"endDate"], 18)];
         [attributedString appendAttributedString:carriage_return(18)];
         return attributedString;
     } else if ([indexPath row] == 2) {
@@ -81,13 +80,11 @@ NSMutableAttributedString *attributed_string(NSString *string, CGFloat size) {
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    // Return the number of sections.
     return 1;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    // Return the number of rows in the section.
     return 3;
 }
 
@@ -122,6 +119,8 @@ NSMutableAttributedString *attributed_string(NSString *string, CGFloat size) {
             UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
                                                            reuseIdentifier:@"Cell"];
             cell.selectionStyle = UITableViewCellSelectionStyleNone;
+            cell.textLabel.attributedText = [self attributedStringForIndexPath:indexPath];
+            cell.textLabel.numberOfLines = 0;
             return cell;
         }
     }
@@ -140,23 +139,6 @@ NSMutableAttributedString *attributed_string(NSString *string, CGFloat size) {
                                                            options:NSStringDrawingUsesFontLeading+NSStringDrawingUsesLineFragmentOrigin
                                                            context:nil];
             return bounds.size.height;
-        }
-    }
-}
-
-#pragma mark - Table view delegate
-
-- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    switch ([indexPath row]) {
-        case 0: {
-            break;
-        }
-        default: {
-            NSMutableAttributedString *attributedString = [self attributedStringForIndexPath:indexPath];
-            cell.textLabel.attributedText = attributedString;
-            cell.textLabel.numberOfLines = 0;
-            break;
         }
     }
 }
