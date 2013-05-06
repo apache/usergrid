@@ -12,11 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.batch.Job;
 import org.usergrid.batch.JobExecution;
+import org.usergrid.batch.JobExecution.Status;
 import org.usergrid.batch.JobExecutionException;
 import org.usergrid.batch.JobExecutionImpl;
 import org.usergrid.batch.JobFactory;
 import org.usergrid.batch.JobNotFoundException;
-import org.usergrid.batch.JobExecution.Status;
 import org.usergrid.batch.repository.JobAccessor;
 import org.usergrid.batch.repository.JobDescriptor;
 
@@ -79,7 +79,6 @@ public class JobSchedulerService extends AbstractScheduledService {
         // loop if there's no capacity
         capacitySemaphore.release();
 
-        // always +1 since the acquire means we'll be off by 1
         int capacity = capacitySemaphore.availablePermits();
 
         logger.debug("Capacity is {}", capacity);
@@ -143,7 +142,9 @@ public class JobSchedulerService extends AbstractScheduledService {
         public Void call() throws Exception {
           capacitySemaphore.acquire();
 
-          execution.start();
+          execution.start(maxFailCount);
+          
+          jobAccessor.save(execution);
 
           // TODO wrap and throw specifically typed exception for onFailure,
           // needs jobId
@@ -170,7 +171,7 @@ public class JobSchedulerService extends AbstractScheduledService {
           logger.error("Failed execution for bulkJob {}", throwable);
           // mark it as failed
           if (execution.getStatus() == Status.IN_PROGRESS) {
-            execution.failed(maxFailCount);
+            execution.failed();
           }
 
           // there's a retry delay, use it
