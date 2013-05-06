@@ -300,6 +300,13 @@ public class ApplicationResourceTest extends AbstractRestTest {
     }
 
     @Test
+    public void authorizeWithInvalidClientIdRaisesError() throws Exception {
+        String result = resource().path("/test-organization/test-app/authorize").queryParam("response_type", "token").queryParam("client_id", "invalid_client_id").queryParam("redirect_uri", "http://www.my_test.com").get(String.class);
+
+        assertTrue(result.contains("Unable to authenticate (OAuth). Invalid client_id."));
+    }
+
+    @Test
     public void authorizationCodeWithValidCredentials() throws Exception {
         ApplicationInfo appInfo = managementService.getApplicationInfo("test-organization/test-app");
         String clientId = managementService.getClientIdForApplication(appInfo.getId());
