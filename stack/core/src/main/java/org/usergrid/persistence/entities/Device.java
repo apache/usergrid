@@ -48,9 +48,6 @@ public class Device extends TypedEntity {
   @EntityProperty
   protected Integer badge;
 
-  @EntityCollection(type = "notification")
-  protected List<UUID> notifications;
-
 	public Device() {
 		// id = UUIDUtils.newTimeUUID();
 	}
@@ -77,15 +74,6 @@ public class Device extends TypedEntity {
 	public void setUsers(List<UUID> users) {
 		this.users = users;
 	}
-
-	@JsonSerialize(include = Inclusion.NON_NULL)
-  public List<UUID> getNotifications() {
-    return this.notifications;
-  }
-
-  public void setNotifications(List<UUID> notifications) {
-    this.notifications = notifications;
-  }
 
   @JsonSerialize(include = Inclusion.NON_NULL)
   public List<UUID> getReceipts() {
