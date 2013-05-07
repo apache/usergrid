@@ -224,7 +224,8 @@ public class ServiceRequest {
 			ServicePayload payload) throws Exception {
 
 		List<ServiceRequest> requests = previousResults.getNextRequests();
-    if (!previousResults.getPath().endsWith("/users") && // exception for selecting Devices for Notifications
+    if (!previousResults.getPath().endsWith("/devices") &&
+        !previousResults.getPath().endsWith("/users") && // exception for selecting Devices for Notifications
         !previousResults.getPath().endsWith("/groups")) {
       if (requests.size() > MAX_INVOCATIONS) {
         throw new IllegalArgumentException(
