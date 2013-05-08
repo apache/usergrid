@@ -39,7 +39,7 @@ public class JobStat extends TypedEntity {
   private long startTime;
   
   @EntityProperty(required = true, basic = true, indexed = true)
-  private int failCount;
+  private int runCount;
   
   @EntityProperty(required = true, basic = true, indexed = true)
   private long duration;
@@ -94,23 +94,23 @@ public class JobStat extends TypedEntity {
     this.startTime = startTime;
   }
   
-  public void incrementFailures(){
-    failCount++;
+  public void incrementRuns(){
+    runCount++;
   }
   
   /**
    * Get the number of times this job has failed
    * @return
    */
-  public int getFailCount(){
-    return failCount;
+  public int getRunCount(){
+    return runCount;
   }
 
   /**
    * @param failCount the failCount to set
    */
-  public void setFailCount(int failCount) {
-    this.failCount = failCount;
+  public void setRunCount(int runCount) {
+    this.runCount = runCount;
   }
 
 

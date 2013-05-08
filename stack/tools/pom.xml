@@ -179,7 +179,7 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>org.hectorclient</groupId>
+			<groupId>org.usergrid</groupId>
 			<artifactId>hector-core</artifactId>
 		</dependency>
 		<dependency>

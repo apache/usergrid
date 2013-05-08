@@ -20,6 +20,8 @@ import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
+import static org.usergrid.security.oauth.ClientCredentialsInfo.getUUIDFromClientId;
 import static org.usergrid.security.shiro.utils.SubjectUtils.isApplicationAdmin;
 import static org.usergrid.services.ServiceParameter.addParameter;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
@@ -71,6 +73,7 @@ import org.usergrid.rest.applications.assets.AssetsResource;
 import org.usergrid.rest.applications.events.EventsResource;
 import org.usergrid.rest.applications.queues.QueueResource;
 import org.usergrid.rest.applications.users.UsersResource;
+import org.usergrid.rest.exceptions.AuthErrorInfo;
 import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.security.oauth.AccessInfo;
@@ -216,7 +219,7 @@ public class ApplicationResource extends ServiceResource {
                             ' ');
                     String[] values = Base64.decodeToString(token).split(":");
                     if (values.length >= 2) {
-                        client_id = values[0].toLowerCase();
+                        client_id = values[0];
                         client_secret = values[1];
                     }
                 }
@@ -297,6 +300,7 @@ public class ApplicationResource extends ServiceResource {
     @Path("token")
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response getAccessTokenPost(@Context UriInfo ui,
+    		@HeaderParam("Authorization") String authorization,
             @FormParam("grant_type") String grant_type,
             @FormParam("username") String username,
             @FormParam("password") String password,
@@ -311,7 +315,7 @@ public class ApplicationResource extends ServiceResource {
 
         logger.debug("ApplicationResource.getAccessTokenPost");
 
-        return getAccessToken(ui, null, grant_type, username, password, pin,
+        return getAccessToken(ui, authorization, grant_type, username, password, pin,
                 client_id, client_secret, code, ttl, redirect_uri, callback);
     }
 
@@ -319,6 +323,7 @@ public class ApplicationResource extends ServiceResource {
     @Path("token")
     @Consumes(APPLICATION_JSON)
     public Response getAccessTokenPostJson(@Context UriInfo ui,
+            @HeaderParam("Authorization") String authorization,
             Map<String, Object> json,
             @QueryParam("callback") @DefaultValue("") String callback)
                     throws Exception {
@@ -341,7 +346,7 @@ public class ApplicationResource extends ServiceResource {
             }
         }
 
-        return getAccessToken(ui, null, grant_type, username, password, pin,
+        return getAccessToken(ui, authorization, grant_type, username, password, pin,
                 client_id, client_secret, code, ttl, redirect_uri, callback);
     }
 
@@ -402,6 +407,11 @@ public class ApplicationResource extends ServiceResource {
             @QueryParam("scope") String scope, @QueryParam("state") String state) {
 
         try {
+            UUID uuid = getUUIDFromClientId(client_id);
+            if (uuid == null) {
+              throw mappableSecurityException(AuthErrorInfo.OAUTH2_INVALID_CLIENT, "Unable to authenticate (OAuth). Invalid client_id");
+            }
+
             responseType = response_type;
             clientId = client_id;
             redirectUri = redirect_uri;

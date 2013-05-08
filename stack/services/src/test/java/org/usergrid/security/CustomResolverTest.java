@@ -78,6 +78,11 @@ public class CustomResolverTest extends AbstractShiroTestHelper {
 				"applications:get:00000000-0000-0000-0000-000000000001:/foo/bar/*/boz/*",
 				"applications:get:00000000-0000-0000-0000-000000000001:/foo/bar/baz/boz/biz");
 
+    testImplies(
+            true,
+            "applications:get:00000000-0000-0000-0000-000000000001:/bar/*/boz/*",
+            "applications:get:00000000-0000-0000-0000-000000000001:/bar/3b270ee0-a2d7-11e2-b8ac-f14ec968db08/boz/b53761a-a2d7-11e2-abbb-11f6def11e98");
+
 		testImplies(
 				false,
 				"applications:get:00000000-0000-0000-0000-000000000001:/foo/bar/*/boz/*",

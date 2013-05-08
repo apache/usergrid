@@ -77,10 +77,18 @@ public class JobExecutionImpl implements JobExecution{
     return stats;
   }
 
-  public void start() {
+  public void start(int maxFailures) {
     Preconditions.checkState(this.status.equals(Status.NOT_STARTED) || this.status.equals(Status.FAILED),
         "Attempted to start job in progress");
     this.status = Status.IN_PROGRESS;
+   
+    stats.incrementRuns();
+    
+    //use >= in case the threshold lowers after the job has passed the failure mark
+    if(maxFailures != FOREVER && stats.getRunCount() > maxFailures){
+      status = Status.DEAD;
+    }
+    
     startTime = System.currentTimeMillis();
     stats.setStartTime(startTime);
   }
@@ -96,23 +104,20 @@ public class JobExecutionImpl implements JobExecution{
    * Mark this execution as failed.  Also pass the maxium number of possible failures.  Set to JobExecution.FOREVER for no limit
    * @param maxFailures
    */
-  public void failed(int maxFailures) {
+  public void failed() {
     Preconditions.checkState(this.status.equals(Status.IN_PROGRESS), "Attempted to fail job not in progress");
     status = Status.FAILED;
     duration = System.currentTimeMillis() - startTime;
-    stats.incrementFailures();
     
-    //use >= in case the threshold lowers after the job has passed the failure mark
-    if(maxFailures != FOREVER && stats.getFailCount() > maxFailures){
-      status = Status.DEAD;
-    }
   }
   
   /**
    * This job should be killed and not retried
    */
   public void killed(){
-    failed(0);
+    Preconditions.checkState(this.status.equals(Status.IN_PROGRESS), "Attempted to fail job not in progress");
+    status = Status.DEAD;
+    duration = System.currentTimeMillis() - startTime;
   }
   
   
