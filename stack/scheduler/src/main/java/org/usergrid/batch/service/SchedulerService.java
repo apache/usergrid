@@ -17,11 +17,10 @@ package org.usergrid.batch.service;
 
 import java.util.UUID;
 
-import org.usergrid.batch.JobExecutionException;
-import org.usergrid.batch.JobExecutionImpl;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
 import org.usergrid.persistence.entities.JobData;
+import org.usergrid.persistence.entities.JobStat;
 
 /**
  * Simple interface for performing job scheduling
@@ -51,12 +50,6 @@ public interface SchedulerService {
    */
   public void deleteJob(UUID jobId);
   
-  /**
-   * Perform any heartbeat operations required.  Update jobExecution with the appropriate data
-   * @param execution
-   * @throws JobExecutionException 
-   */
-  public void heartbeat(JobExecutionImpl execution);
   
   /**
    * Query the job data with the given query object
@@ -65,4 +58,13 @@ public interface SchedulerService {
    * @throws Exception 
    */
   public Results queryJobData(Query query) throws Exception;
+  
+  /**
+   * Get the stats for a job
+   * @param jobName
+   * @param jobId
+   * @return
+   * @throws Exception
+   */
+  public JobStat getStatsForJob(String jobName, UUID jobId) throws Exception;
 }
