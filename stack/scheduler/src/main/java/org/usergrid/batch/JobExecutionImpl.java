@@ -3,6 +3,7 @@ package org.usergrid.batch;
 import java.util.UUID;
 
 import org.usergrid.batch.repository.JobDescriptor;
+import org.usergrid.batch.service.JobRuntimeService;
 import org.usergrid.batch.service.SchedulerService;
 import org.usergrid.persistence.entities.JobData;
 import org.usergrid.persistence.entities.JobStat;
@@ -16,25 +17,24 @@ import com.google.common.base.Preconditions;
  * @author zznate
  * @author tnine
  */
-public class JobExecutionImpl implements JobExecution{
+public class JobExecutionImpl implements JobExecution {
 
-  
   private final UUID jobId;
   private final UUID runId;
   private final String jobName;
   private long duration;
   private Status status = Status.NOT_STARTED;
   private long startTime;
-  private SchedulerService scheduler;
+  private JobRuntimeService runtime;
   private UUID transactionId;
   private JobData data;
   private JobStat stats;
-
+  private long delay = -1;
 
   public JobExecutionImpl(JobDescriptor jobDescriptor) {
     this.runId = UUID.randomUUID();
     this.jobId = jobDescriptor.getJobId();
-    this.scheduler = jobDescriptor.getScheduler();
+    this.runtime = jobDescriptor.getRuntime();
     this.jobName = jobDescriptor.getJobName();
     this.transactionId = jobDescriptor.getTransactionId();
     this.data = jobDescriptor.getData();
@@ -49,10 +49,9 @@ public class JobExecutionImpl implements JobExecution{
     return duration;
   }
 
-
-
   /**
-   * @param transactionId the transactionId to set
+   * @param transactionId
+   *          the transactionId to set
    */
   public void setTransactionId(UUID transactionId) {
     this.transactionId = transactionId;
@@ -69,7 +68,9 @@ public class JobExecutionImpl implements JobExecution{
     return data;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.usergrid.batch.JobExecution#getJobStats()
    */
   @Override
@@ -81,49 +82,73 @@ public class JobExecutionImpl implements JobExecution{
     Preconditions.checkState(this.status.equals(Status.NOT_STARTED) || this.status.equals(Status.FAILED),
         "Attempted to start job in progress");
     this.status = Status.IN_PROGRESS;
-   
+
     stats.incrementRuns();
     
-    //use >= in case the threshold lowers after the job has passed the failure mark
-    if(maxFailures != FOREVER && stats.getRunCount() > maxFailures){
+
+    // use >= in case the threshold lowers after the job has passed the failure
+    // mark
+    if (maxFailures != FOREVER && stats.getTotalAttempts() > maxFailures) {
       status = Status.DEAD;
     }
-    
+
     startTime = System.currentTimeMillis();
     stats.setStartTime(startTime);
   }
 
   public void completed() {
-    Preconditions.checkState(this.status.equals(Status.IN_PROGRESS), "Attempted to complete job not in progress");
-    this.status = Status.COMPLETED;
-    duration = System.currentTimeMillis() - startTime;
+    updateState(Status.IN_PROGRESS, "Attempted to complete job not in progress", Status.COMPLETED);
     stats.setDuration(duration);
   }
 
   /**
-   * Mark this execution as failed.  Also pass the maxium number of possible failures.  Set to JobExecution.FOREVER for no limit
+   * Mark this execution as failed. Also pass the maxium number of possible
+   * failures. Set to JobExecution.FOREVER for no limit
+   * 
    * @param maxFailures
    */
   public void failed() {
-    Preconditions.checkState(this.status.equals(Status.IN_PROGRESS), "Attempted to fail job not in progress");
-    status = Status.FAILED;
-    duration = System.currentTimeMillis() - startTime;
-    
+    updateState(Status.IN_PROGRESS, "Attempted to fail job not in progress", Status.FAILED);
   }
-  
+
   /**
    * This job should be killed and not retried
    */
-  public void killed(){
-    Preconditions.checkState(this.status.equals(Status.IN_PROGRESS), "Attempted to fail job not in progress");
-    status = Status.DEAD;
+  public void killed() {
+    updateState(Status.IN_PROGRESS, "Attempted to fail job not in progress", Status.DEAD);
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.usergrid.batch.JobExecution#delay(long)
+   */
+  @Override
+  public void delay(long delay) {
+    updateState(Status.IN_PROGRESS, "Attempted to delay a job not in progress", Status.DELAYED);
+    stats.incrementDelays();
+    this.delay = delay;
+    runtime.delay(this);
+  }
+
+  /**
+   * Update our state
+   * @param expected
+   * @param message
+   * @param newStatus
+   */
+  private void updateState(Status expected, String message, Status newStatus) {
+    Preconditions.checkState(this.status.equals(expected), message);
+    this.status = newStatus;
     duration = System.currentTimeMillis() - startTime;
   }
-  
-  
+
+  /**
+   * Make sure we're in progress and notifiy the scheduler we're still running
+   */
   public void heartbeat() {
     Preconditions.checkState(this.status.equals(Status.IN_PROGRESS), "Attempted to heartbeat job not in progress");
-    scheduler.heartbeat(this);
+    runtime.heartbeat(this);
   }
 
   /**
@@ -145,13 +170,17 @@ public class JobExecutionImpl implements JobExecution{
   }
 
   /**
+   * @return the delay
+   */
+  public long getDelay() {
+    return delay;
+  }
+
+  /**
    * @return the jobName
    */
   public String getJobName() {
     return jobName;
   }
-
-  
-
 
 }

@@ -15,12 +15,13 @@
  ******************************************************************************/
 package org.usergrid.batch.service;
 
+import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
-import javax.print.attribute.standard.JobName;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +42,6 @@ import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
-import org.usergrid.persistence.Schema;
 import org.usergrid.persistence.SimpleEntityRef;
 import org.usergrid.persistence.cassandra.CassandraService;
 import org.usergrid.persistence.entities.JobData;
@@ -55,7 +55,7 @@ import org.usergrid.persistence.exceptions.TransactionNotFoundException;
  * @author tnine
  * 
  */
-public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
+public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobRuntimeService {
 
   /**
    * 
@@ -250,6 +250,19 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
   /*
    * (non-Javadoc)
    * 
+   * @see org.usergrid.batch.service.SchedulerService#delay(org.usergrid.batch.
+   * JobExecutionImpl)
+   */
+  @Override
+  public void delay(JobExecutionImpl execution) {
+
+    delayRetry(execution, execution.getDelay());
+
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
    * @see
    * org.usergrid.batch.repository.JobAccessor#save(org.usergrid.batch.JobExecution
    * )
@@ -258,8 +271,10 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
   public void save(JobExecution bulkJobExecution) {
 
     JobData data = bulkJobExecution.getJobData();
+    JobStat stat = bulkJobExecution.getJobStats();
 
     Status jobStatus = bulkJobExecution.getStatus();
+    
     try {
 
       // we're done. Mark the transaction as complete and delete the job info
@@ -267,16 +282,21 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
         qm.deleteTransaction(jobQueueName, bulkJobExecution.getTransactionId(), null);
         em.delete(data);
       }
+      
       // the job failed too many times. Delete the transaction to prevent it
       // running again and save it for querying later
       else if (jobStatus == Status.DEAD) {
         qm.deleteTransaction(jobQueueName, bulkJobExecution.getTransactionId(), null);
         em.update(data);
       }
+      
       // update the job for the next run
       else {
         em.update(data);
       }
+      
+      em.update(stat);
+      
     } catch (Exception e) {
       // should never happen
       throw new JobRuntimeException(String.format("Unable to delete job data with id %s", data.getUuid()), e);
@@ -284,21 +304,21 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
 
   }
 
-  /* (non-Javadoc)
-   * @see org.usergrid.batch.service.SchedulerService#queryJobData(org.usergrid.persistence.Query)
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.usergrid.batch.service.SchedulerService#queryJobData(org.usergrid.
+   * persistence.Query)
    */
   @Override
   public Results queryJobData(Query query) throws Exception {
-   
-    if(query == null){
+
+    if (query == null) {
       query = new Query();
     }
-    
-    
-    
-    
+
     return em.searchCollection(em.getApplicationRef(), "job_data", query);
-    
+
   }
 
   /*
@@ -313,13 +333,14 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
 
     JobData data = execution.getJobData();
     JobStat stat = execution.getJobStats();
-    
+
     try {
 
       // if it's a dead status, it's failed too many times, just kill the job
       if (execution.getStatus() == Status.DEAD) {
         qm.deleteTransaction(jobQueueName, execution.getTransactionId(), null);
         em.update(data);
+        em.update(stat);
         return;
       }
 
@@ -332,11 +353,33 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor {
       // update the data for the next run
 
       em.update(data);
+      em.update(stat);
     } catch (Exception e) {
       // should never happen
       throw new JobRuntimeException(String.format("Unable to delete job data with id %s", data.getUuid()), e);
     }
 
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.batch.service.SchedulerService#getStatsForJob(java.lang.String, java.util.UUID)
+   */
+  @Override
+  public JobStat getStatsForJob(String jobName, UUID jobId) throws Exception {
+    EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+    
+    
+    Query query = new Query();
+    query.addEqualityFilter(JOB_NAME, jobName);
+    query.addEqualityFilter(JOB_ID, jobId);
+    
+    Results r =  em.searchCollection(em.getApplicationRef(), "job_stats", query);
+    
+    if(r.size() == 1){
+      return (JobStat) r.getEntity();
+    }
+    
+    return null;
   }
 
   @PostConstruct

@@ -88,6 +88,15 @@ public interface JobExecution {
    * Provide a heartbeat to the job execution to keep it alive
    */
   public void heartbeat();
+  
+  /**
+   * Don't treat the execution as complete.  Simply delay execution for the specified milliseconds.  Similar to heartbeat
+   * but allows the user to specify the timeout for the next attempt instead of the heartbeat default.  This DOES NOT update 
+   * locks, so your job should use distributed locking internally to ensure single execution
+   * 
+   * @param milliseconds
+   */
+  public void delay(long milliseconds);
 
   /**
    * Get the current status of the execution
@@ -118,7 +127,7 @@ public interface JobExecution {
   public UUID getTransactionId();
 
   public enum Status {
-    NOT_STARTED, IN_PROGRESS, COMPLETED, FAILED, DEAD
+    NOT_STARTED, IN_PROGRESS, COMPLETED, FAILED, DEAD, DELAYED
   }
 
 }
