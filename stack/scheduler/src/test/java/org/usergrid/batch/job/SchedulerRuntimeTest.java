@@ -276,6 +276,66 @@ public class SchedulerRuntimeTest {
     assertEquals(0, stat.getDelayCount());
     
   }
+  
+
+  /**
+   * Test the scheduler ramps up correctly when there are more jobs to be read
+   * after a pause when the job specifies the retry time
+   * 
+   * @throws Exception
+   */
+  @Test
+  public void onlyOnceTestOnException() throws Exception {
+
+    long sleepTime = Long.parseLong(props.getProperty(TIMEOUT_PROP));
+
+    long customRetry = sleepTime * 2;
+    int numberOfRuns = 2;
+
+    OnlyOnceUnlockOnFailExceution job = CassandraRunner.getBean("onlyOnceUnlockOnFailExceution", OnlyOnceUnlockOnFailExceution.class);
+
+    job.setTimeout(customRetry);
+    job.setLatch(numberOfRuns);
+    job.setDelay(sleepTime);
+
+    JobData returned = scheduler.createJob("onlyOnceUnlockOnFailExceution", System.currentTimeMillis(), new JobData());
+
+    // sleep until the job should have failed. We sleep 1 extra cycle just to
+    // make sure we're not racing the test
+    boolean waited = job.waitForException(customRetry * numberOfRuns *2 , TimeUnit.MILLISECONDS);
+
+    assertTrue("Job threw exception", waited);
+    
+    
+    //wait for the persistence to store the failure
+   
+    Thread.sleep(3000);
+    
+    JobStat stat = scheduler.getStatsForJob(returned.getJobName(), returned.getUuid());
+
+    // we should have only marked this as run once since we delayed furthur execution
+    // we should have only marked this as run once
+    assertNotNull(stat);
+    assertEquals(1, stat.getTotalAttempts());
+    assertEquals(1, stat.getRunCount());
+    assertEquals(0, stat.getDelayCount());
+    
+    
+    
+    //now wait again to see if the job fires one more time, it shouldn't 
+    waited = job.waitForCount(customRetry * numberOfRuns *2,TimeUnit.MILLISECONDS);
+    
+    assertTrue("Job ran twice", waited);
+    
+    stat = scheduler.getStatsForJob(returned.getJobName(), returned.getUuid());
+
+    // we should have only marked this as run once since we delayed furthur execution
+    // we should have only marked this as run once
+    assertEquals(numberOfRuns, stat.getTotalAttempts());
+    assertEquals(numberOfRuns, stat.getRunCount());
+    assertEquals(0, stat.getDelayCount());
+    
+  }
 
   /**
    * Test the scheduler ramps up correctly when there are more jobs to be read
