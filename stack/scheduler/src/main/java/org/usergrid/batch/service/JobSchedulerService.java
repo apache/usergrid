@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.usergrid.batch.Job;
 import org.usergrid.batch.JobExecution;
 import org.usergrid.batch.JobExecution.Status;
-import org.usergrid.batch.JobExecutionException;
 import org.usergrid.batch.JobExecutionImpl;
 import org.usergrid.batch.JobFactory;
 import org.usergrid.batch.JobNotFoundException;
@@ -158,10 +157,12 @@ public class JobSchedulerService extends AbstractScheduledService {
       Futures.addCallback(future, new FutureCallback<Void>() {
         @Override
         public void onSuccess(Void param) {
-          logger.info("Successful completion of bulkJob {}", execution);
+       
           if (execution.getStatus() == Status.IN_PROGRESS) {
+            logger.info("Successful completion of bulkJob {}", execution);
             execution.completed();
           }
+          
           jobAccessor.save(execution);
           capacitySemaphore.release();
         }
@@ -172,17 +173,6 @@ public class JobSchedulerService extends AbstractScheduledService {
           // mark it as failed
           if (execution.getStatus() == Status.IN_PROGRESS) {
             execution.failed();
-          }
-
-          // there's a retry delay, use it
-          if (throwable instanceof JobExecutionException) {
-            long retryDelay = ((JobExecutionException) throwable).getRetryTimeout();
-
-            if (retryDelay > 0) {
-              jobAccessor.delayRetry(execution, retryDelay);
-              capacitySemaphore.release();
-              return;
-            }
           }
 
           jobAccessor.save(execution);

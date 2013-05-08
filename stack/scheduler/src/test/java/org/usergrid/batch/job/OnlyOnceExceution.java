@@ -19,41 +19,71 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.usergrid.batch.Job;
 import org.usergrid.batch.JobExecution;
 
 /**
- * A simple job that does nothing but increment an atomic counter
+ * A job that will sleep for the amount of time specified. Used to check that
+ * our counter is only ever run once.
  * 
  * @author tnine
  * 
  */
-@Component("failureJobExceuction")
+@Component("onlyOnceExceution")
 @Ignore("Not a test")
-public class FailureJobExceuction implements Job {
+public class OnlyOnceExceution extends OnlyOnceJob {
+
+  private static final Logger logger = LoggerFactory.getLogger(OnlyOnceExceution.class);
 
   private CountDownLatch latch = null;
-  
+  private long timeout;
+  private boolean slept = false;
+  private long delay;
+
   /**
    * 
    */
-  public FailureJobExceuction() {
+  public OnlyOnceExceution() {
   }
 
   /*
    * (non-Javadoc)
    * 
-   * @see org.usergrid.batch.Job#execute(org.usergrid.batch.JobExecution)
+   * @see
+   * org.usergrid.batch.job.OnlyOnceJob#doJob(org.usergrid.batch.JobExecution)
    */
   @Override
-  public void execute(JobExecution execution) throws Exception {
-    latch.countDown();
+  protected void doJob(JobExecution execution) throws Exception {
+    logger.info("Running only once execution");
 
-    throw new RuntimeException("Job Failed");
+    latch.countDown();
+    
+    if (!slept) {
+      logger.info("Sleeping in only once execution");
+      Thread.sleep(timeout);
+      slept = true;
+    }
+
+   
+
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.batch.job.OnlyOnceJob#getDelay(org.usergrid.batch.JobExecution)
+   */
+  @Override
+  protected long getDelay(JobExecution execution) throws Exception {
+    return delay;
   }
   
-  public void setLatch(int calls){
+  public void setDelay(long delay){
+    this.delay = delay;
+  }
+
+  public void setLatch(int calls) {
     latch = new CountDownLatch(calls);
   }
 
@@ -61,6 +91,19 @@ public class FailureJobExceuction implements Job {
     return latch.await(timeout, unit);
   }
 
- 
-  
+  /**
+   * @return the timeout
+   */
+  public long getTimeout() {
+    return timeout;
+  }
+
+  /**
+   * @param timeout
+   *          the timeout to set
+   */
+  public void setTimeout(long timeout) {
+    this.timeout = timeout;
+  }
+
 }
