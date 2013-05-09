@@ -235,6 +235,7 @@ public class ManagementResource extends AbstractContextResource {
     @Path("token")
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response getAccessTokenPost(@Context UriInfo ui, @FormParam("grant_type") String grant_type,
+            @HeaderParam("Authorization") String authorization,
             @FormParam("username") String username, @FormParam("password") String password,
             @FormParam("client_id") String client_id, @FormParam("ttl") long ttl,
             @FormParam("client_secret") String client_secret, @QueryParam("callback") @DefaultValue("") String callback)
@@ -242,14 +243,28 @@ public class ManagementResource extends AbstractContextResource {
 
         logger.info("ManagementResource.getAccessTokenPost");
 
-        return getAccessToken(ui, null, grant_type, username, password, client_id, client_secret, ttl, callback);
+      return getAccessTokenInternal(ui,authorization,grant_type,username,password,client_id,client_secret,ttl,callback, true);
     }
+
+  @POST
+  @Path("me")
+  @Consumes(APPLICATION_FORM_URLENCODED)
+  public Response getAccessTokenLightPost(@Context UriInfo ui, @HeaderParam("Authorization") String authorization,
+              @QueryParam("grant_type") String grant_type, @QueryParam("username") String username,
+              @QueryParam("password") String password, @QueryParam("client_id") String client_id,
+              @QueryParam("client_secret") String client_secret, @QueryParam("ttl") long ttl,
+              @QueryParam("access_token") String access_token,
+              @QueryParam("callback") @DefaultValue("") String callback) throws Exception {
+    return getAccessTokenInternal(ui,authorization,grant_type,username,password,client_id,client_secret,ttl,callback, false);
+  }
 
     @POST
     @Path("token")
     @Consumes(APPLICATION_JSON)
-    public Response getAccessTokenPostJson(@Context UriInfo ui, Map<String, Object> json,
-            @QueryParam("callback") @DefaultValue("") String callback) throws Exception {
+    public Response getAccessTokenPostJson(@Context UriInfo ui,
+                                           @HeaderParam("Authorization") String authorization,
+                                           Map<String, Object> json,
+                                           @QueryParam("callback") @DefaultValue("") String callback) throws Exception {
 
         String grant_type = (String) json.get("grant_type");
         String username = (String) json.get("username");
@@ -266,8 +281,33 @@ public class ManagementResource extends AbstractContextResource {
             }
         }
 
-        return getAccessToken(ui, null, grant_type, username, password, client_id, client_secret, ttl, callback);
+      return getAccessTokenInternal(ui,authorization,grant_type,username,password,client_id,client_secret,ttl,callback, true);
     }
+
+  @POST
+  @Path("me")
+  @Consumes(APPLICATION_JSON)
+  public Response getAccessTokenMePostJson(@Context UriInfo ui, Map<String, Object> json,
+          @QueryParam("callback") @DefaultValue("") String callback,
+          @HeaderParam("Authorization") String authorization) throws Exception {
+
+      String grant_type = (String) json.get("grant_type");
+      String username = (String) json.get("username");
+      String password = (String) json.get("password");
+      String client_id = (String) json.get("client_id");
+      String client_secret = (String) json.get("client_secret");
+      long ttl = 0;
+
+      if (json.get("ttl") != null) {
+          try {
+              ttl = Long.parseLong(json.get("ttl").toString());
+          } catch (NumberFormatException nfe) {
+              throw new IllegalArgumentException("ttl must be a number >= 0");
+          }
+      }
+
+    return getAccessTokenInternal(ui,authorization,grant_type,username,password,client_id,client_secret,ttl,callback, false);
+  }
 
     @GET
     @Path("authorize")
