@@ -1101,30 +1101,30 @@ public class Results implements Iterable<Entity> {
         return cursor;
     }
 
-    public void setCursorToLastResult() {
-        List<UUID> ids = getIds();
-        if ((ids != null) && (metadata != null) && (ids.size() > 0)) {
-            UUID lastId = ids.get(ids.size() - 1);
-            cursor = StringUtils.toString(MapUtils.getMapMap(metadata, lastId,
-                    "cursor"));
-        }
-    }
-
-    /**
-     * Set the cursor to the empty value.  This signifies that no more results can be found for this range
-     */
-    public void setCursorMax() {
-        cursor = EMPTY;
-    }
-
+//    public void setCursorToLastResult() {
+//        List<UUID> ids = getIds();
+//        if ((ids != null) && (metadata != null) && (ids.size() > 0)) {
+//            UUID lastId = ids.get(ids.size() - 1);
+//            cursor = StringUtils.toString(MapUtils.getMapMap(metadata, lastId,
+//                    "cursor"));
+//        }
+//    }
+//
+//    /**
+//     * Set the cursor to the empty value.  This signifies that no more results can be found for this range
+//     */
+//    public void setCursorMax() {
+//        cursor = EMPTY;
+//    }
+//
     public void setCursor(String cursor) {
         this.cursor = cursor;
     }
-
-    public Results withCursor(String cursor) {
-        this.cursor = cursor;
-        return this;
-    }
+//
+//    public Results withCursor(String cursor) {
+//        this.cursor = cursor;
+//        return this;
+//    }
 
     public void setMetadata(UUID id, String name, Object value) {
         if (metadata == null) {

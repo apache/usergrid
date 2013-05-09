@@ -23,7 +23,9 @@ import static org.usergrid.persistence.Schema.getDefaultSchema;
 import static org.usergrid.utils.ConversionUtils.bytes;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,7 @@ import org.apache.commons.collections.comparators.ComparatorChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usergrid.persistence.Entity;
+import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.EntityPropertyComparator;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Query.SortDirection;
@@ -48,8 +51,10 @@ import org.usergrid.persistence.query.ir.NotNode;
 import org.usergrid.persistence.query.ir.OrNode;
 import org.usergrid.persistence.query.ir.QueryNode;
 import org.usergrid.persistence.query.ir.QuerySlice;
+import org.usergrid.persistence.query.ir.SearchVisitor;
 import org.usergrid.persistence.query.ir.SliceNode;
 import org.usergrid.persistence.query.ir.WithinNode;
+import org.usergrid.persistence.query.ir.result.ResultIterator;
 import org.usergrid.persistence.query.tree.AndOperand;
 import org.usergrid.persistence.query.tree.ContainsOperand;
 import org.usergrid.persistence.query.tree.Equal;
@@ -66,7 +71,6 @@ import org.usergrid.persistence.query.tree.QueryVisitor;
 import org.usergrid.persistence.query.tree.StringLiteral;
 import org.usergrid.persistence.query.tree.WithinOperand;
 import org.usergrid.persistence.schema.CollectionInfo;
-import org.usergrid.utils.StringUtils;
 
 public class QueryProcessor {
 
@@ -78,12 +82,14 @@ public class QueryProcessor {
   private QueryNode rootNode;
   private String entityType;
   private CollectionInfo collectionInfo;
+  private int size;
 
   public QueryProcessor(Query query, CollectionInfo collectionInfo) throws PersistenceException {
-    sorts = query.getSortPredicates();
-    cursorCache = new CursorCache(query.getCursor());
-    rootOperand = query.getRootOperand();
-    entityType = query.getEntityType();
+    this.sorts = query.getSortPredicates();
+    this.cursorCache = new CursorCache(query.getCursor());
+    this.rootOperand = query.getRootOperand();
+    this.entityType = query.getEntityType();
+    this.size = query.getLimit();
     this.collectionInfo = collectionInfo;
     process();
   }
@@ -115,27 +121,6 @@ public class QueryProcessor {
     return rootNode;
   }
 
-  /**
-   * Perform an in memory sort of the entities
-   * 
-   * @param entities
-   * @return
-   */
-  @SuppressWarnings("unchecked")
-  public List<Entity> sort(List<Entity> entities) {
-
-    if ((entities != null) && (sorts.size() > 0)) {
-      // Performing in memory sort
-      logger.info("Performing in-memory sort of " + entities.size() + " entities");
-      ComparatorChain chain = new ComparatorChain();
-      for (SortPredicate sort : sorts) {
-        chain.addComparator(new EntityPropertyComparator(sort.getPropertyName()),
-            sort.getDirection() == SortDirection.DESCENDING);
-      }
-      Collections.sort(entities, chain);
-    }
-    return entities;
-  }
 
   /**
    * Apply cursor position and sort order to this slice. This should only be
@@ -189,19 +174,112 @@ public class QueryProcessor {
   }
 
   /**
-   * Update the cursor cache with the new cursor value for the given slice and
-   * value. The cache can then be serialized to a string and returned to the
-   * user after all tree operations have completed.
+   * Return the iterator results, ordered if required
    * 
-   * @param slice
-   * @param cursorValue
+   * @return
+   * @throws Exception 
    */
-  public void updateCursor(QuerySlice slice, String cursorValue) {
-    // TODO T.N. This is inefficient, we should deal with ByteBuffers
-    // internally and and only expose
-    // strings at the interface level
-    cursorCache.setNextCursor(slice.hashCode(), ByteBuffer.wrap(decodeBase64(cursorValue)));
+  @SuppressWarnings("unchecked")
+  public List<Entity> getEntities(EntityManager em, SearchVisitor visitor) throws Exception {
+    // if we have no order by just load the results
+
+    if (rootNode == null) {
+      return null;
+    }
+
+    rootNode.visit(visitor);
+
+    ResultIterator itr = visitor.getResults();
+
+    List<Entity> results = null;
+
+    // load our results a page at a time and sort them in memory
+    if (sorts.size() > 0) {
+      // Performing in memory sort
+      logger.info("Performing in-memory sort of entities");
+      ComparatorChain chain = new ComparatorChain();
+      for (SortPredicate sort : sorts) {
+        chain.addComparator(new EntityPropertyComparator(sort.getPropertyName()),
+            sort.getDirection() == SortDirection.DESCENDING);
+      }
+
+      results = new ArrayList<Entity>(RelationManagerImpl.PAGE_SIZE * 2);
+      
+
+      for (int i = 0; i < RelationManagerImpl.MAX_LOAD / RelationManagerImpl.PAGE_SIZE; i++) {
+
+        results.addAll(loadEntities(em, itr, RelationManagerImpl.PAGE_SIZE));
+
+        Collections.sort(results, chain);
+
+        //clear the elements at size to the end for the next iteration so we don't hold too much in memory at any one time 
+        if(results.size() > size){
+          results.subList(size, results.size()).clear();
+        }
+      }
+      
+      //now set our cursor page to the last value
+
+    }
+
+    //no sorting, so we won't load the results and sort them in memory, just do a direct load
+    else{
+      results = loadEntities(em, itr, size);
+    }
+    
+    return results;
+
   }
+
+  /**
+   * The number of entities to load into the result set
+   * 
+   * @param em
+   * @param itr
+   * @param size
+   * @return
+   * @throws Exception
+   */
+  private List<Entity> loadEntities(EntityManager em, ResultIterator itr, int size) throws Exception {
+
+    List<Entity> results = new ArrayList<Entity>(size);
+
+    for (int i = 0; i < size && itr.hasNext(); i++) {
+      results.add(em.get(itr.next()));
+    }
+
+    return results;
+  }
+
+  private class ResultsSorter implements Comparator<Object> {
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+     */
+    @Override
+    public int compare(Object o1, Object o2) {
+      return 0;
+    }
+
+  }
+
+  // /**
+  // * Update the cursor cache with the new cursor value for the given slice and
+  // * value. The cache can then be serialized to a string and returned to the
+  // * user after all tree operations have completed.
+  // *
+  // * @param slice
+  // * @param cursorValue
+  // */
+  // public void updateCursor(QuerySlice slice, String cursorValue) {
+  // // TODO T.N. This is inefficient, we should deal with ByteBuffers
+  // // internally and and only expose
+  // // strings at the interface level
+  // cursorCache.setNextCursor(slice.hashCode(),
+  // ByteBuffer.wrap(decodeBase64(cursorValue)));
+  // }
 
   private class TreeEvaluator implements QueryVisitor {
 
@@ -212,13 +290,6 @@ public class QueryProcessor {
     private Schema schema = getDefaultSchema();
 
     private int contextCount = -1;
-
-    /**
-     * Incremented as we pass union (AND) nodes. If we have 2 properties, say
-     * "created" and they're at the same union depth, we can put them in a slice
-     * range
-     */
-    private int unionCount = -1;
 
     /**
      * Get the root node in our tree for runtime evaluation
@@ -340,7 +411,8 @@ public class QueryProcessor {
 
       // sdg - if left & right have same field name, we need to create a new
       // slice
-      if (!nodes.isEmpty() && nodes.peek() instanceof SliceNode && ((SliceNode) nodes.peek()).getSlice(indexName) != null) {
+      if (!nodes.isEmpty() && nodes.peek() instanceof SliceNode
+          && ((SliceNode) nodes.peek()).getSlice(indexName) != null) {
         node = newSliceNode();
       } else {
         node = getUnionNode(op);

@@ -15,47 +15,43 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.TreeSet;
+import java.util.List;
 import java.util.UUID;
 
-import org.apache.cassandra.utils.ByteBufferUtil;
 import org.usergrid.persistence.cassandra.CursorCache;
-import org.usergrid.persistence.cassandra.index.IndexScanner;
-import org.usergrid.persistence.query.ir.SliceNode;
 
 /**
- * An iterator that will take all slices and order them correctly
  * @author tnine
  *
  */
-public class SliceIterator<T> implements ResultIterator {
+public abstract class MergeIterator implements ResultIterator {
 
-  private TreeSet<T> values;
-  private Iterator<T> idIterator;
-  private SliceNode slice;
-  private SliceParser<T> parser;
+  protected List<ResultIterator> iterators = new ArrayList<ResultIterator>();
+
+  
+  //kept private on purpose so advance must return the correct value
+  private UUID next;
   
   /**
    * 
    */
-  public SliceIterator(IndexScanner scanResults, SliceNode slice, SliceParser<T> parser) {
-    this.slice = slice;
-    this.parser = parser;
-    values = new TreeSet<T>(parser);
-    
-    while(scanResults.hasNext()){
-      values.add(parser.parse(scanResults.next().getName()));
-    }
-    
-    idIterator = values.iterator();
-  
-    
+  public MergeIterator() {
   }
 
+  /**
+   * Add an iterator for our sub results
+   * 
+   * @param iterator
+   */
+  public void addIterator(ResultIterator iterator) {
+    iterators.add(iterator);
+  }
   
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see java.lang.Iterable#iterator()
    */
   @Override
@@ -63,45 +59,63 @@ public class SliceIterator<T> implements ResultIterator {
     return this;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see java.util.Iterator#hasNext()
    */
   @Override
   public boolean hasNext() {
-    return idIterator.hasNext();
+    //if next isn't set, try to advance
+    if (next == null) {
+      next = advance();
+    }
+
+    return next != null;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see java.util.Iterator#next()
    */
   @Override
   public UUID next() {
-    return parser.getUUID(idIterator.next());
+    UUID returnVal = next;
+
+    next = null;
+
+    return returnVal;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see java.util.Iterator#remove()
    */
   @Override
   public void remove() {
-    throw new UnsupportedOperationException("Remove is not supported");
+    throw new UnsupportedOperationException("You can't remove from a union iterator");
   }
 
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor()
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(
+   * org.usergrid.persistence.cassandra.CursorCache)
    */
   @Override
   public void finalizeCursor(CursorCache cache) {
-   
-    ByteBuffer bytes = ByteBufferUtil.EMPTY_BYTE_BUFFER;
-    
-    if(hasNext()){
-      bytes = parser.serialize(idIterator.next());
+    for (ResultIterator current : iterators) {
+      current.finalizeCursor(cache);
     }
-
-    //otherwise it's an empty buffer
-    cache.setNextCursor(slice.hashCode(), bytes);
   }
   
- 
+  /**
+   * Advance the iterator to the next value
+   */
+  protected abstract UUID advance();
+
+
 }

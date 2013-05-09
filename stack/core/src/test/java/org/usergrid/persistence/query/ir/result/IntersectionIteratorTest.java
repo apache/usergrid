@@ -28,7 +28,7 @@ import org.usergrid.utils.UUIDUtils;
  * @author tnine
  * 
  */
-public class UnionIteratorTest {
+public class IntersectionIteratorTest {
 
   @Test
   public void testMutipleIterators() {
@@ -52,7 +52,6 @@ public class UnionIteratorTest {
     first.add(id3);
     first.add(id8);
     first.add(id9);
- 
     
     TreeIterator second = new TreeIterator();
     second.add(id1);
@@ -77,9 +76,9 @@ public class UnionIteratorTest {
     fourth.add(id3);
     fourth.add(id6);
     fourth.add(id8);
-    fourth.add(id9);
+    fourth.add(id10);
     
-    UnionIterator union = new UnionIterator();
+    IntersectionIterator union = new IntersectionIterator();
     union.addIterator(first);
     union.addIterator(second);
     union.addIterator(third);
@@ -90,31 +89,10 @@ public class UnionIteratorTest {
     assertEquals(id1, union.next());
     
     assertTrue(union.hasNext());
-    assertEquals(id2, union.next());
-    
-    assertTrue(union.hasNext());
     assertEquals(id3, union.next());
     
     assertTrue(union.hasNext());
-    assertEquals(id4, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id5, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id6, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id7, union.next());
-    
-    assertTrue(union.hasNext());
     assertEquals(id8, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id9, union.next());
-    
-    assertTrue(union.hasNext());
-    assertEquals(id10, union.next());
     
     assertFalse(union.hasNext());
   }
@@ -136,7 +114,7 @@ public class UnionIteratorTest {
     first.add(id4);
     
     
-    UnionIterator union = new UnionIterator();
+    IntersectionIterator union = new IntersectionIterator();
     union.addIterator(first);
     
     //now make sure it's right, only 1, 3 and 8 intersect
@@ -160,7 +138,7 @@ public class UnionIteratorTest {
     
     
     
-    UnionIterator union = new UnionIterator();
+    IntersectionIterator union = new IntersectionIterator();
     
     
     //now make sure it's right, only 1, 3 and 8 intersect
