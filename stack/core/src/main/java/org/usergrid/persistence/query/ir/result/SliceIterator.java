@@ -15,16 +15,18 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
-import java.util.ArrayList;
+import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import org.usergrid.persistence.cassandra.index.IndexScanner;
-
 import me.prettyprint.hector.api.beans.DynamicComposite;
+
+import org.apache.cassandra.utils.ByteBufferUtil;
+import org.usergrid.persistence.cassandra.CursorCache;
+import org.usergrid.persistence.cassandra.index.IndexScanner;
+import org.usergrid.persistence.query.ir.SliceNode;
 
 /**
  * An iterator that will take all slices and order them correctly
@@ -35,11 +37,13 @@ public class SliceIterator implements ResultIterator {
 
   private TreeSet<DynamicComposite> values;
   private Iterator<DynamicComposite> idIterator;
+  private SliceNode slice;
   
   /**
    * 
    */
-  public SliceIterator(IndexScanner scanResults) {
+  public SliceIterator(IndexScanner scanResults, SliceNode slice) {
+    this.slice = slice;
     values = new TreeSet<DynamicComposite>(new IndexComparator());
     
     while(scanResults.hasNext()){
@@ -47,6 +51,7 @@ public class SliceIterator implements ResultIterator {
     }
     
     idIterator = values.iterator();
+    
   }
 
   
@@ -86,7 +91,16 @@ public class SliceIterator implements ResultIterator {
    * @see org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor()
    */
   @Override
-  public void finalizeCursor() {
+  public void finalizeCursor(CursorCache cache) {
+   
+    ByteBuffer bytes = ByteBufferUtil.EMPTY_BYTE_BUFFER;
+    
+    if(hasNext()){
+      bytes = idIterator.next().serialize();
+    }
+
+    //otherwise it's an empty buffer
+    cache.setNextCursor(slice.hashCode(), bytes);
   }
   
   private class IndexComparator implements Comparator<DynamicComposite>{

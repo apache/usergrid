@@ -16,12 +16,11 @@
 package org.usergrid.persistence.query.ir.result;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.UUID;
 
+import org.usergrid.persistence.cassandra.CursorCache;
 import org.usergrid.utils.UUIDUtils;
 
 /**
@@ -33,13 +32,18 @@ import org.usergrid.utils.UUIDUtils;
  */
 public class UnionIterator implements ResultIterator {
 
+  // pointer to set the finished value to
   private List<ResultIterator> iterators = new ArrayList<ResultIterator>();
-  private UUID[] last;
+  private UUID match;
+
+  // The pointer to the last iterator we read, so we can advance and read from
+  // the next one
+  private int lastIterator;
 
   /**
-   * Set to true if one of our iterators runs to the end
+   * We can't match any more
    */
-  boolean completed = false;
+  boolean complete = false;
 
   /**
    * 
@@ -61,27 +65,81 @@ public class UnionIterator implements ResultIterator {
    */
   private void intersect() {
 
-    UUID max = null;
-    
-    while(true){
-      for(int i = 0; i < last.length; i ++){
-        max = UUIDUtils.max(first, second)
-      }
-      
-    }
-      
-    
+    UUID current = match;
+    UUID lastMax = null;
 
-  }
-  
-  
-  
-  private UUID next(ResultIterator itr){
-    if(!itr.hasNext()){
-      return null;
+    int size = iterators.size();
+
+    // edge case with only 1 iterator
+    if (size == 1) {
+
+      ResultIterator itr = iterators.get(0);
+
+      if (!itr.hasNext()) {
+        match = null;
+        return;
+      }
+
+      match = itr.next();
+      return;
     }
-    
-    return itr.next();
+
+    int matchCount = 0;
+    int iteratorIndex = lastIterator;
+
+    while (matchCount != size) {
+
+      iteratorIndex = iteratorIndex % iterators.size();
+
+      ResultIterator itr = iterators.get(iteratorIndex);
+
+      // we've run out, we can't match any more records
+      if (!itr.hasNext()) {
+        match = null;
+        complete = true;
+        return;
+      }
+
+      current = itr.next();
+
+      // we haven't set a max yet, set it to our current and try the next
+      // iterator
+      if (lastMax == null) {
+        matchCount = 1;
+        iteratorIndex++;
+        lastMax = current;
+        continue;
+      }
+
+      // we have a last max, compare it to the current one
+      int compare = UUIDUtils.compare(current, lastMax);
+
+      // our current is larger than the last max, so set the last max , reset
+      // our match count and keep
+      // running to the next iterator
+      if (compare > 0) {
+        matchCount = 1;
+        lastMax = current;
+        iteratorIndex++;
+        continue;
+      }
+
+      // our last max is still the largest, advance the current iterator again
+      // for comparison
+      if (compare < 0) {
+        continue;
+      }
+
+      // we have a match, advance and check the next iterator vs this max
+
+      matchCount++;
+      iteratorIndex++;
+
+    }
+
+    match = lastMax;
+    lastIterator = iteratorIndex;
+
   }
 
   /*
@@ -91,22 +149,6 @@ public class UnionIterator implements ResultIterator {
    */
   @Override
   public Iterator<UUID> iterator() {
-    // once someone has set the iterators, we construct our min array
-    last = new UUID[iterators.size()];
-
-    for (int i = 0; i < last.length; i++) {
-      Iterator<UUID> itr = iterators.get(i);
-
-      if (!itr.hasNext()) {
-        completed = true;
-        break;
-      }
-
-      last[i] = itr.next();
-    }
-    
-    Arrays.sort(last);
-
     return this;
   }
 
@@ -117,7 +159,16 @@ public class UnionIterator implements ResultIterator {
    */
   @Override
   public boolean hasNext() {
-    return false;
+    if (complete) {
+      return false;
+    }
+
+    // else try to advance
+    if (match == null) {
+      intersect();
+    }
+
+    return match != null;
   }
 
   /*
@@ -127,7 +178,11 @@ public class UnionIterator implements ResultIterator {
    */
   @Override
   public UUID next() {
-    return null;
+    UUID returnVal = match;
+
+    match = null;
+
+    return returnVal;
   }
 
   /*
@@ -137,16 +192,21 @@ public class UnionIterator implements ResultIterator {
    */
   @Override
   public void remove() {
+    throw new UnsupportedOperationException("You can't remove from a union iterator");
   }
 
   /*
    * (non-Javadoc)
    * 
    * @see
-   * org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor()
+   * org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(
+   * org.usergrid.persistence.cassandra.CursorCache)
    */
   @Override
-  public void finalizeCursor() {
+  public void finalizeCursor(CursorCache cache) {
+    for (ResultIterator current : iterators) {
+      current.finalizeCursor(cache);
+    }
   }
 
 }
