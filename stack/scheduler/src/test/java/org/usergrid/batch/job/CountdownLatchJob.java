@@ -22,7 +22,6 @@ import org.junit.Ignore;
 import org.springframework.stereotype.Component;
 import org.usergrid.batch.Job;
 import org.usergrid.batch.JobExecution;
-import org.usergrid.batch.JobExecutionException;
 
 /**
  * A simple job that does nothing but increment an atomic counter
@@ -48,7 +47,7 @@ public class CountdownLatchJob implements Job {
    * @see org.usergrid.batch.Job#execute(org.usergrid.batch.JobExecution)
    */
   @Override
-  public void execute(JobExecution execution) throws JobExecutionException {
+  public void execute(JobExecution execution) throws Exception {
    latch.countDown();
   }
 

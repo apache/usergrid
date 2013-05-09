@@ -19,6 +19,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.usergrid.batch.Job;
 import org.usergrid.batch.JobExecution;
@@ -29,16 +31,20 @@ import org.usergrid.batch.JobExecution;
  * @author tnine
  * 
  */
-@Component("failureJobExceuction")
+@Component("delayExecution")
 @Ignore("Not a test")
-public class FailureJobExceuction implements Job {
+public class DelayExecution implements Job {
 
+  private static final Logger logger = LoggerFactory.getLogger(DelayExecution.class);
+  
   private CountDownLatch latch = null;
+  private long timeout;
+  private int delayCount;
   
   /**
    * 
    */
-  public FailureJobExceuction() {
+  public DelayExecution() {
   }
 
   /*
@@ -48,9 +54,18 @@ public class FailureJobExceuction implements Job {
    */
   @Override
   public void execute(JobExecution execution) throws Exception {
+    
+    logger.info("Running delay execution");
+    
+    if(latch.getCount() > 1){
+      execution.delay(timeout);
+    }
+    
     latch.countDown();
 
-    throw new RuntimeException("Job Failed");
+    
+    
+  
   }
   
   public void setLatch(int calls){
@@ -61,6 +76,35 @@ public class FailureJobExceuction implements Job {
     return latch.await(timeout, unit);
   }
 
- 
+  
+
+  /**
+   * @return the timeout
+   */
+  public long getTimeout() {
+    return timeout;
+  }
+
+  /**
+   * @param timeout
+   *          the timeout to set
+   */
+  public void setTimeout(long timeout) {
+    this.timeout = timeout;
+  }
+
+  /**
+   * @return the delayCount
+   */
+  public int getDelayCount() {
+    return delayCount;
+  }
+
+  /**
+   * @param delayCount the delayCount to set
+   */
+  public void setDelayCount(int delayCount) {
+    this.delayCount = delayCount;
+  }
   
 }
