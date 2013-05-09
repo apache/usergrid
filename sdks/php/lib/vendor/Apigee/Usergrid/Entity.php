@@ -72,9 +72,13 @@ class Entity {
       }
     }
 
-    $response = $this->client->request($type, $method, $data);
+    if ($method == 'PUT') {
+			$response = $this->client->put($type, array(), $data);
+		} else {
+			$response = $this->client->post($type, array(), $data);
+		}
 
-    if ($response->error) {
+    if ($response->get_error()) {
       $this->client->write_log('Could not save entity.');
     }
     else {
@@ -82,17 +86,17 @@ class Entity {
         $this->set($response->data['entities'][0]);
       }
       $need_password_change = (
-        $this->get('type') == 'user'
-          && !empty($entity_data['oldPassword'])
-          && !empty($entity_data['newPassword'])
+        ($this->get('type') == 'user' || $this->get('type') == 'users')
+      	&& !empty($entity_data['oldpassword'])
+        && !empty($entity_data['newpassword'])
       );
       if ($need_password_change) {
         $pw_data = array(
-          'oldpassword' => $entity_data['oldPassword'],
-          'newpassword' => $entity_data['newPassword']
+          'oldpassword' => $entity_data['oldpassword'],
+          'newpassword' => $entity_data['newpassword']
         );
-        $response = $this->client->request("$type/password", 'PUT', $pw_data);
-        if ($response->error) {
+        $response = $this->client->PUT("$type/password", array(), $pw_data);
+        if ($response->get_error()) {
           $this->client->write_log('Could not update user\'s password.');
         }
         $this->set('oldpassword', NULL);
@@ -109,7 +113,7 @@ class Entity {
       $type .= "/$uuid";
     }
     else {
-      if ($type == 'user') {
+      if ($type == 'user' || $type == 'users') {
         $username = $this->get('username');
         if (!empty($username)) {
           $type .= "/$username";
@@ -130,15 +134,14 @@ class Entity {
           $this->client->write_log($error);
           return (object)array('error' => $error, 'data' => array());
         }
-
       }
     }
-    $response = $this->client->request($type);
-    if ($response->error) {
+    $response = $this->client->get($type, array());
+    if ($response->get_error()) {
       $this->client->write_log('Could not get entity.');
     }
     else {
-      $data = $response->data;
+      $data = $response->get_data();
       if (isset($data['user'])) {
         $this->set($data['user']);
       }
@@ -161,8 +164,8 @@ class Entity {
       return (object)array('error' => $error, 'data' => array());
     }
 
-    $response = $this->client->request($type, 'DELETE');
-    if ($response->error) {
+    $response = $this->client->delete($type, array());
+    if ($response->get_error()) {
       $this->client->write_log('Entity could not be deleted.');
     }
     else {

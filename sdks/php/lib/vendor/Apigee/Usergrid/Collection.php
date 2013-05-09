@@ -36,6 +36,13 @@ class Collection {
     $this->fetch();
   }
 
+  public function get_type(){
+  	return $this->type;
+	}
+	public function set_type($type){
+  	$this->type = $type;
+	}
+
   public function fetch() {
     if ($this->cursor) {
       $this->qs['cursor'] = $this->cursor;
@@ -43,7 +50,7 @@ class Collection {
     elseif (array_key_exists('cursor', $this->qs)) {
       unset($this->qs['cursor']);
     }
-    $response = $this->client->request($this->type, 'GET', array(), $this->qs);
+    $response = $this->client->get($this->type, $this->qs);
     if ($response->error) {
       $this->client->write_log('Error getting collection.');
     }

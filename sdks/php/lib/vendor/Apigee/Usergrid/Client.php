@@ -4,6 +4,7 @@
  * Basic class for accessing Usergrid functionality.
  *
  * @author Daniel Johnson <djohnson@apigee.com>
+ * @author Rod Simpson <rod@apigee.com>
  * @since 26-Apr-2013
  */
 
@@ -17,7 +18,7 @@ class Client {
    * Usergrid endpoint
    * @var string
    */
-  private $uri;
+  private $url = 'http://api.usergrid.com';
 
   /**
    * Organization name. Find your in the Admin Portal (http://apigee.com/usergrid)
@@ -124,73 +125,125 @@ class Client {
     }
   }
 
-  /**
-   * Makes an HTTP request
-   *
-   * @param string $endpoint
-   * @param string $method
-   * @param array $body
-   * @param array $qs
-   * @param bool $m_query
-   *
-   * @return \Apigee\Util\HTTPResponse
-   * @throws UsergridException
-   */
-  public function request($endpoint, $method = 'GET', $body = array(), $qs = array(), $m_query = FALSE) {
-    $uri = $this->uri . '/' . ($m_query ? '' : $this->org_name . '/' . $this->app_name . '/') / $endpoint;
+  public function request($request) {
 
-    if ($token = $this->get_oauth_token()) {
-      $qs['access_token'] = $token;
+    $method = $request->get_method();
+    $endpoint = $request->get_endpoint();
+    $body = $request->get_body();
+    $query_string_array = $request->get_query_string_array();
+    if ($this->get_oauth_token()) {
+      $query_string_array['access_token'] = $this->get_oauth_token();
+      /* //could also use headers for the token
+      xhr.setRequestHeader("Authorization", "Bearer " + self.getToken());
+      xhr.withCredentials = true;
+      */
     }
-    if (!empty($qs)) {
-      $uri .= '?' . http_build_query($qs);
-    }
-
-    $options = array(
-      'headers' => array(),
-      'method' => $method
-    );
-
-    if (!empty($body)) {
-      $options['data'] = json_encode($body);
-      $options['headers']['Content-Type'] = 'application/json';
-      $options['headers']['Content-Length'] = strlen($options['data']);
+    foreach($query_string_array as $key => $value) {
+    	$query_string_array[$key] = urlencode($value);
+		}
+		$query_string = http_build_query($query_string_array);
+    $url = '';
+    if ($request->get_management_query()){
+      $url = $this->url.'/'.$endpoint;
+    } else {
+      $url = $this->url.'/'.$this->org_name.'/'.$this->app_name.'/'.$endpoint;
     }
 
-    $response = \Apigee\Util\HTTPClient::exec($uri, $options);
-
-    $response->data = @json_decode($response->data, TRUE);
-
-    $logout_callback = $this->logout_callback;
-
-    $status = $response->code;
-
-    if (floor($status / 100) != 2) {
-      if ($response->data && array_key_exists('error', $response->data)) {
-        $error = $response->data['error'];
-        $desc = $response->data['description'];
-      }
-      else {
-        $error = $response->status_message;
-        $desc = (isset($response->error) ? $response->error : '');
-      }
-
-      $this->write_log("Error ($status)($error): $desc");
-
-      if (!empty($logout_callback)) {
-        switch ($error) {
-          case 'auth_expired_session_token':
-          case 'unauthorized':
-          case 'auth_missing_credentials':
-          case 'auth_invalid':
-            call_user_func($logout_callback, $response);
-            break;
-        }
-      }
+    //append params to the path
+    if ($query_string) {
+      $url .= '?' . $query_string;
     }
-    if (!isset($response->error)) {
-      $response->error = FALSE;
+    $curl = curl_init($url);
+
+    if ($method == 'POST' || $method == 'PUT' || $method == 'DELETE'){
+      curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
     }
+    if ($method == 'POST' || $method == 'PUT') {
+      $body = json_encode($body);
+      curl_setopt($curl, CURLOPT_HTTPHEADER, array ('Content-Length: '.strlen($body), 'Content-Type: application/json'));
+      curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
+    }
+
+
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($curl, CURLOPT_FOLLOWLOCATION, false);
+    curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
+    curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+
+
+    $response = curl_exec($curl);
+    $meta = curl_getinfo($curl);
+
+    curl_close($curl);
+
+    $response_array = @json_decode($response, TRUE);
+    $response_obj = new Response();
+    $response_obj->set_curl_meta($meta);
+    $response_obj->set_data($response_array);
+
+    if ($meta['http_code'] != 200)   {
+			//there was an api error
+    	$error = $response_array['error'];
+    	$description = isset($response_array['error_description'])?$response_array['error_description']:'';
+    	$description = isset($response_array['exception'])?$response_array['exception']:$description;
+      $this->write_log('Error: '.$meta['http_code'].' error:'.$description);
+			$response_obj->set_error(true);
+    	$response_obj->set_error_message($description);
+    } else {
+      $response_obj->set_error(false);
+      $response_obj->set_error_message(false);
+    }
+
+    return $response_obj;
+  }
+
+  public function get($endpoint, $query_string) {
+
+    $request = new Request();
+    $request->set_method('GET');
+    $request->set_endpoint($endpoint);
+    $request->set_query_string_array($query_string);
+
+    $response = $this->request($request);
+
+    return $response;
+  }
+
+  public function post($endpoint, $query_string, $body) {
+
+    $request = new Request();
+    $request->set_method('POST');
+    $request->set_endpoint($endpoint);
+    $request->set_query_string_array($query_string);
+    $request->set_body($body);
+
+    $response = $this->request($request);
+
+    return $response;
+  }
+
+  public function put($endpoint, $queryString, $body) {
+
+    $request = new Request();
+    $request->set_method('PUT');
+    $request->set_endpoint($endpoint);
+    $request->set_query_string_array($queryString);
+    $request->set_body($body);
+
+    $response = $this->request($request);
+
+    return $response;
+  }
+
+  public function delete($endpoint, $queryString) {
+    $request = new Request();
+    $request->set_method('DELETE');
+    $request->set_endpoint($endpoint);
+    $request->set_query_string_array($queryString);
+
+    $response = $this->request($request);
+
     return $response;
   }
 
@@ -202,17 +255,19 @@ class Client {
    * @return \Apigee\Usergrid\Entity
    */
   public function create_entity($entity_data) {
-    $entity = new Entity($this, $entity_data['options']);
+    $entity = new Entity($this, $entity_data);
     $response = $entity->fetch();
 
     $ok_to_save = (
-      ($response->error && ('service_resource_not_found' == $response->data['error'] || 'no_name_specified' == $response->data['error'] ))
+      ($response->error && ('service_resource_not_found' == $response->error || 'no_name_specified' == $response->error ))
       ||
       (!$response->error && array_key_exists('getOnExist', $entity_data) && $entity_data['getOnExist'])
     );
 
+    //var okToSave = (err && 'service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) || (!err && getOnExist);
+
     if ($ok_to_save) {
-      $entity->set($entity_data['options']);
+      $entity->set($entity_data);
       $response = $entity->save();
       if ($response->error) {
         $this->write_log('Could not create entity.');
@@ -236,10 +291,7 @@ class Client {
     return $entity;
   }
 
-  public function create_collection($type, $qs = array()) {
-    // TODO: force the creation of a collection if it doesn't exist.
-    // This should possibly be done in the Collection constructor, but it may
-    // make more sense to do so in a Collection static method.
+  public function get_collection($type, $qs = array()) {
     $collection = new Collection($this, $type, $qs);
     return $collection;
   }
@@ -258,9 +310,8 @@ class Client {
       'password' => $password,
       'grant_type' => 'password'
     );
-    $response = $this->request('token', 'POST', $body);
-    $has_error = (floor($response->code / 100) != 2);
-    if ($has_error) {
+    $response = $this->POST('token', array(), $body);
+    if ($response->error) {
       $user = NULL;
       $error = 'Error trying to log user in.';
       $this->write_log($error);
@@ -279,8 +330,25 @@ class Client {
     // TODO
   }
 
+  /*
+ * A public facing helper method for signing up users
+ *
+ * @method signup
+ * @public
+ * @params {string} username
+ * @params {string} password
+ * @params {string} email
+ * @params {string} name
+ * @return {object} entity
+ */
+	public function signup($username, $password, $email, $name) {
+		$data = array('type' => 'users', 'username' => $username, 'password'=>$password, 'email'=>$email, 'name'=>$name);
+		return $this->create_entity($data);
+	}
+
   public function get_logged_in_user() {
-    // TODO
+		$data = array('username' => 'me', 'type' => 'users');
+		return $this->get_entity($data);
   }
 
   public function is_logged_in() {

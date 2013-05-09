@@ -95,68 +95,47 @@ Download this repo, then add it to the root of your PHP project.
 #Getting started
 Once you have the the PHP SDK included in your directory tree, get started by including the SDK:
 
-	 include '../autoloader.inc.php';
-	 usergrid_autoload('Apigee\\Usergrid\\Client');
+	@yoda {include-sdk}
 
 Then, start the client, which is the main object for connecting to the SDK.
 
-	 $client = new Apigee\Usergrid\Client('1hotrod','sandbox');
+	@yoda {create-new-client}
 
 Once you have a client created, you will be able to use it to create Entities and Collections, the building blocks of the Usergrid API.
 
 ##Entities
 This sdk provides an easy way to make new entities. Here is a simple example that shows how to create a new object of type "dogs":
 
-	 $data = array('name' => 'Dino', 'type' => 'dog');
-	 $dog = $client->create_entity($data);
-	 if ($dog) {
-	 	//once you have your entity, use the get() method to retrieve properties
-	 	$name = $dog->get('name');
-	 } else {
-	 	//there was an error creating / retrieving the entity
-	 }
+	@yoda {create-entity}
 	
 **Note:** The above method will automatically get the entity if it already exists on the server.  
 
 If you only want to **get** an entity from the server: 
 
-	 $data = array('name' => 'Dino', 'type' => 'dog');
-	 $dog = $client->get_entity($data);
-	 if ($dog) {
-	 	$name = $dog->get('name');
-	 } else {
-	 	//entity doesn't exist on the server
-	 }
+	@yoda {get-entity}
 	
 **Note:** The above method will return **false** if the entity does not exist, and will **not** automatically create a new entity.
 
 
 You can also refresh the object from the database if needed (in case the data has been updated by a different client or device), by calling the fetch() method:
 
-	 $dog->fetch();
+	@yoda {refresh-entity}
 
 To set properties on the entity, use the set() method:
 
-	 $dog->set('master', 'Fred');
-	 $dog->set('breed', 'dinosaur');
-	 $dog->set('color', 'purple');
+	@yoda {set-entity}
 
 These properties are now set locally, but make sure you call the save() method on the entity to save them back to the database!
 
-	 $result = $dog->save();
-	 if (!$result->get_error()) {
-	 	//all is well
-	 } else {
-	 	//there was a problem!
-	 }
+	@yoda {save-entity}
 
 To get a single property from the entity, use the get method:
 
-
+	@yoda {entity-get-methods}
 
 To remove the entity from the database:
 
-	 $result = $dog->destroy();
+	@yoda {destroy-entity}
 
 
 ##The Collection object
@@ -166,13 +145,12 @@ The Collection object models Collections in the database.  Once you start progra
 
 Getting a collection will automatically populate the object with entities from the collection. The following example shows how to create a Collection object, then how to use entities once the Collection has been populated with entities from the server:
 
-	 $dogs = $client->get_collection('dogs');
+	@yoda {get-collection}
 
 
 You can also add a new entity of the same type to the collection:
 
-	 $data = array('name' => 'Dino', 'type' => 'dogs');
-	 $dino = $dogs->add_entity($data);
+	@yoda {add-entity-to-collection}
 
 **Note:** this will also add the entity to the local collection object as well as creating it on the server
 
@@ -180,51 +158,29 @@ You can also add a new entity of the same type to the collection:
 ##Collection iteration and paging
 The Collection object works in Pages of data.  This means that at any given time, the Collection object will have one page of data loaded.  You can iterate across all the entities in the current page of data by using the following pattern:
 
-	 while ($dogs->has_next_entity()) {
-	 	$dog = $dogs->get_next_entity();
-	 	//do something with dog
-	 	$name = $dog->get('name');
-	 }
+	@yoda {iterate-collection}
 
 To iterate over the collection again, you must reset the entity pointer:
 
-	 $dogs->reset_entity_pointer();
-	 while ($dogs->has_next_entity()) {
-	 	$dog = $dogs->get_next_entity();
-	 	//do something with dog
-	 	$name = $dog->get('name');
-	 }
+	@yoda {re-iterate-collection}
 	
 To get the next page of data:
 
-	 $dogs->get_next_page();
-	 while ($dogs->has_next_entity()) {
-	 	$dog = $dogs->get_next_entity();
-	 	$name = $dog->get('name');
-	 }
+	@yoda {get-next-page-collection}
 
 You can use the same pattern to get a previous page of data:
 
-	 $dogs->get_prev_page();
-	 while ($dogs->has_next_entity()) {
-	 	$dog = $dogs->get_next_entity();
-	 	$name = $dog->get('name');
-	 }
+	@yoda {get-prev-page-collection}
 
 To get all the subsequent pages of data from the server and iterate across them, use the following pattern:
 
-	 while ($dogs->get_next_page()) {
-	 	while ($dogs->has_next_entity()) {
-	 		$dog = $dogs->get_next_entity();
-	 		$name = $dog->get('name');
-	 	}
-	 }
+	@yoda {iterate-over-entire-collection}
+	@yoda {iterate-over-entire-collection2}
 
 
 By default, the database will return 10 entities per page.  You can change that amount by setting a limit:
 
-	 $data = array('ql'=>'select * where created > 0', 'limit'=>'40');
-	 $dogs = $client->get_collection('dogs', $data);
+	@yoda {set-limit-collection}
 
 Several other convenience methods exist to make working with pages of data easier:
 
@@ -238,57 +194,31 @@ Several other convenience methods exist to make working with pages of data easie
 ##Modeling users with the Entity object
 There is no specific User object in this SDK.  Instead, you simply need to use the Entity object, specifying a type of "users".  Here is an example:
 
-	 $marty =  $client->signup('marty', 'mysecurepassword','marty@timetravel.com', 'Marty McFly');
-	 if ($marty) {
-	 	//user created
-	 } else {
-	 	//there was an error
-	 }
+	@yoda {create-user}
 
 If the user is modified, just call save on the user again:
 
-	 $marty->set('state', 'California');
-	 $marty->set('girlfriend', 'Jennifer');
-	 $result = $marty->save();
+	@yoda {update-user}
 
 To refresh the user's information in the database:
 
-
+	@yoda {refresh-user}
 
 To change the user's password:
 	
-	 $marty->set('oldpassword', 'mysecurepassword');
-	 $marty->set('newpassword', 'mynewsecurepassword');
-	 $marty->save();
+	@yoda {update-user-password}
 
 To log a user in:
 
-	 if ($client->login('marty', 'mysecurepassword')) {
-	 	//the login call will return an OAuth token, which is saved
-	 	//in the client. Any calls made now will use the token.
-	 	//once a user has logged in, their user object is stored
-	 	//in the client and you can access it this way:
-	 	$token = $client->get_oauth_token();
-	 } else {
-	 }
+	@yoda {log-user-in}
 
 To log a user out:
 
-	 $client->log_out();
-	 if ($client->is_logged_in()) {
-	 	//error - user is still logged in
-	 } else {
-	 	//success - user was logged out
-	 }
+	@yoda {log-user-out}	
 
 If you no longer need the object, call the destroy() method and the object will be removed from database:
 
-	 $result = $marty->destroy();
-	 if ($result->get_error()) {
-	 	//there was an error deleting the user
-	 } else {
-	 	//success - user was deleted
-	 }
+	@yoda {destroy-user}
 	
 
 ##Making generic calls
@@ -296,49 +226,19 @@ If you find that you need to make calls to the API that fall outside of the scop
 
 GET:
 
-	 $endpoint = 'users/fred';
-	 $query_string = array();
-	 $result = $client->get($endpoint, $query_string);
-	 if ($result->get_error()){
-	 	//error - there was a problem getting the entity
-	 } else {
-	 	//success - entity retrieved
-	 }
+	@yoda {generic-get}
 
 POST:
 
-	 $endpoint = 'users';
-	 $query_string = array();
-	 $body = array('username'=>'fred');
-	 $result = $client->post($endpoint, $query_string, $body);
-	 if ($result->get_error()){
-	 	//error - there was a problem creating the entity
-	 } else {
-	 	//success - entity created
-	 }
+	@yoda {generic-post}
 	
 PUT:
 
-	 $endpoint = 'users/fred';
-	 $query_string = array();
-	 $body = array('dog'=>'dino');
-	 $result = $client->put($endpoint, $query_string, $body);
-	 if ($result->get_error()){
-	 	//error - there was a problem updating the entity
-	 } else {
-	 	//success - entity updated
-	 }
+	@yoda {generic-put}
 	
 DELETE:
 
-	 $endpoint = 'users/fred';
-	 $query_string = array();
-	 $result =  $client->delete($endpoint, $query_string);
-	 if ($result->get_error()){
-	 	//error - there was a problem deleting the entity
-	 } else {
-	 	//success - entity deleted
-	 }
+	@yoda {generic-delete}
 
 
 You can make any call to the API using the format above.  However, in practice using the higher level Entity and Collection objects will make life easier as they take care of much of the heavy lifting.

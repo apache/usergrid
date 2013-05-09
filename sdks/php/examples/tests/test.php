@@ -1,0 +1,26 @@
+<?php
+//@han {include-sdk}
+include '../autoloader.inc.php';
+usergrid_autoload('Apigee\\Usergrid\\Client');
+//@solo
+
+//@han {create-new-client}
+$client = new Apigee\Usergrid\Client('1hotrod','sandbox');
+//@solo
+
+include 'Tester.php';
+
+$tester = new Tester();
+
+include 'generic.php';
+include 'entity.php';
+include 'collection.php';
+include 'user.php';
+
+
+//--------------------------------------------------------------
+// Summary
+//--------------------------------------------------------------
+$tester->printSummary();
+
+?>
