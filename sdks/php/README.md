@@ -6,7 +6,7 @@ The file is located in this repository:
 	http://github.com/apigee/usergrid-php-sdk/examples/quick_start/index.php
 	
 
-```html
+```php
 <?php
 //include autoloader to make sure all files are included
 include '../autoloader.inc.php';
