@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Response - a data structure to hold all response-related parameters
@@ -12,15 +11,20 @@ namespace Apigee\Usergrid;
 
 
 class Response extends Request{
-  public $data = array();
-  public $curl_meta = array();
-  public $error = false;
-  public $error_message = '';
+  private $data = array();
+  private $curl_meta = array();
+  private $error = FALSE;
+  private $error_code = '';
+  private $error_message = '';
 
-  public function __construct() {
-
-
+  public function __construct($data = array(), $curl_meta = array(), $error = FALSE, $error_code = '', $error_message = '') {
+		$this->data = $data;
+		$this->curl_meta = $curl_meta;
+		$this->error = $error;
+		$this->set_error_code = $error_code;
+		$this->error_message = $error_message;
   }
+
   public function set_data($in){
     $this->data = $in;
   }
@@ -40,6 +44,13 @@ class Response extends Request{
   }
   public function get_error(){
     return $this->error;
+  }
+
+  public function set_error_code($in){
+    $this->error_code = $in;
+  }
+  public function get_error_code(){
+    return $this->error_code;
   }
 
   public function set_error_message($in){

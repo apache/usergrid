@@ -1,4 +1,11 @@
 <?php
+/**
+ * @file
+ * Entity tests
+ *
+ * @author Rod Simpson <rod@apigee.com>
+ * @since 09-Mar-2013
+ */
 
 //--------------------------------------------------------------
 // Entity tests
@@ -78,7 +85,8 @@ $testname = 'Delete entity';
 //@han {destroy-entity}
 $result = $dog->destroy();
 //@solo
-if (isset($result->data['action']) && $result->data['action'] == 'delete') {
+$data = $result->get_data();
+if (isset($data['action']) && $data['action'] == 'delete') {
 	$tester->success($testname);
 } else {
 	$tester->error($testname);

@@ -1,5 +1,4 @@
 <?php
-
 /**
 * @file
 * Request - a data structure to hold all request-related parameters
@@ -12,16 +11,20 @@ namespace Apigee\Usergrid;
 
 
 class Request {
-  public $method ='';
-  public $endpoint = '';
-  public $query_string_array = ''; //an array of key value pairs to be appended as the query string
-  public $body = '';
-  public $management_query = false;
+  private $method ='';
+  private $endpoint = '';
+  private $query_string_array = ''; //an array of key value pairs to be appended as the query string
+  private $body = '';
+  private $management_query = FALSE;
 
-  public function __construct() {
-
-
+  public function __construct($method = 'GET', $endpoint = '', $query_string_array = array(), $body = array(), $management_query=FALSE) {
+		$this->method = $method;
+		$this->endpoint = $endpoint;
+		$this->query_string_array = $query_string_array;
+		$this->body = $body;
+		$this->management_query = $management_query;
   }
+
   public function set_method($in){
     if ($in !== 'GET' && $in !== 'POST' && $in !== 'PUT' && $in !== 'DELETE') {
       throw new Exception('Unknown method type');

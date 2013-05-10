@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * @file
+ * Generic tests
+ *
+ * @author Rod Simpson <rod@apigee.com>
+ * @since 09-Mar-2013
+ */
 
 //--------------------------------------------------------------
 // Generic Tests
@@ -44,7 +50,8 @@ if ($result->get_error()){
 	$tester->success($testname);
 }
 //@solo
-if (isset($result->data['entities'][0]['username']) && $result->data['entities'][0]['username'] == 'fred'){
+$data = $result->get_data();
+if (isset($data['entities'][0]['username']) && $data['entities'][0]['username'] == 'fred'){
   $tester->success($testname);
 } else {
 	$tester->error($testname);
@@ -65,7 +72,8 @@ if ($result->get_error()){
 	$tester->success($testname);
 }
 //@solo
-if (isset($result->data['entities'][0]['dog']) && $result->data['entities'][0]['dog'] == 'dino'){
+$data = $result->get_data();
+if (isset($data['entities'][0]['dog']) && $data['entities'][0]['dog'] == 'dino'){
   $tester->success($testname);
 } else {
 	$tester->error($testname);
@@ -84,7 +92,8 @@ if ($result->get_error()){
 	$tester->success($testname);
 }
 //@solo
-if (isset($result->data['path']) && $result->data['path'] == '/users'){
+$data = $result->get_data();
+if (isset($data['path']) && $data['path'] == '/users'){
   $tester->success($testname);
 } else {
 	$tester->error($testname);

@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * @file
+ * Collection tests
+ *
+ * @author Rod Simpson <rod@apigee.com>
+ * @since 09-Mar-2013
+ */
 
 //--------------------------------------------------------------
 // Collection tests
@@ -117,7 +123,8 @@ while ($dogs->has_next_entity()) {
 	$dog = $dogs->get_next_entity();
 	$name = $dog->get('name');
 	$result = $dog->destroy();
-	if (isset($result->data['action']) && $result->data['action'] == 'delete') {
+	$response_data = $result->get_data();
+	if (isset($response_data['action']) && $response_data['action'] == 'delete') {
 		$tester->success($testname.$name);
 	} else {
 		$tester->error($testname.$name);

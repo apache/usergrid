@@ -38,6 +38,11 @@ class Client {
   private $build_curl = FALSE;
 
   /**
+   * @var bool
+   */
+  private $use_exceptions = FALSE;
+
+  /**
    * @var Callable
    */
   private $log_callback = NULL;
@@ -88,9 +93,14 @@ class Client {
   public function is_build_curl_enabled() {
     return $this->build_curl;
   }
+
+  public function enable_exceptions($bool = TRUE){
+		$this->use_exceptions = (bool)$bool;
+	}
+
   public function set_log_callback($callback = NULL) {
     if (!empty($callback) && !is_callable($callback)) {
-      throw new UsergridException('Log Callback is not callable.');
+      throw new UGException('Log Callback is not callable.');
     }
     $this->log_callback = $callback;
   }
@@ -102,13 +112,13 @@ class Client {
   }
   public function set_call_timeout_callback($callback = NULL) {
     if (isset($callback) && !is_callable($callback)) {
-      throw new UsergridException('Call Timeout Callback is not callable.');
+      throw new UGException('Call Timeout Callback is not callable.');
     }
     $this->call_timeout_callback = $callback;
   }
   public function set_logout_callback($callback = NULL) {
     if (isset($callback) && !is_callable($callback)) {
-      throw new UsergridException('Logout Callback is not callable.');
+      throw new UGException('Logout Callback is not callable.');
     }
     $this->logout_callback = $callback;
   }
@@ -183,13 +193,37 @@ class Client {
     $response_obj->set_data($response_array);
 
     if ($meta['http_code'] != 200)   {
-			//there was an api error
-    	$error = $response_array['error'];
+    	//there was an api error
+    	$error_code = $response_array['error'];
     	$description = isset($response_array['error_description'])?$response_array['error_description']:'';
     	$description = isset($response_array['exception'])?$response_array['exception']:$description;
       $this->write_log('Error: '.$meta['http_code'].' error:'.$description);
 			$response_obj->set_error(true);
+			$response_obj->set_error_code($error_code);
     	$response_obj->set_error_message($description);
+
+			if ($this->use_exceptions) {
+				switch ($meta['http_code']) {
+			    case 400:
+			      throw new UG_400_BadRequest($error, $meta['http_code']);
+			      break;
+			    case 401:
+			      throw new UG_401_Unauthorized($error, $meta['http_code']);
+			      break;
+			    case 403:
+			      throw new UG_403_Forbidden($error, $meta['http_code']);
+			      break;
+			    case 404:
+			      throw new UG_404_NotFound($error, $meta['http_code']);
+			      break;
+			    case 500:
+			      throw new UG_500_ServerError($error, $meta['http_code']);
+			      break;
+			    default:
+						throw new UGException($error, $meta['http_code']);
+				}
+			}
+
     } else {
       $response_obj->set_error(false);
       $response_obj->set_error_message(false);
@@ -259,9 +293,9 @@ class Client {
     $response = $entity->fetch();
 
     $ok_to_save = (
-      ($response->error && ('service_resource_not_found' == $response->error || 'no_name_specified' == $response->error ))
+      ($response->get_error() && ('service_resource_not_found' == $response->get_error_code() || 'no_name_specified' == $response->get_error_code() ))
       ||
-      (!$response->error && array_key_exists('getOnExist', $entity_data) && $entity_data['getOnExist'])
+      (!$response->get_error() && array_key_exists('getOnExist', $entity_data) && $entity_data['getOnExist'])
     );
 
     //var okToSave = (err && 'service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) || (!err && getOnExist);
@@ -269,12 +303,12 @@ class Client {
     if ($ok_to_save) {
       $entity->set($entity_data);
       $response = $entity->save();
-      if ($response->error) {
+      if ($response->get_error()) {
         $this->write_log('Could not create entity.');
         return FALSE;
       }
     }
-    elseif ($response->error || array_key_exists('error', $response->data)) {
+    elseif ($response->get_error() || array_key_exists('error', $response->get_data())) {
       return FALSE;
     }
     return $entity;
@@ -283,9 +317,8 @@ class Client {
   public function get_entity($entity_data) {
     $entity = new Entity($this, $entity_data);
     $response = $entity->fetch();
-    if ($response->error || !empty($response->data['error'])) {
-      $err_msg = (empty($response->data['error']) ? $response->error : $response->data['error']);
-      $this->write_log($err_msg);
+    if ($response->get_error()) {
+      $this->write_log($response->get_error_message());
       return FALSE;
     }
     return $entity;
@@ -300,8 +333,7 @@ class Client {
     $user_data['type'] = "users/$user_identifier/activities";
     $entity = new Entity($this, $user_data);
     $response = $entity->save();
-    $has_error = ($response->error || array_key_exists('error', $response->data));
-    return ($has_error ? FALSE : $entity);
+    return ($response->get_error() ? FALSE : $entity);
   }
 
   public function login($username, $password) {
@@ -311,19 +343,22 @@ class Client {
       'grant_type' => 'password'
     );
     $response = $this->POST('token', array(), $body);
-    if ($response->error) {
+    if ($response->get_error()) {
       $user = NULL;
       $error = 'Error trying to log user in.';
       $this->write_log($error);
-      if (!$response->error) {
-        $response->error = $error;
+      if (!$response->get_error()) {
+        $response->set_error(TRUE);
+        $response->set_error_message($error);
+        $response->set_error_code($error);
       }
     }
     else {
-      $user = new Entity($this, $response->data['user']);
-      $this->set_oauth_token($response->data['access_token']);
+    	$response_data = $response->get_data();
+      $user = new Entity($this, $response_data['user']);
+      $this->set_oauth_token($response_data['access_token']);
     }
-    return ($user && !$response->error ? $user : FALSE);
+    return ($user && !$response->get_error() ? $user : FALSE);
   }
 
   public function login_facebook($fb_token) {
@@ -367,4 +402,82 @@ class Client {
     return preg_match($regex, $uuid);
   }
 
+  public function createNewNotifierApple($name, $environment, $p12Certificate_path){
+  	/*
+  	$fred = strpos($p12Certificate_path,'@');
+  	$barney = strpos($p12Certificate_path,'/');
+
+  	if (strpos($p12Certificate_path,'@') === FALSE) {
+  		if (strpos($p12Certificate_path,'/') === 0) {
+  			$cert_path = '@'.$p12Certificate_path;
+			}else {
+  			$cert_path = '@/'.$p12Certificate_path;
+			}
+		}
+		*/
+		$endpoint = "notifiers";
+    $data = array(
+			"name"=>$name,
+      "environment"=>$environment,
+      "p12Certificat"=>$p12Certificate_path,
+      "provider"=>"apple"
+    );
+    return $this->post($endpoint, array(), $data);
+  }
+
+  public function createNewNotifierAndroid($name, $apiKey){
+		$endpoint = "notifiers";
+    $data = array(
+    	"name"=>$name,
+      "apiKey"=>$apiKey,
+      "provider"=>"google"
+    );
+    return $this->post($endpoint, array(), $data);
+  }
+
+  public function createNotification(){
+		return new Notification();
+	}
+  public function scheduleNotification($notification){
+		$notifier_name = $notification->get_notifier_name();
+		$message = $notification->get_message();
+		$delivery_time = $notification->get_delivery_time();
+		$recipients_list = $notification->get_recipients_list();
+	  $recipeint_type = $notification->get_recipeint_type();
+
+    //we are trying to make this (where notifierName is the name of the notifier:
+    // { "payloads": { notifierName: "msg" }, "deliver":timestamp }
+    $body = array("payloads"=>array($notifier_name=>$message, "deliver"=>$delivery_time));
+
+		$type = DEVICES;
+    if ($recipeint_type == GROUPS) {
+      $type = 'groups/';
+    } else if ($recipeint_type == USERS) {
+      $type = 'users/';
+    } else if ($recipeint_type == DEVICES) {
+      $type = 'devices/';
+    } else {
+    	//send to all devices
+      // /users;ql=/notifications
+      $type = DEVICES;
+      $recipients_list = array(0=>';ql=');
+    }
+
+    //schedule notification
+    if (count($recipients_list) > 0) {
+      foreach ($recipients_list as $recipient) {
+        $endpoint = $type . $recipient . '/notifications';
+				$result = $this->post($endpoint, array(), $body);
+				if ($result->get_error()){
+					$notification->log_error($result->get_error());
+				}
+      }
+    }
+    return $notification;
+  }
+
+
 }
+
+
+
