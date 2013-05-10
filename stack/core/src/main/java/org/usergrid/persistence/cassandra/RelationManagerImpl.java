@@ -153,6 +153,10 @@ public class RelationManagerImpl implements RelationManager {
     public static final LongSerializer le = new LongSerializer();
     private static final UUID NULL_ID = new UUID(0, 0);
 
+    
+    private static final int GEO_MAX = 10000;
+    
+    
     public RelationManagerImpl() {
     }
 
@@ -3188,7 +3192,7 @@ public class RelationManagerImpl implements RelationManager {
                     headEntity, collection.getName(),
                     node.getPropertyName(),
                     new Point(node.getLattitude(), node.getLongitude()),
-                    node.getDistance(), null, query.getLimit(), false,
+                    node.getDistance(), null, GEO_MAX, false,
                     query.getResultsLevel());
 
             results.push(r);
@@ -3302,7 +3306,7 @@ public class RelationManagerImpl implements RelationManager {
             Results r = em.getGeoIndexManager().proximitySearchConnections(
                     connection.getIndexId(), node.getPropertyName(),
                     new Point(node.getLattitude(), node.getLongitude()),
-                    node.getDistance(), null, query.getLimit(), false,
+                    node.getDistance(), null, GEO_MAX, false,
                     query.getResultsLevel());
 
             results.push(r);
