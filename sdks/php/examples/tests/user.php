@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * @file
+ * User tests
+ *
+ * @author Rod Simpson <rod@apigee.com>
+ * @since 09-Mar-2013
+ */
 
 //--------------------------------------------------------------
 // User tests
@@ -8,7 +14,8 @@ $testname = 'DELETE users/marty';
 $endpoint = 'users/marty';
 $query_string = array();
 $result =  $client->delete($endpoint, $query_string);
-if (isset($result->data)){
+$result_data = $result->get_data();
+if (isset($result_data)){
   $tester->success($testname);
 } else {
 	$tester->error($testname);
@@ -69,7 +76,8 @@ $marty->set('oldpassword', 'mysecurepassword');
 $marty->set('newpassword', 'mynewsecurepassword');
 $marty->save();
 //@solo
-if (isset($result->data['action']) && $result->data['action'] == 'put') {
+$result_data = $result->get_data();
+if (isset($result_data['action']) && $result_data['action'] == 'put') {
 	$tester->success($testname);
 } else {
 	$tester->error($testname);

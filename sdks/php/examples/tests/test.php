@@ -1,4 +1,12 @@
 <?php
+/**
+ * @file
+ * main entry point for running tests
+ *
+ * @author Rod Simpson <rod@apigee.com>
+ * @since 09-Mar-2013
+ */
+
 //@han {include-sdk}
 include '../autoloader.inc.php';
 usergrid_autoload('Apigee\\Usergrid\\Client');
@@ -16,6 +24,7 @@ include 'generic.php';
 include 'entity.php';
 include 'collection.php';
 include 'user.php';
+include 'push.php';
 
 
 //--------------------------------------------------------------

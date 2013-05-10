@@ -4,6 +4,7 @@
  * Allows CRUD operations on Usergrid Entities, including Users.
  *
  * @author Daniel Johnson <djohnson@apigee.com>
+ * @author Rod Simpson <rod@apigee.com>
  * @since 26-Apr-2013
  */
 
@@ -82,8 +83,9 @@ class Entity {
       $this->client->write_log('Could not save entity.');
     }
     else {
-      if (!empty($response->data['entities'])) {
-        $this->set($response->data['entities'][0]);
+    	$response_data = $response->get_data();
+      if (!empty($response_data['entities'])) {
+        $this->set($response_data['entities'][0]);
       }
       $need_password_change = (
         ($this->get('type') == 'user' || $this->get('type') == 'users')

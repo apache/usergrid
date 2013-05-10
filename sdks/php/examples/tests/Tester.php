@@ -1,4 +1,12 @@
 <?php
+/**
+ * @file
+ * Tester - a simple class for logging during a test run
+ *
+ * @author Rod Simpson <rod@apigee.com>
+ * @since 09-Mar-2013
+ */
+
 class Tester {
 
   public $error_count = 0;

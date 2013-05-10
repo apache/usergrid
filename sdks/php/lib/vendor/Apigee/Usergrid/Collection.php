@@ -4,6 +4,7 @@
  * Allows CRUD operations on Usergrid Collections.
  *
  * @author Daniel Johnson <djohnson@apigee.com>
+ * @author Rod Simpson <rod@apigee.com>
  * @since 26-Apr-2013
  */
 
@@ -51,18 +52,19 @@ class Collection {
       unset($this->qs['cursor']);
     }
     $response = $this->client->get($this->type, $this->qs);
-    if ($response->error) {
+    if ($response->get_error()) {
       $this->client->write_log('Error getting collection.');
     }
     else {
-      $cursor = (isset($response->data['cursor']) ? $response->data['cursor'] : NULL);
+    	$response_data = $response->get_data();
+      $cursor = (isset($response_data['cursor']) ? $response_data['cursor'] : NULL);
       $this->save_cursor($cursor);
-      if (!empty($response->data['entities'])) {
+      if (!empty($response_data['entities'])) {
         $this->reset_entity_pointer();
-        $count = count($response->data['entities']);
+        $count = count($response_data['entities']);
         $this->list = array();
         for ($i = 0; $i < $count; $i++) {
-          $entity_data = $response->data['entities'][$i];
+          $entity_data = $response_data['entities'][$i];
           if (array_key_exists('uuid', $entity_data)) {
             $entity = new Entity($this->client, $entity_data);
             $entity->set('type', $this->type);
@@ -85,7 +87,7 @@ class Collection {
 
   public function destroy_entity(Entity $entity) {
     $response = $entity->destroy();
-    if ($response->error) {
+    if ($response->get_error()) {
       $this->client->write_log('Could not destroy entity.');
     }
     else {
