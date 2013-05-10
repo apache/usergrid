@@ -359,7 +359,6 @@ public class GeoIndexManager {
         @SuppressWarnings("unchecked")
         Results results = Results
                 .fromRefList((List<EntityRef>) cast(locations));
-        results = em.loadEntities(results, level, count);
         return results;
     }
 
