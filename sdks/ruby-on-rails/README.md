@@ -152,7 +152,7 @@ usergrid_ironhorse/spec/spec_settings.yaml to match.)
 
 ## Release notes
 
-### 0.1.0
+### 0.1.1
 * New Features
   1. Now prefer application client_id and client_secret (instead of auth_token) in usergrid.yml.
 
