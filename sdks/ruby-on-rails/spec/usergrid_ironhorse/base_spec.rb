@@ -28,6 +28,7 @@ describe Usergrid::Ironhorse::Base do
 
     it "do tasks as admin when requested" do
       organization = @foo.management.organization SPEC_SETTINGS[:organization][:name]
+      organization.logout
 
       # should fail under current user's context
       expect {
@@ -42,6 +43,7 @@ describe Usergrid::Ironhorse::Base do
 
     it "do tasks as admin if require_login is false" do
       organization = @foo.management.organization SPEC_SETTINGS[:organization][:name]
+      organization.logout
 
       # should fail under current user's context
       expect {
@@ -51,6 +53,7 @@ describe Usergrid::Ironhorse::Base do
       # should succeed once require_login is false
       User.settings[:require_login] = false
       organization.create_application "_test_app_#{SecureRandom.hex}"
+      User.settings[:require_login] = true
     end
 
     it 'be created and destroyed' do
@@ -371,6 +374,61 @@ describe Usergrid::Ironhorse::Base do
       end
       count.should eq 13
       bars.each {|bar| bar.delete}
+    end
+
+    it "perform as admin only when requested if require_login is true" do
+
+      organization = @foo.management.organization SPEC_SETTINGS[:organization][:name]
+
+      creds = nil
+      User.as_admin do
+        creds = organization.credentials
+      end
+
+      Usergrid::Ironhorse::Base.settings[:client_id] = creds.data.credentials.client_id
+      Usergrid::Ironhorse::Base.settings[:client_secret] = creds.data.credentials.client_secret
+      Usergrid::Ironhorse::Base.settings[:auth_token] = nil
+      User.clear_thread_context
+      organization.logout
+      User.settings[:require_login] = true
+
+      # should fail (login is required)
+      expect {
+        organization.create_application "_test_app_#{SecureRandom.hex}"
+      }.to raise_error RestClient::Unauthorized
+
+      # should succeed under admin context
+      User.as_admin do
+        organization.create_application "_test_app_#{SecureRandom.hex}"
+      end
+
+      Usergrid::Ironhorse::Base.settings[:client_id] = nil
+      Usergrid::Ironhorse::Base.settings[:client_secret] = nil
+    end
+
+    it "perform as admin if require_login is false" do
+
+      organization = @foo.management.organization SPEC_SETTINGS[:organization][:name]
+      organization.logout
+
+      creds = nil
+      User.as_admin do
+        creds = organization.credentials
+      end
+
+      Usergrid::Ironhorse::Base.settings[:client_id] = creds.data.credentials.client_id
+      Usergrid::Ironhorse::Base.settings[:client_secret] = creds.data.credentials.client_secret
+      Usergrid::Ironhorse::Base.settings[:auth_token] = nil
+      User.clear_thread_context
+      organization.logout
+
+      User.settings[:require_login] = false
+
+      # should succeed
+      organization.create_application "_test_app_#{SecureRandom.hex}"
+
+      Usergrid::Ironhorse::Base.settings[:client_id] = nil
+      Usergrid::Ironhorse::Base.settings[:client_secret] = nil
     end
   end
 end

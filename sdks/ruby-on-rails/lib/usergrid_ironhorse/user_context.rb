@@ -34,6 +34,11 @@ module Usergrid
       def as_admin(&block)
         save_auth_token = Thread.current[:usergrid_auth_token]
         begin
+          unless Base.settings[:auth_token]
+            resource = RestClient::Resource.new Base.settings[:application_url]
+            response = resource['token'].post grant_type: 'client_credentials', client_id: Base.settings[:client_id], client_secret: Base.settings[:client_secret]
+            Base.settings[:auth_token] = MultiJson.load(response)['access_token']
+          end
           Thread.current[:usergrid_auth_token] = Base.settings[:auth_token]
           yield block
         ensure
@@ -50,7 +55,7 @@ module Usergrid
       alias_method :set_context, :set_thread_context
 
       # clears auth from current thread
-      def clear_thread_context(session)
+      def clear_thread_context
         Thread.current[:usergrid_user_id] = nil
         Thread.current[:usergrid_auth_token] = nil
         Thread.current[:usergrid_current_user] = nil

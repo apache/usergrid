@@ -1,13 +1,36 @@
 # overrides methods dealing with auth_token to operate on a thread basis
 module Usergrid
   class Resource
+
     def options
       options = @options.clone
-      require_login = Usergrid::Ironhorse::Base.settings[:require_login] != false
-      auth_token = require_login ? Thread.current[:usergrid_auth_token] : Usergrid::Ironhorse::Base.settings[:auth_token]
+      require_login = Ironhorse::Base.settings[:require_login] != false
+      if require_login
+        auth_token = Thread.current[:usergrid_auth_token]
+      else
+        unless Ironhorse::Base.settings[:auth_token]
+          as_admin {}
+        end
+        auth_token = Ironhorse::Base.settings[:auth_token]
+      end
       options[:headers].delete :Authorization
       options[:headers][:Authorization] = "Bearer #{auth_token}" if auth_token
       options
+    end
+
+    def as_admin(&block)
+      save_auth_token = Thread.current[:usergrid_auth_token]
+      begin
+        unless Ironhorse::Base.settings[:auth_token]
+          resource = RestClient::Resource.new Ironhorse::Base.settings[:application_url]
+          response = resource['token'].post grant_type: 'client_credentials', client_id: Ironhorse::Base.settings[:client_id], client_secret: Ironhorse::Base.settings[:client_secret]
+          Ironhorse::Base.settings[:auth_token] = MultiJson.load(response)['access_token']
+        end
+        Thread.current[:usergrid_auth_token] = Ironhorse::Base.settings[:auth_token]
+        yield block
+      ensure
+        Thread.current[:usergrid_auth_token] = save_auth_token
+      end
     end
 
     # gets user token and automatically set auth header for future requests on this Thread

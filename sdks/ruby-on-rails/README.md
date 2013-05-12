@@ -38,17 +38,20 @@ auth_token is your application token):
 ```
 development:
   application_url: http://localhost:8080/my-organization/my-application
-  auth_token: YWMtc4WjqhcbEeK6UhQQn9SVgQAAATpryjMnLy9oFaPbP-0qIxoUx_4vtaOmpmE
+  client_id: YXA6BVYasLdNEeKBd1A2yYstg
+  client_secret: YXA60Dnbzaxg1ObkE8ffsIxsGzsSo8
   require_login: false
 
 test:
   application_url: http://localhost:8080/my-organization/my-application
-  auth_token: YWMtc4WjqhcbEeK6UhQQn9SVgQAAATpryjMnLy9oFaPbP-0qIxoUx_4vtaOmpmE
+  client_id: YXA6BVYasLdNEeKBd1A2yYstg
+  client_secret: YXA60Dnbzaxg1ObkE8ffsIxsGzsSo8
   require_login: false
 
 production:
   application_url: http://api.usergrid.com/my-organization/my-application
-  auth_token: YWMtc4WjqhcbEeK6UhQQn9SVgQAAATpryjMnLy9oFaPbP-0qIxoUx_4vtaOmpmE
+  client_id: YXA6BVYasLdNEeKBd1A2yYstg
+  client_secret: YXA60Dnbzaxg1ObkE8ffsIxsGzsSo8
   require_login: false
 ```
 
@@ -148,6 +151,10 @@ usergrid_ironhorse/spec/spec_settings.yaml to match.)
 
 
 ## Release notes
+
+### 0.1.0
+* New Features
+  1. Now prefer application client_id and client_secret (instead of auth_token) in usergrid.yml.
 
 ### 0.1.0
 * New Features
