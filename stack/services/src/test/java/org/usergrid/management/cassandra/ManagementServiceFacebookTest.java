@@ -76,24 +76,21 @@ public class ManagementServiceFacebookTest {
 		// setup FB api
 		Object[] wrObjs = invokeFB(fb_access_token);
 		// process fb_access_token 1st time
-		User user1 = facebookProvider.createOrAuthenticate(
-				applicationId, fb_access_token);
+		User user1 = facebookProvider.createOrAuthenticate(fb_access_token);
 		assertNotNull(user1);
 		verify(wrObjs,fb_access_token);
 
 		// setup FB api
 		wrObjs = invokeFB(fb_access_token);
 		// process fb_access_token 2nd time
-		User user2 = facebookProvider.createOrAuthenticate(
-				applicationId, fb_access_token);
+		User user2 = facebookProvider.createOrAuthenticate(fb_access_token);
 		assertNotNull(user2);
 		verify(wrObjs,fb_access_token);
 
 		// setup FB api
 		wrObjs = invokeFB(fb_access_token);
 		// process fb_access_token 3rd time
-		User user3 = facebookProvider.createOrAuthenticate(
-				applicationId, fb_access_token);
+		User user3 = facebookProvider.createOrAuthenticate(fb_access_token);
 		assertNotNull(user3);
 		verify(wrObjs,fb_access_token);
 

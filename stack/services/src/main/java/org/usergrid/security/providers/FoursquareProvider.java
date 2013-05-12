@@ -7,6 +7,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.usergrid.management.ManagementService;
 import org.usergrid.persistence.EntityManager;
 import org.usergrid.persistence.Query;
 import org.usergrid.persistence.Results;
@@ -31,8 +32,30 @@ public class FoursquareProvider extends AbstractProvider {
 
   private Logger logger  = LoggerFactory.getLogger(FoursquareProvider.class);
 
+
+  FoursquareProvider(EntityManager entityManager,
+                     ManagementService managementService) {
+    super(entityManager, managementService);
+  }
+
   @Override
-  public User createOrAuthenticate(UUID applicationId, String externalToken) throws BadTokenException {
+  void configure() {
+  // config params: url, version
+
+  }
+
+  @Override
+  public Map<Object, Object> loadConfigurationFor() {
+    return loadConfigurationFor("foursquareProvider");
+  }
+
+  @Override
+  public void saveToConfiguration(Map<String, Object> config) {
+    saveToConfiguration("foursquareProvider", config);
+  }
+
+  @Override
+  public User createOrAuthenticate(String externalToken) throws BadTokenException {
     ClientConfig clientConfig = new DefaultClientConfig();
     clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
     Client client = Client.create(clientConfig);
@@ -67,15 +90,11 @@ public class FoursquareProvider extends AbstractProvider {
       fq_user_name = (String) fq_user.get("firstName");
     }
 
-    if (applicationId == null) {
-      return null;
-    }
-
     User user = null;
     try {
       if ((fq_user != null) && !anyNull(fq_user_id, fq_user_name)) {
-        EntityManager em = emf.getEntityManager(applicationId);
-        Results r = em.searchCollection(em.getApplicationRef(), "users",
+
+        Results r = entityManager.searchCollection(entityManager.getApplicationRef(), "users",
                 Query.findForProperty("foursquare.id", fq_user_id));
 
         if (r.size() > 1) {
@@ -96,7 +115,7 @@ public class FoursquareProvider extends AbstractProvider {
           properties.put("activated", true);
           properties.put("location", location);
 
-          user = em.create("user", User.class, properties);
+          user = entityManager.create("user", User.class, properties);
         } else {
           user = (User) r.getEntity().toTypedEntity();
           Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -104,7 +123,7 @@ public class FoursquareProvider extends AbstractProvider {
           properties.put("foursquare", fq_user);
           properties.put("picture", "https://is0.4sqi.net/userpix_thumbs" + fq_user_picture);
           properties.put("location", location);
-          em.updateProperties(user, properties);
+          entityManager.updateProperties(user, properties);
 
           user.setProperty("foursquare", fq_user);
           user.setProperty("picture", "https://is0.4sqi.net/userpix_thumbs" + fq_user_picture);

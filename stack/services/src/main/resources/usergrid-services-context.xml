@@ -60,14 +60,9 @@
 		<constructor-arg ref="managementService" />
 	</bean>
 
-    <bean id="facebookProvider" class="org.usergrid.security.providers.FacebookProvider">
-        <property name="managementService" ref="managementService"/>
+    <bean id="signInProviderFactory" class="org.usergrid.security.providers.SignInProviderFactory">
         <property name="entityManagerFactory" ref="entityManagerFactory"/>
-    </bean>
-
-    <bean id="foursquareProvider" class="org.usergrid.security.providers.FoursquareProvider">
         <property name="managementService" ref="managementService"/>
-        <property name="entityManagerFactory" ref="entityManagerFactory"/>
     </bean>
 
 </beans>

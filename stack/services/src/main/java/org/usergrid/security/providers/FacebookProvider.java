@@ -28,15 +28,52 @@ import static org.usergrid.utils.ListUtils.anyNull;
  * @author zznate
  */
 public class FacebookProvider extends AbstractProvider {
+  private static final String DEF_API_URL = "https://graph.facebook.com/me";
+  private static final String DEF_PICTURE_URL  = "http://graph.facebook.com/%s/picture";
 
   private Logger logger = LoggerFactory.getLogger(FacebookProvider.class);
 
+  private String apiUrl = DEF_API_URL;
+  private String pictureUrl   = DEF_PICTURE_URL;
 
+  FacebookProvider(EntityManager entityManager,
+                          ManagementService managementService) {
+    super(entityManager, managementService);
+  }
 
   @Override
-  public User createOrAuthenticate(UUID applicationId, String externalToken) throws BadTokenException {
+  void configure() {
+    try {
+      Map config = loadConfigurationFor("facebookProvider");
+      if ( config != null ) {
+        String foundApiUrl = (String)config.get("api_url");
+        if ( foundApiUrl != null ) {
+          apiUrl = foundApiUrl;
+        }
+        String foundPicUrl = (String)config.get("pic_url");
+        if ( foundPicUrl != null) {
+          pictureUrl = foundApiUrl;
+        }
+      }
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+  }
 
-    Map<String, Object> fb_user = userFromResource("https://graph.facebook.com/me", MapUtils.hashMap("access_token",externalToken));
+  @Override
+  public Map<Object, Object> loadConfigurationFor() {
+    return loadConfigurationFor("facebookProvider");
+  }
+
+  @Override
+  public void saveToConfiguration(Map<String, Object> config) {
+    saveToConfiguration("facebookProvider", config);
+  }
+
+  @Override
+  public User createOrAuthenticate(String externalToken) throws BadTokenException {
+
+    Map<String, Object> fb_user = userFromResource(apiUrl, MapUtils.hashMap("access_token",externalToken));
 
     String fb_user_id = (String) fb_user.get("id");
     String fb_user_name = (String) fb_user.get("name");
@@ -45,17 +82,14 @@ public class FacebookProvider extends AbstractProvider {
     if (logger.isDebugEnabled()) {
       logger.debug(JsonUtils.mapToFormattedJsonString(fb_user));
     }
-    if (applicationId == null) {
-      return null;
-    }
 
     User user = null;
 
     if ((fb_user != null) && !anyNull(fb_user_id, fb_user_name)) {
-      EntityManager em = emf.getEntityManager(applicationId);
+
       Results r = null;
       try {
-        r = em .searchCollection(em.getApplicationRef(), "users", Query.findForProperty("facebook.id", fb_user_id));
+        r = entityManager .searchCollection(entityManager.getApplicationRef(), "users", Query.findForProperty("facebook.id", fb_user_id));
       } catch (Exception ex) {
         throw new BadTokenException("Could not lookup user for that Facebook ID", ex);
       }
@@ -70,11 +104,12 @@ public class FacebookProvider extends AbstractProvider {
         properties.put("facebook", fb_user);
         properties.put("username", "fb_" + fb_user_id);
         properties.put("name", fb_user_name);
-        properties.put("picture", "http://graph.facebook.com/" + fb_user_id + "/picture");
+        properties.put("picture", String.format(pictureUrl ,fb_user_id ));
 
         if (fb_user_email != null) {
           try {
-            user = managementService.getAppUserByIdentifier(applicationId, Identifier.fromEmail(fb_user_email));
+            user = managementService.getAppUserByIdentifier(entityManager.getApplication().getUuid(),
+                    Identifier.fromEmail(fb_user_email));
           } catch (Exception ex) {
             throw new BadTokenException("Could not find existing user for this applicaiton for email: " + fb_user_email, ex);
           }
@@ -85,7 +120,7 @@ public class FacebookProvider extends AbstractProvider {
             properties.remove("username");
             properties.remove("name");
             try {
-              em.updateProperties(user, properties);
+              entityManager.updateProperties(user, properties);
             } catch (Exception ex) {
               throw new BadTokenException("Could not update user with new credentials",ex);
             }
@@ -97,7 +132,7 @@ public class FacebookProvider extends AbstractProvider {
         if (user == null) {
           properties.put("activated", true);
           try {
-            user = em.create("user", User.class, properties);
+            user = entityManager.create("user", User.class, properties);
           } catch (Exception ex) {
             throw new BadTokenException("Could not create user for that token", ex);
           }
@@ -108,13 +143,12 @@ public class FacebookProvider extends AbstractProvider {
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
         properties.put("facebook", fb_user);
-        properties.put("picture", "http://graph.facebook.com/" + fb_user_id + "/picture");
+        properties.put("picture", String.format(pictureUrl ,fb_user_id ));
         try {
-          em.updateProperties(user, properties);
-
+          entityManager.updateProperties(user, properties);
           user.setProperty(PROPERTY_MODIFIED, properties.get(PROPERTY_MODIFIED));
           user.setProperty("facebook", fb_user);
-          user.setProperty("picture", "http://graph.facebook.com/" + fb_user_id + "/picture");
+          user.setProperty("picture", String.format(pictureUrl ,fb_user_id ));
         } catch (Exception ex) {
           throw new BadTokenException("Could not update user properties", ex);
         }

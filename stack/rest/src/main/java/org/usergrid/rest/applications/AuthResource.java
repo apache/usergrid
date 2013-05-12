@@ -48,6 +48,8 @@ import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.security.oauth.AccessInfo;
 import org.usergrid.security.providers.FacebookProvider;
 import org.usergrid.security.providers.FoursquareProvider;
+import org.usergrid.security.providers.SignInAsProvider;
+import org.usergrid.security.providers.SignInProviderFactory;
 import org.usergrid.services.ServiceManager;
 
 @Component
@@ -63,9 +65,7 @@ public class AuthResource extends AbstractContextResource {
 	ServiceManager services = null;
 
   @Autowired
-  private FacebookProvider facebookProvider;
-  @Autowired
-  private FoursquareProvider foursquareProvider;
+  private SignInProviderFactory signInProviderFactory;
 
 	public AuthResource() {
 	}
@@ -118,10 +118,8 @@ public class AuthResource extends AbstractContextResource {
 						.entity(wrapJSONPResponse(callback, response.getBody()))
 						.build();
 			}
-
-			User user = facebookProvider.createOrAuthenticate(
-					services.getEntityManager().getApplicationRef().getUuid(),
-					fb_access_token);
+      SignInAsProvider facebookProvider = signInProviderFactory.facebook(services.getApplication());
+			User user = facebookProvider.createOrAuthenticate(fb_access_token);
 
 			if (user == null) {
 				logger.error("Unable to find or create user");
@@ -196,10 +194,8 @@ public class AuthResource extends AbstractContextResource {
 						.entity(wrapJSONPResponse(callback, response.getBody()))
 						.build();
 			}
-
-			User user = foursquareProvider.createOrAuthenticate(
-					services.getEntityManager().getApplicationRef().getUuid(),
-					fq_access_token);
+      SignInAsProvider foursquareProvider = signInProviderFactory.foursquare(services.getApplication());
+			User user = foursquareProvider.createOrAuthenticate(fq_access_token);
 
 			if (user == null) {
 				logger.error("Unable to find or create user");

@@ -12,10 +12,9 @@ public interface SignInAsProvider {
 
   /**
    * Authenticate a userId and external token against this provider
-   * @param applicationId
    * @param externalToken
    * @return
    */
-  User createOrAuthenticate(UUID applicationId, String externalToken) throws BadTokenException;
+  User createOrAuthenticate(String externalToken) throws BadTokenException;
 
 }
