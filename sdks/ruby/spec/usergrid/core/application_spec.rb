@@ -310,8 +310,8 @@ describe Usergrid::Application do
       end
     end
 
-    context "valid crendentials" do
-      it "should be able to get access token with invalid credentials"do
+    context "valid credentials" do
+      it "should be able to get access token with valid credentials" do
         app_info = JSON.parse @app.get
 
         management = login_management

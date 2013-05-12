@@ -1,6 +1,6 @@
 describe Usergrid::Organization do
 
-  before :all do
+  before :each do
     @management = Usergrid::Resource.new(SPEC_SETTINGS[:api_url]).management
     @management.login SPEC_SETTINGS[:organization][:username], SPEC_SETTINGS[:organization][:password]
     @organization = @management.organization SPEC_SETTINGS[:organization][:name]
@@ -71,6 +71,10 @@ describe Usergrid::Organization do
 
   describe "grant_type: client_credentials" do
     context "invalid credentials" do
+      before :each do
+        @organization.logout
+      end
+
       it "should not be able to get access token with invalid credentials" do
         expect { @organization.login_credentials "invalid_client_id", "invalid_client_secret" }.to raise_exception RestClient::BadRequest
       end
@@ -81,8 +85,9 @@ describe Usergrid::Organization do
     end
 
     context "valid crendentials" do
-      it "should be able to get access token with invalid credentials" do
+      it "should be able to get access token with valid credentials" do
         org_credentials = JSON.parse @organization.credentials
+        @organization.logout
         @organization.login_credentials org_credentials["credentials"]["client_id"], org_credentials["credentials"]["client_secret"]
 
         expect(@organization.auth_token).to_not be_empty
