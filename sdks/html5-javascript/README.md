@@ -131,6 +131,35 @@ The last two items are optional. The **logging** option will enable console.log 
 
 You are now ready to use the client to make calls against the API.
 
+##Asynchronous vs. Synchronous calls (a quick discussion)
+This SDK works by making RESTful API calls from your application to the App Services (Usergrid) API. This SDK currently only supports Asynchronous calls. 
+
+###Synchronous calls
+If an API call is synchronous, it means that code execution will block (or wait) for the API call to return before continuing.  This SDK does not yet support synchronous calls.
+
+###Asynchronous 
+Asynchronous calls, which are supported by this SDK, do not block (or wait) for the API call to return from the server.  Execution continues on in your program, and when the call returns from the server, a "callback" function is executed. For example, in the following code, the function called dogCreateCallback will be called when the create dog API call returns from the server.  Meanwhile, execution will continue:
+
+
+	function dogCreateCallback(err, dog) {
+		alert('I will probably be called second');
+		if (err) {
+			//Error - Dog not created
+		} else {
+			//Success - Dog was created
+
+		}
+	}
+	
+	client.createEntity({type:'dogs'}, dogCreateCallback);
+	
+	alert('I will probably be called first');
+
+The result of this is that we cannot guarantee the order of the two alert statements.  Most likely, the alert right after the createEntity function will be called first since the API call will take a second or so to complete.  
+
+The important point is that program execution will continue, and asynchronously, the callback function will be called once program execution completes.
+
+
 
 ##Entities and Collections
 Usergrid stores its data as "Entities" in "Collections".  Entities are essentially JSON objects and Collections are just like folders for storing these objects. You can learn more about Entities and Collections in the App Services docs:
