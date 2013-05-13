@@ -39,7 +39,10 @@ public class JobStat extends TypedEntity {
   private long startTime;
   
   @EntityProperty(required = true, basic = true, indexed = true)
-  private int failCount;
+  private int runCount;
+  
+  @EntityProperty(required = true, basic = true, indexed = true)
+  private int delayCount;
   
   @EntityProperty(required = true, basic = true, indexed = true)
   private long duration;
@@ -94,23 +97,64 @@ public class JobStat extends TypedEntity {
     this.startTime = startTime;
   }
   
-  public void incrementFailures(){
-    failCount++;
+  /**
+   * Increment the run count 
+   */
+  public void incrementRuns(){
+    runCount++;
+  }
+
+  
+  /**
+   * Increment the run count 
+   */
+  public void incrementDelays(){
+    delayCount++;
   }
   
   /**
    * Get the number of times this job has failed
    * @return
    */
-  public int getFailCount(){
-    return failCount;
+  public int getRunCount(){
+    return runCount;
   }
 
   /**
+   * DON'T CALL THIS, USE THE INRECMENT METHOD!
    * @param failCount the failCount to set
    */
-  public void setFailCount(int failCount) {
-    this.failCount = failCount;
+  public void setRunCount(int runCount) {
+    this.runCount = runCount;
+  }
+  
+  /**
+   * Return the total number of attempts that have resulted in an error and not an explicit delay
+   * 
+   * runCount - delayCount
+   * 
+   * @return 
+   * 
+   */
+  public int getTotalAttempts(){
+    return runCount - delayCount;
+  }
+
+
+  /**
+   * @return the delayCount
+   */
+  public int getDelayCount() {
+    return delayCount;
+  }
+
+
+  /**
+   * DON'T CALL THIS, USE THE INRECMENT METHOD!
+   * @param delayCount the delayCount to set
+   */
+  public void setDelayCount(int delayCount) {
+    this.delayCount = delayCount;
   }
 
 

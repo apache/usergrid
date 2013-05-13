@@ -52,7 +52,7 @@ public abstract class AbstractMongoTest {
 	public AbstractMongoTest() {
 		super();
 		//emf = (EntityManagerFactoryImpl) helper.getEntityManagerFactory();
-		smf = new ServiceManagerFactory(emf, properties, null);
+		smf = new ServiceManagerFactory(emf, properties, null, null);
 		//smf.setApplicationContext(helper.getApplicationContext());
 	}
 

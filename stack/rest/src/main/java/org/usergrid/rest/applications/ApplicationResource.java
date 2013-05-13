@@ -20,11 +20,14 @@ import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
+import static org.usergrid.security.oauth.ClientCredentialsInfo.getUUIDFromClientId;
 import static org.usergrid.security.shiro.utils.SubjectUtils.isApplicationAdmin;
 import static org.usergrid.services.ServiceParameter.addParameter;
 import static org.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Map;
 import java.util.UUID;
@@ -70,6 +73,7 @@ import org.usergrid.rest.applications.assets.AssetsResource;
 import org.usergrid.rest.applications.events.EventsResource;
 import org.usergrid.rest.applications.queues.QueueResource;
 import org.usergrid.rest.applications.users.UsersResource;
+import org.usergrid.rest.exceptions.AuthErrorInfo;
 import org.usergrid.rest.exceptions.RedirectionException;
 import org.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.usergrid.security.oauth.AccessInfo;
@@ -215,7 +219,7 @@ public class ApplicationResource extends ServiceResource {
                             ' ');
                     String[] values = Base64.decodeToString(token).split(":");
                     if (values.length >= 2) {
-                        client_id = values[0].toLowerCase();
+                        client_id = values[0];
                         client_secret = values[1];
                     }
                 }
@@ -296,6 +300,7 @@ public class ApplicationResource extends ServiceResource {
     @Path("token")
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response getAccessTokenPost(@Context UriInfo ui,
+    		@HeaderParam("Authorization") String authorization,
             @FormParam("grant_type") String grant_type,
             @FormParam("username") String username,
             @FormParam("password") String password,
@@ -310,7 +315,7 @@ public class ApplicationResource extends ServiceResource {
 
         logger.debug("ApplicationResource.getAccessTokenPost");
 
-        return getAccessToken(ui, null, grant_type, username, password, pin,
+        return getAccessToken(ui, authorization, grant_type, username, password, pin,
                 client_id, client_secret, code, ttl, redirect_uri, callback);
     }
 
@@ -318,6 +323,7 @@ public class ApplicationResource extends ServiceResource {
     @Path("token")
     @Consumes(APPLICATION_JSON)
     public Response getAccessTokenPostJson(@Context UriInfo ui,
+            @HeaderParam("Authorization") String authorization,
             Map<String, Object> json,
             @QueryParam("callback") @DefaultValue("") String callback)
                     throws Exception {
@@ -340,7 +346,7 @@ public class ApplicationResource extends ServiceResource {
             }
         }
 
-        return getAccessToken(ui, null, grant_type, username, password, pin,
+        return getAccessToken(ui, authorization, grant_type, username, password, pin,
                 client_id, client_secret, code, ttl, redirect_uri, callback);
     }
 
@@ -401,6 +407,11 @@ public class ApplicationResource extends ServiceResource {
             @QueryParam("scope") String scope, @QueryParam("state") String state) {
 
         try {
+            UUID uuid = getUUIDFromClientId(client_id);
+            if (uuid == null) {
+              throw mappableSecurityException(AuthErrorInfo.OAUTH2_INVALID_CLIENT, "Unable to authenticate (OAuth). Invalid client_id");
+            }
+
             responseType = response_type;
             clientId = client_id;
             redirectUri = redirect_uri;
@@ -447,20 +458,12 @@ public class ApplicationResource extends ServiceResource {
                 errorDescription = "user disabled";
             } catch (Exception e1) {
             }
+
             if ((user != null) && isNotBlank(redirect_uri)) {
-                if (!redirect_uri.contains("?")) {
-                    redirect_uri += "?";
-                } else {
-                    redirect_uri += "&";
-                }
-                redirect_uri += "code="
-                        + management.getAccessTokenForAppUser(
-                                services.getApplicationId(), user.getUuid(), 0);
-                if (isNotBlank(state)) {
-                    redirect_uri += "&state="
-                            + URLEncoder.encode(state, "UTF-8");
-                }
-                throw new RedirectionException(state);
+            	String authorizationCode = management.getAccessTokenForAppUser(services.getApplicationId(), user.getUuid(), 0);
+            	redirect_uri = buildRedirectUriWithAuthCode(redirect_uri, state, authorizationCode);
+
+                throw new RedirectionException(redirect_uri);
             } else {
                 errorMsg = errorDescription;
             }
@@ -524,30 +527,47 @@ public class ApplicationResource extends ServiceResource {
         return state;
     }
 
-  // todo: find a mechanism to move these methods into the push notifications project
-  @RequireApplicationAccess
-  @Path("notifiers")
-  public AbstractContextResource getNotifiersResource(@Context UriInfo ui)
-      throws Exception {
+	// todo: find a mechanism to move these methods into the push notifications
+	// project
+	@RequireApplicationAccess
+	@Path("notifiers")
+	public AbstractContextResource getNotifiersResource(@Context UriInfo ui)
+			throws Exception {
 
-    Class cls = Class.forName("org.usergrid.rest.applications.notifiers.NotifiersResource");
+		Class cls = Class
+				.forName("org.usergrid.rest.applications.notifiers.NotifiersResource");
 
-    logger.debug("NotifiersResource.getNotifiersResource");
-    addParameter(getServiceParameters(), "notifiers");
+		logger.debug("NotifiersResource.getNotifiersResource");
+		addParameter(getServiceParameters(), "notifiers");
 
-    PathSegment ps = getFirstPathSegment("notifiers");
-    if (ps != null) {
-      addMatrixParams(getServiceParameters(), ui, ps);
-    }
+		PathSegment ps = getFirstPathSegment("notifiers");
+		if (ps != null) {
+			addMatrixParams(getServiceParameters(), ui, ps);
+		}
 
-    return getSubResource(cls);
-  }
+		return getSubResource(cls);
+	}
 
-  @RequireApplicationAccess
-  @Path("notifier")
-  public AbstractContextResource getNotifierResource(@Context UriInfo ui)
-      throws Exception {
-    return getNotifiersResource(ui);
-  }
+	@RequireApplicationAccess
+	@Path("notifier")
+	public AbstractContextResource getNotifierResource(@Context UriInfo ui)
+			throws Exception {
+		return getNotifiersResource(ui);
+	}
+
+	private String buildRedirectUriWithAuthCode(String redirect_uri, String state, String authorizationCode) throws UnsupportedEncodingException {
+		if (!redirect_uri.contains("?")) {
+			redirect_uri += "?";
+		} else {
+			redirect_uri += "&";
+		}
+		redirect_uri += "code=" + authorizationCode;
+
+		if (isNotBlank(state)) {
+			redirect_uri += "&state=" + URLEncoder.encode(state, "UTF-8");
+		}
+
+		return redirect_uri;
+	}
 
 }

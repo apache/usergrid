@@ -278,6 +278,59 @@ public class ManagementResourceTest extends AbstractRestTest {
     }
 
     @Test
+    public void meToken() throws Exception {
+      JsonNode node = resource().path("/management/me").queryParam("grant_type", "password")
+              .queryParam("username", "test@usergrid.com").queryParam("password", "test")
+              .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+
+      logNode(node);
+      String token = node.get("access_token").getTextValue();
+
+      assertNotNull(token);
+
+      node = resource().path("/management/me").queryParam("access_token", token)
+              .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+      logNode(node);
+    }
+
+  @Test
+  public void meTokenPost() throws Exception {
+    Map<String, String> payload = hashMap("grant_type", "password").map("username", "test@usergrid.com")
+                    .map("password", "test");
+
+    JsonNode node = resource().path("/management/me")
+            .accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE).post(JsonNode.class, payload);
+
+    logNode(node);
+    String token = node.get("access_token").getTextValue();
+
+    assertNotNull(token);
+
+    node = resource().path("/management/me").queryParam("access_token", token)
+            .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+    logNode(node);
+  }
+
+  @Test
+  public void meTokenPostForm() throws Exception {
+    JsonNode node = resource().path("/management/me").queryParam("grant_type", "password")
+               .queryParam("username", "test@usergrid.com").queryParam("password", "test")
+               .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+            .post(JsonNode.class);
+
+    logNode(node);
+    String token = node.get("access_token").getTextValue();
+
+    assertNotNull(token);
+
+    node = resource().path("/management/me").queryParam("access_token", token)
+            .accept(MediaType.APPLICATION_JSON).get(JsonNode.class);
+    logNode(node);
+  }
+
+    @Test
     public void ttlNan() throws Exception {
 
         Map<String, String> payload = hashMap("grant_type", "password").map("username", "test@usergrid.com")

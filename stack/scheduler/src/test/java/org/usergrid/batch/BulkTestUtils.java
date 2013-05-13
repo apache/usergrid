@@ -30,7 +30,7 @@ public class BulkTestUtils {
 
   private static class MyBulkJob implements Job {
     @Override
-    public void execute(JobExecution execution) throws JobExecutionException {
+    public void execute(JobExecution execution) throws Exception {
       // do some stuff
      
     }

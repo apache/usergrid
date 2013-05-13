@@ -90,9 +90,8 @@ public abstract class AbstractBatcher implements Batcher {
       //  thread will pass the tryLock check and acquire the submitLock
       if (shouldSubmit(batch) && submitLock.tryLock()) {
         try {
-          Batch copy = batch;
-          batch = new Batch();
-          submit(copy);
+
+          submit(copyAndClear(batch));
         } finally {
           // by this time, submit(copy) above will have reset the the
           // shouldSubmit condition
@@ -102,6 +101,15 @@ public abstract class AbstractBatcher implements Batcher {
       context.stop();
 
     }
+
+  private Batch copyAndClear(Batch original) {
+    Batch copy;
+    synchronized(original) {
+      copy = new Batch(original);
+      original.clear();
+    }
+    return copy;
+  }
     
 
     class Batch {
@@ -114,7 +122,7 @@ public abstract class AbstractBatcher implements Batcher {
 
         /* copy constructor */
         Batch(Batch batch) {
-            batch.localCallCounter.set(batch.localCallCounter.get());
+            localCallCounter.set(batch.localCallCounter.get());
             counts = new HashMap<String, Count>(batch.counts);
         }
 
