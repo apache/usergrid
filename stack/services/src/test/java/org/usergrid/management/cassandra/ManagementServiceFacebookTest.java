@@ -15,6 +15,7 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -68,6 +69,7 @@ public class ManagementServiceFacebookTest {
 	}
 
 	@Test
+  @Ignore
 	public void getOrCreateUserwithFacebookToken() throws Exception {
 
 		// fb_access_token

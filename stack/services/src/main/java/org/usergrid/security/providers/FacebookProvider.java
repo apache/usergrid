@@ -65,15 +65,30 @@ public class FacebookProvider extends AbstractProvider {
     return loadConfigurationFor("facebookProvider");
   }
 
+  /**
+   * Configuration parameters we look for:
+   * <ul>
+   *   <li>api_url</li>
+   *   <li>pic_url</li>
+   * </ul>
+   * @param config
+   */
   @Override
   public void saveToConfiguration(Map<String, Object> config) {
     saveToConfiguration("facebookProvider", config);
   }
 
   @Override
+  Map<String, Object> userFromResource(String externalToken) {
+    WebResource wr = client.resource(apiUrl);
+    wr.queryParam("access_token", externalToken);
+    return wr.accept(MediaType.APPLICATION_JSON).post(Map.class);
+  }
+
+  @Override
   public User createOrAuthenticate(String externalToken) throws BadTokenException {
 
-    Map<String, Object> fb_user = userFromResource(apiUrl, MapUtils.hashMap("access_token",externalToken));
+    Map<String, Object> fb_user = userFromResource(externalToken);
 
     String fb_user_id = (String) fb_user.get("id");
     String fb_user_name = (String) fb_user.get("name");

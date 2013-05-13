@@ -34,7 +34,6 @@ import static org.mockito.Mockito.mock;
 @RunWith(ShiroHelperRunner.class)
 public class FacebookProviderTest {
 
-  private static FacebookProvider facebookProvider;
   private static ManagementService managementService;
   private static EntityManagerFactory emf;
   private static SignInProviderFactory providerFactory;
@@ -67,17 +66,19 @@ public class FacebookProviderTest {
   @Test
   @Ignore
   public void verifyGetOrCreateOk() throws Exception {
-
-
+    Application application = emf.getEntityManager(applicationId).getApplication();
     Map fb_user = MapUtils
     				.hashMap("id", "12345678").map("name", "Facebook User")
     				.map("username", "fb.user");
-    Map<String,String> paramMap = new HashMap<String, String>();
-    paramMap.put("access_token", fb_access_token);
-    Mockito.when(facebookProvider.userFromResource("https://graph.facebook.com/me",paramMap)).thenReturn(fb_user);
+
+    FacebookProvider facebookProvider = (FacebookProvider)providerFactory.facebook(application);
+    facebookProvider = Mockito.spy(facebookProvider);
+
+    Mockito.when(facebookProvider.userFromResource(Mockito.anyString())).thenReturn(fb_user);
 
 
     User user1 = facebookProvider.createOrAuthenticate(fb_access_token);
+
     assertNotNull(user1);
 
   }
@@ -91,7 +92,7 @@ public class FacebookProviderTest {
     //Mockito.when(fp.loadConfigurationFor("facebookProvider")).thenReturn(fb_user);
     FacebookProvider fp = (FacebookProvider)providerFactory.facebook(application);
     assertNotNull(fp);
-    
+
     fp.saveToConfiguration("facebookProvider",fbProps);
 
     fp.configure();

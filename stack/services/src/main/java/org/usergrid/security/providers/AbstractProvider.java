@@ -22,29 +22,21 @@ public abstract class AbstractProvider implements SignInAsProvider {
 
   protected EntityManager entityManager;
   protected ManagementService managementService;
+  protected Client client;
 
 
   AbstractProvider(EntityManager entityManager,
-                          ManagementService managementService) {
+                   ManagementService managementService) {
     this.entityManager = entityManager;
     this.managementService = managementService;
+    ClientConfig clientConfig = new DefaultClientConfig();
+    clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+    client = Client.create(clientConfig);
   }
 
   abstract void configure();
 
-  // TODO this might make more sense as abstract
-  protected Map<String,Object> userFromResource(String url, Map<String,String> queryParams){
-    ClientConfig clientConfig = new DefaultClientConfig();
-    clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-    Client client = Client.create(clientConfig);
-    WebResource wr = client.resource(url);
-
-    for ( Map.Entry<String,String> entry : queryParams.entrySet() ) {
-      wr.queryParam(entry.getKey(), entry.getValue());
-    }
-
-    return wr.accept(MediaType.APPLICATION_JSON).get(Map.class);
-  }
+  abstract Map<String, Object> userFromResource(String externalToken);
 
   public abstract Map<Object,Object> loadConfigurationFor();
 

@@ -40,8 +40,14 @@ public class FoursquareProvider extends AbstractProvider {
 
   @Override
   void configure() {
-  // config params: url, version
+    // TODO
+    // config params: url, version
+  }
 
+  @Override
+  Map<String, Object> userFromResource(String externalToken) {
+    // TODO user extraction
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
   }
 
   @Override

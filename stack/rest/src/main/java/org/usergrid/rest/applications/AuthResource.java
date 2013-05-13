@@ -46,10 +46,7 @@ import org.springframework.stereotype.Component;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.security.oauth.AccessInfo;
-import org.usergrid.security.providers.FacebookProvider;
-import org.usergrid.security.providers.FoursquareProvider;
-import org.usergrid.security.providers.SignInAsProvider;
-import org.usergrid.security.providers.SignInProviderFactory;
+import org.usergrid.security.providers.*;
 import org.usergrid.services.ServiceManager;
 
 @Component
@@ -94,6 +91,80 @@ public class AuthResource extends AbstractContextResource {
 		return authFB(ui, fb_access_token, ttl, callback);
 	}
 
+  // Ping ident only allows for POST
+  @POST
+ 	@Path("pingident")
+ 	public Response authPingIdent(@Context UriInfo ui,
+ 			@QueryParam("ping_access_token") String pingToken,
+ 			@QueryParam("callback") @DefaultValue("") String callback)
+ 			throws Exception {
+    logger.info("AuthResource.pingIdent");
+ 		try {
+ 			if (StringUtils.isEmpty(pingToken)) {
+        missingTokenFail(callback);
+ 			}
+      SignInAsProvider pingProvider = signInProviderFactory.pingident(services.getApplication());
+ 			User user = pingProvider.createOrAuthenticate(pingToken);
+
+ 			if (user == null) {
+ 				return findAndCreateFail(callback);
+ 			}
+      long ttl = PingIdentityProvider.extractExpiration(user);
+
+ 			String token = management.getAccessTokenForAppUser(
+ 					services.getApplicationId(), user.getUuid(), ttl);
+
+ 			AccessInfo access_info = new AccessInfo()
+ 					.withExpiresIn(tokens.getMaxTokenAge(token) / 1000)
+ 					.withAccessToken(token).withProperty("user", user);
+
+ 			return Response.status(SC_OK).type(jsonMediaType(callback))
+ 					.entity(wrapWithCallback(access_info, callback)).build();
+ 		} catch (Exception e) {
+ 			return generalAuthError(callback, e);
+ 		}
+ 	}
+
+  private Response missingTokenFail(String callback) throws Exception {
+    logger.error("Missing Access token");
+    OAuthResponse response = OAuthResponse
+            .errorResponse(SC_BAD_REQUEST)
+            .setError(OAuthError.TokenResponse.INVALID_REQUEST)
+            .setErrorDescription("missing access token")
+            .buildJSONMessage();
+    return Response
+            .status(response.getResponseStatus())
+            .type(jsonMediaType(callback))
+            .entity(wrapJSONPResponse(callback, response.getBody()))
+            .build();
+  }
+
+  private Response findAndCreateFail(String callback) throws Exception {
+    logger.error("Unable to find or create user");
+				OAuthResponse response = OAuthResponse
+						.errorResponse(SC_BAD_REQUEST)
+						.setError(OAuthError.TokenResponse.INVALID_REQUEST)
+						.setErrorDescription("invalid user").buildJSONMessage();
+				return Response
+						.status(response.getResponseStatus())
+						.type(jsonMediaType(callback))
+						.entity(wrapJSONPResponse(callback, response.getBody()))
+						.build();
+  }
+
+  private Response generalAuthError(String callback, Exception e) throws Exception {
+    logger.error("Generic Auth Error", e);
+ 			OAuthResponse response = OAuthResponse
+ 					.errorResponse(SC_BAD_REQUEST)
+ 					.setError(OAuthError.TokenResponse.INVALID_REQUEST)
+ 					.buildJSONMessage();
+ 			return Response.status(response.getResponseStatus())
+ 					.type(jsonMediaType(callback))
+ 					.entity(wrapJSONPResponse(callback, response.getBody()))
+ 					.build();
+  }
+
+
 	@GET
 	@Path("facebook")
 	public Response authFB(@Context UriInfo ui,
@@ -106,32 +177,13 @@ public class AuthResource extends AbstractContextResource {
 
 		try {
 			if (StringUtils.isEmpty(fb_access_token)) {
-				logger.error("Missing FB Access token");
-				OAuthResponse response = OAuthResponse
-						.errorResponse(SC_BAD_REQUEST)
-						.setError(OAuthError.TokenResponse.INVALID_REQUEST)
-						.setErrorDescription("missing access token")
-						.buildJSONMessage();
-				return Response
-						.status(response.getResponseStatus())
-						.type(jsonMediaType(callback))
-						.entity(wrapJSONPResponse(callback, response.getBody()))
-						.build();
+				return missingTokenFail(callback);
 			}
       SignInAsProvider facebookProvider = signInProviderFactory.facebook(services.getApplication());
 			User user = facebookProvider.createOrAuthenticate(fb_access_token);
 
 			if (user == null) {
-				logger.error("Unable to find or create user");
-				OAuthResponse response = OAuthResponse
-						.errorResponse(SC_BAD_REQUEST)
-						.setError(OAuthError.TokenResponse.INVALID_REQUEST)
-						.setErrorDescription("invalid user").buildJSONMessage();
-				return Response
-						.status(response.getResponseStatus())
-						.type(jsonMediaType(callback))
-						.entity(wrapJSONPResponse(callback, response.getBody()))
-						.build();
+				return findAndCreateFail(callback);
 			}
 
 			String token = management.getAccessTokenForAppUser(
@@ -144,15 +196,7 @@ public class AuthResource extends AbstractContextResource {
 			return Response.status(SC_OK).type(jsonMediaType(callback))
 					.entity(wrapWithCallback(access_info, callback)).build();
 		} catch (Exception e) {
-			logger.error("FB Auth Error", e);
-			OAuthResponse response = OAuthResponse
-					.errorResponse(SC_BAD_REQUEST)
-					.setError(OAuthError.TokenResponse.INVALID_REQUEST)
-					.buildJSONMessage();
-			return Response.status(response.getResponseStatus())
-					.type(jsonMediaType(callback))
-					.entity(wrapJSONPResponse(callback, response.getBody()))
-					.build();
+      return generalAuthError(callback, e);
 		}
 	}
 
@@ -182,32 +226,13 @@ public class AuthResource extends AbstractContextResource {
 
 		try {
 			if (StringUtils.isEmpty(fq_access_token)) {
-				logger.error("Missing FQ Access token");
-				OAuthResponse response = OAuthResponse
-						.errorResponse(SC_BAD_REQUEST)
-						.setError(OAuthError.TokenResponse.INVALID_REQUEST)
-						.setErrorDescription("missing access token")
-						.buildJSONMessage();
-				return Response
-						.status(response.getResponseStatus())
-						.type(jsonMediaType(callback))
-						.entity(wrapJSONPResponse(callback, response.getBody()))
-						.build();
+        return missingTokenFail(callback);
 			}
       SignInAsProvider foursquareProvider = signInProviderFactory.foursquare(services.getApplication());
 			User user = foursquareProvider.createOrAuthenticate(fq_access_token);
 
 			if (user == null) {
-				logger.error("Unable to find or create user");
-				OAuthResponse response = OAuthResponse
-						.errorResponse(SC_BAD_REQUEST)
-						.setError(OAuthError.TokenResponse.INVALID_REQUEST)
-						.setErrorDescription("invalid user").buildJSONMessage();
-				return Response
-						.status(response.getResponseStatus())
-						.type(jsonMediaType(callback))
-						.entity(wrapJSONPResponse(callback, response.getBody()))
-						.build();
+				return findAndCreateFail(callback);
 			}
 
 			String token = management.getAccessTokenForAppUser(
@@ -220,15 +245,7 @@ public class AuthResource extends AbstractContextResource {
 			return Response.status(SC_OK).type(jsonMediaType(callback))
 					.entity(wrapWithCallback(access_info, callback)).build();
 		} catch (Exception e) {
-			logger.error("FQ Auth Error", e);
-			OAuthResponse response = OAuthResponse
-					.errorResponse(SC_BAD_REQUEST)
-					.setError(OAuthError.TokenResponse.INVALID_REQUEST)
-					.buildJSONMessage();
-			return Response.status(response.getResponseStatus())
-					.type(jsonMediaType(callback))
-					.entity(wrapJSONPResponse(callback, response.getBody()))
-					.build();
+      return generalAuthError(callback, e);
 		}
 	}
 
