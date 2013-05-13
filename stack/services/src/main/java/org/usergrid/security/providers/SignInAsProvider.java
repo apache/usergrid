@@ -3,6 +3,7 @@ package org.usergrid.security.providers;
 import org.usergrid.persistence.entities.User;
 import org.usergrid.security.tokens.exceptions.BadTokenException;
 
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -16,5 +17,9 @@ public interface SignInAsProvider {
    * @return
    */
   User createOrAuthenticate(String externalToken) throws BadTokenException;
+
+  Map<Object,Object> loadConfigurationFor();
+
+  void saveToConfiguration(Map<String, Object> config);
 
 }

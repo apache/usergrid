@@ -15,19 +15,17 @@
  ******************************************************************************/
 package org.usergrid.rest.management.organizations.applications;
 
+import java.util.Map;
 import java.util.UUID;
 
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import com.google.common.base.Preconditions;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.ApplicationInfo;
@@ -36,9 +34,13 @@ import org.usergrid.rest.AbstractContextResource;
 import org.usergrid.rest.ApiResponse;
 import org.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.usergrid.security.oauth.ClientCredentialsInfo;
+import org.usergrid.security.providers.SignInAsProvider;
+import org.usergrid.security.providers.SignInProviderFactory;
 import org.usergrid.services.ServiceManager;
 
 import com.sun.jersey.api.json.JSONWithPadding;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Component("org.usergrid.rest.management.organizations.applications.ApplicationResource")
 @Scope("prototype")
@@ -51,6 +53,9 @@ public class ApplicationResource extends AbstractContextResource {
 	UUID applicationId;
 	ApplicationInfo application;
 
+  @Autowired
+  private SignInProviderFactory signInProviderFactory;
+  
 	public ApplicationResource() {
 	}
 
@@ -135,5 +140,36 @@ public class ApplicationResource extends AbstractContextResource {
 		response.setCredentials(credentials);
 		return new JSONWithPadding(response, callback);
 	}
+
+  @POST
+  @Path("sia-provider")
+  @Consumes(APPLICATION_JSON)
+  @RequireOrganizationAccess
+  public JSONWithPadding configureProvider(@Context UriInfo ui,
+                                           @QueryParam("provider_key") String siaProvider,
+                                           Map<String, Object> json,
+                                           @QueryParam("callback") @DefaultValue("") String callback)
+          throws Exception {
+
+    ApiResponse response = createApiResponse();
+    response.setAction("post signin provider configuration");
+
+    Preconditions.checkArgument(siaProvider != null, "Sign in provider required");
+
+    SignInAsProvider signInAsProvider = null;
+    if (StringUtils.equalsIgnoreCase(siaProvider, "facebook")) {
+      signInAsProvider = signInProviderFactory.facebook(smf.getServiceManager(applicationId).getApplication());
+    } else if ( StringUtils.equalsIgnoreCase(siaProvider, "pingident") ) {
+      signInAsProvider = signInProviderFactory.pingident(smf.getServiceManager(applicationId).getApplication());
+    }else if ( StringUtils.equalsIgnoreCase(siaProvider, "foursquare") ) {
+      signInAsProvider = signInProviderFactory.foursquare(smf.getServiceManager(applicationId).getApplication());
+    }
+
+    Preconditions.checkArgument(signInAsProvider != null, "No signin provider found by that name: " + siaProvider);
+
+    signInAsProvider.saveToConfiguration(json);
+
+    return new JSONWithPadding(response, callback);
+  }
 
 }

@@ -91,8 +91,8 @@ public class AuthResource extends AbstractContextResource {
 		return authFB(ui, fb_access_token, ttl, callback);
 	}
 
-  // Ping ident only allows for POST
-  @POST
+
+  @GET
  	@Path("pingident")
  	public Response authPingIdent(@Context UriInfo ui,
  			@QueryParam("ping_access_token") String pingToken,
@@ -123,6 +123,15 @@ public class AuthResource extends AbstractContextResource {
  		} catch (Exception e) {
  			return generalAuthError(callback, e);
  		}
+ 	}
+
+  @POST
+ 	@Path("pingident")
+ 	public Response authPingIdentPost(@Context UriInfo ui,
+ 			@QueryParam("ping_access_token") String pingToken,
+ 			@QueryParam("callback") @DefaultValue("") String callback)
+ 			throws Exception {
+    return authPingIdent(ui, pingToken, callback);
  	}
 
   private Response missingTokenFail(String callback) throws Exception {
