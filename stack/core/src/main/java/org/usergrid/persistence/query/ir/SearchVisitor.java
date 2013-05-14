@@ -108,6 +108,8 @@ public abstract class SearchVisitor implements NodeVisitor {
     if (right != null) {
       union.addIterator(right);
     }
+    
+    results.push(union);
   }
 
 }

@@ -39,14 +39,14 @@ public class SubtractionIteratorTest {
     UUID id5 = UUIDUtils.minTimeUUID(5);
 
     // we should get intersection on 1, 3, and 8
-    TreeIterator keep = new TreeIterator();
+    InOrderIterator keep = new InOrderIterator(100);
     keep.add(id1);
     keep.add(id2);
     keep.add(id3);
     keep.add(id4);
     keep.add(id5);
 
-    TreeIterator subtract = new TreeIterator();
+    InOrderIterator subtract = new InOrderIterator(100);
     subtract.add(id1);
     subtract.add(id3);
     subtract.add(id5);
@@ -76,13 +76,13 @@ public class SubtractionIteratorTest {
     UUID id6 = UUIDUtils.minTimeUUID(6);
 
     // we should get intersection on 1, 3, and 8
-    TreeIterator keep = new TreeIterator();
+    InOrderIterator keep = new InOrderIterator(100);
     keep.add(id1);
     keep.add(id2);
     keep.add(id5);
     keep.add(id6);
 
-    TreeIterator subtract = new TreeIterator();
+    InOrderIterator subtract = new InOrderIterator(100);
     subtract.add(id1);
     subtract.add(id3);
     subtract.add(id4);
@@ -97,6 +97,43 @@ public class SubtractionIteratorTest {
     assertTrue(sub.hasNext());
     assertEquals(id2, sub.next());
 
+    assertFalse(sub.hasNext());
+  }
+  
+  @Test
+  public void noKeep(){
+    UUID id1 = UUIDUtils.minTimeUUID(1);
+
+    // we should get intersection on 1, 3, and 8
+    InOrderIterator keep = new InOrderIterator(100);
+
+    InOrderIterator subtract = new InOrderIterator(100);
+    subtract.add(id1);
+
+    SubtractionIterator sub = new SubtractionIterator();
+    sub.setKeepIterator(keep);
+    sub.setSubtractIterator(subtract);
+    
+    assertFalse(sub.hasNext());
+  }
+  
+  @Test
+  public void noSubtract(){
+    UUID id1 = UUIDUtils.minTimeUUID(1);
+
+    // we should get intersection on 1, 3, and 8
+    InOrderIterator keep = new InOrderIterator(100);
+    keep.add(id1);
+
+    InOrderIterator subtract = new InOrderIterator(100);
+   
+
+    SubtractionIterator sub = new SubtractionIterator();
+    sub.setKeepIterator(keep);
+    sub.setSubtractIterator(subtract);
+    
+    assertTrue(sub.hasNext());
+    assertEquals(id1, sub.next());
     assertFalse(sub.hasNext());
   }
 

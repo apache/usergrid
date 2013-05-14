@@ -16,20 +16,27 @@
 package org.usergrid.persistence.query.ir.result;
 
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
 import org.usergrid.persistence.cassandra.CursorCache;
 
 /**
  * Interface for iterating slice results per node.  This is to be used to iterate and join or intersect values
- * Note that iteration is based on the order of the UUID of the entity so that the iterator
- * will iterate from min(UUID) to max(UUID)
+ * Each iterator element is a set.  Each set size is determined by the underlying implementation.  When no sets of uuids are left
+ * the iterator should fail the next statement 
+ * 
  * 
  * @author tnine
  *
  */
-public interface ResultIterator extends Iterable<UUID>, Iterator<UUID> {
+public interface ResultIterator extends Iterable<Set<UUID>>, Iterator<Set<UUID>> {
   
+  
+  /**
+   * Reset this iterator to the start to begin iterating again
+   */
+  public void reset();
   
   /**
    * Finalize the cursor for this results

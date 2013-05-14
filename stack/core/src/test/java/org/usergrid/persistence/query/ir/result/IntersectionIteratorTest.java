@@ -19,6 +19,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -31,8 +35,8 @@ import org.usergrid.utils.UUIDUtils;
 public class IntersectionIteratorTest {
 
   @Test
-  public void testMutipleIterators() {
-    
+  public void mutipleIterators() {
+
     UUID id1 = UUIDUtils.minTimeUUID(1);
     UUID id2 = UUIDUtils.minTimeUUID(2);
     UUID id3 = UUIDUtils.minTimeUUID(3);
@@ -43,108 +47,199 @@ public class IntersectionIteratorTest {
     UUID id8 = UUIDUtils.minTimeUUID(8);
     UUID id9 = UUIDUtils.minTimeUUID(9);
     UUID id10 = UUIDUtils.minTimeUUID(10);
-    
-    
-    //we should get intersection on 1, 3, and 8
-    TreeIterator first = new TreeIterator();
+
+    // we should get intersection on 1, 3, and 8
+    InOrderIterator first = new InOrderIterator(100);
     first.add(id1);
     first.add(id2);
     first.add(id3);
     first.add(id8);
     first.add(id9);
-    
-    TreeIterator second = new TreeIterator();
+
+    InOrderIterator second = new InOrderIterator(100);
     second.add(id1);
     second.add(id2);
     second.add(id3);
     second.add(id4);
     second.add(id8);
     second.add(id10);
-    
-    TreeIterator third = new TreeIterator();
+
+    InOrderIterator third = new InOrderIterator(100);
     third.add(id1);
     third.add(id3);
     third.add(id5);
     third.add(id6);
     third.add(id7);
     third.add(id8);
-    
 
-    TreeIterator fourth = new TreeIterator();
+    InOrderIterator fourth = new InOrderIterator(100);
     fourth.add(id1);
     fourth.add(id2);
     fourth.add(id3);
     fourth.add(id6);
     fourth.add(id8);
     fourth.add(id10);
+
+    IntersectionIterator intersection = new IntersectionIterator(100);
+    intersection.addIterator(first);
+    intersection.addIterator(second);
+    intersection.addIterator(third);
+    intersection.addIterator(fourth);
     
-    IntersectionIterator union = new IntersectionIterator();
-    union.addIterator(first);
-    union.addIterator(second);
-    union.addIterator(third);
-    union.addIterator(fourth);
-    
-    //now make sure it's right, only 1, 3 and 8 intersect
+    Iterator<UUID> union = intersection.next().iterator();
+
+    // now make sure it's right, only 1, 3 and 8 intersect
     assertTrue(union.hasNext());
     assertEquals(id1, union.next());
-    
+
     assertTrue(union.hasNext());
     assertEquals(id3, union.next());
-    
+
     assertTrue(union.hasNext());
     assertEquals(id8, union.next());
-    
+
     assertFalse(union.hasNext());
   }
-  
+
   @Test
-  public void testOneIterator() {
-    
+  public void oneIterator() {
+
     UUID id1 = UUIDUtils.minTimeUUID(1);
     UUID id2 = UUIDUtils.minTimeUUID(2);
     UUID id3 = UUIDUtils.minTimeUUID(3);
     UUID id4 = UUIDUtils.minTimeUUID(4);
-    
-    
-    //we should get intersection on 1, 3, and 8
-    TreeIterator first = new TreeIterator();
+
+    // we should get intersection on 1, 3, and 8
+    InOrderIterator first = new InOrderIterator(100);
     first.add(id1);
     first.add(id2);
     first.add(id3);
     first.add(id4);
+
+    IntersectionIterator intersection = new IntersectionIterator(100);
+    intersection.addIterator(first);
+
+    // now make sure it's right, only 1, 3 and 8 intersect
+    assertTrue(intersection.hasNext());
     
+    Set<UUID> page = intersection.next();
     
-    IntersectionIterator union = new IntersectionIterator();
-    union.addIterator(first);
+    Iterator<UUID> union = page.iterator();
     
-    //now make sure it's right, only 1, 3 and 8 intersect
-    assertTrue(union.hasNext());
     assertEquals(id1, union.next());
-    
+
     assertTrue(union.hasNext());
     assertEquals(id2, union.next());
-    
+
     assertTrue(union.hasNext());
     assertEquals(id3, union.next());
-    
+
     assertTrue(union.hasNext());
     assertEquals(id4, union.next());
-    
+
     assertFalse(union.hasNext());
   }
-  
+
   @Test
-  public void testNoIterator() {
-    
-    
-    
-    IntersectionIterator union = new IntersectionIterator();
-    
-    
-    //now make sure it's right, only 1, 3 and 8 intersect
+  public void noIterator() {
+    IntersectionIterator union = new IntersectionIterator(100);
+
+    // now make sure it's right, only 1, 3 and 8 intersect
     assertFalse(union.hasNext());
   }
 
+  @Test
+  public void largeIntersection() {
 
-  
+    int size = 10000;
+    int firstIntersection = 100;
+    int secondIntersection = 200;
+
+    UUID[] firstSet = new UUID[size];
+    UUID[] secondSet = new UUID[size];
+    UUID[] thirdSet = new UUID[size];
+
+    InOrderIterator first = new InOrderIterator(100);
+    InOrderIterator second = new InOrderIterator(100);
+    InOrderIterator third = new InOrderIterator(100);
+
+    List<UUID> results = new ArrayList<UUID>(size / secondIntersection);
+
+    for (int i = 0; i < size; i++) {
+      firstSet[i] = UUIDUtils.newTimeUUID();
+      // every 100 elements, set the element equal to the first set. This way we
+      // have intersection
+
+      if (i % firstIntersection == 0) {
+        secondSet[i] = firstSet[i];
+      } else {
+        secondSet[i] = UUIDUtils.newTimeUUID();
+      }
+
+      if (i % secondIntersection == 0) {
+        thirdSet[i] = firstSet[i];
+        results.add(firstSet[i]);
+      }
+
+      else {
+        thirdSet[i] = UUIDUtils.newTimeUUID();
+      }
+    }
+
+    first.add(firstSet);
+    
+    reverse(secondSet);
+    //reverse the second
+    second.add(secondSet);
+    third.add(thirdSet);
+    
+    //now itersect them and make sure we get all results in a small set
+    
+    int numPages = 2;
+    int pageSize = results.size()/numPages;
+    
+    IntersectionIterator intersection = new IntersectionIterator(pageSize);
+    intersection.addIterator(first);
+    intersection.addIterator(second);
+    intersection.addIterator(third);
+    
+    assertTrue(intersection.hasNext());
+    
+    
+    Iterator<UUID> expected = results.iterator();
+    Set<UUID> resultSet = intersection.next();
+    Iterator<UUID> union = resultSet.iterator();
+    
+    
+    while(union.hasNext()){
+      assertTrue(expected.hasNext());
+      assertEquals(expected.next(), union.next());
+    }
+    
+    
+    //now get the 2nd page
+    resultSet = intersection.next();
+    union = resultSet.iterator();
+    
+    
+    while(union.hasNext()){
+      assertTrue(expected.hasNext());
+      assertEquals(expected.next(), union.next());
+    }
+    
+    //no more elements
+    assertFalse(intersection.hasNext());
+    assertFalse(expected.hasNext());
+  }
+
+  private void reverse(UUID[] array){
+    
+    UUID temp = null;
+    
+    for(int i = 0; i < array.length/2; i ++){
+      temp = array[i];
+      array[i] = array[array.length-i-1];
+      array[array.length-i-1] = temp;
+    }
+  }
 }

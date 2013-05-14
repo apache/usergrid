@@ -89,6 +89,7 @@ import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.usergrid.persistence.cassandra.index.IndexScanner;
+import org.usergrid.persistence.query.ir.result.ResultIterator;
 import org.usergrid.utils.JsonUtils;
 
 public class CassandraService {
@@ -1037,13 +1038,13 @@ public class CassandraService {
    * @throws Exception
    *           the exception
    */
-  public List<UUID> getIdList(Keyspace ko, Object key, UUID start, UUID finish, int count, boolean reversed,
+  public IndexScanner getIdList(Keyspace ko, Object key, UUID start, UUID finish, int count, boolean reversed,
       IndexBucketLocator locator, UUID applicationId, String collectionName) throws Exception {
 
     if (count <= 0) {
       count = DEFAULT_COUNT;
     }
-    List<UUID> ids = new ArrayList<UUID>();
+    
     if (NULL_ID.equals(start)) {
       start = null;
     }
@@ -1052,12 +1053,7 @@ public class CassandraService {
         ENTITY_ID_SETS, applicationId, IndexType.COLLECTION, key,
         start, finish, reversed, count, count*10, collectionName);
 
-    for (HColumn<ByteBuffer, ByteBuffer> result : scanner) {
-      ByteBuffer bytes = result.getName();
-      ids.add(uuid(bytes));
-    }
-
-    return ids;
+    return scanner;
 
 
   }

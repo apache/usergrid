@@ -15,9 +15,13 @@
  ******************************************************************************/
 package org.usergrid.persistence.query.ir.result;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import org.usergrid.utils.UUIDUtils;
+
+import com.google.common.collect.Sets;
 
 /**
  * An iterator that unions 1 or more subsets. It makes the assuming that sub
@@ -28,32 +32,42 @@ import org.usergrid.utils.UUIDUtils;
  */
 public class IntersectionIterator extends MergeIterator {
 
-  
+  private Set<UUID> intersection;
 
-  // The pointer to the last iterator we read, so we can advance and read from
-  // the next one
-  protected int lastIterator;
-  
+  private int pageSize;
 
   /**
    * 
    */
-  public IntersectionIterator() {
+  public IntersectionIterator(int pageSize) {
+    this.pageSize = pageSize;
   }
 
-  
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
+   */
+  @Override
+  public void reset() {
+  }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.usergrid.persistence.query.ir.result.MergeIterator#advance()
    */
   @Override
-  protected UUID advance() {
+  protected Set<UUID> advance() {
     /**
      * Advance our sub iterators until the UUID's all line up
      */
 
-   
     int size = iterators.size();
+    
+    if(size == 0){
+      return null;
+    }
 
     // edge case with only 1 iterator
     if (size == 1) {
@@ -67,130 +81,66 @@ public class IntersectionIterator extends MergeIterator {
       return itr.next();
     }
 
-    int matchCount = 0;
-    int iteratorIndex = lastIterator;
-    UUID current = null;
-    UUID lastMax = null;
+    // begin our tree merge of the iterators
 
-
-    while (matchCount != size) {
-
-      iteratorIndex = iteratorIndex % iterators.size();
-
-      ResultIterator itr = iterators.get(iteratorIndex);
-
-      // we've run out, we can't match any more records
-      if (!itr.hasNext()) {
-        return null;
-      }
-
-      current = itr.next();
-
-      // we haven't set a max yet, set it to our current and try the next
-      // iterator
-      if (lastMax == null) {
-        matchCount = 1;
-        iteratorIndex++;
-        lastMax = current;
-        continue;
-      }
-
-      // we have a last max, compare it to the current one
-      int compare = UUIDUtils.compare(current, lastMax);
-
-      // our current is larger than the last max, so set the last max , reset
-      // our match count and keep
-      // running to the next iterator
-      if (compare > 0) {
-        matchCount = 1;
-        lastMax = current;
-        iteratorIndex++;
-        continue;
-      }
-
-      // our last max is still the largest, advance the current iterator again
-      // for comparison
-      if (compare < 0) {
-        continue;
-      }
-
-      // we have a match, advance and check the next iterator vs this max
-
-      matchCount++;
-      iteratorIndex++;
-
-    }
-
-    lastIterator = iteratorIndex;
-    return lastMax;
+    return merge();
 
   }
 
-//  /*
-//   * (non-Javadoc)
-//   * 
-//   * @see java.lang.Iterable#iterator()
-//   */
-//  @Override
-//  public Iterator<UUID> iterator() {
-//    return this;
-//  }
-//
-//  /*
-//   * (non-Javadoc)
-//   * 
-//   * @see java.util.Iterator#hasNext()
-//   */
-//  @Override
-//  public boolean hasNext() {
-//    if (complete) {
-//      return false;
-//    }
-//
-//    // else try to advance
-//    if (match == null) {
-//      intersect();
-//    }
-//
-//    return match != null;
-//  }
-//
-//  /*
-//   * (non-Javadoc)
-//   * 
-//   * @see java.util.Iterator#next()
-//   */
-//  @Override
-//  public UUID next() {
-//    UUID returnVal = match;
-//
-//    match = null;
-//
-//    return returnVal;
-//  }
-//
-//  /*
-//   * (non-Javadoc)
-//   * 
-//   * @see java.util.Iterator#remove()
-//   */
-//  @Override
-//  public void remove() {
-//    throw new UnsupportedOperationException("You can't remove from a union iterator");
-//  }
-//
-//  /*
-//   * (non-Javadoc)
-//   * 
-//   * @see
-//   * org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor(
-//   * org.usergrid.persistence.cassandra.CursorCache)
-//   */
-//  @Override
-//  public void finalizeCursor(CursorCache cache) {
-//    for (ResultIterator current : iterators) {
-//      current.finalizeCursor(cache);
-//    }
-//  }
+  private Set<UUID> merge() {
+
+    Set<UUID> results = new LinkedHashSet<UUID>();
+    ResultIterator rootIterator = iterators.get(0);
+    
+
+    //we've matched to the end
+    if(!rootIterator.hasNext()){
+      return null;
+    }
+    
+    // we start at the next index"
+
+    while (rootIterator.hasNext() && results.size() < pageSize) {
+
+      Set<UUID> intersection = rootIterator.next();
+
+      for (int i = 1; i < iterators.size(); i++) {
+
+        ResultIterator joinIterator = iterators.get(i);
+
+        intersection = merge(intersection, joinIterator);
+        
+        //nothing left short circuit, there is no point in advancing to further join iterators
+        if(intersection.size() == 0){
+          break;
+        }
+      }
+      
+      //now add the intermediate results and continue
+      results.addAll(intersection);
+      
+    }
+
+    return results.size() == 0 ? null : results;
+
+  }
+
+  private Set<UUID> merge(Set<UUID> current, ResultIterator child) {
+
+    Set<UUID> results = new LinkedHashSet<UUID>(pageSize);
+
+    while (results.size() < pageSize) {
+      if (!child.hasNext()) {
+        // we've iterated to the end, reset for next pass
+        child.reset();
+        return results;
+      }
+
+      results.addAll(Sets.intersection(current, child.next()));
+    }
+
+    return results;
+
+  }
 
 }

@@ -18,6 +18,7 @@ package org.usergrid.persistence.query.ir.result;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.usergrid.persistence.cassandra.CursorCache;
@@ -32,7 +33,7 @@ public abstract class MergeIterator implements ResultIterator {
 
   
   //kept private on purpose so advance must return the correct value
-  private UUID next;
+  private Set<UUID> next;
   
   /**
    * 
@@ -55,7 +56,7 @@ public abstract class MergeIterator implements ResultIterator {
    * @see java.lang.Iterable#iterator()
    */
   @Override
-  public Iterator<UUID> iterator() {
+  public Iterator<Set<UUID>> iterator() {
     return this;
   }
 
@@ -80,8 +81,12 @@ public abstract class MergeIterator implements ResultIterator {
    * @see java.util.Iterator#next()
    */
   @Override
-  public UUID next() {
-    UUID returnVal = next;
+  public Set<UUID> next() {
+    if(next == null){
+     hasNext();
+    }
+    
+    Set<UUID> returnVal = next;
 
     next = null;
 
@@ -115,7 +120,7 @@ public abstract class MergeIterator implements ResultIterator {
   /**
    * Advance the iterator to the next value
    */
-  protected abstract UUID advance();
+  protected abstract Set<UUID> advance();
 
 
 }

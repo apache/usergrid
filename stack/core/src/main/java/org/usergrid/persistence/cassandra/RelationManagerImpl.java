@@ -1961,12 +1961,15 @@ public class RelationManagerImpl implements RelationManager {
       boolean reversed) throws Exception {
     // Entity_Collections
     // Key: entity_id,collection_name
-    List<UUID> ids = cass.getIdList(cass.getApplicationKeyspace(applicationId),
+    IndexScanner scanner = cass.getIdList(cass.getApplicationKeyspace(applicationId),
         key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), startResult, null, count + 1, reversed,
         indexBucketLocator, applicationId, collectionName);
 
+    
+    List<UUID> ids = getUUIDListFromIdIndex(scanner, count);
+    
     Results results = null;
-
+    
     if (resultsLevel == Results.Level.IDS) {
       results = Results.fromIdList(ids);
     } else {
@@ -2280,11 +2283,16 @@ public class RelationManagerImpl implements RelationManager {
     // nothing to search for or sort, just grab ids
     if (!query.hasQueryPredicates() && !query.hasSortPredicates()) {
       List<UUID> ids = query.getUuidIdentifiers();
+   
 
       if (ids == null) {
-        ids = cass.getIdList(cass.getApplicationKeyspace(applicationId),
+
+        IndexScanner scanner = cass.getIdList(cass.getApplicationKeyspace(applicationId),
             key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), query.getStartResult(), null,
             query.getLimit() + 1, reversed, indexBucketLocator, applicationId, collectionName);
+
+        ids = getUUIDListFromIdIndex(scanner, query.getLimit());
+
       }
 
       Results results = Results.fromIdList(ids, collection.getType());
@@ -2312,12 +2320,24 @@ public class RelationManagerImpl implements RelationManager {
 
     // now we need to set the cursor from our tree evaluation for return
     results.setCursor(qp.getCursor());
-    
+
     results.setQuery(query);
 
     logger.debug("Query cursor: {}", results.getCursor());
 
     return results;
+  }
+
+  private List<UUID> getUUIDListFromIdIndex(IndexScanner scanner, int size) {
+    SliceIterator<UUID> iter = new SliceIterator<UUID>(scanner, null, UUID_PARSER);
+
+    List<UUID> ids = new ArrayList<UUID>(size);
+
+    for (int i = 0; i < size && iter.hasNext(); i++) {
+      ids.add(iter.next());
+    }
+
+    return ids;
   }
 
   @Override
@@ -2546,7 +2566,7 @@ public class RelationManagerImpl implements RelationManager {
     results.setQuery(query);
 
     results.setCursor(qp.getCursor());
-    
+
     return results;
   }
 
@@ -2576,14 +2596,14 @@ public class RelationManagerImpl implements RelationManager {
 
     qp.getFirstNode().visit(visitor);
 
-//    TODO TN.  Don't forget to repair this.
-//    results = visitor.getResults();
-//
-//    
-//    
-//
-//    return (List) getConnections(results.getIds());
-    
+    // TODO TN. Don't forget to repair this.
+    // results = visitor.getResults();
+    //
+    //
+    //
+    //
+    // return (List) getConnections(results.getIds());
+
     return null;
 
   }
@@ -2614,9 +2634,9 @@ public class RelationManagerImpl implements RelationManager {
   }
 
   private static final CollectionIndexSliceParser COLLECTION_PARSER = new CollectionIndexSliceParser();
-  
+
   private static final UUIDIndexSliceParser UUID_PARSER = new UUIDIndexSliceParser();
-  
+
   /**
    * Simple search visitor that performs all the joining
    * 
@@ -2624,8 +2644,6 @@ public class RelationManagerImpl implements RelationManager {
    * 
    */
   private class SearchCollectionVisitor extends SearchVisitor {
-    
-   
 
     private final CollectionInfo collection;
 
@@ -2682,11 +2700,9 @@ public class RelationManagerImpl implements RelationManager {
         else {
           columns = searchIndexBuckets(indexKey, slice, collection.getName());
         }
-        
-        
+
         intersection.addIterator(new SliceIterator<DynamicComposite>(columns, node, COLLECTION_PARSER));
 
-      
       }
 
       this.results.push(intersection);
@@ -2695,14 +2711,13 @@ public class RelationManagerImpl implements RelationManager {
 
     public void visit(AllNode node) throws Exception {
 
-//      String collectionName = collection.getName();
-//
-//      List<UUID> ids = cass.getIdList(cass.getApplicationKeyspace(applicationId),
-//          key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), query.getStartResult(), null,
-//          query.getLimit() + 1, query.isReversed(), indexBucketLocator, applicationId, collectionName);
-//
-//    
-//      this.results.push( new SliceIterator<UUID>(ids.iterator(), new SliceNode(), UUID_PARSER));
+      String collectionName = collection.getName();
+
+      IndexScanner results = cass.getIdList(cass.getApplicationKeyspace(applicationId),
+          key(headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName), query.getStartResult(), null,
+          query.getLimit() + 1, query.isReversed(), indexBucketLocator, applicationId, collectionName);
+
+      this.results.push(new SliceIterator<UUID>(results, null, UUID_PARSER));
     }
 
     /*
@@ -2714,11 +2729,14 @@ public class RelationManagerImpl implements RelationManager {
     @Override
     public void visit(WithinNode node) throws Exception {
 
-//      Results r = em.getGeoIndexManager().proximitySearchCollection(headEntity, collection.getName(),
-//          node.getPropertyName(), new Point(node.getLattitude(), node.getLongitude()), node.getDistance(), null,
-//          MAX_LOAD, false, query.getResultsLevel());
-//
-//      results.push(r);
+      // Results r =
+      // em.getGeoIndexManager().proximitySearchCollection(headEntity,
+      // collection.getName(),
+      // node.getPropertyName(), new Point(node.getLattitude(),
+      // node.getLongitude()), node.getDistance(), null,
+      // MAX_LOAD, false, query.getResultsLevel());
+      //
+      // results.push(r);
     }
 
   }
@@ -2756,7 +2774,7 @@ public class RelationManagerImpl implements RelationManager {
       int limit = query.getLimit() + 1;
 
       Level resultsLevel = query.getResultsLevel();
-      
+
       IntersectionIterator intersection = new IntersectionIterator();
 
       for (QuerySlice slice : node.getAllSlices()) {
@@ -2766,28 +2784,29 @@ public class RelationManagerImpl implements RelationManager {
         queryProcessor.applyCursorAndSort(slice);
 
         IndexScanner columns = searchIndex(key(connection.getIndexId(), INDEX_CONNECTIONS), slice);
-        
+
         intersection.addIterator(new SliceIterator<DynamicComposite>(columns, node, COLLECTION_PARSER));
-//
-//        Results r = getIndexResults(columns, true, connection.getConnectionType(), connection.getConnectedEntityType(),
-//            resultsLevel, Integer.MAX_VALUE);
-//
-//        if (r.size() > query.getLimit()) {
-//          r.setCursorToLastResult();
-//        }
-//
-//        if (r.getCursor() != null) {
-//          // TODO Todd finish this
-//          // queryProcessor.updateCursor(slice, r.getCursor());
-//        }
-//
-//        r = r.excludeCursorMetadataAttribute();
-//
-//        if (results != null) {
-//          results.and(r);
-//        } else {
-//          results = r;
-//        }
+        //
+        // Results r = getIndexResults(columns, true,
+        // connection.getConnectionType(), connection.getConnectedEntityType(),
+        // resultsLevel, Integer.MAX_VALUE);
+        //
+        // if (r.size() > query.getLimit()) {
+        // r.setCursorToLastResult();
+        // }
+        //
+        // if (r.getCursor() != null) {
+        // // TODO Todd finish this
+        // // queryProcessor.updateCursor(slice, r.getCursor());
+        // }
+        //
+        // r = r.excludeCursorMetadataAttribute();
+        //
+        // if (results != null) {
+        // results.and(r);
+        // } else {
+        // results = r;
+        // }
       }
       //
       // String prop = f.getPropertyName();
@@ -2824,11 +2843,14 @@ public class RelationManagerImpl implements RelationManager {
     @Override
     public void visit(WithinNode node) throws Exception {
 
-//      Results r = em.getGeoIndexManager().proximitySearchConnections(connection.getIndexId(), node.getPropertyName(),
-//          new Point(node.getLattitude(), node.getLongitude()), node.getDistance(), null, MAX_LOAD, false,
-//          query.getResultsLevel());
-//
-//      results.push(r);
+      // Results r =
+      // em.getGeoIndexManager().proximitySearchConnections(connection.getIndexId(),
+      // node.getPropertyName(),
+      // new Point(node.getLattitude(), node.getLongitude()),
+      // node.getDistance(), null, MAX_LOAD, false,
+      // query.getResultsLevel());
+      //
+      // results.push(r);
     }
 
     @Override

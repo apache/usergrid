@@ -46,7 +46,7 @@ public class UnionIteratorTest {
     
     
     //we should get intersection on 1, 3, and 8
-    TreeIterator first = new TreeIterator();
+    InOrderIterator first = new InOrderIterator(100);
     first.add(id1);
     first.add(id2);
     first.add(id3);
@@ -54,7 +54,7 @@ public class UnionIteratorTest {
     first.add(id9);
  
     
-    TreeIterator second = new TreeIterator();
+    InOrderIterator second = new InOrderIterator(100);
     second.add(id1);
     second.add(id2);
     second.add(id3);
@@ -62,7 +62,7 @@ public class UnionIteratorTest {
     second.add(id8);
     second.add(id10);
     
-    TreeIterator third = new TreeIterator();
+    InOrderIterator third = new InOrderIterator(100);
     third.add(id1);
     third.add(id3);
     third.add(id5);
@@ -71,7 +71,7 @@ public class UnionIteratorTest {
     third.add(id8);
     
 
-    TreeIterator fourth = new TreeIterator();
+    InOrderIterator fourth = new InOrderIterator(100);
     fourth.add(id1);
     fourth.add(id2);
     fourth.add(id3);
@@ -129,7 +129,7 @@ public class UnionIteratorTest {
     
     
     //we should get intersection on 1, 3, and 8
-    TreeIterator first = new TreeIterator();
+    InOrderIterator first = new InOrderIterator(100);
     first.add(id1);
     first.add(id2);
     first.add(id3);

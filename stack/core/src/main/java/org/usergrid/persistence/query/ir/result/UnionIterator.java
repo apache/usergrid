@@ -66,6 +66,14 @@ public class UnionIterator extends MergeIterator {
 
   }
   
+  /* (non-Javadoc)
+   * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
+   */
+  @Override
+  public void reset() {
+  }
+
+  
   /**
    * Add the next value, advancing if this key already exists to avoid duplicates
    * @param itr

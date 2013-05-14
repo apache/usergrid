@@ -17,6 +17,8 @@ package org.usergrid.persistence.cassandra.index;
 
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.List;
+import java.util.NavigableSet;
 
 import me.prettyprint.hector.api.beans.HColumn;
 
@@ -37,7 +39,7 @@ public class NoOpIndexScanner implements IndexScanner{
    * @see java.lang.Iterable#iterator()
    */
   @Override
-  public Iterator<HColumn<ByteBuffer, ByteBuffer>> iterator() {
+  public Iterator<NavigableSet<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
     return this;
   }
 
@@ -50,10 +52,18 @@ public class NoOpIndexScanner implements IndexScanner{
   }
 
   /* (non-Javadoc)
+   * @see org.usergrid.persistence.cassandra.index.IndexScanner#reset()
+   */
+  @Override
+  public void reset() {
+    //no op
+  }
+
+  /* (non-Javadoc)
    * @see java.util.Iterator#next()
    */
   @Override
-  public HColumn<ByteBuffer, ByteBuffer> next() {
+  public NavigableSet<HColumn<ByteBuffer, ByteBuffer>> next() {
     return null;
   }
 

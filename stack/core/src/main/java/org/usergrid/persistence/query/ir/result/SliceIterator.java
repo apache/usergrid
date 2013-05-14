@@ -17,8 +17,13 @@ package org.usergrid.persistence.query.ir.result;
 
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.NavigableSet;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+
+import me.prettyprint.hector.api.beans.HColumn;
 
 import org.apache.cassandra.utils.ByteBufferUtil;
 import org.usergrid.persistence.cassandra.CursorCache;
@@ -27,59 +32,83 @@ import org.usergrid.persistence.query.ir.SliceNode;
 
 /**
  * An iterator that will take all slices and order them correctly
+ * 
  * @author tnine
- *
+ * 
  */
 public class SliceIterator<T> implements ResultIterator {
 
-  private TreeSet<T> values;
-  private Iterator<T> idIterator;
+  private LinkedHashSet<UUID> lastResult;
   private SliceNode slice;
   private SliceParser<T> parser;
-  
+  private IndexScanner scanner;
+
   /**
    * 
    */
-  public SliceIterator(IndexScanner scanResults, SliceNode slice, SliceParser<T> parser) {
+  public SliceIterator(IndexScanner scanner, SliceNode slice, SliceParser<T> parser) {
     this.slice = slice;
     this.parser = parser;
-    values = new TreeSet<T>(parser);
-    
-    while(scanResults.hasNext()){
-      values.add(parser.parse(scanResults.next().getName()));
-    }
-    
-    idIterator = values.iterator();
-  
-    
+    this.scanner = scanner;
   }
 
-  
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see java.lang.Iterable#iterator()
    */
   @Override
-  public Iterator<UUID> iterator() {
+  public Iterator<Set<UUID>> iterator() {
     return this;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see java.util.Iterator#hasNext()
    */
   @Override
   public boolean hasNext() {
-    return idIterator.hasNext();
+    if (lastResult == null) {
+      return load();
+    }
+
+    return true;
   }
 
-  /* (non-Javadoc)
+  private boolean load() {
+    if (!scanner.hasNext()) {
+      return false;
+    }
+
+    NavigableSet<HColumn<ByteBuffer, ByteBuffer>> results = scanner.next();
+
+    LinkedHashSet<UUID> ids = new LinkedHashSet<UUID>();
+
+    for (HColumn<ByteBuffer, ByteBuffer> col : results) {
+      ids.add(parser.getUUID(parser.parse(col.getName())));
+    }
+
+    lastResult = ids;
+
+    return lastResult != null && lastResult.size() > 0;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
    * @see java.util.Iterator#next()
    */
   @Override
-  public UUID next() {
-    return parser.getUUID(idIterator.next());
+  public Set<UUID> next() {
+    Set<UUID> temp = lastResult;
+    lastResult = null;
+    return temp;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see java.util.Iterator#remove()
    */
   @Override
@@ -87,21 +116,33 @@ public class SliceIterator<T> implements ResultIterator {
     throw new UnsupportedOperationException("Remove is not supported");
   }
 
-  /* (non-Javadoc)
-   * @see org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor()
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
+   */
+  @Override
+  public void reset() {
+    scanner.reset();
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.usergrid.persistence.query.ir.result.ResultIterator#finalizeCursor()
    */
   @Override
   public void finalizeCursor(CursorCache cache) {
-   
-    ByteBuffer bytes = ByteBufferUtil.EMPTY_BYTE_BUFFER;
-    
-    if(hasNext()){
-      bytes = parser.serialize(idIterator.next());
-    }
 
-    //otherwise it's an empty buffer
-    cache.setNextCursor(slice.hashCode(), bytes);
+    // ByteBuffer bytes = ByteBufferUtil.EMPTY_BYTE_BUFFER;
+    //
+    // if (hasNext()) {
+    // bytes = parser.serialize(idIterator.next());
+    // }
+    //
+    // // otherwise it's an empty buffer
+    // cache.setNextCursor(slice.hashCode(), bytes);
   }
-  
- 
+
 }

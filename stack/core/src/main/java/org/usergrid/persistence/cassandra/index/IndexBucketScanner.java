@@ -23,10 +23,10 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 
 import org.apache.cassandra.config.ConfigurationException;
@@ -36,7 +36,6 @@ import org.usergrid.persistence.IndexBucketLocator;
 import org.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.usergrid.persistence.cassandra.ApplicationCF;
 import org.usergrid.persistence.cassandra.CassandraService;
-import org.usergrid.utils.CompositeUtils;
 
 import com.yammer.metrics.annotation.Metered;
 
@@ -58,37 +57,32 @@ public class IndexBucketScanner implements IndexScanner {
   private final Object finish;
   private final boolean reversed;
   private final int pageSize;
-  private final int max;
-  
   private final String[] indexPath;
   private final IndexType indexType;
 
-  
   /**
    * Pointer to our next start read
    */
   private Object start;
+  
+  /**
+   * Set to the original value to start scanning from
+   */
+  private Object scanStart;
 
   /**
    * Iterator for our results from the last page load
    */
-  private Iterator<HColumn<ByteBuffer, ByteBuffer>> lastResults;
+  private TreeSet<HColumn<ByteBuffer, ByteBuffer>> lastResults;
 
   /**
    * True if our last load loaded a full page size.
    */
   private boolean hasMore = true;
-  
-  
-  /**
-   * The number of elements we have returned
-   */
-  private int count;
-  
 
   public IndexBucketScanner(CassandraService cass, IndexBucketLocator locator, ApplicationCF columnFamily,
-      UUID applicationId, IndexType indexType, Object keyPrefix, Object start, Object finish,
-      boolean reversed, int pageSize, int max, String... indexPath) {
+      UUID applicationId, IndexType indexType, Object keyPrefix, Object start, Object finish, boolean reversed,
+      int pageSize, String... indexPath) {
     this.cass = cass;
     this.indexBucketLocator = locator;
     this.applicationId = applicationId;
@@ -98,15 +92,24 @@ public class IndexBucketScanner implements IndexScanner {
     this.finish = finish;
     this.reversed = reversed;
     this.pageSize = pageSize;
-    this.max = max;
     this.indexPath = indexPath;
     this.indexType = indexType;
+    this.scanStart = start;
 
+  }
+
+  /* (non-Javadoc)
+   * @see org.usergrid.persistence.cassandra.index.IndexScanner#reset()
+   */
+  @Override
+  public void reset() {
+    hasMore = true;
+    start = scanStart;
   }
 
   /**
    * Search the collection index using all the buckets for the given collection.
-   * Load the next page.  Return false if nothing was loaded, true otherwise
+   * Load the next page. Return false if nothing was loaded, true otherwise
    * 
    * @param indexKey
    * @param slice
@@ -132,7 +135,7 @@ public class IndexBucketScanner implements IndexScanner {
     }
 
     Map<ByteBuffer, List<HColumn<ByteBuffer, ByteBuffer>>> results = cass.multiGetColumns(
-        cass.getApplicationKeyspace(applicationId), columnFamily, cassKeys, start, finish, pageSize+1, reversed);
+        cass.getApplicationKeyspace(applicationId), columnFamily, cassKeys, start, finish, pageSize + 1, reversed);
 
     final Comparator<ByteBuffer> comparator = reversed ? new DynamicCompositeReverseComparator(columnFamily)
         : new DynamicCompositeForwardComparator(columnFamily);
@@ -164,20 +167,16 @@ public class IndexBucketScanner implements IndexScanner {
     if (resultsTree.size() == pageSize) {
       hasMore = true;
 
-      //set the bytebuffer for the next pass
+      // set the bytebuffer for the next pass
       start = resultsTree.last().getName();
 
     } else {
       hasMore = false;
     }
-    
 
-    lastResults = resultsTree.iterator();
-    
-    //reset the counter
-    count = 0;
+    lastResults = resultsTree;
 
-    return lastResults.hasNext();
+    return lastResults != null && lastResults.size() > 0;
 
   }
 
@@ -230,7 +229,7 @@ public class IndexBucketScanner implements IndexScanner {
    * @see java.lang.Iterable#iterator()
    */
   @Override
-  public Iterator<HColumn<ByteBuffer, ByteBuffer>> iterator() {
+  public Iterator<NavigableSet<HColumn<ByteBuffer, ByteBuffer>>> iterator() {
     return this;
   }
 
@@ -240,26 +239,22 @@ public class IndexBucketScanner implements IndexScanner {
    * @see java.util.Iterator#hasNext()
    */
   @Override
-    public boolean hasNext() {
-      /**
-       * We've returned our max
-       */
-      if(count == max){
-        return false;
+  public boolean hasNext() {
+
+    // We've either 1) paged everything we should and have 1 left from our
+    // "next page" pointer
+    // Our currently buffered results don't exist or don't have a next. Try to
+    // load them again if they're less than the page size
+    if (lastResults == null && hasMore) {
+      try {
+        return load();
+      } catch (Exception e) {
+        throw new RuntimeException("Error loading next page of indexbucket scanner", e);
       }
-      
-      //We've either 1) paged everything we should and have 1 left from our "next page" pointer
-      //Our currently buffered results don't exist or don't have a next.  Try to load them again if they're less than the page size
-      if(count%pageSize == 0 || lastResults == null || !lastResults.hasNext()){
-        try {
-          return load();
-        } catch (Exception e) {
-          throw new RuntimeException("Error loading next page of indexbucket scanner", e);
-        }
-      }
-      
-      return lastResults.hasNext();
     }
+
+    return false;
+  }
 
   /*
    * (non-Javadoc)
@@ -268,10 +263,12 @@ public class IndexBucketScanner implements IndexScanner {
    */
   @Override
   @Metered(group = "core", name = "IndexBucketScanner_load")
-  public HColumn<ByteBuffer, ByteBuffer> next() {
-    //every time we get an element, increment the counter so we can force a fetch when we hit our limit
-    count++;
-    return lastResults.next();
+  public NavigableSet<HColumn<ByteBuffer, ByteBuffer>> next() {
+    NavigableSet<HColumn<ByteBuffer, ByteBuffer>> returnVal = lastResults;
+
+    lastResults = null;
+
+    return returnVal;
   }
 
   /*

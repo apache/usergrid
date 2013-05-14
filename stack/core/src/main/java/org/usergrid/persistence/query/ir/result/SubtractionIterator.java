@@ -53,6 +53,15 @@ public class SubtractionIterator extends MergeIterator {
   public void setKeepIterator(ResultIterator keepIterator) {
     this.keepIterator = keepIterator;
   }
+  
+  
+
+  /* (non-Javadoc)
+   * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
+   */
+  @Override
+  public void reset() {
+  }
 
   /*
    * (non-Javadoc)
@@ -67,16 +76,23 @@ public class SubtractionIterator extends MergeIterator {
 
     lastKeep = keepIterator.next();
 
-    if (lastSubtract == null && subtractIterator.hasNext()) {
-      lastSubtract = subtractIterator.next();
+    //nothing to subtract
+    if (lastSubtract == null && !subtractIterator.hasNext()){
+       return lastKeep;
     }
+    
+    lastSubtract = subtractIterator.next();
 
     int compare = UUIDUtils.compare(lastSubtract, lastKeep);
 
     // the next uuid to remove is smaller than our current keep uuid, advance
     // our remove until it's >= to the current keep
     while (compare < 0) {
-      lastSubtract = advance(subtractIterator);
+      if(!subtractIterator.hasNext()){
+        break;
+      }
+      
+      lastSubtract = subtractIterator.next();
       compare = UUIDUtils.compare(lastSubtract, lastKeep);
     }
 
@@ -86,31 +102,34 @@ public class SubtractionIterator extends MergeIterator {
       if (!keepIterator.hasNext()) {
         return null;
       }
-
+      
       lastKeep = keepIterator.next();
-      lastSubtract = advance(subtractIterator);
+
+      if(!subtractIterator.hasNext()){
+       return lastKeep;
+      }
+    
+      lastSubtract = subtractIterator.next();
 
       compare = UUIDUtils.compare(lastSubtract, lastKeep);
     }
 
-    UUID next = null;
+   
 
+    UUID next = null;
+    
     if (compare > 0) {
       next = lastKeep;
-      lastKeep = advance(keepIterator);
+      
+      if(keepIterator.hasNext()){
+        lastKeep = keepIterator.next();
+      }
+     
     }
 
     return next;
   }
 
-  /**
-   * Advance the iterator
-   * 
-   * @param itr
-   * @return
-   */
-  private UUID advance(ResultIterator itr) {
-    return itr.hasNext() ? itr.next() : null;
-  }
+
 
 }

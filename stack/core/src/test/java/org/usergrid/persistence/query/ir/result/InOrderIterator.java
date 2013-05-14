@@ -1,22 +1,32 @@
 package org.usergrid.persistence.query.ir.result;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
 import org.junit.Ignore;
 import org.usergrid.persistence.cassandra.CursorCache;
 
+import com.google.common.collect.Iterables;
+
 /**
- * Simple iterator for testing that orders UUIDs
+ * Simple iterator for testing that iterates UUIDs in the order returned
  * @author tnine
  *
  */
 @Ignore("not a test")
-public class TreeIterator implements ResultIterator {
+public class InOrderIterator implements ResultIterator {
 
-    private TreeSet<UUID> uuids = new TreeSet<UUID>();
-    private Iterator<UUID> iterator;
+    private LinkedHashSet<UUID> uuids = new LinkedHashSet<UUID>();
+    private Iterator<List<UUID>> iterator;
+    private int pageSize = 1000;
+    
+    public InOrderIterator(int pageSize){
+      this.pageSize = pageSize;
+    }
     
 
     /**
@@ -35,9 +45,9 @@ public class TreeIterator implements ResultIterator {
      * @see java.lang.Iterable#iterator()
      */
     @Override
-    public Iterator<UUID> iterator() {
+    public Iterator<Set<UUID>> iterator() {
       if(iterator == null){
-        this.iterator = uuids.iterator();
+        reset();
       }
       
       return this;
@@ -51,7 +61,7 @@ public class TreeIterator implements ResultIterator {
     @Override
     public boolean hasNext() {
       if(iterator == null){
-        this.iterator = uuids.iterator();
+        reset();
       }
       
       return iterator.hasNext();
@@ -63,12 +73,22 @@ public class TreeIterator implements ResultIterator {
      * @see java.util.Iterator#next()
      */
     @Override
-    public UUID next() {
+    public Set<UUID> next() {
       if(iterator == null){
-        this.iterator = uuids.iterator();
+        reset();
       }
       
-      return iterator.next();
+      return new LinkedHashSet<UUID>(iterator.next());
+    }
+    
+    
+
+    /* (non-Javadoc)
+     * @see org.usergrid.persistence.query.ir.result.ResultIterator#reset()
+     */
+    @Override
+    public void reset() {
+      this.iterator = Iterables.partition(uuids, pageSize).iterator();
     }
 
     /*
