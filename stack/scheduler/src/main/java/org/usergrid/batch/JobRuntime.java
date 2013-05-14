@@ -13,37 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.batch.service;
+package org.usergrid.batch;
 
-import org.usergrid.batch.JobRuntime;
+import java.util.UUID;
 
 /**
- * Methods to allow job executions to interact with the distributed runtime
- * 
+ * Interface to define all operations possible during a job's specific runtime
  * @author tnine
- *
+ * 
  */
-public interface JobRuntimeService {
-  
-  /**
-   * Perform any heartbeat operations required.  Update jobExecution with the appropriate data
-   * @param execution The job execution to update
-   * @param delay The delay 
-   * 
-   * @throws JobExecutionException 
-   */
-  public void heartbeat(JobRuntime execution, long delay);
-  
-  /**
-   * Heartbeat with the system defaults.  Update jobExecution with the appropriate data
-   * @param execution The execution
-   */
-  public void heartbeat(JobRuntime execution);
-  
-  /**
-   * Delay this exeuction
-   * @param execution
-   */
-  public void delay(JobRuntime execution);
+public interface JobRuntime {
 
+  /**
+   * Set the transaction id for this job's runtime
+   * @param transactionId
+   */
+  public void setTransactionId(UUID transactionId);
+  
+  /**
+   * Get the transaction id of the run time
+   * @return
+   */
+  public UUID getTransactionId();
+  
+  /**
+   * Get the delay of the run time
+   * @return
+   */
+  public long getDelay();
+  
+  /**
+   * Get the job execution
+   * @return
+   */
+  public JobExecution getExecution();
 }
