@@ -79,7 +79,7 @@ import com.yammer.metrics.stats.Snapshot;
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
         "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript" })
-public class RootResource extends AbstractContextResource implements
+public class  RootResource extends AbstractContextResource implements
         MetricProcessor<RootResource.MetricContext> {
 
     static final class MetricContext {
@@ -168,6 +168,18 @@ public class RootResource extends AbstractContextResource implements
         response.setProperty("status", node);
         return new JSONWithPadding(response, callback);
     }
+
+  @GET
+  @Path("lb-status")
+  public Response getLbStatus() {
+    ResponseBuilder response;
+    if (usergridSystemMonitor.getIsCassandraAlive()) {
+      response = Response.noContent().status(Response.Status.OK);
+    } else {
+      response = Response.noContent().status(Response.Status.SERVICE_UNAVAILABLE);
+    }
+    return response.build();
+  }
 
     private void dumpMetrics(ObjectNode node) {
         MetricsRegistry registry = Metrics.defaultRegistry();
