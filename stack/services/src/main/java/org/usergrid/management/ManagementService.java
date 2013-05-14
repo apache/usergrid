@@ -373,12 +373,6 @@ public interface ManagementService {
 	public boolean newAppUsersRequireConfirmation(UUID applicationId)
 			throws Exception;
 
-	public User getOrCreateUserForFacebookAccessToken(UUID applicationId,
-			String fb_access_token) throws Exception;
-
-	public User getOrCreateUserForFoursquareAccessToken(UUID applicationId,
-			String fq_access_token) throws Exception;
-
   public abstract void provisionSuperuser() throws Exception;
 
   public List<OrganizationInfo> getOrganizations(UUID startResult, int count) throws Exception;

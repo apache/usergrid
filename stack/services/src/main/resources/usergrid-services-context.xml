@@ -60,4 +60,9 @@
 		<constructor-arg ref="managementService" />
 	</bean>
 
+    <bean id="signInProviderFactory" class="org.usergrid.security.providers.SignInProviderFactory">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+        <property name="managementService" ref="managementService"/>
+    </bean>
+
 </beans>
