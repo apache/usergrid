@@ -51,7 +51,8 @@ all Apps and Administrators must belong to an Organziation. Here’s how you cre
          http://localhost:8080/management/organizations
 
 You can see that creating an Organization creates an Administrator in the process. Let’s authenticate as him:
-curl 'http://localhost:8080/management/token?grant_type=password&username=nate&password=password'
+
+    curl 'http://localhost:8080/management/token?grant_type=password&username=nate&password=password'
 
 This will return an access\_token. We’ll use this to authenticate the next two calls.
 Next, let’s create an Application:
