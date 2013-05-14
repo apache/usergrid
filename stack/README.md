@@ -32,6 +32,10 @@ To check it’s running properly, you can try loading our status page:
 
 You can also run it as a webapp in Tomcat, by deploying the ROOT.war file generated in the usergrid/rest project.
 
+## Upgrading from Previous Versions
+
+If you built and used a previous version of Usergrid, that may be using a different schema, we have an easy built-in tool to audit your Cassandra column family structure and upgrade the dataset as necessary. Once you have pulled, built and launched the new version of Usergrid, just hit [http://localhost:8080/system/database/setup](http://localhost:8080/system/database/setup) to run the upgrade tool.
+
 ## Getting Started with the Admin Portal
 
 By default, the [Usergrid admin portal](https://github.com/apigee/usergrid-portal) points to our production servers at `api.usergrid.com`. However, by specifying an api_url argument in the query string, you can have it point to
@@ -39,7 +43,6 @@ your local instance instead. For example, you could reuse the version of the adm
 `http://apigee.github.com/usergrid-portal/?api_url=http://localhost:8080`
 
 The same trick would work if you used a local copy of the portal code served from your own machine or servers.
-
 
 ## Getting Started with the HTTP API
 
