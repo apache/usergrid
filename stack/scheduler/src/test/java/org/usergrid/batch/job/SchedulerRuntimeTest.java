@@ -207,7 +207,7 @@ public class SchedulerRuntimeTest {
     // make sure we're not racing the test
     boolean waited = job.waitForCount(customRetry * (delayCount *2 ), TimeUnit.MILLISECONDS);
 
-    assertTrue("Job ran to failure", waited);
+    assertTrue("Job ran to complete", waited);
 
     JobStat stat = scheduler.getStatsForJob(returned.getJobName(), returned.getUuid());
 
@@ -216,6 +216,44 @@ public class SchedulerRuntimeTest {
     assertEquals(1, stat.getTotalAttempts());
     assertEquals(delayCount+1, stat.getRunCount());
     assertEquals(delayCount, stat.getDelayCount());
+  }
+  
+  
+  /**
+   * Test the scheduler ramps up correctly when there are more jobs to be read
+   * after a pause when the job specifies the retry time
+   * 
+   * @throws Exception
+   */
+  @Test
+  public void delayHeartbeat() throws Exception {
+
+    long sleepTime = Long.parseLong(props.getProperty(TIMEOUT_PROP));
+
+    int heartbeatCount = 2;
+
+    long customRetry = sleepTime * 2;
+
+    DelayHeartbeat job = CassandraRunner.getBean("delayHeartbeat", DelayHeartbeat.class);
+
+    job.setTimeout(customRetry);
+    job.setLatch(heartbeatCount+1);
+
+    JobData returned = scheduler.createJob("delayHeartbeat", System.currentTimeMillis(), new JobData());
+
+    // sleep until the job should have failed. We sleep 1 extra cycle just to
+    // make sure we're not racing the test
+    boolean waited = job.waitForCount(customRetry * (heartbeatCount *2 ), TimeUnit.MILLISECONDS);
+
+    assertTrue("Job ran to complete", waited);
+
+    JobStat stat = scheduler.getStatsForJob(returned.getJobName(), returned.getUuid());
+
+    // we should have only marked this as run once since we delayed further execution
+    // we should have only marked this as run once
+    assertEquals(1, stat.getTotalAttempts());
+    assertEquals(1, stat.getRunCount());
+    assertEquals(0, stat.getDelayCount());
   }
   
   
