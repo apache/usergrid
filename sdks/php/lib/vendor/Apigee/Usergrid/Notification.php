@@ -64,7 +64,7 @@ class Notification extends Response{
     return $this->recipeint_type;
   }
 
-	public function log_errors($in){
+	public function log_error($in){
     $this->errors[] = $in;
   }
   public function errors(){
