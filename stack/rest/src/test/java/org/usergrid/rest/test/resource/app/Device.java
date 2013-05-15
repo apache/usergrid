@@ -13,44 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.rest.test.security;
+package org.usergrid.rest.test.resource.app;
+
+import java.util.UUID;
 
 import org.codehaus.jackson.JsonNode;
-import org.usergrid.rest.test.resource.TestContext;
+import org.usergrid.rest.test.resource.EntityResource;
+import org.usergrid.rest.test.resource.NamedResource;
 
 
 /**
+ * A resource for testing queues
+ * 
  * @author tnine
  *
  */
-public class TestAdminUser extends TestUser{
+public class Device extends EntityResource {
 
   /**
-   * @param user
-   * @param password
-   * @param email
+   * @param entityId
+   * @param parent
    */
-  public TestAdminUser(String user, String password, String email) {
-    super(user, password, email);
+  public Device(UUID entityId, NamedResource parent) {
+    super(entityId, parent);
   }
 
-  /* (non-Javadoc)
-   * @see org.usergrid.rest.test.security.TestUser#getToken(java.lang.String, java.lang.String, org.usergrid.rest.test.resource.TestContext)
+  /**
+   * @param entityName
+   * @param parent
    */
-  @Override
-  protected String getToken(TestContext context) {
-    return context.managment().token(user, password);
+  public Device(String entityName, NamedResource parent) {
+    super(entityName, parent);
   }
-
-  /* (non-Javadoc)
-   * @see org.usergrid.rest.test.security.TestUser#create(org.usergrid.rest.test.resource.TestContext)
-   */
-  @Override
-  protected JsonNode createInternal(TestContext context) {
-    return context.application().users().create(user, email, password);
-  }
-
- 
   
 
+  
+  
+  
+
+  
+  
+  
 }

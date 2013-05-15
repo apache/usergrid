@@ -13,48 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.usergrid.rest.test.resource.app;
+package org.usergrid.rest.test.resource.app.queue;
 
-import java.util.UUID;
-
-import org.codehaus.jackson.JsonNode;
-import org.usergrid.rest.test.resource.EntityResource;
 import org.usergrid.rest.test.resource.NamedResource;
-import org.usergrid.rest.test.resource.app.queue.DevicesCollection;
-
+import org.usergrid.rest.test.resource.ValueResource;
+import org.usergrid.rest.test.resource.app.Device;
 
 /**
- * A resource for testing queues
- * 
  * @author tnine
- *
+ * 
  */
-public class User extends EntityResource {
+public class DevicesCollection extends ValueResource {
 
-  /**
-   * @param entityId
-   * @param parent
-   */
-  public User(UUID entityId, NamedResource parent) {
-    super(entityId, parent);
+ 
+  public DevicesCollection(NamedResource parent) {
+    super("devices", parent);
   }
 
-  /**
-   * @param entityName
-   * @param parent
-   */
-  public User(String entityName, NamedResource parent) {
-    super(entityName, parent);
+ 
+  public Device device(String deviceName){
+    return new Device(deviceName, this);
   }
-  
-  public DevicesCollection devices(){
-    return new DevicesCollection(this);
-  }
-  
-  
-  
-
-  
-  
-  
 }

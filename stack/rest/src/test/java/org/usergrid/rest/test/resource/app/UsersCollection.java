@@ -15,10 +15,14 @@
  ******************************************************************************/
 package org.usergrid.rest.test.resource.app;
 
+import java.util.Map;
 import java.util.UUID;
 
+import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.test.resource.CollectionResource;
 import org.usergrid.rest.test.resource.NamedResource;
+import org.usergrid.rest.test.resource.app.queue.DevicesCollection;
+import org.usergrid.utils.MapUtils;
 
 /**
  * @author tnine
@@ -39,4 +43,22 @@ public class UsersCollection extends CollectionResource {
   public User user(UUID id){
     return new User(id, this);
   }
+  
+  /**
+   * Create the user
+   * @param username
+   * @param email
+   * @param password
+   * @return
+   */
+  public JsonNode create(String username, String email, String password){
+    Map<String, String> data = MapUtils.hashMap("username", username).map("email", email).map("password", password);
+    
+    JsonNode response = this.postInternal(data);
+    
+    return getEntity(response, 0);
+    
+  }
+  
+  
 }

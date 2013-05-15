@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.usergrid.rest.test.security;
 
+import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.test.resource.TestContext;
 
 
@@ -24,10 +25,10 @@ import org.usergrid.rest.test.resource.TestContext;
  */
 public abstract class TestUser {
 
-  private String user;
-  private String password;
-  private String email;
-  private String token;
+  protected String user;
+  protected String password;
+  protected String email;
+  protected String token;
   
   
   
@@ -46,10 +47,12 @@ public abstract class TestUser {
   /**
    * Log in the type
    */
-  public void login(TestContext context){
+  public TestUser login(TestContext context){
     if(token == null){
-      token = getToken(user, password, context);
+      token = getToken(context);
     }
+    
+    return this;
   }
   
   /**
@@ -91,10 +94,29 @@ public abstract class TestUser {
     return this.token != null;
   }
 
+  /**
+   * Create this user
+   * @param context
+   * @return
+   */
+  public TestUser create(TestContext context){
+    createInternal(context);
+    return this;
+  }
   
+  /**
+   * Make this user active in the context
+   * @param context
+   * @return
+   */
+  public TestUser makeActive(TestContext context){
+    context.withUser(this);
+    return this;
+  }
   
+  protected abstract JsonNode createInternal(TestContext context);
 
-  protected abstract String getToken(String username, String password, TestContext context);
+  protected abstract String getToken(TestContext context);
   
 
 }

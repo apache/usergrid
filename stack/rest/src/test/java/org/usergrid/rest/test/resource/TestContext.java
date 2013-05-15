@@ -55,11 +55,20 @@ public class TestContext {
     return new TestContext(test);
   }
 
+  
+  public TestUser getActiveUser(){
+    return activeUser;
+  }
+  
   public TestContext withUser(TestUser user) {
     this.activeUser = user;
     return this;
   }
 
+  public TestContext clearUser(){
+    return withUser(null);
+  }
+  
   public TestContext withOrg(String orgName) {
     this.orgName = orgName;
     return this;
@@ -159,7 +168,7 @@ public class TestContext {
   }
 
   protected RootResource root() {
-    return new RootResource(test.resource(), activeUser.getToken());
+    return new RootResource(test.resource(), activeUser == null? null: activeUser.getToken());
   }
 
   /**

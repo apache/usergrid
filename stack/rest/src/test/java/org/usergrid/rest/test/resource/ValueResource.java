@@ -50,6 +50,15 @@ public abstract class ValueResource extends NamedResource {
   }
 
   /**
+   * Create a new entity with the specified data
+   * @param entity
+   * @return
+   */
+  public JsonNode create(Map<String, ? > entity){
+    return postInternal(entity);
+  }
+  
+  /**
    * post to the entity set
    * 
    * @param entity

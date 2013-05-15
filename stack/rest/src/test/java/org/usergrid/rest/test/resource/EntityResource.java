@@ -20,6 +20,9 @@ import java.util.UUID;
 
 import org.codehaus.jackson.JsonNode;
 
+import com.sun.jersey.api.client.ClientResponse.Status;
+import com.sun.jersey.api.client.UniformInterfaceException;
+
 /**
  * @author tnine
  *
@@ -28,6 +31,8 @@ public class EntityResource extends NamedResource {
 
   private String entityName;
   private UUID entityId;
+  
+  private Map<String, ?> data;
   
   
   public EntityResource(String entityName, NamedResource parent){
@@ -102,10 +107,22 @@ public class EntityResource extends NamedResource {
    * Get the resource
    * @return
    */
-  protected JsonNode get(){
+  protected JsonNode getInternal(){
     return jsonMedia(withToken(resource())).get(JsonNode.class);
   }
  
+  
+  public JsonNode get(){
+    try{
+      return getInternal();
+    }catch(UniformInterfaceException uie){
+      if(uie.getResponse().getClientResponseStatus() == Status.NOT_FOUND){
+        return null;
+      }
+      
+      throw uie;
+    }
+  }
   
   
 }
