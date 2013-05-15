@@ -63,7 +63,7 @@ public class UserOwnershipResourceTest extends RestContextTest {
 
     // check we can't see device2
     data = context.application().users().user("me").devices().device("device2").get();
-    assertNull(data);
+    assertNull(getEntity(data, 0));
 
     // log in as user 2 and check it
     context.withUser(user2);
@@ -74,7 +74,7 @@ public class UserOwnershipResourceTest extends RestContextTest {
 
     // check we can't see device1
     data = context.application().users().user("me").devices().device("device1").get();
-    assertNull(data);
+    assertNull(getEntity(data, 0));
 
     // we can see both of these
     DevicesCollection devices = context.application().devices();
