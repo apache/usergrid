@@ -298,8 +298,6 @@ class Client {
       (!$response->get_error() && array_key_exists('getOnExist', $entity_data) && $entity_data['getOnExist'])
     );
 
-    //var okToSave = (err && 'service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) || (!err && getOnExist);
-
     if ($ok_to_save) {
       $entity->set($entity_data);
       $response = $entity->save();

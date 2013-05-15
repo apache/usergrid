@@ -109,6 +109,7 @@ class Entity {
   }
 
   public function fetch() {
+  	$response = new Response();
     $type = $this->get('type');
     $uuid = $this->get('uuid'); // may be NULL
     if (!empty($uuid)) {
@@ -123,7 +124,9 @@ class Entity {
         else {
           $error = 'no_name_specified';
           $this->client->write_log($error);
-          return (object)array('error' => $error, 'data' => array());
+          $response->set_error($error);
+          $response->set_error_code($error);
+          return $response;
         }
       }
       else {
@@ -134,7 +137,9 @@ class Entity {
         else {
           $error = 'no_name_specified';
           $this->client->write_log($error);
-          return (object)array('error' => $error, 'data' => array());
+          $response->set_error($error);
+          $response->set_error_code($error);
+          return $response;
         }
       }
     }
@@ -155,6 +160,7 @@ class Entity {
   }
 
   public function destroy() {
+  	$response = new Response();
     $type = $this->get('type');
     $uuid = $this->get('uuid');
     if (Client::is_uuid($uuid)) {
@@ -163,7 +169,9 @@ class Entity {
     else {
       $error = 'Error trying to delete object: No UUID specified.';
       $this->client->write_log($error);
-      return (object)array('error' => $error, 'data' => array());
+      $response->set_error($error);
+      $response->set_error_code($error);
+      return $response;
     }
 
     $response = $this->client->delete($type, array());
