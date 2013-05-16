@@ -26,6 +26,15 @@ public interface RelationManager {
 			throws Exception;
 
 	public Map<String, Map<UUID, Set<String>>> getOwners() throws Exception;
+	
+
+  /**
+   * Returns true if the owner ref for the current relation manager is an owner of the specified entity
+   * @param owner
+   * @param entity
+   * @throws Exception 
+   */
+  public boolean isOwner(String collectionName, EntityRef entity) throws Exception;
 
 	public Set<String> getCollections() throws Exception;
 
@@ -129,5 +138,6 @@ public interface RelationManager {
 			String propertyName, Object propertyValue) throws Exception;
 
 	public long getCollectionSize(String collectionName) throws Exception;
+
 
 }

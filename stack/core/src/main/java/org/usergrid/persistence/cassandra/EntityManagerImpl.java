@@ -784,7 +784,7 @@ public class EntityManagerImpl implements EntityManager {
 				cass.getApplicationKeyspace(applicationId), ENTITY_ALIASES,
 				keyId, columnNames, se, be);
 
-		if (columns != null) {
+		if (columns != null && columns.size() > 0) {
 			Map<String, ByteBuffer> cols = CassandraPersistenceUtils
 					.getColumnMap(columns);
 			String entityType = string(cols.get("entityType"));
@@ -2915,7 +2915,15 @@ public class EntityManagerImpl implements EntityManager {
 		return getRelationManager(entityRef).getOwners();
 	}
 
-	@Override
+	/* (non-Javadoc)
+   * @see org.usergrid.persistence.EntityManager#isOwner(org.usergrid.persistence.EntityRef, org.usergrid.persistence.EntityRef)
+   */
+  @Override
+  public boolean isOwner(EntityRef owner, String collectionName,EntityRef entity) throws Exception {
+    return getRelationManager(owner).isOwner(collectionName, entity);
+  }
+
+  @Override
 	public Set<String> getCollections(EntityRef entityRef) throws Exception {
 		return getRelationManager(entityRef).getCollections();
 	}

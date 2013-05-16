@@ -31,10 +31,10 @@ import org.usergrid.utils.MapUtils;
 /**
  * 
  */
-public class UserOwnershipResourceTest extends RestContextTest {
+public class OwnershipResourceTest extends RestContextTest {
 
   @Test
-  public void usernameQuery() {
+  public void contextualPathOwnership() {
     
    
     //anonymous user
@@ -55,32 +55,48 @@ public class UserOwnershipResourceTest extends RestContextTest {
 
     // now query on user 1.
 
-    context.withUser(user1);
+    DevicesCollection devices = context.withUser(user1).application().users().user("me").devices();
     
-    JsonNode data = context.application().users().user("me").devices().device("device1").get();
+    
+    JsonNode data = devices.device("device1").get();
     assertNotNull(data);
     assertEquals("device1", getEntity(data, 0).get("name").asText());
 
     // check we can't see device2
-    data = context.application().users().user("me").devices().device("device2").get();
-    assertNull(getEntity(data, 0));
+    data = devices.device("device2").get();
+    assertNull(data);
 
-    // log in as user 2 and check it
-    context.withUser(user2);
+    //do a collection load, make sure we're not loading device 2
+    data = devices.get();
     
-    data = context.application().users().user("me").devices().device("device2").get();
+    assertEquals("device1", getEntity(data, 0).get("name").asText());
+    assertNull(getEntity(data, 1));
+    
+    // log in as user 2 and check it
+    devices = context.withUser(user2).application().users().user("me").devices();
+    
+    data = devices.device("device2").get();
     assertNotNull(data);
     assertEquals("device2", getEntity(data, 0).get("name").asText());
 
     // check we can't see device1
-    data = context.application().users().user("me").devices().device("device1").get();
-    assertNull(getEntity(data, 0));
+    data = devices.device("device1").get();
+    assertNull(data);
 
-    // we can see both of these
-    DevicesCollection devices = context.application().devices();
+    
+    //do a collection load, make sure we're not loading device 1
+    data = devices.get();
+    
+    assertEquals("device2", getEntity(data, 0).get("name").asText());
+    assertNull(getEntity(data, 1));
+    
+    
+    // we should see both devices when loaded from the root application
+   
 
     //test for user 1
-    user1.login(context);
+    
+    devices = context.withUser(user1).application().devices();
     data = devices.device("device1").get();
 
     assertNotNull(data);
@@ -91,13 +107,8 @@ public class UserOwnershipResourceTest extends RestContextTest {
     assertNotNull(data);
     assertEquals("device2", getEntity(data, 0).get("name").asText());
 
-    data = devices.device("device2").get();
-
-    assertNull(data);
-
-    //test for user 2
-    user2.login(context);
-    data = devices.device("device1").get();
+    //test for user 2   
+    data =  context.withUser(user2).application().devices().device("device1").get();
 
     assertNotNull(data);
     assertEquals("device1", getEntity(data, 0).get("name").asText());
@@ -107,9 +118,7 @@ public class UserOwnershipResourceTest extends RestContextTest {
     assertNotNull(data);
     assertEquals("device2", getEntity(data, 0).get("name").asText());
 
-    data = devices.device("device2").get();
 
-    assertNull(data);
   }
   
   

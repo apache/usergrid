@@ -15,10 +15,7 @@
  ******************************************************************************/
 package org.usergrid.persistence;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 import java.util.*;
@@ -525,5 +522,64 @@ public class EntityManagerTest extends AbstractPersistenceTest {
         Entity thingTwo = em.get(saved.getUuid());
         
         assertEquals("two", thingTwo.getProperty("name"));
+    }
+    
+
+    @Test
+    public void ownershipScopeCorrect() throws Exception {
+
+        UUID applicationId = createApplication("testOrganization", "ownershipScopeCorrect");
+
+        EntityManager em = emf.getEntityManager(applicationId);
+
+        //first user
+        Map<String, Object> userProps = new LinkedHashMap<String, Object>();
+        userProps.put("name", "testuser");
+        userProps.put("username", "testuser");
+        userProps.put("email", "test@foo.bar");
+        Entity createdUser = em.create("user", userProps);
+
+        Entity returnedUser = em.get(createdUser.getUuid());
+        
+        assertNotNull(createdUser);
+        assertNotNull(returnedUser);
+        
+        //second user
+        Map<String, Object> userProps2 = new LinkedHashMap<String, Object>();
+        userProps2.put("name", "testuser2");
+        userProps2.put("username", "testuser2");
+        userProps2.put("email", "test2@foo.bar");
+        Entity createdUser2 = em.create("user", userProps2);
+
+        Entity returnedUser2 = em.get(createdUser2.getUuid());
+        
+        assertNotNull(createdUser2);
+        assertNotNull(returnedUser2);
+        
+        //now create the device, in the scope of the user
+        
+        Map<String,Object> device = new LinkedHashMap<String, Object>();
+        device.put("name", "device1");
+        
+        Entity createdDevice = em.createItemInCollection(createdUser, "devices", "device", device);
+        
+        Entity returnedDevice = em.get(createdDevice.getUuid());
+        
+        assertNotNull(createdDevice);
+        assertNotNull(returnedDevice);
+        
+        assertEquals("device1", returnedDevice.getName());
+        
+        //now load it within the context of the user, it should load.
+        
+        //first user is an owner
+        assertTrue(em.isOwner(createdUser, "devices", createdDevice));
+        
+        //Not an owner
+        assertFalse(em.isOwner(createdUser2, "devices", createdDevice));
+      
+        
+        
+
     }
 }

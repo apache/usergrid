@@ -100,16 +100,19 @@ import java.util.UUID;
 
 import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
+import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
+import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.beans.Rows;
+import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
@@ -144,6 +147,13 @@ public class RelationManagerImpl implements RelationManager {
     private EntityManagerImpl em;
     private CassandraService cass;
     private UUID applicationId;
+    
+    /**
+     * TODO TN  This should always be the entity that is the "owner" of an entity.  In /users/me/devices/d, it would be "me" and the entity is "d".
+     * This field is used interchangeably throughout these methods as both the source and target.  It makes the code confusing
+     * and needs refactored for clarity
+     */
+    
     private EntityRef headEntity;
     private IndexBucketLocator indexBucketLocator;
 
@@ -2246,6 +2256,28 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         return owners;
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    @Metered(group="core", name="RelationManager_isOwner")
+    public boolean isOwner(String collectionName, EntityRef entity) throws Exception{
+     
+      Keyspace ko = cass.getApplicationKeyspace(applicationId);
+    
+      ByteBuffer col = DynamicComposite.toByteBuffer(asList(this.headEntity.getType(), collectionName, headEntity.getUuid()));
+      
+      HColumn<ByteBuffer, ByteBuffer> result = cass
+              .getColumn(
+                      ko,
+                      ENTITY_COMPOSITE_DICTIONARIES,
+                      key(entity.getUuid(),
+                              Schema.DICTIONARY_CONTAINER_ENTITIES), col, be, be
+                      );
+      
+      
+      return result != null;
+
     }
 
     @Override

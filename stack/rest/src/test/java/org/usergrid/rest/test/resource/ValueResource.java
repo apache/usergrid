@@ -93,6 +93,14 @@ public abstract class ValueResource extends NamedResource {
     return jsonMedia(withParams(withToken(resource())))
         .put(JsonNode.class, entity);
   }
+  
+  /**
+   * Get the data
+   * @return
+   */
+  public JsonNode get(){
+    return getInternal();
+  }
 
   /**
    * Get a list of entities
