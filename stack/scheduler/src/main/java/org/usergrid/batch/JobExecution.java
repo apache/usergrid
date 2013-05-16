@@ -90,6 +90,13 @@ public interface JobExecution {
   public void heartbeat();
   
   /**
+   * Signal the execution is still running, and delay the timeout for the milliseconds specified
+   * 
+   * @param milliseconds
+   */
+  public void heartbeat(long milliseconds);
+  
+  /**
    * Don't treat the execution as complete.  Simply delay execution for the specified milliseconds.  Similar to heartbeat
    * but allows the user to specify the timeout for the next attempt instead of the heartbeat default.  This DOES NOT update 
    * locks, so your job should use distributed locking internally to ensure single execution

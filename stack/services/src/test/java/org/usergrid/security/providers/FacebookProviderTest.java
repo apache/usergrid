@@ -41,7 +41,7 @@ public class FacebookProviderTest {
  	private static OrganizationInfo organization;
  	private static UUID applicationId;
 
-  private String fb_access_token = "XXXYYYFBTOKENZZZ";
+  private String fb_access_token = "CAAE...NJIZD";
 
 
 
@@ -72,10 +72,6 @@ public class FacebookProviderTest {
     				.map("username", "fb.user");
 
     FacebookProvider facebookProvider = (FacebookProvider)providerFactory.facebook(application);
-    facebookProvider = Mockito.spy(facebookProvider);
-
-    Mockito.when(facebookProvider.userFromResource(Mockito.anyString())).thenReturn(fb_user);
-
 
     User user1 = facebookProvider.createOrAuthenticate(fb_access_token);
 
