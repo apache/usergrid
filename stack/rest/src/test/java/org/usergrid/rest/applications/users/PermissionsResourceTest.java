@@ -30,6 +30,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.java.client.entities.Group;
 import org.usergrid.management.ApplicationInfo;
@@ -564,6 +565,7 @@ public class PermissionsResourceTest extends AbstractRestTest {
    * @throws Exception
    */
   @Test
+  @Ignore
   public void wildcardFollowingPermission() throws Exception {
 	  UUID id = UUIDUtils.newTimeUUID();
 
