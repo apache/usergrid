@@ -114,7 +114,7 @@ public class PingIdentityProvider extends AbstractProvider {
   }
 
   public static String pingUsernameFrom(String rawEmail) {
-    return String.format("pinguser_",rawEmail);
+    return String.format("pinguser_%s",rawEmail);
   }
 
   public static long extractExpiration(User user) {

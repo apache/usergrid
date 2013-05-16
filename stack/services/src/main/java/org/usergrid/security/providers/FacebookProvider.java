@@ -80,9 +80,9 @@ public class FacebookProvider extends AbstractProvider {
 
   @Override
   Map<String, Object> userFromResource(String externalToken) {
-    WebResource wr = client.resource(apiUrl);
-    wr.queryParam("access_token", externalToken);
-    return wr.accept(MediaType.APPLICATION_JSON).post(Map.class);
+    return client.resource(apiUrl).queryParam("access_token", externalToken)
+            .accept(MediaType.APPLICATION_JSON)
+            .get(Map.class);
   }
 
   @Override
