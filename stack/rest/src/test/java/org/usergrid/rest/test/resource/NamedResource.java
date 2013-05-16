@@ -36,6 +36,7 @@ public abstract class NamedResource {
   
   protected NamedResource parent;
   
+  
   /**
    * 
    */

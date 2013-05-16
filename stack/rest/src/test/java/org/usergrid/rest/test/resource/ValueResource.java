@@ -129,5 +129,6 @@ public abstract class ValueResource extends NamedResource {
 
     return jsonMedia(resource).get(JsonNode.class);
   }
+  
 
 }

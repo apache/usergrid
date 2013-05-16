@@ -15,14 +15,14 @@
  ******************************************************************************/
 package org.usergrid.rest.applications.users;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.codehaus.jackson.JsonNode;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.usergrid.rest.RestContextTest;
-import org.usergrid.rest.test.resource.app.Device;
+import org.usergrid.rest.test.resource.CustomCollection;
 import org.usergrid.rest.test.resource.app.queue.DevicesCollection;
 import org.usergrid.rest.test.security.TestAppUser;
 import org.usergrid.rest.test.security.TestUser;
@@ -35,29 +35,31 @@ public class OwnershipResourceTest extends RestContextTest {
 
   @Test
   public void contextualPathOwnership() {
-    
-   
-    //anonymous user
+
+    // anonymous user
     context.clearUser();
-    
-    TestUser user1 = new TestAppUser("testuser1@usergrid.org", "password",  "testuser1@usergrid.org").create(context).login(context).makeActive(context);
+
+    TestUser user1 = new TestAppUser("testuser1@usergrid.org", "password", "testuser1@usergrid.org").create(context)
+        .login(context).makeActive(context);
 
     // create device 1 on user1 devices
-    context.application().users().user("me").devices().create(MapUtils.hashMap("name", "device1").map("number", "5551112222"));
+    context.application().users().user("me").devices()
+        .create(MapUtils.hashMap("name", "device1").map("number", "5551112222"));
 
-    //anonymous user
+    // anonymous user
     context.clearUser();
-    
-    // create device 2 on user 2
-    TestUser user2 = new TestAppUser("testuser2@usergrid.org", "password","testuser2@usergrid.org").create(context).login(context).makeActive(context);
 
-    context.application().users().user("me").devices().create(MapUtils.hashMap("name", "device2").map("number", "5552223333"));
+    // create device 2 on user 2
+    TestUser user2 = new TestAppUser("testuser2@usergrid.org", "password", "testuser2@usergrid.org").create(context)
+        .login(context).makeActive(context);
+
+    context.application().users().user("me").devices()
+        .create(MapUtils.hashMap("name", "device2").map("number", "5552223333"));
 
     // now query on user 1.
 
     DevicesCollection devices = context.withUser(user1).application().users().user("me").devices();
-    
-    
+
     JsonNode data = devices.device("device1").get();
     assertNotNull(data);
     assertEquals("device1", getEntity(data, 0).get("name").asText());
@@ -66,15 +68,15 @@ public class OwnershipResourceTest extends RestContextTest {
     data = devices.device("device2").get();
     assertNull(data);
 
-    //do a collection load, make sure we're not loading device 2
+    // do a collection load, make sure we're not loading device 2
     data = devices.get();
-    
+
     assertEquals("device1", getEntity(data, 0).get("name").asText());
     assertNull(getEntity(data, 1));
-    
+
     // log in as user 2 and check it
     devices = context.withUser(user2).application().users().user("me").devices();
-    
+
     data = devices.device("device2").get();
     assertNotNull(data);
     assertEquals("device2", getEntity(data, 0).get("name").asText());
@@ -83,19 +85,16 @@ public class OwnershipResourceTest extends RestContextTest {
     data = devices.device("device1").get();
     assertNull(data);
 
-    
-    //do a collection load, make sure we're not loading device 1
+    // do a collection load, make sure we're not loading device 1
     data = devices.get();
-    
+
     assertEquals("device2", getEntity(data, 0).get("name").asText());
     assertNull(getEntity(data, 1));
-    
-    
-    // we should see both devices when loaded from the root application
-   
 
-    //test for user 1
-    
+    // we should see both devices when loaded from the root application
+
+    // test for user 1
+
     devices = context.withUser(user1).application().devices();
     data = devices.device("device1").get();
 
@@ -107,8 +106,8 @@ public class OwnershipResourceTest extends RestContextTest {
     assertNotNull(data);
     assertEquals("device2", getEntity(data, 0).get("name").asText());
 
-    //test for user 2   
-    data =  context.withUser(user2).application().devices().device("device1").get();
+    // test for user 2
+    data = context.withUser(user2).application().devices().device("device1").get();
 
     assertNotNull(data);
     assertEquals("device1", getEntity(data, 0).get("name").asText());
@@ -118,10 +117,98 @@ public class OwnershipResourceTest extends RestContextTest {
     assertNotNull(data);
     assertEquals("device2", getEntity(data, 0).get("name").asText());
 
+  }
+
+  @Test
+  public void contextualConnectionOwnership() {
+
+    // anonymous user
+    context.clearUser();
+
+    TestUser user1 = new TestAppUser("testuser1@usergrid.org", "password", "testuser1@usergrid.org").create(context)
+        .login(context).makeActive(context);
+
+    // create a 4peaks restaurant
+    JsonNode data = context.application().collection("restaurants").create(MapUtils.hashMap("name", "4peaks"));
+
+    // create our connection
+    data = context.application().users().user("me").connection("likes").collection("restaurants").entity("4peaks")
+        .post();
+
+    // anonymous user
+    context.clearUser();
+
+    // create a restaurant and link it to user 2
+    TestUser user2 = new TestAppUser("testuser2@usergrid.org", "password", "testuser2@usergrid.org").create(context)
+        .login(context).makeActive(context);
+
+    data = context.application().collection("restaurants").create(MapUtils.hashMap("name", "arrogantbutcher"));
+
+    data = context.application().users().user("me").connection("likes").collection("restaurants")
+        .entity("arrogantbutcher").post();
+
+    // now query on user 1.
+
+    CustomCollection likeRestaurants = context.withUser(user1).application().users().user("me").connection("likes").collection("restaurants");
+
+    data = likeRestaurants.entity("4peaks").get();
+    assertNotNull(data);
+    assertEquals("4peaks", getEntity(data, 0).get("name").asText());
+
+    // check we can't see arrogantbutcher
+    data = likeRestaurants.entity("arrogantbutcher").get();
+    assertNull(data);
+
+    // do a collection load, make sure we're not entities we shouldn't see
+    data = likeRestaurants.get();
+
+    assertEquals("4peaks", getEntity(data, 0).get("name").asText());
+    assertNull(getEntity(data, 1));
+
+    // log in as user 2 and check it
+    likeRestaurants = context.withUser(user2).application().users().user("me").connection("likes").collection("restaurants");
+
+    data = likeRestaurants.entity("arrogantbutcher").get();
+    assertNotNull(data);
+    assertEquals("arrogantbutcher", getEntity(data, 0).get("name").asText());
+
+    // check we can't see 4peaks
+    data = likeRestaurants.entity("4peaks").get();
+    assertNull(data);
+
+    // do a collection load, make sure we're not loading device 1
+    data = likeRestaurants.get();
+
+    assertEquals("arrogantbutcher", getEntity(data, 0).get("name").asText());
+    assertNull(getEntity(data, 1));
+
+    // we should see both devices when loaded from the root application
+
+    // test for user 1
+
+    CustomCollection restaurants = context.withUser(user1).application().collection("restaurants");
+    data = restaurants.entity("4peaks").get();
+
+    assertNotNull(data);
+    assertEquals("4peaks", getEntity(data, 0).get("name").asText());
+
+    data = restaurants.entity("arrogantbutcher").get();
+
+    assertNotNull(data);
+    assertEquals("arrogantbutcher", getEntity(data, 0).get("name").asText());
+
+    // test for user 2
+    restaurants = context.withUser(user1).application().collection("restaurants");
+    data = restaurants.entity("4peaks").get();
+
+    assertNotNull(data);
+    assertEquals("4peaks", getEntity(data, 0).get("name").asText());
+
+    data = restaurants.entity("arrogantbutcher").get();
+
+    assertNotNull(data);
+    assertEquals("arrogantbutcher", getEntity(data, 0).get("name").asText());
 
   }
-  
-  
-  
 
 }

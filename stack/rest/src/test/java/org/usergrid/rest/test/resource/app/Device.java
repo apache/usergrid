@@ -17,7 +17,6 @@ package org.usergrid.rest.test.resource.app;
 
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
 import org.usergrid.rest.test.resource.EntityResource;
 import org.usergrid.rest.test.resource.NamedResource;
 

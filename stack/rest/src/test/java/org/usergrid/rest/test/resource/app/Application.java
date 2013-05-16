@@ -18,6 +18,7 @@ package org.usergrid.rest.test.resource.app;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
+import org.usergrid.rest.test.resource.CustomCollection;
 import org.usergrid.rest.test.resource.NamedResource;
 import org.usergrid.rest.test.resource.RootResource;
 import org.usergrid.rest.test.resource.app.queue.DevicesCollection;
@@ -86,4 +87,8 @@ public class Application extends NamedResource {
     return new DevicesCollection(this);
   }
 
+  public CustomCollection collection(String name){
+    return new CustomCollection(name, this);
+  }
+  
 }
