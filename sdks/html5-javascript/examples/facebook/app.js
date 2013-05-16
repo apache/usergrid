@@ -71,7 +71,7 @@ $(document).ready(function () {
 
   function logout() {
     FB.logout(function(response) {
-      Usergrid.ApiClient.logoutAppUser();
+      client.logoutAppUser();
       var html = "User logged out. \r\n\r\n // Press 'Log in' to log in with Facebook.";
       $('#facebook-status').html(html);
     });
